@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50196 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754674AbXIQS6d (ORCPT
+Received: from mx1.dixongroup.net ([38.98.104.248]:44841 "EHLO
+	mx1.dixongroup.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756228AbXIBA7g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 14:58:33 -0400
-Message-ID: <46EECE52.1060206@lwfinger.net>
-Date: Mon, 17 Sep 2007 13:58:26 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] b43legacy: Don't cancel the restart workqueue in wireless_core_exit
-References: <46e577e8.J3sSMKsbv5F0EAQY%Larry.Finger@lwfinger.net> <20070917150358.GC9282@tuxdriver.com> <46EEB3E0.4010501@lwfinger.net> <20070917173754.GD9282@tuxdriver.com>
-In-Reply-To: <20070917173754.GD9282@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 1 Sep 2007 20:59:36 -0400
+In-Reply-To: <20070901215225.GM9260@stusta.de>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <f34ca13c0709011427u <20070901215225.GM9260@stusta.de>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
+Cc: mureninc@gmail.com, jeff@garzik.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
+From: Jason Dixon <jason@dixongroup.net>
+Subject: Re: That whole "Linux stealing our code" thing
+Date: Sat, 1 Sep 2007 20:36:24 -0400
+To: bunk@kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Mon, Sep 17, 2007 at 12:05:36PM -0500, Larry Finger wrote:
->> John W. Linville wrote:
->>> Is this the correct patch?  The first hunk conflicts with an earlier
->>> patch ("b43legacy: Fix cancellation of work queues").
->>>
->>> John
->> Yes, this one is correct. The first one was without a commit message, and had an error.
-> 
-> Hmmmm, not that one.  There was another patch that (looking closer)
-> you sent me and cc'ed bcm43xx-dev on or about 30 August.  I guess
-> I'll drop that one and use this one instead.
+On Sep 1, 2007, at 5:52 PM, Adrian Bunk wrote:
 
-No, the Aug 30 one is needed. Somehow my patch sets got confused. Please apply the August 30 patch
-and drop the Sept. 10 one. I'll fix it after your tree gets updated. I don't think it will cause any
-problems. As you said, the first hunk is already in the Aug. 30 patch.
+> OK, I begin to understand this, there seem to be three different types
+> of files changed by Jiri's patch:
+> 1. dual licenced files planned to make GPL-only
+> 2. previously dual licenced files with a too recent version used  
+> planned
+>    to make GPL-only
+> 3. never dual licenced files planned to make GPL-only
+>
+> For files under 1. and 2. Reyk did contribute to dual licenced code
+> without touching the licence, but I missed that there's also code  
+> unter 3.
+>
+> So there is a problem, but not with the code under 1. (unless you plan
+> to change the semantics of the word "alternatively"), the problem is
+> with some headers under 2. plus the code under 3.
 
-Larry
+The BSD license plainly states:
+
+"Permission to use, copy, modify, and/or distribute this software for  
+any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies."
+
+Once the grantor (Reyk) releases his code under that license, it must  
+remain.  You are free to derive work and redistribute under your  
+license, but the original copyright and license permission remains  
+intact.  Many other entities (Microsoft, Apple, Sun, etc) have used  
+BSD code and have no problem understanding this.  Why is this so  
+difficult for the Linux brain share to absorb?
+
+As a former Linux advocate and current OpenBSD user/developer, I'm  
+appalled that fellow open-source developers would see fit to  
+cavalierly disregard the rights of the original copyright holder.   
+You wield the GPL when it suits you, and trample the courtesies of  
+non-GPL developers just because you [think you] can.  As bad as  
+Jiri's offense was, it pales to the impudence displayed by Alan Cox,  
+one of the so-called defenders of free software.
+
+Shame on you all.
+
+---
+Jason Dixon
+DixonGroup Consulting
+http://www.dixongroup.net
+
+
