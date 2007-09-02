@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064AbXIHJgt (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:44545 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbXIBT62 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 05:36:49 -0400
-Subject: Re: iwlwifi sparse warnings with __CHECK_ENDIAN__
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1ba2fa240709080120j1c67dbc8m14c91529085cc19a@mail.gmail.com>
-References: <1189100027.28781.104.camel@johannes.berg>
-	 <1ba2fa240709080037p44516f1eu7040bd4424a29f8c@mail.gmail.com>
-	 <1189237311.4506.6.camel@johannes.berg>
-	 <1ba2fa240709080120j1c67dbc8m14c91529085cc19a@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sdKOAT8QxzcLBAC/IWMv"
-Date: Sat, 08 Sep 2007 11:38:19 +0200
-Message-Id: <1189244299.4506.19.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 2 Sep 2007 15:58:28 -0400
+Date: Mon, 3 Sep 2007 01:41:34 +0530 (IST)
+From: Satyam Sharma <satyam@infradead.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -mm] net/wireless/sysfs.c: Shut up build warning
+In-Reply-To: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.in>
+Message-ID: <alpine.LFD.0.999.0709030139110.29617@enigma.security.iitk.ac.in>
+References: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.i
+ n>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="464262402-1192004133-1188763897=:29617"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
---=-sdKOAT8QxzcLBAC/IWMv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--464262402-1192004133-1188763897=:29617
+Content-Type: TEXT/PLAIN; charset=iso-2022-jp
 
-On Sat, 2007-09-08 at 11:20 +0300, Tomas Winkler wrote:
 
-> The version in wireless-dev is 0.1.8 and we are 0.1.15 on stable and
-> 1.1.0 on the development branch. Looks like Yi's patches weren't
-> synced for a while.
+net/wireless/sysfs.c:108: warning: ‘wiphy_uevent’ defined but not used
 
-Huh ok. John is at KS anyhow, but we really need a better plan how to
-continue developing stuff. No wonder if I've been looking at ancient
-code all along...
+when CONFIG_HOTPLUG=n is because the only usage site of this function
+is #ifdef'ed as such, so let's #ifdef the definition also.
 
-johannes
+Signed-off-by: Satyam Sharma <satyam@infradead.org>
 
---=-sdKOAT8QxzcLBAC/IWMv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+ net/wireless/sysfs.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-iD8DBQBG4m2L/ETPhpq3jKURAii2AJwNyOF3uMKM3N8v68SLtQ2ZnIEqZACgtyjD
-boVVqKXl3EfaPfFbQGrPnAc=
-=UIEB
------END PGP SIGNATURE-----
-
---=-sdKOAT8QxzcLBAC/IWMv--
-
+--- linux-2.6.23-rc4-mm1/net/wireless/sysfs.c~fix	2007-09-02 20:06:11.000000000 +0530
++++ linux-2.6.23-rc4-mm1/net/wireless/sysfs.c	2007-09-02 20:07:01.000000000 +0530
+@@ -104,11 +104,13 @@ static void wiphy_dev_release(struct dev
+ 	cfg80211_dev_free(rdev);
+ }
+ 
++#ifdef CONFIG_HOTPLUG
+ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	/* TODO, we probably need stuff here */
+ 	return 0;
+ }
++#endif
+ 
+ struct class ieee80211_class = {
+ 	.name = "ieee80211",
+--464262402-1192004133-1188763897=:29617--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
