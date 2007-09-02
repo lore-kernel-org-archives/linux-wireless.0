@@ -1,57 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:50357 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757142AbXIFCGb (ORCPT
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:44065 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965776AbXIBLuk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 22:06:31 -0400
-Date: Wed, 5 Sep 2007 19:06:11 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] per-sta reassembly buffers
-Message-ID: <20070906020611.GJ5273@jm.kir.nu>
-References: <1188988102.9942.89.camel@johannes.berg>
+	Sun, 2 Sep 2007 07:50:40 -0400
+Date: Sun, 2 Sep 2007 13:50:41 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070902115041.GM16016@stusta.de>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu> <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188988102.9942.89.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 05, 2007 at 12:28:22PM +0200, Johannes Berg wrote:
+On Sun, Sep 02, 2007 at 01:20:27PM +0200, Igor Sobrado wrote:
+> On Sun, 2 Sep 2007, Alan Cox wrote:
+>> You can shout this all you like but you would be wrong. You can remove
+>> the licence if you have permission to do so. For the ath c files there
+>> was permission to do so.
+>
+> There was permission to do so from Reyk Floeter?  Really?
+>
+>> Your understanding isn't quite right. One of many things you may get with
+>> dual licensed code is the right to pick a licence from several choices,
+>> you may also get the right to remove some choices from the recipient.
+>
+> Reyk code was never dual licensed!  His code is under truly free licensing 
+> terms (BSD).
 
-> I was looking through the defragmentation code and noticed that we only
-> allow four fragmented frames to be in flight at the same time. It seems
-> that in a somewhat contended QoS network where fragmentation is enabled
-> this is far from enough since as far as I can tell from the standard
-> each source STA may be sending fragmented frames in the various access
-> categories (think starting in background and then preempting by best
-> effort etc.)
+Jiri's patch touched both files containing BSD-only code by Reyk and 
+code Reyk contributed to leaving the file dual licenced.
 
-I would have expected STAs to transmit only one MSDU at a time to any
-given destination STA. This was the way it was done before QoS and I did
-not find any clear point in QoS changes that would have changed the
-behavior. The changes in the duplicate detection are, though, implicitly
-pointing out that there may actually be separate fragmentation for each
-TID.
+>> A work that combines GPL and BSD licensed material is not the same as a
+>> work which says I may choose between two licences. If both licences must
+>> always apply (which is a perfectly possible condition to put in a
+>> licence) then putting such a "both" GPL/BSD licence piece of code into
+>> OpenBSD would require any OpenBSD distributed containing it was GPL
+>> licenced when conveyed, which I am *very* sure is not the intent.
+>>
+>> Thus what you appear to be doing by putting the ath5k C code in OpenBSD is
+>> conveying it under the BSD licence (making a choice between the two
+>> offered) and conveying a right for parties down the chain to convey it
+>> under one of the licences only.
+>
+> I think that Theo explained this point clearly quite a few times in the 
+> last days.
+>
+>> And as we've already established the header files are quite different.
+>
+> Is a simple change in the header files a reason to vindicate the people 
+> that changed the licensing terms?  Obviously, it isn't.
+>
+>> Doesn't mean its not somewhat rude but illegal and rude are two very
+>> different things.
+>
+> No, because this change is both rude and illegal.
 
-> We could easily increase this by using per-sta reassembly buffers at no
-> CPU cost [1] but that has the obvious disadvantage of having much higher
-> worst-case memory usage. Thoughts?
+You mixed two completely different things in your email:
 
-The main reason for the original design was in being conservative with
-memory use. After all, this was used for embedded devices with very
-limited memory capabilities and the AP was actually allowing up to 2007
-STAs to be associated. If each associated STA were to use fragmentation
-and if there were large number of lost (un-ACK'ed) frames, the total
-memory buffers needed for the frames could go quite high.
+1. Jiri's patch (that was never merged into Linux) not only removed the 
+   BSD header from dual licenced files but also from not dual licenced
+   files.
 
-Since fragments are commonly sent out in a burst that includes the full
-MSDU, the number of pending fragments from unfinished MSDUs is often
-quite a bit smaller than the worst case.
+2. Theo accused Alan that telling people that it was OK to choose one 
+   licence for dual licenced code was "advising people to break the law".
 
-Anyway, I would be fine with changing this as long as there is a way of
-enforcing the total number of buffered frames to be below a reasonable
-(and preferably configurable) limit.
+Jiri's patch was legally not OK regarding 1. - there's no discussion 
+regarding this.
+
+The point 2 is what the email of Theo that was forwarded to linux-kernel 
+is about and what the discussion is about. That's quite a rude action 
+by Theo unless he's able to prove that this accusation is correct.
+
+> Igor
+
+cu
+Adrian
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
