@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42823 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33959 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932156AbXIFNqK (ORCPT
+	with ESMTP id S1750741AbXIBOiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:46:10 -0400
-Message-Id: <20070905234631.159874000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:29 +0200
+	Sun, 2 Sep 2007 10:38:21 -0400
+Subject: Re: [PATCH] ath5k - License clarification
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 20/21] mac80211: kill IE parse typedef
+To: Mark Kettenis <mark.kettenis@xs4all.nl>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <200709021342.l82DgpP4029155@brahms.sibelius.xs4all.nl>
+References: <200709021342.l82DgpP4029155@brahms.sibelius.xs4all.nl>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5ihOtWjGK9PxAayKC54m"
+Date: Sun, 02 Sep 2007 16:39:27 +0200
+Message-Id: <1188743967.4028.2.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The parse result typedef isn't needed.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-5ihOtWjGK9PxAayKC54m
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/mac80211/ieee80211_sta.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+On Sun, 2007-09-02 at 15:42 +0200, Mark Kettenis wrote:
 
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-09-06 01:35:21.734453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-09-06 01:35:29.454453431 +0200
-@@ -117,11 +117,10 @@ struct ieee802_11_elems {
- 	u8 tspec_len;
- };
- 
--typedef enum { ParseOK = 0, ParseUnknown = 1, ParseFailed = -1 } ParseRes;
-+enum ParseRes { ParseOK = 0, ParseUnknown = 1, ParseFailed = -1 };
- 
--
--static ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
--				       struct ieee802_11_elems *elems)
-+static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
-+					    struct ieee802_11_elems *elems)
- {
- 	size_t left = len;
- 	u8 *pos = start;
+[crap that has been reiterated dozens of times]
 
--- 
+May I remind you that this list is called "linux-wireless" for a reason?
+It's not called "ath5k-legal-vs-bsd" or "bsd-vs-gpl-flamewar" or such so
+there really is no reason to create new threads all the time.
+
+Thanks,
+johannes
+
+--=-5ihOtWjGK9PxAayKC54m
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG2ssf/ETPhpq3jKURApz+AJ9kLWh02/He62RmNiT07gggbdnoRgCgj3Ts
+NpZNYvnSwT9Vjz1wA0N+eIQ=
+=yUnB
+-----END PGP SIGNATURE-----
+
+--=-5ihOtWjGK9PxAayKC54m--
 
