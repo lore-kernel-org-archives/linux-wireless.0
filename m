@@ -1,134 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:34173 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151AbXISDBX (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35929 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752159AbXIBNpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 23:01:23 -0400
-Date: Tue, 18 Sep 2007 22:00:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] softmac: Fix inability to associate with WEP networks,  and the inability to change essid
-Message-ID: <46f090e4.wi04CrQ11sG6gLcC%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 2 Sep 2007 09:45:34 -0400
+Date: Sun, 2 Sep 2007 14:53:51 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Cc: Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070902145351.3a204005@the-village.bc.nu>
+In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	<46D99FB7.6030505@garzik.org>
+	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	<20070901205457.GK9260@stusta.de>
+	<20070902113638.78fbd202@the-village.bc.nu>
+	<Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
+	<20070902115041.GM16016@stusta.de>
+	<Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
+	<20070902134612.28a88761@the-village.bc.nu>
+	<Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 4cf92a3c was submitted as a fix for bug #8686 at bugzilla.kernel.org
-(http://bugzilla.kernel.org/show_bug.cgi?id=8686). Unfortunately, the fix led to
-a new bug, reported by Yoshifuji Hideaki, that prevented association for WEP
-encrypted networks that use ifconfig to control the device. This patch effectively
-reverts the earlier commit and does a proper fix for bug #8686.
+> > Not strictly true. They can either agree to a change and issue one or
+> > they can convey to other parties the right to change the terms. The GPL
+> > for example does this for version selection.
+> 
+> So, under a dual-licensed BSD/GPL code the latter license allows a 
+> developer to remove the GPL license itself and release a single-licensed 
+> BSD code if other parties want to do it?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+If the dual licence permits you to select from two alternatives as
+appears to be the case in
 
-John,
+"* Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation."
 
-This fix replaces my earlier request for reversion of commit 4cf92a3c. As stated
-above, it effectively does the reversion, but it also fixes the original bug.
+Then there is no problem in doing exactly what it says and distributing
+it under the terms of the GPL v2 and the GPL v2 alone (or indeed the BSD
+licence alone). Anyone who took the project code and produced a binary
+only proprietary product from it would for example select the BSD licence
+alone and convey almost no rights at all to their customer.
 
-Larry
----
+> I would assume a file as a boundary of a work in the case that file is 
+> under different licensing terms to the rest of the software package.  On a 
 
- net/ieee80211/softmac/ieee80211softmac_assoc.c |    2
- net/ieee80211/softmac/ieee80211softmac_wx.c    |   54 +++++++++----------------
- 2 files changed, 20 insertions(+), 36 deletions(-)
+Assuming is bad, you should consult caselaw.
 
-Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
-===================================================================
---- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_assoc.c
-+++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
-@@ -273,8 +273,6 @@ ieee80211softmac_assoc_work(struct work_
- 			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
- 			if (ieee80211softmac_start_scan(mac)) {
- 				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
--				mac->associnfo.associating = 0;
--				mac->associnfo.associated = 0;
- 			}
- 			goto out;
- 		} else {
-Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c
-===================================================================
---- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_wx.c
-+++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c
-@@ -70,44 +70,30 @@ ieee80211softmac_wx_set_essid(struct net
- 			      char *extra)
- {
- 	struct ieee80211softmac_device *sm = ieee80211_priv(net_dev);
--	struct ieee80211softmac_network *n;
- 	struct ieee80211softmac_auth_queue_item *authptr;
- 	int length = 0;
- 
- check_assoc_again:
- 	mutex_lock(&sm->associnfo.mutex);
--	/* Check if we're already associating to this or another network
--	 * If it's another network, cancel and start over with our new network
--	 * If it's our network, ignore the change, we're already doing it!
--	 */
- 	if((sm->associnfo.associating || sm->associnfo.associated) &&
- 	   (data->essid.flags && data->essid.length)) {
--		/* Get the associating network */
--		n = ieee80211softmac_get_network_by_bssid(sm, sm->associnfo.bssid);
--		if(n && n->essid.len == data->essid.length &&
--		   !memcmp(n->essid.data, extra, n->essid.len)) {
--			dprintk(KERN_INFO PFX "Already associating or associated to "MAC_FMT"\n",
--				MAC_ARG(sm->associnfo.bssid));
--			goto out;
--		} else {
--			dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
--			/* Cancel assoc work */
--			cancel_delayed_work(&sm->associnfo.work);
--			/* We don't have to do this, but it's a little cleaner */
--			list_for_each_entry(authptr, &sm->auth_queue, list)
--				cancel_delayed_work(&authptr->work);
--			sm->associnfo.bssvalid = 0;
--			sm->associnfo.bssfixed = 0;
--			sm->associnfo.associating = 0;
--			sm->associnfo.associated = 0;
--			/* We must unlock to avoid deadlocks with the assoc workqueue
--			 * on the associnfo.mutex */
--			mutex_unlock(&sm->associnfo.mutex);
--			flush_scheduled_work();
--			/* Avoid race! Check assoc status again. Maybe someone started an
--			 * association while we flushed. */
--			goto check_assoc_again;
--		}
-+		dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
-+		/* Cancel assoc work */
-+		cancel_delayed_work(&sm->associnfo.work);
-+		/* We don't have to do this, but it's a little cleaner */
-+		list_for_each_entry(authptr, &sm->auth_queue, list)
-+			cancel_delayed_work(&authptr->work);
-+		sm->associnfo.bssvalid = 0;
-+		sm->associnfo.bssfixed = 0;
-+		sm->associnfo.associating = 0;
-+		sm->associnfo.associated = 0;
-+		/* We must unlock to avoid deadlocks with the assoc workqueue
-+		 * on the associnfo.mutex */
-+		mutex_unlock(&sm->associnfo.mutex);
-+		flush_scheduled_work();
-+		/* Avoid race! Check assoc status again. Maybe someone started an
-+		 * association while we flushed. */
-+		goto check_assoc_again;
- 	}
- 
- 	sm->associnfo.static_essid = 0;
-@@ -153,13 +139,13 @@ ieee80211softmac_wx_get_essid(struct net
- 		data->essid.length = sm->associnfo.req_essid.len;
- 		data->essid.flags = 1;  /* active */
- 		memcpy(extra, sm->associnfo.req_essid.data, sm->associnfo.req_essid.len);
--	}
--
-+		dprintk(KERN_INFO PFX "Getting essid from req_essid\n");
-+	} else if (sm->associnfo.associated || sm->associnfo.associating) {
- 	/* If we're associating/associated, return that */
--	if (sm->associnfo.associated || sm->associnfo.associating) {
- 		data->essid.length = sm->associnfo.associate_essid.len;
- 		data->essid.flags = 1;  /* active */
- 		memcpy(extra, sm->associnfo.associate_essid.data, sm->associnfo.associate_essid.len);
-+		dprintk(KERN_INFO PFX "Getting essid from associate_essid\n");
- 	}
- 	mutex_unlock(&sm->associnfo.mutex);
- 
+> lot of software packages different modules are covered under different 
+> licensing terms.
+> 
+> We can choose what license terms we will honor; however, we do not have 
+> the ability to remove the licensing terms we do not like.
+
+If the author has conveyed that right to you, then you may usually do so.
+
+Alan
