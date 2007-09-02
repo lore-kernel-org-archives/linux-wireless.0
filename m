@@ -1,83 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:50337 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932487AbXIBBcf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:32:35 -0400
-Date: Sun, 2 Sep 2007 03:32:36 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, misc@openbsd.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070902013236.GF16016@stusta.de>
-References: <20070902000226.GE24887@bofh.cns.ualberta.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:56771 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753181AbXIBOLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2007 10:11:31 -0400
+Message-ID: <46DAC482.5090107@garzik.org>
+Date: Sun, 02 Sep 2007 10:11:14 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070902000226.GE24887@bofh.cns.ualberta.ca>
+To: Krzysztof Halasa <khc@pm.waw.pl>
+CC: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>	<46D99FB7.6030505@garzik.org>	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>	<20070901205457.GK9260@stusta.de>	<20070902113638.78fbd202@the-village.bc.nu>	<Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>	<20070902115041.GM16016@stusta.de>	<Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>	<20070902134612.28a88761@the-village.bc.nu>	<Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es> <m3642txj91.fsf@maximus.localdomain>
+In-Reply-To: <m3642txj91.fsf@maximus.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 06:02:26PM -0600, Bob Beck wrote:
-> >As a free software user and developer, the question I have is how come
-> >the Linux community feels that they can take the BSD code that was
-> >reverse-engineered at OpenBSD, and put a more restrictive licence onto
-> >it, such that there will be no possibility of the changes going back
-> >to OpenBSD, given that the main work on the code has happened at
-> >OpenBSD? (Obviously, such a scenario it is permitted by the licence,
-> >but my question is an ethical one -- after all, most components of
-> >OpenHAL were specifically based on the OpenBSD's ath(4) HAL code.)
-> >
-> >You can see that Christoph Hellwig agrees with this ethical problem,
-> >as in the message below.
-> >
-> >C.
-> >
-> >
-> >>On 28/08/07, Christoph Hellwig <hch@infradead.org> wrote:
-> >> On Tue, Aug 28, 2007 at 12:00:50PM -0400, Jiri Slaby wrote:
-> >> > ath5k, license is GPLv2
-> >> >
-> >> > The files are available only under GPLv2 since now.
-> >>
-> >> Is this really a good idea?  Most of the reverse-engineering was
-> >> done by the OpenBSD folks, and it would certainly be helpful to
-> >> work together with them on new hardware revisions, etc..
-> 
-> I couldn't agree more. The point is, while we BSD license fans know and
-> expect people from private industry to take our stuff and use it, at
-> least private industry does not come to the table with "hey, let's
-> cooperate" - we know who the corporate whores are, and we act accordingly. 
-> 
-> However, when a linux developer comes to us and say "hey lets cooperate"
-> usually there is a thought of "this is a kindred spirit who understands
-> what our mutual goals are and won't stab us in the back".  My concern
-> is that this situation will change if this is not rectified. 
-> 
-> I think the community needs to decide, should cooperation be based on
-> morals and trust, or does the Linux community need to be regarded with
-> less trust than a Corporation, something to be avoided, as while
-> corporations can be counted on to act without morals, the knife is up
-> front and visible. They do not come to you with one hand of
-> cooperation extended and a knife kept behind their back.
+Krzysztof Halasa wrote:
+> WRT Atheros driver I'd probably leave the thing as is (i.e., BSD/GPL
+> = in fact BSD), unless something like 50+% of the code is rewritten -
+> it's mostly their hard work after all, isn't it? Not legal
+> requirement, though.
 
-Theo explicitely accused Alan that telling people that it was OK to 
-choose one licence for dual licenced code was "advising people to break 
-the law".
+Yes.  This deserves to be reinforced:
 
-I hope you agree when talking about "cooperation [...] based on morals 
-and trust" that such accusations should either be proven correct or the 
-moral position of the person who made such accusations becomes quiet 
-weak.
+There is definite value in sharing the ath5k HAL between OpenBSD and Linux.
 
->  -Bob 
+	Jeff
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
