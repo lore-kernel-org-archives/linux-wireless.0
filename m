@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755669AbXIKK2a (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:45998 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753912AbXIBSV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 06:28:30 -0400
-Subject: Re: zd-mac80211: Fix TX status reports.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200709111220.31700.mb@bu3sch.de>
-References: <200709082341.31720.mb@bu3sch.de>
-	 <1ba2fa240709102050l75402df4w19ef746d6243dbab@mail.gmail.com>
-	 <1189505821.6161.1.camel@johannes.berg>  <200709111220.31700.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lLN7ebcHYe2KjyCY64Ja"
-Date: Tue, 11 Sep 2007 12:29:56 +0200
-Message-Id: <1189506596.6161.14.camel@johannes.berg>
+	Sun, 2 Sep 2007 14:21:29 -0400
+Date: Sun, 2 Sep 2007 19:21:15 +0100
+From: Al Viro <viro@ftp.linux.org.uk>
+To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070902182115.GR21089@ftp.linux.org.uk>
+References: <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu> <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es> <20070902115041.GM16016@stusta.de> <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es> <20070902134612.28a88761@the-village.bc.nu> <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Sep 02, 2007 at 03:00:46PM +0200, Igor Sobrado wrote:
+> >Not strictly true. They can either agree to a change and issue one or
+> >they can convey to other parties the right to change the terms. The GPL
+> >for example does this for version selection.
+> 
+> So, under a dual-licensed BSD/GPL code the latter license allows a 
+> developer to remove the GPL license itself and release a single-licensed 
+> BSD code if other parties want to do it?
 
---=-lLN7ebcHYe2KjyCY64Ja
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Exactly.  That's what dual-licensing is.
 
-On Tue, 2007-09-11 at 12:20 +0200, Michael Buesch wrote:
+[quote]
+This is no different from the fact that we have some drivers that are
+GPLv2/BSD licensed. Within the kernel, they are GPLv2. But on their own, 
+you can choose to use them under the BSD license, make your changes to
+them, and release them commercially.
+And correct - I cannot (and neither can anybody else) then accept those
+*non*GPLv2 changes back.
+[end quote]
 
-> What about the following:
-> We have a "the packet failed" IRQ. so we know that if that didn't
-> raise for a packet, it must have succeed.
-> So currently we already maintain a queue of TX packets. What about
-> changing the handling of this queue? Instead of dropping (and
-> telling mac80211 success) on an ACK RX, simply do a timeout.
-> We can calculate the time (plus some additional msecs to be sure)
-> by when an ACK must have arrived, no?=20
+That's from Linus and quite recently.
 
-That's tricky though, because multiple retry rates mean that it can
-possibly take quite a while for the packet to go through. And ath5k
-wants to support up to 7 different rates for each packet.
+FWIW, it's damn hard to codify "... and changes to this code should not
+change the situation".  It's certainly a very good policy and in this
+case it's the only sane policy.
 
-> So, if that times out,
-> signal a success. Wouldn't that be reliable? Given that the "tx failed"
-> IRQ actually _is_ reliable.
+[quote]
+Actually, normally I *do* have such a trust. It's why I have no problem
+with drivers that are dual-GPL/BSD, and in fact, I've told people that I
+don't want them to turn them into GPL-only, because that is simply not   
+polite.
+[end quote]
 
-Yeah, and in-order would have to be guaranteed as well so we can match
-which packet failed and assume all previous ones were OK.
-
-johannes
-
---=-lLN7ebcHYe2KjyCY64Ja
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG5m4k/ETPhpq3jKURArJEAJwJdy47X03Rs6GITnwgWQvL8x/cRwCgk/op
-0SBFRzdHdkhFKAPrQM9bzQ4=
-=bHY2
------END PGP SIGNATURE-----
-
---=-lLN7ebcHYe2KjyCY64Ja--
-
+Same posting from Linus.  And that's much more relevant to shooting the patch
+in question down (and IMO it ought to be shot down) than references to
+legality.
