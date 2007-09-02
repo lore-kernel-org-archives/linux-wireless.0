@@ -1,163 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151AbXIANix (ORCPT
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:33225 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932216AbXIBAJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 09:38:53 -0400
-Subject: Re: [PATCH] mac80211: fix race conditions with keys
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1188484758.3978.18.camel@johannes.berg>
-References: <1188484758.3978.18.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 01 Sep 2007 15:40:12 +0200
-Message-Id: <1188654012.7585.151.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 20:09:11 -0400
+Date: Sun, 2 Sep 2007 02:09:13 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070902000913.GB16016@stusta.de>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com> <20070901215225.GM9260@stusta.de> <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I should note that this opens a race condition when you rekey, it could
-happen that we transmit packets while not having a key at all. We could
-avoid that but the patch is largish and complex (below), not sure if
-it's worth it. It's not something that may cause crashes or such, the
-worst case really is that we transmit frames unencrypted.
+On Sat, Sep 01, 2007 at 07:29:39PM -0400, Constantine A. Murenin wrote:
+> On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
+> > On Sat, Sep 01, 2007 at 05:27:03PM -0400, Constantine A. Murenin wrote:
+> > > On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
+> > > > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
+> > > > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
+> > > > > > Constantine A. Murenin wrote:
+> > > > > > > This will hopefully help diminish certain myths about the code licensing.
+> > > > > >
+> > > > > > What myth?  The myth that Theo understands dual licensing?
+> > > > >
+> > > > > Reyk's code was never dual licensed, so it's not like it even matters
+> > > > > to the original dispute.
+> > > >
+> > > > It's no longer dual licenced in the FreeBSD tree because the FreeBSD
+> > > > people removed the GPL choice of the dual licenced code 3 months ago.
+> > >
+> > > FreeBSD doesn't have Reyk's ath(4) HAL, which OpenHAL is based on.
+> > >
+> > > FreeBSD has a driver written by Sam, and a binary-only HAL, also written by Sam.
+> > >
+> > > > So all of Theo's accusations of people breaking the law by making this
+> > > > dual licenced code GPL-only apply as well to the FreeBSD people...
+> > >
+> > > How? FreeBSD doesn't have Reyk's ath(4) HAL from OpenBSD, so there are
+> > > no possible licensing accusations and violations.
+> >
+> > OK, I begin to understand this, there seem to be three different types
+> > of files changed by Jiri's patch:
+> > 1. dual licenced files planned to make GPL-only
+> > 2. previously dual licenced files with a too recent version used planned
+> >    to make GPL-only
+> > 3. never dual licenced files planned to make GPL-only
+> >
+> > For files under 1. and 2. Reyk did contribute to dual licenced code
+> > without touching the licence, but I missed that there's also code unter 3.
+> >
+> > So there is a problem, but not with the code under 1. (unless you plan
+> > to change the semantics of the word "alternatively"), the problem is
+> > with some headers under 2. plus the code under 3.
+> >
+> > It's funny how Theo missed the part of Jiri's patch that actually is a
+> > copyright violation and instead complains about the part that is OK...
+> 
+> I'm not sure how you conclude that Theo missed the relevant parts --
+> there were many messages posted to misc@openbsd.org mailing list and
+> to The OpenBSD Journal in the last few days, and to me it appears as
+> all of the problems were discussed ad nauseam.
+>...
 
-johannes
+Then it's your fault that you forwarded the wrong email - in the email 
+you forwarded the only action for which Theo accused the Linux 
+developers of breaking the law was for choosing one licence when using 
+dual licenced code.
 
----
- net/mac80211/key.c |   88 +++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 76 insertions(+), 12 deletions(-)
+> After the obvious copyright violations were addressed, I think the
+> problem started being an ethical one.
+> 
+> As a free software user and developer, the question I have is how come
+> the Linux community feels that they can take the BSD code that was
+> reverse-engineered at OpenBSD, and put a more restrictive licence onto
+> it, such that there will be no possibility of the changes going back
+> to OpenBSD, given that the main work on the code has happened at
+> OpenBSD? (Obviously, such a scenario it is permitted by the licence,
+> but my question is an ethical one -- after all, most components of
+> OpenHAL were specifically based on the OpenBSD's ath(4) HAL code.)
+> 
+> You can see that Christoph Hellwig agrees with this ethical problem,
+> as in the message below.
 
---- wireless-dev.orig/net/mac80211/key.c	2007-09-01 15:33:16.702769870 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-09-01 15:33:17.482769870 +0200
-@@ -109,6 +109,29 @@ static void ieee80211_key_disable_hw_acc
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
- }
- 
-+/*
-+ * Make a copy of the key including key material,
-+ * does not copy the AES crypto state.
-+ */
-+static struct ieee80211_key *ieee80211_key_clone(struct ieee80211_key *key)
-+{
-+	struct ieee80211_key *result;
-+	int size;
-+
-+	if (!key)
-+		return NULL;
-+
-+	size = sizeof(*result) + key->conf.keylen;
-+
-+	result = kmalloc(size, GFP_KERNEL);
-+	if (!result)
-+		return NULL;
-+
-+	memcpy(result, key, size);
-+
-+	return result;
-+}
-+
- struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
- 					  struct sta_info *sta,
- 					  enum ieee80211_key_alg alg,
-@@ -116,7 +139,8 @@ struct ieee80211_key *ieee80211_key_allo
- 					  size_t key_len,
- 					  const u8 *key_data)
- {
--	struct ieee80211_key *key;
-+	struct ieee80211_key *key, *old;
-+	struct ieee80211_key **replace;
- 
- 	BUG_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS);
- 	BUG_ON(alg == ALG_NONE);
-@@ -156,13 +180,9 @@ struct ieee80211_key *ieee80211_key_allo
- 
- 	ieee80211_debugfs_key_add(key->local, key);
- 
--	/* remove key first */
--	if (sta)
--		ieee80211_key_free(sta->key);
--	else
--		ieee80211_key_free(sdata->keys[idx]);
--
- 	if (sta) {
-+		replace = &sta->key;
-+
- 		ieee80211_debugfs_key_sta_link(key, sta);
- 
- 		/*
-@@ -172,6 +192,8 @@ struct ieee80211_key *ieee80211_key_allo
- 		if (sta->flags & WLAN_STA_WME)
- 			key->conf.flags |= IEEE80211_KEY_FLAG_WMM_STA;
- 	} else {
-+		replace = &sdata->keys[idx];
-+
- 		if (sdata->type == IEEE80211_IF_TYPE_STA) {
- 			struct sta_info *ap;
- 
-@@ -186,14 +208,56 @@ struct ieee80211_key *ieee80211_key_allo
- 		}
- 	}
- 
--	/* enable hwaccel if appropriate */
-+	/*
-+	 * Now it gets tricky. To avoid sending unencrypted packets
-+	 * because we have no key at some point, first clone the old
-+	 * key and put it to use without hw accel.
-+	 *
-+	 * Then we can safely free the previous one and remove it from
-+	 * hardware acceleration.
-+	 */
-+	if (*replace && ((*replace)->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
-+		struct ieee80211_key *clone;
-+
-+		old = *replace;
-+
-+		/*
-+		 * If we fail to clone, we have to live with a short window
-+		 * where we may be sending frames unencrypted.
-+		 */
-+		clone = ieee80211_key_clone(old);
-+		if (clone)
-+			clone->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+
-+		/* now put the clone to use (if any) */
-+		rcu_assign_pointer(*replace, clone);
-+		synchronize_rcu();
-+
-+		/*
-+		 * We only copied the pointer to the AES tfm,
-+		 * those can't be refcounted or such.
-+		 */
-+		old->u.ccmp.tfm = NULL;
-+
-+		/* free original, removing it from hw accel */
-+		ieee80211_key_free(old);
-+	}
-+
-+	/*
-+	 * At this point, the key that's in use (if any) is not uploaded
-+	 * to the hardware, so we can freely upload the new one.
-+	 */
- 	if (netif_running(key->sdata->dev))
- 		ieee80211_key_enable_hw_accel(key);
- 
--	if (sta)
--		rcu_assign_pointer(sta->key, key);
--	else
--		rcu_assign_pointer(sdata->keys[idx], key);
-+	old = *replace;
-+
-+	/* put the new key to use */
-+	rcu_assign_pointer(*replace, key);
-+	synchronize_rcu();
-+
-+	/* and free the old one */
-+	ieee80211_key_free(old);
- 
- 	list_add(&key->list, &sdata->key_list);
- 
+Is it a legal problem or is it "only" an ethical problem?
 
+If choosing one licence when using dual licenced code is not a legal 
+problem then Theo repeatedly talking about it would "break the law" in 
+the email you forwarded was very unethical and the worst he could do
+for his cause.
+
+> C.
+>...
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
