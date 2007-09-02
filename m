@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:22734 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045AbXISSZT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:25:19 -0400
-Received: by an-out-0708.google.com with SMTP id d31so42704and
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 11:25:18 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-Date: Wed, 19 Sep 2007 20:31:19 +0200
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20070918213202.GJ4940@tuxdriver.com>
-In-Reply-To: <20070918213202.GJ4940@tuxdriver.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56176 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754466AbXIBCAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 22:00:51 -0400
+Message-ID: <46DA194F.9030303@garzik.org>
+Date: Sat, 01 Sep 2007 22:00:47 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709192031.19934.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+CC: Theo de Raadt <deraadt@cvs.openbsd.org>,
+	Bob Beck <beck@bofh.cns.ualberta.ca>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, misc@openbsd.org
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+References: <20070902000226.GE24887@bofh.cns.ualberta.ca>	 <200709020036.l820aaNf014181@cvs.openbsd.org> <f34ca13c0709011852w7f2c14cevdd08582a0ba5ddf5@mail.gmail.com>
+In-Reply-To: <f34ca13c0709011852w7f2c14cevdd08582a0ba5ddf5@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Constantine A. Murenin wrote:
+> Indeed, it's upsetting that people like Luis Rodriguez push for the
+> lawyers to be involved to (fight?) an open source project. Why, may I
+> ask?
 
-> This patch adds the rt2x00 drivers for Ralink wireless hardware.
-> This collection of drivers has seen lots of action in Fedora (both
-> F7 and rawhide) and many people are using them with good results
-> (although some problems do remain).
-> 
-> Ivo in particular has been very helpful in responding to bug reports
-> for these drivers, including bugs reported at kernel.org and in
-> distro bugzillas.  I extend my thanks to him for both his past and
-> future support of these drivers.  I'm sure he and the rest of the
-> rt2x00 team will continue to support the community and their userbase.
-> 
-> Ivo and his team may feel I am jumping the gun a bit -- they have
-> a few more random bugs they wanted to squash before going upstream.
-> But since they are bugs, any fixes should still be able to be applied
-> in the -rc phase of 2.6.24.  In the meantime, I definitely think it
-> would be better to get this code into mainline rather than keeping
-> it out of stream.
 
-With 2.6.23 not yet released, I assume we still have a few months to get
-rt2x00 shaped up to be really ready for 2.6.24?
-Because I am indeed not really happy with this early merge, but I'll do my
-best to resolve the last outstanding bugs as soon as possible.
+Is it not self-evident?  Legal review is the sane course of action, when 
+legal issues are the bone of contention.
 
-Ivo
+That said, Linux people are far more pragmatic than FSF people, and 
+often disagree with the FSF.  I would not take an FSF lawyer's word as 
+Gospel.
+
+Theo manages to confuse "Linux" and "FSF" quite often, but that's 
+characteristic of his muddled thinking and inexperience.
+
+	Jeff
+
+
