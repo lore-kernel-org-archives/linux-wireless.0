@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45454 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbXI2NL6 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:24296 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933221AbXIBBmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 09:11:58 -0400
-Subject: Re: iwlwifi scan question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ian Schram <ischram@telenet.be>
-Cc: Tomas Winkler <tomas.winkler@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46FE4E50.2010300@telenet.be>
-References: <1190815228.4204.9.camel@johannes.berg>
-	 <46FE4E50.2010300@telenet.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QqaDmZb6DqbzNo5kkr7e"
-Date: Sat, 29 Sep 2007 15:13:16 +0200
-Message-Id: <1191071596.22960.84.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 21:42:55 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4210681pyb
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 18:42:54 -0700 (PDT)
+Message-ID: <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
+Date: Sat, 1 Sep 2007 21:42:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+Subject: Re: That whole "Linux stealing our code" thing
+Cc: "Jeff Garzik" <jeff@garzik.org>,
+	"Jason Dixon" <jason@dixongroup.net>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
+In-Reply-To: <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	 <46D99FB7.6030505@garzik.org>
+	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>
+	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
+	 <46DA1315.9060002@garzik.org>
+	 <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 9/1/07, Constantine A. Murenin <mureninc@gmail.com> wrote:
+> On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
+> > Jason Dixon wrote:
+> > > Once the grantor (Reyk) releases his code under that license, it must
+> > > remain.  You are free to derive work and redistribute under your
+> > > license, but the original copyright and license permission remains
+> > > intact.  Many other entities (Microsoft, Apple, Sun, etc) have used BSD
+> > > code and have no problem understanding this.  Why is this so difficult
+> > > for the Linux brain share to absorb?
+> >
+> > Why is it so difficult to understand dual licensing?
+>
+> Maybe because Reyk's code was never dual-licensed?
 
---=-QqaDmZb6DqbzNo5kkr7e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We asked SFLC to work with us to make sure that everyone's copyrights
+were respected in the right places, and that the licenses various developers
+wanted for their copyrights were implemented correctly.  The patch I sent
+implements SFLC's suggestions in that regard.
 
-On Sat, 2007-09-29 at 15:08 +0200, Ian Schram wrote:
-
-> I couldn't follow all the rest of this thread but i think the patch below
-> is what you were initially after.
-
-Not in this thread really, I was just curious here because I was
-thinking of disentangling the scan and sta state machines.
-
-> I'll also send this patch to ipw3945-devel mailinglist, so it can take th=
-e
-> same route as my other patches.
-
-If it works you only need to fix the whitespace issue:
-
-+       memcpy(priv->mac_addr,conf->mac_addr, ETH_ALEN);
-                              ^ missing space
-
-and sign it off and that might address one of the points I pointed out.
-However, when the interface is removed again you should also clear the
-MAC address in the hardware or set the hardware to monitor mode so it no
-longer acknowledges packets when in pure monitor mode.
-
-Also, a full filter flags implementation would be good.
-
-johannes
-
---=-QqaDmZb6DqbzNo5kkr7e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARv5Pa6Vg1VMiehFYAQIJkQ//XlzhLc9tWRj98h02Z61jHgjIkd4B6OT1
-vyhotsVZ7N73rI+IIPbYJDWohIQcjkj8bNknbXBbeU5wPj3cvpCkB8xEGrT5l4A/
-P9s2Oyl3Of71E5eqXxonK56yq79a2HPPRcCueu0QQywCqPSU/WpY/BAM4kn4jNZd
-yw9cpUM2e/djjNxgwmr4hds5UIDO7k+VyJ/+9/u5e1PuBi/7HvKYFYnXaom40+Xp
-KMoEDtDD58V7YCGapS7jrV5KmcEcf/g9dFl3IE2Bv+fMcVpoO5KSs8kP+fqrEJMr
-Q9BkVqe92XkxuobxNRBgobSoTO1wzZEJiX78xHbLRvQqnPFFIwVAH19E6VyAIJvE
-NgkfQ2x5QTGn/PojYg+vwLp14DTF7S+WCzdDazmAMUSVChctz3MBRvUjUWCN/21V
-ewJ+BF+TWRqhcmiW3N+V7LObVh/e5AdrfktphdEoH2B6t7DXIbrriuHNQmvlZPEE
-nK7QmdvlJD5uwAzHh+2AlNi38VQjrW40+fefGDKBk3HhaW0EJX4u/LECnshhi4N0
-xtGSpfvp7/l6i52BhQZ+1AMKZE/HvDxssMphrGmDOEdlrRGlYkVSQfB2702C1OP8
-QpSAwW9jcEeMehWk1zdMB5BPZHmiZ3XojMpExdHhDmzzaFAC5Jab63XDipTFZPAK
-lZYfqzgGw9k=
-=tnKu
------END PGP SIGNATURE-----
-
---=-QqaDmZb6DqbzNo5kkr7e--
-
+  Luis
