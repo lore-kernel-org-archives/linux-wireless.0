@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:48877 "HELO
-	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S964945AbXIGI1f convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 04:27:35 -0400
-Date: Fri, 7 Sep 2007 01:20:53 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: request for information about the "ath5k" licensing
-To: linux-wireless@vger.kernel.org, Reyk Floeter <reyk@openbsd.org>
+Received: from mail-out5.netspace.net.au ([203.10.110.92]:62840 "EHLO
+	mail.netspace.net.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753413AbXIBCpq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 22:45:46 -0400
+Date: Sun, 2 Sep 2007 12:22:53 +1000
+From: Jonathan Gray <jsg@goblin.cx>
+To: Jason Dixon <jason@dixongroup.net>
+Cc: bunk@kernel.org, mureninc@gmail.com, jeff@garzik.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jirislaby@gmail.com,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: That whole "Linux stealing our code" thing
+Message-ID: <20070902022253.GA18201@mail.netspace.net.au>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <302924.76562.qm@web51403.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reyk Floeter wrote:
-> I'm still waiting for an answer. Your process is taking too long.
-> 
-> Reyk
+On Sat, Sep 01, 2007 at 08:36:24PM -0400, Jason Dixon wrote:
+>
+> On Sep 1, 2007, at 5:52 PM, Adrian Bunk wrote:
+>
+>> OK, I begin to understand this, there seem to be three different types
+>> of files changed by Jiri's patch:
+>> 1. dual licenced files planned to make GPL-only
+>> 2. previously dual licenced files with a too recent version used planned
+>>    to make GPL-only
+>> 3. never dual licenced files planned to make GPL-only
+>>
+>> For files under 1. and 2. Reyk did contribute to dual licenced code
+>> without touching the licence, but I missed that there's also code unter 3.
+>>
+>> So there is a problem, but not with the code under 1. (unless you plan
+>> to change the semantics of the word "alternatively"), the problem is
+>> with some headers under 2. plus the code under 3.
+>
+> The BSD license plainly states:
+>
+> "Permission to use, copy, modify, and/or distribute this software for any
+> purpose with or without fee is hereby granted, provided that the above
+> copyright notice and this permission notice appear in all copies."
+>
+> Once the grantor (Reyk) releases his code under that license, it must 
+> remain.  You are free to derive work and redistribute under your license, 
+> but the original copyright and license permission remains intact.  Many 
+> other entities (Microsoft, Apple, Sun, etc) have used BSD code and have no 
+> problem understanding this.  Why is this so difficult for the Linux brain 
+> share to absorb?
+>
+> As a former Linux advocate and current OpenBSD user/developer, I'm appalled 
+> that fellow open-source developers would see fit to cavalierly disregard 
+> the rights of the original copyright holder.  You wield the GPL when it 
+> suits you, and trample the courtesies of non-GPL developers just because 
+> you [think you] can.  As bad as Jiri's offense was, it pales to the 
+> impudence displayed by Alan Cox, one of the so-called defenders of free 
+> software.
 
-Reyk (and everybody else),
-I'm writing as a silent observer, not as an involved (until now) party. I will restrict my answer mostly to links to information I consider key facts of this whole affair:
+>From http://www.mac.linux-m68k.org/docs/macpaper.php
 
-The development of the Linux Atheros driver (both for the official Atheros HAL and your work) takes place at www.madwifi.org. The SVN branch based on openhal can be found here:
-http://madwifi.org/browser/branches/ath5k
-Going back in the version history you WILL find revisions with the changed license. This mistake has been corrected in revision 2699.
+"Always be the second operating system port to an undocumented platform.
+The sterling work done by the OpenBSD/Mac team was a huge help to the
+Linux project. I'm also happy to say that while half of the world may
+sit on usenet advocacy groups throwing manure the relationship between
+the Linux and BSD Macintosh teams has always been one of mutual
+co-operation. Together we advance our detective work and knowledge of
+the Macintosh platforms to the good of all Macintosh users dumped"
 
-The patches from the openhal team at madwifi.org have been merged into the "official" Linux wireless repository. You can find the branch that includes the ath5k driver here:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-dev.git;a=summary
-the ath5k files are here:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-dev.git;a=tree;f=drivers/net/wireless;h=2d6caeba0924c34b9539960b9ab568ab3d193fc8;hb=everything
-(look for the ath5k files). Going back in the revision history you will find, that the proposed license changes where never applied:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-dev.git;a=history;f=drivers/net/wireless/ath5k_hw.c;h=07ad1278b39037caf68825cabcf9469db059dfc8;hb=everything
+Alan Cox circa 1999.
 
-The mail that started this affair was:
-http://marc.info/?l=linux-wireless&m=118831729905625&w=2
+http://lists.freedesktop.org/archives/xorg/2007-August/027419.html
 
-If you follow this thread, you will see, that the obvious problems were immediately flagged in the review process.
+"well I'd be quite happy to see X go GPL but I'm aware
+thats not the intention of the project ;)"
 
-Next thing: While the proposed change was obviously bad, it *SEEMS* that this was a honest mistake. The following mail
-by Sam Leffler suggest, that Jiri Slaby tried to get the consent of the *BSD developers:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/5305
+Alan Cox circa 2007.
 
-Most of the ensuing flame war centered around whether it was illegal to change the license of those dual licensed files. Alan Cox stated in
-http://article.gmane.org/gmane.linux.network/70533
-"So whats the problem ?"
-Theo de Raadt in http://thread.gmane.org/gmane.os.openbsd.misc/127782
-wrote "Alan asks "So whats the problem ?".  Well, Alan, I must caution you -- your post is advising people to break the law."
-
-This made a lot of people upset and the whole thing went out of hand.
-
-It was more or less finally settled with the following mail:
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/5303
-
-This affair *NEVER* came close to what one would consider the official Linux repository, e.g. Linus tree:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=summary
-
-And for Linus' position to BSD vs. GPL in drivers is summarized here:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/5452
-
-Kind regards
-  Joerg
- 
---  
-Regards
- 
-       Joerg
- 
-
-
-
-
-
-
-      Machen Sie Yahoo! zu Ihrer Startseite. Los geht's: 
-http://de.yahoo.com/set
+What changed? Why are you guys setting out to break all of the
+work underpinning UNIX and the Internet done in the 80s at
+Berkeley? The reason the protocols and infrastructure took
+off in the first place is due to liberal licenses that let everyone
+be involved, not wrapping things up in more restrictions and lawyers.
