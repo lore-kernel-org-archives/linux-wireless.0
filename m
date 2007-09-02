@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:40403 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752156AbXIAJCt (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33360 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755187AbXIBKKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 05:02:49 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id A3BE51804B257
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 10:02:48 +0100 (BST)
-Received: from meerkat.home.warmcat.com (unknown [192.168.0.242])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id B5304104B2
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 09:03:53 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by meerkat.home.warmcat.com (Postfix) with ESMTP id 0F10812F34EF
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 10:02:44 +0100 (BST)
-From: warmcat <andy@warmcat.com>
-Subject: [PATCH] mac80211: get STA after tx radiotap snipped
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 10:02:44 +0100
-Message-ID: <20070901090244.7234.51990.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 2 Sep 2007 06:10:19 -0400
+Date: Sun, 2 Sep 2007 11:18:24 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jonathan Gray <jsg@goblin.cx>
+Cc: Jason Dixon <jason@dixongroup.net>, bunk@kernel.org,
+	mureninc@gmail.com, jeff@garzik.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com
+Subject: Re: That whole "Linux stealing our code" thing
+Message-ID: <20070902111824.153bc036@the-village.bc.nu>
+In-Reply-To: <20070902022253.GA18201@mail.netspace.net.au>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	<46D99FB7.6030505@garzik.org>
+	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	<20070901205457.GK9260@stusta.de>
+	<3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
+	<20070902022253.GA18201@mail.netspace.net.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg noticed that in __ieee80211_tx_prepare() we try to get the
-STA from addr1 of the ieee80211 header when the radiotap header is actually
-still at the front of the packet.  This patch defers doing that until the
-radiotap header is gone.
+> co-operation. Together we advance our detective work and knowledge of
+> the Macintosh platforms to the good of all Macintosh users dumped"
+> 
+> Alan Cox circa 1999.
+> 
+> http://lists.freedesktop.org/archives/xorg/2007-August/027419.html
+> 
+> "well I'd be quite happy to see X go GPL but I'm aware
+> thats not the intention of the project ;)"
+> Alan Cox circa 2007.
+> 
+> What changed? 
 
-Signed-off-by: Andy Green <andy@warmcat.com>
----
+Nothing that I am aware of. You can't take Linux/Mac68K code back into
+BSD either. BSD code is being used according to the BSD licence. You
+could adopt a different licence if the way your code is being used
+bothers you, thats.
 
- net/mac80211/tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Where I've reused BSD code I've aways tried to contribute it back to the
+BSD people or share the knowledge (and the knowledge far more than the
+code mattered both ways for Mac68K systems)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 902d5b4..075f982 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -950,8 +950,6 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
- 	tx->dev = dev; /* use original interface */
- 	tx->local = local;
- 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	tx->sta = sta_info_get(local, hdr->addr1);
--	tx->fc = le16_to_cpu(hdr->frame_control);
- 
- 	/*
- 	 * set defaults for things that can be set by
-@@ -976,6 +974,8 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
- 		res = TXRX_QUEUED; /* indication it was monitor packet */
- 	}
- 
-+	tx->sta = sta_info_get(local, hdr->addr1);
-+	tx->fc = le16_to_cpu(hdr->frame_control);
- 	tx->u.tx.control = control;
- 	if (is_multicast_ether_addr(hdr->addr1)) {
- 		tx->flags &= ~IEEE80211_TXRXD_TXUNICAST;
+I suggest you read drivers/net/wan/syncppp.c, which is I think the only
+BSD derived bit of code of mine left in the kernel - and its quite
+specific what it says.
 
+Ath5k isn't my code so I don't get to pick. Having the OpenBSD maintainer
+make bogus remarks about that doesn't help anyone, especially when he's
+wrong and doesn't appear to know about the subject in the first place.
+
+Alan
