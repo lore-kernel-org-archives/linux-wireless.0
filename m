@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58620 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577AbXIXR0k (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:55963 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbXIBCHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 13:26:40 -0400
-Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and  initvals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	Christoph Hellwig <hch@infradead.org>
-In-Reply-To: <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>
-References: <3175698652466923884@pripojeni.net>
-	 <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fOnFPrpoHlq9yjtdyEw2"
-Date: Mon, 24 Sep 2007 19:27:56 +0200
-Message-Id: <1190654876.18521.276.camel@johannes.berg>
+	Sat, 1 Sep 2007 22:07:04 -0400
+Date: Sun, 2 Sep 2007 03:06:57 +0100
+From: Al Viro <viro@ftp.linux.org.uk>
+To: Casey Dahlin <cjdahlin@ncsu.edu>
+Cc: "Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>,
+	Jason Dixon <jason@dixongroup.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jirislaby@gmail.com,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: That whole "Linux stealing our code" thing
+Message-ID: <20070902020657.GP21089@ftp.linux.org.uk>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net> <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com> <46DA18C2.1000104@ncsu.edu>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46DA18C2.1000104@ncsu.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 01, 2007 at 09:58:26PM -0400, Casey Dahlin wrote:
+> Suppose you saw some other variant of *nix that had some code you wanted 
+> to use, but there was a gaping security hole in it. Wouldn't you patch 
+> it before you incorporated it? and would it be your fault if this fix 
+> made the code not work with the original?
+> 
+> We took the code and fixed a gaping security vulnerability that appeared 
+> within the opening comment. We DO care who does what with our code, and 
+> we fully intend to cover our balls.
 
---=-fOnFPrpoHlq9yjtdyEw2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2007-09-24 at 13:24 -0400, Luis R. Rodriguez wrote:
-
-> * ath5k_hw_set_rfgain_opt() is defined once and used once, can we
-> instead make it inline? If we really are not going to re-use this
-> later why do we put it into a routine on its own?
-
-Why mark it inline then? The compiler will inline it anyway if it's only
-used once. And I haven't looked at the code but making it an own routine
-could possibly make the code more readable, especially if lots of
-indentation is involved.`
-
-johannes
-
---=-fOnFPrpoHlq9yjtdyEw2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG9/Oc/ETPhpq3jKURAmKiAKC6gTZO1prnTavPh24ppNDegt/yigCgsoiA
-NQtNJeIz6wVGNwQBjKH5cU4=
-=ppl0
------END PGP SIGNATURE-----
-
---=-fOnFPrpoHlq9yjtdyEw2--
-
+Who's "we" and would you mind showing your contributions to the tree?
+git doesn't seem to find them in 2.5.0-to-current for some reason...
