@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2970 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751535AbXISVll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 17:41:41 -0400
-Date: Wed, 19 Sep 2007 17:26:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: hch@infradead.org, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net
-Subject: Re: Please pull 'p54' branch of wireless-2.6
-Message-ID: <20070919212607.GA3036@tuxdriver.com>
-References: <20070919195527.GD5483@tuxdriver.com> <20070919210405.GA2231@infradead.org> <20070919.141200.56568833.davem@davemloft.net>
+Received: from sovereign.computergmbh.de ([85.214.69.204]:50196 "EHLO
+	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965608AbXIBLko (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2007 07:40:44 -0400
+Date: Sun, 2 Sep 2007 13:40:43 +0200 (CEST)
+From: Jan Engelhardt <jengelh@computergmbh.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+cc: Bob Beck <beck@bofh.cns.ualberta.ca>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Fwd: That whole "Linux stealing our code" thing 
+In-Reply-To: <200709020036.l820aaNf014181@cvs.openbsd.org>
+Message-ID: <Pine.LNX.4.64.0709021336040.14556@fbirervta.pbzchgretzou.qr>
+References: <200709020036.l820aaNf014181@cvs.openbsd.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070919.141200.56568833.davem@davemloft.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 02:12:00PM -0700, David Miller wrote:
-> From: Christoph Hellwig <hch@infradead.org>
-> Date: Wed, 19 Sep 2007 22:04:05 +0100
-> 
-> > PLease put it into a separate subdirectory, thanks.
-> > 
-> > Also net2280.h seems rather oddly named.
-> 
-> The next time I rebase I'll try to take care of this for both
-> this driver and the iwlwifi stuff.
 
-Fine by me, although I swear I remember complaints about adding separate
-directories for drivers...*shrug*...
+On Sep 1 2007 18:36, Theo de Raadt wrote:
+>
+>When companies have taken our wireless device drivers, many many of
+>them have given changes and fixes back.  Some maybe didn't, but that
+>is OK.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+For companies it's ok, but for linux people it is not?
+
+(1) You do not know how much of the modifications companies did
+    are actually returned
+
+(2) You do not know whether the ath5k linux part authors will
+    give back at a later point (much like companies)
+
