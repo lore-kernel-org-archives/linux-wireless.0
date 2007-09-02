@@ -1,197 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:12662 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825AbXINAGQ (ORCPT
+Received: from fresno.net.uniovi.es ([156.35.11.2]:56088 "EHLO
+	FRESNO.NET.UNIOVI.ES" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965065AbXIBNAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 20:06:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1426049pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2007 17:06:16 -0700 (PDT)
-Message-ID: <43e72e890709131706p565bd955m1b9820198cafa7fa@mail.gmail.com>
-Date: Thu, 13 Sep 2007 20:06:15 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] Internalize Atheros Turbo modes and Turbo modulation
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>, "Jiri Slaby" <jirislaby@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_23111_32298380.1189728375748"
+	Sun, 2 Sep 2007 09:00:49 -0400
+Date: Sun, 02 Sep 2007 15:00:46 +0200 (CEST)
+From: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+In-reply-to: <20070902134612.28a88761@the-village.bc.nu>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Message-id: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+ <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+ <46D99FB7.6030505@garzik.org>
+ <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+ <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu>
+ <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
+ <20070902115041.GM16016@stusta.de>
+ <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
+ <20070902134612.28a88761@the-village.bc.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_23111_32298380.1189728375748
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Sun, 2 Sep 2007, Alan Cox wrote:
 
-This patch:
+>> So, a multi-licensed file remains multi-licensed except when all authors
+>> agree about a change in the licensing terms.  And it is clear on the BSD
+>
+> Not strictly true. They can either agree to a change and issue one or
+> they can convey to other parties the right to change the terms. The GPL
+> for example does this for version selection.
 
-* Internalizes Atheros Turbo modes (MODE_ATHEROS_TURBO, MODE_ATHEROS_TURBOG)
+So, under a dual-licensed BSD/GPL code the latter license allows a 
+developer to remove the GPL license itself and release a single-licensed 
+BSD code if other parties want to do it?
 
-* Internatizes Turbo modulation (MODULATION_TURBO)
+> A multi-licensed work (note work not file - don't assume a file is a
+> boundary of a work) which conveys the choice of licence (as some bits of
+> ath5k did) allows a receiving party to choose the licence it wishes.
+> Failing that OpenBSD would have turned itself GPL by adding that file as
+> according to your argument "it must be distributed under *all* these
+> licensing terms concurrently".
 
-* Adds documention for Atheros Turbo modes (MODE_ATHEROS_TURBO,
-MODE_ATHEROS_TURBOG), Turbo modulation (MODULATION_TURBO) and XR
-modulation (MODULATION_XR)
+I would assume a file as a boundary of a work in the case that file is 
+under different licensing terms to the rest of the software package.  On a 
+lot of software packages different modules are covered under different 
+licensing terms.
 
-This patch is intended for the ath5k branch of wireless-dev after a
-pull from origin/everything once
-01-remove-atheros-turbo-from-mac80211.diff is applied.
+We can choose what license terms we will honor; however, we do not have 
+the ability to remove the licensing terms we do not like.
 
-drivers/net/wireless/ath5k_base.c |    2 +-
-1 files changed, 1 insertions(+), 1 deletions(-)
-
-Changes-licensed-under: BSD
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
-drivers/net/wireless/ath5k.h    |   86 +++++++++++++++++++++++++++++++++------
-drivers/net/wireless/ath5k_hw.c |    4 +-
-2 files changed, 76 insertions(+), 14 deletions(-)
-
-Changes-licensed-under: ISC
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>
-CC: Johannes Berg <johannes@sipsolutions.net
-
-  Luis
-
-------=_Part_23111_32298380.1189728375748
-Content-Type: text/x-patch; name="03-ath5k-internalize-vendor-modes.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="03-ath5k-internalize-vendor-modes.diff"
-X-Attachment-Id: f_f6jxkt9b
-
-W1BBVENIXSBJbnRlcm5hbGl6ZSBBdGhlcm9zIFR1cmJvIG1vZGVzIGFuZCBUdXJibyBtb2R1bGF0
-aW9uCgpUaGlzIHBhdGNoOgoKKiBJbnRlcm5hbGl6ZXMgQXRoZXJvcyBUdXJibyBtb2RlcyAoTU9E
-RV9BVEhFUk9TX1RVUkJPLCAKICBNT0RFX0FUSEVST1NfVFVSQk9HKQoKKiBJbnRlcm5hdGl6ZXMg
-VHVyYm8gbW9kdWxhdGlvbiAoTU9EVUxBVElPTl9UVVJCTykKCiogQWRkcyBkb2N1bWVudGlvbiBm
-b3IgQXRoZXJvcyBUdXJibyBtb2RlcyAoTU9ERV9BVEhFUk9TX1RVUkJPLAogIE1PREVfQVRIRVJP
-U19UVVJCT0cpLCBUdXJibyBtb2R1bGF0aW9uIChNT0RVTEFUSU9OX1RVUkJPKSBhbmQgWFIKICBt
-b2R1bGF0aW9uIChNT0RVTEFUSU9OX1hSKQoKVGhpcyBwYXRjaCBpcyBpbnRlbmRlZCBmb3IgdGhl
-IGF0aDVrIGJyYW5jaCBvZiB3aXJlbGVzcy1kZXYgYWZ0ZXIgYSBwdWxsCmZyb20gb3JpZ2luL2V2
-ZXJ5dGhpbmcgb25jZSAwMS1yZW1vdmUtYXRoZXJvcy10dXJiby1mcm9tLW1hYzgwMjExLmRpZmYg
-aXMKYXBwbGllZC4KCmRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYyB8ICAgIDIgKy0K
-MSBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pCgpDaGFuZ2Vz
-LWxpY2Vuc2VkLXVuZGVyOiBCU0QKU2lnbmVkLW9mZi1ieTogTHVpcyBSLiBSb2RyaWd1ZXogPG1j
-Z3JvZkBnbWFpbC5jb20+Cgpkcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay5oICAgIHwgICA4NiAr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0KZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYXRoNWtfaHcuYyB8ICAgIDQgKy0KMiBmaWxlcyBjaGFuZ2VkLCA3NiBpbnNlcnRpb25zKCsp
-LCAxNCBkZWxldGlvbnMoLSkKCkNoYW5nZXMtbGljZW5zZWQtdW5kZXI6IElTQwpTaWduZWQtb2Zm
-LWJ5OiBMdWlzIFIuIFJvZHJpZ3VleiA8bWNncm9mQGdtYWlsLmNvbT4KCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsu
-aAppbmRleCA3OGQ3Y2IyLi5hNmY3OTk1IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGg1ay5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrLmgKQEAgLTE4NywxMiAr
-MTg3LDcyIEBAIHN0cnVjdCBhdGg1a19zcmV2X25hbWUgewogCiAjZGVmaW5lIElFRUU4MDIxMV9N
-QVhfTEVOICAgICAgIDI1MDAKIAotLyogVE9ETyBNZXJnZSB0aGlzIHRvIG1hYzgwMjExICovCi0j
-ZGVmaW5lIE1PRFVMQVRJT05fWFIgCQkweDAwMDAwMjAwIC8qWFIgdGhpbmdpZSovCisvKiBUT0RP
-IGFkZCBzdXBwb3J0IHRvIG1hYzgwMjExIGZvciB2ZW5kb3Itc3BlY2lmaWMgcmF0ZXMgYW5kIG1v
-ZGVzICovCisKKy8qIAorICogU29tZSBvZiB0aGlzIGluZm9ybWF0aW9uIGlzIGJhc2VkIG9uIERv
-Y3VtZW50YXRpb24gZnJvbToKKyAqCisgKiBodHRwOi8vbWFkd2lmaS5vcmcvd2lraS9DaGlwc2V0
-RmVhdHVyZXMvU3VwZXJBRworICoKKyAqIE1vZHVsYXRpb24gZm9yIEF0aGVyb3MnIGVYdGVuZGVk
-IFJhbmdlIC0gcmFuZ2UgZW5oYW5jaW5nIGV4dGVuc2lvbiB0aGF0IGlzCisgKiBzdXBwb3NlZCB0
-byBkb3VibGUgdGhlIGRpc3RhbmNlIGFuIEF0aGVyb3MgY2xpZW50IGRldmljZSBjYW4ga2VlcCBh
-IAorICogY29ubmVjdGlvbiB3aXRoIGFuIEF0aGVyb3MgYWNjZXNzIHBvaW50LiBUaGlzIGlzIGFj
-aGlldmVkIGJ5IGluY3JlYXNpbmcgCisgKiB0aGUgcmVjZWl2ZXIgc2Vuc2l0aXZpdHkgdXAgdG8s
-IC0xMDVkQm0sIHdoaWNoIGlzIGFib3V0IDIwZEIgYWJvdmUgd2hhdCAKKyAqIHRoZSA4MDIuMTEg
-c3BlY2lmaWNhdGlvbnMgZGVtYW5kLiBJbiBhZGRpdGlvbiwgbmV3IChwcm9wcmlldGFyeSkgZGF0
-YSByYXRlcworICogYXJlIGludHJvZHVjZWQ6IDMsIDIsIDEsIDAuNSBhbmQgMC4yNSBNQml0L3Mu
-CisgKgorICogUGxlYXNlIG5vdGUgdGhhdCBjYW4geW91IGVpdGhlciB1c2UgWFIgb3IgVFVSQk8g
-YnV0IHlvdSBjYW5ub3QgdXNlIGJvdGgsCisgKiB0aGV5IGFyZSBleGNsdXNpdmUuCisgKgorICov
-CisjZGVmaW5lIE1PRFVMQVRJT05fWFIgCQkweDAwMDAwMjAwCisvKgorICogTW9kdWxhdGlvbiBm
-b3IgQXRoZXJvcycgVHVyYm8gRyBhbmQgVHVyYm8gQSwgaXRzIHN1cHBvc2VkIHRvIHByb3ZpZGUg
-YQorICogdGhyb3VnaHB1dCB0cmFuc21pc3Npb24gc3BlZWQgdXAgdG8gNDBNYml0L3MtNjBNYml0
-L3MgYXQgYSAxMDhNYml0L3MKKyAqIHNpZ25hbGluZyByYXRlIGFjaGlldmVkIHRocm91Z2ggdGhl
-IGJvbmRpbmcgb2YgdHdvIDU0TWJpdC9zIDgwMi4xMWcgCisgKiBjaGFubmVscy4gVG8gdXNlIHRo
-aXMgZmVhdHVyZSB5b3VyIEFjY2VzcyBQb2ludCBtdXN0IGFsc28gc3Vwb3J0IGl0LgorICogVGhl
-cmUgaXMgYWxzbyBhIGRpc3RpbmN0aW9uIGJldHdlZW4gInN0YXRpYyIgYW5kICJkeW5hbWljIiB0
-dXJibyBtb2RlczoKKyAqCisgKiAtIFN0YXRpYzogaXMgdGhlIGR1bWIgdmVyc2lvbjogZGV2aWNl
-cyBzZXQgdG8gdGhpcyBtb2RlIHN0aWNrIHRvIGl0IHVudGlsIAorICogICAgIHRoZSBtb2RlIGlz
-IHR1cm5lZCBvZmYuCisgKiAtIER5bmFtaWM6IGlzIHRoZSBpbnRlbGxpZ2VudCB2ZXJzaW9uLCB0
-aGUgbmV0d29yayBkZWNpZGVzIGl0c2VsZiBpZiBpdCAKKyAqICAgICBpcyBvayB0byB1c2UgdHVy
-Ym8uIEFzIHNvb24gYXMgdHJhZmZpYyBpcyBkZXRlY3RlZCBvbiBhZGphY2VudCBjaGFubmVscwor
-ICogICAgICh3aGljaCB3b3VsZCBnZXQgdXNlZCBpbiB0dXJibyBtb2RlKSwgb3Igd2hlbiBhIG5v
-bi10dXJibyBzdGF0aW9uIGpvaW5zCisgKiAgICAgdGhlIG5ldHdvcmssIHR1cmJvIG1vZGUgd29u
-J3QgYmUgdXNlZCB1bnRpbCB0aGUgc2l0dWF0aW9uIGNoYW5nZXMgYWdhaW4uCisgKiAgICAgRHlu
-YW1pYyBtb2RlIGlzIGFjaGlldmVkIGJ5IEF0aGVyb3MnIEFkYXB0aXZlIFJhZGlvIChBUikgZmVh
-dHVyZSB3aGljaAorICogICAgIG1vbml0b3JzIHRoZSB1c2VkIHJhZGlvIGJhbmQgaW4gb3JkZXIg
-dG8gZGVjaWRlIHdoZXRoZXIgdHVyYm8gbW9kZSBtYXkgCisgKiAgICAgYmUgdXNlZCBvciBub3Qu
-CisgKgorICogVGhpcyBhcnRpY2xlIGNsYWltcyBTdXBlciBHIHN0aWNrcyB0byBib25kaW5nIG9m
-IGNoYW5uZWxzIDUgYW5kIDYgZm9yCisgKiBVU0E6CisgKgorICogaHR0cDovL3d3dy5wY3dvcmxk
-LmNvbS9hcnRpY2xlL2lkLDExMzQyOC1wYWdlLDEvYXJ0aWNsZS5odG1sCisgKgorICogVGhlIGNo
-YW5uZWwgYm9uZGluZyBzZWVtcyB0byBiZSBkcml2ZXIgc3BlY2lmaWMgdGhvdWdoLiBJbiBhZGRp
-dGlvbiB0bworICogZGVjaWRpbmcgd2hhdCBjaGFubmVscyB3aWxsIGJlIHVzZWQsIHRoZXNlICJU
-dXJibyIgbW9kZXMgYXJlIGFjY29tcGxpc2hlZAorICogYnkgYWxzbyBlbmFibGluZyB0aGUgZm9s
-bG93aW5nIGZlYXR1cmVzOgorICoKKyAqIC0gQnVyc3Rpbmc6IGFsbG93cyBtdWx0aXBsZSBmcmFt
-ZXMgdG8gYmUgc2VudCBhdCBvbmNlLCByYXRoZXIgdGhhbiBwYXVzaW5nIAorICogICAgIGFmdGVy
-IGVhY2ggZnJhbWUuIEJ1cnN0aW5nIGlzIGEgc3RhbmRhcmRzLWNvbXBsaWFudCBmZWF0dXJlIHRo
-YXQgY2FuIGJlCisgKiAgICAgdXNlZCB3aXRoIGFueSBBY2Nlc3MgUG9pbnQuCisgKiAtIEZhc3Qg
-ZnJhbWVzOiBpbmNyZWFzZXMgdGhlIGFtb3VudCBvZiBpbmZvcm1hdGlvbiB0aGF0IGNhbiBiZSBz
-ZW50IHBlcgorICogICAgIGZyYW1lLCBhbHNvIHJlc3VsdGluZyBpbiBhIHJlZHVjdGlvbiBvZiB0
-cmFuc21pc3Npb24gb3ZlcmhlYWQuIEl0IGlzIGEKKyAqICAgICBwcm9wcmlldGFyeSBmZWF0dXJl
-IHRoYXQgbmVlZHMgdG8gYmUgc3VwcG9ydGVkIGJ5IHRoZSBBY2Nlc3MgUG9pbnQuCisgKiAtIENv
-bXByZXNzaW9uOiBkYXRhIGZyYW1lcyBhcmUgY29tcHJlc3NlZCBpbiByZWFsIHRpbWUgdXNpbmcg
-YSBMZW1wZWwgWml2CisgKiAgICAgYWxnb3JpdGhtLiBUaGlzIGlzIGRvbmUgdHJhbnNwYXJlbnRs
-eS4gT25jZSB0aGlzIGZlYXR1cmUgaXMgZW5hYmxlZCwgCisgKiAgICAgY29tcHJlc3Npb24gYW5k
-IGRlY29tcHJlc3Npb24gdGFrZXMgcGxhY2UgaW5zaWRlIHRoZSBjaGlwc2V0LCB3aXRob3V0Cisg
-KiAgICAgcHV0dGluZyBhZGRpdGlvbmFsIGxvYWQgb24gdGhlIGhvc3QgQ1BVLgorICovCisjZGVm
-aW5lIE1PRFVMQVRJT05fVFVSQk8JMHgwMDAwMDA4MAorCitlbnVtIGF0aDVrX3ZlbmRvcl9tb2Rl
-IHsKKwlNT0RFX0FUSEVST1NfVFVSQk8gPSBOVU1fSUVFRTgwMjExX01PREVTKzEsCisJTU9ERV9B
-VEhFUk9TX1RVUkJPRworfTsKKwkKKy8qIGFkZGluZyB0aGlzIGZsYWcgdG8gcmF0ZV9jb2RlIGVu
-YWJsZXMgc2hvcnQgcHJlYW1ibGUsIHNlZSBhcjUyMTJfcmVnLmggKi8KKyNkZWZpbmUgQVI1S19T
-RVRfU0hPUlRfUFJFQU1CTEUgMHgwNAogCi0jZGVmaW5lIEFSNUtfU0VUX1NIT1JUX1BSRUFNQkxF
-IDB4MDQgLyogYWRkaW5nIHRoaXMgZmxhZyB0byByYXRlX2NvZGUKLQkJCQkJZW5hYmxlcyBzaG9y
-dCBwcmVhbWJsZSwgc2VlCi0JCQkJCWFyNTIxMl9yZWcuaCAqLwogI2RlZmluZSBIQVNfU0hQUkVB
-TUJMRShfaXgpIChydC0+cmF0ZXNbX2l4XS5tb2R1bGF0aW9uID09IElFRUU4MDIxMV9SQVRFX0ND
-S18yKQogI2RlZmluZSBTSFBSRUFNQkxFX0ZMQUcoX2l4KSAoSEFTX1NIUFJFQU1CTEUoX2l4KSA/
-IEFSNUtfU0VUX1NIT1JUX1BSRUFNQkxFIDogMCkKIApAQCAtNjM2LDE0ICs2OTYsMTQgQEAgc3Ry
-dWN0IGF0aDVrX3JhdGVfdGFibGUgewogCTI1NSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAyNTUsIDI1
-NSwgMjU1LCA2LCA0LCAyLCAwLAlcCiAJNywgNSwgMywgMSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAy
-NTUsIDI1NSwgMjU1LCAyNTUsCVwKIAkyNTUsIDI1NSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAyNTUs
-IDI1NSB9LCB7CQlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9UVVJCTywgNjAwMCwgMTEsIDE0MCwg
-MCB9LAlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9UVVJCTywgOTAwMCwgMTUsIDE4LCAwIH0sCVwK
-LQl7IDEsIElFRUU4MDIxMV9SQVRFX1RVUkJPLCAxMjAwMCwgMTAsIDE1MiwgMiB9LAlcCi0JeyAx
-LCBJRUVFODAyMTFfUkFURV9UVVJCTywgMTgwMDAsIDE0LCAzNiwgMiB9LAlcCi0JeyAxLCBJRUVF
-ODAyMTFfUkFURV9UVVJCTywgMjQwMDAsIDksIDE3NiwgNCB9LAlcCi0JeyAxLCBJRUVFODAyMTFf
-UkFURV9UVVJCTywgMzYwMDAsIDEzLCA3MiwgNCB9LAlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9U
-VVJCTywgNDgwMDAsIDgsIDk2LCA0IH0sCVwKLQl7IDEsIElFRUU4MDIxMV9SQVRFX1RVUkJPLCA1
-NDAwMCwgMTIsIDEwOCwgNCB9IH0JXAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgNjAwMCwgMTEs
-IDE0MCwgMCB9LAlcCisJeyAxLCBNT0RVTEFUSU9OX1RVUkJPLCA5MDAwLCAxNSwgMTgsIDAgfSwJ
-XAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgMTIwMDAsIDEwLCAxNTIsIDIgfSwJXAorCXsgMSwg
-TU9EVUxBVElPTl9UVVJCTywgMTgwMDAsIDE0LCAzNiwgMiB9LAlcCisJeyAxLCBNT0RVTEFUSU9O
-X1RVUkJPLCAyNDAwMCwgOSwgMTc2LCA0IH0sCVwKKwl7IDEsIE1PRFVMQVRJT05fVFVSQk8sIDM2
-MDAwLCAxMywgNzIsIDQgfSwJXAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgNDgwMDAsIDgsIDk2
-LCA0IH0sCVwKKwl7IDEsIE1PRFVMQVRJT05fVFVSQk8sIDU0MDAwLCAxMiwgMTA4LCA0IH0gfQlc
-CiB9CiAKICNkZWZpbmUgQVI1S19SQVRFU19YUiB7IDEyLCB7CQkJCQlcCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGg1a19iYXNlLmMKaW5kZXggYmEyNmVhZC4uNmE0MzdkZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoNWtfYmFzZS5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVr
-X2Jhc2UuYwpAQCAtMTg0NCw3ICsxODQ0LDcgQEAgc3RhdGljIGludCBhdGhfZ2V0Y2hhbm5lbHMo
-c3RydWN0IGllZWU4MDIxMV9odyAqaHcpCiAJCVRHID0gTU9ERV9BVEhFUk9TX1RVUkJPRywKIAl9
-OwogCi0JQlVJTERfQlVHX09OKEFSUkFZX1NJWkUoc2MtPm1vZGVzKSA8IDUpOworCUJVSUxEX0JV
-R19PTihBUlJBWV9TSVpFKHNjLT5tb2RlcykgPCAzKTsKIAogCWFoLT5haF9jb3VudHJ5X2NvZGUg
-PSBjb3VudHJ5Y29kZTsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtf
-aHcuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMKaW5kZXggMDdhZDEyNy4uZTRj
-YzMwNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfaHcuYworKysgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jCkBAIC0xNDIsNiArMTQyLDcgQEAgYXRoX2hh
-bF9jb21wdXRldHh0aW1lKHN0cnVjdCBhdGhfaHcgKmhhbCwgY29uc3Qgc3RydWN0IGF0aDVrX3Jh
-dGVfdGFibGUgKnJhdGVzLAogCSAqIENhbGN1bGF0ZSB0aGUgdHJhbnNtaXNzaW9uIHRpbWUgYnkg
-b3BlcmF0aW9uIChQSFkpIG1vZGUKIAkgKi8KIAlzd2l0Y2ggKHJhdGUtPm1vZHVsYXRpb24pIHsK
-KwkvKiBTdGFuZGFyZCByYXRlcyAqLwogCWNhc2UgSUVFRTgwMjExX1JBVEVfQ0NLOgogCQkvKgog
-CQkgKiBDQ0sgLyBEUyBtb2RlICg4MDIuMTFiKQpAQCAtMTYwLDcgKzE2MSw4IEBAIGF0aF9oYWxf
-Y29tcHV0ZXR4dGltZShzdHJ1Y3QgYXRoX2h3ICpoYWwsIGNvbnN0IHN0cnVjdCBhdGg1a19yYXRl
-X3RhYmxlICpyYXRlcywKIAkJdmFsdWUgPSBBUjVLX09GRE1fVFhfVElNRShyYXRlLT5yYXRlX2ti
-cHMsIGZyYW1lX2xlbmd0aCk7CiAJCWJyZWFrOwogCi0JY2FzZSBJRUVFODAyMTFfUkFURV9UVVJC
-TzoKKwkvKiBWZW5kb3Itc3BlY2lmaWMgcmF0ZXMgKi8KKwljYXNlIE1PRFVMQVRJT05fVFVSQk86
-CiAJCS8qCiAJCSAqIE9ydGhvZ29uYWwgRnJlcXVlbmN5IERpdmlzaW9uIE11bHRpcGxleGluZwog
-CQkgKiBBdGhlcm9zICJUdXJibyBNb2RlIiAoZG91YmxlZCByYXRlcykKCg==
-------=_Part_23111_32298380.1189728375748--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Igor.
