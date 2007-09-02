@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bofh.cns.ualberta.ca ([129.128.11.10]:52940 "EHLO
-	bofh.cns.ualberta.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755745AbXIAXNA (ORCPT
+Received: from fresno.net.uniovi.es ([156.35.11.2]:55444 "EHLO
+	FRESNO.NET.UNIOVI.ES" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755402AbXIBM2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 19:13:00 -0400
-Date: Sat, 1 Sep 2007 16:41:12 -0600
-From: Bob Beck <beck@bofh.cns.ualberta.ca>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [beck@bofh.cns.ualberta.ca: I respect the GPL immensely, really I do - but I believe this type of action weakens us all.]
-Message-ID: <20070901224112.GC24887@bofh.cns.ualberta.ca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 2 Sep 2007 08:28:31 -0400
+Date: Sun, 02 Sep 2007 14:28:28 +0200 (CEST)
+From: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+In-reply-to: <20070902115041.GM16016@stusta.de>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Message-id: <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+ <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+ <46D99FB7.6030505@garzik.org>
+ <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+ <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu>
+ <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
+ <20070902115041.GM16016@stusta.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------ Forwarded message from Bob Beck <beck@bofh.cns.ualberta.ca> -----
-
-From: Bob Beck <beck@bofh.cns.ualberta.ca>
-To: misc@openbsd.org
-Subject: I respect the GPL immensely, really I do - but I believe this type of action weakens us all.
-X-Spam-Checker-Version: SpamAssassin 3.1.8 (2007-02-13) on bofh.cns.ualberta.ca
-X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=AWL,BAYES_00,
-	DNS_FROM_RFC_ABUSE,FORGED_RCVD_HELO autolearn=no version=3.1.8
-Date: Sat, 1 Sep 2007 16:22:43 -0600
-User-Agent: Mutt/1.5.12-2006-07-14
-
- [ A copy of this is going to the linux kernel mailing list, regarding the
-recent license modifications to reyk's files]
-
->Oh, and if you look at the OpenBSD CVS you see versions 4 months old 
->with dozens of contributions by Reyk and with:
+On Sun, 2 Sep 2007, Adrian Bunk wrote:
+> On Sun, Sep 02, 2007 at 01:20:27PM +0200, Igor Sobrado wrote:
+>> Reyk code was never dual licensed!  His code is under truly free licensing
+>> terms (BSD).
 >
->/*      $OpenBSD: ath.c,v 1.63 2007/05/09 16:41:14 reyk Exp $  */
->/*      $NetBSD: ath.c,v 1.37 2004/08/18 21:59:39 dyoung Exp $        */
->/*-
-> * Copyright (c) 2002-2004 Sam Leffler, Errno Consulting
-> * All rights reserved.
+> Jiri's patch touched both files containing BSD-only code by Reyk and
+> code Reyk contributed to leaving the file dual licenced.
 
-   Of course you do! because some of reyk's work used some of Sam's
-work, and unlike what it seems a portion of the Linux community seems
-to be willing to do in their Zealotry for the GPL, reyk is not
-*removing and modifying* the licenses granted by the original authors.
-That's the point. He's not saying he wrote this piece, and he's not
-*changing* the conditions under which Sam distributed the code in the
-first place. However what scares me more is the seeming willingness to
-make the authors of a derivative work appear to be the primary authors
-of something, and a willingness to change an authors copyright
-statement (on reyk's code) without his permission. 
+Ok.
 
-   I have always immensely respected the GPL - it has very noble
-goals, they are very appropriate in some cases, they don't happen to
-be mine, but that's fine, I don't release my code under it - but
-that's fine, it's my choice.  Just like many smart people who I know
-and respect do their work in GPL land, and this is great too. However,
-when it comes time to be looking at someone else's work above all we
-have to respect the various authors choice of how they want their hard
-work shared with the community. 
+> You mixed two completely different things in your email:
+>
+> 1. Jiri's patch (that was never merged into Linux) not only removed the
+>   BSD header from dual licenced files but also from not dual licenced
+>   files.
+>
+> 2. Theo accused Alan that telling people that it was OK to choose one
+>   licence for dual licenced code was "advising people to break the law".
+>
+> Jiri's patch was legally not OK regarding 1. - there's no discussion
+> regarding this.
+>
+> The point 2 is what the email of Theo that was forwarded to linux-kernel
+> is about and what the discussion is about. That's quite a rude action
+> by Theo unless he's able to prove that this accusation is correct.
 
-  To me, this seems like a portion of the Linux community seems to be
-wanting to make their own rules, chosing to rewrite a license at any
-time they choose without the original author's agreement. This appalls
-and scares me. Why? not only does it show a huge lack of respect for
-someone who has worked very hard to produce something the whole
-community can use, but seriously undermines software freedom as a
-whole. This is a slippery slope. If one community starts modifying the
-others licenses for no purpose other than zealotry, I see only two
-consequences:
+When code is multi-licensed it must be distributed under *all* these 
+licensing terms concurrently.  It is easy to understand.  Removing (or 
+changing) the conditions that apply to the program from the source code 
+and documentation *without* an authorization from all the author(s) is 
+illegal.
 
-   1) a hugh rift of mistrust between the developers of both camps,
-meaning no cooperating to make the world a better place.
+So, a multi-licensed file remains multi-licensed except when all authors 
+agree about a change in the licensing terms.  And it is clear on the BSD 
+license that a modification of the distribution terms is illegal.  It is 
+the first clause on the BSD license:
 
-   2) A weakening of the respect for licensing on all sides of the
-community, which weakens the credibility of both BSD *AND* the GPL
-license when tested from the outside. Frankly, this scares the hell
-out of me and dismays me. 
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer,
+  *    without modification.
 
-   I seriously hope that saner more mature and forward thinking heads
-inside the Linux community will stop bashing the things that Theo and
-the rest of our community is saying just because it's coming from
-Theo, and he's a great target to bash, and start thinking about what
-you are doing to free software as a whole. I think you are on the
-verge of doing irreparable damage that will seriously weaken the
-ability for all of our projects to move forward, and protect our
-rights as code authors in the future.
+So, removing (or changing) the list of conditions on the BSD license is 
+not allowed.
 
-	-Bob
-
-
------ End forwarded message -----
+Igor.
