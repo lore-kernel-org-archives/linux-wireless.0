@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37823 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755569AbXIUWCw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 18:02:52 -0400
-Date: Fri, 21 Sep 2007 15:02:53 -0700
-From: Greg KH <greg@kroah.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	stable@kernel.org, Rob Hussey <robjhussey@gmail.com>
-Subject: Re: [stable] [PATCH] cfg80211: fix initialisation if built-in
-Message-ID: <20070921220253.GA32585@kroah.com>
-References: <1189424685.4506.63.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1189424685.4506.63.camel@johannes.berg>
+Received: from mga03.intel.com ([143.182.124.21]:52667 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976AbXIBT60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2007 15:58:26 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211#everything: PS mode fix
+Date: Sun,  2 Sep 2007 22:58:21 +0300
+Message-Id: <1188763101479-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 10, 2007 at 01:44:45PM +0200, Johannes Berg wrote:
-> When cfg80211 is built into the kernel it needs to init earlier
-> so that device registrations are run after it has initialised.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+tx.mode must be set also for buffered frames. It is used in the tx hanlders
 
-When this goes into Linus's tree, please resend it to the
-stable@kernel.org address so we can add it to our queue.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-thanks,
-
-greg k-h
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 902d5b4..5a7345f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1877,6 +1877,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, int if_id,
+ 	}
+ 	sta = tx.sta;
+ 	tx.flags |= IEEE80211_TXRXD_TXPS_BUFFERED;
++	tx.u.tx.mode = local->hw.conf.mode;
+ 
+ 	for (handler = local->tx_handlers; *handler != NULL; handler++) {
+ 		res = (*handler)(&tx);
+-- 
+1.5.2.2
