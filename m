@@ -1,130 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2841 "EHLO ra.tuxdriver.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:38659 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753912AbXIVQHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Sep 2007 12:07:51 -0400
-Date: Sat, 22 Sep 2007 11:41:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6 (for 2.6.23)
-Message-ID: <20070922154142.GA4738@tuxdriver.com>
+	id S932514AbXIBBeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 21:34:15 -0400
+Message-ID: <46DA1315.9060002@garzik.org>
+Date: Sat, 01 Sep 2007 21:34:13 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Jason Dixon <jason@dixongroup.net>
+CC: mureninc@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
+Subject: Re: That whole "Linux stealing our code" thing
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <f34ca13c0709011427u <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
+In-Reply-To: <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Jason Dixon wrote:
+> Once the grantor (Reyk) releases his code under that license, it must 
+> remain.  You are free to derive work and redistribute under your 
+> license, but the original copyright and license permission remains 
+> intact.  Many other entities (Microsoft, Apple, Sun, etc) have used BSD 
+> code and have no problem understanding this.  Why is this so difficult 
+> for the Linux brain share to absorb?
 
-These are a few more minor fixes that I would like to have in 2.6.23 if
-at all possible.
+Why is it so difficult to understand dual licensing?
 
-Thanks!
+	Jeff
 
-John
 
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
-
----
-
-The following changes since commit 81cfe79b9c577139a873483654640eb3f6e78c39:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc7
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Johannes Berg (3):
-      cfg80211: fix initialisation if built-in
-      net/mac80211/wme.c: fix sparse warning
-      mac80211: fix initialisation when built-in
-
-Satyam Sharma (1):
-      net/wireless/sysfs.c: Shut up build warning
-
- net/mac80211/ieee80211.c      |    2 +-
- net/mac80211/rc80211_simple.c |    2 +-
- net/mac80211/wme.c            |    2 +-
- net/wireless/core.c           |    2 +-
- net/wireless/sysfs.c          |    2 ++
- 5 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 7286c38..ff2172f 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -5259,7 +5259,7 @@ static void __exit ieee80211_exit(void)
- }
- 
- 
--module_init(ieee80211_init);
-+subsys_initcall(ieee80211_init);
- module_exit(ieee80211_exit);
- 
- MODULE_DESCRIPTION("IEEE 802.11 subsystem");
-diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
-index f6780d6..17b9f46 100644
---- a/net/mac80211/rc80211_simple.c
-+++ b/net/mac80211/rc80211_simple.c
-@@ -431,7 +431,7 @@ static void __exit rate_control_simple_exit(void)
- }
- 
- 
--module_init(rate_control_simple_init);
-+subsys_initcall(rate_control_simple_init);
- module_exit(rate_control_simple_exit);
- 
- MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 89ce815..7ab82b3 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -424,7 +424,7 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
- 		skb_queue_head_init(&q->requeued[i]);
- 		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
- 						 qd->handle);
--		if (q->queues[i] == 0) {
-+		if (!q->queues[i]) {
- 			q->queues[i] = &noop_qdisc;
- 			printk(KERN_ERR "%s child qdisc %i creation failed", dev->name, i);
- 		}
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 7eabd55..9771451 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -213,7 +213,7 @@ out_fail_notifier:
- out_fail_sysfs:
- 	return err;
- }
--module_init(cfg80211_init);
-+subsys_initcall(cfg80211_init);
- 
- static void cfg80211_exit(void)
- {
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 88aaacd..2d5d225 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -52,12 +52,14 @@ static void wiphy_dev_release(struct device *dev)
- 	cfg80211_dev_free(rdev);
- }
- 
-+#ifdef CONFIG_HOTPLUG
- static int wiphy_uevent(struct device *dev, char **envp,
- 			int num_envp, char *buf, int size)
- {
- 	/* TODO, we probably need stuff here */
- 	return 0;
- }
-+#endif
- 
- struct class ieee80211_class = {
- 	.name = "ieee80211",
--- 
-John W. Linville
-linville@tuxdriver.com
