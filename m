@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39413 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757431AbXIQU7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 16:59:12 -0400
-Message-ID: <46EEEA9B.70407@garzik.org>
-Date: Mon, 17 Sep 2007 16:59:07 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from wx-out-0506.google.com ([66.249.82.229]:29405 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933262AbXIBBwc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 21:52:32 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1166480wxd
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 18:52:31 -0700 (PDT)
+Message-ID: <f34ca13c0709011852w7f2c14cevdd08582a0ba5ddf5@mail.gmail.com>
+Date: Sat, 1 Sep 2007 21:52:31 -0400
+From: "Constantine A. Murenin" <mureninc@gmail.com>
+To: "Theo de Raadt" <deraadt@cvs.openbsd.org>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Cc: "Bob Beck" <beck@bofh.cns.ualberta.ca>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, misc@openbsd.org
+In-Reply-To: <200709020036.l820aaNf014181@cvs.openbsd.org>
 MIME-Version: 1.0
-To: Jiri Slaby <jirislaby@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(),  we're MMIO-only
-References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com> <46EEE735.5050306@gmail.com>
-In-Reply-To: <46EEE735.5050306@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20070902000226.GE24887@bofh.cns.ualberta.ca>
+	 <200709020036.l820aaNf014181@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby wrote:
-> NACK, this is wrong. iomap returns platform dependant return value, which may or
+On 01/09/07, Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
+> When companies have taken our wireless device drivers, many many of
+> them have given changes and fixes back.  Some maybe didn't, but that
+> is OK.
+>
+> When Linux took our changes back, they immediately locked the door
+> against changes moving back, by putting a GPL license on guard.
+>
+> Why does our brother Linux take a file that is 90% BSD licensed,
+> and refuse to let us see the 10% he adds?
 
-Incorrect.  readl() and writel() work just fine on all existing 
-platforms where Atheros may be used.
+Indeed, it's upsetting that people like Luis Rodriguez push for the
+lawyers to be involved to (fight?) an open source project. Why, may I
+ask?
 
-If you want pci_iomap() usage removed as well, that's a fair request.
+Why Luis puts the phrase "legal hell" next to entirely free software?
+[0] Why is he trying to go against the BSD community, which gave him
+the entire HAL framework for the driver in question?
 
-	Jeff
+Best regards,
+Constantine.
 
-
+[0] http://marc.info/?l=linux-wireless&m=118857712529898&w=2
