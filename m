@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:42251 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499AbXIUWAr (ORCPT
+Received: from uni21mr.unity.ncsu.edu ([152.1.2.137]:59609 "EHLO
+	uni21mr.unity.ncsu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757826AbXIBCNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 18:00:47 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1791670pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2007 15:00:46 -0700 (PDT)
-Message-ID: <43e72e890709211500k741e7a8ai21f2de12eec81926@mail.gmail.com>
-Date: Fri, 21 Sep 2007 18:00:46 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/5] Add central regulatory domain agent - Patchset I
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Daniel Drake" <dsd@gentoo.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-In-Reply-To: <1190411390.18521.174.camel@johannes.berg>
+	Sat, 1 Sep 2007 22:13:20 -0400
+Message-ID: <46DA18C2.1000104@ncsu.edu>
+Date: Sat, 01 Sep 2007 21:58:26 -0400
+From: Casey Dahlin <cjdahlin@ncsu.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20070921204606.GD31768@pogo>
-	 <1190410796.14368.17.camel@xo-3E-67-34.localdomain>
-	 <1190411390.18521.174.camel@johannes.berg>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+CC: Jeff Garzik <jeff@garzik.org>, Jason Dixon <jason@dixongroup.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jirislaby@gmail.com,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: That whole "Linux stealing our code" thing
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>	 <46D99FB7.6030505@garzik.org>	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>	 <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
+In-Reply-To: <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/21/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2007-09-21 at 17:39 -0400, Dan Williams wrote:
->
-> > Also, if you could make sure this stuff is completely separate
-> > conceptually and architecturally from mac80211 itself, but have mac80211
-> > _rely_ on it, then we can rip the bits out of the fullmac drivers that
-> > do regdomain stuff and plug them into this framework too.  I think
-> > that's a real win.
->
-> Yeah, I think that's the plan. In fact, I always consider mac80211 to be
-> on the the same level like fullmac _drivers_ and mac80211-based drivers
-> somewhere below that (at a level that with fullmac drivers doesn't
-> exist)
+Suppose you saw some other variant of *nix that had some code you wanted 
+to use, but there was a gaping security hole in it. Wouldn't you patch 
+it before you incorporated it? and would it be your fault if this fix 
+made the code not work with the original?
 
-Correct, the only way this touches mac80211 is ripping common wireless
-stuff out from it and putting it into a wireless_common.h. other than
-that all of this so far is 100% independent of mac80211.
+We took the code and fixed a gaping security vulnerability that appeared 
+within the opening comment. We DO care who does what with our code, and 
+we fully intend to cover our balls.
 
-In fact, you can apply each patch, one by one, and compile the kernel
-and all modules and you should have no issues independently. However
-each subsequent patch depends on the previous patch. The idea with
-this was to try to get this regulatory work into the 'everything'
-wireless-dev branch so we can address any small issues before we start
-hacking away on mac80211 and its drivers.
-
-At first I wanted to send all of the patches together but this was
-just taking too long... My hope now was to speed the development
-process up by separating the required work into two patches series.
-
-  Luis
+The problem is yours to fix. If you actually care, use a license that 
+SAYS you care. Right now there's a big /* I don't give a shit */ on top 
+of every BSD file. We took you at your word and assumed you didn't. Now 
+its too late and you suddenly care, don't you?
