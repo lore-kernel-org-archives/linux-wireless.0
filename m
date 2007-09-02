@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:41928 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755451AbXITPiz (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.224]:50188 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932429AbXIBALI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 11:38:55 -0400
-Received: by an-out-0708.google.com with SMTP id d31so85962and
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2007 08:38:55 -0700 (PDT)
-Message-ID: <43e72e890709200838j48d460a3pa72cce9c90d15b13@mail.gmail.com>
-Date: Thu, 20 Sep 2007 11:38:54 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Stephen Hemminger" <shemminger@linux-foundation.org>
-Subject: Re: ath5k and network manager
-Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Tim Gardner" <tim.gardner@canonical.com>
-In-Reply-To: <20070920083514.4a4f1b3f@freepuppy.rosehill>
+	Sat, 1 Sep 2007 20:11:08 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1149779wxd
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 17:11:07 -0700 (PDT)
+Message-ID: <f34ca13c0709011711n8521bc2k58a13f0fd4e98403@mail.gmail.com>
+Date: Sat, 1 Sep 2007 20:11:07 -0400
+From: "Constantine A. Murenin" <mureninc@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Cc: "Adrian Bunk" <bunk@kernel.org>, "Jeff Garzik" <jeff@garzik.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Alan Cox" <alan@lxorguk.ukuu.org.uk>
+In-Reply-To: <43e72e890709011648k5caffb7fn1051e1f5d5f27c9b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
-	 <43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
-	 <200709201511.23400.mb@bu3sch.de>
-	 <20070920083056.31f231b9@freepuppy.rosehill>
-	 <43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
-	 <20070920083514.4a4f1b3f@freepuppy.rosehill>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	 <46D99FB7.6030505@garzik.org>
+	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	 <20070901205457.GK9260@stusta.de>
+	 <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
+	 <20070901215225.GM9260@stusta.de>
+	 <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
+	 <43e72e890709011648k5caffb7fn1051e1f5d5f27c9b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> On Thu, 20 Sep 2007 11:34:29 -0400
-> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
->
-> > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > > On Thu, 20 Sep 2007 15:11:23 +0200
-> > > Michael Buesch <mb@bu3sch.de> wrote:
-> > >
-> > > > On Thursday 20 September 2007, Luis R. Rodriguez wrote:
-> > > > > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > > > > > Network manager doesn't seem to detect ath5k. Perhaps it is because
-> > > > > > it is name "ath0".  I think device should follow the convention of using
-> > > > > > name "wifi0" rather than BSD convention of putting driver name in device name.
-> > > > >
-> > > > > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
-> > > > > any other mac80211 driver. Is yours coming out to ath%d ?
-> > > > >
-> > > > > ieee80211_register_hw():
-> > > > >
-> > > > >         /* add one default STA interface */
-> > > > >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
-> > > > >                                   IEEE80211_IF_TYPE_STA);
-> > > > >
-> > > >
-> > > >
-> > > > Probably udev renames it.
-> > >
-> > > It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
-> > > value.
-> > >
-> >
-> > CC' TIm
-> >
-> > Was it a rule by PCI ID? If so then perhaps its based on the old
-> > madwifi rules of sticking to ath%d notation as well. This can be
-> > removed for ath5k but not too sure how this works.
-> >
->
-> It was by PCI ID
+On 01/09/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> I urge developers to not bait into this and just leave this alone.
+> Those involved know what they are doing and have a strong team of
+> attorneys watching their backs. Any *necessary* discussions are be
+> done privately.
 
-Then I guess that rule should be removed from udev because of ath5k,
-if we let the driver pick the name then we'd get ath%d for madwifi
-driver and wlan%d for ath5k. Would help with troubleshooting too. Tim?
-:-)
+Err...
 
-  Luis
+I don't understand why you need a lawyer to interpret this document:
+
+/*     $OpenBSD: ar5210.c,v 1.39 2007/04/10 17:47:55 miod Exp $        */
+
+/*
+ * Copyright (c) 2004, 2005, 2006, 2007 Reyk Floeter <reyk@openbsd.org>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+If you want to add more code to it, and your contribution is
+significant, simply add you name next to Reyk's. Where's the problem?
+
+I don't know how licensing could be any simpler than this. Please,
+notice, that there are no additional documents (other than the
+copyright law) to read here -- _this is the complete licence_! (And
+you have to read the copyright law even if you use the GNU GPL.)
+
+C.
