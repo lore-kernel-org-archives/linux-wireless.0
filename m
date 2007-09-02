@@ -1,92 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:53532 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756589AbXIAVwZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 17:52:25 -0400
-Date: Sat, 1 Sep 2007 23:52:25 +0200
-From: Adrian Bunk <bunk@kernel.org>
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:34134 "EHLO
+	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909AbXIBFqo (ORCPT
+	<RFC822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2007 01:46:44 -0400
 To: "Constantine A. Murenin" <mureninc@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+Cc: Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070901215225.GM9260@stusta.de>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
+	Alan Cox <alan@lxorguk.ukuu.org.uk>, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: That whole "Linux stealing our code" thing
+In-Reply-To: Your message of "Sun, 02 Sep 2007 01:09:18 EDT."
+             <f34ca13c0709012209x64c282b9o1fd0cb7d08690247@mail.gmail.com>
+From: Valdis.Kletnieks@vt.edu
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net> <20070902015537.GH16016@stusta.de> <5619.1188704843@turing-police.cc.vt.edu>
+            <f34ca13c0709012209x64c282b9o1fd0cb7d08690247@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1188711996_2988P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Sun, 02 Sep 2007 01:46:36 -0400
+Message-ID: <24861.1188711996@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 05:27:03PM -0400, Constantine A. Murenin wrote:
-> On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
-> > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
-> > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > > > Constantine A. Murenin wrote:
-> > > > > This will hopefully help diminish certain myths about the code licensing.
-> > > >
-> > > > What myth?  The myth that Theo understands dual licensing?
-> > >
-> > > Reyk's code was never dual licensed, so it's not like it even matters
-> > > to the original dispute.
-> >
-> > It's no longer dual licenced in the FreeBSD tree because the FreeBSD
-> > people removed the GPL choice of the dual licenced code 3 months ago.
-> 
-> FreeBSD doesn't have Reyk's ath(4) HAL, which OpenHAL is based on.
-> 
-> FreeBSD has a driver written by Sam, and a binary-only HAL, also written by Sam.
-> 
-> > So all of Theo's accusations of people breaking the law by making this
-> > dual licenced code GPL-only apply as well to the FreeBSD people...
-> 
-> How? FreeBSD doesn't have Reyk's ath(4) HAL from OpenBSD, so there are
-> no possible licensing accusations and violations.
+--==_Exmh_1188711996_2988P
+Content-Type: text/plain; charset=us-ascii
 
-OK, I begin to understand this, there seem to be three different types 
-of files changed by Jiri's patch:
-1. dual licenced files planned to make GPL-only
-2. previously dual licenced files with a too recent version used planned 
-   to make GPL-only
-3. never dual licenced files planned to make GPL-only
+On Sun, 02 Sep 2007 01:09:18 EDT, "Constantine A. Murenin" said:
 
-For files under 1. and 2. Reyk did contribute to dual licenced code 
-without touching the licence, but I missed that there's also code unter 3.
+> The idea here is that no patching was needed in the first place --
+> most of the files are/were BSD-licensed, because they were forked from
+> OpenBSD.
 
-So there is a problem, but not with the code under 1. (unless you plan 
-to change the semantics of the word "alternatively"), the problem is 
-with some headers under 2. plus the code under 3.
+Oh, silly me.  For some reason, I had it in my head that Jiri's original
+patch actually included some real live *code* in addition to the parts that
+changed the licensing text... ;)
 
-It's funny how Theo missed the part of Jiri's patch that actually is a 
-copyright violation and instead complains about the part that is OK...
+--==_Exmh_1188711996_2988P
+Content-Type: application/pgp-signature
 
-> > > That said, I don't see what exact wording you consider inaccurate.
-> >
-> > Both the FreeBSD and Linux people draw the logical conclusion that this
-> > "Alternatively" means everyone can always choose to remove one of the
-> > two choices alternatively offered.
-> >
-> > According to Theo, that is "breaking the law"...
-> 
-> FreeBSD's ath(4) code, both the driver and the HAL, is entirely
-> written by Sam Leffler, who can licence it in whichever way he seems
-> reasonable. The driver part of Sam's code is also present in OpenBSD,
-> but the HALs in OpenBSD and FreeBSD are entirely different.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-Sam also changed the licence of a file additionally containing an
-  Copyright (c) 2004 Video54 Technologies, Inc.
+iD8DBQFG2k48cC3lWbTT17ARAuNCAKD7cvkX1fngwvhOCXCW/0C2R+mV+gCdGd7E
+9aCzyBSxygcU0ZyqtI67zvY=
+=k9wr
+-----END PGP SIGNATURE-----
 
-> C.
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+--==_Exmh_1188711996_2988P--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
