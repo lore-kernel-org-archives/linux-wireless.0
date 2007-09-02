@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51389 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754068AbXIDNmj (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:59837 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933349AbXIBByD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 09:42:39 -0400
-Subject: Re: port of my recent patches to net-2.6.24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>, Jiri Slaby <jirislaby@gmail.com>
-In-Reply-To: <20070904002002.GU1835@jm.kir.nu>
-References: <1188027470.9529.5.camel@johannes.berg>
-	 <200708270029.35845.flamingice@sourmilk.net>
-	 <1188211612.6756.8.camel@johannes.berg>  <20070904002002.GU1835@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/dtmSw00/eM7/nPjlAH4"
-Date: Tue, 04 Sep 2007 15:43:22 +0200
-Message-Id: <1188913402.9942.18.camel@johannes.berg>
+	Sat, 1 Sep 2007 21:54:03 -0400
+Date: Sun, 2 Sep 2007 02:53:56 +0100
+From: Al Viro <viro@ftp.linux.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>,
+	Jason Dixon <jason@dixongroup.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jirislaby@gmail.com,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: That whole "Linux stealing our code" thing
+Message-ID: <20070902015356.GO21089@ftp.linux.org.uk>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net> <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com> <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 01, 2007 at 09:42:54PM -0400, Luis R. Rodriguez wrote:
+ 
+> We asked SFLC to work with us to make sure that everyone's copyrights
+> were respected in the right places, and that the licenses various developers
+> wanted for their copyrights were implemented correctly.  The patch I sent
+> implements SFLC's suggestions in that regard.
 
---=-/dtmSw00/eM7/nPjlAH4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2007-09-03 at 17:20 -0700, Jouni Malinen wrote:
-
-> For the original reason for adding this (making it easier to do some
-> continuous TX tests), yes, it can be done in other ways. The only thing
-> I can think of here would be some special frames (like broadcast data
-> frames as a beacon of some upper layer service) that would be used by
-> clients that are capable of receiving frames when not associated (e.g.,
-> they use monitor mode). This is getting a bit speculative here, so
-> unless someone can point out a real example that depends on this,=20
-
-This sounds like something that Andy was working on with radiotap
-injection etc. Penumbra.
-
-> I
-> would go ahead and remove it now.
-
-I think it's already gone.
-
-johannes
-
---=-/dtmSw00/eM7/nPjlAH4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3WD6/ETPhpq3jKURAi0kAJ43RjypVsbQ3qbmyorIv1VAE1Q2owCdEotI
-raagXOO5AvR/sfhBDibE79I=
-=hhnq
------END PGP SIGNATURE-----
-
---=-/dtmSw00/eM7/nPjlAH4--
-
+You know, I'm rapidly losing any respect to both sides of that.  Eben
+Moglen as source of advice in "is it OK to convert to GPL-only"?  And
+you seriously rely on morality of that?  Theo's rants aside, if you
+have to rely on SFLC for licensing decisions...  Ouch.
