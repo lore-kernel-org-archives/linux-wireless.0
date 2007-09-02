@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbXIMHKN (ORCPT
+Received: from mx1.dixongroup.net ([38.98.104.248]:9000 "EHLO
+	mx1.dixongroup.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbXIBCjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 03:10:13 -0400
-Subject: Re: [PATCH V4 wireless-dev#pending-upstream] Add iwlwifi wireless   drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>
-In-Reply-To: <1189582835.24707.118.camel@debian.sh.intel.com>
-References: <1189582835.24707.118.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/UcnwsS12oDv24MxS6bB"
-Date: Wed, 12 Sep 2007 21:45:04 +0200
-Message-Id: <1189626304.6161.55.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 22:39:21 -0400
+In-Reply-To: <46DA18C2.1000104@ncsu.edu>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>	 <46D99FB7.6030505@garzik.org>	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>	 <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com> <46DA18C2.1000104@ncsu.edu>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <D81EA0BC-AD13-4C6B-943B-80B5FE355E56@dixongroup.net>
+Cc: "Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
+From: Jason Dixon <jason@dixongroup.net>
+Subject: Re: That whole "Linux stealing our code" thing
+Date: Sat, 1 Sep 2007 22:44:16 -0400
+To: Casey Dahlin <cjdahlin@ncsu.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sep 1, 2007, at 9:58 PM, Casey Dahlin wrote:
 
---=-/UcnwsS12oDv24MxS6bB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Suppose you saw some other variant of *nix that had some code you  
+> wanted to use, but there was a gaping security hole in it. Wouldn't  
+> you patch it before you incorporated it? and would it be your fault  
+> if this fix made the code not work with the original?
+>
+> We took the code and fixed a gaping security vulnerability that  
+> appeared within the opening comment. We DO care who does what with  
+> our code, and we fully intend to cover our balls.
 
-On Wed, 2007-09-12 at 15:40 +0800, Zhu Yi wrote:
+Since when is this *your* code?  Oh that's right, when Jiri decided  
+to steal it by deleting Reyk's copyright and license.  Oh wait,  
+that's already been corrected.  What was your point again?
 
->  drivers/net/wireless/iwl-3945-rs.c  |  979 ++++
->  drivers/net/wireless/iwl-4965-rs.c  | 2118 ++++++++
+> The problem is yours to fix. If you actually care, use a license  
+> that SAYS you care. Right now there's a big /* I don't give a shit  
+> */ on top of every BSD file. We took you at your word and assumed  
+> you didn't. Now its too late and you suddenly care, don't you?
 
-Did you change those to subsys_initcall? I can't check right now
-(offline), but it's required for proper operation when built-in, or you
-need to rely on link order to have the rate control initialised earlier
-than the drivers.
+The BSD license, in effect, says that we care about good code.  We  
+allow anyone to use it.  The only stipulation is that the copyright  
+and license permissions must remain intact.
 
-johannes
+Are you trying to be hateful, or are you really this ignorant?
 
---=-/UcnwsS12oDv24MxS6bB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
+Jason Dixon
+DixonGroup Consulting
+http://www.dixongroup.net
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6EHA/ETPhpq3jKURAn1rAJ9Co3Q4wUhoyE6wBd/8GmuyaXwUGgCfXsJq
-QTya+VoY55cXWiYd7U1i5kM=
-=kod1
------END PGP SIGNATURE-----
-
---=-/UcnwsS12oDv24MxS6bB--
 
