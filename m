@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35015 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbXIFPSl (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57004 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756078AbXIBK2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 11:18:41 -0400
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Satyam Sharma <satyam@infradead.org>,
-	Florian Lohoff <flo@rfc822.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
-In-Reply-To: <20070906082301.GB21929@gondor.apana.org.au>
-References: <20070902184439.GA14306@paradigm.rfc822.org>
-	 <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com>
-	 <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
-	 <20070906082301.GB21929@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P0JM25PSs9MHCk1RoLrB"
-Date: Thu, 06 Sep 2007 17:19:55 +0200
-Message-Id: <1189091995.28781.99.camel@johannes.berg>
+	Sun, 2 Sep 2007 06:28:13 -0400
+Date: Sun, 2 Sep 2007 11:36:38 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+Cc: "Adrian Bunk" <bunk@kernel.org>, "Jeff Garzik" <jeff@garzik.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070902113638.78fbd202@the-village.bc.nu>
+In-Reply-To: <f34ca13c0709011753h7733089dt48570480a7a19baa@mail.gmail.com>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	<46D99FB7.6030505@garzik.org>
+	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	<20070901205457.GK9260@stusta.de>
+	<f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
+	<20070901215225.GM9260@stusta.de>
+	<f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
+	<20070902000913.GB16016@stusta.de>
+	<f34ca13c0709011753h7733089dt48570480a7a19baa@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> - If you receive ISC or BSD licensed code, you may not delete the
+>  license.  Same principle, since the notice says so.  It's the law.
+>  Really.
 
---=-P0JM25PSs9MHCk1RoLrB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You can shout this all you like but you would be wrong. You can remove
+the licence if you have permission to do so. For the ath c files there
+was permission to do so.
 
-On Thu, 2007-09-06 at 16:23 +0800, Herbert Xu wrote:
-> On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
-> >=20
-> > > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
-> > > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80=
-211]
->=20
-> This is where the bug is.  You cannot call dev_close from an
-> atomic context as i33380211_master_stop does it within spin
-> locks.
+> My understanding is that with dual-licensed code, you choose to comply
+> with all of the terms of either licence. However, you cannot simply
+> remove either of these licences from the code, unless you specifically
+> receive such right from the copyright holder (remember, with the
+> copyright law, unless the rights are specifically given, they are
+> retained). This is what Theo was trying to educate the community on. I
+> don't see anything unethical in explaining the legal issues.
 
-Oh btw. Can we stick a might_sleep() into dev_close() *before* the test
-whether the device is up? That way, we'd have seen the bug, but
-apparently nobody before Florian ever did a 'ip link set wmaster0 down'
-while the other interfaces were still open.
+Your understanding isn't quite right. One of many things you may get with
+dual licensed code is the right to pick a licence from several choices,
+you may also get the right to remove some choices from the recipient.
 
-johannes
+A work that combines GPL and BSD licensed material is not the same as a
+work which says I may choose between two licences. If both licences must
+always apply (which is a perfectly possible condition to put in a
+licence) then putting such a "both" GPL/BSD licence piece of code into
+OpenBSD would require any OpenBSD distributed containing it was GPL
+licenced when conveyed, which I am *very* sure is not the intent.
 
---=-P0JM25PSs9MHCk1RoLrB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thus what you appear to be doing by putting the ath5k C code in OpenBSD is
+conveying it under the BSD licence (making a choice between the two
+offered) and conveying a right for parties down the chain to convey it
+under one of the licences only.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+And as we've already established the header files are quite different.
 
-iD8DBQBG4Bqb/ETPhpq3jKURAodYAJ9Ue7BZ2OM/mODT3BxY5BZTViKo5gCgrEkC
-LpH1f969DmQIZpNHoSH2Ank=
-=vRYa
------END PGP SIGNATURE-----
 
---=-P0JM25PSs9MHCk1RoLrB--
+Doesn't mean its not somewhat rude but illegal and rude are two very
+different things.
 
