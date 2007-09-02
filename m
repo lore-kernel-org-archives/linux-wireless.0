@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35950 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762014AbXIKKWO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 06:22:14 -0400
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240709100720k5156e11v775a5faa50144990@mail.gmail.com>
-References: <1188875058.13078.428.camel@debian.sh.intel.com>
-	 <1189076408.28781.49.camel@johannes.berg>
-	 <1189146702.16788.103.camel@debian.sh.intel.com>
-	 <1189172436.28781.148.camel@johannes.berg>
-	 <1189390172.24707.36.camel@debian.sh.intel.com>
-	 <1189420954.4506.37.camel@johannes.berg>
-	 <1ba2fa240709100720k5156e11v775a5faa50144990@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-810Vdr13Hto4gIlzdvh4"
-Date: Tue, 11 Sep 2007 12:23:41 +0200
-Message-Id: <1189506221.6161.9.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from khc.piap.pl ([195.187.100.11]:51740 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755711AbXIBN5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2007 09:57:34 -0400
+To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	<46D99FB7.6030505@garzik.org>
+	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	<20070901205457.GK9260@stusta.de>
+	<20070902113638.78fbd202@the-village.bc.nu>
+	<Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
+	<20070902115041.GM16016@stusta.de>
+	<Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
+	<20070902134612.28a88761@the-village.bc.nu>
+	<Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Sun, 02 Sep 2007 15:57:30 +0200
+In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es> (Igor Sobrado's message of "Sun, 02 Sep 2007 15:00:46 +0200 (CEST)")
+Message-ID: <m3642txj91.fsf@maximus.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+IANAL, but:
 
---=-810Vdr13Hto4gIlzdvh4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Igor Sobrado <igor@condmat1.ciencias.uniovi.es> writes:
 
-On Mon, 2007-09-10 at 17:20 +0300, Tomas Winkler wrote:
+> So, under a dual-licensed BSD/GPL code the latter license allows a
+> developer to remove the GPL license itself and release a
+> single-licensed BSD code if other parties want to do it?
 
-> It is my best intention yet first we need native interface which make
-> in turn problems in eb tables. So it is a long shot.
+Of course. If it wasn't legal, dual BSD/GPL would just be equal
+to GPL. Now, dual BSD/GPL equals BSD.
 
-Ok. We've managed long enough without it so I guess we can wait :)
+OTOH I'd probable leave the original licence text, something like:
 
-> I wouldn't appreciate this at all. 11n is major feature of our NIC.
-> Major obstacle in finally pushing 11n is constant  code base change of
-> iwlwifi. This is already 4th  code base. The latest was because the
-> driver didn't look nice enough, what an engineering   reason! In the
-> bottom line we are hunting our own tail for wrong reasons
+The actual licence conditions:
+GPL or BSD or whatever.
 
-Well, I believe that there are bad layering violations in your current
-driver, namely looking at the packets mac80211 sends, doing 11N
-manipulations and everything in the driver and duplicating the sta_info
-stuff because mac80211 happens to be missing a few hooks. If you think
-those are "wrong reasons" that's fine with me.
+Portions of this file were licenced under:
+[the original licence text, not valid as a licence for current file]
 
-Personally, I'm just raising these points and marking them down as
-"against merging as-is". If others don't care about them, that's ok with
-me.
 
-johannes
-
---=-810Vdr13Hto4gIlzdvh4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG5myt/ETPhpq3jKURAgIVAJ4yxOr6Z94sWoWsJsePRnqOzrXwvQCgqExd
-GmUcqYje8RCxQudbqkzQ9v0=
-=Rdw7
------END PGP SIGNATURE-----
-
---=-810Vdr13Hto4gIlzdvh4--
-
+WRT Atheros driver I'd probably leave the thing as is (i.e., BSD/GPL
+= in fact BSD), unless something like 50+% of the code is rewritten -
+it's mostly their hard work after all, isn't it? Not legal
+requirement, though.
+-- 
+Krzysztof Halasa
