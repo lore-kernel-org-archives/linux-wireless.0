@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:30095 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751113AbXIAAcQ (ORCPT
+Received: from bofh.cns.ualberta.ca ([129.128.11.10]:59131 "EHLO
+	bofh.cns.ualberta.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933511AbXIBATP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 20:32:16 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/6] adm8211: Switch to eeprom_93cx6
-Date: Fri, 31 Aug 2007 20:30:14 -0400
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200708310055.37580.flamingice@sourmilk.net> <200708312340.52730.IvDoorn@gmail.com>
-In-Reply-To: <200708312340.52730.IvDoorn@gmail.com>
+	Sat, 1 Sep 2007 20:19:15 -0400
+Date: Sat, 1 Sep 2007 18:19:13 -0600
+From: Bob Beck <beck@bofh.cns.ualberta.ca>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vge
+Subject: r.kernel.org
+Message-ID: <20070902001913.GF24887@bofh.cns.ualberta.ca>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart16983435.J2nlOLkpmG";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708312030.19046.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart16983435.J2nlOLkpmG
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Friday 31 August 2007 17:40, Ivo van Doorn wrote:
-> > +	ADM8211_CSR_WRITE(SPR, reg);
-> > +	ADM8211_CSR_READ(SPR);		// eeprom_delay
-> > +}
-> Is this extra delay needed? eeprom_93cx6 also performs
-> a ndelay(450) during each pulse
+
+>I urge developers to not bait into this and just leave this alone.
+>Those involved know what they are doing and have a strong team of
+>attorneys watching their backs. Any *necessary* discussions are be
+>done privately.
 >
-It's required to ensure the data reaches the card, at the very least. I'm n=
-ot=20
-sure if the read causes the hardware to do any sort of delay, if that's=20
-possible, but the previous eeprom reading code indicated that it did and=20
-didn't bother to do any actual delays.
+>  Luis
 
-=2DMichael Wu
+	What? when we talk about the ethics of cooperating development
+and sharing code the response is "we have lawyers watching your backs"
+and "we know what we are doing and have a plan"
 
---nextPart16983435.J2nlOLkpmG
-Content-Type: application/pgp-signature
+	What is this? a concerted attack by some organization on
+the BSD projects? Would that be the FSF? or freesoftware.org?  
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+	What kind of crap is this? that Free Software developers can't
+respect each others project goals and work together, but instead should
+beware of organizations with hidden agendas to abscond with their work. 
 
-iD8DBQBG2LKbT3Oqt9AH4aERAmD5AJ9+WktUl1qZu/i/Ycrkc5vT/fybBwCgnetk
-4CE3NNjf75MDjosxNA9uGhA=
-=L/yC
------END PGP SIGNATURE-----
+	What a crock. I urge any developers involved to decide if
+you really want to work in an environment of this sort of amoral baloney.
 
---nextPart16983435.J2nlOLkpmG--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+	I think you all should decide if you want to work in an environment
+where developers can cooperate on a handshake and respect each others
+differnet goals, or whether discoveries in each camp need to be hidden
+from each other and fought over by lawyers.  You're all being talked
+to by a bunch of zealots who put zealotry above morals.
+
+	-Bob
+
+
+        
+
