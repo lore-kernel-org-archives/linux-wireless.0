@@ -1,122 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42470 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51064 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbXIUV4w (ORCPT
+	with ESMTP id S1753413AbXICITN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 17:56:52 -0400
-Subject: Re: [PATCH 3/5] Wireless: add IEEE-802.11 regualtory domain module
+	Mon, 3 Sep 2007 04:19:13 -0400
+Subject: Re: letting drivers choose their preferred rate scale
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <43e72e890709211452j743fedfcyab6b981a0a3fce09@mail.gmail.com>
-References: <20070921210437.GG31768@pogo>
-	 <1190410242.18521.171.camel@johannes.berg>
-	 <43e72e890709211452j743fedfcyab6b981a0a3fce09@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RaCj6gHzExbtksHqEcEr"
-Date: Fri, 21 Sep 2007 23:58:10 +0200
-Message-Id: <1190411890.18521.179.camel@johannes.berg>
+To: ian <ischram@telenet.be>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46DB537E.8030801@telenet.be>
+References: <46CF95F9.6090802@telenet.be>
+	 <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be>
+	 <1188211749.6756.11.camel@johannes.berg>
+	 <20070831180933.GB3352@tuxdriver.com>  <46DB537E.8030801@telenet.be>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5sdxM1TiSX93MAp/eCuo"
+Date: Mon, 03 Sep 2007 10:20:23 +0200
+Message-Id: <1188807623.14564.13.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-RaCj6gHzExbtksHqEcEr
+--=-5sdxM1TiSX93MAp/eCuo
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-09-21 at 17:52 -0400, Luis R. Rodriguez wrote:
+On Mon, 2007-09-03 at 02:21 +0200, ian wrote:
 
-> > Then we can use "enum ieee80211_band" below in the structs and get type
-> > checking. Generally, no new stuff has anything to do with
-> > include/net/ieee80211.h, that's just for the old "stack".
+> I read up on the code and kernel mechanisms involved and this is
+> what i came up with
 >=20
-> Sure, I just wanted to point out the band def existed in another
-> header. My hopes is we can address all common header stuff once in for
-> all. I guess it'll have to wait a bit more.
-
-Oh ok. But I think we should start using sane values (these bits look
-awfully like you could OR them which is totally bogus) and convert the
-other stack over.
-
-> > > + * @name: name for this subband.
-> >
-> > Why does it need a name?
+> Right now there is no way of knowing what the "default" rc should be
+> other than that it has a module alias rc80211_default, checking
+> for this is probably not done, and would be pretty unpractical.
+> And it wouldn't be settable from userspace in the future either.
 >=20
-> Well to distinguish it.
-
-But why do we need to distinguish subbands by name? What do we use them
-for anyway?
-
-> > > + * @min_freq: minimum frequency for this subband, in MHz. This repre=
-sents the
-> > > + *   center of frequency of a channel.
-> > > + * @max_freq: maximum frequency for this subband, in MHz. This repre=
-sents the
-> > > + *   center of frequency of a channel.
-> >
-> > How can both be center freq?
+> We could however replace "simple" with a user settable variable.
+> (global variable in ieee80211.c like the rate_ctrl_algs and mutex,
+> with some accessors for a module parameter/debugfs/..?)
 >=20
-> min_freq is the center of frequency for the minimum channel on the
-> subband. max_freq is the center of frequency for the max channel on
-> the subband. I guess I should clear that up a little more huh.
-
-Uh ok, no, I just need to read better :)
-
-> > > +/**
-> > > + * struct ieee80211_regdomain - defines a regulatory domain
-> > > + *
-> > > + * @regdomain_id: ID of this regulatory domain. Some come from
-> > > + *   http://standards.ieee.org/getieee802/download/802.11b-1999_Cor1=
--2001.pdf
-> > > + * @regdomain_name: name of this regulatory domain.
-> > > + * @list: node, part of band_restrictions_list
-> > > + *
-> > > + * This structure defines a regulatory domain, which consists of cha=
-nnel and
-> > > + * power restrictions. Some regulatory domains come from
-> > > + * 802.11b-1999_Cor1-2001, the rest are based on Reyk Floeter's ar5k=
-. If
-> > > + * there is need to add more values here, please add one that is eit=
-her
-> > > + * defined in a standard or that many hardware devices have adopted.=
- Also
-> > > + * note that multiple countries can map to the same @regdomain_id
-> >
-> > There's no table here where you could add values, is there?.
+> we could additionally remove the module_alias from rc80211_simple
 >=20
-> There is a lot of them.. but we can add few to show as an example.
+> I don't know too much of the rest of mac80211 code and conventions,
+> so feel free to be brutal if this patch makes no sense.
+> ---
+> Make rc80211_simple the default rate scaling algorithm
+>=20
+> Signed-of-by: Ian Schram <ischram@telenet.be>
 
-Then again. Why do we have this struct in a header file?
+I think along with the patch from James this should work, with simple
+being the default. We should additionally have a debugfs file associated
+with "local" that allows you to set the "simple" string you've used
+there to something else. That also allows us to test the error path
+there :P
 
-> I should have explained that too. Well, if you may recall in my last
-> implementation of this I actually used a linked list. I then decided
-> we weren't going to add new 2.4GHz or 5GHz subbands unless a big
-> IEEE-802.11 change occurs. That doesn't happen so often to either use
-> linked list or a variable length array.
+> --- a/net/mac80211/ieee80211_rate.c	2007-09-03 01:26:18.000000000 +0200
+> +++ b/net/mac80211/ieee80211_rate.c	2007-09-03 01:46:54.000000000 +0200
+> @@ -62,7 +62,7 @@ ieee80211_try_rate_control_ops_get(const
+>=20
+>  	mutex_lock(&rate_ctrl_mutex);
+>  	list_for_each_entry(alg, &rate_ctrl_algs, list) {
+> -		if (!name || !strcmp(alg->ops->name, name))
+> +		if (!strcmp(alg->ops->name, name))
+>  			if (try_module_get(alg->ops->module)) {
+>  				ops =3D alg->ops;
+>  				break;
+> @@ -78,11 +78,12 @@ static struct rate_control_ops *
+>  ieee80211_rate_control_ops_get(const char *name)
+>  {
+>  	struct rate_control_ops *ops;
+> +	const char *try_name =3D name ? name : "simple";
+>=20
+> -	ops =3D ieee80211_try_rate_control_ops_get(name);
+> +	ops =3D ieee80211_try_rate_control_ops_get(try_name);
+>  	if (!ops) {
+> -		request_module("rc80211_%s", name ? name : "default");
+> -		ops =3D ieee80211_try_rate_control_ops_get(name);
+> +		request_module("rc80211_%s", try_name);
+> +		ops =3D ieee80211_try_rate_control_ops_get(try_name);
+>  	}
+>  	return ops;
+>  }
+>=20
+>=20
+>=20
 
-Ok I just don't understand why you have this information in a struct.
-Shouldn't all of this information be essentially internal to the
-regulatory code, and people who use it simply query it and get back a
-pointer to the subband that applies to their query? I don't see why
-everybody needs to see this huge array.
-
-johannes
-
---=-RaCj6gHzExbtksHqEcEr
+--=-5sdxM1TiSX93MAp/eCuo
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG9D5y/ETPhpq3jKURAn+7AJ9+VXNn2G+JtJemaLxFsE/BWTBv3gCghYd3
-INZjpw43wa53VEHekhsPtMI=
-=wAlH
+iD8DBQBG28PH/ETPhpq3jKURAmOTAKC2DSI8vqvs9ZeoimM6AW1x5iM6BACfXgNk
+vaaHEgATBZR1LA6/RsjOgsY=
+=fAVt
 -----END PGP SIGNATURE-----
 
---=-RaCj6gHzExbtksHqEcEr--
+--=-5sdxM1TiSX93MAp/eCuo--
 
