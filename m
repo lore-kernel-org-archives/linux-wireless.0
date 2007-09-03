@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:44541 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932937AbXILKFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2007 06:05:41 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1IVP5i-0000Oe-4l
-	for linux-wireless@vger.kernel.org; Wed, 12 Sep 2007 12:05:02 +0200
-Received: from 80.169.182.16 ([80.169.182.16])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 12:05:02 +0200
-Received: from marcus by 80.169.182.16 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 12:05:02 +0200
-To: linux-wireless@vger.kernel.org
-From: Marcus Better <marcus@better.se>
-Subject: rt2500 suspend problems
-Date: Wed, 12 Sep 2007 09:41:32 +0200
-Message-ID: <fc85aq$uu6$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nf-out-0910.google.com ([64.233.182.186]:22567 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbXICSyC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Sep 2007 14:54:02 -0400
+Received: by nf-out-0910.google.com with SMTP id f5so1261272nfh
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2007 11:54:00 -0700 (PDT)
+Message-ID: <46DC588D.40305@gmail.com>
+Date: Mon, 03 Sep 2007 20:55:09 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Krzysztof Halasa <khc@pm.waw.pl>
+CC: Jiri Slaby <jirislaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Ath5k panic fix
+References: <m3ejhfvbp3.fsf@maximus.localdomain>
+In-Reply-To: <m3ejhfvbp3.fsf@maximus.localdomain>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Krzysztof Halasa napsal(a):
+> Ath5k panics on ath_open() because sc->pdev is never set, fixed.
+> 
+> Signed-off-by: Krzysztof Halasa <khc@pm.waw.pl>
 
-my laptop with rt2500 card won't wake up from suspend-to-RAM. The cause
-seems to be the rt2x00 driver. Are there any known issues with this? I
-tried 2.6.23-rc4 from wireless-dev head (yesterday), and also an earlier
-commit based on 2.6.23-rc3.
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
 
-(As a separate issue, it seems I cannot even associate to my AP with WEP
-with the latest kernel. The syslog says:
-Sep 12 07:55:13 better kernel: wlan0: RX WEP frame, but no key set
-.)
+I wonder how it is possible that the driver works here.
 
-Here's the lspci line for the WiFi card:
+> --- a/drivers/net/wireless/ath5k_base.c
+> +++ b/drivers/net/wireless/ath5k_base.c
+> @@ -2295,6 +2295,7 @@ static int __devinit ath_pci_probe(struct pci_dev *pdev,
+>  	hw->max_rssi = 127; /* FIXME: get a real value for this. */
+>  	sc = hw->priv;
+>  	sc->hw = hw;
+> +	sc->pdev = pdev;
+>  
+>  	/*
+>  	 * Mark the device as detached to avoid processing
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-08:02.0 Network controller [0280]: RaLink RT2500 802.11g Cardbus/mini-PCI
-[1814:0201] (rev 01)
-
-The system is an LG LE50 Express i386 laptop.
-
-Thanks,
-
-Marcus
-
-
+thanks,
+-- 
+http://www.fi.muni.cz/~xslaby/            Jiri Slaby
+faculty of informatics, masaryk university, brno, cz
