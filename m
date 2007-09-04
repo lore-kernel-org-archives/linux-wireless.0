@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:51740 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755711AbXIBN5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 09:57:34 -0400
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Adrian Bunk <bunk@kernel.org>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	<46D99FB7.6030505@garzik.org>
-	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	<20070901205457.GK9260@stusta.de>
-	<20070902113638.78fbd202@the-village.bc.nu>
-	<Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
-	<20070902115041.GM16016@stusta.de>
-	<Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
-	<20070902134612.28a88761@the-village.bc.nu>
-	<Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Sun, 02 Sep 2007 15:57:30 +0200
-In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es> (Igor Sobrado's message of "Sun, 02 Sep 2007 15:00:46 +0200 (CEST)")
-Message-ID: <m3642txj91.fsf@maximus.localdomain>
+Received: from mu-out-0910.google.com ([209.85.134.188]:35137 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbXIDSsT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 14:48:19 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so2576864mue
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2007 11:48:17 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Date: Tue, 4 Sep 2007 20:58:15 +0200
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <200709042015.34764.IvDoorn@gmail.com> <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com>
+In-Reply-To: <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709042058.15463.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IANAL, but:
+On Tuesday 04 September 2007, dragoran wrote:
+> On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > On Tuesday 04 September 2007, dragoran wrote:
+> > > >+static ssize_t show_rf_kill(struct device *d,
+> > > >+                        struct device_attribute *attr, char *buf)
+> > > >+{
+> > > >+    /*
+> > > >+     * 0 - RF kill not enabled
+> > > >+     * 1 - SW based RF kill active (sysfs)
+> > > >+     * 2 - HW based RF kill active
+> > > >+     * 3 - Both HW and SW based RF kill active
+> > > >
+> > > >that as well, along with all the other sysfs bits. Also, how about using
+> > > >the generic rfkill infrastructure Ivo did?
+> > >
+> > > is the generic rfkill interface already stable and merged into the linus tree?
+> >
+> > Yes. It currently is only missing users.
+> 
+> ok thats great ;) is the (userspace) interface defined somewhere? or
+> should I read the code to understand how it works? (would like to add
+> support to hal)
 
-Igor Sobrado <igor@condmat1.ciencias.uniovi.es> writes:
+There isn't a documentation file for it, so best thing to do would be looking at the code.
+basically hal only needs to check the sysfs files:
 
-> So, under a dual-licensed BSD/GPL code the latter license allows a
-> developer to remove the GPL license itself and release a
-> single-licensed BSD code if other parties want to do it?
+	name -> Name of device/interface
+	type -> wlan, bluetooth, irda
+	state -> Current device state. 0: Off, 1: On
+	claim -> 0: Kernel handles events, 1: Userspace handles events
 
-Of course. If it wasn't legal, dual BSD/GPL would just be equal
-to GPL. Now, dual BSD/GPL equals BSD.
+"name" and "type" are read-only
+"claim" and "state" are read/writable
 
-OTOH I'd probable leave the original licence text, something like:
+Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
+this has been fixed in 2.6.23-rc.
 
-The actual licence conditions:
-GPL or BSD or whatever.
+> > > if not please leave this for now to not break userspace (hal).
+> > > hal currently is using this on all ipw* and iwl* drivers to get and
+> > > set the rfkill status. And NM uses this interface to set/get rfkill
+> > > status.
+> > >
+> > > So please don't remove this yet until the proper interface is merged
+> > > too (which should be better anyway because this one requires polling)
+> >
+> > The input-polldev interface could be used for polling if it is required.
+> 
+> shouldn't the new interface send events so that polling isn't required?
 
-Portions of this file were licenced under:
-[the original licence text, not valid as a licence for current file]
+Not really, rfkill was intended for a generic interface, which would make
+the rfkill buttons work with or without intervention of userspace. So polling
+is required unless the hardware generates interrupts when the button is called.
 
-
-WRT Atheros driver I'd probably leave the thing as is (i.e., BSD/GPL
-= in fact BSD), unless something like 50+% of the code is rewritten -
-it's mostly their hard work after all, isn't it? Not legal
-requirement, though.
--- 
-Krzysztof Halasa
+Ivo
