@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42778 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755608AbXIFNpn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:45:43 -0400
-Message-Id: <20070905234624.154022000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:15 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 06/21] mac80211: remove IEEE80211_CONF_SSID_HIDDEN and  PRISM2_PARAM_BROADCAST_SSID
+Received: from mga01.intel.com ([192.55.52.88]:17274 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984AbXIDDKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Sep 2007 23:10:22 -0400
+Subject: [PATCH V3] Add iwlwifi wireless drivers
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W.Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 04 Sep 2007 11:04:17 +0800
+Message-Id: <1188875058.13078.428.camel@debian.sh.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE80211_CONF_SSID_HIDDEN setting is not useful for any driver
-we have and should be a per-interface setting anyway. Remove it.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This is the third version of the patch (against 2.6.23-rc4) adds
+the mac80211 based wireless drivers for the Intel PRO/Wireless
+3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN (4965)
+adapters. You can find it from:
+http://intellinuxwireless.org/iwlwifi/v6-Add-iwlwifi-wireless-drivers.patch
 
----
- include/net/mac80211.h         |    3 +--
- net/mac80211/hostapd_ioctl.h   |    1 -
- net/mac80211/ieee80211_ioctl.c |   13 -------------
- 3 files changed, 1 insertion(+), 16 deletions(-)
+I list the changes against the last version I submitted to the list last
+week in case you have reviewed the previous version and only want to see
+the diff. You can find the overall patch here:
+http://intellinuxwireless.org/iwlwifi/iwlwifi-v5_to_v6.patch
 
---- wireless-dev.orig/include/net/mac80211.h	2007-09-06 01:35:13.764453431 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-09-06 01:35:16.124453431 +0200
-@@ -322,8 +322,7 @@ struct ieee80211_conf {
- 
- #define IEEE80211_CONF_SHORT_SLOT_TIME	(1<<0) /* use IEEE 802.11g Short Slot
- 						* Time */
--#define IEEE80211_CONF_SSID_HIDDEN	(1<<1) /* do not broadcast the ssid */
--#define IEEE80211_CONF_RADIOTAP		(1<<2) /* use radiotap if supported
-+#define IEEE80211_CONF_RADIOTAP		(1<<1) /* use radiotap if supported
- 						  check this bit at RX time */
- 	u32 flags;			/* configuration flags defined above */
- 
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-09-06 01:35:14.614453431 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-09-06 01:35:16.144453431 +0200
-@@ -36,7 +36,6 @@ enum {
- 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
- 	PRISM2_PARAM_NEXT_MODE = 1008,
- 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
--	PRISM2_PARAM_BROADCAST_SSID = 1015,
- 	PRISM2_PARAM_EAPOL = 1023,
- 	PRISM2_PARAM_WIFI_WME_NOACK_TEST = 1033,
- 	PRISM2_PARAM_SCAN_FLAGS = 1035,
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-09-06 01:35:14.624453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-09-06 01:35:16.144453431 +0200
-@@ -1673,15 +1673,6 @@ static int ieee80211_ioctl_prism2_param(
- 		local->next_mode = hostapd_mode_to_mode(value);
- 		break;
- 
--	case PRISM2_PARAM_BROADCAST_SSID:
--		if ((value < 0) || (value > 1))
--			ret = -EINVAL;
--		else if (value)
--			local->hw.conf.flags |= IEEE80211_CONF_SSID_HIDDEN;
--		else
--			local->hw.conf.flags &= ~IEEE80211_CONF_SSID_HIDDEN;
--		break;
--
- 	case PRISM2_PARAM_EAPOL:
- 		sdata->eapol = value;
- 		break;
-@@ -1809,10 +1800,6 @@ static int ieee80211_ioctl_get_prism2_pa
- 		*param = local->next_mode;
- 		break;
- 
--	case PRISM2_PARAM_BROADCAST_SSID:
--		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SSID_HIDDEN);
--		break;
--
- 	case PRISM2_PARAM_EAPOL:
- 		*param = sdata->eapol;
- 		break;
+In this version, we replace the "comiple iwl-base.c twice for two
+drivers" scheme with separating the two drivers into two code base. In
+the future, we will abstract a common layer for all the iwl based
+drivers and make it a separate module for better maintenance.
 
--- 
+Note, the #include "../net/mac80211/ieee80211_rate.h" still existed in
+this version of the driver. We are discussing how to abstract the
+mac80211 rate scaling interface in another thread in this ML.
 
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+
+Adrian Bunk (1):
+      iwl-base.c bugfixes
+
+Ben Cahill (3):
+      iwlwifi: unify definitions (3945/4965) of struct
+iwl_txpowertable_cmd
+      iwlwifi: remove unused definitions in iwl-4965-hw.h
+      iwlwifi: move 4965 Rx API stuff into iwl-commands.h
+
+Mohamed Abbas (2):
+      iwlwifi: fix assert when calling LinkQuality command
+      iwlwifi: fix aggregation tx status
+
+Tomas Winkler (14):
+      iwlwifi: kill legacy fields from iwl_cmd_meta
+      iwlwifi: kill __iwl_send_cmd
+      iwlwifi: add file iwl-prph.h
+      iwlwifi: CSR registers cleanup
+      iwlwifi: add Makefile sparse target
+      iwlwifi: iwl_mac_conf_tx remove casting to restricted
+      iwlwifi: setting RAxTID endianity fix
+      iwlwifi: AP setup qos and tx_conf bug fix
+      iwlwifi: move defines from iwl-4965.c to iwl-commands.h
+      iwlwifi: remove unnecessary condition check
+      iwlwifi: fixing LQ command changes in AP mode
+      iwlwifi: FAT channel bug fix for zero relevant bits
+      iwlwifi: Control channel fix for FAT channel
+      iwlwifi: move APMG registers to Periphery section
+
+Zhu Yi (4):
+      iwlwifi: make "ipw going down" debug message depends on
+IWL_DL_INFO
+      iwlwifi: fix IBSS connection problem caused by LinkQuality cmd
+change
+      iwlwifi: Update version iwl-base.c stamp to 0.1.14
+      iwlwifi: move macros defines from *.c to *.h
+      
+ian (1):
+      avoid kernel oops in monitor mode with debug enabled
