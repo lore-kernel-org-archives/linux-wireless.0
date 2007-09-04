@@ -1,44 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61850 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbXIAEgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:36:50 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 6BA90618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:36:49 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 27/35] Remove unneeded braces, found by checkpatch.pl
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:36:49 -0400
-Message-ID: <20070901043648.2498.86369.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321AbXIDNlI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 09:41:08 -0400
+Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+In-Reply-To: <20070904011648.GX1835@jm.kir.nu>
+References: <1187987850.24933.29.camel@johannes.berg>
+	 <20070904011648.GX1835@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Rfn9NFHfaCPGaXXYa+0J"
+Date: Tue, 04 Sep 2007 15:42:15 +0200
+Message-Id: <1188913335.9942.16.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
 
- drivers/net/wireless/at76_usb.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+--=-Rfn9NFHfaCPGaXXYa+0J
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-09-03 at 18:16 -0700, Jouni Malinen wrote:
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index e469d66..fb4a45c 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -3407,11 +3407,10 @@ static int at76_submit_rx_urb(struct at76_priv *priv)
- 	}
- 
- exit:
--	if (ret < 0 && ret != -ENODEV) {
-+	if (ret < 0 && ret != -ENODEV)
- 		printk(KERN_ERR "%s: cannot submit rx urb - please unload the "
- 		       "driver and/or power cycle the device\n",
- 		       priv->netdev->name);
--	}
- 
- 	return ret;
- }
+> Where are things like NL80211_ATTR_IFNAME and
+> NL80211_CMD_ADD_VIRTUAL_INTERFACE defined? I would assume these are from
+> linux/nl80211.h, but where should I get the version that includes these?
+
+You have to use the one from wireless-dev as we don't ship it from
+mainline yet.
+
+> This is making it a bit difficult to build driver_devicescape.c and same
+> goes for the requirement for svn trunk version of libnl.. Any idea how
+> much code from libnl is needed here? Would it be major effort to do the
+> needed calls without having to rely on libnl at or (or at least not on
+> an unreleased svn trunk version)?
+
+There's a whole bunch of code in libnl I use, all the generic netlink
+family resolving etc. Maybe Thomas can prerelease a libnl with generic
+netlink support?
+
+> This is not good direction to go to.. I would really not like to include
+> linux/*.h unless absolutely needed since these header files have been
+> very likely to conflict with glibc ones and there is not really that
+> much guarantees in people wanting to keep kernel header files suitable
+> for inclusion into user space programs.
+
+Actually, the latter point hasn't been true for a long time, ever since
+David Woodhouse cleaned up exporting kernel headers to userspace glibc
+has happily shipped them.
+
+> I would much rather use these for now and should the /usr/include/linux
+> directory in most distributions some day have all the needed stuff, then
+> we could move towards using those.
+
+It really ought to have the wireless stuff except for nl80211.h
+
+johannes
+
+--=-Rfn9NFHfaCPGaXXYa+0J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3WC3/ETPhpq3jKURAhMrAJsETljPn1gKR7OjvMI5Ynzi+GfU0QCgo6Ch
+UX3tPnrToL56fIow79iXCbo=
+=vLGx
+-----END PGP SIGNATURE-----
+
+--=-Rfn9NFHfaCPGaXXYa+0J--
+
