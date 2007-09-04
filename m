@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:35419 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751743AbXISVdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 17:33:44 -0400
-Date: Wed, 19 Sep 2007 14:33:56 -0700
-From: Greg KH <gregkh@suse.de>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	David Brownell <david-b@pacbell.net>,
-	linux-usb-devel@lists.sourceforge.net
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-usb-users@lists.sourceforge.net, zambrano@broadcom.com,
-	mb@bu3sch.de
-Subject: Re: Please pull 'ssb-drivers' branch of wireless-2.6
-Message-ID: <20070919213356.GB15510@suse.de>
-References: <20070919204428.GE5483@tuxdriver.com>
+Received: from fk-out-0910.google.com ([209.85.128.190]:63698 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755213AbXIDSFk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 14:05:40 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1714046fkz
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2007 11:05:38 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Date: Tue, 4 Sep 2007 20:15:34 +0200
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com>
+In-Reply-To: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070919204428.GE5483@tuxdriver.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709042015.34764.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 04:44:28PM -0400, John W. Linville wrote:
-> Jeff, Greg, Gary, and Dave,
+On Tuesday 04 September 2007, dragoran wrote:
+> >+static ssize_t show_rf_kill(struct device *d,
+> >+			    struct device_attribute *attr, char *buf)
+> >+{
+> >+	/*
+> >+	 * 0 - RF kill not enabled
+> >+	 * 1 - SW based RF kill active (sysfs)
+> >+	 * 2 - HW based RF kill active
+> >+	 * 3 - Both HW and SW based RF kill active
+> >
+> >that as well, along with all the other sysfs bits. Also, how about using
+> >the generic rfkill infrastructure Ivo did?
 > 
-> These patches build upon the SSB bus support added to net-2.6.24 to
-> support the b43 wireless driver.  Since Dave has that support in his
-> tree, I'm asking him to merge these patches as well.
-> 
-> The first patch changes b44 from being a PCI (i.e. SSB-in-drag)
-> device to being a native SSB device.  This has little effect one
-> way or the other for laptop/desktop/server machines.  But, some
-> embedded devices have b44 hardware but no PCI bus (i.e. just SSB).
-> This patch enables the use of the b44 driver on that hardware.
-> 
-> The second patch adds a driver for a USB OHCI device which lives on
-> the SSB bus.  Again, this is found on a number of SoC devices used
-> especially in wireless routers and APs.
-> 
-> Thanks for reviewing/ACKing/merging!
-> 
-> John
-> 
-> ---
-> 
-> The patches are available here:
-> 
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/ssb-drivers/0001-b44-port-to-native-ssb-support.patch
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/ssb-drivers/0002-usb-ssb-hosted-OHCI-driver.patch
+> is the generic rfkill interface already stable and merged into the linus tree?
 
-This one needs to go through the linux-usb-devel list (not the -users
-list) and get acked by David Brownell, the current OHCI maintainer.
+Yes. It currently is only missing users.
 
-thanks,
+> if not please leave this for now to not break userspace (hal).
+> hal currently is using this on all ipw* and iwl* drivers to get and
+> set the rfkill status. And NM uses this interface to set/get rfkill
+> status.
+> 
+> So please don't remove this yet until the proper interface is merged
+> too (which should be better anyway because this one requires polling)
 
-greg k-h
+The input-polldev interface could be used for polling if it is required.
+
+Ivo
