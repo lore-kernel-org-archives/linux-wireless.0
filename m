@@ -1,112 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282AbXIZNYQ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:32860
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753306AbXIDNPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 09:24:16 -0400
-Message-Id: <20070926132137.144217000@sipsolutions.net>
-References: <20070926131938.575572000@sipsolutions.net>
-Date: Wed, 26 Sep 2007 15:19:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
-Subject: [patch 12/12] mac80211: remove generic IE for AP interfaces
-Mime-Version: 1.0
+	Tue, 4 Sep 2007 09:15:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix HW key clearing.
+Date: Tue, 4 Sep 2007 15:14:23 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709041514.23773.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not useful since we do not support probe response
-offload to hardware at this time and beacons are set in
-another way.
+This fixes clearing of the HW keys.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
----
- include/net/mac80211.h         |    7 -------
- net/mac80211/ieee80211.c       |    4 ----
- net/mac80211/ieee80211_i.h     |    2 --
- net/mac80211/ieee80211_iface.c |    1 -
- net/mac80211/ieee80211_ioctl.c |    9 ---------
- 5 files changed, 23 deletions(-)
-
---- wireless-dev.orig/include/net/mac80211.h	2007-09-26 14:38:36.728936654 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-09-26 14:38:39.048936654 +0200
-@@ -518,11 +518,6 @@ struct ieee80211_if_init_conf {
-  *	config_interface() call, so copy the value somewhere if you need
-  *	it.
-  * @ssid_len: length of the @ssid field.
-- * @generic_elem: used (together with @generic_elem_len) by drivers for
-- *	hardware that generate beacons independently. The pointer is valid
-- *	only during the config_interface() call, so copy the value somewhere
-- *	if you need it.
-- * @generic_elem_len: length of the generic element.
-  * @beacon: beacon template. Valid only if @host_gen_beacon_template in
-  *	&struct ieee80211_hw is set. The driver is responsible of freeing
-  *	the sk_buff.
-@@ -537,8 +532,6 @@ struct ieee80211_if_conf {
- 	u8 *bssid;
- 	u8 *ssid;
- 	size_t ssid_len;
--	u8 *generic_elem;
--	size_t generic_elem_len;
- 	struct sk_buff *beacon;
- 	struct ieee80211_tx_control *beacon_control;
- };
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 14:38:36.738936654 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 14:39:47.048936654 +0200
-@@ -452,13 +452,9 @@ static int __ieee80211_if_config(struct 
- 		conf.bssid = sdata->u.sta.bssid;
- 		conf.ssid = sdata->u.sta.ssid;
- 		conf.ssid_len = sdata->u.sta.ssid_len;
--		conf.generic_elem = sdata->u.sta.extra_ie;
--		conf.generic_elem_len = sdata->u.sta.extra_ie_len;
- 	} else if (sdata->type == IEEE80211_IF_TYPE_AP) {
- 		conf.ssid = sdata->u.ap.ssid;
- 		conf.ssid_len = sdata->u.ap.ssid_len;
--		conf.generic_elem = sdata->u.ap.generic_elem;
--		conf.generic_elem_len = sdata->u.ap.generic_elem_len;
- 		conf.beacon = beacon;
- 		conf.beacon_control = control;
+Index: wireless-dev/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-31 15:37:00.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-31 16:01:34.000000000 +0200
+@@ -727,7 +727,7 @@ static void key_write(struct b43_wldev *
+ 
+ static void keymac_write(struct b43_wldev *dev, u8 index, const u8 * addr)
+ {
+-	u32 addrtmp[2];
++	u32 addrtmp[2] = { 0, 0, };
+ 	u8 per_sta_keys_start = 8;
+ 
+ 	if (b43_new_kidx_api(dev))
+@@ -741,12 +741,14 @@ static void keymac_write(struct b43_wlde
+ 	 */
+ 	index -= per_sta_keys_start;
+ 
+-	addrtmp[0] = addr[0];
+-	addrtmp[0] |= ((u32) (addr[1]) << 8);
+-	addrtmp[0] |= ((u32) (addr[2]) << 16);
+-	addrtmp[0] |= ((u32) (addr[3]) << 24);
+-	addrtmp[1] = addr[4];
+-	addrtmp[1] |= ((u32) (addr[5]) << 8);
++	if (addr) {
++		addrtmp[0] = addr[0];
++		addrtmp[0] |= ((u32) (addr[1]) << 8);
++		addrtmp[0] |= ((u32) (addr[2]) << 16);
++		addrtmp[0] |= ((u32) (addr[3]) << 24);
++		addrtmp[1] = addr[4];
++		addrtmp[1] |= ((u32) (addr[5]) << 8);
++	}
+ 
+ 	if (dev->dev->id.revision >= 5) {
+ 		/* Receive match transmitter address mechanism */
+@@ -776,7 +778,7 @@ static void do_key_write(struct b43_wlde
+ 			 u8 index, u8 algorithm,
+ 			 const u8 * key, size_t key_len, const u8 * mac_addr)
+ {
+-	u8 buf[B43_SEC_KEYSIZE];
++	u8 buf[B43_SEC_KEYSIZE] = { 0, };
+ 	u8 per_sta_keys_start = 8;
+ 
+ 	if (b43_new_kidx_api(dev))
+@@ -785,10 +787,10 @@ static void do_key_write(struct b43_wlde
+ 	B43_WARN_ON(index >= dev->max_nr_keys);
+ 	B43_WARN_ON(key_len > B43_SEC_KEYSIZE);
+ 
+-	memset(buf, 0, sizeof(buf));
+ 	if (index >= per_sta_keys_start)
+-		keymac_write(dev, index, buf);	/* First zero out mac. */
+-	memcpy(buf, key, key_len);
++		keymac_write(dev, index, NULL);	/* First zero out mac. */
++	if (key)
++		memcpy(buf, key, key_len);
+ 	key_write(dev, index, algorithm, buf);
+ 	if (index >= per_sta_keys_start)
+ 		keymac_write(dev, index, mac_addr);
+@@ -804,10 +806,13 @@ static int b43_key_write(struct b43_wlde
+ {
+ 	int i;
+ 	int sta_keys_start;
+-	bool removal = 0;
+ 
+ 	if (key_len > B43_SEC_KEYSIZE)
+ 		return -EINVAL;
++	for (i = 0; i < dev->max_nr_keys; i++) {
++		/* Check that we don't already have this key. */
++		B43_WARN_ON(dev->key[i].keyconf == keyconf);
++	}
+ 	if (index < 0) {
+ 		/* Either pairwise key or address is 00:00:00:00:00:00
+ 		 * for transmit-only keys. Search the index. */
+@@ -816,24 +821,13 @@ static int b43_key_write(struct b43_wlde
+ 		else
+ 			sta_keys_start = 8;
+ 		for (i = sta_keys_start; i < dev->max_nr_keys; i++) {
+-			if (dev->key[i].keyconf == keyconf) {
+-				/* we already have this key so we must be
+-				 * in removal (there is no update) */
+-				removal = 1;
++			if (!dev->key[i].keyconf) {
++				/* found empty */
+ 				index = i;
+ 				break;
+ 			}
+ 		}
+ 		if (index < 0) {
+-			for (i = sta_keys_start; i < dev->max_nr_keys; i++) {
+-				if (!dev->key[i].keyconf) {
+-					/* found empty */
+-					index = i;
+-					break;
+-				}
+-			}
+-		}
+-		if (index < 0) {
+ 			b43err(dev->wl, "Out of hardware key memory\n");
+ 			return -ENOSPC;
+ 		}
+@@ -847,22 +841,32 @@ static int b43_key_write(struct b43_wlde
+ 		do_key_write(dev, index + 4, algorithm, key, key_len, NULL);
  	}
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-26 14:38:36.748936654 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-26 14:43:03.908936654 +0200
-@@ -195,8 +195,6 @@ struct ieee80211_if_ap {
+ 	keyconf->hw_key_idx = index;
+-	dev->key[index].keyconf = removal ? NULL : keyconf;
++	dev->key[index].keyconf = keyconf;
++
++	return 0;
++}
++
++static int b43_key_clear(struct b43_wldev *dev, int index)
++{
++	if (B43_WARN_ON((index < 0) || (index >= dev->max_nr_keys)))
++		return -EINVAL;
++	do_key_write(dev, index, B43_SEC_ALGO_NONE,
++		     NULL, B43_SEC_KEYSIZE, NULL);
++	if ((index <= 3) && !b43_new_kidx_api(dev)) {
++		do_key_write(dev, index + 4, B43_SEC_ALGO_NONE,
++			     NULL, B43_SEC_KEYSIZE, NULL);
++	}
++	dev->key[index].keyconf = NULL;
  
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	size_t ssid_len;
--	u8 *generic_elem;
--	size_t generic_elem_len;
- 
- 	/* yes, this looks ugly, but guarantees that we can later use
- 	 * bitmap_empty :)
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-09-26 14:38:16.958936654 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-09-26 14:39:41.338936654 +0200
-@@ -120,15 +120,6 @@ static int ieee80211_ioctl_siwgenie(stru
- 		return 0;
- 	}
- 
--	if (sdata->type == IEEE80211_IF_TYPE_AP) {
--		kfree(sdata->u.ap.generic_elem);
--		sdata->u.ap.generic_elem = kmalloc(data->length, GFP_KERNEL);
--		if (!sdata->u.ap.generic_elem)
--			return -ENOMEM;
--		memcpy(sdata->u.ap.generic_elem, extra, data->length);
--		sdata->u.ap.generic_elem_len = data->length;
--		return ieee80211_if_config(dev);
--	}
- 	return -EOPNOTSUPP;
+ 	return 0;
  }
  
---- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-26 14:38:36.748936654 +0200
-+++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-26 14:43:03.958936654 +0200
-@@ -206,7 +206,6 @@ void ieee80211_if_reinit(struct net_devi
+ static void b43_clear_keys(struct b43_wldev *dev)
+ {
+-	static const u8 zero[B43_SEC_KEYSIZE] = { 0 };
+-	unsigned int i;
++	int i;
  
- 		kfree(sdata->u.ap.beacon_head);
- 		kfree(sdata->u.ap.beacon_tail);
--		kfree(sdata->u.ap.generic_elem);
+-	BUILD_BUG_ON(B43_SEC_KEYSIZE < ETH_ALEN);
+-	for (i = 0; i < dev->max_nr_keys; i++) {
+-		do_key_write(dev, i, B43_SEC_ALGO_NONE,
+-			     zero, B43_SEC_KEYSIZE, zero);
+-		dev->key[i].keyconf = NULL;
+-	}
++	for (i = 0; i < dev->max_nr_keys; i++)
++		b43_key_clear(dev, i);
+ }
  
- 		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
- 			local->total_ps_buffered--;
-
--- 
-
+ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
+@@ -2962,12 +2966,7 @@ static int b43_dev_set_key(struct ieee80
+ 		}
+ 		break;
+ 	case DISABLE_KEY: {
+-		static const u8 zero[B43_SEC_KEYSIZE] = { 0 };
+-
+-		algorithm = B43_SEC_ALGO_NONE;
+-		err = b43_key_write(dev, index, algorithm,
+-				    zero, B43_SEC_KEYSIZE,
+-				    NULL, key);
++		err = b43_key_clear(dev, key->hw_key_idx);
+ 		if (err)
+ 			goto out_unlock;
+ 		break;
