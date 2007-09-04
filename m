@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2200 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968596AbXILORb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2007 10:17:31 -0400
-Date: Wed, 12 Sep 2007 09:43:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Cc: linux-wireless@vger.kernel.org, jt@hpl.hp.com,
-	geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Message-ID: <20070912134312.GA6085@tuxdriver.com>
-References: <20070730144726.GA6586@tuxdriver.com> <20070807153150.A867.MOKUNO@sm.sony.co.jp> <20070912133226.6818.MOKUNO@sm.sony.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070912133226.6818.MOKUNO@sm.sony.co.jp>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754250AbXIDOyC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 10:54:02 -0400
+Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+In-Reply-To: <1188913335.9942.16.camel@johannes.berg>
+References: <1187987850.24933.29.camel@johannes.berg>
+	 <20070904011648.GX1835@jm.kir.nu>  <1188913335.9942.16.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sp8y1V7oqcfYIsCxmLn4"
+Date: Tue, 04 Sep 2007 16:55:16 +0200
+Message-Id: <1188917716.9942.37.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 12, 2007 at 01:36:16PM +0900, Masakazu Mokuno wrote:
-> Hi John,
-> 
-> Could you please apply the patch that I has submitted in 8th Aug, for
-> 2.6.24?
-> 
-> http://marc.info/?l=linux-wireless&m=118647249314475
-> 
-> This patch does not seem to be included into the wireless tree.
 
-Well, thanks for pointing that out.  The reason is that the patch
-was lost, probably due to the fact that it wasn't posted under a new
-subject with something like "[PATCH] fix compat_ioctl blah blah blah".
-I try to read every email and find all the patches, but this list does
-get a lot of traffic.  If you could mark new patches more clearly it
-would help me a lot.  Plus, it is probably easier than tracking the
-trees and having to send reminders. :-)
+--=-sp8y1V7oqcfYIsCxmLn4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Tue, 2007-09-04 at 15:42 +0200, Johannes Berg wrote:
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> > This is making it a bit difficult to build driver_devicescape.c and sam=
+e
+> > goes for the requirement for svn trunk version of libnl.. Any idea how
+> > much code from libnl is needed here? Would it be major effort to do the
+> > needed calls without having to rely on libnl at or (or at least not on
+> > an unreleased svn trunk version)?
+>=20
+> There's a whole bunch of code in libnl I use, all the generic netlink
+> family resolving etc. Maybe Thomas can prerelease a libnl with generic
+> netlink support?
+
+Also, since this affects git trees only... To use this you actually have
+to have hostap git, wireless-dev git so what's the big deal with
+requiring libnl svn? :)
+
+johannes
+
+--=-sp8y1V7oqcfYIsCxmLn4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3XHU/ETPhpq3jKURAl5IAKCGjA2o3DH05VJ+vFFx4bgouvflbwCfSESF
+wHZlIp7V3/Dtz0YJ69n16yc=
+=HuNS
+-----END PGP SIGNATURE-----
+
+--=-sp8y1V7oqcfYIsCxmLn4--
+
