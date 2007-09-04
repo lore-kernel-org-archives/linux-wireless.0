@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57238
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753513AbXIYVSc (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49217 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660AbXIDOC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 17:18:32 -0400
-Date: Tue, 25 Sep 2007 14:18:16 -0700 (PDT)
-Message-Id: <20070925.141816.71108553.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: johannes@sipsolutions.net, kune@deine-taler.de, dsd@gentoo.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: zd1211 or mac80211: SKB invalid truesize
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200709252242.12331.mb@bu3sch.de>
-References: <200709252242.12331.mb@bu3sch.de>
+	Tue, 4 Sep 2007 10:02:57 -0400
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>
+In-Reply-To: <1188875058.13078.428.camel@debian.sh.intel.com>
+References: <1188875058.13078.428.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kQ/5rcrdDlKFYw+pQXUY"
+Date: Tue, 04 Sep 2007 16:04:11 +0200
+Message-Id: <1188914651.9942.25.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Tue, 25 Sep 2007 22:42:11 +0200
 
-> I get dmesg spammed with the following message when
-> I connect to an open network with zd1211rw-mac80211.
-> I'm not sure if that's a bug in zd or mac80211.
-> Any idea how to debug this?
-> 
-> [  280.915811] SKB BUG: Invalid truesize (840) len=1440, sizeof(sk_buff)=168
-> 
-> The device keeps working fine while this spams dmesg.
+--=-kQ/5rcrdDlKFYw+pQXUY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-For anyone who investigates this, the issue is that if there is a
-socket associated with an skb (ie. skb->sk is non-NULL) you cannot
-change the skb->truesize without also adjusting the memory accounted
-to the socket.
+On Tue, 2007-09-04 at 11:04 +0800, Zhu Yi wrote:
 
-Otherwise when the SKB gets freed, the wrong amount of socket buffer
-memory allocation will be given back to the socket.
+> Note, the #include "../net/mac80211/ieee80211_rate.h" still existed in
+> this version of the driver. We are discussing how to abstract the
+> mac80211 rate scaling interface in another thread in this ML.
 
-When the above message triggers, it means the skb->truesize is
-smaller than skb->len plus the size of struct sk_buff which is
-obviously completely bogus.
+You also haven't addressed any of the other points I raised wrt.
+encryption [please try running your driver on the latest
+mac80211/net-2.6.24 tree, it'll complain very loudly], looking into
+frames, using the configured MAC address instead of the programmed one,
+oopsing if pure monitor mode is requested, doing frame aggregation and
+all the others.
+
+I think this repost is mostly useless for review, I applaud that you're
+working on things but don't see why we'd be interested in this step.
+
+johannes
+
+--=-kQ/5rcrdDlKFYw+pQXUY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3WXb/ETPhpq3jKURAix9AJ9LWtE5vhBWXlKrHrhY7ng1bFmaXACfbPG7
+eHBqCADY1MSYojmaEJNQTUo=
+=rbdb
+-----END PGP SIGNATURE-----
+
+--=-kQ/5rcrdDlKFYw+pQXUY--
+
