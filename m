@@ -1,97 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:8731 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753618AbXISOza (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:40807 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbXIDTQp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 10:55:30 -0400
-Received: by py-out-1112.google.com with SMTP id u77so425988pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 07:55:29 -0700 (PDT)
-Message-ID: <40f31dec0709190755h5ea62e0cv578f2a5ed0788d80@mail.gmail.com>
-Date: Wed, 19 Sep 2007 17:55:28 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Krzysztof Halasa" <khc@pm.waw.pl>
-Subject: Re: AR5006 - should it work?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <m3odg0dji3.fsf@maximus.localdomain>
+	Tue, 4 Sep 2007 15:16:45 -0400
+Date: Tue, 04 Sep 2007 14:14:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] bcm43xx: Fix cancellation of work queue crashes
+Message-ID: <46ddae8c.UPc5+Azm3rCZdJxZ%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <m3odg0dji3.fsf@maximus.localdomain>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/9/18, Krzysztof Halasa <khc@pm.waw.pl>:
-> Hi,
->
-> I'm trying to use AR5006* mini-PCI cards with no success - should
-> I expect them to work with madwifi ath5k branch and/or
-> linux/kernel/git/linville/wireless-dev.git ath5k branch on kernel.org?
->
-> AR5004X seems to work fine.
->
-> Don't work:
-> ENGENIUS EMP-8602(+) 400 mW a/b/g AR5413 rev 1.0 and 1.1
-> AR5006X PCI ID 168c:001b 168c:2063
->
-> SparkLAN WMIA-166AG a/b/g AR5414A
-> AR5006XS PCI ID 168c:001b 17f9:000d
->
-> Testing with:
-> # modprobe ath5k
-> # ifconfig wlan0 up
-> # iwlist wlan0 scan
->
-> wlan0     No scan results
->
->
+A crash upon booting that is caused by bcm43xx has been reported [1] and
+found to be due to a work queue being reinitialized while work on that
+queue is still pending. This fix modifies the shutdown of work queues and
+prevents periodic work from being requeued during shutdown. With this patch,
+no more crashes on reboot were observed by the original reporter. I do not
+get that particular failure on my system; however, when running a large
+number of ifdown/ifup sequences, my system would kernel panic with the
+'caps lock' light blinking at roughly a 1 Hz rate. In addition, there were
+infrequent failures in the firmware that resulted in 'IRQ READY TIMEOUT'
+errors. With this patch, no more of the first type of failure occur, and
+incidence of the second type is greatly reduced.
 
-Are you sure 5413 didn't work ? (it has poor signal quality etc,
-perhaps you can try getting closer to the AP -just for testing-).
-Because it worked for me, i haven't tested 5414.  We know we don't
-initialize single-chip radios the right way but we are working on
-it...
+[1] http://bugzilla.kernel.org/show_bug.cgi?id=8937
 
-That's the card i've tested...
-
----
-02:09.0 Ethernet controller: Atheros Communications, Inc. AR5006X
-802.11abg NIC (rev 01)
-        Subsystem: Atheros Communications, Inc. EnGenius EMP-8602
-(400mw) or Compex WLM54AG
-        Flags: bus master, medium devsel, latency 168, IRQ 11
-        Memory at ee010000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
----
-168c:001b (rev 01) Subsystem: 168c:2063
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 
-Can you try ath_info tool ?
-(http://madwifi.org/browser/trunk/tools/ath_info.c) it'll give us more
-infos about your hardware ;-)
+John,
 
-> madwifi.org ath5k dmesg (with 2.6.22 kernel, EMP-8602):
-> ath5k: MAC revision: 5413  (0xa4)
-> ath5k: PHY revision: SChip (0x63)
-> ath5k: EEPROM version: 5.2
-> wmaster0: Selected rate control algorithm 'simple'
->
-> John's git repository (2.6.23-current, EMP-8602):
-> wmaster0: Selected rate control algorithm 'simple'
-> ath_pci 0000:00:0d.0: AR5212 chip found: mac 10.10 phy 6.1
->
-> This is ARM-based system (Intel IXP425) but just tried with
-> AMD64 (madwifi ath5k only) - results are the same.
->
+Sorry, I forgot to refresh the patch before sending.
 
-ath5k branch on madwifi.org is more up-to-date we'll soon commit changes back
+This fix should be sent to 2.6.23. Once it it there, I'll send it on to
+-stable.
 
-> AR5004X based card shows few devices in the neighbourhood, max
-> signal ~ 20/127.
-
-AR5004X series worked ok in all of my tests, i guess that if you try
-with the binary HAL (madwifi driver) you'll get the same results.
+Larry
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c  |   28 +++++++++++++++++++--------
+ drivers/net/wireless/bcm43xx/bcm43xx_main.h  |    2 -
+ drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c |    2 +-
+ 3 files changed, 22 insertions(+), 10 deletions(-)
+
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -3197,6 +3197,9 @@ static void bcm43xx_periodic_work_handle
+ 	unsigned long orig_trans_start = 0;
+ 
+ 	mutex_lock(&bcm->mutex);
++	/* keep from doing and rearming periodic work if shutting down */
++	if (bcm43xx_status(bcm) == BCM43xx_STAT_UNINIT)
++		goto unlock_mutex;
+ 	if (unlikely(bcm->periodic_state % 60 == 0)) {
+ 		/* Periodic work will take a long time, so we want it to
+ 		 * be preemtible.
+@@ -3242,14 +3245,10 @@ static void bcm43xx_periodic_work_handle
+ 	mmiowb();
+ 	bcm->periodic_state++;
+ 	spin_unlock_irqrestore(&bcm->irq_lock, flags);
++unlock_mutex:
+ 	mutex_unlock(&bcm->mutex);
+ }
+ 
+-void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm)
+-{
+-	cancel_rearming_delayed_work(&bcm->periodic_work);
+-}
+-
+ void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm)
+ {
+ 	struct delayed_work *work = &bcm->periodic_work;
+@@ -3299,6 +3298,14 @@ static int bcm43xx_rng_init(struct bcm43
+ 	return err;
+ }
+ 
++void bcm43xx_cancel_work(struct bcm43xx_private *bcm)
++{
++	/* The system must be unlocked when this routine is entered.
++	 * If not, the next 2 steps may deadlock */
++	cancel_work_sync(&bcm->restart_work);
++	cancel_delayed_work_sync(&bcm->periodic_work);
++}
++
+ static int bcm43xx_shutdown_all_wireless_cores(struct bcm43xx_private *bcm)
+ {
+ 	int ret = 0;
+@@ -3335,7 +3342,12 @@ static void bcm43xx_free_board(struct bc
+ {
+ 	bcm43xx_rng_exit(bcm);
+ 	bcm43xx_sysfs_unregister(bcm);
+-	bcm43xx_periodic_tasks_delete(bcm);
++
++	mutex_lock(&(bcm)->mutex);
++	bcm43xx_set_status(bcm, BCM43xx_STAT_UNINIT);
++	mutex_unlock(&(bcm)->mutex);
++
++	bcm43xx_cancel_work(bcm);
+ 
+ 	mutex_lock(&(bcm)->mutex);
+ 	bcm43xx_shutdown_all_wireless_cores(bcm);
+@@ -4030,7 +4042,7 @@ static int bcm43xx_net_stop(struct net_d
+ 	err = bcm43xx_disable_interrupts_sync(bcm);
+ 	assert(!err);
+ 	bcm43xx_free_board(bcm);
+-	flush_scheduled_work();
++	bcm43xx_cancel_work(bcm);
+ 
+ 	return 0;
+ }
+@@ -4162,9 +4174,9 @@ static void bcm43xx_chip_reset(struct wo
+ 	struct bcm43xx_phyinfo *phy;
+ 	int err = -ENODEV;
+ 
++	bcm43xx_cancel_work(bcm);
+ 	mutex_lock(&(bcm)->mutex);
+ 	if (bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED) {
+-		bcm43xx_periodic_tasks_delete(bcm);
+ 		phy = bcm43xx_current_phy(bcm);
+ 		err = bcm43xx_select_wireless_core(bcm, phy->type);
+ 		if (!err)
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.h
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+@@ -122,7 +122,7 @@ void bcm43xx_wireless_core_reset(struct 
+ void bcm43xx_mac_suspend(struct bcm43xx_private *bcm);
+ void bcm43xx_mac_enable(struct bcm43xx_private *bcm);
+ 
+-void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm);
++void bcm43xx_cancel_work(struct bcm43xx_private *bcm);
+ void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm);
+ 
+ void bcm43xx_controller_restart(struct bcm43xx_private *bcm, const char *reason);
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+@@ -327,7 +327,7 @@ static ssize_t bcm43xx_attr_phymode_stor
+ 		goto out;
+ 	}
+ 
+-	bcm43xx_periodic_tasks_delete(bcm);
++	bcm43xx_cancel_work(bcm);
+ 	mutex_lock(&(bcm)->mutex);
+ 	err = bcm43xx_select_wireless_core(bcm, phytype);
+ 	if (!err)
