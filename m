@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751501AbXI0Des (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 23:34:48 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: Correction for sending beacon in config_ap
-Date: Thu, 27 Sep 2007 11:27:32 +0800
-Message-Id: <11908636692415-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11908636683204-git-send-email-yi.zhu@intel.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
- <11908636662994-git-send-email-yi.zhu@intel.com>
- <11908636683204-git-send-email-yi.zhu@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42884 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753655AbXIDOpw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 10:45:52 -0400
+Subject: Re: [PATCH] hostapd: remove key threshold setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070904002758.GW1835@jm.kir.nu>
+References: <1187957890.24933.24.camel@johannes.berg>
+	 <20070904002758.GW1835@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZQ/W0LKtIqQkMzm/0pNZ"
+Date: Tue, 04 Sep 2007 16:47:01 +0200
+Message-Id: <1188917221.9942.35.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch takes out sending beacon from conditional in
-config_ap function.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+--=-ZQ/W0LKtIqQkMzm/0pNZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 8ae7c30..af261e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -7495,9 +7495,8 @@ static void iwl_config_ap(struct iwl_priv *priv)
- 		iwl_activate_qos(priv, 1);
- #endif
- 		iwl_rxon_add_station(priv, BROADCAST_ADDR, 0);
--		iwl_send_beacon_cmd(priv);
--	} else
--		iwl_send_beacon_cmd(priv);
-+	}
-+	iwl_send_beacon_cmd(priv);
- 
- 	/* FIXME - we need to add code here to detect a totally new
- 	 * configuration, reset the AP, unassoc, rxon timing, assoc,
--- 
-1.5.1
+On Mon, 2007-09-03 at 17:27 -0700, Jouni Malinen wrote:
+> On Fri, Aug 24, 2007 at 02:18:10PM +0200, Johannes Berg wrote:
+> > I'm in the process of adding this to nl80211 as a per-key setting, so
+> > remove it here for now. It's never called anyway.
+>=20
+> Thanks, applied.
+
+Looks like you didn't push that out to your git tree.
+
+johannes
+
+--=-ZQ/W0LKtIqQkMzm/0pNZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3W/l/ETPhpq3jKURAszYAKCgizytNZfSWlI5myM5AUC6xZlg6gCfVmRT
+DT95sOiOnW8RAlc/3EA7H6Y=
+=YCN4
+-----END PGP SIGNATURE-----
+
+--=-ZQ/W0LKtIqQkMzm/0pNZ--
+
