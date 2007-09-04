@@ -1,83 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:9403 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753700AbXINULI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 16:11:08 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so741742nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 13:11:06 -0700 (PDT)
-Message-ID: <46EAEAC1.5020105@gmail.com>
-Date: Fri, 14 Sep 2007 22:10:41 +0200
-From: dragoran <drago01@gmail.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlist and network-manager bug report
-References: <1189526874.6161.30.camel@johannes.berg>	 <1189610572.5644.28.camel@xo-3E-67-34.localdomain>	 <20070912170153.GA25785@bougret.hpl.hp.com>	 <1189667496.6161.77.camel@johannes.berg>	 <1189707493.1329.1.camel@johannes.berg>	 <1189793380.2508.2.camel@xo-3E-67-34.localdomain>	 <46EADD21.7070607@gmail.com> <1189800306.20386.6.camel@xo-3E-67-34.localdomain>
-In-Reply-To: <1189800306.20386.6.camel@xo-3E-67-34.localdomain>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:30301 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750902AbXIDCbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Sep 2007 22:31:51 -0400
+Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
+From: Zhu Yi <yi.zhu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <20070831205524.GA11128@tuxdriver.com>
+References: <1188192012.13078.177.camel@debian.sh.intel.com>
+	 <20070831205524.GA11128@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 04 Sep 2007 10:25:46 +0800
+Message-Id: <1188872746.13078.411.camel@debian.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Fri, 2007-09-14 at 21:12 +0200, dragoran wrote:
->  =20
->> Dan Williams wrote:
->>    =20
->>> On Thu, 2007-09-13 at 20:18 +0200, Johannes Berg wrote:
->>>  =20
->>>      =20
->>>> On Thu, 2007-09-13 at 09:11 +0200, Johannes Berg wrote:
->>>>
->>>>    =20
->>>>        =20
->>>>> Ok. I'll have to do some more extensive tests but in my last test=
- with
->>>>> zd1211 it wouldn't display anything. Might be a different issue, =
-but
->>>>> scanning manually showed things.
->>>>>      =20
->>>>>          =20
->>>> Cool, I was totally wrong, seems the fact that it didn't display
->>>> anything was unrelated. I just tried again and NM 0.6.5 as shipped=
- by
->>>> debian/unstable actually manages to display the =C3=BC umlaut that=
- is
->>>> supposed to be the \xfc character.
->>>>
->>>> Btw. Will there ever be a 0.7 release? :)
->>>>    =20
->>>>        =20
->>> I've been burning the midnight oil on it for the past few weeks, ch=
-eck
->>> NM and applet changelogs.  Still not quite there yet, there's some =
-core
->>> work left to do getting NM to talk to the settings daemons (ie,
->>> nm-client or knetworkmanager) correctly, getting GUI bits for Conne=
-ction
->>> editing in the applet, and making sure the relevant settings are
->>> honored.
->>>  =20
->>>      =20
->> might be a bit OT but:
->> are you still planning to include it in F8 ? seems that the snapshot=
-=20
->> didn't make it into test2 ..
->>    =20
->
-> There was a snapshot queued, but it really sucked, and was thankfully
-> dropped.=20
-ok I noticed thats broken after getting it from koji ...
->  Look for something in rawhide this week that actually works.
->
->  =20
-ok :)
+On Fri, 2007-08-31 at 16:55 -0400, John W. Linville wrote:
+> A few comments below -- many of them are nits or somewhat minor.
+> I think the ieee80211_rate.h one needs to be resolved for sure.  Also,
+> splitting iwl-base.c is definitely worth considering -- building two
+> object from one source is a bit ugly.
+> 
+> Please respond to the questions/comments, and indicate if/when you
+> will split iwl-base.c.
 
+Will split it in the next version as well as addressing all your
+comments below.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also, let's figure-out what really needs to
+> be exportd to drivers from ieee80211_rate.h and get that done.
+
+Since they are device specific rate scale algorithm, I don't think they
+will help to increase performance for other devices. So make them stay
+together with the driver is a better choice (vs. with mac80211). If so,
+the rate scale interface has to be abstracted from internal mac80211.
+The current dependencies are as below:
+
+iwl3945-rs -> rate_control_ops (ieee80211_rate.h)
+rate_control_ops -> sta_info (sta_info.h)
+rate_control_ops -> ieee80211_local (ieee80211_i.h)
+ieee80211_local -> ieee80211_key (ieee80211_key.h)
+
+If we want to avoid a big restructure of the mac80211 headers, the
+easiest way is to move four header files from net/mac80211 to
+include/net/ and rename them with mac80211_ prefix (especially for
+sta_info.h). This way, for any mac80211 based wireless drivers want to
+create their own rate scale algorithm, they can smiply include
+<net/mac80211_rate.h> and implement all the callback functions.
+Comments?
+
+If you all agree with this change, especially the mac80211 folks, I'll
+come up with a patch for it.
+
+Thanks,
+-yi
