@@ -1,45 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:49394 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758143AbXIXRvQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47103 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbXIDOMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 13:51:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3044728pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 10:51:14 -0700 (PDT)
-Message-ID: <43e72e890709241051k42bb248ue0cba02e96310c1b@mail.gmail.com>
-Date: Mon, 24 Sep 2007 13:51:13 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and initvals
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, mickflemm@gmail.com
-In-Reply-To: <20070924173607.GA652@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <3175698652466923884@pripojeni.net>
-	 <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>
-	 <1190654876.18521.276.camel@johannes.berg>
-	 <20070924173607.GA652@infradead.org>
+	Tue, 4 Sep 2007 10:12:47 -0400
+Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <1188872746.13078.411.camel@debian.sh.intel.com>
+References: <1188192012.13078.177.camel@debian.sh.intel.com>
+	 <20070831205524.GA11128@tuxdriver.com>
+	 <1188872746.13078.411.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uLNAx3LJj/xujfjfdckc"
+Date: Tue, 04 Sep 2007 16:13:49 +0200
+Message-Id: <1188915229.9942.29.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/24/07, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Sep 24, 2007 at 07:27:56PM +0200, Johannes Berg wrote:
-> > On Mon, 2007-09-24 at 13:24 -0400, Luis R. Rodriguez wrote:
-> >
-> > > * ath5k_hw_set_rfgain_opt() is defined once and used once, can we
-> > > instead make it inline? If we really are not going to re-use this
-> > > later why do we put it into a routine on its own?
-> >
-> > Why mark it inline then? The compiler will inline it anyway if it's only
-> > used once. And I haven't looked at the code but making it an own routine
-> > could possibly make the code more readable, especially if lots of
-> > indentation is involved.`
->
-> Seconded.  Splitting things up into logically sound subroutines is
-> good programming style.
 
-Then that comment can be ignored, thanks.
+--=-uLNAx3LJj/xujfjfdckc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2007-09-04 at 10:25 +0800, Zhu Yi wrote:
+
+> Since they are device specific rate scale algorithm, I don't think they
+> will help to increase performance for other devices.
+
+What exactly is device specific?
+
+> If so,
+> the rate scale interface has to be abstracted from internal mac80211.
+> The current dependencies are as below:
+>=20
+> iwl3945-rs -> rate_control_ops (ieee80211_rate.h)
+> rate_control_ops -> sta_info (sta_info.h)
+> rate_control_ops -> ieee80211_local (ieee80211_i.h)
+> ieee80211_local -> ieee80211_key (ieee80211_key.h)
+
+I never liked exporting ieee80211_local to the rate control algorithms.
+That just means the interface is badly defined. And sta_info I'm not too
+sure about either, on the one hand the rate control algorithms need
+access to some flags but on the other hand some things if they need to
+store per-sta information then it can't really be in the sta_info struct
+since that info varies per algorithm
+
+> If we want to avoid a big restructure of the mac80211 headers, the
+> easiest way is to move four header files from net/mac80211 to
+> include/net/ and rename them with mac80211_ prefix (especially for
+> sta_info.h). This way, for any mac80211 based wireless drivers want to
+> create their own rate scale algorithm, they can smiply include
+> <net/mac80211_rate.h> and implement all the callback functions.
+> Comments?
+
+I don't like this, especially not ieee80211_i.h. I'm ok with _rate.h,
+but let's get rid of the ieee80211_local dependency in rate control
+algorithms.
+
+johannes
+
+--=-uLNAx3LJj/xujfjfdckc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3Wgd/ETPhpq3jKURAk7cAJwMwZP1cqRwZpiQZKGbCyuBIt2S8wCgjJF+
+AGHzdX5iZTZYo6J235RpXeQ=
+=Uhii
+-----END PGP SIGNATURE-----
+
+--=-uLNAx3LJj/xujfjfdckc--
+
