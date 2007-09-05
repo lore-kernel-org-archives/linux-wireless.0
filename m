@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbXIPMHp (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756206AbXIELVv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:07:45 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:07:45 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sun, 16 Sep 2007 14:17:39 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Message-Id: <200709161417.40727.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 5 Sep 2007 07:21:51 -0400
+Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+In-Reply-To: <20070905024930.GG5273@jm.kir.nu>
+References: <1187987850.24933.29.camel@johannes.berg>
+	 <20070904011648.GX1835@jm.kir.nu> <1188913335.9942.16.camel@johannes.berg>
+	 <20070905024930.GG5273@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Hfz/hah339ZjD0avv7Uk"
+Date: Wed, 05 Sep 2007 13:22:04 +0200
+Message-Id: <1188991324.9942.95.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-It has taken some time to finally release this,
-but it contains quite a lot of bugfixes of variating impact.
+--=-Hfz/hah339ZjD0avv7Uk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Overall the stability has been greatly improved,
-although there are still some nasty bugs in there.
+On Tue, 2007-09-04 at 19:49 -0700, Jouni Malinen wrote:
+> On Tue, Sep 04, 2007 at 03:42:15PM +0200, Johannes Berg wrote:
+> > On Mon, 2007-09-03 at 18:16 -0700, Jouni Malinen wrote:
+> > > Where are things like NL80211_ATTR_IFNAME and
+> > > NL80211_CMD_ADD_VIRTUAL_INTERFACE defined? I would assume these are f=
+rom
+> > > linux/nl80211.h, but where should I get the version that includes the=
+se?
+> >=20
+> > You have to use the one from wireless-dev as we don't ship it from
+> > mainline yet.
+>=20
+> I was trying to use wireless-dev.. Which branch includes the values
+> shown above? I don't see them in either master or even everything..
+> (git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git)
 
-Note that even after this update rt2x00 in wireless-dev will still not work
-for encrypted networks. This is because rt2x00 depends on the encryption
-patches by Johannes which are pending for wireless-dev inclusion
-(Most notably the patch that fixes the IEEE80211_HW_WEP_INCLUDE_IV
-behavior is required to make it work again).
+It should be in 'everything' in include/linux/nl80211.h
 
-Ivo
+> OK. If there were a pre-release version, that would likely make this
+> quite a bit easier. Gentoo actually includes 1.0-pre6 which is the
+> latest pre-release and as such, I was kind of hoping for it to be new
+> enough. Then again, once I looked at the release date, I noticed it's
+> already a year old.. I don't really want to depend on this unless there
+> is a good likelyhood of there being a proper release with the needed
+> functionality in somewhat near future.
 
----
+Up to Thomas, I guess.
 
-The following changes since commit e6d77b902151278df6a670b460a32e7cc6b75e9e:
-  Luis R. Rodriguez (1):
-        Merge branch 'ath5k' into everything
+johannes
 
-are available in the git repository at:
+--=-Hfz/hah339ZjD0avv7Uk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Ivo van Doorn (24):
-      rt2x00: Remove firmware not-NULL check
-      rt2x00: Don't check for IEEE80211_TXCTL_REQ_TX_STATUS
-      rt2x00: Cleanup rxdone
-      rt2x00: Don't allow configuration calls when uninitialized
-      rt2x00: Fix rt61pci and rt73usb beacon handling
-      rt2x00: Recalculate link quality
-      rt2x00: Cleanup entry->flags
-      rt2x00: Reduce LNA flags
-      rt2x00: Rework RT61 and RT73 Antenna handling
-      rt2x00: Rename DEVICE_SUPPORT_ATIM to REQUIRE_BEACON_RING
-      rt2x00: Remove rt2x00mac_reset()
-      rt2x00: Fix system freeze on device removal
-      rt2x00: Reduce magic value writing to device
-      rt2x00: New USB ID's for rt73usb and rt2500usb
-      rt2x00: Beacon ring entries should have QID_MGMT
-      rt2x00: Fix DEV_RATEBIT_ definitions
-      rt2x00: Fix rfkill handling
-      rt2x00: Merge allocation/free register components
-      rt2x00: macro's shouldn't use hidden arguments
-      rt2x00: Fix channel initialization
-      rt2x00: Add better CONFIG_PM checks
-      rt2x00: Add start/stop handlers
-      rt2x00: Add additional bit to MAX_FRAME_UNIT
-      rt2x00: Release rt2x00 2.0.8
+iD8DBQBG3pFc/ETPhpq3jKURAqDjAJwPUJmCdoqaLn1B2wsQkkG3IDUfUwCfU9nt
+ohgoO5w8ZLm5Z+7IWVpfcjc=
+=4Lv3
+-----END PGP SIGNATURE-----
 
- drivers/net/wireless/rt2x00/rt2400pci.c      |   37 +-
- drivers/net/wireless/rt2x00/rt2500pci.c      |   83 +++--
- drivers/net/wireless/rt2x00/rt2500pci.h      |   40 ++-
- drivers/net/wireless/rt2x00/rt2500usb.c      |  208 ++++++++--
- drivers/net/wireless/rt2x00/rt2500usb.h      |   39 ++-
- drivers/net/wireless/rt2x00/rt2x00.h         |   47 ++-
- drivers/net/wireless/rt2x00/rt2x00config.c   |   12 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c    |   26 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c      |  308 ++++++--------
- drivers/net/wireless/rt2x00/rt2x00firmware.c |    6 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h      |    4 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c      |  111 ++++--
- drivers/net/wireless/rt2x00/rt2x00pci.c      |  127 ++----
- drivers/net/wireless/rt2x00/rt2x00pci.h      |    3 +
- drivers/net/wireless/rt2x00/rt2x00reg.h      |   27 +-
- drivers/net/wireless/rt2x00/rt2x00rfkill.c   |    6 +-
- drivers/net/wireless/rt2x00/rt2x00ring.h     |   29 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c      |  235 +++--------
- drivers/net/wireless/rt2x00/rt2x00usb.h      |    9 +-
- drivers/net/wireless/rt2x00/rt61pci.c        |  617 ++++++++++++++++++--------
- drivers/net/wireless/rt2x00/rt61pci.h        |   87 ++++-
- drivers/net/wireless/rt2x00/rt73usb.c        |  471 +++++++++++++-------
- drivers/net/wireless/rt2x00/rt73usb.h        |   65 +++-
- 23 files changed, 1615 insertions(+), 982 deletions(-)
+--=-Hfz/hah339ZjD0avv7Uk--
+
