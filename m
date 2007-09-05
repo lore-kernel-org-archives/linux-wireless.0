@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33128 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480AbXIAJyY (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:23753 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754304AbXIESlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 05:54:24 -0400
-Subject: Re: radiotap injection bugs & extending it
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <46D9353C.2080509@warmcat.com>
-References: <1188609135.7585.105.camel@johannes.berg>
-	 <46D92A1C.4050308@warmcat.com> <1188637615.7585.118.camel@johannes.berg>
-	 <46D92EFC.2060007@warmcat.com> <1188639380.7585.130.camel@johannes.berg>
-	 <46D9353C.2080509@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PHG4lOplwXwhYKAfshvT"
-Date: Sat, 01 Sep 2007 11:55:43 +0200
-Message-Id: <1188640543.7585.133.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 5 Sep 2007 14:41:47 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Date: Tue, 4 Sep 2007 18:17:39 -0700
+Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com> <200709042058.15463.IvDoorn@gmail.com>
+In-Reply-To: <200709042058.15463.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709041817.40366.inaky@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 04 September 2007, Ivo van Doorn wrote:
+> On Tuesday 04 September 2007, dragoran wrote:
+> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > >+static ssize_t show_rf_kill(struct device *d,
+> > >
+> > > Yes. It currently is only missing users.
+> > 
+> > ok thats great ;) is the (userspace) interface defined somewhere? or
+> > should I read the code to understand how it works? (would like to add
+> > support to hal)
+> 
+> There isn't a documentation file for it, so best thing to do would be looking at the code.
+> basically hal only needs to check the sysfs files:
+> 
+> 	name -> Name of device/interface
+> 	type -> wlan, bluetooth, irda
 
---=-PHG4lOplwXwhYKAfshvT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Can you add 'uwb' [for ultrawideband radios]? That way I could start to use it. A
+Doc file would help enourmously also :)
 
-On Sat, 2007-09-01 at 10:47 +0100, Andy Green wrote:
-
-> > Well, for one, the PS code is only relevant if we're ourselves operatin=
-g
-> > in IBSS or AP mode. If we're operating in AP/IBSS mode we'll also
-> > automatically buffer your injected multicast frames for after the DTIM
-> > beacon. I think we should just buffer injected unicast frames as well,
-> > it won't hurt your use case (multicast destination) and makes things
-> > more consistent.
->=20
-> Fine by me.
-
-Good. I'll look at it later or next week.
-
-> There are other problems hiding somewhere, perhaps iwl3945, as well.
-> Having a secondary network interface like mon0 in Monitor mode is still
-> not quite the same as having the primary network interface in Monitor mod=
-e.
-
-Definitely iwlwifi. Might be caused by going into power management mode
-though, not much you can do about it then. But that reminds me of
-something I need to check.
-
-johannes
-
---=-PHG4lOplwXwhYKAfshvT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG2Tcf/ETPhpq3jKURAgGfAJ9zm44hlP80vXoj1SNL1v6uR1DsmQCgjiG3
-GzFxNiJE6ojxi0gTuUg+WM8=
-=qren
------END PGP SIGNATURE-----
-
---=-PHG4lOplwXwhYKAfshvT--
-
+-- Inaky
