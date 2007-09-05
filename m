@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54384
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753365AbXIST0L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 15:26:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-Date: Wed, 19 Sep 2007 21:23:16 +0200
-Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-References: <20070919181005.GB5483@tuxdriver.com> <20070919.115903.75429061.davem@davemloft.net>
-In-Reply-To: <20070919.115903.75429061.davem@davemloft.net>
+Received: from mga11.intel.com ([192.55.52.93]:9808 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755990AbXIEBoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2007 21:44:15 -0400
+Date: Wed, 5 Sep 2007 09:38:04 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Message-ID: <20070905013804.GA388@mail.intel.com>
+Reply-To: yi.zhu@intel.com
+References: <1188875058.13078.428.camel@debian.sh.intel.com> <1188914651.9942.25.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200709192123.16884.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1188914651.9942.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 19 September 2007 20:59:03 David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 19 Sep 2007 14:10:05 -0400
+On Tue, Sep 04, 2007 at 04:04:11PM +0200, Johannes Berg wrote:
+> On Tue, 2007-09-04 at 11:04 +0800, Zhu Yi wrote:
 > 
-> > This patch adds z1211 (previously known as zd1211rw-mac80211),
-> > a driver for Zydas ZD1211 hardware.  This driver has proven very
-> > robust -- Fedora 7 uses this driver and I don't think I have any open
-> > bugzillas for it.  Either the driver works well, or no one as using
-> > it...given the common availability of the hardware, I have to presume
-> > the former. :-)
-> > 
-> > This driver is mostly a port of zd1211rw to the mac80211
-> > infrastructure.  In fact, most zd1211rw patches have been mirrored
-> > directly to this driver for some time.  I considered merely updating
-> > the existing driver with this code, but I think it is more prudent to
-> > include this as a separate driver just to avoid confusion.  There is
-> > some symbol clash between the two drivers, so I add a Kconfig hack
-> > to ensure that only one or the other is built-in or that this one is
-> > built as a module.
-> > 
-> > The maintainers have identified some (IMHO minor) issues with the
-> > mac80211 port of this driver.  Some of them are summarized here:
-> > 
-> > 	http://linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
-> > 
-> > Still, I think we would be better-off having this driver upstream.
+> > Note, the #include "../net/mac80211/ieee80211_rate.h" still existed in
+> > this version of the driver. We are discussing how to abstract the
+> > mac80211 rate scaling interface in another thread in this ML.
 > 
-> Agreed, merged into net-2.6.24, thanks John.
+> You also haven't addressed any of the other points I raised wrt.
+> encryption [please try running your driver on the latest
+> mac80211/net-2.6.24 tree, it'll complain very loudly], looking into
+> frames, using the configured MAC address instead of the programmed one,
+> oopsing if pure monitor mode is requested,
 
+Do you mean this?
 
-John, please also note that the following patch is not merged, yet.
-http://bu3sch.de/patches/wireless-dev/20070915-1740/patches/006-zd-fix-tx-status.patch
-Without it ratecontrol does not work. It does neither scale the rate
-up nor down. This patch fixes both.
-I think it got lost in a (really unrelated to the actual bug) discussion
-about whether it's required or not to report status in mac80211 drivers.
-(It turned out that it _is_ required).
+> ian (1):
+>      avoid kernel oops in monitor mode with debug enabled
 
--- 
-Greetings Michael.
+For your other comments, I agree they are valid and we will address
+them. But I don't think any of them are a block issue for .24, right?
+The driver works well for most users, I think we can push it into
+mainline for better testing and fix them slowly (keep stability) by
+.25 time.
+
+Thanks,
+-yi
