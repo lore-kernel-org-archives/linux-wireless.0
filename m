@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbXIPMIl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42809 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbXIFNqB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:08:41 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:40 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 23/24] rt2x00: Add additional bit to MAX_FRAME_UNIT
-Date: Sun, 16 Sep 2007 14:19:43 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200709161419.44941.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 6 Sep 2007 09:46:01 -0400
+Message-Id: <20070905234627.193670000@sipsolutions.net>
+References: <20070905234209.108005000@sipsolutions.net>
+Date: Thu, 06 Sep 2007 01:42:21 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 12/21] mac80211: remove tx info sw_retry_attempt member
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy driver indicated that the MAX_FRAME_UNIT register
-was 11 bits long. _but_ they do write 12 bits to the register.
-Increase the register definition to accept the 12th bit.
+This is unused.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
 ---
- drivers/net/wireless/rt2x00/rt61pci.h |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ include/net/mac80211.h |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index f24bff3..6721d7d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -262,7 +262,7 @@ struct hw_pairwise_ta_entry {
-  * MAC_CSR6: Maximum frame length register.
-  */
- #define MAC_CSR6			0x3018
--#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x000007ff)
-+#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x00000fff)
- 
- /*
-  * MAC_CSR7: Reserved
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
-index 82f4e76..5d63a1a 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.h
-+++ b/drivers/net/wireless/rt2x00/rt73usb.h
-@@ -174,7 +174,7 @@ struct hw_pairwise_ta_entry {
-  * MAC_CSR6: Maximum frame length register.
-  */
- #define MAC_CSR6			0x3018
--#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x000007ff)
-+#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x00000fff)
- 
- /*
-  * MAC_CSR7: Reserved
+--- wireless-dev.orig/include/net/mac80211.h	2007-09-06 01:35:19.614453431 +0200
++++ wireless-dev/include/net/mac80211.h	2007-09-06 01:35:21.044453431 +0200
+@@ -282,9 +282,6 @@ struct ieee80211_tx_control {
+ 	u8 iv_len;		/* length of the IV field in octets */
+ 	u8 queue;		/* hardware queue to use for this frame;
+ 				 * 0 = highest, hw->queues-1 = lowest */
+-	u8 sw_retry_attempt;	/* number of times hw has tried to
+-				 * transmit frame (not incl. hw retries) */
+-
+ 	struct ieee80211_rate *rate;		/* internal 80211.o rate */
+ 	struct ieee80211_rate *rts_rate;	/* internal 80211.o rate
+ 						 * for RTS/CTS */
+
 -- 
-1.5.3
+
