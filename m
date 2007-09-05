@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752567AbXIPMHr (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:30969 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754229AbXIETdo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:07:47 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:07:47 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/24] rt2x00: Remove firmware not-NULL check
-Date: Sun, 16 Sep 2007 14:17:45 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+	Wed, 5 Sep 2007 15:33:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2697024wah
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2007 12:33:43 -0700 (PDT)
+Message-ID: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
+Date: Wed, 5 Sep 2007 21:33:37 +0200
+From: dragoran <drago01@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless drivers)
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 MIME-Version: 1.0
-Message-Id: <200709161417.46880.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cleaning up the firmware, we don't need
-to check if rt2x00dev->fw is not-NULL.
+On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Tuesday 04 September 2007, dragoran wrote:
+> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > > > >+static ssize_t show_rf_kill(struct device *d,
+> > > > > > >+                        struct device_attribute *attr, char *buf)
+> > > > > > >+{
+> > > > > > >+    /*
+> > > > > > >+     * 0 - RF kill not enabled
+> > > > > > >+     * 1 - SW based RF kill active (sysfs)
+> > > > > > >+     * 2 - HW based RF kill active
+> > > > > > >+     * 3 - Both HW and SW based RF kill active
+> > > > > > >
+> > > > > > >that as well, along with all the other sysfs bits. Also, how about using
+> > > > > > >the generic rfkill infrastructure Ivo did?
+> > > > > >
+> > > > > > is the generic rfkill interface already stable and merged into the linus tree?
+> > > > >
+> > > > > Yes. It currently is only missing users.
+> > > >
+> > > > ok thats great ;) is the (userspace) interface defined somewhere? or
+> > > > should I read the code to understand how it works? (would like to add
+> > > > support to hal)
+> > >
+> > > There isn't a documentation file for it, so best thing to do would be looking at the code.
+> > > basically hal only needs to check the sysfs files:
+> > >
+> > >         name -> Name of device/interface
+> > >         type -> wlan, bluetooth, irda
+> > >         state -> Current device state. 0: Off, 1: On
+> > >         claim -> 0: Kernel handles events, 1: Userspace handles events
+> > >
+> > > "name" and "type" are read-only
+> > > "claim" and "state" are read/writable
+> > >
+> > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
+> > > this has been fixed in 2.6.23-rc.
+> >
+> > ok that isn't complicated what is the claim used for?
+> > does It has to be set to userspace to be able to toggle the status via software?
+>
+> By default the kernel will act when the rfkill button is pressed, it will loop
+> through all registered buttons of the same type and change the state.
+> Userspace can read the "state" sysfs file to see the current status,
+> but if a userspace tools wants to take control of taking action when the button is pressed,
+> or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
+> tell the kernel that it should back off and ignore all events.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00firmware.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-index 143e793..236025f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-@@ -118,9 +118,7 @@ int rt2x00lib_load_firmware(struct rt2x00_dev *rt2x00dev)
- 
- void rt2x00lib_free_firmware(struct rt2x00_dev *rt2x00dev)
- {
--	if (rt2x00dev->fw) {
--		release_firmware(rt2x00dev->fw);
--		rt2x00dev->fw = NULL;
--	}
-+	release_firmware(rt2x00dev->fw);
-+	rt2x00dev->fw = NULL;
- }
- 
--- 
-1.5.3
+ok thx for explaining this will talk to the nm and hal people about it
+and see how they want things to work than I will create patches to
+implement it.
+which drivers support it now? rt2x00 and ?? or are they the only ones right now?
