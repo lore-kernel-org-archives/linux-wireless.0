@@ -1,78 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37885 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431AbXIZPEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 11:04:34 -0400
-Subject: Re: [PATCH 1/5] Move standard wireless defintions out of mac80211
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <43e72e890709241049y63a88d6aoa6456d2f1465ee04@mail.gmail.com>
-References: <20070921210014.GE31768@pogo>
-	 <1190409462.18521.160.camel@johannes.berg>
-	 <43e72e890709211433hf6669f1y97d24663a97b21ff@mail.gmail.com>
-	 <20070924094959.GY10493@thot.informatik.uni-kl.de>
-	 <43e72e890709241049y63a88d6aoa6456d2f1465ee04@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 26 Sep 2007 11:01:02 -0400
-Message-Id: <1190818863.20955.4.camel@xo-3E-67-34.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755744AbXIFNq1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2007 09:46:27 -0400
+Message-Id: <20070905234628.749705000@sipsolutions.net>
+References: <20070905234209.108005000@sipsolutions.net>
+Date: Thu, 06 Sep 2007 01:42:24 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 15/21] mac80211: rename ieee80211_cfg.c to cfg.c
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-09-24 at 13:49 -0400, Luis R. Rodriguez wrote:
-> On 9/24/07, Joerg Mayer <jmayer@loplof.de> wrote:
-> > On Fri, Sep 21, 2007 at 05:33:42PM -0400, Luis R. Rodriguez wrote:
-> > > > > + * ieee80211_channel - internal structure definiton for an IEEE-802.11 channel
-> > > > > + *
-> > > > > + * This defines an ieee80211_channel. The IEEE-802.11 regulatory domain agent
-> > > > > + * is in charge of filling most of these fields out. The low-level driver
-> > > > > + * is expected to fill in, if needed, the val field. Note that val is already
-> > > > > + * set by the regulatory agent to the same channel as in chan.
-> > > >
-> > > > Shouldn't you also set chan and freq in the driver?
-> > [...]
-> > > Initially I wanted to move mac80211 to use a linked list of channels
-> > > instead of an array for each mode. As we discussed it over (you, me
-> > > and a few others) we determined it wasn't best to do this (I have a
-> > > patch that allows this just in case we later change our mind). But --
-> > > previous to doing this I had a wrapper on ieee80211_channel as I
-> > > wanted the central regdomain to have a linked list of reg domain
-> > > channels. If we don't want a wrapper we have to add this to the
-> > > ieee8021_channel struct. Otherwise I need to define my own channel
-> > > struct which wraps around ieee80211_channel.
-> > >
-> > > > > +struct ieee80211_channel {
-> > > > > +     /* XXX change to u8 */
-> > > > > +     short chan;
-> > > >
-> > > > Not sure, is a u8 always enough? I thought 802.11a had huge channel
-> > > > numbers?
-> > >
-> > > Not that huge :-) Highest I've heard is 220. u8 should suffice.
-> >
-> > What's the idea of working with channels? Channels are non-uniq numbers.
-> > Internally everything should work with center frequency and not with
-> > channels. If necessary, information should be converted from channels
-> > by the driver when reporting it into the stack. That way there also won't
-> > be any problems if there ever is a channel 417.
-> 
-> I agree. I'm OK with just having center of freq. Right now WE supports
-> channel or freqs and the value is passed directly to the driver (for
-> FullMAC) or mac80211 (for SoftMAC). For nl80211 we can just support
-> channel passing onto the kernel, if the user supplies a channel we'll
-> do the conversion to freq in userspace. On step at a time.
+It's just painful to have the extra ieee80211_ prefix.
 
-Definitely need to use freq and not channel.  Channels are not unique
-(they just _happen_ to be so right now).  Of course remember that we
-can't just pass channel really, we need to pass the tuple of (channel,
-band) or maybe even (channel, [A|B|G|N]) or something.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Dan
+---
+ net/mac80211/Makefile        |    2 -
+ net/mac80211/cfg.c           |   75 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_cfg.c |   75 -------------------------------------------
+ 3 files changed, 76 insertions(+), 76 deletions(-)
 
+--- wireless-dev.orig/net/mac80211/Makefile	2007-09-06 01:34:54.904453431 +0200
++++ wireless-dev/net/mac80211/Makefile	2007-09-06 01:35:23.424453431 +0200
+@@ -17,7 +17,7 @@ mac80211-objs := \
+ 	regdomain.o \
+ 	tkip.o \
+ 	aes_ccm.o \
+-	ieee80211_cfg.o \
++	cfg.o \
+ 	rx.o \
+ 	tx.o \
+ 	key.o \
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-dev/net/mac80211/cfg.c	2007-09-06 01:35:23.424453431 +0200
+@@ -0,0 +1,75 @@
++/*
++ * mac80211 configuration hooks for cfg80211
++ *
++ * Copyright 2006	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This file is GPLv2 as found in COPYING.
++ */
++
++#include <linux/nl80211.h>
++#include <linux/rtnetlink.h>
++#include <net/cfg80211.h>
++#include "ieee80211_i.h"
++#include "ieee80211_cfg.h"
++
++static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
++			       enum nl80211_iftype type)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	int itype;
++
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
++		return -ENODEV;
++
++	switch (type) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++		itype = IEEE80211_IF_TYPE_STA;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		itype = IEEE80211_IF_TYPE_IBSS;
++		break;
++	case NL80211_IFTYPE_STATION:
++		itype = IEEE80211_IF_TYPE_STA;
++		break;
++	case NL80211_IFTYPE_AP:
++		itype = IEEE80211_IF_TYPE_AP;
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		itype = IEEE80211_IF_TYPE_VLAN;
++		break;
++	case NL80211_IFTYPE_WDS:
++		itype = IEEE80211_IF_TYPE_WDS;
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		itype = IEEE80211_IF_TYPE_MNTR;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return ieee80211_if_add(local->mdev, name, NULL, itype);
++}
++
++static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct net_device *dev;
++	char *name;
++
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
++		return -ENODEV;
++
++	dev = dev_get_by_index(ifindex);
++	if (!dev)
++		return 0;
++
++	name = dev->name;
++	dev_put(dev);
++
++	return ieee80211_if_remove(local->mdev, name, -1);
++}
++
++struct cfg80211_ops mac80211_config_ops = {
++	.add_virtual_intf = ieee80211_add_iface,
++	.del_virtual_intf = ieee80211_del_iface,
++};
+--- wireless-dev.orig/net/mac80211/ieee80211_cfg.c	2007-09-06 01:35:13.764453431 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,75 +0,0 @@
+-/*
+- * mac80211 configuration hooks for cfg80211
+- *
+- * Copyright 2006	Johannes Berg <johannes@sipsolutions.net>
+- *
+- * This file is GPLv2 as found in COPYING.
+- */
+-
+-#include <linux/nl80211.h>
+-#include <linux/rtnetlink.h>
+-#include <net/cfg80211.h>
+-#include "ieee80211_i.h"
+-#include "ieee80211_cfg.h"
+-
+-static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
+-			       enum nl80211_iftype type)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-	int itype;
+-
+-	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
+-		return -ENODEV;
+-
+-	switch (type) {
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-		itype = IEEE80211_IF_TYPE_STA;
+-		break;
+-	case NL80211_IFTYPE_ADHOC:
+-		itype = IEEE80211_IF_TYPE_IBSS;
+-		break;
+-	case NL80211_IFTYPE_STATION:
+-		itype = IEEE80211_IF_TYPE_STA;
+-		break;
+-	case NL80211_IFTYPE_AP:
+-		itype = IEEE80211_IF_TYPE_AP;
+-		break;
+-	case NL80211_IFTYPE_AP_VLAN:
+-		itype = IEEE80211_IF_TYPE_VLAN;
+-		break;
+-	case NL80211_IFTYPE_WDS:
+-		itype = IEEE80211_IF_TYPE_WDS;
+-		break;
+-	case NL80211_IFTYPE_MONITOR:
+-		itype = IEEE80211_IF_TYPE_MNTR;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return ieee80211_if_add(local->mdev, name, NULL, itype);
+-}
+-
+-static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-	struct net_device *dev;
+-	char *name;
+-
+-	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
+-		return -ENODEV;
+-
+-	dev = dev_get_by_index(ifindex);
+-	if (!dev)
+-		return 0;
+-
+-	name = dev->name;
+-	dev_put(dev);
+-
+-	return ieee80211_if_remove(local->mdev, name, -1);
+-}
+-
+-struct cfg80211_ops mac80211_config_ops = {
+-	.add_virtual_intf = ieee80211_add_iface,
+-	.del_virtual_intf = ieee80211_del_iface,
+-};
+
+-- 
 
