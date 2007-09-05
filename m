@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42003
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750773AbXIPEuy (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48384 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755198AbXIEOJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 00:50:54 -0400
-Date: Sat, 15 Sep 2007 21:50:53 -0700 (PDT)
-Message-Id: <20070915.215053.74746915.davem@davemloft.net>
-To: flamingice@sourmilk.net
-Cc: jeff@garzik.org, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'adm8211' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200709160047.45128.flamingice@sourmilk.net>
-References: <200709152017.02646.flamingice@sourmilk.net>
-	<46EC7F33.2050206@garzik.org>
-	<200709160047.45128.flamingice@sourmilk.net>
+	Wed, 5 Sep 2007 10:09:40 -0400
+Subject: Re: [PATCHv3] mac80211: dynamic wep
+From: Johannes Berg <johannes@sipsolutions.net>
+To: dragoran <drago01@gmail.com>
+Cc: linux-wireless@vger.kernel.org, volker.braun@physik.hu-berlin.de
+In-Reply-To: <f6ca9fed0709050705kaa04849t7f7658081dcac140@mail.gmail.com>
+References: <f6ca9fed0709050705kaa04849t7f7658081dcac140@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pKjg+0CrcEoXX/j3NXLW"
+Date: Wed, 05 Sep 2007 16:11:05 +0200
+Message-Id: <1189001465.9942.106.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
-Date: Sun, 16 Sep 2007 00:47:40 -0400
 
-> Huh? How does a driver use NAPI if it can't pass a struct net_device?
+--=-pKjg+0CrcEoXX/j3NXLW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It is now managed by a struct napi_struct which you can embed into any
-object you like.
+On Wed, 2007-09-05 at 16:05 +0200, dragoran wrote:
+> Whats the status of this patch?
 
-NAPI is now totally disconnected from the network device structure.
-This was necessary for proper support of multi-queue cards.
+You'd really make life easier if you could post emails with a valid
+References header so they'd be sorted into the right thread.... Please
+check if your mail client can do that.
+
+I'm handling the patch in question. Patience.
+
+johannes
+
+--=-pKjg+0CrcEoXX/j3NXLW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3rj5/ETPhpq3jKURAtFxAJ9RoKG5EgZRzYPxES2pordiCoOxNACfW/Hn
+OFnZtHFpTlhZjFxbfOp1fbc=
+=Pp1d
+-----END PGP SIGNATURE-----
+
+--=-pKjg+0CrcEoXX/j3NXLW--
 
