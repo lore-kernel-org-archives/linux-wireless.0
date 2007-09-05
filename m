@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598AbXIPMHx (ORCPT
+Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:52988 "EHLO
+	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbXIECij (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:07:53 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:07:53 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/24] rt2x00: Don't allow configuration calls when uninitialized
-Date: Sun, 16 Sep 2007 14:18:05 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+	Tue, 4 Sep 2007 22:38:39 -0400
+Date: Tue, 4 Sep 2007 19:38:24 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: bridge packets option
+Message-ID: <20070905023824.GE5273@jm.kir.nu>
+References: <1188405071.1757.5.camel@johannes.berg> <20070903235714.GT1835@jm.kir.nu> <1188915742.9942.33.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200709161418.06645.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1188915742.9942.33.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a device is being hot-unplugged or during suspend/resume
-rt2x00 is not able to handle configuration calls from mac80211.
-Check for the DEVICE_INITIALIZED flag to determine if a
-configuration call from mac80211 is welcome or not.
+On Tue, Sep 04, 2007 at 04:22:22PM +0200, Johannes Berg wrote:
+> On Mon, 2007-09-03 at 16:57 -0700, Jouni Malinen wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+> > Kernel
+> > bridging code does not (or at least did not the last time I looked)
+> > allow packets to be bridged back to the same interface which would be
+> > needed for the case of two wireless stations which are associated to the
+> > same AP sending packets to each other.
+> 
+> I was thinking more of routing in the unicast case, if a packet comes in
+> you'd have to route it back to wireless if the destination is there.
+> Isn't that possible?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index f25cf38..0001b79 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -245,6 +245,15 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 
- 	/*
-+	 * If the device is not initialized we shouldn't accept
-+	 * any configuration changes. Mac80211 might be calling
-+	 * this function while we are trying to remove the device
-+	 * or perhaps suspending it.
-+	 */
-+	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
-+		return 0;
-+
-+	/*
- 	 * Check if we need to disable the radio,
- 	 * if this is not the case, at least the RX must be disabled.
- 	 */
-@@ -285,6 +294,15 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw, int if_id,
- 	int status;
- 
- 	/*
-+	 * If the device is not initialized we shouldn't accept
-+	 * any configuration changes. Mac80211 might be calling
-+	 * this function while we are trying to remove the device
-+	 * or perhaps suspending it.
-+	 */
-+	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
-+		return 0;
-+
-+	/*
- 	 * Monitor mode does not need configuring.
- 	 * If the given type does not match the configured type,
- 	 * there has been a problem.
+Well, it may be possible, but that would not be the way IEEE 802.11
+access points normally work. AP is a layer 2 bridge and it should bridge
+the packets regardless of what ethertype is used. There is no need for
+it to keep up ARP tables for the associated stations to figure out where
+to route packets. Furthermore, I would rather not see ICMP redirects
+showing up on the wireless interface because IP routing needed to send
+the packet back to the same interface. I would assume that this can be
+disabled, but anyway, layer 2 bridge is the location that would be much
+close to what AP does between two associated wireless stations.
+
 -- 
-1.5.3
+Jouni Malinen                                            PGP id EFC895FA
