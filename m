@@ -1,59 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39457 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42843 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763862AbXIUVse (ORCPT
+	with ESMTP id S1755744AbXIFNqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 17:48:34 -0400
-Subject: Re: [PATCH 0/5] Add central regulatory domain agent - Patchset I
+	Thu, 6 Sep 2007 09:46:21 -0400
+Message-Id: <20070905234624.573108000@sipsolutions.net>
+References: <20070905234209.108005000@sipsolutions.net>
+Date: Thu, 06 Sep 2007 01:42:16 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1190410796.14368.17.camel@xo-3E-67-34.localdomain>
-References: <20070921204606.GD31768@pogo>
-	 <1190410796.14368.17.camel@xo-3E-67-34.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c1KFOVUki90F62cdphDf"
-Date: Fri, 21 Sep 2007 23:49:50 +0200
-Message-Id: <1190411390.18521.174.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 07/21] mac80211: renumber and document the hardware flags
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, hardware flags that drivers must set are not
+documented well enough. Fix this.
 
---=-c1KFOVUki90F62cdphDf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Fri, 2007-09-21 at 17:39 -0400, Dan Williams wrote:
+---
+ include/net/mac80211.h |  101 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 55 insertions(+), 46 deletions(-)
 
-> Also, if you could make sure this stuff is completely separate
-> conceptually and architecturally from mac80211 itself, but have mac80211
-> _rely_ on it, then we can rip the bits out of the fullmac drivers that
-> do regdomain stuff and plug them into this framework too.  I think
-> that's a real win.
+--- wireless-dev.orig/include/net/mac80211.h	2007-09-06 01:35:16.124453431 +0200
++++ wireless-dev/include/net/mac80211.h	2007-09-06 01:35:17.374453431 +0200
+@@ -501,6 +501,61 @@ typedef enum set_key_cmd {
+ 	SET_KEY, DISABLE_KEY,
+ } set_key_cmd;
+ 
++
++/**
++ * enum ieee80211_hw_flags - hardware flags
++ *
++ * These flags are used to indicate hardware capabilities to
++ * the stack. Generally, flags here should have their meaning
++ * done in a way that the simplest hardware doesn't need setting
++ * any particular flags. There are some exceptions to this rule,
++ * however, so you are advised to review these flags carefully.
++ *
++ * @IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE:
++ *	The device only needs to be supplied with a beacon template.
++ *	If you need the host to generate each beacon then don't use
++ *	this flag and call ieee80211_beacon_get() when you need the
++ *	next beacon frame. Note that if you set this flag, you must
++ *	implement the set_tim() callback for powersave mode to work
++ *	properly.
++ *	This flag is only relevant for access-point mode.
++ *
++ * @IEEE80211_HW_RX_INCLUDES_FCS:
++ *	Indicates that received frames passed to the stack include
++ *	the FCS at the end.
++ *
++ * @IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING:
++ *	Some wireless LAN chipsets buffer broadcast/multicast frames
++ *	for power saving stations in the hardware/firmware and others
++ *	rely on the host system for such buffering. This option is used
++ *	to configure the IEEE 802.11 upper layer to buffer broadcast and
++ *	multicast frames when there are power saving stations so that
++ *	the driver can fetch them with ieee80211_get_buffered_bc(). Note
++ *	that not setting this flag works properly only when the
++ *	%IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE is also not set because
++ *	otherwise the stack will not know when the DTIM beacon was sent.
++ *
++ * @IEEE80211_HW_MULTICAST_FILTER:
++ *	Device has multicast filters, i.e. it can filter based on the
++ *	multicast address. If this flag is clear, then %FIF_ALLMULTI
++ *	will be enabled instead of passing multicast addresses when
++ *	multicast addresses are added.
++ *
++ * @IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED:
++ *	Channels are already configured to the default regulatory domain
++ *	specified in the device's EEPROM
++ *
++ * @IEEE80211_HW_SUPPORT_HT_MODE: The device capable of supporting 11n.
++ */
++enum ieee80211_hw_flags {
++	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
++	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
++	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING	= 1<<2,
++	IEEE80211_HW_MULTICAST_FILTER			= 1<<3,
++	IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED	= 1<<4,
++	IEEE80211_HW_SUPPORT_HT_MODE			= 1<<5,
++};
++
+ /**
+  * struct ieee80211_hw - hardware information and state
+  * TODO: move documentation into kernel-doc format
+@@ -524,52 +579,6 @@ struct ieee80211_hw {
+ 
+ 	/* The rest is information about your hardware */
+ 
+-	/* TODO: frame_type 802.11/802.3, sw_encryption requirements */
+-
+-/* hole at 0 */
+-
+-	/*
+-	 * The device only needs to be supplied with a beacon template.
+-	 * If you need the host to generate each beacon then don't use
+-	 * this flag and use ieee80211_beacon_get().
+-	 */
+-#define IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE (1<<1)
+-
+-/* hole at 2 */
+-
+-	/* Whether RX frames passed to ieee80211_rx() include FCS in the end */
+-#define IEEE80211_HW_RX_INCLUDES_FCS (1<<3)
+-
+-	/* Some wireless LAN chipsets buffer broadcast/multicast frames for
+-	 * power saving stations in the hardware/firmware and others rely on
+-	 * the host system for such buffering. This option is used to
+-	 * configure the IEEE 802.11 upper layer to buffer broadcast/multicast
+-	 * frames when there are power saving stations so that low-level driver
+-	 * can fetch them with ieee80211_get_buffered_bc(). */
+-#define IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING (1<<4)
+-
+-/* hole at 5 */
+-
+-/* hole at 6 */
+-
+-/* hole at 7 */
+-
+-/* hole at 8 */
+-
+-	/*
+-	 * Device has multicast filters.
+-	 */
+-#define IEEE80211_HW_MULTICAST_FILTER (1<<9)
+-
+-/* hole at 10 */
+-
+-	/* Channels are already configured to the default regulatory domain
+-	 * specified in the device's EEPROM */
+-#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
+-
+-	/* The device capable of supporting 11n */
+-#define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
+-
+ 	u32 flags;			/* hardware flags defined above */
+ 
+ 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
 
-Yeah, I think that's the plan. In fact, I always consider mac80211 to be
-on the the same level like fullmac _drivers_ and mac80211-based drivers
-somewhere below that (at a level that with fullmac drivers doesn't
-exist)
-
-johannes
-
---=-c1KFOVUki90F62cdphDf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG9Dx+/ETPhpq3jKURAulPAJ49DxoIBw+BKHcpqYQ6zpkZfN1N4wCffCTS
-tDW0IiY6rFf9iyNLPZ66KJU=
-=VQUc
------END PGP SIGNATURE-----
-
---=-c1KFOVUki90F62cdphDf--
+-- 
 
