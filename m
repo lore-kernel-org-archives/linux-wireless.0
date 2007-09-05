@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:45353 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbXIQEBK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42788 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbXIFNpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 00:01:10 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2923319pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 21:01:09 -0700 (PDT)
-Message-ID: <43e72e890709162101g7a93a200m6ab5b0a422f2dad0@mail.gmail.com>
-Date: Mon, 17 Sep 2007 00:01:09 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Add Luis to MAINTAINERS for ath5k
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_11534_6108369.1190001669333"
+	Thu, 6 Sep 2007 09:45:47 -0400
+Message-Id: <20070905234209.108005000@sipsolutions.net>
+Date: Thu, 06 Sep 2007 01:42:09 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 00/21] more mac80211 updates
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_11534_6108369.1190001669333
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Again, a series of mac80211 updates, mostly from me unless otherwise
+noted. Notable are:
+ * The filter flags change. I haven't seen anybody complain,
+   au contraire.
+ * reworked VLAN interface patch to work, confident in it now
+ * loads of documentation updates
+ * include myself as mac80211 maintainer so I get to be be
+   blamed for the bugs...
 
-This patch adds me to the MAINTAINERS entry for ath5k. It applies to
-the ath5k branch on wireless-dev.
+Also includes cleanups.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+As previously, these patches apply against wireless-dev but
+I have equivalents against net-2.6.24 which I'll give to John
+to apply directly instead of posting them too. Of course,
+they'll simply be on http://johannes.sipsolutions.net/patches/
+so feel free to look there too.
 
---
+johannes
 
- MAINTAINERS |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-------=_Part_11534_6108369.1190001669333
-Content-Type: text/x-patch;
- name="add-mcgrof-to-ath5k-MAINTAINERS-ath5k.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="add-mcgrof-to-ath5k-MAINTAINERS-ath5k.diff"
-X-Attachment-Id: f_f6oga1dh
-
-ZGlmZiAtLWdpdCBhL01BSU5UQUlORVJTIGIvTUFJTlRBSU5FUlMKaW5kZXggNWQ3NzMxYi4uMDli
-OWM2NSAxMDA2NDQKLS0tIGEvTUFJTlRBSU5FUlMKKysrIGIvTUFJTlRBSU5FUlMKQEAgLTYzNiw2
-ICs2MzYsOCBAQCBTOglTdXBwb3J0ZWQKIEFUSEVST1MgQVRINUsgV0lSRUxFU1MgRFJJVkVSCiBQ
-OglKaXJpIFNsYWJ5CiBNOglqaXJpc2xhYnlAZ21haWwuY29tCitQOglMdWlzIFIuIFJvZHJpZ3Vl
-egorTToJbWNncm9mQGdtYWlsLmNvbQogTDoJbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-CiBTOglNYWludGFpbmVkCiAK
-------=_Part_11534_6108369.1190001669333--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
