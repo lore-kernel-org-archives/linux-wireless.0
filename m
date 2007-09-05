@@ -1,79 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:56073 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755621AbXITOK5 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756378AbXIEObn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 10:10:57 -0400
-Date: Thu, 20 Sep 2007 10:10:18 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20070920141006.GH14127@storm.local.network>
-References: <20070919193743.GA14127@storm.local.network> <1190297065.18521.61.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="aFi3jz1oiPowsTUB"
-In-Reply-To: <1190297065.18521.61.camel@johannes.berg>
+	Wed, 5 Sep 2007 10:31:43 -0400
+Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200709051023.48927.flamingice@sourmilk.net>
+References: <20070821161845.165557000@sipsolutions.net>
+	 <20070905051626.GA12198@deine-taler.de>
+	 <1188991396.9942.97.camel@johannes.berg>
+	 <200709051023.48927.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kIACCROf7ZiQe6wPEcJE"
+Date: Wed, 05 Sep 2007 16:33:03 +0200
+Message-Id: <1189002783.9942.110.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---aFi3jz1oiPowsTUB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-kIACCROf7ZiQe6wPEcJE
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Wed, 2007-09-05 at 10:23 -0400, Michael Wu wrote:
 
-On Thu, Sep 20, 2007 at 04:04:25PM +0200, Johannes Berg wrote:
-> On Wed, 2007-09-19 at 15:37 -0400, Forest Bond wrote:
->=20
-> > This doesn't sound very GPL to me, however, the twist is in main_usb.c:
->=20
-> Not really.
->=20
-> > MODULE_LICENSE("GPL");
->=20
-> > What do you think?
->=20
-> That declaring MODULE_LICENSE in a file that isn't licensed under GPL is
-> a violation of the kernel license.
+> That's just a general rule of thumb. configure_filter holds the tx lock s=
+o=20
+> it's actually safe to do that there.
 
-And, assuming that in-kernel support for this chip is desirable, is it bett=
-er to
-pursue license clarification from VIA, or re-implement using the driver sou=
-rce
-as a reference?
+Good point.
 
-The reason I ask is that I suspect for this driver to get into the kernel, =
-it
-will likely see a lot of changes, anyway.  If it's going to be rewritten,
-there's little sense in me pushing VIA on the license issue, is there?
+>  In other cases, it can be buggy (some tx=20
+> code can get stuck) and racy (frames can get enqueued after stopping the=20
+> queues). The first can be fixed in mac80211, but the second can't be.=20
 
-I hope I'm not being daft.
+I think that we should be able to get all this resolved when we rip out
+the queue code and implement multiqueue devices. But if I want to do
+that I need to reverse engineer b43 QoS first to have multiple queues ;)
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
+> For=20
+> most cases, stopping the hardware queue(s) should be done instead and=20
+> possibly flushing the queue or waiting for it to empty, if you're trying =
+to=20
+> adjust the radio.
 
---aFi3jz1oiPowsTUB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+In this case it's about adjusting the MAC (filtering) and I'm not even
+sure the the USB device has a queue that can be stopped.
+
+johannes
+
+--=-kIACCROf7ZiQe6wPEcJE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFG8n9KRO4fQQdv5AwRAgmnAJ4/sVb/icVtlzQWA+qd3LxhwzedlgCfWrKm
-3/KbR8BTYKGSJCu1VPJegXo=
-=HxuX
+iD8DBQBG3r4f/ETPhpq3jKURAs8pAJ41JY52NAtdgHHzSMVcKlgzWazseQCeMgXl
+8BoddKdKhu+WOg5bTrt8j9w=
+=eNBR
 -----END PGP SIGNATURE-----
 
---aFi3jz1oiPowsTUB--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-kIACCROf7ZiQe6wPEcJE--
+
