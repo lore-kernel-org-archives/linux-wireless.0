@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp156.iad.emailsrvr.com ([207.97.245.156]:57189 "EHLO
-	smtp156.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752511AbXICCJl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37895 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756210AbXIELWC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 22:09:41 -0400
-Message-ID: <46DB6C7B.3020001@gentoo.org>
-Date: Sun, 02 Sep 2007 22:07:55 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
+	Wed, 5 Sep 2007 07:22:02 -0400
 Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-References: <20070821161845.165557000@sipsolutions.net> <20070821161942.938977000@sipsolutions.net>
-In-Reply-To: <20070821161942.938977000@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <20070905051626.GA12198@deine-taler.de>
+References: <20070821161845.165557000@sipsolutions.net>
+	 <20070821161942.938977000@sipsolutions.net> <46DB6C7B.3020001@gentoo.org>
+	 <1188811750.14564.32.camel@johannes.berg>
+	 <1188817035.14564.44.camel@johannes.berg>
+	 <20070905051626.GA12198@deine-taler.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XJQ3rlBLyXsnrkBJowrX"
+Date: Wed, 05 Sep 2007 13:23:16 +0200
+Message-Id: <1188991396.9942.97.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> +	/*
-> +	 * Configure the device's RX filter.
-[...]
-> +	 * Must be atomic due to running under the tx lock.
 
-This is slightly freaky for zd1211rw and probably other USB drivers. In 
-most cases we can't act upon any of those filter flag changes in atomic 
-context.
+--=-XJQ3rlBLyXsnrkBJowrX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We could defer work like we do for multicast lists, but then the driver 
-would be lying in that it would return from configure_filter saying that 
-it has honoured some flags without actually having done so (yet).
+On Wed, 2007-09-05 at 07:16 +0200, Ulrich Kunitz wrote:
 
-Will that be a problem? I'm thinking maybe not, since the flags only 
-affect RX and we can't determine which frames will be in the air at any 
-time. [as opposed to such atomicity problems that relate to TX, we can 
-just disable TX until the work has completed]
+> I see three options to achieve this:
+>=20
+> 1) Use ieee80211_stop_queues() in ->configure_filter() and
+>    ieee80211_wake_queues() at the end of the workqueue function.
+>=20
+> 2) Throw away all packets until the workqueue function
+>    terminates.
+>=20
+> 3) Implement our own tx queue.
+>=20
+> I prefer to do option (1) because it wouldn't require adding
+> additional fields to our private structure beside the work_struct
+> for the workqueue function, it is simple to implement and it would
+> not throw away any packets. Are there any side effects that I have
+> overlooked?
 
-> +	 * This callback is must be implemented.
-> +	 */
+I think Michael says it's currently buggy if called outside of ->tx().
 
-Typo.
+johannes
 
-Daniel
+--=-XJQ3rlBLyXsnrkBJowrX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3pGk/ETPhpq3jKURAn+lAJ4kNP4A0GLQbonllYBDvDYtcSj9CACcC7Pu
+wRMP8trGeAbfkHICvwf5Kyg=
+=m1RX
+-----END PGP SIGNATURE-----
+
+--=-XJQ3rlBLyXsnrkBJowrX--
+
