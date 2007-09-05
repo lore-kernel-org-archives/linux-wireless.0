@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:56947 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755598AbXINAyQ (ORCPT
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:55281 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbXIECkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 20:54:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1446188pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2007 17:54:15 -0700 (PDT)
-Message-ID: <43e72e890709131754q62d803d2k30fcc83ef16e7bb2@mail.gmail.com>
-Date: Thu, 13 Sep 2007 20:54:14 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH 2/3] Remove use of Atheros-specific modes from iwlwifi
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1189730363.18944.24.camel@debian.sh.intel.com>
+	Tue, 4 Sep 2007 22:40:51 -0400
+Date: Tue, 4 Sep 2007 19:40:37 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostapd: remove key threshold setting
+Message-ID: <20070905024037.GF5273@jm.kir.nu>
+References: <1187957890.24933.24.camel@johannes.berg> <20070904002758.GW1835@jm.kir.nu> <1188917221.9942.35.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709131703p1260f31fx2a20ea45742583ae@mail.gmail.com>
-	 <1189730363.18944.24.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1188917221.9942.35.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/13/07, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Thu, 2007-09-13 at 20:03 -0400, Luis R. Rodriguez wrote:
-> > This patch removes usage of all Atheros turbo modes from iwlwifi.
-> >
-> > This patch is intended for the iwlwifi branch of wireless-dev after a
-> > pull from origin/everything once
-> > 01-remove-atheros-turbo-from-mac80211.diff is applied.
->
-> The atheros turbo mode code is already removed from my latest update for
-> iwlwifi. See my post yesterday with subject:
->
-> "[PATCH wireless-dev#iwlwifi] update iwlwifi drivers to 0.1.15"
+On Tue, Sep 04, 2007 at 04:47:01PM +0200, Johannes Berg wrote:
+> On Mon, 2007-09-03 at 17:27 -0700, Jouni Malinen wrote:
+> > On Fri, Aug 24, 2007 at 02:18:10PM +0200, Johannes Berg wrote:
+> > > I'm in the process of adding this to nl80211 as a per-key setting, so
+> > > remove it here for now. It's never called anyway.
+> > 
+> > Thanks, applied.
+> 
+> Looks like you didn't push that out to your git tree.
 
-John, then this specific patch can be ignored.
+Yes, apparently I forgot to push the last change out. Anyway, it was
+applied at that time ;-) and is now on w1.fi.
 
-  Luis
+-- 
+Jouni Malinen                                            PGP id EFC895FA
