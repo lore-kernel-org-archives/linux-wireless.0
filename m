@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:54466 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750878AbXIXWNR (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965280AbXIGNU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 18:13:17 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 2/6] adm8211: Improve writing of mac addrs to registers
-Date: Mon, 24 Sep 2007 18:10:25 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20070924221025.6870.67251.stgit@magic.sourmilk.net>
-In-Reply-To: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
-References: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Fri, 7 Sep 2007 09:20:29 -0400
+Subject: b43 sparse warnings with __CHECK_ENDIAN__
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Buesch <mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-s+vEodx8Cd9HSRhmBTU+"
+Date: Thu, 06 Sep 2007 19:32:41 +0200
+Message-Id: <1189099962.28781.102.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
 
-The mac address write is broken for big endian and the bssid write can be
-simplified. This patch does both.
+--=-s+vEodx8Cd9HSRhmBTU+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+drivers/net/wireless/b43/xmit.c:124:9: warning: incorrect type in assignmen=
+t (different base types)
+drivers/net/wireless/b43/xmit.c:124:9:    expected restricted unsigned int =
+[usertype] <noident>
+drivers/net/wireless/b43/xmit.c:124:9:    got unsigned char=20
+drivers/net/wireless/b43/xmit.c:126:9: warning: incorrect type in assignmen=
+t (different base types)
+drivers/net/wireless/b43/xmit.c:126:9:    expected restricted unsigned int =
+[usertype] <noident>
+drivers/net/wireless/b43/xmit.c:126:9:    got int=20
+drivers/net/wireless/b43/xmit.c:127:11: warning: incorrect type in argument=
+ 1 (different base types)
+drivers/net/wireless/b43/xmit.c:127:11:    expected unsigned int [unsigned]=
+ [usertype] x
+drivers/net/wireless/b43/xmit.c:127:11:    got restricted unsigned int [use=
+rtype] <noident>
+drivers/net/wireless/b43/pio.c:63:8: warning: cast to restricted type
+drivers/net/wireless/b43/pio.c:551:14: warning: incorrect type in assignmen=
+t (different base types)
+drivers/net/wireless/b43/pio.c:551:14:    expected unsigned short [unsigned=
+] [short] <noident>
+drivers/net/wireless/b43/pio.c:551:14:    got restricted unsigned short [us=
+ertype] [force] <noident>
+drivers/net/wireless/b43/pio.c:558:19: warning: incorrect type in assignmen=
+t (different base types)
+drivers/net/wireless/b43/pio.c:558:19:    expected unsigned short [unsigned=
+] [short] <noident>
+drivers/net/wireless/b43/pio.c:558:19:    got restricted unsigned short [us=
+ertype] [force] <noident>
+drivers/net/wireless/b43/pio.c:561:12: warning: cast to restricted type
+drivers/net/wireless/b43/pio.c:561:12: warning: cast from restricted type
+drivers/net/wireless/b43/pio.c:586:30: warning: incorrect type in assignmen=
+t (different base types)
+drivers/net/wireless/b43/pio.c:586:30:    expected unsigned short [unsigned=
+] [short] [usertype] <noident>
+drivers/net/wireless/b43/pio.c:586:30:    got restricted unsigned short [us=
+ertype] [force] <noident>
 
- drivers/net/wireless/adm8211.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 0893d0d..4c43cdb 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1283,8 +1283,7 @@ static void adm8211_set_bssid(struct ieee80211_hw *dev, const u8 *bssid)
- 	struct adm8211_priv *priv = dev->priv;
- 	u32 reg;
- 
--	reg = bssid[0] | (bssid[1] << 8) | (bssid[2] << 16) | (bssid[3] << 24);
--	ADM8211_CSR_WRITE(BSSID0, reg);
-+	ADM8211_CSR_WRITE(BSSID0, le32_to_cpu(*(__le32 *)bssid));
- 	reg = ADM8211_CSR_READ(ABDA1);
- 	reg &= 0x0000ffff;
- 	reg |= (bssid[4] << 16) | (bssid[5] << 24);
-@@ -1414,8 +1413,8 @@ static int adm8211_add_interface(struct ieee80211_hw *dev,
- 
- 	ADM8211_IDLE();
- 
--	ADM8211_CSR_WRITE(PAR0, *(u32 *)conf->mac_addr);
--	ADM8211_CSR_WRITE(PAR1, *(u16 *)(conf->mac_addr + 4));
-+	ADM8211_CSR_WRITE(PAR0, le32_to_cpu(*(__le32 *)conf->mac_addr));
-+	ADM8211_CSR_WRITE(PAR1, le16_to_cpu(*(__le16 *)(conf->mac_addr + 4)));
- 
- 	adm8211_update_mode(dev);
- 
+--=-s+vEodx8Cd9HSRhmBTU+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4Dm5/ETPhpq3jKURAn5iAKCNLDoV62lPPStvzkdtQloeFwIDaQCfWMj+
+7CErrR6mUL+zIJYLBQthSGM=
+=SeBn
+-----END PGP SIGNATURE-----
+
+--=-s+vEodx8Cd9HSRhmBTU+--
 
