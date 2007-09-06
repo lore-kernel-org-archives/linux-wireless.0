@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbXIPMIn (ORCPT
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:50357 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757142AbXIFCGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:08:43 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:43 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 24/24] rt2x00: Release rt2x00 2.0.8
-Date: Sun, 16 Sep 2007 14:19:48 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+	Wed, 5 Sep 2007 22:06:31 -0400
+Date: Wed, 5 Sep 2007 19:06:11 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] per-sta reassembly buffers
+Message-ID: <20070906020611.GJ5273@jm.kir.nu>
+References: <1188988102.9942.89.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200709161419.49774.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1188988102.9942.89.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 05, 2007 at 12:28:22PM +0200, Johannes Berg wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I was looking through the defragmentation code and noticed that we only
+> allow four fragmented frames to be in flight at the same time. It seems
+> that in a somewhat contended QoS network where fragmentation is enabled
+> this is far from enough since as far as I can tell from the standard
+> each source STA may be sending fragmented frames in the various access
+> categories (think starting in background and then preempting by best
+> effort etc.)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 1681749..80b079d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -42,7 +42,7 @@
-  * Module information.
-  * DRV_NAME should be set within the individual module source files.
-  */
--#define DRV_VERSION	"2.0.7"
-+#define DRV_VERSION	"2.0.8"
- #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
- 
- /*
+I would have expected STAs to transmit only one MSDU at a time to any
+given destination STA. This was the way it was done before QoS and I did
+not find any clear point in QoS changes that would have changed the
+behavior. The changes in the duplicate detection are, though, implicitly
+pointing out that there may actually be separate fragmentation for each
+TID.
+
+> We could easily increase this by using per-sta reassembly buffers at no
+> CPU cost [1] but that has the obvious disadvantage of having much higher
+> worst-case memory usage. Thoughts?
+
+The main reason for the original design was in being conservative with
+memory use. After all, this was used for embedded devices with very
+limited memory capabilities and the AP was actually allowing up to 2007
+STAs to be associated. If each associated STA were to use fragmentation
+and if there were large number of lost (un-ACK'ed) frames, the total
+memory buffers needed for the frames could go quite high.
+
+Since fragments are commonly sent out in a burst that includes the full
+MSDU, the number of pending fragments from unfinished MSDUs is often
+quite a bit smaller than the worst case.
+
+Anyway, I would be fine with changing this as long as there is a way of
+enforcing the total number of buffered frames to be below a reasonable
+(and preferably configurable) limit.
+
 -- 
-1.5.3
-
+Jouni Malinen                                            PGP id EFC895FA
