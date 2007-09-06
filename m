@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:53110 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750935AbXISVEM (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965390AbXIGNYs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 17:04:12 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 3/3] adm8211: Adapt to filter configuration API
-Date: Wed, 19 Sep 2007 17:03:23 -0400
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <20070918213833.8850.90828.stgit@magic.sourmilk.net> <200709181742.33948.flamingice@sourmilk.net> <200709191946.43300.mb@bu3sch.de>
-In-Reply-To: <200709191946.43300.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5489781.Z1XFJ8NoPj";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709191703.30877.flamingice@sourmilk.net>
+	Fri, 7 Sep 2007 09:24:48 -0400
+Subject: Re: [PATCH net-2.6.24] cfg80211: use idr layer for wiphy indizes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1188480704.2963.41.camel@johannes.berg>
+References: <1188480704.2963.41.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1MdhsD7e72dkOYcj6/xl"
+Date: Thu, 06 Sep 2007 19:56:56 +0200
+Message-Id: <1189101416.28781.115.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5489781.Z1XFJ8NoPj
-Content-Type: text/plain;
-  charset="utf-8"
+
+--=-1MdhsD7e72dkOYcj6/xl
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 19 September 2007 13:46, Michael Buesch wrote:
-> This is broken on BigEndian platforms.
-> use cpu_to_leX().
-Hm, yeah, I remember thinking that at one point and then I forgot about tha=
-t=20
-issue. This patch doesn't introduce it of course.. the code was always brok=
-en=20
-in that fashion, but this moves it to a new place.
+On Thu, 2007-08-30 at 15:31 +0200, Johannes Berg wrote:
+> This makes cfg80211 use the idr layer instead of keeping
+> an own list of registered devices.
 
-> You can also replace the handcoded endianness conversion in
-> adm8211_set_bssid by cpu_to_leX().
->
-Sure, but then I have to do some questionable looking casts to shut up spar=
-se.=20
-(might be worth it, we'll see)
+Hmm. Come to think of it, this is not good as it makes us reuse the
+wiphy numbers. Normally that would be fine, however, here it would
+probably be nicer for tools to know that a specific wiphy no longer
+exists when they have an old index.
 
-=2DMichael Wu
+Please don't apply. I'll make a new patch to still keep a list but
+introduce the walking helper.
 
---nextPart5489781.Z1XFJ8NoPj
-Content-Type: application/pgp-signature
+johannes
+
+--=-1MdhsD7e72dkOYcj6/xl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBG8Y6iT3Oqt9AH4aERAu9bAKCzU290WJhpK62EoPSRmaLuEnXiagCfee5n
-Hrz59Fc6UEK5hGw/82rOouM=
-=hAq+
+iD8DBQBG4D9o/ETPhpq3jKURAofeAJ0YgfQtZBSUn8rUlXwskpEKK7sPqACcDray
+sGJCKzlTmTywwGI51j7NkO0=
+=aCWl
 -----END PGP SIGNATURE-----
 
---nextPart5489781.Z1XFJ8NoPj--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-1MdhsD7e72dkOYcj6/xl--
+
