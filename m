@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36251 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588AbXIAEfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:35:55 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id C9847618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:46 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 16/35] Don't disable and enable tasklets,  it doesn't work as expected
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:35:46 -0400
-Message-ID: <20070901043546.2498.56818.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54710 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899AbXIFMnc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2007 08:43:32 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: satyam@infradead.org, flo@rfc822.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	flamingice@sourmilk.net
+In-Reply-To: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
+References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LWtdbtBJirb3aZ2jyNYY"
+Date: Thu, 06 Sep 2007 14:44:45 +0200
+Message-Id: <1189082685.28781.70.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bringing the interface down causes high CPU utilization.  Correct fix
-should probably disable rx URB, not only the rx tasklet.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+--=-LWtdbtBJirb3aZ2jyNYY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/at76_usb.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+On Thu, 2007-09-06 at 20:36 +0800, Herbert Xu wrote:
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> >
+> > Hah, I suspected as much but didn't have a chance to look yet. I had
+> > plans to replace that sub_if_list with an RCU list and not require the
+> > lock there, but that's far off. Any ideas how to fix this? We can't
+> > reject the master stop so we have to walk the list, I guess we'll have
+> > to audit the other list manipulation places, I think they're all under
+> > RTNL.
+>=20
+> Yeah I think they're all under RTNL too.  So you don't need to
+> take the lock here at all since you should already have the RTNL.
 
+I'll take a look at them and post appropriate patches.
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 5577606..218641e 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -3445,7 +3445,6 @@ static int at76_open(struct net_device *netdev)
- 		goto error;
- 	}
- 
--	tasklet_enable(&priv->rx_tasklet);
- 	schedule_delayed_work(&priv->dwork_restart, 0);
- 
- 	at76_dbg(DBG_PROC_ENTRY, "%s(): end", __func__);
-@@ -3463,7 +3462,6 @@ static int at76_stop(struct net_device *netdev)
- 	if (mutex_lock_interruptible(&priv->mtx))
- 		return -EINTR;
- 
--	tasklet_disable(&priv->rx_tasklet);
- 	at76_quiesce(priv);
- 
- 	if (!priv->device_unplugged) {
-@@ -5375,7 +5373,6 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
- 
- 	priv->rx_tasklet.func = at76_rx_tasklet;
- 	priv->rx_tasklet.data = 0;
--	tasklet_disable(&priv->rx_tasklet);
- 
- 	priv->pm_mode = AT76_PM_OFF;
- 	priv->pm_period = 0;
-@@ -5535,8 +5532,6 @@ static void at76_delete_device(struct at76_priv *priv)
- 	/* The device is gone, don't bother turning it off */
- 	priv->device_unplugged = 1;
- 
--	tasklet_kill(&priv->rx_tasklet);
--
- 	if (priv->netdev_registered)
- 		unregister_netdev(priv->netdev);
- 
+johannes
+
+--=-LWtdbtBJirb3aZ2jyNYY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3/Y9/ETPhpq3jKURAvLjAKCFSRyi4Ij0UTiBFZ/CyT1nxeIqqQCcCaaT
+JOrgWZa3EoGGNxK7mFGN0KA=
+=e5W9
+-----END PGP SIGNATURE-----
+
+--=-LWtdbtBJirb3aZ2jyNYY--
+
