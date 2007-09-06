@@ -1,31 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:59890 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826AbXIFQze (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42039
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbXIFO3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 12:55:34 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so189250ugc
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 09:55:33 -0700 (PDT)
+	Thu, 6 Sep 2007 10:29:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
 Subject: Re: [PATCH 03/21] mac80211: revamp interface and filter configuration
-Date: Thu, 6 Sep 2007 19:05:53 +0200
+Date: Thu, 6 Sep 2007 16:28:22 +0200
 Cc: John Linville <linville@tuxdriver.com>,
 	Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org,
 	Larry Finger <larry.finger@lwfinger.net>,
 	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
 	Ulrich Kunitz <kune@deine-taler.de>,
 	Daniel Drake <dsd@gentoo.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
 	rt2400-devel@lists.sourceforge.net,
 	Li YanBo <dreamfly281@gmail.com>
 References: <20070905234209.108005000@sipsolutions.net> <20070905234622.671760000@sipsolutions.net>
 In-Reply-To: <20070905234622.671760000@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200709061905.54102.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="utf-8"
+Message-Id: <200709061628.23222.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -77,13 +75,6 @@ On Thursday 06 September 2007, Johannes Berg wrote:
 > Cc: rt2400-devel@lists.sourceforge.net
 > Cc: Li YanBo <dreamfly281@gmail.com>
 
-rt2x00 changes look good to me,
-it will probably take me some time to find time
-to make the full correct patch to fix rt2x00 but
-I'll do my best to do it as soon as possible.
 
-In the mean time this patch can be applied anyway,
-I'll try to keep the time rt2x00 will be bugging to
-a minimum.
-
-Ivo
+The b43 changes are
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
