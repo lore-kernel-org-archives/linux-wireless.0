@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW3.Sony.CO.JP ([137.153.0.15]:54374 "EHLO mgw3.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbXILEh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2007 00:37:26 -0400
-Date: Wed, 12 Sep 2007 13:36:16 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Cc: linux-wireless@vger.kernel.org, jt@hpl.hp.com,
-	geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20070807153150.A867.MOKUNO@sm.sony.co.jp>
-References: <20070730144726.GA6586@tuxdriver.com> <20070807153150.A867.MOKUNO@sm.sony.co.jp>
-Message-Id: <20070912133226.6818.MOKUNO@sm.sony.co.jp>
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:45762 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757336AbXIFCim (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2007 22:38:42 -0400
+Date: Wed, 5 Sep 2007 19:38:24 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
+Message-ID: <20070906023824.GK5273@jm.kir.nu>
+References: <1187987850.24933.29.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1187987850.24933.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Aug 24, 2007 at 10:37:30PM +0200, Johannes Berg wrote:
+> This makes hostapd use nl80211 (via libnl) to create/remove interfaces.
+> Also lays the foundation for using nl80211 in hostapd.
 
-Could you please apply the patch that I has submitted in 8th Aug, for
-2.6.24?
+Thanks, applied.
 
-http://marc.info/?l=linux-wireless&m=118647249314475
+> I have tested this code with the patch to use monitor interfaces instead
+> of the management interface, but wasn't able to test exactly these code
+> paths because none of the cards we have drivers for currently allow
+> multiple BSSes.
 
-This patch does not seem to be included into the wireless tree.
-
+I haven't had a chance of testing this yet, but at least I'm now back in
+state where I can build everything successfully :-). I will be traveling
+next couple of weeks at IEEE 802.11 meetings and will be very unlikely
+to test this any time soon (especially so, taken into account where the
+meetings are this time.. getting two meetings on consecutive weeks and
+on two Hawaiian islands is quite a nice combination ;-). Consequently,
+it is probably best to just get this in now and we'll fix multi-BSS
+things later, if needed.
 
 -- 
-Masakazu MOKUNO
-
+Jouni Malinen                                            PGP id EFC895FA
