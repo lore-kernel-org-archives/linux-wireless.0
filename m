@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757553AbXIFMLO (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:52325 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752932AbXIFI2h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 08:11:14 -0400
-Subject: Re: Kernel panic with rt2500pci built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Hussey <robjhussey@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dWfQVh5qdYUlBzVp0UKa"
-Date: Thu, 06 Sep 2007 14:12:34 +0200
-Message-Id: <1189080754.28781.68.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 6 Sep 2007 04:28:37 -0400
+Date: Thu, 6 Sep 2007 14:11:46 +0530 (IST)
+From: Satyam Sharma <satyam@infradead.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+cc: Florian Lohoff <flo@rfc822.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+In-Reply-To: <20070906082301.GB21929@gondor.apana.org.au>
+Message-ID: <alpine.LFD.0.999.0709061409120.3781@enigma.security.iitk.ac.in>
+References: <20070902184439.GA14306@paradigm.rfc822.org>
+ <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com>
+ <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
+ <20070906082301.GB21929@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-dWfQVh5qdYUlBzVp0UKa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-09-05 at 23:25 -0400, Rob Hussey wrote:
+On Thu, 6 Sep 2007, Herbert Xu wrote:
 
-> > ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 22 (level, low) -> IRQ 18
-> > phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003,
-> > rev: 00000004
-> > WARNING: at lib/kref.c:33 kref_get()
-> > [<c0229da9>] kref_get+0x3d/0x44
->                             kobject_get
->                             kobject_shadow
->                             kobject_set_name
->                             device_add
->                             wiphy_register
+> On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
+> > 
+> > > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
+> > > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80211]
+> 
+> This is where the bug is.  You cannot call dev_close from an
+> atomic context as i33380211_master_stop does it within spin
+> locks.
 
-I have to admit I don't understand this. It seems that device_add is
-called with an invalid device, but that's very odd because
-device_initialise must have been called before.
-
-johannes
-
---=-dWfQVh5qdYUlBzVp0UKa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3+6y/ETPhpq3jKURApFlAJ9R8LyURAp3vbAdwY8XkBHJuKNHewCeJWLO
-q8U0OxDI/2uf1OW20y9gAVs=
-=S+jr
------END PGP SIGNATURE-----
-
---=-dWfQVh5qdYUlBzVp0UKa--
-
+Doh, of course! I must be blind ... and wait_for_completion()'s
+might_sleep() clearly didn't trigger earlier because Florian must've
+had CONFIG_DEBUG_SPINLOCK_SLEEP off in his .config ...
