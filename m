@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57261 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753222AbXIUPyK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44231 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbXIFLy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 11:54:10 -0400
-Message-ID: <46F3E930.1050007@lwfinger.net>
-Date: Fri, 21 Sep 2007 10:54:24 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Change the hardware radio enable logic and  cleanup code
-References: <46f319ef.8UBDQAjFjjfCblr5%Larry.Finger@lwfinger.net> <200709211522.01273.mb@bu3sch.de>
-In-Reply-To: <200709211522.01273.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Sep 2007 07:54:57 -0400
+Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070906023824.GK5273@jm.kir.nu>
+References: <1187987850.24933.29.camel@johannes.berg>
+	 <20070906023824.GK5273@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-noNESwFe1lXcING8NBjM"
+Date: Thu, 06 Sep 2007 13:54:24 +0200
+Message-Id: <1189079664.28781.52.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> 
-> Just that you are aware of it:
-> This is a racy access to the radio_hw_enable variable, as we don't take
-> the mutex here (we can't and we don't want). But it's OK, since nobody
-> cares if the LED is racing for a second and displays the wrong state
-> for a second.
-> Same goes for the phy->radio_on access.
-> 
-> The patch is ACKed by me.
-> 
 
-Thanks for the heads-up on the raciness of the access. I'm still learning what can and cannot be done.
+--=-noNESwFe1lXcING8NBjM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Wed, 2007-09-05 at 19:38 -0700, Jouni Malinen wrote:
+> On Fri, Aug 24, 2007 at 10:37:30PM +0200, Johannes Berg wrote:
+> > This makes hostapd use nl80211 (via libnl) to create/remove interfaces.
+> > Also lays the foundation for using nl80211 in hostapd.
+>=20
+> Thanks, applied.
+
+Great, thanks.
+
+> I haven't had a chance of testing this yet, but at least I'm now back in
+> state where I can build everything successfully :-).=20
+
+Good :)
+
+> I will be traveling
+> next couple of weeks at IEEE 802.11 meetings and will be very unlikely
+> to test this any time soon (especially so, taken into account where the
+> meetings are this time.. getting two meetings on consecutive weeks and
+> on two Hawaiian islands is quite a nice combination ;-). Consequently,
+> it is probably best to just get this in now and we'll fix multi-BSS
+> things later, if needed.
+
+Alright, sounds good. I don't think this breaks anything but I don't
+have a mac80211 based driver that allows multiple BSSes and I don't have
+all the radius stuff set up for VLANs. That said, I tested the actual
+nl80211 interface by hand and it's working fine.
+
+johannes
+
+--=-noNESwFe1lXcING8NBjM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3+pw/ETPhpq3jKURAv2yAJ9Ib+z2uL+6U5gxfrdFw7xRdhr7vwCgj375
+YVii0ZKsbullNvyyFlUThs4=
+=IM3I
+-----END PGP SIGNATURE-----
+
+--=-noNESwFe1lXcING8NBjM--
 
