@@ -1,70 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57198 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbXIGTgZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 15:36:25 -0400
-Subject: Re: Kernel panic with rt2500pci built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Hussey <robjhussey@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-	 <1189125944.28781.125.camel@johannes.berg>
-	 <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Am0p2kmZE3c72jsErh4s"
-Date: Fri, 07 Sep 2007 21:37:20 +0200
-Message-Id: <1189193840.28781.197.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:47861 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751203AbXIFAum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2007 20:50:42 -0400
+Subject: Re: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless  drivers)
+From: Dan Williams <dcbw@redhat.com>
+To: dragoran <drago01@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+In-Reply-To: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
+References: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 05 Sep 2007 20:50:22 -0400
+Message-Id: <1189039823.13730.4.camel@xo-3E-67-34.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-09-05 at 21:33 +0200, dragoran wrote:
+> On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > On Tuesday 04 September 2007, dragoran wrote:
+> > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > > > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > > > > >+static ssize_t show_rf_kill(struct device *d,
+> > > > > > > >+                        struct device_attribute *attr, char *buf)
+> > > > > > > >+{
+> > > > > > > >+    /*
+> > > > > > > >+     * 0 - RF kill not enabled
+> > > > > > > >+     * 1 - SW based RF kill active (sysfs)
+> > > > > > > >+     * 2 - HW based RF kill active
+> > > > > > > >+     * 3 - Both HW and SW based RF kill active
+> > > > > > > >
+> > > > > > > >that as well, along with all the other sysfs bits. Also, how about using
+> > > > > > > >the generic rfkill infrastructure Ivo did?
+> > > > > > >
+> > > > > > > is the generic rfkill interface already stable and merged into the linus tree?
+> > > > > >
+> > > > > > Yes. It currently is only missing users.
+> > > > >
+> > > > > ok thats great ;) is the (userspace) interface defined somewhere? or
+> > > > > should I read the code to understand how it works? (would like to add
+> > > > > support to hal)
+> > > >
+> > > > There isn't a documentation file for it, so best thing to do would be looking at the code.
+> > > > basically hal only needs to check the sysfs files:
+> > > >
+> > > >         name -> Name of device/interface
+> > > >         type -> wlan, bluetooth, irda
+> > > >         state -> Current device state. 0: Off, 1: On
+> > > >         claim -> 0: Kernel handles events, 1: Userspace handles events
+> > > >
+> > > > "name" and "type" are read-only
+> > > > "claim" and "state" are read/writable
+> > > >
+> > > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
+> > > > this has been fixed in 2.6.23-rc.
+> > >
+> > > ok that isn't complicated what is the claim used for?
+> > > does It has to be set to userspace to be able to toggle the status via software?
+> >
+> > By default the kernel will act when the rfkill button is pressed, it will loop
+> > through all registered buttons of the same type and change the state.
+> > Userspace can read the "state" sysfs file to see the current status,
+> > but if a userspace tools wants to take control of taking action when the button is pressed,
+> > or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
+> > tell the kernel that it should back off and ignore all events.
+> 
+> ok thx for explaining this will talk to the nm and hal people about it
+> and see how they want things to work than I will create patches to
+> implement it.
+> which drivers support it now? rt2x00 and ?? or are they the only ones right now?
 
---=-Am0p2kmZE3c72jsErh4s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Since it's in the kernel, the next step is to get HAL aware of the
+killswitches through sysfs and not through fdi files keyed on
+Dell/Sony/etc.
 
-On Fri, 2007-09-07 at 15:31 -0400, Rob Hussey wrote:
+Ivo: how does one tell whether or not the switch needs to be polled?
+That's something that HAL will need to deal with polling/non-polling
+intelligently.  I assume that either the layer or the driver
+implementing the button will know that it needs to be polled and should
+be the thing that sets the value.  Ideally just an attribute in sysfs
+like "require-poll" with a value of 1 or 0 or something like that.
 
-> This was with wireless-dev git. I can try DEBUG_KOBJECT once I get a chan=
-ce.
+Dan
 
-That'd be good.
-
-> I'd like to try to bisect this though, but I'm having trouble finding
-> a point in which it worked.
-
-> If I do:
-> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless=
--dev.git
-> and then:
-> git pull . remotes/origin/rt2x00
->=20
-> Then my commit history has all rt2x00 commits on top, and trying to
-> reset to an earlier point in time reverts rt2x00 commits, but not
-> wireless-dev commits (unless I  reset to before the initial rt2x00
-> commit). This causes compile errors mostly involving undeclared stuff
-> prefixed "IEEE80211_" Is there a better way to do this? Did I even
-> start out correctly?
-
-I'm not sure you can bisect due to the way mac80211/rt2x00 are currently
-developed, in lockstep but in different branches that are pulled
-together.
-
-johannes
-
---=-Am0p2kmZE3c72jsErh4s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4ahw/ETPhpq3jKURAnJDAJ0RlAjmnlH3qR/dPxZKp18+X91rcACcCDcv
-fLhJwub/TwZcmTdZoC6wcQg=
-=vSuj
------END PGP SIGNATURE-----
-
---=-Am0p2kmZE3c72jsErh4s--
 
