@@ -1,107 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7718 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751371AbXIAEhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:37:35 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 32611618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:37:35 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 35/35] Replace scan_runs with scan_need_any
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:37:34 -0400
-Message-ID: <20070901043734.2498.8176.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from ananke.telenet-ops.be ([195.130.137.78]:45012 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757272AbXIFBcF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2007 21:32:05 -0400
+Message-ID: <46DF5894.70909@telenet.be>
+Date: Thu, 06 Sep 2007 03:32:04 +0200
+From: Ian Schram <ischram@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
+References: <1188192012.13078.177.camel@debian.sh.intel.com>	 <20070831205524.GA11128@tuxdriver.com>	 <1188872746.13078.411.camel@debian.sh.intel.com> <1188915229.9942.29.camel@johannes.berg>
+In-Reply-To: <1188915229.9942.29.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's more meaningful than a number.
-
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-
- drivers/net/wireless/at76_usb.c |   22 +++++++---------------
- drivers/net/wireless/at76_usb.h |    2 +-
- 2 files changed, 8 insertions(+), 16 deletions(-)
 
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index ba0ad2c..9b418bf 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -3700,9 +3700,9 @@ static void at76_dwork_get_scan(struct work_struct *work)
- 		   further down the line and stop this cycle */
- 	}
- 	at76_dbg(DBG_PROGRESS,
--		 "%s %s: got cmd_status %d (state %s, scan_runs %d)",
-+		 "%s %s: got cmd_status %d (state %s, need_any %d)",
- 		 priv->netdev->name, __func__, status,
--		 mac_states[priv->mac_state], priv->scan_runs);
-+		 mac_states[priv->mac_state], priv->scan_need_any);
- 
- 	if (status != CMD_STATUS_COMPLETE) {
- 		if ((status != CMD_STATUS_IN_PROGRESS) &&
-@@ -3723,9 +3723,8 @@ static void at76_dwork_get_scan(struct work_struct *work)
- 
- 	if (at76_debug & DBG_BSS_TABLE)
- 		at76_dump_bss_table(priv);
--	switch (priv->scan_runs) {
- 
--	case 2:
-+	if (priv->scan_need_any) {
- 		ret = at76_start_scan(priv, 0);
- 		if (ret < 0)
- 			err("%s: %s: start_scan (ANY) failed with %d",
-@@ -3735,22 +3734,15 @@ static void at76_dwork_get_scan(struct work_struct *work)
- 			 __func__, __LINE__, SCAN_POLL_INTERVAL);
- 		schedule_delayed_work(&priv->dwork_get_scan,
- 				      SCAN_POLL_INTERVAL);
--		break;
--
--	case 3:
-+		priv->scan_need_any = 0;
-+	} else {
- 		priv->scan_state = SCAN_COMPLETED;
- 		/* report the end of scan to user space */
- 		at76_iwevent_scan_complete(priv->netdev);
- 		at76_set_mac_state(priv, MAC_JOINING);
- 		schedule_work(&priv->work_join);
--		break;
--
--	default:
--		err("unexpected priv->scan_runs %d", priv->scan_runs);
- 	}
- 
--	priv->scan_runs++;
--
- exit:
- 	mutex_unlock(&priv->mtx);
- }
-@@ -4034,9 +4026,9 @@ static void at76_work_start_scan(struct work_struct *work)
- 	 * otherwise simply rely on at76_bss_list_timeout */
- 	if (priv->scan_state == SCAN_IN_PROGRESS) {
- 		at76_free_bss_list(priv);
--		priv->scan_runs = 2;
-+		priv->scan_need_any = 1;
- 	} else
--		priv->scan_runs = 3;
-+		priv->scan_need_any = 0;
- 
- 	ret = at76_start_scan(priv, 1);
- 
-diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
-index c8cff99..8b51f9a 100644
---- a/drivers/net/wireless/at76_usb.h
-+++ b/drivers/net/wireless/at76_usb.h
-@@ -495,7 +495,7 @@ struct at76_priv {
- 	int scan_min_time;	/* scan min channel time */
- 	int scan_max_time;	/* scan max channel time */
- 	int scan_mode;		/* SCAN_TYPE_ACTIVE, SCAN_TYPE_PASSIVE */
--	int scan_runs;		/* counts how many scans are started */
-+	int scan_need_any;	/* if set, need to scan for any ESSID */
- 
- 	/* the list we got from scanning */
- 	spinlock_t bss_list_spinlock;	/* protects bss_list operations */
+Johannes Berg wrote:
+> On Tue, 2007-09-04 at 10:25 +0800, Zhu Yi wrote:
+> 
+>> Since they are device specific rate scale algorithm, I don't think they
+>> will help to increase performance for other devices.
+> 
+> What exactly is device specific?
+> 
+
+I thought I'd try and answer this question to the best of my ability, since it
+has been asked before. And even though it's open source and now has been submitted
+to this list, leaving this unanswered feels like a creepy way of potential time bombs
+and frustration. That said I'm probably not the best person to do it.
+
+
+iwl3945-rs:
+
+- the device can retry at different rates, and hence is able to deduct
+from the total number of retries a packet needed at which rates it failed/
+succeeded
+
+- tables of expected tpt (throughput?) which are used in the the throughput
+calculation are probably not very universal?
+there aren't identical for 3945 and 4965.
+
+-some synchronization of the station list with the device ucode happens here
+
+
+addidtionally in iwl4965-rs:
+
+- there is additionally the use of the "link quality" command which for example gets issued when
+there isn't enough of other throughput data available.
+
+
+
+Might be other things that I have missed, and
+parts of the algorithm might be tested/fine tuned for the intended devices.
+
+
+So that's that. Some questionable implementation details, but it does use
+device specific logic/capabilities in order to decide which rate to use.
+Now what do we do?
+
+ian
+
+> johannes
