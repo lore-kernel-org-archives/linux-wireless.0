@@ -1,166 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60212 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752324AbXIZM0K (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:40460 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbXIFQjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 08:26:10 -0400
-Subject: [PATCH v2] mac80211: fix interface initialisation and  deinitialisation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <1190755892.18521.330.camel@johannes.berg>
-References: <200709252206.57855.mb@bu3sch.de>
-	 <1190755892.18521.330.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 26 Sep 2007 14:27:23 +0200
-Message-Id: <1190809643.4204.3.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 6 Sep 2007 12:39:22 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so186433ugc
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 09:39:21 -0700 (PDT)
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless drivers)
+Date: Thu, 6 Sep 2007 18:49:36 +0200
+Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+References: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com> <1189039823.13730.4.camel@xo-3E-67-34.localdomain>
+In-Reply-To: <1189039823.13730.4.camel@xo-3E-67-34.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200709061849.36579.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an interface is registered it is still uninitialised so
-ieee80211_if_reinit() can't be called on it (it will oops.)
-Hence, we need to move the uninit method assignment.
+On Thursday 06 September 2007, Dan Williams wrote:
+> On Wed, 2007-09-05 at 21:33 +0200, dragoran wrote:
+> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > > > > > On Tuesday 04 September 2007, dragoran wrote:
+> > > > > > > > >+static ssize_t show_rf_kill(struct device *d,
+> > > > > > > > >+                        struct device_attribute *attr, char *buf)
+> > > > > > > > >+{
+> > > > > > > > >+    /*
+> > > > > > > > >+     * 0 - RF kill not enabled
+> > > > > > > > >+     * 1 - SW based RF kill active (sysfs)
+> > > > > > > > >+     * 2 - HW based RF kill active
+> > > > > > > > >+     * 3 - Both HW and SW based RF kill active
+> > > > > > > > >
+> > > > > > > > >that as well, along with all the other sysfs bits. Also, how about using
+> > > > > > > > >the generic rfkill infrastructure Ivo did?
+> > > > > > > >
+> > > > > > > > is the generic rfkill interface already stable and merged into the linus tree?
+> > > > > > >
+> > > > > > > Yes. It currently is only missing users.
+> > > > > >
+> > > > > > ok thats great ;) is the (userspace) interface defined somewhere? or
+> > > > > > should I read the code to understand how it works? (would like to add
+> > > > > > support to hal)
+> > > > >
+> > > > > There isn't a documentation file for it, so best thing to do would be looking at the code.
+> > > > > basically hal only needs to check the sysfs files:
+> > > > >
+> > > > >         name -> Name of device/interface
+> > > > >         type -> wlan, bluetooth, irda
+> > > > >         state -> Current device state. 0: Off, 1: On
+> > > > >         claim -> 0: Kernel handles events, 1: Userspace handles events
+> > > > >
+> > > > > "name" and "type" are read-only
+> > > > > "claim" and "state" are read/writable
+> > > > >
+> > > > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
+> > > > > this has been fixed in 2.6.23-rc.
+> > > >
+> > > > ok that isn't complicated what is the claim used for?
+> > > > does It has to be set to userspace to be able to toggle the status via software?
+> > >
+> > > By default the kernel will act when the rfkill button is pressed, it will loop
+> > > through all registered buttons of the same type and change the state.
+> > > Userspace can read the "state" sysfs file to see the current status,
+> > > but if a userspace tools wants to take control of taking action when the button is pressed,
+> > > or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
+> > > tell the kernel that it should back off and ignore all events.
+> > 
+> > ok thx for explaining this will talk to the nm and hal people about it
+> > and see how they want things to work than I will create patches to
+> > implement it.
+> > which drivers support it now? rt2x00 and ?? or are they the only ones right now?
+> 
+> Since it's in the kernel, the next step is to get HAL aware of the
+> killswitches through sysfs and not through fdi files keyed on
+> Dell/Sony/etc.
+> 
+> Ivo: how does one tell whether or not the switch needs to be polled?
+> That's something that HAL will need to deal with polling/non-polling
+> intelligently.  I assume that either the layer or the driver
+> implementing the button will know that it needs to be polled and should
+> be the thing that sets the value.  Ideally just an attribute in sysfs
+> like "require-poll" with a value of 1 or 0 or something like that.
 
-Also, this patch fixes the bug that the master device is never
-initialised nor deinitialised at all. Oddly, the deinit code
-had an if statement to not run some code when running for the
-master interface (which never happened), but that if statement
-is also wrong. Fix that too.
+No, because like I explained userspace is not in control of polling,
+because there should be no userspace dependency. This means that
+if the device requires polling, it should register itself with the input_polldev handler.
+This way the radio button will allwats work as expected, without requiring
+some version of HAL..
 
-Now that the uninit code is run for the master device, another
-bug surfaced: it tries to remove all dependent interfaces and
-that oopses or BUGs at some point, either because it unregisters
-already unregistered interfaces (missing list_del bug) or due
-to trying to iterate a list that has had other things removed.
-Fix this too by handling the master interface specially.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/mac80211/ieee80211.c       |   19 ++++++++++++++++---
- net/mac80211/ieee80211_iface.c |   35 +++++++++++++++++++++++++++--------
- 2 files changed, 43 insertions(+), 11 deletions(-)
-
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 12:39:30.970162850 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 14:08:54.109659539 +0200
-@@ -266,7 +266,6 @@ void ieee80211_if_mgmt_setup(struct net_
- 	dev->stop = ieee80211_mgmt_stop;
- 	dev->type = ARPHRD_IEEE80211_PRISM;
- 	dev->hard_header_parse = header_parse_80211;
--	dev->uninit = ieee80211_if_reinit;
- 	dev->destructor = ieee80211_if_free;
- }
- 
-@@ -543,7 +542,6 @@ void ieee80211_if_setup(struct net_devic
- 	dev->change_mtu = ieee80211_change_mtu;
- 	dev->open = ieee80211_open;
- 	dev->stop = ieee80211_stop;
--	dev->uninit = ieee80211_if_reinit;
- 	dev->destructor = ieee80211_if_free;
- }
- 
-@@ -1234,6 +1232,7 @@ int ieee80211_register_hw(struct ieee802
- 		goto fail_dev;
- 
- 	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
-+	ieee80211_if_set_type(local->mdev, IEEE80211_IF_TYPE_AP);
- 
- 	result = ieee80211_init_rate_ctrl_alg(local, NULL);
- 	if (result < 0) {
-@@ -1338,8 +1337,22 @@ void ieee80211_unregister_hw(struct ieee
- 	 * because the driver cannot be handing us frames any
- 	 * more and the tasklet is killed.
- 	 */
--	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list)
-+
-+	/*
-+	 * First, we remove all non-master interfaces. Do this because they
-+	 * may have bss pointer dependency on the master, and when we free
-+	 * the master these would be freed as well, breaking our list
-+	 * iteration completely.
-+	 */
-+	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
-+		if (sdata->dev == local->mdev)
-+			continue;
-+		list_del(&sdata->list);
- 		__ieee80211_if_del(local, sdata);
-+	}
-+
-+	/* then, finally, remove the master interface */
-+	__ieee80211_if_del(local, IEEE80211_DEV_TO_SUB_IF(local->mdev));
- 
- 	rtnl_unlock();
- 
---- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-26 12:39:31.050162850 +0200
-+++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-26 14:09:42.479659539 +0200
-@@ -127,6 +127,12 @@ int ieee80211_if_add_mgmt(struct ieee802
- 	if (ret)
- 		goto fail;
- 
-+	/*
-+	 * Called even when register_netdevice fails, it would
-+	 * oops if assigned before initialising the rest.
-+	 */
-+	ndev->uninit = ieee80211_if_reinit;
-+
- 	ieee80211_debugfs_add_netdev(nsdata);
- 
- 	if (local->open_count > 0)
-@@ -155,12 +161,27 @@ void ieee80211_if_set_type(struct net_de
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	int oldtype = sdata->type;
- 
--	dev->hard_start_xmit = ieee80211_subif_start_xmit;
-+	/*
-+	 * We need to call this function on the master interface
-+	 * which already has a hard_start_xmit routine assigned
-+	 * which must not be changed.
-+	 */
-+	if (!dev->hard_start_xmit)
-+		dev->hard_start_xmit = ieee80211_subif_start_xmit;
-+
-+	/*
-+	 * Called even when register_netdevice fails, it would
-+	 * oops if assigned before initialising the rest.
-+	 */
-+	dev->uninit = ieee80211_if_reinit;
- 
-+	/* most have no BSS pointer */
-+	sdata->bss = NULL;
- 	sdata->type = type;
-+
- 	switch (type) {
- 	case IEEE80211_IF_TYPE_WDS:
--		sdata->bss = NULL;
-+		/* nothing special */
- 		break;
- 	case IEEE80211_IF_TYPE_VLAN:
- 		sdata->u.vlan.ap = NULL;
-@@ -213,6 +234,7 @@ void ieee80211_if_reinit(struct net_devi
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta;
-+	struct sk_buff *skb;
- 
- 	ASSERT_RTNL();
- 
-@@ -246,12 +268,9 @@ void ieee80211_if_reinit(struct net_devi
- 		kfree(sdata->u.ap.beacon_tail);
- 		kfree(sdata->u.ap.generic_elem);
- 
--		if (dev != local->mdev) {
--			struct sk_buff *skb;
--			while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
--				local->total_ps_buffered--;
--				dev_kfree_skb(skb);
--			}
-+		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
-+			local->total_ps_buffered--;
-+			dev_kfree_skb(skb);
- 		}
- 
- 		break;
-
-
+Ivo
