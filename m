@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4413 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbXIAEhH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:37:07 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 93F4A618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:37:06 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 30/35] Eliminate pr_debug() in favor of at76_dbg()
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:37:06 -0400
-Message-ID: <20070901043706.2498.22327.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55025 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077AbXIFMIv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2007 08:08:51 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Satyam Sharma <satyam@infradead.org>,
+	Florian Lohoff <flo@rfc822.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070906082301.GB21929@gondor.apana.org.au>
+References: <20070902184439.GA14306@paradigm.rfc822.org>
+	 <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com>
+	 <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
+	 <20070906082301.GB21929@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aDhX2JYVj+qvS9HXtxEq"
+Date: Thu, 06 Sep 2007 14:09:35 +0200
+Message-Id: <1189080575.28781.65.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
 
- drivers/net/wireless/at76_usb.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
+--=-aDhX2JYVj+qvS9HXtxEq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2007-09-06 at 16:23 +0800, Herbert Xu wrote:
+> On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
+> >=20
+> > > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
+> > > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80=
+211]
+>=20
+> This is where the bug is.  You cannot call dev_close from an
+> atomic context as i33380211_master_stop does it within spin
+> locks.
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 5922d35..e612dc5 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -1818,19 +1818,18 @@ static void at76_dump_bss_table(struct at76_priv *priv)
- 
- 	spin_lock_irqsave(&priv->bss_list_spinlock, flags);
- 
--	pr_debug("%s BSS table (curr=%p):", priv->netdev->name, priv->curr_bss);
-+	at76_dbg(DBG_BSS_TABLE, "%s BSS table (curr=%p):", priv->netdev->name,
-+		 priv->curr_bss);
- 
- 	list_for_each(lptr, &priv->bss_list) {
- 		ptr = list_entry(lptr, struct bss_info, list);
--		pr_debug("0x%p: bssid %s channel %d ssid %s (%s)"
--			 " capa 0x%04x rates %s rssi %d link %d noise %d",
--			 ptr, mac2str(ptr->bssid),
--			 ptr->channel,
--			 ptr->ssid,
--			 hex2str(ptr->ssid, ptr->ssid_len),
--			 ptr->capa,
--			 hex2str(ptr->rates, ptr->rates_len),
--			 ptr->rssi, ptr->link_qual, ptr->noise_level);
-+		at76_dbg(DBG_BSS_TABLE,
-+			 "0x%p: bssid %s channel %d ssid %s (%s)"
-+			 " capa 0x%04x rates %s rssi %d link %d noise %d", ptr,
-+			 mac2str(ptr->bssid), ptr->channel, ptr->ssid,
-+			 hex2str(ptr->ssid, ptr->ssid_len), ptr->capa,
-+			 hex2str(ptr->rates, ptr->rates_len), ptr->rssi,
-+			 ptr->link_qual, ptr->noise_level);
- 	}
- 	spin_unlock_irqrestore(&priv->bss_list_spinlock, flags);
- }
+Hah, I suspected as much but didn't have a chance to look yet. I had
+plans to replace that sub_if_list with an RCU list and not require the
+lock there, but that's far off. Any ideas how to fix this? We can't
+reject the master stop so we have to walk the list, I guess we'll have
+to audit the other list manipulation places, I think they're all under
+RTNL.
+
+johannes
+
+--=-aDhX2JYVj+qvS9HXtxEq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG3+3//ETPhpq3jKURAmSDAJ4htpfzSylRKgy7lccg8n7RghW2+gCgoJDZ
+IpSVWTebwTCqf7Iq44pU2gc=
+=u3vr
+-----END PGP SIGNATURE-----
+
+--=-aDhX2JYVj+qvS9HXtxEq--
+
