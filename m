@@ -1,79 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbXIVKbR (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:59890 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbXIFQze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Sep 2007 06:31:17 -0400
-Subject: API to regulatory control (2)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1190456574.18521.220.camel@johannes.berg>
-References: <1190456574.18521.220.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IHyQthSvsLmsRVd0SzZr"
-Date: Sat, 22 Sep 2007 12:32:35 +0200
-Message-Id: <1190457155.18521.230.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 6 Sep 2007 12:55:34 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so189250ugc
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 09:55:33 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 03/21] mac80211: revamp interface and filter configuration
+Date: Thu, 6 Sep 2007 19:05:53 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	rt2400-devel@lists.sourceforge.net,
+	Li YanBo <dreamfly281@gmail.com>
+References: <20070905234209.108005000@sipsolutions.net> <20070905234622.671760000@sipsolutions.net>
+In-Reply-To: <20070905234622.671760000@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200709061905.54102.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 06 September 2007, Johannes Berg wrote:
+> Drivers are currently supposed to keep track of monitor
+> interfaces if they allow so-called "hard" monitor, and
+> they are also supposed to keep track of multicast etc.
+> 
+> This patch changes that, replaces the set_multicast_list()
+> callback with a new configure_filter() callback that takes
+> filter flags (FIF_*) instead of interface flags (IFF_*).
+> For a driver, this means it should open the filter as much
+> as necessary to get all frames requested by the filter flags.
+> Accordingly, the filter flags are named "positively", e.g.
+> FIF_ALLMULTI.
+> 
+> Multicast filtering is a bit special, which is why drivers
+> that do not require FIF_ALLMULTI for multicast address filters
+> (i.e. they actually have filters for multicast addresses)
+> need to set the new IEEE80211_HW_MULTICAST_FILTER flag and
+> call the get_mc_item() function passed to the configure_filter
+> callback.
+> 
+> At the same time, drivers are no longer notified about
+> monitor interfaces at all, this means they now need to
+> implement the start() and stop() callbacks and the new
+> change_filter_flags() callback. Also, the start()/stop()
+> ordering changed, start() is now called *before* any
+> add_interface() as it really should be, and stop() after
+> any remove_interface().
+> 
+> The patch also changes the behaviour of setting the bssid
+> to multicast for scanning when IEEE80211_HW_NO_PROBE_FILTERING
+> is set; the IEEE80211_HW_NO_PROBE_FILTERING flag is removed
+> and the filter flag FIF_BCN_PRBRESP_PROMISC introduced.
+> This is a lot more efficient for hardware like b43 that
+> supports it and other hardware can still set the BSSID
+> to all-ones.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Larry Finger <larry.finger@lwfinger.net>
+> Cc: Michael Wu <flamingice@sourmilk.net>
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Tomas Winkler <tomasw@gmail.com>
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: Ulrich Kunitz <kune@deine-taler.de>
+> Cc: Daniel Drake <dsd@gentoo.org>
+> Cc: Ivo van Doorn <ivdoorn@gmail.com>
+> Cc: rt2400-devel@lists.sourceforge.net
+> Cc: Li YanBo <dreamfly281@gmail.com>
 
---=-IHyQthSvsLmsRVd0SzZr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+rt2x00 changes look good to me,
+it will probably take me some time to find time
+to make the full correct patch to fix rt2x00 but
+I'll do my best to do it as soon as possible.
 
-So in the first part I covered how information on channel restrictions
-is communicated between the central regulatory control agent and drivers
-and/or mac80211.
+In the mean time this patch can be applied anyway,
+I'll try to keep the time rt2x00 will be bugging to
+a minimum.
 
-This second part is rather short, but important.
-
-Devices that are capable of operating in a wide range of regulatory
-restrictions usually also have country information encoded in their
-EEPROM. I understand that Intel devices will need to make this EEPROM
-information part of their channels list because the firmware rejects
-tuning to other channels, but most devices fully enforce these
-restrictions in software.
-
-Hence, it is necessary that drivers are able to set the regulatory
-domain they think they are operating in. It would probably be possible
-to override by the user, but when the user has just booted it would be
-good to be able to read the EEPROM of a wireless card to set the initial
-operating domain.
-
-For this, we need two exported functions:
-
-void cfg80211_regulatory_set_alpha2(const char *alpha2);
-void cfg80211_regulatory_set_domain(int ieee80211_domain);
-
-These functions, when called, internally look up the value and, if
-found, update each registered wiphy's channels list for the new
-restrictions. They also set the internal domain to the value given
-(well, I suppose the _set_domain function internally looks up an alpha2
-value and calls the other one). Also, it will call the notifier chain I
-talked about earlier so drivers can be notified of the change if
-necessary.
-
-Similarly, userspace can set the alpha2 value through some
-nl80211/configfs API which will also cause the the same updates and
-notifier chain calls.
-
-I think this covers all the public API to regulatory control. Did I miss
-anything? Everything else should be internal.
-
-johannes
-
---=-IHyQthSvsLmsRVd0SzZr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG9O9D/ETPhpq3jKURAkKxAKC3h2S3svsCYWD+ymIOioe+j/gICwCdH8j/
-bplPaoqQEFe89ozBZ693vnE=
-=b+b8
------END PGP SIGNATURE-----
-
---=-IHyQthSvsLmsRVd0SzZr--
-
+Ivo
