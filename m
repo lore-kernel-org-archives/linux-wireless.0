@@ -1,77 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51336 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbXIDNlI (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:44639 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385AbXIFOb4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 09:41:08 -0400
-Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <20070904011648.GX1835@jm.kir.nu>
-References: <1187987850.24933.29.camel@johannes.berg>
-	 <20070904011648.GX1835@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Rfn9NFHfaCPGaXXYa+0J"
-Date: Tue, 04 Sep 2007 15:42:15 +0200
-Message-Id: <1188913335.9942.16.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 6 Sep 2007 10:31:56 -0400
+Received: by an-out-0708.google.com with SMTP id d31so27246and
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 07:31:55 -0700 (PDT)
+Message-ID: <1ba2fa240709060731n59d76023s61ac9c6f7152d631@mail.gmail.com>
+Date: Thu, 6 Sep 2007 17:31:55 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
+Cc: "Ian Schram" <ischram@telenet.be>, linux-wireless@vger.kernel.org,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Felix Fietkau" <nbd@nbd.name>
+In-Reply-To: <1189088042.28781.86.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1188192012.13078.177.camel@debian.sh.intel.com>
+	 <20070831205524.GA11128@tuxdriver.com>
+	 <1188872746.13078.411.camel@debian.sh.intel.com>
+	 <1188915229.9942.29.camel@johannes.berg> <46DF5894.70909@telenet.be>
+	 <1189080026.28781.58.camel@johannes.berg>
+	 <1ba2fa240709060704g4a5044beu298bb1d5ae42703d@mail.gmail.com>
+	 <1189088042.28781.86.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 9/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2007-09-06 at 17:04 +0300, Tomas Winkler wrote:
+>
+> > There is nothing NOT general in 3945 rate scaling algorithm just the
+> > current interfaces of rate scaling algorithm is a bit awkward, not
+> > extensible. The struct ieee80211_tx_status is tight to mac80211 and
+> > not to rate scale algorithm so if you create your own crazy rate scale
+> > algorithm you cannot decide what parameters you need.
+>
+> Yeah, I agree, we need to improve this. "minstrel" really wants more
+> retry rates too than just two.
+>
+> > 4965 is 11n card and rate scale algorithm is totally different.
+> > One aspect is that rate scaling works  with much more parameters. MIMO
+> > rates are rather 2 dimensional table, therefore the algorithm is
+> > essentially different, but so far no interface change is needed.
+> > Actually it covers also legacy rate scaling.
+>
+> Right. Maybe we can orthogonalize this into a rate control interface
+> for .11n and one for "legacy"?
+>
+11n should cover also legacy rate scaling, and legacy mode in general.
 
---=-Rfn9NFHfaCPGaXXYa+0J
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > The second aspect of HT is the aggregation. Bunch of packets at once
+> > and they are also ACKed at once so regular TX status path of updating
+> > rate scale algorithm is not so natural. Mostly because it is combined
+> > with reclaiming the packet.
+>
+> This is something you need to work on in mac80211 anyway. I don't like
+> how your driver does all the decisions about when to aggregate etc. This
+> should be in the per-sta code in mac80211.
+>
+We have solved that it just as I said it is not rebased  against
+latest wireless-dev so you don't see this code. I will probably
+release some RFC patches first so nobody will accuse me of selling FUD
+:)
 
-On Mon, 2007-09-03 at 18:16 -0700, Jouni Malinen wrote:
+> > Third part and this is 4965 specific is that  TX rate is not attached
+> > to packet but rate table is updated when need on it's own path. This
+> > is device specific.
+>
+> It seemed like the rate was attached to each station. This is a bit and
+> I don't really know how to handle it.
+???
 
-> Where are things like NL80211_ATTR_IFNAME and
-> NL80211_CMD_ADD_VIRTUAL_INTERFACE defined? I would assume these are from
-> linux/nl80211.h, but where should I get the version that includes these?
+> > Forth is that the aggregation. In general this involves some handshake
+> > on protocol level i.e. MLME but efficiency of aggregation is kind of
+> > rate scaling decision in addition  it might be enabled only for MIMO
+> > rates (different plcp header)
+>
+> Right. I think you mentioned aggregation as number two already :)
+>
+Number 2 is the rate scaling update path this is rate scaling decision path
 
-You have to use the one from wireless-dev as we don't ship it from
-mainline yet.
+> > 1. rs_update_event(sta, struct rs_data *)  - function that brings rate
+> > scaling statistics not connected to packet reclaim path
+> >   struct rs_data is specific to rate scaling and opaque to mac80211
+>
+> What sort of statistics would it bring, and when?
+>
+In legacy TX it will be the same as current implementation, actual
+rate, number of retries, etc
+For aggregation it need rate and number of packets ACKed and NACked.
+The whole aggregation is sent in one rate. Theoreticaly multi rate
+aggregation might be sent, but no vendor creates such radios yet.
 
-> This is making it a bit difficult to build driver_devicescape.c and same
-> goes for the requirement for svn trunk version of libnl.. Any idea how
-> much code from libnl is needed here? Would it be major effort to do the
-> needed calls without having to rely on libnl at or (or at least not on
-> an unreleased svn trunk version)?
+> > 2. rs_add_sta/rs_init(sta)  - create new instance of rate scaling for
+> > added station including AP in STA mode
+>
+> That's what we have now afaict.
+> Yes
 
-There's a whole bunch of code in libnl I use, all the generic netlink
-family resolving etc. Maybe Thomas can prerelease a libnl with generic
-netlink support?
+> > 3. rs_compute(sta/sta_addr) - actual computation of rate scaling
+> > algorithm possible also from RX path (tx reclaim)
+>
+> Where would it be called?
 
-> This is not good direction to go to.. I would really not like to include
-> linux/*.h unless absolutely needed since these header files have been
-> very likely to conflict with glibc ones and there is not really that
-> much guarantees in people wanting to keep kernel header files suitable
-> for inclusion into user space programs.
+This can be run in reclaim path (RX) as now  but for 4965 I would
+create period work
 
-Actually, the latter point hasn't been true for a long time, ever since
-David Woodhouse cleaned up exporting kernel headers to userspace glibc
-has happily shipped them.
+> > 4.  rs_get_rate - for regular TX path setting of rates
+>
+> Right.
+>
+> > 5. void (*rs_apply_rates)(sta_addr)  - driver supplied handler for
+> > applying rate not through TX path.
+>
+> This needs more parameters, no?
+Sure, the rates themselves. Currently I have in vision only 4965 rate
+table. Need to find something more general probably.
 
-> I would much rather use these for now and should the /usr/include/linux
-> directory in most distributions some day have all the needed stuff, then
-> we could move towards using those.
-
-It really ought to have the wireless stuff except for nl80211.h
-
-johannes
-
---=-Rfn9NFHfaCPGaXXYa+0J
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3WC3/ETPhpq3jKURAhMrAJsETljPn1gKR7OjvMI5Ynzi+GfU0QCgo6Ch
-UX3tPnrToL56fIow79iXCbo=
-=vLGx
------END PGP SIGNATURE-----
-
---=-Rfn9NFHfaCPGaXXYa+0J--
-
+Thanks for your comments
+Tomas
+>
