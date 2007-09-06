@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:35674 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759948AbXIQU77 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:12324 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201AbXIFSCl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 16:59:59 -0400
-Received: by an-out-0708.google.com with SMTP id d31so247408and
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2007 13:59:58 -0700 (PDT)
-Message-ID: <43e72e890709171359s2d3e828t81b0997bb4388244@mail.gmail.com>
-Date: Mon, 17 Sep 2007 16:59:58 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(), we're MMIO-only
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jeff Garzik" <jeff@garzik.org>
-In-Reply-To: <46EEE735.5050306@gmail.com>
+	Thu, 6 Sep 2007 14:02:41 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so199936ugc
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 11:02:40 -0700 (PDT)
+To: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Date: Thu, 6 Sep 2007 20:13:02 +0200
+Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <200709061847.53659.IvDoorn@gmail.com> <200709061054.22492.inaky@linux.intel.com>
+In-Reply-To: <200709061054.22492.inaky@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>
-	 <46EEE735.5050306@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709062013.03203.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/17/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> On 09/17/2007 10:34 PM, Luis R. Rodriguez wrote:
-> > Based on advise from Jeff, as described in the e-mail:
-> >
-> > [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-> >
-> > we shouldn't use ioread32()/iowrite32() unless we really have a need
-> > to otherwise we're creating an unnecessary branch on read/write. Lets
-> > revert this back to readl()/writel() as our devices so far have been
-> > MMIO-only. This reverts 9202ec15da36ca060722c363575e0e390d85fb71 on
-> > ath5k. This patch is intended for the ath5k branch of wireless-dev.
-> >
-> > Changes-licensed-under: ISC
-> > Singed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> >
-> > ---
-> >
-> >  drivers/net/wireless/ath5k_hw.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath5k_hw.c b/drivers/net/wireless/ath5k_hw.c
-> > index 07ad127..3501b4c 100644
-> > --- a/drivers/net/wireless/ath5k_hw.c
-> > +++ b/drivers/net/wireless/ath5k_hw.c
-> > @@ -219,7 +219,7 @@ static inline unsigned int
-> > ath5k_hw_clocktoh(unsigned int clock, bool turbo)
-> >   */
-> >  static inline u32 ath5k_hw_reg_read(struct ath_hw *hal, u16 reg)
-> >  {
-> > -       return ioread32(hal->ah_sh + reg);
-> > +       return readl(hal->ah_sh + reg);
-> >  }
-> >
-> >  /*
-> > @@ -227,7 +227,7 @@ static inline u32 ath5k_hw_reg_read(struct ath_hw
-> > *hal, u16 reg)
-> >   */
-> >  static inline void ath5k_hw_reg_write(struct ath_hw *hal, u32 val, u16 reg)
-> >  {
-> > -       iowrite32(val, hal->ah_sh + reg);
-> > +       writel(val, hal->ah_sh + reg);
-> >  }
-> >
-> >  /*
-> >
->
-> NACK, this is wrong. iomap returns platform dependant return value, which may or
-> may not correspond to what is accepted by readX/writeX. (but is 100% accepted by
-> ioreadXX/iowriteXX).
+On Thursday 06 September 2007, Inaky Perez-Gonzalez wrote:
+> On Thursday 06 September 2007, Ivo van Doorn wrote:
+> > >
+> > > Can you add 'uwb' [for ultrawideband radios]? That way I could start to use it. A
+> > > Doc file would help enourmously also :)
+> > 
+> > I'll create a doc file this weekend which will explain the sysfs files
+> > and some instructions for drivers that want to implement it.
+> 
+> Thanks,
+> 
+> > I'm not familiar with ultrawideband radios, don't they fall under the same
+> > catagory as wireless lan?
+> 
+> Nope, totally different beast; see linuxuwb.org. UWB is kind of like bluetooth 
+> on esteroids, for PAN applications. Wireless USB (for eaxmple) uses a UWB radio.
 
-Actually it does work 100% of the times if all we have is MMIO-only
-devices and hence the change. I've asked around and checked some of my
-really old Atheros cards and can't find any using PIO. Are you aware
-of any Atheros card using PIO?
+Ah ok.
+Well if there will be users, I'll create a patch to add the UWB to the list.
+Patch will, just like the doc file, follow this weekend.
 
-  Luis
+Ivo
