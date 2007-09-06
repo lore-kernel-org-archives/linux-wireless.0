@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:19737 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbXIJUkx (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35015 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbXIFPSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 16:40:53 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so586815nze
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2007 13:40:52 -0700 (PDT)
-Message-ID: <6b8cef970709101340y77264f86s535384414b68c6f2@mail.gmail.com>
-Date: Mon, 10 Sep 2007 16:40:51 -0400
-From: "Rob Hussey" <robjhussey@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Kernel panic with rt2500pci built-in
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1189422311.4506.52.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <1189244217.4506.16.camel@johannes.berg>
-	 <6b8cef970709080857s69c055f2s1bc1ce6bd0ad4dfd@mail.gmail.com>
-	 <200709081816.10143.IvDoorn@gmail.com>
-	 <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
-	 <1189420297.4506.26.camel@johannes.berg>
-	 <1189422311.4506.52.camel@johannes.berg>
+	Thu, 6 Sep 2007 11:18:41 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Satyam Sharma <satyam@infradead.org>,
+	Florian Lohoff <flo@rfc822.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+In-Reply-To: <20070906082301.GB21929@gondor.apana.org.au>
+References: <20070902184439.GA14306@paradigm.rfc822.org>
+	 <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com>
+	 <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
+	 <20070906082301.GB21929@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P0JM25PSs9MHCk1RoLrB"
+Date: Thu, 06 Sep 2007 17:19:55 +0200
+Message-Id: <1189091995.28781.99.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/10/07, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> Can you change all module_init() in net/mac80211/ to subsys_initcall()
-> as well?
 
-Thank you Johannes! This worked very well. In fact, I'm emailing this
-message using my built-in rt2x00 driver.
+--=-P0JM25PSs9MHCk1RoLrB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I had to change the module_init() to subsys_initcall() in ieee80211.c
-and rc80211_simple.c, as well as the original change in
-net/wireless/core.c. After that, it seems to work well either built-in
-or as modules.
+On Thu, 2007-09-06 at 16:23 +0800, Herbert Xu wrote:
+> On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
+> >=20
+> > > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
+> > > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80=
+211]
+>=20
+> This is where the bug is.  You cannot call dev_close from an
+> atomic context as i33380211_master_stop does it within spin
+> locks.
+
+Oh btw. Can we stick a might_sleep() into dev_close() *before* the test
+whether the device is up? That way, we'd have seen the bug, but
+apparently nobody before Florian ever did a 'ip link set wmaster0 down'
+while the other interfaces were still open.
+
+johannes
+
+--=-P0JM25PSs9MHCk1RoLrB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4Bqb/ETPhpq3jKURAodYAJ9Ue7BZ2OM/mODT3BxY5BZTViKo5gCgrEkC
+LpH1f969DmQIZpNHoSH2Ank=
+=vRYa
+-----END PGP SIGNATURE-----
+
+--=-P0JM25PSs9MHCk1RoLrB--
+
