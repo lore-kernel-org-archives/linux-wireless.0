@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4648 "EHLO ra.tuxdriver.com"
+Received: from hydra.gt.owl.de ([195.71.99.218]:43650 "EHLO hydra.gt.owl.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755728AbXIQXlu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 19:41:50 -0400
-Date: Mon, 17 Sep 2007 19:05:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	id S1754941AbXIFJFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2007 05:05:48 -0400
+Date: Thu, 6 Sep 2007 10:38:04 +0200
+From: Florian Lohoff <flo@rfc822.org>
 To: Satyam Sharma <satyam@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH -mm][resend] net/wireless/sysfs.c: Shut up build warning
-Message-ID: <20070917230559.GF9282@tuxdriver.com>
-References: <alpine.LFD.0.999.0709180412490.8863@enigma.security.iitk.ac.in>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+Message-ID: <20070906083804.GB20644@paradigm.rfc822.org>
+References: <20070902184439.GA14306@paradigm.rfc822.org> <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com> <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in> <20070906082301.GB21929@gondor.apana.org.au> <alpine.LFD.0.999.0709061409120.3781@enigma.security.iitk.ac.in>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <alpine.LFD.0.999.0709180412490.8863@enigma.security.iitk.ac.in>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TakKZr9L6Hm6aLOc"
+In-Reply-To: <alpine.LFD.0.999.0709061409120.3781@enigma.security.iitk.ac.in>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 18, 2007 at 04:15:11AM +0530, Satyam Sharma wrote:
->=20
-> net/wireless/sysfs.c:108: warning: =E2=80=98wiphy_uevent=E2=80=99 def=
-ined but not used
->=20
-> when CONFIG_HOTPLUG=3Dn is because the only usage site of this functi=
-on
-> is #ifdef'ed as such, so let's #ifdef the definition also.
->=20
-> Signed-off-by: Satyam Sharma <satyam@infradead.org>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-This has already been sent upstream through Dave Miller's net-2.6.24
-tree...
+--TakKZr9L6Hm6aLOc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-John
+On Thu, Sep 06, 2007 at 02:11:46PM +0530, Satyam Sharma wrote:
+> On Thu, 6 Sep 2007, Herbert Xu wrote:
+>=20
+> > On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
+> > >=20
+> > > > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
+> > > > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac=
+80211]
+> >=20
+> > This is where the bug is.  You cannot call dev_close from an
+> > atomic context as i33380211_master_stop does it within spin
+> > locks.
+>=20
+> Doh, of course! I must be blind ... and wait_for_completion()'s
+> might_sleep() clearly didn't trigger earlier because Florian must've
+> had CONFIG_DEBUG_SPINLOCK_SLEEP off in his .config ...
+
+# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
+
+Exactly ...
+
+Flo
 --=20
-John W. Linville
-linville@tuxdriver.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Florian Lohoff                  flo@rfc822.org             +49-171-2280134
+	Those who would give up a little freedom to get a little=20
+          security shall soon have neither - Benjamin Franklin
+
+--TakKZr9L6Hm6aLOc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFG37xsUaz2rXW+gJcRAi1SAKC7KncTgeJYtwDQFVhjhml5ucKshgCfS5GD
+PRtbaTuS2rBmcMMjwKMPjaE=
+=fIGc
+-----END PGP SIGNATURE-----
+
+--TakKZr9L6Hm6aLOc--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
