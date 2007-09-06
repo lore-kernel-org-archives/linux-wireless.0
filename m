@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47984
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751148AbXISWOu (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60392 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563AbXIFOph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 18:14:50 -0400
-Date: Wed, 19 Sep 2007 15:14:46 -0700 (PDT)
-Message-Id: <20070919.151446.116351108.davem@davemloft.net>
-To: dsd@gentoo.org
-Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <46F19DD0.2050605@gentoo.org>
-References: <20070919181005.GB5483@tuxdriver.com>
-	<46F19DD0.2050605@gentoo.org>
+	Thu, 6 Sep 2007 10:45:37 -0400
+Subject: Re: [PATCH 03/21] mac80211: revamp interface and filter  configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	Li YanBo <dreamfly281@gmail.com>
+In-Reply-To: <20070905234622.671760000@sipsolutions.net>
+References: <20070905234209.108005000@sipsolutions.net>
+	 <20070905234622.671760000@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tsKtUEobmabUV5K/K9F+"
+Date: Thu, 06 Sep 2007 16:46:53 +0200
+Message-Id: <1189090013.28781.97.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Drake <dsd@gentoo.org>
-Date: Wed, 19 Sep 2007 23:08:16 +0100
 
-> John, thanks a lot for your efforts, I hope you don't mind waiting one 
-> extra release cycle for me to sort a few things out.
+--=-tsKtUEobmabUV5K/K9F+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Having "a driver" is always better for users than having "no driver".
-Please I ask you not to block this merge even if you think it is too
-early.
+On Thu, 2007-09-06 at 01:42 +0200, Johannes Berg wrote:
 
-Distribution vendors are going to merge this driver into their kernel
-trees anyways.  And as Linus stated at the recent kernel summit, when
-this happens and upstream doesn't merge the driver too, the process
-has failed.
+> +/* show frames with failed FCS, but set RX_FLAG_FAILED_FCS_CRC for them =
+*/
+> +#define FIF_FCSFAIL		0x04
+> +/* show frames with failed PLCP CRC, but set RX_FLAG_FAILED_PLCP_CRC for=
+ them */
+> +#define FIF_PLCPFAIL		0x08
 
-We have had huge issues with shit piling up in the wireless tree and
-it has to stop sooner rather than later, and I'm going to make sure
-it stops now.
+For those wanting to uses these flags I should notice that the b43 patch
+is currently incomplete, it doesn't set the related RX flags on the bad
+packets. This doesn't matter for now of course because we have no way of
+enabling these flags.
 
-So please don't feel compelled to fix "all the issues" before a merge.
-Drivers will always have issues, and if we merge now you will get more
-useful feedback, sooner, and users will have something to use rather
-than no driver at all.
+Also, I should note that the next patches in this series document these
+better, I just split that up for more technical reasons. I could roll
+the changes into this patch but I feel it's not worth the effort of
+rediffing everything.
 
-Thanks.
+johannes
+
+--=-tsKtUEobmabUV5K/K9F+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4BLd/ETPhpq3jKURAswOAKCQRvE4gbKPwflnW+siYQCiRk9mrQCgl2GO
+AhEEuKKWSmSO9n+1RHPyVhA=
+=D96m
+-----END PGP SIGNATURE-----
+
+--=-tsKtUEobmabUV5K/K9F+--
+
