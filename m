@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:13005 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbXINIby (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:53279 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbXIGTbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 04:31:54 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so469857ugc
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 01:31:53 -0700 (PDT)
-Message-ID: <46EA46F5.1050906@gmail.com>
-Date: Fri, 14 Sep 2007 10:31:49 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 7 Sep 2007 15:31:24 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so639316wah
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2007 12:31:23 -0700 (PDT)
+Message-ID: <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
+Date: Fri, 7 Sep 2007 15:31:23 -0400
+From: "Rob Hussey" <robjhussey@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Kernel panic with rt2500pci built-in
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1189125944.28781.125.camel@johannes.berg>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] Internalize Atheros Turbo modes and Turbo modulation
-References: <43e72e890709131706p565bd955m1b9820198cafa7fa@mail.gmail.com>
-In-Reply-To: <43e72e890709131706p565bd955m1b9820198cafa7fa@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
+	 <1189125944.28781.125.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez napsal(a):
-> This patch:
-> 
-> * Internalizes Atheros Turbo modes (MODE_ATHEROS_TURBO, MODE_ATHEROS_TURBOG)
-> 
-> * Internatizes Turbo modulation (MODULATION_TURBO)
-> 
-> * Adds documention for Atheros Turbo modes (MODE_ATHEROS_TURBO,
-> MODE_ATHEROS_TURBOG), Turbo modulation (MODULATION_TURBO) and XR
-> modulation (MODULATION_XR)
-> 
-> This patch is intended for the ath5k branch of wireless-dev after a
-> pull from origin/everything once
-> 01-remove-atheros-turbo-from-mac80211.diff is applied.
-> 
-> drivers/net/wireless/ath5k_base.c |    2 +-
-> 1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> Changes-licensed-under: BSD
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> 
-> drivers/net/wireless/ath5k.h    |   86 +++++++++++++++++++++++++++++++++------
-> drivers/net/wireless/ath5k_hw.c |    4 +-
-> 2 files changed, 76 insertions(+), 14 deletions(-)
-> 
-> Changes-licensed-under: ISC
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> 
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Michael Wu <flamingice@sourmilk.net>
-> CC: Johannes Berg <johannes@sipsolutions.net
+On 9/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> I have no idea what's going on here. Can you enable DEBUG_KOBJECT? Oh
+> also, what kernel is this with?
+>
 
-Just a question if it doesn't affect somehow supp_rates/basic_rates, which
-has up to NUM_IEEE80211_MODES pointers.
+This was with wireless-dev git. I can try DEBUG_KOBJECT once I get a chance.
 
-thanks,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
+I'd like to try to bisect this though, but I'm having trouble finding
+a point in which it worked.
+
+If I do:
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+and then:
+git pull . remotes/origin/rt2x00
+
+Then my commit history has all rt2x00 commits on top, and trying to
+reset to an earlier point in time reverts rt2x00 commits, but not
+wireless-dev commits (unless I  reset to before the initial rt2x00
+commit). This causes compile errors mostly involving undeclared stuff
+prefixed "IEEE80211_" Is there a better way to do this? Did I even
+start out correctly?
+
+Thanks,
+Rob
