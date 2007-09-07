@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58102 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762190AbXIKKQR (ORCPT
+Received: from slim.vantronix.net ([83.246.81.11]:44964 "EHLO
+	slim.vantronix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932814AbXIGGrk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 06:16:17 -0400
-Subject: Re: Kernel panic with rt2500pci built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Hussey <robjhussey@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <6b8cef970709101425q42d8ceb3mc0e7a103aad45f66@mail.gmail.com>
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <1189244217.4506.16.camel@johannes.berg>
-	 <6b8cef970709080857s69c055f2s1bc1ce6bd0ad4dfd@mail.gmail.com>
-	 <200709081816.10143.IvDoorn@gmail.com>
-	 <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
-	 <1189420297.4506.26.camel@johannes.berg>
-	 <1189422311.4506.52.camel@johannes.berg>
-	 <6b8cef970709101340y77264f86s535384414b68c6f2@mail.gmail.com>
-	 <6b8cef970709101425q42d8ceb3mc0e7a103aad45f66@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nYicoW3lrhBxevV8rXM6"
-Date: Tue, 11 Sep 2007 12:17:46 +0200
-Message-Id: <1189505866.6161.2.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 7 Sep 2007 02:47:40 -0400
+Date: Fri, 7 Sep 2007 08:47:30 +0200
+From: Reyk Floeter <reyk@openbsd.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Reyk Floeter <reyk@openbsd.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jirislaby@gmail.com, moglen@softwarefreedom.org
+Subject: Re: request for information about the "ath5k" licensing
+Message-ID: <20070907064730.GA15001@slim.vantronix.net>
+References: <20070905151823.GA1384@slim.vantronix.net> <200709051835.33572.mb@bu3sch.de> <43e72e890709051000m74252604paff3eb1651f55d22@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890709051000m74252604paff3eb1651f55d22@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 05, 2007 at 01:00:15PM -0400, Luis R. Rodriguez wrote:
+> On 9/5/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Wednesday 05 September 2007, Reyk Floeter wrote:
+> > > I'm the author of the free hardware driver layer for wireless Atheros
+> > > devices in OpenBSD, also known as "OpenHAL".
+> > >
+> > > I'm still trying to get an idea about the facts and the latest state
+> > > of the incidence that violated the copyright of my code, because I
+> > > just returned from vacation.
+> >
+> > > Could you please give me some feedback about the latest state? Please
+> > > reply in private, I'm not subscribed to any of the Linux lists and I'm
+> > > rather interested in facts than in the usual trolling.
+> > >
+> > > - Has this issue been fixed?
+> >
+> > It has never been applied to any repository.
+> > -> No issue and no copyright violation.
+> >
+> > > - Is there any repository available with the "ath5k" code using a
+> > > modified/"extended" license?
+> >
+> > No.
+> 
+> Well that is not accurate. Please give us a few we are working on
+> verifying some information for you.
+> 
+> > > I don't know how to find the relevant bits in the various Linux git
+> > > repositories. Sorry, I don't get the structure of it. Are there any
+> > > other sources online except this diff on the linux kernel mailing
+> > > list?
+> > >
+> > > - Are there any plans to release the "ath5k" code using a
+> > > modified/"extended" license?
+> >
+> > No.
+> >
+> 
+> Same here. Apologies for this taking so long. It'll all be sorted out soon.
+> 
 
---=-nYicoW3lrhBxevV8rXM6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm still waiting for an answer. Your process is taking too long.
 
-On Mon, 2007-09-10 at 17:25 -0400, Rob Hussey wrote:
-> On 9/10/07, Rob Hussey <robjhussey@gmail.com> wrote:
-> > I had to change the module_init() to subsys_initcall() in ieee80211.c
-> > and rc80211_simple.c, as well as the original change in
-> > net/wireless/core.c.
->=20
-> After more testing, it seems to also work just as well if ieee80211.c
-> is left with the module_init() and both rc80211_simple.c and
-> net/wireless/core.c are switched to subsys_initcall().
-
-Yeah, but that might leave mac80211 in a bit of a messy state, we really
-should make sure that it is initialised before devices are registered on
-it.
-
-johannes
-
---=-nYicoW3lrhBxevV8rXM6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG5mtK/ETPhpq3jKURAniAAKC4p4fSFhay4X32HNN7Hf6FJjw8qwCgp4s7
-46q56/NdUeMXOYH7Ef9Zi2Q=
-=OngG
------END PGP SIGNATURE-----
-
---=-nYicoW3lrhBxevV8rXM6--
-
+Reyk
