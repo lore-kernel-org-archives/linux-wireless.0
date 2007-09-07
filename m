@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:8076 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754048AbXIYSou (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48615
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932474AbXIGQCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 14:44:50 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so2123530fkz
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:49 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 8/12] rt2x00: make rt2x00lib_stop_link_tuner() reentrant with link_tuner work
-Date: Tue, 25 Sep 2007 20:56:36 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709252052.34803.IvDoorn@gmail.com>
-In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
+	Fri, 7 Sep 2007 12:02:33 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+Date: Fri, 7 Sep 2007 18:01:34 +0200
+Cc: paulmck@linux.vnet.ibm.com,
+	Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
+	flo@rfc822.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	flamingice@sourmilk.net
+References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au> <20070906154612.GD8030@linux.vnet.ibm.com> <1189171635.28781.134.camel@johannes.berg>
+In-Reply-To: <1189171635.28781.134.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200709252056.36472.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200709071801.34909.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling cancel_delayed_work_sync() unconditionally won't hurt
-and it will avoid race conditions when another CPU is already
-executing link_tuner work.
+On Friday 07 September 2007, Johannes Berg wrote:
+> On Thu, 2007-09-06 at 08:46 -0700, Paul E. McKenney wrote:
+> 
+> > Looks good to me from an RCU viewpoint.  I cannot claim familiarity with
+> > this code.  I therefore especially like the indications of where RTNL
+> > is held and not!!!
+> 
+> :)
+> 
+> > Some questions below based on a quick scan.  And a global question:
+> > should the comments about RTNL being held be replaced by ASSERT_RTNL()?
+> 
+> I don't like ASSERT_RTNL() much because it actually tries to lock it.
+> I'd be much happer if it was WARN_ON(!mutex_locked(&rtnl_mutex)) or
+> something equivalent.
 
-Signed-off-by: Modestas Vainius <modestas@vainius.eu>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index f8f7e6e..e8c91fb 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -80,8 +80,7 @@ static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2x00lib_stop_link_tuner(struct rt2x00_dev *rt2x00dev)
- {
--	if (delayed_work_pending(&rt2x00dev->link.work))
--		cancel_rearming_delayed_work(&rt2x00dev->link.work);
-+	cancel_delayed_work_sync(&rt2x00dev->link.work);
- }
- 
- void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev)
--- 
-1.5.3.2
-
+What's the problem with trying to lock it?
+In the paths where you insert this assertion, you will be locked.
+So the trylock will fail and not cause any blocking or something else.
+It's basically not more expensive than your mutex_locked test.
+And the !mutex_locked test might not work on UP (Not sure, about
+the current implementation.)
