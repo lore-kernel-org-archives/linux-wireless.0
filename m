@@ -1,258 +1,478 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42869 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34411 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756032AbXIFNqb (ORCPT
+	with ESMTP id S965352AbXIGOha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:46:31 -0400
-Message-Id: <20070905234623.197117000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:13 +0200
+	Fri, 7 Sep 2007 10:37:30 -0400
+Subject: [RFC] mac80211: fix virtual interface locking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 04/21] mac80211: validate VLAN interfaces better
+To: paulmck@linux.vnet.ibm.com
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
+	flo@rfc822.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	flamingice@sourmilk.net,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070907142538.GC8864@linux.vnet.ibm.com>
+References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
+	 <1189085815.28781.78.camel@johannes.berg>
+	 <20070906154612.GD8030@linux.vnet.ibm.com>
+	 <1189171635.28781.134.camel@johannes.berg>
+	 <20070907142538.GC8864@linux.vnet.ibm.com>
+Content-Type: text/plain
+Date: Fri, 07 Sep 2007 16:38:41 +0200
+Message-Id: <1189175921.28781.173.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes mac80211 to verify that VLAN interfaces
-are valid and not bother drivers about them any more.
-VLAN interfaces are now only valid when an AP interface
-is up with the same MAC address, and are automatically
-turned off when the AP interface is set down.
+Florian Lohoff noticed a bug in mac80211: when bringing the
+master interface down while other virtual interfaces are up
+we call dev_close() under a spinlock which is not allowed.
+This patch removes the sub_if_lock used by mac80211 in favour
+of using an RCU list. All list manipulations are already done
+under rtnl so are well protected against each other, and the
+read-side locks we took in the RX and TX code are already in
+RCU read-side critical sections.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>
+Cc: Florian Lohoff <flo@rfc822.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Satyam Sharma <satyam@infradead.org>
 
 ---
-Changes since v1:
- * tested manually via nl80211
- * fixed bug: typo in the list iteration leading to oopses
- * fixed bug: open_count must be decremented after removing vlans
+If you want to test this you'll need to get the other pending patches,
+as John is at KS he isn't pushing to Dave who is at KS too anyhow. Grab
+from
+http://johannes.sipsolutions.net/patches/net-2.6.24/all/2007-09-06-13:43/ patches 002-011, they are slated to go into net-2.6.24 if timing works out. I'll backport this fix to -stable when we actually get around to verifying it.
 
- include/net/mac80211.h         |   17 ++++++------
- net/mac80211/debugfs_netdev.c  |    5 ---
- net/mac80211/ieee80211.c       |   54 +++++++++++++++++++++++++++++++++++------
- net/mac80211/ieee80211_cfg.c   |    3 ++
- net/mac80211/ieee80211_i.h     |    6 +++-
- net/mac80211/ieee80211_iface.c |    5 +++
- 6 files changed, 68 insertions(+), 22 deletions(-)
+ net/mac80211/ieee80211.c       |  100 ++++++++++++++++++++---------------------
+ net/mac80211/ieee80211_i.h     |    5 --
+ net/mac80211/ieee80211_iface.c |   31 +++++-------
+ net/mac80211/ieee80211_sta.c   |   12 ++--
+ net/mac80211/rx.c              |    9 +--
+ net/mac80211/tx.c              |   10 ++--
+ 6 files changed, 84 insertions(+), 83 deletions(-)
 
---- wireless-dev.orig/include/net/mac80211.h	2007-09-06 01:35:12.344453431 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-09-06 01:35:13.764453431 +0200
-@@ -346,16 +346,17 @@ struct ieee80211_conf {
-  * @IEEE80211_IF_TYPE_IBSS: interface in IBSS (ad-hoc) mode.
-  * @IEEE80211_IF_TYPE_MNTR: interface in monitor (rfmon) mode.
-  * @IEEE80211_IF_TYPE_WDS: interface in WDS mode.
-- * @IEEE80211_IF_TYPE_VLAN: not used.
-+ * @IEEE80211_IF_TYPE_VLAN: VLAN interface bound to an AP, drivers
-+ *	will never see this type.
-  */
- enum ieee80211_if_types {
--	IEEE80211_IF_TYPE_AP = 0x00000000,
--	IEEE80211_IF_TYPE_MGMT = 0x00000001,
--	IEEE80211_IF_TYPE_STA = 0x00000002,
--	IEEE80211_IF_TYPE_IBSS = 0x00000003,
--	IEEE80211_IF_TYPE_MNTR = 0x00000004,
--	IEEE80211_IF_TYPE_WDS = 0x5A580211,
--	IEEE80211_IF_TYPE_VLAN = 0x00080211,
-+	IEEE80211_IF_TYPE_AP,
-+	IEEE80211_IF_TYPE_MGMT,
-+	IEEE80211_IF_TYPE_STA,
-+	IEEE80211_IF_TYPE_IBSS,
-+	IEEE80211_IF_TYPE_MNTR,
-+	IEEE80211_IF_TYPE_WDS,
-+	IEEE80211_IF_TYPE_VLAN,
- };
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-07 10:52:12.604441281 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-07 16:30:34.044429746 +0200
+@@ -88,24 +88,31 @@ static struct dev_mc_list *ieee80211_get
+ 		return NULL;
+ 	}
  
- /**
---- wireless-dev.orig/net/mac80211/ieee80211_cfg.c	2007-09-06 01:34:58.704453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_cfg.c	2007-09-06 01:35:13.764453431 +0200
-@@ -34,6 +34,9 @@ static int ieee80211_add_iface(struct wi
- 	case NL80211_IFTYPE_AP:
- 		itype = IEEE80211_IF_TYPE_AP;
- 		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		itype = IEEE80211_IF_TYPE_VLAN;
-+		break;
- 	case NL80211_IFTYPE_WDS:
- 		itype = IEEE80211_IF_TYPE_WDS;
- 		break;
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-06 01:35:12.364453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-06 01:35:13.774453431 +0200
-@@ -429,22 +429,43 @@ static int ieee80211_open(struct net_dev
- 	int res;
+-	/* start of iteration, both unassigned */
+-	if (!mcd->cur && !mcd->sdata) {
+-		mcd->sdata = list_entry(local->sub_if_list.next,
+-					struct ieee80211_sub_if_data, list);
+-		mcd->cur = mcd->sdata->dev->mc_list;
+-	}
++	/*
++	 * Prepare for iteration if not done already.
++	 */
++	list_prepare_entry(mcd->sdata, &local->interfaces, list);
+ 
+-	if (mcd->cur)
++	if (mcd->cur) {
++		/*
++		 * Iterate over the multicast addresses in
++		 * the current device (mcd->sdata).
++		 */
+ 		mcd->cur = mcd->cur->next;
++	}
+ 
+-	while (!mcd->cur) {
+-		/* reached end of interface list? */
+-		if (mcd->sdata->list.next == &local->sub_if_list)
+-			break;
+-		/* otherwise try next interface */
+-		mcd->sdata = list_entry(mcd->sdata->list.next,
+-					struct ieee80211_sub_if_data, list);
+-		mcd->cur = mcd->sdata->dev->mc_list;
++	if (!mcd->cur) {
++		/*
++		 * Iterate over the devices until finding one (the
++		 * first or the next) with multicast addresses.
++		 */
++		list_for_each_entry_continue_rcu(mcd->sdata,
++						 &local->interfaces,
++						 list) {
++			mcd->cur = mcd->sdata->dev->mc_list;
++			if (mcd->cur)
++				break;
++		}
+ 	}
+ 
+ 	return mcd->cur;
+@@ -145,9 +152,10 @@ static void ieee80211_configure_filter(s
+ 
+ 	/*
+ 	 * We can iterate through the device list for the multicast
+-	 * address list so need to lock it.
++	 * address list so need to be in a RCU read-side section,
++	 * the RTNL isn't held in this function.
+ 	 */
+-	read_lock(&local->sub_if_lock);
++	rcu_read_lock();
+ 
+ 	/* be a bit nasty */
+ 	new_flags |= (1<<31);
+@@ -163,7 +171,7 @@ static void ieee80211_configure_filter(s
+ 	WARN_ON(mcd.cur);
+ 
+ 	local->filter_flags = new_flags & ~(1<<31);
+-	read_unlock(&local->sub_if_lock);
++	rcu_read_unlock();
+ 
+ 	netif_tx_unlock(local->mdev);
+ }
+@@ -176,14 +184,13 @@ static int ieee80211_master_open(struct 
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int res = -EOPNOTSUPP;
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	/* we hold the RTNL here so can safely walk the list */
++	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->dev != dev && netif_running(sdata->dev)) {
+ 			res = 0;
+ 			break;
+ 		}
+ 	}
+-	read_unlock(&local->sub_if_lock);
+ 	return res;
+ }
+ 
+@@ -192,11 +199,10 @@ static int ieee80211_master_stop(struct 
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list)
++	/* we hold the RTNL here so can safely walk the list */
++	list_for_each_entry(sdata, &local->interfaces, list)
+ 		if (sdata->dev != dev && netif_running(sdata->dev))
+ 			dev_close(sdata->dev);
+-	read_unlock(&local->sub_if_lock);
+ 
+ 	return 0;
+ }
+@@ -395,8 +401,8 @@ static int ieee80211_open(struct net_dev
  
  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	read_lock(&local->sub_if_lock);
- 	list_for_each_entry(nsdata, &local->sub_if_list, list) {
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(nsdata, &local->sub_if_list, list) {
++	/* we hold the RTNL here so can safely walk the list */
++	list_for_each_entry(nsdata, &local->interfaces, list) {
  		struct net_device *ndev = nsdata->dev;
  
  		if (ndev != dev && ndev != local->mdev && netif_running(ndev) &&
--		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0 &&
--		    !identical_mac_addr_allowed(sdata->type, nsdata->type)) {
--			read_unlock(&local->sub_if_lock);
--			return -ENOTUNIQ;
-+		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0) {
-+			/*
-+			 * check whether it may have the same address
-+			 */
-+			if (!identical_mac_addr_allowed(sdata->type,
-+							nsdata->type)) {
-+				read_unlock(&local->sub_if_lock);
-+				return -ENOTUNIQ;
-+			}
-+
-+			/*
-+			 * can only add VLANs to enabled APs
-+			 */
-+			if (sdata->type == IEEE80211_IF_TYPE_VLAN &&
-+			    nsdata->type == IEEE80211_IF_TYPE_AP &&
-+			    netif_running(nsdata->dev))
-+				sdata->u.vlan.ap = nsdata;
+@@ -405,10 +411,8 @@ static int ieee80211_open(struct net_dev
+ 			 * check whether it may have the same address
+ 			 */
+ 			if (!identical_mac_addr_allowed(sdata->type,
+-							nsdata->type)) {
+-				read_unlock(&local->sub_if_lock);
++							nsdata->type))
+ 				return -ENOTUNIQ;
+-			}
+ 
+ 			/*
+ 			 * can only add VLANs to enabled APs
+@@ -419,7 +423,6 @@ static int ieee80211_open(struct net_dev
+ 				sdata->u.vlan.ap = nsdata;
  		}
  	}
- 	read_unlock(&local->sub_if_lock);
- 
--	if (sdata->type == IEEE80211_IF_TYPE_WDS &&
--	    is_zero_ether_addr(sdata->u.wds.remote_addr))
--		return -ENOLINK;
-+	switch (sdata->type) {
-+	case IEEE80211_IF_TYPE_WDS:
-+		if (is_zero_ether_addr(sdata->u.wds.remote_addr))
-+			return -ENOLINK;
-+		break;
-+	case IEEE80211_IF_TYPE_VLAN:
-+		if (!sdata->u.vlan.ap)
-+			return -ENOLINK;
-+		break;
-+	}
- 
- 	if (local->open_count == 0) {
- 		res = 0;
-@@ -455,6 +476,10 @@ static int ieee80211_open(struct net_dev
- 	}
+-	read_unlock(&local->sub_if_lock);
  
  	switch (sdata->type) {
-+	case IEEE80211_IF_TYPE_VLAN:
-+		list_add(&sdata->u.vlan.list, &sdata->u.vlan.ap->u.ap.vlans);
-+		/* no need to tell driver */
-+		break;
- 	case IEEE80211_IF_TYPE_MNTR:
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
-@@ -518,9 +543,24 @@ static int ieee80211_stop(struct net_dev
+ 	case IEEE80211_IF_TYPE_WDS:
+@@ -541,14 +544,13 @@ static int ieee80211_stop(struct net_dev
+ 		del_timer_sync(&sdata->u.sta.timer);
+ 		del_timer_sync(&sdata->u.sta.admit_timer);
+ 		/*
+-		 * Holding the sub_if_lock for writing here blocks
+-		 * out the receive path and makes sure it's not
+-		 * currently processing a packet that may get
+-		 * added to the queue.
++		 * When we get here, the interface is marked down.
++		 * Call synchronize_rcu() to wait for the RX path
++		 * should it be using the interface and enqueuing
++		 * frames at this very time on another CPU.
+ 		 */
+-		write_lock_bh(&local->sub_if_lock);
++		synchronize_rcu();
+ 		skb_queue_purge(&sdata->u.sta.skb_queue);
+-		write_unlock_bh(&local->sub_if_lock);
  
- 	netif_stop_queue(dev);
+ 		if (!local->ops->hw_scan &&
+ 		    local->scan_dev == sdata->dev) {
+@@ -1101,9 +1103,9 @@ void ieee80211_tx_status(struct ieee8021
  
-+	/* down all dependent devices, that is VLANs */
-+	if (sdata->type == IEEE80211_IF_TYPE_AP) {
-+		struct ieee80211_sub_if_data *vlan, *tmp;
-+
-+		list_for_each_entry_safe(vlan, tmp, &sdata->u.ap.vlans,
-+					 u.vlan.list)
-+			dev_close(vlan->dev);
-+		WARN_ON(!list_empty(&sdata->u.ap.vlans));
-+	}
-+
- 	local->open_count--;
+ 	rthdr->data_retries = status->retry_count;
  
- 	switch (sdata->type) {
-+	case IEEE80211_IF_TYPE_VLAN:
-+		list_del(&sdata->u.vlan.list);
-+		sdata->u.vlan.ap = NULL;
-+		/* no need to tell driver */
-+		break;
- 	case IEEE80211_IF_TYPE_MNTR:
- 		local->monitors--;
- 		if (local->monitors == 0) {
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-06 01:35:12.364453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-06 01:35:13.774453431 +0200
-@@ -215,6 +215,8 @@ struct ieee80211_if_ap {
- 	u8 *beacon_head, *beacon_tail;
- 	int beacon_head_len, beacon_tail_len;
- 
-+	struct list_head vlans;
-+
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	size_t ssid_len;
- 	u8 *generic_elem;
-@@ -238,7 +240,8 @@ struct ieee80211_if_wds {
- };
- 
- struct ieee80211_if_vlan {
--	u8 id;
-+	struct ieee80211_sub_if_data *ap;
-+	struct list_head list;
- };
- 
- /* flags used in struct ieee80211_if_sta.flags */
-@@ -450,7 +453,6 @@ struct ieee80211_sub_if_data {
- 			struct dentry *drop_unencrypted;
- 			struct dentry *eapol;
- 			struct dentry *ieee8021_x;
--			struct dentry *vlan_id;
- 		} vlan;
- 		struct {
- 			struct dentry *mode;
---- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-06 01:34:58.794453431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-06 01:35:13.774453431 +0200
-@@ -164,6 +164,7 @@ void ieee80211_if_set_type(struct net_de
- 		sdata->bss = NULL;
- 		break;
- 	case IEEE80211_IF_TYPE_VLAN:
-+		sdata->u.vlan.ap = NULL;
- 		break;
- 	case IEEE80211_IF_TYPE_AP:
- 		sdata->u.ap.dtim_period = 2;
-@@ -171,6 +172,7 @@ void ieee80211_if_set_type(struct net_de
- 		sdata->u.ap.max_ratectrl_rateidx = -1;
- 		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
- 		sdata->bss = &sdata->u.ap;
-+		INIT_LIST_HEAD(&sdata->u.ap.vlans);
- 		break;
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS: {
-@@ -300,6 +302,9 @@ void ieee80211_if_reinit(struct net_devi
- 	case IEEE80211_IF_TYPE_MNTR:
- 		dev->type = ARPHRD_ETHER;
- 		break;
-+	case IEEE80211_IF_TYPE_VLAN:
-+		sdata->u.vlan.ap = NULL;
-+		break;
+-	read_lock(&local->sub_if_lock);
++	rcu_read_lock();
+ 	monitors = local->monitors;
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		/*
+ 		 * Using the monitors counter is possibly racy, but
+ 		 * if the value is wrong we simply either clone the skb
+@@ -1119,7 +1121,7 @@ void ieee80211_tx_status(struct ieee8021
+ 				continue;
+ 			monitors--;
+ 			if (monitors)
+-				skb2 = skb_clone(skb, GFP_KERNEL);
++				skb2 = skb_clone(skb, GFP_ATOMIC);
+ 			else
+ 				skb2 = NULL;
+ 			skb->dev = sdata->dev;
+@@ -1134,7 +1136,7 @@ void ieee80211_tx_status(struct ieee8021
+ 		}
  	}
+  out:
+-	read_unlock(&local->sub_if_lock);
++	rcu_read_unlock();
+ 	if (skb)
+ 		dev_kfree_skb(skb);
+ }
+@@ -1222,8 +1224,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
  
- 	/* remove all STAs that are bound to this virtual interface */
---- wireless-dev.orig/net/mac80211/debugfs_netdev.c	2007-09-06 01:35:12.374453431 +0200
-+++ wireless-dev/net/mac80211/debugfs_netdev.c	2007-09-06 01:35:13.774453431 +0200
-@@ -422,9 +422,6 @@ __IEEE80211_IF_FILE(beacon_tail_len);
- /* WDS attributes */
- IEEE80211_IF_FILE(peer, u.wds.remote_addr, MAC);
+ 	INIT_LIST_HEAD(&local->modes_list);
  
--/* VLAN attributes */
--IEEE80211_IF_FILE(vlan_id, u.vlan.id, DEC);
+-	rwlock_init(&local->sub_if_lock);
+-	INIT_LIST_HEAD(&local->sub_if_list);
++	INIT_LIST_HEAD(&local->interfaces);
+ 
+ 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_sta_scan_work);
+ 	ieee80211_rx_bss_list_init(mdev);
+@@ -1242,7 +1243,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	sdata->u.ap.force_unicast_rateidx = -1;
+ 	sdata->u.ap.max_ratectrl_rateidx = -1;
+ 	ieee80211_if_sdata_init(sdata);
+-	list_add_tail(&sdata->list, &local->sub_if_list);
++	/* no RCU needed since we're still during init phase */
++	list_add_tail(&sdata->list, &local->interfaces);
+ 
+ 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
+ 		     (unsigned long)local);
+@@ -1401,7 +1403,6 @@ void ieee80211_unregister_hw(struct ieee
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata, *tmp;
+-	struct list_head tmp_list;
+ 	int i;
+ 
+ 	tasklet_kill(&local->tx_pending_tasklet);
+@@ -1415,11 +1416,12 @@ void ieee80211_unregister_hw(struct ieee
+ 	if (local->apdev)
+ 		ieee80211_if_del_mgmt(local);
+ 
+-	write_lock_bh(&local->sub_if_lock);
+-	list_replace_init(&local->sub_if_list, &tmp_list);
+-	write_unlock_bh(&local->sub_if_lock);
 -
- #define DEBUGFS_ADD(name, type)\
- 	sdata->debugfs.type.name = debugfs_create_file(#name, 0444,\
- 		sdata->debugfsdir, sdata, &name##_ops);
-@@ -523,7 +520,6 @@ static void add_vlan_files(struct ieee80
- 	DEBUGFS_ADD(drop_unencrypted, vlan);
- 	DEBUGFS_ADD(eapol, vlan);
- 	DEBUGFS_ADD(ieee8021_x, vlan);
--	DEBUGFS_ADD(vlan_id, vlan);
+-	list_for_each_entry_safe(sdata, tmp, &tmp_list, list)
++	/*
++	 * At this point, interface list manipulations are fine
++	 * because the driver cannot be handing us frames any
++	 * more and the tasklet is killed.
++	 */
++	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list)
+ 		__ieee80211_if_del(local, sdata);
+ 
+ 	rtnl_unlock();
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-07 10:52:12.604441281 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-07 16:30:33.974429746 +0200
+@@ -548,9 +548,8 @@ struct ieee80211_local {
+ 	ieee80211_rx_handler *rx_handlers;
+ 	ieee80211_tx_handler *tx_handlers;
+ 
+-	rwlock_t sub_if_lock; /* Protects sub_if_list. Cannot be taken under
+-			       * sta_bss_lock or sta_lock. */
+-	struct list_head sub_if_list;
++	struct list_head interfaces;
++
+ 	int sta_scanning;
+ 	int scan_channel_idx;
+ 	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
+--- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-07 10:52:12.604441281 +0200
++++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-07 16:30:34.244429746 +0200
+@@ -79,16 +79,15 @@ int ieee80211_if_add(struct net_device *
+ 	ieee80211_debugfs_add_netdev(sdata);
+ 	ieee80211_if_set_type(ndev, type);
+ 
+-	write_lock_bh(&local->sub_if_lock);
++	/* we're under RTNL so all this is fine */
+ 	if (unlikely(local->reg_state == IEEE80211_DEV_UNREGISTERED)) {
+-		write_unlock_bh(&local->sub_if_lock);
+ 		__ieee80211_if_del(local, sdata);
+ 		return -ENODEV;
+ 	}
+-	list_add(&sdata->list, &local->sub_if_list);
++	list_add_tail_rcu(&sdata->list, &local->interfaces);
++
+ 	if (new_dev)
+ 		*new_dev = ndev;
+-	write_unlock_bh(&local->sub_if_lock);
+ 
+ 	return 0;
+ 
+@@ -242,22 +241,22 @@ void ieee80211_if_reinit(struct net_devi
+ 		/* Remove all virtual interfaces that use this BSS
+ 		 * as their sdata->bss */
+ 		struct ieee80211_sub_if_data *tsdata, *n;
+-		LIST_HEAD(tmp_list);
+ 
+-		write_lock_bh(&local->sub_if_lock);
+-		list_for_each_entry_safe(tsdata, n, &local->sub_if_list, list) {
++		list_for_each_entry_safe(tsdata, n, &local->interfaces, list) {
+ 			if (tsdata != sdata && tsdata->bss == &sdata->u.ap) {
+ 				printk(KERN_DEBUG "%s: removing virtual "
+ 				       "interface %s because its BSS interface"
+ 				       " is being removed\n",
+ 				       sdata->dev->name, tsdata->dev->name);
+-				list_move_tail(&tsdata->list, &tmp_list);
++				list_del_rcu(&tsdata->list);
++				/*
++				 * We have lots of time and can afford
++				 * to sync for each interface
++				 */
++				synchronize_rcu();
++				__ieee80211_if_del(local, tsdata);
+ 			}
+ 		}
+-		write_unlock_bh(&local->sub_if_lock);
+-
+-		list_for_each_entry_safe(tsdata, n, &tmp_list, list)
+-			__ieee80211_if_del(local, tsdata);
+ 
+ 		kfree(sdata->u.ap.beacon_head);
+ 		kfree(sdata->u.ap.beacon_tail);
+@@ -334,18 +333,16 @@ int ieee80211_if_remove(struct net_devic
+ 
+ 	ASSERT_RTNL();
+ 
+-	write_lock_bh(&local->sub_if_lock);
+-	list_for_each_entry_safe(sdata, n, &local->sub_if_list, list) {
++	list_for_each_entry_safe(sdata, n, &local->interfaces, list) {
+ 		if ((sdata->type == id || id == -1) &&
+ 		    strcmp(name, sdata->dev->name) == 0 &&
+ 		    sdata->dev != local->mdev) {
+-			list_del(&sdata->list);
+-			write_unlock_bh(&local->sub_if_lock);
++			list_del_rcu(&sdata->list);
++			synchronize_rcu();
+ 			__ieee80211_if_del(local, sdata);
+ 			return 0;
+ 		}
+ 	}
+-	write_unlock_bh(&local->sub_if_lock);
+ 	return -ENODEV;
  }
  
- static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
-@@ -651,7 +647,6 @@ static void del_vlan_files(struct ieee80
- 	DEBUGFS_DEL(drop_unencrypted, vlan);
- 	DEBUGFS_DEL(eapol, vlan);
- 	DEBUGFS_DEL(ieee8021_x, vlan);
--	DEBUGFS_DEL(vlan_id, vlan);
- }
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-09-07 10:52:12.634441281 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-09-07 10:57:23.574441281 +0200
+@@ -3597,8 +3597,8 @@ void ieee80211_scan_completed(struct iee
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
  
- static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 
+ 		/* No need to wake the master device. */
+ 		if (sdata->dev == local->mdev)
+@@ -3612,7 +3612,7 @@ void ieee80211_scan_completed(struct iee
+ 
+ 		netif_wake_queue(sdata->dev);
+ 	}
+-	read_unlock(&local->sub_if_lock);
++	rcu_read_unlock();
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type == IEEE80211_IF_TYPE_IBSS) {
+@@ -3749,8 +3749,8 @@ static int ieee80211_sta_start_scan(stru
+ 
+ 	local->sta_scanning = 1;
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 
+ 		/* Don't stop the master interface, otherwise we can't transmit
+ 		 * probes! */
+@@ -3762,7 +3762,7 @@ static int ieee80211_sta_start_scan(stru
+ 		    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED))
+ 			ieee80211_send_nullfunc(local, sdata, 1);
+ 	}
+-	read_unlock(&local->sub_if_lock);
++	rcu_read_unlock();
+ 
+ 	if (ssid) {
+ 		local->scan_ssid_len = ssid_len;
+--- wireless-dev.orig/net/mac80211/rx.c	2007-09-07 10:52:12.654441281 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-09-07 16:30:34.144429746 +0200
+@@ -1522,8 +1522,9 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	}
+ 
+ 	/*
+-	 * key references are protected using RCU and this requires that
+-	 * we are in a read-site RCU section during receive processing
++	 * key references and virtual interfaces are protected using RCU
++	 * and this requires that we are in a read-side RCU section during
++	 * receive processing
+ 	 */
+ 	rcu_read_lock();
+ 
+@@ -1578,8 +1579,7 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 
+ 	bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		rx.flags |= IEEE80211_TXRXD_RXRA_MATCH;
+ 
+ 		if (!netif_running(sdata->dev))
+@@ -1632,7 +1632,6 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 					     &rx, sta);
+ 	} else
+ 		dev_kfree_skb(skb);
+-	read_unlock(&local->sub_if_lock);
+ 
+  end:
+ 	rcu_read_unlock();
+--- wireless-dev.orig/net/mac80211/tx.c	2007-09-07 10:52:12.674441281 +0200
++++ wireless-dev/net/mac80211/tx.c	2007-09-07 12:20:51.174437343 +0200
+@@ -291,8 +291,12 @@ static void purge_old_ps_buffers(struct 
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
++	/*
++	 * virtual interfaces are protected by RCU
++	 */
++	rcu_read_lock();
++
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		struct ieee80211_if_ap *ap;
+ 		if (sdata->dev == local->mdev ||
+ 		    sdata->type != IEEE80211_IF_TYPE_AP)
+@@ -305,7 +309,7 @@ static void purge_old_ps_buffers(struct 
+ 		}
+ 		total += skb_queue_len(&ap->ps_bc_buf);
+ 	}
+-	read_unlock(&local->sub_if_lock);
++	rcu_read_unlock();
+ 
+ 	read_lock_bh(&local->sta_lock);
+ 	list_for_each_entry(sta, &local->sta_list, list) {
 
--- 
 
