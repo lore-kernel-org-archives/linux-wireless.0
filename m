@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbXI0Dey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 23:34:54 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: removing unnecessary memset in 4965 rate scale
-Date: Thu, 27 Sep 2007 11:27:36 +0800
-Message-Id: <11908636743625-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11908636732679-git-send-email-yi.zhu@intel.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
- <11908636662994-git-send-email-yi.zhu@intel.com>
- <11908636683204-git-send-email-yi.zhu@intel.com>
- <11908636692415-git-send-email-yi.zhu@intel.com>
- <119086367088-git-send-email-yi.zhu@intel.com>
- <11908636712746-git-send-email-yi.zhu@intel.com>
- <11908636732679-git-send-email-yi.zhu@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965409AbXIGO3B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2007 10:29:01 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: paulmck@linux.vnet.ibm.com
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
+	flo@rfc822.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	flamingice@sourmilk.net
+In-Reply-To: <20070907142538.GC8864@linux.vnet.ibm.com>
+References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
+	 <1189085815.28781.78.camel@johannes.berg>
+	 <20070906154612.GD8030@linux.vnet.ibm.com>
+	 <1189171635.28781.134.camel@johannes.berg>
+	 <20070907142538.GC8864@linux.vnet.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4XdgTktjVHwooodKhzoa"
+Date: Fri, 07 Sep 2007 16:30:15 +0200
+Message-Id: <1189175415.28781.165.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes redundant memset in rate scale. In rs_alloc_sta,
-kzalloc is used so the memset can be avoided. In rs_rate_init, it is
-a bug fix since it overrides everything set in other handlers namely
-add_debugfs.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+--=-4XdgTktjVHwooodKhzoa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index edcc542..86e650d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1776,10 +1776,9 @@ static void *rs_alloc_sta(void *priv, gfp_t gfp)
- 
- 	if (crl == NULL)
- 		return NULL;
--
--	memset(crl, 0, sizeof(struct iwl_rate_scale_priv));
- 	crl->lq.sta_id = 0xff;
- 
-+
- 	for (j = 0; j < LQ_SIZE; j++)
- 		for (i = 0; i < IWL_RATE_COUNT; i++)
- 			rs_rate_scale_clear_window(&(crl->lq_info[j].win[i]));
-@@ -1796,9 +1795,6 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_rate;
- 	struct iwl_rate_scale_priv *crl = priv_sta;
- 
--	memset(crl, 0, sizeof(struct iwl_rate_scale_priv));
--
--	crl->lq.sta_id = 0xff;
- 	crl->flush_timer = 0;
- 	sta->txrate = 3;
- 	for (j = 0; j < LQ_SIZE; j++)
--- 
-1.5.1
+On Fri, 2007-09-07 at 07:25 -0700, Paul E. McKenney wrote:
+
+> > I don't like ASSERT_RTNL() much because it actually tries to lock it.
+> > I'd be much happer if it was WARN_ON(!mutex_locked(&rtnl_mutex)) or
+> > something equivalent.
+>=20
+> Ah!  It would indeed be nice to have a lower-overhead ASSERT_RTNL_LIGHT()
+> or whatever.
+
+I don't know why it tries that anyway. Maybe it's from semaphore days
+where you couldn't check _is_locked()?
+
+> > In any case, I have an updated patch I'll be sending soon, and it
+> > requires a new list walking primitive I'll also send.
+>=20
+> Look forward to seeing it!
+
+Will send in a minute.
+
+johannes
+
+--=-4XdgTktjVHwooodKhzoa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4WB3/ETPhpq3jKURAmOZAJ9TOGSuLJfpuooUTU6yWlbckOv5NACggVSj
+Ken1ushUM1w6gKLvDZtlbCo=
+=iT/x
+-----END PGP SIGNATURE-----
+
+--=-4XdgTktjVHwooodKhzoa--
+
