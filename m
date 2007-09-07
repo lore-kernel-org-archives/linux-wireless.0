@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:60514 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbXIECtp (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48102 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbXIGV70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 22:49:45 -0400
-Date: Tue, 4 Sep 2007 19:49:30 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
-Message-ID: <20070905024930.GG5273@jm.kir.nu>
-References: <1187987850.24933.29.camel@johannes.berg> <20070904011648.GX1835@jm.kir.nu> <1188913335.9942.16.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188913335.9942.16.camel@johannes.berg>
+	Fri, 7 Sep 2007 17:59:26 -0400
+Subject: Re: Kernel panic with rt2500pci built-in
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rob Hussey <robjhussey@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <6b8cef970709071438o6870cecej355119fee4396dcb@mail.gmail.com>
+References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
+	 <1189125944.28781.125.camel@johannes.berg>
+	 <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
+	 <1189193840.28781.197.camel@johannes.berg>
+	 <6b8cef970709071438o6870cecej355119fee4396dcb@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JhkPlXbGYxO9Ml4K3aUE"
+Date: Sat, 08 Sep 2007 00:00:41 +0200
+Message-Id: <1189202441.28781.208.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2007 at 03:42:15PM +0200, Johannes Berg wrote:
-> On Mon, 2007-09-03 at 18:16 -0700, Jouni Malinen wrote:
-> > Where are things like NL80211_ATTR_IFNAME and
-> > NL80211_CMD_ADD_VIRTUAL_INTERFACE defined? I would assume these are from
-> > linux/nl80211.h, but where should I get the version that includes these?
-> 
-> You have to use the one from wireless-dev as we don't ship it from
-> mainline yet.
 
-I was trying to use wireless-dev.. Which branch includes the values
-shown above? I don't see them in either master or even everything..
-(git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git)
+--=-JhkPlXbGYxO9Ml4K3aUE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > This is making it a bit difficult to build driver_devicescape.c and same
-> > goes for the requirement for svn trunk version of libnl.. Any idea how
-> > much code from libnl is needed here? Would it be major effort to do the
-> > needed calls without having to rely on libnl at or (or at least not on
-> > an unreleased svn trunk version)?
-> 
-> There's a whole bunch of code in libnl I use, all the generic netlink
-> family resolving etc. Maybe Thomas can prerelease a libnl with generic
-> netlink support?
+On Fri, 2007-09-07 at 17:38 -0400, Rob Hussey wrote:
 
-OK. If there were a pre-release version, that would likely make this
-quite a bit easier. Gentoo actually includes 1.0-pre6 which is the
-latest pre-release and as such, I was kind of hoping for it to be new
-enough. Then again, once I looked at the release date, I noticed it's
-already a year old.. I don't really want to depend on this unless there
-is a good likelyhood of there being a proper release with the needed
-functionality in somewhat near future.
+> I took some pictures of the screen with DEBUG_KOBJECT enabled. It's
+> tough to get it all though, since the messages don't really fit on one
+> screen. I played around with the vga=3D line, and was able to get the
+> scrolling to stop at different points (the stack trace and all appears
+> about 1 msec after booting, so this was my only choice). The pictures
+> can be found here:
+> http://www.healthcarelinen.com/misc/
+>=20
+> These two are probably the best:
+> http://www.healthcarelinen.com/misc/101_1988.jpg
+> http://www.healthcarelinen.com/misc/101_1992.jpg
+>=20
+> Hopefully the pictures have what you need.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+The line
+kobject phy0: registering. parent: <NULL>, set: devices
+points out what I thought was the problem. However, I don't understand
+why it happens.
+
+In rt2500pci we see:
+rt2500pci_probe_hw_mode:
+	SET_IEEE80211_DEV(rt2x00dev->hw, &rt2x00dev_pci(rt2x00dev)->dev);
+which expands to
+	set_wiphy_dev(hw->wiphy, dev);
+which expands to
+	wiphy->dev.parent =3D dev;
+
+it is called from rt2500pci_probe_hw which in turn is called from
+rt2x00lib_probe_dev, which later calls rt2x00lib_probe_hw which is what
+calls ieee80211_register_hw which is the path leading to the bug.
+
+But there's no way &rt2x00dev_pci(rt2x00dev)->dev can be NULL! Sorry, I
+don't see right now how this can happen. Anybody have a better idea?
+
+johannes
+
+--=-JhkPlXbGYxO9Ml4K3aUE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4coJ/ETPhpq3jKURAlZJAJwOrBdXzw9BP+pwbuFTPwwEGhq95wCdGL24
+TDFEF/oLSOfWvOkYgWTtnDM=
+=anJu
+-----END PGP SIGNATURE-----
+
+--=-JhkPlXbGYxO9Ml4K3aUE--
+
