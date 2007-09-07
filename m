@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60276
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753634AbXIKKyh (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49049 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965427AbXIGOei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 06:54:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: zd-mac80211: Fix TX status reports.
-Date: Tue, 11 Sep 2007 12:52:29 +0200
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200709082341.31720.mb@bu3sch.de> <200709111220.31700.mb@bu3sch.de> <1189506596.6161.14.camel@johannes.berg>
-In-Reply-To: <1189506596.6161.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200709111252.30291.mb@bu3sch.de>
+	Fri, 7 Sep 2007 10:34:38 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: paulmck@linux.vnet.ibm.com
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
+	flo@rfc822.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
+	flamingice@sourmilk.net
+In-Reply-To: <20070907142538.GC8864@linux.vnet.ibm.com>
+References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
+	 <1189085815.28781.78.camel@johannes.berg>
+	 <20070906154612.GD8030@linux.vnet.ibm.com>
+	 <1189171635.28781.134.camel@johannes.berg>
+	 <20070907142538.GC8864@linux.vnet.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IdO4tpi0nZG8DJ8ISM4+"
+Date: Fri, 07 Sep 2007 16:35:59 +0200
+Message-Id: <1189175759.28781.169.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 September 2007 12:29:56 Johannes Berg wrote:
-> On Tue, 2007-09-11 at 12:20 +0200, Michael Buesch wrote:
-> 
-> > What about the following:
-> > We have a "the packet failed" IRQ. so we know that if that didn't
-> > raise for a packet, it must have succeed.
-> > So currently we already maintain a queue of TX packets. What about
-> > changing the handling of this queue? Instead of dropping (and
-> > telling mac80211 success) on an ACK RX, simply do a timeout.
-> > We can calculate the time (plus some additional msecs to be sure)
-> > by when an ACK must have arrived, no? 
-> 
-> That's tricky though, because multiple retry rates mean that it can
-> possibly take quite a while for the packet to go through. And ath5k
-> wants to support up to 7 different rates for each packet.
 
-I'm only talking about zd, though.
+--=-IdO4tpi0nZG8DJ8ISM4+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > So, if that times out,
-> > signal a success. Wouldn't that be reliable? Given that the "tx failed"
-> > IRQ actually _is_ reliable.
-> 
-> Yeah, and in-order would have to be guaranteed as well so we can match
-> which packet failed and assume all previous ones were OK.
+On Fri, 2007-09-07 at 07:25 -0700, Paul E. McKenney wrote:
 
--- 
-Greetings Michael.
+> > > > @@ -226,22 +225,22 @@ void ieee80211_if_reinit(struct net_devi
+> > > >  		/* Remove all virtual interfaces that use this BSS
+> > > >  		 * as their sdata->bss */
+> > > >  		struct ieee80211_sub_if_data *tsdata, *n;
+> > > > -		LIST_HEAD(tmp_list);
+> > > >=20
+> > > > -		write_lock_bh(&local->sub_if_lock);
+> > >=20
+> > > This code is also protected by RTNL?
+> >=20
+> > Yes.
+>=20
+> Comment?  (Or is it in the function header?)
+
+Oh, forgot to say: yes, there is a comment further up and even an
+ASSERT_RTNL()
+
+johannes
+
+--=-IdO4tpi0nZG8DJ8ISM4+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG4WHP/ETPhpq3jKURAr3DAKCDiqVlmDTgtNA0MrlPeedNvxUItACgnz5U
+LagOxuLcia2E1MN7EXK3TPA=
+=f/3v
+-----END PGP SIGNATURE-----
+
+--=-IdO4tpi0nZG8DJ8ISM4+--
+
