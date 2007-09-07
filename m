@@ -1,170 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34546
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756295AbXI0Tds (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:45597 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758592AbXIGViV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 15:33:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: Add support for an rfkill LED.
-Date: Thu, 27 Sep 2007 21:33:12 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+	Fri, 7 Sep 2007 17:38:21 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so671952wah
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2007 14:38:21 -0700 (PDT)
+Message-ID: <6b8cef970709071438o6870cecej355119fee4396dcb@mail.gmail.com>
+Date: Fri, 7 Sep 2007 17:38:20 -0400
+From: "Rob Hussey" <robjhussey@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Kernel panic with rt2500pci built-in
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1189193840.28781.197.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709272133.13138.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
+	 <1189125944.28781.125.camel@johannes.berg>
+	 <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
+	 <1189193840.28781.197.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a LED trigger.
+Forgot to "reply to all." Resending.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On 9/7/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2007-09-07 at 15:31 -0400, Rob Hussey wrote:
+>
+> > This was with wireless-dev git. I can try DEBUG_KOBJECT once I get a chance.
+>
+> That'd be good.
+>
 
-Index: wireless-2.6/include/linux/rfkill.h
-===================================================================
---- wireless-2.6.orig/include/linux/rfkill.h	2007-09-26 17:22:47.000000000 +0200
-+++ wireless-2.6/include/linux/rfkill.h	2007-09-27 16:21:37.000000000 +0200
-@@ -26,6 +26,7 @@
- #include <linux/list.h>
- #include <linux/mutex.h>
- #include <linux/device.h>
-+#include <linux/leds.h>
- 
- /**
-  * enum rfkill_type - type of rfkill switch.
-@@ -56,6 +57,7 @@ enum rfkill_state {
-  * @data: Pointer to the RF button drivers private data which will be
-  *	passed along when toggling radio state.
-  * @toggle_radio(): Mandatory handler to control state of the radio.
-+ * @led_trigger: A LED trigger for this button's LED.
-  * @dev: Device structure integrating the switch into device tree.
-  * @node: Used to place switch into list of all switches known to the
-  *	the system.
-@@ -74,6 +76,10 @@ struct rfkill {
- 	void *data;
- 	int (*toggle_radio)(void *data, enum rfkill_state state);
- 
-+#ifdef CONFIG_RFKILL_LEDS
-+	struct led_trigger led_trigger;
-+#endif
-+
- 	struct device dev;
- 	struct list_head node;
- };
-@@ -86,4 +92,19 @@ void rfkill_unregister(struct rfkill *rf
- 
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
- 
-+/**
-+ * rfkill_get_led_name - Get the LED trigger name for the button's LED.
-+ * This function might return a NULL pointer if registering of the
-+ * LED trigger failed.
-+ * Use this as "default_trigger" for the LED.
-+ */
-+static inline char *rfkill_get_led_name(struct rfkill *rfkill)
-+{
-+#ifdef CONFIG_RFKILL_LEDS
-+	return (char *)(rfkill->led_trigger.name);
-+#else
-+	return NULL;
-+#endif
-+}
-+
- #endif /* RFKILL_H */
-Index: wireless-2.6/net/rfkill/rfkill.c
-===================================================================
---- wireless-2.6.orig/net/rfkill/rfkill.c	2007-09-26 17:22:49.000000000 +0200
-+++ wireless-2.6/net/rfkill/rfkill.c	2007-09-27 16:32:30.000000000 +0200
-@@ -37,6 +37,22 @@ static DEFINE_MUTEX(rfkill_mutex);
- 
- static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
- 
-+
-+static void rfkill_led_trigger(struct rfkill *rfkill,
-+			       enum rfkill_state state)
-+{
-+#ifdef CONFIG_RFKILL_LEDS
-+	struct led_trigger *led = &rfkill->led_trigger;
-+
-+	if (!led->name)
-+		return;
-+	if (state == RFKILL_STATE_OFF)
-+		led_trigger_event(led, LED_OFF);
-+	else
-+		led_trigger_event(led, LED_FULL);
-+#endif /* CONFIG_RFKILL_LEDS */
-+}
-+
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state)
- {
-@@ -48,8 +64,10 @@ static int rfkill_toggle_radio(struct rf
- 
- 	if (state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
--		if (!retval)
-+		if (!retval) {
- 			rfkill->state = state;
-+			rfkill_led_trigger(rfkill, state);
-+		}
- 	}
- 
- 	mutex_unlock(&rfkill->mutex);
-@@ -328,6 +346,26 @@ void rfkill_free(struct rfkill *rfkill)
- }
- EXPORT_SYMBOL(rfkill_free);
- 
-+static void rfkill_led_trigger_register(struct rfkill *rfkill)
-+{
-+#ifdef CONFIG_RFKILL_LEDS
-+	int error;
-+
-+	rfkill->led_trigger.name = rfkill->dev.bus_id;
-+	error = led_trigger_register(&rfkill->led_trigger);
-+	if (error)
-+		rfkill->led_trigger.name = NULL;
-+#endif /* CONFIG_RFKILL_LEDS */
-+}
-+
-+static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
-+{
-+#ifdef CONFIG_RFKILL_LEDS
-+	if (rfkill->led_trigger.name)
-+		led_trigger_unregister(&rfkill->led_trigger);
-+#endif
-+}
-+
- /**
-  * rfkill_register - Register a rfkill structure.
-  * @rfkill: rfkill structure to be registered
-@@ -357,6 +395,7 @@ int rfkill_register(struct rfkill *rfkil
- 		rfkill_remove_switch(rfkill);
- 		return error;
- 	}
-+	rfkill_led_trigger_register(rfkill);
- 
- 	return 0;
- }
-@@ -372,6 +411,7 @@ EXPORT_SYMBOL(rfkill_register);
-  */
- void rfkill_unregister(struct rfkill *rfkill)
- {
-+	rfkill_led_trigger_unregister(rfkill);
- 	device_del(&rfkill->dev);
- 	rfkill_remove_switch(rfkill);
- 	put_device(&rfkill->dev);
-Index: wireless-2.6/net/rfkill/Kconfig
-===================================================================
---- wireless-2.6.orig/net/rfkill/Kconfig	2007-09-26 17:22:49.000000000 +0200
-+++ wireless-2.6/net/rfkill/Kconfig	2007-09-27 16:31:41.000000000 +0200
-@@ -22,3 +22,10 @@ config RFKILL_INPUT
- 
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called rfkill-input.
-+
-+# LED trigger support
-+config RFKILL_LEDS
-+	bool
-+	depends on RFKILL && LEDS_TRIGGERS
-+	default y
-+
+I took some pictures of the screen with DEBUG_KOBJECT enabled. It's
+tough to get it all though, since the messages don't really fit on one
+screen. I played around with the vga= line, and was able to get the
+scrolling to stop at different points (the stack trace and all appears
+about 1 msec after booting, so this was my only choice). The pictures
+can be found here:
+http://www.healthcarelinen.com/misc/
+
+These two are probably the best:
+http://www.healthcarelinen.com/misc/101_1988.jpg
+http://www.healthcarelinen.com/misc/101_1992.jpg
+
+Hopefully the pictures have what you need.
+
+> > I'd like to try to bisect this though, but I'm having trouble finding
+> > a point in which it worked.
+>
+> > If I do:
+> > git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+> > and then:
+> > git pull . remotes/origin/rt2x00
+> >
+> > Then my commit history has all rt2x00 commits on top, and trying to
+> > reset to an earlier point in time reverts rt2x00 commits, but not
+> > wireless-dev commits (unless I  reset to before the initial rt2x00
+> > commit). This causes compile errors mostly involving undeclared stuff
+> > prefixed "IEEE80211_" Is there a better way to do this? Did I even
+> > start out correctly?
+>
+> I'm not sure you can bisect due to the way mac80211/rt2x00 are currently
+> developed, in lockstep but in different branches that are pulled
+> together.
+>
+
+Bummer.
