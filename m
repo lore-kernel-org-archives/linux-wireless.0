@@ -1,107 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:65226 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757481AbXIFDZI (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:58851 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbXIHQjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 23:25:08 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so30026nze
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2007 20:25:07 -0700 (PDT)
-Message-ID: <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-Date: Wed, 5 Sep 2007 23:25:05 -0400
+	Sat, 8 Sep 2007 12:39:17 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so933731wah
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 09:39:16 -0700 (PDT)
+Message-ID: <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
+Date: Sat, 8 Sep 2007 12:39:15 -0400
 From: "Rob Hussey" <robjhussey@gmail.com>
-To: linux-wireless@vger.kernel.org
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
 Subject: Re: Kernel panic with rt2500pci built-in
-In-Reply-To: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200709081816.10143.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <1189244217.4506.16.camel@johannes.berg>
+	 <6b8cef970709080857s69c055f2s1bc1ce6bd0ad4dfd@mail.gmail.com>
+	 <200709081816.10143.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry hit enter before I was done typing, message continues:
-
-On 9/5/07, Rob Hussey <robjhussey@gmail.com> wrote:
-> I receive a kernel panic with rt2500pci built-in, but if built as a
-> module, I can insmod it without problem. I don't have a serial
-> console, and I tried to capture the panic with netconsole (using a
-> different interface of course) but the panic happens immediately after
-> rt2500pci is initialized, or in other words, too soon for netconsole.
+On 9/8/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
 >
-> I'd rather not copy over everything unless necessary. Here's the first portion:
->
-> ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 22 (level, low) -> IRQ 18
-> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003,
-> rev: 00000004
-> WARNING: at lib/kref.c:33 kref_get()
-> [<c0229da9>] kref_get+0x3d/0x44
-                            kobject_get
-                            kobject_shadow
-                            kobject_set_name
-                            device_add
-                            wiphy_register
-                            ieee80211_register_hw
-                            rt2x00lib_probe_dev
-                            rt2x00pci_probe
-                            pci_match_device
-                            pci_device_probe
-                            driver_probe_device
-                            klist_next
-                            __driver_attach
-                            bus_for_each_dev
-                            driver_attach
-                            __driver_attach
-                            bus_add_driver
-                            __pci_register_driver
-                            kernel_init
+> And there was no rt2x00lib, rt2x00pci or rt2500pci error message
+> in the log that could indicate why the device is not present?
 
-... can't type everything... skipping
+Not in the log, but on the screen. I should've noticed not everything
+was in there. Here's what shows up:
 
-BUG: unable to handle kernel NULL pointer dereference at virtual
-address 00000024
-printing eip:
-c01a9966
-*pde = 00000000
-Oops: 0000 [#1]
-PREEMPT SMP
-Modules linked in:
-CPU: 1
-EIP: 0060:[<c01a9966>] Not tainted VLI
-EIP is at sysfs_addrm_start+0x21/0x87
+wmaster0: Failed to select rate control algorithm
+phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+ACPI: PCI interrupt for device 0000:02:0a.0 disabled
+rt2500pci: probe of 0000:02:0a.0 failed with error -2
 
-skipping...
+> Could you compile rt2x00 with debug enabled and see what additional
+> messages are being printed out?
 
-Call Trace:
-create_dir
-sysfs_create_dir
-kobject_get
-kobject_shadow_add
-kobject_set_name
-device_add
-wiphy_register
-ieee80211_register_hw
-rt2x00lib_prove_dev
-rt2x00pci_probe
-pci_match_device
-pci_device_probe
-driver_probe_device
-klist_next
-__driver_attach
-bus_for_each_dev
-driver_attach
-__driver_attach
-bus_add_driver
-__pci_register_driver
-kernel_init
-schedule_tail
-ret_from_fork
-kernel_init
-kernel_init
-kernel_thread_helper
-
-...
-
-Kernel panic - not syncing: Attempting to kill init!
-
-
-I likely left out important parts, if so, just tell me and I'll try to
-post them.
+The above is with debug enabled, and I yesterday I attached dmesg
+output with rt2x00 built as modules and debug enabled.
