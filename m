@@ -1,74 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40163 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756211AbXIEOTt (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:25255 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbXIHPCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 10:19:49 -0400
-Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200709051616.25044.mb@bu3sch.de>
-References: <20070821161845.165557000@sipsolutions.net>
-	 <20070905051626.GA12198@deine-taler.de>
-	 <1188991396.9942.97.camel@johannes.berg>  <200709051616.25044.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4UwqGU5LSwRyLbhxhbNO"
-Date: Wed, 05 Sep 2007 16:21:16 +0200
-Message-Id: <1189002076.9942.107.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 8 Sep 2007 11:02:07 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so353997ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 08:02:06 -0700 (PDT)
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [RFC 2/3] rfkill: Add support for ultrawideband
+Date: Sat, 8 Sep 2007 17:11:50 +0200
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>
+References: <200709081710.56744.IvDoorn@gmail.com>
+In-Reply-To: <200709081710.56744.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709081711.50344.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch will add support for UWB keys to rfkill,
+support for this has been requested by Inaky.
 
---=-4UwqGU5LSwRyLbhxhbNO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+CC: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+---
+ include/linux/input.h     |    1 +
+ include/linux/rfkill.h    |    2 ++
+ net/rfkill/rfkill-input.c |    9 +++++++++
+ net/rfkill/rfkill.c       |    3 +++
+ 4 files changed, 15 insertions(+), 0 deletions(-)
 
-On Wed, 2007-09-05 at 16:16 +0200, Michael Buesch wrote:
-
-> > > 1) Use ieee80211_stop_queues() in ->configure_filter() and
-> > >    ieee80211_wake_queues() at the end of the workqueue function.
-> > >=20
-> > > 2) Throw away all packets until the workqueue function
-> > >    terminates.
-> > >=20
-> > > 3) Implement our own tx queue.
-> > >=20
-> > > I prefer to do option (1) because it wouldn't require adding
-> > > additional fields to our private structure beside the work_struct
-> > > for the workqueue function, it is simple to implement and it would
-> > > not throw away any packets. Are there any side effects that I have
-> > > overlooked?
-> >=20
-> > I think Michael says it's currently buggy if called outside of ->tx().
->=20
-> Yes, we had a bug in b43 where we used it in the periodic workqueue.
-> It causes really hard to track down system freezes on UP
-> systems due to races with the TX code.
-> It will hang and busy wait in the qdisc code when this triggers.
-> I didn't see a fix for this, yet.
-> But I think a fix could probably be to take the netif_tx_lock
-> in the ieee80211_stop_queues() function, so we make sure that no
-> TX is in progress while we stop it.
-
-Ok. Of course, for zd1211 it'd be easy to set a flag in
-configure_filter() and check that flag in tx() and if it's set then call
-stop_queues().
-
-johannes
-
---=-4UwqGU5LSwRyLbhxhbNO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3rtc/ETPhpq3jKURAqZgAJ421M14GWJGtIW8kNOiiX7HG/R7YQCeKmIZ
-DLd0hGY0FM9j4mye0weGQZU=
-=+vcI
------END PGP SIGNATURE-----
-
---=-4UwqGU5LSwRyLbhxhbNO--
+diff --git a/include/linux/input.h b/include/linux/input.h
+index cf2b561..8e5828d 100644
+--- a/include/linux/input.h
++++ b/include/linux/input.h
+@@ -360,6 +360,7 @@ struct input_absinfo {
+ 
+ #define KEY_BLUETOOTH		237
+ #define KEY_WLAN		238
++#define KEY_UWB			239
+ 
+ #define KEY_UNKNOWN		240
+ 
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index c4546e1..f9a50da 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -31,10 +31,12 @@
+  * enum rfkill_type - type of rfkill switch.
+  * RFKILL_TYPE_WLAN: switch is no a Wireless network devices.
+  * RFKILL_TYPE_BlUETOOTH: switch is on a bluetooth device.
++ * RFKILL_TYPE_UWB: switch is on a Ultra wideband device.
+  */
+ enum rfkill_type {
+ 	RFKILL_TYPE_WLAN ,
+ 	RFKILL_TYPE_BLUETOOTH,
++	RFKILL_TYPE_UWB,
+ 	RFKILL_TYPE_MAX,
+ };
+ 
+diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+index 9f746be..8e4516a 100644
+--- a/net/rfkill/rfkill-input.c
++++ b/net/rfkill/rfkill-input.c
+@@ -81,6 +81,7 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
+ 
+ static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_WLAN);
+ static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
++static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
+ 
+ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 			unsigned int code, int down)
+@@ -93,6 +94,9 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 		case KEY_BLUETOOTH:
+ 			rfkill_schedule_toggle(&rfkill_bt);
+ 			break;
++		case KEY_UWB:
++			rfkill_schedule_toggle(&rfkill_uwb);
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -148,6 +152,11 @@ static const struct input_device_id rfkill_ids[] = {
+ 		.evbit = { BIT(EV_KEY) },
+ 		.keybit = { [LONG(KEY_BLUETOOTH)] = BIT(KEY_BLUETOOTH) },
+ 	},
++	{
++		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
++		.evbit = { BIT(EV_KEY) },
++		.keybit = { [LONG(KEY_UWB)] = BIT(KEY_UWB) },
++	},
+ 	{ }
+ };
+ 
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 50e0102..03ed7fd 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -106,6 +106,9 @@ static ssize_t rfkill_type_show(struct device *dev,
+ 	case RFKILL_TYPE_BLUETOOTH:
+ 		type = "bluetooth";
+ 		break;
++	case RFKILL_TYPE_UWB:
++		type = "ultrawideband";
++		break;
+ 	default:
+ 		BUG();
+ 	}
+-- 
+1.5.3
 
