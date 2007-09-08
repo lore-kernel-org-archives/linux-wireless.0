@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:47348 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbXIHNBY (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:7419 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753466AbXIHLNK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 09:01:24 -0400
-Date: Sat, 8 Sep 2007 14:01:18 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: COMMON symbol warnings
-Message-ID: <20070908130118.GA11648@infradead.org>
-References: <1189100314.28781.112.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1189100314.28781.112.camel@johannes.berg>
+	Sat, 8 Sep 2007 07:13:10 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so345355ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 04:13:09 -0700 (PDT)
+Message-ID: <46E2836B.60406@googlemail.com>
+Date: Sat, 08 Sep 2007 13:11:39 +0200
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Pierre Ossman <drzeus-mmc@drzeus.cx>,
+	Christian Casteyde <casteyde.christian@free.fr>,
+	Alan Stern <stern@rowland.harvard.edu>, netdev@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Florian Lohoff <flo@rfc822.org>,
+	linux-wireless@vger.kernel.org,
+	Christian Casteyde <casteyde.christian@free.fr>,
+	Martin Langer <martin-langer@gmx.de>,
+	Stefano Brivio <st3@riseup.net>,
+	Michael Buesch <mbuesch@freenet.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>
+Subject: Re: [2/2] 2.6.23-rc5: known regressions with patches v2
+References: <46E28149.2090900@googlemail.com>
+In-Reply-To: <46E28149.2090900@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 06, 2007 at 07:38:34PM +0200, Johannes Berg wrote:
-> After my compile run with __CHECK_ENDIAN__ the modules were built and I
-> got:
-> 
-> WARNING: "iwl_param_debug" [drivers/net/wireless/iwl3945] is COMMON symbol
-> WARNING: "iwl_param_disable_hw_scan" [drivers/net/wireless/iwl3945] is COMMON symbol
-> WARNING: "iwl_param_hwcrypto" [drivers/net/wireless/iwl3945] is COMMON symbol
-> WARNING: "iwl_param_antenna" [drivers/net/wireless/iwl3945] is COMMON symbol
-> WARNING: "iwl_param_disable" [drivers/net/wireless/iwl3945] is COMMON symbol
-> WARNING: "iwl_param_debug" [drivers/net/wireless/iwl4965] is COMMON symbol
-> WARNING: "iwl_param_disable_hw_scan" [drivers/net/wireless/iwl4965] is COMMON symbol
-> WARNING: "iwl_param_hwcrypto" [drivers/net/wireless/iwl4965] is COMMON symbol
-> WARNING: "iwl_param_antenna" [drivers/net/wireless/iwl4965] is COMMON symbol
-> WARNING: "iwl_param_disable" [drivers/net/wireless/iwl4965] is COMMON symbol
-> WARNING: "zd_workqueue" [drivers/net/wireless/zd1211rw-mac80211/zd1211rw-mac80211] is COMMON symbol
-> WARNING: "zd_workqueue" [drivers/net/wireless/zd1211rw/zd1211rw] is COMMON symbol
-> 
-> any idea what that means?
+Hi all,
 
-Yes.  It means a variable is declared in multiple places and the linker
-merges it for you.  The fix is to make sure these are declared extern in
-all places but one.
+Here is a list of some known regressions in 2.6.23-rc5
+with patches available.
+
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+List of Aces
+
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            10
+Linus Torvalds                         6
+Andi Kleen                             5
+Hugh Dickins                           5
+Trond Myklebust                        5
+Andrew Morton                          4
+Al Viro                                3
+Alan Stern                             3
+Alexey Starikovskiy                    3
+Cornelia Huck                          3
+David S. Miller                        3
+Jens Axboe                             3
+Stephen Hemminger                      3
+Tejun Heo                              3
+
+
+
+Some of these patches are available in -krf (known regressions fixes) tree
+http://www.stardust.webpages.pl/files/patches/krf/2.6.23-rc5-git1/linux-2.6.23-rc5-git1-krf1.patch.bz2
+http://www.stardust.webpages.pl/files/patches/krf/2.6.23-rc5-git1/linux-2.6.23-rc5-git1-krf1.tar.bz2
+
+
+
+MMC
+
+Subject         : Unable to access memory card reader anymore
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8885
+Last known good : ?
+Submitter       : Christian Casteyde <casteyde.christian@free.fr>
+Caused-By       : ?
+Handled-By      : Alan Stern <stern@rowland.harvard.edu>
+Patch           : http://bugzilla.kernel.org/attachment.cgi?id=12438
+Status          : patch available
+
+
+
+Networking
+
+Subject         : ifconfig eth1 - scheduling while atomic: ifconfig/0x00000002/4170
+References      : http://lkml.org/lkml/2007/9/2/165
+Last known good : ?
+Submitter       : Florian Lohoff <flo@rfc822.org>
+Caused-By       : ?
+Handled-By      : Johannes Berg <johannes@sipsolutions.net>
+Patch           : http://lkml.org/lkml/2007/9/7/75
+Status          : patch available
+
+Subject         : System freeze when restarting network connection with Broadcom driver
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8934
+Last known good : ?
+Submitter       : Christian Casteyde <casteyde.christian@free.fr>
+Caused-By       : ?
+Handled-By      : ?
+Status          : patch has been submitted to John Linville
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
