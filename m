@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54223
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750981AbXIRWc6 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:36380 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbXIHI0Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 18:32:58 -0400
-Date: Tue, 18 Sep 2007 15:32:53 -0700 (PDT)
-Message-Id: <20070918.153253.66805416.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, IvDoorn@gmail.com
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070918213202.GJ4940@tuxdriver.com>
-References: <20070918213202.GJ4940@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 8 Sep 2007 04:26:16 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so817741wah
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 01:26:15 -0700 (PDT)
+Message-ID: <6b8cef970709080126t517cd2e3r292f6b933d615384@mail.gmail.com>
+Date: Sat, 8 Sep 2007 04:26:15 -0400
+From: "Rob Hussey" <robjhussey@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Kernel panic with rt2500pci built-in
+Cc: linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
+In-Reply-To: <1189237764.4506.14.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
+	 <1189125944.28781.125.camel@johannes.berg>
+	 <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
+	 <1189193840.28781.197.camel@johannes.berg>
+	 <6b8cef970709071438o6870cecej355119fee4396dcb@mail.gmail.com>
+	 <1189202441.28781.208.camel@johannes.berg>
+	 <6b8cef970709072129r5d7658b8v46e5b327638b8f06@mail.gmail.com>
+	 <6b8cef970709072140o23cfd152nee56313db53739ae@mail.gmail.com>
+	 <1189237764.4506.14.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 18 Sep 2007 17:32:02 -0400
+On 9/8/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> Can you go to the end of the file net/wireless/core.c and exchange
+> the module_init(cfg80211_init) with subsys_initcall(cfg80211_init)? It
+> looks like that might be the problem.
 
-> This patch adds the rt2x00 drivers for Ralink wireless hardware.
-> This collection of drivers has seen lots of action in Fedora (both
-> F7 and rawhide) and many people are using them with good results
-> (although some problems do remain).
-> 
-> Ivo in particular has been very helpful in responding to bug reports
-> for these drivers, including bugs reported at kernel.org and in
-> distro bugzillas.  I extend my thanks to him for both his past and
-> future support of these drivers.  I'm sure he and the rest of the
-> rt2x00 team will continue to support the community and their userbase.
-> 
-> Ivo and his team may feel I am jumping the gun a bit -- they have
-> a few more random bugs they wanted to squash before going upstream.
-> But since they are bugs, any fixes should still be able to be applied
-> in the -rc phase of 2.6.24.  In the meantime, I definitely think it
-> would be better to get this code into mainline rather than keeping
-> it out of stream.
-
-Applied to net-2.6.24 and pushed out.
-
-Thanks John.
+Much like when I commented out the ieee80211_register_hw call, the
+kernel booted fine, but there was no sign of the wireless card in the
+logs or otherwise.
