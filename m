@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758573AbXINMG4 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43611
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753396AbXIIMOY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 08:06:56 -0400
-Subject: Re: letting drivers choose their preferred rate scale
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ian Schram <ischram@telenet.be>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46E9AECE.5050305@telenet.be>
-References: <46CF95F9.6090802@telenet.be>
-	 <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be>
-	 <1188211749.6756.11.camel@johannes.berg>
-	 <20070831180933.GB3352@tuxdriver.com> <46DB537E.8030801@telenet.be>
-	 <1188808692.14564.24.camel@johannes.berg> <46DC1500.7090808@telenet.be>
-	 <20070913183918.GA10239@tuxdriver.com>  <46E9AECE.5050305@telenet.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VyYbd63sgvQ9dJS3aryn"
-Date: Fri, 14 Sep 2007 14:08:17 +0200
-Message-Id: <1189771697.3974.30.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 9 Sep 2007 08:14:24 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Simplify and cleanup debugfs infrastructure
+Date: Sun, 9 Sep 2007 14:12:22 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <200709091353.52002.mb@bu3sch.de>
+In-Reply-To: <200709091353.52002.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709091412.22672.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 09 September 2007 13:53:51 Michael Buesch wrote:
+> Index: wireless-dev/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-07 16:36:00.000000000 +0200
+> +++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-09 13:27:14.000000000 +0200
+> @@ -762,7 +762,6 @@ static void keymac_write(struct b43_wlde
+>  		 */
+>  		if (index < 8) {
+>  			/* TODO write to RCM 16, 19, 22 and 25 */
+> -			TODO();
+>  		} else {
+>  			b43_shm_write32(dev, B43_SHM_SHARED,
+>  					B43_SHM_SH_PSM + (index * 6) + 0,
+> @@ -3593,19 +3592,23 @@ static void b43_chip_reset(struct work_s
+>  
+>  	mutex_lock(&wl->mutex);
+>  
+> +printk("RESTART\n");
+>  	prev_status = b43_status(dev);
+>  	/* Bring the device down... */
+>  	if (prev_status >= B43_STAT_STARTED)
+>  		b43_wireless_core_stop(dev);
+> +printk("exit\n");
+>  	if (prev_status >= B43_STAT_INITIALIZED)
+>  		b43_wireless_core_exit(dev);
+>  
+> +printk("init\n");
+>  	/* ...and up again. */
+>  	if (prev_status >= B43_STAT_INITIALIZED) {
+>  		err = b43_wireless_core_init(dev);
+>  		if (err)
+>  			goto out;
+>  	}
+> +printk("start\n");
+>  	if (prev_status >= B43_STAT_STARTED) {
+>  		err = b43_wireless_core_start(dev);
+>  		if (err) {
+> @@ -3613,6 +3616,7 @@ static void b43_chip_reset(struct work_s
+>  			goto out;
+>  		}
+>  	}
+> +printk("done\n");
+>        out:
+>  	mutex_unlock(&wl->mutex);
+>  	if (err)
 
---=-VyYbd63sgvQ9dJS3aryn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Whoopsy. Seems like I should remove debugging code before submission :)
 
-On Thu, 2007-09-13 at 23:42 +0200, Ian Schram wrote:
 
-> The whole point of this exercise is to make simple the default.
-
-What I actually wanted, though, was to have the default be a string that
-is settable at runtime to any of the loaded rate control algorithms.
-
-johannes
-
---=-VyYbd63sgvQ9dJS3aryn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6nmx/ETPhpq3jKURAuDcAJ9io1xlY2GUXmaR1K5qqLZT8QE5ngCfXDQ3
-sqR/2T6TfNhIa0FdgUWk8VU=
-=HXjy
------END PGP SIGNATURE-----
-
---=-VyYbd63sgvQ9dJS3aryn--
-
+-- 
+Greetings Michael.
