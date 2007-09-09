@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30301 "EHLO mga11.intel.com"
+Received: from deine-taler.de ([217.160.107.63]:63061 "EHLO deine-taler.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902AbXIDCbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 22:31:51 -0400
-Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
-In-Reply-To: <20070831205524.GA11128@tuxdriver.com>
-References: <1188192012.13078.177.camel@debian.sh.intel.com>
-	 <20070831205524.GA11128@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 04 Sep 2007 10:25:46 +0800
-Message-Id: <1188872746.13078.411.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+	id S1753500AbXIIIup (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Sep 2007 04:50:45 -0400
+Date: Sun, 9 Sep 2007 10:50:43 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: COMMON symbol warnings
+Message-ID: <20070909085043.GA12021@deine-taler.de>
+References: <1189100314.28781.112.camel@johannes.berg> <20070908130118.GA11648@infradead.org> <200709081835.02212.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200709081835.02212.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-31 at 16:55 -0400, John W. Linville wrote:
-> A few comments below -- many of them are nits or somewhat minor.
-> I think the ieee80211_rate.h one needs to be resolved for sure.  Also,
-> splitting iwl-base.c is definitely worth considering -- building two
-> object from one source is a bit ugly.
+Michael Buesch wrote:
+
+> On Saturday 08 September 2007, Christoph Hellwig wrote:
+> > > WARNING: "zd_workqueue" [drivers/net/wireless/zd1211rw-mac80211/zd1211rw-mac80211] is COMMON symbol
+> > > WARNING: "zd_workqueue" [drivers/net/wireless/zd1211rw/zd1211rw] is COMMON symbol
+> > > 
+> > > any idea what that means?
+> > 
+> > Yes.  It means a variable is declared in multiple places and the linker
+> > merges it for you.  The fix is to make sure these are declared extern in
+> > all places but one.
 > 
-> Please respond to the questions/comments, and indicate if/when you
-> will split iwl-base.c.
+> Do you need an own workqueue in zd? Can you use the one mac80211 exports?
 
-Will split it in the next version as well as addressing all your
-comments below.
+We could use the one mac80211 exports. This has been on my TODO
+list for quite some time. But given the other problems we still
+have, this hasn't been the highest priority. There is no bug here,
+the only issue is that resource usage is a little bit higher. The
+warning is from my point of view useless, because it is always
+shown regardless whether there is a problem or not.
 
-> Also, let's figure-out what really needs to
-> be exportd to drivers from ieee80211_rate.h and get that done.
-
-Since they are device specific rate scale algorithm, I don't think they
-will help to increase performance for other devices. So make them stay
-together with the driver is a better choice (vs. with mac80211). If so,
-the rate scale interface has to be abstracted from internal mac80211.
-The current dependencies are as below:
-
-iwl3945-rs -> rate_control_ops (ieee80211_rate.h)
-rate_control_ops -> sta_info (sta_info.h)
-rate_control_ops -> ieee80211_local (ieee80211_i.h)
-ieee80211_local -> ieee80211_key (ieee80211_key.h)
-
-If we want to avoid a big restructure of the mac80211 headers, the
-easiest way is to move four header files from net/mac80211 to
-include/net/ and rename them with mac80211_ prefix (especially for
-sta_info.h). This way, for any mac80211 based wireless drivers want to
-create their own rate scale algorithm, they can smiply include
-<net/mac80211_rate.h> and implement all the callback functions.
-Comments?
-
-If you all agree with this change, especially the mac80211 folks, I'll
-come up with a patch for it.
-
-Thanks,
--yi
+-- 
+Uli Kunitz
