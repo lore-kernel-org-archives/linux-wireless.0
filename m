@@ -1,87 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:52474 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755912AbXI1UKh (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36258
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753602AbXIILBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 16:10:37 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so2621959nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 13:10:35 -0700 (PDT)
-Message-ID: <aa73b9a0709281310w6030e0f5g4e3195cf800b5e7d@mail.gmail.com>
-Date: Fri, 28 Sep 2007 15:10:34 -0500
-From: "John Pierce" <john.j35@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Belkin Wireless G USB
+	Sun, 9 Sep 2007 07:01:36 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: zd-mac80211: Fix TX status reports.
+Date: Sun, 9 Sep 2007 12:58:56 +0200
+Cc: Daniel Drake <dsd@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <200709082341.31720.mb@bu3sch.de> <20070909100530.GB12021@deine-taler.de>
+In-Reply-To: <20070909100530.GB12021@deine-taler.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709091259.00237.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Sunday 09 September 2007 12:05:30 Ulrich Kunitz wrote:
+> Just a general remark: The ZD1211 device doesn't support TX status
+> reporting directly. The driver emulates this by getting ACK
+> packets and transmission failures reported. The driver simply
+> reports them in sequence to transmitted packets without having a
+> reliable way to verify that the ACK packet or the failure report
+> actually belongs to the packet for which the status is reported.
+> This is error-prone. A typical problem are several correct ACKs
+> received for the same packet. In such a situation the driver loses
+> the synchronization of status and transmitted packets. If the
+> mac80211 stack uses the returned status for more than statistics,
+> this may cause bugs.
+[snip]
+> An alternative option could be that the mac80211 stack would call
+> a non-atomic function of the driver to report the total count of
+> transmitted packets and the number of successful transmissions.
+> The driver could even use counters maintained by the device to
+> support this. In specific cases where a status is required and
+> performance is not an issue (association) a reliable status report
+> mode could be supported, but this would add complexity to the
+> driver. I understand that this would require invasive changes to
+> the mac80211 stack, but I believe this change would be the right
+> thing.
 
-I just purchased a belkin wireless g usb adapter and am not having any
-luck getting it to work.
+Basically, the TX status report is only useful for the rate control
+algorithm. So it's basically "only" statistics. But we have to
+get these statistics approximately right to get the RC algo working
+correctly. That is what this patch does. With it, the RC algo properly
+scales up and down if the signal gets better or worse.
 
-The following is the output from various commands, if more info is
-needed then I will post it back.
+> > Johannes, to me it seems that there's also a bug in mac80211.
+> > I never get a frame with the REQ_TX_STATUS bit set, so frames
+> > will always end up on the "unreliable" tx status queue.
+> 
+> It appears that the patch tries to fix this by ignoring
+> REQ_TX_STATUS. See below.
 
-Distro: Fedora 7
-Kernel: 2.6.22.4-65.fc7
+Well, I think the driver should ignore that flag in any case, as
+mac80211 does handle it internally.
+Especially on devices like the zd, which don't support TX status
+reporting in hw, we should gather as much information as possible
+and pass it to mac80211 to get the RC algorithm working.
+mac80211 will handle the unrequested status requests with more care,
+so that's OK.
 
-I have created a ifcfg-wlan0 file in /etc/sysconfig/network-scripts
-with the following:
+> > @@ -356,19 +357,18 @@ static int init_tx_skb_control_block(str
+> >   * If no status information has been requested, the skb is freed.
+> >   */
+> >  static void tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+> > -	              struct ieee80211_tx_status *status)
+> > +	              struct ieee80211_tx_status *status,
+> > +		      bool success)
+> >  {
+> >  	struct zd_tx_skb_control_block *cb = (struct zd_tx_skb_control_block *)
+> >  		skb->cb;
+> >  
+> >  	ZD_ASSERT(cb->control != NULL);
+> > -	if ((cb->control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)) {
+> > -		memcpy(&status->control, cb->control, sizeof(status->control));
+> > -		clear_tx_skb_control_block(skb);
+> > -		ieee80211_tx_status_irqsafe(hw, skb, status);
+> > -	} else {
+> > -		kfree_tx_skb(skb);
+> > -	}
+> > +	memcpy(&status->control, cb->control, sizeof(status->control));
+> > +	if (!success)
+> > +		status->excessive_retries = 1;
+> > +	clear_tx_skb_control_block(skb);
+> > +	ieee80211_tx_status_irqsafe(hw, skb, status);
+> >  }
+> 
+> 
 
-GATEWAY=192.168.1.1
-TYPE=Wireless
-DEVICE=wlan0
-BOOTPROTO=static
-NETMASK=255.255.255.0
-IPADDR=192.168.1.60
-ONBOOT=yes
-USERCTL=yes
-IPV6INIT=no
-PEERDNS=yes
-ESSID=thedungeon
-CHANNEL=11
-MODE=Managed
-RATE=Auto
-SECURITYMODE=open
 
-I have a keys-wlan0 file in that same directory with the wep key for my router.
-
-I set up a file named zd1211 in the /etc/modprobe.d/ directory with
-the following in it.
-
-alias wlan0 zd1211rw_mac80211
-
-This is the output of dmesg immediately after inserting the usb adapter.
-
-usb 2-2: new high speed USB device using ehci_hcd and address 7
-usb 2-2: configuration #1 chosen from 1 choice
-usb 2-2: reset high speed USB device using ehci_hcd and address 7
-wmaster0: Failed to select rate control algorithm
-wmaster0: Failed to initialize rate control algorithm
-usb 2-2: reset high speed USB device using ehci_hcd and address 7
-zd1211rw_mac80211: probe of 2-2:1.0 failed with error -2
-usbcore: registered new interface driver zd1211rw_mac80211
-
-This is the output of lsusb after inserting the adapter.
-
-Bus 002 Device 007: ID 050d:705c Belkin Components
-Bus 002 Device 001: ID 0000:0000
-Bus 001 Device 002: ID 15d9:0a33
-Bus 001 Device 001: ID 0000:0000
-
-When I try the run ifup wlan0 this is the output.
-
-zd1211rw_mac80211 device wlan0 does not seem to be present, delaying
-initialization.
-
-Every thing I have read indicates that this device is supported in
-linux, including the vendor and device id.
-
-Any thoughts or suggestions would be appreciated.
 
 -- 
-John
-Registered Linux User 263680, get counted at
-http://counter.li.org
+Greetings Michael.
