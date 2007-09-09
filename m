@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:22567 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbXICSyC (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41809 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045AbXIJKaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 14:54:02 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so1261272nfh
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2007 11:54:00 -0700 (PDT)
-Message-ID: <46DC588D.40305@gmail.com>
-Date: Mon, 03 Sep 2007 20:55:09 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Krzysztof Halasa <khc@pm.waw.pl>
-CC: Jiri Slaby <jirislaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Ath5k panic fix
-References: <m3ejhfvbp3.fsf@maximus.localdomain>
-In-Reply-To: <m3ejhfvbp3.fsf@maximus.localdomain>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Sep 2007 06:30:10 -0400
+Subject: A-MSDU deaggregation support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mohamed salim abbas <mabbaswireless@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3ZpPd/mM9Ry4uIldsy2Y"
+Date: Sun, 09 Sep 2007 18:15:26 +0200
+Message-Id: <1189354526.4506.25.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Krzysztof Halasa napsal(a):
-> Ath5k panics on ath_open() because sc->pdev is never set, fixed.
-> 
-> Signed-off-by: Krzysztof Halasa <khc@pm.waw.pl>
 
-Acked-by: Jiri Slaby <jirislaby@gmail.com>
+--=-3ZpPd/mM9Ry4uIldsy2Y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I wonder how it is possible that the driver works here.
+Hey,
 
-> --- a/drivers/net/wireless/ath5k_base.c
-> +++ b/drivers/net/wireless/ath5k_base.c
-> @@ -2295,6 +2295,7 @@ static int __devinit ath_pci_probe(struct pci_dev *pdev,
->  	hw->max_rssi = 127; /* FIXME: get a real value for this. */
->  	sc = hw->priv;
->  	sc->hw = hw;
-> +	sc->pdev = pdev;
->  
->  	/*
->  	 * Mark the device as detached to avoid processing
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+I just looked at the deaggregation code for unrelated reasons and
+thought about it a bit more; shouldn't there be some sort of checks that
+the 802.11 rules about identical addresses are adhered to to avoid
+having rogue packets pretending to come from somewhere else enter the
+networking stack? This can usually be avoided by using RSNA, but this
+code allows one to easily circumvent this which makes us look pretty
+bad.
 
-thanks,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
+Makes you wonder why they included full 802.3 framing in the
+subframes...
+
+johannes
+
+--=-3ZpPd/mM9Ry4uIldsy2Y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG5Bwe/ETPhpq3jKURAhkVAKC3Pi72rbHJzlySO71czZpQY/VaJwCgscnQ
+c+zrHfPPPQTbTN3w5AUYlm8=
+=/k3h
+-----END PGP SIGNATURE-----
+
+--=-3ZpPd/mM9Ry4uIldsy2Y--
+
