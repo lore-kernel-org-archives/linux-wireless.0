@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40450 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754799AbXITPbq (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41980
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754057AbXIILzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 11:31:46 -0400
-Date: Thu, 20 Sep 2007 08:30:56 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: ath5k and network manager
-Message-ID: <20070920083056.31f231b9@freepuppy.rosehill>
-In-Reply-To: <200709201511.23400.mb@bu3sch.de>
-References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
-	<43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
-	<200709201511.23400.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 9 Sep 2007 07:55:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Don't cancel the restart workqueue in wireless_core_exit
+Date: Sun, 9 Sep 2007 13:55:00 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709091355.00658.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 20 Sep 2007 15:11:23 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+The wq must be canceled later on rmmod. It's nonfatal, if
+the wq runs on a device that's not started or down. It will
+handle these cases.
+But syncing in wireless_core_exit() will cause a deadlock with
+the restart_work. (restart work cancels itself)
 
-> On Thursday 20 September 2007, Luis R. Rodriguez wrote:
-> > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > > Network manager doesn't seem to detect ath5k. Perhaps it is because
-> > > it is name "ath0".  I think device should follow the convention of using
-> > > name "wifi0" rather than BSD convention of putting driver name in device name.
-> > 
-> > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
-> > any other mac80211 driver. Is yours coming out to ath%d ?
-> > 
-> > ieee80211_register_hw():
-> > 
-> >         /* add one default STA interface */
-> >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
-> >                                   IEEE80211_IF_TYPE_STA);
-> > 
-> 
-> 
-> Probably udev renames it.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger@lwfinger.net>
 
-It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
-value.
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+Index: wireless-dev/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-09 13:27:14.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-09 13:46:31.000000000 +0200
+@@ -3317,7 +3317,6 @@ static void b43_imcfglo_timeouts_workaro
+ /* Locking: wl->mutex */
+ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ {
+-	struct b43_wl *wl = dev->wl;
+ 	struct b43_phy *phy = &dev->phy;
+ 
+ 	B43_WARN_ON(b43_status(dev) > B43_STAT_INITIALIZED);
+@@ -3325,12 +3324,6 @@ static void b43_wireless_core_exit(struc
+ 		return;
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+-	mutex_unlock(&wl->mutex);
+-	/* Must unlock as it would otherwise deadlock. No races here.
+-	 * Cancel possibly pending workqueues. */
+-	cancel_work_sync(&dev->restart_work);
+-	mutex_lock(&wl->mutex);
+-
+ 	b43_rng_exit(dev->wl);
+ 	b43_pio_free(dev);
+ 	b43_dma_free(dev);
+@@ -3811,6 +3804,7 @@ static void b43_one_core_detach(struct s
+ 
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
++	cancel_work_sync(&wldev->restart_work);
+ 	b43_debugfs_remove_device(wldev);
+ 	b43_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
