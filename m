@@ -1,220 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52996
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755773AbXI0NNX (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755971AbXIJKlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 09:13:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Add association LED trigger
-Date: Thu, 27 Sep 2007 15:10:44 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709271510.45121.mb@bu3sch.de>
+	Mon, 10 Sep 2007 06:41:04 -0400
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>
+In-Reply-To: <1189390172.24707.36.camel@debian.sh.intel.com>
+References: <1188875058.13078.428.camel@debian.sh.intel.com>
+	 <1189076408.28781.49.camel@johannes.berg>
+	 <1189146702.16788.103.camel@debian.sh.intel.com>
+	 <1189172436.28781.148.camel@johannes.berg>
+	 <1189390172.24707.36.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KDYIHE0BSL/VUlAjdm2m"
+Date: Mon, 10 Sep 2007 12:42:34 +0200
+Message-Id: <1189420954.4506.37.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many devices have LEDs to indicate the link status.
-Export this functionality to drivers.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-KDYIHE0BSL/VUlAjdm2m
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-2.6/include/net/mac80211.h
-===================================================================
---- wireless-2.6.orig/include/net/mac80211.h	2007-09-26 20:31:04.000000000 +0200
-+++ wireless-2.6/include/net/mac80211.h	2007-09-27 12:02:26.000000000 +0200
-@@ -926,6 +926,7 @@ int ieee80211_register_hw(struct ieee802
- #ifdef CONFIG_MAC80211_LEDS
- extern char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw);
- extern char *__ieee80211_get_rx_led_name(struct ieee80211_hw *hw);
-+extern char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw);
- #endif
- static inline char *ieee80211_get_tx_led_name(struct ieee80211_hw *hw)
- {
-@@ -945,6 +946,16 @@ static inline char *ieee80211_get_rx_led
- #endif
- }
- 
-+static inline char *ieee80211_get_assoc_led_name(struct ieee80211_hw *hw)
-+{
-+#ifdef CONFIG_MAC80211_LEDS
-+	return __ieee80211_get_assoc_led_name(hw);
-+#else
-+	return NULL;
-+#endif
-+}
-+
-+
- /* Register a new hardware PHYMODE capability to the stack. */
- int ieee80211_register_hwmode(struct ieee80211_hw *hw,
- 			      struct ieee80211_hw_mode *mode);
-Index: wireless-2.6/net/mac80211/ieee80211_i.h
-===================================================================
---- wireless-2.6.orig/net/mac80211/ieee80211_i.h	2007-09-26 23:28:42.000000000 +0200
-+++ wireless-2.6/net/mac80211/ieee80211_i.h	2007-09-27 12:03:32.000000000 +0200
-@@ -510,8 +510,8 @@ struct ieee80211_local {
- 
- #ifdef CONFIG_MAC80211_LEDS
- 	int tx_led_counter, rx_led_counter;
--	struct led_trigger *tx_led, *rx_led;
--	char tx_led_name[32], rx_led_name[32];
-+	struct led_trigger *tx_led, *rx_led, *assoc_led;
-+	char tx_led_name[32], rx_led_name[32], assoc_led_name[32];
- #endif
- 
- 	u32 channel_use;
-Index: wireless-2.6/net/mac80211/ieee80211_led.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/ieee80211_led.c	2007-09-26 17:22:49.000000000 +0200
-+++ wireless-2.6/net/mac80211/ieee80211_led.c	2007-09-27 12:16:41.000000000 +0200
-@@ -33,33 +33,58 @@ void ieee80211_led_tx(struct ieee80211_l
- 		led_trigger_event(local->tx_led, LED_FULL);
- }
- 
-+void ieee80211_led_assoc(struct ieee80211_local *local, bool associated)
-+{
-+	if (unlikely(!local->assoc_led))
-+		return;
-+	if (associated)
-+		led_trigger_event(local->assoc_led, LED_FULL);
-+	else
-+		led_trigger_event(local->assoc_led, LED_OFF);
-+}
-+
- void ieee80211_led_init(struct ieee80211_local *local)
- {
- 	local->rx_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
--	if (!local->rx_led)
--		return;
--	snprintf(local->rx_led_name, sizeof(local->rx_led_name),
--		 "%srx", wiphy_name(local->hw.wiphy));
--	local->rx_led->name = local->rx_led_name;
--	if (led_trigger_register(local->rx_led)) {
--		kfree(local->rx_led);
--		local->rx_led = NULL;
-+	if (local->rx_led) {
-+		snprintf(local->rx_led_name, sizeof(local->rx_led_name),
-+			 "%srx", wiphy_name(local->hw.wiphy));
-+		local->rx_led->name = local->rx_led_name;
-+		if (led_trigger_register(local->rx_led)) {
-+			kfree(local->rx_led);
-+			local->rx_led = NULL;
-+		}
- 	}
- 
- 	local->tx_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
--	if (!local->tx_led)
--		return;
--	snprintf(local->tx_led_name, sizeof(local->tx_led_name),
--		 "%stx", wiphy_name(local->hw.wiphy));
--	local->tx_led->name = local->tx_led_name;
--	if (led_trigger_register(local->tx_led)) {
--		kfree(local->tx_led);
--		local->tx_led = NULL;
-+	if (local->tx_led) {
-+		snprintf(local->tx_led_name, sizeof(local->tx_led_name),
-+			 "%stx", wiphy_name(local->hw.wiphy));
-+		local->tx_led->name = local->tx_led_name;
-+		if (led_trigger_register(local->tx_led)) {
-+			kfree(local->tx_led);
-+			local->tx_led = NULL;
-+		}
-+	}
-+
-+	local->assoc_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
-+	if (local->assoc_led) {
-+		snprintf(local->assoc_led_name, sizeof(local->assoc_led_name),
-+			 "%sassoc", wiphy_name(local->hw.wiphy));
-+		local->assoc_led->name = local->assoc_led_name;
-+		if (led_trigger_register(local->assoc_led)) {
-+			kfree(local->assoc_led);
-+			local->assoc_led = NULL;
-+		}
- 	}
- }
- 
- void ieee80211_led_exit(struct ieee80211_local *local)
- {
-+	if (local->assoc_led) {
-+		led_trigger_unregister(local->assoc_led);
-+		kfree(local->assoc_led);
-+	}
- 	if (local->tx_led) {
- 		led_trigger_unregister(local->tx_led);
- 		kfree(local->tx_led);
-@@ -70,6 +95,16 @@ void ieee80211_led_exit(struct ieee80211
- 	}
- }
- 
-+char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	if (local->assoc_led)
-+		return local->assoc_led_name;
-+	return NULL;
-+}
-+EXPORT_SYMBOL(__ieee80211_get_assoc_led_name);
-+
- char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-Index: wireless-2.6/net/mac80211/ieee80211_led.h
-===================================================================
---- wireless-2.6.orig/net/mac80211/ieee80211_led.h	2007-09-26 17:22:49.000000000 +0200
-+++ wireless-2.6/net/mac80211/ieee80211_led.h	2007-09-27 12:18:02.000000000 +0200
-@@ -14,6 +14,8 @@
- #ifdef CONFIG_MAC80211_LEDS
- extern void ieee80211_led_rx(struct ieee80211_local *local);
- extern void ieee80211_led_tx(struct ieee80211_local *local, int q);
-+extern void ieee80211_led_assoc(struct ieee80211_local *local,
-+				bool associated);
- extern void ieee80211_led_init(struct ieee80211_local *local);
- extern void ieee80211_led_exit(struct ieee80211_local *local);
- #else
-@@ -23,6 +25,10 @@ static inline void ieee80211_led_rx(stru
- static inline void ieee80211_led_tx(struct ieee80211_local *local, int q)
- {
- }
-+static inline void ieee80211_led_assoc(struct ieee80211_local *local,
-+				       bool associated)
-+{
-+}
- static inline void ieee80211_led_init(struct ieee80211_local *local)
- {
- }
-Index: wireless-2.6/net/mac80211/ieee80211_sta.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/ieee80211_sta.c	2007-09-26 20:31:04.000000000 +0200
-+++ wireless-2.6/net/mac80211/ieee80211_sta.c	2007-09-27 12:27:04.000000000 +0200
-@@ -31,6 +31,7 @@
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- #include "ieee80211_rate.h"
-+#include "ieee80211_led.h"
- #include "hostapd_ioctl.h"
- 
- #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
-@@ -408,8 +409,9 @@ static void ieee80211_sta_send_associnfo
- 
- static void ieee80211_set_associated(struct net_device *dev,
- 				     struct ieee80211_if_sta *ifsta,
--				     unsigned int assoc)
-+				     bool assoc)
- {
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	union iwreq_data wrqu;
- 
- 	if (!!(ifsta->flags & IEEE80211_STA_ASSOCIATED) == assoc)
-@@ -447,6 +449,7 @@ static void ieee80211_set_associated(str
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- 	ifsta->last_probe = jiffies;
-+	ieee80211_led_assoc(local, assoc);
- }
- 
- static void ieee80211_set_disassoc(struct net_device *dev,
+On Mon, 2007-09-10 at 10:09 +0800, Zhu Yi wrote:
+> On Fri, 2007-09-07 at 15:40 +0200, Johannes Berg wrote:
+> > But you need to have another place where this flag is set based on the
+> > equivalent mac80211 flag, so this is not necessary.
+>=20
+> OK. Will use mac80211's indication if mac80211 already takes care about
+> the "trick".
+
+If not I'd consider it a bug. But I don't see a "trick" there anyhow.
+What's non-standard in this behaviour? Almost every unicast packet is
+expected to be acknowledged.
+
+> > > BTW=EF=BC=8C the whole 802.11 qdisc hack will be removed with
+> > > the multiqueue supported in .24. =20
+
+> If nobody will work on that, we Intel will do. I remembered Tomas
+> promised John in this OLS ;)
+
+:)
+Sounds good. Do you guys have contact to whoever wrote it? ISTR it came
+from Intel in the first place.
+
+> It should be 31, not 32 (shift =3D 31 - bits). Will use your suggestion.
+
+Huh. /me double-checks. Am I doing this bit-calculation totally wrong? I
+thought you had a "bits"-bit number that included the sign in the bit
+"bits-1" (if you number 0 through "bits-1"). Then you have to shift up
+by "32 - bits" so that the "bits" bits including the sign live in the
+upper "bits" bits of the 32-bit number, and then shift down again by the
+same amount to do the sign extension. I wonder if there's a good way to
+ask gcc to do this :)
+
+> OK. Let me remove the 11N stuff in iwlwifi for .24 and then we do
+> another round of mac80211 11N patches submission/review later.
+
+That would be much appreciated. We really also should have rate control
+be able to influence that generically and lots more things that have to
+be figured out but that are quite hard to work with when the 802.11n
+drafts are not available to many.
+
+> I believe
+> you can do a better job than Jiri did.
+
+Thanks. I'm not sure I can live up to that though; for example I'll have
+to mostly disappear for the next 10 days or so to prepare for an exam.
+I'll be around, but not patching quite as much ;)
+
+> I thought John would take my .24 iwlwifi patch to wireless-dev GIT
+> directly since he just rebased the tree (at that time) and all the
+> commits for iwlwifi were merged into one big patch.
+
+Ah ok.
+
+> Anyway, I will
+> repost it explicitly for wireless-dev next time: iwlwifi driver + HT
+> features for the iwlwifi (or everything) branch; and iwlwifi driver
+> without HT features for pending-upstream branch. We can work on iwlwifi
+> driver to make it in .24 first and sort out HT things in .25.
+
+Sounds good. I'll take another look then.
+
+Thanks,
+johannes
+
+--=-KDYIHE0BSL/VUlAjdm2m
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG5R+a/ETPhpq3jKURAi/uAJ9XK0pnNwLWPbKd4BMVxefju12RtACglIRm
+uHnM8igo0CBWOBdItIyUysc=
+=IUPE
+-----END PGP SIGNATURE-----
+
+--=-KDYIHE0BSL/VUlAjdm2m--
+
