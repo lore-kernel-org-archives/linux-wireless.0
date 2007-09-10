@@ -1,117 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:50243 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759227AbXIJPgt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 11:36:49 -0400
-Date: Mon, 10 Sep 2007 10:33:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Add debugfs file to dump shared memory
-Message-ID: <46e563c1./VcIP+GCZUv+o4RX%Larry.Finger@lwfinger.net>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:47698 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753871AbXIJRju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2007 13:39:50 -0400
+Date: Mon, 10 Sep 2007 10:39:48 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] list.h: add list_for_each_entry_continue_rcu
+Message-ID: <20070910173948.GD11801@linux.vnet.ibm.com>
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <1189425947.4506.78.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1189425947.4506.78.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
+On Mon, Sep 10, 2007 at 02:05:47PM +0200, Johannes Berg wrote:
+> To implement the multicast list callback in mac80211 we need to
+> do partial list iteration. Since I want to convert the interface
+> list to an RCU list, I need a new list walking primitive:
+> list_for_each_entry_continue_rcu().
+> 
+> Additional help text was provided by Paul McKenney.
 
-This adds a file to dump the SHM.
-Note that SHM dumping is racy, as the microcode continues to run
-while we dump the SHM.
+Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
----
-
-Index: wireless-dev/drivers/net/wireless/b43legacy/debugfs.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/debugfs.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/debugfs.c
-@@ -151,6 +151,42 @@ out_unlock_bb:
- 	return res;
- }
- 
-+static ssize_t shm_read_file(struct file *file, char __user * userbuf,
-+			     size_t count, loff_t * ppos)
-+{
-+	struct b43legacy_wldev *dev = file->private_data;
-+	const size_t len = ARRAY_SIZE(big_buffer);
-+	u8 *buf = big_buffer;
-+	__le16 *le16buf = (__le16*)big_buffer;
-+	size_t pos = 0;
-+	ssize_t res;
-+	unsigned long flags;
-+	int i;
-+	u16 tmp;
-+
-+	mutex_lock(&big_buffer_mutex);
-+	mutex_lock(&dev->wl->mutex);
-+	spin_lock_irqsave(&dev->wl->irq_lock, flags);
-+	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED) {
-+		fappend("Board not initialized.\n");
-+		goto out;
-+	}
-+
-+	for (i = 0; i < 0x1000; i++) {
-+		tmp = b43legacy_shm_read16(dev, B43legacy_SHM_SHARED, 2 * i);
-+		le16buf[i] = cpu_to_le16(tmp);
-+		pos += sizeof(tmp);
-+	}
-+
-+out:
-+	spin_unlock_irqrestore(&dev->wl->irq_lock, flags);
-+	mutex_unlock(&dev->wl->mutex);
-+	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+	mutex_unlock(&big_buffer_mutex);
-+
-+	return res;
-+}
-+
- static ssize_t ucode_regs_read_file(struct file *file, char __user * userbuf,
- 				    size_t count, loff_t * ppos)
- {
-@@ -382,6 +418,11 @@ static struct file_operations ucode_regs
- 	.open = open_file_generic,
- };
- 
-+static struct file_operations shm_fops = {
-+	.read = shm_read_file,
-+	.open = open_file_generic,
-+};
-+
- static struct file_operations txstat_fops = {
- 	.read = txstat_read_file,
- 	.write = write_file_dummy,
-@@ -484,6 +525,10 @@ void b43legacy_debugfs_add_device(struct
- 						   dev, &ucode_regs_fops);
- 	if (IS_ERR(e->dentry_ucode_regs))
- 		e->dentry_ucode_regs = NULL;
-+	e->dentry_shm = debugfs_create_file("shm", 0400, e->subdir,
-+					    dev, &shm_fops);
-+	if (IS_ERR(e->dentry_shm))
-+		e->dentry_shm = NULL;
- 	e->dentry_txstat = debugfs_create_file("tx_status", 0400, e->subdir,
- 						dev, &txstat_fops);
- 	if (IS_ERR(e->dentry_txstat))
-@@ -514,6 +559,7 @@ void b43legacy_debugfs_remove_device(str
- 	b43legacy_remove_dynamic_debug(dev);
- 	debugfs_remove(e->dentry_tsf);
- 	debugfs_remove(e->dentry_ucode_regs);
-+	debugfs_remove(e->dentry_shm);
- 	debugfs_remove(e->dentry_txstat);
- 	debugfs_remove(e->dentry_restart);
- 	debugfs_remove(e->dentry_power);
-Index: wireless-dev/drivers/net/wireless/b43legacy/debugfs.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/debugfs.h
-+++ wireless-dev/drivers/net/wireless/b43legacy/debugfs.h
-@@ -33,6 +33,7 @@ struct b43legacy_dfsentry {
- 	struct dentry *subdir;
- 	struct dentry *dentry_tsf;
- 	struct dentry *dentry_ucode_regs;
-+	struct dentry *dentry_shm;
- 	struct dentry *dentry_txstat;
- 	struct dentry *dentry_restart;
- 	struct dentry *dentry_power;
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+> 
+> ---
+> John, I don't know if you want to merge this or not. There's no clear
+> list.h maintainer and this patch is requisite for the bugfix I'm going
+> to send in a minute so it'd probably be best if this goes into the tree
+> together.
+> If you don't want to take it, however, I have no idea how to handle the
+> situation :)
+> 
+>  include/linux/list.h |   26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+> 
+> --- wireless-dev.orig/include/linux/list.h	2007-09-07 22:00:41.234425862 +0200
+> +++ wireless-dev/include/linux/list.h	2007-09-07 22:05:08.184425862 +0200
+> @@ -665,6 +665,32 @@ static inline void list_splice_init_rcu(
+>  		prefetch(rcu_dereference((pos))->next), (pos) != (head); \
+>          	(pos) = (pos)->next)
+> 
+> +
+> +/**
+> + * list_for_each_entry_continue_rcu - continue iteration over rcu list
+> + * @pos:	the type * to use as a loop cursor.
+> + * @head:	the head for your list.
+> + * @member:	the name of the list_struct within the struct.
+> + *
+> + * Continue to iterate over rcu list of given type, continuing after
+> + * the current position.
+> + *
+> + * This list-traversal primitive may safely run concurrently with
+> + * the _rcu list-mutation primitives such as list_add_rcu()
+> + * as long as the traversal is guarded by rcu_read_lock().
+> + *
+> + * Note that the caller is responsible for making sure that
+> + * the element remains in place between the earlier iterator
+> + * and this one.  One way to do this is to ensure that
+> + * both iterators are covered by the same rcu_read_lock(),
+> + * while others involve reference counts, flags, or mutexes.
+> + */
+> +#define list_for_each_entry_continue_rcu(pos, head, member) \
+> +	for ((pos) = list_entry((pos)->member.next, typeof(*pos), member); \
+> +		prefetch(rcu_dereference((pos))->member.next), \
+> +			 &pos->member != (head); \
+> +        	(pos) = list_entry(pos->member.next, typeof(*pos), member))
+> +
+>  /*
+>   * Double linked lists with a single pointer list head.
+>   * Mostly useful for hash tables where the two pointer list head is
+> 
+> 
