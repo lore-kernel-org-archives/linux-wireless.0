@@ -1,116 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33093
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753180AbXIDNRF (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:46622 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932730AbXIJPxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 09:17:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Mon, 10 Sep 2007 11:53:13 -0400
+Date: Mon, 10 Sep 2007 10:52:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add debugfs file to dump microcode registers
-Date: Tue, 4 Sep 2007 15:16:00 +0200
-Cc: bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Fix most of the sparse warnings
+Message-ID: <46e56847.e8NGY1BRpVwK0qe+%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709041516.01095.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a debugfs file to dump all microcode registers.
-Note that the dumping is racy, as microcode continues to run
-while we loop over each register to dump it.
+Fix most of the sparse warnings in b43legacy. Several are generated
+in phy.c that cannot easily be fixed.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Index: wireless-dev/drivers/net/wireless/b43/debugfs.c
+Index: wireless-dev/drivers/net/wireless/b43legacy/leds.c
 ===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/debugfs.c	2007-08-31 16:51:12.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/debugfs.c	2007-08-31 17:39:23.000000000 +0200
-@@ -148,6 +148,39 @@ static ssize_t tsf_write_file(struct fil
- 	return res;
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/leds.c
++++ wireless-dev/drivers/net/wireless/b43legacy/leds.c
+@@ -33,14 +33,13 @@
+ static void b43legacy_led_changestate(struct b43legacy_led *led)
+ {
+ 	struct b43legacy_wldev *dev = led->dev;
+-	const int index = b43legacy_led_index(led);
+-	const u16 mask = (1 << index);
++	const int index = led->index;
+ 	u16 ledctl;
+ 
+ 	B43legacy_WARN_ON(!(index >= 0 && index < B43legacy_NR_LEDS));
+ 	B43legacy_WARN_ON(!led->blink_interval);
+ 	ledctl = b43legacy_read16(dev, B43legacy_MMIO_GPIO_CONTROL);
+-	ledctl = (ledctl & mask) ? (ledctl & ~mask) : (ledctl | mask);
++	ledctl ^= (1 << index);
+ 	b43legacy_write16(dev, B43legacy_MMIO_GPIO_CONTROL, ledctl);
  }
  
-+static ssize_t ucode_regs_read_file(struct file *file, char __user * userbuf,
-+				    size_t count, loff_t * ppos)
-+{
-+	struct b43_wldev *dev = file->private_data;
-+	const size_t len = ARRAY_SIZE(big_buffer);
-+	char *buf = big_buffer;
-+	size_t pos = 0;
-+	ssize_t res;
-+	unsigned long flags;
-+	int i;
-+
-+	mutex_lock(&big_buffer_mutex);
-+	mutex_lock(&dev->wl->mutex);
-+	spin_lock_irqsave(&dev->wl->irq_lock, flags);
-+	if (b43_status(dev) < B43_STAT_INITIALIZED) {
-+		fappend("Board not initialized.\n");
-+		goto out;
-+	}
-+
-+	for (i = 0; i < 64; i++) {
-+		fappend("r%d = 0x%04x\n", i,
-+			b43_shm_read16(dev, B43_SHM_SCRATCH, i));
-+	}
-+
-+out:
-+	spin_unlock_irqrestore(&dev->wl->irq_lock, flags);
-+	mutex_unlock(&dev->wl->mutex);
-+	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+	mutex_unlock(&big_buffer_mutex);
-+
-+	return res;
-+}
-+
- static ssize_t txstat_read_file(struct file *file, char __user * userbuf,
- 				size_t count, loff_t * ppos)
+@@ -72,7 +71,7 @@ static void b43legacy_led_blink_start(st
+ static void b43legacy_led_blink_stop(struct b43legacy_led *led, int sync)
  {
-@@ -470,6 +503,11 @@ static struct file_operations tsf_fops =
- 	.open = open_file_generic,
- };
+ 	struct b43legacy_wldev *dev = led->dev;
+-	const int index = b43legacy_led_index(led);
++	const int index = led->index;
+ 	u16 ledctl;
  
-+static struct file_operations ucode_regs_fops = {
-+	.read = ucode_regs_read_file,
-+	.open = open_file_generic,
-+};
-+
- static struct file_operations txstat_fops = {
- 	.read = txstat_read_file,
- 	.write = write_file_dummy,
-@@ -575,6 +613,10 @@ void b43_debugfs_add_device(struct b43_w
- 					    dev, &tsf_fops);
- 	if (IS_ERR(e->dentry_tsf))
- 		e->dentry_tsf = NULL;
-+	e->dentry_ucode_regs = debugfs_create_file("ucode_regs", 0400, e->subdir,
-+						   dev, &ucode_regs_fops);
-+	if (IS_ERR(e->dentry_ucode_regs))
-+		e->dentry_ucode_regs = NULL;
- 	e->dentry_txstat = debugfs_create_file("tx_status", 0400, e->subdir,
- 					       dev, &txstat_fops);
- 	if (IS_ERR(e->dentry_txstat))
-@@ -607,6 +649,7 @@ void b43_debugfs_remove_device(struct b4
- 	b43_remove_dynamic_debug(dev);
- 	debugfs_remove(e->dentry_loctls);
- 	debugfs_remove(e->dentry_tsf);
-+	debugfs_remove(e->dentry_ucode_regs);
- 	debugfs_remove(e->dentry_txstat);
- 	debugfs_remove(e->dentry_restart);
- 	debugfs_remove(e->dentry_txpower_g);
-Index: wireless-dev/drivers/net/wireless/b43/debugfs.h
+ 	if (!led->blink_interval)
+@@ -142,6 +141,7 @@ int b43legacy_leds_init(struct b43legacy
+ 
+ 	for (i = 0; i < B43legacy_NR_LEDS; i++) {
+ 		led = &(dev->leds[i]);
++		led->index = i;
+ 		led->dev = dev;
+ 		setup_timer(&led->blink_timer,
+ 			    b43legacy_led_blink,
+Index: wireless-dev/drivers/net/wireless/b43legacy/leds.h
 ===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/debugfs.h	2007-08-31 16:51:12.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/debugfs.h	2007-08-31 17:39:23.000000000 +0200
-@@ -31,6 +31,7 @@ struct b43_txstatus_log {
- struct b43_dfsentry {
- 	struct dentry *subdir;
- 	struct dentry *dentry_tsf;
-+	struct dentry *dentry_ucode_regs;
- 	struct dentry *dentry_txstat;
- 	struct dentry *dentry_txpower_g;
- 	struct dentry *dentry_restart;
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/leds.h
++++ wireless-dev/drivers/net/wireless/b43legacy/leds.h
+@@ -6,14 +6,14 @@
+ 
+ 
+ struct b43legacy_led {
+-	u8 behaviour:7;
+-	u8 activelow:1;
+-
++	u8 behaviour;
++	bool activelow;
++	/* Index in the "leds" array in b43legacy_wldev */
++	u8 index;
+ 	struct b43legacy_wldev *dev;
+ 	struct timer_list blink_timer;
+ 	unsigned long blink_interval;
+ };
+-#define b43legacy_led_index(led)	((int)((led) - (led)->dev->leds))
+ 
+ /* Delay between state changes when blinking in jiffies */
+ #define B43legacy_LEDBLINK_SLOW		(HZ / 1)
+Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-dev/drivers/net/wireless/b43legacy/main.c
+@@ -848,7 +848,7 @@ static void handle_irq_noise(struct b43l
+ 	B43legacy_WARN_ON(!dev->noisecalc.calculation_running);
+ 	if (dev->noisecalc.channel_at_start != phy->channel)
+ 		goto drop_calculation;
+-	*((u32 *)noise) = cpu_to_le32(b43legacy_jssi_read(dev));
++	*((__le32 *)noise) = cpu_to_le32(b43legacy_jssi_read(dev));
+ 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
+ 	    noise[2] == 0x7F || noise[3] == 0x7F)
+ 		goto generate_new;
+@@ -1434,8 +1434,7 @@ static int do_request_fw(struct b43legac
+ 			 const char *name,
+ 			 const struct firmware **fw)
+ {
+-	const size_t plen = sizeof(modparam_fwpostfix) + 32;
+-	char path[plen];
++	char path[sizeof(modparam_fwpostfix) + 32];
+ 	struct b43legacy_fw_header *hdr;
+ 	u32 size;
+ 	int err;
+Index: wireless-dev/drivers/net/wireless/b43legacy/xmit.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/xmit.c
++++ wireless-dev/drivers/net/wireless/b43legacy/xmit.c
+@@ -125,10 +125,12 @@ void b43legacy_generate_plcp_hdr(struct 
+ 	__u8 *raw = plcp->raw;
+ 
+ 	if (b43legacy_is_ofdm_rate(bitrate)) {
+-		*data = b43legacy_plcp_get_ratecode_ofdm(bitrate);
++		u16 d;
++
++		d = b43legacy_plcp_get_ratecode_ofdm(bitrate);
+ 		B43legacy_WARN_ON(octets & 0xF000);
+-		*data |= (octets << 5);
+-		*data = cpu_to_le32(*data);
++		d |= (octets << 5);
++		*data = cpu_to_le32(d);
+ 	} else {
+ 		u32 plen;
+ 
+@@ -442,7 +444,7 @@ void b43legacy_rx(struct b43legacy_wldev
+ 	phystat0 = le16_to_cpu(rxhdr->phy_status0);
+ 	phystat3 = le16_to_cpu(rxhdr->phy_status3);
+ 	jssi = rxhdr->jssi;
+-	macstat = le32_to_cpu(rxhdr->mac_status);
++	macstat = le16_to_cpu(rxhdr->mac_status);
+ 	mactime = le16_to_cpu(rxhdr->mac_time);
+ 	chanstat = le16_to_cpu(rxhdr->channel);
+ 
+
