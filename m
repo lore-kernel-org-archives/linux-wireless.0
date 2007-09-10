@@ -1,85 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:53066 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756774AbXIAVvu (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:55286 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbXIJOUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 17:51:50 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1127485wxd
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 14:51:49 -0700 (PDT)
-Message-ID: <f34ca13c0709011451p67ca96f8o184c0b32efa6b55b@mail.gmail.com>
-Date: Sat, 1 Sep 2007 17:51:49 -0400
-From: "Constantine A. Murenin" <mureninc@gmail.com>
-To: "Adrian Bunk" <bunk@kernel.org>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Cc: "Jeff Garzik" <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20070901211642.GL9260@stusta.de>
+	Mon, 10 Sep 2007 10:20:06 -0400
+Received: by an-out-0708.google.com with SMTP id d31so153675and
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2007 07:20:05 -0700 (PDT)
+Message-ID: <1ba2fa240709100720k5156e11v775a5faa50144990@mail.gmail.com>
+Date: Mon, 10 Sep 2007 17:20:05 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>
+In-Reply-To: <1189420954.4506.37.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	 <46D99FB7.6030505@garzik.org>
-	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	 <20070901205457.GK9260@stusta.de> <20070901211642.GL9260@stusta.de>
+Content-Type: text/plain; charset=ISO-2022-JP
+References: <1188875058.13078.428.camel@debian.sh.intel.com>
+	 <1189076408.28781.49.camel@johannes.berg>
+	 <1189146702.16788.103.camel@debian.sh.intel.com>
+	 <1189172436.28781.148.camel@johannes.berg>
+	 <1189390172.24707.36.camel@debian.sh.intel.com>
+	 <1189420954.4506.37.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
-> On Sat, Sep 01, 2007 at 10:54:57PM +0200, Adrian Bunk wrote:
-> > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
-> > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > > > Constantine A. Murenin wrote:
-> > > > > This will hopefully help diminish certain myths about the code licensing.
-> > > >
-> > > > What myth?  The myth that Theo understands dual licensing?
-> > >
-> > > Reyk's code was never dual licensed, so it's not like it even matters
-> > > to the original dispute.
+On 9/10/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2007-09-10 at 10:09 +0800, Zhu Yi wrote:
+> > On Fri, 2007-09-07 at 15:40 +0200, Johannes Berg wrote:
+> > > But you need to have another place where this flag is set based on the
+> > > equivalent mac80211 flag, so this is not necessary.
+> >
+> > OK. Will use mac80211's indication if mac80211 already takes care about
+> > the "trick".
 >
-> Oh, and if you look at the OpenBSD CVS you see versions 4 months old
-> with dozens of contributions by Reyk and with:
+> If not I'd consider it a bug. But I don't see a "trick" there anyhow.
+> What's non-standard in this behaviour? Almost every unicast packet is
+> expected to be acknowledged.
 >
-> /*      $OpenBSD: ath.c,v 1.63 2007/05/09 16:41:14 reyk Exp $  */
-> /*      $NetBSD: ath.c,v 1.37 2004/08/18 21:59:39 dyoung Exp $        */
+> > > > BTW， the whole 802.11 qdisc hack will be removed with
+> > > > the multiqueue supported in .24.
 >
-> /*-
->  * Copyright (c) 2002-2004 Sam Leffler, Errno Consulting
->  * All rights reserved.
->  *
->  * Redistribution and use in source and binary forms, with or without
->  * modification, are permitted provided that the following conditions
->  * are met:
->  * 1. Redistributions of source code must retain the above copyright
->  *    notice, this list of conditions and the following disclaimer,
->  *    without modification.
->  * 2. Redistributions in binary form must reproduce at minimum a disclaimer
->  *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
->  *    redistribution must be conditioned upon including a substantially
->  *    similar Disclaimer requirement for further binary redistribution.
->  * 3. Neither the names of the above-listed copyright holders nor the names
->  *    of any contributors may be used to endorse or promote products derived
->  *    from this software without specific prior written permission.
->  *
->  * Alternatively, this software may be distributed under the terms of the
->  * GNU General Public License ("GPL") version 2 as published by the Free
->  * Software Foundation.
->  *
->  * NO WARRANTY
->  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
->  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
->  * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
->  * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
->  * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
->  * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
->  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
->  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
->  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
->  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
->  * THE POSSIBILITY OF SUCH DAMAGES.
->  */
+> > If nobody will work on that, we Intel will do. I remembered Tomas
+> > promised John in this OLS ;)
+>
+> :)
+> Sounds good. Do you guys have contact to whoever wrote it? ISTR it came
+> from Intel in the first place.
+>
+It is my best intention yet first we need native interface which make
+in turn problems in eb tables. So it is a long shot.
 
-Where exactly do you see Reyk's copyright in the above quote?
+> > It should be 31, not 32 (shift = 31 - bits). Will use your suggestion.
+>
+> Huh. /me double-checks. Am I doing this bit-calculation totally wrong? I
+> thought you had a "bits"-bit number that included the sign in the bit
+> "bits-1" (if you number 0 through "bits-1"). Then you have to shift up
+> by "32 - bits" so that the "bits" bits including the sign live in the
+> upper "bits" bits of the 32-bit number, and then shift down again by the
+> same amount to do the sign extension. I wonder if there's a good way to
+> ask gcc to do this :)
+>
+> > OK. Let me remove the 11N stuff in iwlwifi for .24 and then we do
+> > another round of mac80211 11N patches submission/review later.
+>
+> That would be much appreciated. We really also should have rate control
+> be able to influence that generically and lots more things that have to
+> be figured out but that are quite hard to work with when the 802.11n
+> drafts are not available to many.
 
-http://www.openbsd.org/cgi-bin/man.cgi?query=ath&sektion=4#AUTHORS
+I wouldn't appreciate this at all. 11n is major feature of our NIC.
+Major obstacle in finally pushing 11n is constant  code base change of
+iwlwifi. This is already 4th  code base. The latest was because the
+driver didn't look nice enough, what an engineering   reason! In the
+bottom line we are hunting our own tail for wrong reasons
 
-C.
+> > I believe
+> > you can do a better job than Jiri did.
+>
+> Thanks. I'm not sure I can live up to that though; for example I'll have
+> to mostly disappear for the next 10 days or so to prepare for an exam.
+> I'll be around, but not patching quite as much ;)
+>
+> > I thought John would take my .24 iwlwifi patch to wireless-dev GIT
+> > directly since he just rebased the tree (at that time) and all the
+> > commits for iwlwifi were merged into one big patch.
+>
+> Ah ok.
+>
+> > Anyway, I will
+> > repost it explicitly for wireless-dev next time: iwlwifi driver + HT
+> > features for the iwlwifi (or everything) branch; and iwlwifi driver
+> > without HT features for pending-upstream branch. We can work on iwlwifi
+> > driver to make it in .24 first and sort out HT things in .25.
+>
+> Sounds good. I'll take another look then.
+>
+> Thanks,
+> johannes
+>
+>
