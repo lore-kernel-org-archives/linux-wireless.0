@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:24296 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933221AbXIBBmz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53043 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753390AbXIJLrl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:42:55 -0400
-Received: by py-out-1112.google.com with SMTP id u77so4210681pyb
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 18:42:54 -0700 (PDT)
-Message-ID: <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
-Date: Sat, 1 Sep 2007 21:42:54 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Constantine A. Murenin" <mureninc@gmail.com>
-Subject: Re: That whole "Linux stealing our code" thing
-Cc: "Jeff Garzik" <jeff@garzik.org>,
-	"Jason Dixon" <jason@dixongroup.net>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
-In-Reply-To: <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	 <46D99FB7.6030505@garzik.org>
-	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>
-	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
-	 <46DA1315.9060002@garzik.org>
-	 <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
+	Mon, 10 Sep 2007 07:47:41 -0400
+Subject: Re: A-MSDU deaggregation support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
+References: <1189354526.4506.25.camel@johannes.berg>
+	 <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YiUILEQzSPbbkW0JEKxT"
+Date: Mon, 10 Sep 2007 13:49:12 +0200
+Message-Id: <1189424952.4506.68.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/1/07, Constantine A. Murenin <mureninc@gmail.com> wrote:
-> On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > Jason Dixon wrote:
-> > > Once the grantor (Reyk) releases his code under that license, it must
-> > > remain.  You are free to derive work and redistribute under your
-> > > license, but the original copyright and license permission remains
-> > > intact.  Many other entities (Microsoft, Apple, Sun, etc) have used BSD
-> > > code and have no problem understanding this.  Why is this so difficult
-> > > for the Linux brain share to absorb?
-> >
-> > Why is it so difficult to understand dual licensing?
->
-> Maybe because Reyk's code was never dual-licensed?
 
-We asked SFLC to work with us to make sure that everyone's copyrights
-were respected in the right places, and that the licenses various developers
-wanted for their copyrights were implemented correctly.  The patch I sent
-implements SFLC's suggestions in that regard.
+--=-YiUILEQzSPbbkW0JEKxT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Mon, 2007-09-10 at 14:41 +0300, Tomas Winkler wrote:
+
+> There is difference between receiving and destination address. AP is
+> receiving address but not the destination. If station sends packets to
+> multiple stations it still go through one AP (receiving address). The
+> only restriction is that all the packets in A-MSDU belongs to one TID
+> stream.
+
+Good point. However, shouldn't we be checking the SA/TA?
+
+> There is actually different problem with the A-MSDU deaggregation and
+> this is EPOL filtering. One of the packets might belong to EAPOL
+> handshake
+
+Good point as well. Also, there's still the headroom reservation thing I
+haven't really walked through.
+
+But I would like to ask you to not work on this at this time, I'm going
+to make some larger changes in this area that may end up doing
+deaggregation in a loop and pushing the remaining packets through some
+more rx handling.
+
+Michael had the idea to introduce a type of interface that would see all
+frames not destined for other interfaces including those eapol packets
+etc. to run the userspace mlme (wpa_supplicant or hostapd) on such an
+interface to avoid copying all data packets. This will most likely
+require framing the packet to 802.3 before it is cloned for each
+interface (currently we copy for each interface!), and hence the
+deaggregation would be done along with reframing regular packets,
+eapol/802.1X filtering would move behind that.
+
+johannes
+
+--=-YiUILEQzSPbbkW0JEKxT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG5S84/ETPhpq3jKURAkdlAKC0N7+ZH1j0Pqt8lGllyE+R6vpEQgCgiIPt
+VDBybEtVi7rg7aOlFQ8L77E=
+=3VWD
+-----END PGP SIGNATURE-----
+
+--=-YiUILEQzSPbbkW0JEKxT--
+
