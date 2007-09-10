@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:55281 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbXIECkv (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:39069 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbXIJQ7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 22:40:51 -0400
-Date: Tue, 4 Sep 2007 19:40:37 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostapd: remove key threshold setting
-Message-ID: <20070905024037.GF5273@jm.kir.nu>
-References: <1187957890.24933.24.camel@johannes.berg> <20070904002758.GW1835@jm.kir.nu> <1188917221.9942.35.camel@johannes.berg>
+	Mon, 10 Sep 2007 12:59:53 -0400
+Date: Mon, 10 Sep 2007 11:59:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] b43legacy: Don't cancel the restart workqueue in  wireless_core_exit
+Message-ID: <46e577e8.J3sSMKsbv5F0EAQY%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188917221.9942.35.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2007 at 04:47:01PM +0200, Johannes Berg wrote:
-> On Mon, 2007-09-03 at 17:27 -0700, Jouni Malinen wrote:
-> > On Fri, Aug 24, 2007 at 02:18:10PM +0200, Johannes Berg wrote:
-> > > I'm in the process of adding this to nl80211 as a per-key setting, so
-> > > remove it here for now. It's never called anyway.
-> > 
-> > Thanks, applied.
-> 
-> Looks like you didn't push that out to your git tree.
+From: Michael Buesch <mb@bu3sch.de>
 
-Yes, apparently I forgot to push the last change out. Anyway, it was
-applied at that time ;-) and is now on w1.fi.
+The wq must be canceled later on rmmod. It's nonfatal, if
+the wq runs on a device that's not started or down. It will
+handle these cases.
+But syncing in wireless_core_exit() will cause a deadlock with
+the restart_work. (restart work cancels itself)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
+---
+
+John,
+
+Sorry, but I sent the bare patch in the first version.
+
+Larry
+
+ drivers/net/wireless/b43legacy/main.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-dev/drivers/net/wireless/b43legacy/main.c
+@@ -3021,6 +3021,7 @@ static void b43legacy_wireless_core_exit
+ 	B43legacy_WARN_ON(b43legacy_status(dev) > B43legacy_STAT_INITIALIZED);
+ 	if (b43legacy_status(dev) != B43legacy_STAT_INITIALIZED)
+ 		return;
++	b43legacy_set_status(dev, B43legacy_STAT_UNINIT);
+ 
+ 	b43legacy_rng_exit(dev->wl);
+ 	b43legacy_pio_free(dev);
+@@ -3520,6 +3521,7 @@ static void b43legacy_one_core_detach(st
+ 
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
++	cancel_work_sync(&wldev->restart_work);
+ 	b43legacy_debugfs_remove_device(wldev);
+ 	b43legacy_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
