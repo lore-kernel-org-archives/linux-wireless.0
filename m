@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:56569 "EHLO
-	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbXIDBSb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41818 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754447AbXIJKaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 21:18:31 -0400
-Date: Mon, 3 Sep 2007 18:16:48 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
-Message-ID: <20070904011648.GX1835@jm.kir.nu>
-References: <1187987850.24933.29.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1187987850.24933.29.camel@johannes.berg>
+	Mon, 10 Sep 2007 06:30:22 -0400
+Subject: Re: Kernel panic with rt2500pci built-in
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rob Hussey <robjhussey@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
+References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
+	 <1189244217.4506.16.camel@johannes.berg>
+	 <6b8cef970709080857s69c055f2s1bc1ce6bd0ad4dfd@mail.gmail.com>
+	 <200709081816.10143.IvDoorn@gmail.com>
+	 <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I0v2QoM+VEWAgysRy4pK"
+Date: Mon, 10 Sep 2007 12:31:37 +0200
+Message-Id: <1189420297.4506.26.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 24, 2007 at 10:37:30PM +0200, Johannes Berg wrote:
-> This makes hostapd use nl80211 (via libnl) to create/remove interfaces.
-> Also lays the foundation for using nl80211 in hostapd.
 
-Where are things like NL80211_ATTR_IFNAME and
-NL80211_CMD_ADD_VIRTUAL_INTERFACE defined? I would assume these are from
-linux/nl80211.h, but where should I get the version that includes these?
-This is making it a bit difficult to build driver_devicescape.c and same
-goes for the requirement for svn trunk version of libnl.. Any idea how
-much code from libnl is needed here? Would it be major effort to do the
-needed calls without having to rely on libnl at or (or at least not on
-an unreleased svn trunk version)?
+--=-I0v2QoM+VEWAgysRy4pK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> -#ifdef USE_KERNEL_HEADERS
-> -#include <asm/types.h>
-> +#include <netlink/genl/genl.h>
-> +#include <netlink/genl/family.h>
-> +#include <netlink/genl/ctrl.h>
-> +#include <netlink/msg.h>
-> +#include <netlink/attr.h>
-> +#include <linux/nl80211.h>
-> +#include <net/if.h>
->  #include <linux/if_packet.h>
->  #include <linux/if_ether.h>   /* The L2 protocols */
-> -#include <linux/if_arp.h>
->  #include <linux/wireless.h>
-> -#else /* USE_KERNEL_HEADERS */
+On Sat, 2007-09-08 at 12:39 -0400, Rob Hussey wrote:
 
-This is not good direction to go to.. I would really not like to include
-linux/*.h unless absolutely needed since these header files have been
-very likely to conflict with glibc ones and there is not really that
-much guarantees in people wanting to keep kernel header files suitable
-for inclusion into user space programs.
+> Not in the log, but on the screen. I should've noticed not everything
+> was in there. Here's what shows up:
+>=20
+> wmaster0: Failed to select rate control algorithm
+> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
 
->  #include <net/if_arp.h>
-> -#include <netpacket/packet.h>
-> -#include "wireless_copy.h"
-> -#include "priv_netlink.h"
+Ok, then the change I proposed to you definitely fixed the bug, but this
+is an unrelated one. I'll have to look why it fails to init the rate
+control when that's built in.
 
-I would much rather use these for now and should the /usr/include/linux
-directory in most distributions some day have all the needed stuff, then
-we could move towards using those.
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=-I0v2QoM+VEWAgysRy4pK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG5R0J/ETPhpq3jKURAgOJAKCNDfzI2PPlv/Hi2W5t4h2E2XKMMgCfR9uh
+obOJHZA6z96FgR9DoYAzNvQ=
+=oIQf
+-----END PGP SIGNATURE-----
+
+--=-I0v2QoM+VEWAgysRy4pK--
+
