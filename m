@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:45998 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753912AbXIBSV3 (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:56729 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758473AbXIJPmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 14:21:29 -0400
-Date: Sun, 2 Sep 2007 19:21:15 +0100
-From: Al Viro <viro@ftp.linux.org.uk>
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Adrian Bunk <bunk@kernel.org>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070902182115.GR21089@ftp.linux.org.uk>
-References: <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu> <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es> <20070902115041.GM16016@stusta.de> <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es> <20070902134612.28a88761@the-village.bc.nu> <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-Mime-Version: 1.0
+	Mon, 10 Sep 2007 11:42:05 -0400
+Date: Mon, 10 Sep 2007 10:41:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Don't cancel the restart workqueue in  wireless_core_exit
+Message-ID: <46e565b2.UeI48jNziAkn2wBs%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 02, 2007 at 03:00:46PM +0200, Igor Sobrado wrote:
-> >Not strictly true. They can either agree to a change and issue one or
-> >they can convey to other parties the right to change the terms. The GPL
-> >for example does this for version selection.
-> 
-> So, under a dual-licensed BSD/GPL code the latter license allows a 
-> developer to remove the GPL license itself and release a single-licensed 
-> BSD code if other parties want to do it?
-
-Exactly.  That's what dual-licensing is.
-
-[quote]
-This is no different from the fact that we have some drivers that are
-GPLv2/BSD licensed. Within the kernel, they are GPLv2. But on their own, 
-you can choose to use them under the BSD license, make your changes to
-them, and release them commercially.
-And correct - I cannot (and neither can anybody else) then accept those
-*non*GPLv2 changes back.
-[end quote]
-
-That's from Linus and quite recently.
-
-FWIW, it's damn hard to codify "... and changes to this code should not
-change the situation".  It's certainly a very good policy and in this
-case it's the only sane policy.
-
-[quote]
-Actually, normally I *do* have such a trust. It's why I have no problem
-with drivers that are dual-GPL/BSD, and in fact, I've told people that I
-don't want them to turn them into GPL-only, because that is simply not   
-polite.
-[end quote]
-
-Same posting from Linus.  And that's much more relevant to shooting the patch
-in question down (and IMO it ought to be shot down) than references to
-legality.
+Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-dev/drivers/net/wireless/b43legacy/main.c
+@@ -3021,6 +3021,7 @@ static void b43legacy_wireless_core_exit
+ 	B43legacy_WARN_ON(b43legacy_status(dev) > B43legacy_STAT_INITIALIZED);
+ 	if (b43legacy_status(dev) != B43legacy_STAT_INITIALIZED)
+ 		return;
++	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+ 	b43legacy_rng_exit(dev->wl);
+ 	b43legacy_pio_free(dev);
+@@ -3520,6 +3521,7 @@ static void b43legacy_one_core_detach(st
+ 
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
++	cancel_work_sync(&wldev->restart_work);
+ 	b43legacy_debugfs_remove_device(wldev);
+ 	b43legacy_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
