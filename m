@@ -1,141 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965384AbXIGNXO (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:59261 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756814AbXIJMON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 09:23:14 -0400
-Subject: iwlwifi sparse warnings with __CHECK_ENDIAN__
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tFWdbYotRvuu3VakZ4XM"
-Date: Thu, 06 Sep 2007 19:33:47 +0200
-Message-Id: <1189100027.28781.104.camel@johannes.berg>
+	Mon, 10 Sep 2007 08:14:13 -0400
+Date: Mon, 10 Sep 2007 13:14:10 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: COMMON symbol warnings
+Message-ID: <20070910121410.GA5948@infradead.org>
+References: <1189100314.28781.112.camel@johannes.berg> <20070908130118.GA11648@infradead.org> <1189422492.4506.54.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1189422492.4506.54.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Sep 10, 2007 at 01:08:12PM +0200, Johannes Berg wrote:
+> On Sat, 2007-09-08 at 14:01 +0100, Christoph Hellwig wrote:
+> 
+> > Yes.  It means a variable is declared in multiple places and the linker
+> > merges it for you.  The fix is to make sure these are declared extern in
+> > all places but one.
+> 
+> Interesting. So it's missing in a header file but sparse doesn't warn
+> about it like it does with functions that aren't declared nor static?
 
---=-tFWdbYotRvuu3VakZ4XM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No.  Say you have the following case:
 
-drivers/net/wireless/iwl-3945.c:949:3: warning: incorrect type in argument =
-3 (different base types)
-drivers/net/wireless/iwl-3945.c:949:3:    expected int=20
-drivers/net/wireless/iwl-3945.c:949:3:    got restricted unsigned short [us=
-ertype] board_revision
-drivers/net/wireless/iwl-3945.c:954:3: warning: incorrect type in argument =
-3 (different base types)
-drivers/net/wireless/iwl-3945.c:954:3:    expected int=20
-drivers/net/wireless/iwl-3945.c:954:3:    got restricted unsigned short [us=
-ertype] board_revision
-drivers/net/wireless/iwl-3945.c:1650:15: warning: cast from restricted type
-drivers/net/wireless/iwl-base.c:1703:17: warning: cast to restricted type
-drivers/net/wireless/iwl-base.c:2168:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2168:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2168:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2169:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2169:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2169:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2170:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2170:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2170:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2171:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2171:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2171:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2172:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2172:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2172:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2178:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2178:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2178:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2180:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2180:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2180:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2182:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2182:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2182:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2184:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2184:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2184:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2185:4: warning: incorrect type in initiali=
-zer (different base types)
-drivers/net/wireless/iwl-base.c:2185:4:    expected restricted unsigned sho=
-rt [usertype] flags
-drivers/net/wireless/iwl-base.c:2185:4:    got restricted unsigned int [use=
-rtype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2220:16: warning: incorrect type in assignm=
-ent (different base types)
-drivers/net/wireless/iwl-base.c:2220:16:    expected restricted unsigned sh=
-ort [usertype] flags
-drivers/net/wireless/iwl-base.c:2220:16:    got restricted unsigned int [us=
-ertype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2222:16: warning: incorrect type in assignm=
-ent (different base types)
-drivers/net/wireless/iwl-base.c:2222:16:    expected restricted unsigned sh=
-ort [usertype] flags
-drivers/net/wireless/iwl-base.c:2222:16:    got restricted unsigned int [us=
-ertype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2267:14: warning: incorrect type in assignm=
-ent (different base types)
-drivers/net/wireless/iwl-base.c:2267:14:    expected restricted unsigned sh=
-ort [usertype] flags
-drivers/net/wireless/iwl-base.c:2267:14:    got restricted unsigned int [us=
-ertype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2271:14: warning: incorrect type in assignm=
-ent (different base types)
-drivers/net/wireless/iwl-base.c:2271:14:    expected restricted unsigned sh=
-ort [usertype] flags
-drivers/net/wireless/iwl-base.c:2271:14:    got restricted unsigned int [us=
-ertype] [force] <noident>
-drivers/net/wireless/iwl-base.c:2279:2: warning: incorrect type in argument=
- 3 (different base types)
-drivers/net/wireless/iwl-base.c:2279:2:    expected int=20
-drivers/net/wireless/iwl-base.c:2279:2:    got restricted unsigned short [u=
-sertype] flags
-drivers/net/wireless/iwl-4965.c:490:18: warning: restricted degrades to int=
-eger
+----------- foo.h ------------
+int foo;
+----------- foo1.c -----------
+#include "foo.h"
+----------- foo2.c -----------
+#include "foo.h"
+--------- Makefile -----------
+obj-m += foo.o
+foo-y += foo1.o foo2.o
 
 
---=-tFWdbYotRvuu3VakZ4XM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+This gives you a foo COMMON symbol.  But at least on i386 the kernel
+is compiled with -fno-common so you get a warning like:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+/home/hch/test/foo1.o:(.bss+0x0): multiple definition of `foo'
+/home/hch/test/foo2.o:(.bss+0x0): first defined here
 
-iD8DBQBG4Dn7/ETPhpq3jKURAv9fAJ0ff46PKS66CsF3UgkAq0dQ9uOMrgCfTxeb
-r/Ey9f7m7gdrcklN/kQAT7w=
-=qmSo
------END PGP SIGNATURE-----
+When adding -fcommon to EXTRA_FLAGS I get what you saw in this thread:
 
---=-tFWdbYotRvuu3VakZ4XM--
+WARNING: "foo" [/home/hch/test/foo] is COMMON symbol
 
+I wonder how the driver build managed to override our global -fno-common
+setting.
