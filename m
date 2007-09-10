@@ -1,133 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45672 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753690AbXIRXIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 19:08:41 -0400
-Message-ID: <46F05A74.2000005@garzik.org>
-Date: Tue, 18 Sep 2007 19:08:36 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>	 <20070918113401.6a8a737f@the-village.bc.nu>	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>	 <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>	 <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>	 <46F0332D.3050704@garzik.org> <1190154053.6403.125.camel@localhost.localdomain>
-In-Reply-To: <1190154053.6403.125.camel@localhost.localdomain>
-Content-Type: multipart/mixed;
- boundary="------------000506090305050902010909"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756814AbXIJLxm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2007 07:53:42 -0400
+Subject: [PATCH] fix sparse warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 10 Sep 2007 13:55:08 +0200
+Message-Id: <1189425308.4506.71.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000506090305050902010909
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+wme.c triggers a sparse warning; it wasn't noticed before because until
+recently ARRAY_SIZE triggered a sparse error.
 
-Benjamin Herrenschmidt wrote:
-> On Tue, 2007-09-18 at 16:21 -0400, Jeff Garzik wrote:
->> A new pci_mmio_map() helper, to be used with 100% MMIO hardware, might
->> help eliminate confusion. 
-> 
-> Maybe not the best name in theory but at least would show that it
-> relates to existing ioremap would be pci_ioremap()
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+---
+ net/mac80211/wme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- wireless-dev.orig/net/mac80211/wme.c	2007-09-10 13:34:51.347219618 +0200
++++ wireless-dev/net/mac80211/wme.c	2007-09-10 13:34:55.397214627 +0200
+@@ -386,7 +386,7 @@ static int wme_qdiscop_init(struct Qdisc
+ 		skb_queue_head_init(&q->requeued[i]);
+ 		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
+ 						 qd->handle);
+-		if (q->queues[i] == 0) {
++		if (!q->queues[i]) {
+ 			q->queues[i] = &noop_qdisc;
+ 			printk(KERN_ERR "%s child qdisc %i creation failed", dev->name, i);
+ 		}
 
 
-Easy enough... 'pcimap' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
-
-	Jeff
-
-
-
---------------000506090305050902010909
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-commit 6e09c71822f76c618353682bf295fc7588284521
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Tue Sep 18 19:06:08 2007 -0400
-
-    Add pci_ioremap() to generic iomap lib.
-    
-    (arches that don't wish to use lib/iomap.c's version may fill in their own)
-    
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
- include/asm-generic/iomap.h |    1 +
- lib/iomap.c                 |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
-
-6e09c71822f76c618353682bf295fc7588284521
-diff --git a/include/asm-generic/iomap.h b/include/asm-generic/iomap.h
-index cde592f..611e6cf 100644
---- a/include/asm-generic/iomap.h
-+++ b/include/asm-generic/iomap.h
-@@ -63,6 +63,7 @@ extern void ioport_unmap(void __iomem *);
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- struct pci_dev;
- extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+extern void __iomem *pci_ioremap(struct pci_dev *dev, int bar, unsigned long max);
- extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
- 
- #endif
-diff --git a/lib/iomap.c b/lib/iomap.c
-index 864f2ec..0338da0 100644
---- a/lib/iomap.c
-+++ b/lib/iomap.c
-@@ -275,9 +275,43 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
- 	return NULL;
- }
- 
-+/**
-+ * pci_ioremap - create a virtual mapping cookie for a memory-based PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @maxlen: length of MMIO memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using read*() and write*().
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR without checking for its length first, pass %0 here.
-+ * */
-+void __iomem *pci_ioremap(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	unsigned long start = pci_resource_start(dev, bar);
-+	unsigned long len = pci_resource_len(dev, bar);
-+	unsigned long flags = pci_resource_flags(dev, bar);
-+
-+	if (!len || !start)
-+		return NULL;
-+	if (maxlen && len > maxlen)
-+		len = maxlen;
-+	if (flags & IORESOURCE_IO)
-+		return NULL;
-+	if (flags & IORESOURCE_MEM) {
-+		if (flags & IORESOURCE_CACHEABLE)
-+			return ioremap(start, len);
-+		return ioremap_nocache(start, len);
-+	}
-+	/* What? */
-+	return NULL;
-+}
-+
- void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
- {
- 	IO_COND(addr, /* nothing */, iounmap(addr));
- }
- EXPORT_SYMBOL(pci_iomap);
-+EXPORT_SYMBOL(pci_ioremap);
- EXPORT_SYMBOL(pci_iounmap);
-
---------------000506090305050902010909--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
