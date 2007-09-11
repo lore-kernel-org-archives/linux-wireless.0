@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44312 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60560 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756635AbXI0Qpf (ORCPT
+	with ESMTP id S1755310AbXIKKtI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 12:45:35 -0400
-Subject: hostapd: passing sta info struct to drivers?
+	Tue, 11 Sep 2007 06:49:08 -0400
+Subject: [PATCH] mac80211: fix initialisation when built-in
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+R6HLiPV8BL1rml1se62"
-Date: Thu, 27 Sep 2007 18:46:39 +0200
-Message-Id: <1190911599.5021.4.camel@johannes.berg>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 11 Sep 2007 12:50:32 +0200
+Message-Id: <1189507832.6161.16.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When mac80211 is built into the kernel it needs to init earlier
+so that device registrations are run after it has initialised.
+The same applies to rate control algorithms.
 
---=-+R6HLiPV8BL1rml1se62
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Hi,
+---
+ net/mac80211/ieee80211.c      |    2 +-
+ net/mac80211/rc80211_simple.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-During porting the STA management to nl80211 it turned out that it would
-be much nicer in the kernel if we would always set all the flags on a
-STA that the kernel needs to get from hostapd.
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-11 12:48:01.272841092 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-11 12:48:06.232834148 +0200
+@@ -1501,7 +1501,7 @@ static void __exit ieee80211_exit(void)
+ }
+ 
+ 
+-module_init(ieee80211_init);
++subsys_initcall(ieee80211_init);
+ module_exit(ieee80211_exit);
+ 
+ MODULE_DESCRIPTION("IEEE 802.11 subsystem");
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c	2007-09-11 12:48:11.502839735 +0200
++++ wireless-dev/net/mac80211/rc80211_simple.c	2007-09-11 12:48:17.552835992 +0200
+@@ -423,7 +423,7 @@ static void __exit rate_control_simple_e
+ }
+ 
+ 
+-module_init(rate_control_simple_init);
++subsys_initcall(rate_control_simple_init);
+ module_exit(rate_control_simple_exit);
+ 
+ MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
 
-To implement that, it would be good to simply pass the sta_info
-structure, e.g. we currently have this code:
-
-        if (sta->flags & WLAN_STA_WME)
-                hostapd_sta_set_flags(hapd, sta->addr, WLAN_STA_WME, ~0);
-        else
-                hostapd_sta_set_flags(hapd, sta->addr, 0, ~WLAN_STA_WME);
-
-and that would become
-
-	hostapd_sta_set_flags(hapd, sta, WLAN_STA_WME);
-or
-	hostapd_sta_set_flags(hapd, sta->flags, WLAN_STA_WME);
-
-where the third parameter indicates which flag may have changed and the
-nl80211 driver would simply use only the flags.
-
-Do you see any issues with that? Are there sometimes flag changes that
-we do not want to commit to the kernel?
-
-johannes
-
---=-+R6HLiPV8BL1rml1se62
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG+95u/ETPhpq3jKURAhFiAJ4uZ0Lv6ltFlo0sZUbdcl8fUj+iWgCdF4uM
-ovxLZe7cJMGVBb37KVfXCU4=
-=zTPC
------END PGP SIGNATURE-----
-
---=-+R6HLiPV8BL1rml1se62--
 
