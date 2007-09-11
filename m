@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760749AbXILIxN (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60276
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634AbXIKKyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2007 04:53:13 -0400
+	Tue, 11 Sep 2007 06:54:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
 Subject: Re: zd-mac80211: Fix TX status reports.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Michael Buesch <mb@bu3sch.de>,
+Date: Tue, 11 Sep 2007 12:52:29 +0200
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Ulrich Kunitz <kune@deine-taler.de>,
 	Daniel Drake <dsd@gentoo.org>,
 	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240709120140l56c21269p8254c790edda42b1@mail.gmail.com>
-References: <200709082341.31720.mb@bu3sch.de>
-	 <200709111220.31700.mb@bu3sch.de> <1189506596.6161.14.camel@johannes.berg>
-	 <200709111252.30291.mb@bu3sch.de> <1189508230.6161.18.camel@johannes.berg>
-	 <20070911223258.GA31400@deine-taler.de>
-	 <1ba2fa240709120140l56c21269p8254c790edda42b1@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oIjdw7AglsShA7PfuPxV"
-Date: Wed, 12 Sep 2007 10:54:33 +0200
-Message-Id: <1189587273.6161.36.camel@johannes.berg>
-Mime-Version: 1.0
+References: <200709082341.31720.mb@bu3sch.de> <200709111220.31700.mb@bu3sch.de> <1189506596.6161.14.camel@johannes.berg>
+In-Reply-To: <1189506596.6161.14.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200709111252.30291.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 11 September 2007 12:29:56 Johannes Berg wrote:
+> On Tue, 2007-09-11 at 12:20 +0200, Michael Buesch wrote:
+> 
+> > What about the following:
+> > We have a "the packet failed" IRQ. so we know that if that didn't
+> > raise for a packet, it must have succeed.
+> > So currently we already maintain a queue of TX packets. What about
+> > changing the handling of this queue? Instead of dropping (and
+> > telling mac80211 success) on an ACK RX, simply do a timeout.
+> > We can calculate the time (plus some additional msecs to be sure)
+> > by when an ACK must have arrived, no? 
+> 
+> That's tricky though, because multiple retry rates mean that it can
+> possibly take quite a while for the packet to go through. And ath5k
+> wants to support up to 7 different rates for each packet.
 
---=-oIjdw7AglsShA7PfuPxV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm only talking about zd, though.
 
-On Wed, 2007-09-12 at 11:40 +0300, Tomas Winkler wrote:
+> > So, if that times out,
+> > signal a success. Wouldn't that be reliable? Given that the "tx failed"
+> > IRQ actually _is_ reliable.
+> 
+> Yeah, and in-order would have to be guaranteed as well so we can match
+> which packet failed and assume all previous ones were OK.
 
-> > Sending only one packet until the timeout period is over is
-> > certainly doable and could be used for critical activity like
-> > association and authentication, but for normal mode the driver
-> > should only be required to provide statistics.
-
-> That was my suggestion as well.
-
-The only question is how we know which packets we need to be careful
-with. Right now, it seems that is only packets from hostapd?
-
-johannes
-
---=-oIjdw7AglsShA7PfuPxV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG56lJ/ETPhpq3jKURAtBDAKCSce6cK7u8m3RVwm35ATATVJCgcACgocJd
-xtjHfz00canADce8afuguEw=
-=51DD
------END PGP SIGNATURE-----
-
---=-oIjdw7AglsShA7PfuPxV--
-
+-- 
+Greetings Michael.
