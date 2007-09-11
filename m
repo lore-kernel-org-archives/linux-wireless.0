@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16429 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326AbXIAEfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:35:18 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 27186618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:18 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 11/35] Simplify logic in at76_get_reg_domain()
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:35:17 -0400
-Message-ID: <20070901043517.2498.56777.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from an-out-0708.google.com ([209.85.132.251]:31965 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761514AbXIKKD0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2007 06:03:26 -0400
+Received: by an-out-0708.google.com with SMTP id d31so197697and
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2007 03:03:25 -0700 (PDT)
+Message-ID: <1ba2fa240709110303s56077295p814c0518d36aacbe@mail.gmail.com>
+Date: Tue, 11 Sep 2007 13:03:24 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Daniel Drake" <dsd@gentoo.org>
+Subject: Re: zd-mac80211: Fix TX status reports.
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Ulrich Kunitz" <kune@deine-taler.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <46E64935.9010905@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200709082341.31720.mb@bu3sch.de> <200709091259.00237.mb@bu3sch.de>
+	 <1189421542.4506.46.camel@johannes.berg>
+	 <200709101258.39619.mb@bu3sch.de>
+	 <1189422611.4506.58.camel@johannes.berg>
+	 <1ba2fa240709102050l75402df4w19ef746d6243dbab@mail.gmail.com>
+	 <46E64935.9010905@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+On 9/11/07, Daniel Drake <dsd@gentoo.org> wrote:
+> Tomas Winkler wrote:
+> > Receiving all ACKs packets will degraded performance greatly for sure,
+> > even on PCI interface.
+> > Receving ACK can maybe allowed selectively only for management packets
+> > including EAPOLS in some synchronous way, yet this is still error
+> > prone.
+>
+> I don't think we have such control. It's either all ACKs or no ACKs.
+>
+For MLME completeness
+Set timer for direct management frames and EAPOLs cancel the timer on
+failure TX in interrupt  arrival. Send TX status success from the
+timer handler.
+For data frames just report success otherwise it will effect performance.
+The drawback is that you need to watch each TX frame in the driver.
+..
+You probably have to implement your own rate scale statistic
+collection like iwlwifi does
 
- drivers/net/wireless/at76_usb.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
-
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 206fa90..6ad6248 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -664,6 +664,7 @@ exit:
- 
- static struct reg_domain const *at76_get_reg_domain(u16 code)
- {
-+	int i;
- 	static struct reg_domain const fd_tab[] = {
- 		{0x10, "FCC (USA)", 0x7ff},	/* ch 1-11 */
- 		{0x20, "IC (Canada)", 0x7ff},	/* ch 1-11 */
-@@ -673,19 +674,15 @@ static struct reg_domain const *at76_get_reg_domain(u16 code)
- 		{0x40, "MKK (Japan)", 0x2000},	/* ch 14 */
- 		{0x41, "MKK1 (Japan)", 0x3fff},	/* ch 1-14 */
- 		{0x50, "Israel", 0x3fc},	/* ch 3-9 */
-+		{0x00, "<unknown>", 0xffffffff}	/* ch 1-32 */
- 	};
--	static int const tab_len = ARRAY_SIZE(fd_tab);
--
--	/* use this if an unknown code comes in */
--	static struct reg_domain const unknown = { 0, "<unknown>", 0xffffffff };
--
--	int i;
- 
--	for (i = 0; i < tab_len; i++)
-+	/* Last entry is fallback for unknown domain code */
-+	for (i = 0; i < ARRAY_SIZE(fd_tab) - 1; i++)
- 		if (code == fd_tab[i].code)
- 			break;
- 
--	return (i >= tab_len) ? &unknown : &fd_tab[i];
-+	return &fd_tab[i];
- }
- 
- static inline int at76_get_mib(struct usb_device *udev, u16 mib, void *buf,
+> > It looks strange to me that there is no other HW mechanism that does that?
+> > Is this driver reverse engineered?
+>
+> No. There is another mechanism for detecting failed transmissions: we
+> get an interrupt for every failed TX. I feel that this should be enough
+> to implement rate control, however mac80211 at the moment requires
+> reports of both success and failure for rate control to work. Detecting
+> success is the tricky part.
+>
+> Daniel
+>
+>
