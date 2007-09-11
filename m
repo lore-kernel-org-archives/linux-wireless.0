@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbXIJKuz (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:25774 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbXIKBEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 06:50:55 -0400
-Subject: Re: zd-mac80211: Fix TX status reports.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200709091259.00237.mb@bu3sch.de>
-References: <200709082341.31720.mb@bu3sch.de>
-	 <20070909100530.GB12021@deine-taler.de>  <200709091259.00237.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CzyHl8NNF2c1jAajd01s"
-Date: Mon, 10 Sep 2007 12:52:21 +0200
-Message-Id: <1189421542.4506.46.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 10 Sep 2007 21:04:22 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2818669pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2007 18:04:21 -0700 (PDT)
+Message-ID: <aec7e5c30709101804p337084e9o63b5bcb4f007828@mail.gmail.com>
+Date: Tue, 11 Sep 2007 10:04:16 +0900
+From: "Magnus Damm" <magnus.damm@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: fix initialisation if built-in
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Rob Hussey" <robjhussey@gmail.com>, stable@kernel.org
+In-Reply-To: <1189424685.4506.63.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1189424685.4506.63.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 9/10/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> When cfg80211 is built into the kernel it needs to init earlier
+> so that device registrations are run after it has initialised.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-CzyHl8NNF2c1jAajd01s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yep, I need this fix as well. Without it the ath5k driver built in
+bombs out during module_init(). Something with kref and a struct
+device pointing to an uninitialized ieee80211_class.
 
-On Sun, 2007-09-09 at 12:58 +0200, Michael Buesch wrote:
+I need a similar fix for net/mac80211/rc80211_simple.c as well to get
+ath5k working though, not sure why at the moment. There may be some
+bug with request_module() not being called properly.
+ieee80211_register_hw() calls ieee80211_init_rate_ctrl_alg() with NULL
+as name which calls rate_control_alloc() with NULL which always seems
+to fail when built in.
 
-> Basically, the TX status report is only useful for the rate control
-> algorithm. So it's basically "only" statistics. But we have to
-> get these statistics approximately right to get the RC algo working
-> correctly. That is what this patch does. With it, the RC algo properly
-> scales up and down if the signal gets better or worse.
+This hack works around that problem, not sure what the real fix is.
 
-Michael, this is unfortunately not true. At least hostapd relies on the
-ack callback because it requires stations to acknowledge the association
-response before advancing the state machine, and we have also made
-monitoring outgoing packets depend on the ack callback.
+--- 0002/net/mac80211/rc80211_simple.c
++++ work/net/mac80211/rc80211_simple.c  2007-09-09 18:11:48.000000000 +0900
+@@ -431,7 +431,8 @@ static void __exit rate_control_simple_e
+ }
 
-> > > Johannes, to me it seems that there's also a bug in mac80211.
-> > > I never get a frame with the REQ_TX_STATUS bit set, so frames
-> > > will always end up on the "unreliable" tx status queue.
 
-Yes, this is by design, you will only get the bit set on any frame if
-hostapd requested it via setting one of the version bits when sending a
-frame on the management interface.
+-module_init(rate_control_simple_init);
++//module_init(rate_control_simple_init);
++postcore_initcall(rate_control_simple_init);
+ module_exit(rate_control_simple_exit);
 
-> Well, I think the driver should ignore that flag in any case, as
-> mac80211 does handle it internally.
-> Especially on devices like the zd, which don't support TX status
-> reporting in hw, we should gather as much information as possible
-> and pass it to mac80211 to get the RC algorithm working.
-> mac80211 will handle the unrequested status requests with more care,
-> so that's OK.
+ MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
 
-This is a really fine line to walk. For "good" rate scaling like
-minstrel or such you really need multiple retry rates per packet and
-such; for "simple" rate scaling just statistics are sufficient. However,
-in the case of hostapd, having the tx status callback be precise is
-actually required for *correctness*.
+Thanks,
 
-johannes
-
---=-CzyHl8NNF2c1jAajd01s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG5SHl/ETPhpq3jKURAleDAJ0UpZs0NWUbpZOdc0BQ4USExE5mfQCfX118
-RVxRRWy0iUayVpmABjX5A+Y=
-=+tg2
------END PGP SIGNATURE-----
-
---=-CzyHl8NNF2c1jAajd01s--
-
+/ magnus
