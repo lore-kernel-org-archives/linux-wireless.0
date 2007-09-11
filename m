@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51410.mail.re2.yahoo.com ([206.190.38.189]:44877 "HELO
-	web51410.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752192AbXI0IIk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 04:08:40 -0400
-Date: Thu, 27 Sep 2007 01:08:37 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: [patch 6/7] mac80211: allow only one IBSS interface
-To: linux-wireless@vger.kernel.org
+Received: from deine-taler.de ([217.160.107.63]:58793 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757300AbXIKWc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2007 18:32:59 -0400
+Date: Wed, 12 Sep 2007 00:32:58 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Tomas Winkler <tomasw@gmail.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: zd-mac80211: Fix TX status reports.
+Message-ID: <20070911223258.GA31400@deine-taler.de>
+References: <200709082341.31720.mb@bu3sch.de> <200709111220.31700.mb@bu3sch.de> <1189506596.6161.14.camel@johannes.berg> <200709111252.30291.mb@bu3sch.de> <1189508230.6161.18.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <242588.34302.qm@web51410.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1189508230.6161.18.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You write:
-> Consider the case of multiple virtual IBSS interfaces
-> trying to join the same IBSS.
+Johannes Berg wrote:
 
-Well, consider the case that you want to route between
-two *different* IBSS networks with a single NIC. This=20
-could be really useful and those a nice feature to have.
--- =20
-Regards
-=20
-       Joerg
-=20
+> On Tue, 2007-09-11 at 12:52 +0200, Michael Buesch wrote:
+> > On Tuesday 11 September 2007 12:29:56 Johannes Berg wrote:
+> > > On Tue, 2007-09-11 at 12:20 +0200, Michael Buesch wrote:
+> > > 
+> > > > What about the following:
+> > > > We have a "the packet failed" IRQ. so we know that if that didn't
+> > > > raise for a packet, it must have succeed.
+> > > > So currently we already maintain a queue of TX packets. What about
+> > > > changing the handling of this queue? Instead of dropping (and
+> > > > telling mac80211 success) on an ACK RX, simply do a timeout.
+> > > > We can calculate the time (plus some additional msecs to be sure)
+> > > > by when an ACK must have arrived, no? 
+> > > 
+> > > That's tricky though, because multiple retry rates mean that it can
+> > > possibly take quite a while for the packet to go through. And ath5k
+> > > wants to support up to 7 different rates for each packet.
+> > 
+> > I'm only talking about zd, though.
+> 
+> Yeah, but that means the driver should implement it because it has much
+> less problems getting the heuristics right.
 
+Notify that the TX-failed interrupt has only the destination MAC
+address of the transmitted packet. So if the driver has sent two packets
+to the device and both are still in their timeout time, it will
+not be known, whether the first or the second failed. (The
+destination address for STAs will always be the same.)
 
+Sending only one packet until the timeout period is over is
+certainly doable and could be used for critical activity like
+association and authentication, but for normal mode the driver
+should only be required to provide statistics.
 
-
-
-
-      Heute schon einen Blick in die Zukunft von E-Mails wagen? Versuch=
-en Sie=B4s mit dem neuen Yahoo! Mail. www.yahoo.de/mail
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Uli Kunitz
