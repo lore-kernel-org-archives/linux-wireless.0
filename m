@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43606 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbXIPHub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 03:50:31 -0400
-Message-ID: <46ECE041.3090001@garzik.org>
-Date: Sun, 16 Sep 2007 03:50:25 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'adm8211' branch of wireless-2.6
-References: <20070915132220.GE6060@tuxdriver.com> <200709152017.02646.flamingice@sourmilk.net> <46EC7F33.2050206@garzik.org> <200709160047.45128.flamingice@sourmilk.net>
-In-Reply-To: <200709160047.45128.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762014AbXIKKWO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2007 06:22:14 -0400
+Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>
+In-Reply-To: <1ba2fa240709100720k5156e11v775a5faa50144990@mail.gmail.com>
+References: <1188875058.13078.428.camel@debian.sh.intel.com>
+	 <1189076408.28781.49.camel@johannes.berg>
+	 <1189146702.16788.103.camel@debian.sh.intel.com>
+	 <1189172436.28781.148.camel@johannes.berg>
+	 <1189390172.24707.36.camel@debian.sh.intel.com>
+	 <1189420954.4506.37.camel@johannes.berg>
+	 <1ba2fa240709100720k5156e11v775a5faa50144990@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-810Vdr13Hto4gIlzdvh4"
+Date: Tue, 11 Sep 2007 12:23:41 +0200
+Message-Id: <1189506221.6161.9.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Saturday 15 September 2007 20:56, Jeff Garzik wrote:
->>>>> +	if (flags & IFF_PROMISC)
->>>>> +		dev->flags |= IEEE80211_HW_RX_INCLUDES_FCS;
->>>>> +	else
->>>>> +		dev->flags &= ~IEEE80211_HW_RX_INCLUDES_FCS;
->>>> why does promisc dictate inclusion of FCS?
->>> Because that's the way the hardware works.
->> Why not always include it, regardless of promisc?
->>
-> I really do mean that's how the hardware works. If you turn on the promisc bit 
-> in the hardware (which IFF_PROMISC causes), it starts including the FCS, but 
-> if the bit is not set, the FCS is not included in frames.
 
-OK, I was confused by the name.  Based on the constant's name, I was 
-assuming that you could unconditionally enable it, promisc or not. 
-Nevermind.  I thought that was a hardware rather than software bit.
+--=-810Vdr13Hto4gIlzdvh4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-09-10 at 17:20 +0300, Tomas Winkler wrote:
 
-> What form of debugging are you talking about? I don't see how it makes a 
-> difference for debugging. The type checking provided by enums won't make a 
+> It is my best intention yet first we need native interface which make
+> in turn problems in eb tables. So it is a long shot.
 
-When you are tracing through with kgdb, the code is actually readable. 
-You see
+Ok. We've managed long enough without it so I guess we can wait :)
 
-	dev->flags |= IEEE80211_HW_RX_INCLUDES_FCS;
+> I wouldn't appreciate this at all. 11n is major feature of our NIC.
+> Major obstacle in finally pushing 11n is constant  code base change of
+> iwlwifi. This is already 4th  code base. The latest was because the
+> driver didn't look nice enough, what an engineering   reason! In the
+> bottom line we are hunting our own tail for wrong reasons
 
-rather than the far more obtuse
+Well, I believe that there are bad layering violations in your current
+driver, namely looking at the packets mac80211 sends, doing 11N
+manipulations and everything in the driver and duplicating the sta_info
+stuff because mac80211 happens to be missing a few hooks. If you think
+those are "wrong reasons" that's fine with me.
 
-	dev->flags |= 8;
+Personally, I'm just raising these points and marking them down as
+"against merging as-is". If others don't care about them, that's ok with
+me.
 
-Ditto for any time you have to read pre-processed source code.  I do so 
-at least once a month, since post-cpp code shows you precisely what the 
-compiler is munching, after all the macro magic goes away.
+johannes
 
-	Jeff
+--=-810Vdr13Hto4gIlzdvh4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG5myt/ETPhpq3jKURAgIVAJ4yxOr6Z94sWoWsJsePRnqOzrXwvQCgqExd
+GmUcqYje8RCxQudbqkzQ9v0=
+=Rdw7
+-----END PGP SIGNATURE-----
+
+--=-810Vdr13Hto4gIlzdvh4--
 
