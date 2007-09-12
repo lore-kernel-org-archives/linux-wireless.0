@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbXIMHPI (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:49508 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762979AbXILLDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 03:15:08 -0400
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, satyam@infradead.org, flo@rfc822.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, michal.k.k.piotrowski@gmail.com,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
-In-Reply-To: <20070912.053411.21914920.davem@davemloft.net>
-References: <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
-	 <20070906082301.GB21929@gondor.apana.org.au>
-	 <1189091995.28781.99.camel@johannes.berg>
-	 <20070912.053411.21914920.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5q22gSmlNtum6WvC184l"
-Date: Thu, 13 Sep 2007 09:16:27 +0200
-Message-Id: <1189667787.6161.83.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 12 Sep 2007 07:03:44 -0400
+Received: by py-out-1112.google.com with SMTP id u77so347582pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 04:03:44 -0700 (PDT)
+Message-ID: <efe7343f0709120403s23d673bascec8e27ddcc1ad87@mail.gmail.com>
+Date: Wed, 12 Sep 2007 12:03:44 +0100
+From: "Luis Correia" <luis.f.correia@gmail.com>
+To: "Marcus Better" <marcus@better.se>
+Subject: Re: rt2500 suspend problems
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <fc8goi$abd$1@sea.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <fc85aq$uu6$1@sea.gmane.org>
+	 <1189594257.6161.45.camel@johannes.berg> <fc8goi$abd$1@sea.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 9/12/07, Marcus Better <marcus@better.se> wrote:
+> Johannes Berg wrote:
+> > No idea, must be a driver bug.
+>
+> Anything I can do to debug it?
+>
+> Marcus
+>
 
---=-5q22gSmlNtum6WvC184l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Try to use the rt2x00.git repo, available at:
+git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git
 
-On Wed, 2007-09-12 at 05:34 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu, 06 Sep 2007 17:19:55 +0200
->=20
-> >=20
-> > Oh btw. Can we stick a might_sleep() into dev_close() *before* the test
-> > whether the device is up? That way, we'd have seen the bug, but
-> > apparently nobody before Florian ever did a 'ip link set wmaster0 down'
-> > while the other interfaces were still open.
->=20
-> I've added this to net-2.6.24
-
-Great, thanks. Now I just hope John gets around to merging all the
-accumulated fixes :)
-
-johannes
-
---=-5q22gSmlNtum6WvC184l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6OPL/ETPhpq3jKURAiTOAJwMn5glpAN/OmX5HDwzBuMV07lF5wCdEnkk
-FOg8XO6khHJn/9NbCUHx7Ys=
-=y5gF
------END PGP SIGNATURE-----
-
---=-5q22gSmlNtum6WvC184l--
-
+Luis Correia
+rt2x00 project administrator
