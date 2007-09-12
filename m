@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34308 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756246AbXICIg5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 04:36:57 -0400
-Subject: Re: letting drivers choose their preferred rate scale
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ian <ischram@telenet.be>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46DB537E.8030801@telenet.be>
-References: <46CF95F9.6090802@telenet.be>
-	 <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be>
-	 <1188211749.6756.11.camel@johannes.berg>
-	 <20070831180933.GB3352@tuxdriver.com>  <46DB537E.8030801@telenet.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FlpbFB0RsNxQ9o1yULUT"
-Date: Mon, 03 Sep 2007 10:38:12 +0200
-Message-Id: <1188808692.14564.24.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:6039 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765156AbXILHrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2007 03:47:31 -0400
+Subject: [PATCH wireless-dev#iwlwifi] update iwlwifi drivers to 0.1.15
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W.Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 12 Sep 2007 15:40:34 +0800
+Message-Id: <1189582834.24707.117.camel@debian.sh.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-FlpbFB0RsNxQ9o1yULUT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The patch (against wireless-dev GIT iwlwifi branch) updates the iwlwifi
+driver to version 0.1.15. It also splits the iwlwifi code base into 3945
+and 4965 separately. Please apply.
 
-On Mon, 2007-09-03 at 02:21 +0200, ian wrote:
+http://intellinuxwireless.org/iwlwifi/iwlwifi-wireless-dev-01.patch
 
-> we could additionally remove the module_alias from rc80211_simple
-
-indeed, please roll into this patch
-
-johannes
-
---=-FlpbFB0RsNxQ9o1yULUT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG28f0/ETPhpq3jKURAu1HAKCemxJfDbZ12fKMrvoPdlkHkox4JQCgrOrH
-h6Lon/fdye1o684/5xsU4Xg=
-=GBQA
------END PGP SIGNATURE-----
-
---=-FlpbFB0RsNxQ9o1yULUT--
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/Makefile       |   25 +-
+ drivers/net/wireless/iwl-3945-hw.h  |   14 +
+ drivers/net/wireless/iwl-3945-rs.c  |   34 +-
+ drivers/net/wireless/iwl-3945-rs.h  |   36 +-
+ drivers/net/wireless/iwl-3945.c     |  158 +-
+ drivers/net/wireless/iwl-3945.h     |   19 -
+ drivers/net/wireless/iwl-4965-hw.h  |  407 +--
+ drivers/net/wireless/iwl-4965-rs.c  |  236 +-
+ drivers/net/wireless/iwl-4965-rs.h  |   82 +-
+ drivers/net/wireless/iwl-4965.c     |  554 +--
+ drivers/net/wireless/iwl-4965.h     |   58 +-
+ drivers/net/wireless/iwl-base.c     | 9565
+-----------------------------------
+ drivers/net/wireless/iwl-channel.h  |    6 +-
+ drivers/net/wireless/iwl-commands.h | 1526 +++++-
+ drivers/net/wireless/iwl-debug.h    |    4 +-
+ drivers/net/wireless/iwl-eeprom.h   |   52 +-
+ drivers/net/wireless/iwl-hw.h       | 1294 +-----
+ drivers/net/wireless/iwl-io.h       |  150 +-
+ drivers/net/wireless/iwl-priv.h     |   12 +-
+ drivers/net/wireless/iwl-prph.h     |  229 +
+ drivers/net/wireless/iwl3945-base.c | 8732
+++++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwl4965-base.c | 9323
+++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi.h      |  131 +-
+ 23 files changed, 20404 insertions(+), 12243 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwl-base.c
+ create mode 100644 drivers/net/wireless/iwl-prph.h
+ create mode 100644 drivers/net/wireless/iwl3945-base.c
+ create mode 100644 drivers/net/wireless/iwl4965-base.c
