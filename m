@@ -1,75 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbXIZHij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 03:38:39 -0400
-Subject: Re: A-MSDU deaggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com>
-References: <1189354526.4506.25.camel@johannes.berg>
-	 <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
-	 <1190747966.18521.320.camel@johannes.berg>
-	 <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v7xkLOiP0weNu+tYwQRE"
-Date: Wed, 26 Sep 2007 09:39:54 +0200
-Message-Id: <1190792394.18521.354.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from madara.hpl.hp.com ([192.6.19.124]:59735 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765753AbXILRDZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2007 13:03:25 -0400
+Date: Wed, 12 Sep 2007 10:01:53 -0700
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlist and network-manager bug report
+Message-ID: <20070912170153.GA25785@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1189526874.6161.30.camel@johannes.berg> <1189610572.5644.28.camel@xo-3E-67-34.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1189610572.5644.28.camel@xo-3E-67-34.localdomain>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 12, 2007 at 11:22:52AM -0400, Dan Williams wrote:
+> On Tue, 2007-09-11 at 18:07 +0200, Johannes Berg wrote:
+> > Hi Jean,
+> >=20
+> > I have no idea where to send bug reports for iwlist so I'm mailing =
+you
+> > directly with CC to wireless-dev so others are aware.
+> >=20
+> > Dan, for NM I suppose the right bug tracker would be redhats? I'm
+> > offline as I'm writing this so I can't check.
+>=20
+> NM 0.6.x and earlier (quite wrongly) treat the SSID as a string.  Tha=
+t
+> has been fixed in 0.7 trunk, though we do need to make sure that NM
+> 0.6.x and earlier don't puke with it.
+>=20
+> SSID conversion is really, really tricky, and NM tries a few things t=
+o
+> coerce the SSID to UTF-8, including trying your LANG encoding if it
+> exists.  None of these methods work reliably though.
 
---=-v7xkLOiP0weNu+tYwQRE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	I personally can't see how we could figure out the encoding,
+because we are talking of other's people network. It would have been
+nice for IEEE 802.11 to specify something, but it's now probably too
+late, as each vendor did his own stuff.
+	Where it's get even weirder is that special characters don't
+seem to be forbidden either, such as NUL, and all the control
+character. There is no way we are going to print them properly.
 
-On Wed, 2007-09-26 at 01:24 +0200, Tomas Winkler wrote:
+> Any suggestions?
 
-> EAPOL frames should not be filtered out. Everything else should be filter=
-ed out
-> except EAPOL frames till the port is open.
+	Print them in hex ? URL encoding ?
 
-Right now though, when we're an AP, we're sending EAPOL frames to the
-mgmt interface instead of the regular 802.3 interface. This quite sucks
-wrt. deagg. But it's also very weird, look at ieee80211_rx_h_802_1x_pae.
-It sends
- * eapol frames for non-STA interfaces that are for us -> mgmt iface
- * non-eapol frames from unauthorized STAs -> bitbucket
- * everything else -> the regular 802.3 interface
+> Obviously NM needs to be fixed.
+>=20
+> > Anyhow, the problem is that my landlord has an AP that broadcasts a=
+n
+> > SSID with a 0xFC byte in it (supposedly an "=FC" in windows). iwlis=
+t,
+> > however, just prints
+> >=20
+> > 		ESSID:"B
+>=20
+> iwlist just stuffs the SSID into a null-terminated buffer and prints =
+it,
+> it doesn't try to do any cleanup of the SSID at all.
 
-Right afterwards, unencrypted non-EAPOL frames are dropped.
+	Up to now, it never had been an issue. I made sure it would be
+possible to implement a more clever ESSID display routine, but never
+did it. It's not terribly complex to implement, but we need to decide
+how we do it.
+	Note that ideally, we should also do the same with regards to
+setting an ESSID. And all the /proc files of the various drivers may
+want to be sanitized (yuck).
 
-So any STA can actually send EAPOL frames with an arbitrary destination
-MAC address except our own into our 802.3 interface. Hence, it looks
-like the first case above is only for having eapol on mgmt iface.
+> Dan
+>=20
+> > and nothing more (the SSID is B\xFC...). wpa_supplicant converts it=
+ to
+> > an underscore in its output (B_...),
 
-The only problem I see with not doing this is that hostapd will have to
-listen for EAPOL frames on all VLAN interfaces but I suppose that is
-doable.
+	That would not be my prefered solution.
 
-> The problem is the order of the handlers.  First you need to
-> deaggregated the frame then filtered out non EAPLOL frames if the port
-> is not open.
+> > and network-manager also seems to
+> > not like it, though it doesn't display any networks right now. Migh=
+t or
+> > might not be related.
+> >=20
+> > I think it shouldn't be displayed truncated, although it is probabl=
+y not
+> > possible to display it in a fashion that all shells will properly p=
+arse
+> > and convert to the right binary before invoking iwconfig or such.
 
-Yeah, I know, I had a plan a while back, will see if I can implement it.
+	One way would be to check if the ESSID is Ascii, and if it's
+not, display it entirely in hex with a leading 0x. Then, iwconfig
+would recognise the leading 0x and do the right stuff.
+	The problem with escaping is that you always have to escape
+the escape sequence, otherwise you get ambiguity.
 
-johannes
-
---=-v7xkLOiP0weNu+tYwQRE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG+gzK/ETPhpq3jKURAlpaAJ4jW+WGxD8X+3CXB25dLZOksuYbbACfZy3X
-Urqinl9qT77xqHK605iG1CM=
-=6XlR
------END PGP SIGNATURE-----
-
---=-v7xkLOiP0weNu+tYwQRE--
-
+	Jean
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
