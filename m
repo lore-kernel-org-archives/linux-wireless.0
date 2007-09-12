@@ -1,170 +1,736 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27371 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393AbXI3Ska (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2007 14:40:30 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 17/26] at76_usb: Move some parts from at76_usb.h to at76_usb.c
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Sep 2007 14:40:27 -0400
-Message-ID: <20070930184027.23921.49109.stgit@tt.roinet.com>
-In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
-References: <20070930183409.23921.97762.stgit@tt.roinet.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:53170 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761316AbXILVEp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2007 17:04:45 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so303649ugc
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 14:04:44 -0700 (PDT)
+Message-ID: <46E85598.9010700@gmail.com>
+Date: Wed, 12 Sep 2007 22:09:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: orinoco-devel@lists.sourceforge.net,
+	orinoco-users@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, proski@gnu.org,
+	hermes@gibson.dropbear.id.au
+Subject: [PATCH 03/05] orinoco: Agere/Lucent firmware download
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't include anything from at76_usb.h.  Keep DRIVER_NAME and
-DRIVER_VERSION together.  Define at76_dbg() after DRIVER_NAME.
+Move firmware download functionality from spectrum_cs into
+hermes_dld in preparation for making everything more generic.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
 ---
-
- drivers/net/wireless/at76_usb.c |   47 +++++++++++++++++++++++++++++++++++++--
- drivers/net/wireless/at76_usb.h |   46 --------------------------------------
- 2 files changed, 45 insertions(+), 48 deletions(-)
-
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index f470964..fc1b331 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -36,13 +36,56 @@
- #include <net/ieee80211_radiotap.h>
- #include <linux/firmware.h>
- #include <linux/leds.h>
-+#include <net/ieee80211.h>
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index ef35bc6..2d2ec4f 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -16,7 +16,7 @@ obj-$(CONFIG_WAVELAN)		+= wavelan.o
+ obj-$(CONFIG_PCMCIA_NETWAVE)	+= netwave_cs.o
+ obj-$(CONFIG_PCMCIA_WAVELAN)	+= wavelan_cs.o
  
- #include "at76_usb.h"
- 
- /* Version information */
- #define DRIVER_NAME "at76_usb"
-+#define DRIVER_VERSION	"0.16"
- #define DRIVER_DESC "Atmel at76x USB Wireless LAN Driver"
- 
-+/* at76_debug bits */
-+#define DBG_PROGRESS		0x00000001	/* authentication/accociation */
-+#define DBG_BSS_TABLE		0x00000002	/* show BSS table after scans */
-+#define DBG_IOCTL		0x00000004	/* ioctl calls / settings */
-+#define DBG_MAC_STATE		0x00000008	/* MAC state transitions */
-+#define DBG_TX_DATA		0x00000010	/* tx header */
-+#define DBG_TX_DATA_CONTENT	0x00000020	/* tx content */
-+#define DBG_TX_MGMT		0x00000040	/* tx management */
-+#define DBG_RX_DATA		0x00000080	/* rx data header */
-+#define DBG_RX_DATA_CONTENT	0x00000100	/* rx data content */
-+#define DBG_RX_MGMT		0x00000200	/* rx mgmt frame headers */
-+#define DBG_RX_BEACON		0x00000400	/* rx beacon */
-+#define DBG_RX_CTRL		0x00000800	/* rx control */
-+#define DBG_RX_MGMT_CONTENT	0x00001000	/* rx mgmt content */
-+#define DBG_RX_FRAGS		0x00002000	/* rx data fragment handling */
-+#define DBG_DEVSTART		0x00004000	/* fw download, device start */
-+#define DBG_URB			0x00008000	/* rx urb status, ... */
-+#define DBG_RX_ATMEL_HDR	0x00010000	/* Atmel-specific Rx headers */
-+#define DBG_PROC_ENTRY		0x00020000	/* procedure entries/exits */
-+#define DBG_PM			0x00040000	/* power management settings */
-+#define DBG_BSS_MATCH		0x00080000	/* BSS match failures */
-+#define DBG_PARAMS		0x00100000	/* show configured parameters */
-+#define DBG_WAIT_COMPLETE	0x00200000	/* command completion */
-+#define DBG_RX_FRAGS_SKB	0x00400000	/* skb header of Rx fragments */
-+#define DBG_BSS_TABLE_RM	0x00800000	/* purging bss table entries */
-+#define DBG_MONITOR_MODE	0x01000000	/* monitor mode */
-+#define DBG_MIB			0x02000000	/* dump all MIBs on startup */
-+#define DBG_MGMT_TIMER		0x04000000	/* dump mgmt_timer ops */
-+#define DBG_WE_EVENTS		0x08000000	/* dump wireless events */
-+#define DBG_FW			0x10000000	/* firmware download */
-+#define DBG_DFU			0x20000000	/* device firmware upgrade */
+-obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
++obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
+ obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
+ obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
+ obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
+diff --git a/drivers/net/wireless/hermes_dld.c b/drivers/net/wireless/hermes_dld.c
+new file mode 100644
+index 0000000..24b471e
+--- /dev/null
++++ b/drivers/net/wireless/hermes_dld.c
+@@ -0,0 +1,338 @@
++/*
++ * Hermes download helper driver.
++ *
++ * This could be entirely merged into hermes.c.
++ *
++ * I'm keeping it separate to minimise the amount of merging between
++ * kernel upgrades. It also means the memory overhead for drivers that
++ * don't need firmware download low.
++ *
++ * This driver:
++ *  - is capable of writing to the volatile area of the hermes device
++ *  - is currently not capable of writing to non-volatile areas
++ *  - provide helpers to identify and update plugin data
++ *  - is not capable of interpreting a fw image directly. That is up to
++ *    the main card driver.
++ *  - deals with Hermes I devices. It can probably be modified to deal
++ *    with Hermes II devices
++ *
++ * Copyright (C) 2007, David Kilroy
++ *
++ * Plug data code slightly modified from spectrum_cs driver
++ *    Copyright (C) 2002-2005 Pavel Roskin <proski@gnu.org>
++ * Portions based on information in wl_lkm_718 Agere driver
++ *    COPYRIGHT (C) 2001-2004 by Agere Systems Inc. All Rights Reserved
++ *
++ * The contents of this file are subject to the Mozilla Public License
++ * Version 1.1 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License
++ * at http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS"
++ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
++ * the License for the specific language governing rights and
++ * limitations under the License.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * terms of the GNU General Public License version 2 (the "GPL"), in
++ * which case the provisions of the GPL are applicable instead of the
++ * above.  If you wish to allow the use of your version of this file
++ * only under the terms of the GPL and not to allow others to use your
++ * version of this file under the MPL, indicate your decision by
++ * deleting the provisions above and replace them with the notice and
++ * other provisions required by the GPL.  If you do not delete the
++ * provisions above, a recipient may use your version of this file
++ * under either the MPL or the GPL.
++ */
 +
-+#define DBG_DEFAULTS		0
++#include <linux/module.h>
++#include <linux/delay.h>
++#include "hermes.h"
++#include "hermes_dld.h"
 +
-+/* Use our own dbg macro */
-+#define at76_dbg(bits, format, arg...) \
-+	do { \
-+		if (at76_debug & (bits)) \
-+		printk(KERN_DEBUG DRIVER_NAME ": " format "\n" , ## arg); \
-+	} while (0)
++MODULE_DESCRIPTION("Download helper for Lucent Hermes chipset");
++MODULE_AUTHOR("David Kilroy <kilroyd@gmail.com>");
++MODULE_LICENSE("Dual MPL/GPL");
 +
- static int at76_debug = DBG_DEFAULTS;
- 
- /* Protect against concurrent firmware loading and parsing */
-@@ -199,6 +242,8 @@ static const long channel_frequency[] = {
- 	2447, 2452, 2457, 2462, 2467, 2472, 2484
- };
- 
-+#define NUM_CHANNELS ARRAY_SIZE(channel_frequency)
++#define PFX "hermes_dld: "
 +
- static const char *const preambles[] = { "long", "short", "auto" };
++/*
++ * AUX port access.  To unlock the AUX port write the access keys to the
++ * PARAM0-2 registers, then write HERMES_AUX_ENABLE to the HERMES_CONTROL
++ * register.  Then read it and make sure it's HERMES_AUX_ENABLED.
++ */
++#define HERMES_AUX_ENABLE	0x8000	/* Enable auxiliary port access */
++#define HERMES_AUX_DISABLE	0x4000	/* Disable to auxiliary port access */
++#define HERMES_AUX_ENABLED	0xC000	/* Auxiliary port is open */
++
++#define HERMES_AUX_PW0	0xFE01
++#define HERMES_AUX_PW1	0xDC23
++#define HERMES_AUX_PW2	0xBA45
++
++/* End markers */
++#define PDI_END		0x00000000	/* End of PDA */
++#define BLOCK_END	0xFFFFFFFF	/* Last image block */
++
++/*
++ * The following structures have little-endian fields denoted by
++ * the leading underscore.  Don't access them directly - use inline
++ * functions defined below.
++ */
++
++/*
++ * The binary image to be downloaded consists of series of data blocks.
++ * Each block has the following structure.
++ */
++struct dblock {
++	__le32 addr;		/* adapter address where to write the block */
++	__le16 len;		/* length of the data only, in bytes */
++	char data[0];		/* data to be written */
++} __attribute__ ((packed));
++
++/*
++ * Plug Data References are located in in the image after the last data
++ * block.  They refer to areas in the adapter memory where the plug data
++ * items with matching ID should be written.
++ */
++struct pdr {
++	__le32 id;		/* record ID */
++	__le32 addr;		/* adapter address where to write the data */
++	__le32 len;		/* expected length of the data, in bytes */
++	char next[0];		/* next PDR starts here */
++} __attribute__ ((packed));
++
++/*
++ * Plug Data Items are located in the EEPROM read from the adapter by
++ * primary firmware.  They refer to the device-specific data that should
++ * be plugged into the secondary firmware.
++ */
++struct pdi {
++	__le16 len;		/* length of ID and data, in words */
++	__le16 id;		/* record ID */
++	char data[0];		/* plug data */
++} __attribute__ ((packed));
++
++/* Functions for access to little-endian data */
++static inline u32
++dblock_addr(const struct dblock *blk)
++{
++	return le32_to_cpu(blk->addr);
++}
++
++static inline u32
++dblock_len(const struct dblock *blk)
++{
++	return le16_to_cpu(blk->len);
++}
++
++static inline u32
++pdr_id(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->id);
++}
++
++static inline u32
++pdr_addr(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->addr);
++}
++
++static inline u32
++pdr_len(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->len);
++}
++
++static inline u32
++pdi_id(const struct pdi *pdi)
++{
++	return le16_to_cpu(pdi->id);
++}
++
++/* Return length of the data only, in bytes */
++static inline u32
++pdi_len(const struct pdi *pdi)
++{
++	return 2 * (le16_to_cpu(pdi->len) - 1);
++}
++
++/* Set address of the auxiliary port */
++static inline void
++spectrum_aux_setaddr(hermes_t *hw, u32 addr)
++{
++	hermes_write_reg(hw, HERMES_AUXPAGE, (u16) (addr >> 7));
++	hermes_write_reg(hw, HERMES_AUXOFFSET, (u16) (addr & 0x7F));
++}
++
++/* Open access to the auxiliary port */
++static int
++spectrum_aux_open(hermes_t *hw)
++{
++	int i;
++
++	/* Already open? */
++	if (hermes_read_reg(hw, HERMES_CONTROL) == HERMES_AUX_ENABLED)
++		return 0;
++
++	hermes_write_reg(hw, HERMES_PARAM0, HERMES_AUX_PW0);
++	hermes_write_reg(hw, HERMES_PARAM1, HERMES_AUX_PW1);
++	hermes_write_reg(hw, HERMES_PARAM2, HERMES_AUX_PW2);
++	hermes_write_reg(hw, HERMES_CONTROL, HERMES_AUX_ENABLE);
++
++	for (i = 0; i < 20; i++) {
++		udelay(10);
++		if (hermes_read_reg(hw, HERMES_CONTROL) ==
++		    HERMES_AUX_ENABLED)
++			return 0;
++	}
++
++	return -EBUSY;
++}
++
++/*
++ * Scan PDR for the record with the specified RECORD_ID.
++ * If it's not found, return NULL.
++ */
++static struct pdr *
++spectrum_find_pdr(struct pdr *first_pdr, u32 record_id)
++{
++	struct pdr *pdr = first_pdr;
++
++	while (pdr_id(pdr) != PDI_END) {
++		/*
++		 * PDR area is currently not terminated by PDI_END.
++		 * It's followed by CRC records, which have the type
++		 * field where PDR has length.  The type can be 0 or 1.
++		 */
++		if (pdr_len(pdr) < 2)
++			return NULL;
++
++		/* If the record ID matches, we are done */
++		if (pdr_id(pdr) == record_id)
++			return pdr;
++
++		pdr = (struct pdr *) pdr->next;
++	}
++	return NULL;
++}
++
++/* Process one Plug Data Item - find corresponding PDR and plug it */
++static int
++spectrum_plug_pdi(hermes_t *hw, struct pdr *first_pdr, struct pdi *pdi)
++{
++	struct pdr *pdr;
++
++	/* Find the PDI corresponding to this PDR */
++	pdr = spectrum_find_pdr(first_pdr, pdi_id(pdi));
++
++	/* No match is found, safe to ignore */
++	if (!pdr)
++		return 0;
++
++	/* Lengths of the data in PDI and PDR must match */
++	if (pdi_len(pdi) != pdr_len(pdr))
++		return -EINVAL;
++
++	/* do the actual plugging */
++	spectrum_aux_setaddr(hw, pdr_addr(pdr));
++	hermes_write_bytes(hw, HERMES_AUXDATA, pdi->data, pdi_len(pdi));
++
++	return 0;
++}
++
++/* Read PDA from the adapter */
++int
++spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len)
++{
++	int ret;
++	int pda_size;
++
++	/* Issue command to read EEPROM */
++	ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, 0, 0, NULL);
++	if (ret)
++		return ret;
++
++	/* Open auxiliary port */
++	ret = spectrum_aux_open(hw);
++	if (ret)
++		return ret;
++
++	/* read PDA from EEPROM */
++	spectrum_aux_setaddr(hw, PDA_ADDR);
++	hermes_read_words(hw, HERMES_AUXDATA, pda, pda_len / 2);
++
++	/* Check PDA length */
++	pda_size = le16_to_cpu(pda[0]);
++	if (pda_size > pda_len)
++		return -EINVAL;
++
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_read_pda);
++
++/* Parse PDA and write the records into the adapter */
++int
++spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
++		   __le16 *pda)
++{
++	int ret;
++	struct pdi *pdi;
++	struct pdr *first_pdr;
++	const struct dblock *blk = first_block;
++
++	/* Skip all blocks to locate Plug Data References */
++	while (dblock_addr(blk) != BLOCK_END)
++		blk = (struct dblock *) &blk->data[dblock_len(blk)];
++
++	first_pdr = (struct pdr *) blk;
++
++	/* Go through every PDI and plug them into the adapter */
++	pdi = (struct pdi *) (pda + 2);
++	while (pdi_id(pdi) != PDI_END) {
++		ret = spectrum_plug_pdi(hw, first_pdr, pdi);
++		if (ret)
++			return ret;
++
++		/* Increment to the next PDI */
++		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
++	}
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_apply_pda);
++
++/* Load firmware blocks into the adapter */
++int
++spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block)
++{
++	const struct dblock *blk;
++	u32 blkaddr;
++	u32 blklen;
++
++	blk = first_block;
++	blkaddr = dblock_addr(blk);
++	blklen = dblock_len(blk);
++
++	while (dblock_addr(blk) != BLOCK_END) {
++		spectrum_aux_setaddr(hw, blkaddr);
++		hermes_write_bytes(hw, HERMES_AUXDATA, blk->data,
++				   blklen);
++
++		blk = (struct dblock *) &blk->data[blklen];
++		blkaddr = dblock_addr(blk);
++		blklen = dblock_len(blk);
++	}
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_load_blocks);
++
++static int __init init_hermes_dld(void)
++{
++	return 0;
++}
++
++static void __exit exit_hermes_dld(void)
++{
++}
++
++module_init(init_hermes_dld);
++module_exit(exit_hermes_dld);
+diff --git a/drivers/net/wireless/hermes_dld.h b/drivers/net/wireless/hermes_dld.h
+new file mode 100644
+index 0000000..2c8892a
+--- /dev/null
++++ b/drivers/net/wireless/hermes_dld.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright (C) 2007, David Kilroy
++ *
++ * The contents of this file are subject to the Mozilla Public License
++ * Version 1.1 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License
++ * at http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS"
++ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
++ * the License for the specific language governing rights and
++ * limitations under the License.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * terms of the GNU General Public License version 2 (the "GPL"), in
++ * which case the provisions of the GPL are applicable instead of the
++ * above.  If you wish to allow the use of your version of this file
++ * only under the terms of the GPL and not to allow others to use your
++ * version of this file under the MPL, indicate your decision by
++ * deleting the provisions above and replace them with the notice and
++ * other provisions required by the GPL.  If you do not delete the
++ * provisions above, a recipient may use your version of this file
++ * under either the MPL or the GPL.
++ */
++#ifndef _HERMES_DLD_H
++#define _HERMES_DLD_H
++
++#include "hermes.h"
++
++/* Position of PDA in the adapter memory */
++#define EEPROM_ADDR	0x3000
++#define EEPROM_LEN	0x200
++#define PDA_OFFSET	0x100
++
++#define PDA_ADDR	(EEPROM_ADDR + PDA_OFFSET)
++#define PDA_WORDS	((EEPROM_LEN - PDA_OFFSET) / 2)
++
++struct dblock;
++
++int spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len);
++int spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
++		       __le16 *pda);
++int spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block);
++
++#endif /* _HERMES_DLD_H */
+diff --git a/drivers/net/wireless/spectrum_cs.c b/drivers/net/wireless/spectrum_cs.c
+index b273362..8b412f7 100644
+--- a/drivers/net/wireless/spectrum_cs.c
++++ b/drivers/net/wireless/spectrum_cs.c
+@@ -33,6 +33,7 @@
+ #include <pcmcia/ds.h>
  
- static const char *const mac_states[] = {
-@@ -211,8 +256,6 @@ static const char *const mac_states[] = {
- 	[MAC_OWN_IBSS] = "OWN_IBSS"
- };
+ #include "orinoco.h"
++#include "hermes_dld.h"
  
--#define NUM_CHANNELS ARRAY_SIZE(channel_frequency)
--
- /* Firmware download */
- /* DFU states */
- #define STATE_IDLE			0x00
-diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
-index 2737e85..6c3b76b 100644
---- a/drivers/net/wireless/at76_usb.h
-+++ b/drivers/net/wireless/at76_usb.h
-@@ -22,11 +22,6 @@
- #ifndef _AT76_USB_H
- #define _AT76_USB_H
+ static const char primary_fw_name[] = "symbol_sp24t_prim_fw";
+ static const char secondary_fw_name[] = "symbol_sp24t_sec_fw";
+@@ -88,144 +89,9 @@ static void spectrum_cs_release(struct pcmcia_device *link);
+ #define HCR_IDLE	0x0E	/* don't run firmware after reset */
+ #define HCR_MEM16	0x10	/* memory width bit, should be preserved */
  
--#include <net/ieee80211.h>
+-/*
+- * AUX port access.  To unlock the AUX port write the access keys to the
+- * PARAM0-2 registers, then write HERMES_AUX_ENABLE to the HERMES_CONTROL
+- * register.  Then read it and make sure it's HERMES_AUX_ENABLED.
+- */
+-#define HERMES_AUX_ENABLE	0x8000	/* Enable auxiliary port access */
+-#define HERMES_AUX_DISABLE	0x4000	/* Disable to auxiliary port access */
+-#define HERMES_AUX_ENABLED	0xC000	/* Auxiliary port is open */
 -
--/* current driver version */
--#define DRIVER_VERSION	"0.16"
+-#define HERMES_AUX_PW0	0xFE01
+-#define HERMES_AUX_PW1	0xDC23
+-#define HERMES_AUX_PW2	0xBA45
 -
- /* Board types */
- enum board_type {
- 	BOARD_503_ISL3861 = 1,
-@@ -621,45 +616,4 @@ struct at76_rx_radiotap {
- /* the max padding size for tx in bytes (see calc_padding) */
- #define MAX_PADDING_SIZE	53
+ /* End markers */
+-#define PDI_END		0x00000000	/* End of PDA */
+-#define BLOCK_END	0xFFFFFFFF	/* Last image block */
+ #define TEXT_END	0x1A		/* End of text header */
  
--/* at76_debug bits */
--#define DBG_PROGRESS		0x00000001	/* authentication/accociation */
--#define DBG_BSS_TABLE		0x00000002	/* show BSS table after scans */
--#define DBG_IOCTL		0x00000004	/* ioctl calls / settings */
--#define DBG_MAC_STATE		0x00000008	/* MAC state transitions */
--#define DBG_TX_DATA		0x00000010	/* tx header */
--#define DBG_TX_DATA_CONTENT	0x00000020	/* tx content */
--#define DBG_TX_MGMT		0x00000040	/* tx management */
--#define DBG_RX_DATA		0x00000080	/* rx data header */
--#define DBG_RX_DATA_CONTENT	0x00000100	/* rx data content */
--#define DBG_RX_MGMT		0x00000200	/* rx mgmt frame headers */
--#define DBG_RX_BEACON		0x00000400	/* rx beacon */
--#define DBG_RX_CTRL		0x00000800	/* rx control */
--#define DBG_RX_MGMT_CONTENT	0x00001000	/* rx mgmt content */
--#define DBG_RX_FRAGS		0x00002000	/* rx data fragment handling */
--#define DBG_DEVSTART		0x00004000	/* fw download, device start */
--#define DBG_URB			0x00008000	/* rx urb status, ... */
--#define DBG_RX_ATMEL_HDR	0x00010000	/* Atmel-specific Rx headers */
--#define DBG_PROC_ENTRY		0x00020000	/* procedure entries/exits */
--#define DBG_PM			0x00040000	/* power management settings */
--#define DBG_BSS_MATCH		0x00080000	/* BSS match failures */
--#define DBG_PARAMS		0x00100000	/* show configured parameters */
--#define DBG_WAIT_COMPLETE	0x00200000	/* command completion */
--#define DBG_RX_FRAGS_SKB	0x00400000	/* skb header of Rx fragments */
--#define DBG_BSS_TABLE_RM	0x00800000	/* purging bss table entries */
--#define DBG_MONITOR_MODE	0x01000000	/* monitor mode */
--#define DBG_MIB			0x02000000	/* dump all MIBs on startup */
--#define DBG_MGMT_TIMER		0x04000000	/* dump mgmt_timer ops */
--#define DBG_WE_EVENTS		0x08000000	/* dump wireless events */
--#define DBG_FW			0x10000000	/* firmware download */
--#define DBG_DFU			0x20000000	/* device firmware upgrade */
+-/*
+- * The following structures have little-endian fields denoted by
+- * the leading underscore.  Don't access them directly - use inline
+- * functions defined below.
+- */
 -
--#define DBG_DEFAULTS		0
+-/*
+- * The binary image to be downloaded consists of series of data blocks.
+- * Each block has the following structure.
+- */
+-struct dblock {
+-	__le32 addr;		/* adapter address where to write the block */
+-	__le16 len;		/* length of the data only, in bytes */
+-	char data[0];		/* data to be written */
+-} __attribute__ ((packed));
 -
--/* Use our own dbg macro */
--#define at76_dbg(bits, format, arg...) \
--	do { \
--		if (at76_debug & (bits)) \
--		printk(KERN_DEBUG DRIVER_NAME ": " format "\n" , ## arg); \
--	} while (0)
+-/*
+- * Plug Data References are located in in the image after the last data
+- * block.  They refer to areas in the adapter memory where the plug data
+- * items with matching ID should be written.
+- */
+-struct pdr {
+-	__le32 id;		/* record ID */
+-	__le32 addr;		/* adapter address where to write the data */
+-	__le32 len;		/* expected length of the data, in bytes */
+-	char next[0];		/* next PDR starts here */
+-} __attribute__ ((packed));
 -
- #endif				/* _AT76_USB_H */
+-
+-/*
+- * Plug Data Items are located in the EEPROM read from the adapter by
+- * primary firmware.  They refer to the device-specific data that should
+- * be plugged into the secondary firmware.
+- */
+-struct pdi {
+-	__le16 len;		/* length of ID and data, in words */
+-	__le16 id;		/* record ID */
+-	char data[0];		/* plug data */
+-} __attribute__ ((packed));
+-
+-
+-/* Functions for access to little-endian data */
+-static inline u32
+-dblock_addr(const struct dblock *blk)
+-{
+-	return le32_to_cpu(blk->addr);
+-}
+-
+-static inline u32
+-dblock_len(const struct dblock *blk)
+-{
+-	return le16_to_cpu(blk->len);
+-}
+-
+-static inline u32
+-pdr_id(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->id);
+-}
+-
+-static inline u32
+-pdr_addr(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->addr);
+-}
+-
+-static inline u32
+-pdr_len(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->len);
+-}
+-
+-static inline u32
+-pdi_id(const struct pdi *pdi)
+-{
+-	return le16_to_cpu(pdi->id);
+-}
+-
+-/* Return length of the data only, in bytes */
+-static inline u32
+-pdi_len(const struct pdi *pdi)
+-{
+-	return 2 * (le16_to_cpu(pdi->len) - 1);
+-}
+-
+-
+-/* Set address of the auxiliary port */
+-static inline void
+-spectrum_aux_setaddr(hermes_t *hw, u32 addr)
+-{
+-	hermes_write_reg(hw, HERMES_AUXPAGE, (u16) (addr >> 7));
+-	hermes_write_reg(hw, HERMES_AUXOFFSET, (u16) (addr & 0x7F));
+-}
+-
+-
+-/* Open access to the auxiliary port */
+-static int
+-spectrum_aux_open(hermes_t *hw)
+-{
+-	int i;
+-
+-	/* Already open? */
+-	if (hermes_read_reg(hw, HERMES_CONTROL) == HERMES_AUX_ENABLED)
+-		return 0;
+-
+-	hermes_write_reg(hw, HERMES_PARAM0, HERMES_AUX_PW0);
+-	hermes_write_reg(hw, HERMES_PARAM1, HERMES_AUX_PW1);
+-	hermes_write_reg(hw, HERMES_PARAM2, HERMES_AUX_PW2);
+-	hermes_write_reg(hw, HERMES_CONTROL, HERMES_AUX_ENABLE);
+-
+-	for (i = 0; i < 20; i++) {
+-		udelay(10);
+-		if (hermes_read_reg(hw, HERMES_CONTROL) ==
+-		    HERMES_AUX_ENABLED)
+-			return 0;
+-	}
+-
+-	return -EBUSY;
+-}
+-
+ 
+ #define CS_CHECK(fn, ret) \
+   do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
+@@ -294,144 +160,6 @@ spectrum_reset(struct pcmcia_device *link, int idle)
+ 
+ 
+ /*
+- * Scan PDR for the record with the specified RECORD_ID.
+- * If it's not found, return NULL.
+- */
+-static struct pdr *
+-spectrum_find_pdr(struct pdr *first_pdr, u32 record_id)
+-{
+-	struct pdr *pdr = first_pdr;
+-
+-	while (pdr_id(pdr) != PDI_END) {
+-		/*
+-		 * PDR area is currently not terminated by PDI_END.
+-		 * It's followed by CRC records, which have the type
+-		 * field where PDR has length.  The type can be 0 or 1.
+-		 */
+-		if (pdr_len(pdr) < 2)
+-			return NULL;
+-
+-		/* If the record ID matches, we are done */
+-		if (pdr_id(pdr) == record_id)
+-			return pdr;
+-
+-		pdr = (struct pdr *) pdr->next;
+-	}
+-	return NULL;
+-}
+-
+-
+-/* Process one Plug Data Item - find corresponding PDR and plug it */
+-static int
+-spectrum_plug_pdi(hermes_t *hw, struct pdr *first_pdr, struct pdi *pdi)
+-{
+-	struct pdr *pdr;
+-
+-	/* Find the PDI corresponding to this PDR */
+-	pdr = spectrum_find_pdr(first_pdr, pdi_id(pdi));
+-
+-	/* No match is found, safe to ignore */
+-	if (!pdr)
+-		return 0;
+-
+-	/* Lengths of the data in PDI and PDR must match */
+-	if (pdi_len(pdi) != pdr_len(pdr))
+-		return -EINVAL;
+-
+-	/* do the actual plugging */
+-	spectrum_aux_setaddr(hw, pdr_addr(pdr));
+-	hermes_write_bytes(hw, HERMES_AUXDATA, pdi->data, pdi_len(pdi));
+-
+-	return 0;
+-}
+-
+-
+-/* Read PDA from the adapter */
+-static int
+-spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len)
+-{
+-	int ret;
+-	int pda_size;
+-
+-	/* Issue command to read EEPROM */
+-	ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, 0, 0, NULL);
+-	if (ret)
+-		return ret;
+-
+-	/* Open auxiliary port */
+-	ret = spectrum_aux_open(hw);
+-	if (ret)
+-		return ret;
+-
+-	/* read PDA from EEPROM */
+-	spectrum_aux_setaddr(hw, PDA_ADDR);
+-	hermes_read_words(hw, HERMES_AUXDATA, pda, pda_len / 2);
+-
+-	/* Check PDA length */
+-	pda_size = le16_to_cpu(pda[0]);
+-	if (pda_size > pda_len)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+-
+-/* Parse PDA and write the records into the adapter */
+-static int
+-spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
+-		   __le16 *pda)
+-{
+-	int ret;
+-	struct pdi *pdi;
+-	struct pdr *first_pdr;
+-	const struct dblock *blk = first_block;
+-
+-	/* Skip all blocks to locate Plug Data References */
+-	while (dblock_addr(blk) != BLOCK_END)
+-		blk = (struct dblock *) &blk->data[dblock_len(blk)];
+-
+-	first_pdr = (struct pdr *) blk;
+-
+-	/* Go through every PDI and plug them into the adapter */
+-	pdi = (struct pdi *) (pda + 2);
+-	while (pdi_id(pdi) != PDI_END) {
+-		ret = spectrum_plug_pdi(hw, first_pdr, pdi);
+-		if (ret)
+-			return ret;
+-
+-		/* Increment to the next PDI */
+-		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
+-	}
+-	return 0;
+-}
+-
+-
+-/* Load firmware blocks into the adapter */
+-static int
+-spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block)
+-{
+-	const struct dblock *blk;
+-	u32 blkaddr;
+-	u32 blklen;
+-
+-	blk = first_block;
+-	blkaddr = dblock_addr(blk);
+-	blklen = dblock_len(blk);
+-
+-	while (dblock_addr(blk) != BLOCK_END) {
+-		spectrum_aux_setaddr(hw, blkaddr);
+-		hermes_write_bytes(hw, HERMES_AUXDATA, blk->data,
+-				   blklen);
+-
+-		blk = (struct dblock *) &blk->data[blklen];
+-		blkaddr = dblock_addr(blk);
+-		blklen = dblock_len(blk);
+-	}
+-	return 0;
+-}
+-
+-
+-/*
+  * Process a firmware image - stop the card, load the firmware, reset
+  * the card and make sure it responds.  For the secondary firmware take
+  * care of the PDA - read it and then write it on top of the firmware.
