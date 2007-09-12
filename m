@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:34400 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204AbXI1Pdt (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46505 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756977AbXILKt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 11:33:49 -0400
-Received: from localhost (durandal.nerv-un.net [199.201.145.179])
-	by durandal.nerv-un.net (Postfix) with ESMTP id AF90FBC0D9
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 11:19:25 -0400 (EDT)
-Date: Fri, 28 Sep 2007 11:23:17 -0400
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: linux-wireless@vger.kernel.org
-Subject: add_iface controls
-Message-ID: <20070928152317.GA7387@drd1813.lan>
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
+	Wed, 12 Sep 2007 06:49:28 -0400
+Subject: Re: rt2500 suspend problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcus Better <marcus@better.se>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <fc85aq$uu6$1@sea.gmane.org>
+References: <fc85aq$uu6$1@sea.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qGwdxmtc8UX3HXtf8ypU"
+Date: Wed, 12 Sep 2007 12:50:57 +0200
+Message-Id: <1189594257.6161.45.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-qGwdxmtc8UX3HXtf8ypU
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Sorry for the mostly-usage-related question, but I'm obviously missing
-something simple - after a week of searching list archives and git I
-sure can't find it though...  What patch set is required to enable the
-mac80211 vap add_iface/remove_iface controls in sysfs?
+On Wed, 2007-09-12 at 09:41 +0200, Marcus Better wrote:
 
-Running 2.6.23rc8 I can't find any mention of them in the source (and
-they don't, obviously, show up in sys), and pulling John's git tree
-yields no joy either - can anyone point me in the right direction?
+> my laptop with rt2500 card won't wake up from suspend-to-RAM. The cause
+> seems to be the rt2x00 driver. Are there any known issues with this? I
+> tried 2.6.23-rc4 from wireless-dev head (yesterday), and also an earlier
+> commit based on 2.6.23-rc3.
 
-(Symptoms are nothing in sysfs under /sys/class/ieee80211/phyN for
-add/remove, and no __ATTR entries for add_iface in wireless/sysfs or
-anywhere else that I could find)
+No idea, must be a driver bug.
 
--m
+> (As a separate issue, it seems I cannot even associate to my AP with WEP
+> with the latest kernel. The syslog says:
+> Sep 12 07:55:13 better kernel: wlan0: RX WEP frame, but no key set
+> .)
 
---=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
+known issue, actually. The driver doesn't set the
+IEEE80211_HW_WEP_INCLUDE_IV flag and mac80211 expects it to be set. But
+the driver shouldn't be changed, instead the patch "mac80211: rework
+hardware crypto flags" should finally be merged. John seems to
+hide... :)
 
-Bus Error at 008BE426 while reading byte from DEADBEEF in User data space
+johannes
 
-
---C7zPtVaVf+AK4Oqc
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+--=-qGwdxmtc8UX3HXtf8ypU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFG/Rxl17KIInOLvbERAnKYAJoCJ0EBH2karoKfWnzOUxWI4zkafACfXm9U
-TgCgxcLT1AgxbPk76rAXAVc=
-=YveU
+iD8DBQBG58SR/ETPhpq3jKURAihoAKCNnI6+6RDIrMaUX324D0p3g0gvpwCdHh+H
+Qz4EmwNszAF2NK+3shy7T7E=
+=ufgM
 -----END PGP SIGNATURE-----
 
---C7zPtVaVf+AK4Oqc--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-qGwdxmtc8UX3HXtf8ypU--
+
