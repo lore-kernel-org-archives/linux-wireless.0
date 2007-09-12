@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbXINTFa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 15:05:30 -0400
-Subject: Re: [PATCH 00/05] orinoco: Agere/Lucent firmware download
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <46EAD760.9020102@gmail.com>
-References: <46E8557F.2080401@gmail.com> <1189746312.26312.39.camel@dv>
-	 <46EACAA5.2050706@gmail.com>  <46EAD760.9020102@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pelslsrvM3eBKkiBN5ZW"
-Date: Fri, 14 Sep 2007 21:06:47 +0200
-Message-Id: <1189796807.3974.53.camel@johannes.berg>
+Received: from main.gmane.org ([80.91.229.2]:33153 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763684AbXILK6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2007 06:58:55 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1IVPvd-00081s-Hy
+	for linux-wireless@vger.kernel.org; Wed, 12 Sep 2007 12:58:41 +0200
+Received: from 80.169.182.16 ([80.169.182.16])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 12:58:41 +0200
+Received: from marcus by 80.169.182.16 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2007 12:58:41 +0200
+To: linux-wireless@vger.kernel.org
+From: Marcus Better <marcus@better.se>
+Subject: Re: rt2500 suspend problems
+Date: Wed, 12 Sep 2007 12:56:33 +0200
+Message-ID: <fc8goi$abd$1@sea.gmane.org>
+References: <fc85aq$uu6$1@sea.gmane.org> <1189594257.6161.45.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> No idea, must be a driver bug.
 
---=-pelslsrvM3eBKkiBN5ZW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Anything I can do to debug it?
 
-On Fri, 2007-09-14 at 19:48 +0100, Dave wrote:
+Marcus
 
-> Either that was painless, or I did it wrong. Using sparse 3.0 the only
-> warnings were in orinoco.c, related to the use of ARRAY_SIZE. Errors
-> are false positives.
-
-They're errors tho so sparse aborts and stops parsing the file at that
-point. A new git sparse can actually parse ARRAY_SIZE though, I can only
-recommend getting that.
-
-johannes
-
---=-pelslsrvM3eBKkiBN5ZW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6tvH/ETPhpq3jKURAgXgAJ9O/CJdvAUJxrkLYJ2sqEm4qe8aMwCfWmfK
-5QY9w4AXkIJQJpQWUvirASk=
-=fxud
------END PGP SIGNATURE-----
-
---=-pelslsrvM3eBKkiBN5ZW--
 
