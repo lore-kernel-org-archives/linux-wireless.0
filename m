@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:56068 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757042AbXISUq0 (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:61766 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750927AbXILBHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 16:46:26 -0400
-Received: by py-out-1112.google.com with SMTP id u77so594066pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 13:46:25 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-Date: Wed, 19 Sep 2007 22:59:10 +0200
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20070918213202.GJ4940@tuxdriver.com> <200709192031.19934.IvDoorn@gmail.com> <20070919191156.GC5483@tuxdriver.com>
-In-Reply-To: <20070919191156.GC5483@tuxdriver.com>
+	Tue, 11 Sep 2007 21:07:20 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC 2/3] rfkill: Add support for ultrawideband
+Date: Tue, 11 Sep 2007 18:07:22 -0700
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <200709081710.56744.IvDoorn@gmail.com> <200709081711.50344.IvDoorn@gmail.com>
+In-Reply-To: <200709081711.50344.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200709192259.10694.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200709111807.23091.inaky@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 19 September 2007, John W. Linville wrote:
-> On Wed, Sep 19, 2007 at 08:31:19PM +0200, Ivo van Doorn wrote:
+On Saturday 08 September 2007, Ivo van Doorn wrote:
+> This patch will add support for UWB keys to rfkill,
+> support for this has been requested by Inaky.
 > 
-> > > Ivo and his team may feel I am jumping the gun a bit -- they have
-> > > a few more random bugs they wanted to squash before going upstream.
-> > > But since they are bugs, any fixes should still be able to be applied
-> > > in the -rc phase of 2.6.24.  In the meantime, I definitely think it
-> > > would be better to get this code into mainline rather than keeping
-> > > it out of stream.
-> > 
-> > With 2.6.23 not yet released, I assume we still have a few months to get
-> > rt2x00 shaped up to be really ready for 2.6.24?
-> > Because I am indeed not really happy with this early merge, but I'll do my
-> > best to resolve the last outstanding bugs as soon as possible.
-> 
-> Ivo,
-> 
-> Having failed to ask for permission, this is where I ask for your
-> forgiveness.  Please forgive me! :-)
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> CC: Inaky Perez-Gonzalez <inaky@linux.intel.com>
 
-Not a problem. :)
+Thanks so much
 
-> As Dave said, merging rt2x00 now is undoubtedly better than having
-> no driver at all.  I appreciate your understanding and cooperation!
-
-I was just surprised to see the pull request floating by,
-but you were right, there should be enough time to resolve the remaining issues
-and it is actually a good thing to start moving rt2x00 further upstream.
-
-Ivo
+Acked-by: Inaky Perez-Gonzalez <inaky@linux.intel.com>
