@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58137
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbXI2K0S (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763438AbXILIzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 06:26:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] z1211: Make the LEDs warning debug-only
-Date: Sat, 29 Sep 2007 12:23:20 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200709291223.20926.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+	Wed, 12 Sep 2007 04:55:05 -0400
+Subject: Re: zd-mac80211: Fix TX status reports.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Michael Buesch <mb@bu3sch.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1189587273.6161.36.camel@johannes.berg>
+References: <200709082341.31720.mb@bu3sch.de>
+	 <200709111220.31700.mb@bu3sch.de> <1189506596.6161.14.camel@johannes.berg>
+	 <200709111252.30291.mb@bu3sch.de> <1189508230.6161.18.camel@johannes.berg>
+	 <20070911223258.GA31400@deine-taler.de>
+	 <1ba2fa240709120140l56c21269p8254c790edda42b1@mail.gmail.com>
+	 <1189587273.6161.36.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BN8dBgm5olXfY4ZXnI6o"
+Date: Wed, 12 Sep 2007 10:56:31 +0200
+Message-Id: <1189587391.6161.38.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This warning triggers now and then with an -ETIMEDOUT error.
-Though the LEDs work fine.
-Make this warning debug-only, as nobody is really interested
-in a LED failure that happens only now and then.
-If the LEDs don't work, one can easily enable debugging to see
-what's going on.
-This reduces dmesg spamming.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-BN8dBgm5olXfY4ZXnI6o
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2007-09-12 at 10:54 +0200, Johannes Berg wrote:
+> On Wed, 2007-09-12 at 11:40 +0300, Tomas Winkler wrote:
+>=20
+> > > Sending only one packet until the timeout period is over is
+> > > certainly doable and could be used for critical activity like
+> > > association and authentication, but for normal mode the driver
+> > > should only be required to provide statistics.
+>=20
+> > That was my suggestion as well.
+>=20
+> The only question is how we know which packets we need to be careful
+> with. Right now, it seems that is only packets from hostapd?
 
-Index: wireless-2.6/drivers/net/wireless/z1211/zd_mac.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/z1211/zd_mac.c	2007-09-25 22:51:28.000000000 +0200
-+++ wireless-2.6/drivers/net/wireless/z1211/zd_mac.c	2007-09-29 12:19:54.000000000 +0200
-@@ -922,7 +922,7 @@ static void link_led_handler(struct work
- 	r = zd_chip_control_leds(chip,
- 		                 is_associated ? LED_ASSOCIATED : LED_SCANNING);
- 	if (r)
--		dev_err(zd_mac_dev(mac), "zd_chip_control_leds error %d\n", r);
-+		dev_dbg_f(zd_mac_dev(mac), "zd_chip_control_leds error %d\n", r);
- 
- 	queue_delayed_work(zd_workqueue, &mac->housekeeping.link_led_work,
- 		           LINK_LED_WORK_DELAY);
+Also, do we really want to basically stop the whole AP when a new
+station is trying to associate? Maybe zd1211 is just not suitable for
+running an AP.
 
--- 
-Greetings Michael.
+johannes
+
+--=-BN8dBgm5olXfY4ZXnI6o
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG56m//ETPhpq3jKURAlN6AJ9xVbSPSvAMokoGHWcWKzr5+avePACdEw/z
+mjZKlzgCjEwUHATeWv8dmb8=
+=hqKs
+-----END PGP SIGNATURE-----
+
+--=-BN8dBgm5olXfY4ZXnI6o--
+
