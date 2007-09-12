@@ -1,81 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:59730 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755221AbXITQ4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 12:56:12 -0400
-Date: Thu, 20 Sep 2007 09:55:45 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wext 64-bit: network manager and wpa_supplicant
-Message-ID: <20070920165545.GA29452@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1190292526.18521.52.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190292526.18521.52.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51535 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbXIMHKS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2007 03:10:18 -0400
+Subject: documenting mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eN2v7fLtHn8XxNpXdWcM"
+Date: Wed, 12 Sep 2007 23:55:25 +0200
+Message-Id: <1189634125.6161.69.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 20, 2007 at 02:48:46PM +0200, Johannes Berg wrote:
-> Ahrg. So I was complaining about NM not displaying any networks when
-> that umlaut-network I talked about earlier was present. But all that was
-> just wrong, the real problem seems to be that NM doesn't work on 64-bit
-> platforms. Is there any fix for it? It really should be going into a
-> 0.6.5.1 version or something so distributions will ship it.
-> 
-> And even the wpa_supplicant git version still seems to parse everything
-> itself without any 64-bit workarounds as far as I can tell. I keep
-> building wpa_supplicant for 64-bit just to test... Any chance to finally
-> get fixes into the stable versions distros are shipping?
-> 
-> Thanks,
-> johannes
 
-	You know that I don't have any 64 bit box, so I can't really
-test it. I did extensive work with people of Gentoo and Debian to make
-sure that my fix in Wireless Extension works both with 32 bits
-userspace on 64 bits kernel and 64 bits userspace on 64 bits
-kernels. The versions that are fully fixed are 29-pre20 and later.
-	Then, I modified NetworkManaged to use libiw for scan
-parsing. The idea was to simplify NetworkManager and fix the 32-64 bit
-bug, plus a few other potential gotchas. The first version of
-NetworkManager to include that fix is 0.6.5. But, I've just realised
-that I did not convert event parsing, which could be an issue, I'll
-try to work on that.
-	Note that the other big issue is that, if wpa_supplicant is
-present, NetworkManager will request the scan from it, and won't use
-its internal code, so all those fixes are useless. Maybe there should
-be a control to force NetworkManager to use its own scan code when
-needed.
+--=-eN2v7fLtHn8XxNpXdWcM
+Content-Type: multipart/mixed; boundary="=-n7nSHCP+YB5KYd7AJUR2"
 
-	As far as I know, Debian testing (Lenny) has those
-packages. Of course, I would not mind if you could test all this,
-verify that the packages are the right version and that iwlist works
-properly. If iwlist does not work, the rest will never works.
 
-	With respect to wpa_supplicant. Well, I sent multiple e-mail
-to Jouni to inform him about this. My personaly inclination would be
-to rip the custom parsing code of wpa_supplicant and use libiw
-instead, but Jouni will never accept that. Maybe you should use
-xsupplicant instead.
+--=-n7nSHCP+YB5KYd7AJUR2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Same seems to go for wpa_supplicant, Debian is shipping 0.6.0 which only
-> triggers this in the kernel log:
-> 
-> [  787.877417] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  787.877763] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  787.877817] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  795.264145] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> [  795.264243] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> [  795.264291] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> 
+Hey,
 
-	Ok, I see what's happening. That would just prevent you to set
-authentication information, but that is not the root caause of your
-problems. I'll puch a fix ASAP to John.
+After having added all the docbook stuff to mac80211.h I want to
+aggregate it into a document. This is really WIP but I hope to attract
+some others to document things, often bugs/bad assumptions are found
+that way.
 
-	Regards,
+Attached is a mac80211.tmpl file suitable for Documentation/DocBook.
+Note, however, that it contains !P directives which are not understood
+by scripts/basic/docproc.c yet, patches will be fixed up and sent soon.
+Hence, I've also uploaded the current documentation to
+http://johannes.sipsolutions.net/files/mac80211/
 
-	Jean
+Of course, most of the chapters in that document are empty, they ought
+to be filled with contents as time permits. I have structured the
+document into four chapters as you can see in the output:
+   I. The basic mac80211 driver interface
+  II. Advanced driver interface
+ III. Rate control interface
+  IV. Internals
+
+Obviously, chapter III. can't be written yet because the rate control
+interface hasn't been formalised, but maybe we should actually write the
+documentation before the code.
+
+Also, a new book on cfg80211 should be written that shall include all
+the wiphy stuff and the new regulatory stuff from Luis. But I can only
+do so much at a time :)
+
+johannes
+
+--=-n7nSHCP+YB5KYd7AJUR2
+Content-Disposition: attachment; filename=mac80211.tmpl
+Content-Type: application/docbook+xml; name=mac80211.tmpl
+Content-Transfer-Encoding: base64
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGJvb2sgUFVC
+TElDICItLy9PQVNJUy8vRFREIERvY0Jvb2sgWE1MIFY0LjEuMi8vRU4iCgkiaHR0cDovL3d3dy5v
+YXNpcy1vcGVuLm9yZy9kb2Nib29rL3htbC80LjEuMi9kb2Nib29reC5kdGQiIFtdPgoKPGJvb2sg
+aWQ9Im1hYzgwMjExLWRldmVsb3BlcnMtZ3VpZGUiPgogIDxib29raW5mbz4KICAgIDx0aXRsZT5U
+aGUgbWFjODAyMTEgc3Vic3lzdGVtIGZvciBrZXJuZWwgZGV2ZWxvcGVyczwvdGl0bGU+CgogICAg
+PGF1dGhvcmdyb3VwPgogICAgICA8YXV0aG9yPgogICAgICAgIDxmaXJzdG5hbWU+Sm9oYW5uZXM8
+L2ZpcnN0bmFtZT4KICAgICAgICA8c3VybmFtZT5CZXJnPC9zdXJuYW1lPgogICAgICAgIDxhZmZp
+bGlhdGlvbj4KICAgICAgICAgIDxhZGRyZXNzPjxlbWFpbD5qb2hhbm5lc0BzaXBzb2x1dGlvbnMu
+bmV0PC9lbWFpbD48L2FkZHJlc3M+CiAgICAgICAgPC9hZmZpbGlhdGlvbj4KICAgICAgPC9hdXRo
+b3I+CiAgICA8L2F1dGhvcmdyb3VwPgoKICAgIDxjb3B5cmlnaHQ+CiAgICAgIDx5ZWFyPjIwMDc8
+L3llYXI+CiAgICAgIDxob2xkZXI+Sm9oYW5uZXMgQmVyZzwvaG9sZGVyPgogICAgPC9jb3B5cmln
+aHQ+CgogICAgPGxlZ2Fsbm90aWNlPgogICAgICA8cGFyYT4KICAgICAgICBUaGlzIGRvY3VtZW50
+YXRpb24gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUKICAgICAgICBpdCBh
+bmQvb3IgbW9kaWZ5IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGlj
+CiAgICAgICAgTGljZW5zZSB2ZXJzaW9uIDIgYXMgcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3
+YXJlIEZvdW5kYXRpb24uCiAgICAgIDwvcGFyYT4KCiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMg
+ZG9jdW1lbnRhdGlvbiBpcyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUK
+ICAgICAgICB1c2VmdWwsIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5UWTsgd2l0aG91dCBldmVuIHRo
+ZSBpbXBsaWVkCiAgICAgICAgd2FycmFudHkgb2YgTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1Mg
+Rk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFLgogICAgICAgIFNlZSB0aGUgR05VIEdlbmVyYWwgUHVi
+bGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4KICAgICAgPC9wYXJhPgoKICAgICAgPHBhcmE+
+CiAgICAgICAgWW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVy
+YWwgUHVibGljCiAgICAgICAgTGljZW5zZSBhbG9uZyB3aXRoIHRoaXMgZG9jdW1lbnRhdGlvbjsg
+aWYgbm90LCB3cml0ZSB0byB0aGUgRnJlZQogICAgICAgIFNvZnR3YXJlIEZvdW5kYXRpb24sIElu
+Yy4sIDU5IFRlbXBsZSBQbGFjZSwgU3VpdGUgMzMwLCBCb3N0b24sCiAgICAgICAgTUEgMDIxMTEt
+MTMwNyBVU0EKICAgICAgPC9wYXJhPgoKICAgICAgPHBhcmE+CiAgICAgICAgRm9yIG1vcmUgZGV0
+YWlscyBzZWUgdGhlIGZpbGUgQ09QWUlORyBpbiB0aGUgc291cmNlCiAgICAgICAgZGlzdHJpYnV0
+aW9uIG9mIExpbnV4LgogICAgICA8L3BhcmE+CiAgICA8L2xlZ2Fsbm90aWNlPgoKICAgIDxhYnN0
+cmFjdD4KIVBpbmNsdWRlL25ldC9tYWM4MDIxMS5oIEludHJvZHVjdGlvbgohUGluY2x1ZGUvbmV0
+L21hYzgwMjExLmggV2FybmluZwogICAgPC9hYnN0cmFjdD4KICA8L2Jvb2tpbmZvPgoKICA8dG9j
+PjwvdG9jPgoKPCEtLQpHZW5lcmFsbHksIHRoaXMgZG9jdW1lbnQgc2hhbGwgYmUgb3JkZXJlZCBi
+eSBpbmNyZWFzaW5nIGNvbXBsZXhpdHkuCkl0IGlzIGltcG9ydGFudCB0byBub3RlIHRoYXQgcmVh
+ZGVycyBzaG91bGQgYmUgYWJsZSB0byByZWFkIG9ubHkKdGhlIGZpcnN0IGZldyBzZWN0aW9ucyB0
+byBnZXQgYSB3b3JraW5nIGRyaXZlciBhbmQgb25seSBhZHZhbmNlZAp1c2FnZSBzaG91bGQgcmVx
+dWlyZSByZWFkaW5nIHRoZSBmdWxsIGRvY3VtZW50LgotLT4KCiAgPHBhcnQ+CiAgICA8dGl0bGU+
+VGhlIGJhc2ljIG1hYzgwMjExIGRyaXZlciBpbnRlcmZhY2U8L3RpdGxlPgogICAgPHBhcnRpbnRy
+bz4KICAgICAgPHBhcmE+CiAgICAgICAgWW91IHNob3VsZCByZWFkIGFuZCB1bmRlcnN0YW5kIHRo
+ZSBpbmZvcm1hdGlvbiBjb250YWluZWQKICAgICAgICB3aXRoaW4gdGhpcyBwYXJ0IG9mIHRoZSBi
+b29rIHdoaWxlIGltcGxlbWVudGluZyBhIGRyaXZlci4KICAgICAgICBJbiBzb21lIGNoYXB0ZXJz
+LCBhZHZhbmNlZCB1c2FnZSBpcyBub3RlZCwgdGhhdCBtYXkgYmUKICAgICAgICBza2lwcGVkIGF0
+IGZpcnN0LgogICAgICA8L3BhcmE+CiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMgcGFydCBvZiB0
+aGUgYm9vayBvbmx5IGNvdmVycyBzdGF0aW9uIGFuZCBtb25pdG9yIG1vZGUKICAgICAgICBmdW5j
+dGlvbmFsaXR5LCBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHJlcXVpcmVkIHRvIGltcGxlbWVudAog
+ICAgICAgIHRoZSBvdGhlciBtb2RlcyBpcyBjb3ZlcmVkIGluIHRoZSBzZWNvbmQgcGFydCBvZiB0
+aGUgYm9vay4KICAgICAgPC9wYXJhPgogICAgPC9wYXJ0aW50cm8+CgogICAgPGNoYXB0ZXIgaWQ9
+ImJhc2ljcyI+CiAgICAgIDx0aXRsZT5CYXNpYyBoYXJkd2FyZSBoYW5kbGluZzwvdGl0bGU+CiAg
+ICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgICAgVGhpcyBjaGFwdGVyIHNo
+YWxsIGNvbnRhaW4gaW5mb3JtYXRpb24gb24gZ2V0dGluZyBhIGh3CiAgICAgICAgc3RydWN0IGFs
+bG9jYXRlZCBhbmQgcmVnaXN0ZXJlZCB3aXRoIG1hYzgwMjExLgogICAgICA8L3BhcmE+CiAgICAg
+IDxwYXJhPgogICAgICAgIFNpbmNlIGl0IGlzIHJlcXVpcmVkIHRvIGFsbG9jYXRlIHJhdGVzL21v
+ZGVzIGJlZm9yZSByZWdpc3RlcmluZwogICAgICAgIGEgaHcgc3RydWN0LCB0aGlzIGNoYXB0ZXIg
+c2hhbGwgYWxzbyBjb250YWluIGluZm9ybWF0aW9uIG9uIHNldHRpbmcKICAgICAgICB1cCB0aGUg
+cmF0ZS9tb2RlIHN0cnVjdHMuCiAgICAgIDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgICAgQWRk
+aXRpb25hbGx5LCBzb21lIGRpc2N1c3Npb24gYWJvdXQgdGhlIGNhbGxiYWNrcyBhbmQKICAgICAg
+ICB0aGUgZ2VuZXJhbCBwcm9ncmFtbWluZyBtb2RlbCBzaG91bGQgYmUgaW4gaGVyZSwgaW5jbHVk
+aW5nCiAgICAgICAgdGhlIGRlZmluaXRpb24gb2YgaWVlZTgwMjExX29wcyB3aGljaCB3aWxsIGJl
+IHJlZmVycmVkIHRvCiAgICAgICAgYSBsb3QuCiAgICAgIDwvcGFyYT4KICAgICAgPHBhcmE+CiAg
+ICAgICAgRmluYWxseSwgYSBkaXNjdXNzaW9uIG9mIGhhcmR3YXJlIGNhcGFiaWxpdGllcyBzaG91
+bGQgYmUgZG9uZQogICAgICAgIHdpdGggcmVmZXJlbmNlcyB0byBvdGhlciBwYXJ0cyBvZiB0aGUg
+Ym9vay4KICAgICAgPC9wYXJhPgo8IS0tIGludGVudGlvbmFsbHkgbXVsdGlwbGUgIUYgbGluZXMg
+dG8gZ2V0IHByb3BlciBvcmRlciAtLT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIx
+MV9waHltb2RlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfaHdfbW9kZQohRmlu
+Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2h3CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEu
+aCBpZWVlODAyMTFfaHdfZmxhZ3MKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIFNFVF9JRUVFODAy
+MTFfREVWCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBTRVRfSUVFRTgwMjExX1BFUk1fQUREUgoh
+RmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX29wcwohRmluY2x1ZGUvbmV0L21hYzgw
+MjExLmggaWVlZTgwMjExX2FsbG9jX2h3CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
+MTFfcmVnaXN0ZXJfaHcKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZXRfdHhf
+bGVkX25hbWUKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZXRfcnhfbGVkX25h
+bWUKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9yZWdpc3Rlcl9od21vZGUKIUZp
+bmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV91bnJlZ2lzdGVyX2h3CiFGaW5jbHVkZS9u
+ZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfZnJlZV9odwogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFw
+dGVyIGlkPSJwaHktaGFuZGxpbmciPgogICAgICA8dGl0bGU+UEhZIGNvbmZpZ3VyYXRpb248L3Rp
+dGxlPgogICAgICA8cGFyYT5UQkQ8L3BhcmE+CiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMgY2hh
+cHRlciBzaG91bGQgZGVzY3JpYmUgUEhZIGhhbmRsaW5nIGluY2x1ZGluZwogICAgICAgIHN0YXJ0
+L3N0b3AgY2FsbGJhY2tzIGFuZCB0aGUgdmFyaW91cyBzdHJ1Y3R1cmVzIHVzZWQuCiAgICAgIDwv
+cGFyYT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9jb25mCiFGaW5jbHVkZS9u
+ZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfY29uZl9mbGFncwohRmluY2x1ZGUvbmV0L21hYzgwMjEx
+LmggaWVlZTgwMjExX2VycF9jaGFuZ2VfZmxhZ3MKICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRl
+ciBpZD0iaWZhY2UtaGFuZGxpbmciPgogICAgICA8dGl0bGU+VmlydHVhbCBpbnRlcmZhY2VzPC90
+aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgogICAgICA8cGFyYT4KICAgICAgICBUaGlzIGNo
+YXB0ZXIgc2hvdWxkIGRlc2NyaWJlIHZpcnR1YWwgaW50ZXJmYWNlIGJhc2ljcwogICAgICAgIHRo
+YXQgYXJlIHJlbGV2YW50IHRvIHRoZSBkcml2ZXIgKFZMQU5zLCBNR01UIGV0YyBhcmUgbm90LikK
+ICAgICAgICBJdCBzaG91bGQgZXhwbGFpbiB0aGUgdXNlIG9mIHRoZSBhZGRfaWZhY2UvcmVtb3Zl
+X2lmYWNlCiAgICAgICAgY2FsbGJhY2tzIGFzIHdlbGwgYXMgdGhlIGludGVyZmFjZSBjb25maWd1
+cmF0aW9uIGNhbGxiYWNrcy4KICAgICAgPC9wYXJhPgogICAgICA8cGFyYT5UaGluZ3MgcmVsYXRl
+ZCB0byBBUCBtb2RlIHNob3VsZCBiZSBkaXNjdXNzZWQgdGhlcmUuPC9wYXJhPgogICAgICA8cGFy
+YT4KICAgICAgICBUaGluZ3MgcmVsYXRlZCB0byBzdXBwb3J0aW5nIG11bHRpcGxlIGludGVyZmFj
+ZXMgc2hvdWxkIGJlCiAgICAgICAgaW4gdGhlIGFwcHJvcHJpYXRlIGNoYXB0ZXIsIGEgQklHIEZB
+VCBub3RlIHNob3VsZCBiZSBoZXJlIGFib3V0CiAgICAgICAgdGhpcyB0aG91Z2ggYW5kIHRoZSBy
+ZWNvbW1lbmRhdGlvbiB0byBhbGxvdyBvbmx5IGEgc2luZ2xlCiAgICAgICAgaW50ZXJmYWNlIGlu
+IFNUQSBtb2RlIGF0IGZpcnN0IQogICAgICA8L3BhcmE+CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEu
+aCBpZWVlODAyMTFfaWZfdHlwZXMKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9p
+Zl9pbml0X2NvbmYKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9pZl9jb25mCiAg
+ICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9ImZyYW1lLWZvcm1hdCI+CiAgICAgIDx0aXRs
+ZT5GcmFtZSBmb3JtYXQ8L3RpdGxlPgogICAgICAgIDxwYXJhPlRCRDogbW92ZSBpbnRvIHJ4L3R4
+IGNoYXB0ZXI/PC9wYXJhPgohUGluY2x1ZGUvbmV0L21hYzgwMjExLmggRnJhbWUgZm9ybWF0CiAg
+ICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InJ4LXR4Ij4KICAgICAgPHRpdGxlPlJlY2Vp
+dmUgYW5kIHRyYW5zbWl0IHByb2Nlc3Npbmc8L3RpdGxlPgogICAgICA8c2VjdDE+CiAgICAgICAg
+PHRpdGxlPndoYXQgc2hvdWxkIGJlIGhlcmU8L3RpdGxlPgogICAgICAgIDxwYXJhPlRCRDwvcGFy
+YT4KICAgICAgICA8cGFyYT4KICAgICAgICAgIFRoaXMgc2hvdWxkIGRlc2NyaWJlIHRoZSByZWNl
+aXZlIGFuZCB0cmFuc21pdAogICAgICAgICAgcGF0aHMgaW4gbWFjODAyMTEvdGhlIGRyaXZlcnMg
+YXMgd2VsbCBhcwogICAgICAgICAgdHJhbnNtaXQgc3RhdHVzIGhhbmRsaW5nLgogICAgICAgIDwv
+cGFyYT4KICAgICAgPC9zZWN0MT4KICAgICAgPHNlY3QxPgogICAgICAgIDx0aXRsZT5DYWxsaW5n
+IGludG8gbWFjODAyMTEgZnJvbSBpbnRlcnJ1cHRzPC90aXRsZT4KIVBpbmNsdWRlL25ldC9tYWM4
+MDIxMS5oIENhbGxpbmcgbWFjODAyMTEgZnJvbSBpbnRlcnJ1cHRzCiAgICAgIDwvc2VjdDE+CiAg
+ICAgIDxzZWN0MT4KICAgICAgICA8dGl0bGU+ZnVuY3Rpb25zL2RlZmluaXRpb25zPC90aXRsZT4K
+IUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9yeF9zdGF0dXMKIUZpbmNsdWRlL25l
+dC9tYWM4MDIxMS5oIG1hYzgwMjExX3J4X2ZsYWdzCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBp
+ZWVlODAyMTFfdHhfY29udHJvbAohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4
+X3N0YXR1c19mbGFncwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3J4CiFGaW5j
+bHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfcnhfaXJxc2FmZQohRmluY2x1ZGUvbmV0L21h
+YzgwMjExLmggaWVlZTgwMjExX3R4X3N0YXR1cwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVl
+ZTgwMjExX3R4X3N0YXR1c19pcnFzYWZlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
+MTFfcnRzX2dldAohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3J0c19kdXJhdGlv
+bgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2N0c3Rvc2VsZl9nZXQKIUZpbmNs
+dWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9jdHN0b3NlbGZfZHVyYXRpb24KIUZpbmNsdWRl
+L25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZW5lcmljX2ZyYW1lX2R1cmF0aW9uCiFGaW5jbHVk
+ZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfZ2V0X2hkcmxlbl9mcm9tX3NrYgohRmluY2x1ZGUv
+bmV0L21hYzgwMjExLmggaWVlZTgwMjExX2dldF9oZHJsZW4KIUZpbmNsdWRlL25ldC9tYWM4MDIx
+MS5oIGllZWU4MDIxMV93YWtlX3F1ZXVlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
+MTFfc3RvcF9xdWV1ZQohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3N0YXJ0X3F1
+ZXVlcwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3N0b3BfcXVldWVzCiFGaW5j
+bHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfd2FrZV9xdWV1ZXMKICAgICAgPC9zZWN0MT4K
+ICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0iZmlsdGVycyI+CiAgICAgIDx0aXRsZT5G
+cmFtZSBmaWx0ZXJpbmc8L3RpdGxlPgohUGluY2x1ZGUvbmV0L21hYzgwMjExLmggRnJhbWUgZmls
+dGVyaW5nCjwhLS0gaW50ZW50aW9uYWxseSB0d28gIUYgbGluZXMgdG8gZ2V0IHByb3BlciBvcmRl
+ciAtLT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9maWx0ZXJfZmxhZ3MKICAg
+IDwvY2hhcHRlcj4KICA8L3BhcnQ+CgogIDxwYXJ0IGlkPSJhZHZhbmNlZCI+CiAgICA8dGl0bGU+
+QWR2YW5jZWQgZHJpdmVyIGludGVyZmFjZTwvdGl0bGU+CiAgICA8cGFydGludHJvPgogICAgICA8
+cGFyYT4KICAgICAgCUluZm9ybWF0aW9uIGNvbnRhaW5lZCB3aXRoaW4gdGhpcyBwYXJ0IG9mIHRo
+ZSBib29rIGlzCiAgICAgIAlvZiBpbnRlcmVzdCBvbmx5IGZvciBhZHZhbmNlZCBpbnRlcmFjdGlv
+biBvZiBtYWM4MDIxMQogICAgICAJd2l0aCBkcml2ZXJzIHRvIGV4cGxvaXQgbW9yZSBoYXJkd2Fy
+ZSBjYXBhYmlsaXRpZXMgYW5kCiAgICAgIAlpbXByb3ZlIHBlcmZvcm1hbmNlLgogICAgICA8L3Bh
+cmE+CiAgICA8L3BhcnRpbnRybz4KCiAgICA8Y2hhcHRlciBpZD0iaGFyZHdhcmUtY3J5cHRvLW9m
+ZmxvYWQiPgogICAgICA8dGl0bGU+SGFyZHdhcmUgY3J5cHRvIGFjY2VsZXJhdGlvbjwvdGl0bGU+
+CiFQaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBIYXJkd2FyZSBjcnlwdG8gYWNjZWxlcmF0aW9uCjwh
+LS0gaW50ZW50aW9uYWxseSBkaWZmZXJlbnQgIUYgbGluZXMgdG8gZ2V0IHByb3BlciBvcmRlciAt
+LT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIHNldF9rZXlfY21kCiFGaW5jbHVkZS9uZXQvbWFj
+ODAyMTEuaCBpZWVlODAyMTFfa2V5X2NvbmYKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4
+MDIxMV9rZXlfYWxnCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfa2V5X2ZsYWdz
+CiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InFvcyI+CiAgICAgIDx0aXRsZT5NdWx0
+aXBsZSBxdWV1ZXMgYW5kIFFvUyBzdXBwb3J0PC90aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJh
+PgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3BhcmFtcwohRmlu
+Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3N0YXRzX2RhdGEKIUZpbmNs
+dWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV90eF9xdWV1ZQohRmluY2x1ZGUvbmV0L21hYzgw
+MjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3N0YXRzCiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0
+ZXIgaWQ9IkFQIj4KICAgICAgPHRpdGxlPkFjY2VzcyBwb2ludCBtb2RlIHN1cHBvcnQ8L3RpdGxl
+PgogICAgICA8cGFyYT5UQkQ8L3BhcmE+CiAgICAgIDxwYXJhPlNvbWUgcGFydHMgb2YgdGhlIGlm
+X2NvbmYgc2hvdWxkIGJlIGRpc2N1c3NlZCBoZXJlIGluc3RlYWQ8L3BhcmE+CiAgICAgIDxwYXJh
+PgogICAgICAgIEluc2VydCBub3RlcyBhYm91dCBWTEFOIGludGVyZmFjZXMgd2l0aCBodyBjcnlw
+dG8gaGVyZSBvcgogICAgICAgIGluIHRoZSBodyBjcnlwdG8gY2hhcHRlci4KICAgICAgPC9wYXJh
+PgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2dldF9idWZmZXJlZF9iYwohRmlu
+Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2JlYWNvbl9nZXQKICAgIDwvY2hhcHRlcj4K
+CiAgICA8Y2hhcHRlciBpZD0ibXVsdGktaWZhY2UiPgogICAgICA8dGl0bGU+U3VwcG9ydGluZyBt
+dWx0aXBsZSB2aXJ0dWFsIGludGVyZmFjZXM8L3RpdGxlPgogICAgICA8cGFyYT5UQkQ8L3BhcmE+
+CiAgICAgIDxwYXJhPgogICAgICAgIE5vdGU6IFdEUyB3aXRoIGlkZW50aWNhbCBNQUMgYWRkcmVz
+cyBzaG91bGQgYWxtb3N0IGFsd2F5cyBiZSBPSwogICAgICA8L3BhcmE+CiAgICAgIDxwYXJhPgog
+ICAgICAgIEluc2VydCBub3RlcyBhYm91dCBoYXZpbmcgbXVsdGlwbGUgdmlydHVhbCBpbnRlcmZh
+Y2VzIHdpdGgKICAgICAgICBkaWZmZXJlbnQgTUFDIGFkZHJlc3NlcyBoZXJlLCBub3RlIHdoaWNo
+IGNvbmZpZ3VyYXRpb25zIGFyZQogICAgICAgIHN1cHBvcnRlZCBieSBtYWM4MDIxMSwgYWRkIG5v
+dGVzIGFib3V0IHN1cHBvcnRpbmcgaHcgY3J5cHRvCiAgICAgICAgd2l0aCBpdC4KICAgICAgPC9w
+YXJhPgogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFwdGVyIGlkPSJoYXJkd2FyZS1zY2FuLW9mZmxv
+YWQiPgogICAgICA8dGl0bGU+SGFyZHdhcmUgc2NhbiBvZmZsb2FkPC90aXRsZT4KICAgICAgPHBh
+cmE+VEJEPC9wYXJhPgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3NjYW5fY29t
+cGxldGVkCiAgICA8L2NoYXB0ZXI+CiAgPC9wYXJ0PgoKICA8cGFydCBpZD0icmF0ZS1jb250cm9s
+Ij4KICAgIDx0aXRsZT5SYXRlIGNvbnRyb2wgaW50ZXJmYWNlPC90aXRsZT4KICAgIDxwYXJ0aW50
+cm8+CiAgICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgIAlUaGlzIHBhcnQg
+b2YgdGhlIGJvb2sgZGVzY3JpYmVzIHRoZSByYXRlIGNvbnRyb2wgYWxnb3JpdGhtCiAgICAgIAlp
+bnRlcmZhY2UgYW5kIGhvdyBpdCByZWxhdGVzIHRvIG1hYzgwMjExIGFuZCBkcml2ZXJzLgogICAg
+ICA8L3BhcmE+CiAgICA8L3BhcnRpbnRybz4KICAgIDxjaGFwdGVyIGlkPSJkdW1teSI+CiAgICAg
+IDx0aXRsZT5kdW1teSBjaGFwdGVyPC90aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgogICAg
+PC9jaGFwdGVyPgogIDwvcGFydD4KCiAgPHBhcnQgaWQ9ImludGVybmFsIj4KICAgIDx0aXRsZT5J
+bnRlcm5hbHM8L3RpdGxlPgogICAgPHBhcnRpbnRybz4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgog
+ICAgICA8cGFyYT4KICAgICAgCVRoaXMgcGFydCBvZiB0aGUgYm9vayBkZXNjcmliZXMgbWFjODAy
+MTEgaW50ZXJuYWxzLgogICAgICA8L3BhcmE+CiAgICA8L3BhcnRpbnRybz4KCiAgICA8Y2hhcHRl
+ciBpZD0ia2V5LWhhbmRsaW5nIj4KICAgICAgPHRpdGxlPktleSBoYW5kbGluZzwvdGl0bGU+CiAg
+ICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0icngt
+cHJvY2Vzc2luZyI+CiAgICAgIDx0aXRsZT5SZWNlaXZlIHByb2Nlc3Npbmc8L3RpdGxlPgogICAg
+ICA8cGFyYT5UQkQ8L3BhcmE+CiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InR4LXBy
+b2Nlc3NpbmciPgogICAgICA8dGl0bGU+VHJhbnNtaXQgcHJvY2Vzc2luZzwvdGl0bGU+CiAgICAg
+IDxwYXJhPlRCRDwvcGFyYT4KICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0ic3RhLWlu
+Zm8iPgogICAgICA8dGl0bGU+U3RhdGlvbiBpbmZvIGhhbmRsaW5nPC90aXRsZT4KICAgICAgPHBh
+cmE+VEJEPC9wYXJhPgogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFwdGVyIGlkPSJzeW5jaHJvbmlz
+YXRpb24iPgogICAgICA8dGl0bGU+U3luY2hyb25pc2F0aW9uPC90aXRsZT4KICAgICAgPHBhcmE+
+VEJEPC9wYXJhPgogICAgICA8cGFyYT5Mb2NraW5nLCBsb3RzIG9mIFJDVTwvcGFyYT4KICAgIDwv
+Y2hhcHRlcj4KICA8L3BhcnQ+CjwvYm9vaz4K
+
+
+--=-n7nSHCP+YB5KYd7AJUR2--
+
+--=-eN2v7fLtHn8XxNpXdWcM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG6GBN/ETPhpq3jKURAkllAJ9CCu7tdOnzZh2Qezo5hh7TUrM2rwCgqArK
+YvyEkfUMTzNhBag1U6rstak=
+=SVHe
+-----END PGP SIGNATURE-----
+
+--=-eN2v7fLtHn8XxNpXdWcM--
+
