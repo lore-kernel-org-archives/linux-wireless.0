@@ -1,98 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4607 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752215AbXIONkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 09:40:47 -0400
-Date: Sat, 15 Sep 2007 09:21:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'upstream-jgarzik' branch of wireless-2.6
-Message-ID: <20070915132134.GD6060@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbXIMHPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2007 03:15:08 -0400
+Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, satyam@infradead.org, flo@rfc822.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, michal.k.k.piotrowski@gmail.com,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+In-Reply-To: <20070912.053411.21914920.davem@davemloft.net>
+References: <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
+	 <20070906082301.GB21929@gondor.apana.org.au>
+	 <1189091995.28781.99.camel@johannes.berg>
+	 <20070912.053411.21914920.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5q22gSmlNtum6WvC184l"
+Date: Thu, 13 Sep 2007 09:16:27 +0200
+Message-Id: <1189667787.6161.83.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff,
 
-A few more for 2.6.24...
+--=-5q22gSmlNtum6WvC184l
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Wed, 2007-09-12 at 05:34 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Thu, 06 Sep 2007 17:19:55 +0200
+>=20
+> >=20
+> > Oh btw. Can we stick a might_sleep() into dev_close() *before* the test
+> > whether the device is up? That way, we'd have seen the bug, but
+> > apparently nobody before Florian ever did a 'ip link set wmaster0 down'
+> > while the other interfaces were still open.
+>=20
+> I've added this to net-2.6.24
 
-John
+Great, thanks. Now I just hope John gets around to merging all the
+accumulated fixes :)
 
----
+johannes
 
-The following changes since commit 18d256761aa268fd2fb113c4fd26c400431f1dc1:
-  Jeff Garzik (1):
-        Merge branch 'stats' into upstream
+--=-5q22gSmlNtum6WvC184l
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-are available in the git repository at:
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-jgarzik
+iD8DBQBG6OPL/ETPhpq3jKURAiTOAJwMn5glpAN/OmX5HDwzBuMV07lF5wCdEnkk
+FOg8XO6khHJn/9NbCUHx7Ys=
+=y5gF
+-----END PGP SIGNATURE-----
 
-Jesper Juhl (1):
-      zd1211rw: Don't needlessly initialize variable to NULL in zd_chip
+--=-5q22gSmlNtum6WvC184l--
 
-Larry Finger (1):
-      bcm43xx: Change radio hardware switch status printk from debug to regular
-
-Ulrich Kunitz (1):
-      zd1211rw: add USB id for Telegent TG54USB WLAN adapter
-
- drivers/net/wireless/bcm43xx/bcm43xx_main.c |    4 ++--
- drivers/net/wireless/zd1211rw/zd_chip.c     |    2 +-
- drivers/net/wireless/zd1211rw/zd_usb.c      |    1 +
- 3 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-index 618d1a2..4d84631 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -2380,7 +2380,7 @@ static int bcm43xx_chip_init(struct bcm43xx_private *bcm)
- 		goto err_gpio_cleanup;
- 	bcm43xx_radio_turn_on(bcm);
- 	bcm->radio_hw_enable = bcm43xx_is_hw_radio_enabled(bcm);
--	dprintk(KERN_INFO PFX "Radio %s by hardware\n",
-+	printk(KERN_INFO PFX "Radio %s by hardware\n",
- 		(bcm->radio_hw_enable == 0) ? "disabled" : "enabled");
- 
- 	bcm43xx_write16(bcm, 0x03E6, 0x0000);
-@@ -3129,7 +3129,7 @@ static void bcm43xx_periodic_every1sec(struct bcm43xx_private *bcm)
- 	radio_hw_enable = bcm43xx_is_hw_radio_enabled(bcm);
- 	if (unlikely(bcm->radio_hw_enable != radio_hw_enable)) {
- 		bcm->radio_hw_enable = radio_hw_enable;
--		dprintk(KERN_INFO PFX "Radio hardware status changed to %s\n",
-+		printk(KERN_INFO PFX "Radio hardware status changed to %s\n",
- 		       (radio_hw_enable == 0) ? "disabled" : "enabled");
- 		bcm43xx_leds_update(bcm, 0);
- 	}
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 4959042..06244d8 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -106,7 +106,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
- {
- 	int r;
- 	int i;
--	zd_addr_t *a16 = (zd_addr_t *)NULL;
-+	zd_addr_t *a16;
- 	u16 *v16;
- 	unsigned int count16;
- 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index e49628b..895ff84 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -55,6 +55,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x14ea, 0xab13), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x13b1, 0x001e), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0586, 0x3407), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x129b, 0x1666), .driver_info = DEVICE_ZD1211 },
- 	/* ZD1211B */
- 	{ USB_DEVICE(0x0ace, 0x1215), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x157e, 0x300d), .driver_info = DEVICE_ZD1211B },
--- 
-John W. Linville
-linville@tuxdriver.com
