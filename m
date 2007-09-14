@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:29405 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933262AbXIBBwc (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757821AbXINMGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:52:32 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1166480wxd
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 18:52:31 -0700 (PDT)
-Message-ID: <f34ca13c0709011852w7f2c14cevdd08582a0ba5ddf5@mail.gmail.com>
-Date: Sat, 1 Sep 2007 21:52:31 -0400
-From: "Constantine A. Murenin" <mureninc@gmail.com>
-To: "Theo de Raadt" <deraadt@cvs.openbsd.org>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Cc: "Bob Beck" <beck@bofh.cns.ualberta.ca>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, misc@openbsd.org
-In-Reply-To: <200709020036.l820aaNf014181@cvs.openbsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20070902000226.GE24887@bofh.cns.ualberta.ca>
-	 <200709020036.l820aaNf014181@cvs.openbsd.org>
+	Fri, 14 Sep 2007 08:06:16 -0400
+Subject: Re: [PATCH 03/21] mac80211: revamp interface and filter  configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	Li YanBo <dreamfly281@gmail.com>
+In-Reply-To: <200709132350.38488.flamingice@sourmilk.net>
+References: <20070905234209.108005000@sipsolutions.net>
+	 <20070905234622.671760000@sipsolutions.net>
+	 <200709132350.38488.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6atJI+leP/0WY5cW6V3q"
+Date: Fri, 14 Sep 2007 14:06:58 +0200
+Message-Id: <1189771618.3974.28.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/07, Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
-> When companies have taken our wireless device drivers, many many of
-> them have given changes and fixes back.  Some maybe didn't, but that
-> is OK.
->
-> When Linux took our changes back, they immediately locked the door
-> against changes moving back, by putting a GPL license on guard.
->
-> Why does our brother Linux take a file that is 90% BSD licensed,
-> and refuse to let us see the 10% he adds?
 
-Indeed, it's upsetting that people like Luis Rodriguez push for the
-lawyers to be involved to (fight?) an open source project. Why, may I
-ask?
+--=-6atJI+leP/0WY5cW6V3q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Why Luis puts the phrase "legal hell" next to entirely free software?
-[0] Why is he trying to go against the BSD community, which gave him
-the entire HAL framework for the driver in question?
+On Thu, 2007-09-13 at 23:50 -0400, Michael Wu wrote:
 
-Best regards,
-Constantine.
+> > +	void (*configure_filter)(struct ieee80211_hw *hw,
+> > +				 struct dev_mc_list *(get_mc_item)(void *data),
+> Yuck. Preventing drivers from calling get_mc_item outside configure_filte=
+r or=20
+> when the filter hasn't changed isn't worth doing this to enforce it. ;)
 
-[0] http://marc.info/?l=linux-wireless&m=118857712529898&w=2
+Well, it gets rid of a needless export that takes up memory all the time
+and makes it much clearer that locking is correct during the invocation
+of the call. But I can live with either way.
+
+johannes
+
+--=-6atJI+leP/0WY5cW6V3q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG6nli/ETPhpq3jKURAiHxAJwIw4ubkzqPGwXHaDOK05jLZ5IsUwCgg6j4
+aax9sKdlQE8T/JIoJ9fzBck=
+=Wdn5
+-----END PGP SIGNATURE-----
+
+--=-6atJI+leP/0WY5cW6V3q--
+
