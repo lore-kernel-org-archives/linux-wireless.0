@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57085 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33181 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757980AbXIZPzL (ORCPT
+	with ESMTP id S1752210AbXINTFa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 11:55:11 -0400
-Message-Id: <20070926155435.685374000@sipsolutions.net>
-References: <20070926155313.955049000@sipsolutions.net>
-Date: Wed, 26 Sep 2007 17:53:19 +0200
+	Fri, 14 Sep 2007 15:05:30 -0400
+Subject: Re: [PATCH 00/05] orinoco: Agere/Lucent firmware download
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [patch 6/7] mac80211: allow only one IBSS interface
+To: Dave <kilroyd@googlemail.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <46EAD760.9020102@gmail.com>
+References: <46E8557F.2080401@gmail.com> <1189746312.26312.39.camel@dv>
+	 <46EACAA5.2050706@gmail.com>  <46EAD760.9020102@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pelslsrvM3eBKkiBN5ZW"
+Date: Fri, 14 Sep 2007 21:06:47 +0200
+Message-Id: <1189796807.3974.53.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consider the case of multiple virtual IBSS interfaces
-trying to join the same IBSS. They wouldn't see beacons
-that the other virtual interface sent of course so this
-leads to problems. Disallow it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-pelslsrvM3eBKkiBN5ZW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/mac80211/ieee80211.c |   21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+On Fri, 2007-09-14 at 19:48 +0100, Dave wrote:
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 17:21:42.667337342 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 17:21:51.317337342 +0200
-@@ -170,8 +170,25 @@ static int ieee80211_open(struct net_dev
- 	list_for_each_entry(nsdata, &local->interfaces, list) {
- 		struct net_device *ndev = nsdata->dev;
- 
--		if (ndev != dev && ndev != local->mdev && netif_running(ndev) &&
--		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0) {
-+		if (ndev != dev && ndev != local->mdev &&
-+		    netif_running(ndev)) {
-+			/*
-+			 * We really only support one IBSS interface, think
-+			 * what would happen if they tried to be in the same
-+			 * BSS.
-+			 */
-+			if (sdata->type == IEEE80211_IF_TYPE_IBSS &&
-+			    nsdata->type == IEEE80211_IF_TYPE_IBSS &&
-+			    netif_running(nsdata->dev))
-+				return -EBUSY;
-+
-+			/*
-+			 * The remaining checks are only done for devices
-+			 * with the same MAC address.
-+			 */
-+			if (compare_ether_addr(dev->dev_addr, ndev->dev_addr))
-+				continue;
-+
- 			/*
- 			 * check whether it may have the same address
- 			 */
+> Either that was painless, or I did it wrong. Using sparse 3.0 the only
+> warnings were in orinoco.c, related to the use of ARRAY_SIZE. Errors
+> are false positives.
 
--- 
+They're errors tho so sparse aborts and stops parsing the file at that
+point. A new git sparse can actually parse ARRAY_SIZE though, I can only
+recommend getting that.
+
+johannes
+
+--=-pelslsrvM3eBKkiBN5ZW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG6tvH/ETPhpq3jKURAgXgAJ9O/CJdvAUJxrkLYJ2sqEm4qe8aMwCfWmfK
+5QY9w4AXkIJQJpQWUvirASk=
+=fxud
+-----END PGP SIGNATURE-----
+
+--=-pelslsrvM3eBKkiBN5ZW--
 
