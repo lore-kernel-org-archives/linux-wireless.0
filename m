@@ -1,187 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16429 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbXIAEfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:35:12 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 53A5C618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:12 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 10/35] Add minimal support to 505AMX
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:35:11 -0400
-Message-ID: <20070901043511.2498.30700.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:9403 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753700AbXINULI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2007 16:11:08 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so741742nfb
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 13:11:06 -0700 (PDT)
+Message-ID: <46EAEAC1.5020105@gmail.com>
+Date: Fri, 14 Sep 2007 22:10:41 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Dan Williams <dcbw@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlist and network-manager bug report
+References: <1189526874.6161.30.camel@johannes.berg>	 <1189610572.5644.28.camel@xo-3E-67-34.localdomain>	 <20070912170153.GA25785@bougret.hpl.hp.com>	 <1189667496.6161.77.camel@johannes.berg>	 <1189707493.1329.1.camel@johannes.berg>	 <1189793380.2508.2.camel@xo-3E-67-34.localdomain>	 <46EADD21.7070607@gmail.com> <1189800306.20386.6.camel@xo-3E-67-34.localdomain>
+In-Reply-To: <1189800306.20386.6.camel@xo-3E-67-34.localdomain>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use inline functions for board classification.  Drop "_2958" from
-BOARD_505A_2958, it's implied.
+Dan Williams wrote:
+> On Fri, 2007-09-14 at 21:12 +0200, dragoran wrote:
+>  =20
+>> Dan Williams wrote:
+>>    =20
+>>> On Thu, 2007-09-13 at 20:18 +0200, Johannes Berg wrote:
+>>>  =20
+>>>      =20
+>>>> On Thu, 2007-09-13 at 09:11 +0200, Johannes Berg wrote:
+>>>>
+>>>>    =20
+>>>>        =20
+>>>>> Ok. I'll have to do some more extensive tests but in my last test=
+ with
+>>>>> zd1211 it wouldn't display anything. Might be a different issue, =
+but
+>>>>> scanning manually showed things.
+>>>>>      =20
+>>>>>          =20
+>>>> Cool, I was totally wrong, seems the fact that it didn't display
+>>>> anything was unrelated. I just tried again and NM 0.6.5 as shipped=
+ by
+>>>> debian/unstable actually manages to display the =C3=BC umlaut that=
+ is
+>>>> supposed to be the \xfc character.
+>>>>
+>>>> Btw. Will there ever be a 0.7 release? :)
+>>>>    =20
+>>>>        =20
+>>> I've been burning the midnight oil on it for the past few weeks, ch=
+eck
+>>> NM and applet changelogs.  Still not quite there yet, there's some =
+core
+>>> work left to do getting NM to talk to the settings daemons (ie,
+>>> nm-client or knetworkmanager) correctly, getting GUI bits for Conne=
+ction
+>>> editing in the applet, and making sure the relevant settings are
+>>> honored.
+>>>  =20
+>>>      =20
+>> might be a bit OT but:
+>> are you still planning to include it in F8 ? seems that the snapshot=
+=20
+>> didn't make it into test2 ..
+>>    =20
+>
+> There was a snapshot queued, but it really sucked, and was thankfully
+> dropped.=20
+ok I noticed thats broken after getting it from koji ...
+>  Look for something in rawhide this week that actually works.
+>
+>  =20
+ok :)
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
 
- drivers/net/wireless/at76_usb.c |   65 +++++++++++++++++++--------------------
- drivers/net/wireless/at76_usb.h |    2 +
- 2 files changed, 32 insertions(+), 35 deletions(-)
-
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 41f28dc..206fa90 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -56,7 +56,7 @@ static struct fwentry firmwares[] = {
- 	[BOARD_503_ACC] = {"atmel_at76c503-rfmd-acc.bin"},
- 	[BOARD_505] = {"atmel_at76c505-rfmd.bin"},
- 	[BOARD_505_2958] = {"atmel_at76c505-rfmd2958.bin"},
--	[BOARD_505A_2958] = {"atmel_at76c505a-rfmd2958.bin"},
-+	[BOARD_505A] = {"atmel_at76c505a-rfmd2958.bin"},
- 	[BOARD_505AMX] = {"atmel_at76c505amx-rfmd.bin"},
- };
- 
-@@ -171,11 +171,11 @@ static struct usb_device_id dev_table[] = {
- 	 * at76c505a-rfmd2958
- 	 */
- 	/* Generic AT76C505A device */
--	{USB_DEVICE(VID_ATMEL, 0x7614), .driver_info = BOARD_505A_2958},
-+	{USB_DEVICE(VID_ATMEL, 0x7614), .driver_info = BOARD_505A},
- 	/* Generic AT76C505AS device */
--	{USB_DEVICE(VID_ATMEL, 0x7617), .driver_info = BOARD_505A_2958},
-+	{USB_DEVICE(VID_ATMEL, 0x7617), .driver_info = BOARD_505A},
- 	/* Siemens Gigaset USB WLAN Adapter 11 */
--	{USB_DEVICE(VID_GIGASET, 0x0701), .driver_info = BOARD_505A_2958},
-+	{USB_DEVICE(VID_GIGASET, 0x0701), .driver_info = BOARD_505A},
- 	/*
- 	 * at76c505amx-rfmd
- 	 */
-@@ -241,6 +241,21 @@ struct dfu_status {
- 	unsigned char string;
- } __attribute__((packed));
- 
-+static inline int at76_is_intersil(enum board_type board)
-+{
-+	return (board == BOARD_503_ISL3861 || board == BOARD_503_ISL3863);
-+}
-+
-+static inline int at76_is_503rfmd(enum board_type board)
-+{
-+	return (board == BOARD_503 || board == BOARD_503_ACC);
-+}
-+
-+static inline int at76_is_505a(enum board_type board)
-+{
-+	return (board == BOARD_505A || board == BOARD_505AMX);
-+}
-+
- /* Load a block of the first (internal) part of the firmware */
- static int at76_load_int_fw_block(struct usb_device *udev, int blockno,
- 				  void *block, int size)
-@@ -618,45 +633,29 @@ static int at76_get_hw_config(struct at76_priv *priv)
- 	if (!hwcfg)
- 		return -ENOMEM;
- 
--	switch (priv->board_type) {
 -
--	case BOARD_503_ISL3861:
--	case BOARD_503_ISL3863:
-+	if (at76_is_intersil(priv->board_type)) {
- 		ret = at76_get_hw_cfg_intersil(priv->udev, hwcfg,
- 					       sizeof(hwcfg->i));
- 		if (ret < 0)
--			break;
-+			goto exit;
- 		memcpy(priv->mac_addr, hwcfg->i.mac_addr, ETH_ALEN);
- 		priv->regulatory_domain = hwcfg->i.regulatory_domain;
--		break;
--
--	case BOARD_503:
--	case BOARD_503_ACC:
-+	} else if (at76_is_503rfmd(priv->board_type)) {
- 		ret = at76_get_hw_cfg(priv->udev, hwcfg, sizeof(hwcfg->r3));
- 		if (ret < 0)
--			break;
-+			goto exit;
- 		memcpy(priv->mac_addr, hwcfg->r3.mac_addr, ETH_ALEN);
- 		priv->regulatory_domain = hwcfg->r3.regulatory_domain;
--		break;
--
--	case BOARD_505:
--	case BOARD_505_2958:
--	case BOARD_505A_2958:
-+	} else {
- 		ret = at76_get_hw_cfg(priv->udev, hwcfg, sizeof(hwcfg->r5));
- 		if (ret < 0)
--			break;
-+			goto exit;
- 		memcpy(priv->mac_addr, hwcfg->r5.mac_addr, ETH_ALEN);
- 		priv->regulatory_domain = hwcfg->r5.regulatory_domain;
--		break;
--
--	default:
--		err("Bad board type set (%d).  Unable to get hardware config.",
--		    priv->board_type);
--		ret = -EINVAL;
- 	}
- 
-+exit:
- 	kfree(hwcfg);
--
- 	if (ret < 0)
- 		err("Get HW Config failed (%d)", ret);
- 
-@@ -2445,8 +2444,7 @@ static int at76_iw_handler_get_scan(struct net_device *netdev,
- 		iwe->u.qual.level = (curr_bss->rssi * 100 / 42);
- 		if (iwe->u.qual.level > 100)
- 			iwe->u.qual.level = 100;
--		if ((priv->board_type == BOARD_503_ISL3861) ||
--		    (priv->board_type == BOARD_503_ISL3863))
-+		if (at76_is_intersil(priv->board_type))
- 			iwe->u.qual.qual = curr_bss->link_qual;
- 		else {
- 			iwe->u.qual.qual = 0;
-@@ -3596,8 +3594,8 @@ static int at76_load_external_fw(struct usb_device *udev, struct fwentry *fwe)
- 		blockno++;
- 	} while (bsize > 0);
- 
--	if (fwe->board_type == BOARD_505A_2958) {
--		at76_dbg(DBG_DEVSTART, "200 ms delay for board type 7");
-+	if (at76_is_505a(fwe->board_type)) {
-+		at76_dbg(DBG_DEVSTART, "200 ms delay for 505a");
- 		schedule_timeout_interruptible(HZ / 5 + 1);
- 	}
- 
-@@ -3612,7 +3610,7 @@ exit:
- static int at76_load_internal_fw(struct usb_device *udev, struct fwentry *fwe)
- {
- 	int ret;
--	int need_remap = (fwe->board_type != BOARD_505A_2958);
-+	int need_remap = !at76_is_505a(fwe->board_type);
- 
- 	ret = at76_usbdfu_download(udev, fwe->intfw, fwe->intfw_size,
- 				   need_remap ? 0 : 2000);
-@@ -4688,8 +4686,7 @@ static void at76_calc_level(struct at76_priv *priv, struct at76_rx_buffer *buf,
- static void at76_calc_qual(struct at76_priv *priv, struct at76_rx_buffer *buf,
- 			   struct iw_quality *qual)
- {
--	if ((priv->board_type == BOARD_503_ISL3861) ||
--	    (priv->board_type == BOARD_503_ISL3863))
-+	if (at76_is_intersil(priv->board_type))
- 		qual->qual = buf->link_quality;
- 	else {
- 		unsigned long msec;
-diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
-index 71b7c22..fbae175 100644
---- a/drivers/net/wireless/at76_usb.h
-+++ b/drivers/net/wireless/at76_usb.h
-@@ -70,7 +70,7 @@ enum board_type {
- 	BOARD_503_ACC = 4,
- 	BOARD_505 = 5,
- 	BOARD_505_2958 = 6,
--	BOARD_505A_2958 = 7,
-+	BOARD_505A = 7,
- 	BOARD_505AMX = 8
- };
- 
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
