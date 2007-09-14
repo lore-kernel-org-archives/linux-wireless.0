@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50578 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757821AbXINMGQ (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:13999 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199AbXINSsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 08:06:16 -0400
-Subject: Re: [PATCH 03/21] mac80211: revamp interface and filter  configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	Li YanBo <dreamfly281@gmail.com>
-In-Reply-To: <200709132350.38488.flamingice@sourmilk.net>
-References: <20070905234209.108005000@sipsolutions.net>
-	 <20070905234622.671760000@sipsolutions.net>
-	 <200709132350.38488.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6atJI+leP/0WY5cW6V3q"
-Date: Fri, 14 Sep 2007 14:06:58 +0200
-Message-Id: <1189771618.3974.28.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 14 Sep 2007 14:48:06 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so555770ugc
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 11:48:04 -0700 (PDT)
+Message-ID: <46EAD760.9020102@gmail.com>
+Date: Fri, 14 Sep 2007 19:48:00 +0100
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/05] orinoco: Agere/Lucent firmware download
+References: <46E8557F.2080401@gmail.com> <1189746312.26312.39.camel@dv> <46EACAA5.2050706@gmail.com>
+In-Reply-To: <46EACAA5.2050706@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave wrote:
+> Pavel Roskin wrote:
+>> On Wed, 2007-09-12 at 22:09 +0100, Dave wrote:
+>>> Implements firmware download to RAM for Lucent-Agere firmware.
+>>> Firmware download is a requirement to implement WPA on these cards.
+>>
+>> Please use sparse to check endianess and other issues.  You can use this
+>> command once sparse is in PATH:
+>>
+>> make C=2 CF="-Wall -D__CHECK_ENDIAN__"
 
---=-6atJI+leP/0WY5cW6V3q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Either that was painless, or I did it wrong. Using sparse 3.0 the only warnings were in orinoco.c, related to the use of ARRAY_SIZE. Errors are false positives.
 
-On Thu, 2007-09-13 at 23:50 -0400, Michael Wu wrote:
+$ make O=../build C=2 CF="-Wall -D__CHECK_ENDIAN__" > ../sparse.log 2>&1
 
-> > +	void (*configure_filter)(struct ieee80211_hw *hw,
-> > +				 struct dev_mc_list *(get_mc_item)(void *data),
-> Yuck. Preventing drivers from calling get_mc_item outside configure_filte=
-r or=20
-> when the filter hasn't changed isn't worth doing this to enforce it. ;)
+<snip>
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/irda/sir_dongle.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:1391:27: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:2542:35: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:2771:24: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:2773:18: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3118:19: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3123:29: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3357:18: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3393:2: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3421:20: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:3426:13: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:4007:38: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:4278:18: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:4279:17: error: cannot size expression
+/usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco.c:4280:22: error: cannot size expression
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/hermes.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/hermes_dld.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco_cs.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco_plx.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco_pci.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco_tmd.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/orinoco_nortel.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/spectrum_cs.c
+  CHECK   /usr/src/linux-current/linux-2.6/drivers/net/wireless/zd1201.c
+<snip>
 
-Well, it gets rid of a needless export that takes up memory all the time
-and makes it much clearer that locking is correct during the invocation
-of the call. But I can live with either way.
+Regards,
 
-johannes
-
---=-6atJI+leP/0WY5cW6V3q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6nli/ETPhpq3jKURAiHxAJwIw4ubkzqPGwXHaDOK05jLZ5IsUwCgg6j4
-aax9sKdlQE8T/JIoJ9fzBck=
-=Wdn5
------END PGP SIGNATURE-----
-
---=-6atJI+leP/0WY5cW6V3q--
+Dave.
 
