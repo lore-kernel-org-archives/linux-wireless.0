@@ -1,197 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753819AbXI1QEk (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:12662 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825AbXINAGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 12:04:40 -0400
-Subject: Re: hostapd: passing sta info struct to drivers?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1190977157.5021.28.camel@johannes.berg>
-References: <1190911599.5021.4.camel@johannes.berg>
-	 <20070928011630.GI27241@jm.kir.nu> <1190977157.5021.28.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 28 Sep 2007 18:06:01 +0200
-Message-Id: <1190995561.22960.3.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 13 Sep 2007 20:06:16 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1426049pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2007 17:06:16 -0700 (PDT)
+Message-ID: <43e72e890709131706p565bd955m1b9820198cafa7fa@mail.gmail.com>
+Date: Thu, 13 Sep 2007 20:06:15 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] Internalize Atheros Turbo modes and Turbo modulation
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_23111_32298380.1189728375748"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How about this then?
+------=_Part_23111_32298380.1189728375748
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
----
- hostapd/driver.h             |    8 ++++----
- hostapd/driver_bsd.c         |    3 ++-
- hostapd/driver_devicescape.c |    6 +++---
- hostapd/driver_hostap.c      |    4 ++--
- hostapd/driver_madwifi.c     |    3 ++-
- hostapd/driver_prism54.c     |    3 ++-
- hostapd/ieee802_11.c         |    4 ++--
- hostapd/ieee802_1x.c         |    4 ++--
- hostapd/wme.c                |    6 ++++--
- 9 files changed, 23 insertions(+), 18 deletions(-)
+This patch:
 
---- hostap.orig/hostapd/driver.h	2007-09-28 14:20:48.000000000 +0200
-+++ hostap/hostapd/driver.h	2007-09-28 14:21:37.000000000 +0200
-@@ -92,7 +92,7 @@ struct wpa_driver_ops {
- 	int (*get_retry)(void *priv, int *short_retry, int *long_retry);
- 
- 	int (*sta_set_flags)(void *priv, const u8 *addr,
--			     int flags_or, int flags_and);
-+			     int total_flags, int flags_or, int flags_and);
- 	int (*set_rate_sets)(void *priv, int *supp_rates, int *basic_rates,
- 			     int mode);
- 	int (*set_channel_flag)(void *priv, int mode, int chan, int flag,
-@@ -427,12 +427,12 @@ hostapd_get_retry(struct hostapd_data *h
- 
- static inline int
- hostapd_sta_set_flags(struct hostapd_data *hapd, u8 *addr,
--		      int flags_or, int flags_and)
-+		      int total_flags, int flags_or, int flags_and)
- {
- 	if (hapd->driver == NULL || hapd->driver->sta_set_flags == NULL)
- 		return 0;
--	return hapd->driver->sta_set_flags(hapd->drv_priv, addr, flags_or,
--					   flags_and);
-+	return hapd->driver->sta_set_flags(hapd->drv_priv, addr, total_flags,
-+					   flags_or, flags_and);
- }
- 
- static inline int
---- hostap.orig/hostapd/driver_bsd.c	2007-09-28 14:21:55.000000000 +0200
-+++ hostap/hostapd/driver_bsd.c	2007-09-28 14:22:14.000000000 +0200
-@@ -322,7 +322,8 @@ bsd_set_sta_authorized(void *priv, const
- }
- 
- static int
--bsd_sta_set_flags(void *priv, const u8 *addr, int flags_or, int flags_and)
-+bsd_sta_set_flags(void *priv, const u8 *addr, int total_flags, int flags_or,
-+		  int flags_and)
- {
- 	/* For now, only support setting Authorized flag */
- 	if (flags_or & WLAN_STA_AUTHORIZED)
---- hostap.orig/hostapd/driver_devicescape.c	2007-09-28 14:22:25.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-09-28 14:22:43.000000000 +0200
-@@ -75,7 +75,7 @@ struct i802_driver_data {
- #define HAPD_DECL	struct hostapd_data *hapd = iface->bss[0]
- 
- static int i802_sta_set_flags(void *priv, const u8 *addr,
--			      int flags_or, int flags_and);
-+			      int total_flags, int flags_or, int flags_and);
- 
- 
- static int hostapd_set_iface_flags(struct i802_driver_data *drv, int dev_up)
-@@ -764,7 +764,7 @@ static int i802_sta_remove(void *priv, c
- 	struct i802_driver_data *drv = priv;
- 	struct prism2_hostapd_param param;
- 
--	i802_sta_set_flags(drv, addr, 0, ~WLAN_STA_AUTHORIZED);
-+	i802_sta_set_flags(drv, addr, 0, 0, ~WLAN_STA_AUTHORIZED);
- 
- 	memset(&param, 0, sizeof(param));
- 	param.cmd = PRISM2_HOSTAPD_REMOVE_STA;
-@@ -776,7 +776,7 @@ static int i802_sta_remove(void *priv, c
- 
- 
- static int i802_sta_set_flags(void *priv, const u8 *addr,
--			      int flags_or, int flags_and)
-+			      int total_flags, int flags_or, int flags_and)
- {
- 	struct i802_driver_data *drv = priv;
- 	struct prism2_hostapd_param param;
---- hostap.orig/hostapd/driver_hostap.c	2007-09-28 14:22:54.000000000 +0200
-+++ hostap/hostapd/driver_hostap.c	2007-09-28 14:23:15.000000000 +0200
-@@ -374,7 +374,7 @@ static int hostap_send_eapol(void *priv,
- 
- 
- static int hostap_sta_set_flags(void *priv, const u8 *addr,
--				int flags_or, int flags_and)
-+				int total_flags, int flags_or, int flags_and)
- {
- 	struct hostap_driver_data *drv = priv;
- 	struct prism2_hostapd_param param;
-@@ -694,7 +694,7 @@ static int hostap_sta_remove(void *priv,
- 	struct hostap_driver_data *drv = priv;
- 	struct prism2_hostapd_param param;
- 
--	hostap_sta_set_flags(drv, addr, 0, ~WLAN_STA_AUTHORIZED);
-+	hostap_sta_set_flags(drv, addr, 0, 0, ~WLAN_STA_AUTHORIZED);
- 
- 	memset(&param, 0, sizeof(param));
- 	param.cmd = PRISM2_HOSTAPD_REMOVE_STA;
---- hostap.orig/hostapd/driver_madwifi.c	2007-09-28 14:23:15.000000000 +0200
-+++ hostap/hostapd/driver_madwifi.c	2007-09-28 14:23:31.000000000 +0200
-@@ -410,7 +410,8 @@ madwifi_set_sta_authorized(void *priv, c
- }
- 
- static int
--madwifi_sta_set_flags(void *priv, const u8 *addr, int flags_or, int flags_and)
-+madwifi_sta_set_flags(void *priv, const u8 *addr, int total_flags,
-+		      int flags_or, int flags_and)
- {
- 	/* For now, only support setting Authorized flag */
- 	if (flags_or & WLAN_STA_AUTHORIZED)
---- hostap.orig/hostapd/driver_prism54.c	2007-09-28 14:23:35.000000000 +0200
-+++ hostap/hostapd/driver_prism54.c	2007-09-28 14:23:49.000000000 +0200
-@@ -187,7 +187,8 @@ static int prism54_set_sta_authorized(vo
- 
- 
- static int
--prism54_sta_set_flags(void *priv, const u8 *addr, int flags_or, int flags_and)
-+prism54_sta_set_flags(void *priv, const u8 *addr, int total_flags,
-+		      int flags_or, int flags_and)
- {
- 	/* For now, only support setting Authorized flag */
- 	if (flags_or & WLAN_STA_AUTHORIZED)
---- hostap.orig/hostapd/ieee802_11.c	2007-09-28 14:23:51.000000000 +0200
-+++ hostap/hostapd/ieee802_11.c	2007-09-28 14:24:04.000000000 +0200
-@@ -1625,10 +1625,10 @@ static void handle_assoc_cb(struct hosta
- 		ap_sta_bind_vlan(hapd, sta, 0);
- 	}
- 	if (sta->flags & WLAN_STA_SHORT_PREAMBLE) {
--		hostapd_sta_set_flags(hapd, sta->addr,
-+		hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
- 				      WLAN_STA_SHORT_PREAMBLE, ~0);
- 	} else {
--		hostapd_sta_set_flags(hapd, sta->addr,
-+		hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
- 				      0, ~WLAN_STA_SHORT_PREAMBLE);
- 	}
- 
---- hostap.orig/hostapd/ieee802_1x.c	2007-09-28 14:24:04.000000000 +0200
-+++ hostap/hostapd/ieee802_1x.c	2007-09-28 14:24:14.000000000 +0200
-@@ -94,13 +94,13 @@ void ieee802_1x_set_sta_authorized(struc
- 
- 	if (authorized) {
- 		sta->flags |= WLAN_STA_AUTHORIZED;
--		res = hostapd_sta_set_flags(hapd, sta->addr,
-+		res = hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
- 					    WLAN_STA_AUTHORIZED, ~0);
- 		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
- 			       HOSTAPD_LEVEL_DEBUG, "authorizing port");
- 	} else {
- 		sta->flags &= ~WLAN_STA_AUTHORIZED;
--		res = hostapd_sta_set_flags(hapd, sta->addr,
-+		res = hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
- 					    0, ~WLAN_STA_AUTHORIZED);
- 		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
- 			       HOSTAPD_LEVEL_DEBUG, "unauthorizing port");
---- hostap.orig/hostapd/wme.c	2007-09-28 14:24:16.000000000 +0200
-+++ hostap/hostapd/wme.c	2007-09-28 14:24:33.000000000 +0200
-@@ -110,9 +110,11 @@ int hostapd_wme_sta_config(struct hostap
- {
- 	/* update kernel STA data for WME related items (WLAN_STA_WPA flag) */
- 	if (sta->flags & WLAN_STA_WME)
--		hostapd_sta_set_flags(hapd, sta->addr, WLAN_STA_WME, ~0);
-+		hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
-+				      WLAN_STA_WME, ~0);
- 	else
--		hostapd_sta_set_flags(hapd, sta->addr, 0, ~WLAN_STA_WME);
-+		hostapd_sta_set_flags(hapd, sta->addr, sta->flags,
-+				      0, ~WLAN_STA_WME);
- 
- 	return 0;
- }
+* Internalizes Atheros Turbo modes (MODE_ATHEROS_TURBO, MODE_ATHEROS_TURBOG)
 
+* Internatizes Turbo modulation (MODULATION_TURBO)
 
+* Adds documention for Atheros Turbo modes (MODE_ATHEROS_TURBO,
+MODE_ATHEROS_TURBOG), Turbo modulation (MODULATION_TURBO) and XR
+modulation (MODULATION_XR)
+
+This patch is intended for the ath5k branch of wireless-dev after a
+pull from origin/everything once
+01-remove-atheros-turbo-from-mac80211.diff is applied.
+
+drivers/net/wireless/ath5k_base.c |    2 +-
+1 files changed, 1 insertions(+), 1 deletions(-)
+
+Changes-licensed-under: BSD
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+
+drivers/net/wireless/ath5k.h    |   86 +++++++++++++++++++++++++++++++++------
+drivers/net/wireless/ath5k_hw.c |    4 +-
+2 files changed, 76 insertions(+), 14 deletions(-)
+
+Changes-licensed-under: ISC
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>
+CC: Johannes Berg <johannes@sipsolutions.net
+
+  Luis
+
+------=_Part_23111_32298380.1189728375748
+Content-Type: text/x-patch; name="03-ath5k-internalize-vendor-modes.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="03-ath5k-internalize-vendor-modes.diff"
+X-Attachment-Id: f_f6jxkt9b
+
+W1BBVENIXSBJbnRlcm5hbGl6ZSBBdGhlcm9zIFR1cmJvIG1vZGVzIGFuZCBUdXJibyBtb2R1bGF0
+aW9uCgpUaGlzIHBhdGNoOgoKKiBJbnRlcm5hbGl6ZXMgQXRoZXJvcyBUdXJibyBtb2RlcyAoTU9E
+RV9BVEhFUk9TX1RVUkJPLCAKICBNT0RFX0FUSEVST1NfVFVSQk9HKQoKKiBJbnRlcm5hdGl6ZXMg
+VHVyYm8gbW9kdWxhdGlvbiAoTU9EVUxBVElPTl9UVVJCTykKCiogQWRkcyBkb2N1bWVudGlvbiBm
+b3IgQXRoZXJvcyBUdXJibyBtb2RlcyAoTU9ERV9BVEhFUk9TX1RVUkJPLAogIE1PREVfQVRIRVJP
+U19UVVJCT0cpLCBUdXJibyBtb2R1bGF0aW9uIChNT0RVTEFUSU9OX1RVUkJPKSBhbmQgWFIKICBt
+b2R1bGF0aW9uIChNT0RVTEFUSU9OX1hSKQoKVGhpcyBwYXRjaCBpcyBpbnRlbmRlZCBmb3IgdGhl
+IGF0aDVrIGJyYW5jaCBvZiB3aXJlbGVzcy1kZXYgYWZ0ZXIgYSBwdWxsCmZyb20gb3JpZ2luL2V2
+ZXJ5dGhpbmcgb25jZSAwMS1yZW1vdmUtYXRoZXJvcy10dXJiby1mcm9tLW1hYzgwMjExLmRpZmYg
+aXMKYXBwbGllZC4KCmRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYyB8ICAgIDIgKy0K
+MSBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pCgpDaGFuZ2Vz
+LWxpY2Vuc2VkLXVuZGVyOiBCU0QKU2lnbmVkLW9mZi1ieTogTHVpcyBSLiBSb2RyaWd1ZXogPG1j
+Z3JvZkBnbWFpbC5jb20+Cgpkcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay5oICAgIHwgICA4NiAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0KZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYXRoNWtfaHcuYyB8ICAgIDQgKy0KMiBmaWxlcyBjaGFuZ2VkLCA3NiBpbnNlcnRpb25zKCsp
+LCAxNCBkZWxldGlvbnMoLSkKCkNoYW5nZXMtbGljZW5zZWQtdW5kZXI6IElTQwpTaWduZWQtb2Zm
+LWJ5OiBMdWlzIFIuIFJvZHJpZ3VleiA8bWNncm9mQGdtYWlsLmNvbT4KCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1ay5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsu
+aAppbmRleCA3OGQ3Y2IyLi5hNmY3OTk1IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9hdGg1ay5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrLmgKQEAgLTE4NywxMiAr
+MTg3LDcyIEBAIHN0cnVjdCBhdGg1a19zcmV2X25hbWUgewogCiAjZGVmaW5lIElFRUU4MDIxMV9N
+QVhfTEVOICAgICAgIDI1MDAKIAotLyogVE9ETyBNZXJnZSB0aGlzIHRvIG1hYzgwMjExICovCi0j
+ZGVmaW5lIE1PRFVMQVRJT05fWFIgCQkweDAwMDAwMjAwIC8qWFIgdGhpbmdpZSovCisvKiBUT0RP
+IGFkZCBzdXBwb3J0IHRvIG1hYzgwMjExIGZvciB2ZW5kb3Itc3BlY2lmaWMgcmF0ZXMgYW5kIG1v
+ZGVzICovCisKKy8qIAorICogU29tZSBvZiB0aGlzIGluZm9ybWF0aW9uIGlzIGJhc2VkIG9uIERv
+Y3VtZW50YXRpb24gZnJvbToKKyAqCisgKiBodHRwOi8vbWFkd2lmaS5vcmcvd2lraS9DaGlwc2V0
+RmVhdHVyZXMvU3VwZXJBRworICoKKyAqIE1vZHVsYXRpb24gZm9yIEF0aGVyb3MnIGVYdGVuZGVk
+IFJhbmdlIC0gcmFuZ2UgZW5oYW5jaW5nIGV4dGVuc2lvbiB0aGF0IGlzCisgKiBzdXBwb3NlZCB0
+byBkb3VibGUgdGhlIGRpc3RhbmNlIGFuIEF0aGVyb3MgY2xpZW50IGRldmljZSBjYW4ga2VlcCBh
+IAorICogY29ubmVjdGlvbiB3aXRoIGFuIEF0aGVyb3MgYWNjZXNzIHBvaW50LiBUaGlzIGlzIGFj
+aGlldmVkIGJ5IGluY3JlYXNpbmcgCisgKiB0aGUgcmVjZWl2ZXIgc2Vuc2l0aXZpdHkgdXAgdG8s
+IC0xMDVkQm0sIHdoaWNoIGlzIGFib3V0IDIwZEIgYWJvdmUgd2hhdCAKKyAqIHRoZSA4MDIuMTEg
+c3BlY2lmaWNhdGlvbnMgZGVtYW5kLiBJbiBhZGRpdGlvbiwgbmV3IChwcm9wcmlldGFyeSkgZGF0
+YSByYXRlcworICogYXJlIGludHJvZHVjZWQ6IDMsIDIsIDEsIDAuNSBhbmQgMC4yNSBNQml0L3Mu
+CisgKgorICogUGxlYXNlIG5vdGUgdGhhdCBjYW4geW91IGVpdGhlciB1c2UgWFIgb3IgVFVSQk8g
+YnV0IHlvdSBjYW5ub3QgdXNlIGJvdGgsCisgKiB0aGV5IGFyZSBleGNsdXNpdmUuCisgKgorICov
+CisjZGVmaW5lIE1PRFVMQVRJT05fWFIgCQkweDAwMDAwMjAwCisvKgorICogTW9kdWxhdGlvbiBm
+b3IgQXRoZXJvcycgVHVyYm8gRyBhbmQgVHVyYm8gQSwgaXRzIHN1cHBvc2VkIHRvIHByb3ZpZGUg
+YQorICogdGhyb3VnaHB1dCB0cmFuc21pc3Npb24gc3BlZWQgdXAgdG8gNDBNYml0L3MtNjBNYml0
+L3MgYXQgYSAxMDhNYml0L3MKKyAqIHNpZ25hbGluZyByYXRlIGFjaGlldmVkIHRocm91Z2ggdGhl
+IGJvbmRpbmcgb2YgdHdvIDU0TWJpdC9zIDgwMi4xMWcgCisgKiBjaGFubmVscy4gVG8gdXNlIHRo
+aXMgZmVhdHVyZSB5b3VyIEFjY2VzcyBQb2ludCBtdXN0IGFsc28gc3Vwb3J0IGl0LgorICogVGhl
+cmUgaXMgYWxzbyBhIGRpc3RpbmN0aW9uIGJldHdlZW4gInN0YXRpYyIgYW5kICJkeW5hbWljIiB0
+dXJibyBtb2RlczoKKyAqCisgKiAtIFN0YXRpYzogaXMgdGhlIGR1bWIgdmVyc2lvbjogZGV2aWNl
+cyBzZXQgdG8gdGhpcyBtb2RlIHN0aWNrIHRvIGl0IHVudGlsIAorICogICAgIHRoZSBtb2RlIGlz
+IHR1cm5lZCBvZmYuCisgKiAtIER5bmFtaWM6IGlzIHRoZSBpbnRlbGxpZ2VudCB2ZXJzaW9uLCB0
+aGUgbmV0d29yayBkZWNpZGVzIGl0c2VsZiBpZiBpdCAKKyAqICAgICBpcyBvayB0byB1c2UgdHVy
+Ym8uIEFzIHNvb24gYXMgdHJhZmZpYyBpcyBkZXRlY3RlZCBvbiBhZGphY2VudCBjaGFubmVscwor
+ICogICAgICh3aGljaCB3b3VsZCBnZXQgdXNlZCBpbiB0dXJibyBtb2RlKSwgb3Igd2hlbiBhIG5v
+bi10dXJibyBzdGF0aW9uIGpvaW5zCisgKiAgICAgdGhlIG5ldHdvcmssIHR1cmJvIG1vZGUgd29u
+J3QgYmUgdXNlZCB1bnRpbCB0aGUgc2l0dWF0aW9uIGNoYW5nZXMgYWdhaW4uCisgKiAgICAgRHlu
+YW1pYyBtb2RlIGlzIGFjaGlldmVkIGJ5IEF0aGVyb3MnIEFkYXB0aXZlIFJhZGlvIChBUikgZmVh
+dHVyZSB3aGljaAorICogICAgIG1vbml0b3JzIHRoZSB1c2VkIHJhZGlvIGJhbmQgaW4gb3JkZXIg
+dG8gZGVjaWRlIHdoZXRoZXIgdHVyYm8gbW9kZSBtYXkgCisgKiAgICAgYmUgdXNlZCBvciBub3Qu
+CisgKgorICogVGhpcyBhcnRpY2xlIGNsYWltcyBTdXBlciBHIHN0aWNrcyB0byBib25kaW5nIG9m
+IGNoYW5uZWxzIDUgYW5kIDYgZm9yCisgKiBVU0E6CisgKgorICogaHR0cDovL3d3dy5wY3dvcmxk
+LmNvbS9hcnRpY2xlL2lkLDExMzQyOC1wYWdlLDEvYXJ0aWNsZS5odG1sCisgKgorICogVGhlIGNo
+YW5uZWwgYm9uZGluZyBzZWVtcyB0byBiZSBkcml2ZXIgc3BlY2lmaWMgdGhvdWdoLiBJbiBhZGRp
+dGlvbiB0bworICogZGVjaWRpbmcgd2hhdCBjaGFubmVscyB3aWxsIGJlIHVzZWQsIHRoZXNlICJU
+dXJibyIgbW9kZXMgYXJlIGFjY29tcGxpc2hlZAorICogYnkgYWxzbyBlbmFibGluZyB0aGUgZm9s
+bG93aW5nIGZlYXR1cmVzOgorICoKKyAqIC0gQnVyc3Rpbmc6IGFsbG93cyBtdWx0aXBsZSBmcmFt
+ZXMgdG8gYmUgc2VudCBhdCBvbmNlLCByYXRoZXIgdGhhbiBwYXVzaW5nIAorICogICAgIGFmdGVy
+IGVhY2ggZnJhbWUuIEJ1cnN0aW5nIGlzIGEgc3RhbmRhcmRzLWNvbXBsaWFudCBmZWF0dXJlIHRo
+YXQgY2FuIGJlCisgKiAgICAgdXNlZCB3aXRoIGFueSBBY2Nlc3MgUG9pbnQuCisgKiAtIEZhc3Qg
+ZnJhbWVzOiBpbmNyZWFzZXMgdGhlIGFtb3VudCBvZiBpbmZvcm1hdGlvbiB0aGF0IGNhbiBiZSBz
+ZW50IHBlcgorICogICAgIGZyYW1lLCBhbHNvIHJlc3VsdGluZyBpbiBhIHJlZHVjdGlvbiBvZiB0
+cmFuc21pc3Npb24gb3ZlcmhlYWQuIEl0IGlzIGEKKyAqICAgICBwcm9wcmlldGFyeSBmZWF0dXJl
+IHRoYXQgbmVlZHMgdG8gYmUgc3VwcG9ydGVkIGJ5IHRoZSBBY2Nlc3MgUG9pbnQuCisgKiAtIENv
+bXByZXNzaW9uOiBkYXRhIGZyYW1lcyBhcmUgY29tcHJlc3NlZCBpbiByZWFsIHRpbWUgdXNpbmcg
+YSBMZW1wZWwgWml2CisgKiAgICAgYWxnb3JpdGhtLiBUaGlzIGlzIGRvbmUgdHJhbnNwYXJlbnRs
+eS4gT25jZSB0aGlzIGZlYXR1cmUgaXMgZW5hYmxlZCwgCisgKiAgICAgY29tcHJlc3Npb24gYW5k
+IGRlY29tcHJlc3Npb24gdGFrZXMgcGxhY2UgaW5zaWRlIHRoZSBjaGlwc2V0LCB3aXRob3V0Cisg
+KiAgICAgcHV0dGluZyBhZGRpdGlvbmFsIGxvYWQgb24gdGhlIGhvc3QgQ1BVLgorICovCisjZGVm
+aW5lIE1PRFVMQVRJT05fVFVSQk8JMHgwMDAwMDA4MAorCitlbnVtIGF0aDVrX3ZlbmRvcl9tb2Rl
+IHsKKwlNT0RFX0FUSEVST1NfVFVSQk8gPSBOVU1fSUVFRTgwMjExX01PREVTKzEsCisJTU9ERV9B
+VEhFUk9TX1RVUkJPRworfTsKKwkKKy8qIGFkZGluZyB0aGlzIGZsYWcgdG8gcmF0ZV9jb2RlIGVu
+YWJsZXMgc2hvcnQgcHJlYW1ibGUsIHNlZSBhcjUyMTJfcmVnLmggKi8KKyNkZWZpbmUgQVI1S19T
+RVRfU0hPUlRfUFJFQU1CTEUgMHgwNAogCi0jZGVmaW5lIEFSNUtfU0VUX1NIT1JUX1BSRUFNQkxF
+IDB4MDQgLyogYWRkaW5nIHRoaXMgZmxhZyB0byByYXRlX2NvZGUKLQkJCQkJZW5hYmxlcyBzaG9y
+dCBwcmVhbWJsZSwgc2VlCi0JCQkJCWFyNTIxMl9yZWcuaCAqLwogI2RlZmluZSBIQVNfU0hQUkVB
+TUJMRShfaXgpIChydC0+cmF0ZXNbX2l4XS5tb2R1bGF0aW9uID09IElFRUU4MDIxMV9SQVRFX0ND
+S18yKQogI2RlZmluZSBTSFBSRUFNQkxFX0ZMQUcoX2l4KSAoSEFTX1NIUFJFQU1CTEUoX2l4KSA/
+IEFSNUtfU0VUX1NIT1JUX1BSRUFNQkxFIDogMCkKIApAQCAtNjM2LDE0ICs2OTYsMTQgQEAgc3Ry
+dWN0IGF0aDVrX3JhdGVfdGFibGUgewogCTI1NSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAyNTUsIDI1
+NSwgMjU1LCA2LCA0LCAyLCAwLAlcCiAJNywgNSwgMywgMSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAy
+NTUsIDI1NSwgMjU1LCAyNTUsCVwKIAkyNTUsIDI1NSwgMjU1LCAyNTUsIDI1NSwgMjU1LCAyNTUs
+IDI1NSB9LCB7CQlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9UVVJCTywgNjAwMCwgMTEsIDE0MCwg
+MCB9LAlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9UVVJCTywgOTAwMCwgMTUsIDE4LCAwIH0sCVwK
+LQl7IDEsIElFRUU4MDIxMV9SQVRFX1RVUkJPLCAxMjAwMCwgMTAsIDE1MiwgMiB9LAlcCi0JeyAx
+LCBJRUVFODAyMTFfUkFURV9UVVJCTywgMTgwMDAsIDE0LCAzNiwgMiB9LAlcCi0JeyAxLCBJRUVF
+ODAyMTFfUkFURV9UVVJCTywgMjQwMDAsIDksIDE3NiwgNCB9LAlcCi0JeyAxLCBJRUVFODAyMTFf
+UkFURV9UVVJCTywgMzYwMDAsIDEzLCA3MiwgNCB9LAlcCi0JeyAxLCBJRUVFODAyMTFfUkFURV9U
+VVJCTywgNDgwMDAsIDgsIDk2LCA0IH0sCVwKLQl7IDEsIElFRUU4MDIxMV9SQVRFX1RVUkJPLCA1
+NDAwMCwgMTIsIDEwOCwgNCB9IH0JXAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgNjAwMCwgMTEs
+IDE0MCwgMCB9LAlcCisJeyAxLCBNT0RVTEFUSU9OX1RVUkJPLCA5MDAwLCAxNSwgMTgsIDAgfSwJ
+XAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgMTIwMDAsIDEwLCAxNTIsIDIgfSwJXAorCXsgMSwg
+TU9EVUxBVElPTl9UVVJCTywgMTgwMDAsIDE0LCAzNiwgMiB9LAlcCisJeyAxLCBNT0RVTEFUSU9O
+X1RVUkJPLCAyNDAwMCwgOSwgMTc2LCA0IH0sCVwKKwl7IDEsIE1PRFVMQVRJT05fVFVSQk8sIDM2
+MDAwLCAxMywgNzIsIDQgfSwJXAorCXsgMSwgTU9EVUxBVElPTl9UVVJCTywgNDgwMDAsIDgsIDk2
+LCA0IH0sCVwKKwl7IDEsIE1PRFVMQVRJT05fVFVSQk8sIDU0MDAwLCAxMiwgMTA4LCA0IH0gfQlc
+CiB9CiAKICNkZWZpbmUgQVI1S19SQVRFU19YUiB7IDEyLCB7CQkJCQlcCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGg1a19iYXNlLmMKaW5kZXggYmEyNmVhZC4uNmE0MzdkZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoNWtfYmFzZS5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVr
+X2Jhc2UuYwpAQCAtMTg0NCw3ICsxODQ0LDcgQEAgc3RhdGljIGludCBhdGhfZ2V0Y2hhbm5lbHMo
+c3RydWN0IGllZWU4MDIxMV9odyAqaHcpCiAJCVRHID0gTU9ERV9BVEhFUk9TX1RVUkJPRywKIAl9
+OwogCi0JQlVJTERfQlVHX09OKEFSUkFZX1NJWkUoc2MtPm1vZGVzKSA8IDUpOworCUJVSUxEX0JV
+R19PTihBUlJBWV9TSVpFKHNjLT5tb2RlcykgPCAzKTsKIAogCWFoLT5haF9jb3VudHJ5X2NvZGUg
+PSBjb3VudHJ5Y29kZTsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtf
+aHcuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMKaW5kZXggMDdhZDEyNy4uZTRj
+YzMwNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfaHcuYworKysgYi9k
+cml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jCkBAIC0xNDIsNiArMTQyLDcgQEAgYXRoX2hh
+bF9jb21wdXRldHh0aW1lKHN0cnVjdCBhdGhfaHcgKmhhbCwgY29uc3Qgc3RydWN0IGF0aDVrX3Jh
+dGVfdGFibGUgKnJhdGVzLAogCSAqIENhbGN1bGF0ZSB0aGUgdHJhbnNtaXNzaW9uIHRpbWUgYnkg
+b3BlcmF0aW9uIChQSFkpIG1vZGUKIAkgKi8KIAlzd2l0Y2ggKHJhdGUtPm1vZHVsYXRpb24pIHsK
+KwkvKiBTdGFuZGFyZCByYXRlcyAqLwogCWNhc2UgSUVFRTgwMjExX1JBVEVfQ0NLOgogCQkvKgog
+CQkgKiBDQ0sgLyBEUyBtb2RlICg4MDIuMTFiKQpAQCAtMTYwLDcgKzE2MSw4IEBAIGF0aF9oYWxf
+Y29tcHV0ZXR4dGltZShzdHJ1Y3QgYXRoX2h3ICpoYWwsIGNvbnN0IHN0cnVjdCBhdGg1a19yYXRl
+X3RhYmxlICpyYXRlcywKIAkJdmFsdWUgPSBBUjVLX09GRE1fVFhfVElNRShyYXRlLT5yYXRlX2ti
+cHMsIGZyYW1lX2xlbmd0aCk7CiAJCWJyZWFrOwogCi0JY2FzZSBJRUVFODAyMTFfUkFURV9UVVJC
+TzoKKwkvKiBWZW5kb3Itc3BlY2lmaWMgcmF0ZXMgKi8KKwljYXNlIE1PRFVMQVRJT05fVFVSQk86
+CiAJCS8qCiAJCSAqIE9ydGhvZ29uYWwgRnJlcXVlbmN5IERpdmlzaW9uIE11bHRpcGxleGluZwog
+CQkgKiBBdGhlcm9zICJUdXJibyBNb2RlIiAoZG91YmxlZCByYXRlcykKCg==
+------=_Part_23111_32298380.1189728375748--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
