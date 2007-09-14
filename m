@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36751 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:59956 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764242AbXIUUuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 16:50:08 -0400
-Subject: Re: [PATCH 0/5] Add central regulatory domain agent - Patchset I
+	id S1754631AbXINShF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2007 14:37:05 -0400
+Subject: Re: iwlist and network-manager bug report
 From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20070921204606.GD31768@pogo>
-References: <20070921204606.GD31768@pogo>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: jt@hpl.hp.com, linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1189794311.3974.49.camel@johannes.berg>
+References: <1189526874.6161.30.camel@johannes.berg>
+	 <1189610572.5644.28.camel@xo-3E-67-34.localdomain>
+	 <20070912170153.GA25785@bougret.hpl.hp.com>
+	 <1189667496.6161.77.camel@johannes.berg>
+	 <1189707493.1329.1.camel@johannes.berg>
+	 <1189793380.2508.2.camel@xo-3E-67-34.localdomain>
+	 <1189794311.3974.49.camel@johannes.berg>
 Content-Type: text/plain
-Date: Fri, 21 Sep 2007 16:47:29 -0400
-Message-Id: <1190407649.14368.6.camel@xo-3E-67-34.localdomain>
+Date: Fri, 14 Sep 2007 14:33:40 -0400
+Message-Id: <1189794820.2508.22.camel@xo-3E-67-34.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-09-21 at 16:46 -0400, Luis R. Rodriguez wrote:
-> Patchset I - Add central regulatory domain agent
+On Fri, 2007-09-14 at 20:25 +0200, Johannes Berg wrote:
+> On Fri, 2007-09-14 at 14:09 -0400, Dan Williams wrote:
 > 
-> This is patchset I of II which adds a central regulatory domain
-> agent onto the wireless subsystem. I've split it into two patchsets in order
-> to introduce the agent before affecting mac80211 drivers. This allows work
-> to continue on the central reg agent independant of mac80211
-> advancements.
+> > I've been burning the midnight oil on it for the past few weeks, check
+> > NM and applet changelogs.  Still not quite there yet, there's some core
+> > work left to do getting NM to talk to the settings daemons (ie,
+> > nm-client or knetworkmanager) correctly, getting GUI bits for Connection
+> > editing in the applet, and making sure the relevant settings are
+> > honored.
 > 
-> Patch series I adds the central regulatory domain agent and
-> integrates it with cfg80211. The central reg agent consists of 2
-> main modules:
+> Great, good to know. There are various quirks in 0.6.5, my brother tells
+> me for example that it's impossible to log on to an _open_ network at
+> the university where he currently is while it works fine with iwconfig.
+> Some other things too, my wpa network at home never works with nm and I
+> was never able to determine why...
 
-My bad, my reading was too quick.  I see cfg80211 above now :)
+For whatever reason, driving wpa_supplicant with D-Bus is a lot more
+reliable than talking to it over the unix domain socket.  I've long
+suspected that's part of the issue with random failures of
+wpa_supplicant in situations where the results between NM-driven and
+plain wpa_supplicant are different.
+
+Would be interesting to see some wpa_supplicant debug output from Ben's
+machine though to see where it's failing and what info NM is pushing to
+it.
 
 Dan
 
-> * ISO3166-1
-> * Regdomains
-> 
-> Additionally, changing regulatory domains can be acomplished through
-> the use of a new configfs module which will be introduced for
-> the wireless subsystem.
-> 
-> Patch series II will add support for the centreal reglatory agent
-> onto mac80211, remove mac80211's simple regulatory control and and 
-> replace each driver's own regulatory domain implementation with the
-> central one.
-> 
->   Luis
 
