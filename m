@@ -1,67 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:61854 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755224AbXIEOZu (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54160 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753797AbXINR5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 10:25:50 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-Date: Wed, 5 Sep 2007 10:23:35 -0400
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-References: <20070821161845.165557000@sipsolutions.net> <20070905051626.GA12198@deine-taler.de> <1188991396.9942.97.camel@johannes.berg>
-In-Reply-To: <1188991396.9942.97.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4131860.B08ULbqmYi";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709051023.48927.flamingice@sourmilk.net>
+	Fri, 14 Sep 2007 13:57:48 -0400
+Subject: Re: wireless vs. network namespaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <m1bqc52ria.fsf@ebiederm.dsl.xmission.com>
+References: <1189763513.3974.26.camel@johannes.berg>
+	 <m1bqc52ria.fsf@ebiederm.dsl.xmission.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LUeu4DbIFWxcX+UnPzRY"
+Date: Fri, 14 Sep 2007 19:59:10 +0200
+Message-Id: <1189792750.3974.43.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4131860.B08ULbqmYi
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-LUeu4DbIFWxcX+UnPzRY
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 05 September 2007 07:23, Johannes Berg wrote:
-> > I prefer to do option (1) because it wouldn't require adding
-> > additional fields to our private structure beside the work_struct
-> > for the workqueue function, it is simple to implement and it would
-> > not throw away any packets. Are there any side effects that I have
-> > overlooked?
->
-> I think Michael says it's currently buggy if called outside of ->tx().
->
-That's just a general rule of thumb. configure_filter holds the tx lock so=
-=20
-it's actually safe to do that there. In other cases, it can be buggy (some =
-tx=20
-code can get stuck) and racy (frames can get enqueued after stopping the=20
-queues). The first can be fixed in mac80211, but the second can't be. For=20
-most cases, stopping the hardware queue(s) should be done instead and=20
-possibly flushing the queue or waiting for it to empty, if you're trying to=
-=20
-adjust the radio.
+On Fri, 2007-09-14 at 09:31 -0600, Eric W. Biederman wrote:
 
-=2DMichael Wu
+> > Now that the network namespace work is in net-2.6.24, I'm wondering how
+> > wireless will be handling this. Is there any benefit at all to a
+> > wireless device supporting network namespaces?
+>=20
+> Good question.  Network namespaces are designed as a general tool
+> so if we can support network namespaces in the wireless stack without
+> killing ourselves there should be value in it.
 
---nextPart4131860.B08ULbqmYi
-Content-Type: application/pgp-signature
+Right.
+
+> > Should we, for now, set the new NETIF_F_NETNS_LOCAL flag for all
+> > mac80211 devices?
+> >
+> > If we do want to support moving, then we'll have to make cfg80211
+> > (preferably, though mac80211 might be easier at first) migrate *all*
+> > virtual interfaces associated with the same wiphy because otherwise
+> > we'll get into trouble when moving one virtual interface and then
+> > somebody in the other namespace changes its operating channel.
+>=20
+> Ok.  This appears at least to be an atomicity issue and possibly more.
+
+Yeah, good point, it'd have to move them all at once.
+
+> I don't currently understand the way the wireless interfaces interact
+> well enough to make a judgement call.
+>=20
+> There are two basic usage models I can currently think of.
+> 1) Super chroot.  Where a group of processes has distinct mount,
+>    network, uts, ipc, and pid namespaces.  So in this case on the
+>    inside we will only see processes that only belong to our own
+>    network namespace.  So in this scenario you get whatever the person
+>    who sets up the environment gives you.
+>=20
+>    If one of the network devices only allows access to a subset of
+>    the wireless networking  (say just sending packets but not
+>    controlling the radio aspects) I can see and advantage in only
+>    having that device in the restricted network namespace.
+
+Right now, there's no way to disallow that, but yes, I can see value in
+it as well.
+
+> 2) Advanced routing.  Where someone is doing some weird thing like=20
+>    testing sending packets and receiving them on the same machine.
+
+Not sure I see a point in that with wireless.
+
+> Currently creation of a network namespace requires CAP_SYS_ADMIN
+> and for device movement we only require CAP_NET_ADMIN.  So these are
+> all privileged operations.  So the scenario you are concerned about
+> may just be a "don't do that then".
+
+Ok. Sounds good to me. All the radio config requires CAP_SYS_ADMIN as
+well.
+
+> If this doesn't give you enough information to make the call can
+> you describe for me how the separation of wireless network interfaces
+> work?
+
+Well, basically what we have is one physical device that sends/receives
+packets. We have multiple options then:
+ * some hardware (no drivers at this time) support multiple virtual
+   devices to associate to multiple different access points, each has a
+   different MAC address too
+ * more importantly, if you have an access point you can put any group
+   of associated stations into a sort of VLAN based on which encryption
+   keys they use for multicast traffic. Each of these VLANs shows up as
+   a local device as well.
+ * Then there's some things like having a monitor interface that sees
+   all traffic etc. but that's not too interesting.
+ * You could have an AP along with a WDS device to enable bridging
+   between multiple APs over wireless, not really interesting either in
+   this context
+
+I can mainly see the first and the second points having value in
+separation. With the first, pending drivers that have multi-MAC address
+support you could give each namespace one device that can associate to
+some different AP [1]. And then you could have VLANs on an AP where each
+VLAN "ends" in a different namespace.
+
+johannes
+
+[1] though actually, right now, they couldn't associate to the same AP
+without having weird bugs in mac80211... I have plans to fix this
+though.
+
+--=-LUeu4DbIFWxcX+UnPzRY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBG3rv0T3Oqt9AH4aERAv7yAJwLbR6sAkobfn2VOcPDQf0yrP6ZcACgrcS2
-rceAICIYlBXCzY2W/iEtK8k=
-=weCs
+iD8DBQBG6svu/ETPhpq3jKURAoS1AKCNdbUClxwdxWBfLd+cBBnZcbp82ACeOn5c
+WK9u8DPMi2/4/xhFz756Ewc=
+=HTZ3
 -----END PGP SIGNATURE-----
 
---nextPart4131860.B08ULbqmYi--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-LUeu4DbIFWxcX+UnPzRY--
+
