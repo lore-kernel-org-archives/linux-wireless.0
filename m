@@ -1,152 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:49696 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbXITVN3 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53733
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbXIOWGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 17:13:29 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1177226pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2007 14:13:28 -0700 (PDT)
-Message-ID: <43e72e890709201413w4cee6ea5v799f4b88e1982e5a@mail.gmail.com>
-Date: Thu, 20 Sep 2007 17:13:26 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k - Fix filters for AR5212, correct return values for WEP
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Nick Kossifidis" <mickflemm@gmail.com>
+	Sat, 15 Sep 2007 18:06:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH V2] b43legacy: Fix machine check errors for PPC architecture with BCM4306/2
+Date: Sun, 16 Sep 2007 00:04:27 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <46ec4d0c.PU+VRueOH3Peh6s5%Larry.Finger@lwfinger.net>
+In-Reply-To: <46ec4d0c.PU+VRueOH3Peh6s5%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_33387_21420474.1190322806729"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709160004.28018.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_33387_21420474.1190322806729
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Saturday 15 September 2007 23:22:20 Larry Finger wrote:
+> In b43legacy, the variable gmode is always set. With a BCM4306/2,
+> and likely a BCM4301, a variable is needed to control the execution
+> path through the PHY and radio initialization, otherwise there are
+> attempts to read from invalid registers. On x86 platforms, these
+> read failures cause no problems; however they lead to machine check
+> errors for the ppc architecture. This patch reverts to the variable
+> and semantics used in the V3 specifications. It has been tested on
+> an i386 platform using special code to detect these invalid reads,
+> and on at least one Powerbook.
+>  
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-I was not get getting DHCP replies back with ath5k on a AR5212. Turns
-out out of all filter flags if I enable AR5K_RX_FILTER_PROM I get my
-replies back. I've tested enabling AR5K_RX_FILTER_BCAST and
-AR5K_RX_FILTER_MCAST but AR5K_RX_FILTER_PROM only does the trick. This
-may fix this for other cards if you are not getting DHCP replies
-please let us know. For now we can enable AR5K_RX_FILTER_PROM on STA
-and Ad-hoc only for AR5212 until we sort out the filter flags
-properly. This patch also takes into account new changes to mac80211
-for ieee80211_ops's set_key().
+> Index: wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/b43legacy/b43legacy.h
+> +++ wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
+> @@ -389,10 +389,10 @@ struct b43legacy_lopair {
+>  struct b43legacy_phy {
+>  	/* Possible PHYMODEs on this PHY */
+>  	u8 possible_phymodes;
+> -	/* GMODE bit enabled? */
+> -	bool gmode;
+> +	/* true if PHY registers can be accessed */
+> +	bool connected;
 
-Filter API changes to come soon.
+I am completely against re-adding the old broken "connected" semantics.
+IMO, this is a step backwards. I was happy to finally get rid of
+this, as it caused me a lot of headaches.
 
-In summary this patch has these changes:
+>  	/* Possible ieee80211 subsystem hwmodes for this PHY.
+> -	 * Which mode is selected, depends on thr GMODE enabled bit */
+> +	 * This will be either G or B mode */
+>  #define B43legacy_MAX_PHYHWMODES	2
+>  	struct ieee80211_hw_mode hwmodes[B43legacy_MAX_PHYHWMODES];
 
-* AR5212 now receives broadcasts (DHCP works now)
-* ath5k_hw_set_key() was checking against key table size against
-key->keyid -- this can only be 0, 1, 2 or 3. Check against key->keylen
-and divide the table size by 8.
-* return proper values for WEP setting as per mac80211 documenation
+Not sure why you change the comment here this way.
+If you remove the "gmode" capability, you also limit
+the number of hwmodes to one. So no array is needed here anymore.
 
-This patch applies to the ath5k branch of wireless-dev.
+But in the end, you are the maintainer, so you decide.
+I personally would not re-add proven wrong stuff back to my driver.
 
-Changes to ath5k_base.c
-Changes-licensed-under: BSD
-
-Changes to ath5k_hw.c, ath5k_reg.h
-Changes-licensed-under: ISC
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
----
-
- drivers/net/wireless/ath5k_base.c |   26 ++++++++++++++++++--------
- 1 files changed, 18 insertions(+), 8 deletions(-
-
- drivers/net/wireless/ath5k_hw.c  |   12 +++++++++---
- drivers/net/wireless/ath5k_reg.h |   12 ++++++++++++
- 2 files changed, 21 insertions(+), 3 deletions(-)
-
-------=_Part_33387_21420474.1190322806729
-Content-Type: text/x-patch; name="ath5k-fix-filter.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="ath5k-fix-filter.diff"
-X-Attachment-Id: f_f6tr89q6
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYwppbmRleCBmZWFkOWE3Li5jNDlhNzQ0IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19iYXNlLmMKKysrIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYXRoNWtfYmFzZS5jCkBAIC03MzQsNyArNzM0LDcgQEAgc3RhdGljIHUzMiBhdGhf
-Y2FsY3J4ZmlsdGVyKHN0cnVjdCBhdGhfc29mdGMgKnNjKQogCQlBUjVLX1JYX0ZJTFRFUl9VQ0FT
-VCB8IEFSNUtfUlhfRklMVEVSX0JDQVNUIHwKIAkJQVI1S19SWF9GSUxURVJfTUNBU1QgfCBBUjVL
-X1JYX0ZJTFRFUl9SQURBUkVSUjsKIAotCWlmIChzYy0+b3Btb2RlID09IElFRUU4MDIxMV9JRl9U
-WVBFX01OVFIpCisJaWYgKG9wbW9kZSA9PSBJRUVFODAyMTFfSUZfVFlQRV9NTlRSKQogCQlyZmls
-dCB8PSBBUjVLX1JYX0ZJTFRFUl9DT05UUk9MIHwgQVI1S19SWF9GSUxURVJfQkVBQ09OIHwKIAkJ
-CUFSNUtfUlhfRklMVEVSX1BST0JFUkVRIHwgQVI1S19SWF9GSUxURVJfUFJPTTsKIAlpZiAob3Bt
-b2RlICE9IElFRUU4MDIxMV9JRl9UWVBFX1NUQSkKQEAgLTc0Miw4ICs3NDIsMTQgQEAgc3RhdGlj
-IHUzMiBhdGhfY2FsY3J4ZmlsdGVyKHN0cnVjdCBhdGhfc29mdGMgKnNjKQogCWlmIChvcG1vZGUg
-IT0gSUVFRTgwMjExX0lGX1RZUEVfQVAgJiYgdGVzdF9iaXQoQVRIX1NUQVRfUFJPTUlTQywKIAkJ
-CQlzYy0+c3RhdHVzKSkKIAkJcmZpbHQgfD0gQVI1S19SWF9GSUxURVJfUFJPTTsKLQlpZiAob3Bt
-b2RlID09IElFRUU4MDIxMV9JRl9UWVBFX1NUQSB8fCBvcG1vZGUgPT0gSUVFRTgwMjExX0lGX1RZ
-UEVfSUJTUykKKwlpZiAob3Btb2RlID09IElFRUU4MDIxMV9JRl9UWVBFX1NUQSB8fCBvcG1vZGUg
-PT0gSUVFRTgwMjExX0lGX1RZUEVfSUJTUykgewogCQlyZmlsdCB8PSBBUjVLX1JYX0ZJTFRFUl9C
-RUFDT047CisJCS8qIE5vdGU6IEFSNTIxMiByZXF1aXJlcyBBUjVLX1JYX0ZJTFRFUl9QUk9NIHRv
-IHJlY2VpdmUgYnJvYWRjYXN0cywgCisJCSAqIHBlcmhhcHMgdGhlIGZsYWdzIGFyZSBvZmYsIGZv
-ciBub3cgdG8gYmUgc2FmZSB3ZSdsbCBlbmFibGUgaXQgZm9yCisJCSAqIFNUQSBhbmQgQURIT0Mg
-dW50aWwgd2UgaGF2ZSB0aGlzIHByb3Blcmx5IG1hcHBlZCAqLworCQlpZiAoYWgtPmFoX3ZlcnNp
-b24gPT0gQVI1S19BUjUyMTIpCisJCQlyZmlsdCB8PSBBUjVLX1JYX0ZJTFRFUl9QUk9NOworCX0K
-IAogCXJldHVybiByZmlsdDsKIH0KQEAgLTE0MzcsMjEgKzE0NDMsMjggQEAgc3RhdGljIGludCBh
-dGhfc2V0X2tleShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc2V0X2tleV9jbWQgY21kLAogCXN0
-cnVjdCBhdGhfc29mdGMgKnNjID0gaHctPnByaXY7CiAJaW50IHJldCA9IDA7CiAKKwlzd2l0Y2go
-a2V5LT5hbGcpIHsKKyAgICAgICAgY2FzZSBBTEdfV0VQOgorCQlicmVhazsKKyAgICAgICAgY2Fz
-ZSBBTEdfVEtJUDoKKyAgICAgICAgY2FzZSBBTEdfQ0NNUDoKKwkJcmV0dXJuIC1FT1BOT1RTVVBQ
-OworCWNhc2UgQUxHX05PTkU6CisJCWJyZWFrOworCWRlZmF1bHQ6CisJCVdBUk5fT04oMSk7CisJ
-CXJldHVybiAtRUlOVkFMOworCX0KKwogCW11dGV4X2xvY2soJnNjLT5sb2NrKTsKIAogCXN3aXRj
-aCAoY21kKSB7CiAJY2FzZSBTRVRfS0VZOgotCQlpZiAoa2V5LT5hbGcgIT0gQUxHX1dFUCAmJiBr
-ZXktPmFsZyAhPSBBTEdfTk9ORSkgewotCQkJcmV0ID0gLUVJTlZBTDsKLQkJCWdvdG8gdW5sb2Nr
-OwotCQl9Ci0KIAkJcmV0ID0gYXRoNWtfaHdfc2V0X2tleShzYy0+YWgsIGtleS0+a2V5aWR4LCBr
-ZXksIGFkZHIpOwogCQlpZiAocmV0KSB7CiAJCQlwcmludGsoS0VSTl9FUlIgImF0aDogY2FuJ3Qg
-c2V0IHRoZSBrZXlcbiIpOwogCQkJZ290byB1bmxvY2s7CiAJCX0KLQogCQlfX3NldF9iaXQoa2V5
-LT5rZXlpZHgsIHNjLT5rZXltYXApOwogCQlrZXktPmh3X2tleV9pZHggPSBrZXktPmtleWlkeDsK
-IAkJYnJlYWs7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfaHcuYwppbmRleCBlNGNjMzA3Li4yNGI3MTdiIDEw
-MDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jCisrKyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMKQEAgLTMxODEsMjEgKzMxODEsMjcgQEAgaW50IGF0aDVr
-X2h3X3NldF9rZXkoc3RydWN0IGF0aF9odyAqaGFsLCB1MTYgZW50cnksCiAJdTMyIGtleXR5cGU7
-CiAKIAlBUjVLX1RSQUNFOwotCUFSNUtfQVNTRVJUX0VOVFJZKGVudHJ5LCBBUjVLX0tFWVRBQkxF
-X1NJWkUpOworCisJLyoga2V5LT5rZXlsZW4gY29tZXMgaW4gZnJvbSBtYWM4MDIxMSBpbiBieXRl
-cyAqLworCisJaWYgKGtleS0+a2V5bGVuID4gQVI1S19LRVlUQUJMRV9TSVpFIC8gOCkKKwkJcmV0
-dXJuIC1FT1BOT1RTVVBQOwogCiAJc3dpdGNoIChrZXktPmtleWxlbikgeworCS8qIFdFUCA0MC1i
-aXQgICA9IDQwLWJpdCAgZW50ZXJlZCBrZXkgKyAyNCBiaXQgSVYgPSA2NC1iaXQgKi8KIAljYXNl
-IDQwIC8gODoKIAkJbWVtY3B5KCZrZXlfdlswXSwga2V5LT5rZXksIDUpOwogCQlrZXl0eXBlID0g
-QVI1S19LRVlUQUJMRV9UWVBFXzQwOwogCQlicmVhazsKIAorCS8qIFdFUCAxMDQtYml0ICA9IDEw
-NC1iaXQgZW50ZXJlZCBrZXkgKyAyNC1iaXQgSVYgPSAxMjgtYml0ICovCiAJY2FzZSAxMDQgLyA4
-OgogCQltZW1jcHkoJmtleV92WzBdLCAma2V5LT5rZXlbMF0sIDYpOwogCQltZW1jcHkoJmtleV92
-WzJdLCAma2V5LT5rZXlbNl0sIDYpOwogCQltZW1jcHkoJmtleV92WzRdLCAma2V5LT5rZXlbMTJd
-LCAxKTsKIAkJa2V5dHlwZSA9IEFSNUtfS0VZVEFCTEVfVFlQRV8xMDQ7CiAJCWJyZWFrOwotCisJ
-LyogV0VQIDEyOC1iaXQgID0gMTI4LWJpdCBlbnRlcmVkIGtleSArIDI0IGJpdCBJViA9IDE1Mi1i
-aXQgKi8KIAljYXNlIDEyOCAvIDg6CiAJCW1lbWNweSgma2V5X3ZbMF0sICZrZXktPmtleVswXSwg
-Nik7CiAJCW1lbWNweSgma2V5X3ZbMl0sICZrZXktPmtleVs2XSwgNik7CkBAIC0zMjA0LDcgKzMy
-MTAsNyBAQCBpbnQgYXRoNWtfaHdfc2V0X2tleShzdHJ1Y3QgYXRoX2h3ICpoYWwsIHUxNiBlbnRy
-eSwKIAkJYnJlYWs7CiAKIAlkZWZhdWx0OgotCQlyZXR1cm4gLUVJTlZBTDsKKwkJcmV0dXJuIC1F
-SU5WQUw7IC8qIHNob3VsZG4ndCBoYXBwZW4gKi8KIAl9CiAKIAlmb3IgKGkgPSAwOyBpIDwgQVJS
-QVlfU0laRShrZXlfdik7IGkrKykKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aDVrX3JlZy5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmgKaW5kZXggMWQ1M2E5
-ZS4uZTVjZTg0MCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmgK
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmgKQEAgLTE1ODgsNiArMTU4OCwx
-OCBAQAogI2RlZmluZSBBUjVLX0tFWVRBQkxFX01BQzEoX24pCQlBUjVLX0tFWVRBQkxFX09GRihf
-biwgNykKICNkZWZpbmUgQVI1S19LRVlUQUJMRV9WQUxJRAkJMHgwMDAwODAwMAogCisvKiBXRVAg
-NDAtYml0CT0gNDAtYml0ICBlbnRlcmVkIGtleSArIDI0IGJpdCBJViA9IDY0LWJpdAorICogV0VQ
-IDEwNC1iaXQJPSAxMDQtYml0IGVudGVyZWQga2V5ICsgMjQtYml0IElWID0gMTI4LWJpdAorICog
-V0VQIDEyOC1iaXQJPSAxMjgtYml0IGVudGVyZWQga2V5ICsgMjQgYml0IElWID0gMTUyLWJpdAor
-ICoKKyAqIFNvbWUgdmVuZG9ycyBoYXZlIGludHJvZHVjZWQgYmlnZ2VyIFdFUCBrZXlzIHRvIGFk
-ZHJlc3MgCisgKiBzZWN1cml0eSB2dWxuZXJhYmlsaXRpZXMgaW4gV0VQLiBUaGlzIGluY2x1ZGVz
-OgorICoKKyAqIFdFUCAyMzItYml0ID0gMjMyLWJpdCBlbnRlcmVkIGtleSArIDI0IGJpdCBJViA9
-IDI1Ni1iaXQKKyAqCisgKiBXZSBjYW4gZXhwYW5kIHRoaXMgaWYgd2UgZmluZCBhcjVrIEF0aGVy
-b3MgY2FyZHMgd2l0aCBhIGxhcmdlcgorICoga2V5IHRhYmxlIHNpemUuCisgKi8KICNkZWZpbmUg
-QVI1S19LRVlUQUJMRV9TSVpFXzUyMTAJCTY0CiAjZGVmaW5lIEFSNUtfS0VZVEFCTEVfU0laRV81
-MjExCQkxMjgKICNkZWZpbmUJQVI1S19LRVlUQUJMRV9TSVpFCQkoaGFsLT5haF92ZXJzaW9uID09
-IEFSNUtfQVI1MjEwID8gXAo=
-------=_Part_33387_21420474.1190322806729--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
