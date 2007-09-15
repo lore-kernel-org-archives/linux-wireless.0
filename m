@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35929 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752159AbXIBNpe (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61094 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753062AbXIOXZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 09:45:34 -0400
-Date: Sun, 2 Sep 2007 14:53:51 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-Cc: Adrian Bunk <bunk@kernel.org>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070902145351.3a204005@the-village.bc.nu>
-In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	<46D99FB7.6030505@garzik.org>
-	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	<20070901205457.GK9260@stusta.de>
-	<20070902113638.78fbd202@the-village.bc.nu>
-	<Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
-	<20070902115041.GM16016@stusta.de>
-	<Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
-	<20070902134612.28a88761@the-village.bc.nu>
-	<Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 15 Sep 2007 19:25:52 -0400
+Message-ID: <46EC6A25.2010204@lwfinger.net>
+Date: Sat, 15 Sep 2007 18:26:29 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture  with BCM4306/2
+References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net> <200709152147.57431.mb@bu3sch.de> <46EC4844.1060003@lwfinger.net> <200709152358.08887.mb@bu3sch.de>
+In-Reply-To: <200709152358.08887.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Not strictly true. They can either agree to a change and issue one or
-> > they can convey to other parties the right to change the terms. The GPL
-> > for example does this for version selection.
+Michael Buesch wrote:
 > 
-> So, under a dual-licensed BSD/GPL code the latter license allows a 
-> developer to remove the GPL license itself and release a single-licensed 
-> BSD code if other parties want to do it?
-
-If the dual licence permits you to select from two alternatives as
-appears to be the case in
-
-"* Alternatively, this software may be distributed under the terms of the
- * GNU General Public License ("GPL") version 2 as published by the Free
- * Software Foundation."
-
-Then there is no problem in doing exactly what it says and distributing
-it under the terms of the GPL v2 and the GPL v2 alone (or indeed the BSD
-licence alone). Anyone who took the project code and produced a binary
-only proprietary product from it would for example select the BSD licence
-alone and convey almost no rights at all to their customer.
-
-> I would assume a file as a boundary of a work in the case that file is 
-> under different licensing terms to the rest of the software package.  On a 
-
-Assuming is bad, you should consult caselaw.
-
-> lot of software packages different modules are covered under different 
-> licensing terms.
+> There is no such thing as "connected".
+> The bit is called "gmode". Why do you change it back to the wrong name?
+> The V3 specs are simply _wrong_. It has nothing to do with the backplane
+> or anything else like that. The bit just selects between the A-PHY and
+> the BG-PHY. Of course, if there is no A-PHY it will obviously machine-check
+> on access, if it's selected.
 > 
-> We can choose what license terms we will honor; however, we do not have 
-> the ability to remove the licensing terms we do not like.
+> V3 specs assume that the meaning is "connected", because it was misinterpreted
+> to be a "PHY connect" flag. But it really is a "PHY select" flag, to select
+> between two different PHYs. If it's enabled, the G-PHY will be selected (and
+> the A-PHY otherwise).
+> 
+> Btw, while we are at it: The V3 specs are wrong regarding the gmode (or connected)
+> bit in other areas as well, because there was even more confusion with
+> other PHY flags. The PHY specification is pretty broken in the v3 specs.
 
-If the author has conveyed that right to you, then you may usually do so.
+The critical part of the legacy code in this regard is from phy_calibrate():
 
-Alan
+        if (phy->type == B43legacy_PHYTYPE_G && phy->rev == 1) {
+                b43legacy_wireless_core_reset(dev, 0);
+                b43legacy_phy_initg(dev);
+                b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
+        }
+
+If phy_initg is going to work correctly, then gmode has to follow the state of the MACCTL_GMODE bit
+in MMIO_MACCTL. Apparently GPHYs with rev > 1 do not care about this bit, but the BCM4306/2 does.
+The changes can be accomplished by the following patch:
+
+Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-dev/drivers/net/wireless/b43legacy/main.c
+@@ -738,8 +738,11 @@ void b43legacy_wireless_core_reset(struc
+
+        macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
+        macctl &= ~B43legacy_MACCTL_GMODE;
+-       if (flags & B43legacy_TMSLOW_GMODE)
++       if (flags & B43legacy_TMSLOW_GMODE) {
+                macctl |= B43legacy_MACCTL_GMODE;
++               dev->phy.gmode = 1;
++       } else
++               dev->phy.gmode = 0;
+        macctl |= B43legacy_MACCTL_IHR_ENABLED;
+        b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ }
+
+The above patch and a revised comment for the gmode variable will be the contents of V3 of my patch.
+I hope that you find it acceptable. In my position as maintainer, I can push stuff through, but I
+prefer that you are in agreement.
+
+Larry
+
