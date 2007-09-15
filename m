@@ -1,66 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:49079 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754923AbXIYQNZ (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:34602 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbXIORjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 12:13:25 -0400
-Received: by an-out-0708.google.com with SMTP id d31so291469and
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 09:13:25 -0700 (PDT)
-Message-ID: <43e72e890709250913x5c137ee3k8d68b4ad755cadfe@mail.gmail.com>
-Date: Tue, 25 Sep 2007 12:13:24 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: API to regulatory control (1)
-Cc: linux-wireless@vger.kernel.org, "Jouni Malinen" <j@w1.fi>
-In-Reply-To: <1190727624.18521.310.camel@johannes.berg>
+	Sat, 15 Sep 2007 13:39:44 -0400
+Date: Sat, 15 Sep 2007 12:39:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Fix machine check errors for PPC architecture  with BCM4306/2
+Message-ID: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1190456574.18521.220.camel@johannes.berg>
-	 <43e72e890709221416o25bf3287v5d8d7bb5c2fe15ab@mail.gmail.com>
-	 <1190624554.18521.261.camel@johannes.berg>
-	 <43e72e890709241255v1f044f9dh4af1e00fcaba03b0@mail.gmail.com>
-	 <1190669783.18521.301.camel@johannes.berg>
-	 <43e72e890709241518h1cc694d9of8f8a8d216a7906b@mail.gmail.com>
-	 <1190727624.18521.310.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/25/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2007-09-24 at 18:18 -0400, Luis R. Rodriguez wrote:
->
-> > I saw complaints on the z1211 move thread to upstream about large
-> > patches and driver developers not being able to keep up as mac80211 is
-> > a 'moving target'.
->
-> It'll always be. Everything in Linux is a moving target. That's the pain
-> associated with maintaining a driver out of tree. This change in
-> particular isn't even hard to follow and I'd happily help change all the
-> drivers that are in tree.
+In b43, the variable gmode merely indicates whether the given core
+has a GPHY or a BPHY. In b43legacy, this is always true; however,
+on a BCM4306/2 it must be set only when the PHY is connected to the
+ssb backplane, otherwise, reads of the PHY registers are invalid.
+For x86 architecture, these read failures cause no problems; however,
+on the ppc architecture, they cause a machine check. This patch has been
+tested on an i386 platform using special code to detect these invalid
+reads, and on two different Powerbooks.
+ 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-OK fine, lets just move forward but I'll take you up on the offer ;)
+John,
 
-> > > I don't think I want to call into some cfg80211 call for this, a
-> > > specific notifier seems more appropriate.
-> >
-> > Well what if cfg80211  generates a notification if a possible conflict
-> > has been found? Is there a need to generate a notification on power
-> > reg changes to the driver besides this?
->
-> Well, that'd mean that cfg80211 would need to keep track of the current
-> power level. I've intentionally made cfg80211 keep track of as few
-> things as possible so that drivers are free to change things when
-> necessary without having synchronisation problems. I would prefer if it
-> stayed this way.
+This patch fixes a problem with the Fedora Rawhide kernel reported by David
+Woodhouse on the bcm43xx mailing list and by Will Woods at 
+https://bugzilla.redhat.com/show_bug.cgi?id=233011.
 
-I wasn't thinking of that, but  instead, of the 'loop' cfg80211 would
-do upon regulatory change, on all wiphys.
+Larry
 
-> Also, just providing the hook is much simpler and we can leave it up to
-> drivers to implement this logic.
+ drivers/net/wireless/b43legacy/main.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Hm, the drivers will still call a cfg80211 helper anyway to update its
-channel flags/power limits, why not let cfg80211 just do it then in a
-loop for all wiphys upon reg change? At the end of the loop for each
-wiphy we can call a driver-specific ops->verify_reg().
-
-  Luis
+Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-dev/drivers/net/wireless/b43legacy/main.c
+@@ -738,8 +738,11 @@ void b43legacy_wireless_core_reset(struc
+ 
+ 	macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
+ 	macctl &= ~B43legacy_MACCTL_GMODE;
+-	if (flags & B43legacy_TMSLOW_GMODE)
++	if (flags & B43legacy_TMSLOW_GMODE) {
+ 		macctl |= B43legacy_MACCTL_GMODE;
++		dev->phy.gmode = 1;
++	} else
++		dev->phy.gmode = 0;
+ 	macctl |= B43legacy_MACCTL_IHR_ENABLED;
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ }
+@@ -3424,7 +3427,6 @@ static int b43legacy_wireless_core_attac
+ 	int err;
+ 	int have_bphy = 0;
+ 	int have_gphy = 0;
+-	u32 tmp;
+ 
+ 	/* Do NOT do any device initialization here.
+ 	 * Do it in wireless_core_init() instead.
+@@ -3456,9 +3458,7 @@ static int b43legacy_wireless_core_attac
+ 	if (err)
+ 		goto err_powerdown;
+ 
+-	dev->phy.gmode = (have_gphy || have_bphy);
+-	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
+-	b43legacy_wireless_core_reset(dev, tmp);
++	b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
+ 
+ 	err = b43legacy_phy_versioning(dev);
+ 	if (err)
+@@ -3482,9 +3482,7 @@ static int b43legacy_wireless_core_attac
+ 			B43legacy_BUG_ON(1);
+ 		}
+ 	}
+-	dev->phy.gmode = (have_gphy || have_bphy);
+-	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
+-	b43legacy_wireless_core_reset(dev, tmp);
++	b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
+ 
+ 	err = b43legacy_validate_chipaccess(dev);
+ 	if (err)
+Index: wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -389,7 +389,7 @@ struct b43legacy_lopair {
+ struct b43legacy_phy {
+ 	/* Possible PHYMODEs on this PHY */
+ 	u8 possible_phymodes;
+-	/* GMODE bit enabled? */
++	/* True if PHY connected to ssb backplane */
+ 	bool gmode;
+ 	/* Possible ieee80211 subsystem hwmodes for this PHY.
+ 	 * Which mode is selected, depends on thr GMODE enabled bit */
+Index: wireless-dev/drivers/net/wireless/b43legacy/xmit.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43legacy/xmit.c
++++ wireless-dev/drivers/net/wireless/b43legacy/xmit.c
+@@ -49,8 +49,8 @@ static u8 b43legacy_plcp_get_bitrate_cck
+ 	case 0x6E:
+ 		return B43legacy_CCK_RATE_11MB;
+ 	}
+-	B43legacy_BUG_ON(1);
+-	return 0;
++	printk(KERN_INFO "b43legacy: Invalid CCK bitrate of 0x%X\n", plcp->raw[0]);
++	return B43legacy_CCK_RATE_1MB;
+ }
+ 
+ /* Extract the bitrate out of an OFDM PLCP header. */
+@@ -74,8 +74,8 @@ static u8 b43legacy_plcp_get_bitrate_ofd
+ 	case 0xC:
+ 		return B43legacy_OFDM_RATE_54MB;
+ 	}
+-	B43legacy_BUG_ON(1);
+-	return 0;
++	printk(KERN_INFO "b43legacy: Invalid OFDM bitrate of 0x%X\n", plcp->raw[0] & 0xF);
++	return B43legacy_OFDM_RATE_6MB;
+ }
+ 
+ u8 b43legacy_plcp_get_ratecode_cck(const u8 bitrate)
+@@ -90,8 +90,8 @@ u8 b43legacy_plcp_get_ratecode_cck(const
+ 	case B43legacy_CCK_RATE_11MB:
+ 		return 0x6E;
+ 	}
+-	B43legacy_BUG_ON(1);
+-	return 0;
++	printk(KERN_INFO "b43legacy: Invalid CCK ratecode of 0x%X\n", bitrate);
++	return 0x0A;
+ }
+ 
+ u8 b43legacy_plcp_get_ratecode_ofdm(const u8 bitrate)
+@@ -114,8 +114,8 @@ u8 b43legacy_plcp_get_ratecode_ofdm(cons
+ 	case B43legacy_OFDM_RATE_54MB:
+ 		return 0xC;
+ 	}
+-	B43legacy_BUG_ON(1);
+-	return 0;
++	printk(KERN_INFO "b43legacy: Invalid OFDM ratecode of 0x%X\n", bitrate);
++	return 0x0B;
+ }
+ 
+ void b43legacy_generate_plcp_hdr(struct b43legacy_plcp_hdr4 *plcp,
