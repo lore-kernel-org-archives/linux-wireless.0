@@ -1,50 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57685
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492AbXIKKXl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 06:23:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: zd-mac80211: Fix TX status reports.
-Date: Tue, 11 Sep 2007 12:20:31 +0200
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200709082341.31720.mb@bu3sch.de> <1ba2fa240709102050l75402df4w19ef746d6243dbab@mail.gmail.com> <1189505821.6161.1.camel@johannes.berg>
-In-Reply-To: <1189505821.6161.1.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4599 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751718AbXIONke (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Sep 2007 09:40:34 -0400
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id l8FDeJsQ019087
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Sep 2007 09:40:24 -0400
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id l8FDPjVv018879
+	for linux-wireless@vger.kernel.org; Sat, 15 Sep 2007 09:25:45 -0400
+Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
+	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id l8FDNFvG013218
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Sep 2007 09:23:15 -0400
+Received: (from linville@localhost)
+	by linville-t43.mobile (8.14.1/8.14.1/Submit) id l8FDNFS2013217
+	for linux-wireless@vger.kernel.org; Sat, 15 Sep 2007 09:23:15 -0400
+Date: Sat, 15 Sep 2007 09:23:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: [linville@tuxdriver.com: Please pull 'fixes-jgarzik' branch of  wireless-2.6]
+Message-ID: <20070915132315.GF6060@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200709111220.31700.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 September 2007 12:17:01 Johannes Berg wrote:
-> > However I liked the idea about
-> > 
-> > "An alternative option could be that the mac80211 stack would call
-> > a non-atomic function of the driver to report the total count of
-> > transmitted packets and the number of successful transmissions."
-> > 
-> > This mechanism will help us to implement aggregation rate scaling
-> > I would actually prefer if such statistics will be pushed by driver
-> > rather then pulled by mac though.
-> 
-> It doesn't help knowing whether the relevant packets were acked though.
+Forgot to CC: linux-wireless...
 
-What about the following:
-We have a "the packet failed" IRQ. so we know that if that didn't
-raise for a packet, it must have succeed.
-So currently we already maintain a queue of TX packets. What about
-changing the handling of this queue? Instead of dropping (and
-telling mac80211 success) on an ACK RX, simply do a timeout.
-We can calculate the time (plus some additional msecs to be sure)
-by when an ACK must have arrived, no? So, if that times out,
-signal a success. Wouldn't that be reliable? Given that the "tx failed"
-IRQ actually _is_ reliable.
+----- Forwarded message from "John W. Linville" <linville@tuxdriver.com> -----
+
+> Date: Sat, 15 Sep 2007 09:14:52 -0400
+> From: "John W. Linville" <linville@tuxdriver.com>
+> To: jeff@garzik.org
+> Cc: netdev@vger.kernel.org
+> Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
+> User-Agent: Mutt/1.5.14 (2007-02-12)
+> 
+> Jeff,
+> 
+> Two more fixes for 2.6.23, including one for kernel.org bug 8937...
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> The following changes since commit 0d4cbb5e7f60b2f1a4d8b7f6ea4cc264262c7a01:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc6
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> 
+> Larry Finger (1):
+>       bcm43xx: Fix cancellation of work queue crashes
+> 
+> Masakazu Mokuno (1):
+>       As struct iw_point is bi-directional payload, we should copy back the content
+> 
+>  drivers/net/wireless/bcm43xx/bcm43xx_main.c  |   28 ++++++++++++++++++-------
+>  drivers/net/wireless/bcm43xx/bcm43xx_main.h  |    2 +-
+>  drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c |    2 +-
+>  fs/compat_ioctl.c                            |   22 ++++++++++++++++---
+>  4 files changed, 40 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> index c5d6753..dfbd01e 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> @@ -3183,6 +3183,9 @@ static void bcm43xx_periodic_work_handler(struct work_struct *work)
+>  	unsigned long orig_trans_start = 0;
+>  
+>  	mutex_lock(&bcm->mutex);
+> +	/* keep from doing and rearming periodic work if shutting down */
+> +	if (bcm43xx_status(bcm) == BCM43xx_STAT_UNINIT)
+> +		goto unlock_mutex;
+>  	if (unlikely(bcm->periodic_state % 60 == 0)) {
+>  		/* Periodic work will take a long time, so we want it to
+>  		 * be preemtible.
+> @@ -3228,14 +3231,10 @@ static void bcm43xx_periodic_work_handler(struct work_struct *work)
+>  	mmiowb();
+>  	bcm->periodic_state++;
+>  	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+> +unlock_mutex:
+>  	mutex_unlock(&bcm->mutex);
+>  }
+>  
+> -void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm)
+> -{
+> -	cancel_rearming_delayed_work(&bcm->periodic_work);
+> -}
+> -
+>  void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm)
+>  {
+>  	struct delayed_work *work = &bcm->periodic_work;
+> @@ -3285,6 +3284,14 @@ static int bcm43xx_rng_init(struct bcm43xx_private *bcm)
+>  	return err;
+>  }
+>  
+> +void bcm43xx_cancel_work(struct bcm43xx_private *bcm)
+> +{
+> +	/* The system must be unlocked when this routine is entered.
+> +	 * If not, the next 2 steps may deadlock */
+> +	cancel_work_sync(&bcm->restart_work);
+> +	cancel_delayed_work_sync(&bcm->periodic_work);
+> +}
+> +
+>  static int bcm43xx_shutdown_all_wireless_cores(struct bcm43xx_private *bcm)
+>  {
+>  	int ret = 0;
+> @@ -3321,7 +3328,12 @@ static void bcm43xx_free_board(struct bcm43xx_private *bcm)
+>  {
+>  	bcm43xx_rng_exit(bcm);
+>  	bcm43xx_sysfs_unregister(bcm);
+> -	bcm43xx_periodic_tasks_delete(bcm);
+> +
+> +	mutex_lock(&(bcm)->mutex);
+> +	bcm43xx_set_status(bcm, BCM43xx_STAT_UNINIT);
+> +	mutex_unlock(&(bcm)->mutex);
+> +
+> +	bcm43xx_cancel_work(bcm);
+>  
+>  	mutex_lock(&(bcm)->mutex);
+>  	bcm43xx_shutdown_all_wireless_cores(bcm);
+> @@ -4016,7 +4028,7 @@ static int bcm43xx_net_stop(struct net_device *net_dev)
+>  	err = bcm43xx_disable_interrupts_sync(bcm);
+>  	assert(!err);
+>  	bcm43xx_free_board(bcm);
+> -	flush_scheduled_work();
+> +	bcm43xx_cancel_work(bcm);
+>  
+>  	return 0;
+>  }
+> @@ -4148,9 +4160,9 @@ static void bcm43xx_chip_reset(struct work_struct *work)
+>  	struct bcm43xx_phyinfo *phy;
+>  	int err = -ENODEV;
+>  
+> +	bcm43xx_cancel_work(bcm);
+>  	mutex_lock(&(bcm)->mutex);
+>  	if (bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED) {
+> -		bcm43xx_periodic_tasks_delete(bcm);
+>  		phy = bcm43xx_current_phy(bcm);
+>  		err = bcm43xx_select_wireless_core(bcm, phy->type);
+>  		if (!err)
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.h b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+> index c8f3c53..14cfbeb 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+> @@ -122,7 +122,7 @@ void bcm43xx_wireless_core_reset(struct bcm43xx_private *bcm, int connect_phy);
+>  void bcm43xx_mac_suspend(struct bcm43xx_private *bcm);
+>  void bcm43xx_mac_enable(struct bcm43xx_private *bcm);
+>  
+> -void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm);
+> +void bcm43xx_cancel_work(struct bcm43xx_private *bcm);
+>  void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm);
+>  
+>  void bcm43xx_controller_restart(struct bcm43xx_private *bcm, const char *reason);
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c b/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+> index c71b998..8ab5f93 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+> @@ -327,7 +327,7 @@ static ssize_t bcm43xx_attr_phymode_store(struct device *dev,
+>  		goto out;
+>  	}
+>  
+> -	bcm43xx_periodic_tasks_delete(bcm);
+> +	bcm43xx_cancel_work(bcm);
+>  	mutex_lock(&(bcm)->mutex);
+>  	err = bcm43xx_select_wireless_core(bcm, phytype);
+>  	if (!err)
+> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+> index a6c9078..5a5b711 100644
+> --- a/fs/compat_ioctl.c
+> +++ b/fs/compat_ioctl.c
+> @@ -2311,8 +2311,10 @@ static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long ar
+>  	struct iwreq __user *iwr_u;
+>  	struct iw_point __user *iwp;
+>  	struct compat_iw_point __user *iwp_u;
+> -	compat_caddr_t pointer;
+> +	compat_caddr_t pointer_u;
+> +	void __user *pointer;
+>  	__u16 length, flags;
+> +	int ret;
+>  
+>  	iwr_u = compat_ptr(arg);
+>  	iwp_u = (struct compat_iw_point __user *) &iwr_u->u.data;
+> @@ -2330,17 +2332,29 @@ static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long ar
+>  			   sizeof(iwr->ifr_ifrn.ifrn_name)))
+>  		return -EFAULT;
+>  
+> -	if (__get_user(pointer, &iwp_u->pointer) ||
+> +	if (__get_user(pointer_u, &iwp_u->pointer) ||
+>  	    __get_user(length, &iwp_u->length) ||
+>  	    __get_user(flags, &iwp_u->flags))
+>  		return -EFAULT;
+>  
+> -	if (__put_user(compat_ptr(pointer), &iwp->pointer) ||
+> +	if (__put_user(compat_ptr(pointer_u), &iwp->pointer) ||
+>  	    __put_user(length, &iwp->length) ||
+>  	    __put_user(flags, &iwp->flags))
+>  		return -EFAULT;
+>  
+> -	return sys_ioctl(fd, cmd, (unsigned long) iwr);
+> +	ret = sys_ioctl(fd, cmd, (unsigned long) iwr);
+> +
+> +	if (__get_user(pointer, &iwp->pointer) ||
+> +	    __get_user(length, &iwp->length) ||
+> +	    __get_user(flags, &iwp->flags))
+> +		return -EFAULT;
+> +
+> +	if (__put_user(ptr_to_compat(pointer), &iwp_u->pointer) ||
+> +	    __put_user(length, &iwp_u->length) ||
+> +	    __put_user(flags, &iwp_u->flags))
+> +		return -EFAULT;
+> +
+> +	return ret;
+>  }
+>  
+>  /* Since old style bridge ioctl's endup using SIOCDEVPRIVATE
+> -- 
+> John W. Linville
+> linville@tuxdriver.com
+
+----- End forwarded message -----
 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
