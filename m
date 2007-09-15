@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33680 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751792AbXI2EzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 00:55:24 -0400
-Subject: Re: [PATCH] libertas: fix link errors (bz# 9077)
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-wireless@vger.kernel.org, rjwysocki@sisk.pl
-In-Reply-To: <20070927203650.GD7991@tuxdriver.com>
-References: <20070927101742.44146651.randy.dunlap@oracle.com>
-	 <1190915263.5021.8.camel@johannes.berg>
-	 <20070927203650.GD7991@tuxdriver.com>
-Content-Type: text/plain
-Date: Sat, 29 Sep 2007 00:51:07 -0400
-Message-Id: <1191041467.9155.11.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53072
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbXIOWA1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Sep 2007 18:00:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture with BCM4306/2
+Date: Sat, 15 Sep 2007 23:58:08 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net> <200709152147.57431.mb@bu3sch.de> <46EC4844.1060003@lwfinger.net>
+In-Reply-To: <46EC4844.1060003@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709152358.08887.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-09-27 at 16:36 -0400, John W. Linville wrote:
-> On Thu, Sep 27, 2007 at 07:47:43PM +0200, Johannes Berg wrote:
-> > On Thu, 2007-09-27 at 10:17 -0700, Randy Dunlap wrote:
-> > > From: Randy Dunlap <randy.dunlap@oracle.com>
-> > > 
-> > > Fix missing symbols in libertas USB driver when it is modular and rest
-> > > of libertas is built-in.
-> > 
-> > Ohhh. Thanks Randy, I stared at this problem for a while and never
-> > noticed that it said _USB there.
-> 
-> FWIW, the equivalent change seems to already be in net-2.6.24.
+On Saturday 15 September 2007 23:01:56 Larry Finger wrote:
+> I have generated and tested a patch that changes back to the old 'connected' variable. That will
+> avoid the semantics argument and match the V3 specs.
 
-I 100% certain this was fixed in libertas-2.6 months ago, but my hunch
-is that it got blown away when I rebased the 70-odd libertas-2.6 patches
-on top of 2.6.23 to send to linville for the 2.6.24 cycle.  That section
-specifically conflicted with the addition of the zd1211 driver's config
-variable.  Yay for merging, sorry...
+There is no such thing as "connected".
+The bit is called "gmode". Why do you change it back to the wrong name?
+The V3 specs are simply _wrong_. It has nothing to do with the backplane
+or anything else like that. The bit just selects between the A-PHY and
+the BG-PHY. Of course, if there is no A-PHY it will obviously machine-check
+on access, if it's selected.
 
-Dan
+V3 specs assume that the meaning is "connected", because it was misinterpreted
+to be a "PHY connect" flag. But it really is a "PHY select" flag, to select
+between two different PHYs. If it's enabled, the G-PHY will be selected (and
+the A-PHY otherwise).
 
+Btw, while we are at it: The V3 specs are wrong regarding the gmode (or connected)
+bit in other areas as well, because there was even more confusion with
+other PHY flags. The PHY specification is pretty broken in the v3 specs.
 
+-- 
+Greetings Michael.
