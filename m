@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41998
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754784AbXI0Unr (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:41940 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753360AbXIPAhk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 16:43:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] b43: RF-kill support
-Date: Thu, 27 Sep 2007 22:41:06 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200709272135.35686.mb@bu3sch.de> <200709272254.44608.IvDoorn@gmail.com>
-In-Reply-To: <200709272254.44608.IvDoorn@gmail.com>
+	Sat, 15 Sep 2007 20:37:40 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Please pull 'adm8211' branch of wireless-2.6
+Date: Sat, 15 Sep 2007 20:37:11 -0400
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <20070915132220.GE6060@tuxdriver.com>
+In-Reply-To: <20070915132220.GE6060@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709272241.06570.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart1416498.K8ZN9iTnvH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709152037.15580.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 27 September 2007 22:54:44 Ivo van Doorn wrote:
-> Hi,
-> 
-> > @@ -2401,8 +2401,7 @@ static void b43_periodic_every1sec(struc
-> >  	radio_hw_enable = b43_is_hw_radio_enabled(dev);
-> >  	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
-> >  		dev->radio_hw_enable = radio_hw_enable;
-> > -		b43info(dev->wl, "Radio hardware status changed to %s\n",
-> > -			radio_hw_enable ? "ENABLED" : "DISABLED");
-> > +		b43_rfkill_toggled(dev, radio_hw_enable);
-> 
-> Isn't it better to use the input_polldev for scheduled input device checking?
-> 
-> > +static void b43_notify_rfkill_press(struct work_struct *work)
-> > +{
-> > +	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill,
-> > +					      notify_work);
-> > +	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
-> > +	struct b43_wldev *dev;
-> > +	enum rfkill_state state;
-> 
-> Same here, input_polldev was created especially for hardware
-> devices that don't trigger interrupts when the button was pressed.
+--nextPart1416498.K8ZN9iTnvH
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Ah, well. Will change that later. This works for now.
+On Saturday 15 September 2007 09:22, John W. Linville wrote:
+> It is reverse-engineered and still has more magic
+> initialization numbers than I'd like, but overall I think it would
+> be better to have this upstream than not.
+>
+Not entirely accurate, as ADMtek released specs (publically downloadable, n=
+o=20
+NDA), released their Linux driver source (under GPL), sent hardware samples=
+,=20
+and offered an engineer's help a few months after the first release of the=
+=20
+adm8211 driver.
 
--- 
-Greetings Michael.
+=2DMichael Wu
+
+--nextPart1416498.K8ZN9iTnvH
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBG7Hq7T3Oqt9AH4aERAlp/AJ4mvYcwCtk5jXRtCG5zGnozUFPkLwCglN9C
+6jHyunBje3lB3iic2z3YX5k=
+=1rRv
+-----END PGP SIGNATURE-----
+
+--nextPart1416498.K8ZN9iTnvH--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
