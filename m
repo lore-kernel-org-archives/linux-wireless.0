@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:52039 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750856AbXICOuw (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:54182 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753137AbXIPW1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 10:50:52 -0400
-Date: Mon, 3 Sep 2007 16:50:53 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Jonathan Gray <jsg@goblin.cx>, Reyk Floeter <reyk@openbsd.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [reyk@openbsd.org: Re: That whole "Linux stealing our code"  thing]
-Message-ID: <20070903145053.GX16016@stusta.de>
-References: <20070903132542.GA902@mail.netspace.net.au>
+	Sun, 16 Sep 2007 18:27:23 -0400
+Date: Sun, 16 Sep 2007 17:26:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] bcm43xx: Change radio hardware switch status printk  from debug to regular
+Message-ID: <46edada9.p7TujTB8lnlVSSMg%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070903132542.GA902@mail.netspace.net.au>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 03, 2007 at 11:25:42PM +1000, Jonathan Gray wrote:
+Some distros ship bcm43xx with debugging printout disabled. For those
+BCM43xx devices with radio on/off switches, this makes it impossible
+to know if the radio is on or off. This patch changes a pair of debug
+printk's into ordinary printk's. It also changes the message that
+prints when the radio is initialized to the off state as the old message
+seems to confuse users.
 
-> This is a lot more relevant than much of the ongoing
-> discussion, so perhaps people could take a moment to read it over.
-> 
-> ----- Forwarded message from Reyk Floeter <reyk@openbsd.org> -----
-> 
-> From: Reyk Floeter <reyk@openbsd.org>
-> Date: Mon, 3 Sep 2007 13:23:04 +0200
-> To: misc@openbsd.org
-> Subject: Re: That whole "Linux stealing our code" thing
-> 
-> Hi!
-> 
-> I just returned from vacation where I was offline for about two weeks.
-> So I totally missed the incidence and all the surrounding discussion.
-> I'm just digging through many many mails in my inbox from OpenBSD
-> users and developers, Linux people, GNU/freesoftware people, misc *BSD
-> people, and obviously from some trolls.
-> 
-> I don't want to restart the discussion but I just want to say and
-> repeat a few words:
-> 
-> - I will not release or agree to release my code under either the GPL
-> or any kind of a "dual"-license.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-It's your code and it's your choice.
+John,
 
-(But note that you contributed to then dual-licenced code in the
- OpenBSD CVS and kept this code dual-licenced. For this code your
- contributions might be assumed dual-licenced.)
+This is 2.6.24 material.
 
-> - The ISC-style license must remain including the copyright notice and
-> even the warranty term.
+Thanks,
 
-Full agreement (for not dual-licenced code).
+Larry
 
-> - Thanks to the OpenBSD community and especially to Theo de Raadt for
-> entering into it and for defending my rights as the author of the
-> controversial code.
+ bcm43xx_main.c  |    4 ++--
+ bcm43xx_radio.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-The email of Theo that was forwarded to linux-kernel [1] centered around 
-Theo telling people that picking one licence for Sam's dual-licenced 
-code would "break the law".
-
-He would have better made the mistake in Jiri's patch visible (and 
-therefore better defended your copyright) if he wouldn't have obscured 
-it with these pointless accusations...
-
-> - This is eating our time. Every few weeks I get a new discussion
-> about licensing of the atheros driver etc. blah blah. Why can't they
-> just accept the license as it is and focus on more important things?
-> 
-> I will talk to different people to get the latest state and to think
-> about the next steps. I don't even know if the issue has been solved
-> in the linux tree.
->...
-
-To clarify this myth once again:
-
-The patch that mistakenly changed BSD-only code to GPL has never ever 
-been in the Linux tree.
-
-> Thanks!
-> reyk
-
-cu
-Adrian
-
-[1] http://lkml.org/lkml/2007/9/1/102
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -2394,7 +2394,7 @@ static int bcm43xx_chip_init(struct bcm4
+ 		goto err_gpio_cleanup;
+ 	bcm43xx_radio_turn_on(bcm);
+ 	bcm->radio_hw_enable = bcm43xx_is_hw_radio_enabled(bcm);
+-	dprintk(KERN_INFO PFX "Radio %s by hardware\n",
++	printk(KERN_INFO PFX "Radio %s by hardware\n",
+ 		(bcm->radio_hw_enable == 0) ? "disabled" : "enabled");
+ 
+ 	bcm43xx_write16(bcm, 0x03E6, 0x0000);
+@@ -3143,7 +3143,7 @@ static void bcm43xx_periodic_every1sec(s
+ 	radio_hw_enable = bcm43xx_is_hw_radio_enabled(bcm);
+ 	if (unlikely(bcm->radio_hw_enable != radio_hw_enable)) {
+ 		bcm->radio_hw_enable = radio_hw_enable;
+-		dprintk(KERN_INFO PFX "Radio hardware status changed to %s\n",
++		printk(KERN_INFO PFX "Radio hardware status changed to %s\n",
+ 		       (radio_hw_enable == 0) ? "disabled" : "enabled");
+ 		bcm43xx_leds_update(bcm, 0);
+ 	}
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+@@ -2146,7 +2146,7 @@ void bcm43xx_radio_turn_off(struct bcm43
+ 	} else
+ 		bcm43xx_phy_write(bcm, 0x0015, 0xAA00);
+ 	radio->enabled = 0;
+-	dprintk(KERN_INFO PFX "Radio turned off\n");
++	dprintk(KERN_INFO PFX "Radio initialized\n");
+ 	bcm43xx_leds_update(bcm, 0);
+ }
+ 
