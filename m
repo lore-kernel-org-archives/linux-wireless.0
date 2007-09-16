@@ -1,28 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:43075 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584AbXIXSkm (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbXIPMIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 14:40:42 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1456780nfb
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 11:40:40 -0700 (PDT)
-Message-ID: <46F804A3.10109@gmail.com>
-Date: Mon, 24 Sep 2007 20:40:35 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Sun, 16 Sep 2007 08:08:41 -0400
+Received: by an-out-0708.google.com with SMTP id d31so189208and
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:40 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 23/24] rt2x00: Add additional bit to MAX_FRAME_UNIT
+Date: Sun, 16 Sep 2007 14:19:43 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com
-Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and initvals
-References: <3175698652466923884@pripojeni.net>	 <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>	 <1190654876.18521.276.camel@johannes.berg>	 <20070924173607.GA652@infradead.org> <43e72e890709241051k42bb248ue0cba02e96310c1b@mail.gmail.com>
-In-Reply-To: <43e72e890709241051k42bb248ue0cba02e96310c1b@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200709161419.44941.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2007 07:51 PM, Luis R. Rodriguez wrote:
-> Then that comment can be ignored, thanks.
+Legacy driver indicated that the MAX_FRAME_UNIT register
+was 11 bits long. _but_ they do write 12 bits to the register.
+Increase the register definition to accept the 12th bit.
 
-Me too, corrected patchset on the road...
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.h |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index f24bff3..6721d7d 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -262,7 +262,7 @@ struct hw_pairwise_ta_entry {
+  * MAC_CSR6: Maximum frame length register.
+  */
+ #define MAC_CSR6			0x3018
+-#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x000007ff)
++#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x00000fff)
+ 
+ /*
+  * MAC_CSR7: Reserved
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
+index 82f4e76..5d63a1a 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.h
++++ b/drivers/net/wireless/rt2x00/rt73usb.h
+@@ -174,7 +174,7 @@ struct hw_pairwise_ta_entry {
+  * MAC_CSR6: Maximum frame length register.
+  */
+ #define MAC_CSR6			0x3018
+-#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x000007ff)
++#define MAC_CSR6_MAX_FRAME_UNIT		FIELD32(0x00000fff)
+ 
+ /*
+  * MAC_CSR7: Reserved
+-- 
+1.5.3
