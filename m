@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:10173 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494AbXIAUjm (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.224]:56704 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbXIPOmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 16:39:42 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so939944nfh
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 13:39:40 -0700 (PDT)
-Message-ID: <46D9C6A8.7070600@gmail.com>
-Date: Sat, 01 Sep 2007 22:08:08 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Sun, 16 Sep 2007 10:42:47 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1135772wxd
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 07:42:46 -0700 (PDT)
+Message-ID: <f34ca13c0709160742p526703c4pa1cdef38fad1f28d@mail.gmail.com>
+Date: Sun, 16 Sep 2007 10:42:45 -0400
+From: "Constantine A. Murenin" <mureninc@gmail.com>
+To: espie@nerim.net, "Eben Moglen" <moglen@softwarefreedom.org>,
+	jcroberts@designtools.org, jeff@garzik.org, mrmacman_g4@mac.com,
+	jason@dixongroup.net, misc@openbsd.org, lessig_from_web@pobox.com,
+	bkuhn@softwarefreedom.org, norwood@softwarefreedom.org,
+	fontana@softwarefreedom.org, karen@softwarefreedom.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: Re: [PATCH 3/5] Net: ath5k, use int as retval
-References: <2713029743177393055@pripojeni.net> <2440910618305782004@pripojeni.net> <20070830124054.GC5140@tuxdriver.com>
-In-Reply-To: <20070830124054.GC5140@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Statement by SFLC (was Re: Wasting our Freedom)
+In-Reply-To: <20070916140034.GA238@lain.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <5C8C3794-C62A-4935-8267-81080CCF6867@dixongroup.net>
+	 <200709160052.45493.jcroberts@designtools.org>
+	 <46ECE554.5030308@garzik.org>
+	 <200709160217.55933.jcroberts@designtools.org>
+	 <1993-Sun16Sep2007091741-0400-eben@softwarefreedom.org>
+	 <20070916140034.GA238@lain.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville napsal(a):
-> On Tue, Aug 28, 2007 at 12:00:09PM -0400, Jiri Slaby wrote:
->> ath5k, use int as retval
->>
->> Convert some functions to return int and proper negative return value on
->> error as we are used to.
-> 
-> Since I didn't apply 1/5, this one didn't apply either.  It seems
-> fine overall, so if you rediff I'll be happy to apply.
+On 16/09/2007, Marc Espie <espie@nerim.net> wrote:
+> On Sun, Sep 16, 2007 at 09:17:41AM -0400, Eben Moglen wrote:
+> > We will make no more public statements until the work is complete, and
+> > we will be neither hurried nor intimidated by people who shout at us
+> > instead of helping.
+>
+> http://www.softwarefreedom.org/news/2007/jul/31/openhal/
+>
+> As I said in a former email, this has several glaring problems.
+>
+> As far as I understand, this is a public statement, even if it predates
+> the issue at hand.
+>
+> Please fix it in a timely manner, or take it down for now.
 
-Ok, I'll do it, thanks,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
+Most noticeably, I fail to see any credits to Reyk Floeter in the
+above press release.
 
+Moreover, back when the release was first posted at the above address,
+there was no credit even to the OpenBSD project, which I found simply
+outrageous!  Only after I (and possibly others) have complained to
+SFLC did they append the release to give some really vague mention
+that OpenHAL is based on OpenBSD's ath(4) HAL.
+
+Eben, is this the work that you are doing in bringing the communities
+together, by omitting such vital information as giving credit to the
+people and projects who performed most of the work?  After all of
+these mistakes, after ignoring the ethical side of the relicensing,
+after failing to inform when relicensing is even legally an option,
+are you seriously even surprised about the negative attention that
+SFLC is getting now?  Taking a step aside, don't you agree it is
+well-deserved?
+
+http://bsd.slashdot.org/article.pl?sid=07/09/13/156258
+
+C.
