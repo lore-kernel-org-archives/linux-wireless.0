@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:59878 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519AbXICUxN (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:38346 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbXIPMHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 16:53:13 -0400
-Received: by py-out-1112.google.com with SMTP id u77so5074892pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2007 13:53:12 -0700 (PDT)
-Message-ID: <40f31dec0709031353t8b2c8deqdc641fe25fc67f6@mail.gmail.com>
-Date: Mon, 3 Sep 2007 23:53:12 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: Ath5k panic fix
-Cc: "Krzysztof Halasa" <khc@pm.waw.pl>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46DC588D.40305@gmail.com>
+	Sun, 16 Sep 2007 08:07:50 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1643781wah
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:07:49 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/24] rt2x00: Don't check for IEEE80211_TXCTL_REQ_TX_STATUS
+Date: Sun, 16 Sep 2007 14:17:54 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <m3ejhfvbp3.fsf@maximus.localdomain> <46DC588D.40305@gmail.com>
+Message-Id: <200709161417.55339.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/9/3, Jiri Slaby <jirislaby@gmail.com>:
-> Krzysztof Halasa napsal(a):
-> > Ath5k panics on ath_open() because sc->pdev is never set, fixed.
-> >
-> > Signed-off-by: Krzysztof Halasa <khc@pm.waw.pl>
->
-> Acked-by: Jiri Slaby <jirislaby@gmail.com>
->
-> I wonder how it is possible that the driver works here.
->
-> > --- a/drivers/net/wireless/ath5k_base.c
-> > +++ b/drivers/net/wireless/ath5k_base.c
-> > @@ -2295,6 +2295,7 @@ static int __devinit ath_pci_probe(struct pci_dev *pdev,
-> >       hw->max_rssi = 127; /* FIXME: get a real value for this. */
-> >       sc = hw->priv;
-> >       sc->hw = hw;
-> > +     sc->pdev = pdev;
-> >
-> >       /*
-> >        * Mark the device as detached to avoid processing
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
->
-> thanks,
+As recommended by Johannes Berg, rt2x00 shouldn't check
+for IEEE80211_TXCTL_REQ_TX_STATUS and always pass the frame
+back to mac80211.
 
-I've already fixed this on r2698 ;-)
-http://madwifi.org/changeset/2698
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 8c24797..c4086f0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -333,16 +333,10 @@ void rt2x00lib_txdone(struct data_entry *entry,
+ 	}
+ 
+ 	/*
+-	 * Check if mac80211 wants to be updated or not,
+-	 * if it wants the update it will cleanup the skb structure,
+-	 * else then we should cleanup the skb structure.
++	 * Send the tx_status to mac80211,
++	 * that method also cleans up the skb structure.
+ 	 */
+-	if (tx_status->control.flags & IEEE80211_TXCTL_REQ_TX_STATUS)
+-		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb,
+-					    tx_status);
+-	else
+-		dev_kfree_skb_any(entry->skb);
+-
++	ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb, tx_status);
+ 	entry->skb = NULL;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.3
