@@ -1,106 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43781
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbXIHVnr (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51022 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753227AbXIPWb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 17:43:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>
-Subject: zd-mac80211: Fix TX status reports.
-Date: Sat, 8 Sep 2007 23:41:31 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+	Sun, 16 Sep 2007 18:31:28 -0400
+Message-ID: <46EDAEC3.6020201@lwfinger.net>
+Date: Sun, 16 Sep 2007 17:31:31 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709082341.31720.mb@bu3sch.de>
+To: wireless <linux-wireless@vger.kernel.org>
+CC: gmccullagh@gmail.com
+Subject: [Fwd: [AirForce One 54g] working]
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Automatic rate scaling does not work on the zd-mac80211 driver.
-The driver does not properly report succeed and failed frames
-to mac80211.
+Forwarded to linux-wireless@vger.kernel.org because of "decrypt failed" messages.
 
-We need to indicate failed frames with the excessive_retries field
-(Should we also fake report some high retry count here?)
-Otherwise the rc algo is not able to scale down.
+-------- Original Message --------
+Subject: [AirForce One 54g] working
+Resent-Date: Sun, 16 Sep 2007 23:12:55 +0100
+Resent-From: Gavin McCullagh <gmccullagh@gmail.com>
+Resent-To: bcm43xx-dev@lists.berlios.de
+Date: Sun, 16 Sep 2007 22:45:02 +0100
+From: Gavin McCullagh <gmccullagh@gmail.com>
+Reply-To: Gavin McCullagh <gmccullagh@gmail.com>
+To: bcm43xx-dev@lists.berlios.de
 
-Remove the conditional in REQ_TX_STATUS, as mac80211 handles that internally.
+Hi,
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I have a linksys WPC54GS pcmcia wifi card.  lspci details below.  I tried
+it with the latest firmware and Ubuntu gutsy's 2.6.22-10-generic and
+2.6.22-11-generic kernels.  With the former, I got WPA working
+intermittently, but not stably (ie it'd die and need the driver reloading).
+With the latter, I could only get it working unencrypted (I didn't debug in
+detail, but it seemed like it didn't associate so presumaby the link never
+came up -- I can give logs and more detail if it's useful).
 
----
+I went onto the IRC channel and noted the suggestion that I try the
+wireless-dev tree (2.6.23-rc4).  So I did and I'm glad to say successfully.
+I'm using it now and have been for the past 6-8 hours on and off without
+any reboot or problems.  I guess it's possible it would also work with the
+current 2.6.23-rc6 development kernel.  Perhaps I'll try and check that in
+due course.
+
+A couple of things worth mentioning.
+
+1. I've been getting tonnes of syslog errors like this:
+	Sep 16 21:46:59 tilly kernel: [ 5171.869169] CCMP: decrypt failed: STA=00:09:5b:d2:f0:2f
+	Sep 16 21:46:59 tilly kernel: [ 5171.872336] CCMP: decrypt failed: STA=00:18:84:11:78:d6
+	Sep 16 21:47:05 tilly kernel: [ 5174.178449] printk: 122 messages suppressed.
+   which all seem to correspond to packets tranferred between my AP and
+   a second netgear laptop with an atheros chipset.  So it's not a worry.
+   ifconfig shows a collossal packet drop count, which seems to
+   approximately equal the number of packets sent+rec'd  by the other
+   laptop so I guess it's the same error as above.  Perhaps there's a good
+   debug reason for these printk statements, but they have their cost on the
+   machine.
+
+2. The quoted signal strength is 50% even when I have the AP and card right
+   next to each other.  It doesn't bother me, but I wonder if it's correct
+   or not.
+
+I wrote up a howto for Ubuntu here as I suspect others might be interested
+to try it out.
+
+https://help.ubuntu.com/community/WifiDocs/Device/Broadcom_BCM4318_%5bAirForce_One_54g%5d_%28Native_Driver%29#preview
+
+Gavin
+
+gavinmc@tilly:~$ lspci -v -s 02:00.0
+02:00.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g]
+802.11g Wireless LAN Controller (rev 02)
+        Subsystem: Linksys Unknown device 0049
+        Flags: bus master, fast devsel, latency 64, IRQ 10
+        Memory at 24000000 (32-bit, non-prefetchable) [size=8K]
+
+gavinmc@tilly:~$ lspci -vn -s 02:00.0
+02:00.0 0280: 14e4:4318 (rev 02)
+        Subsystem: 1737:0049
+        Flags: bus master, fast devsel, latency 64, IRQ 10
+        Memory at 24000000 (32-bit, non-prefetchable) [size=8K]
 
 
-Johannes, to me it seems that there's also a bug in mac80211.
-I never get a frame with the REQ_TX_STATUS bit set, so frames
-will always end up on the "unreliable" tx status queue.
+_______________________________________________
+Bcm43xx-dev mailing list
+Bcm43xx-dev@lists.berlios.de
+https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
 
-
-Index: wireless-dev/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c	2007-09-07 16:13:10.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c	2007-09-08 23:33:47.000000000 +0200
-@@ -348,6 +348,7 @@ static int init_tx_skb_control_block(str
-  * @hw - a &struct ieee80211_hw pointer
-  * @skb - a sk-buffer
-  * @status - the tx status of the packet without control information
-+ * @success - True for successfull transmission of the frame
-  *
-  * This information calls ieee80211_tx_status_irqsafe() if required by the
-  * control information. It copies the control information into the status
-@@ -356,19 +357,18 @@ static int init_tx_skb_control_block(str
-  * If no status information has been requested, the skb is freed.
-  */
- static void tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
--	              struct ieee80211_tx_status *status)
-+	              struct ieee80211_tx_status *status,
-+		      bool success)
- {
- 	struct zd_tx_skb_control_block *cb = (struct zd_tx_skb_control_block *)
- 		skb->cb;
- 
- 	ZD_ASSERT(cb->control != NULL);
--	if ((cb->control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)) {
--		memcpy(&status->control, cb->control, sizeof(status->control));
--		clear_tx_skb_control_block(skb);
--		ieee80211_tx_status_irqsafe(hw, skb, status);
--	} else {
--		kfree_tx_skb(skb);
--	}
-+	memcpy(&status->control, cb->control, sizeof(status->control));
-+	if (!success)
-+		status->excessive_retries = 1;
-+	clear_tx_skb_control_block(skb);
-+	ieee80211_tx_status_irqsafe(hw, skb, status);
- }
- 
- /**
-@@ -388,7 +388,7 @@ void zd_mac_tx_failed(struct ieee80211_h
- 	skb = skb_dequeue(q);
- 	if (skb == NULL)
- 		return;
--	tx_status(hw, skb, &status);
-+	tx_status(hw, skb, &status, 0);
- }
- 
- /**
-@@ -413,7 +413,7 @@ void zd_mac_tx_to_dev(struct sk_buff *sk
- 		    (cb->control->flags & IEEE80211_TXCTL_NO_ACK)))
- 		{
- 			struct ieee80211_tx_status status = {{0}};
--			tx_status(hw, skb, &status);
-+			tx_status(hw, skb, &status, !error);
- 		} else {
- 			struct sk_buff_head *q =
- 				&zd_hw_mac(hw)->ack_wait_queue;
-@@ -664,7 +664,7 @@ static int filter_ack(struct ieee80211_h
- 			status.flags = IEEE80211_TX_STATUS_ACK;
- 			status.ack_signal = stats->ssi;
- 			__skb_unlink(skb, q);
--			tx_status(hw, skb, &status);
-+			tx_status(hw, skb, &status, 1);
- 			goto out;
- 		}
- 	}
