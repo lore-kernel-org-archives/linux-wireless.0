@@ -1,290 +1,580 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:32336 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756003AbXIBX7V (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608AbXIPMIC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 19:59:21 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1704307wah
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2007 16:59:20 -0700 (PDT)
-Message-ID: <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com>
-Date: Mon, 3 Sep 2007 01:59:20 +0200
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-To: "Florian Lohoff" <flo@rfc822.org>
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-Cc: linux-kernel@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070902184439.GA14306@paradigm.rfc822.org>
+	Sun, 16 Sep 2007 08:08:02 -0400
+Received: by an-out-0708.google.com with SMTP id d31so189208and
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:01 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 7/24] rt2x00: Cleanup entry->flags
+Date: Sun, 16 Sep 2007 14:18:22 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20070902184439.GA14306@paradigm.rfc822.org>
+Message-Id: <200709161418.23564.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+By moving all TXD flags from entry->flags to the
+desc->flags we can remove entry argument for
+write_tx_desc and replace it with the ring argument.
 
-[Adding netdev and wireless to CC]
+This will remove unrequired access to the entry array
+inside the dataring.
 
-On 02/09/07, Florian Lohoff <flo@rfc822.org> wrote:
->
-> Hi,
-> with current git i got this when "ifconfig eth1" down. eth1 had a mac
-> address which looked really like an eth1394 ethernet although the module
-> was not loaded. Something is really broken in 2.6.23-currentgit. I always get the
-> sysfs rename issues which are discussed to be an udev issue. Then i see
-> a eth1394 mac address on an interface which typically shouldn exist
-> (udev should rename the wireless to eth1) and when issueing an
-> ifconfig eth1 down i get a
->
->         BUG: scheduling while atomic: ifconfig/0x00000002/4170
->
-> On the next boot i see the eth1394 mac address on the wireless interface
-> wmaster0_rename whereas eth1 is active (the wireless) and has the correct
-> ip address. I dont get it - this all looks really messed up. udev is
-> debian sid 114-2.
->
-> eth0      Link encap:Ethernet  HWaddr 00:17:42:13:45:8C
->           UP BROADCAST MULTICAST  MTU:1500  Metric:1
->           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
->           Interrupt:19
->
-> eth1      Link encap:Ethernet  HWaddr 00:18:DE:63:F0:B3
->           inet addr:195.71.97.208  Bcast:195.71.97.223  Mask:255.255.255.224
->           inet6 addr: fe80::218:deff:fe63:f0b3/64 Scope:Link
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:2079 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:2220 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:508959 (497.0 KiB)  TX bytes:261123 (255.0 KiB)
->
-> wmaster0_ Link encap:UNSPEC  HWaddr 00-18-DE-63-F0-B3-30-3A-00-00-00-00-00-00-00-00
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
->
->
-> [   14.300736] VFS: Mounted root (ext3 filesystem) readonly.
-> [   14.300902] Freeing unused kernel memory: 216k freed
-> [   17.618804] irda_init()
-> [   17.618817] NET: Registered protocol family 23
-> [   17.636399] ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 16 (level, low) -> IRQ 19
-> [   17.636588] PCI: Setting latency timer of device 0000:02:00.0 to 64
-> [   17.636619] sky2 0000:02:00.0: v1.17 addr 0xf0000000 irq 19 Yukon-EC Ultra (0xb4) rev 2
-> [   17.648081] parport_pc 00:0c: reported by Plug and Play ACPI
-> [   17.648206] parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE,EPP]
-> [   17.653652] sky2 eth0: addr 00:17:42:13:45:8c
-> [   17.680848] input: Video Bus as /class/input/input6
-> [   17.680961] ACPI: Video Device [GFX0] (multi-head: yes  rom: no  post: no)
-> [   17.757019] usbcore: registered new interface driver usbfs
-> [   17.757139] usbcore: registered new interface driver hub
-> [   17.757264] usbcore: registered new device driver usb
-> [   17.824819] Yenta: CardBus bridge found at 0000:08:03.0 [10cf:131e]
-> [   17.824941] Yenta O2: res at 0x94/0xD4: 00/ea
-> [   17.825034] Yenta O2: enabling read prefetch/write burst
-> [   17.828363] hda: ATAPI 24X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
-> [   17.828838] Uniform CD-ROM driver Revision: 3.20
-> [   17.891481] USB Universal Host Controller Interface driver v3.0
-> [   17.891650] ACPI: PCI Interrupt 0000:00:1d.0[A] -> GSI 23 (level, low) -> IRQ 22
-> [   17.891840] PCI: Setting latency timer of device 0000:00:1d.0 to 64
-> [   17.891844] uhci_hcd 0000:00:1d.0: UHCI Host Controller
-> [   17.892155] uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 1
-> [   17.892327] uhci_hcd 0000:00:1d.0: irq 22, io base 0x00001820
-> [   17.892571] usb usb1: configuration #1 chosen from 1 choice
-> [   17.892689] hub 1-0:1.0: USB hub found
-> [   17.892784] hub 1-0:1.0: 2 ports detected
-> [   17.924265] found SMC SuperIO Chip (devid=0x7a rev=00 base=0x002e): LPC47N227
-> [   17.924390] smsc_superio_flat(): fir: 0x6e8, sir: 0x2e8, dma: 03, irq: 3, mode: 0x0e
-> [   17.924526] smsc_ircc_present: can't get sir_base of 0x2e8
-> [   17.954918] Yenta: ISA IRQ mask 0x0c38, PCI irq 19
-> [   17.955009] Socket status: 30000006
-> [   17.955094] Yenta: Raising subordinate bus# of parent bus (#08) from #09 to #0c
-> [   17.955225] pcmcia: parent PCI bridge I/O window: 0x3000 - 0x3fff
-> [   17.955315] cs: IO port probe 0x3000-0x3fff: clean.
-> [   17.955773] pcmcia: parent PCI bridge Memory window: 0xf0200000 - 0xf02fffff
-> [   17.955864] pcmcia: parent PCI bridge Memory window: 0x30000000 - 0x37ffffff
-> [   17.956497] Yenta: CardBus bridge found at 0000:08:03.1 [10cf:131e]
-> [   17.981605] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 0.1.14
-> [   17.981752] iwl3945: Copyright(c) 2003-2007 Intel Corporation
-> [   17.983847] sdhci: Secure Digital Host Controller Interface driver
-> [   17.983940] sdhci: Copyright(c) Pierre Ossman
-> [   17.998087] ACPI: PCI Interrupt 0000:00:1d.1[B] -> GSI 20 (level, low) -> IRQ 18
-> [   17.998299] PCI: Setting latency timer of device 0000:00:1d.1 to 64
-> [   17.998303] uhci_hcd 0000:00:1d.1: UHCI Host Controller
-> [   17.998428] uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 2
-> [   17.998601] uhci_hcd 0000:00:1d.1: irq 18, io base 0x00001840
-> [   17.998811] usb usb2: configuration #1 chosen from 1 choice
-> [   17.998933] hub 2-0:1.0: USB hub found
-> [   17.999023] hub 2-0:1.0: 2 ports detected
-> [   18.082862] Yenta: ISA IRQ mask 0x0438, PCI irq 19
-> [   18.082956] Socket status: 30000410
-> [   18.083041] Yenta: Raising subordinate bus# of parent bus (#08) from #0c to #10
-> [   18.083169] pcmcia: parent PCI bridge I/O window: 0x3000 - 0x3fff
-> [   18.083255] cs: IO port probe 0x3000-0x3fff: clean.
-> [   18.083710] pcmcia: parent PCI bridge Memory window: 0xf0200000 - 0xf02fffff
-> [   18.083798] pcmcia: parent PCI bridge Memory window: 0x30000000 - 0x37ffffff
-> [   18.105897] ACPI: PCI Interrupt 0000:00:1d.2[C] -> GSI 18 (level, low) -> IRQ 20
-> [   18.106097] PCI: Setting latency timer of device 0000:00:1d.2 to 64
-> [   18.106101] uhci_hcd 0000:00:1d.2: UHCI Host Controller
-> [   18.106218] uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 3
-> [   18.106385] uhci_hcd 0000:00:1d.2: irq 20, io base 0x00001860
-> [   18.106594] usb usb3: configuration #1 chosen from 1 choice
-> [   18.106709] hub 3-0:1.0: USB hub found
-> [   18.106799] hub 3-0:1.0: 2 ports detected
-> [   18.213730] ACPI: PCI Interrupt 0000:00:1d.3[D] -> GSI 16 (level, low) -> IRQ 19
-> [   18.213932] PCI: Setting latency timer of device 0000:00:1d.3 to 64
-> [   18.213938] uhci_hcd 0000:00:1d.3: UHCI Host Controller
-> [   18.214052] uhci_hcd 0000:00:1d.3: new USB bus registered, assigned bus number 4
-> [   18.214210] uhci_hcd 0000:00:1d.3: irq 19, io base 0x00001880
-> [   18.214414] usb usb4: configuration #1 chosen from 1 choice
-> [   18.214529] hub 4-0:1.0: USB hub found
-> [   18.214620] hub 4-0:1.0: 2 ports detected
-> [   18.318020] ACPI: PCI Interrupt 0000:00:1d.7[A] -> GSI 23 (level, low) -> IRQ 22
-> [   18.324538] PCI: Setting latency timer of device 0000:00:1d.7 to 64
-> [   18.324544] ehci_hcd 0000:00:1d.7: EHCI Host Controller
-> [   18.324687] ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 5
-> [   18.324857] ehci_hcd 0000:00:1d.7: debug port 1
-> [   18.324951] PCI: cache line size of 32 is not supported by device 0000:00:1d.7
-> [   18.324959] ehci_hcd 0000:00:1d.7: irq 22, io mem 0xf0644000
-> [   18.328914] ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
-> [   18.329163] usb usb5: configuration #1 chosen from 1 choice
-> [   18.329282] hub 5-0:1.0: USB hub found
-> [   18.329374] hub 5-0:1.0: 8 ports detected
-> [   18.429643] ACPI: PCI Interrupt 0000:08:03.4[A] -> GSI 16 (level, low) -> IRQ 19
-> [   18.480534] ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[19]  MMIO=[f0201000-f02017ff]  Max Packet=[2048]  IR/IT contexts=[8/8]
-> [   18.483902] ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 18 (level, low) -> IRQ 20
-> [   18.484135] PCI: Setting latency timer of device 0000:05:00.0 to 64
-> [   18.484153] iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
-> [   18.595000] sdhci: SDHCI controller found at 0000:08:03.2 [1217:7120] (rev 1)
-> [   18.595114] ACPI: PCI Interrupt 0000:08:03.2[A] -> GSI 16 (level, low) -> IRQ 19
-> [   18.595299] sdhci:slot0: Unknown controller version (16). You may experience problems.
-> [   18.595581] mmc0: SDHCI at 0xf0202800 irq 19 PIO
-> [   18.614800] ACPI: PCI Interrupt 0000:00:1b.0[A] -> GSI 17 (level, low) -> IRQ 23
-> [   18.614990] PCI: Setting latency timer of device 0000:00:1b.0 to 64
-> [   18.700659] iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> [   18.701906] wmaster0: Selected rate control algorithm 'iwl-3945-rs'
-> [   18.721016] pccard: PCMCIA card inserted into slot 1
-> [   18.721131] cs: memory probe 0xf0200000-0xf02fffff: excluding 0xf0200000-0xf020ffff
-> [   18.739151] pcmcia: registering new device pcmcia1.0
-> [   18.740929] net eth1: device_rename: sysfs_create_symlink failed (-17)
-> [   18.741075] net wlan0_rename: device_rename: sysfs_create_symlink failed (-17)
-> [   18.741625] udev: renamed network interface wmaster0 to eth1
-> [   18.779425] cs: IO port probe 0x100-0x3af:<3>si3054: cannot initialize. EXT MID = 0000
-> [   18.783468]  clean.
-> [   18.783592] cs: IO port probe 0x3e0-0x4ff: excluding 0x4d0-0x4d7
-> [   18.784668] cs: IO port probe 0x820-0x8ff: clean.
-> [   18.785521] cs: IO port probe 0xc00-0xcf7: clean.
-> [   18.786456] cs: IO port probe 0xa00-0xaff: clean.
-> [   18.837550] cs: IO port probe 0x100-0x3af: clean.
-> [   18.839641] cs: IO port probe 0x3e0-0x4ff: excluding 0x4d0-0x4d7
-> [   18.840664] cs: IO port probe 0x820-0x8ff: clean.
-> [   18.841501] cs: IO port probe 0xc00-0xcf7: clean.
-> [   18.842426] cs: IO port probe 0xa00-0xaff: clean.
-> [   18.964571] usb 4-2: new full speed USB device using uhci_hcd and address 2
-> [   19.141976] usb 4-2: configuration #1 chosen from 1 choice
-> [   19.214394] Bluetooth: Core ver 2.11
-> [   19.214546] NET: Registered protocol family 31
-> [   19.214640] Bluetooth: HCI device and connection manager initialized
-> [   19.214737] Bluetooth: HCI socket layer initialized
-> [   19.257180] Bluetooth: HCI USB driver ver 2.9
-> [   19.257349] usbcore: registered new interface driver hci_usb
-> [   19.751313] ieee1394: Host added: ID:BUS[0-00:1023]  GUID[00000e10036532e4]
-> [   50.113619] Adding 979924k swap on /dev/sda5.  Priority:-1 extents:1 across:979924k
-> [   50.163229] EXT3 FS on sda6, internal journal
-> [   64.870417] NET: Registered protocol family 10
-> [   64.870613] lo: Disabled Privacy Extensions
-> [   71.028607] Bluetooth: L2CAP ver 2.8
-> [   71.028615] Bluetooth: L2CAP socket layer initialized
-> [   71.168926] Bluetooth: RFCOMM socket layer initialized
-> [   71.169019] Bluetooth: RFCOMM TTY layer initialized
-> [   71.169054] Bluetooth: RFCOMM ver 1.8
-> [   71.539346] ADDRCONF(NETDEV_UP): wlan0_rename: link is not ready
-> [   71.737809] sky2 eth0: enabling interface
-> [   71.740794] sky2 eth0: ram buffer 0K
-> [   71.741733] ADDRCONF(NETDEV_UP): eth0: link is not ready
-> [  142.968449] wlan0_rename: Initial auth_alg=0
-> [  142.968461] wlan0_rename: authenticate with AP 00:0c:41:de:12:e1
-> [  142.976883] wlan0_rename: RX authentication from 00:0c:41:de:12:e1 (alg=0 transaction=2 status=0)
-> [  142.976891] wlan0_rename: authenticated
-> [  142.976895] wlan0_rename: associate with AP 00:0c:41:de:12:e1
-> [  142.979389] wlan0_rename: authentication frame received from 00:0c:41:de:12:e1, but not in authenticate state - ignored
-> [  142.980404] wlan0_rename: RX AssocResp from 00:0c:41:de:12:e1 (capab=0x401 status=0 aid=1)
-> [  142.980412] wlan0_rename: associated
-> [  142.982914] ADDRCONF(NETDEV_CHANGE): wlan0_rename: link becomes ready
-> [  148.291754] ICMPv6 NA: someone advertises our address on wlan0_rename!
-> [  151.386585] wlan0_rename: duplicate address detected!
-> [  382.517007] BUG: scheduling while atomic: ifconfig/0x00000002/4170
-> [  382.517029]  [<c032bf5c>] __sched_text_start+0x84/0x71c
-> [  382.517047]  [<c032c5da>] __sched_text_start+0x702/0x71c
-> [  382.517065]  [<c0174a6c>] link_path_walk+0xa9/0xb3
-> [  382.517079]  [<c032c6ad>] wait_for_completion+0x65/0x9b
-> [  382.517090]  [<c011f0a2>] default_wake_function+0x0/0xc
-> [  382.517103]  [<c01334cf>] synchronize_rcu+0x2a/0x2f
-> [  382.517115]  [<c0133091>] wakeme_after_rcu+0x0/0x8
-> [  382.517127]  [<c02d5f4f>] dev_deactivate+0x89/0x9c
-> [  382.517138]  [<c02c8abc>] dev_close+0x24/0x67
-> [  382.517150]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80211]
-> [  382.517176]  [<c02c8ae3>] dev_close+0x4b/0x67
-> [  382.517183]  [<c02c7f47>] dev_change_flags+0x9d/0x14e
-> [  382.517193]  [<c03058c8>] devinet_ioctl+0x224/0x532
-> [  382.517201]  [<c02c9589>] dev_ifsioc+0x113/0x396
-> [  382.517208]  [<c02c8d59>] dev_load+0x24/0x4b
-> [  382.517214]  [<c02be61d>] sock_ioctl+0x0/0x1be
-> [  382.517233]  [<c02be7bc>] sock_ioctl+0x19f/0x1be
-> [  382.517239]  [<c011a993>] do_page_fault+0x269/0x58e
-> [  382.517246]  [<c02be61d>] sock_ioctl+0x0/0x1be
-> [  382.517254]  [<c0176787>] do_ioctl+0x1f/0x62
-> [  382.517263]  [<c0176a01>] vfs_ioctl+0x237/0x249
-> [  382.517270]  [<c016b7d8>] do_sys_open+0xbb/0xc5
-> [  382.517280]  [<c0176a46>] sys_ioctl+0x33/0x4d
-> [  382.517288]  [<c0103e52>] sysenter_past_esp+0x5f/0x85
-> [  382.517303]  =======================
-> [  382.528958] BUG: scheduling while atomic: ifconfig/0x00000002/4170
-> [  382.528972]  [<c032bf5c>] __sched_text_start+0x84/0x71c
-> [  382.528996]  [<c032c6ad>] wait_for_completion+0x65/0x9b
-> [  382.529005]  [<c011f0a2>] default_wake_function+0x0/0xc
-> [  382.529014]  [<c01334cf>] synchronize_rcu+0x2a/0x2f
-> [  382.529021]  [<c0133091>] wakeme_after_rcu+0x0/0x8
-> [  382.529031]  [<c02d5f4f>] dev_deactivate+0x89/0x9c
-> [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
-> [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80211]
-> [  382.529077]  [<c02c8ae3>] dev_close+0x4b/0x67
-> [  382.529088]  [<c02c7f47>] dev_change_flags+0x9d/0x14e
-> [  382.529101]  [<c03058c8>] devinet_ioctl+0x224/0x532
-> [  382.529111]  [<c02c9589>] dev_ifsioc+0x113/0x396
-> [  382.529122]  [<c02c8d59>] dev_load+0x24/0x4b
-> [  382.529132]  [<c02be61d>] sock_ioctl+0x0/0x1be
-> [  382.529153]  [<c02be7bc>] sock_ioctl+0x19f/0x1be
-> [  382.529164]  [<c011a993>] do_page_fault+0x269/0x58e
-> [  382.529174]  [<c02be61d>] sock_ioctl+0x0/0x1be
-> [  382.529187]  [<c0176787>] do_ioctl+0x1f/0x62
-> [  382.529201]  [<c0176a01>] vfs_ioctl+0x237/0x249
-> [  382.529211]  [<c016b7d8>] do_sys_open+0xbb/0xc5
-> [  382.529224]  [<c0176a46>] sys_ioctl+0x33/0x4d
-> [  382.529235]  [<c0103e52>] sysenter_past_esp+0x5f/0x85
-> [  382.529253]  =======================
-> [  382.530962] Freeing alive inet6 address cd98f600
-> --
-> Florian Lohoff                  flo@rfc822.org             +49-171-2280134
->         Those who would give up a little freedom to get a little
->           security shall soon have neither - Benjamin Franklin
->
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.6 (GNU/Linux)
->
-> iD8DBQFG2wSWUaz2rXW+gJcRAq/8AKCEqN8Vylr12kRU9es5Y0K6vPNIXwCg0AnS
-> tqx3+KmEGpVapGtzj8z3r1M=
-> =EYJK
-> -----END PGP SIGNATURE-----
->
->
+Remove entry argument from write_tx_desc, by adding
+rt2x00_get_ring from write_tx_ring itself we can better
+check for NULL and we can use a fallback ring to get
+the cw_min/cw_max values from.
 
-Regards,
-Michal
+Also remove the ring usage from beacon_update in
+rt61pci and rt73usb. Since they no longer use the
+beacon ring DMA, they shouldn't use the ring structure
+either.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c  |    7 ++---
+ drivers/net/wireless/rt2x00/rt2500pci.c  |   15 +++++------
+ drivers/net/wireless/rt2x00/rt2500usb.c  |   16 +++++-------
+ drivers/net/wireless/rt2x00/rt2x00.h     |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c  |   37 +++++++++++++++++++++--------
+ drivers/net/wireless/rt2x00/rt2x00pci.c  |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00ring.h |   23 +++++++++++++-----
+ drivers/net/wireless/rt2x00/rt2x00usb.c  |    5 +--
+ drivers/net/wireless/rt2x00/rt61pci.c    |   31 ++++++++++--------------
+ drivers/net/wireless/rt2x00/rt73usb.c    |   28 +++++++++-------------
+ 10 files changed, 90 insertions(+), 79 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index cdafbee..22834a5 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1091,7 +1091,6 @@ static int rt2400pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+  * TX descriptor initialization
+  */
+ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-				    struct data_entry *entry,
+ 				    struct data_desc *txd,
+ 				    struct data_entry_desc *desc,
+ 				    struct ieee80211_hdr *ieee80211hdr,
+@@ -1145,13 +1144,13 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXD_W0_OWNER_NIC, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_VALID, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_MORE_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &entry->flags));
++			   test_bit(ENTRY_TXD_MORE_FRAG, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_ACK,
+ 			   !(control->flags & IEEE80211_TXCTL_NO_ACK));
+ 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags));
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_RTS,
+-			   test_bit(ENTRY_TXD_RTS_FRAME, &entry->flags));
++			   test_bit(ENTRY_TXD_RTS_FRAME, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, desc->ifs);
+ 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+ 			   !!(control->flags &
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 03c85a2..be82f2d 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1236,7 +1236,6 @@ static int rt2500pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+  * TX descriptor initialization
+  */
+ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-				    struct data_entry *entry,
+ 				    struct data_desc *txd,
+ 				    struct data_entry_desc *desc,
+ 				    struct ieee80211_hdr *ieee80211hdr,
+@@ -1250,9 +1249,9 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2x00_desc_read(txd, 2, &word);
+ 	rt2x00_set_field32(&word, TXD_W2_IV_OFFSET, IEEE80211_HEADER);
+-	rt2x00_set_field32(&word, TXD_W2_AIFS, entry->ring->tx_params.aifs);
+-	rt2x00_set_field32(&word, TXD_W2_CWMIN, entry->ring->tx_params.cw_min);
+-	rt2x00_set_field32(&word, TXD_W2_CWMAX, entry->ring->tx_params.cw_max);
++	rt2x00_set_field32(&word, TXD_W2_AIFS, desc->aifs);
++	rt2x00_set_field32(&word, TXD_W2_CWMIN, desc->cw_min);
++	rt2x00_set_field32(&word, TXD_W2_CWMAX, desc->cw_max);
+ 	rt2x00_desc_write(txd, 2, word);
+ 
+ 	rt2x00_desc_read(txd, 3, &word);
+@@ -1264,20 +1263,20 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 
+ 	rt2x00_desc_read(txd, 10, &word);
+ 	rt2x00_set_field32(&word, TXD_W10_RTS,
+-			   test_bit(ENTRY_TXD_RTS_FRAME, &entry->flags));
++			   test_bit(ENTRY_TXD_RTS_FRAME, &desc->flags));
+ 	rt2x00_desc_write(txd, 10, word);
+ 
+ 	rt2x00_desc_read(txd, 0, &word);
+ 	rt2x00_set_field32(&word, TXD_W0_OWNER_NIC, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_VALID, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_MORE_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &entry->flags));
++			   test_bit(ENTRY_TXD_MORE_FRAG, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_ACK,
+ 			   !(control->flags & IEEE80211_TXCTL_NO_ACK));
+ 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags));
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_OFDM,
+-			   test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags));
++			   test_bit(ENTRY_TXD_OFDM_RATE, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_CIPHER_OWNER, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, desc->ifs);
+ 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 06219ce..c4f12cd 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1034,7 +1034,6 @@ static int rt2500usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+  * TX descriptor initialization
+  */
+ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-				    struct data_entry *entry,
+ 				    struct data_desc *txd,
+ 				    struct data_entry_desc *desc,
+ 				    struct ieee80211_hdr *ieee80211hdr,
+@@ -1048,9 +1047,9 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2x00_desc_read(txd, 1, &word);
+ 	rt2x00_set_field32(&word, TXD_W1_IV_OFFSET, IEEE80211_HEADER);
+-	rt2x00_set_field32(&word, TXD_W1_AIFS, entry->ring->tx_params.aifs);
+-	rt2x00_set_field32(&word, TXD_W1_CWMIN, entry->ring->tx_params.cw_min);
+-	rt2x00_set_field32(&word, TXD_W1_CWMAX, entry->ring->tx_params.cw_max);
++	rt2x00_set_field32(&word, TXD_W1_AIFS, desc->aifs);
++	rt2x00_set_field32(&word, TXD_W1_CWMIN, desc->cw_min);
++	rt2x00_set_field32(&word, TXD_W1_CWMAX, desc->cw_max);
+ 	rt2x00_desc_write(txd, 1, word);
+ 
+ 	rt2x00_desc_read(txd, 2, &word);
+@@ -1063,13 +1062,13 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_desc_read(txd, 0, &word);
+ 	rt2x00_set_field32(&word, TXD_W0_RETRY_LIMIT, control->retry_limit);
+ 	rt2x00_set_field32(&word, TXD_W0_MORE_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &entry->flags));
++			   test_bit(ENTRY_TXD_MORE_FRAG, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_ACK,
+ 			   !(control->flags & IEEE80211_TXCTL_NO_ACK));
+ 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags));
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_OFDM,
+-			   test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags));
++			   test_bit(ENTRY_TXD_OFDM_RATE, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_NEW_SEQ,
+ 			   !!(control->flags & IEEE80211_TXCTL_FIRST_FRAGMENT));
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, desc->ifs);
+@@ -1620,8 +1619,7 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 	 * First we create the beacon.
+ 	 */
+ 	skb_push(skb, ring->desc_size);
+-	rt2x00lib_write_tx_desc(rt2x00dev, beacon,
+-				(struct data_desc *)skb->data,
++	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
+ 				(struct ieee80211_hdr *)(skb->data +
+ 							 ring->desc_size),
+ 				skb->len - ring->desc_size, control);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 1f5b3cb..40dd52b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -401,7 +401,6 @@ struct rt2x00lib_ops {
+ 	 * TX control handlers
+ 	 */
+ 	void (*write_tx_desc) (struct rt2x00_dev *rt2x00dev,
+-			       struct data_entry *entry,
+ 			       struct data_desc *txd,
+ 			       struct data_entry_desc *desc,
+ 			       struct ieee80211_hdr *ieee80211hdr,
+@@ -763,7 +762,7 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
+  * TX descriptor initializer
+  */
+ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-			     struct data_entry *entry, struct data_desc *txd,
++			     struct data_desc *txd,
+ 			     struct ieee80211_hdr *ieee80211hdr,
+ 			     unsigned int length,
+ 			     struct ieee80211_tx_control *control);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 09c31e3..fed2cce 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -388,13 +388,13 @@ EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
+  * TX descriptor initializer
+  */
+ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-			     struct data_entry *entry,
+ 			     struct data_desc *txd,
+ 			     struct ieee80211_hdr *ieee80211hdr,
+ 			     unsigned int length,
+ 			     struct ieee80211_tx_control *control)
+ {
+ 	struct data_entry_desc desc;
++	struct data_ring *ring;
+ 	int tx_rate;
+ 	int bitrate;
+ 	int duration;
+@@ -403,6 +403,23 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	u16 seq_ctrl;
+ 
+ 	/*
++	 * Make sure the descriptor is properly cleared.
++	 */
++	memset(&desc, 0x00, sizeof(desc));
++
++	/*
++	 * Get ring pointer, if we fail to obtain the
++	 * correct ring, then use the first TX ring.
++	 */
++	ring = rt2x00lib_get_ring(rt2x00dev, control->queue);
++	if (!ring)
++		ring = rt2x00lib_get_ring(rt2x00dev, IEEE80211_TX_QUEUE_DATA0);
++
++	desc.cw_min = ring->tx_params.cw_min;
++	desc.cw_max = ring->tx_params.cw_max;
++	desc.aifs = ring->tx_params.aifs;
++
++	/*
+ 	 * Identify queue
+ 	 */
+ 	if (control->queue < rt2x00dev->hw->queues)
+@@ -422,9 +439,9 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 * Check if this is a RTS/CTS frame
+ 	 */
+ 	if (is_rts_frame(frame_control) || is_cts_frame(frame_control)) {
+-		__set_bit(ENTRY_TXD_BURST, &entry->flags);
++		__set_bit(ENTRY_TXD_BURST, &desc.flags);
+ 		if (is_rts_frame(frame_control))
+-			__set_bit(ENTRY_TXD_RTS_FRAME, &entry->flags);
++			__set_bit(ENTRY_TXD_RTS_FRAME, &desc.flags);
+ 		if (control->rts_cts_rate)
+ 			tx_rate = control->rts_cts_rate;
+ 	}
+@@ -433,14 +450,14 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 * Check for OFDM
+ 	 */
+ 	if (DEVICE_GET_RATE_FIELD(tx_rate, RATEMASK) & DEV_OFDM_RATEMASK)
+-		__set_bit(ENTRY_TXD_OFDM_RATE, &entry->flags);
++		__set_bit(ENTRY_TXD_OFDM_RATE, &desc.flags);
+ 
+ 	/*
+ 	 * Check if more fragments are pending
+ 	 */
+ 	if (ieee80211_get_morefrag(ieee80211hdr)) {
+-		__set_bit(ENTRY_TXD_BURST, &entry->flags);
+-		__set_bit(ENTRY_TXD_MORE_FRAG, &entry->flags);
++		__set_bit(ENTRY_TXD_BURST, &desc.flags);
++		__set_bit(ENTRY_TXD_MORE_FRAG, &desc.flags);
+ 	}
+ 
+ 	/*
+@@ -449,7 +466,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	if (control->queue == IEEE80211_TX_QUEUE_BEACON ||
+ 	    is_probe_resp(frame_control))
+-		__set_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags);
++		__set_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc.flags);
+ 
+ 	/*
+ 	 * Determine with what IFS priority this frame should be send.
+@@ -457,7 +474,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 * or this fragment came after RTS/CTS.
+ 	 */
+ 	if ((seq_ctrl & IEEE80211_SCTL_FRAG) > 0 ||
+-	    test_bit(ENTRY_TXD_RTS_FRAME, &entry->flags))
++	    test_bit(ENTRY_TXD_RTS_FRAME, &desc.flags))
+ 		desc.ifs = IFS_SIFS;
+ 	else
+ 		desc.ifs = IFS_BACKOFF;
+@@ -469,7 +486,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	desc.signal = DEVICE_GET_RATE_FIELD(tx_rate, PLCP);
+ 	desc.service = 0x04;
+ 
+-	if (test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags)) {
++	if (test_bit(ENTRY_TXD_OFDM_RATE, &desc.flags)) {
+ 		desc.length_high = ((length + FCS_LEN) >> 6) & 0x3f;
+ 		desc.length_low = ((length + FCS_LEN) & 0x3f);
+ 	} else {
+@@ -502,7 +519,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 			desc.signal |= 0x08;
+ 	}
+ 
+-	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry, txd, &desc,
++	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, txd, &desc,
+ 					   ieee80211hdr, length, control);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_write_tx_desc);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 66fce58..f61cc7f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -58,7 +58,7 @@ int rt2x00pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 * Update the beacon entry.
+ 	 */
+ 	memcpy(entry->data_addr, skb->data, skb->len);
+-	rt2x00lib_write_tx_desc(rt2x00dev, entry, entry->priv,
++	rt2x00lib_write_tx_desc(rt2x00dev, entry->priv,
+ 				(struct ieee80211_hdr *)skb->data,
+ 				skb->len, control);
+ 
+@@ -103,7 +103,7 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	entry->skb = skb;
+ 	memcpy(&entry->tx_status.control, control, sizeof(*control));
+ 	memcpy(entry->data_addr, skb->data, skb->len);
+-	rt2x00lib_write_tx_desc(rt2x00dev, entry, txd, ieee80211hdr,
++	rt2x00lib_write_tx_desc(rt2x00dev, txd, ieee80211hdr,
+ 				skb->len, control);
+ 
+ 	rt2x00_ring_index_inc(ring);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ring.h b/drivers/net/wireless/rt2x00/rt2x00ring.h
+index 143ad6d..78e128a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ring.h
++++ b/drivers/net/wireless/rt2x00/rt2x00ring.h
+@@ -46,6 +46,16 @@ struct data_desc {
+  * descriptor for sending a TX frame.
+  */
+ struct data_entry_desc {
++	unsigned long flags;
++#define ENTRY_TXDONE		1
++#define ENTRY_TXD_RTS_FRAME	2
++#define ENTRY_TXD_OFDM_RATE	3
++#define ENTRY_TXD_MORE_FRAG	4
++#define ENTRY_TXD_REQ_TIMESTAMP	5
++#define ENTRY_TXD_BURST		6
++
++	int queue;
++
+ 	/*
+ 	 * PLCP values.
+ 	 */
+@@ -54,8 +64,13 @@ struct data_entry_desc {
+ 	u16 signal;
+ 	u16 service;
+ 
+-	int queue;
++	/*
++	 * Timing information
++	 */
++	int aifs;
+ 	int ifs;
++	int cw_min;
++	int cw_max;
+ };
+ 
+ /*
+@@ -71,12 +86,6 @@ struct data_entry {
+ 	 */
+ 	unsigned long flags;
+ #define ENTRY_OWNER_NIC		1
+-#define ENTRY_TXDONE		2
+-#define ENTRY_TXD_RTS_FRAME	3
+-#define ENTRY_TXD_OFDM_RATE	4
+-#define ENTRY_TXD_MORE_FRAG	5
+-#define ENTRY_TXD_REQ_TIMESTAMP	6
+-#define ENTRY_TXD_BURST		7
+ 
+ 	/*
+ 	 * Ring we belong to.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 246ba93..ede3766 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -183,9 +183,8 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
+ 	memset(skb->data, 0x00, rt2x00dev->hw->extra_tx_headroom);
+ 
+-	rt2x00lib_write_tx_desc(rt2x00dev, entry,
+-				(struct data_desc *)skb->data, ieee80211hdr,
+-				length, control);
++	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
++				ieee80211hdr, length, control);
+ 	memcpy(&entry->tx_status.control, control, sizeof(*control));
+ 	entry->skb = skb;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index fe9edb9..b94f005 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1089,7 +1089,6 @@ static int rt61pci_init_rings(struct rt2x00_dev *rt2x00dev)
+ 	rt61pci_init_txring(rt2x00dev, IEEE80211_TX_QUEUE_DATA2);
+ 	rt61pci_init_txring(rt2x00dev, IEEE80211_TX_QUEUE_DATA3);
+ 	rt61pci_init_txring(rt2x00dev, IEEE80211_TX_QUEUE_DATA4);
+-	rt61pci_init_txring(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+ 
+ 	/*
+ 	 * Initialize registers.
+@@ -1489,7 +1488,6 @@ static int rt61pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+  * TX descriptor initialization
+  */
+ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-				  struct data_entry *entry,
+ 				  struct data_desc *txd,
+ 				  struct data_entry_desc *desc,
+ 				  struct ieee80211_hdr *ieee80211hdr,
+@@ -1503,9 +1501,9 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2x00_desc_read(txd, 1, &word);
+ 	rt2x00_set_field32(&word, TXD_W1_HOST_Q_ID, desc->queue);
+-	rt2x00_set_field32(&word, TXD_W1_AIFSN, entry->ring->tx_params.aifs);
+-	rt2x00_set_field32(&word, TXD_W1_CWMIN, entry->ring->tx_params.cw_min);
+-	rt2x00_set_field32(&word, TXD_W1_CWMAX, entry->ring->tx_params.cw_max);
++	rt2x00_set_field32(&word, TXD_W1_AIFSN, desc->aifs);
++	rt2x00_set_field32(&word, TXD_W1_CWMIN, desc->cw_min);
++	rt2x00_set_field32(&word, TXD_W1_CWMAX, desc->cw_max);
+ 	rt2x00_set_field32(&word, TXD_W1_IV_OFFSET, IEEE80211_HEADER);
+ 	rt2x00_set_field32(&word, TXD_W1_HW_SEQUENCE, 1);
+ 	rt2x00_desc_write(txd, 1, word);
+@@ -1531,13 +1529,13 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXD_W0_OWNER_NIC, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_VALID, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_MORE_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &entry->flags));
++			   test_bit(ENTRY_TXD_MORE_FRAG, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_ACK,
+ 			   !(control->flags & IEEE80211_TXCTL_NO_ACK));
+ 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags));
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_OFDM,
+-			   test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags));
++			   test_bit(ENTRY_TXD_OFDM_RATE, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, desc->ifs);
+ 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+ 			   !!(control->flags &
+@@ -1545,7 +1543,7 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXD_W0_TKIP_MIC, 0);
+ 	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, length);
+ 	rt2x00_set_field32(&word, TXD_W0_BURST,
+-			   test_bit(ENTRY_TXD_BURST, &entry->flags));
++			   test_bit(ENTRY_TXD_BURST, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
+ 	rt2x00_desc_write(txd, 0, word);
+ }
+@@ -2255,8 +2253,6 @@ int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			  struct ieee80211_tx_control *control)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	struct data_ring *ring =
+-	    rt2x00lib_get_ring(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+ 
+ 	/*
+ 	 * Just in case the ieee80211 doesn't set this,
+@@ -2269,8 +2265,8 @@ int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 * We need to append the descriptor in front of the
+ 	 * beacon frame.
+ 	 */
+-	if (skb_headroom(skb) < ring->desc_size) {
+-		if (pskb_expand_head(skb, ring->desc_size, 0, GFP_ATOMIC)) {
++	if (skb_headroom(skb) < TXD_DESC_SIZE) {
++		if (pskb_expand_head(skb, TXD_DESC_SIZE, 0, GFP_ATOMIC)) {
+ 			dev_kfree_skb(skb);
+ 			return -ENOMEM;
+ 		}
+@@ -2279,12 +2275,11 @@ int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	/*
+ 	 * First we create the beacon.
+ 	 */
+-	skb_push(skb, ring->desc_size);
+-	rt2x00lib_write_tx_desc(rt2x00dev, ring->entry,
+-				(struct data_desc *)skb->data,
++	skb_push(skb, TXD_DESC_SIZE);
++	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
+ 				(struct ieee80211_hdr *)(skb->data +
+-							 ring->desc_size),
+-				skb->len - ring->desc_size, control);
++							 TXD_DESC_SIZE),
++				skb->len - TXD_DESC_SIZE, control);
+ 
+ 	/*
+ 	 * Write entire beacon with descriptor to register,
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 78c15f4..feb211d 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1230,7 +1230,6 @@ static int rt73usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+  * TX descriptor initialization
+  */
+ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+-				  struct data_entry *entry,
+ 				  struct data_desc *txd,
+ 				  struct data_entry_desc *desc,
+ 				  struct ieee80211_hdr *ieee80211hdr,
+@@ -1244,9 +1243,9 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2x00_desc_read(txd, 1, &word);
+ 	rt2x00_set_field32(&word, TXD_W1_HOST_Q_ID, desc->queue);
+-	rt2x00_set_field32(&word, TXD_W1_AIFSN, entry->ring->tx_params.aifs);
+-	rt2x00_set_field32(&word, TXD_W1_CWMIN, entry->ring->tx_params.cw_min);
+-	rt2x00_set_field32(&word, TXD_W1_CWMAX, entry->ring->tx_params.cw_max);
++	rt2x00_set_field32(&word, TXD_W1_AIFSN, desc->aifs);
++	rt2x00_set_field32(&word, TXD_W1_CWMIN, desc->cw_min);
++	rt2x00_set_field32(&word, TXD_W1_CWMAX, desc->cw_max);
+ 	rt2x00_set_field32(&word, TXD_W1_IV_OFFSET, IEEE80211_HEADER);
+ 	rt2x00_set_field32(&word, TXD_W1_HW_SEQUENCE, 1);
+ 	rt2x00_desc_write(txd, 1, word);
+@@ -1266,16 +1265,16 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 
+ 	rt2x00_desc_read(txd, 0, &word);
+ 	rt2x00_set_field32(&word, TXD_W0_BURST,
+-			   test_bit(ENTRY_TXD_BURST, &entry->flags));
++			   test_bit(ENTRY_TXD_BURST, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_VALID, 1);
+ 	rt2x00_set_field32(&word, TXD_W0_MORE_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &entry->flags));
++			   test_bit(ENTRY_TXD_MORE_FRAG, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_ACK,
+ 			   !(control->flags & IEEE80211_TXCTL_NO_ACK));
+ 	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &entry->flags));
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_OFDM,
+-			   test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags));
++			   test_bit(ENTRY_TXD_OFDM_RATE, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, desc->ifs);
+ 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+ 			   !!(control->flags &
+@@ -1283,7 +1282,7 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXD_W0_TKIP_MIC, 0);
+ 	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, length);
+ 	rt2x00_set_field32(&word, TXD_W0_BURST2,
+-			   test_bit(ENTRY_TXD_BURST, &entry->flags));
++			   test_bit(ENTRY_TXD_BURST, &desc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
+ 	rt2x00_desc_write(txd, 0, word);
+ }
+@@ -1870,8 +1869,6 @@ int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			  struct ieee80211_tx_control *control)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	struct data_ring *ring =
+-	    rt2x00lib_get_ring(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+ 	int timeout;
+ 
+ 	/*
+@@ -1884,12 +1881,11 @@ int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	/*
+ 	 * First we create the beacon.
+ 	 */
+-	skb_push(skb, ring->desc_size);
+-	rt2x00lib_write_tx_desc(rt2x00dev, ring->entry,
+-				(struct data_desc *)skb->data,
++	skb_push(skb, TXD_DESC_SIZE);
++	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
+ 				(struct ieee80211_hdr *)(skb->data +
+-							 ring->desc_size),
+-				skb->len - ring->desc_size, control);
++							 TXD_DESC_SIZE),
++				skb->len - TXD_DESC_SIZE, control);
+ 
+ 	/*
+ 	 * Write entire beacon with descriptor to register,
 -- 
-LOG
-http://www.stardust.webpages.pl/log/
+1.5.3
