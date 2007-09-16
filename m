@@ -1,36 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:65056 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbXIJVZH (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:43496 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750729AbXIPEsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 17:25:07 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1716398wah
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2007 14:25:07 -0700 (PDT)
-Message-ID: <6b8cef970709101425q42d8ceb3mc0e7a103aad45f66@mail.gmail.com>
-Date: Mon, 10 Sep 2007 17:25:07 -0400
-From: "Rob Hussey" <robjhussey@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Kernel panic with rt2500pci built-in
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <6b8cef970709101340y77264f86s535384414b68c6f2@mail.gmail.com>
+	Sun, 16 Sep 2007 00:48:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Please pull 'adm8211' branch of wireless-2.6
+Date: Sun, 16 Sep 2007 00:47:40 -0400
+Cc: David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20070915132220.GE6060@tuxdriver.com> <200709152017.02646.flamingice@sourmilk.net> <46EC7F33.2050206@garzik.org>
+In-Reply-To: <46EC7F33.2050206@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <1189244217.4506.16.camel@johannes.berg>
-	 <6b8cef970709080857s69c055f2s1bc1ce6bd0ad4dfd@mail.gmail.com>
-	 <200709081816.10143.IvDoorn@gmail.com>
-	 <6b8cef970709080939v42e88426n40b68a3aa85a951f@mail.gmail.com>
-	 <1189420297.4506.26.camel@johannes.berg>
-	 <1189422311.4506.52.camel@johannes.berg>
-	 <6b8cef970709101340y77264f86s535384414b68c6f2@mail.gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart5199460.uWAHHEJ5x5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709160047.45128.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/10/07, Rob Hussey <robjhussey@gmail.com> wrote:
-> I had to change the module_init() to subsys_initcall() in ieee80211.c
-> and rc80211_simple.c, as well as the original change in
-> net/wireless/core.c.
+--nextPart5199460.uWAHHEJ5x5
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-After more testing, it seems to also work just as well if ieee80211.c
-is left with the module_init() and both rc80211_simple.c and
-net/wireless/core.c are switched to subsys_initcall().
+On Saturday 15 September 2007 20:56, Jeff Garzik wrote:
+> >>> +	if (flags & IFF_PROMISC)
+> >>> +		dev->flags |=3D IEEE80211_HW_RX_INCLUDES_FCS;
+> >>> +	else
+> >>> +		dev->flags &=3D ~IEEE80211_HW_RX_INCLUDES_FCS;
+> >>
+> >> why does promisc dictate inclusion of FCS?
+> >
+> > Because that's the way the hardware works.
+>
+> Why not always include it, regardless of promisc?
+>
+I really do mean that's how the hardware works. If you turn on the promisc =
+bit=20
+in the hardware (which IFF_PROMISC causes), it starts including the FCS, bu=
+t=20
+if the bit is not set, the FCS is not included in frames.
+
+> >>> +	} while (count++ < 20);
+> >>
+> >> NAK -- talk about back to the past.
+> >>
+> >> It's bogus to loop in the interrupt handler, then loop again in both RX
+> >> and TX paths.  You are getting close to reinventing the wheel here.
+> >>
+> >> Use NAPI rather than doing such a loop.
+> >
+> > This is old interrupt handler code from Jouni's original driver. I never
+> > bothered to replace it with the simpler designs used in newer drivers
+> > I've worked on.
+> >
+> > Also - mac80211 drivers have no access to NAPI.
+>
+> Not true as of net-2.6.24.
+>
+Huh? How does a driver use NAPI if it can't pass a struct net_device?
+
+> >>> +/* CSR (Host Control and Status Registers) */
+> >>> +struct adm8211_csr {
+> >>
+> >> [snip]
+> >>
+> >>> +} __attribute__ ((packed));
+> >>
+> >> attributed(packed) is unneccesary here, and its use results in
+> >> sub-optimal code
+> >
+> > How? Doesn't this just turn into a bunch of offsets?
+>
+> It depends on how its used in the code.
+>
+I don't think I'm using it in a way that would make a difference.
+
+> >> enums are preferred.  they do not disappear at the cpp stage, and conf=
+er
+> >> type information.
+> >
+> > I'd rather not.
+>
+> Elaboration?
+>
+What form of debugging are you talking about? I don't see how it makes a=20
+difference for debugging. The type checking provided by enums won't make a=
+=20
+difference for my code - any problems with using the wrong register bits in=
+=20
+the wrong place is obvious due to the prefixes. I don't really see how enum=
+=20
+type checking is even effective at all without annotations and casts all ov=
+er=20
+the place.
+
+Thanks,
+=2DMichael Wu
+
+--nextPart5199460.uWAHHEJ5x5
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBG7LVxT3Oqt9AH4aERAkzIAJ9j0ux9CG+UKqO7mhueEyzVUKY6LwCfZ/W+
+VggYak5MAHQl3ulAf/aBALw=
+=dq54
+-----END PGP SIGNATURE-----
+
+--nextPart5199460.uWAHHEJ5x5--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
