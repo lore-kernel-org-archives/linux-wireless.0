@@ -1,74 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:3562 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763189AbXIUUo6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 16:44:58 -0400
-Received: by an-out-0708.google.com with SMTP id d31so150363and
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2007 13:44:57 -0700 (PDT)
-Date: Fri, 21 Sep 2007 16:46:06 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/5] Add central regulatory domain agent - Patchset I
-Message-ID: <20070921204606.GD31768@pogo>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4431 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753583AbXIPDPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Sep 2007 23:15:38 -0400
+Date: Sat, 15 Sep 2007 22:36:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: Re: Please pull 'adm8211' branch of wireless-2.6
+Message-ID: <20070916023600.GA3967@tuxdriver.com>
+References: <20070915132220.GE6060@tuxdriver.com> <20070915170018.GC18930@tuxdriver.com> <20070915.112549.79067357.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Fba/0zbH8Xs+Fj9o"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070915.112549.79067357.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 15, 2007 at 11:25:49AM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Sat, 15 Sep 2007 13:00:18 -0400
+> 
+> > Come to think of it, this driver will depend on some of the mac80211
+> > patches Dave M. has queued for net-2.6.24.  Perhaps it would be better
+> > if Dave were to merge it with his tree?
+> > 
+> > Jeff, if you have no objection then please sign-off/ack/whatever so
+> > davem can see it.  Dave, in that case please pull this to net-2.6.24.
+> 
+> There are a lot of things to sort out :-)
+> 
+> What I'm going to try and accomplish right now is:
+> 
+> 1) Rebase my tree, I just finished that.
+> 2) Integrate linville's upstream-davem stuff into net-2.6.24
+> 3) Integrate Jeff's upstream branch into net-2.6.24
 
---Fba/0zbH8Xs+Fj9o
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Forgot about this part...would you be doing this otherwise?  If not,
+I can rearrange this patch (or its successor) so that it is based
+off your tree instead.
 
-Patchset I - Add central regulatory domain agent
+> 4) Integrate linville's adm8211 driver into net-2.6.24
+> 
+> We'll see how well that goes.
 
-This is patchset I of II which adds a central regulatory domain
-agent onto the wireless subsystem. I've split it into two patchsets in order
-to introduce the agent before affecting mac80211 drivers. This allows work
-to continue on the central reg agent independant of mac80211
-advancements.
+It sounds like Michael will be respinning in response to Jeff's
+comments...?
 
-Patch series I adds the central regulatory domain agent and
-integrates it with cfg80211. The central reg agent consists of 2
-main modules:
-
-* ISO3166-1
-* Regdomains
-
-Additionally, changing regulatory domains can be acomplished through
-the use of a new configfs module which will be introduced for
-the wireless subsystem.
-
-Patch series II will add support for the centreal reglatory agent
-onto mac80211, remove mac80211's simple regulatory control and and=20
-replace each driver's own regulatory domain implementation with the
-central one.
-
-  Luis
-
---Fba/0zbH8Xs+Fj9o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFG9C2Oat1JN+IKUl4RAikPAJ0dvfSpCgNRQPzBkdzzAEOQGwPBzwCePtbp
-3OdRtLvcA4lO/dOl8Oic5Mg=
-=6/aK
------END PGP SIGNATURE-----
-
---Fba/0zbH8Xs+Fj9o--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
