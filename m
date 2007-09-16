@@ -1,147 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42843 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755744AbXIFNqV (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:38346 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbXIPMIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:46:21 -0400
-Message-Id: <20070905234624.573108000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:16 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 07/21] mac80211: renumber and document the hardware flags
-Mime-Version: 1.0
+	Sun, 16 Sep 2007 08:08:04 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1643781wah
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:04 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 8/24] rt2x00: Reduce LNA flags
+Date: Sun, 16 Sep 2007 14:18:27 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200709161418.29076.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, hardware flags that drivers must set are not
-documented well enough. Fix this.
+Because rt73usb has LNA in a single variable
+and rt61pci has LNA for A and BG modes we currently
+had 3 flags for LNA.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reduce this by setting LNA_A and LNA_BG if rt73usb has
+LNA enabled.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/net/mac80211.h |  101 ++++++++++++++++++++++++++-----------------------
- 1 file changed, 55 insertions(+), 46 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h  |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c |   18 ++++++++++--------
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
---- wireless-dev.orig/include/net/mac80211.h	2007-09-06 01:35:16.124453431 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-09-06 01:35:17.374453431 +0200
-@@ -501,6 +501,61 @@ typedef enum set_key_cmd {
- 	SET_KEY, DISABLE_KEY,
- } set_key_cmd;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 40dd52b..02a5adf 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -520,7 +520,7 @@ struct rt2x00_dev {
+ #define DEVICE_SUPPORT_HW_BUTTON	12
+ #define CONFIG_FRAME_TYPE		13
+ #define CONFIG_RF_SEQUENCE		14
+-#define CONFIG_EXTERNAL_LNA		15
++/* Hole: Add new Flag here */
+ #define CONFIG_EXTERNAL_LNA_A		16
+ #define CONFIG_EXTERNAL_LNA_BG		17
+ #define CONFIG_DOUBLE_ANTENNA		18
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index feb211d..703e4e1 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -519,7 +519,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	rt73usb_register_read(rt2x00dev, PHY_CSR0, &reg);
  
-+
-+/**
-+ * enum ieee80211_hw_flags - hardware flags
-+ *
-+ * These flags are used to indicate hardware capabilities to
-+ * the stack. Generally, flags here should have their meaning
-+ * done in a way that the simplest hardware doesn't need setting
-+ * any particular flags. There are some exceptions to this rule,
-+ * however, so you are advised to review these flags carefully.
-+ *
-+ * @IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE:
-+ *	The device only needs to be supplied with a beacon template.
-+ *	If you need the host to generate each beacon then don't use
-+ *	this flag and call ieee80211_beacon_get() when you need the
-+ *	next beacon frame. Note that if you set this flag, you must
-+ *	implement the set_tim() callback for powersave mode to work
-+ *	properly.
-+ *	This flag is only relevant for access-point mode.
-+ *
-+ * @IEEE80211_HW_RX_INCLUDES_FCS:
-+ *	Indicates that received frames passed to the stack include
-+ *	the FCS at the end.
-+ *
-+ * @IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING:
-+ *	Some wireless LAN chipsets buffer broadcast/multicast frames
-+ *	for power saving stations in the hardware/firmware and others
-+ *	rely on the host system for such buffering. This option is used
-+ *	to configure the IEEE 802.11 upper layer to buffer broadcast and
-+ *	multicast frames when there are power saving stations so that
-+ *	the driver can fetch them with ieee80211_get_buffered_bc(). Note
-+ *	that not setting this flag works properly only when the
-+ *	%IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE is also not set because
-+ *	otherwise the stack will not know when the DTIM beacon was sent.
-+ *
-+ * @IEEE80211_HW_MULTICAST_FILTER:
-+ *	Device has multicast filters, i.e. it can filter based on the
-+ *	multicast address. If this flag is clear, then %FIF_ALLMULTI
-+ *	will be enabled instead of passing multicast addresses when
-+ *	multicast addresses are added.
-+ *
-+ * @IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED:
-+ *	Channels are already configured to the default regulatory domain
-+ *	specified in the device's EEPROM
-+ *
-+ * @IEEE80211_HW_SUPPORT_HT_MODE: The device capable of supporting 11n.
-+ */
-+enum ieee80211_hw_flags {
-+	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
-+	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
-+	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING	= 1<<2,
-+	IEEE80211_HW_MULTICAST_FILTER			= 1<<3,
-+	IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED	= 1<<4,
-+	IEEE80211_HW_SUPPORT_HT_MODE			= 1<<5,
-+};
-+
- /**
-  * struct ieee80211_hw - hardware information and state
-  * TODO: move documentation into kernel-doc format
-@@ -524,52 +579,6 @@ struct ieee80211_hw {
+ 	if (rt2x00dev->curr_hwmode == HWMODE_A) {
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
++		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
+ 			rt73usb_bbp_write(rt2x00dev, 96, 0x78);
+ 			rt73usb_bbp_write(rt2x00dev, 104, 0x48);
+ 			rt73usb_bbp_write(rt2x00dev, 75, 0x80);
+@@ -539,7 +539,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 		rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_BG, 0);
+ 		rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_A, 1);
+ 	} else {
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
++		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags)) {
+ 			rt73usb_bbp_write(rt2x00dev, 96, 0x68);
+ 			rt73usb_bbp_write(rt2x00dev, 104, 0x3c);
+ 			rt73usb_bbp_write(rt2x00dev, 75, 0x80);
+@@ -792,7 +792,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 		low_bound = 0x28;
+ 		up_bound = 0x48;
  
- 	/* The rest is information about your hardware */
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
++		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
+ 			low_bound += 0x10;
+ 			up_bound += 0x10;
+ 		}
+@@ -808,7 +808,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 			up_bound = 0x1c;
+ 		}
  
--	/* TODO: frame_type 802.11/802.3, sw_encryption requirements */
--
--/* hole at 0 */
--
--	/*
--	 * The device only needs to be supplied with a beacon template.
--	 * If you need the host to generate each beacon then don't use
--	 * this flag and use ieee80211_beacon_get().
--	 */
--#define IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE (1<<1)
--
--/* hole at 2 */
--
--	/* Whether RX frames passed to ieee80211_rx() include FCS in the end */
--#define IEEE80211_HW_RX_INCLUDES_FCS (1<<3)
--
--	/* Some wireless LAN chipsets buffer broadcast/multicast frames for
--	 * power saving stations in the hardware/firmware and others rely on
--	 * the host system for such buffering. This option is used to
--	 * configure the IEEE 802.11 upper layer to buffer broadcast/multicast
--	 * frames when there are power saving stations so that low-level driver
--	 * can fetch them with ieee80211_get_buffered_bc(). */
--#define IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING (1<<4)
--
--/* hole at 5 */
--
--/* hole at 6 */
--
--/* hole at 7 */
--
--/* hole at 8 */
--
--	/*
--	 * Device has multicast filters.
--	 */
--#define IEEE80211_HW_MULTICAST_FILTER (1<<9)
--
--/* hole at 10 */
--
--	/* Channels are already configured to the default regulatory domain
--	 * specified in the device's EEPROM */
--#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
--
--	/* The device capable of supporting 11n */
--#define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
--
- 	u32 flags;			/* hardware flags defined above */
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
++		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags)) {
+ 			low_bound += 0x14;
+ 			up_bound += 0x10;
+ 		}
+@@ -1336,7 +1336,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ 	}
  
- 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
-
+ 	if (rt2x00dev->rx_status.phymode == MODE_IEEE80211A) {
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
++		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
+ 			if (lna == 3 || lna == 2)
+ 				offset += 10;
+ 		} else {
+@@ -1349,7 +1349,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_A, &eeprom);
+ 		offset -= rt2x00_get_field16(eeprom, EEPROM_RSSI_OFFSET_A_1);
+ 	} else {
+-		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags))
++		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags))
+ 			offset += 14;
+ 
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_BG, &eeprom);
+@@ -1544,8 +1544,10 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
+ 
+-	if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA))
+-		__set_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags);
++	if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA)) {
++		__set_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags);
++		__set_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags);
++	}
+ 
+ 	/*
+ 	 * Store led settings, for correct led behaviour.
 -- 
-
+1.5.3
