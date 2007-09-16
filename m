@@ -1,143 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37549
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbXISRMC (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbXIPMIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 13:12:02 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH v2 FIXED] b43: Change loglevel of radio-enable message.
-Date: Wed, 19 Sep 2007 19:10:08 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+	Sun, 16 Sep 2007 08:08:36 -0400
+Received: by an-out-0708.google.com with SMTP id d31so189208and
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:35 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 21/24] rt2x00: Add better CONFIG_PM checks
+Date: Sun, 16 Sep 2007 14:19:34 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
 MIME-Version: 1.0
+Message-Id: <200709161419.36297.IvDoorn@gmail.com>
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709191910.08743.mb@bu3sch.de>
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also cleanup the code a bit and remove the inline.
+Put rt2x00lib suspend/resume handlers inside CONFIG_PM defines,
+also declare rt2x00{pci,usb}_suspend/resume NULL when CONFIG_PM
+is not not defined. This safes macro checks inside the drivers.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 --
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 --
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 --
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00pci.h |    3 +++
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    3 +++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    2 --
+ drivers/net/wireless/rt2x00/rt73usb.c   |    2 --
+ 9 files changed, 10 insertions(+), 10 deletions(-)
 
-Index: wireless-dev/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-19 19:02:24.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-19 19:02:27.000000000 +0200
-@@ -2175,6 +2175,21 @@ static void b43_mgmtframe_txantenna(stru
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PRPHYCTL, tmp);
- }
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 28236dc..38e2188 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1671,10 +1671,8 @@ static struct pci_driver rt2400pci_driver = {
+ 	.id_table	= rt2400pci_device_table,
+ 	.probe		= rt2x00pci_probe,
+ 	.remove		= __devexit_p(rt2x00pci_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= rt2x00pci_suspend,
+ 	.resume		= rt2x00pci_resume,
+-#endif /* CONFIG_PM */
+ };
  
-+/* Returns TRUE, if the radio is enabled in hardware. */
-+static bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
-+{
-+	if (dev->phy.rev >= 3) {
-+		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
-+		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
-+			return 1;
-+	} else {
-+		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
-+		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
-+			return 1;
-+	}
-+	return 0;
-+}
-+
- /* This is the opposite of b43_chip_init() */
- static void b43_chip_exit(struct b43_wldev *dev)
+ static int __init rt2400pci_init(void)
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index fc28631..f6115c6 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1982,10 +1982,8 @@ static struct pci_driver rt2500pci_driver = {
+ 	.id_table	= rt2500pci_device_table,
+ 	.probe		= rt2x00pci_probe,
+ 	.remove		= __devexit_p(rt2x00pci_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= rt2x00pci_suspend,
+ 	.resume		= rt2x00pci_resume,
+-#endif /* CONFIG_PM */
+ };
+ 
+ static int __init rt2500pci_init(void)
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 5bdf64f..847bd7f 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1819,10 +1819,8 @@ static struct usb_driver rt2500usb_driver = {
+ 	.id_table	= rt2500usb_device_table,
+ 	.probe		= rt2x00usb_probe,
+ 	.disconnect	= rt2x00usb_disconnect,
+-#ifdef CONFIG_PM
+ 	.suspend	= rt2x00usb_suspend,
+ 	.resume		= rt2x00usb_resume,
+-#endif /* CONFIG_PM */
+ };
+ 
+ static int __init rt2500usb_init(void)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index b5f408c..c18875b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -797,7 +797,9 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, int queue,
+  */
+ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev);
+ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev);
++#ifdef CONFIG_PM
+ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state);
+ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev);
++#endif /* CONFIG_PM */
+ 
+ #endif /* RT2X00_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 6992727..c0bdf63 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1106,6 +1106,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_remove_dev);
+ /*
+  * Device state handlers
+  */
++#ifdef CONFIG_PM
+ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
  {
-@@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
- 	b43_radio_turn_on(dev);
- 	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
- 	b43dbg(dev->wl, "Radio %s by hardware\n",
--	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
-+	       dev->radio_hw_enable ? "enabled" : "disabled");
- 
- 	b43_write16(dev, 0x03E6, 0x0000);
- 	err = b43_phy_init(dev);
-@@ -2373,14 +2388,14 @@ static void b43_periodic_every15sec(stru
- 
- static void b43_periodic_every1sec(struct b43_wldev *dev)
- {
--	int radio_hw_enable;
-+	bool radio_hw_enable;
- 
- 	/* check if radio hardware enabled status changed */
- 	radio_hw_enable = b43_is_hw_radio_enabled(dev);
- 	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
- 		dev->radio_hw_enable = radio_hw_enable;
--		b43dbg(dev->wl, "Radio hardware status changed to %s\n",
--		       (radio_hw_enable == 0) ? "disabled" : "enabled");
-+		b43info(dev->wl, "Radio hardware status changed to %s\n",
-+			radio_hw_enable ? "ENABLED" : "DISABLED");
- 		b43_leds_update(dev, 0);
- 	}
+ 	int retval;
+@@ -1184,6 +1185,7 @@ exit:
+ 	return retval;
  }
-Index: wireless-dev/drivers/net/wireless/b43/main.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/main.h	2007-09-19 19:02:24.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.h	2007-09-19 19:02:27.000000000 +0200
-@@ -96,23 +96,6 @@ static inline int b43_is_ofdm_rate(int r
- 	return !b43_is_cck_rate(rate);
- }
+ EXPORT_SYMBOL_GPL(rt2x00lib_resume);
++#endif /* CONFIG_PM */
  
--static inline int b43_is_hw_radio_enabled(struct b43_wldev *dev)
--{
--	/* function to return state of hardware enable of radio
--	 * returns 0 if radio disabled, 1 if radio enabled
--	 */
--	struct b43_phy *phy = &dev->phy;
--
--	if (phy->rev >= 3)
--		return ((b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
--			 & B43_MMIO_RADIO_HWENABLED_HI_MASK)
--			== 0) ? 1 : 0;
--	else
--		return ((b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
--			 & B43_MMIO_RADIO_HWENABLED_LO_MASK)
--			== 0) ? 0 : 1;
--}
--
- void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
- void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
+ /*
+  * rt2x00lib module information.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
+index 0a8b680..82adeac 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
+@@ -119,6 +119,9 @@ void rt2x00pci_remove(struct pci_dev *pci_dev);
+ #ifdef CONFIG_PM
+ int rt2x00pci_suspend(struct pci_dev *pci_dev, pm_message_t state);
+ int rt2x00pci_resume(struct pci_dev *pci_dev);
++#else
++#define rt2x00pci_suspend	NULL
++#define rt2x00pci_resume	NULL
+ #endif /* CONFIG_PM */
  
-Index: wireless-dev/drivers/net/wireless/b43/leds.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/leds.c	2007-09-19 18:13:49.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/leds.c	2007-09-19 19:07:45.000000000 +0200
-@@ -176,6 +176,7 @@ void b43_leds_update(struct b43_wldev *d
- 	unsigned long interval = 0;
- 	u16 ledctl;
- 	unsigned long flags;
-+	bool radio_enabled = (phy->radio_on && dev->radio_hw_enable);
+ #endif /* RT2X00PCI_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index f3be092..d4113e5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -172,6 +172,9 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf);
+ #ifdef CONFIG_PM
+ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state);
+ int rt2x00usb_resume(struct usb_interface *usb_intf);
++#else
++#define rt2x00usb_suspend	NULL
++#define rt2x00usb_resume	NULL
+ #endif /* CONFIG_PM */
  
- 	spin_lock_irqsave(&dev->wl->leds_lock, flags);
- 	ledctl = b43_read16(dev, B43_MMIO_GPIO_CONTROL);
-@@ -195,21 +196,19 @@ void b43_leds_update(struct b43_wldev *d
- 			turn_on = activity;
- 			break;
- 		case B43_LED_RADIO_ALL:
--			turn_on = phy->radio_on && b43_is_hw_radio_enabled(dev);
-+			turn_on = radio_enabled;
- 			break;
- 		case B43_LED_RADIO_A:
--			turn_on = (phy->radio_on && b43_is_hw_radio_enabled(dev)
--				   && phy->type == B43_PHYTYPE_A);
-+			turn_on = (radio_enabled && phy->type == B43_PHYTYPE_A);
- 			break;
- 		case B43_LED_RADIO_B:
--			turn_on = (phy->radio_on && b43_is_hw_radio_enabled(dev)
--				   && (phy->type == B43_PHYTYPE_B
--				       || phy->type == B43_PHYTYPE_G));
-+			turn_on = (radio_enabled &&
-+				   (phy->type == B43_PHYTYPE_B
-+				    || phy->type == B43_PHYTYPE_G));
- 			break;
- 		case B43_LED_MODE_BG:
- 			if (phy->type == B43_PHYTYPE_G
--			    && b43_is_hw_radio_enabled(dev)
--			    && 1 /*FIXME: using G rates. */ )
-+			    && radio_enabled)
- 				turn_on = 1;
- 			break;
- 		case B43_LED_TRANSFER:
+ #endif /* RT2X00USB_H */
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 6baa651..730bed5 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2585,10 +2585,8 @@ static struct pci_driver rt61pci_driver = {
+ 	.id_table	= rt61pci_device_table,
+ 	.probe		= rt2x00pci_probe,
+ 	.remove		= __devexit_p(rt2x00pci_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= rt2x00pci_suspend,
+ 	.resume		= rt2x00pci_resume,
+-#endif /* CONFIG_PM */
+ };
+ 
+ static int __init rt61pci_init(void)
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index f7017a8..b047c7c 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2106,10 +2106,8 @@ static struct usb_driver rt73usb_driver = {
+ 	.id_table	= rt73usb_device_table,
+ 	.probe		= rt2x00usb_probe,
+ 	.disconnect	= rt2x00usb_disconnect,
+-#ifdef CONFIG_PM
+ 	.suspend	= rt2x00usb_suspend,
+ 	.resume		= rt2x00usb_resume,
+-#endif /* CONFIG_PM */
+ };
+ 
+ static int __init rt73usb_init(void)
+-- 
+1.5.3
