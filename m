@@ -1,89 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47861 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203AbXIFAum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 20:50:42 -0400
-Subject: Re: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless  drivers)
-From: Dan Williams <dcbw@redhat.com>
-To: dragoran <drago01@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-In-Reply-To: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
-References: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 05 Sep 2007 20:50:22 -0400
-Message-Id: <1189039823.13730.4.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598AbXIPMHx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Sep 2007 08:07:53 -0400
+Received: by an-out-0708.google.com with SMTP id d31so189208and
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:07:53 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/24] rt2x00: Don't allow configuration calls when uninitialized
+Date: Sun, 16 Sep 2007 14:18:05 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709161403.11332.IvDoorn@gmail.com>
+In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200709161418.06645.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-09-05 at 21:33 +0200, dragoran wrote:
-> On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > On Tuesday 04 September 2007, dragoran wrote:
-> > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > > > >+static ssize_t show_rf_kill(struct device *d,
-> > > > > > > >+                        struct device_attribute *attr, char *buf)
-> > > > > > > >+{
-> > > > > > > >+    /*
-> > > > > > > >+     * 0 - RF kill not enabled
-> > > > > > > >+     * 1 - SW based RF kill active (sysfs)
-> > > > > > > >+     * 2 - HW based RF kill active
-> > > > > > > >+     * 3 - Both HW and SW based RF kill active
-> > > > > > > >
-> > > > > > > >that as well, along with all the other sysfs bits. Also, how about using
-> > > > > > > >the generic rfkill infrastructure Ivo did?
-> > > > > > >
-> > > > > > > is the generic rfkill interface already stable and merged into the linus tree?
-> > > > > >
-> > > > > > Yes. It currently is only missing users.
-> > > > >
-> > > > > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > > > > should I read the code to understand how it works? (would like to add
-> > > > > support to hal)
-> > > >
-> > > > There isn't a documentation file for it, so best thing to do would be looking at the code.
-> > > > basically hal only needs to check the sysfs files:
-> > > >
-> > > >         name -> Name of device/interface
-> > > >         type -> wlan, bluetooth, irda
-> > > >         state -> Current device state. 0: Off, 1: On
-> > > >         claim -> 0: Kernel handles events, 1: Userspace handles events
-> > > >
-> > > > "name" and "type" are read-only
-> > > > "claim" and "state" are read/writable
-> > > >
-> > > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
-> > > > this has been fixed in 2.6.23-rc.
-> > >
-> > > ok that isn't complicated what is the claim used for?
-> > > does It has to be set to userspace to be able to toggle the status via software?
-> >
-> > By default the kernel will act when the rfkill button is pressed, it will loop
-> > through all registered buttons of the same type and change the state.
-> > Userspace can read the "state" sysfs file to see the current status,
-> > but if a userspace tools wants to take control of taking action when the button is pressed,
-> > or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
-> > tell the kernel that it should back off and ignore all events.
-> 
-> ok thx for explaining this will talk to the nm and hal people about it
-> and see how they want things to work than I will create patches to
-> implement it.
-> which drivers support it now? rt2x00 and ?? or are they the only ones right now?
+When a device is being hot-unplugged or during suspend/resume
+rt2x00 is not able to handle configuration calls from mac80211.
+Check for the DEVICE_INITIALIZED flag to determine if a
+configuration call from mac80211 is welcome or not.
 
-Since it's in the kernel, the next step is to get HAL aware of the
-killswitches through sysfs and not through fdi files keyed on
-Dell/Sony/etc.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-Ivo: how does one tell whether or not the switch needs to be polled?
-That's something that HAL will need to deal with polling/non-polling
-intelligently.  I assume that either the layer or the driver
-implementing the button will know that it needs to be polled and should
-be the thing that sets the value.  Ideally just an attribute in sysfs
-like "require-poll" with a value of 1 or 0 or something like that.
-
-Dan
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index f25cf38..0001b79 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -245,6 +245,15 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 
+ 	/*
++	 * If the device is not initialized we shouldn't accept
++	 * any configuration changes. Mac80211 might be calling
++	 * this function while we are trying to remove the device
++	 * or perhaps suspending it.
++	 */
++	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
++		return 0;
++
++	/*
+ 	 * Check if we need to disable the radio,
+ 	 * if this is not the case, at least the RX must be disabled.
+ 	 */
+@@ -285,6 +294,15 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw, int if_id,
+ 	int status;
+ 
+ 	/*
++	 * If the device is not initialized we shouldn't accept
++	 * any configuration changes. Mac80211 might be calling
++	 * this function while we are trying to remove the device
++	 * or perhaps suspending it.
++	 */
++	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
++		return 0;
++
++	/*
+ 	 * Monitor mode does not need configuring.
+ 	 * If the given type does not match the configured type,
+ 	 * there has been a problem.
+-- 
+1.5.3
