@@ -1,73 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:13378 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbXIDTIv (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:5107 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498AbXIQUev (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 15:08:51 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2324991wah
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2007 12:08:50 -0700 (PDT)
-Message-ID: <f6ca9fed0709041208rfabb10en634674a6fb64a750@mail.gmail.com>
-Date: Tue, 4 Sep 2007 21:08:45 +0200
-From: dragoran <drago01@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-In-Reply-To: <200709042058.15463.IvDoorn@gmail.com>
+	Mon, 17 Sep 2007 16:34:51 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3354943pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2007 13:34:51 -0700 (PDT)
+Message-ID: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>
+Date: Mon, 17 Sep 2007 16:34:51 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(), we're MMIO-only
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jeff Garzik" <jeff@garzik.org>, "Jiri Slaby" <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com>
-	 <200709042015.34764.IvDoorn@gmail.com>
-	 <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com>
-	 <200709042058.15463.IvDoorn@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_15986_8417745.1190061291079"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Tuesday 04 September 2007, dragoran wrote:
-> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > >+static ssize_t show_rf_kill(struct device *d,
-> > > > >+                        struct device_attribute *attr, char *buf)
-> > > > >+{
-> > > > >+    /*
-> > > > >+     * 0 - RF kill not enabled
-> > > > >+     * 1 - SW based RF kill active (sysfs)
-> > > > >+     * 2 - HW based RF kill active
-> > > > >+     * 3 - Both HW and SW based RF kill active
-> > > > >
-> > > > >that as well, along with all the other sysfs bits. Also, how about using
-> > > > >the generic rfkill infrastructure Ivo did?
-> > > >
-> > > > is the generic rfkill interface already stable and merged into the linus tree?
-> > >
-> > > Yes. It currently is only missing users.
-> >
-> > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > should I read the code to understand how it works? (would like to add
-> > support to hal)
->
-> There isn't a documentation file for it, so best thing to do would be looking at the code.
-> basically hal only needs to check the sysfs files:
->
->         name -> Name of device/interface
->         type -> wlan, bluetooth, irda
->         state -> Current device state. 0: Off, 1: On
->         claim -> 0: Kernel handles events, 1: Userspace handles events
->
-> "name" and "type" are read-only
-> "claim" and "state" are read/writable
->
-> Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
-> this has been fixed in 2.6.23-rc.
+------=_Part_15986_8417745.1190061291079
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-ok that isn't complicated what is the claim used for?
-does It has to be set to userspace to be able to toggle the status via software?
+Based on advise from Jeff, as described in the e-mail:
 
+[PATCH] Clarify pci_iomap() usage for MMIO-only devices
 
-> > shouldn't the new interface send events so that polling isn't required?
->
-> Not really, rfkill was intended for a generic interface, which would make
-> the rfkill buttons work with or without intervention of userspace. So polling
-> is required unless the hardware generates interrupts when the button is called.
+we shouldn't use ioread32()/iowrite32() unless we really have a need
+to otherwise we're creating an unnecessary branch on read/write. Lets
+revert this back to readl()/writel() as our devices so far have been
+MMIO-only. This reverts 9202ec15da36ca060722c363575e0e390d85fb71 on
+ath5k. This patch is intended for the ath5k branch of wireless-dev.
 
-ok
+Changes-licensed-under: ISC
+Singed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+
+---
+
+ drivers/net/wireless/ath5k_hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k_hw.c b/drivers/net/wireless/ath5k_hw.c
+index 07ad127..3501b4c 100644
+--- a/drivers/net/wireless/ath5k_hw.c
++++ b/drivers/net/wireless/ath5k_hw.c
+@@ -219,7 +219,7 @@ static inline unsigned int
+ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+  */
+ static inline u32 ath5k_hw_reg_read(struct ath_hw *hal, u16 reg)
+ {
+-       return ioread32(hal->ah_sh + reg);
++       return readl(hal->ah_sh + reg);
+ }
+
+ /*
+@@ -227,7 +227,7 @@ static inline u32 ath5k_hw_reg_read(struct ath_hw
+*hal, u16 reg)
+  */
+ static inline void ath5k_hw_reg_write(struct ath_hw *hal, u32 val, u16 reg)
+ {
+-       iowrite32(val, hal->ah_sh + reg);
++       writel(val, hal->ah_sh + reg);
+ }
+
+ /*
+
+------=_Part_15986_8417745.1190061291079
+Content-Type: text/x-patch; name="ath5k-revert-ioread-write.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="ath5k-revert-ioread-write.diff"
+X-Attachment-Id: f_f6pfhh5q
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMgYi9kcml2ZXJzL25l
+dC93aXJlbGVzcy9hdGg1a19ody5jCmluZGV4IDA3YWQxMjcuLjM1MDFiNGMgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYXRoNWtfaHcuYwpAQCAtMjE5LDcgKzIxOSw3IEBAIHN0YXRpYyBpbmxpbmUgdW5zaWduZWQg
+aW50IGF0aDVrX2h3X2Nsb2NrdG9oKHVuc2lnbmVkIGludCBjbG9jaywgYm9vbCB0dXJibykKICAq
+Lwogc3RhdGljIGlubGluZSB1MzIgYXRoNWtfaHdfcmVnX3JlYWQoc3RydWN0IGF0aF9odyAqaGFs
+LCB1MTYgcmVnKQogewotCXJldHVybiBpb3JlYWQzMihoYWwtPmFoX3NoICsgcmVnKTsKKwlyZXR1
+cm4gcmVhZGwoaGFsLT5haF9zaCArIHJlZyk7CiB9CiAKIC8qCkBAIC0yMjcsNyArMjI3LDcgQEAg
+c3RhdGljIGlubGluZSB1MzIgYXRoNWtfaHdfcmVnX3JlYWQoc3RydWN0IGF0aF9odyAqaGFsLCB1
+MTYgcmVnKQogICovCiBzdGF0aWMgaW5saW5lIHZvaWQgYXRoNWtfaHdfcmVnX3dyaXRlKHN0cnVj
+dCBhdGhfaHcgKmhhbCwgdTMyIHZhbCwgdTE2IHJlZykKIHsKLQlpb3dyaXRlMzIodmFsLCBoYWwt
+PmFoX3NoICsgcmVnKTsKKwl3cml0ZWwodmFsLCBoYWwtPmFoX3NoICsgcmVnKTsKIH0KIAogLyoK
+
+------=_Part_15986_8417745.1190061291079--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
