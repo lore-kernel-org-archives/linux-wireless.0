@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from namei.org ([69.55.235.186]:45466 "EHLO us.intercode.com.au"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756142AbXISJWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 05:22:30 -0400
-Date: Wed, 19 Sep 2007 02:22:21 -0700 (PDT)
-From: James Morris <jmorris@namei.org>
-To: linux-wireless@vger.kernel.org
-cc: fabrice@bellet.info
-Subject: Problem with Cisco MPI350/airo
-Message-ID: <Xine.LNX.4.64.0709190051080.29334@us.intercode.com.au>
+Received: from py-out-1112.google.com ([64.233.166.183]:57212 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709AbXIQUWI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2007 16:22:08 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3349039pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2007 13:22:07 -0700 (PDT)
+Message-ID: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+Date: Mon, 17 Sep 2007 16:22:07 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Linus Torvalds" <torvalds@linux-foundation.org>
+Subject: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	"Jeff Garzik" <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+	boundary="----=_Part_15876_26305641.1190060527274"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've got an x31 thinkpad with an MPI350 card, which has worked more or 
-less reliably for several years.
+------=_Part_15876_26305641.1190060527274
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-With current git and Fedora kernels, the wireless dies some time after 
-boot, with the following types of messages ending up in syslog:
+This patch updates the pci_iomap() kernel-doc to make it clarify the
+case when read*()/write*() can be called over ioread*/iowrite*(). When
+driver writers read this documenation sometimes it is assumed you just
+*need* to use ioread*()/iorwrite*(). We have an exception so lets just
+clarify this is not true for the exception.
 
-Sep 19 16:36:32 localhost kernel: airo(eth0): cmd:1 status:7f21 rsp0:21 rsp1:0 rsp2:2eab
-Sep 19 16:36:32 localhost kernel: airo(eth0): Bad MAC enable reason=21, rid=0, offset=11947
-Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:2 status:7f02 rsp0:0 rsp1:0 rsp2:2eab
-Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:1 status:7f01 rsp0:2 rsp1:0 rsp2:2eab
-Sep 19 16:36:33 localhost kernel: airo(eth0): Bad MAC enable reason=2, rid=0, offset=11947
-Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:3 status:7f03 rsp0:0 rsp1:0 rsp2:2eab
+ lib/iomap.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-NetworkManager seems to lose contact with the card, then fails & asks for 
-a new key (which it doesn't actually need).
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
 
-Sep 19 16:37:03 localhost NetworkManager: <info>  Activation 
-(eth0/wireless): association took too long (>20s), asking for
- new key. 
+  Luis
 
-Anyone seen this before, and/or know what's happening ?
+------=_Part_15876_26305641.1190060527274
+Content-Type: text/x-patch; name="pci_iomap-doc-clarification.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="pci_iomap-doc-clarification.diff"
+X-Attachment-Id: f_f6pfahct
 
-
-- James
--- 
-James Morris
-<jmorris@namei.org>
+ZGlmZiAtLWdpdCBhL2xpYi9pb21hcC5jIGIvbGliL2lvbWFwLmMKaW5kZXggODY0ZjJlYy4uMzM2
+NTFmOCAxMDA2NDQKLS0tIGEvbGliL2lvbWFwLmMKKysrIGIvbGliL2lvbWFwLmMKQEAgLTI0Nyw5
+ICsyNDcsMTQgQEAgRVhQT1JUX1NZTUJPTChpb3BvcnRfdW5tYXApOwogICogQG1heGxlbjogbGVu
+Z3RoIG9mIHRoZSBtZW1vcnkgdG8gbWFwCiAgKgogICogVXNpbmcgdGhpcyBmdW5jdGlvbiB5b3Ug
+d2lsbCBnZXQgYSBfX2lvbWVtIGFkZHJlc3MgdG8geW91ciBkZXZpY2UgQkFSLgotICogWW91IGNh
+biBhY2Nlc3MgaXQgdXNpbmcgaW9yZWFkKigpIGFuZCBpb3dyaXRlKigpLiBUaGVzZSBmdW5jdGlv
+bnMgaGlkZQotICogdGhlIGRldGFpbHMgaWYgdGhpcyBpcyBhIE1NSU8gb3IgUElPIGFkZHJlc3Mg
+c3BhY2UgYW5kIHdpbGwganVzdCBkbyB3aGF0Ci0gKiB5b3UgZXhwZWN0IGZyb20gdGhlbSBpbiB0
+aGUgY29ycmVjdCB3YXkuCisgKiBJZiB5b3UgdXNlIHBjaV9pb21hcCgpIGl0IGlzIHJlY29tbWVu
+ZGVkIHlvdSB1c2UgaW9yZWFkKigpIGFuZCBpb3dyaXRlKigpLiBJZgorICogeW91ciBkZXZpY2Ug
+aXMgTU1JTy1vbmx5IGFuZCBhcyBsb25nIGFzIGZ1dHVyZSBhcmNoaXRlY3R1cmVzIGRvbid0IGJy
+ZWFrIHRoZQorICogYXNzdW1wdGlvbiB0aGF0IHBjaW9faW9tYXAoKS1yZXR1cm5lZCBjb29raWUg
+Y2FuIGJlIHVzZWQgYnkgcmVhZCooKS93cml0ZSooKQorICogdGhlbiB5b3UgY2FuIHVzZSByZWFk
+KigpL3dyaXRlKigpIGluc3RlYWQuIFRoZSBpb3JlYWQqKCkgYW5kIGlvd3JpdGUqKCkgCisgKiBm
+dW5jdGlvbnMgaGlkZSB0aGUgZGV0YWlscyBpZiB0aGlzIGlzIGEgTU1JTyBvciBQSU8gYWRkcmVz
+cyBzcGFjZSBhbmQgd2lsbAorICoganVzdCBkbyB3aGF0IHlvdSBleHBlY3QgZnJvbSB0aGVtIGlu
+IHRoZSBjb3JyZWN0IHdheS4gRHJpdmVycyBmb3IgTU1JTy1vbmx5IAorICogZGV2aWNlcyB3b3Vs
+ZCB1c2UgdGhpcyBvbmx5IHRvIHNhdmUgdGhlbXNlbHZlcyBmcm9tIGhhdmluZyB0byBjYWxsIAor
+ICogJnBjaV9yZXNvdXJjZV9zdGFydCgpLgogICoKICAqIEBtYXhsZW4gc3BlY2lmaWVzIHRoZSBt
+YXhpbXVtIGxlbmd0aCB0byBtYXAuIElmIHlvdSB3YW50IHRvIGdldCBhY2Nlc3MgdG8KICAqIHRo
+ZSBjb21wbGV0ZSBCQVIgd2l0aG91dCBjaGVja2luZyBmb3IgaXRzIGxlbmd0aCBmaXJzdCwgcGFz
+cyAlMCBoZXJlLgo=
+------=_Part_15876_26305641.1190060527274--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
