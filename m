@@ -1,63 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:20558 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754285AbXIXRYq (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:35674 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759948AbXIQU77 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 13:24:46 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3031474pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 10:24:45 -0700 (PDT)
-Message-ID: <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>
-Date: Mon, 24 Sep 2007 13:24:45 -0400
+	Mon, 17 Sep 2007 16:59:59 -0400
+Received: by an-out-0708.google.com with SMTP id d31so247408and
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2007 13:59:58 -0700 (PDT)
+Message-ID: <43e72e890709171359s2d3e828t81b0997bb4388244@mail.gmail.com>
+Date: Mon, 17 Sep 2007 16:59:58 -0400
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
 To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and initvals
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, "Christoph Hellwig" <hch@infradead.org>
-In-Reply-To: <3175698652466923884@pripojeni.net>
+Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(), we're MMIO-only
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jeff Garzik" <jeff@garzik.org>
+In-Reply-To: <46EEE735.5050306@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <3175698652466923884@pripojeni.net>
+References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>
+	 <46EEE735.5050306@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> From: Nick Kossifidis <mickflemm@gmail.com>
+On 9/17/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 09/17/2007 10:34 PM, Luis R. Rodriguez wrote:
+> > Based on advise from Jeff, as described in the e-mail:
+> >
+> > [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+> >
+> > we shouldn't use ioread32()/iowrite32() unless we really have a need
+> > to otherwise we're creating an unnecessary branch on read/write. Lets
+> > revert this back to readl()/writel() as our devices so far have been
+> > MMIO-only. This reverts 9202ec15da36ca060722c363575e0e390d85fb71 on
+> > ath5k. This patch is intended for the ath5k branch of wireless-dev.
+> >
+> > Changes-licensed-under: ISC
+> > Singed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> >
+> > ---
+> >
+> >  drivers/net/wireless/ath5k_hw.c |    4 ++--
+> >  1 files changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath5k_hw.c b/drivers/net/wireless/ath5k_hw.c
+> > index 07ad127..3501b4c 100644
+> > --- a/drivers/net/wireless/ath5k_hw.c
+> > +++ b/drivers/net/wireless/ath5k_hw.c
+> > @@ -219,7 +219,7 @@ static inline unsigned int
+> > ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+> >   */
+> >  static inline u32 ath5k_hw_reg_read(struct ath_hw *hal, u16 reg)
+> >  {
+> > -       return ioread32(hal->ah_sh + reg);
+> > +       return readl(hal->ah_sh + reg);
+> >  }
+> >
+> >  /*
+> > @@ -227,7 +227,7 @@ static inline u32 ath5k_hw_reg_read(struct ath_hw
+> > *hal, u16 reg)
+> >   */
+> >  static inline void ath5k_hw_reg_write(struct ath_hw *hal, u32 val, u16 reg)
+> >  {
+> > -       iowrite32(val, hal->ah_sh + reg);
+> > +       writel(val, hal->ah_sh + reg);
+> >  }
+> >
+> >  /*
+> >
 >
-> ath5k, split hw into hw, phy and initvals
->
-> Separate the hw code into logical pieces hw, phy and initvals for better
-> readability and maintainability.
->
-> This include suggested file renames (_hw removal).
->
-> Changes-licensed-under: ISC
-> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+> NACK, this is wrong. iomap returns platform dependant return value, which may or
+> may not correspond to what is accepted by readX/writeX. (but is 100% accepted by
+> ioreadXX/iowriteXX).
 
-<-- snip patch -->
-
-> [Message clipped]
-> http://mail.google.com/mail/?view=lg&msg=11536c180ed66ff1
-
-I didn't want to take this approach before as it seemed we wanted to
-try to keep drivers without their own directory and consolidate
-drivers files into as many few files as necessary. Since it seems that
-has changed and it has been made clear that we *can* use a directory
-for each driver then I'd suggest we apply a similar patch but first
-move ath5k* to ath5k/.
-
-But anyway, I NACK this patch for the following reasons:
-
-* Copyright (c) 2007 The MadWiFi Team
-
-MadWifi is not a non-profit yet and as such it is advised to use
-individual copyright notices.
-
-* ath5k_hw_set_rfgain_opt() is defined once and used once, can we
-instead make it inline? If we really are not going to re-use this
-later why do we put it into a routine on its own?
-
-* #if 0's need to go, lets just remove this code instead.
+Actually it does work 100% of the times if all we have is MMIO-only
+devices and hence the change. I've asked around and checked some of my
+really old Atheros cards and can't find any using PIO. Are you aware
+of any Atheros card using PIO?
 
   Luis
