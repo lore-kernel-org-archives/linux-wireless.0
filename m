@@ -1,34 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2484 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754226AbXITNlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 09:41:03 -0400
-Date: Thu, 20 Sep 2007 09:28:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-Message-ID: <20070920132811.GB6748@tuxdriver.com>
-References: <20070919181005.GB5483@tuxdriver.com> <46F19EE2.6040402@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46F19EE2.6040402@gentoo.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42327 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853AbXIQKH2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2007 06:07:28 -0400
+Subject: Re: [Fwd: [AirForce One 54g] working]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gavin McCullagh <gmccullagh@gmail.com>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070917100515.GD1455@gmail.com>
+References: <46EDAEC3.6020201@lwfinger.net>
+	 <1190022872.3934.6.camel@localhost>  <20070917100515.GD1455@gmail.com>
+Content-Type: text/plain
+Date: Mon, 17 Sep 2007 12:07:18 +0200
+Message-Id: <1190023638.4563.0.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 11:12:50PM +0100, Daniel Drake wrote:
-> John W. Linville wrote:
+On Mo, 2007-09-17 at 11:05 +0100, Gavin McCullagh wrote:
 
-> BTW: I fairly regularly get email from F7 users complaining about 
-> connection intermittancy and other bugs that we don't seem to have for 
-> the softmac driver (maybe stack related issues, of which I've fixed a 
-> couple that affected me personally, I'm a little surprised that F7 
-> jumped so early).
+> I'll have to have a look when I get home, but I didn't apply any patches, I
+> simply downloaded the wireless-dev tree from git.kernel.org.  
 
-Hmmm...please refer any of these to bugzilla.redhat.com if you don't mind.
+Ok, thanks. I expect that somehow I introduced a bug with mac address
+filtering and crypto.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+johannes
+
