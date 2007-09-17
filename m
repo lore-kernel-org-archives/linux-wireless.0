@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:41945 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932748AbXIKBSO (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:45353 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbXIQEBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 21:18:14 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1775931wah
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2007 18:18:11 -0700 (PDT)
-Message-ID: <6b8cef970709101818g72366544ve1a75804f79499e3@mail.gmail.com>
-Date: Mon, 10 Sep 2007 21:18:11 -0400
-From: "Rob Hussey" <robjhussey@gmail.com>
-To: "Magnus Damm" <magnus.damm@gmail.com>
-Subject: Re: [PATCH] cfg80211: fix initialisation if built-in
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, stable@kernel.org
-In-Reply-To: <aec7e5c30709101804p337084e9o63b5bcb4f007828@mail.gmail.com>
+	Mon, 17 Sep 2007 00:01:10 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2923319pyb
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 21:01:09 -0700 (PDT)
+Message-ID: <43e72e890709162101g7a93a200m6ab5b0a422f2dad0@mail.gmail.com>
+Date: Mon, 17 Sep 2007 00:01:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Add Luis to MAINTAINERS for ath5k
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1189424685.4506.63.camel@johannes.berg>
-	 <aec7e5c30709101804p337084e9o63b5bcb4f007828@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_11534_6108369.1190001669333"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/10/07, Magnus Damm <magnus.damm@gmail.com> wrote:
-> -module_init(rate_control_simple_init);
-> +//module_init(rate_control_simple_init);
-> +postcore_initcall(rate_control_simple_init);
->  module_exit(rate_control_simple_exit);
->
->  MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
+------=_Part_11534_6108369.1190001669333
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Same problem here, except with the rt2x00 driver. I changed it to
-subsys_initcall(rate_control_simple_init), which also worked. I also
-found that without this change, it was failing at this point in
-ieee80211_rate.c:
+This patch adds me to the MAINTAINERS entry for ath5k. It applies to
+the ath5k branch on wireless-dev.
 
-ieee80211_try_rate_control_ops_get(const char *name)
-{
-        struct rate_control_alg *alg;
-        struct rate_control_ops *ops = NULL;
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
 
-        mutex_lock(&rate_ctrl_mutex);
-        list_for_each_entry(alg, &rate_ctrl_algs, list) {   <===== Here
-                if (!name || !strcmp(alg->ops->name, name))
-                        if (try_module_get(alg->ops->module)) {
-                                ops = alg->ops;
-                                break;
-                        }
+--
+
+ MAINTAINERS |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+------=_Part_11534_6108369.1190001669333
+Content-Type: text/x-patch;
+ name="add-mcgrof-to-ath5k-MAINTAINERS-ath5k.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="add-mcgrof-to-ath5k-MAINTAINERS-ath5k.diff"
+X-Attachment-Id: f_f6oga1dh
+
+ZGlmZiAtLWdpdCBhL01BSU5UQUlORVJTIGIvTUFJTlRBSU5FUlMKaW5kZXggNWQ3NzMxYi4uMDli
+OWM2NSAxMDA2NDQKLS0tIGEvTUFJTlRBSU5FUlMKKysrIGIvTUFJTlRBSU5FUlMKQEAgLTYzNiw2
+ICs2MzYsOCBAQCBTOglTdXBwb3J0ZWQKIEFUSEVST1MgQVRINUsgV0lSRUxFU1MgRFJJVkVSCiBQ
+OglKaXJpIFNsYWJ5CiBNOglqaXJpc2xhYnlAZ21haWwuY29tCitQOglMdWlzIFIuIFJvZHJpZ3Vl
+egorTToJbWNncm9mQGdtYWlsLmNvbQogTDoJbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
+CiBTOglNYWludGFpbmVkCiAK
+------=_Part_11534_6108369.1190001669333--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
