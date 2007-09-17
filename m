@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50010 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753494AbXITMyv (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:64130 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752620AbXIQRFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 08:54:51 -0400
-Message-ID: <46F26DAA.6070909@lwfinger.net>
-Date: Thu, 20 Sep 2007 07:55:06 -0500
+	Mon, 17 Sep 2007 13:05:32 -0400
+Message-ID: <46EEB3E0.4010501@lwfinger.net>
+Date: Mon, 17 Sep 2007 12:05:36 -0500
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Change loglevel of radio-enable message.
-References: <200709191858.38634.mb@bu3sch.de> <46F162AF.9050903@lwfinger.net> <200709191957.59255.mb@bu3sch.de>
-In-Reply-To: <200709191957.59255.mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] b43legacy: Don't cancel the restart workqueue in wireless_core_exit
+References: <46e577e8.J3sSMKsbv5F0EAQY%Larry.Finger@lwfinger.net> <20070917150358.GC9282@tuxdriver.com>
+In-Reply-To: <20070917150358.GC9282@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 19 September 2007 19:55:59 Larry Finger wrote:
->> Michael Buesch wrote:
->>> Also cleanup the code a bit and remove the inline.
->>>
->>> Signed-off-by: Michael Buesch <mb@bu3sch.de>
->>> @@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
->>>  	b43_radio_turn_on(dev);
->>>  	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
->>>  	b43dbg(dev->wl, "Radio %s by hardware\n",           <========================
->>> -	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
->>> +	       dev->radio_hw_enable ? "enabled" : "disabled");
->> Shouldn't this one be b43info rather than b43dbg?
+John W. Linville wrote:
+> Is this the correct patch?  The first hunk conflicts with an earlier
+> patch ("b43legacy: Fix cancellation of work queues").
 > 
-> No, I think it's really only interesting to see if it changed
-> in operation.
-> If it doesn't work, people will press their rfkill buttons
-> before even noticing this message on init. :)
+> John
 
-I have a suggestion to simplify the whole business of hardware radio control. Why don't we
-unconditionally set radio_hw_enable to one here and dispense with this message? That way, people
-without the rfkill switch will never see a message and those that do will only get messages if their
-switch is off, or if it is toggled.
+Yes, this one is correct. The first one was without a commit message, and had an error.
 
 Larry
