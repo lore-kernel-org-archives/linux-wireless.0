@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:41123 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751780AbXIECzW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 22:55:22 -0400
-Date: Tue, 4 Sep 2007 19:55:08 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
-Message-ID: <20070905025508.GH5273@jm.kir.nu>
-References: <1187987850.24933.29.camel@johannes.berg> <20070904011648.GX1835@jm.kir.nu> <1188913335.9942.16.camel@johannes.berg> <1188917716.9942.37.camel@johannes.berg>
+Received: from srv5.dvmed.net ([207.36.208.214]:60409 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753033AbXIRWok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 18:44:40 -0400
+Message-ID: <46F054D4.5090006@garzik.org>
+Date: Tue, 18 Sep 2007 18:44:36 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188917716.9942.37.camel@johannes.berg>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(),  we're MMIO-only
+References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>	 <46EEE735.5050306@gmail.com> <46EEEA9B.70407@garzik.org>	 <46EEF543.7060901@gmail.com>	 <43e72e890709181203x30144451hf332da4032b5b770@mail.gmail.com>	 <43e72e890709181212u75ec6fe2x7aa639bac319c087@mail.gmail.com> <1190153934.6403.123.camel@localhost.localdomain>
+In-Reply-To: <1190153934.6403.123.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2007 at 04:55:16PM +0200, Johannes Berg wrote:
+Benjamin Herrenschmidt wrote:
+> To be more precise, a platform has every right to return some kind of
+> "token" from ioport_map/pci_iomap that encodes the type of address, and
+> that is -different- from what a normal ioremap does. In which case, you
+> will -not- be able to use readb/writeb & cie on such a token.
+> 
+> The fact that current implementations seem to return something for MMIO
+> that is equivalent to what ioremap returns is an accident and cannot be
+> relied upon.
 
-> Also, since this affects git trees only... To use this you actually have
-> to have hostap git, wireless-dev git so what's the big deal with
-> requiring libnl svn? :)
 
-In my particular case, one of the main problems was in svn not working
-after libexpat update on Gentoo.. ;-)  This made it a bit difficult to
-fetch the correct version.
+Fair enough.  It's easy enough to change ath5k to using ioremap (or 
+pci_ioremap).
 
-At this point, we are indeed talking about quite bleeding edge stuff,
-but I'm planning on releasing hostapd 0.6.1 at some point soonish and I
-would hope that mainline Linux kernel will get enough stuff for at least
-minimal AP functionality and at that point, I do not really want to
-point people at an svn repository as the only means of getting a
-required library..
+	Jeff
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
