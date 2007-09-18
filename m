@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:48673 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756122AbXITPf6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 11:35:58 -0400
-Date: Thu, 20 Sep 2007 08:35:14 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Tim Gardner" <tim.gardner@canonical.com>
-Subject: Re: ath5k and network manager
-Message-ID: <20070920083514.4a4f1b3f@freepuppy.rosehill>
-In-Reply-To: <43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
-References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
-	<43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
-	<200709201511.23400.mb@bu3sch.de>
-	<20070920083056.31f231b9@freepuppy.rosehill>
-	<43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:54121 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757383AbXIRWRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 18:17:12 -0400
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+	 <20070918113401.6a8a737f@the-village.bc.nu>
+	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+Content-Type: text/plain
+Date: Wed, 19 Sep 2007 08:16:14 +1000
+Message-Id: <1190153775.6403.120.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 20 Sep 2007 11:34:29 -0400
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
-
-> On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > On Thu, 20 Sep 2007 15:11:23 +0200
-> > Michael Buesch <mb@bu3sch.de> wrote:
-> >
-> > > On Thursday 20 September 2007, Luis R. Rodriguez wrote:
-> > > > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > > > > Network manager doesn't seem to detect ath5k. Perhaps it is because
-> > > > > it is name "ath0".  I think device should follow the convention of using
-> > > > > name "wifi0" rather than BSD convention of putting driver name in device name.
-> > > >
-> > > > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
-> > > > any other mac80211 driver. Is yours coming out to ath%d ?
-> > > >
-> > > > ieee80211_register_hw():
-> > > >
-> > > >         /* add one default STA interface */
-> > > >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
-> > > >                                   IEEE80211_IF_TYPE_STA);
-> > > >
-> > >
-> > >
-> > > Probably udev renames it.
-> >
-> > It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
-> > value.
-> >
+On Tue, 2007-09-18 at 12:03 -0700, Linus Torvalds wrote:
 > 
-> CC' TIm
+> On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
+> > 
+> > Alright, here is the same patch inline with s/recommended/required/ language:
 > 
-> Was it a rule by PCI ID? If so then perhaps its based on the old
-> madwifi rules of sticking to ath%d notation as well. This can be
-> removed for ath5k but not too sure how this works.
+> Well, the thing is, I'm not at all sure that I agree with this.
 > 
+> If you use ioport_map/unmap, then you really *should* access them with the 
+> proper iomem accessors (ioread/iowrite). The fact that it may happen to 
+> work (when using the default lib/iomap.c implementation, at least) on 
+> some architectures and with the current implementation still doesn't mean 
+> that you should necessarily use readb/writeb.
+> 
+> After all, you cannot use "inb/outb" on it, even if would happen to be an 
+> IO address.
+> 
+> So what is this usage that wants to use the bogus accessor? Why not fix 
+> that instead of adding documentation for something that is very arguably 
+> something we want to *avoid* having people do!
 
-It was by PCI ID
+Agreed.
 
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+ioremap -> readb/writeb
+ioport_map/pci_iomap -> ioread/iowrite
+
+and nothing else should be allowed.
+
+Cheers,
+Ben.
+
+
