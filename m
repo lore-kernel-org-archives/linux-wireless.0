@@ -1,150 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60136 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751220AbXITAK5 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52062
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760070AbXIRSHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 20:10:57 -0400
-Message-ID: <46F1BAA7.9080701@lwfinger.net>
-Date: Wed, 19 Sep 2007 19:11:19 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: joe@perches.com, netdev@vger.kernel.org,
+	Tue, 18 Sep 2007 14:07:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: jt@hpl.hp.com
+Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit 4cf92a3c
+Date: Tue, 18 Sep 2007 20:04:19 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: net-2.6.24 - build failure
-References: <1190238802.26101.24.camel@localhost> <20070919.151712.66176476.davem@davemloft.net>
-In-Reply-To: <20070919.151712.66176476.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20070917.042418.19962472.yoshfuji@linux-ipv6.org> <46EF5534.3030609@lwfinger.net> <20070918174202.GB1466@bougret.hpl.hp.com>
+In-Reply-To: <20070918174202.GB1466@bougret.hpl.hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709182004.20227.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Wed, 19 Sep 2007 14:53:22 -0700
+On Tuesday 18 September 2007 19:42:02 Jean Tourrilhes wrote:
+> On Mon, Sep 17, 2007 at 11:33:56PM -0500, Larry Finger wrote:
+> > John,
+> > 
+> > Yoshifuji Hideaki reported that commit 4cf92a3c broke the bcm43xx driver. I was able to duplicate
+> > the problem with WEP encryption and ifconfig control of the device. The problem does not happen with
+> > WPA or when using NetworkManager with WEP.
+> > 
+> > This patch was supposed to be a fix for the bug reported at
+> > http://bugzilla.kernel.org/show_bug.cgi?id=8686; however, it does not.
+> > 
+> > This commit should be reverted before 2.6.23 is released.
+> > 
+> > Thanks,
+> > 
+> > Larry
 > 
->> drivers/net/wireless/b43legacy/built-in.o: In function `tsf_read_file':
->> drivers/net/wireless/b43legacy/debugfs.c:80: multiple definition of `tsf_read_file'
+> 	Larry,
 > 
-> Can one of the wireless folks fix b43legacy to not use the same
-> global variable and function names as the b43 driver?
-> 
+> 	Could you be more explicit ? Reverting the patch will just
+> bring back the old bug, and the old code was obviously wrong. I don't
+> like the idea of trading one bug for another bug. It looks to me like
+> nobody knows what's exactly happening in the driver and we are just
+> trying random fixes and see what breaks.
+> 	Could you figure out what's exactly happening and make a
+> proper fix ?
 
-David,
+Indeed. The patch does fix a bug. So reverting it is not really
+an option. I'm not sure how that patch can introduce such breakage, though.
+It must be some special ordering of wext calls that trigger this.
+It might be that there's another bug similiar to this one breaking
+the state machine.
+Can you monitor if all needed steps are properly done (assoc, etc...)
+to get a WEP connection? If not, where does it fail?
 
-The patch below was sent to John Linville yesterday. Obviously, it didn't get included before he
-pushed to you. With this patch, all the debugfs names become static, and avoid the namespace clash
-with b43. In addition, Michael Buesch has a similar patch pending for b43.
-
-Larry
-========================================
-
-There are additional sparse warnings in b43legacy. None of them result
-in program errors, but are fixed for completeness.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
- drivers/net/wireless/b43legacy/debugfs.c |   14 +++++++-------
- drivers/net/wireless/b43legacy/pio.c     |    6 +++---
- 2 files changed, 10 insertions(+), 10 deletions(-)
-
-Index: wireless-dev/drivers/net/wireless/b43legacy/debugfs.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/debugfs.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/debugfs.c
-@@ -39,7 +39,7 @@
-
-
- /* The root directory. */
--struct dentry *rootdir;
-+static struct dentry *rootdir;
-
- struct b43legacy_debugfs_fops {
- 	ssize_t (*read)(struct b43legacy_wldev *dev, char *buf, size_t bufsize);
-@@ -76,7 +76,7 @@ struct b43legacy_dfs_file * fops_to_dfs_
-
-
- /* wl->irq_lock is locked */
--ssize_t tsf_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t tsf_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	u64 tsf;
-@@ -90,7 +90,7 @@ ssize_t tsf_read_file(struct b43legacy_w
- }
-
- /* wl->irq_lock is locked */
--int tsf_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
-+static int tsf_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
- {
- 	u64 tsf;
-
-@@ -102,7 +102,7 @@ int tsf_write_file(struct b43legacy_wlde
- }
-
- /* wl->irq_lock is locked */
--ssize_t ucode_regs_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t ucode_regs_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	int i;
-@@ -116,7 +116,7 @@ ssize_t ucode_regs_read_file(struct b43l
- }
-
- /* wl->irq_lock is locked */
--ssize_t shm_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t shm_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	int i;
-@@ -135,7 +135,7 @@ ssize_t shm_read_file(struct b43legacy_w
- 	return count;
- }
-
--ssize_t txstat_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t txstat_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	struct b43legacy_txstatus_log *log = &dev->dfsentry->txstatlog;
- 	ssize_t count = 0;
-@@ -183,7 +183,7 @@ out_unlock:
- }
-
- /* wl->irq_lock is locked */
--int restart_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
-+static int restart_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
- {
- 	int err = 0;
-
-Index: wireless-dev/drivers/net/wireless/b43legacy/pio.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/pio.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/pio.c
-@@ -66,7 +66,7 @@ static u16 tx_get_next_word(const u8 *tx
- 		source = packet;
- 		i -= txhdr_size;
- 	}
--	ret = le16_to_cpu(*((u16 *)(source + i)));
-+	ret = le16_to_cpu(*((__le16 *)(source + i)));
- 	*pos += 2;
-
- 	return ret;
-@@ -539,7 +539,7 @@ static void pio_rx_error(struct b43legac
-
- void b43legacy_pio_rx(struct b43legacy_pioqueue *queue)
- {
--	u16 preamble[21] = { 0 };
-+	__le16 preamble[21] = { 0 };
- 	struct b43legacy_rxhdr_fw3 *rxhdr;
- 	u16 tmp;
- 	u16 len;
-@@ -609,7 +609,7 @@ data_ready:
- 	skb_put(skb, len);
- 	for (i = 0; i < len - 1; i += 2) {
- 		tmp = b43legacy_pio_read(queue, B43legacy_PIO_RXDATA);
--		*((u16 *)(skb->data + i)) = cpu_to_le16(tmp);
-+		*((__le16 *)(skb->data + i)) = cpu_to_le16(tmp);
- 	}
- 	if (len % 2) {
- 		tmp = b43legacy_pio_read(queue, B43legacy_PIO_RXDATA);
-
--------
+-- 
+Greetings Michael.
