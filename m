@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44545 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbXIBT62 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56789
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752574AbXIRVeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 15:58:28 -0400
-Date: Mon, 3 Sep 2007 01:41:34 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH -mm] net/wireless/sysfs.c: Shut up build warning
-In-Reply-To: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.in>
-Message-ID: <alpine.LFD.0.999.0709030139110.29617@enigma.security.iitk.ac.in>
-References: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.i
- n>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="464262402-1192004133-1188763897=:29617"
+	Tue, 18 Sep 2007 17:34:10 -0400
+Date: Tue, 18 Sep 2007 14:32:24 -0700 (PDT)
+Message-Id: <20070918.143224.94038422.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sam@ravnborg.org
+Subject: Re: Please pull 'b43' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070918202819.GI4940@tuxdriver.com>
+References: <20070918202819.GI4940@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 18 Sep 2007 16:28:19 -0400
 
---464262402-1192004133-1188763897=:29617
-Content-Type: TEXT/PLAIN; charset=iso-2022-jp
+> This series adds the b43 and b43legacy drivers, as well as the ssb
+> bus infrastructure upon which they depend.
+> 
+> These drivers support the BCM43xx wireless hardware from Broadcom.
+> The b43 driver supports modern hardware using the "version 4" firmware,
+> while the b43legacy driver uses the "version 3" firmware to support
+> some older devices which lack the resources to run the newer (and
+> more feature rich) firmware.  Both drivers have performed well in
+> -mm and Fedora rawhide, and b43 has performed well in later Fedora
+> 7 kernels as well.
+> 
+> Furthermore, Michael and Larry have both demonstrated a strong
+> commitment to the community and their users.  They both have responded
+> to bugs both at the kernel.org bugzilla and in distro bugzillas.
+> I have every confidence that they will continue to support their
+> drivers at the same high standard that have already set.  I'd like
+> to take this opportunity to thank both of them for their support both
+> in the past and in the future as well.
+> 
+> No doubt there are still problems here.  But again, I think we would
+> be better served by mainlining this code rather than continuing to
+> maintain it out of stream.
 
+John, I'm adding this and the iwlwifi bits to my net-2.6.24
+tree.
 
-net/wireless/sysfs.c:108: warning: ‘wiphy_uevent’ defined but not used
-
-when CONFIG_HOTPLUG=n is because the only usage site of this function
-is #ifdef'ed as such, so let's #ifdef the definition also.
-
-Signed-off-by: Satyam Sharma <satyam@infradead.org>
-
----
-
- net/wireless/sysfs.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- linux-2.6.23-rc4-mm1/net/wireless/sysfs.c~fix	2007-09-02 20:06:11.000000000 +0530
-+++ linux-2.6.23-rc4-mm1/net/wireless/sysfs.c	2007-09-02 20:07:01.000000000 +0530
-@@ -104,11 +104,13 @@ static void wiphy_dev_release(struct dev
- 	cfg80211_dev_free(rdev);
- }
- 
-+#ifdef CONFIG_HOTPLUG
- static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
- 	/* TODO, we probably need stuff here */
- 	return 0;
- }
-+#endif
- 
- struct class ieee80211_class = {
- 	.name = "ieee80211",
---464262402-1192004133-1188763897=:29617--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Thanks.
