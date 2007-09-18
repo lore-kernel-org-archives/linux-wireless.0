@@ -1,92 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbXIYNjM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 09:39:12 -0400
-Subject: Re: API to regulatory control (1)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <43e72e890709241518h1cc694d9of8f8a8d216a7906b@mail.gmail.com>
-References: <1190456574.18521.220.camel@johannes.berg>
-	 <43e72e890709221416o25bf3287v5d8d7bb5c2fe15ab@mail.gmail.com>
-	 <1190624554.18521.261.camel@johannes.berg>
-	 <43e72e890709241255v1f044f9dh4af1e00fcaba03b0@mail.gmail.com>
-	 <1190669783.18521.301.camel@johannes.berg>
-	 <43e72e890709241518h1cc694d9of8f8a8d216a7906b@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r7/i6D2Ls/bJ2SvCqtcI"
-Date: Tue, 25 Sep 2007 15:40:24 +0200
-Message-Id: <1190727624.18521.310.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:50314 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752221AbXIRUVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 16:21:09 -0400
+Message-ID: <46F0332D.3050704@garzik.org>
+Date: Tue, 18 Sep 2007 16:21:01 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>  <20070918113401.6a8a737f@the-village.bc.nu>  <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>  <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org> <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com> <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+Content-Type: multipart/mixed;
+ boundary="------------020900040104060002090203"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------020900040104060002090203
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
---=-r7/i6D2Ls/bJ2SvCqtcI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Linus Torvalds wrote:
+> Why do people insist on 
+> using the old interfaces (and matching them with the new setup)?
 
-On Mon, 2007-09-24 at 18:18 -0400, Luis R. Rodriguez wrote:
 
-> I saw complaints on the z1211 move thread to upstream about large
-> patches and driver developers not being able to keep up as mac80211 is
-> a 'moving target'.
+readl/writel is [slightly] faster, and possibility of using even-write 
+__raw_writel() exists, in the old interface...
 
-It'll always be. Everything in Linux is a moving target. That's the pain
-associated with maintaining a driver out of tree. This change in
-particular isn't even hard to follow and I'd happily help change all the
-drivers that are in tree.
+  ...but pci_iomap() is a bus-friendly wrapper that handles a few checks 
+and function calls for you, even if you know your device is always MMIO.
 
-> Another option here is just speak to the driver in a hardware-agnostic
-> sense and just let drivers map this out however they want. I guess it
-> provides for a cleaner API if we keep this in our own structs though.
+A new pci_mmio_map() helper, to be used with 100% MMIO hardware, might 
+help eliminate confusion.
 
-We could, but unless the hardware operates with frequencies like b43
-it'll likely need a big switch() statement which doesn't seem too nice.
+	Jeff
 
-> > > ACK -- but, since cfg80211 *can* be in charge of updating the, either
-> > > central channel struct, or each driver's channel struct, we can also
-> > > have it update power restrictions upon regulatory domain change. Same
-> > > as above. What do you think?
-> >
-> > Well, but the driver must actually change the power level and hence it
-> > must be notified of the change after it has occurred so it is able to
-> > adjust.
->=20
-> Only if the new power restrictions makes he current one invalid.
 
-Right.
 
-> > I don't think I want to call into some cfg80211 call for this, a
-> > specific notifier seems more appropriate.
->=20
-> Well what if cfg80211  generates a notification if a possible conflict
-> has been found? Is there a need to generate a notification on power
-> reg changes to the driver besides this?
+--------------020900040104060002090203
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-Well, that'd mean that cfg80211 would need to keep track of the current
-power level. I've intentionally made cfg80211 keep track of as few
-things as possible so that drivers are free to change things when
-necessary without having synchronisation problems. I would prefer if it
-stayed this way.
+diff --git a/include/asm-generic/iomap.h b/include/asm-generic/iomap.h
+index cde592f..69e5390 100644
+--- a/include/asm-generic/iomap.h
++++ b/include/asm-generic/iomap.h
+@@ -63,6 +63,7 @@ extern void ioport_unmap(void __iomem *);
+ /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+ struct pci_dev;
+ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
++extern void __iomem *pci_mmio_map(struct pci_dev *dev, int bar, unsigned long max);
+ extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+ 
+ #endif
+diff --git a/lib/iomap.c b/lib/iomap.c
+index 864f2ec..c87d7f3 100644
+--- a/lib/iomap.c
++++ b/lib/iomap.c
+@@ -275,9 +275,32 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+ 	return NULL;
+ }
+ 
++/* for people who wish to use readl/writel exclusively */
++void __iomem *pci_mmio_map(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	unsigned long start = pci_resource_start(dev, bar);
++	unsigned long len = pci_resource_len(dev, bar);
++	unsigned long flags = pci_resource_flags(dev, bar);
++
++	if (!len || !start)
++		return NULL;
++	if (maxlen && len > maxlen)
++		len = maxlen;
++	if (flags & IORESOURCE_IO)
++		return NULL;
++	if (flags & IORESOURCE_MEM) {
++		if (flags & IORESOURCE_CACHEABLE)
++			return ioremap(start, len);
++		return ioremap_nocache(start, len);
++	}
++	/* What? */
++	return NULL;
++}
++
+ void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
+ {
+ 	IO_COND(addr, /* nothing */, iounmap(addr));
+ }
+ EXPORT_SYMBOL(pci_iomap);
++EXPORT_SYMBOL(pci_mmio_map);
+ EXPORT_SYMBOL(pci_iounmap);
 
-Also, just providing the hook is much simpler and we can leave it up to
-drivers to implement this logic.
-
-johannes
-
---=-r7/i6D2Ls/bJ2SvCqtcI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG+Q/I/ETPhpq3jKURAm7cAJ4wGZqoOFkk6qYjLA3Jf2Nb1omkzgCePZdf
-Dkcxo6D9ArdzwKcvGrkz5Ew=
-=2NN5
------END PGP SIGNATURE-----
-
---=-r7/i6D2Ls/bJ2SvCqtcI--
-
+--------------020900040104060002090203--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
