@@ -1,132 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:61207 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797AbXITVYa (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45223 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754142AbXIRWTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 17:24:30 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1181719pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2007 14:24:29 -0700 (PDT)
-Message-ID: <43e72e890709201424k3a18a5cbnbbb488dbf5bb19d3@mail.gmail.com>
-Date: Thu, 20 Sep 2007 17:24:27 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH] ath5k - Fix filters for AR5212, correct return values for WEP
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <46F2E3A9.2040605@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_33478_32058450.1190323468022"
-References: <43e72e890709201413w4cee6ea5v799f4b88e1982e5a@mail.gmail.com>
-	 <46F2E3A9.2040605@gmail.com>
+	Tue, 18 Sep 2007 18:19:03 -0400
+Date: Tue, 18 Sep 2007 23:25:46 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+Message-ID: <20070918232546.004af9ff@the-village.bc.nu>
+In-Reply-To: <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+	<20070918113401.6a8a737f@the-village.bc.nu>
+	<43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+	<alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_33478_32058450.1190323468022
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> If you use ioport_map/unmap, then you really *should* access them with the 
+> proper iomem accessors (ioread/iowrite). The fact that it may happen to 
+> work (when using the default lib/iomap.c implementation, at least) on 
+> some architectures and with the current implementation still doesn't mean 
+> that you should necessarily use readb/writeb.
 
-On 9/20/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-    int ret = 0;
->
-> +       switch(key->alg) {
-> +        case ALG_WEP:
-> +               break;
-> +        case ALG_TKIP:
-> +        case ALG_CCMP:
-> +               return -EOPNOTSUPP;
->
-> Some broken whitespace here :).
+Another reason we should enforce the use of ioread/iowrite is that some
+platforms do daft things like map mmio type devices through indirect
+register access. Sparc PCMCIA is a classic example. The only sane way to
+make these work is to require ioread/iowrite is used with iomap
 
-You mean all the extra spaces on the left instead of Tabs? If so then
-ACK, attached v2.
-
-  Luis
-
-------=_Part_33478_32058450.1190323468022
-Content-Type: text/x-patch; name="ath5k-fix-filter.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="ath5k-fix-filter.diff"
-X-Attachment-Id: f_f6trv6x9
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYwppbmRleCBmZWFkOWE3Li5lYzM1MzQyIDEwMDY0NAot
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19iYXNlLmMKKysrIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYXRoNWtfYmFzZS5jCkBAIC03MzQsNyArNzM0LDcgQEAgc3RhdGljIHUzMiBhdGhf
-Y2FsY3J4ZmlsdGVyKHN0cnVjdCBhdGhfc29mdGMgKnNjKQogCQlBUjVLX1JYX0ZJTFRFUl9VQ0FT
-VCB8IEFSNUtfUlhfRklMVEVSX0JDQVNUIHwKIAkJQVI1S19SWF9GSUxURVJfTUNBU1QgfCBBUjVL
-X1JYX0ZJTFRFUl9SQURBUkVSUjsKIAotCWlmIChzYy0+b3Btb2RlID09IElFRUU4MDIxMV9JRl9U
-WVBFX01OVFIpCisJaWYgKG9wbW9kZSA9PSBJRUVFODAyMTFfSUZfVFlQRV9NTlRSKQogCQlyZmls
-dCB8PSBBUjVLX1JYX0ZJTFRFUl9DT05UUk9MIHwgQVI1S19SWF9GSUxURVJfQkVBQ09OIHwKIAkJ
-CUFSNUtfUlhfRklMVEVSX1BST0JFUkVRIHwgQVI1S19SWF9GSUxURVJfUFJPTTsKIAlpZiAob3Bt
-b2RlICE9IElFRUU4MDIxMV9JRl9UWVBFX1NUQSkKQEAgLTc0Miw4ICs3NDIsMTQgQEAgc3RhdGlj
-IHUzMiBhdGhfY2FsY3J4ZmlsdGVyKHN0cnVjdCBhdGhfc29mdGMgKnNjKQogCWlmIChvcG1vZGUg
-IT0gSUVFRTgwMjExX0lGX1RZUEVfQVAgJiYgdGVzdF9iaXQoQVRIX1NUQVRfUFJPTUlTQywKIAkJ
-CQlzYy0+c3RhdHVzKSkKIAkJcmZpbHQgfD0gQVI1S19SWF9GSUxURVJfUFJPTTsKLQlpZiAob3Bt
-b2RlID09IElFRUU4MDIxMV9JRl9UWVBFX1NUQSB8fCBvcG1vZGUgPT0gSUVFRTgwMjExX0lGX1RZ
-UEVfSUJTUykKKwlpZiAob3Btb2RlID09IElFRUU4MDIxMV9JRl9UWVBFX1NUQSB8fCBvcG1vZGUg
-PT0gSUVFRTgwMjExX0lGX1RZUEVfSUJTUykgewogCQlyZmlsdCB8PSBBUjVLX1JYX0ZJTFRFUl9C
-RUFDT047CisJCS8qIE5vdGU6IEFSNTIxMiByZXF1aXJlcyBBUjVLX1JYX0ZJTFRFUl9QUk9NIHRv
-IHJlY2VpdmUgYnJvYWRjYXN0cywgCisJCSAqIHBlcmhhcHMgdGhlIGZsYWdzIGFyZSBvZmYsIGZv
-ciBub3cgdG8gYmUgc2FmZSB3ZSdsbCBlbmFibGUgaXQgZm9yCisJCSAqIFNUQSBhbmQgQURIT0Mg
-dW50aWwgd2UgaGF2ZSB0aGlzIHByb3Blcmx5IG1hcHBlZCAqLworCQlpZiAoYWgtPmFoX3ZlcnNp
-b24gPT0gQVI1S19BUjUyMTIpCisJCQlyZmlsdCB8PSBBUjVLX1JYX0ZJTFRFUl9QUk9NOworCX0K
-IAogCXJldHVybiByZmlsdDsKIH0KQEAgLTE0MzcsMjEgKzE0NDMsMjggQEAgc3RhdGljIGludCBh
-dGhfc2V0X2tleShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc2V0X2tleV9jbWQgY21kLAogCXN0
-cnVjdCBhdGhfc29mdGMgKnNjID0gaHctPnByaXY7CiAJaW50IHJldCA9IDA7CiAKKwlzd2l0Y2go
-a2V5LT5hbGcpIHsKKwljYXNlIEFMR19XRVA6CisJCWJyZWFrOworCWNhc2UgQUxHX1RLSVA6CisJ
-Y2FzZSBBTEdfQ0NNUDoKKwkJcmV0dXJuIC1FT1BOT1RTVVBQOworCWNhc2UgQUxHX05PTkU6CisJ
-CWJyZWFrOworCWRlZmF1bHQ6CisJCVdBUk5fT04oMSk7CisJCXJldHVybiAtRUlOVkFMOworCX0K
-KwogCW11dGV4X2xvY2soJnNjLT5sb2NrKTsKIAogCXN3aXRjaCAoY21kKSB7CiAJY2FzZSBTRVRf
-S0VZOgotCQlpZiAoa2V5LT5hbGcgIT0gQUxHX1dFUCAmJiBrZXktPmFsZyAhPSBBTEdfTk9ORSkg
-ewotCQkJcmV0ID0gLUVJTlZBTDsKLQkJCWdvdG8gdW5sb2NrOwotCQl9Ci0KIAkJcmV0ID0gYXRo
-NWtfaHdfc2V0X2tleShzYy0+YWgsIGtleS0+a2V5aWR4LCBrZXksIGFkZHIpOwogCQlpZiAocmV0
-KSB7CiAJCQlwcmludGsoS0VSTl9FUlIgImF0aDogY2FuJ3Qgc2V0IHRoZSBrZXlcbiIpOwogCQkJ
-Z290byB1bmxvY2s7CiAJCX0KLQogCQlfX3NldF9iaXQoa2V5LT5rZXlpZHgsIHNjLT5rZXltYXAp
-OwogCQlrZXktPmh3X2tleV9pZHggPSBrZXktPmtleWlkeDsKIAkJYnJlYWs7CmRpZmYgLS1naXQg
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-YXRoNWtfaHcuYwppbmRleCBlNGNjMzA3Li4yNGI3MTdiIDEwMDY0NAotLS0gYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9hdGg1a19ody5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3
-LmMKQEAgLTMxODEsMjEgKzMxODEsMjcgQEAgaW50IGF0aDVrX2h3X3NldF9rZXkoc3RydWN0IGF0
-aF9odyAqaGFsLCB1MTYgZW50cnksCiAJdTMyIGtleXR5cGU7CiAKIAlBUjVLX1RSQUNFOwotCUFS
-NUtfQVNTRVJUX0VOVFJZKGVudHJ5LCBBUjVLX0tFWVRBQkxFX1NJWkUpOworCisJLyoga2V5LT5r
-ZXlsZW4gY29tZXMgaW4gZnJvbSBtYWM4MDIxMSBpbiBieXRlcyAqLworCisJaWYgKGtleS0+a2V5
-bGVuID4gQVI1S19LRVlUQUJMRV9TSVpFIC8gOCkKKwkJcmV0dXJuIC1FT1BOT1RTVVBQOwogCiAJ
-c3dpdGNoIChrZXktPmtleWxlbikgeworCS8qIFdFUCA0MC1iaXQgICA9IDQwLWJpdCAgZW50ZXJl
-ZCBrZXkgKyAyNCBiaXQgSVYgPSA2NC1iaXQgKi8KIAljYXNlIDQwIC8gODoKIAkJbWVtY3B5KCZr
-ZXlfdlswXSwga2V5LT5rZXksIDUpOwogCQlrZXl0eXBlID0gQVI1S19LRVlUQUJMRV9UWVBFXzQw
-OwogCQlicmVhazsKIAorCS8qIFdFUCAxMDQtYml0ICA9IDEwNC1iaXQgZW50ZXJlZCBrZXkgKyAy
-NC1iaXQgSVYgPSAxMjgtYml0ICovCiAJY2FzZSAxMDQgLyA4OgogCQltZW1jcHkoJmtleV92WzBd
-LCAma2V5LT5rZXlbMF0sIDYpOwogCQltZW1jcHkoJmtleV92WzJdLCAma2V5LT5rZXlbNl0sIDYp
-OwogCQltZW1jcHkoJmtleV92WzRdLCAma2V5LT5rZXlbMTJdLCAxKTsKIAkJa2V5dHlwZSA9IEFS
-NUtfS0VZVEFCTEVfVFlQRV8xMDQ7CiAJCWJyZWFrOwotCisJLyogV0VQIDEyOC1iaXQgID0gMTI4
-LWJpdCBlbnRlcmVkIGtleSArIDI0IGJpdCBJViA9IDE1Mi1iaXQgKi8KIAljYXNlIDEyOCAvIDg6
-CiAJCW1lbWNweSgma2V5X3ZbMF0sICZrZXktPmtleVswXSwgNik7CiAJCW1lbWNweSgma2V5X3Zb
-Ml0sICZrZXktPmtleVs2XSwgNik7CkBAIC0zMjA0LDcgKzMyMTAsNyBAQCBpbnQgYXRoNWtfaHdf
-c2V0X2tleShzdHJ1Y3QgYXRoX2h3ICpoYWwsIHUxNiBlbnRyeSwKIAkJYnJlYWs7CiAKIAlkZWZh
-dWx0OgotCQlyZXR1cm4gLUVJTlZBTDsKKwkJcmV0dXJuIC1FSU5WQUw7IC8qIHNob3VsZG4ndCBo
-YXBwZW4gKi8KIAl9CiAKIAlmb3IgKGkgPSAwOyBpIDwgQVJSQVlfU0laRShrZXlfdik7IGkrKykK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX3JlZy5oIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmgKaW5kZXggMWQ1M2E5ZS4uZTVjZTg0MCAxMDA2NDQKLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmgKKysrIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYXRoNWtfcmVnLmgKQEAgLTE1ODgsNiArMTU4OCwxOCBAQAogI2RlZmluZSBBUjVLX0tF
-WVRBQkxFX01BQzEoX24pCQlBUjVLX0tFWVRBQkxFX09GRihfbiwgNykKICNkZWZpbmUgQVI1S19L
-RVlUQUJMRV9WQUxJRAkJMHgwMDAwODAwMAogCisvKiBXRVAgNDAtYml0CT0gNDAtYml0ICBlbnRl
-cmVkIGtleSArIDI0IGJpdCBJViA9IDY0LWJpdAorICogV0VQIDEwNC1iaXQJPSAxMDQtYml0IGVu
-dGVyZWQga2V5ICsgMjQtYml0IElWID0gMTI4LWJpdAorICogV0VQIDEyOC1iaXQJPSAxMjgtYml0
-IGVudGVyZWQga2V5ICsgMjQgYml0IElWID0gMTUyLWJpdAorICoKKyAqIFNvbWUgdmVuZG9ycyBo
-YXZlIGludHJvZHVjZWQgYmlnZ2VyIFdFUCBrZXlzIHRvIGFkZHJlc3MgCisgKiBzZWN1cml0eSB2
-dWxuZXJhYmlsaXRpZXMgaW4gV0VQLiBUaGlzIGluY2x1ZGVzOgorICoKKyAqIFdFUCAyMzItYml0
-ID0gMjMyLWJpdCBlbnRlcmVkIGtleSArIDI0IGJpdCBJViA9IDI1Ni1iaXQKKyAqCisgKiBXZSBj
-YW4gZXhwYW5kIHRoaXMgaWYgd2UgZmluZCBhcjVrIEF0aGVyb3MgY2FyZHMgd2l0aCBhIGxhcmdl
-cgorICoga2V5IHRhYmxlIHNpemUuCisgKi8KICNkZWZpbmUgQVI1S19LRVlUQUJMRV9TSVpFXzUy
-MTAJCTY0CiAjZGVmaW5lIEFSNUtfS0VZVEFCTEVfU0laRV81MjExCQkxMjgKICNkZWZpbmUJQVI1
-S19LRVlUQUJMRV9TSVpFCQkoaGFsLT5haF92ZXJzaW9uID09IEFSNUtfQVI1MjEwID8gXAo=
-------=_Part_33478_32058450.1190323468022--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
