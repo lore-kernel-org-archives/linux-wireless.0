@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:4097 "EHLO baikonur.stro.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756389AbXIIRKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Sep 2007 13:10:13 -0400
-Date: Sun, 9 Sep 2007 19:10:08 +0200
-From: maximilian attems <max@stro.at>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwlwifi testing
-Message-ID: <20070909171008.GF1653@baikonur.stro.at>
-References: <20070909165447.GA2574@stro.at> <1ba2fa240709091000o3fecdcd4t301d715d864a1d95@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240709091000o3fecdcd4t301d715d864a1d95@mail.gmail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44385 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751948AbXIRVnI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 17:43:08 -0400
+Date: Tue, 18 Sep 2007 14:42:04 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+In-Reply-To: <46F04386.8010209@garzik.org>
+Message-ID: <alpine.LFD.0.999.0709181439190.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+ <20070918113401.6a8a737f@the-village.bc.nu>
+ <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+ <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+ <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
+ <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+ <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
+ <alpine.LFD.0.999.0709181323260.16478@woody.linux-foundation.org>
+ <43e72e890709181402x7335d0acp306cf576fac6c070@mail.gmail.com>
+ <alpine.LFD.0.999.0709181408390.16478@woody.linux-foundation.org>
+ <46F04386.8010209@garzik.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 09, 2007 at 08:00:21PM +0300, Tomas Winkler wrote:
-> Do you have this one in ?
-> http://intellinuxwireless.org/repos/?p=iwlwifi.git;a=commit;h=0c4826cdf9adbda1af908aa5fec22ac2277f2e53
+
+
+On Tue, 18 Sep 2007, Jeff Garzik wrote:
 > 
+> Most new hardware is MMIO-only, making ioread32() only for drivers that care
+> about legacy IO support, something that is being slowly phased out.  e.g.
+> legacy IDE, legacy 10/100 mbps ethernet NICs with the dual MMIO/PIO register
+> spaces.
 
-afais this one was not yet part of
-v6-Add-iwlwifi-wireless-drivers.patch
+Hey, I think your patch was better than the one that just assumed that you 
+can do "read*/write*()" on an iomap(). If people really want it, I don't 
+care *that* much.
 
-so no, i'll add it.
+I just think that the arguments that have been raised so far have really 
+been very weak. There really is no "performance" argument without some 
+kinds of numbers.
 
--- 
-maks
+I just think that proliferation of IO interfaces is a bad idea. 
+
+			Linus
