@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:25079 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756715AbXIXTXZ (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:37773 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752953AbXIREd4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 15:23:25 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: zd1211 config operation problem
-Date: Mon, 24 Sep 2007 15:22:20 -0400
-Cc: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <200709231648.17107.mb@bu3sch.de> <1190654401.18521.272.camel@johannes.berg> <1190654481.18521.274.camel@johannes.berg>
-In-Reply-To: <1190654481.18521.274.camel@johannes.berg>
+	Tue, 18 Sep 2007 00:33:56 -0400
+Message-ID: <46EF5534.3030609@lwfinger.net>
+Date: Mon, 17 Sep 2007 23:33:56 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart16093329.8vqcOSEOSj";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709241522.21156.flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>
+CC: Jean Tourrilhes <jt@hpl.hp.com>,
+	YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit 4cf92a3c
+References: <20070917.042418.19962472.yoshfuji@linux-ipv6.org> <20070917165435.GA26926@bougret.hpl.hp.com>
+In-Reply-To: <20070917165435.GA26926@bougret.hpl.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart16093329.8vqcOSEOSj
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+John,
 
-On Monday 24 September 2007 13:21, Johannes Berg wrote:
-> Also, shouldn't we then call ->config when the first interface is
-> brought up or something?
->
-I'm pretty sure that was done for all cases at some point. When did it get=
-=20
-switched to being done for just monitor?
+Yoshifuji Hideaki reported that commit 4cf92a3c broke the bcm43xx driver. I was able to duplicate
+the problem with WEP encryption and ifconfig control of the device. The problem does not happen with
+WPA or when using NetworkManager with WEP.
 
-=2DMichael Wu
+This patch was supposed to be a fix for the bug reported at
+http://bugzilla.kernel.org/show_bug.cgi?id=8686; however, it does not.
 
---nextPart16093329.8vqcOSEOSj
-Content-Type: application/pgp-signature
+This commit should be reverted before 2.6.23 is released.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Thanks,
 
-iD8DBQBG+A5tT3Oqt9AH4aERAhbDAJ9nV4HpAyk809G58pAZilgHhIh5RQCfUuVi
-vmGLHFaZplyVWz8EEW04chk=
-=WoR+
------END PGP SIGNATURE-----
+Larry
 
---nextPart16093329.8vqcOSEOSj--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
