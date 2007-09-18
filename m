@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53072
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbXIOWA1 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:49797 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751557AbXIRUbB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 18:00:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture with BCM4306/2
-Date: Sat, 15 Sep 2007 23:58:08 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net> <200709152147.57431.mb@bu3sch.de> <46EC4844.1060003@lwfinger.net>
-In-Reply-To: <46EC4844.1060003@lwfinger.net>
+	Tue, 18 Sep 2007 16:31:01 -0400
+Date: Tue, 18 Sep 2007 13:30:25 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+In-Reply-To: <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
+Message-ID: <alpine.LFD.0.999.0709181323260.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+ <20070918113401.6a8a737f@the-village.bc.nu>
+ <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+ <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+ <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
+ <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+ <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709152358.08887.mb@bu3sch.de>
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 15 September 2007 23:01:56 Larry Finger wrote:
-> I have generated and tested a patch that changes back to the old 'connected' variable. That will
-> avoid the semantics argument and match the V3 specs.
 
-There is no such thing as "connected".
-The bit is called "gmode". Why do you change it back to the wrong name?
-The V3 specs are simply _wrong_. It has nothing to do with the backplane
-or anything else like that. The bit just selects between the A-PHY and
-the BG-PHY. Of course, if there is no A-PHY it will obviously machine-check
-on access, if it's selected.
 
-V3 specs assume that the meaning is "connected", because it was misinterpreted
-to be a "PHY connect" flag. But it really is a "PHY select" flag, to select
-between two different PHYs. If it's enabled, the G-PHY will be selected (and
-the A-PHY otherwise).
+On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
+> 
+> An extra branch is created on MMIO-only devices on read/writes on the
+> IO_COND macro using this interface -- or is this optimized out?
 
-Btw, while we are at it: The V3 specs are wrong regarding the gmode (or connected)
-bit in other areas as well, because there was even more confusion with
-other PHY flags. The PHY specification is pretty broken in the v3 specs.
+Umm. Does anybody actually have any performance numbers? 
 
--- 
-Greetings Michael.
+The thing is, those things are *cheap* compared to the IO. And any 
+high-performance device will be using DMA for the real IO, so we're not 
+generally even talking about any performance-critical stuff. 
+
+Quite frankly, if performance is a _real_ reason to avoid 
+ioread*/iowrite*, I'll happily accept read*/write*, but it would be needed 
+to be backed up by real numbers. Can you even measure it?
+
+I would definitely *not* encourage the notion that people should use 
+readl/writel because of "performance reasons". That may be valid for some 
+fbcon driver, but those drivers go to other extremes (ie they use 
+"__raw_writel()" etc, and MTRR's etc).
+
+If you don't use write-combining memory regions, the performance argument 
+is not really valid.
+
+			Linus
