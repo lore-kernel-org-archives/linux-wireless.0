@@ -1,64 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:45672 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752082AbXI0Dew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 23:34:52 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Ian Schram <ischram@telenet.be>
-Subject: [PATCH] iwlwifi: fix add_station to avoid FW error
-Date: Thu, 27 Sep 2007 11:27:35 +0800
-Message-Id: <11908636732679-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11908636712746-git-send-email-yi.zhu@intel.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
- <11908636662994-git-send-email-yi.zhu@intel.com>
- <11908636683204-git-send-email-yi.zhu@intel.com>
- <11908636692415-git-send-email-yi.zhu@intel.com>
- <119086367088-git-send-email-yi.zhu@intel.com>
- <11908636712746-git-send-email-yi.zhu@intel.com>
+	id S1753690AbXIRXIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 19:08:41 -0400
+Message-ID: <46F05A74.2000005@garzik.org>
+Date: Tue, 18 Sep 2007 19:08:36 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>	 <20070918113401.6a8a737f@the-village.bc.nu>	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>	 <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>	 <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>	 <46F0332D.3050704@garzik.org> <1190154053.6403.125.camel@localhost.localdomain>
+In-Reply-To: <1190154053.6403.125.camel@localhost.localdomain>
+Content-Type: multipart/mixed;
+ boundary="------------000506090305050902010909"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were a few Firmware errors reported the most reproducible
-http://bughost.org/bugzilla/show_bug.cgi?id=1471
+This is a multi-part message in MIME format.
+--------------000506090305050902010909
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The root cause is rate_n_flags isn't set anymore. This patch fixes
-the problem.
+Benjamin Herrenschmidt wrote:
+> On Tue, 2007-09-18 at 16:21 -0400, Jeff Garzik wrote:
+>> A new pci_mmio_map() helper, to be used with 100% MMIO hardware, might
+>> help eliminate confusion. 
+> 
+> Maybe not the best name in theory but at least would show that it
+> relates to existing ioremap would be pci_ioremap()
 
-Signed-off-by: Ian Schram <ischram@telenet.be>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 6e46920..a83934f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -464,6 +464,7 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap, u8 flags)
- 	struct iwl_station_entry *station;
- 	unsigned long flags_spin;
- 	DECLARE_MAC_BUF(mac);
-+	u8 rate;
+Easy enough... 'pcimap' branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
+
+	Jeff
+
+
+
+--------------000506090305050902010909
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+commit 6e09c71822f76c618353682bf295fc7588284521
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Tue Sep 18 19:06:08 2007 -0400
+
+    Add pci_ioremap() to generic iomap lib.
+    
+    (arches that don't wish to use lib/iomap.c's version may fill in their own)
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+ include/asm-generic/iomap.h |    1 +
+ lib/iomap.c                 |   34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+6e09c71822f76c618353682bf295fc7588284521
+diff --git a/include/asm-generic/iomap.h b/include/asm-generic/iomap.h
+index cde592f..611e6cf 100644
+--- a/include/asm-generic/iomap.h
++++ b/include/asm-generic/iomap.h
+@@ -63,6 +63,7 @@ extern void ioport_unmap(void __iomem *);
+ /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+ struct pci_dev;
+ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
++extern void __iomem *pci_ioremap(struct pci_dev *dev, int bar, unsigned long max);
+ extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
  
- 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
- 	if (is_ap)
-@@ -507,6 +508,15 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap, u8 flags)
- 	station->sta.sta.sta_id = index;
- 	station->sta.station_flags = 0;
+ #endif
+diff --git a/lib/iomap.c b/lib/iomap.c
+index 864f2ec..0338da0 100644
+--- a/lib/iomap.c
++++ b/lib/iomap.c
+@@ -275,9 +275,43 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+ 	return NULL;
+ }
  
-+	rate = (priv->phymode == MODE_IEEE80211A) ? IWL_RATE_6M_PLCP :
-+				IWL_RATE_1M_PLCP | priv->hw_setting.cck_flag;
++/**
++ * pci_ioremap - create a virtual mapping cookie for a memory-based PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @maxlen: length of MMIO memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using read*() and write*().
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR without checking for its length first, pass %0 here.
++ * */
++void __iomem *pci_ioremap(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	unsigned long start = pci_resource_start(dev, bar);
++	unsigned long len = pci_resource_len(dev, bar);
++	unsigned long flags = pci_resource_flags(dev, bar);
 +
-+	/* Turn on both antennas for the station... */
-+	station->sta.rate_n_flags =
-+			iwl_hw_set_rate_n_flags(rate, RATE_MCS_ANT_AB_MSK);
-+	station->current_rate.rate_n_flags =
-+			le16_to_cpu(station->sta.rate_n_flags);
++	if (!len || !start)
++		return NULL;
++	if (maxlen && len > maxlen)
++		len = maxlen;
++	if (flags & IORESOURCE_IO)
++		return NULL;
++	if (flags & IORESOURCE_MEM) {
++		if (flags & IORESOURCE_CACHEABLE)
++			return ioremap(start, len);
++		return ioremap_nocache(start, len);
++	}
++	/* What? */
++	return NULL;
++}
 +
- 	spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
- 	iwl_send_add_station(priv, &station->sta, flags);
- 	return index;
--- 
-1.5.1
+ void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
+ {
+ 	IO_COND(addr, /* nothing */, iounmap(addr));
+ }
+ EXPORT_SYMBOL(pci_iomap);
++EXPORT_SYMBOL(pci_ioremap);
+ EXPORT_SYMBOL(pci_iounmap);
+
+--------------000506090305050902010909--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
