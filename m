@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:59837 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933349AbXIBByD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:54:03 -0400
-Date: Sun, 2 Sep 2007 02:53:56 +0100
-From: Al Viro <viro@ftp.linux.org.uk>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>,
-	Jason Dixon <jason@dixongroup.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, jirislaby@gmail.com,
-	alan@lxorguk.ukuu.org.uk
-Subject: Re: That whole "Linux stealing our code" thing
-Message-ID: <20070902015356.GO21089@ftp.linux.org.uk>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net> <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com> <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890709011842m213b590ds141deb9657b979e7@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:43687 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101AbXIRVav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 17:30:51 -0400
+Message-ID: <46F04386.8010209@garzik.org>
+Date: Tue, 18 Sep 2007 17:30:46 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>  <20070918113401.6a8a737f@the-village.bc.nu>  <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>  <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>  <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>  <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>  <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>  <alpine.LFD.0.999.0709181323260.16478@woody.linux-foundation.org> <43e72e890709181402x7335d0acp306cf576fac6c070@mail.gmail.com> <alpine.LFD.0.999.0709181408390.16478@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.0.999.0709181408390.16478@woody.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 09:42:54PM -0400, Luis R. Rodriguez wrote:
- 
-> We asked SFLC to work with us to make sure that everyone's copyrights
-> were respected in the right places, and that the licenses various developers
-> wanted for their copyrights were implemented correctly.  The patch I sent
-> implements SFLC's suggestions in that regard.
+Linus Torvalds wrote:
+> The old situation with SATA drivers that had
+> 
+> 	if (iomem)
+> 		writel(..)
+> 	else
+> 		outl(..)
+> 
+> in the cases that needed it (and used hardcoded writel/outl in the cases 
+> that didn't) was an example of code that "in theory" is faster. But 
+> dammit, in practice that mattered not one whit, and what iomap() tries to 
+> do is to attack the _real_ problem we had in that area. 
+> 
+> Which had nothing what-so-ever to do with any branches.
 
-You know, I'm rapidly losing any respect to both sides of that.  Eben
-Moglen as source of advice in "is it OK to convert to GPL-only"?  And
-you seriously rely on morality of that?  Theo's rants aside, if you
-have to rely on SFLC for licensing decisions...  Ouch.
+And none of those issues are a factor at all in ath5k (which spawned 
+this sub-discussion), or indeed many other drivers.  The above code you 
+cite is -generic-, hardware agnostic code.
+
+Most new hardware is MMIO-only, making ioread32() only for drivers that 
+care about legacy IO support, something that is being slowly phased out. 
+  e.g. legacy IDE, legacy 10/100 mbps ethernet NICs with the dual 
+MMIO/PIO register spaces.
+
+	Jeff
+
+
+
