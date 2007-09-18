@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48615
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932474AbXIGQCd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 12:02:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
+Received: from madara.hpl.hp.com ([192.6.19.124]:55052 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630AbXIRRh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 13:37:57 -0400
+Date: Tue, 18 Sep 2007 10:37:18 -0700
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-Date: Fri, 7 Sep 2007 18:01:34 +0200
-Cc: paulmck@linux.vnet.ibm.com,
-	Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
-	flo@rfc822.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	michal.k.k.piotrowski@gmail.com,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
-	flamingice@sourmilk.net
-References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au> <20070906154612.GD8030@linux.vnet.ibm.com> <1189171635.28781.134.camel@johannes.berg>
-In-Reply-To: <1189171635.28781.134.camel@johannes.berg>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlist and network-manager bug report
+Message-ID: <20070918173718.GA1466@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1189526874.6161.30.camel@johannes.berg> <1189610572.5644.28.camel@xo-3E-67-34.localdomain> <20070912170153.GA25785@bougret.hpl.hp.com> <1189667496.6161.77.camel@johannes.berg> <20070918003628.GA28939@bougret.hpl.hp.com> <1190110522.23521.36.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709071801.34909.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1190110522.23521.36.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 September 2007, Johannes Berg wrote:
-> On Thu, 2007-09-06 at 08:46 -0700, Paul E. McKenney wrote:
+On Tue, Sep 18, 2007 at 12:15:22PM +0200, Johannes Berg wrote:
+> On Mon, 2007-09-17 at 17:36 -0700, Jean Tourrilhes wrote:
 > 
-> > Looks good to me from an RCU viewpoint.  I cannot claim familiarity with
-> > this code.  I therefore especially like the indications of where RTNL
-> > is held and not!!!
+> > > Yeah, I don't think they cared for non-ascii at the time.
+> > 
+> > 	There were not concerned about UI, witness the mess in
+> > specifying WEP keys (do you want passphrase with that ?).
 > 
-> :)
-> 
-> > Some questions below based on a quick scan.  And a global question:
-> > should the comments about RTNL being held be replaced by ASSERT_RTNL()?
-> 
-> I don't like ASSERT_RTNL() much because it actually tries to lock it.
-> I'd be much happer if it was WARN_ON(!mutex_locked(&rtnl_mutex)) or
-> something equivalent.
+> Is passphrase actually specified in 802.11? I always thought it was some
+> external hashing but didn't look it up.
 
-What's the problem with trying to lock it?
-In the paths where you insert this assertion, you will be locked.
-So the trylock will fail and not cause any blocking or something else.
-It's basically not more expensive than your mutex_locked test.
-And the !mutex_locked test might not work on UP (Not sure, about
-the current implementation.)
+	Yes, it's some external hashing, and if I remember there is at
+least two variants of it.
+
+> But yes, I don't think in 1999
+> many people cared about general UIs...
+> 
+> > 	I'm talking of all driver that have their own private API :
+> > --------------------------------
+> > # cat /proc/driver/aironet/eth0/SSID 
+> > MY_ESSID
+> > --------------------------------
+> 
+> Oh. I didn't think that existed. Is there any point in that or could we
+> just remove it?
+
+	I say we just ignore it, it mostly legacy drivers, and some
+people may use it.
+
+> > 	I forgot one little issue.
+> > 	Remember all the fuss about the ESSID API change a long while
+> > back ? The goal was to support ESSID a array of char as opposed to
+> > ASCII strings in the API. There was a big fuss, and at that time John
+> > did a backward compatibility hack to support the old API in the
+> > kernel.
+> > 	Well, the hack of John is broken on the receive side. It
+> > basically prevents us to implement what you want, amongst other
+> > things. This is what you currently get :
+> > ---------------------------------------
+> > >./iwconfig eth0
+> > eth0      IEEE 802.11b  ESSID:"my_essid\x00"  Nickname:"HERMES I"
+> >           Mode:Managed  Frequency:2.422 GHz  Access Point: Not-Associated   
+> >           Bit Rate:11 Mb/s   Sensitivity:1/3  
+> > ---------------------------------------
+> 
+> Hmmm. So we already \x00-escape the trailing NUL?
+
+	No, that's only in the brand new version of Wireless Tools
+30.pre1 that include the escaping code. I coded that following your
+suggestions, it includes full escaping in output and input. But now
+I'm stuck because of that bug, I can't really distribute it.
+
+> > 	I've already sent the patch to fix that to John, don't know
+> > where it went :
+> > 		http://marc.info/?t=118401941300001&r=1&w=2
+> > 	I can resend you a copy if you want. I feel this patch ought
+> > to go also in the various stable series.
+> 
+> Probably got lost, you should probably resend and to -stable as well.
+
+	I'll do, but you seem much more efficient at getting stuff in
+the kernel ;-)
+
+> johannes
+
+	Regards,
+
+	Jean
+
