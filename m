@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4614 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3903 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752257AbXIONlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 09:41:03 -0400
-Date: Sat, 15 Sep 2007 09:15:43 -0400
+	id S1755371AbXIRUlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 16:41:14 -0400
+Date: Tue, 18 Sep 2007 16:28:19 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
 To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20070915131543.GB6060@tuxdriver.com>
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sam@ravnborg.org
+Subject: Please pull 'b43' branch of wireless-2.6
+Message-ID: <20070918202819.GI4940@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Jeff & Dave,
 
-A few more fixes targetted for 2.6.23, including a couple of warning fixes.
+This series adds the b43 and b43legacy drivers, as well as the ssb
+bus infrastructure upon which they depend.
 
-As usual, the individual patches are available here:
+These drivers support the BCM43xx wireless hardware from Broadcom.
+The b43 driver supports modern hardware using the "version 4" firmware,
+while the b43legacy driver uses the "version 3" firmware to support
+some older devices which lack the resources to run the newer (and
+more feature rich) firmware.  Both drivers have performed well in
+-mm and Fedora rawhide, and b43 has performed well in later Fedora
+7 kernels as well.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
+Furthermore, Michael and Larry have both demonstrated a strong
+commitment to the community and their users.  They both have responded
+to bugs both at the kernel.org bugzilla and in distro bugzillas.
+I have every confidence that they will continue to support their
+drivers at the same high standard that have already set.  I'd like
+to take this opportunity to thank both of them for their support both
+in the past and in the future as well.
 
-Thanks,
+No doubt there are still problems here.  But again, I think we would
+be better served by mainlining this code rather than continuing to
+maintain it out of stream.
+
+Thanks!
 
 John
+
+---
+
+Patches are here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/b43/
 
 ---
 
@@ -34,94 +58,157 @@ The following changes since commit 0d4cbb5e7f60b2f1a4d8b7f6ea4cc264262c7a01:
 
 are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git b43
 
-Johannes Berg (3):
-      cfg80211: fix initialisation if built-in
-      net/mac80211/wme.c: fix sparse warning
-      mac80211: fix initialisation when built-in
+Larry Finger (1):
+      b43legacy: add mac80211-based driver for legacy BCM43xx devices
 
-Satyam Sharma (1):
-      net/wireless/sysfs.c: Shut up build warning
+Michael Buesch (2):
+      ssb: add Sonics Silicon Backplane bus support
+      b43: add mac80211-based driver for modern BCM43xx devices
 
- net/mac80211/ieee80211.c      |    2 +-
- net/mac80211/rc80211_simple.c |    2 +-
- net/mac80211/wme.c            |    2 +-
- net/wireless/core.c           |    2 +-
- net/wireless/sysfs.c          |    2 ++
- 5 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 7286c38..ff2172f 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -5259,7 +5259,7 @@ static void __exit ieee80211_exit(void)
- }
- 
- 
--module_init(ieee80211_init);
-+subsys_initcall(ieee80211_init);
- module_exit(ieee80211_exit);
- 
- MODULE_DESCRIPTION("IEEE 802.11 subsystem");
-diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
-index f6780d6..17b9f46 100644
---- a/net/mac80211/rc80211_simple.c
-+++ b/net/mac80211/rc80211_simple.c
-@@ -431,7 +431,7 @@ static void __exit rate_control_simple_exit(void)
- }
- 
- 
--module_init(rate_control_simple_init);
-+subsys_initcall(rate_control_simple_init);
- module_exit(rate_control_simple_exit);
- 
- MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 89ce815..7ab82b3 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -424,7 +424,7 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
- 		skb_queue_head_init(&q->requeued[i]);
- 		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
- 						 qd->handle);
--		if (q->queues[i] == 0) {
-+		if (!q->queues[i]) {
- 			q->queues[i] = &noop_qdisc;
- 			printk(KERN_ERR "%s child qdisc %i creation failed", dev->name, i);
- 		}
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 7eabd55..9771451 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -213,7 +213,7 @@ out_fail_notifier:
- out_fail_sysfs:
- 	return err;
- }
--module_init(cfg80211_init);
-+subsys_initcall(cfg80211_init);
- 
- static void cfg80211_exit(void)
- {
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 88aaacd..2d5d225 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -52,12 +52,14 @@ static void wiphy_dev_release(struct device *dev)
- 	cfg80211_dev_free(rdev);
- }
- 
-+#ifdef CONFIG_HOTPLUG
- static int wiphy_uevent(struct device *dev, char **envp,
- 			int num_envp, char *buf, int size)
- {
- 	/* TODO, we probably need stuff here */
- 	return 0;
- }
-+#endif
- 
- struct class ieee80211_class = {
- 	.name = "ieee80211",
+ MAINTAINERS                                |   22 +
+ drivers/Kconfig                            |    2 +
+ drivers/Makefile                           |    1 +
+ drivers/net/wireless/Kconfig               |    2 +
+ drivers/net/wireless/Makefile              |    2 +
+ drivers/net/wireless/b43/Kconfig           |  119 +
+ drivers/net/wireless/b43/Makefile          |   17 +
+ drivers/net/wireless/b43/b43.h             |  845 ++++++
+ drivers/net/wireless/b43/debugfs.c         |  654 +++++
+ drivers/net/wireless/b43/debugfs.h         |   89 +
+ drivers/net/wireless/b43/dma.c             | 1494 ++++++++++
+ drivers/net/wireless/b43/dma.h             |  337 +++
+ drivers/net/wireless/b43/leds.c            |  299 ++
+ drivers/net/wireless/b43/leds.h            |   55 +
+ drivers/net/wireless/b43/lo.c              | 1261 ++++++++
+ drivers/net/wireless/b43/lo.h              |  112 +
+ drivers/net/wireless/b43/main.c            | 4091 ++++++++++++++++++++++++++
+ drivers/net/wireless/b43/main.h            |  142 +
+ drivers/net/wireless/b43/pcmcia.c          |  157 +
+ drivers/net/wireless/b43/pcmcia.h          |   20 +
+ drivers/net/wireless/b43/phy.c             | 4351 ++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/phy.h             |  297 ++
+ drivers/net/wireless/b43/pio.c             |  650 +++++
+ drivers/net/wireless/b43/pio.h             |  153 +
+ drivers/net/wireless/b43/sysfs.c           |  235 ++
+ drivers/net/wireless/b43/sysfs.h           |    9 +
+ drivers/net/wireless/b43/tables.c          |  375 +++
+ drivers/net/wireless/b43/tables.h          |   28 +
+ drivers/net/wireless/b43/xmit.c            |  648 +++++
+ drivers/net/wireless/b43/xmit.h            |  250 ++
+ drivers/net/wireless/b43legacy/Kconfig     |   89 +
+ drivers/net/wireless/b43legacy/Makefile    |   14 +
+ drivers/net/wireless/b43legacy/b43legacy.h |  829 ++++++
+ drivers/net/wireless/b43legacy/debugfs.c   |  505 ++++
+ drivers/net/wireless/b43legacy/debugfs.h   |   89 +
+ drivers/net/wireless/b43legacy/dma.c       | 1565 ++++++++++
+ drivers/net/wireless/b43legacy/dma.h       |  367 +++
+ drivers/net/wireless/b43legacy/ilt.c       |  336 +++
+ drivers/net/wireless/b43legacy/ilt.h       |   34 +
+ drivers/net/wireless/b43legacy/leds.c      |  302 ++
+ drivers/net/wireless/b43legacy/leds.h      |   56 +
+ drivers/net/wireless/b43legacy/main.c      | 3805 ++++++++++++++++++++++++
+ drivers/net/wireless/b43legacy/main.h      |  147 +
+ drivers/net/wireless/b43legacy/phy.c       | 2265 +++++++++++++++
+ drivers/net/wireless/b43legacy/phy.h       |  219 ++
+ drivers/net/wireless/b43legacy/pio.c       |  668 +++++
+ drivers/net/wireless/b43legacy/pio.h       |  172 ++
+ drivers/net/wireless/b43legacy/radio.c     | 2131 ++++++++++++++
+ drivers/net/wireless/b43legacy/radio.h     |   98 +
+ drivers/net/wireless/b43legacy/sysfs.c     |  238 ++
+ drivers/net/wireless/b43legacy/sysfs.h     |    9 +
+ drivers/net/wireless/b43legacy/xmit.c      |  642 ++++
+ drivers/net/wireless/b43legacy/xmit.h      |  259 ++
+ drivers/ssb/Kconfig                        |  117 +
+ drivers/ssb/Makefile                       |   18 +
+ drivers/ssb/b43_pci_bridge.c               |   46 +
+ drivers/ssb/driver_chipcommon.c            |  446 +++
+ drivers/ssb/driver_extif.c                 |  129 +
+ drivers/ssb/driver_mipscore.c              |  223 ++
+ drivers/ssb/driver_pcicore.c               |  576 ++++
+ drivers/ssb/main.c                         | 1162 ++++++++
+ drivers/ssb/pci.c                          |  740 +++++
+ drivers/ssb/pcihost_wrapper.c              |  104 +
+ drivers/ssb/pcmcia.c                       |  271 ++
+ drivers/ssb/scan.c                         |  413 +++
+ drivers/ssb/ssb_private.h                  |  136 +
+ include/linux/mod_devicetable.h            |   15 +
+ include/linux/ssb/ssb.h                    |  424 +++
+ include/linux/ssb/ssb_driver_chipcommon.h  |  396 +++
+ include/linux/ssb/ssb_driver_extif.h       |  204 ++
+ include/linux/ssb/ssb_driver_mips.h        |   46 +
+ include/linux/ssb/ssb_driver_pci.h         |  106 +
+ include/linux/ssb/ssb_regs.h               |  292 ++
+ scripts/mod/file2alias.c                   |   19 +
+ 74 files changed, 37439 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/b43/Kconfig
+ create mode 100644 drivers/net/wireless/b43/Makefile
+ create mode 100644 drivers/net/wireless/b43/b43.h
+ create mode 100644 drivers/net/wireless/b43/debugfs.c
+ create mode 100644 drivers/net/wireless/b43/debugfs.h
+ create mode 100644 drivers/net/wireless/b43/dma.c
+ create mode 100644 drivers/net/wireless/b43/dma.h
+ create mode 100644 drivers/net/wireless/b43/leds.c
+ create mode 100644 drivers/net/wireless/b43/leds.h
+ create mode 100644 drivers/net/wireless/b43/lo.c
+ create mode 100644 drivers/net/wireless/b43/lo.h
+ create mode 100644 drivers/net/wireless/b43/main.c
+ create mode 100644 drivers/net/wireless/b43/main.h
+ create mode 100644 drivers/net/wireless/b43/pcmcia.c
+ create mode 100644 drivers/net/wireless/b43/pcmcia.h
+ create mode 100644 drivers/net/wireless/b43/phy.c
+ create mode 100644 drivers/net/wireless/b43/phy.h
+ create mode 100644 drivers/net/wireless/b43/pio.c
+ create mode 100644 drivers/net/wireless/b43/pio.h
+ create mode 100644 drivers/net/wireless/b43/sysfs.c
+ create mode 100644 drivers/net/wireless/b43/sysfs.h
+ create mode 100644 drivers/net/wireless/b43/tables.c
+ create mode 100644 drivers/net/wireless/b43/tables.h
+ create mode 100644 drivers/net/wireless/b43/xmit.c
+ create mode 100644 drivers/net/wireless/b43/xmit.h
+ create mode 100644 drivers/net/wireless/b43legacy/Kconfig
+ create mode 100644 drivers/net/wireless/b43legacy/Makefile
+ create mode 100644 drivers/net/wireless/b43legacy/b43legacy.h
+ create mode 100644 drivers/net/wireless/b43legacy/debugfs.c
+ create mode 100644 drivers/net/wireless/b43legacy/debugfs.h
+ create mode 100644 drivers/net/wireless/b43legacy/dma.c
+ create mode 100644 drivers/net/wireless/b43legacy/dma.h
+ create mode 100644 drivers/net/wireless/b43legacy/ilt.c
+ create mode 100644 drivers/net/wireless/b43legacy/ilt.h
+ create mode 100644 drivers/net/wireless/b43legacy/leds.c
+ create mode 100644 drivers/net/wireless/b43legacy/leds.h
+ create mode 100644 drivers/net/wireless/b43legacy/main.c
+ create mode 100644 drivers/net/wireless/b43legacy/main.h
+ create mode 100644 drivers/net/wireless/b43legacy/phy.c
+ create mode 100644 drivers/net/wireless/b43legacy/phy.h
+ create mode 100644 drivers/net/wireless/b43legacy/pio.c
+ create mode 100644 drivers/net/wireless/b43legacy/pio.h
+ create mode 100644 drivers/net/wireless/b43legacy/radio.c
+ create mode 100644 drivers/net/wireless/b43legacy/radio.h
+ create mode 100644 drivers/net/wireless/b43legacy/sysfs.c
+ create mode 100644 drivers/net/wireless/b43legacy/sysfs.h
+ create mode 100644 drivers/net/wireless/b43legacy/xmit.c
+ create mode 100644 drivers/net/wireless/b43legacy/xmit.h
+ create mode 100644 drivers/ssb/Kconfig
+ create mode 100644 drivers/ssb/Makefile
+ create mode 100644 drivers/ssb/b43_pci_bridge.c
+ create mode 100644 drivers/ssb/driver_chipcommon.c
+ create mode 100644 drivers/ssb/driver_extif.c
+ create mode 100644 drivers/ssb/driver_mipscore.c
+ create mode 100644 drivers/ssb/driver_pcicore.c
+ create mode 100644 drivers/ssb/main.c
+ create mode 100644 drivers/ssb/pci.c
+ create mode 100644 drivers/ssb/pcihost_wrapper.c
+ create mode 100644 drivers/ssb/pcmcia.c
+ create mode 100644 drivers/ssb/scan.c
+ create mode 100644 drivers/ssb/ssb_private.h
+ create mode 100644 include/linux/ssb/ssb.h
+ create mode 100644 include/linux/ssb/ssb_driver_chipcommon.h
+ create mode 100644 include/linux/ssb/ssb_driver_extif.h
+ create mode 100644 include/linux/ssb/ssb_driver_mips.h
+ create mode 100644 include/linux/ssb/ssb_driver_pci.h
+ create mode 100644 include/linux/ssb/ssb_regs.h
 -- 
 John W. Linville
 linville@tuxdriver.com
