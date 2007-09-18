@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44881 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965390AbXIGNY5 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57790 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756694AbXIRTED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 09:24:57 -0400
-Subject: Re: Kernel panic with rt2500pci built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Hussey <robjhussey@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gdQ8tQxgiYO/1uIYxk7m"
-Date: Fri, 07 Sep 2007 02:45:44 +0200
-Message-Id: <1189125944.28781.125.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 18 Sep 2007 15:04:03 -0400
+Date: Tue, 18 Sep 2007 12:03:15 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+In-Reply-To: <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+Message-ID: <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+ <20070918113401.6a8a737f@the-village.bc.nu>
+ <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-gdQ8tQxgiYO/1uIYxk7m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-09-05 at 23:25 -0400, Rob Hussey wrote:
+On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
+> 
+> Alright, here is the same patch inline with s/recommended/required/ language:
 
-> > ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 22 (level, low) -> IRQ 18
-> > phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003,
-> > rev: 00000004
-> > WARNING: at lib/kref.c:33 kref_get()
-> > [<c0229da9>] kref_get+0x3d/0x44
->                             kobject_get
->                             kobject_shadow
->                             kobject_set_name
->                             device_add
->                             wiphy_register
+Well, the thing is, I'm not at all sure that I agree with this.
 
-Ok, this comes from
-	WARN_ON(!atomic_read(&kref->refcount));
-which means that somehow the refcount is zero.
+If you use ioport_map/unmap, then you really *should* access them with the 
+proper iomem accessors (ioread/iowrite). The fact that it may happen to 
+work (when using the default lib/iomap.c implementation, at least) on 
+some architectures and with the current implementation still doesn't mean 
+that you should necessarily use readb/writeb.
 
-> BUG: unable to handle kernel NULL pointer dereference at virtual
-> address 00000024
+After all, you cannot use "inb/outb" on it, even if would happen to be an 
+IO address.
 
-> EIP is at sysfs_addrm_start+0x21/0x87
+So what is this usage that wants to use the bogus accessor? Why not fix 
+that instead of adding documentation for something that is very arguably 
+something we want to *avoid* having people do!
 
-> Call Trace:
-> create_dir
-> sysfs_create_dir
-> kobject_get
-> kobject_shadow_add
-> kobject_set_name
-> device_add
-> wiphy_register
-
-I wish x86 had proper backtraces. What are kobject_get and
-kobject_set_name doing in there??? Can't people get proper machines?
-powerpc has really nice backtraces... Anyhow, that appears to be sysfs
-trying to access kobj->parent which appears to be NULL.
-
-I have no idea what's going on here. Can you enable DEBUG_KOBJECT? Oh
-also, what kernel is this with?
-
-johannes
-
---=-gdQ8tQxgiYO/1uIYxk7m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4J84/ETPhpq3jKURAlLgAKCRzVekr4uhziR8lJYirQPBHjU66ACgkvuZ
-LpxHABUCPhPfkJ5Y0DjJzkY=
-=qvAq
------END PGP SIGNATURE-----
-
---=-gdQ8tQxgiYO/1uIYxk7m--
-
+		Linus
