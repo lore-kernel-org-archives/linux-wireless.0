@@ -1,47 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42562 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbXI2C66 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 22:58:58 -0400
-Date: Fri, 28 Sep 2007 19:42:34 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: devel@linuxdriverproject.org,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from mx1.redhat.com ([66.187.233.31]:52404 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754662AbXIRTGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 15:06:42 -0400
+Subject: Re: iwlist and network-manager bug report
+From: Dan Williams <dcbw@redhat.com>
+To: jt@hpl.hp.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux wireless driver procedures
-Message-ID: <20070929024234.GA15696@kroah.com>
-References: <43e72e890709281840h21b1ddebpfe45e6b24dd2c9ac@mail.gmail.com> <43e72e890709281851r7bb7d515le58fb4051761cadf@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890709281851r7bb7d515le58fb4051761cadf@mail.gmail.com>
+In-Reply-To: <20070918173718.GA1466@bougret.hpl.hp.com>
+References: <1189526874.6161.30.camel@johannes.berg>
+	 <1189610572.5644.28.camel@xo-3E-67-34.localdomain>
+	 <20070912170153.GA25785@bougret.hpl.hp.com>
+	 <1189667496.6161.77.camel@johannes.berg>
+	 <20070918003628.GA28939@bougret.hpl.hp.com>
+	 <1190110522.23521.36.camel@johannes.berg>
+	 <20070918173718.GA1466@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Tue, 18 Sep 2007 15:02:03 -0400
+Message-Id: <1190142123.12515.3.camel@xo-3E-67-34.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 28, 2007 at 09:51:00PM -0400, Luis R. Rodriguez wrote:
-> On 9/28/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > FYI,
-> >
-> > We have set up procedures for vendors wanting to get free wireless
-> > drivers written for Linux. These procedures can be found at:
-> >
-> > http://linuxwireless.org/en/vendors/DriverDevelopment
-> >
-> > Perhaps we should create sections on the linuxdriverproject.org page
-> > and for each one link to procedures if they exist?
+On Tue, 2007-09-18 at 10:37 -0700, Jean Tourrilhes wrote:
+> On Tue, Sep 18, 2007 at 12:15:22PM +0200, Johannes Berg wrote:
+> > On Mon, 2007-09-17 at 17:36 -0700, Jean Tourrilhes wrote:
+> > 
+> > > > Yeah, I don't think they cared for non-ascii at the time.
+> > > 
+> > > 	There were not concerned about UI, witness the mess in
+> > > specifying WEP keys (do you want passphrase with that ?).
+> > 
+> > Is passphrase actually specified in 802.11? I always thought it was some
+> > external hashing but didn't look it up.
 > 
-> Now that I think about it, these procedures may be a bit outdated,
-> taking into consideration:
+> 	Yes, it's some external hashing, and if I remember there is at
+> least two variants of it.
+
+There are three: a) ASCII passphrase, b) MD5 passphrase (the most
+popular), and c) Apple Airport password.
+
+All three result in a different key for the same input.
+
+Dan
+
+> > But yes, I don't think in 1999
+> > many people cared about general UIs...
+> > 
+> > > 	I'm talking of all driver that have their own private API :
+> > > --------------------------------
+> > > # cat /proc/driver/aironet/eth0/SSID 
+> > > MY_ESSID
+> > > --------------------------------
+> > 
+> > Oh. I didn't think that existed. Is there any point in that or could we
+> > just remove it?
 > 
-> http://linuxdriverproject.org/twiki/bin/view/Main/CompanyProcess
+> 	I say we just ignore it, it mostly legacy drivers, and some
+> people may use it.
 > 
-> should we simply refer to that page and have the companies go through
-> the project managers? Hmm...
+> > > 	I forgot one little issue.
+> > > 	Remember all the fuss about the ESSID API change a long while
+> > > back ? The goal was to support ESSID a array of char as opposed to
+> > > ASCII strings in the API. There was a big fuss, and at that time John
+> > > did a backward compatibility hack to support the old API in the
+> > > kernel.
+> > > 	Well, the hack of John is broken on the receive side. It
+> > > basically prevents us to implement what you want, amongst other
+> > > things. This is what you currently get :
+> > > ---------------------------------------
+> > > >./iwconfig eth0
+> > > eth0      IEEE 802.11b  ESSID:"my_essid\x00"  Nickname:"HERMES I"
+> > >           Mode:Managed  Frequency:2.422 GHz  Access Point: Not-Associated   
+> > >           Bit Rate:11 Mb/s   Sensitivity:1/3  
+> > > ---------------------------------------
+> > 
+> > Hmmm. So we already \x00-escape the trailing NUL?
+> 
+> 	No, that's only in the brand new version of Wireless Tools
+> 30.pre1 that include the escaping code. I coded that following your
+> suggestions, it includes full escaping in output and input. But now
+> I'm stuck because of that bug, I can't really distribute it.
+> 
+> > > 	I've already sent the patch to fix that to John, don't know
+> > > where it went :
+> > > 		http://marc.info/?t=118401941300001&r=1&w=2
+> > > 	I can resend you a copy if you want. I feel this patch ought
+> > > to go also in the various stable series.
+> > 
+> > Probably got lost, you should probably resend and to -stable as well.
+> 
+> 	I'll do, but you seem much more efficient at getting stuff in
+> the kernel ;-)
+> 
+> > johannes
+> 
+> 	Regards,
+> 
+> 	Jean
+> 
 
-I'd prefer if there not be a different proceedure for every type of
-driver, in the end, they all need to do the same thing, work :)
-
-thanks,
-
-greg k-h
