@@ -1,122 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38912 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140AbXISKOK (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55495 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752046AbXIRX2j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 06:14:10 -0400
-Date: Wed, 19 Sep 2007 11:13:26 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'iwlwifi' branch of wireless-2.6
-Message-ID: <20070919101326.GA32432@infradead.org>
-References: <20070918185040.GF4940@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070918185040.GF4940@tuxdriver.com>
+	Tue, 18 Sep 2007 19:28:39 -0400
+Date: Tue, 18 Sep 2007 16:27:24 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+In-Reply-To: <46F05A74.2000005@garzik.org>
+Message-ID: <alpine.LFD.0.999.0709181625500.16478@woody.linux-foundation.org>
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+ <20070918113401.6a8a737f@the-village.bc.nu>
+ <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+ <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+ <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
+ <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+ <46F0332D.3050704@garzik.org> <1190154053.6403.125.camel@localhost.localdomain>
+ <46F05A74.2000005@garzik.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 18, 2007 at 02:50:40PM -0400, John W. Linville wrote:
-> Jeff & Dave,
-> 
-> Here it is -- it's big, it's...well...beautiful in its own way...well,
-> at least it seems to work... :-)
-> 
-> There are some outstanding issues.  The driver does more than it
-> probably should under the covers instead of in the stack, and the
-> issue of including headers with a "../../mac80211/..." path remains.
-> Still, I think it would be better to get this mainlined than to keep
-> it out of stream.
 
-it really needs to be moved into a directory of it's own.
-The useless per-file CFLAGS need to go most places can trivially
-be made unconditional anyway.
 
-The depends on m for CONFIG_IWL4965 and CONFIG_IWL3945 needs to go,
-we don't put drivers int that need to be modular.
+On Tue, 18 Sep 2007, Jeff Garzik wrote:
+> 
+> Easy enough... 'pcimap' branch of
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
 
-This is just a tiny review from the build system point of view.
-> 
-> Thanks!
-> 
-> John
-> 
-> ---
-> 
-> Patch available here:
-> 
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/iwlwifi/0001-iwlwifi-add-iwlwifi-wireless-drivers.patch
-> 
-> ---
-> 
-> The following changes since commit 0d4cbb5e7f60b2f1a4d8b7f6ea4cc264262c7a01:
->   Linus Torvalds (1):
->         Linux 2.6.23-rc6
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git iwlwifi
-> 
-> Zhu Yi (1):
->       iwlwifi: add iwlwifi wireless drivers
-> 
->  MAINTAINERS                         |    9 +
->  drivers/net/wireless/Kconfig        |  129 +
->  drivers/net/wireless/Makefile       |   12 +
->  drivers/net/wireless/iwl-3945-hw.h  |  118 +
->  drivers/net/wireless/iwl-3945-rs.c  |  979 ++++
->  drivers/net/wireless/iwl-3945-rs.h  |  191 +
->  drivers/net/wireless/iwl-3945.c     | 2290 +++++++++
->  drivers/net/wireless/iwl-3945.h     |   41 +
->  drivers/net/wireless/iwl-4965-hw.h  |  581 +++
->  drivers/net/wireless/iwl-4965-rs.c  | 2118 ++++++++
->  drivers/net/wireless/iwl-4965-rs.h  |  266 +
->  drivers/net/wireless/iwl-4965.c     | 4719 ++++++++++++++++++
->  drivers/net/wireless/iwl-4965.h     |  341 ++
->  drivers/net/wireless/iwl-channel.h  |  161 +
->  drivers/net/wireless/iwl-commands.h | 1734 +++++++
->  drivers/net/wireless/iwl-debug.h    |  149 +
->  drivers/net/wireless/iwl-eeprom.h   |  336 ++
->  drivers/net/wireless/iwl-helpers.h  |  255 +
->  drivers/net/wireless/iwl-hw.h       |  537 ++
->  drivers/net/wireless/iwl-io.h       |  470 ++
->  drivers/net/wireless/iwl-priv.h     |  308 ++
->  drivers/net/wireless/iwl-prph.h     |  229 +
->  drivers/net/wireless/iwl-spectrum.h |   91 +
->  drivers/net/wireless/iwl3945-base.c | 8732 ++++++++++++++++++++++++++++++++
->  drivers/net/wireless/iwl4965-base.c | 9323 +++++++++++++++++++++++++++++++++++
->  drivers/net/wireless/iwlwifi.h      |  713 +++
->  26 files changed, 34832 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/net/wireless/iwl-3945-hw.h
->  create mode 100644 drivers/net/wireless/iwl-3945-rs.c
->  create mode 100644 drivers/net/wireless/iwl-3945-rs.h
->  create mode 100644 drivers/net/wireless/iwl-3945.c
->  create mode 100644 drivers/net/wireless/iwl-3945.h
->  create mode 100644 drivers/net/wireless/iwl-4965-hw.h
->  create mode 100644 drivers/net/wireless/iwl-4965-rs.c
->  create mode 100644 drivers/net/wireless/iwl-4965-rs.h
->  create mode 100644 drivers/net/wireless/iwl-4965.c
->  create mode 100644 drivers/net/wireless/iwl-4965.h
->  create mode 100644 drivers/net/wireless/iwl-channel.h
->  create mode 100644 drivers/net/wireless/iwl-commands.h
->  create mode 100644 drivers/net/wireless/iwl-debug.h
->  create mode 100644 drivers/net/wireless/iwl-eeprom.h
->  create mode 100644 drivers/net/wireless/iwl-helpers.h
->  create mode 100644 drivers/net/wireless/iwl-hw.h
->  create mode 100644 drivers/net/wireless/iwl-io.h
->  create mode 100644 drivers/net/wireless/iwl-priv.h
->  create mode 100644 drivers/net/wireless/iwl-prph.h
->  create mode 100644 drivers/net/wireless/iwl-spectrum.h
->  create mode 100644 drivers/net/wireless/iwl3945-base.c
->  create mode 100644 drivers/net/wireless/iwl4965-base.c
->  create mode 100644 drivers/net/wireless/iwlwifi.h
-> -- 
-> John W. Linville
-> linville@tuxdriver.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+This is wrong.
+
+You must not put it in lib/iomap.c, since that file is only compiled for 
+architectures that use CONFIG_GENERIC_IOMAP.
+
+So you need to put it in some *generic* PCI place, like drivers/pci/pci.c 
+or similar.
+
+		Linus
