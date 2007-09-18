@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33360 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755187AbXIBKKT (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:29542 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364AbXIRUM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 06:10:19 -0400
-Date: Sun, 2 Sep 2007 11:18:24 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Jonathan Gray <jsg@goblin.cx>
-Cc: Jason Dixon <jason@dixongroup.net>, bunk@kernel.org,
-	mureninc@gmail.com, jeff@garzik.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jirislaby@gmail.com
-Subject: Re: That whole "Linux stealing our code" thing
-Message-ID: <20070902111824.153bc036@the-village.bc.nu>
-In-Reply-To: <20070902022253.GA18201@mail.netspace.net.au>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	<f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	<46D99FB7.6030505@garzik.org>
-	<f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	<20070901205457.GK9260@stusta.de>
-	<3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
-	<20070902022253.GA18201@mail.netspace.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 18 Sep 2007 16:12:57 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3965593pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2007 13:12:57 -0700 (PDT)
+Message-ID: <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
+Date: Tue, 18 Sep 2007 16:12:56 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Linus Torvalds" <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+Cc: "Alan Cox" <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"Jeff Garzik" <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+	 <20070918113401.6a8a737f@the-village.bc.nu>
+	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+	 <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
+	 <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> co-operation. Together we advance our detective work and knowledge of
-> the Macintosh platforms to the good of all Macintosh users dumped"
-> 
-> Alan Cox circa 1999.
-> 
-> http://lists.freedesktop.org/archives/xorg/2007-August/027419.html
-> 
-> "well I'd be quite happy to see X go GPL but I'm aware
-> thats not the intention of the project ;)"
-> Alan Cox circa 2007.
-> 
-> What changed? 
+On 9/18/07, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+>
+>
+> On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
+> >
+> > ACK -- driver developers use this just to save themselves a few lines
+> > from calling pci_resource_start() and friends. How about having an
+> > inline which does what pci_iomap() does except it doesn't call
+> > ioport_map() ? I am just not sure where this would go..
+>
+> I'm not understanding what the problem is?
+>
+> Why don't these people just use "ioread*()/iowrite*()"?
+>
+> In other words, the whole point of *not* using "read*/write*()" is that
+> you get a whole slew of much nicer interfaces.
+>
+> So can people explain this fundamental issue? Why do people insist on
+> using the old interfaces (and matching them with the new setup)?
 
-Nothing that I am aware of. You can't take Linux/Mac68K code back into
-BSD either. BSD code is being used according to the BSD licence. You
-could adopt a different licence if the way your code is being used
-bothers you, thats.
+An extra branch is created on MMIO-only devices on read/writes on the
+IO_COND macro using this interface -- or is this optimized out?
 
-Where I've reused BSD code I've aways tried to contribute it back to the
-BSD people or share the knowledge (and the knowledge far more than the
-code mattered both ways for Mac68K systems)
-
-I suggest you read drivers/net/wan/syncppp.c, which is I think the only
-BSD derived bit of code of mine left in the kernel - and its quite
-specific what it says.
-
-Ath5k isn't my code so I don't get to pick. Having the OpenBSD maintainer
-make bogus remarks about that doesn't help anyone, especially when he's
-wrong and doesn't appear to know about the subject in the first place.
-
-Alan
+  Luis
