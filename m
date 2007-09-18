@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754738AbXIAJPm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 05:15:42 -0400
-Subject: Re: [PATCH 18/35] Only cancel correct timeouts for Auth and Assoc  replies
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070901043557.2498.6553.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-	 <20070901043557.2498.6553.stgit@dv.roinet.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rWgoFwroP/VGHk0EbXkr"
-Date: Sat, 01 Sep 2007 11:17:08 +0200
-Message-Id: <1188638228.7585.124.camel@johannes.berg>
+Received: from gate.crashing.org ([63.228.1.57]:54155 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753748AbXIRWTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 18:19:43 -0400
+Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use  readl()/writel(), we're MMIO-only
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <43e72e890709181212u75ec6fe2x7aa639bac319c087@mail.gmail.com>
+References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>
+	 <46EEE735.5050306@gmail.com> <46EEEA9B.70407@garzik.org>
+	 <46EEF543.7060901@gmail.com>
+	 <43e72e890709181203x30144451hf332da4032b5b770@mail.gmail.com>
+	 <43e72e890709181212u75ec6fe2x7aa639bac319c087@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 19 Sep 2007 08:18:54 +1000
+Message-Id: <1190153934.6403.123.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-rWgoFwroP/VGHk0EbXkr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > > If the driver knows its MMIO, using readX/writeX after pci_iomap() is
+> > > > just fine, for all current implementations, and it makes sense that way.
+> > >
+> > > There is nothing that guarantees this is permitted, any more than there
+> > > is anything saying not to use outb/outl. Some of the implementations do
+> > > quite strange things. It may happen to work but its not in the
+> > > documentation or the comments.
+> >
+> > I posted a patch to update the documentation with this.
+> >
+> > > Please, can anybody clarify it?
+> >
+> > Based on Alan's 'Review-by' remarks on my patch for updating the
+> > documenation on pci_iomap() it seems this validates this patch. Please
+> > see thread with subject:
+> >
+> > [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+> 
+> Well spoke too soon. Now Linus disagrees. We'll see the outcome on the
+> other thread then.
 
-On Sat, 2007-09-01 at 00:35 -0400, Pavel Roskin wrote:
-> Don't cancel all delayed works indiscriminately.  In case of
-> at76_rx_mgmt_auth(), cancel the timeout regardless of the status of the
-> reply, as long as the reply is for us.
+To be more precise, a platform has every right to return some kind of
+"token" from ioport_map/pci_iomap that encodes the type of address, and
+that is -different- from what a normal ioremap does. In which case, you
+will -not- be able to use readb/writeb & cie on such a token.
 
-Out of curiosity, why are you cleaning up code that needs to be deleted
-anyhow? The way I see it, the driver ought to be be ported to mac80211,
-no? It seems to ship with an in-driver softmac.
+The fact that current implementations seem to return something for MMIO
+that is equivalent to what ioremap returns is an accident and cannot be
+relied upon.
 
-johannes
+Cheers,
+Ben.
 
---=-rWgoFwroP/VGHk0EbXkr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG2S4U/ETPhpq3jKURAm0iAKCjZqXq5XKJLCPVto2vSdsZl+Im9gCbByHH
-5qqyUPvMt7EqdxxVMytrpVE=
-=Cwpk
------END PGP SIGNATURE-----
-
---=-rWgoFwroP/VGHk0EbXkr--
 
