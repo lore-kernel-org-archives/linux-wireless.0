@@ -1,72 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:45170 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753390AbXIPAyT (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36175
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbXISRAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 20:54:19 -0400
-Date: Sat, 15 Sep 2007 19:52:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 19 Sep 2007 13:00:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V3] b43legacy: Fix machine check errors for PPC  architecture with BCM4306/2
-Message-ID: <46ec7e3b.fvdyZ6cbJm24I7PA%Larry.Finger@lwfinger.net>
+Subject: [PATCH] b43: Change loglevel of radio-enable message.
+Date: Wed, 19 Sep 2007 18:58:38 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709191858.38634.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In b43legacy, the variable gmode is always set. With a BCM4306/2,
-a variable is needed to control the execution path through the PHY
-and radio initialization, otherwise there are attempts to read from
-invalid registers. On x86 platforms, these read failures cause no
-problems; however they lead to machine check errors for the ppc
-architecture. This problem is fixed by making the variable gmode mimic
-the state of the GMODE bit of MACCTL. This patch has been tested on an
-i386 platform using special code to detect these invalid reads, and on
-at least one Powerbook.
- 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Also cleanup the code a bit and remove the inline.
 
-John,
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-This patch fixes a problem with the Fedora Rawhide kernel reported by David
-Woodhouse on the bcm43xx mailing list and by Will Woods at 
-https://bugzilla.redhat.com/show_bug.cgi?id=233011. 
-
-Larry
-
- drivers/net/wireless/b43legacy/b43legacy.h |    2 +-
- drivers/net/wireless/b43legacy/main.c      |    5 ++++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
+Index: wireless-dev/drivers/net/wireless/b43/main.c
 ===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/main.c
-@@ -738,8 +738,11 @@ void b43legacy_wireless_core_reset(struc
- 
- 	macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
- 	macctl &= ~B43legacy_MACCTL_GMODE;
--	if (flags & B43legacy_TMSLOW_GMODE)
-+	if (flags & B43legacy_TMSLOW_GMODE) {
- 		macctl |= B43legacy_MACCTL_GMODE;
-+		dev->phy.gmode = 1;
-+	} else
-+		dev->phy.gmode = 0;
- 	macctl |= B43legacy_MACCTL_IHR_ENABLED;
- 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-19 18:26:34.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-19 18:47:04.000000000 +0200
+@@ -2175,6 +2175,21 @@ static void b43_mgmtframe_txantenna(stru
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PRPHYCTL, tmp);
  }
-Index: wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
+ 
++/* Returns TRUE, if the radio is enabled in hardware. */
++static bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
++{
++	if (dev->phy.rev >= 3) {
++		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
++		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
++			return 1;
++	} else {
++		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
++		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
++			return 1;
++	}
++	return 0;
++}
++
+ /* This is the opposite of b43_chip_init() */
+ static void b43_chip_exit(struct b43_wldev *dev)
+ {
+@@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
+ 	b43_radio_turn_on(dev);
+ 	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
+ 	b43dbg(dev->wl, "Radio %s by hardware\n",
+-	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
++	       dev->radio_hw_enable ? "enabled" : "disabled");
+ 
+ 	b43_write16(dev, 0x03E6, 0x0000);
+ 	err = b43_phy_init(dev);
+@@ -2373,14 +2388,14 @@ static void b43_periodic_every15sec(stru
+ 
+ static void b43_periodic_every1sec(struct b43_wldev *dev)
+ {
+-	int radio_hw_enable;
++	bool radio_hw_enable;
+ 
+ 	/* check if radio hardware enabled status changed */
+ 	radio_hw_enable = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
+ 		dev->radio_hw_enable = radio_hw_enable;
+-		b43dbg(dev->wl, "Radio hardware status changed to %s\n",
+-		       (radio_hw_enable == 0) ? "disabled" : "enabled");
++		b43info(dev->wl, "Radio hardware status changed to %s\n",
++			radio_hw_enable ? "ENABLED" : "DISABLED");
+ 		b43_leds_update(dev, 0);
+ 	}
+ }
+Index: wireless-dev/drivers/net/wireless/b43/main.h
 ===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/b43legacy.h
-+++ wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -389,7 +389,7 @@ struct b43legacy_lopair {
- struct b43legacy_phy {
- 	/* Possible PHYMODEs on this PHY */
- 	u8 possible_phymodes;
--	/* GMODE bit enabled? */
-+	/* GMODE bit enabled in MACCTL? */
- 	bool gmode;
- 	/* Possible ieee80211 subsystem hwmodes for this PHY.
- 	 * Which mode is selected, depends on thr GMODE enabled bit */
+--- wireless-dev.orig/drivers/net/wireless/b43/main.h	2007-09-19 17:15:58.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.h	2007-09-19 18:40:57.000000000 +0200
+@@ -96,23 +96,6 @@ static inline int b43_is_ofdm_rate(int r
+ 	return !b43_is_cck_rate(rate);
+ }
+ 
+-static inline int b43_is_hw_radio_enabled(struct b43_wldev *dev)
+-{
+-	/* function to return state of hardware enable of radio
+-	 * returns 0 if radio disabled, 1 if radio enabled
+-	 */
+-	struct b43_phy *phy = &dev->phy;
+-
+-	if (phy->rev >= 3)
+-		return ((b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+-			 & B43_MMIO_RADIO_HWENABLED_HI_MASK)
+-			== 0) ? 1 : 0;
+-	else
+-		return ((b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+-			 & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+-			== 0) ? 0 : 1;
+-}
+-
+ void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
+ void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
+ 
