@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758235AbXIGTe4 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40699
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750917AbXIST4m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 15:34:56 -0400
-Subject: Re: rtl8187 on realtek 8189
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "andreamrl@tiscali.it" <andreamrl@tiscali.it>
-Cc: maximilian attems <max@stro.at>, flamingice@sourmilk.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <504962.1189180247759.JavaMail.root@ps13>
-References: <504962.1189180247759.JavaMail.root@ps13>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z2JUIgQJDcQ5Z6W6iBqD"
-Date: Fri, 07 Sep 2007 21:36:26 +0200
-Message-Id: <1189193787.28781.195.camel@johannes.berg>
+	Wed, 19 Sep 2007 15:56:42 -0400
+Date: Wed, 19 Sep 2007 12:56:41 -0700 (PDT)
+Message-Id: <20070919.125641.62342823.davem@davemloft.net>
+To: mb@bu3sch.de
+Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200709192123.16884.mb@bu3sch.de>
+References: <20070919181005.GB5483@tuxdriver.com>
+	<20070919.115903.75429061.davem@davemloft.net>
+	<200709192123.16884.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Buesch <mb@bu3sch.de>
+Date: Wed, 19 Sep 2007 21:23:16 +0200
 
---=-Z2JUIgQJDcQ5Z6W6iBqD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> John, please also note that the following patch is not merged, yet.
+> http://bu3sch.de/patches/wireless-dev/20070915-1740/patches/006-zd-fix-tx-status.patch
+> Without it ratecontrol does not work. It does neither scale the rate
+> up nor down. This patch fixes both.
 
-On Fri, 2007-09-07 at 17:50 +0200, andreamrl@tiscali.it wrote:
+I agreed with John to merge this in myself, but this patch
+applied to the old driver aparently, not the new z1211 one.
 
-> However maybe someone can host the driver appeared on Realtek site. I=20
-> have a copy.
+Can you resend this patch against the new driver so I can
+add it to net-2.6.24?
 
-If it's suitably redistributable I can put it up on linuxwireless.org
-
-johannes
-
---=-Z2JUIgQJDcQ5Z6W6iBqD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4ag6/ETPhpq3jKURAoJQAJ9WRmTHtmiqX8nMHgFMl76/3ECb8gCfSnUW
-G0tHMihTRZrF3s+/sbFxSyQ=
-=qsVC
------END PGP SIGNATURE-----
-
---=-Z2JUIgQJDcQ5Z6W6iBqD--
-
+Thanks!
