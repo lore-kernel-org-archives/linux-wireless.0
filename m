@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:44526 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750822AbXIOTL2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 15:11:28 -0400
-Message-ID: <46EC2E84.4080901@lwfinger.net>
-Date: Sat, 15 Sep 2007 14:12:04 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3974 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751414AbXISTlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 15:41:52 -0400
+Date: Wed, 19 Sep 2007 15:11:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
+Message-ID: <20070919191156.GC5483@tuxdriver.com>
+References: <20070918213202.GJ4940@tuxdriver.com> <200709192031.19934.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture  with BCM4306/2
-References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net> <200709151948.46667.mb@bu3sch.de> <46EC1F5A.7030800@lwfinger.net> <200709152010.07647.mb@bu3sch.de>
-In-Reply-To: <200709152010.07647.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200709192031.19934.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Saturday 15 September 2007 20:07:22 Larry Finger wrote:
->> Your comments may be correct; however, the fact remains that with a rev 4 BCM4306, the original code
->> generates many, many machine checks on PPC architecture, and I get reads with all ones on i386
->> indicating that the read is invalid. These all occur before the firmware is loaded. Making the
->> "gmode" bit mimic the behavior of the phy_connected variable of bcm43xx gets rid of the problems on
->> both platforms.
+On Wed, Sep 19, 2007 at 08:31:19PM +0200, Ivo van Doorn wrote:
+
+> > Ivo and his team may feel I am jumping the gun a bit -- they have
+> > a few more random bugs they wanted to squash before going upstream.
+> > But since they are bugs, any fixes should still be able to be applied
+> > in the -rc phase of 2.6.24.  In the meantime, I definitely think it
+> > would be better to get this code into mainline rather than keeping
+> > it out of stream.
 > 
-> Sure. But if you workaround this like that, you could
-> as well get completely rid of the gmode bit, as you always force it on.
-> But I think that's not what we want. The real fix is simple. See below.
-> 
-> 
->> If you can suggest a reordering of the initialization that delays PHY setup until the "magic step"
->> that eliminates this problem is done on/to the ssb backplane, I will be happy to test it. I was
->> unable to find such a solution.
-> 
-> There is no reordering needed.
-> You just need to find out why phy->gmode was not set.
-> I think it's set based on the have_gphy and have_bphy bits.
-> So you need to look there why one of these is not set. That is the real
-> cause of the issue.
+> With 2.6.23 not yet released, I assume we still have a few months to get
+> rt2x00 shaped up to be really ready for 2.6.24?
+> Because I am indeed not really happy with this early merge, but I'll do my
+> best to resolve the last outstanding bugs as soon as possible.
 
-In the original code, have_gphy was true, and phy->gmode was set. These variables were not the cause.
+Ivo,
 
-In bcm43xx, the second argument to wireless_core_reset controls the value of phy->connected at exit.
-This behavior is missing in the original b43legacy (and in b43). For b43, it seems to have no
-consequence, but for the early PHYs, phy->connected controls when certain registers can be
-read/written and affects the program flow through the phy and radio initialization. The lack of the
-ability to toggle gmode is what leads to the register errors, and this is what my change restores.
-The name could be changed, but that seems more intrusive than necessary.
+Having failed to ask for permission, this is where I ask for your
+forgiveness.  Please forgive me! :-)
 
-Larry
+As Dave said, merging rt2x00 now is undoubtedly better than having
+no driver at all.  I appreciate your understanding and cooperation!
 
+Thanks,
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
