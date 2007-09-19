@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752517AbXI0Dev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 23:34:51 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: Fix typo in rate sacling algorithm
-Date: Thu, 27 Sep 2007 11:27:34 +0800
-Message-Id: <11908636712746-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <119086367088-git-send-email-yi.zhu@intel.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
- <11908636662994-git-send-email-yi.zhu@intel.com>
- <11908636683204-git-send-email-yi.zhu@intel.com>
- <11908636692415-git-send-email-yi.zhu@intel.com>
- <119086367088-git-send-email-yi.zhu@intel.com>
+Received: from clarity.mcc.ac.uk ([130.88.200.144]:50019 "EHLO
+	clarity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754616AbXISWqL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 18:46:11 -0400
+Message-ID: <46F19DD0.2050605@gentoo.org>
+Date: Wed, 19 Sep 2007 23:08:16 +0100
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+References: <20070919181005.GB5483@tuxdriver.com>
+In-Reply-To: <20070919181005.GB5483@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes tiny typo in 4965 rate sacling algorithm
+John W. Linville wrote:
+> The maintainers have identified some (IMHO minor) issues with the
+> mac80211 port of this driver.  Some of them are summarized here:
+> 
+> 	http://linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
+> 
+> Still, I think we would be better-off having this driver upstream.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I apologise for being inactive over the last few weeks, I've been moving 
+back from the US to the UK and then moving back to university. However I 
+am now just-about-settled and will be active again soon.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index bc5e67b..edcc542 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1672,7 +1672,7 @@ static void rs_initialize_lq(struct iwl_priv *priv,
- 	tbl->antenna_type = ANT_AUX;
- 	rs_get_tbl_info_from_mcs(&mcs_rate, priv->phymode, tbl, &rate_idx);
- 	if (!rs_is_ant_connected(priv->valid_antenna, tbl->antenna_type))
--	    rs_toggle_antenna(&mcs_rate, tbl),
-+	    rs_toggle_antenna(&mcs_rate, tbl);
- 
- 	rs_mcs_from_tbl(&mcs_rate, tbl, rate_idx, use_green);
- 	tbl->current_rate.rate_n_flags = mcs_rate.rate_n_flags;
--- 
-1.5.1
+I would like to this until 2.6.25 until I have had time to clear up some 
+final issues and do more testing myself of zd1211rw-mac80211. I also 
+think we need to discuss the rename...
+
+(just to clarify to others: this is the first I heard of this merge 
+before John posted it).
+
+John, thanks a lot for your efforts, I hope you don't mind waiting one 
+extra release cycle for me to sort a few things out.
+
+Thanks,
+Daniel
