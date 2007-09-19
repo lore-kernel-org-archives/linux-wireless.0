@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:8076 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbXIYSow (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 14:44:52 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so2123530fkz
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:52 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 9/12] rt2x00: Stop link tuning when radio is down
-Date: Tue, 25 Sep 2007 20:57:04 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709252052.34803.IvDoorn@gmail.com>
-In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709252057.04999.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:56020 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751690AbXISC6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2007 22:58:08 -0400
+Subject: Re: Fw: build #301 failed for 2.6.23-rc6-g0d4cbb5 in   linux/drivers/net/wireless/libertas/
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
+In-Reply-To: <1189954364.29570.15.camel@xo-3E-67-34.localdomain>
+References: <20070915020251.2b5b8adc.akpm@linux-foundation.org>
+	 <1189847359.23521.2.camel@johannes.berg>
+	 <1189954364.29570.15.camel@xo-3E-67-34.localdomain>
+Content-Type: text/plain
+Date: Tue, 18 Sep 2007 22:55:59 -0400
+Message-Id: <1190170559.30482.14.camel@xo-3E-67-34.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As pointed out by Modestas Vainius the link tuner
-could continue working while the radio is already
-down. This because at the start of disable_radio
-the ENABLED_RADIO flag is cleared and causes the
-toggle_rx to skip the stop_link_tuner() call.
-This will add a check to the start of the link tuner
-which will automatically stop the link tuner when the
-radio is disabled.
+On Sun, 2007-09-16 at 10:52 -0400, Dan Williams wrote:
+> On Sat, 2007-09-15 at 11:09 +0200, Johannes Berg wrote:
+> > On Sat, 2007-09-15 at 02:02 -0700, Andrew Morton wrote:
+> > 
+> > >   Building modules, stage 2.
+> > >   MODPOST 353 modules
+> > > ERROR: "libertas_remove_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_add_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_send_tx_feedback" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_prepare_and_send_command" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_remove_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_add_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_process_rxed_packet" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_interrupt" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > > ERROR: "libertas_activate_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+> > 
+> > I really wonder how this thing works at all. All these symbols need to
+> > be exported. I'm pretty sure we've had this before.
+> 
+> Yeah, I must have accidentally dropped that bit...  But I'm 99% sure
+> there are EXPORT_SYMBOL_GPL() notations in the right places for these,
+> certainly for libertas_remove_mesh and libertas_add_mesh and the others.
+> What else needs to be done?
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Any ideas here?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index e8c91fb..92b7252 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -237,6 +237,13 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
- 	    container_of(work, struct rt2x00_dev, link.work.work);
- 
- 	/*
-+	 * When the radio is shutting down we should
-+	 * immediately cease all link tuning.
-+	 */
-+	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
-+		return;
-+
-+	/*
- 	 * Update statistics.
- 	 */
- 	rt2x00dev->ops->lib->link_stats(rt2x00dev);
--- 
-1.5.3.2
+Every single one of these reputedly undefined symbols is currently
+marked with EXPORT_SYMBOL_GPL in 2.6.23-rc6.  Is that not relevant to
+this issue?  If not, does building libertas into the kernel preclude
+building stuff that depends on it as modules?
+
+Dan
+
 
