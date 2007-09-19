@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33959 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbXIBOiV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 10:38:21 -0400
-Subject: Re: [PATCH] ath5k - License clarification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mark Kettenis <mark.kettenis@xs4all.nl>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <200709021342.l82DgpP4029155@brahms.sibelius.xs4all.nl>
-References: <200709021342.l82DgpP4029155@brahms.sibelius.xs4all.nl>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5ihOtWjGK9PxAayKC54m"
-Date: Sun, 02 Sep 2007 16:39:27 +0200
-Message-Id: <1188743967.4028.2.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:49605 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752490AbXISN3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 09:29:10 -0400
+Message-ID: <46F12414.8000900@garzik.org>
+Date: Wed, 19 Sep 2007 09:28:52 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'iwlwifi' branch of wireless-2.6
+References: <20070918185040.GF4940@tuxdriver.com> <20070918.122258.82101397.davem@davemloft.net>
+In-Reply-To: <20070918.122258.82101397.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David Miller wrote:
+> Jeff, if you have no objections I'll pull this into net-2.6.24
 
---=-5ihOtWjGK9PxAayKC54m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2007-09-02 at 15:42 +0200, Mark Kettenis wrote:
+Given that there is now a large backlog of new drivers to review, I 
+think the preferred course of action would be to queue them into -mm 
+(via net-2.6.24) for wider review and testing, and then make sure they 
+all get a thorough review+ACK before pushing upstream.
 
-[crap that has been reiterated dozens of times]
+So far, its sounding like each review has turned up stuff that wants 
+fixing before the drivers commented upon go upstream.
 
-May I remind you that this list is called "linux-wireless" for a reason?
-It's not called "ath5k-legal-vs-bsd" or "bsd-vs-gpl-flamewar" or such so
-there really is no reason to create new threads all the time.
+	Jeff
 
-Thanks,
-johannes
-
---=-5ihOtWjGK9PxAayKC54m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG2ssf/ETPhpq3jKURApz+AJ9kLWh02/He62RmNiT07gggbdnoRgCgj3Ts
-NpZNYvnSwT9Vjz1wA0N+eIQ=
-=yUnB
------END PGP SIGNATURE-----
-
---=-5ihOtWjGK9PxAayKC54m--
 
