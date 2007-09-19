@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:52897 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbXIDAVn (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54384
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365AbXIST0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2007 20:21:43 -0400
-Date: Mon, 3 Sep 2007 17:20:02 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>, Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: port of my recent patches to net-2.6.24
-Message-ID: <20070904002002.GU1835@jm.kir.nu>
-References: <1188027470.9529.5.camel@johannes.berg> <200708270029.35845.flamingice@sourmilk.net> <1188211612.6756.8.camel@johannes.berg>
+	Wed, 19 Sep 2007 15:26:11 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+Date: Wed, 19 Sep 2007 21:23:16 +0200
+Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
+References: <20070919181005.GB5483@tuxdriver.com> <20070919.115903.75429061.davem@davemloft.net>
+In-Reply-To: <20070919.115903.75429061.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188211612.6756.8.camel@johannes.berg>
+Message-Id: <200709192123.16884.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 27, 2007 at 12:46:52PM +0200, Johannes Berg wrote:
-> On Mon, 2007-08-27 at 00:29 -0400, Michael Wu wrote:
-
-> > Patch 12:
-> > -	int allow_broadcast_always; /* whether to allow TX of broadcast frames
-> > -				     * even when there are no associated STAs
-> > -				     */
-> > -
-> > Hmm.. that seems useful.. yet nothing is using it? What happen here?
+On Wednesday 19 September 2007 20:59:03 David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 19 Sep 2007 14:10:05 -0400
 > 
-> It's "used" in wireless-dev in ioctls, but talking to Jouni he seemed to
-> have a better idea instead so was OK with removing it.
+> > This patch adds z1211 (previously known as zd1211rw-mac80211),
+> > a driver for Zydas ZD1211 hardware.  This driver has proven very
+> > robust -- Fedora 7 uses this driver and I don't think I have any open
+> > bugzillas for it.  Either the driver works well, or no one as using
+> > it...given the common availability of the hardware, I have to presume
+> > the former. :-)
+> > 
+> > This driver is mostly a port of zd1211rw to the mac80211
+> > infrastructure.  In fact, most zd1211rw patches have been mirrored
+> > directly to this driver for some time.  I considered merely updating
+> > the existing driver with this code, but I think it is more prudent to
+> > include this as a separate driver just to avoid confusion.  There is
+> > some symbol clash between the two drivers, so I add a Kconfig hack
+> > to ensure that only one or the other is built-in or that this one is
+> > built as a module.
+> > 
+> > The maintainers have identified some (IMHO minor) issues with the
+> > mac80211 port of this driver.  Some of them are summarized here:
+> > 
+> > 	http://linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
+> > 
+> > Still, I think we would be better-off having this driver upstream.
+> 
+> Agreed, merged into net-2.6.24, thanks John.
 
-For the original reason for adding this (making it easier to do some
-continuous TX tests), yes, it can be done in other ways. The only thing
-I can think of here would be some special frames (like broadcast data
-frames as a beacon of some upper layer service) that would be used by
-clients that are capable of receiving frames when not associated (e.g.,
-they use monitor mode). This is getting a bit speculative here, so
-unless someone can point out a real example that depends on this, I
-would go ahead and remove it now.
+
+John, please also note that the following patch is not merged, yet.
+http://bu3sch.de/patches/wireless-dev/20070915-1740/patches/006-zd-fix-tx-status.patch
+Without it ratecontrol does not work. It does neither scale the rate
+up nor down. This patch fixes both.
+I think it got lost in a (really unrelated to the actual bug) discussion
+about whether it's required or not to report status in mac80211 drivers.
+(It turned out that it _is_ required).
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
