@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxsf07.insightbb.com ([74.128.0.77]:35285 "EHLO
-	mxsf07.insightbb.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbXIJEOf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51644 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbXISM1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 00:14:35 -0400
-From: Dmitry Torokhov <dtor@insightbb.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [RFC 0/3] rfkill
-Date: Mon, 10 Sep 2007 00:04:55 -0400
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>
-References: <200709081710.56744.IvDoorn@gmail.com>
-In-Reply-To: <200709081710.56744.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709100004.56664.dtor@insightbb.com>
+	Wed, 19 Sep 2007 08:27:42 -0400
+Subject: Re: [PATCH 1/1] mac80211: add sta_notify callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240709190438o5032df52mb22a97546bdbe563@mail.gmail.com>
+References: <1190036530108-git-send-email-tomas.winkler@intel.com>
+	 <1190054680.23521.23.camel@johannes.berg>
+	 <1ba2fa240709180951v3dc0a98ay11205296fd5768a@mail.gmail.com>
+	 <1190197117.4414.0.camel@johannes.berg>
+	 <1ba2fa240709190438o5032df52mb22a97546bdbe563@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mPeW+MnX/dB2eiaanjLr"
+Date: Wed, 19 Sep 2007 14:28:53 +0200
+Message-Id: <1190204934.4414.17.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ivo,
 
-On Saturday 08 September 2007 11:10, Ivo van Doorn wrote:
-> Hi Dmitry,
-> 
-> I have a few rfkill related patches for which I would prefer if you to could 
-> take a look at before I send them for inclusion.
-> 
+--=-mPeW+MnX/dB2eiaanjLr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Looks good, feel free to add
+On Wed, 2007-09-19 at 13:38 +0200, Tomas Winkler wrote:
 
-	Acked-by: Dmitry Torokhov <dtor@mail.ru>
+> Yes, yet I'm not sure I want to deal with it right now.=20
 
-Thanks!
+Well, my patch making sta_info be per-if isn't ready yet either.
+However, once I finish that patch I'll have to touch this callback to be
+correct, and then I will need to fix iwlwifi for using it which is not
+really nice. Hence, I would very much prefer if this callback was
+correctly defined in the first place and the driver simply ignored the
+extra information it currently doesn't need.
 
--- 
-Dmitry
+johannes
+
+--=-mPeW+MnX/dB2eiaanjLr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG8RYF/ETPhpq3jKURAvSnAKCfPKVWKbsWh6fn6V9qxkKQjBGWvQCdFacp
+JCEnZsNZFIns753IIyW36mU=
+=2OcZ
+-----END PGP SIGNATURE-----
+
+--=-mPeW+MnX/dB2eiaanjLr--
+
