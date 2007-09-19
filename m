@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43860
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763930AbXISSAX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60156
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756577AbXISVZb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:00:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Change loglevel of radio-enable message.
-Date: Wed, 19 Sep 2007 19:57:59 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200709191858.38634.mb@bu3sch.de> <46F162AF.9050903@lwfinger.net>
-In-Reply-To: <46F162AF.9050903@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200709191957.59255.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Wed, 19 Sep 2007 17:25:31 -0400
+Date: Wed, 19 Sep 2007 14:25:29 -0700 (PDT)
+Message-Id: <20070919.142529.03110023.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: jeff@garzik.org, gregkh@suse.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-usb-users@lists.sourceforge.net, zambrano@broadcom.com,
+	mb@bu3sch.de
+Subject: Re: Please pull 'ssb-drivers' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070919204428.GE5483@tuxdriver.com>
+References: <20070919204428.GE5483@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 19 September 2007 19:55:59 Larry Finger wrote:
-> Michael Buesch wrote:
-> > Also cleanup the code a bit and remove the inline.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> > @@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
-> >  	b43_radio_turn_on(dev);
-> >  	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
-> >  	b43dbg(dev->wl, "Radio %s by hardware\n",           <========================
-> > -	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
-> > +	       dev->radio_hw_enable ? "enabled" : "disabled");
-> 
-> Shouldn't this one be b43info rather than b43dbg?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 19 Sep 2007 16:44:28 -0400
 
-No, I think it's really only interesting to see if it changed
-in operation.
-If it doesn't work, people will press their rfkill buttons
-before even noticing this message on init. :)
+> Jeff, Greg, Gary, and Dave,
+> 
+> These patches build upon the SSB bus support added to net-2.6.24 to
+> support the b43 wireless driver.  Since Dave has that support in his
+> tree, I'm asking him to merge these patches as well.
+> 
+> The first patch changes b44 from being a PCI (i.e. SSB-in-drag)
+> device to being a native SSB device.  This has little effect one
+> way or the other for laptop/desktop/server machines.  But, some
+> embedded devices have b44 hardware but no PCI bus (i.e. just SSB).
+> This patch enables the use of the b44 driver on that hardware.
+> 
+> The second patch adds a driver for a USB OHCI device which lives on
+> the SSB bus.  Again, this is found on a number of SoC devices used
+> especially in wireless routers and APs.
+> 
+> Thanks for reviewing/ACKing/merging!
 
--- 
-Greetings Michael.
+I've merged the B44 driver conversion into my tree.
+
+I'll let Greg take in the OHCI thing.  I would suggest that he
+queue it up, and then once I get the net-2.6.24 tree into the
+merge window (which contains the SSB stack) he can push the
+OHCI change in afterwards.
