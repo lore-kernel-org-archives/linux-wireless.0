@@ -1,54 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43547 "EHLO ciao.gmane.org"
+Received: from madara.hpl.hp.com ([192.6.19.124]:51525 "EHLO madara.hpl.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754772AbXI0SOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 14:14:31 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Iaxr1-0005oF-M3
-	for linux-wireless@vger.kernel.org; Thu, 27 Sep 2007 18:12:51 +0000
-Received: from 069-064-229-129.pdx.net ([69.64.229.129])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 18:12:51 +0000
-Received: from shemminger by 069-064-229-129.pdx.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 18:12:51 +0000
-To: linux-wireless@vger.kernel.org
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: New 'Changes-licensed-under' tag introduced for Linux-wireless
-Date: Thu, 27 Sep 2007 11:09:50 -0700
-Message-ID: <20070927110950.0561eca1@freepuppy.rosehill>
-References: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-In-Reply-To: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
-Cc: linux-kernel@vger.kernel.org
+	id S1751994AbXISSws (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 14:52:48 -0400
+Date: Wed, 19 Sep 2007 11:50:28 -0700
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2.6.23] WE : Fix ESSID API
+Message-ID: <20070919185028.GA22011@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 27 Sep 2007 14:00:09 -0400
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+	Hi,
 
-> Our guidelines for patches [1] for Linux-wireless has been updated.
-> One section asks Linux-wireless developers to subscribe to the patch
-> guideline wiki page (section 2) and another which introduces the new
-> 'Changes-licensed-under' (section 10).
-> 
-> Here I'll cover the new 'Changes-licensed-under' tag but please refer
-> to the link and subscribe to the page for the complete details and for
-> further changes.
-> 
+	The hack introduced one year ago to support the old ESSID API
+is proving even more problematic than I first though. It does not
+work, and therefore it need to be removed.
 
-No, please don't down this legal rat hole. It would cause bullshit like
-people submitting dual licensed patches to the scheduler or GPL only
-patches to the ath5k or ACPI code.
+	First problem : you can not read an ESSID with 32
+char. Philippe Teuwen was the first one to report that, followed by
+the MadWifi team :
+                http://madwifi.org/ticket/930
+	This is trivial to test. You just set an ESSID with 32
+character using iwconfig, and you will see that iwconfig won't display
+it back.
+	More info :
+		http://marc.info/?t=118401941300001&r=1&w=2
 
-Instead, add a section to Documentation/SubmittingPatches that clearly
-states that all changes to a file are licensed under the same license
-as the original file. I don't feel legally qualified to write the correct
-wording.
+	Second problem : a spurious NUL character is always appended
+to the ESSID. Johannes ask me to change iwconfig to display non-ascii
+characters in ESSID, and this bug is preventing this change.
+	If you use a version of iwconfig aware of non-ASCII
+characters (30.pre1), this is what it will display :
+---------------------------------------------------
+eth0      IEEE 802.11b  ESSID:"my_essid\x00"
+---------------------------------------------------
+	Supporting non-ASCII characters in ESSID is getting more and
+more important, as more an more network out there are starting to use
+them. The painful API change started 18 months ago was designed to
+enable that, but unfortunately this is not yet the possible.
+	More info :
+		http://marc.info/?t=118958503300003&r=1&w=2
 
+	The patch was tested for weeks on 2.6.22, and tested quickly
+on 2.6.23-rc6. I also have a patch for 2.6.20/2.6.21.
 
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+	In my personal opinion, this patch is totally safe and should
+go ASAP in the kernel and in the stable series. However, I understand
+that you are not confortable with it, therefore a compromise would be
+to push it in 2.6.24-pre1, and once it has baked enough in 2.6.24-pre,
+to push it to the stable series (2.6.20 - not applicable to 2.6.16).
+
+	Johannes : would you mind adding your own comments ?
+
+	Thanks...
+
+        Jean
+
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+
+-----------------------------------------------------------
+
+--- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
++++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
+@@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
+ 		int	extra_size;
+ 		int	user_length = 0;
+ 		int	err;
+-		int	essid_compat = 0;
+ 
+ 		/* Calculate space needed by arguments. Always allocate
+ 		 * for max space. Easier, and won't last long... */
+ 		extra_size = descr->max_tokens * descr->token_size;
+ 
+-		/* Check need for ESSID compatibility for WE < 21 */
+-		switch (cmd) {
+-		case SIOCSIWESSID:
+-		case SIOCGIWESSID:
+-		case SIOCSIWNICKN:
+-		case SIOCGIWNICKN:
+-			if (iwr->u.data.length == descr->max_tokens + 1)
+-				essid_compat = 1;
+-			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-				char essid[IW_ESSID_MAX_SIZE + 1];
+-
+-				err = copy_from_user(essid, iwr->u.data.pointer,
+-						     iwr->u.data.length *
+-						     descr->token_size);
+-				if (err)
+-					return -EFAULT;
+-
+-				if (essid[iwr->u.data.length - 1] == '\0')
+-					essid_compat = 1;
+-			}
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		iwr->u.data.length -= essid_compat;
+-
+ 		/* Check what user space is giving us */
+ 		if (IW_IS_SET(cmd)) {
+ 			/* Check NULL pointer */
+@@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
+ 		}
+ 
+ 		/* Create the kernel buffer */
+-		/*    kzalloc ensures NULL-termination for essid_compat */
+ 		extra = kzalloc(extra_size, GFP_KERNEL);
+ 		if (extra == NULL)
+ 			return -ENOMEM;
+@@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
+ 		/* Call the handler */
+ 		ret = handler(dev, &info, &(iwr->u), extra);
+ 
+-		iwr->u.data.length += essid_compat;
+-
+ 		/* If we have something to return to the user */
+ 		if (!ret && IW_IS_GET(cmd)) {
+ 			/* Check if there is enough buffer up there */
 
