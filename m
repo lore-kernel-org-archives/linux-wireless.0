@@ -1,121 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:38346 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752614AbXIPMIE (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:34173 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbXISDBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:08:04 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1643781wah
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:04 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 8/24] rt2x00: Reduce LNA flags
-Date: Sun, 16 Sep 2007 14:18:27 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
+	Tue, 18 Sep 2007 23:01:23 -0400
+Date: Tue, 18 Sep 2007 22:00:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] softmac: Fix inability to associate with WEP networks,  and the inability to change essid
+Message-ID: <46f090e4.wi04CrQ11sG6gLcC%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Message-Id: <200709161418.29076.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because rt73usb has LNA in a single variable
-and rt61pci has LNA for A and BG modes we currently
-had 3 flags for LNA.
+Commit 4cf92a3c was submitted as a fix for bug #8686 at bugzilla.kernel.org
+(http://bugzilla.kernel.org/show_bug.cgi?id=8686). Unfortunately, the fix led to
+a new bug, reported by Yoshifuji Hideaki, that prevented association for WEP
+encrypted networks that use ifconfig to control the device. This patch effectively
+reverts the earlier commit and does a proper fix for bug #8686.
 
-Reduce this by setting LNA_A and LNA_BG if rt73usb has
-LNA enabled.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h  |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c |   18 ++++++++++--------
- 2 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 40dd52b..02a5adf 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -520,7 +520,7 @@ struct rt2x00_dev {
- #define DEVICE_SUPPORT_HW_BUTTON	12
- #define CONFIG_FRAME_TYPE		13
- #define CONFIG_RF_SEQUENCE		14
--#define CONFIG_EXTERNAL_LNA		15
-+/* Hole: Add new Flag here */
- #define CONFIG_EXTERNAL_LNA_A		16
- #define CONFIG_EXTERNAL_LNA_BG		17
- #define CONFIG_DOUBLE_ANTENNA		18
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index feb211d..703e4e1 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -519,7 +519,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	rt73usb_register_read(rt2x00dev, PHY_CSR0, &reg);
+John,
+
+This fix replaces my earlier request for reversion of commit 4cf92a3c. As stated
+above, it effectively does the reversion, but it also fixes the original bug.
+
+Larry
+---
+
+ net/ieee80211/softmac/ieee80211softmac_assoc.c |    2
+ net/ieee80211/softmac/ieee80211softmac_wx.c    |   54 +++++++++----------------
+ 2 files changed, 20 insertions(+), 36 deletions(-)
+
+Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+===================================================================
+--- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_assoc.c
++++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+@@ -273,8 +273,6 @@ ieee80211softmac_assoc_work(struct work_
+ 			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
+ 			if (ieee80211softmac_start_scan(mac)) {
+ 				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
+-				mac->associnfo.associating = 0;
+-				mac->associnfo.associated = 0;
+ 			}
+ 			goto out;
+ 		} else {
+Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c
+===================================================================
+--- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_wx.c
++++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c
+@@ -70,44 +70,30 @@ ieee80211softmac_wx_set_essid(struct net
+ 			      char *extra)
+ {
+ 	struct ieee80211softmac_device *sm = ieee80211_priv(net_dev);
+-	struct ieee80211softmac_network *n;
+ 	struct ieee80211softmac_auth_queue_item *authptr;
+ 	int length = 0;
  
- 	if (rt2x00dev->curr_hwmode == HWMODE_A) {
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
-+		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
- 			rt73usb_bbp_write(rt2x00dev, 96, 0x78);
- 			rt73usb_bbp_write(rt2x00dev, 104, 0x48);
- 			rt73usb_bbp_write(rt2x00dev, 75, 0x80);
-@@ -539,7 +539,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 		rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_BG, 0);
- 		rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_A, 1);
- 	} else {
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
-+		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags)) {
- 			rt73usb_bbp_write(rt2x00dev, 96, 0x68);
- 			rt73usb_bbp_write(rt2x00dev, 104, 0x3c);
- 			rt73usb_bbp_write(rt2x00dev, 75, 0x80);
-@@ -792,7 +792,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
- 		low_bound = 0x28;
- 		up_bound = 0x48;
- 
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
-+		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
- 			low_bound += 0x10;
- 			up_bound += 0x10;
- 		}
-@@ -808,7 +808,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
- 			up_bound = 0x1c;
- 		}
- 
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
-+		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags)) {
- 			low_bound += 0x14;
- 			up_bound += 0x10;
- 		}
-@@ -1336,7 +1336,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ check_assoc_again:
+ 	mutex_lock(&sm->associnfo.mutex);
+-	/* Check if we're already associating to this or another network
+-	 * If it's another network, cancel and start over with our new network
+-	 * If it's our network, ignore the change, we're already doing it!
+-	 */
+ 	if((sm->associnfo.associating || sm->associnfo.associated) &&
+ 	   (data->essid.flags && data->essid.length)) {
+-		/* Get the associating network */
+-		n = ieee80211softmac_get_network_by_bssid(sm, sm->associnfo.bssid);
+-		if(n && n->essid.len == data->essid.length &&
+-		   !memcmp(n->essid.data, extra, n->essid.len)) {
+-			dprintk(KERN_INFO PFX "Already associating or associated to "MAC_FMT"\n",
+-				MAC_ARG(sm->associnfo.bssid));
+-			goto out;
+-		} else {
+-			dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
+-			/* Cancel assoc work */
+-			cancel_delayed_work(&sm->associnfo.work);
+-			/* We don't have to do this, but it's a little cleaner */
+-			list_for_each_entry(authptr, &sm->auth_queue, list)
+-				cancel_delayed_work(&authptr->work);
+-			sm->associnfo.bssvalid = 0;
+-			sm->associnfo.bssfixed = 0;
+-			sm->associnfo.associating = 0;
+-			sm->associnfo.associated = 0;
+-			/* We must unlock to avoid deadlocks with the assoc workqueue
+-			 * on the associnfo.mutex */
+-			mutex_unlock(&sm->associnfo.mutex);
+-			flush_scheduled_work();
+-			/* Avoid race! Check assoc status again. Maybe someone started an
+-			 * association while we flushed. */
+-			goto check_assoc_again;
+-		}
++		dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
++		/* Cancel assoc work */
++		cancel_delayed_work(&sm->associnfo.work);
++		/* We don't have to do this, but it's a little cleaner */
++		list_for_each_entry(authptr, &sm->auth_queue, list)
++			cancel_delayed_work(&authptr->work);
++		sm->associnfo.bssvalid = 0;
++		sm->associnfo.bssfixed = 0;
++		sm->associnfo.associating = 0;
++		sm->associnfo.associated = 0;
++		/* We must unlock to avoid deadlocks with the assoc workqueue
++		 * on the associnfo.mutex */
++		mutex_unlock(&sm->associnfo.mutex);
++		flush_scheduled_work();
++		/* Avoid race! Check assoc status again. Maybe someone started an
++		 * association while we flushed. */
++		goto check_assoc_again;
  	}
  
- 	if (rt2x00dev->rx_status.phymode == MODE_IEEE80211A) {
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags)) {
-+		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
- 			if (lna == 3 || lna == 2)
- 				offset += 10;
- 		} else {
-@@ -1349,7 +1349,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_A, &eeprom);
- 		offset -= rt2x00_get_field16(eeprom, EEPROM_RSSI_OFFSET_A_1);
- 	} else {
--		if (test_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags))
-+		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags))
- 			offset += 14;
+ 	sm->associnfo.static_essid = 0;
+@@ -153,13 +139,13 @@ ieee80211softmac_wx_get_essid(struct net
+ 		data->essid.length = sm->associnfo.req_essid.len;
+ 		data->essid.flags = 1;  /* active */
+ 		memcpy(extra, sm->associnfo.req_essid.data, sm->associnfo.req_essid.len);
+-	}
+-
++		dprintk(KERN_INFO PFX "Getting essid from req_essid\n");
++	} else if (sm->associnfo.associated || sm->associnfo.associating) {
+ 	/* If we're associating/associated, return that */
+-	if (sm->associnfo.associated || sm->associnfo.associating) {
+ 		data->essid.length = sm->associnfo.associate_essid.len;
+ 		data->essid.flags = 1;  /* active */
+ 		memcpy(extra, sm->associnfo.associate_essid.data, sm->associnfo.associate_essid.len);
++		dprintk(KERN_INFO PFX "Getting essid from associate_essid\n");
+ 	}
+ 	mutex_unlock(&sm->associnfo.mutex);
  
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_BG, &eeprom);
-@@ -1544,8 +1544,10 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
- 
--	if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA))
--		__set_bit(CONFIG_EXTERNAL_LNA, &rt2x00dev->flags);
-+	if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA)) {
-+		__set_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags);
-+		__set_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags);
-+	}
- 
- 	/*
- 	 * Store led settings, for correct led behaviour.
--- 
-1.5.3
