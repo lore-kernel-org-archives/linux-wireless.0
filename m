@@ -1,115 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43430 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757182AbXIJMPr (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35479
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755145AbXISQy1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 08:15:47 -0400
-Subject: [RFC/RFT] mac80211: fix TKIP IV update
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 10 Sep 2007 14:17:12 +0200
-Message-Id: <1189426632.4506.89.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 19 Sep 2007 12:54:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Use ioreadX() and iowriteX() for PCI.
+Date: Wed, 19 Sep 2007 18:53:44 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709191853.44334.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TKIP IV should be updated only after MMIC verification,
-this patch changes it to be at that spot.
+On a PCI bus use ioreadX() and iowriteX().
+We map the I/O space with pci_iomap(), so we must use the correct
+accessor functions, too.
+readX() and writeX() are not guaranteed to accept the cookie returned
+from pci_iomap() (though, it currently works on most architectures).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
----
-I'm not entirely sure about this, the comment said it should be correct
-but I haven't double-checked the specs. It does seem to work, however,
-I've connected to my TKIP[GTK]/CCMP[PTK] network without ill effects and
-multicast traffic was fine.
-
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/tkip.c        |   16 ++++++++++------
- net/mac80211/tkip.h        |    3 ++-
- net/mac80211/wpa.c         |    8 +++++++-
- 4 files changed, 21 insertions(+), 8 deletions(-)
-
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-10 14:13:03.907220974 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-10 14:13:08.237222493 +0200
-@@ -160,6 +160,8 @@ struct ieee80211_txrx_data {
- 			int sent_ps_buffered;
- 			int queue;
- 			int load;
-+			u32 tkip_iv32;
-+			u16 tkip_iv16;
- 			u16 qos_control;
- 		} rx;
- 	} u;
---- wireless-dev.orig/net/mac80211/tkip.c	2007-09-10 14:13:03.957223904 +0200
-+++ wireless-dev/net/mac80211/tkip.c	2007-09-10 14:13:08.237222493 +0200
-@@ -238,7 +238,8 @@ void ieee80211_tkip_encrypt_data(struct 
- int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 				struct ieee80211_key *key,
- 				u8 *payload, size_t payload_len, u8 *ta,
--				int only_iv, int queue)
-+				int only_iv, int queue,
-+				u32 *out_iv32, u16 *out_iv16)
- {
- 	u32 iv32;
- 	u32 iv16;
-@@ -330,11 +331,14 @@ int ieee80211_tkip_decrypt_data(struct c
- 	res = ieee80211_wep_decrypt_data(tfm, rc4key, 16, pos, payload_len - 12);
-  done:
- 	if (res == TKIP_DECRYPT_OK) {
--		/* FIX: these should be updated only after Michael MIC has been
--		 * verified */
--		/* Record previously received IV */
--		key->u.tkip.iv32_rx[queue] = iv32;
--		key->u.tkip.iv16_rx[queue] = iv16;
-+		/*
-+		 * Record previously received IV, will be copied into the
-+		 * key information after MIC verification. It is possible
-+		 * that we don't catch replays of fragments but that's ok
-+		 * because the Michael MIC verication will then fail.
-+		 */
-+		*out_iv32 = iv32;
-+		*out_iv16 = iv16;
+Index: wireless-dev/drivers/ssb/pci.c
+===================================================================
+--- wireless-dev.orig/drivers/ssb/pci.c	2007-09-19 17:15:58.000000000 +0200
++++ wireless-dev/drivers/ssb/pci.c	2007-09-19 17:31:44.000000000 +0200
+@@ -531,7 +531,7 @@ static u16 ssb_pci_read16(struct ssb_dev
+ 		if (unlikely(ssb_pci_switch_core(bus, dev)))
+ 			return 0xFFFF;
  	}
- 
- 	return res;
---- wireless-dev.orig/net/mac80211/tkip.h	2007-09-10 14:13:03.977220323 +0200
-+++ wireless-dev/net/mac80211/tkip.h	2007-09-10 14:13:08.237222493 +0200
-@@ -31,6 +31,7 @@ enum {
- int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 				struct ieee80211_key *key,
- 				u8 *payload, size_t payload_len, u8 *ta,
--				int only_iv, int queue);
-+				int only_iv, int queue,
-+				u32 *out_iv32, u16 *out_iv16);
- 
- #endif /* TKIP_H */
---- wireless-dev.orig/net/mac80211/wpa.c	2007-09-10 14:13:04.027227485 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-09-10 14:13:08.237222493 +0200
-@@ -239,6 +239,10 @@ ieee80211_rx_h_michael_mic_verify(struct
- 	/* remove Michael MIC from payload */
- 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
- 
-+	/* update IV in key information to be able to detect replays */
-+	rx->key->u.tkip.iv32_rx[rx->u.rx.queue] = rx->u.rx.tkip_iv32;
-+	rx->key->u.tkip.iv16_rx[rx->u.rx.queue] = rx->u.rx.tkip_iv16;
-+
- 	return TXRX_CONTINUE;
+-	return readw(bus->mmio + offset);
++	return ioread16(bus->mmio + offset);
  }
  
-@@ -461,7 +465,9 @@ ieee80211_crypto_tkip_decrypt(struct iee
- 	res = ieee80211_tkip_decrypt_data(rx->local->wep_rx_tfm,
- 					  key, skb->data + hdrlen,
- 					  skb->len - hdrlen, rx->sta->addr,
--					  hwaccel, rx->u.rx.queue);
-+					  hwaccel, rx->u.rx.queue,
-+					  &rx->u.rx.tkip_iv32,
-+					  &rx->u.rx.tkip_iv16);
- 	if (res != TKIP_DECRYPT_OK || wpa_test) {
- 		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
- 		       MAC_FMT " (res=%d)\n",
-
-
+ static u32 ssb_pci_read32(struct ssb_device *dev, u16 offset)
+@@ -544,7 +544,7 @@ static u32 ssb_pci_read32(struct ssb_dev
+ 		if (unlikely(ssb_pci_switch_core(bus, dev)))
+ 			return 0xFFFFFFFF;
+ 	}
+-	return readl(bus->mmio + offset);
++	return ioread32(bus->mmio + offset);
+ }
+ 
+ static void ssb_pci_write16(struct ssb_device *dev, u16 offset, u16 value)
+@@ -557,7 +557,7 @@ static void ssb_pci_write16(struct ssb_d
+ 		if (unlikely(ssb_pci_switch_core(bus, dev)))
+ 			return;
+ 	}
+-	writew(value, bus->mmio + offset);
++	iowrite16(value, bus->mmio + offset);
+ }
+ 
+ static void ssb_pci_write32(struct ssb_device *dev, u16 offset, u32 value)
+@@ -570,7 +570,7 @@ static void ssb_pci_write32(struct ssb_d
+ 		if (unlikely(ssb_pci_switch_core(bus, dev)))
+ 			return;
+ 	}
+-	writel(value, bus->mmio + offset);
++	iowrite32(value, bus->mmio + offset);
+ }
+ 
+ /* Not "static", as it's used in main.c */
