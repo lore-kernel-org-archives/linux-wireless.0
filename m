@@ -1,35 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42561 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965341AbXIBMhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 08:37:00 -0400
-Message-ID: <46DAAE64.3070203@garzik.org>
-Date: Sun, 02 Sep 2007 08:36:52 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37549
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbXISRMC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 13:12:02 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH v2 FIXED] b43: Change loglevel of radio-enable message.
+Date: Wed, 19 Sep 2007 19:10:08 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-CC: Adrian Bunk <bunk@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu> <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es> <20070902115041.GM16016@stusta.de> <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
-In-Reply-To: <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709191910.08743.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Sobrado wrote:
-> When code is multi-licensed it must be distributed under *all* these 
-> licensing terms concurrently.  It is easy to understand.  Removing (or 
-> changing) the conditions that apply to the program from the source code 
-> and documentation *without* an authorization from all the author(s) is 
-> illegal.
+Also cleanup the code a bit and remove the inline.
 
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-The plain English in the dual-license text directly contradicts this 
-fiction.
-
-	Jeff
-
-
+Index: wireless-dev/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-19 19:02:24.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-19 19:02:27.000000000 +0200
+@@ -2175,6 +2175,21 @@ static void b43_mgmtframe_txantenna(stru
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PRPHYCTL, tmp);
+ }
+ 
++/* Returns TRUE, if the radio is enabled in hardware. */
++static bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
++{
++	if (dev->phy.rev >= 3) {
++		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
++		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
++			return 1;
++	} else {
++		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
++		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
++			return 1;
++	}
++	return 0;
++}
++
+ /* This is the opposite of b43_chip_init() */
+ static void b43_chip_exit(struct b43_wldev *dev)
+ {
+@@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
+ 	b43_radio_turn_on(dev);
+ 	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
+ 	b43dbg(dev->wl, "Radio %s by hardware\n",
+-	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
++	       dev->radio_hw_enable ? "enabled" : "disabled");
+ 
+ 	b43_write16(dev, 0x03E6, 0x0000);
+ 	err = b43_phy_init(dev);
+@@ -2373,14 +2388,14 @@ static void b43_periodic_every15sec(stru
+ 
+ static void b43_periodic_every1sec(struct b43_wldev *dev)
+ {
+-	int radio_hw_enable;
++	bool radio_hw_enable;
+ 
+ 	/* check if radio hardware enabled status changed */
+ 	radio_hw_enable = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
+ 		dev->radio_hw_enable = radio_hw_enable;
+-		b43dbg(dev->wl, "Radio hardware status changed to %s\n",
+-		       (radio_hw_enable == 0) ? "disabled" : "enabled");
++		b43info(dev->wl, "Radio hardware status changed to %s\n",
++			radio_hw_enable ? "ENABLED" : "DISABLED");
+ 		b43_leds_update(dev, 0);
+ 	}
+ }
+Index: wireless-dev/drivers/net/wireless/b43/main.h
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/main.h	2007-09-19 19:02:24.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.h	2007-09-19 19:02:27.000000000 +0200
+@@ -96,23 +96,6 @@ static inline int b43_is_ofdm_rate(int r
+ 	return !b43_is_cck_rate(rate);
+ }
+ 
+-static inline int b43_is_hw_radio_enabled(struct b43_wldev *dev)
+-{
+-	/* function to return state of hardware enable of radio
+-	 * returns 0 if radio disabled, 1 if radio enabled
+-	 */
+-	struct b43_phy *phy = &dev->phy;
+-
+-	if (phy->rev >= 3)
+-		return ((b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+-			 & B43_MMIO_RADIO_HWENABLED_HI_MASK)
+-			== 0) ? 1 : 0;
+-	else
+-		return ((b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+-			 & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+-			== 0) ? 0 : 1;
+-}
+-
+ void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
+ void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
+ 
+Index: wireless-dev/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/leds.c	2007-09-19 18:13:49.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/leds.c	2007-09-19 19:07:45.000000000 +0200
+@@ -176,6 +176,7 @@ void b43_leds_update(struct b43_wldev *d
+ 	unsigned long interval = 0;
+ 	u16 ledctl;
+ 	unsigned long flags;
++	bool radio_enabled = (phy->radio_on && dev->radio_hw_enable);
+ 
+ 	spin_lock_irqsave(&dev->wl->leds_lock, flags);
+ 	ledctl = b43_read16(dev, B43_MMIO_GPIO_CONTROL);
+@@ -195,21 +196,19 @@ void b43_leds_update(struct b43_wldev *d
+ 			turn_on = activity;
+ 			break;
+ 		case B43_LED_RADIO_ALL:
+-			turn_on = phy->radio_on && b43_is_hw_radio_enabled(dev);
++			turn_on = radio_enabled;
+ 			break;
+ 		case B43_LED_RADIO_A:
+-			turn_on = (phy->radio_on && b43_is_hw_radio_enabled(dev)
+-				   && phy->type == B43_PHYTYPE_A);
++			turn_on = (radio_enabled && phy->type == B43_PHYTYPE_A);
+ 			break;
+ 		case B43_LED_RADIO_B:
+-			turn_on = (phy->radio_on && b43_is_hw_radio_enabled(dev)
+-				   && (phy->type == B43_PHYTYPE_B
+-				       || phy->type == B43_PHYTYPE_G));
++			turn_on = (radio_enabled &&
++				   (phy->type == B43_PHYTYPE_B
++				    || phy->type == B43_PHYTYPE_G));
+ 			break;
+ 		case B43_LED_MODE_BG:
+ 			if (phy->type == B43_PHYTYPE_G
+-			    && b43_is_hw_radio_enabled(dev)
+-			    && 1 /*FIXME: using G rates. */ )
++			    && radio_enabled)
+ 				turn_on = 1;
+ 			break;
+ 		case B43_LED_TRANSFER:
