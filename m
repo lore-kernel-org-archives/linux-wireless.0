@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50974 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbXI1LaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 07:30:14 -0400
-Subject: Re: Error in compilation of b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46FC854B.2010500@lwfinger.net>
-References: <46FC854B.2010500@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fFHGDwml4eFoN0y81W8S"
-Date: Fri, 28 Sep 2007 13:31:32 +0200
-Message-Id: <1190979092.5021.37.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from namei.org ([69.55.235.186]:45466 "EHLO us.intercode.com.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756142AbXISJWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 05:22:30 -0400
+Date: Wed, 19 Sep 2007 02:22:21 -0700 (PDT)
+From: James Morris <jmorris@namei.org>
+To: linux-wireless@vger.kernel.org
+cc: fabrice@bellet.info
+Subject: Problem with Cisco MPI350/airo
+Message-ID: <Xine.LNX.4.64.0709190051080.29334@us.intercode.com.au>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I've got an x31 thinkpad with an MPI350 card, which has worked more or 
+less reliably for several years.
 
---=-fFHGDwml4eFoN0y81W8S
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+With current git and Fedora kernels, the wireless dies some time after 
+boot, with the following types of messages ending up in syslog:
 
-On Thu, 2007-09-27 at 23:38 -0500, Larry Finger wrote:
+Sep 19 16:36:32 localhost kernel: airo(eth0): cmd:1 status:7f21 rsp0:21 rsp1:0 rsp2:2eab
+Sep 19 16:36:32 localhost kernel: airo(eth0): Bad MAC enable reason=21, rid=0, offset=11947
+Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:2 status:7f02 rsp0:0 rsp1:0 rsp2:2eab
+Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:1 status:7f01 rsp0:2 rsp1:0 rsp2:2eab
+Sep 19 16:36:33 localhost kernel: airo(eth0): Bad MAC enable reason=2, rid=0, offset=11947
+Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:3 status:7f03 rsp0:0 rsp1:0 rsp2:2eab
 
-> drivers/net/wireless/b43/rfkill.c:112: error: implicit declaration of fun=
-ction =E2=80=98rfkill_get_led_name=E2=80=99
-> drivers/net/wireless/b43/rfkill.c:112: warning: return makes pointer from=
- integer without a cast
->=20
-> I assume that I missed some critical patch. Can you tell me which one it =
-is?
+NetworkManager seems to lose contact with the card, then fails & asks for 
+a new key (which it doesn't actually need).
 
-Looks like "[PATCH] rfkill: Add support for an rfkill LED" might be it.
+Sep 19 16:37:03 localhost NetworkManager: <info>  Activation 
+(eth0/wireless): association took too long (>20s), asking for
+ new key. 
 
-johannes
+Anyone seen this before, and/or know what's happening ?
 
---=-fFHGDwml4eFoN0y81W8S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG/OYU/ETPhpq3jKURAmBrAJ9dLrQiYClSJPRVfyXkR92MEizP4ACeIgZc
-v5hfxyk7PDZ4QHBf+NJLC2Y=
-=dOSU
------END PGP SIGNATURE-----
-
---=-fFHGDwml4eFoN0y81W8S--
-
+- James
+-- 
+James Morris
+<jmorris@namei.org>
