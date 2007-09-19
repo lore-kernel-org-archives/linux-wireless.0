@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:29542 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753364AbXIRUM5 (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.231]:41965 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbXISSfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 16:12:57 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3965593pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2007 13:12:57 -0700 (PDT)
-Message-ID: <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
-Date: Tue, 18 Sep 2007 16:12:56 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Linus Torvalds" <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-Cc: "Alan Cox" <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"Jeff Garzik" <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+	Wed, 19 Sep 2007 14:35:17 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so224936wxd
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 11:35:16 -0700 (PDT)
+To: David Miller <davem@davemloft.net>
+Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
+Date: Wed, 19 Sep 2007 20:47:59 +0200
+Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <20070918213202.GJ4940@tuxdriver.com> <200709192031.19934.IvDoorn@gmail.com> <20070919.112137.48806758.davem@davemloft.net>
+In-Reply-To: <20070919.112137.48806758.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
-	 <20070918113401.6a8a737f@the-village.bc.nu>
-	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-	 <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
-	 <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709192048.00741.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/18/07, Linus Torvalds <torvalds@linux-foundation.org> wrote:
->
->
-> On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
-> >
-> > ACK -- driver developers use this just to save themselves a few lines
-> > from calling pci_resource_start() and friends. How about having an
-> > inline which does what pci_iomap() does except it doesn't call
-> > ioport_map() ? I am just not sure where this would go..
->
-> I'm not understanding what the problem is?
->
-> Why don't these people just use "ioread*()/iowrite*()"?
->
-> In other words, the whole point of *not* using "read*/write*()" is that
-> you get a whole slew of much nicer interfaces.
->
-> So can people explain this fundamental issue? Why do people insist on
-> using the old interfaces (and matching them with the new setup)?
+On Wednesday 19 September 2007, David Miller wrote:
+> From: Ivo van Doorn <ivdoorn@gmail.com>
+> Date: Wed, 19 Sep 2007 20:31:19 +0200
+> 
+> > Because I am indeed not really happy with this early merge, but I'll do my
+> > best to resolve the last outstanding bugs as soon as possible.
+> 
+> Relax :-)
 
-An extra branch is created on MMIO-only devices on read/writes on the
-IO_COND macro using this interface -- or is this optimized out?
+:)
 
-  Luis
+> A merge upstream doesn't mean "bug free", it means "significantly
+> better than no driver at all" and that is undoubtedly the case
+> here.
+
+Well I am happy rt2x00 is being considered good enough for upstream already,
+but I have the habbit of wanting things bug-free before pushing it further upstream.
+
+Well most users are happy with current rt2x00 version anyway,
+so the remaining issues probably aren't that big anyway. (Except for the 2 panics,
+which should be resolved soon anyway) ;)
+
+Ivo
