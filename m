@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34172
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbXITUNj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 16:13:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Remove the "radio hw enabled" message on startup.
-Date: Thu, 20 Sep 2007 22:12:58 +0200
-Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2972 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755485AbXISVlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2007 17:41:46 -0400
+Date: Wed, 19 Sep 2007 17:27:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: jeff@garzik.org, gregkh@suse.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-usb-users@lists.sourceforge.net, zambrano@broadcom.com,
+	mb@bu3sch.de
+Subject: Re: Please pull 'ssb-drivers' branch of wireless-2.6
+Message-ID: <20070919212756.GA3136@tuxdriver.com>
+References: <20070919204428.GE5483@tuxdriver.com> <20070919.142529.03110023.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709202212.58455.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070919.142529.03110023.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message is useless. Only report state changes.
+On Wed, Sep 19, 2007 at 02:25:29PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 19 Sep 2007 16:44:28 -0400
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
+> > The second patch adds a driver for a USB OHCI device which lives on
+> > the SSB bus.  Again, this is found on a number of SoC devices used
+> > especially in wireless routers and APs.
 
-Index: wireless-dev/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-20 19:39:06.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-20 20:06:24.000000000 +0200
-@@ -2227,9 +2227,6 @@ static int b43_chip_init(struct b43_wlde
- 	if (err)
- 		goto err_gpio_cleanup;
- 	b43_radio_turn_on(dev);
--	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
--	b43dbg(dev->wl, "Radio %s by hardware\n",
--	       dev->radio_hw_enable ? "enabled" : "disabled");
- 
- 	b43_write16(dev, 0x03E6, 0x0000);
- 	err = b43_phy_init(dev);
-@@ -3251,6 +3248,9 @@ static void setup_struct_wldev_for_init(
- {
- 	/* Flags */
- 	dev->reg124_set_0x4 = 0;
-+	/* Assume the radio is enabled. If it's not enabled, the state will
-+	 * immediately get fixed on the first periodic work run. */
-+	dev->radio_hw_enable = 1;
- 
- 	/* Stats */
- 	memset(&dev->stats, 0, sizeof(dev->stats));
+> I'll let Greg take in the OHCI thing.  I would suggest that he
+> queue it up, and then once I get the net-2.6.24 tree into the
+> merge window (which contains the SSB stack) he can push the
+> OHCI change in afterwards.
+
+ACK
+
+-- 
+John W. Linville
+linville@tuxdriver.com
