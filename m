@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sovereign.computergmbh.de ([85.214.69.204]:50196 "EHLO
-	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965608AbXIBLko (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:37280 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751747AbXISRzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 07:40:44 -0400
-Date: Sun, 2 Sep 2007 13:40:43 +0200 (CEST)
-From: Jan Engelhardt <jengelh@computergmbh.de>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-cc: Bob Beck <beck@bofh.cns.ualberta.ca>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing 
-In-Reply-To: <200709020036.l820aaNf014181@cvs.openbsd.org>
-Message-ID: <Pine.LNX.4.64.0709021336040.14556@fbirervta.pbzchgretzou.qr>
-References: <200709020036.l820aaNf014181@cvs.openbsd.org>
+	Wed, 19 Sep 2007 13:55:38 -0400
+Message-ID: <46F162AF.9050903@lwfinger.net>
+Date: Wed, 19 Sep 2007 12:55:59 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Change loglevel of radio-enable message.
+References: <200709191858.38634.mb@bu3sch.de>
+In-Reply-To: <200709191858.38634.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> Also cleanup the code a bit and remove the inline.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Sep 1 2007 18:36, Theo de Raadt wrote:
->
->When companies have taken our wireless device drivers, many many of
->them have given changes and fixes back.  Some maybe didn't, but that
->is OK.
+> @@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
+>  	b43_radio_turn_on(dev);
+>  	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
+>  	b43dbg(dev->wl, "Radio %s by hardware\n",           <========================
+> -	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
+> +	       dev->radio_hw_enable ? "enabled" : "disabled");
 
-For companies it's ok, but for linux people it is not?
+Shouldn't this one be b43info rather than b43dbg?
 
-(1) You do not know how much of the modifications companies did
-    are actually returned
-
-(2) You do not know whether the ath5k linux part authors will
-    give back at a later point (much like companies)
+Larry
 
