@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33037
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763375AbXIXQmZ (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.239]:36651 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760780AbXISPH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 12:42:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: zd1211 config operation problem
-Date: Mon, 24 Sep 2007 18:41:49 +0200
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <200709231648.17107.mb@bu3sch.de> <200709231348.30055.flamingice@sourmilk.net>
-In-Reply-To: <200709231348.30055.flamingice@sourmilk.net>
+	Wed, 19 Sep 2007 11:07:26 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so181992nze
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 08:07:17 -0700 (PDT)
+Message-ID: <40f31dec0709190807k5ea36ce8h615764a49c49efc@mail.gmail.com>
+Date: Wed, 19 Sep 2007 18:07:17 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"Jeff Garzik" <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070918232546.004af9ff@the-village.bc.nu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709241841.50232.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
+	 <20070918113401.6a8a737f@the-village.bc.nu>
+	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
+	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
+	 <20070918232546.004af9ff@the-village.bc.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 23 September 2007, Michael Wu wrote:
-> On Sunday 23 September 2007 10:48, Michael Buesch wrote:
-> > The zd1211 driver has a bug in the ieee80211 config callback.
-> > It currently unconditionally calls the set_channel() function,
-> > whether the device is running or not. This causes a failed
-> > bus access, if we set some config while the device is down.
-> > The driver must check if the device is running before setting
-> > any config on it (usb->initialized?).
-> Hm, that sounds pretty terrible. mac80211 should check if the device was 
-> started before trying to run any configure callbacks.
+2007/9/19, Alan Cox <alan@lxorguk.ukuu.org.uk>:
+> > If you use ioport_map/unmap, then you really *should* access them with the
+> > proper iomem accessors (ioread/iowrite). The fact that it may happen to
+> > work (when using the default lib/iomap.c implementation, at least) on
+> > some architectures and with the current implementation still doesn't mean
+> > that you should necessarily use readb/writeb.
+>
+> Another reason we should enforce the use of ioread/iowrite is that some
+> platforms do daft things like map mmio type devices through indirect
+> register access. Sparc PCMCIA is a classic example. The only sane way to
+> make these work is to require ioread/iowrite is used with iomap
+>
 
-Something like that?
+Hmm, we 've had bug reports about driver (madwifi-old-openhal) not
+working on Sparc64, can someone test if this is the case (the fact
+that we used readl/writel instead of ioread/iowrite on
+madwifi-old-openhal) ? It was really weird because we handle
+big-endian machines ok (madwifi-old-openhal on ppc worked fine).
 
+(ath5k was based on madwifi-old-openhal)
 
-
-
-Subject: mac80211: Check open_count before calling config callback.
-
-Also remove the check for ops->config!=NULL, as it can never be NULL.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-Index: wireless-dev/net/mac80211/ieee80211.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-24 18:29:54.000000000 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-24 18:36:11.000000000 +0200
-@@ -722,7 +722,7 @@ int ieee80211_hw_config(struct ieee80211
- 	       local->hw.conf.phymode);
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
--	if (local->ops->config)
-+	if (local->open_count)
- 		ret = local->ops->config(local_to_hw(local), &local->hw.conf);
- 
- 	return ret;
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
