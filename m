@@ -1,59 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:61682 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751796AbXIAFA4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbXITP7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 01:00:56 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Chr <chunkeey@web.de>
-Subject: Re: [PATCH 2/2] p54: disable QoS on older firmwares
-Date: Sat, 1 Sep 2007 00:58:55 -0400
-Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <46BFF10B.1090307@hhs.nl> <200708300152.27736.flamingice@sourmilk.net> <200708312327.28981.chunkeey@web.de>
-In-Reply-To: <200708312327.28981.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6393742.HgTpDKi5qr";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709010058.59928.flamingice@sourmilk.net>
+	Thu, 20 Sep 2007 11:59:53 -0400
+Subject: [PATCH] mac80211: fix bugs with turbo removal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Thu, 20 Sep 2007 18:00:16 +0200
+Message-Id: <1190304016.18521.80.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6393742.HgTpDKi5qr
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+It appears that I sent out/pushed the wrong patch, in the patch
+that was merged some conversion were missing. This also adds
+some sanity checks in places and fixes a thinko.
 
-On Friday 31 August 2007 17:27, Chr wrote:
-> This patch fixes a regression with older (pre 2.5.2.0) firmwares, that
-> don't support the QoS queues yet...
->
-Why bother allocating a temporary buffer for firmware version string? Just=
-=20
-keep a pointer to where it's located. (unless it's not null terminated..)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-There's two extra unnecessary lines added to the end of p54_parse_firmware.
+---
+This only applies to wireless-dev since all the ioctls that are touched
+are not in mainline.
 
-Thanks,
-=2DMichael Wu
+ net/mac80211/ieee80211_ioctl.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
---nextPart6393742.HgTpDKi5qr
-Content-Type: application/pgp-signature
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-09-20 17:34:41.731572754 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-09-20 17:36:45.941573677 +0200
+@@ -158,7 +158,7 @@ static int ieee80211_ioctl_get_hw_featur
+ 		left -= sizeof(*hdr) + clen + rlen;
+ 
+ 		hdr = (struct hostapd_ioctl_hw_modes_hdr *) pos;
+-		hdr->mode = mode->mode;
++		hdr->mode = mode_to_hostapd_mode(mode->mode);
+ 		hdr->num_channels = mode->num_channels;
+ 		hdr->num_rates = mode->num_rates;
+ 
+@@ -714,10 +714,13 @@ static int ieee80211_ioctl_set_rate_sets
+ 	int i, mode, num_supp, num_basic, *supp, *basic, *prev;
+ 	struct ieee80211_hw_mode *hw_mode;
+ 
+-	mode = param->u.set_rate_sets.mode;
++	mode = hostapd_mode_to_mode(param->u.set_rate_sets.mode);
+ 	num_supp = param->u.set_rate_sets.num_supported_rates;
+ 	num_basic = param->u.set_rate_sets.num_basic_rates;
+ 
++	if (mode < 0 || mode >= NUM_IEEE80211_MODES)
++		return -EINVAL;
++
+ 	if (left < (num_supp + num_basic) * 2) {
+ 		printk(KERN_WARNING "%s: invalid length in hostapd set rate "
+ 		       "sets ioctl (%d != %d)\n", dev->name, left,
+@@ -878,7 +881,8 @@ static int ieee80211_ioctl_set_channel_f
+ 	int i;
+ 
+ 	list_for_each_entry(mode, &local->modes_list, list) {
+-		if (mode->mode == param->u.set_channel_flag.mode)
++		if (mode->mode ==
++		    hostapd_mode_to_mode(param->u.set_channel_flag.mode))
+ 			goto found;
+ 	}
+ 	return -ENOENT;
+@@ -1725,7 +1729,10 @@ static int ieee80211_ioctl_prism2_param(
+ 		break;
+ 
+ 	case PRISM2_PARAM_NEXT_MODE:
+-		local->next_mode = hostapd_mode_to_mode(value);
++		mode = hostapd_mode_to_mode(value);
++		if (mode >= NUM_IEEE80211_MODES)
++			return -EINVAL;
++		local->next_mode = mode;
+ 		break;
+ 
+ 	case PRISM2_PARAM_EAPOL:
+@@ -1753,13 +1760,13 @@ static int ieee80211_ioctl_prism2_param(
+ 		break;
+ 
+ 	case PRISM2_PARAM_HW_MODES:
+-		mode = 1;
++		mode = 0;
+ 		local->enabled_modes = 0;
+ 		while (value) {
+ 			if (value & 1)
+ 				local->enabled_modes |=
+-					hostapd_mode_to_mode(mode);
+-			mode <<= 1;
++					(1 << hostapd_mode_to_mode(mode));
++			mode += 1;
+ 			value >>= 1;
+ 		}
+ 		break;
+@@ -1872,7 +1879,7 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = 0;
+ 		while (mode < NUM_IEEE80211_MODES) {
+ 			if (local->enabled_modes & (1<<mode))
+-				*param |= mode_to_hostapd_mode(1<<mode);
++				*param |= 1 << mode_to_hostapd_mode(mode);
+ 			mode++;
+ 		}
+ 		break;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG2PGTT3Oqt9AH4aERAlwHAJ9xndw/WkEdC4mjRDiKjhk5i/I6LgCfduFr
-aSuRLP/WsO3cE+zGhlL32uY=
-=79mt
------END PGP SIGNATURE-----
-
---nextPart6393742.HgTpDKi5qr--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
