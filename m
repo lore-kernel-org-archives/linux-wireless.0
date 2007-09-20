@@ -1,38 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.freeshell.ORG ([192.94.73.19]:57636 "EHLO sdf.lonestar.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753923AbXIATVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 15:21:48 -0400
-Date: Sat, 1 Sep 2007 19:14:05 +0000
-From: Jacob Meuser <jakemsr@sdf.lonestar.org>
-To: mcgrof@gmail.com
-Cc: mickflemm@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k - License clarification
-Message-ID: <20070901191405.GB10469@SDF.LONESTAR.ORG>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50032
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751143AbXITU0S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 16:26:18 -0400
+Date: Thu, 20 Sep 2007 13:26:17 -0700 (PDT)
+Message-Id: <20070920.132617.66334410.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'nl80211' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070920191245.GJ6748@tuxdriver.com>
+References: <20070920191245.GJ6748@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 20 Sep 2007 15:12:45 -0400
 
-Whie the license clarification is much appreciated, adding GPL'd
-code to this driver is a slap in the face for BSD developers.
+> This patch adds the basic nl80211 infrastructure.
 
-Adding code under a more restrictive licence than the code
-was originally released; does that really fit in with the principles
-of the FSF, the GPL, Linux, or the hacking community in general?
+I've pulled this into net-2.6.24 and pushed back out.
 
-Regardless of whether this is Microsoft taking BSD code and making it
-totally unfree, or you guys taking it and adding things which cannot
-be taken back by the original author, the result is the same: changes
-that don't go back to the author.  Isn't this one of the primary goals
-of the GPL, so changes remain as free as the original?
-
-Please think about that for a minute.  Not from your point of view
-as a Linux coder, but from your point of view simply as a coder.
-
-Thanks.
-
--- 
-jakemsr@sdf.lonestar.org
-SDF Public Access UNIX System - http://sdf.lonestar.org
+Thanks John!
