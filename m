@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:41767 "HELO
-	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751499AbXI0LoZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 07:44:25 -0400
-Date: Thu, 27 Sep 2007 04:44:23 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [patch 6/7] mac80211: allow only one IBSS interface
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+Received: from an-out-0708.google.com ([209.85.132.251]:41928 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451AbXITPiz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 11:38:55 -0400
+Received: by an-out-0708.google.com with SMTP id d31so85962and
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2007 08:38:55 -0700 (PDT)
+Message-ID: <43e72e890709200838j48d460a3pa72cce9c90d15b13@mail.gmail.com>
+Date: Thu, 20 Sep 2007 11:38:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Stephen Hemminger" <shemminger@linux-foundation.org>
+Subject: Re: ath5k and network manager
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Tim Gardner" <tim.gardner@canonical.com>
+In-Reply-To: <20070920083514.4a4f1b3f@freepuppy.rosehill>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <2113.93857.qm@web51404.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+	 <43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
+	 <200709201511.23400.mb@bu3sch.de>
+	 <20070920083056.31f231b9@freepuppy.rosehill>
+	 <43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
+	 <20070920083514.4a4f1b3f@freepuppy.rosehill>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, the Unix and those the Linux way is "Give 'em enough rope...".
-Sure, things might break if you don't know what you do, but the
-same is true when you do "rm -rf /" as root. I really don't see the
-point of protecting root from itself.
-=20
--- =20
-Regards
-=20
-       Joerg
-=20
+On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> On Thu, 20 Sep 2007 11:34:29 -0400
+> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+>
+> > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > > On Thu, 20 Sep 2007 15:11:23 +0200
+> > > Michael Buesch <mb@bu3sch.de> wrote:
+> > >
+> > > > On Thursday 20 September 2007, Luis R. Rodriguez wrote:
+> > > > > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > > > > > Network manager doesn't seem to detect ath5k. Perhaps it is because
+> > > > > > it is name "ath0".  I think device should follow the convention of using
+> > > > > > name "wifi0" rather than BSD convention of putting driver name in device name.
+> > > > >
+> > > > > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
+> > > > > any other mac80211 driver. Is yours coming out to ath%d ?
+> > > > >
+> > > > > ieee80211_register_hw():
+> > > > >
+> > > > >         /* add one default STA interface */
+> > > > >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
+> > > > >                                   IEEE80211_IF_TYPE_STA);
+> > > > >
+> > > >
+> > > >
+> > > > Probably udev renames it.
+> > >
+> > > It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
+> > > value.
+> > >
+> >
+> > CC' TIm
+> >
+> > Was it a rule by PCI ID? If so then perhaps its based on the old
+> > madwifi rules of sticking to ath%d notation as well. This can be
+> > removed for ath5k but not too sure how this works.
+> >
+>
+> It was by PCI ID
 
+Then I guess that rule should be removed from udev because of ath5k,
+if we let the driver pick the name then we'd get ath%d for madwifi
+driver and wlan%d for ath5k. Would help with troubleshooting too. Tim?
+:-)
 
------ Urspr=FCngliche Mail ----
-Von: Johannes Berg <johannes@sipsolutions.net>
-An: Joerg Pommnitz <pommnitz@yahoo.com>
-CC: linux-wireless@vger.kernel.org
-Gesendet: Donnerstag, den 27. September 2007, 10:50:38 Uhr
-Betreff: Re: [patch 6/7] mac80211: allow only one IBSS interface
-
-[Could you please use reply-to-all and not break threads? thanks]
-
-On Thu, 2007-09-27 at 01:08 -0700, Joerg Pommnitz wrote:
-
-> Well, consider the case that you want to route between
-> two *different* IBSS networks with a single NIC. This=20
-> could be really useful and those a nice feature to have.
-
-Yes, but consider the case where it all breaks because you associate to
-the same IBSS. IMHO correctness is more important than "nice features".
-It would be possible to fix the issue, by keeping track of the beaconin=
-g
-etc. in software and having the two IBSS interfaces see each other via
-software since they can't in hardware, but I'm not interested in
-expending that effort right now.
-
-johannes
-
-
-
-
-
-
-      Machen Sie Yahoo! zu Ihrer Startseite. Los geht's:=20
-http://de.yahoo.com/set
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
