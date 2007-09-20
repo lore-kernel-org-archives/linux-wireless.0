@@ -1,96 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:56982 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757322AbXI0Vx3 (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.228]:22042 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943AbXITCjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 17:53:29 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so2855943fkz
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 14:53:28 -0700 (PDT)
-To: davem@davemloft.net
-Subject: [PATCH] rfkill: Move rfkill_switch_all out of global header
-Date: Fri, 28 Sep 2007 00:07:41 +0200
-Cc: Dmitry Torokhov <dtor@insightbb.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
+	Wed, 19 Sep 2007 22:39:35 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so324555nze
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 19:39:34 -0700 (PDT)
+Message-ID: <40f31dec0709191939l6f99b59gd31d5291057692a2@mail.gmail.com>
+Date: Thu, 20 Sep 2007 05:39:33 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Krzysztof Halasa" <khc@pm.waw.pl>
+Subject: Re: AR5006 - should it work?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <m3ir66s1zn.fsf@maximus.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709280007.41676.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <m3odg0dji3.fsf@maximus.localdomain>
+	 <40f31dec0709190755h5ea62e0cv578f2a5ed0788d80@mail.gmail.com>
+	 <m3ir66s1zn.fsf@maximus.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_switch_all shouldn't be called by drivers directly,
-instead they should send a signal over the input device.
+2007/9/20, Krzysztof Halasa <khc@pm.waw.pl>:
+> "Nick Kossifidis" <mickflemm@gmail.com> writes:
+>
+> > Are you sure 5413 didn't work ? (it has poor signal quality etc,
+> > perhaps you can try getting closer to the AP -just for testing-).
+>
+> I don't currently have any AP, just few cards and two IXP425
+> boxes (and PCI-miniPCI converter).
+> People around here use APs and they easily show up on 5004X.
+> BTW the IXP425 (ARM) CPU is usually in big-endian mode.
+>
+> > 02:09.0 Ethernet controller: Atheros Communications, Inc. AR5006X
+> > 802.11abg NIC (rev 01)
+> >         Subsystem: Atheros Communications, Inc. EnGenius EMP-8602
+> > (400mw) or Compex WLM54AG
+>
+> Same cards here.
+>
+> > (http://madwifi.org/browser/trunk/tools/ath_info.c) it'll give us more
+> > infos about your hardware ;-)
+>
+> Well...
+> # modprobe ath5k
+> PCI: enabling device 0000:00:0d.0 (0140 -> 0142)
+>
+> # setpci -s d command
+> 0146
+> # setpci -s d cache_line_size
+> 08
+>
+> # ath_info -v 0x48000000
+> #DBG main: sleep_ctl reg 00000000   reset_ctl reg 00000000
+> (pressed ^C)
+>
+> # ath_info -v 0x48000000
+> Unable to handle kernel paging request at virtual address e1a00fc0 :-)
+>
+> (rebooting little-endian system)
+>
 
-To prevent confusion for driver developers, move the
-function into a rfkill private header.
+hmm my fault i forgot to swap values for big endian machines...
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> #DBG main: sleep_ctl reg 00000000   reset_ctl reg 00000000
+>  -==Device Information==-
+> MAC Version:  2424 (0xa0)
+> MAC Revision: 5413 (0xa4)
+> 5Ghz PHY Revision: SChip(0x63)
+> 2Ghz PHY Revision: SChip(0x63)
 
----
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index f9a50da..67096b5 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -2,7 +2,7 @@
- #define __RFKILL_H
- 
- /*
-- * Copyright (C) 2006 Ivo van Doorn
-+ * Copyright (C) 2006 - 2007 Ivo van Doorn
-  * Copyright (C) 2007 Dmitry Torokhov
-  *
-  * This program is free software; you can redistribute it and/or modify
-@@ -84,6 +84,4 @@ void rfkill_free(struct rfkill *rfkill);
- int rfkill_register(struct rfkill *rfkill);
- void rfkill_unregister(struct rfkill *rfkill);
- 
--void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
--
- #endif /* RFKILL_H */
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 8e4516a..eaabf08 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -17,6 +17,8 @@
- #include <linux/init.h>
- #include <linux/rfkill.h>
- 
-+#include "rfkill-input.h"
-+
- MODULE_AUTHOR("Dmitry Torokhov <dtor@mail.ru>");
- MODULE_DESCRIPTION("Input layer to RF switch connector");
- MODULE_LICENSE("GPL");
-diff --git a/net/rfkill/rfkill-input.h b/net/rfkill/rfkill-input.h
-new file mode 100644
-index 0000000..4dae500
---- /dev/null
-+++ b/net/rfkill/rfkill-input.h
-@@ -0,0 +1,16 @@
-+/*
-+ * Copyright (C) 2007 Ivo van Doorn
-+ */
-+
-+/*
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ */
-+
-+#ifndef __RFKILL_INPUT_H
-+#define __RFKILL_INPUT_H
-+
-+void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
-+
-+#endif /* __RFKILL_INPUT_H */
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 03ed7fd..00ee534 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (C) 2006 Ivo van Doorn
-+ * Copyright (C) 2006 - 2007 Ivo van Doorn
-  * Copyright (C) 2007 Dmitry Torokhov
-  *
-  * This program is free software; you can redistribute it and/or modify
+It's a 5413 i must fix that function that matches ids with names soon :P
+
+>  -==EEPROM Information==-
+> EEPROM Version:     5.2
+> EEPROM Size:        16K
+> Regulatory Domain:  0x37
+
+FYI later 5424/2424 have a 4K EEPROM (v 5.3) that is not supported
+yet, also your regulatory domain is ETSI1_WORLD
+
+>  -==== Capabilities ====-
+> |  802.11a Support: yes  |
+> |  802.11b Support: yes  |
+> |  802.11g Support: yes  |
+> |  RFKill  Support: no   |
+> |  32KHz   Crystal: no   |
+>  ========================
+> GPIO registers: CR 00000000 DO 00000000 DI 00000012
+>
+
+32KHz crystal is used for power saving
+
+> > AR5004X series worked ok in all of my tests, i guess that if you try
+> > with the binary HAL (madwifi driver) you'll get the same results.
+>
+> It works for me as well, 5006X doesn't.
+>
+> Is it possible that a signal which shows as 20/127 on 5004X
+> is too weak for 5006X to be detected by scanning?
+>
+
+Nope it's fine, it might be that 5006X's RF part is not initialized
+propertly so it doesn't "hear" 5004X.
+
+> BTW: on the 5004X I'm connecting the antenna to AUX connector
+> (CM9 card - AUX in the middle), it doesn't work in MAIN (the corner).
+> Should I connect the antenna to AUX (the corner) or to MAIN (middle)
+> on 5006X?
+
+Typicaly you should connect the antenna on main (actually on my CM9
+-lol we also have the same 5004X card- i connected both antennas so i
+haven't checked that).
+
+> Is the antenna selectable?
+>
+
+yup but it's not implemented yet in ath5k (hw functions for this are
+ok we just don't use them yet as far as i know -i'll check it out to
+be sure).
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
