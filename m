@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34374
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752277AbXISSVh (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:41740 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbXITMzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:21:37 -0400
-Date: Wed, 19 Sep 2007 11:21:37 -0700 (PDT)
-Message-Id: <20070919.112137.48806758.davem@davemloft.net>
-To: ivdoorn@gmail.com
-Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200709192031.19934.IvDoorn@gmail.com>
-References: <20070918213202.GJ4940@tuxdriver.com>
-	<200709192031.19934.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 20 Sep 2007 08:55:10 -0400
+Received: by py-out-1112.google.com with SMTP id u77so936976pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2007 05:55:09 -0700 (PDT)
+Message-ID: <43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
+Date: Thu, 20 Sep 2007 08:55:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Stephen Hemminger" <shemminger@linux-foundation.org>
+Subject: Re: ath5k and network manager
+Cc: linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <ivdoorn@gmail.com>
-Date: Wed, 19 Sep 2007 20:31:19 +0200
+On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> Network manager doesn't seem to detect ath5k. Perhaps it is because
+> it is name "ath0".  I think device should follow the convention of using
+> name "wifi0" rather than BSD convention of putting driver name in device name.
 
-> Because I am indeed not really happy with this early merge, but I'll do my
-> best to resolve the last outstanding bugs as soon as possible.
+I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
+any other mac80211 driver. Is yours coming out to ath%d ?
 
-Relax :-)
+ieee80211_register_hw():
 
-A merge upstream doesn't mean "bug free", it means "significantly
-better than no driver at all" and that is undoubtedly the case
-here.
+        /* add one default STA interface */
+        result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
+                                  IEEE80211_IF_TYPE_STA);
+
+  Luis
