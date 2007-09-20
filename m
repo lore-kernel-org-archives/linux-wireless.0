@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39265 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439AbXIFMCk (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40450 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754799AbXITPbq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 08:02:40 -0400
-Subject: Re: [RFC] per-sta reassembly buffers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070906020611.GJ5273@jm.kir.nu>
-References: <1188988102.9942.89.camel@johannes.berg>
-	 <20070906020611.GJ5273@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aQAzFv7bdqudNpDY6zuT"
-Date: Thu, 06 Sep 2007 14:03:58 +0200
-Message-Id: <1189080238.28781.63.camel@johannes.berg>
+	Thu, 20 Sep 2007 11:31:46 -0400
+Date: Thu, 20 Sep 2007 08:30:56 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: ath5k and network manager
+Message-ID: <20070920083056.31f231b9@freepuppy.rosehill>
+In-Reply-To: <200709201511.23400.mb@bu3sch.de>
+References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+	<43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
+	<200709201511.23400.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 20 Sep 2007 15:11:23 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
---=-aQAzFv7bdqudNpDY6zuT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thursday 20 September 2007, Luis R. Rodriguez wrote:
+> > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > > Network manager doesn't seem to detect ath5k. Perhaps it is because
+> > > it is name "ath0".  I think device should follow the convention of using
+> > > name "wifi0" rather than BSD convention of putting driver name in device name.
+> > 
+> > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
+> > any other mac80211 driver. Is yours coming out to ath%d ?
+> > 
+> > ieee80211_register_hw():
+> > 
+> >         /* add one default STA interface */
+> >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
+> >                                   IEEE80211_IF_TYPE_STA);
+> > 
+> 
+> 
+> Probably udev renames it.
 
-On Wed, 2007-09-05 at 19:06 -0700, Jouni Malinen wrote:
+It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
+value.
 
-> I would have expected STAs to transmit only one MSDU at a time to any
-> given destination STA.
-
-Yeah, me too, but I came to challenge that expectation recently :)
-
-> This was the way it was done before QoS and I did
-> not find any clear point in QoS changes that would have changed the
-> behavior. The changes in the duplicate detection are, though, implicitly
-> pointing out that there may actually be separate fragmentation for each
-> TID.
-
-Right. Not very specific. Maybe something for 802.11ma, if it hadn't
-been dissolved ;)
-
-> The main reason for the original design was in being conservative with
-> memory use. After all, this was used for embedded devices with very
-> limited memory capabilities and the AP was actually allowing up to 2007
-> STAs to be associated. If each associated STA were to use fragmentation
-> and if there were large number of lost (un-ACK'ed) frames, the total
-> memory buffers needed for the frames could go quite high.
-
-Yes, I understand, hence my question.
-
-> Since fragments are commonly sent out in a burst that includes the full
-> MSDU, the number of pending fragments from unfinished MSDUs is often
-> quite a bit smaller than the worst case.
-
-Obviously. Since we're talking about a single station having a
-fragmented frame outstanding in each access category, this would mean
-that others stations would have to contend very much in the voice
-category to even allow this situation to happen. Not very likely.
-
-> Anyway, I would be fine with changing this as long as there is a way of
-> enforcing the total number of buffered frames to be below a reasonable
-> (and preferably configurable) limit.
-
-Good plan actually, implementing it would probably require having the
-skbs on two lists: one per station to lookup and one global list to age
-them. Shouldn't be hard to implement at all, I'll look into it.
-
-johannes
-
---=-aQAzFv7bdqudNpDY6zuT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3+yu/ETPhpq3jKURAno3AJkBkuROf2rXZp6mQptuzJkd19TW5ACdEAOB
-NlfBKvSYH7+jtsnjm9VdOLg=
-=zLTL
------END PGP SIGNATURE-----
-
---=-aQAzFv7bdqudNpDY6zuT--
-
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
