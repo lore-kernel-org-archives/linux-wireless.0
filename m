@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:30969 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754229AbXIETdo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 15:33:44 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2697024wah
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2007 12:33:43 -0700 (PDT)
-Message-ID: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
-Date: Wed, 5 Sep 2007 21:33:37 +0200
-From: dragoran <drago01@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless drivers)
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Received: from ra.tuxdriver.com ([70.61.120.52]:3866 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755544AbXITOKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 10:10:50 -0400
+Date: Thu, 20 Sep 2007 09:47:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+Message-ID: <20070920134730.GC6748@tuxdriver.com>
+References: <20070919181005.GB5483@tuxdriver.com> <46F19DD0.2050605@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46F19DD0.2050605@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Tuesday 04 September 2007, dragoran wrote:
-> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > > >+static ssize_t show_rf_kill(struct device *d,
-> > > > > > >+                        struct device_attribute *attr, char *buf)
-> > > > > > >+{
-> > > > > > >+    /*
-> > > > > > >+     * 0 - RF kill not enabled
-> > > > > > >+     * 1 - SW based RF kill active (sysfs)
-> > > > > > >+     * 2 - HW based RF kill active
-> > > > > > >+     * 3 - Both HW and SW based RF kill active
-> > > > > > >
-> > > > > > >that as well, along with all the other sysfs bits. Also, how about using
-> > > > > > >the generic rfkill infrastructure Ivo did?
-> > > > > >
-> > > > > > is the generic rfkill interface already stable and merged into the linus tree?
-> > > > >
-> > > > > Yes. It currently is only missing users.
-> > > >
-> > > > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > > > should I read the code to understand how it works? (would like to add
-> > > > support to hal)
-> > >
-> > > There isn't a documentation file for it, so best thing to do would be looking at the code.
-> > > basically hal only needs to check the sysfs files:
-> > >
-> > >         name -> Name of device/interface
-> > >         type -> wlan, bluetooth, irda
-> > >         state -> Current device state. 0: Off, 1: On
-> > >         claim -> 0: Kernel handles events, 1: Userspace handles events
-> > >
-> > > "name" and "type" are read-only
-> > > "claim" and "state" are read/writable
-> > >
-> > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
-> > > this has been fixed in 2.6.23-rc.
-> >
-> > ok that isn't complicated what is the claim used for?
-> > does It has to be set to userspace to be able to toggle the status via software?
->
-> By default the kernel will act when the rfkill button is pressed, it will loop
-> through all registered buttons of the same type and change the state.
-> Userspace can read the "state" sysfs file to see the current status,
-> but if a userspace tools wants to take control of taking action when the button is pressed,
-> or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
-> tell the kernel that it should back off and ignore all events.
+On Wed, Sep 19, 2007 at 11:08:16PM +0100, Daniel Drake wrote:
 
-ok thx for explaining this will talk to the nm and hal people about it
-and see how they want things to work than I will create patches to
-implement it.
-which drivers support it now? rt2x00 and ?? or are they the only ones right now?
+> I would like to this until 2.6.25 until I have had time to clear up some 
+> final issues and do more testing myself of zd1211rw-mac80211. I also 
+> think we need to discuss the rename...
+
+Renames being what they are, I was hoping to avoid a "bikeshed"
+discussion about the choice of names.  My main point was to get it
+into the tree with a unique and manageable name.  I'm sure we could
+still rename it again before 2.6.24 ships or even later.
+
+I know that you will argue that a rename is unnecessary if we
+simply port the existing driver to mac80211, which is certainly true.
+I just wonder if that is the least bumpy solution for users.  At least
+with a new driver, if something doesn't work then the old driver is
+still there as a fallback.  Plus you can avoid some confusion with
+old howtos and such on the web referring to an old driver instead
+of the new one, etc.  Maybe that isn't a huge issue in this case,
+but I wouldn't underestimate the possible confusion.
+
+> (just to clarify to others: this is the first I heard of this merge 
+> before John posted it).
+
+Yes, sorry...permission, forgiveness...forgive? :-)
+
+> John, thanks a lot for your efforts, I hope you don't mind waiting one 
+> extra release cycle for me to sort a few things out.
+
+Well, obviously I would like to get it out now.  The longer we are
+without a mac80211-based driver for zd1211 hardware then the longer
+we must maintain the softmac component (or at least take bug reports
+for it).
+
+If you are determined not to have it in 2.6.24 then I will relent.
+I will also suggest that Larry start sending any softmac bugs to
+you... :-)
+
+If we will be having a port rather than a new driver, how soon after
+2.6.24-rc1 closes can we queue the port for 2.6.25?  I think it
+should be almost immediately, to ensure maximum test exposure and to
+"seal the deal".  What do you think?
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
