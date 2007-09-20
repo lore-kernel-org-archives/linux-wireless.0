@@ -1,85 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865AbXIBUXN (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48673 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756122AbXITPf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 16:23:13 -0400
-Subject: Re: [PATCH -mm] net/wireless/sysfs.c: Shut up build warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Satyam Sharma <satyam@infradead.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.LFD.0.999.0709030139110.29617@enigma.security.iitk.ac.in>
-References: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.i n>
-	 <alpine.LFD.0.999.0709030139110.29617@enigma.security.iitk.ac.in>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1T6AezXWMTICFHRunIHu"
-Date: Sun, 02 Sep 2007 22:24:19 +0200
-Message-Id: <1188764659.14564.0.camel@johannes.berg>
+	Thu, 20 Sep 2007 11:35:58 -0400
+Date: Thu, 20 Sep 2007 08:35:14 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Tim Gardner" <tim.gardner@canonical.com>
+Subject: Re: ath5k and network manager
+Message-ID: <20070920083514.4a4f1b3f@freepuppy.rosehill>
+In-Reply-To: <43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
+References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+	<43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
+	<200709201511.23400.mb@bu3sch.de>
+	<20070920083056.31f231b9@freepuppy.rosehill>
+	<43e72e890709200834xc6947f5g50a6cf0c5bd4d971@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 20 Sep 2007 11:34:29 -0400
+"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
 
---=-1T6AezXWMTICFHRunIHu
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > On Thu, 20 Sep 2007 15:11:23 +0200
+> > Michael Buesch <mb@bu3sch.de> wrote:
+> >
+> > > On Thursday 20 September 2007, Luis R. Rodriguez wrote:
+> > > > On 9/20/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > > > > Network manager doesn't seem to detect ath5k. Perhaps it is because
+> > > > > it is name "ath0".  I think device should follow the convention of using
+> > > > > name "wifi0" rather than BSD convention of putting driver name in device name.
+> > > >
+> > > > I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
+> > > > any other mac80211 driver. Is yours coming out to ath%d ?
+> > > >
+> > > > ieee80211_register_hw():
+> > > >
+> > > >         /* add one default STA interface */
+> > > >         result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
+> > > >                                   IEEE80211_IF_TYPE_STA);
+> > > >
+> > >
+> > >
+> > > Probably udev renames it.
+> >
+> > It was udev, don't know why Ubuntu was adding a rule for it (and getting wrong)
+> > value.
+> >
+> 
+> CC' TIm
+> 
+> Was it a rule by PCI ID? If so then perhaps its based on the old
+> madwifi rules of sticking to ath%d notation as well. This can be
+> removed for ath5k but not too sure how this works.
+> 
 
-On Mon, 2007-09-03 at 01:41 +0530, Satyam Sharma wrote:
-> net/wireless/sysfs.c:108: warning: =E2=80=98wiphy_uevent=E2=80=99 defined=
- but not used
->=20
-> when CONFIG_HOTPLUG=3Dn is because the only usage site of this function
-> is #ifdef'ed as such, so let's #ifdef the definition also.
->=20
-> Signed-off-by: Satyam Sharma <satyam@infradead.org>
+It was by PCI ID
 
-Looks good to me. The new style seems to be to do
-#ifdef SOMETHING
-code
-#else
-#define wiphy_uevent NULL
-#endif
-
-and then using it unconditionally, but I'm fine with both.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->=20
->  net/wireless/sysfs.c |    2 ++
->  1 file changed, 2 insertions(+)
->=20
-> --- linux-2.6.23-rc4-mm1/net/wireless/sysfs.c=E2=80=BEfix	2007-09-02 20:0=
-6:11.000000000 +0530
-> +++ linux-2.6.23-rc4-mm1/net/wireless/sysfs.c	2007-09-02 20:07:01.0000000=
-00 +0530
-> @@ -104,11 +104,13 @@ static void wiphy_dev_release(struct dev
->  	cfg80211_dev_free(rdev);
->  }
-> =20
-> +#ifdef CONFIG_HOTPLUG
->  static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
->  {
->  	/* TODO, we probably need stuff here */
->  	return 0;
->  }
-> +#endif
-> =20
->  struct class ieee80211_class =3D {
->  	.name =3D "ieee80211",
-
---=-1T6AezXWMTICFHRunIHu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG2xvz/ETPhpq3jKURAqQuAJ9uwYijqez3o62+Aj4ERFV5D/PMfACfRXnO
-AaQH2ioC2v5/fI1GDF65XYg=
-=rDcv
------END PGP SIGNATURE-----
-
---=-1T6AezXWMTICFHRunIHu--
-
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
