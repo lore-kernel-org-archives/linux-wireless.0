@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:23753 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754304AbXIESlr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51827 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754812AbXITODF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 14:41:47 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-Date: Tue, 4 Sep 2007 18:17:39 -0700
-Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com> <200709042058.15463.IvDoorn@gmail.com>
-In-Reply-To: <200709042058.15463.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709041817.40366.inaky@linux.intel.com>
+	Thu, 20 Sep 2007 10:03:05 -0400
+Subject: Re: VT6656 driver source available from VIA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070919193743.GA14127@storm.local.network>
+References: <20070919193743.GA14127@storm.local.network>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ugojDYHwHrai8OcjtxqG"
+Date: Thu, 20 Sep 2007 16:04:25 +0200
+Message-Id: <1190297065.18521.61.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 September 2007, Ivo van Doorn wrote:
-> On Tuesday 04 September 2007, dragoran wrote:
-> > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > >+static ssize_t show_rf_kill(struct device *d,
-> > >
-> > > Yes. It currently is only missing users.
-> > 
-> > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > should I read the code to understand how it works? (would like to add
-> > support to hal)
-> 
-> There isn't a documentation file for it, so best thing to do would be looking at the code.
-> basically hal only needs to check the sysfs files:
-> 
-> 	name -> Name of device/interface
-> 	type -> wlan, bluetooth, irda
 
-Can you add 'uwb' [for ultrawideband radios]? That way I could start to use it. A
-Doc file would help enourmously also :)
+--=-ugojDYHwHrai8OcjtxqG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- Inaky
+On Wed, 2007-09-19 at 15:37 -0400, Forest Bond wrote:
+
+> This doesn't sound very GPL to me, however, the twist is in main_usb.c:
+
+Not really.
+
+> MODULE_LICENSE("GPL");
+
+> What do you think?
+
+That declaring MODULE_LICENSE in a file that isn't licensed under GPL is
+a violation of the kernel license.
+
+johannes
+
+--=-ugojDYHwHrai8OcjtxqG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG8n3p/ETPhpq3jKURArDZAJ4lqFaeZqI+OP2L8VJNy7Nqw4qyzgCgsPba
+C18qeTioxHUzWtdxdLikLes=
+=/REc
+-----END PGP SIGNATURE-----
+
+--=-ugojDYHwHrai8OcjtxqG--
+
