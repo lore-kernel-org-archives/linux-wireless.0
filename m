@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:30041 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754344AbXIYSo5 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:32828 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755012AbXITQh4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 14:44:57 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1757580nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:57 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/12] rt2x00: Release rt2x00 2.0.9
-Date: Tue, 25 Sep 2007 20:58:08 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709252052.34803.IvDoorn@gmail.com>
-In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
+	Thu, 20 Sep 2007 12:37:56 -0400
+Message-ID: <46F2A1D4.9030601@lwfinger.net>
+Date: Thu, 20 Sep 2007 11:37:40 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709252058.08961.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Daniel Drake <dsd@gentoo.org>
+CC: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+References: <20070919181005.GB5483@tuxdriver.com> <46F19DD0.2050605@gentoo.org> <20070920134730.GC6748@tuxdriver.com> <46F28374.9040106@gentoo.org>
+In-Reply-To: <46F28374.9040106@gentoo.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Version bump
+Daniel Drake wrote:
+> John W. Linville wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>> If you are determined not to have it in 2.6.24 then I will relent.
+>> I will also suggest that Larry start sending any softmac bugs to
+>> you... :-)
+> 
+> That's fine.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index ea20f3a..511c11c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -42,7 +42,7 @@
-  * Module information.
-  * DRV_NAME should be set within the individual module source files.
-  */
--#define DRV_VERSION	"2.0.8"
-+#define DRV_VERSION	"2.0.9"
- #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
- 
- /*
--- 
-1.5.3.2
+You're on. BTW, I will let you be the primary tester of "[PATCH] fix softmac lockdep reports" that
+Johannes posted earlier today. I see you were CC'd. I plan on testing it with bcm43xx, but I won't
+get to it for a couple of days.
+
+Larry
 
