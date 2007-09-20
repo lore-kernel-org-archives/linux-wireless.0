@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526AbXI0De5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 23:34:57 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: limit printouts on hot path
-Date: Thu, 27 Sep 2007 11:27:39 +0800
-Message-Id: <11908636781043-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11908636772860-git-send-email-yi.zhu@intel.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
- <11908636662994-git-send-email-yi.zhu@intel.com>
- <11908636683204-git-send-email-yi.zhu@intel.com>
- <11908636692415-git-send-email-yi.zhu@intel.com>
- <119086367088-git-send-email-yi.zhu@intel.com>
- <11908636712746-git-send-email-yi.zhu@intel.com>
- <11908636732679-git-send-email-yi.zhu@intel.com>
- <11908636743625-git-send-email-yi.zhu@intel.com>
- <11908636753775-git-send-email-yi.zhu@intel.com>
- <11908636772860-git-send-email-yi.zhu@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400AbXITNuV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 09:50:21 -0400
+Subject: mac80211 and QoS support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Tomas Winkler <tomasw@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UXQKZI6B8I966uPMQGoA"
+Date: Thu, 20 Sep 2007 11:57:53 +0200
+Message-Id: <1190282273.18521.31.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch change printouts on TX path to the net_ratelimit version.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-4965.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    3 +++
- 3 files changed, 6 insertions(+), 3 deletions(-)
+--=-UXQKZI6B8I966uPMQGoA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index e3a0cca..b9d7ad8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -622,7 +622,7 @@ static void rs_tx_status(void *priv_rate,
- 	u16 fc = le16_to_cpu(hdr->frame_control);
- 	s32 tpt = 0;
- 
--	IWL_DEBUG_RATE("get frame ack response, update rate scale window\n");
-+	IWL_DEBUG_RATE_LIMIT("get frame ack response, update rate scale window\n");
- 
- 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
- 		return;
-@@ -1717,7 +1717,7 @@ static struct ieee80211_rate *rs_get_rate(void *priv_rate,
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_rate;
- 	struct iwl_rate_scale_priv *lq;
- 
--	IWL_DEBUG_RATE("rate scale calculate new rate for skb\n");
-+	IWL_DEBUG_RATE_LIMIT("rate scale calculate new rate for skb\n");
- 
- 	memset(extra, 0, sizeof(*extra));
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b704fe7..b41addf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -184,7 +184,7 @@ u8 iwl_hw_find_station(struct iwl_priv *priv, const u8 *addr)
- 			goto out;
- 		}
- 
--	IWL_DEBUG_ASSOC("can not find STA %s total %d\n",
-+	IWL_DEBUG_ASSOC_LIMIT("can not find STA " MAC_FMT " total %d\n",
- 			print_mac(mac, addr), priv->num_stations);
- 
-  out:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index abd344c..72318d7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -136,8 +136,11 @@ static inline void IWL_DEBUG_LIMIT(int level, const char *fmt, ...)
- #define IWL_DEBUG_TXPOWER(f, a...) IWL_DEBUG(IWL_DL_TXPOWER, f, ## a)
- #define IWL_DEBUG_IO(f, a...) IWL_DEBUG(IWL_DL_IO, f, ## a)
- #define IWL_DEBUG_RATE(f, a...) IWL_DEBUG(IWL_DL_RATE, f, ## a)
-+#define IWL_DEBUG_RATE_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_RATE, f, ## a)
- #define IWL_DEBUG_NOTIF(f, a...) IWL_DEBUG(IWL_DL_NOTIF, f, ## a)
- #define IWL_DEBUG_ASSOC(f, a...) IWL_DEBUG(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
-+#define IWL_DEBUG_ASSOC_LIMIT(f, a...) \
-+	IWL_DEBUG_LIMIT(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
- #define IWL_DEBUG_HT(f, a...) IWL_DEBUG(IWL_DL_HT, f, ## a)
- #define IWL_DEBUG_STATS(f, a...) IWL_DEBUG(IWL_DL_STATS, f, ## a)
- #define IWL_DEBUG_TX_REPLY(f, a...) IWL_DEBUG(IWL_DL_TX_REPLY, f, ## a)
--- 
-1.5.1
+Hey,
+
+After looking again into why we were sending frames with invalid QoS
+control fields under certain circumstances it occurred to me that this
+would only happen when CONFIG_NET_SCHED was not set.
+
+That, however, seems wrong: when CONFIG_NET_SCHED is unset we really are
+behaving as a non-QoS STA. However, even if it is set we never announce
+our QoS capability, hostapd will never set the QoS capability field in a
+beacon and neither will we set in our capability information in
+(re)association requests.
+
+On the other hand, in both cases we will start sending QoS frames if the
+other side has announced support for it in their capability information.
+It seems to me that this violates the mandated behaviour if we're an AP
+in that we force a QoS-capable STA to behave as a QoS STA although it is
+associated to a non-QoS BSS and thus should expect to work as a non-QoS
+STA.
+
+It seems to me that we should introduce a new per-interface (where VLAN
+interfaces use the AP setting) "QoS enabled" setting that wpa_supplicant
+(when acting as MLME) or hostapd set. For the in-kernel-MLME, I would
+suggest to force it to be off. Enabling QoS would be disallowed when
+CONFIG_NET_SCHED is unset or when we have only one hardware queue. It
+should then behave like the 802.11 option "dot11QosOptionImplemented",
+but consistency wouldn't be enforced (i.e. hostapd sets this option so
+it is also required to set the QoS capability flag and insert the EDCA
+parameter set or QOS capability IE)
+
+johannes
+
+--=-UXQKZI6B8I966uPMQGoA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG8kQh/ETPhpq3jKURApmpAJ0dXNrd1EzmtsSuN695KFHIoTv7sgCeM6f2
+Pmyy+LUASRaMiHPZF4zn+NA=
+=OnGT
+-----END PGP SIGNATURE-----
+
+--=-UXQKZI6B8I966uPMQGoA--
+
