@@ -1,80 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36251 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751624AbXIAEfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:35:55 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 77C1E618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:52 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 17/35] Start beacon timeout task when connected
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:35:52 -0400
-Message-ID: <20070901043551.2498.68351.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from mail3.webfaction.com ([70.85.44.146]:56073 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755621AbXITOK5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 10:10:57 -0400
+Date: Thu, 20 Sep 2007 10:10:18 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: VT6656 driver source available from VIA
+Message-ID: <20070920141006.GH14127@storm.local.network>
+References: <20070919193743.GA14127@storm.local.network> <1190297065.18521.61.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aFi3jz1oiPowsTUB"
+In-Reply-To: <1190297065.18521.61.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Limit beacon timeout task to the managed mode.  Don't warn of the wrong
-mode or state, just exit.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+--aFi3jz1oiPowsTUB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/at76_usb.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
+Hi,
 
+On Thu, Sep 20, 2007 at 04:04:25PM +0200, Johannes Berg wrote:
+> On Wed, 2007-09-19 at 15:37 -0400, Forest Bond wrote:
+>=20
+> > This doesn't sound very GPL to me, however, the twist is in main_usb.c:
+>=20
+> Not really.
+>=20
+> > MODULE_LICENSE("GPL");
+>=20
+> > What do you think?
+>=20
+> That declaring MODULE_LICENSE in a file that isn't licensed under GPL is
+> a violation of the kernel license.
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 218641e..bda7632 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -1889,6 +1889,7 @@ static void at76_work_assoc_done(struct work_struct *work)
- 			at76_dump_mib_mac_mgmt(priv);
- #endif
- 		}
-+		schedule_delayed_work(&priv->dwork_beacon, BEACON_TIMEOUT);
- 	}
- 	at76_set_pm_mode(priv);
- 
-@@ -3796,7 +3797,6 @@ static void at76_work_join(struct work_struct *work)
- 		netif_start_queue(priv->netdev);
- 		/* just to be sure */
- 		cancel_delayed_work(&priv->dwork_get_scan);
--		cancel_delayed_work(&priv->dwork_beacon);
- 		cancel_delayed_work(&priv->dwork_auth);
- 		cancel_delayed_work(&priv->dwork_assoc);
- 	} else {
-@@ -3921,23 +3921,18 @@ static void at76_dwork_beacon(struct work_struct *work)
- 					      dwork_beacon.work);
- 
- 	mutex_lock(&priv->mtx);
--	WARN_ON(priv->mac_state != MAC_CONNECTED);
--	if (priv->mac_state != MAC_CONNECTED)
-+	if (priv->mac_state != MAC_CONNECTED || priv->iw_mode != IW_MODE_INFRA)
- 		goto exit;
- 
- 	/* We haven't received any beacons from out AP for BEACON_TIMEOUT */
- 	printk(KERN_INFO "%s: lost beacon bssid %s\n",
- 	       priv->netdev->name, mac2str(priv->curr_bss->bssid));
- 
--	/* jal: starting mgmt_timer in ad-hoc mode is questionable,
--	   but I'll leave it here to debug another lockup problem */
--	if (priv->iw_mode != IW_MODE_ADHOC) {
--		netif_carrier_off(priv->netdev);
--		netif_stop_queue(priv->netdev);
--		at76_iwevent_bss_disconnect(priv->netdev);
--		at76_set_mac_state(priv, MAC_SCANNING);
--		schedule_work(&priv->work_start_scan);
--	}
-+	netif_carrier_off(priv->netdev);
-+	netif_stop_queue(priv->netdev);
-+	at76_iwevent_bss_disconnect(priv->netdev);
-+	at76_set_mac_state(priv, MAC_SCANNING);
-+	schedule_work(&priv->work_start_scan);
- 
- exit:
- 	mutex_unlock(&priv->mtx);
+And, assuming that in-kernel support for this chip is desirable, is it bett=
+er to
+pursue license clarification from VIA, or re-implement using the driver sou=
+rce
+as a reference?
+
+The reason I ask is that I suspect for this driver to get into the kernel, =
+it
+will likely see a lot of changes, anyway.  If it's going to be rewritten,
+there's little sense in me pushing VIA on the license issue, is there?
+
+I hope I'm not being daft.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+
+--aFi3jz1oiPowsTUB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFG8n9KRO4fQQdv5AwRAgmnAJ4/sVb/icVtlzQWA+qd3LxhwzedlgCfWrKm
+3/KbR8BTYKGSJCu1VPJegXo=
+=HxuX
+-----END PGP SIGNATURE-----
+
+--aFi3jz1oiPowsTUB--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
