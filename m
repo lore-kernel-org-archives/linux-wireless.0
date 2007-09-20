@@ -1,124 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:20969 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750921AbXIXWNS (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50010 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753494AbXITMyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 18:13:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 1/6] adm8211: kill interrupt loop
-Date: Mon, 24 Sep 2007 18:10:25 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Thu, 20 Sep 2007 08:54:51 -0400
+Message-ID: <46F26DAA.6070909@lwfinger.net>
+Date: Thu, 20 Sep 2007 07:55:06 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Change loglevel of radio-enable message.
+References: <200709191858.38634.mb@bu3sch.de> <46F162AF.9050903@lwfinger.net> <200709191957.59255.mb@bu3sch.de>
+In-Reply-To: <200709191957.59255.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Michael Buesch wrote:
+> On Wednesday 19 September 2007 19:55:59 Larry Finger wrote:
+>> Michael Buesch wrote:
+>>> Also cleanup the code a bit and remove the inline.
+>>>
+>>> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+>>> @@ -2214,7 +2229,7 @@ static int b43_chip_init(struct b43_wlde
+>>>  	b43_radio_turn_on(dev);
+>>>  	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
+>>>  	b43dbg(dev->wl, "Radio %s by hardware\n",           <========================
+>>> -	       (dev->radio_hw_enable == 0) ? "disabled" : "enabled");
+>>> +	       dev->radio_hw_enable ? "enabled" : "disabled");
+>> Shouldn't this one be b43info rather than b43dbg?
+> 
+> No, I think it's really only interesting to see if it changed
+> in operation.
+> If it doesn't work, people will press their rfkill buttons
+> before even noticing this message on init. :)
 
-Looping in the interrupt handler is unnecessary.
+I have a suggestion to simplify the whole business of hardware radio control. Why don't we
+unconditionally set radio_hw_enable to one here and dispense with this message? That way, people
+without the rfkill switch will never see a message and those that do will only get messages if their
+switch is off, or if it is toggled.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- drivers/net/wireless/adm8211.c |   84 +++++++++++++++++++---------------------
- 1 files changed, 39 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 49a6b9e..0893d0d 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -458,51 +458,45 @@ do {									   \
- 
- 	struct ieee80211_hw *dev = dev_id;
- 	struct adm8211_priv *priv = dev->priv;
--	unsigned int count = 0;
--	u32 stsr;
--
--	do {
--		stsr = ADM8211_CSR_READ(STSR);
--		ADM8211_CSR_WRITE(STSR, stsr);
--		if (stsr == 0xffffffff)
--			return IRQ_HANDLED;
--
--		if (!(stsr & (ADM8211_STSR_NISS | ADM8211_STSR_AISS)))
--			break;
--
--		if (stsr & ADM8211_STSR_RCI)
--			adm8211_interrupt_rci(dev);
--		if (stsr & ADM8211_STSR_TCI)
--			adm8211_interrupt_tci(dev);
--
--		/*ADM8211_INT(LinkOn);*/
--		/*ADM8211_INT(LinkOff);*/
--
--		ADM8211_INT(PCF);
--		ADM8211_INT(BCNTC);
--		ADM8211_INT(GPINT);
--		ADM8211_INT(ATIMTC);
--		ADM8211_INT(TSFTF);
--		ADM8211_INT(TSCZ);
--		ADM8211_INT(SQL);
--		ADM8211_INT(WEPTD);
--		ADM8211_INT(ATIME);
--		/*ADM8211_INT(TBTT);*/
--		ADM8211_INT(TEIS);
--		ADM8211_INT(FBE);
--		ADM8211_INT(REIS);
--		ADM8211_INT(GPTT);
--		ADM8211_INT(RPS);
--		ADM8211_INT(RDU);
--		ADM8211_INT(TUF);
--		/*ADM8211_INT(TRT);*/
--		/*ADM8211_INT(TLT);*/
--		/*ADM8211_INT(TDU);*/
--		ADM8211_INT(TPS);
--
--	} while (count++ < 20);
--
--	return IRQ_RETVAL(count);
-+	u32 stsr = ADM8211_CSR_READ(STSR);
-+	ADM8211_CSR_WRITE(STSR, stsr);
-+	if (stsr == 0xffffffff)
-+		return IRQ_HANDLED;
-+
-+	if (!(stsr & (ADM8211_STSR_NISS | ADM8211_STSR_AISS)))
-+		return IRQ_HANDLED;
-+
-+	if (stsr & ADM8211_STSR_RCI)
-+		adm8211_interrupt_rci(dev);
-+	if (stsr & ADM8211_STSR_TCI)
-+		adm8211_interrupt_tci(dev);
-+
-+	/*ADM8211_INT(LinkOn);*/
-+	/*ADM8211_INT(LinkOff);*/
-+
-+	ADM8211_INT(PCF);
-+	ADM8211_INT(BCNTC);
-+	ADM8211_INT(GPINT);
-+	ADM8211_INT(ATIMTC);
-+	ADM8211_INT(TSFTF);
-+	ADM8211_INT(TSCZ);
-+	ADM8211_INT(SQL);
-+	ADM8211_INT(WEPTD);
-+	ADM8211_INT(ATIME);
-+	/*ADM8211_INT(TBTT);*/
-+	ADM8211_INT(TEIS);
-+	ADM8211_INT(FBE);
-+	ADM8211_INT(REIS);
-+	ADM8211_INT(GPTT);
-+	ADM8211_INT(RPS);
-+	ADM8211_INT(RDU);
-+	ADM8211_INT(TUF);
-+	/*ADM8211_INT(TRT);*/
-+	/*ADM8211_INT(TLT);*/
-+	/*ADM8211_INT(TDU);*/
-+	ADM8211_INT(TPS);
-+
-+	return IRQ_HANDLED;
- 
- #undef ADM8211_INT
- }
-
+Larry
