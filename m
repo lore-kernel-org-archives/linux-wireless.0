@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49049 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965427AbXIGOei (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34172
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbXITUNj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 10:34:38 -0400
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-From: Johannes Berg <johannes@sipsolutions.net>
-To: paulmck@linux.vnet.ibm.com
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, satyam@infradead.org,
-	flo@rfc822.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	michal.k.k.piotrowski@gmail.com,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
-	flamingice@sourmilk.net
-In-Reply-To: <20070907142538.GC8864@linux.vnet.ibm.com>
-References: <E1ITGb2-0006Be-00@gondolin.me.apana.org.au>
-	 <1189085815.28781.78.camel@johannes.berg>
-	 <20070906154612.GD8030@linux.vnet.ibm.com>
-	 <1189171635.28781.134.camel@johannes.berg>
-	 <20070907142538.GC8864@linux.vnet.ibm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IdO4tpi0nZG8DJ8ISM4+"
-Date: Fri, 07 Sep 2007 16:35:59 +0200
-Message-Id: <1189175759.28781.169.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 20 Sep 2007 16:13:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Remove the "radio hw enabled" message on startup.
+Date: Thu, 20 Sep 2007 22:12:58 +0200
+Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709202212.58455.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This message is useless. Only report state changes.
 
---=-IdO4tpi0nZG8DJ8ISM4+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger@lwfinger.net>
 
-On Fri, 2007-09-07 at 07:25 -0700, Paul E. McKenney wrote:
-
-> > > > @@ -226,22 +225,22 @@ void ieee80211_if_reinit(struct net_devi
-> > > >  		/* Remove all virtual interfaces that use this BSS
-> > > >  		 * as their sdata->bss */
-> > > >  		struct ieee80211_sub_if_data *tsdata, *n;
-> > > > -		LIST_HEAD(tmp_list);
-> > > >=20
-> > > > -		write_lock_bh(&local->sub_if_lock);
-> > >=20
-> > > This code is also protected by RTNL?
-> >=20
-> > Yes.
->=20
-> Comment?  (Or is it in the function header?)
-
-Oh, forgot to say: yes, there is a comment further up and even an
-ASSERT_RTNL()
-
-johannes
-
---=-IdO4tpi0nZG8DJ8ISM4+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4WHP/ETPhpq3jKURAr3DAKCDiqVlmDTgtNA0MrlPeedNvxUItACgnz5U
-LagOxuLcia2E1MN7EXK3TPA=
-=f/3v
------END PGP SIGNATURE-----
-
---=-IdO4tpi0nZG8DJ8ISM4+--
-
+Index: wireless-dev/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-09-20 19:39:06.000000000 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-09-20 20:06:24.000000000 +0200
+@@ -2227,9 +2227,6 @@ static int b43_chip_init(struct b43_wlde
+ 	if (err)
+ 		goto err_gpio_cleanup;
+ 	b43_radio_turn_on(dev);
+-	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
+-	b43dbg(dev->wl, "Radio %s by hardware\n",
+-	       dev->radio_hw_enable ? "enabled" : "disabled");
+ 
+ 	b43_write16(dev, 0x03E6, 0x0000);
+ 	err = b43_phy_init(dev);
+@@ -3251,6 +3248,9 @@ static void setup_struct_wldev_for_init(
+ {
+ 	/* Flags */
+ 	dev->reg124_set_0x4 = 0;
++	/* Assume the radio is enabled. If it's not enabled, the state will
++	 * immediately get fixed on the first periodic work run. */
++	dev->radio_hw_enable = 1;
+ 
+ 	/* Stats */
+ 	memset(&dev->stats, 0, sizeof(dev->stats));
