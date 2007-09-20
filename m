@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2645 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2484 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752022AbXIMIFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 04:05:10 -0400
-Subject: Re: [PATCH V4 wireless-dev#pending-upstream] Add iwlwifi wireless   drivers
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>
-In-Reply-To: <1189626304.6161.55.camel@johannes.berg>
-References: <1189582835.24707.118.camel@debian.sh.intel.com>
-	 <1189626304.6161.55.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 13 Sep 2007 15:58:08 +0800
-Message-Id: <1189670288.18944.20.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+	id S1754226AbXITNlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2007 09:41:03 -0400
+Date: Thu, 20 Sep 2007 09:28:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+Message-ID: <20070920132811.GB6748@tuxdriver.com>
+References: <20070919181005.GB5483@tuxdriver.com> <46F19EE2.6040402@gentoo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46F19EE2.6040402@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-09-12 at 21:45 +0200, Johannes Berg wrote:
-> Did you change those to subsys_initcall? I can't check right now
-> (offline), but it's required for proper operation when built-in, or
-> you need to rely on link order to have the rate control initialised
-> earlier than the drivers. 
+On Wed, Sep 19, 2007 at 11:12:50PM +0100, Daniel Drake wrote:
+> John W. Linville wrote:
 
-No, this won't happen because the current iwlwifi driver can only be
-compiled as module. This was mainly caused by the split of the 3945 and
-4965 code base (both of them define some same functions). We plan to
-abstract a core layer for all the iwlwifi based drivers, so the problem
-will be solved well. But that is targeted on .25.
+> BTW: I fairly regularly get email from F7 users complaining about 
+> connection intermittancy and other bugs that we don't seem to have for 
+> the softmac driver (maybe stack related issues, of which I've fixed a 
+> couple that affected me personally, I'm a little surprised that F7 
+> jumped so early).
 
-Thanks,
--yi
+Hmmm...please refer any of these to bugzilla.redhat.com if you don't mind.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
