@@ -1,123 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22358 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756323AbXI3Lwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2007 07:52:46 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1 V2] mac80211: add sta_notify callback
-Date: Sun, 30 Sep 2007 13:52:37 +0200
-Message-Id: <1191153157853-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from py-out-1112.google.com ([64.233.166.181]:27227 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762993AbXIUW5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2007 18:57:34 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1811468pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2007 15:57:33 -0700 (PDT)
+Message-ID: <43e72e890709211557q2aed1c6ai9e487eff731bebb3@mail.gmail.com>
+Date: Fri, 21 Sep 2007 18:57:32 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/5] Wireless: add IEEE-802.11 regualtory domain module
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	"Daniel Drake" <dsd@gentoo.org>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+In-Reply-To: <1190411890.18521.179.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20070921210437.GG31768@pogo>
+	 <1190410242.18521.171.camel@johannes.berg>
+	 <43e72e890709211452j743fedfcyab6b981a0a3fce09@mail.gmail.com>
+	 <1190411890.18521.179.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds sta_notify callback and removes sta_table_notification
-which was not used by any driver.
-sta_notify() is essential for drivers that keeps notion of station
-internally and need to be notified about removal or addition of a station
-to the (I)BSS or assocation to an AP.
+On 9/21/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2007-09-21 at 17:52 -0400, Luis R. Rodriguez wrote:
+>
+> > > Then we can use "enum ieee80211_band" below in the structs and get type
+> > > checking. Generally, no new stuff has anything to do with
+> > > include/net/ieee80211.h, that's just for the old "stack".
+> >
+> > Sure, I just wanted to point out the band def existed in another
+> > header. My hopes is we can address all common header stuff once in for
+> > all. I guess it'll have to wait a bit more.
+>
+> Oh ok. But I think we should start using sane values (these bits look
+> awfully like you could OR them which is totally bogus) and convert the
+> other stack over.
 
-This version adds interface id to the parameter list
-as suggested by Johannes Berg
+ACK -- we can define any value we want into this. Point taken though.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/net/mac80211.h  |   20 ++++++++++++++++----
- net/mac80211/sta_info.c |   13 +++++++------
- 2 files changed, 23 insertions(+), 10 deletions(-)
+> > > > + * @name: name for this subband.
+> > >
+> > > Why does it need a name?
+> >
+> > Well to distinguish it.
+>
+> But why do we need to distinguish subbands by name? What do we use them
+> for anyway?
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 06f9aad..d0e091c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -613,6 +613,18 @@ enum set_key_cmd {
- 	SET_KEY, DISABLE_KEY,
- };
- 
-+/**
-+ * enum sta_notify_cmd - sta notify command
-+ *
-+ * Used with the sta_notify() callback in &struct ieee80211_ops, this
-+ * indicates addition and removal of a station to station table
-+ *
-+ * @STA_NOTIFY_ADD: a station was added to the station table
-+ * @STA_NOTIFY_REMOVE: a station being removed from the station table
-+ */
-+enum sta_notify_cmd {
-+	STA_NOTIFY_ADD, STA_NOTIFY_REMOVE
-+};
- 
- /**
-  * enum ieee80211_hw_flags - hardware flags
-@@ -957,8 +969,8 @@ enum ieee80211_erp_change_flags {
-  *
-  * @set_retry_limit: Configuration of retry limits (if device needs it)
-  *
-- * @sta_table_notification: Number of STAs in STA table notification. Must
-- *	be atomic.
-+ * @sta_notify: Notifies low level driver about addition or removal
-+ *	of assocaited station or AP.
-  *
-  * @erp_ie_changed: Handle ERP IE change notifications. Must be atomic.
-  *
-@@ -1025,8 +1037,8 @@ struct ieee80211_ops {
- 	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
- 	int (*set_retry_limit)(struct ieee80211_hw *hw,
- 			       u32 short_retry, u32 long_retr);
--	void (*sta_table_notification)(struct ieee80211_hw *hw,
--				       int num_sta);
-+	void (*sta_notify)(struct ieee80211_hw *hw, int if_id,
-+			enum sta_notify_cmd, const u8 *addr);
- 	void (*erp_ie_changed)(struct ieee80211_hw *hw, u8 changes,
- 			       int cts_protection, int preamble);
- 	int (*conf_tx)(struct ieee80211_hw *hw, int queue,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index cacceff..4ed1b60 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -158,9 +158,9 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 	list_add(&sta->list, &local->sta_list);
- 	local->num_sta++;
- 	sta_info_hash_add(local, sta);
--	if (local->ops->sta_table_notification)
--		local->ops->sta_table_notification(local_to_hw(local),
--						  local->num_sta);
-+	if (local->ops->sta_notify)
-+		local->ops->sta_notify(local_to_hw(local), dev->ifindex,
-+					STA_NOTIFY_ADD, addr);
- 	write_unlock_bh(&local->sta_lock);
- 
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-@@ -198,9 +198,6 @@ void sta_info_remove(struct sta_info *sta)
- 	local->num_sta--;
- 	sta_info_remove_aid_ptr(sta);
- 
--	if (local->ops->sta_table_notification)
--		local->ops->sta_table_notification(local_to_hw(local),
--						   local->num_sta);
- }
- 
- void sta_info_free(struct sta_info *sta)
-@@ -230,6 +227,10 @@ void sta_info_free(struct sta_info *sta)
- 	ieee80211_key_free(sta->key);
- 	sta->key = NULL;
- 
-+	if (local->ops->sta_notify)
-+		local->ops->sta_notify(local_to_hw(local), sta->dev->ifindex,
-+					STA_NOTIFY_REMOVE, sta->addr);
-+
- 	rate_control_remove_sta_debugfs(sta);
- 	ieee80211_sta_debugfs_remove(sta);
- 
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+We use it in:
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+u16 regdomain_ieee2mhz(u16 chan, u8 band)
+
+freq_band_id() returns it
+
+print_regdomain() uses it to distinguish the band the subband is in.
+
+static int __alloc_band_channels(u32 regdomain_id,
+        struct ieee80211_regdomain *reg, u8 band,
+        u32 sb_chan_domain)
+
+uses it internally to determine from what what regmap array it should
+use to build channels from. That is, it either uses reg_2ghz_channels
+or reg_5ghz_channels.
+
+> > > > + * @min_freq: minimum frequency for this subband, in MHz. This represents the
+> > > > + *   center of frequency of a channel.
+> > > > + * @max_freq: maximum frequency for this subband, in MHz. This represents the
+> > > > + *   center of frequency of a channel.
+> > >
+> > > How can both be center freq?
+> >
+> > min_freq is the center of frequency for the minimum channel on the
+> > subband. max_freq is the center of frequency for the max channel on
+> > the subband. I guess I should clear that up a little more huh.
+>
+> Uh ok, no, I just need to read better :)
+
+:-P
+
+> > > > +/**
+> > > > + * struct ieee80211_regdomain - defines a regulatory domain
+> > > > + *
+> > > > + * @regdomain_id: ID of this regulatory domain. Some come from
+> > > > + *   http://standards.ieee.org/getieee802/download/802.11b-1999_Cor1-2001.pdf
+> > > > + * @regdomain_name: name of this regulatory domain.
+> > > > + * @list: node, part of band_restrictions_list
+> > > > + *
+> > > > + * This structure defines a regulatory domain, which consists of channel and
+> > > > + * power restrictions. Some regulatory domains come from
+> > > > + * 802.11b-1999_Cor1-2001, the rest are based on Reyk Floeter's ar5k. If
+> > > > + * there is need to add more values here, please add one that is either
+> > > > + * defined in a standard or that many hardware devices have adopted. Also
+> > > > + * note that multiple countries can map to the same @regdomain_id
+> > >
+> > > There's no table here where you could add values, is there?.
+> >
+> > There is a lot of them.. but we can add few to show as an example.
+>
+> Then again. Why do we have this struct in a header file?
+
+cfg80211 uses it. This is how we create a central regulatory domain.
+cfg80211 creates its own struct based on this.
+
+> > I should have explained that too. Well, if you may recall in my last
+> > implementation of this I actually used a linked list. I then decided
+> > we weren't going to add new 2.4GHz or 5GHz subbands unless a big
+> > IEEE-802.11 change occurs. That doesn't happen so often to either use
+> > linked list or a variable length array.
+>
+> Ok I just don't understand why you have this information in a struct.
+> Shouldn't all of this information be essentially internal to the
+> regulatory code, and people who use it simply query it and get back a
+> pointer to the subband that applies to their query?
+
+In order to build things and make things concretely. cfg80211 will
+have a ieee80211_regdomain, but well this ieee80211_regdomain has some
+structs we might as well define to make it easier to build from a map.
+
+> I don't see why
+> everybody needs to see this huge array.
+
+Well you are welcome to provide an alternative solution. I first
+started with a linked list, but then that seemed silly as this remains
+constant.. so I think a static array of subbands is easier. Hmm, I
+think I had even tried a variable length array too..
+
+  Luis
