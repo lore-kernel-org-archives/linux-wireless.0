@@ -1,115 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:25255 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805AbXIHPCH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761451AbXIUWFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 11:02:07 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so353997ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 08:02:06 -0700 (PDT)
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: [RFC 2/3] rfkill: Add support for ultrawideband
-Date: Sat, 8 Sep 2007 17:11:50 +0200
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>
-References: <200709081710.56744.IvDoorn@gmail.com>
-In-Reply-To: <200709081710.56744.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709081711.50344.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 21 Sep 2007 18:05:22 -0400
+Subject: Re: [stable] [PATCH] cfg80211: fix initialisation if built-in
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Greg KH <greg@kroah.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	stable@kernel.org, Rob Hussey <robjhussey@gmail.com>
+In-Reply-To: <20070921220253.GA32585@kroah.com>
+References: <1189424685.4506.63.camel@johannes.berg>
+	 <20070921220253.GA32585@kroah.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tBE6grxHYA1Oiiwht9ua"
+Date: Sat, 22 Sep 2007 00:06:39 +0200
+Message-Id: <1190412399.18521.181.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will add support for UWB keys to rfkill,
-support for this has been requested by Inaky.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-CC: Inaky Perez-Gonzalez <inaky@linux.intel.com>
----
- include/linux/input.h     |    1 +
- include/linux/rfkill.h    |    2 ++
- net/rfkill/rfkill-input.c |    9 +++++++++
- net/rfkill/rfkill.c       |    3 +++
- 4 files changed, 15 insertions(+), 0 deletions(-)
+--=-tBE6grxHYA1Oiiwht9ua
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/linux/input.h b/include/linux/input.h
-index cf2b561..8e5828d 100644
---- a/include/linux/input.h
-+++ b/include/linux/input.h
-@@ -360,6 +360,7 @@ struct input_absinfo {
- 
- #define KEY_BLUETOOTH		237
- #define KEY_WLAN		238
-+#define KEY_UWB			239
- 
- #define KEY_UNKNOWN		240
- 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index c4546e1..f9a50da 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -31,10 +31,12 @@
-  * enum rfkill_type - type of rfkill switch.
-  * RFKILL_TYPE_WLAN: switch is no a Wireless network devices.
-  * RFKILL_TYPE_BlUETOOTH: switch is on a bluetooth device.
-+ * RFKILL_TYPE_UWB: switch is on a Ultra wideband device.
-  */
- enum rfkill_type {
- 	RFKILL_TYPE_WLAN ,
- 	RFKILL_TYPE_BLUETOOTH,
-+	RFKILL_TYPE_UWB,
- 	RFKILL_TYPE_MAX,
- };
- 
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 9f746be..8e4516a 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -81,6 +81,7 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
- 
- static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_WLAN);
- static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
-+static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
- 
- static void rfkill_event(struct input_handle *handle, unsigned int type,
- 			unsigned int code, int down)
-@@ -93,6 +94,9 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
- 		case KEY_BLUETOOTH:
- 			rfkill_schedule_toggle(&rfkill_bt);
- 			break;
-+		case KEY_UWB:
-+			rfkill_schedule_toggle(&rfkill_uwb);
-+			break;
- 		default:
- 			break;
- 		}
-@@ -148,6 +152,11 @@ static const struct input_device_id rfkill_ids[] = {
- 		.evbit = { BIT(EV_KEY) },
- 		.keybit = { [LONG(KEY_BLUETOOTH)] = BIT(KEY_BLUETOOTH) },
- 	},
-+	{
-+		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
-+		.evbit = { BIT(EV_KEY) },
-+		.keybit = { [LONG(KEY_UWB)] = BIT(KEY_UWB) },
-+	},
- 	{ }
- };
- 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 50e0102..03ed7fd 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -106,6 +106,9 @@ static ssize_t rfkill_type_show(struct device *dev,
- 	case RFKILL_TYPE_BLUETOOTH:
- 		type = "bluetooth";
- 		break;
-+	case RFKILL_TYPE_UWB:
-+		type = "ultrawideband";
-+		break;
- 	default:
- 		BUG();
- 	}
--- 
-1.5.3
+On Fri, 2007-09-21 at 15:02 -0700, Greg KH wrote:
+
+> When this goes into Linus's tree, please resend it to the
+> stable@kernel.org address so we can add it to our queue.
+
+It's on the way, sitting in net-2.6.24 right now but I don't know
+whether it's scheduled for .23. I'm no longer sure if it really matters
+for -stable since we have no drivers there so typically drivers build as
+out-of-tree modules and the issue doesn't matter.
+
+johannes
+
+--=-tBE6grxHYA1Oiiwht9ua
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG9EBv/ETPhpq3jKURAjyvAJ9lX7GVENiZpEFg4y4qfWKcvmV39ACgr8BJ
+0b4ZUlCBsKtV8LFg38lC3fY=
+=AV/m
+-----END PGP SIGNATURE-----
+
+--=-tBE6grxHYA1Oiiwht9ua--
 
