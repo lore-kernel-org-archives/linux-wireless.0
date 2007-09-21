@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4818 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753481AbXIMTLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 15:11:10 -0400
-Date: Thu, 13 Sep 2007 14:39:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: ian <ischram@telenet.be>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: letting drivers choose their preferred rate scale
-Message-ID: <20070913183918.GA10239@tuxdriver.com>
-References: <46CF95F9.6090802@telenet.be> <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be> <1188211749.6756.11.camel@johannes.berg> <20070831180933.GB3352@tuxdriver.com> <46DB537E.8030801@telenet.be> <1188808692.14564.24.camel@johannes.berg> <46DC1500.7090808@telenet.be>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41021
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759476AbXIUQUh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2007 12:20:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: net-2.6.24 - build failure
+Date: Fri, 21 Sep 2007 18:18:04 +0200
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <1190238802.26101.24.camel@localhost> <20070919.151712.66176476.davem@davemloft.net>
+In-Reply-To: <20070919.151712.66176476.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46DC1500.7090808@telenet.be>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709211818.05232.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 03, 2007 at 04:06:56PM +0200, ian wrote:
-> Johannes Berg wrote:
-> > On Mon, 2007-09-03 at 02:21 +0200, ian wrote:
-> > 
-> >> we could additionally remove the module_alias from rc80211_simple
-> > 
-> > indeed, please roll into this patch
-> > 
-> I don't know enough from debugfs yet, to do that part, but I'll read up.
+On Thursday 20 September 2007 00:17:12 David Miller wrote:
+> From: Joe Perches <joe@perches.com>
+> Date: Wed, 19 Sep 2007 14:53:22 -0700
 > 
-> ---
-> Make rc80211_simple the default rate scaling algorithm
+> > drivers/net/wireless/b43legacy/built-in.o: In function `tsf_read_file':
+> > drivers/net/wireless/b43legacy/debugfs.c:80: multiple definition of `tsf_read_file'
+> 
+> Can one of the wireless folks fix b43legacy to not use the same
+> global variable and function names as the b43 driver?
 
-> @@ -78,11 +78,12 @@ static struct rate_control_ops *
->  ieee80211_rate_control_ops_get(const char *name)
->  {
->  	struct rate_control_ops *ops;
-> +	const char *try_name = name ? name : "simple";
-> 
-> -	ops = ieee80211_try_rate_control_ops_get(name);
-> +	ops = ieee80211_try_rate_control_ops_get(try_name);
->  	if (!ops) {
-> -		request_module("rc80211_%s", name ? name : "default");
-> -		ops = ieee80211_try_rate_control_ops_get(name);
-> +		request_module("rc80211_%s", try_name);
-> +		ops = ieee80211_try_rate_control_ops_get(try_name);
->  	}
->  	return ops;
->  }
-> --- a/net/mac80211/rc80211_simple.c	2007-09-03 15:53:42.000000000 +0200
-> +++ b/net/mac80211/rc80211_simple.c	2007-09-03 15:54:40.000000000 +0200
-> @@ -29,7 +29,6 @@
->  #define RATE_CONTROL_INTERVAL (HZ / 20)
->  #define RATE_CONTROL_MIN_TX 10
-> 
-> -MODULE_ALIAS("rc80211_default");
-> 
->  static void rate_control_rate_inc(struct ieee80211_local *local,
->  				  struct sta_info *sta)
- 
-Does this actually change anything?  With the MODULE_ALIAS line
-in rc80211_simple.c, doesn't the request_module("rc80211_default")
-just load rc80211_simple?
+Fixes are already submitted.
+This was only an accident (forgot static).
 
-Confused...
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
