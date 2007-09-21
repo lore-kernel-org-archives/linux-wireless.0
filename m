@@ -1,89 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:55052 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630AbXIRRh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 13:37:57 -0400
-Date: Tue, 18 Sep 2007 10:37:18 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlist and network-manager bug report
-Message-ID: <20070918173718.GA1466@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1189526874.6161.30.camel@johannes.berg> <1189610572.5644.28.camel@xo-3E-67-34.localdomain> <20070912170153.GA25785@bougret.hpl.hp.com> <1189667496.6161.77.camel@johannes.berg> <20070918003628.GA28939@bougret.hpl.hp.com> <1190110522.23521.36.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190110522.23521.36.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbXIUPQr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2007 11:16:47 -0400
+Subject: promisc interface behaviour, matching frames to interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
+	Jiri Benc <jbenc@suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NSIZRS9GLreZo0FkNtPW"
+Date: Fri, 21 Sep 2007 17:18:00 +0200
+Message-Id: <1190387880.18521.150.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 18, 2007 at 12:15:22PM +0200, Johannes Berg wrote:
-> On Mon, 2007-09-17 at 17:36 -0700, Jean Tourrilhes wrote:
-> 
-> > > Yeah, I don't think they cared for non-ascii at the time.
-> > 
-> > 	There were not concerned about UI, witness the mess in
-> > specifying WEP keys (do you want passphrase with that ?).
-> 
-> Is passphrase actually specified in 802.11? I always thought it was some
-> external hashing but didn't look it up.
 
-	Yes, it's some external hashing, and if I remember there is at
-least two variants of it.
+--=-NSIZRS9GLreZo0FkNtPW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> But yes, I don't think in 1999
-> many people cared about general UIs...
-> 
-> > 	I'm talking of all driver that have their own private API :
-> > --------------------------------
-> > # cat /proc/driver/aironet/eth0/SSID 
-> > MY_ESSID
-> > --------------------------------
-> 
-> Oh. I didn't think that existed. Is there any point in that or could we
-> just remove it?
+Hey,
 
-	I say we just ignore it, it mostly legacy drivers, and some
-people may use it.
+Thinking more about how to match frames to interfaces, I'm a bit worried
+about promisc behaviour.
 
-> > 	I forgot one little issue.
-> > 	Remember all the fuss about the ESSID API change a long while
-> > back ? The goal was to support ESSID a array of char as opposed to
-> > ASCII strings in the API. There was a big fuss, and at that time John
-> > did a backward compatibility hack to support the old API in the
-> > kernel.
-> > 	Well, the hack of John is broken on the receive side. It
-> > basically prevents us to implement what you want, amongst other
-> > things. This is what you currently get :
-> > ---------------------------------------
-> > >./iwconfig eth0
-> > eth0      IEEE 802.11b  ESSID:"my_essid\x00"  Nickname:"HERMES I"
-> >           Mode:Managed  Frequency:2.422 GHz  Access Point: Not-Associated   
-> >           Bit Rate:11 Mb/s   Sensitivity:1/3  
-> > ---------------------------------------
-> 
-> Hmmm. So we already \x00-escape the trailing NUL?
+Currently, we have code for one dubious optimisation: if the sender is
+known, not a WDS peer or an AP we're associated to, the frame is not
+multicast and we don't have promisc interfaces, we push the frame to the
+interface  the sender is associated to assuming that we're actually the
+right destination. I believe that last part is simply wrong, shouldn't
+we at least check the RA?
 
-	No, that's only in the brand new version of Wireless Tools
-30.pre1 that include the escaping code. I coded that following your
-suggestions, it includes full escaping in output and input. But now
-I'm stuck because of that bug, I can't really distribute it.
+In any case, I think that it's also not as good as it could be. It only
+seems to catch STAs that are associated to us as an AP, but then why
+the !promisc check?
 
-> > 	I've already sent the patch to fix that to John, don't know
-> > where it went :
-> > 		http://marc.info/?t=118401941300001&r=1&w=2
-> > 	I can resend you a copy if you want. I feel this patch ought
-> > to go also in the various stable series.
-> 
-> Probably got lost, you should probably resend and to -stable as well.
+However, when thinking about how to improve (see also my previous mail),
+I noticed that there's no clear definition of how promisc should work.
+In the STA/IBSS case it's not too bad: see frames from the same BSS but
+not necessarily addressed to us. But what about an AP/VLAN interface? Or
+WDS? I tend to think that for those, promisc makes no sense at all,
+which is sort of what is implemented today. Anybody have a differing
+opinion?
 
-	I'll do, but you seem much more efficient at getting stuff in
-the kernel ;-)
+Once we have that sorted out, let's take a step back and see what sort
+of frames we can get, here's a table:
 
-> johannes
+ToDS    FromDS  A1(RA)  A2(TA)  A3      A4      Use
+---------------------------------------------------
+0       0      DA      SA      BSSID   -       IBSS and DLS
+0       1      DA      BSSID   SA      -       AP -> STA
+1       0      BSSID   SA      DA      -       AP <- STA
+1       1      RA      TA      DA      SA      unspecified (WDS)
 
-	Regards,
+Now, the easiest way to do good matching from frames to interfaces seems
+to look like this:
 
-	Jean
+First handle the IBSS interface (if present) [1] by checking whether the
+frame is an IBSS frame destined to us with the right BSSID and adding
+the transmitter to the station table.
+
+Secondly, iterate over all [2] known sta_info structures with matching
+TA. The device they belong to is most likely the right device, but you
+need to consider the DS bits.
+
+Except for the scanning problem mentioned earlier which I believe I can
+fix with some cleanups, this still has the problem that promisc stops
+working.
+
+I suppose the real question is: is promisc really useful on an 802.3
+framed interface? Personally, I always use monitor interfaces and then
+also get to see the right frames if it wasn't encrypted (or WEP,
+wireshark can decrypt WEP.)
+
+johannes
+
+[1] we can really only allow one IBSS interface on a single hardware
+because they could try to be in the same BSS and that leads to trouble
+
+[2] technically, this requires my patch to make sta_info structures
+per-interface, but unless you need corner cases it works fine right now
+as well, only you iterate over a single one
+
+
+--=-NSIZRS9GLreZo0FkNtPW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG8+Co/ETPhpq3jKURAp8RAKCPPtWLztB5ZwtNgGh+paJIA0gmlACdFxIs
+hcb5oOR0JOKiSOD7XFxVP1o=
+=CZM3
+-----END PGP SIGNATURE-----
+
+--=-NSIZRS9GLreZo0FkNtPW--
 
