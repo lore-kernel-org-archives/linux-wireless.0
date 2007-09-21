@@ -1,110 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3318 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36751 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755592AbXISSoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:44:22 -0400
-Date: Wed, 19 Sep 2007 14:10:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-Subject: Please pull 'z1211' branch of wireless-2.6
-Message-ID: <20070919181005.GB5483@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1764242AbXIUUuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2007 16:50:08 -0400
+Subject: Re: [PATCH 0/5] Add central regulatory domain agent - Patchset I
+From: Dan Williams <dcbw@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Drake <dsd@gentoo.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <20070921204606.GD31768@pogo>
+References: <20070921204606.GD31768@pogo>
+Content-Type: text/plain
+Date: Fri, 21 Sep 2007 16:47:29 -0400
+Message-Id: <1190407649.14368.6.camel@xo-3E-67-34.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff & Dave,
+On Fri, 2007-09-21 at 16:46 -0400, Luis R. Rodriguez wrote:
+> Patchset I - Add central regulatory domain agent
+> 
+> This is patchset I of II which adds a central regulatory domain
+> agent onto the wireless subsystem. I've split it into two patchsets in order
+> to introduce the agent before affecting mac80211 drivers. This allows work
+> to continue on the central reg agent independant of mac80211
+> advancements.
+> 
+> Patch series I adds the central regulatory domain agent and
+> integrates it with cfg80211. The central reg agent consists of 2
+> main modules:
 
-This patch adds z1211 (previously known as zd1211rw-mac80211),
-a driver for Zydas ZD1211 hardware.  This driver has proven very
-robust -- Fedora 7 uses this driver and I don't think I have any open
-bugzillas for it.  Either the driver works well, or no one as using
-it...given the common availability of the hardware, I have to presume
-the former. :-)
+My bad, my reading was too quick.  I see cfg80211 above now :)
 
-This driver is mostly a port of zd1211rw to the mac80211
-infrastructure.  In fact, most zd1211rw patches have been mirrored
-directly to this driver for some time.  I considered merely updating
-the existing driver with this code, but I think it is more prudent to
-include this as a separate driver just to avoid confusion.  There is
-some symbol clash between the two drivers, so I add a Kconfig hack
-to ensure that only one or the other is built-in or that this one is
-built as a module.
+Dan
 
-The maintainers have identified some (IMHO minor) issues with the
-mac80211 port of this driver.  Some of them are summarized here:
+> * ISO3166-1
+> * Regdomains
+> 
+> Additionally, changing regulatory domains can be acomplished through
+> the use of a new configfs module which will be introduced for
+> the wireless subsystem.
+> 
+> Patch series II will add support for the centreal reglatory agent
+> onto mac80211, remove mac80211's simple regulatory control and and 
+> replace each driver's own regulatory domain implementation with the
+> central one.
+> 
+>   Luis
 
-	http://linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
-
-Still, I think we would be better-off having this driver upstream.
-
-Thanks,
-
-John
-
----
-
-Patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/0001-z1211-add-mac80211-based-driver-for-ZD1211-hardwa.patch
-
----
-
-The following changes since commit 0d4cbb5e7f60b2f1a4d8b7f6ea4cc264262c7a01:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git z1211
-
-Daniel Drake (1):
-      z1211: add mac80211-based driver for ZD1211 hardware
-
- MAINTAINERS                                |   10 +
- drivers/net/wireless/Kconfig               |    1 +
- drivers/net/wireless/Makefile              |    1 +
- drivers/net/wireless/z1211/Kconfig         |   18 +
- drivers/net/wireless/z1211/Makefile        |   10 +
- drivers/net/wireless/z1211/zd_chip.c       | 1619 ++++++++++++++++++++++++++++
- drivers/net/wireless/z1211/zd_chip.h       |  921 ++++++++++++++++
- drivers/net/wireless/z1211/zd_def.h        |   57 +
- drivers/net/wireless/z1211/zd_ieee80211.c  |  100 ++
- drivers/net/wireless/z1211/zd_ieee80211.h  |   75 ++
- drivers/net/wireless/z1211/zd_mac.c        |  949 ++++++++++++++++
- drivers/net/wireless/z1211/zd_mac.h        |  227 ++++
- drivers/net/wireless/z1211/zd_rf.c         |  178 +++
- drivers/net/wireless/z1211/zd_rf.h         |  108 ++
- drivers/net/wireless/z1211/zd_rf_al2230.c  |  439 ++++++++
- drivers/net/wireless/z1211/zd_rf_al7230b.c |  492 +++++++++
- drivers/net/wireless/z1211/zd_rf_rf2959.c  |  279 +++++
- drivers/net/wireless/z1211/zd_rf_uw2453.c  |  534 +++++++++
- drivers/net/wireless/z1211/zd_usb.c        | 1528 ++++++++++++++++++++++++++
- drivers/net/wireless/z1211/zd_usb.h        |  263 +++++
- drivers/net/wireless/z1211/zd_util.c       |   82 ++
- drivers/net/wireless/z1211/zd_util.h       |   29 +
- 22 files changed, 7920 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/z1211/Kconfig
- create mode 100644 drivers/net/wireless/z1211/Makefile
- create mode 100644 drivers/net/wireless/z1211/zd_chip.c
- create mode 100644 drivers/net/wireless/z1211/zd_chip.h
- create mode 100644 drivers/net/wireless/z1211/zd_def.h
- create mode 100644 drivers/net/wireless/z1211/zd_ieee80211.c
- create mode 100644 drivers/net/wireless/z1211/zd_ieee80211.h
- create mode 100644 drivers/net/wireless/z1211/zd_mac.c
- create mode 100644 drivers/net/wireless/z1211/zd_mac.h
- create mode 100644 drivers/net/wireless/z1211/zd_rf.c
- create mode 100644 drivers/net/wireless/z1211/zd_rf.h
- create mode 100644 drivers/net/wireless/z1211/zd_rf_al2230.c
- create mode 100644 drivers/net/wireless/z1211/zd_rf_al7230b.c
- create mode 100644 drivers/net/wireless/z1211/zd_rf_rf2959.c
- create mode 100644 drivers/net/wireless/z1211/zd_rf_uw2453.c
- create mode 100644 drivers/net/wireless/z1211/zd_usb.c
- create mode 100644 drivers/net/wireless/z1211/zd_usb.h
- create mode 100644 drivers/net/wireless/z1211/zd_util.c
- create mode 100644 drivers/net/wireless/z1211/zd_util.h
--- 
-John W. Linville
-linville@tuxdriver.com
