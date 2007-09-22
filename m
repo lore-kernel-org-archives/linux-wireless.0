@@ -1,50 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59339
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756211AbXIEOQ4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 10:16:56 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-Date: Wed, 5 Sep 2007 16:16:24 +0200
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org
-References: <20070821161845.165557000@sipsolutions.net> <20070905051626.GA12198@deine-taler.de> <1188991396.9942.97.camel@johannes.berg>
-In-Reply-To: <1188991396.9942.97.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2841 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753912AbXIVQHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Sep 2007 12:07:51 -0400
+Date: Sat, 22 Sep 2007 11:41:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6 (for 2.6.23)
+Message-ID: <20070922154142.GA4738@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200709051616.25044.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 05 September 2007, Johannes Berg wrote:
-> On Wed, 2007-09-05 at 07:16 +0200, Ulrich Kunitz wrote:
-> 
-> > I see three options to achieve this:
-> > 
-> > 1) Use ieee80211_stop_queues() in ->configure_filter() and
-> >    ieee80211_wake_queues() at the end of the workqueue function.
-> > 
-> > 2) Throw away all packets until the workqueue function
-> >    terminates.
-> > 
-> > 3) Implement our own tx queue.
-> > 
-> > I prefer to do option (1) because it wouldn't require adding
-> > additional fields to our private structure beside the work_struct
-> > for the workqueue function, it is simple to implement and it would
-> > not throw away any packets. Are there any side effects that I have
-> > overlooked?
-> 
-> I think Michael says it's currently buggy if called outside of ->tx().
+Dave,
 
-Yes, we had a bug in b43 where we used it in the periodic workqueue.
-It causes really hard to track down system freezes on UP
-systems due to races with the TX code.
-It will hang and busy wait in the qdisc code when this triggers.
-I didn't see a fix for this, yet.
-But I think a fix could probably be to take the netif_tx_lock
-in the ieee80211_stop_queues() function, so we make sure that no
-TX is in progress while we stop it.
+These are a few more minor fixes that I would like to have in 2.6.23 if
+at all possible.
+
+Thanks!
+
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
+
+---
+
+The following changes since commit 81cfe79b9c577139a873483654640eb3f6e78c39:
+  Linus Torvalds (1):
+        Linux 2.6.23-rc7
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+
+Johannes Berg (3):
+      cfg80211: fix initialisation if built-in
+      net/mac80211/wme.c: fix sparse warning
+      mac80211: fix initialisation when built-in
+
+Satyam Sharma (1):
+      net/wireless/sysfs.c: Shut up build warning
+
+ net/mac80211/ieee80211.c      |    2 +-
+ net/mac80211/rc80211_simple.c |    2 +-
+ net/mac80211/wme.c            |    2 +-
+ net/wireless/core.c           |    2 +-
+ net/wireless/sysfs.c          |    2 ++
+ 5 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 7286c38..ff2172f 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -5259,7 +5259,7 @@ static void __exit ieee80211_exit(void)
+ }
+ 
+ 
+-module_init(ieee80211_init);
++subsys_initcall(ieee80211_init);
+ module_exit(ieee80211_exit);
+ 
+ MODULE_DESCRIPTION("IEEE 802.11 subsystem");
+diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
+index f6780d6..17b9f46 100644
+--- a/net/mac80211/rc80211_simple.c
++++ b/net/mac80211/rc80211_simple.c
+@@ -431,7 +431,7 @@ static void __exit rate_control_simple_exit(void)
+ }
+ 
+ 
+-module_init(rate_control_simple_init);
++subsys_initcall(rate_control_simple_init);
+ module_exit(rate_control_simple_exit);
+ 
+ MODULE_DESCRIPTION("Simple rate control algorithm for ieee80211");
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 89ce815..7ab82b3 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -424,7 +424,7 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
+ 		skb_queue_head_init(&q->requeued[i]);
+ 		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
+ 						 qd->handle);
+-		if (q->queues[i] == 0) {
++		if (!q->queues[i]) {
+ 			q->queues[i] = &noop_qdisc;
+ 			printk(KERN_ERR "%s child qdisc %i creation failed", dev->name, i);
+ 		}
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7eabd55..9771451 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -213,7 +213,7 @@ out_fail_notifier:
+ out_fail_sysfs:
+ 	return err;
+ }
+-module_init(cfg80211_init);
++subsys_initcall(cfg80211_init);
+ 
+ static void cfg80211_exit(void)
+ {
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 88aaacd..2d5d225 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -52,12 +52,14 @@ static void wiphy_dev_release(struct device *dev)
+ 	cfg80211_dev_free(rdev);
+ }
+ 
++#ifdef CONFIG_HOTPLUG
+ static int wiphy_uevent(struct device *dev, char **envp,
+ 			int num_envp, char *buf, int size)
+ {
+ 	/* TODO, we probably need stuff here */
+ 	return 0;
+ }
++#endif
+ 
+ struct class ieee80211_class = {
+ 	.name = "ieee80211",
+-- 
+John W. Linville
+linville@tuxdriver.com
