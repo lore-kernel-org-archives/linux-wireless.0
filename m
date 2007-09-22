@@ -1,28 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:27074 "EHLO cvs.openbsd.org"
+Received: from deine-taler.de ([217.160.107.63]:59626 "EHLO deine-taler.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932635AbXIBArZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 20:47:25 -0400
-Message-Id: <200709020036.l820aaNf014181@cvs.openbsd.org>
-To: Bob Beck <beck@bofh.cns.ualberta.ca>
-cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing 
-In-reply-to: Your message of "Sat, 01 Sep 2007 18:02:26 MDT."
-             <20070902000226.GE24887@bofh.cns.ualberta.ca>
-Date: Sat, 01 Sep 2007 18:36:36 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+	id S1751181AbXIVJsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Sep 2007 05:48:01 -0400
+Date: Sat, 22 Sep 2007 11:48:00 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Drake <dsd@gentoo.org>, davem@davemloft.net,
+	jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'z1211' branch of wireless-2.6
+Message-ID: <20070922094800.GB12327@deine-taler.de>
+References: <20070919181005.GB5483@tuxdriver.com> <46F19DD0.2050605@gentoo.org> <20070920134730.GC6748@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070920134730.GC6748@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When companies have taken our wireless device drivers, many many of
-them have given changes and fixes back.  Some maybe didn't, but that
-is OK.
+Sorry for joining the discussion so late, but I have a day job
+requires sometimes all of my time.
 
-When Linux took our changes back, they immediately locked the door
-against changes moving back, by putting a GPL license on guard.
+John W. Linville wrote:
 
-Why does our brother Linux take a file that is 90% BSD licensed,
-and refuse to let us see the 10% he adds?
+> On Wed, Sep 19, 2007 at 11:08:16PM +0100, Daniel Drake wrote:
+> 
+> > I would like to this until 2.6.25 until I have had time to clear up some 
+> > final issues and do more testing myself of zd1211rw-mac80211. I also 
+> > think we need to discuss the rename...
+> 
+> Renames being what they are, I was hoping to avoid a "bikeshed"
+> discussion about the choice of names.  My main point was to get it
+> into the tree with a unique and manageable name.  I'm sure we could
+> still rename it again before 2.6.24 ships or even later.
 
+I would remark here that names are important. John you are
+suggesting here the fourth rename of the mac80211 zd1211rw driver.
+In my professional life I would clearly identify this as a
+problem. I agree that zd1211rw-mac80211 is awkward, but this name
+hasn't been  introduced by Daniel or me. z1211 has never been used
+to refer to the device. If a new name for zd1211rw-mac80211 has to
+be found, we should use zd1211mac. This is a different name than
+the for the softmac driver, which is zd1211rw. This should also
+clarify my personal position, which is that different things
+should be named differently. We cannot use zd1211, because this is
+used by the out-of-tree vendor driver, which is still used by some
+people.
 
+> Well, obviously I would like to get it out now.  The longer we are
+> without a mac80211-based driver for zd1211 hardware then the longer
+> we must maintain the softmac component (or at least take bug reports
+> for it).
+
+The problem from my perspective is, that mac80211 and our driver
+is not there where it should be. Actually the softmac driver still
+works better than the mac80211 driver. There are sometimes stops
+with mac80211 for several seconds, which is pretty painful while
+remotely editing text, which I do right now. Yes, I eat my own dog
+food. The reason is that mac80211 has assumptions about the
+features a device supports that we emulate quite badly, because
+the device interface doesn't support the required semantics. (TX
+confirmations is my major concern right now.) Multiple interfaces
+don't work and I have been able to cause kernel crashes while
+playing around with this. The driver doesn't support the setting
+of certain configuration parameters while the device is down.
+(Personally I think that should be handled by the stack, but it
+doesn't right now.) We are receiving complains about kismet
+compatibility once in a while.
+
+You could ask, why we have not fixed those things. The problem is
+that mac80211 right now is a moving target. I spent two weekends
+simply to identify the patch, that caused a complete crash of the
+kernel with the driver. At the same time the wireless-dev tree
+reorg has been done, which destroyed the whole history. I wrote my
+own git patch tool to be able to bisect. I found the patch, it had
+around 2000 changed lines, it mixed code moves and some quick
+fixes. Shortly afterwards a patch by Johannes fixed the problem. I
+had not changed a line of the driver, but had spend around 50
+hours on the problem. I apologize for the ranting. But I sometimes
+feel, that Linux development is done under the assumption that
+everybody has tons of midnight oil to burn. 
+
+Daniel and I are testing and reviewing every patch we are
+forwarding to the wireless mailing list. It's not nice to spend
+one to two hours again to adapt and test the pending patches,
+because somebody has renamed the driver directory again.
+
+> If you are determined not to have it in 2.6.24 then I will relent.
+> I will also suggest that Larry start sending any softmac bugs to
+> you... :-)
+
+I think I have ranted enough. :-)
+> 
+> If we will be having a port rather than a new driver, how soon after
+> 2.6.24-rc1 closes can we queue the port for 2.6.25?  I think it
+> should be almost immediately, to ensure maximum test exposure and to
+> "seal the deal".  What do you think?
+
+My minimum criteria for mainline inclusion are:
+
+1) The driver doesn't crash anymore while playing around with
+   multiple interfaces. (I have to check this.)
+2) A reasonable name has been chosen. My suggestion is zd1211mac.
+
+A real high-quality driver will require Johannes' proposed
+mac80211 driver interface changes to be merged and TX
+confirmations handled in a way, that the semantics can really be
+supported by the driver. (Michael Buesh's patch is taping over the
+issue.)
+
+Thanks,
+
+Uli
+
+-- 
+Uli Kunitz
