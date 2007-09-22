@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:46412 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750823AbXIAEP7 (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:47294 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757467AbXIVHNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:15:59 -0400
-Date: Fri, 31 Aug 2007 21:16:03 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Subject: borkage in 2.6.23-rc4-mm1
-Message-Id: <20070831211603.083dfed2.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 22 Sep 2007 03:13:40 -0400
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43legacy: Change the hardware radio enable logic and cleanup code
+References: <46f319ef.8UBDQAjFjjfCblr5%Larry.Finger@lwfinger.net>
+	<200709211522.01273.mb@bu3sch.de>
+From: Kalle Valo <Kalle.Valo@iki.fi>
+Date: Sat, 22 Sep 2007 10:05:21 +0300
+In-Reply-To: <200709211522.01273.mb@bu3sch.de> (Michael Buesch's message of "Fri\, 21 Sep 2007 15\:22\:00 +0200")
+Message-ID: <87d4wbnpse.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch <mb@bu3sch.de> writes:
 
-Am seeing random crap like this:
+>> Index: wireless-dev/drivers/net/wireless/b43legacy/leds.c
+>> ===================================================================
+>> --- wireless-dev.orig/drivers/net/wireless/b43legacy/leds.c
+>> +++ wireless-dev/drivers/net/wireless/b43legacy/leds.c
+>> @@ -182,6 +182,7 @@ void b43legacy_leds_update(struct b43leg
+>>  	unsigned long interval = 0;
+>>  	u16 ledctl;
+>>  	unsigned long flags;
+>> +	bool radio_enabled = (phy->radio_on && dev->radio_hw_enable);
+>
+> Just that you are aware of it:
+> This is a racy access to the radio_hw_enable variable, as we don't take
+> the mutex here (we can't and we don't want). But it's OK, since nobody
+> cares if the LED is racing for a second and displays the wrong state
+> for a second.
+> Same goes for the phy->radio_on access.
 
-Aug 31 20:57:46 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
-Aug 31 20:57:51 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
-Aug 31 20:57:56 sony dhclient: dhclient(4537) is already running - exiting. 
-Aug 31 20:57:56 sony dhclient: exiting.
-Aug 31 20:58:05 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 4
-Aug 31 20:58:07 sony kernel: ipw2200: Firmware error detected.  Restarting.
-Aug 31 20:58:09 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 7
-Aug 31 20:58:16 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 14
-Aug 31 20:58:16 sony dhclient: DHCPOFFER from 192.168.2.1
-Aug 31 20:58:16 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
-Aug 31 20:58:20 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
-Aug 31 20:58:20 sony dhclient: DHCPACK from 192.168.2.1
-Aug 31 20:58:20 sony NET[4946]: /sbin/dhclient-script : updated /etc/resolv.conf
-Aug 31 20:58:20 sony dhclient: bound to 192.168.2.5 -- renewal in 125513 seconds.
-Aug 31 20:59:45 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
-Aug 31 20:59:51 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
-Aug 31 20:59:52 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
-Aug 31 21:01:31 sony kernel: ipw2200: Firmware error detected.  Restarting.
-Aug 31 21:01:54 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
-Aug 31 21:01:59 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
-Aug 31 21:02:02 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
-Aug 31 21:04:04 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
-Aug 31 21:04:05 sony kernel: ipw2200: Firmware error detected.  Restarting.
-Aug 31 21:04:07 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
-Aug 31 21:04:12 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
-Aug 31 21:05:21 sony kernel: ipw2200: Firmware error detected.  Restarting.
+As a side note, it would be nice to have this as a comment in the
+code. Makes it easier for other people reading the code and wondering
+if this a bug or not.
 
-when trying to use ssh on the current rc4-mm1 lineup.
+-- 
+Kalle Valo
