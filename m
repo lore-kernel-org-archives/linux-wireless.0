@@ -1,122 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57077 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbXIZPzF (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.224]:24097 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbXIVScF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 11:55:05 -0400
-Message-Id: <20070926155436.262774000@sipsolutions.net>
-References: <20070926155313.955049000@sipsolutions.net>
-Date: Wed, 26 Sep 2007 17:53:20 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [patch 7/7] mac80211: make userspace-mlme a per-interface setting
-Mime-Version: 1.0
+	Sat, 22 Sep 2007 14:32:05 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so868934qbe
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2007 11:32:04 -0700 (PDT)
+Message-ID: <40f31dec0709221132q4e65b975s4e1fa402beab065@mail.gmail.com>
+Date: Sat, 22 Sep 2007 21:32:04 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH] ath5k - Fix filters for AR5212, correct return values for WEP
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <46F2E56D.1040606@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890709201413w4cee6ea5v799f4b88e1982e5a@mail.gmail.com>
+	 <46F2E3A9.2040605@gmail.com>
+	 <43e72e890709201424k3a18a5cbnbbb488dbf5bb19d3@mail.gmail.com>
+	 <46F2E56D.1040606@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Ppl can someone plz port also these changes from madwifi svn ??? Sorry
+for not doing this myself i'm really out of time these days...
 
----
- net/mac80211/ieee80211.c       |    2 +-
- net/mac80211/ieee80211_i.h     |    3 +--
- net/mac80211/ieee80211_ioctl.c |   12 +++++-------
- net/mac80211/rx.c              |    2 +-
- 4 files changed, 8 insertions(+), 11 deletions(-)
+http://madwifi.org/changeset/2704
+http://madwifi.org/changeset/2703
+http://madwifi.org/changeset/2701
+http://madwifi.org/changeset/2700
+http://madwifi.org/changeset/2698
 
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-26 17:51:21.617337342 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-26 17:51:25.817337342 +0200
-@@ -287,6 +287,7 @@ struct ieee80211_if_sta {
-  * generator reports that there are no present stations that cannot support short
-  * preambles */
- #define IEEE80211_SDATA_SHORT_PREAMBLE	BIT(3)
-+#define IEEE80211_SDATA_USERSPACE_MLME	BIT(4)
- struct ieee80211_sub_if_data {
- 	struct list_head list;
- 	enum ieee80211_if_types type;
-@@ -553,8 +554,6 @@ struct ieee80211_local {
- 	unsigned int hw_modes; /* bitfield of supported hardware modes;
- 				* (1 << MODE_*) */
- 
--	int user_space_mlme;
--
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct local_debugfsdentries {
- 		struct dentry *channel;
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 17:51:24.757337342 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 17:51:25.827337342 +0200
-@@ -267,7 +267,7 @@ static int ieee80211_open(struct net_dev
- 		ieee80211_enable_keys(sdata);
- 
- 		if (sdata->type == IEEE80211_IF_TYPE_STA &&
--		    !local->user_space_mlme)
-+		    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
- 			netif_carrier_off(dev);
- 		else
- 			netif_carrier_on(dev);
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-09-26 17:44:40.867337342 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-09-26 17:51:25.827337342 +0200
-@@ -105,12 +105,12 @@ static int ieee80211_ioctl_siwgenie(stru
- 				    struct iw_point *data, char *extra)
- {
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 
--	if (local->user_space_mlme)
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME)
- 		return -EOPNOTSUPP;
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
- 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
- 		int ret = ieee80211_sta_set_extra_ie(dev, extra, data->length);
-@@ -374,7 +374,6 @@ static int ieee80211_ioctl_siwessid(stru
- 				    struct iw_request_info *info,
- 				    struct iw_point *data, char *ssid)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata;
- 	size_t len = data->length;
- 
-@@ -386,7 +385,7 @@ static int ieee80211_ioctl_siwessid(stru
- 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
- 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
- 		int ret;
--		if (local->user_space_mlme) {
-+		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
- 			if (len > IEEE80211_MAX_SSID_LEN)
- 				return -EINVAL;
- 			memcpy(sdata->u.sta.ssid, ssid, len);
-@@ -451,14 +450,13 @@ static int ieee80211_ioctl_siwap(struct 
- 				 struct iw_request_info *info,
- 				 struct sockaddr *ap_addr, char *extra)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
- 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
- 		int ret;
--		if (local->user_space_mlme) {
-+		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
- 			memcpy(sdata->u.sta.bssid, (u8 *) &ap_addr->sa_data,
- 			       ETH_ALEN);
- 			return 0;
---- wireless-dev.orig/net/mac80211/rx.c	2007-09-26 17:45:32.207337342 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-09-26 17:51:25.837337342 +0200
-@@ -1199,7 +1199,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_txr
- 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 	if ((sdata->type == IEEE80211_IF_TYPE_STA ||
- 	     sdata->type == IEEE80211_IF_TYPE_IBSS) &&
--	    !rx->local->user_space_mlme)
-+	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
- 		ieee80211_sta_rx_mgmt(rx->dev, rx->skb, rx->u.rx.status);
- 	else
- 		return TXRX_DROP;
+2007/9/21, Jiri Slaby <jirislaby@gmail.com>:
+> On 09/20/2007 11:24 PM, Luis R. Rodriguez wrote:
+> > On 9/20/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> >     int ret = 0;
+> >> +       switch(key->alg) {
+> >> +        case ALG_WEP:
+> >> +               break;
+> >> +        case ALG_TKIP:
+> >> +        case ALG_CCMP:
+> >> +               return -EOPNOTSUPP;
+> >>
+> >> Some broken whitespace here :).
+> >
+> > You mean all the extra spaces on the left instead of Tabs? If so then
+> > ACK, attached v2.
+>
+> Yes, nice.
+>
+> --
+> Jiri Slaby (jirislaby@gmail.com)
+> Faculty of Informatics, Masaryk University
+>
+
 
 -- 
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
