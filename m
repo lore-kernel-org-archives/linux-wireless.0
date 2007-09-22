@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:60924 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757285AbXIXTFE (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbXIVKbR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 15:05:04 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3080923pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 12:05:03 -0700 (PDT)
-Message-ID: <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
-Date: Mon, 24 Sep 2007 15:05:02 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/3] Net: ath5k, make its own directory
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <46F80A33.2080201@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2595810412809010611@pripojeni.net>
-	 <1190660419.18521.278.camel@johannes.berg>
-	 <46F80A33.2080201@gmail.com>
+	Sat, 22 Sep 2007 06:31:17 -0400
+Subject: API to regulatory control (2)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1190456574.18521.220.camel@johannes.berg>
+References: <1190456574.18521.220.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IHyQthSvsLmsRVd0SzZr"
+Date: Sat, 22 Sep 2007 12:32:35 +0200
+Message-Id: <1190457155.18521.230.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> On 09/24/2007 09:00 PM, Johannes Berg wrote:
-> > On Mon, 2007-09-24 at 14:39 -0400, Jiri Slaby wrote:
-> >> ath5k, make its own directory
-> >
-> >> rename from drivers/net/wireless/ath5k_regdom.c
-> >> rename to drivers/net/wireless/ath5k/ath5k_regdom.c
-> >
-> > imho you should get rid of the ath5k_ prefixes now.
->
-> It's OK to me, but this is how bcm, prism and zd do it :). If nobody minds, I
-> will get rid of the prefix.
 
-This would be great :-)
+--=-IHyQthSvsLmsRVd0SzZr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+So in the first part I covered how information on channel restrictions
+is communicated between the central regulatory control agent and drivers
+and/or mac80211.
+
+This second part is rather short, but important.
+
+Devices that are capable of operating in a wide range of regulatory
+restrictions usually also have country information encoded in their
+EEPROM. I understand that Intel devices will need to make this EEPROM
+information part of their channels list because the firmware rejects
+tuning to other channels, but most devices fully enforce these
+restrictions in software.
+
+Hence, it is necessary that drivers are able to set the regulatory
+domain they think they are operating in. It would probably be possible
+to override by the user, but when the user has just booted it would be
+good to be able to read the EEPROM of a wireless card to set the initial
+operating domain.
+
+For this, we need two exported functions:
+
+void cfg80211_regulatory_set_alpha2(const char *alpha2);
+void cfg80211_regulatory_set_domain(int ieee80211_domain);
+
+These functions, when called, internally look up the value and, if
+found, update each registered wiphy's channels list for the new
+restrictions. They also set the internal domain to the value given
+(well, I suppose the _set_domain function internally looks up an alpha2
+value and calls the other one). Also, it will call the notifier chain I
+talked about earlier so drivers can be notified of the change if
+necessary.
+
+Similarly, userspace can set the alpha2 value through some
+nl80211/configfs API which will also cause the the same updates and
+notifier chain calls.
+
+I think this covers all the public API to regulatory control. Did I miss
+anything? Everything else should be internal.
+
+johannes
+
+--=-IHyQthSvsLmsRVd0SzZr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG9O9D/ETPhpq3jKURAkKxAKC3h2S3svsCYWD+ymIOioe+j/gICwCdH8j/
+bplPaoqQEFe89ozBZ693vnE=
+=b+b8
+-----END PGP SIGNATURE-----
+
+--=-IHyQthSvsLmsRVd0SzZr--
+
