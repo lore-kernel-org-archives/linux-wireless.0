@@ -1,101 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbXIUPQr (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:44820 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754619AbXIWRt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 11:16:47 -0400
-Subject: promisc interface behaviour, matching frames to interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
-	Jiri Benc <jbenc@suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NSIZRS9GLreZo0FkNtPW"
-Date: Fri, 21 Sep 2007 17:18:00 +0200
-Message-Id: <1190387880.18521.150.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 23 Sep 2007 13:49:28 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: zd1211 config operation problem
+Date: Sun, 23 Sep 2007 13:48:25 -0400
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <200709231648.17107.mb@bu3sch.de>
+In-Reply-To: <200709231648.17107.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart6544900.21FOUjh9l4";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709231348.30055.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-NSIZRS9GLreZo0FkNtPW
-Content-Type: text/plain
+--nextPart6544900.21FOUjh9l4
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Hey,
+On Sunday 23 September 2007 10:48, Michael Buesch wrote:
+> The zd1211 driver has a bug in the ieee80211 config callback.
+> It currently unconditionally calls the set_channel() function,
+> whether the device is running or not. This causes a failed
+> bus access, if we set some config while the device is down.
+> The driver must check if the device is running before setting
+> any config on it (usb->initialized?).
+Hm, that sounds pretty terrible. mac80211 should check if the device was=20
+started before trying to run any configure callbacks.
 
-Thinking more about how to match frames to interfaces, I'm a bit worried
-about promisc behaviour.
+=2DMichael Wu
 
-Currently, we have code for one dubious optimisation: if the sender is
-known, not a WDS peer or an AP we're associated to, the frame is not
-multicast and we don't have promisc interfaces, we push the frame to the
-interface  the sender is associated to assuming that we're actually the
-right destination. I believe that last part is simply wrong, shouldn't
-we at least check the RA?
-
-In any case, I think that it's also not as good as it could be. It only
-seems to catch STAs that are associated to us as an AP, but then why
-the !promisc check?
-
-However, when thinking about how to improve (see also my previous mail),
-I noticed that there's no clear definition of how promisc should work.
-In the STA/IBSS case it's not too bad: see frames from the same BSS but
-not necessarily addressed to us. But what about an AP/VLAN interface? Or
-WDS? I tend to think that for those, promisc makes no sense at all,
-which is sort of what is implemented today. Anybody have a differing
-opinion?
-
-Once we have that sorted out, let's take a step back and see what sort
-of frames we can get, here's a table:
-
-ToDS    FromDS  A1(RA)  A2(TA)  A3      A4      Use
----------------------------------------------------
-0       0      DA      SA      BSSID   -       IBSS and DLS
-0       1      DA      BSSID   SA      -       AP -> STA
-1       0      BSSID   SA      DA      -       AP <- STA
-1       1      RA      TA      DA      SA      unspecified (WDS)
-
-Now, the easiest way to do good matching from frames to interfaces seems
-to look like this:
-
-First handle the IBSS interface (if present) [1] by checking whether the
-frame is an IBSS frame destined to us with the right BSSID and adding
-the transmitter to the station table.
-
-Secondly, iterate over all [2] known sta_info structures with matching
-TA. The device they belong to is most likely the right device, but you
-need to consider the DS bits.
-
-Except for the scanning problem mentioned earlier which I believe I can
-fix with some cleanups, this still has the problem that promisc stops
-working.
-
-I suppose the real question is: is promisc really useful on an 802.3
-framed interface? Personally, I always use monitor interfaces and then
-also get to see the right frames if it wasn't encrypted (or WEP,
-wireshark can decrypt WEP.)
-
-johannes
-
-[1] we can really only allow one IBSS interface on a single hardware
-because they could try to be in the same BSS and that leads to trouble
-
-[2] technically, this requires my patch to make sta_info structures
-per-interface, but unless you need corner cases it works fine right now
-as well, only you iterate over a single one
-
-
---=-NSIZRS9GLreZo0FkNtPW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart6544900.21FOUjh9l4
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG8+Co/ETPhpq3jKURAp8RAKCPPtWLztB5ZwtNgGh+paJIA0gmlACdFxIs
-hcb5oOR0JOKiSOD7XFxVP1o=
-=CZM3
+iD8DBQBG9qbuT3Oqt9AH4aERArUpAJ9pYv84hs+ZxMinjhsxVQIvEL6mMgCeNsUN
+rYpzOtT8Y7m1ZR8V7W2yrCM=
+=GkiO
 -----END PGP SIGNATURE-----
 
---=-NSIZRS9GLreZo0FkNtPW--
-
+--nextPart6544900.21FOUjh9l4--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
