@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3974 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414AbXISTlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 15:41:52 -0400
-Date: Wed, 19 Sep 2007 15:11:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-Message-ID: <20070919191156.GC5483@tuxdriver.com>
-References: <20070918213202.GJ4940@tuxdriver.com> <200709192031.19934.IvDoorn@gmail.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:15165 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753806AbXIWWdF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Sep 2007 18:33:05 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: scanning implementation and sta matching
+Date: Sun, 23 Sep 2007 18:31:59 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1190330446.18521.120.camel@johannes.berg>
+In-Reply-To: <1190330446.18521.120.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200709192031.19934.IvDoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1293199.64HUCbzzHf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709231832.05498.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 08:31:19PM +0200, Ivo van Doorn wrote:
+--nextPart1293199.64HUCbzzHf
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> > Ivo and his team may feel I am jumping the gun a bit -- they have
-> > a few more random bugs they wanted to squash before going upstream.
-> > But since they are bugs, any fixes should still be able to be applied
-> > in the -rc phase of 2.6.24.  In the meantime, I definitely think it
-> > would be better to get this code into mainline rather than keeping
-> > it out of stream.
-> 
-> With 2.6.23 not yet released, I assume we still have a few months to get
-> rt2x00 shaped up to be really ready for 2.6.24?
-> Because I am indeed not really happy with this early merge, but I'll do my
-> best to resolve the last outstanding bugs as soon as possible.
+On Thursday 20 September 2007 19:20, Johannes Berg wrote:
+> In any case, this is how I broke scanning, we know nothing about the
+> stations we're scanning so the frames are directed to no interface.
+I still don't see how you broke scanning, at least in sta/ibss mode. As far=
+ as=20
+I can tell, it's working fine here because you haven't removed any of the=20
+scanning special cases which relax the rx filtering and direct probe=20
+responses and beacons straight to the MLME during scanning. (see the=20
+misleadingly named ieee80211_rx_h_passive_scan rx handler function)
 
-Ivo,
+Of course, this is with the pending-mac80211 series in mac80211-misc. Did y=
+ou=20
+break scanning in some other patches?
 
-Having failed to ask for permission, this is where I ask for your
-forgiveness.  Please forgive me! :-)
+=2DMichael Wu
 
-As Dave said, merging rt2x00 now is undoubtedly better than having
-no driver at all.  I appreciate your understanding and cooperation!
+--nextPart1293199.64HUCbzzHf
+Content-Type: application/pgp-signature
 
-Thanks,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+iD8DBQBG9ullT3Oqt9AH4aERAlTyAKDYtyE/AmSU12ekrtiCAg6Naxab8gCg0Xmx
+LNqdNogf07HUupQgV5KN+rs=
+=ezWF
+-----END PGP SIGNATURE-----
+
+--nextPart1293199.64HUCbzzHf--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
