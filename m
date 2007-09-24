@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:61326 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761311AbXISQdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 12:33:31 -0400
-Date: Wed, 19 Sep 2007 09:32:37 -0700
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit 4cf92a3c
-Message-ID: <20070919163237.GA7914@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070917.042418.19962472.yoshfuji@linux-ipv6.org> <20070917165435.GA26926@bougret.hpl.hp.com> <46EF5534.3030609@lwfinger.net> <20070918174202.GB1466@bougret.hpl.hp.com> <46F09167.5020606@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46F09167.5020606@lwfinger.net>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from fencepost.gnu.org ([140.186.70.10]:41311 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbXIXNYX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2007 09:24:23 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IZnuY-0000Sq-GF
+	for linux-wireless@vger.kernel.org; Mon, 24 Sep 2007 09:23:42 -0400
+Subject: Re: API to regulatory control (1)
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1190639518.18521.269.camel@johannes.berg>
+References: <1190456574.18521.220.camel@johannes.berg>
+	 <1190638775.21374.5.camel@dv>  <20070924130715.GA18847@infradead.org>
+	 <1190639518.18521.269.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 24 Sep 2007 09:24:13 -0400
+Message-Id: <1190640253.21374.14.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 18, 2007 at 10:03:03PM -0500, Larry Finger wrote:
-> Jean Tourrilhes wrote:
+On Mon, 2007-09-24 at 15:11 +0200, Johannes Berg wrote:
+
+> > > Please consider using "long" for hardware_value.  Drivers should be able
+> > > to use this value as a pointer to some driver-specific structure.
 > > 
-> > 	Could you be more explicit ? Reverting the patch will just
-> > bring back the old bug, and the old code was obviously wrong. I don't
-> > like the idea of trading one bug for another bug. It looks to me like
-> > nobody knows what's exactly happening in the driver and we are just
-> > trying random fixes and see what breaks.
-> > 	Could you figure out what's exactly happening and make a
-> > proper fix ?
-> > 	Regards,
+> > If you want to use it as pointer better make it a pointer..
 > 
-> It took me nearly two days, but I finally found the correct fix for the bug that made it impossible
-> to set the essid. The resulting patch has been sent to John.
-> 
-> Larry
+> Then we'd have to have two values. I don't see a need for having a
+> pointer at all though. Pavel, can you show a driver that really benefits
+> from that? And explain why it can't use an array index here?
 
-	Yes, the fix looked more extensive than I though, and I guess
-you also fixed other corner cases in the process. Thanks for your
-work, I think you did the right thing...
-	Regards,
+No, it's just a "general sanity" thing.  If we want the driver to keep
+some data there without specifying what data it can be, it's better to
+provide a way to keep a pointer if needed.
 
-	Jean
+OK, if my suggestion doesn't sound interesting, we can forget it for
+now.  After all, it's easy to change Linux code at any time, as long as
+the external interfaces are not involved.
+
+-- 
+Regards,
+Pavel Roskin
 
