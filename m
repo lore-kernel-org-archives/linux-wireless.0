@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:64543 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbXIZBwQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41500 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758857AbXIXRSt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 21:52:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3880932pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 18:52:15 -0700 (PDT)
-Message-ID: <40f31dec0709251852v39e9dbffm8873d7041215a516@mail.gmail.com>
-Date: Wed, 26 Sep 2007 04:52:15 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 1/3] Net: ath5k, make its own directory
-Cc: "Jiri Slaby" <jirislaby@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2595810412809010611@pripojeni.net>
-	 <1190660419.18521.278.camel@johannes.berg>
-	 <46F80A33.2080201@gmail.com>
-	 <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
+	Mon, 24 Sep 2007 13:18:49 -0400
+Subject: Re: zd1211 config operation problem
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200709241841.50232.mb@bu3sch.de>
+References: <200709231648.17107.mb@bu3sch.de>
+	 <200709231348.30055.flamingice@sourmilk.net>
+	 <200709241841.50232.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZxMXNpAQc0SRLu6c111z"
+Date: Mon, 24 Sep 2007 19:20:00 +0200
+Message-Id: <1190654401.18521.272.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/9/24, Luis R. Rodriguez <mcgrof@gmail.com>:
-> On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > On 09/24/2007 09:00 PM, Johannes Berg wrote:
-> > > On Mon, 2007-09-24 at 14:39 -0400, Jiri Slaby wrote:
-> > >> ath5k, make its own directory
-> > >
-> > >> rename from drivers/net/wireless/ath5k_regdom.c
-> > >> rename to drivers/net/wireless/ath5k/ath5k_regdom.c
-> > >
-> > > imho you should get rid of the ath5k_ prefixes now.
-> >
-> > It's OK to me, but this is how bcm, prism and zd do it :). If nobody minds, I
-> > will get rid of the prefix.
->
 
-O.K. by me too ;-)
+--=-ZxMXNpAQc0SRLu6c111z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+On Mon, 2007-09-24 at 18:41 +0200, Michael Buesch wrote:
+
+> -	if (local->ops->config)
+> +	if (local->open_count)
+>  		ret =3D local->ops->config(local_to_hw(local), &local->hw.conf);
+
+Isn't this racy?
+
+johannes
+
+--=-ZxMXNpAQc0SRLu6c111z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG9/HA/ETPhpq3jKURAhwKAKCPm672VPHzXMcagis7a63LwEuC4wCeM1v2
+hAaODHAX634qAfNHLwGxZEE=
+=FotC
+-----END PGP SIGNATURE-----
+
+--=-ZxMXNpAQc0SRLu6c111z--
+
