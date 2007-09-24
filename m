@@ -1,123 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:54162 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176AbXINU1S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 16:27:18 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1959134pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 13:27:17 -0700 (PDT)
-Message-ID: <43e72e890709141327j4128c9e1ye8d5e8ea465a863@mail.gmail.com>
-Date: Fri, 14 Sep 2007 16:27:16 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 3/3] Internalize Atheros Turbo modes and Turbo modulation
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <46EA46F5.1050906@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:45056 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755926AbXIXLfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2007 07:35:19 -0400
+Message-ID: <46F7A0F2.7000900@redhat.com>
+Date: Mon, 24 Sep 2007 13:35:14 +0200
+From: Michal Schmidt <mschmidt@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_4414_4542415.1189801636281"
-References: <43e72e890709131706p565bd955m1b9820198cafa7fa@mail.gmail.com>
-	 <46EA46F5.1050906@gmail.com>
+To: James Morris <jmorris@namei.org>
+CC: linux-wireless@vger.kernel.org, fabrice@bellet.info
+Subject: Re: Problem with Cisco MPI350/airo
+References: <Xine.LNX.4.64.0709190051080.29334@us.intercode.com.au>
+In-Reply-To: <Xine.LNX.4.64.0709190051080.29334@us.intercode.com.au>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_4414_4542415.1189801636281
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On 9/14/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> Luis R. Rodriguez napsal(a):
-> > This patch:
-> >
-> > * Internalizes Atheros Turbo modes (MODE_ATHEROS_TURBO, MODE_ATHEROS_TURBOG)
-> >
-> > * Internatizes Turbo modulation (MODULATION_TURBO)
-> >
-> > * Adds documention for Atheros Turbo modes (MODE_ATHEROS_TURBO,
-> > MODE_ATHEROS_TURBOG), Turbo modulation (MODULATION_TURBO) and XR
-> > modulation (MODULATION_XR)
-> >
-> > This patch is intended for the ath5k branch of wireless-dev after a
-> > pull from origin/everything once
-> > 01-remove-atheros-turbo-from-mac80211.diff is applied.
-> >
-> > drivers/net/wireless/ath5k_base.c |    2 +-
-> > 1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > Changes-licensed-under: BSD
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> >
-> > drivers/net/wireless/ath5k.h    |   86 +++++++++++++++++++++++++++++++++------
-> > drivers/net/wireless/ath5k_hw.c |    4 +-
-> > 2 files changed, 76 insertions(+), 14 deletions(-)
-> >
-> > Changes-licensed-under: ISC
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> >
-> > Cc: Zhu Yi <yi.zhu@intel.com>
-> > Cc: Jiri Slaby <jirislaby@gmail.com>
-> > Cc: Michael Wu <flamingice@sourmilk.net>
-> > CC: Johannes Berg <johannes@sipsolutions.net
->
-> Just a question if it doesn't affect somehow supp_rates/basic_rates, which
-> has up to NUM_IEEE80211_MODES pointers.
+James Morris wrote:
+> I've got an x31 thinkpad with an MPI350 card, which has worked more or 
+> less reliably for several years.
+> 
+> With current git and Fedora kernels, the wireless dies some time after 
+> boot, with the following types of messages ending up in syslog:
+> 
+> Sep 19 16:36:32 localhost kernel: airo(eth0): cmd:1 status:7f21 rsp0:21 rsp1:0 rsp2:2eab
+> Sep 19 16:36:32 localhost kernel: airo(eth0): Bad MAC enable reason=21, rid=0, offset=11947
+> Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:2 status:7f02 rsp0:0 rsp1:0 rsp2:2eab
+> Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:1 status:7f01 rsp0:2 rsp1:0 rsp2:2eab
+> Sep 19 16:36:33 localhost kernel: airo(eth0): Bad MAC enable reason=2, rid=0, offset=11947
+> Sep 19 16:36:33 localhost kernel: airo(eth0): cmd:3 status:7f03 rsp0:0 rsp1:0 rsp2:2eab
+> 
+> NetworkManager seems to lose contact with the card, then fails & asks for 
+> a new key (which it doesn't actually need).
+> 
+> Sep 19 16:37:03 localhost NetworkManager: <info>  Activation 
+> (eth0/wireless): association took too long (>20s), asking for
+>  new key. 
+> 
+> Anyone seen this before, and/or know what's happening ?
+> 
+> 
+> - James
 
-These are accessed through a mac80211 mode as its index so so long as
-the driver doesn't add a mode of its own to pass down to mac8021 we
-are good.
+Mine doesn't do that. Can you try replacing airo.c with the version from
+2.6.22 ?
+git-checkout v2.6.22 drivers/net/wireless/airo.c
 
-For example, util.c ieee80211_prepare_rates() access these as follows:
+Does it make it work correctly again?
 
-                if (local->supp_rates[mode->mode]) {
-                        if (!rate_list_match(local->supp_rates[mode->mode],
-                                             rate->rate))
-                                continue;
-                }
+Michal
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Using GnuPG with Red Hat - http://enigmail.mozdev.org
 
-Or in ieee80211_ioctl.c ieee80211_ioctl_set_rate_sets() called when
-PRISM2_HOSTAPD_SET_RATE_SETS is received and accesses these as
-follows:
-
-        prev = local->supp_rates[mode];
-        local->supp_rates[mode] = supp;
-        kfree(prev);
-
-        prev = local->basic_rates[mode];
-        local->basic_rates[mode] = basic;
-        kfree(prev);
-
-To be safe we can apply the attached patch to test if the driver
-passed an invalid mode on ieee80211_register_hwmode().
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
- net/mac80211/ieee80211.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-  Luis
-
-------=_Part_4414_4542415.1189801636281
-Content-Type: text/x-patch; name="mac80211-check-mode-on-register.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="mac80211-check-mode-on-register.diff"
-X-Attachment-Id: f_f6l54sf4
-
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9pZWVlODAyMTEuYyBiL25ldC9tYWM4MDIxMS9pZWVl
-ODAyMTEuYwppbmRleCAwMzEzMDhmLi4wYmY1NzU2IDEwMDY0NAotLS0gYS9uZXQvbWFjODAyMTEv
-aWVlZTgwMjExLmMKKysrIGIvbmV0L21hYzgwMjExL2llZWU4MDIxMS5jCkBAIC0xMzc1LDYgKzEz
-NzUsNyBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVyX2h3bW9kZShzdHJ1Y3QgaWVlZTgwMjExX2h3
-ICpodywKIAlzdHJ1Y3QgaWVlZTgwMjExX3JhdGUgKnJhdGU7CiAJaW50IGk7CiAKKwlCVUdfT04o
-bW9kZSA+PSBOVU1fSUVFRTgwMjExX01PREVTKTsKIAlJTklUX0xJU1RfSEVBRCgmbW9kZS0+bGlz
-dCk7CiAJbGlzdF9hZGRfdGFpbCgmbW9kZS0+bGlzdCwgJmxvY2FsLT5tb2Rlc19saXN0KTsKIAo=
-
-------=_Part_4414_4542415.1189801636281--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+iD8DBQFG96DyxTW/vZef86oRAt+SAJ4oPryHfdOla1nY3HA1khqAqoQfzACgxIuj
+UsRaAsu95oo+EiuPZtVh/1k=
+=ZB/x
+-----END PGP SIGNATURE-----
