@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:37519 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753783AbXIRWhk (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:50573 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757629AbXIXNHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 18:37:40 -0400
-Date: Tue, 18 Sep 2007 15:36:23 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-In-Reply-To: <1190154117.6403.127.camel@localhost.localdomain>
-Message-ID: <alpine.LFD.0.999.0709181533370.16478@woody.linux-foundation.org>
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
- <20070918113401.6a8a737f@the-village.bc.nu>
- <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
- <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
- <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
- <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
- <43e72e890709181312sf2b421cn49be3389b3786a2a@mail.gmail.com>
- <alpine.LFD.0.999.0709181323260.16478@woody.linux-foundation.org>
- <1190154117.6403.127.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+	Mon, 24 Sep 2007 09:07:19 -0400
+Date: Mon, 24 Sep 2007 14:07:15 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: API to regulatory control (1)
+Message-ID: <20070924130715.GA18847@infradead.org>
+References: <1190456574.18521.220.camel@johannes.berg> <1190638775.21374.5.camel@dv>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1190638775.21374.5.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Wed, 19 Sep 2007, Benjamin Herrenschmidt wrote:
+On Mon, Sep 24, 2007 at 08:59:35AM -0400, Pavel Roskin wrote:
+> On Sat, 2007-09-22 at 12:22 +0200, Johannes Berg wrote:
 > 
-> Also, I've been told that modern x86 chipsets have the ability to remap
-> IO space in the CPU physical address space. Is that true ? That would
-> allow even x86 to get rid of the condition and just use some magic
-> offset at map time.
+> > struct ieee80211_channel {
+> > 	/* first part set by driver */
+> > 	u16 freq;		/* in MHz */
+> > 	int hardware_value;	/* arbitrary */
+> 
+> Please consider using "long" for hardware_value.  Drivers should be able
+> to use this value as a pointer to some driver-specific structure.
 
-I've not seen that, but I wouldn't be entirely surprised if IO 
-virtualization eventually causes something like this to happen: 
-virtualizing PIO is just damn painful right now, due to the lack of any 
-way to remap it.
-
-I *think* you may be confused with the PCI config cycles, where the new 
-MMIO configuration was introduced (for similar virtualization reasons). 
-But it's also possible that this is one of those undocumented areas and 
-CPU's actually do have some IO remapping facility.
-
-		Linus
+If you want to use it as pointer better make it a pointer..
