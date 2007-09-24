@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202AbXITNuS (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:25079 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756715AbXIXTXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 09:50:18 -0400
-Subject: generic IE and AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GNSfXD2gKbOKLKn2VwA5"
-Date: Thu, 20 Sep 2007 03:58:46 +0200
-Message-Id: <1190253526.18521.12.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 24 Sep 2007 15:23:25 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: zd1211 config operation problem
+Date: Mon, 24 Sep 2007 15:22:20 -0400
+Cc: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <200709231648.17107.mb@bu3sch.de> <1190654401.18521.272.camel@johannes.berg> <1190654481.18521.274.camel@johannes.berg>
+In-Reply-To: <1190654481.18521.274.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart16093329.8vqcOSEOSj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709241522.21156.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-GNSfXD2gKbOKLKn2VwA5
-Content-Type: text/plain
+--nextPart16093329.8vqcOSEOSj
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Hey,
+On Monday 24 September 2007 13:21, Johannes Berg wrote:
+> Also, shouldn't we then call ->config when the first interface is
+> brought up or something?
+>
+I'm pretty sure that was done for all cases at some point. When did it get=
+=20
+switched to being done for just monitor?
 
-Currently we have some sort of support for hardware that generates
-beacons independently. However, we have no such hardware. Hostapd,
-however, requires that SIOCSIWGENIE doesn't fail. I suppose it can be
-taught to ignore it.
+=2DMichael Wu
 
-However, the question is whether we want to support such hardware
-designs in mac80211. I tend to not want to with the ever increasing
-complexity and number of fields in the beacon. Where should the "generic
-element" be inserted into the beacon? Last? After the TIM? Then how does
-the hardware know what to include in the supported rates element etc?
-
-Does anyone object to just getting rid of it?
-
-johannes
-
---=-GNSfXD2gKbOKLKn2VwA5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart16093329.8vqcOSEOSj
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG8dPW/ETPhpq3jKURAvdEAJ4of3pL582Vku0BiLevp0VX+jZ0wQCgrcIB
-x/eRLUPT04xmPvtsVCYpHYo=
-=FfyX
+iD8DBQBG+A5tT3Oqt9AH4aERAhbDAJ9nV4HpAyk809G58pAZilgHhIh5RQCfUuVi
+vmGLHFaZplyVWz8EEW04chk=
+=WoR+
 -----END PGP SIGNATURE-----
 
---=-GNSfXD2gKbOKLKn2VwA5--
-
+--nextPart16093329.8vqcOSEOSj--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
