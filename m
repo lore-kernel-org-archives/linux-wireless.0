@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:51641 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933469AbXIBOra (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42600 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635AbXIXNKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 10:47:30 -0400
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>,
-	Adrian Bunk <bunk@kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Reply-To: 7eggert@gmx.de
-Date: Sun, 02 Sep 2007 16:47:19 +0200
-References: <8YEkG-1ed-19@gated-at.bofh.it> <8YEkG-1ed-17@gated-at.bofh.it> <8YEXm-2hs-11@gated-at.bofh.it> <8YF6Z-2tM-1@gated-at.bofh.it> <8YIeP-7fC-29@gated-at.bofh.it> <8YUSv-1Bl-7@gated-at.bofh.it> <8YWhJ-3Gj-41@gated-at.bofh.it> <8YWhJ-3Gj-39@gated-at.bofh.it> <8YWKF-4y9-5@gated-at.bofh.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <E1IRqjP-0000qI-9q@be1.lrz>
+	Mon, 24 Sep 2007 09:10:44 -0400
+Subject: Re: API to regulatory control (1)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20070924130715.GA18847@infradead.org>
+References: <1190456574.18521.220.camel@johannes.berg>
+	 <1190638775.21374.5.camel@dv>  <20070924130715.GA18847@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Sg72jy3GmK9rI/7JkoXh"
+Date: Mon, 24 Sep 2007 15:11:58 +0200
+Message-Id: <1190639518.18521.269.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Sobrado <igor@condmat1.ciencias.uniovi.es> wrote:
 
-> When code is multi-licensed it must be distributed under *all* these
-> licensing terms concurrently.
+--=-Sg72jy3GmK9rI/7JkoXh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-No. E.g.:
+On Mon, 2007-09-24 at 14:07 +0100, Christoph Hellwig wrote:
+> On Mon, Sep 24, 2007 at 08:59:35AM -0400, Pavel Roskin wrote:
+> > On Sat, 2007-09-22 at 12:22 +0200, Johannes Berg wrote:
+> >=20
+> > > struct ieee80211_channel {
+> > > 	/* first part set by driver */
+> > > 	u16 freq;		/* in MHz */
+> > > 	int hardware_value;	/* arbitrary */
+> >=20
+> > Please consider using "long" for hardware_value.  Drivers should be abl=
+e
+> > to use this value as a pointer to some driver-specific structure.
+>=20
+> If you want to use it as pointer better make it a pointer..
 
-If I don't agree to the GPL (or if I had violated it and therefore have lost
-it's privileges), I MUST NOT redistribute it under the GPL because I have no
-license to do that, but the BSD license would still allow me to redistribute.
+Then we'd have to have two values. I don't see a need for having a
+pointer at all though. Pavel, can you show a driver that really benefits
+from that? And explain why it can't use an array index here?
+
+johannes
+
+--=-Sg72jy3GmK9rI/7JkoXh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG97ee/ETPhpq3jKURApWDAJwNsJDtAy3vuub3v9cKydI4sbaKdQCgpDl3
+qKL8HnWZJoLuj1C+nBUgamM=
+=yprY
+-----END PGP SIGNATURE-----
+
+--=-Sg72jy3GmK9rI/7JkoXh--
 
