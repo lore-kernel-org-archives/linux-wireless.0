@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52667 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750976AbXIBT60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 15:58:26 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211#everything: PS mode fix
-Date: Sun,  2 Sep 2007 22:58:21 +0300
-Message-Id: <1188763101479-git-send-email-tomas.winkler@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbXIXJLD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2007 05:11:03 -0400
+Subject: Re: [PATCH] zd1211: Fix crashes with NULL mac addresses (monitor  mode)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200709231835.37069.mb@bu3sch.de>
+References: <200709231626.22446.mb@bu3sch.de>
+	 <20070923152743.GA23532@deine-taler.de>  <200709231835.37069.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-evLNqgXJvGU2uVg8uvDW"
+Date: Mon, 24 Sep 2007 11:12:17 +0200
+Message-Id: <1190625137.18521.265.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx.mode must be set also for buffered frames. It is used in the tx hanlders
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/tx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+--=-evLNqgXJvGU2uVg8uvDW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 902d5b4..5a7345f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1877,6 +1877,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, int if_id,
- 	}
- 	sta = tx.sta;
- 	tx.flags |= IEEE80211_TXRXD_TXPS_BUFFERED;
-+	tx.u.tx.mode = local->hw.conf.mode;
- 
- 	for (handler = local->tx_handlers; *handler != NULL; handler++) {
- 		res = (*handler)(&tx);
--- 
-1.5.2.2
+On Sun, 2007-09-23 at 18:35 +0200, Michael Buesch wrote:
+
+> Also, what's needed to get monitor during operation running?
+> I guess it's only about removing the artificial restriction
+> for this in the add_interface callback. Is there something else?
+
+Michael, just ignore all this, the filter flags patch is on the way into
+the tree and it gets rid of all that. No need to now try to fix it.
+
+johannes
+
+--=-evLNqgXJvGU2uVg8uvDW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG939x/ETPhpq3jKURAmDvAKC6y5Y3+ubC1+nJnvc2ZZ9L9qIYkgCeLkdu
+vaCJ5jqgO0otOXzE+q1IFbw=
+=SnTx
+-----END PGP SIGNATURE-----
+
+--=-evLNqgXJvGU2uVg8uvDW--
+
