@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:35052 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757295AbXIAWGd (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:54466 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750878AbXIXWNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 18:06:33 -0400
-Date: Sun, 2 Sep 2007 00:06:34 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: "Constantine A. Murenin" <mureninc@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070901220634.GN9260@stusta.de>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901211642.GL9260@stusta.de> <f34ca13c0709011451p67ca96f8o184c0b32efa6b55b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f34ca13c0709011451p67ca96f8o184c0b32efa6b55b@mail.gmail.com>
+	Mon, 24 Sep 2007 18:13:17 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 2/6] adm8211: Improve writing of mac addrs to registers
+Date: Mon, 24 Sep 2007 18:10:25 -0400
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20070924221025.6870.67251.stgit@magic.sourmilk.net>
+In-Reply-To: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
+References: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 05:51:49PM -0400, Constantine A. Murenin wrote:
-> On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
-> > On Sat, Sep 01, 2007 at 10:54:57PM +0200, Adrian Bunk wrote:
-> > > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
-> > > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > > > > Constantine A. Murenin wrote:
-> > > > > > This will hopefully help diminish certain myths about the code licensing.
-> > > > >
-> > > > > What myth?  The myth that Theo understands dual licensing?
-> > > >
-> > > > Reyk's code was never dual licensed, so it's not like it even matters
-> > > > to the original dispute.
-> >
-> > Oh, and if you look at the OpenBSD CVS you see versions 4 months old
-> > with dozens of contributions by Reyk and with:
-> >
-> > /*      $OpenBSD: ath.c,v 1.63 2007/05/09 16:41:14 reyk Exp $  */
-> > /*      $NetBSD: ath.c,v 1.37 2004/08/18 21:59:39 dyoung Exp $        */
-> >
-> > /*-
-> >  * Copyright (c) 2002-2004 Sam Leffler, Errno Consulting
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions
-> >  * are met:
-> >  * 1. Redistributions of source code must retain the above copyright
-> >  *    notice, this list of conditions and the following disclaimer,
-> >  *    without modification.
-> >  * 2. Redistributions in binary form must reproduce at minimum a disclaimer
-> >  *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
-> >  *    redistribution must be conditioned upon including a substantially
-> >  *    similar Disclaimer requirement for further binary redistribution.
-> >  * 3. Neither the names of the above-listed copyright holders nor the names
-> >  *    of any contributors may be used to endorse or promote products derived
-> >  *    from this software without specific prior written permission.
-> >  *
-> >  * Alternatively, this software may be distributed under the terms of the
-> >  * GNU General Public License ("GPL") version 2 as published by the Free
-> >  * Software Foundation.
-> >  *
-> >  * NO WARRANTY
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> >  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> >  * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
-> >  * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-> >  * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
-> >  * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-> >  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-> >  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-> >  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-> >  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-> >  * THE POSSIBILITY OF SUCH DAMAGES.
-> >  */
-> 
-> Where exactly do you see Reyk's copyright in the above quote?
->...
+From: Michael Wu <flamingice@sourmilk.net>
 
-He has automatically a copyright on his contributions if they are 
-non-trivial.
+The mac address write is broken for big endian and the bssid write can be
+simplified. This patch does both.
 
-> C.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-cu
-Adrian
+ drivers/net/wireless/adm8211.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 0893d0d..4c43cdb 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1283,8 +1283,7 @@ static void adm8211_set_bssid(struct ieee80211_hw *dev, const u8 *bssid)
+ 	struct adm8211_priv *priv = dev->priv;
+ 	u32 reg;
+ 
+-	reg = bssid[0] | (bssid[1] << 8) | (bssid[2] << 16) | (bssid[3] << 24);
+-	ADM8211_CSR_WRITE(BSSID0, reg);
++	ADM8211_CSR_WRITE(BSSID0, le32_to_cpu(*(__le32 *)bssid));
+ 	reg = ADM8211_CSR_READ(ABDA1);
+ 	reg &= 0x0000ffff;
+ 	reg |= (bssid[4] << 16) | (bssid[5] << 24);
+@@ -1414,8 +1413,8 @@ static int adm8211_add_interface(struct ieee80211_hw *dev,
+ 
+ 	ADM8211_IDLE();
+ 
+-	ADM8211_CSR_WRITE(PAR0, *(u32 *)conf->mac_addr);
+-	ADM8211_CSR_WRITE(PAR1, *(u16 *)(conf->mac_addr + 4));
++	ADM8211_CSR_WRITE(PAR0, le32_to_cpu(*(__le32 *)conf->mac_addr));
++	ADM8211_CSR_WRITE(PAR1, le16_to_cpu(*(__le16 *)(conf->mac_addr + 4)));
+ 
+ 	adm8211_update_mode(dev);
+ 
 
