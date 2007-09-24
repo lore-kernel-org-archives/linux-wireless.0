@@ -1,52 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:38251 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbXIFQha (ORCPT
+Received: from general-networks3.cust.sloane.cz ([88.146.176.14]:47666 "EHLO
+	server.generalnetworks.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbXIXSjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 12:37:30 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so186115ugc
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2007 09:37:28 -0700 (PDT)
-To: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-Date: Thu, 6 Sep 2007 18:47:53 +0200
-Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <200709042058.15463.IvDoorn@gmail.com> <200709041817.40366.inaky@linux.intel.com>
-In-Reply-To: <200709041817.40366.inaky@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709061847.53659.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 24 Sep 2007 14:39:02 -0400
+Message-id: <2595810412809010611@pripojeni.net>
+Subject: [PATCH 1/3] Net: ath5k, make its own directory
+From: Jiri Slaby <jirislaby@gmail.com>
+To: <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <mcgrof@gmail.com>
+Date: Mon, 24 Sep 2007 14:39:02 -0400
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 05 September 2007, Inaky Perez-Gonzalez wrote:
-> On Tuesday 04 September 2007, Ivo van Doorn wrote:
-> > On Tuesday 04 September 2007, dragoran wrote:
-> > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > >+static ssize_t show_rf_kill(struct device *d,
-> > > >
-> > > > Yes. It currently is only missing users.
-> > > 
-> > > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > > should I read the code to understand how it works? (would like to add
-> > > support to hal)
-> > 
-> > There isn't a documentation file for it, so best thing to do would be looking at the code.
-> > basically hal only needs to check the sysfs files:
-> > 
-> > 	name -> Name of device/interface
-> > 	type -> wlan, bluetooth, irda
-> 
-> Can you add 'uwb' [for ultrawideband radios]? That way I could start to use it. A
-> Doc file would help enourmously also :)
+ath5k, make its own directory
 
-I'll create a doc file this weekend which will explain the sysfs files
-and some instructions for drivers that want to implement it.
+Changes-licensed-under: ISC
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 
-I'm not familiar with ultrawideband radios, don't they fall under the same
-catagory as wireless lan?
+---
+commit 83e027e3714be11155c100a8e4ea7c0eb2a14f0a
+tree 989dc0a74ddf3b54fc28a9196bd2048cb39f8529
+parent 657bdad86e3a284f0195df4b78b833d21beb727f
+author Jiri Slaby <ku@bellona.localdomain> Mon, 24 Sep 2007 20:23:34 +0200
+committer Jiri Slaby <ku@bellona.localdomain> Mon, 24 Sep 2007 20:23:34 +0200
 
-Ivo
+ drivers/net/wireless/Makefile             |    3 +--
+ drivers/net/wireless/ath5k/Makefile       |    2 ++
+ drivers/net/wireless/ath5k/ath5k.h        |    0 
+ drivers/net/wireless/ath5k/ath5k_base.c   |    0 
+ drivers/net/wireless/ath5k/ath5k_base.h   |    0 
+ drivers/net/wireless/ath5k/ath5k_hw.c     |    0 
+ drivers/net/wireless/ath5k/ath5k_hw.h     |    0 
+ drivers/net/wireless/ath5k/ath5k_reg.h    |    0 
+ drivers/net/wireless/ath5k/ath5k_regdom.c |    0 
+ drivers/net/wireless/ath5k/ath5k_regdom.h |    0 
+ 10 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 02f8b71..638865d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -48,5 +48,4 @@ obj-$(CONFIG_LIBERTAS)      += libertas/
+ rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
+ obj-$(CONFIG_RTL8187)	+= rtl8187.o
+ 
+-obj-$(CONFIG_ATH5K)	+= ath5k.o
+-ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o
++obj-$(CONFIG_ATH5K)	+= ath5k/
+diff --git a/drivers/net/wireless/ath5k/Makefile b/drivers/net/wireless/ath5k/Makefile
+new file mode 100644
+index 0000000..cf04c90
+--- /dev/null
++++ b/drivers/net/wireless/ath5k/Makefile
+@@ -0,0 +1,2 @@
++ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o
++obj-$(CONFIG_ATH5K)	+= ath5k.o
+diff --git a/drivers/net/wireless/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+similarity index 100%
+rename from drivers/net/wireless/ath5k.h
+rename to drivers/net/wireless/ath5k/ath5k.h
+diff --git a/drivers/net/wireless/ath5k_base.c b/drivers/net/wireless/ath5k/ath5k_base.c
+similarity index 100%
+rename from drivers/net/wireless/ath5k_base.c
+rename to drivers/net/wireless/ath5k/ath5k_base.c
+diff --git a/drivers/net/wireless/ath5k_base.h b/drivers/net/wireless/ath5k/ath5k_base.h
+similarity index 100%
+rename from drivers/net/wireless/ath5k_base.h
+rename to drivers/net/wireless/ath5k/ath5k_base.h
+diff --git a/drivers/net/wireless/ath5k_hw.c b/drivers/net/wireless/ath5k/ath5k_hw.c
+similarity index 100%
+rename from drivers/net/wireless/ath5k_hw.c
+rename to drivers/net/wireless/ath5k/ath5k_hw.c
+diff --git a/drivers/net/wireless/ath5k_hw.h b/drivers/net/wireless/ath5k/ath5k_hw.h
+similarity index 100%
+rename from drivers/net/wireless/ath5k_hw.h
+rename to drivers/net/wireless/ath5k/ath5k_hw.h
+diff --git a/drivers/net/wireless/ath5k_reg.h b/drivers/net/wireless/ath5k/ath5k_reg.h
+similarity index 100%
+rename from drivers/net/wireless/ath5k_reg.h
+rename to drivers/net/wireless/ath5k/ath5k_reg.h
+diff --git a/drivers/net/wireless/ath5k_regdom.c b/drivers/net/wireless/ath5k/ath5k_regdom.c
+similarity index 100%
+rename from drivers/net/wireless/ath5k_regdom.c
+rename to drivers/net/wireless/ath5k/ath5k_regdom.c
+diff --git a/drivers/net/wireless/ath5k_regdom.h b/drivers/net/wireless/ath5k/ath5k_regdom.h
+similarity index 100%
+rename from drivers/net/wireless/ath5k_regdom.h
+rename to drivers/net/wireless/ath5k/ath5k_regdom.h
