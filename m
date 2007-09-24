@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:17799 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299AbXIAEez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:34:55 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 41E30618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:55 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 07/35] Don't use shift on numeric constants in  usb_control_msg() arguments
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:34:54 -0400
-Message-ID: <20070901043454.2498.43997.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from py-out-1112.google.com ([64.233.166.181]:60924 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757285AbXIXTFE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2007 15:05:04 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3080923pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 12:05:03 -0700 (PDT)
+Message-ID: <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
+Date: Mon, 24 Sep 2007 15:05:02 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/3] Net: ath5k, make its own directory
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <46F80A33.2080201@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
+References: <2595810412809010611@pripojeni.net>
+	 <1190660419.18521.278.camel@johannes.berg>
+	 <46F80A33.2080201@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't know the meaning of 0x0a02 and 0x0902 in at76_get_hw_cfg() and
-at76_get_hw_cfg_intersil() respectively, so don't pretend that we do.
+On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 09/24/2007 09:00 PM, Johannes Berg wrote:
+> > On Mon, 2007-09-24 at 14:39 -0400, Jiri Slaby wrote:
+> >> ath5k, make its own directory
+> >
+> >> rename from drivers/net/wireless/ath5k_regdom.c
+> >> rename to drivers/net/wireless/ath5k/ath5k_regdom.c
+> >
+> > imho you should get rid of the ath5k_ prefixes now.
+>
+> It's OK to me, but this is how bcm, prism and zd do it :). If nobody minds, I
+> will get rid of the prefix.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+This would be great :-)
 
- drivers/net/wireless/at76_usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 55e82cd..8994b70 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -599,7 +599,7 @@ static inline int at76_get_hw_cfg(struct usb_device *udev,
- {
- 	return usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
- 			       USB_TYPE_VENDOR | USB_DIR_IN |
--			       USB_RECIP_INTERFACE, ((0x0a << 8) | 0x02), 0,
-+			       USB_RECIP_INTERFACE, 0x0a02, 0,
- 			       buf, buf_size, USB_CTRL_GET_TIMEOUT);
- }
- 
-@@ -609,7 +609,7 @@ static inline int at76_get_hw_cfg_intersil(struct usb_device *udev,
- {
- 	return usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
- 			       USB_TYPE_VENDOR | USB_DIR_IN |
--			       USB_RECIP_INTERFACE, ((0x09 << 8) | 0x02), 0,
-+			       USB_RECIP_INTERFACE, 0x0902, 0,
- 			       buf, buf_size, USB_CTRL_GET_TIMEOUT);
- }
- 
+  Luis
