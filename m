@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58446 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33629 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbXIRKI2 (ORCPT
+	with ESMTP id S1751749AbXIXIlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 06:08:28 -0400
-Subject: Re: [PATCH 1/1] mac80211: add sta_notify callback
+	Mon, 24 Sep 2007 04:41:23 -0400
+Subject: Re: scanning implementation and sta matching
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1190036530108-git-send-email-tomas.winkler@intel.com>
-References: <1190036530108-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-klZQQAG/PZpF6xCTfmpr"
-Date: Mon, 17 Sep 2007 20:44:40 +0200
-Message-Id: <1190054680.23521.23.camel@johannes.berg>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200709231832.05498.flamingice@sourmilk.net>
+References: <1190330446.18521.120.camel@johannes.berg>
+	 <200709231832.05498.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9lLsbvp5nV3Cf2msTKvC"
+Date: Mon, 24 Sep 2007 10:42:45 +0200
+Message-Id: <1190623365.18521.240.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-klZQQAG/PZpF6xCTfmpr
+--=-9lLsbvp5nV3Cf2msTKvC
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-09-17 at 15:42 +0200, Tomas Winkler wrote:
+On Sun, 2007-09-23 at 18:31 -0400, Michael Wu wrote:
 
-> +	void (*sta_notify)(struct ieee80211_hw *hw,
-> +				sta_notify_cmd cmd, const u8 *addr);
+> Of course, this is with the pending-mac80211 series in mac80211-misc. Did=
+ you=20
+> break scanning in some other patches?
 
-I have plans to make the sta_info structs per-netdev so that we can
-support having the same station associate to multiple virtual APs and
-not hurting WDS links etc. This is not too hard, but needs some thought.
-
-However, for this callback to be correct when the same sta_info struct
-can be present for multiple virtual interfaces, we need to be able to
-distinguish somehow, so this callback should probably get an if_idx that
-allows a driver to map to the right interface because in add_interface
-it was given the same if_idx.
-
-I know this doesn't matter for iwlwifi because it only supports a single
-local MAC address and currently not even WDS/AP mode at the same time
-(nor AP mode at all? haven't checked). And I wonder if there will ever
-be any hardware that cares and supports the configuration that would
-require it. Should we just leave it and add a comment that when the
-driver supports multiple interfaces this callback is unusable?
-
-Thoughts? Do you have plans to, say, support combined WDS/AP modes? If
-so, would the firmware be able to distinguish between the same STA
-sending WDS frames and trying to associate? I don't know if any current
-software supports that but I see nothing precluding it either. Or say
-you have a WDS interface and also associate with a client interface to
-the same AP; we could easily do that with b43 by allowing WDS interfaces
-with the same MAC address in parallel all the time.
+Oh, of course I wouldn't post such patches; I broke scanning in later
+patches when I tried optimising the frame->interface matching.
 
 johannes
 
---=-klZQQAG/PZpF6xCTfmpr
+--=-9lLsbvp5nV3Cf2msTKvC
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG7ssY/ETPhpq3jKURAiSrAKChg1ahNrXEQyoz7XTlOVUaZPtSUgCgn6WS
-59pja+Mzq81+5a2khELclr0=
-=zhLR
+iD8DBQBG93iF/ETPhpq3jKURAkwZAJ0RuuHvVM6AKfRTxgX1BE8xw2nltgCeOnNd
+RZ8wV7HygoTkgaDqZjuoZTs=
+=PGVr
 -----END PGP SIGNATURE-----
 
---=-klZQQAG/PZpF6xCTfmpr--
+--=-9lLsbvp5nV3Cf2msTKvC--
 
