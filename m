@@ -1,59 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44430 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754250AbXIDOyC (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:43075 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584AbXIXSkm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 10:54:02 -0400
-Subject: Re: [PATCH] hostapd: use nl80211 instead of prism ioctls to create  interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <1188913335.9942.16.camel@johannes.berg>
-References: <1187987850.24933.29.camel@johannes.berg>
-	 <20070904011648.GX1835@jm.kir.nu>  <1188913335.9942.16.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sp8y1V7oqcfYIsCxmLn4"
-Date: Tue, 04 Sep 2007 16:55:16 +0200
-Message-Id: <1188917716.9942.37.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 24 Sep 2007 14:40:42 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1456780nfb
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 11:40:40 -0700 (PDT)
+Message-ID: <46F804A3.10109@gmail.com>
+Date: Mon, 24 Sep 2007 20:40:35 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com
+Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and initvals
+References: <3175698652466923884@pripojeni.net>	 <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>	 <1190654876.18521.276.camel@johannes.berg>	 <20070924173607.GA652@infradead.org> <43e72e890709241051k42bb248ue0cba02e96310c1b@mail.gmail.com>
+In-Reply-To: <43e72e890709241051k42bb248ue0cba02e96310c1b@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/24/2007 07:51 PM, Luis R. Rodriguez wrote:
+> Then that comment can be ignored, thanks.
 
---=-sp8y1V7oqcfYIsCxmLn4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2007-09-04 at 15:42 +0200, Johannes Berg wrote:
-
-> > This is making it a bit difficult to build driver_devicescape.c and sam=
-e
-> > goes for the requirement for svn trunk version of libnl.. Any idea how
-> > much code from libnl is needed here? Would it be major effort to do the
-> > needed calls without having to rely on libnl at or (or at least not on
-> > an unreleased svn trunk version)?
->=20
-> There's a whole bunch of code in libnl I use, all the generic netlink
-> family resolving etc. Maybe Thomas can prerelease a libnl with generic
-> netlink support?
-
-Also, since this affects git trees only... To use this you actually have
-to have hostap git, wireless-dev git so what's the big deal with
-requiring libnl svn? :)
-
-johannes
-
---=-sp8y1V7oqcfYIsCxmLn4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3XHU/ETPhpq3jKURAl5IAKCGjA2o3DH05VJ+vFFx4bgouvflbwCfSESF
-wHZlIp7V3/Dtz0YJ69n16yc=
-=HuNS
------END PGP SIGNATURE-----
-
---=-sp8y1V7oqcfYIsCxmLn4--
-
+Me too, corrected patchset on the road...
