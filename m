@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:32834 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755577AbXIRTMX (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.240]:58123 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756440AbXIXU1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 15:12:23 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3936252pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2007 12:12:22 -0700 (PDT)
-Message-ID: <43e72e890709181212u75ec6fe2x7aa639bac319c087@mail.gmail.com>
-Date: Tue, 18 Sep 2007 15:12:21 -0400
+	Mon, 24 Sep 2007 16:27:07 -0400
+Received: by an-out-0708.google.com with SMTP id d31so246100and
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 13:27:07 -0700 (PDT)
+Message-ID: <43e72e890709241327o2c1bcc7age4a438e42c9e4771@mail.gmail.com>
+Date: Mon, 24 Sep 2007 16:27:07 -0400
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH] revert ath5k ioread32()/iowrite32() usage - use readl()/writel(), we're MMIO-only
-Cc: "Jeff Garzik" <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Alan Cox" <alan@lxorguk.ukuu.org.uk>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
-In-Reply-To: <43e72e890709181203x30144451hf332da4032b5b770@mail.gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: Guide on how to submit patches for linux-wireless
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46F81281.7080407@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709171334y321dc2c8ke255a126a733dad6@mail.gmail.com>
-	 <46EEE735.5050306@gmail.com> <46EEEA9B.70407@garzik.org>
-	 <46EEF543.7060901@gmail.com>
-	 <43e72e890709181203x30144451hf332da4032b5b770@mail.gmail.com>
+References: <43e72e890709241209obc236eav5eca6c0828052ee1@mail.gmail.com>
+	 <46F81281.7080407@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/18/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On 9/17/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > On 09/17/2007 10:59 PM, Jeff Garzik wrote:
-> > > Jiri Slaby wrote:
-> > >> NACK, this is wrong. iomap returns platform dependant return value,
-> > >> which may or
-> > >
-> > > Incorrect.  readl() and writel() work just fine on all existing
-> > > platforms where Atheros may be used.
+On 9/24/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> Luis R. Rodriguez wrote:
+> > Here's a new guide to help developers write and submit patches
+> > specifically for linux-wireless:
 > >
-> > Ok, this is what Alan Cox wrote about that and you didn't reply to it, so I
-> > thought he's right. Anyway I wouldn't rely on iomap that it will never be
-> > changed even on x86 -- what's the (performance) impact of having ioread instead
-> > of readl? How much data are transferred this way?
+> > http://linuxwireless.org/en/developers/SubmittingPatches
 > >
-> > <cite from="http://lkml.org/lkml/2007/8/25/50">
-> > On Sat, 25 Aug 2007 04:56:19 -0400
-> > Jeff Garzik <jgarzik@pobox.com> wrote:
-> >
-> > > If the driver knows its MMIO, using readX/writeX after pci_iomap() is
-> > > just fine, for all current implementations, and it makes sense that way.
-> >
-> > There is nothing that guarantees this is permitted, any more than there
-> > is anything saying not to use outb/outl. Some of the implementations do
-> > quite strange things. It may happen to work but its not in the
-> > documentation or the comments.
 >
-> I posted a patch to update the documentation with this.
->
-> > Please, can anybody clarify it?
->
-> Based on Alan's 'Review-by' remarks on my patch for updating the
-> documenation on pci_iomap() it seems this validates this patch. Please
-> see thread with subject:
->
-> [PATCH] Clarify pci_iomap() usage for MMIO-only devices
+> Very useful contribution.
 
-Well spoke too soon. Now Linus disagrees. We'll see the outcome on the
-other thread then.
+Thanks.
+
+> I have only two comments:
+
+> (1) The pop-up above developers needs to be
+> taller. The entry for 'Testing' overwrites the Developers tab on my machine, and
+
+I've deleted testing from the navigation bar for now as that is an
+incomplete doc.
+
+> (2) patches,
+> particularly large ones, need to be run through scripts/checkpatch.pl. It is better to find the
+> "errors" yourself than have Andrew or Jeff point them out publicly.
+
+Added, thanks.
 
   Luis
