@@ -1,114 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:40905 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965491AbXIBNMZ (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:20558 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754285AbXIXRYq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 09:12:25 -0400
-Date: Sun, 2 Sep 2007 15:12:26 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070902131226.GN16016@stusta.de>
-References: <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu> <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es> <20070902115041.GM16016@stusta.de> <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es> <20070902134612.28a88761@the-village.bc.nu> <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+	Mon, 24 Sep 2007 13:24:46 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3031474pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 10:24:45 -0700 (PDT)
+Message-ID: <43e72e890709241024pd364c31k4a41c030f192cf0d@mail.gmail.com>
+Date: Mon, 24 Sep 2007 13:24:45 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/2 try 2] Net: ath5k, split hw into hw, phy and initvals
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, "Christoph Hellwig" <hch@infradead.org>
+In-Reply-To: <3175698652466923884@pripojeni.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+Content-Type: text/plain; charset=UTF-8
+References: <3175698652466923884@pripojeni.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 02, 2007 at 03:00:46PM +0200, Igor Sobrado wrote:
-> On Sun, 2 Sep 2007, Alan Cox wrote:
+On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> From: Nick Kossifidis <mickflemm@gmail.com>
 >
->>> So, a multi-licensed file remains multi-licensed except when all authors
->>> agree about a change in the licensing terms.  And it is clear on the BSD
->>
->> Not strictly true. They can either agree to a change and issue one or
->> they can convey to other parties the right to change the terms. The GPL
->> for example does this for version selection.
+> ath5k, split hw into hw, phy and initvals
 >
-> So, under a dual-licensed BSD/GPL code the latter license allows a 
-> developer to remove the GPL license itself and release a single-licensed 
-> BSD code if other parties want to do it?
-
-
-Exactly.
-
-
->> A multi-licensed work (note work not file - don't assume a file is a
->> boundary of a work) which conveys the choice of licence (as some bits of
->> ath5k did) allows a receiving party to choose the licence it wishes.
->> Failing that OpenBSD would have turned itself GPL by adding that file as
->> according to your argument "it must be distributed under *all* these
->> licensing terms concurrently".
+> Separate the hw code into logical pieces hw, phy and initvals for better
+> readability and maintainability.
 >
-> I would assume a file as a boundary of a work in the case that file is 
-> under different licensing terms to the rest of the software package.  On a 
-> lot of software packages different modules are covered under different 
-> licensing terms.
+> This include suggested file renames (_hw removal).
 >
-> We can choose what license terms we will honor; however, we do not have the 
-> ability to remove the licensing terms we do not like.
+> Changes-licensed-under: ISC
+> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 
+<-- snip patch -->
 
-We have the ability if the author explicitely allowed it.
+> [Message clipped]
+> http://mail.google.com/mail/?view=lg&msg=11536c180ed66ff1
 
-This is the licencing text we are talking about:
+I didn't want to take this approach before as it seemed we wanted to
+try to keep drivers without their own directory and consolidate
+drivers files into as many few files as necessary. Since it seems that
+has changed and it has been made clear that we *can* use a directory
+for each driver then I'd suggest we apply a similar patch but first
+move ath5k* to ath5k/.
 
+But anyway, I NACK this patch for the following reasons:
 
-/*-
- * Copyright (c) 2002-2004 Sam Leffler, Errno Consulting
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer,
- *    without modification.
- * 2. Redistributions in binary form must reproduce at minimum a disclaimer
- *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
- *    redistribution must be conditioned upon including a substantially
- *    similar Disclaimer requirement for further binary redistribution.
- * 3. Neither the names of the above-listed copyright holders nor the names
- *    of any contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * Alternatively, this software may be distributed under the terms of the
- * GNU General Public License ("GPL") version 2 as published by the Free
- * Software Foundation.
- *
- * NO WARRANTY
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
- * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
- * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGES.
- */
+* Copyright (c) 2007 The MadWiFi Team
 
+MadWifi is not a non-profit yet and as such it is advised to use
+individual copyright notices.
 
-The author himself offered two _alternatives_ for distributing his code.
+* ath5k_hw_set_rfgain_opt() is defined once and used once, can we
+instead make it inline? If we really are not going to re-use this
+later why do we put it into a routine on its own?
 
+* #if 0's need to go, lets just remove this code instead.
 
-> Igor.
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+  Luis
