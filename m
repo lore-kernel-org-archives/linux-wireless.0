@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56080 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37513 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759925AbXINVMa (ORCPT
+	with ESMTP id S1762656AbXIXTmQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 17:12:30 -0400
-Subject: Re: [PATCH 00/05] orinoco: Agere/Lucent firmware download
+	Mon, 24 Sep 2007 15:42:16 -0400
+Subject: Re: Guide on how to submit patches for linux-wireless
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <46EAF698.8030604@gmail.com>
-References: <46E8557F.2080401@gmail.com> <1189746312.26312.39.camel@dv>
-	 <46EACAA5.2050706@gmail.com>  <46EAD760.9020102@gmail.com>
-	 <1189796807.3974.53.camel@johannes.berg>  <46EAF698.8030604@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Qtu5ngvtbzIi6bKM4cA2"
-Date: Fri, 14 Sep 2007 23:13:48 +0200
-Message-Id: <1189804428.3974.55.camel@johannes.berg>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46F81281.7080407@lwfinger.net>
+References: <43e72e890709241209obc236eav5eca6c0828052ee1@mail.gmail.com>
+	 <46F81281.7080407@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3LHIDyJxywEtz0Ayip6t"
+Date: Mon, 24 Sep 2007 21:43:33 +0200
+Message-Id: <1190663013.18521.286.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Qtu5ngvtbzIi6bKM4cA2
+--=-3LHIDyJxywEtz0Ayip6t
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-09-14 at 22:01 +0100, Dave wrote:
-> Johannes Berg wrote:
-> > On Fri, 2007-09-14 at 19:48 +0100, Dave wrote:
-> >> Either that was painless, or I did it wrong. Using sparse 3.0 the only
-> >> warnings were in orinoco.c, related to the use of ARRAY_SIZE. Errors
-> >> are false positives.
-> >=20
-> > They're errors tho so sparse aborts and stops parsing the file at that
-> > point. A new git sparse can actually parse ARRAY_SIZE though, I can onl=
-y
-> > recommend getting that.
->=20
-> Repeated with latest sparse from git. No warnings.
+On Mon, 2007-09-24 at 14:39 -0500, Larry Finger wrote:
 
-:)
+> (1) The pop-up above developers needs to be
+> taller. The entry for 'Testing' overwrites the Developers tab on my machi=
+ne
+
+Heh. Same here, but I think we should rather remove some items, this is
+intended as a "first contact" menu, those who dig into more detail don't
+necessarily need everything on the menu.
 
 johannes
 
---=-Qtu5ngvtbzIi6bKM4cA2
+--=-3LHIDyJxywEtz0Ayip6t
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG6vmM/ETPhpq3jKURAq/cAKChHbcU/oX+VcwhXXul05rt+FL89gCeJiVT
-MXpS1qIuP2cSE5n6ZKfhTj0=
-=ymTc
+iD8DBQBG+BNl/ETPhpq3jKURAgaSAKCDIP0rDJiJulctroRq7CJSAdDYpQCaA8zK
+PA4H4McnqKy9kGBg1fyobtA=
+=AxCA
 -----END PGP SIGNATURE-----
 
---=-Qtu5ngvtbzIi6bKM4cA2--
+--=-3LHIDyJxywEtz0Ayip6t--
 
