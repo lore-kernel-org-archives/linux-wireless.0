@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:57790 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756694AbXIRTED (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:34443 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750918AbXIXWNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 15:04:03 -0400
-Date: Tue, 18 Sep 2007 12:03:15 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-In-Reply-To: <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-Message-ID: <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
- <20070918113401.6a8a737f@the-village.bc.nu>
- <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+	Mon, 24 Sep 2007 18:13:17 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 3/6] adm8211: kill version printks
+Date: Mon, 24 Sep 2007 18:10:25 -0400
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20070924221025.6870.61008.stgit@magic.sourmilk.net>
+In-Reply-To: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
+References: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Wu <flamingice@sourmilk.net>
 
+No need to pollute dmesg with copyright info.
 
-On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
-> 
-> Alright, here is the same patch inline with s/recommended/required/ language:
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-Well, the thing is, I'm not at all sure that I agree with this.
+ drivers/net/wireless/adm8211.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
 
-If you use ioport_map/unmap, then you really *should* access them with the 
-proper iomem accessors (ioread/iowrite). The fact that it may happen to 
-work (when using the default lib/iomap.c implementation, at least) on 
-some architectures and with the current implementation still doesn't mean 
-that you should necessarily use readb/writeb.
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 4c43cdb..ce1f8e3 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -39,11 +39,6 @@ static unsigned int rx_ring_size __read_mostly = 16;
+ module_param(tx_ring_size, uint, 0);
+ module_param(rx_ring_size, uint, 0);
+ 
+-static const char version[] = KERN_INFO "adm8211: "
+-"Copyright 2003, Jouni Malinen <j@w1.fi>; "
+-"Copyright 2004-2007, Michael Wu <flamingice@sourmilk.net>\n";
+-
+-
+ static struct pci_device_id adm8211_pci_id_table[] __devinitdata = {
+ 	/* ADMtek ADM8211 */
+ 	{ PCI_DEVICE(0x10B7, 0x6000) }, /* 3Com 3CRSHPW796 */
+@@ -1794,12 +1789,6 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 	u8 perm_addr[ETH_ALEN];
+ 	DECLARE_MAC_BUF(mac);
+ 
+-#ifndef MODULE
+-	static unsigned int cardidx;
+-	if (!cardidx++)
+-		printk(version);
+-#endif
+-
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		printk(KERN_ERR "%s (adm8211): Cannot enable new PCI device\n",
+@@ -2051,10 +2040,6 @@ static struct pci_driver adm8211_driver = {
+ 
+ static int __init adm8211_init(void)
+ {
+-#ifdef MODULE
+-	printk(version);
+-#endif
+-
+ 	return pci_register_driver(&adm8211_driver);
+ }
+ 
 
-After all, you cannot use "inb/outb" on it, even if would happen to be an 
-IO address.
-
-So what is this usage that wants to use the bogus accessor? Why not fix 
-that instead of adding documentation for something that is very arguably 
-something we want to *avoid* having people do!
-
-		Linus
