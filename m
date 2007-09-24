@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37346 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755103AbXI2SJS (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:57262 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756686AbXIXTBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 14:09:18 -0400
-Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
-From: David Woodhouse <dwmw2@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <200709291932.57924.mb@bu3sch.de>
-References: <200709281422.34434.mb@bu3sch.de>
-	 <200709291908.24758.mb@bu3sch.de>
-	 <1191086074.8203.18.camel@shinybook.infradead.org>
-	 <200709291932.57924.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Sat, 29 Sep 2007 19:09:11 +0100
-Message-Id: <1191089351.2911.0.camel@shinybook.infradead.org>
-Mime-Version: 1.0
+	Mon, 24 Sep 2007 15:01:51 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3079288pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 12:01:50 -0700 (PDT)
+Message-ID: <43e72e890709241201r8bcc6dds3648aefb68182937@mail.gmail.com>
+Date: Mon, 24 Sep 2007 15:01:49 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 3/3 try 3] Net: ath5k, use int as retval
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <31460273016629243@pripojeni.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2595810412809010611@pripojeni.net>
+	 <31460273016629243@pripojeni.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-09-29 at 19:32 +0200, Michael Buesch wrote:
-> The patch is correct as-is. RF-kill was polled by the periodic work.
+On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> ath5k, use int as retval
+>
+> Changes-licensed-under: ISC
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 
-OK, cool. Just checking.
+Same comment applies here for the #if 0. Specifically here:
 
--- 
-dwmw2
+@@ -4360,38 +4344,41 @@ yes:
+       return 0;
+ }
 
+-bool
+-ath5k_hw_query_pspoll_support(struct ath_hw *hal)
++#if 0
++static bool ath5k_hw_query_pspoll_support(struct ath_hw *hal)
+ {
+       AR5K_TRACE;
++
+       if (hal->ah_version == AR5K_AR5210)
+-               return(true);
++               return true;
+
+       return false;
+ }
++#endif
+
+  Luis
