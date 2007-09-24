@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from post.fh-kl.de ([143.93.17.200]:39224 "EHLO post.fh-kl.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751548AbXI1NRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 09:17:07 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by post.fh-kl.de (Postfix) with ESMTP id 9EA8D240D326
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 14:47:59 +0200 (CEST)
-Received: from post.fh-kl.de ([127.0.0.1])
-	by localhost (post.fh-kl.de [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id ZQ6FhCPT6soi for <linux-wireless@vger.kernel.org>;
-	Fri, 28 Sep 2007 14:47:54 +0200 (CEST)
-Received: from [10.0.23.37] (aoip1.informatik.fh-kl.de [143.93.17.33])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by post.fh-kl.de (Postfix) with ESMTP id CB5E5240FFB2
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 14:47:49 +0200 (CEST)
-Message-ID: <46FCF7E7.6080706@fh-kl.de>
-Date: Fri, 28 Sep 2007 14:47:35 +0200
-From: Patrick Ziegler <patrick.ziegler@fh-kl.de>
+Received: from smtp.rutgers.edu ([128.6.72.243]:44008 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752355AbXIXTVw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2007 15:21:52 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: zd1211 config operation problem
+Date: Mon, 24 Sep 2007 15:20:41 -0400
+Cc: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <200709231648.17107.mb@bu3sch.de> <200709241841.50232.mb@bu3sch.de> <1190654401.18521.272.camel@johannes.berg>
+In-Reply-To: <1190654401.18521.272.camel@johannes.berg>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: 802.11n drivers
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: multipart/signed;
+  boundary="nextPart5248511.BxdtLLhSiX";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709241520.50411.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--nextPart5248511.BxdtLLhSiX
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-we are working with new 802.11n Hardware. Is there a driver for some
-kinds of Hardware yet? Especially for Broadcom chipsets ( bcm2055 ) so
-called "Intensi-fi" ?
+On Monday 24 September 2007 13:20, Johannes Berg wrote:
+> On Mon, 2007-09-24 at 18:41 +0200, Michael Buesch wrote:
+> > -	if (local->ops->config)
+> > +	if (local->open_count)
+> >  		ret =3D local->ops->config(local_to_hw(local), &local->hw.conf);
+> Isn't this racy?
+>
+Shouldn't be. Some callers are holding rtnl (ieee80211_open,=20
+ieee80211_ioctl*). Other callers (in ieee80211_sta.c) cannot run if the=20
+device is down.
 
+=2DMichael Wu
 
--- 
+--nextPart5248511.BxdtLLhSiX
+Content-Type: application/pgp-signature
 
-Dipl. Inf. (FH) Patrick Ziegler
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-University Of Applied Sciences
-Kaiserslautern
+iD8DBQBG+A4ST3Oqt9AH4aERAmD6AKC+DXMQpHMAPN2YKe2/t4F2ihkiogCfXT+W
+1FZyAboocazu07qQqqOM5K4=
+=oQ1O
+-----END PGP SIGNATURE-----
 
-Amerikastrasse 1
-D-66482 Zweibruecken
-Germany
-
-Phone:	+49 6332 914 526
-Mail:	patrick.ziegler@fh-kl.de
-
-http://www.fh-kl.de
+--nextPart5248511.BxdtLLhSiX--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
