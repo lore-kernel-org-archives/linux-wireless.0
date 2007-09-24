@@ -1,268 +1,447 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbXIZNYd (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:53879 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757199AbXIXR4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 09:24:33 -0400
-Message-Id: <20070926132132.308101000@sipsolutions.net>
-References: <20070926131938.575572000@sipsolutions.net>
-Date: Wed, 26 Sep 2007 15:19:41 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
-Subject: [patch 03/12] mac80211: consolidate encryption
-Mime-Version: 1.0
+	Mon, 24 Sep 2007 13:56:00 -0400
+From: Chr <chunkeey@web.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] p54: Adapt to filter configuration API
+Date: Mon, 24 Sep 2007 19:55:56 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200709241106.04902.flamingice@sourmilk.net> <200709241107.28275.flamingice@sourmilk.net>
+In-Reply-To: <200709241107.28275.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_so/9GuJC6hqcvhk"
+Message-Id: <200709241955.57014.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently we run through all crypto handlers for each transmitted
-frame although we already know which one will be used. This
-changes the code to invoke only the needed handler. It also moves
-the wep code into wep.c.
+--Boundary-00=_so/9GuJC6hqcvhk
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Monday, 24. September 2007, Michael Wu wrote:
+> On Monday 24 September 2007 11:06, Michael Wu wrote:
+> > From: Michael Wu <flamingice@sourmilk.net>
+> >
+> > This makes p54 use the new filter configuration API in mac80211.
+> >
+> > Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+> Err, and the title should be:
+> 
+> [PATCH] p54: Adapt to filter configuration API 
+> 
+> Ugh.
+> 
+> -Michael Wu
+> 
+
+K, I couldn't test it,  but it looks OK! I'll provide a tested-by as soon as the API
+can be found in the git tree ;)
 
 ---
- net/mac80211/tx.c  |   62 ++++++++++++-----------------------------------------
- net/mac80211/wep.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/wep.h |    5 +---
- net/mac80211/wpa.c |   10 +++-----
- net/mac80211/wpa.h |    4 +--
- 5 files changed, 77 insertions(+), 61 deletions(-)
 
---- wireless-dev.orig/net/mac80211/tx.c	2007-09-25 23:28:22.131610568 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-09-25 23:29:35.111582139 +0200
-@@ -541,56 +541,26 @@ ieee80211_tx_h_fragment(struct ieee80211
- 	return TXRX_DROP;
+(the attached patch is just something to look at (although it should work too), 
+it contains new information about the some remaining unknown fields and magics...)  
+
+--Boundary-00=_so/9GuJC6hqcvhk
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="p54-stuff.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-stuff.diff"
+
+diff -Nurp a/drivers/net/wireless/p54.h b/drivers/net/wireless/p54.h
+--- a/drivers/net/wireless/p54.h	2007-09-20 21:53:22.000000000 +0200
++++ b/drivers/net/wireless/p54.h	2007-09-24 19:21:15.000000000 +0200
+@@ -32,9 +32,9 @@ struct p54_control_hdr {
+ 	__le16 magic1;
+ 	__le16 len;
+ 	__le32 req_id;
+-	__le16 type;	/* enum control_frame_types */
+-	u8 retry1;
+-	u8 retry2;
++	__le16 type;	/* enum control_frame_types, or AID for all kinds for data frames */
++	u8 short_retry;
++	u8 long_retry;
+ 	u8 data[0];
+ } __attribute__ ((packed));
+ 
+@@ -52,6 +52,11 @@ struct p54_common {
+ 	int (*open)(struct ieee80211_hw *dev);
+ 	void (*stop)(struct ieee80211_hw *dev);
+ 	int mode;
++	int rx_antenna;
++	int slot_time;
++	__le16 freq;
++	int dtim_wakeup;
++	int rate_mask;
+ 	u8 *mac_addr;
+ 	struct pda_iq_autocal_entry *iq_autocal;
+ 	unsigned int iq_autocal_len;
+diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+--- a/drivers/net/wireless/p54common.c	2007-09-20 21:53:22.000000000 +0200
++++ b/drivers/net/wireless/p54common.c	2007-09-24 19:43:07.000000000 +0200
+@@ -294,7 +294,7 @@ void p54_fill_eeprom_readback(struct p54
+ 	hdr->magic1 = cpu_to_le16(0x8000);
+ 	hdr->len = cpu_to_le16(sizeof(*eeprom_hdr) + 0x2000);
+ 	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_EEPROM_READBACK);
+-	hdr->retry1 = hdr->retry2 = 0;
++	hdr->short_retry = hdr->long_retry = 0;
+ 	eeprom_hdr = (struct p54_eeprom_lm86 *) hdr->data;
+ 	eeprom_hdr->offset = 0x0;
+ 	eeprom_hdr->len = cpu_to_le16(0x2000);
+@@ -502,6 +502,11 @@ static void p54_assign_address(struct ie
+ 	data->req_id = cpu_to_le32(target_addr + 0x70);
  }
  
--static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
--{
--	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
--		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
--			return -1;
--	} else {
--		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
--		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
--			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
--				return -1;
--		}
--	}
--	return 0;
--}
--
- static ieee80211_txrx_result
--ieee80211_tx_h_wep_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_tx_h_encrypt(struct ieee80211_txrx_data *tx)
++static int inline p54_antenna_sel(int antenna)
++{
++	return (antenna == 0) ? 2 : antenna - 1;
++}
++
+ static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 		  struct ieee80211_tx_control *control)
  {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
--	u16 fc;
--
--	fc = le16_to_cpu(hdr->frame_control);
--
--	if (!tx->key || tx->key->conf.alg != ALG_WEP ||
--	    ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
--	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
--	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
-+	if (!tx->key)
- 		return TXRX_CONTINUE;
+@@ -538,12 +543,11 @@ static int p54_tx(struct ieee80211_hw *d
+ 		hdr->magic1 = cpu_to_le16(0x0010);
+ 	hdr->len = cpu_to_le16(len);
+ 	hdr->type = (control->flags & IEEE80211_TXCTL_NO_ACK) ? 0 : cpu_to_le16(1);
+-	hdr->retry1 = hdr->retry2 = control->retry_limit;
++	hdr->short_retry = hdr->long_retry = control->retry_limit;
+ 	p54_assign_address(dev, skb, hdr, skb->len, control_copy);
  
--	tx->u.tx.control->iv_len = WEP_IV_LEN;
--	tx->u.tx.control->icv_len = WEP_ICV_LEN;
--	ieee80211_tx_set_iswep(tx);
--
--	if (wep_encrypt_skb(tx, tx->skb) < 0) {
--		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
--		return TXRX_DROP;
--	}
--
--	if (tx->u.tx.extra_frag) {
--		int i;
--		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
--			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
--				I802_DEBUG_INC(tx->local->
--					       tx_handlers_drop_wep);
--				return TXRX_DROP;
--			}
--		}
-+	switch (tx->key->conf.alg) {
-+	case ALG_WEP:
-+		return ieee80211_crypto_wep_encrypt(tx);
-+	case ALG_TKIP:
-+		return ieee80211_crypto_tkip_encrypt(tx);
-+	case ALG_CCMP:
-+		return ieee80211_crypto_ccmp_encrypt(tx);
-+	case ALG_NONE:
-+		return TXRX_CONTINUE;
+-	memset(txhdr->wep_key, 0x0, 16);
+-	txhdr->padding = 0;
+-	txhdr->padding2 = 0;
++	memset(txhdr->hw_crypt_key, 0x0, 16);
++	memset(&txhdr->padding2, 0, sizeof(txhdr->padding2));
+ 
+ 	/* TODO: add support for alternate retry TX rates */
+ 	rate = control->tx_rate;
+@@ -552,15 +556,13 @@ static int p54_tx(struct ieee80211_hw *d
+ 	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
+ 		rate |= 0x20;
+ 	memset(txhdr->rateset, rate, 8);
+-	txhdr->wep_key_present = 0;
+-	txhdr->wep_key_len = 0;
+-	txhdr->frame_type = cpu_to_le32(control->queue + 4);
+-	txhdr->magic4 = 0;
+-	txhdr->antenna = (control->antenna_sel_tx == 0) ?
+-		2 : control->antenna_sel_tx - 1;
++	txhdr->hw_crypt_key_type = 0;
++	txhdr->hw_crypt_key_len = 0;
++	txhdr->frame_queue = control->queue + 4;
++	txhdr->antenna = p54_antenna_sel(control->antenna_sel_tx);
+ 	txhdr->output_power = 0x7f; // HW Maximum
+-	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
+-		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
++	txhdr->cts_rate = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
++		(0) : (control->rts_cts_rate | 0x20);
+ 	if (padding)
+ 		txhdr->align[0] = padding;
+ 
+@@ -569,8 +571,7 @@ static int p54_tx(struct ieee80211_hw *d
+ }
+ 
+ static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
+-			  const u8 *dst, const u8 *src, u8 antenna,
+-			  u32 magic3, u32 magic8, u32 magic9)
++			  const u8 *dst, const u8 *src)
+ {
+ 	struct p54_common *priv = dev->priv;
+ 	struct p54_control_hdr *hdr;
+@@ -591,19 +592,29 @@ static int p54_set_filter(struct ieee802
+ 
+ 	filter->filter_type = cpu_to_le16(filter_type);
+ 	memcpy(filter->dst, dst, ETH_ALEN);
++
+ 	if (!src)
+ 		memset(filter->src, ~0, ETH_ALEN);
+ 	else
+ 		memcpy(filter->src, src, ETH_ALEN);
+-	filter->antenna = antenna;
+-	filter->magic3 = cpu_to_le32(magic3);
++
++	if (filter_type) {
++		filter->wakeup_period = cpu_to_le16(priv->dtim_wakeup);
++		filter->bss_basic_rate_mask = cpu_to_le16(priv->rate_mask);
++	}
++	filter->rx_antenna = p54_antenna_sel(priv->rx_antenna);
+ 	filter->rx_addr = cpu_to_le32(priv->rx_end);
+ 	filter->max_rx = cpu_to_le16(0x0620);	/* FIXME: for usb ver 1.. maybe */
+ 	filter->rxhw = priv->rxhw;
+-	filter->magic8 = cpu_to_le16(magic8);
+-	filter->magic9 = cpu_to_le16(magic9);
++	filter->padding = 0;
++	filter->padding2 = 0;
+ 
+ 	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*filter), 1);
++
++	/* give the device some msecs to initialize the new settings... */
++	msleep(100);
++	priv->freq = 0;
++
+ 	return 0;
+ }
+ 
+@@ -633,7 +644,7 @@ static int p54_set_freq(struct ieee80211
+ 	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + payload_len, NULL);
+ 
+ 	chan->magic1 = cpu_to_le16(0x1);
+-	chan->magic2 = cpu_to_le16(0x0);
++	chan->magic2 = cpu_to_le16(0x1);
+ 
+ 	for (i = 0; i < priv->iq_autocal_len; i++) {
+ 		if (priv->iq_autocal[i].freq != freq)
+@@ -677,6 +688,7 @@ static int p54_set_freq(struct ieee80211
+ 		break;
  	}
  
--	return TXRX_CONTINUE;
-+	/* not reached */
-+	WARN_ON(1);
-+	return TXRX_DROP;
++	priv->freq = freq;
+ 	memcpy(hdr->data + payload_len - 4, &chan->val_bpsk, 4);
+ 
+ 	priv->tx(dev, hdr, sizeof(*hdr) + payload_len, 1);
+@@ -768,6 +780,8 @@ static void p54_set_vdcf(struct ieee8021
+ 		vdcf->magic2 = 0x06;
+ 	}
+ 
++	priv->slot_time = dev->conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME;
++
+ 	/* (see prism54/isl_oid.h for further details) */
+ 	vdcf->frameburst = cpu_to_le16(0);
+ 
+@@ -780,37 +794,47 @@ static int p54_add_interface(struct ieee
+ 	struct p54_common *priv = dev->priv;
+ 	int err;
+ 
+-	/* NOTE: using IEEE80211_IF_TYPE_MGMT to indicate no mode selected */
+-	if (priv->mode != IEEE80211_IF_TYPE_MGMT)
++	/* NOTE: using P54_FILTER_NOFILTER to indicate no mode selected */
++	if (priv->mode != P54_FILTER_NOFILTER)
+ 		return -1;
+ 
+ 	switch (conf->type) {
+ 	case IEEE80211_IF_TYPE_STA:
+-		priv->mode = conf->type;
++		priv->mode = P54_FILTER_STA;
++		break;
++	case IEEE80211_IF_TYPE_MNTR:
++		priv->mode = P54_FILTER_MNTR;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	priv->mac_addr = conf->mac_addr;
++	priv->mac_addr = conf->mac_addr ? conf->mac_addr : dev->wiphy->perm_addr;
+ 
+ 	err = priv->open(dev);
+ 	if (err) {
+-		priv->mode = IEEE80211_IF_TYPE_MGMT;
++		priv->mode = P54_FILTER_NOFILTER;
+ 		skb_queue_purge(&priv->tx_queue);
+ 		return err;
+ 	}
+ 
+-	p54_set_filter(dev, 0, priv->mac_addr, NULL, 0, 1, 0, 0xF642);
+-	p54_set_filter(dev, 0, priv->mac_addr, NULL, 1, 0, 0, 0xF642);
++	err = p54_set_filter(dev, P54_FILTER_NOFILTER, priv->mac_addr, NULL);
++	if (err)
++		return err;
++
+ 	p54_set_vdcf(dev);
+ 
+-	switch (conf->type) {
+-	case IEEE80211_IF_TYPE_STA:
+-		p54_set_filter(dev, 1, priv->mac_addr, NULL, 0, 0x15F, 0x1F4, 0);
++	switch (priv->mode) {
++	case P54_FILTER_STA:
++		priv->rate_mask = 0x15f;
++		err = p54_set_filter(dev, priv->mode, priv->mac_addr, NULL);
++		break;
++	case P54_FILTER_MNTR:
++		priv->rate_mask = 0xffff;
++		err = p54_set_filter(dev, priv->mode, priv->mac_addr, NULL);
+ 		break;
+ 	}
+-
++	
+ 	p54_set_leds(dev, 1, 0, 0);
+ 
+ 	return 0;
+@@ -827,27 +851,35 @@ static void p54_remove_interface(struct 
+ 			kfree(range->control);
+ 		kfree_skb(skb);
+ 	}
+-	priv->mode = IEEE80211_IF_TYPE_MGMT;
++
++	priv->mode = P54_FILTER_NOFILTER;
+ 	priv->stop(dev);
  }
  
- static ieee80211_txrx_result
-@@ -805,9 +775,7 @@ ieee80211_tx_handler ieee80211_tx_handle
- 	ieee80211_tx_h_select_key,
- 	ieee80211_tx_h_michael_mic_add,
- 	ieee80211_tx_h_fragment,
--	ieee80211_tx_h_tkip_encrypt,
--	ieee80211_tx_h_ccmp_encrypt,
--	ieee80211_tx_h_wep_encrypt,
-+	ieee80211_tx_h_encrypt,
- 	ieee80211_tx_h_rate_ctrl,
- 	ieee80211_tx_h_misc,
- 	ieee80211_tx_h_load_stats,
---- wireless-dev.orig/net/mac80211/wpa.c	2007-09-25 23:29:34.131604926 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-09-25 23:29:35.111582139 +0200
-@@ -239,17 +239,16 @@ static int tkip_encrypt_skb(struct ieee8
- 
- 
- ieee80211_txrx_result
--ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx)
+ static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
  {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
- 	u16 fc;
--	struct ieee80211_key *key = tx->key;
- 	struct sk_buff *skb = tx->skb;
- 	int wpa_test = 0, test = 0;
+-	int ret;
++	struct p54_common *priv = dev->priv;
++	int ret = 0;
++
++	if (priv->rx_antenna != conf->antenna_sel_rx) {
++		priv->rx_antenna = conf->antenna_sel_rx;
++		p54_set_filter(dev, priv->mode, priv->mac_addr, NULL);
++	}
++	
++	if ((dev->flags & IEEE80211_CONF_SHORT_SLOT_TIME) != priv->slot_time)
++		p54_set_vdcf(dev);
  
- 	fc = le16_to_cpu(hdr->frame_control);
- 
--	if (!key || key->conf.alg != ALG_TKIP || !WLAN_FC_DATA_PRESENT(fc))
-+	if (!WLAN_FC_DATA_PRESENT(fc))
- 		return TXRX_CONTINUE;
- 
- 	tx->u.tx.control->icv_len = TKIP_ICV_LEN;
-@@ -491,17 +490,16 @@ static int ccmp_encrypt_skb(struct ieee8
- 
- 
- ieee80211_txrx_result
--ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
--	struct ieee80211_key *key = tx->key;
- 	u16 fc;
- 	struct sk_buff *skb = tx->skb;
- 	int test = 0;
- 
- 	fc = le16_to_cpu(hdr->frame_control);
- 
--	if (!key || key->conf.alg != ALG_CCMP || !WLAN_FC_DATA_PRESENT(fc))
-+	if (!WLAN_FC_DATA_PRESENT(fc))
- 		return TXRX_CONTINUE;
- 
- 	tx->u.tx.control->icv_len = CCMP_MIC_LEN;
---- wireless-dev.orig/net/mac80211/wpa.h	2007-09-25 23:29:34.131604926 +0200
-+++ wireless-dev/net/mac80211/wpa.h	2007-09-25 23:29:35.131571125 +0200
-@@ -19,12 +19,12 @@ ieee80211_txrx_result
- ieee80211_rx_h_michael_mic_verify(struct ieee80211_txrx_data *rx);
- 
- ieee80211_txrx_result
--ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx);
-+ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx);
- ieee80211_txrx_result
- ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx);
- 
- ieee80211_txrx_result
--ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx);
-+ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx);
- ieee80211_txrx_result
- ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx);
- 
---- wireless-dev.orig/net/mac80211/wep.c	2007-09-25 23:29:34.131604926 +0200
-+++ wireless-dev/net/mac80211/wep.c	2007-09-25 23:29:35.131571125 +0200
-@@ -80,9 +80,9 @@ static void ieee80211_wep_get_iv(struct 
+ 	ret = p54_set_freq(dev, cpu_to_le16(conf->freq));
+-	p54_set_vdcf(dev);
++
+ 	return ret;
  }
  
- 
--u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
--			  struct sk_buff *skb,
--			  struct ieee80211_key *key)
-+static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
-+				struct sk_buff *skb,
-+				struct ieee80211_key *key)
+ static int p54_config_interface(struct ieee80211_hw *dev, int if_id,
+ 				struct ieee80211_if_conf *conf)
  {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u16 fc;
-@@ -350,3 +350,54 @@ ieee80211_crypto_wep_decrypt(struct ieee
+-	struct p54_common *priv = dev->priv;
++	if (conf->bssid)
++		p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
  
- 	return TXRX_CONTINUE;
+-	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 0, 1, 0, 0xF642);
+-	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 2, 0, 0, 0);
+-	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
+ 	return 0;
  }
-+
-+static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
-+{
-+	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
-+		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
-+			return -1;
-+	} else {
-+		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
-+		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
-+			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
-+				return -1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+ieee80211_txrx_result
-+ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
-+	u16 fc;
-+
-+	fc = le16_to_cpu(hdr->frame_control);
-+
-+	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
-+	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
-+	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
-+		return TXRX_CONTINUE;
-+
-+	tx->u.tx.control->iv_len = WEP_IV_LEN;
-+	tx->u.tx.control->icv_len = WEP_ICV_LEN;
-+	ieee80211_tx_set_iswep(tx);
-+
-+	if (wep_encrypt_skb(tx, tx->skb) < 0) {
-+		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
-+		return TXRX_DROP;
-+	}
-+
-+	if (tx->u.tx.extra_frag) {
-+		int i;
-+		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
-+			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
-+				I802_DEBUG_INC(tx->local->
-+					       tx_handlers_drop_wep);
-+				return TXRX_DROP;
-+			}
-+		}
-+	}
-+
-+	return TXRX_CONTINUE;
-+}
---- wireless-dev.orig/net/mac80211/wep.h	2007-09-25 23:29:34.141573296 +0200
-+++ wireless-dev/net/mac80211/wep.h	2007-09-25 23:29:35.131571125 +0200
-@@ -18,9 +18,6 @@
  
- int ieee80211_wep_init(struct ieee80211_local *local);
- void ieee80211_wep_free(struct ieee80211_local *local);
--u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
--			  struct sk_buff *skb,
--			  struct ieee80211_key *key);
- void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
- 				size_t klen, u8 *data, size_t data_len);
- int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
-@@ -34,5 +31,7 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_
+@@ -913,7 +945,7 @@ struct ieee80211_hw *p54_init_common(siz
+ 		return NULL;
  
- ieee80211_txrx_result
- ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx);
-+ieee80211_txrx_result
-+ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx);
+ 	priv = dev->priv;
+-	priv->mode = IEEE80211_IF_TYPE_MGMT;
++	priv->mode = P54_FILTER_NOFILTER;
+ 	skb_queue_head_init(&priv->tx_queue);
+ 	memcpy(priv->channels, p54_channels, sizeof(p54_channels));
+ 	memcpy(priv->rates, p54_rates, sizeof(p54_rates));
+@@ -933,6 +965,10 @@ struct ieee80211_hw *p54_init_common(siz
+ 	dev->max_rssi = 127;
  
- #endif /* WEP_H */
+ 	priv->tx_stats.data[0].limit = 5;
++	priv->rx_antenna = 0;
++	priv->rate_mask = 1;
++	priv->freq = 0;
++
+ 	dev->queues = 1;
+ 
+ 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
+diff -Nurp a/drivers/net/wireless/p54common.h b/drivers/net/wireless/p54common.h
+--- a/drivers/net/wireless/p54common.h	2007-09-20 21:53:22.000000000 +0200
++++ b/drivers/net/wireless/p54common.h	2007-09-24 19:34:06.000000000 +0200
+@@ -161,6 +161,20 @@ struct p54_eeprom_lm86 {
+ 	u8 data[0];
+ } __attribute__ ((packed));
+ 
++struct p54_statistics {
++	__le32 rx_success;
++	__le32 rx_errors;
++	__le32 rx_aborts;
++	__le32 rx_aborts_phy;
++	__le32 rx_rts_success;
++	__le32 rx_rts_failed;
++	__le32 timestamp;
++	__le32 unknown_stat;
++	u8 noise_floor_rssi;
++	u8 padding[3];
++	u8 unknown[36];	// used for radar and Clear Channel Assessment
++} __attribute__ ((packed));
++
+ struct p54_rx_hdr {
+ 	__le16 magic;
+ 	__le16 len;
+@@ -169,7 +183,8 @@ struct p54_rx_hdr {
+ 	u8 rate;
+ 	u8 rssi;
+ 	u8 quality;
+-	u16 unknown2;
++	u8 hw_crypt_key_type;
++	u8 channel_activity;	// raw RSSI
+ 	__le64 timestamp;
+ 	u8 data[0];
+ } __attribute__ ((packed));
+@@ -185,31 +200,41 @@ struct p54_frame_sent_hdr {
+ struct p54_tx_control_allocdata {
+ 	u8 rateset[8];
+ 	u16 padding;
+-	u8 wep_key_present;
+-	u8 wep_key_len;
+-	u8 wep_key[16];
+-	__le32 frame_type;
+-	u32 padding2;
+-	__le16 magic4;
++	u8 hw_crypt_key_type;
++	u8 hw_crypt_key_len;
++	u8 hw_crypt_key[16];
++	u8 frame_queue;
++	u8 padding2[9];
+ 	u8 antenna;
+ 	u8 output_power;
+-	__le32 magic5;
++	u8 cts_rate;
++	u8 padding3[3];
+ 	u8 align[0];
+ } __attribute__ ((packed));
+ 
++enum {
++	P54_FILTER_NOFILTER = 0,
++	P54_FILTER_STA = 1,
++	P54_FILTER_ADHOC = 2,
++	P54_FILTER_AP = 4,
++	P54_FILTER_PROMISC = 8,
++	P54_FILTER_MNTR = 16,
++} P54_FILTER_TYPES;
++
+ struct p54_tx_control_filter {
+-	__le16 filter_type;
++	__le16 filter_type;	/* enum P54_FILTER_TYPES */
+ 	u8 dst[ETH_ALEN];
+ 	u8 src[ETH_ALEN];
+-	u8 antenna;
+-	u8 debug;
+-	__le32 magic3;
+-	u8 rates[8];	// FIXME: what's this for?
++	u8 rx_antenna;
++	u8 rx_align;
++	__le16 bss_basic_rate_mask;
++	__le16 padding;
++	u8 rts_rates[8];
+ 	__le32 rx_addr;
+ 	__le16 max_rx;
+ 	__le16 rxhw;
+-	__le16 magic8;
+-	__le16 magic9;
++	__le16 wakeup_period;
++	__le16 padding2;
+ } __attribute__ ((packed));
+ 
+ struct p54_tx_control_channel {
+@@ -247,7 +272,9 @@ struct p54_tx_control_vdcf {
+ 	u8 magic1;
+ 	u8 magic2;
+ 	struct p54_tx_vdcf_queues queue[8];
+-	u8 pad2[4];
++	u8 queue5_offset;
++	u8 queue6_offset;
++	u8 pad2[2];
+ 	__le16 frameburst;
+ } __attribute__ ((packed));
+ 
 
--- 
-
+--Boundary-00=_so/9GuJC6hqcvhk--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
