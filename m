@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40446 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34952 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755165AbXIEL1W (ORCPT
+	with ESMTP id S1763544AbXIXTZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 07:27:22 -0400
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
+	Mon, 24 Sep 2007 15:25:40 -0400
+Subject: Re: zd1211 config operation problem
 From: Johannes Berg <johannes@sipsolutions.net>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070905013804.GA388@mail.intel.com>
-References: <1188875058.13078.428.camel@debian.sh.intel.com>
-	 <1188914651.9942.25.camel@johannes.berg>
-	 <20070905013804.GA388@mail.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r4VkMCWjzR/RfOOaHXQI"
-Date: Wed, 05 Sep 2007 13:28:46 +0200
-Message-Id: <1188991726.9942.99.camel@johannes.berg>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200709241520.50411.flamingice@sourmilk.net>
+References: <200709231648.17107.mb@bu3sch.de>
+	 <200709241841.50232.mb@bu3sch.de>
+	 <1190654401.18521.272.camel@johannes.berg>
+	 <200709241520.50411.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-31nq9l+h5jFly9kMnz9U"
+Date: Mon, 24 Sep 2007 21:26:55 +0200
+Message-Id: <1190662015.18521.280.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-r4VkMCWjzR/RfOOaHXQI
+--=-31nq9l+h5jFly9kMnz9U
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-09-05 at 09:38 +0800, Zhu Yi wrote:
+On Mon, 2007-09-24 at 15:20 -0400, Michael Wu wrote:
+> On Monday 24 September 2007 13:20, Johannes Berg wrote:
+> > On Mon, 2007-09-24 at 18:41 +0200, Michael Buesch wrote:
+> > > -	if (local->ops->config)
+> > > +	if (local->open_count)
+> > >  		ret =3D local->ops->config(local_to_hw(local), &local->hw.conf);
+> > Isn't this racy?
+> >
+> Shouldn't be. Some callers are holding rtnl (ieee80211_open,=20
+> ieee80211_ioctl*). Other callers (in ieee80211_sta.c) cannot run if the=20
+> device is down.
 
-> For your other comments, I agree they are valid and we will address
-> them. But I don't think any of them are a block issue for .24, right?
-
-Actually, at least the crypto thing is an issue for you: it'll be a
-support nightmare. Please do what I've been saying in every second mail
-now: run this driver against the mac80211 in net-2.6.24. It *will*
-trigger a WARN_ON() in the key handling code.
+Good point. I guess the patch is fine then.
 
 johannes
 
---=-r4VkMCWjzR/RfOOaHXQI
+--=-31nq9l+h5jFly9kMnz9U
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG3pLu/ETPhpq3jKURAoQVAKCSKtLsZeQdLL0QOaHvZL2UuafWNACfS5WJ
-J9YoZs2YcKiJrT5nwsFAEg4=
-=e/OX
+iD4DBQBG+A9//ETPhpq3jKURAhyVAJ4nwIMpeuVDXOaBqeyJ5VOu1NIcpQCYx35U
+PWCHiuYdhahHdZMUgTCsQg==
+=YAyG
 -----END PGP SIGNATURE-----
 
---=-r4VkMCWjzR/RfOOaHXQI--
+--=-31nq9l+h5jFly9kMnz9U--
 
