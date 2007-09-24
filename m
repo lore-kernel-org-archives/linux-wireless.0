@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from general-networks3.cust.sloane.cz ([88.146.176.14]:47666 "EHLO
-	server.generalnetworks.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbXIXSjC (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33037
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763375AbXIXQmZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 14:39:02 -0400
-Message-id: <2595810412809010611@pripojeni.net>
-Subject: [PATCH 1/3] Net: ath5k, make its own directory
-From: Jiri Slaby <jirislaby@gmail.com>
-To: <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <mcgrof@gmail.com>
-Date: Mon, 24 Sep 2007 14:39:02 -0400
+	Mon, 24 Sep 2007 12:42:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: zd1211 config operation problem
+Date: Mon, 24 Sep 2007 18:41:49 +0200
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <200709231648.17107.mb@bu3sch.de> <200709231348.30055.flamingice@sourmilk.net>
+In-Reply-To: <200709231348.30055.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200709241841.50232.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k, make its own directory
+On Sunday 23 September 2007, Michael Wu wrote:
+> On Sunday 23 September 2007 10:48, Michael Buesch wrote:
+> > The zd1211 driver has a bug in the ieee80211 config callback.
+> > It currently unconditionally calls the set_channel() function,
+> > whether the device is running or not. This causes a failed
+> > bus access, if we set some config while the device is down.
+> > The driver must check if the device is running before setting
+> > any config on it (usb->initialized?).
+> Hm, that sounds pretty terrible. mac80211 should check if the device was 
+> started before trying to run any configure callbacks.
 
-Changes-licensed-under: ISC
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Something like that?
 
----
-commit 83e027e3714be11155c100a8e4ea7c0eb2a14f0a
-tree 989dc0a74ddf3b54fc28a9196bd2048cb39f8529
-parent 657bdad86e3a284f0195df4b78b833d21beb727f
-author Jiri Slaby <ku@bellona.localdomain> Mon, 24 Sep 2007 20:23:34 +0200
-committer Jiri Slaby <ku@bellona.localdomain> Mon, 24 Sep 2007 20:23:34 +0200
 
- drivers/net/wireless/Makefile             |    3 +--
- drivers/net/wireless/ath5k/Makefile       |    2 ++
- drivers/net/wireless/ath5k/ath5k.h        |    0 
- drivers/net/wireless/ath5k/ath5k_base.c   |    0 
- drivers/net/wireless/ath5k/ath5k_base.h   |    0 
- drivers/net/wireless/ath5k/ath5k_hw.c     |    0 
- drivers/net/wireless/ath5k/ath5k_hw.h     |    0 
- drivers/net/wireless/ath5k/ath5k_reg.h    |    0 
- drivers/net/wireless/ath5k/ath5k_regdom.c |    0 
- drivers/net/wireless/ath5k/ath5k_regdom.h |    0 
- 10 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 02f8b71..638865d 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -48,5 +48,4 @@ obj-$(CONFIG_LIBERTAS)      += libertas/
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
- obj-$(CONFIG_RTL8187)	+= rtl8187.o
+
+Subject: mac80211: Check open_count before calling config callback.
+
+Also remove the check for ops->config!=NULL, as it can never be NULL.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+Index: wireless-dev/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-24 18:29:54.000000000 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-24 18:36:11.000000000 +0200
+@@ -722,7 +722,7 @@ int ieee80211_hw_config(struct ieee80211
+ 	       local->hw.conf.phymode);
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
  
--obj-$(CONFIG_ATH5K)	+= ath5k.o
--ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o
-+obj-$(CONFIG_ATH5K)	+= ath5k/
-diff --git a/drivers/net/wireless/ath5k/Makefile b/drivers/net/wireless/ath5k/Makefile
-new file mode 100644
-index 0000000..cf04c90
---- /dev/null
-+++ b/drivers/net/wireless/ath5k/Makefile
-@@ -0,0 +1,2 @@
-+ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o
-+obj-$(CONFIG_ATH5K)	+= ath5k.o
-diff --git a/drivers/net/wireless/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-similarity index 100%
-rename from drivers/net/wireless/ath5k.h
-rename to drivers/net/wireless/ath5k/ath5k.h
-diff --git a/drivers/net/wireless/ath5k_base.c b/drivers/net/wireless/ath5k/ath5k_base.c
-similarity index 100%
-rename from drivers/net/wireless/ath5k_base.c
-rename to drivers/net/wireless/ath5k/ath5k_base.c
-diff --git a/drivers/net/wireless/ath5k_base.h b/drivers/net/wireless/ath5k/ath5k_base.h
-similarity index 100%
-rename from drivers/net/wireless/ath5k_base.h
-rename to drivers/net/wireless/ath5k/ath5k_base.h
-diff --git a/drivers/net/wireless/ath5k_hw.c b/drivers/net/wireless/ath5k/ath5k_hw.c
-similarity index 100%
-rename from drivers/net/wireless/ath5k_hw.c
-rename to drivers/net/wireless/ath5k/ath5k_hw.c
-diff --git a/drivers/net/wireless/ath5k_hw.h b/drivers/net/wireless/ath5k/ath5k_hw.h
-similarity index 100%
-rename from drivers/net/wireless/ath5k_hw.h
-rename to drivers/net/wireless/ath5k/ath5k_hw.h
-diff --git a/drivers/net/wireless/ath5k_reg.h b/drivers/net/wireless/ath5k/ath5k_reg.h
-similarity index 100%
-rename from drivers/net/wireless/ath5k_reg.h
-rename to drivers/net/wireless/ath5k/ath5k_reg.h
-diff --git a/drivers/net/wireless/ath5k_regdom.c b/drivers/net/wireless/ath5k/ath5k_regdom.c
-similarity index 100%
-rename from drivers/net/wireless/ath5k_regdom.c
-rename to drivers/net/wireless/ath5k/ath5k_regdom.c
-diff --git a/drivers/net/wireless/ath5k_regdom.h b/drivers/net/wireless/ath5k/ath5k_regdom.h
-similarity index 100%
-rename from drivers/net/wireless/ath5k_regdom.h
-rename to drivers/net/wireless/ath5k/ath5k_regdom.h
+-	if (local->ops->config)
++	if (local->open_count)
+ 		ret = local->ops->config(local_to_hw(local), &local->hw.conf);
+ 
+ 	return ret;
