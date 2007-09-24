@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756198AbXITQjs (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:54598 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752971AbXIXPIb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 12:39:48 -0400
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-In-Reply-To: <46F2A1D4.9030601@lwfinger.net>
-References: <20070919181005.GB5483@tuxdriver.com>
-	 <46F19DD0.2050605@gentoo.org> <20070920134730.GC6748@tuxdriver.com>
-	 <46F28374.9040106@gentoo.org>  <46F2A1D4.9030601@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zSri8TA2AM+FuxHR7iwl"
-Date: Thu, 20 Sep 2007 18:40:51 +0200
-Message-Id: <1190306451.18521.90.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 24 Sep 2007 11:08:31 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: Adapt to filter configuration API
+Date: Mon, 24 Sep 2007 11:07:24 -0400
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+References: <200709241106.04902.flamingice@sourmilk.net>
+In-Reply-To: <200709241106.04902.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2865436.TKobSlOikP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709241107.28275.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-zSri8TA2AM+FuxHR7iwl
-Content-Type: text/plain
+--nextPart2865436.TKobSlOikP
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Thu, 2007-09-20 at 11:37 -0500, Larry Finger wrote:
+On Monday 24 September 2007 11:06, Michael Wu wrote:
+> From: Michael Wu <flamingice@sourmilk.net>
+>
+> This makes p54 use the new filter configuration API in mac80211.
+>
+> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Err, and the title should be:
 
-> You're on. BTW, I will let you be the primary tester of "[PATCH] fix soft=
-mac lockdep reports" that
-> Johannes posted earlier today. I see you were CC'd. I plan on testing it =
-with bcm43xx, but I won't
-> get to it for a couple of days.
+[PATCH] p54: Adapt to filter configuration API=20
 
-The only thing it can possibly fix is our race against some other
-functions that use the global workqueue and lock the RTNL from within
-the work function while we have it locked while flushing. Conversely, it
-can't really break anything either.
+Ugh.
 
-johannes
+=2DMichael Wu
 
---=-zSri8TA2AM+FuxHR7iwl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart2865436.TKobSlOikP
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG8qKT/ETPhpq3jKURApx9AKC2G9Ce0qqwXOaqtG/b51uxCkIeSACguuQ0
-WCYNk9qZ0iTX9FFwwnxs6N0=
-=LU49
+iD8DBQBG99KwT3Oqt9AH4aERAjPuAJ4sYAs0dizWSzECifaeRSCkpmFAOQCgnytP
+fCpsmO6sXoB9t7EW6h4pKeM=
+=2tlI
 -----END PGP SIGNATURE-----
 
---=-zSri8TA2AM+FuxHR7iwl--
-
+--nextPart2865436.TKobSlOikP--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
