@@ -1,60 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965041AbXIGNYW (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41302
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbXIYVfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 09:24:22 -0400
-Subject: p54 sparse warnings with __CHECK_ENDIAN__
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bFffRKk44/uxRyA8mUEc"
-Date: Thu, 06 Sep 2007 19:36:27 +0200
-Message-Id: <1189100187.28781.108.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 25 Sep 2007 17:35:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix interface initialisation
+Date: Tue, 25 Sep 2007 23:32:36 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <200709252206.57855.mb@bu3sch.de> <1190755892.18521.330.camel@johannes.berg>
+In-Reply-To: <1190755892.18521.330.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200709252332.37064.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 25 September 2007 23:31:32 Johannes Berg wrote:
+> When an interface is registered it is still uninitialised so
+> ieee80211_if_reinit() can't be called on it (it will oops.)
+> Hence, we need to move the uninit method assignment. Also,
+> this patch fixes the bug that the master device is never
+> initialised at all.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-bFffRKk44/uxRyA8mUEc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I guess you should send this
+To: John Linville
+instead :)
 
-drivers/net/wireless/p54common.c:53:12: warning: cast to restricted type
-drivers/net/wireless/p54common.c:74:21: warning: cast to restricted type
-drivers/net/wireless/p54common.c:76:19: warning: cast to restricted type
-drivers/net/wireless/p54pci.c:57:6: warning: incorrect type in assignment (=
-different base types)
-drivers/net/wireless/p54pci.c:57:6:    expected restricted unsigned int [us=
-ertype] reg
-drivers/net/wireless/p54pci.c:57:6:    got unsigned int=20
-drivers/net/wireless/p54pci.c:105:6: warning: incorrect type in assignment =
-(different base types)
-drivers/net/wireless/p54pci.c:105:6:    expected restricted unsigned int [a=
-ssigned] [usertype] reg
-drivers/net/wireless/p54pci.c:105:6:    got unsigned int=20
-drivers/net/wireless/p54pci.c:131:6: warning: incorrect type in assignment =
-(different base types)
-drivers/net/wireless/p54pci.c:131:6:    expected restricted unsigned int [u=
-sertype] reg
-drivers/net/wireless/p54pci.c:131:6:    got unsigned int=20
-drivers/net/wireless/p54pci.c:134:6: warning: restricted degrades to intege=
-r
-drivers/net/wireless/p54pci.c:531: warning: ignoring return value of 'pci_s=
-et_mwi', declared with attribute warn_unused_result
+Though, I tested this and ACK it.
+
+> ---
+>  net/mac80211/ieee80211.c       |    3 +--
+>  net/mac80211/ieee80211_iface.c |   20 +++++++++++++++++++-
+>  2 files changed, 20 insertions(+), 3 deletions(-)
+> 
+> --- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-25 22:26:31.341579155 +0200
+> +++ wireless-dev/net/mac80211/ieee80211.c	2007-09-25 23:28:21.581572375 +0200
+> @@ -266,7 +266,6 @@ void ieee80211_if_mgmt_setup(struct net_
+>  	dev->stop = ieee80211_mgmt_stop;
+>  	dev->type = ARPHRD_IEEE80211_PRISM;
+>  	dev->hard_header_parse = header_parse_80211;
+> -	dev->uninit = ieee80211_if_reinit;
+>  	dev->destructor = ieee80211_if_free;
+>  }
+>  
+> @@ -543,7 +542,6 @@ void ieee80211_if_setup(struct net_devic
+>  	dev->change_mtu = ieee80211_change_mtu;
+>  	dev->open = ieee80211_open;
+>  	dev->stop = ieee80211_stop;
+> -	dev->uninit = ieee80211_if_reinit;
+>  	dev->destructor = ieee80211_if_free;
+>  }
+>  
+> @@ -1234,6 +1232,7 @@ int ieee80211_register_hw(struct ieee802
+>  		goto fail_dev;
+>  
+>  	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
+> +	ieee80211_if_set_type(local->mdev, IEEE80211_IF_TYPE_AP);
+>  
+>  	result = ieee80211_init_rate_ctrl_alg(local, NULL);
+>  	if (result < 0) {
+> --- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-25 22:26:40.111572537 +0200
+> +++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-25 23:28:21.651570910 +0200
+> @@ -127,6 +127,12 @@ int ieee80211_if_add_mgmt(struct ieee802
+>  	if (ret)
+>  		goto fail;
+>  
+> +	/*
+> +	 * Called even when register_netdevice fails, it would
+> +	 * oops if assigned before initialising the rest.
+> +	 */
+> +	ndev->uninit = ieee80211_if_reinit;
+> +
+>  	ieee80211_debugfs_add_netdev(nsdata);
+>  
+>  	if (local->open_count > 0)
+> @@ -155,7 +161,19 @@ void ieee80211_if_set_type(struct net_de
+>  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  	int oldtype = sdata->type;
+>  
+> -	dev->hard_start_xmit = ieee80211_subif_start_xmit;
+> +	/*
+> +	 * We need to call this function on the master interface
+> +	 * which already has a hard_start_xmit routine assigned
+> +	 * which must not be changed.
+> +	 */
+> +	if (!dev->hard_start_xmit)
+> +		dev->hard_start_xmit = ieee80211_subif_start_xmit;
+> +
+> +	/*
+> +	 * Called even when register_netdevice fails, it would
+> +	 * oops if assigned before initialising the rest.
+> +	 */
+> +	dev->uninit = ieee80211_if_reinit;
+>  
+>  	sdata->type = type;
+>  	switch (type) {
+> 
+> 
+> 
+> 
 
 
---=-bFffRKk44/uxRyA8mUEc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4Dqb/ETPhpq3jKURAnTNAJ9i3XBU/K4CzsVyv/JLHZoG7D0dMwCggnxy
-r8lJ0LKeh6K1odchKRyamJ8=
-=KpVg
------END PGP SIGNATURE-----
-
---=-bFffRKk44/uxRyA8mUEc--
-
+-- 
+Greetings Michael.
