@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49344
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754511AbXIZCfv (ORCPT
+Received: from yue.linux-ipv6.org ([203.178.140.15]:45561 "EHLO
+	yue.st-paulia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752736AbXIYD2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 22:35:51 -0400
-Date: Tue, 25 Sep 2007 19:35:50 -0700 (PDT)
-Message-Id: <20070925.193550.36647404.davem@davemloft.net>
-To: yi.zhu@intel.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	chuyee@santarosa.sh.intel.com
-Subject: Re: [PATCH 2.6.24] iwlwifi: create own directory for iwlwifi driver
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <11903436591320-git-send-email-yi.zhu@intel.com>
-References: <11903436591320-git-send-email-yi.zhu@intel.com>
+	Mon, 24 Sep 2007 23:28:13 -0400
+Date: Tue, 25 Sep 2007 12:29:51 +0900 (JST)
+Message-Id: <20070925.122951.98475715.yoshfuji@linux-ipv6.org>
+To: larry.finger@lwfinger.net
+Cc: jt@hpl.hp.com, linville@tuxdriver.com, mb@bu3sch.de,
+	linux-wireless@vger.kernel.org, davem@davemloft.net,
+	torvalds@linux-foundation.org, yoshfuji@linux-ipv6.org
+Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit  4cf92a3c
+From: YOSHIFUJI Hideaki / =?iso-2022-jp?B?GyRCNUhGIzFRTEAbKEI=?=
+	<yoshfuji@linux-ipv6.org>
+In-Reply-To: <46F87B27.5040106@lwfinger.net>
+References: <20070919163237.GA7914@bougret.hpl.hp.com>
+	<20070925.115054.25066958.yoshfuji@linux-ipv6.org>
+	<46F87B27.5040106@lwfinger.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
-Date: Fri, 21 Sep 2007 11:00:59 +0800
+In article <46F87B27.5040106@lwfinger.net> (at Mon, 24 Sep 2007 22:06:15 -0500), Larry Finger <larry.finger@lwfinger.net> says:
 
-> From: Zhu Yi <chuyee@santarosa.sh.intel.com>
+> The right fix is in the chain. I sent it to John Linville who has sent it to Jeff Garzik. I
+> certainly hope it makes it before 2.6.23, as it is a serious regression.
 > 
-> 	drivers/net/wireless/iwlwifi/
-> 
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> Do you have the patch that fixes it? If not, please let me know and I'll send it to you.
 
-Crap, I did this myself without realizing I had this patch
-in my inbox :-)
+No, I don't have it in my hand.  Please sent it to me. Thank you.
 
-Thank anyways! :)
+--yoshfuji
