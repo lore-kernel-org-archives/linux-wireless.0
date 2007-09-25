@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756010AbXI1Ic5 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:8076 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380AbXIYSog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 04:32:57 -0400
-Subject: Re: A-MSDU deaggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070928013956.GK27241@jm.kir.nu>
-References: <1189354526.4506.25.camel@johannes.berg>
-	 <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
-	 <1190747966.18521.320.camel@johannes.berg>
-	 <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com>
-	 <1190792394.18521.354.camel@johannes.berg>
-	 <20070928013956.GK27241@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cJ73BB9pZWbdEBiLo6/a"
-Date: Fri, 28 Sep 2007 10:34:10 +0200
-Message-Id: <1190968450.5021.18.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 25 Sep 2007 14:44:36 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so2123530fkz
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:34 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/12] rt2x00: Make *_beacon_update static
+Date: Tue, 25 Sep 2007 20:53:43 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709252052.34803.IvDoorn@gmail.com>
+In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200709252053.44107.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make rt61pci_beacon_update and rt73usb_beacon_update static,
+they are only used inside their own source file and then only
+for setting it as callback funtion for mac80211.
 
---=-cJ73BB9pZWbdEBiLo6/a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-On Thu, 2007-09-27 at 18:39 -0700, Jouni Malinen wrote:
-> On Wed, Sep 26, 2007 at 09:39:54AM +0200, Johannes Berg wrote:
->=20
-> > So any STA can actually send EAPOL frames with an arbitrary destination
-> > MAC address except our own into our 802.3 interface. Hence, it looks
-> > like the first case above is only for having eapol on mgmt iface.
->=20
-> EAPOL ethertype is not supposed to be bridged, so it would be perfectly
-> fine dropping these wherever it is most convenient to do.
-
-Not sure I understand. If it's not supposed to be bridged then I hope
-the bridging code knows about this. Otherwise, we can fix it. But I
-don't understand the second part of your sentence, I was actually
-proposing not doing anything special to EAPOL packets at all except
-accepting them unencrypted.
-
-> > The only problem I see with not doing this is that hostapd will have to
-> > listen for EAPOL frames on all VLAN interfaces but I suppose that is
-> > doable.
->=20
-> That's fine. This should be doable with just one packet socket that is
-> not bound to any interface or alternatively with multiple sockets (one
-> per interface).
-
-Good point.
-
->  I wouldn't be too concerned about the extra cost here as
-> long as the other EAPOL related silliness (e.g., the difference in
-> encryption of re-keying packets in 802.1X with dynamic WEP vs. WPA).
-
-That sentence seems unfinished?
-
-johannes
-
---=-cJ73BB9pZWbdEBiLo6/a
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG/LyC/ETPhpq3jKURAoFbAJ9BdmZtg+fjSaUIPOUuwuOd/R+ClACfRfEU
-/z5bzyh0i+r4QXM1t5GMHKA=
-=VYKR
------END PGP SIGNATURE-----
-
---=-cJ73BB9pZWbdEBiLo6/a--
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 09c8c96..69ed178 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2462,7 +2462,7 @@ static void rt61pci_reset_tsf(struct ieee80211_hw *hw)
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR13, 0);
+ }
+ 
+-int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
++static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			  struct ieee80211_tx_control *control)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 3397881..890b449 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1939,7 +1939,7 @@ static void rt73usb_reset_tsf(struct ieee80211_hw *hw)
+ 	rt73usb_register_write(rt2x00dev, TXRX_CSR13, 0);
+ }
+ 
+-int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
++static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			  struct ieee80211_tx_control *control)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-- 
+1.5.3.2
 
