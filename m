@@ -1,117 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:63607 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751075AbXIAEec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:34:32 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 350F8618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:32 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 03/35] Rewrite at76_alloc_urbs() in a more linear fashion
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:34:31 -0400
-Message-ID: <20070901043431.2498.11849.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from nf-out-0910.google.com ([64.233.182.189]:30041 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070AbXIYSoz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 14:44:55 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1757580nfb
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:54 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/12] rt2x00: Fix obvious typo in comment
+Date: Tue, 25 Sep 2007 20:57:25 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709252052.34803.IvDoorn@gmail.com>
+In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200709252057.25939.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+
+Signed-off-by: Modestas Vainius <modestas@vainius.eu>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/at76_usb.c |   66 +++++++++++++++++++++------------------
- 1 files changed, 35 insertions(+), 31 deletions(-)
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 929257d..842da90 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -244,7 +244,7 @@ static int rt2500pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00pci_register_read(rt2x00dev, GPIOCSR, &reg);
+ 	return rt2x00_get_field32(reg, GPIOCSR_BIT0);
+ }
+-#endif /* CONFIG_RT2400PCI_RFKILL */
++#endif /* CONFIG_RT2500PCI_RFKILL */
+ 
+ /*
+  * Configuration handlers.
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 4c5e317..6aa5176 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -269,7 +269,7 @@ static int rt61pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00pci_register_read(rt2x00dev, MAC_CSR13, &reg);
+ 	return rt2x00_get_field32(reg, MAC_CSR13_BIT5);;
+ }
+-#endif /* CONFIG_RT2400PCI_RFKILL */
++#endif /* CONFIG_RT61PCI_RFKILL */
+ 
+ /*
+  * Configuration handlers.
+-- 
+1.5.3.2
 
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index be9ef6e..d1d604e 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -2026,8 +2026,7 @@ static void at76_delete_device(struct at76_priv *priv)
- static int at76_alloc_urbs(struct at76_priv *priv,
- 			   struct usb_interface *interface)
- {
--	struct usb_endpoint_descriptor *endpoint;
--	struct usb_device *udev = priv->udev;
-+	struct usb_endpoint_descriptor *endpoint, *ep_in, *ep_out;
- 	int i;
- 	int buffer_size;
- 	struct usb_host_interface *iface_desc;
-@@ -2037,41 +2036,46 @@ static int at76_alloc_urbs(struct at76_priv *priv,
- 	at76_dbg(DBG_URB, "%s: NumEndpoints %d ", __func__,
- 		 interface->altsetting[0].desc.bNumEndpoints);
- 
-+	ep_in = NULL;
-+	ep_out = NULL;
- 	iface_desc = interface->cur_altsetting;
- 	for (i = 0; i < iface_desc->desc.bNumEndpoints; i++) {
- 		endpoint = &iface_desc->endpoint[i].desc;
- 
- 		at76_dbg(DBG_URB, "%s: %d. endpoint: addr 0x%x attr 0x%x",
--			 __func__,
--			 i, endpoint->bEndpointAddress, endpoint->bmAttributes);
--
--		if (usb_endpoint_is_bulk_in(endpoint)) {
--			priv->read_urb = usb_alloc_urb(0, GFP_KERNEL);
--			if (!priv->read_urb) {
--				err("No free urbs available");
--				return -ENOMEM;
--			}
--			priv->rx_bulk_pipe =
--			    usb_rcvbulkpipe(udev, endpoint->bEndpointAddress);
--		}
-+			 __func__, i, endpoint->bEndpointAddress,
-+			 endpoint->bmAttributes);
- 
--		if (usb_endpoint_is_bulk_out(endpoint)) {
--			priv->write_urb = usb_alloc_urb(0, GFP_KERNEL);
--			if (!priv->write_urb) {
--				err("no free urbs available");
--				return -ENOMEM;
--			}
--			buffer_size = sizeof(struct at76_tx_buffer) +
--			    MAX_PADDING_SIZE;
--			priv->tx_bulk_pipe =
--			    usb_sndbulkpipe(udev, endpoint->bEndpointAddress);
--			priv->bulk_out_buffer =
--			    kmalloc(buffer_size, GFP_KERNEL);
--			if (!priv->bulk_out_buffer) {
--				err("couldn't allocate bulk_out_buffer");
--				return -ENOMEM;
--			}
--		}
-+		if (!ep_in && usb_endpoint_is_bulk_in(endpoint))
-+			ep_in = endpoint;
-+
-+		if (!ep_out && usb_endpoint_is_bulk_out(endpoint))
-+			ep_out = endpoint;
-+	}
-+
-+	if (!ep_in || !ep_out) {
-+		printk(KERN_ERR DRIVER_NAME ": bulk endpoints missing\n");
-+		return -ENXIO;
-+	}
-+
-+	priv->rx_bulk_pipe =
-+	    usb_rcvbulkpipe(priv->udev, ep_in->bEndpointAddress);
-+	priv->tx_bulk_pipe =
-+	    usb_sndbulkpipe(priv->udev, ep_out->bEndpointAddress);
-+
-+	priv->read_urb = usb_alloc_urb(0, GFP_KERNEL);
-+	priv->write_urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!priv->read_urb || !priv->write_urb) {
-+		printk(KERN_ERR DRIVER_NAME ": cannot allocate URB\n");
-+		return -ENOMEM;
-+	}
-+
-+	buffer_size = sizeof(struct at76_tx_buffer) + MAX_PADDING_SIZE;
-+	priv->bulk_out_buffer = kmalloc(buffer_size, GFP_KERNEL);
-+	if (!priv->bulk_out_buffer) {
-+		printk(KERN_ERR DRIVER_NAME
-+		       ": cannot allocate output buffer\n");
-+		return -ENOMEM;
- 	}
- 
- 	at76_dbg(DBG_PROC_ENTRY, "%s: EXIT", __func__);
