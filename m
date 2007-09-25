@@ -1,92 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:41757 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182AbXICAWG (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:46526 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752300AbXIYTEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 20:22:06 -0400
-Received: from astra.telenet-ops.be (astra.telenet-ops.be [195.130.132.58])
-	by hoefnix.telenet-ops.be (Postfix) with ESMTP id C39039D1DE
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Sep 2007 02:21:57 +0200 (CEST)
-Message-ID: <46DB537E.8030801@telenet.be>
-Date: Mon, 03 Sep 2007 02:21:18 +0200
-From: ian <ischram@telenet.be>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: letting drivers choose their preferred rate scale
-References: <46CF95F9.6090802@telenet.be> <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be> <1188211749.6756.11.camel@johannes.berg> <20070831180933.GB3352@tuxdriver.com>
-In-Reply-To: <20070831180933.GB3352@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 25 Sep 2007 15:04:23 -0400
+Date: Tue, 25 Sep 2007 12:03:34 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Faidon Liambotis <paravoid@debian.org>,
+	linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
+Subject: Re: ath5k and network manager
+Message-ID: <20070925120334.78a4ed89@freepuppy.rosehill>
+In-Reply-To: <1190744864.27777.25.camel@xo-3E-67-34.localdomain>
+References: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+	<43e72e890709200555r779aaa50i6bb8ab90195686bc@mail.gmail.com>
+	<200709201511.23400.mb@bu3sch.de>
+	<46F296D8.3090704@debian.org>
+	<1190744864.27777.25.camel@xo-3E-67-34.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 25 Sep 2007 14:27:44 -0400
+Dan Williams <dcbw@redhat.com> wrote:
 
-
-John W. Linville wrote:
-> On Mon, Aug 27, 2007 at 12:49:09PM +0200, Johannes Berg wrote:
->> On Sat, 2007-08-25 at 14:15 +0200, ian wrote:
->>
->>> I reread the discussion carefully and can't find any specific
->>> comments on the patch which for clarity I will reproduce below.
->> Then I guess I remember wrong and the comment was raised in another
->> thread. The problem we have is that once any rate control algorithm is
->> loaded, it will be default for any future drivers, which is often
->> inappropriate. Hence, it would be great if
->> hw->preferred_rate_control==NULL would indicate "use default" where
->> "default" would be set to "simple" to start with but also changeable.
->> (although the change functionality could just be not usable from
->> userspace for now)
+> On Thu, 2007-09-20 at 18:50 +0300, Faidon Liambotis wrote:
+> > [CCing networkmanager mailing list]
+> > Michael Buesch wrote:
+> > > On Thursday 20 September 2007, Luis R. Rodriguez wrote:
+> > >> On 9/20/07, Stephen Hemminger <shemminger-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> > >>> Network manager doesn't seem to detect ath5k. Perhaps it is because
+> > >>> it is name "ath0".  I think device should follow the convention of using
+> > >>> name "wifi0" rather than BSD convention of putting driver name in device name.
+> > >> I couldn't agree anymore. But my ath5k kicks out a wlan%d name as with
+> > >> any other mac80211 driver. Is yours coming out to ath%d ?
+> > > 
+> > > Probably udev renames it.
+> > IMHO, NetworkManager should cope with whatever name is assigned to a device.
+> > AFAIK, device names are only "suggestions" by the drivers; the user may
+> > rename the device name (either by "ip link set name", with ifrename or
+> > with udev rules) to his liking, e.g. home.
 > 
-> I ACK this approach.  Anyone have a patch hacked-up to post?
+> 0.7 svn trunk uses device indexes internally already.
+> 
+> > Granted, seems a bit of an overkill to rename a device on a machine
+> > where NetworkManager is in charge of the device but still, there is no
+> > reason why it shouldn't be allowed.
+> 
+> No reason why you shouldn't be able to do this with NM.
+> 
+> Dan
 > 
 
-I read up on the code and kernel mechanisms involved and this is
-what i came up with
-
-Right now there is no way of knowing what the "default" rc should be
-other than that it has a module alias rc80211_default, checking
-for this is probably not done, and would be pretty unpractical.
-And it wouldn't be settable from userspace in the future either.
-
-We could however replace "simple" with a user settable variable.
-(global variable in ieee80211.c like the rate_ctrl_algs and mutex,
-with some accessors for a module parameter/debugfs/..?)
-
-we could additionally remove the module_alias from rc80211_simple
-
-I don't know too much of the rest of mac80211 code and conventions,
-so feel free to be brutal if this patch makes no sense.
----
-Make rc80211_simple the default rate scaling algorithm
-
-Signed-of-by: Ian Schram <ischram@telenet.be>
---- a/net/mac80211/ieee80211_rate.c	2007-09-03 01:26:18.000000000 +0200
-+++ b/net/mac80211/ieee80211_rate.c	2007-09-03 01:46:54.000000000 +0200
-@@ -62,7 +62,7 @@ ieee80211_try_rate_control_ops_get(const
-
- 	mutex_lock(&rate_ctrl_mutex);
- 	list_for_each_entry(alg, &rate_ctrl_algs, list) {
--		if (!name || !strcmp(alg->ops->name, name))
-+		if (!strcmp(alg->ops->name, name))
- 			if (try_module_get(alg->ops->module)) {
- 				ops = alg->ops;
- 				break;
-@@ -78,11 +78,12 @@ static struct rate_control_ops *
- ieee80211_rate_control_ops_get(const char *name)
- {
- 	struct rate_control_ops *ops;
-+	const char *try_name = name ? name : "simple";
-
--	ops = ieee80211_try_rate_control_ops_get(name);
-+	ops = ieee80211_try_rate_control_ops_get(try_name);
- 	if (!ops) {
--		request_module("rc80211_%s", name ? name : "default");
--		ops = ieee80211_try_rate_control_ops_get(name);
-+		request_module("rc80211_%s", try_name);
-+		ops = ieee80211_try_rate_control_ops_get(try_name);
- 	}
- 	return ops;
- }
+Actually, NM sees the card. The problem is that scanning appears to
+be broken. It seems to be related to the card type (PCI-E).
 
 
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
