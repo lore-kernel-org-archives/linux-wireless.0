@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3607 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752476AbXIQSKh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 14:10:37 -0400
-Date: Mon, 17 Sep 2007 13:37:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] b43legacy: Don't cancel the restart workqueue in  wireless_core_exit
-Message-ID: <20070917173754.GD9282@tuxdriver.com>
-References: <46e577e8.J3sSMKsbv5F0EAQY%Larry.Finger@lwfinger.net> <20070917150358.GC9282@tuxdriver.com> <46EEB3E0.4010501@lwfinger.net>
+Received: from an-out-0708.google.com ([209.85.132.243]:49079 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754923AbXIYQNZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 12:13:25 -0400
+Received: by an-out-0708.google.com with SMTP id d31so291469and
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 09:13:25 -0700 (PDT)
+Message-ID: <43e72e890709250913x5c137ee3k8d68b4ad755cadfe@mail.gmail.com>
+Date: Tue, 25 Sep 2007 12:13:24 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: API to regulatory control (1)
+Cc: linux-wireless@vger.kernel.org, "Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1190727624.18521.310.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46EEB3E0.4010501@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
+References: <1190456574.18521.220.camel@johannes.berg>
+	 <43e72e890709221416o25bf3287v5d8d7bb5c2fe15ab@mail.gmail.com>
+	 <1190624554.18521.261.camel@johannes.berg>
+	 <43e72e890709241255v1f044f9dh4af1e00fcaba03b0@mail.gmail.com>
+	 <1190669783.18521.301.camel@johannes.berg>
+	 <43e72e890709241518h1cc694d9of8f8a8d216a7906b@mail.gmail.com>
+	 <1190727624.18521.310.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 17, 2007 at 12:05:36PM -0500, Larry Finger wrote:
-> John W. Linville wrote:
-> > Is this the correct patch?  The first hunk conflicts with an earlier
-> > patch ("b43legacy: Fix cancellation of work queues").
-> > 
-> > John
-> 
-> Yes, this one is correct. The first one was without a commit message, and had an error.
+On 9/25/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2007-09-24 at 18:18 -0400, Luis R. Rodriguez wrote:
+>
+> > I saw complaints on the z1211 move thread to upstream about large
+> > patches and driver developers not being able to keep up as mac80211 is
+> > a 'moving target'.
+>
+> It'll always be. Everything in Linux is a moving target. That's the pain
+> associated with maintaining a driver out of tree. This change in
+> particular isn't even hard to follow and I'd happily help change all the
+> drivers that are in tree.
 
-Hmmmm, not that one.  There was another patch that (looking closer)
-you sent me and cc'ed bcm43xx-dev on or about 30 August.  I guess
-I'll drop that one and use this one instead.
+OK fine, lets just move forward but I'll take you up on the offer ;)
 
-Thanks,
+> > > I don't think I want to call into some cfg80211 call for this, a
+> > > specific notifier seems more appropriate.
+> >
+> > Well what if cfg80211  generates a notification if a possible conflict
+> > has been found? Is there a need to generate a notification on power
+> > reg changes to the driver besides this?
+>
+> Well, that'd mean that cfg80211 would need to keep track of the current
+> power level. I've intentionally made cfg80211 keep track of as few
+> things as possible so that drivers are free to change things when
+> necessary without having synchronisation problems. I would prefer if it
+> stayed this way.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+I wasn't thinking of that, but  instead, of the 'loop' cfg80211 would
+do upon regulatory change, on all wiphys.
+
+> Also, just providing the hook is much simpler and we can leave it up to
+> drivers to implement this logic.
+
+Hm, the drivers will still call a cfg80211 helper anyway to update its
+channel flags/power limits, why not let cfg80211 just do it then in a
+loop for all wiphys upon reg change? At the end of the loop for each
+wiphy we can call a driver-specific ops->verify_reg().
+
+  Luis
