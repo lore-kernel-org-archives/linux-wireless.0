@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fresno.net.uniovi.es ([156.35.11.2]:56088 "EHLO
-	FRESNO.NET.UNIOVI.ES" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965065AbXIBNAt (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:8076 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665AbXIYSow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 09:00:49 -0400
-Date: Sun, 02 Sep 2007 15:00:46 +0200 (CEST)
-From: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-In-reply-to: <20070902134612.28a88761@the-village.bc.nu>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Adrian Bunk <bunk@kernel.org>,
-	"Constantine A. Murenin" <mureninc@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Message-id: <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-MIME-version: 1.0
-Content-type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
- <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
- <46D99FB7.6030505@garzik.org>
- <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
- <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu>
- <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
- <20070902115041.GM16016@stusta.de>
- <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
- <20070902134612.28a88761@the-village.bc.nu>
+	Tue, 25 Sep 2007 14:44:52 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so2123530fkz
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 11:44:52 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 9/12] rt2x00: Stop link tuning when radio is down
+Date: Tue, 25 Sep 2007 20:57:04 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200709252052.34803.IvDoorn@gmail.com>
+In-Reply-To: <200709252052.34803.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200709252057.04999.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2 Sep 2007, Alan Cox wrote:
+As pointed out by Modestas Vainius the link tuner
+could continue working while the radio is already
+down. This because at the start of disable_radio
+the ENABLED_RADIO flag is cleared and causes the
+toggle_rx to skip the stop_link_tuner() call.
+This will add a check to the start of the link tuner
+which will automatically stop the link tuner when the
+radio is disabled.
 
->> So, a multi-licensed file remains multi-licensed except when all authors
->> agree about a change in the licensing terms.  And it is clear on the BSD
->
-> Not strictly true. They can either agree to a change and issue one or
-> they can convey to other parties the right to change the terms. The GPL
-> for example does this for version selection.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-So, under a dual-licensed BSD/GPL code the latter license allows a 
-developer to remove the GPL license itself and release a single-licensed 
-BSD code if other parties want to do it?
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index e8c91fb..92b7252 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -237,6 +237,13 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
+ 	    container_of(work, struct rt2x00_dev, link.work.work);
+ 
+ 	/*
++	 * When the radio is shutting down we should
++	 * immediately cease all link tuning.
++	 */
++	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++		return;
++
++	/*
+ 	 * Update statistics.
+ 	 */
+ 	rt2x00dev->ops->lib->link_stats(rt2x00dev);
+-- 
+1.5.3.2
 
-> A multi-licensed work (note work not file - don't assume a file is a
-> boundary of a work) which conveys the choice of licence (as some bits of
-> ath5k did) allows a receiving party to choose the licence it wishes.
-> Failing that OpenBSD would have turned itself GPL by adding that file as
-> according to your argument "it must be distributed under *all* these
-> licensing terms concurrently".
-
-I would assume a file as a boundary of a work in the case that file is 
-under different licensing terms to the rest of the software package.  On a 
-lot of software packages different modules are covered under different 
-licensing terms.
-
-We can choose what license terms we will honor; however, we do not have 
-the ability to remove the licensing terms we do not like.
-
-Igor.
