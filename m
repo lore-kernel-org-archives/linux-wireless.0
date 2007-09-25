@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51104 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750921AbXISWBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 18:01:43 -0400
-Message-ID: <46F19C3C.6090605@garzik.org>
-Date: Wed, 19 Sep 2007 18:01:32 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, hch@infradead.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net
-Subject: Re: Please pull 'p54' branch of wireless-2.6
-References: <20070919195527.GD5483@tuxdriver.com> <20070919210405.GA2231@infradead.org> <20070919.141200.56568833.davem@davemloft.net> <20070919212607.GA3036@tuxdriver.com>
-In-Reply-To: <20070919212607.GA3036@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60676
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752536AbXIYVac (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 17:30:32 -0400
+Date: Tue, 25 Sep 2007 14:30:10 -0700 (PDT)
+Message-Id: <20070925.143010.112603042.davem@davemloft.net>
+To: mb@bu3sch.de
+Cc: johannes@sipsolutions.net, kune@deine-taler.de, dsd@gentoo.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: zd1211 or mac80211: SKB invalid truesize
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200709252325.03360.mb@bu3sch.de>
+References: <200709252242.12331.mb@bu3sch.de>
+	<20070925.141816.71108553.davem@davemloft.net>
+	<200709252325.03360.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Sep 19, 2007 at 02:12:00PM -0700, David Miller wrote:
->> From: Christoph Hellwig <hch@infradead.org>
->> Date: Wed, 19 Sep 2007 22:04:05 +0100
->>
->>> PLease put it into a separate subdirectory, thanks.
->>>
->>> Also net2280.h seems rather oddly named.
->> The next time I rebase I'll try to take care of this for both
->> this driver and the iwlwifi stuff.
-> 
-> Fine by me, although I swear I remember complaints about adding separate
-> directories for drivers...*shrug*...
+From: Michael Buesch <mb@bu3sch.de>
+Date: Tue, 25 Sep 2007 23:25:02 +0200
 
-There were complaints about the nonsensical wireless/mac80211 directory. 
-  But if there are enough files, a driver should definitely get its own 
-directory.  Like life, it's a balance.  If it's just one or two C files, 
-a directory might be overkill.  If it's more, it definitely warrants a 
-sub-dir.
+> Yeah, well. But how can this happen? Someone assigning to skb->len?
+> zd1211 doesn't do this.
+> Any slight idea which (kind of) code could trigger this?
 
-	Jeff
+Anything which modifies skb->truesize directly would be
+suspect.
 
+Most modifications of skb->len go through the standard
+interfaces like skb_put(), skb_pull() etc. and those
+assert whether we go over and under the limits.
 
-
+Therefore something that modifies skb->len directly would
+be suspect as well.
