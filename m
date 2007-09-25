@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3866 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755544AbXITOKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 10:10:50 -0400
-Date: Thu, 20 Sep 2007 09:47:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-Message-ID: <20070920134730.GC6748@tuxdriver.com>
-References: <20070919181005.GB5483@tuxdriver.com> <46F19DD0.2050605@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46F19DD0.2050605@gentoo.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760337AbXIYQWa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 12:22:30 -0400
+Subject: Re: API to regulatory control (1)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <43e72e890709250913x5c137ee3k8d68b4ad755cadfe@mail.gmail.com>
+References: <1190456574.18521.220.camel@johannes.berg>
+	 <43e72e890709221416o25bf3287v5d8d7bb5c2fe15ab@mail.gmail.com>
+	 <1190624554.18521.261.camel@johannes.berg>
+	 <43e72e890709241255v1f044f9dh4af1e00fcaba03b0@mail.gmail.com>
+	 <1190669783.18521.301.camel@johannes.berg>
+	 <43e72e890709241518h1cc694d9of8f8a8d216a7906b@mail.gmail.com>
+	 <1190727624.18521.310.camel@johannes.berg>
+	 <43e72e890709250913x5c137ee3k8d68b4ad755cadfe@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TItTaE6Xb1S0Kb3JBE8T"
+Date: Tue, 25 Sep 2007 18:23:46 +0200
+Message-Id: <1190737426.18521.316.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 11:08:16PM +0100, Daniel Drake wrote:
 
-> I would like to this until 2.6.25 until I have had time to clear up some 
-> final issues and do more testing myself of zd1211rw-mac80211. I also 
-> think we need to discuss the rename...
+--=-TItTaE6Xb1S0Kb3JBE8T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Renames being what they are, I was hoping to avoid a "bikeshed"
-discussion about the choice of names.  My main point was to get it
-into the tree with a unique and manageable name.  I'm sure we could
-still rename it again before 2.6.24 ships or even later.
+On Tue, 2007-09-25 at 12:13 -0400, Luis R. Rodriguez wrote:
 
-I know that you will argue that a rename is unnecessary if we
-simply port the existing driver to mac80211, which is certainly true.
-I just wonder if that is the least bumpy solution for users.  At least
-with a new driver, if something doesn't work then the old driver is
-still there as a fallback.  Plus you can avoid some confusion with
-old howtos and such on the web referring to an old driver instead
-of the new one, etc.  Maybe that isn't a huge issue in this case,
-but I wouldn't underestimate the possible confusion.
+> Hm, the drivers will still call a cfg80211 helper anyway to update its
+> channel flags/power limits, why not let cfg80211 just do it then in a
+> loop for all wiphys upon reg change? At the end of the loop for each
+> wiphy we can call a driver-specific ops->verify_reg().
 
-> (just to clarify to others: this is the first I heard of this merge 
-> before John posted it).
+Oh ok, yeah, sure, we can do that instead of a notifier chain.
 
-Yes, sorry...permission, forgiveness...forgive? :-)
+johannes
 
-> John, thanks a lot for your efforts, I hope you don't mind waiting one 
-> extra release cycle for me to sort a few things out.
+--=-TItTaE6Xb1S0Kb3JBE8T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Well, obviously I would like to get it out now.  The longer we are
-without a mac80211-based driver for zd1211 hardware then the longer
-we must maintain the softmac component (or at least take bug reports
-for it).
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-If you are determined not to have it in 2.6.24 then I will relent.
-I will also suggest that Larry start sending any softmac bugs to
-you... :-)
+iD8DBQBG+TYS/ETPhpq3jKURAuqRAKCYZXGShHxlGOwThVlsqbMqEvlukgCgmYWh
+8MOit9PC9YMHs7wydZN5Msg=
+=dWeV
+-----END PGP SIGNATURE-----
 
-If we will be having a port rather than a new driver, how soon after
-2.6.24-rc1 closes can we queue the port for 2.6.25?  I think it
-should be almost immediately, to ensure maximum test exposure and to
-"seal the deal".  What do you think?
+--=-TItTaE6Xb1S0Kb3JBE8T--
 
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
