@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42896 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754938AbXIRTXI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49174 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbXIYUfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 15:23:08 -0400
-Date: Tue, 18 Sep 2007 12:22:28 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-In-Reply-To: <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
-Message-ID: <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
- <20070918113401.6a8a737f@the-village.bc.nu>
- <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
- <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
- <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+	Tue, 25 Sep 2007 16:35:45 -0400
+Subject: Re: mac80211: crash while adding interface.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200709252206.57855.mb@bu3sch.de>
+References: <200709252206.57855.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Tue, 25 Sep 2007 22:36:56 +0200
+Message-Id: <1190752616.18521.322.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2007-09-25 at 22:06 +0200, Michael Buesch wrote:
+> The following happened when adding an interface through sysfs
+> on b43, while another one was operating and transmitting data:
+
+As discussed, this is because register_netdevice() didn't like the
+device. Try this patch.
+
+johannes
+
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-25 22:26:31.341579155 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-25 22:29:12.421568847 +0200
+@@ -266,7 +266,6 @@ void ieee80211_if_mgmt_setup(struct net_
+ 	dev->stop = ieee80211_mgmt_stop;
+ 	dev->type = ARPHRD_IEEE80211_PRISM;
+ 	dev->hard_header_parse = header_parse_80211;
+-	dev->uninit = ieee80211_if_reinit;
+ 	dev->destructor = ieee80211_if_free;
+ }
+ 
+@@ -543,7 +542,6 @@ void ieee80211_if_setup(struct net_devic
+ 	dev->change_mtu = ieee80211_change_mtu;
+ 	dev->open = ieee80211_open;
+ 	dev->stop = ieee80211_stop;
+-	dev->uninit = ieee80211_if_reinit;
+ 	dev->destructor = ieee80211_if_free;
+ }
+ 
+@@ -1233,6 +1231,12 @@ int ieee80211_register_hw(struct ieee802
+ 	if (result < 0)
+ 		goto fail_dev;
+ 
++	/*
++	 * Called even when register_netdevice fails, it would
++	 * oops if assigned before initialising the rest.
++	 */
++	local->mdev->uninit = ieee80211_if_reinit;
++
+ 	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
+ 
+ 	result = ieee80211_init_rate_ctrl_alg(local, NULL);
+--- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-25 22:26:40.111572537 +0200
++++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-25 22:32:27.631569281 +0200
+@@ -76,6 +76,12 @@ int ieee80211_if_add(struct net_device *
+ 	if (ret)
+ 		goto fail;
+ 
++	/*
++	 * Called even when register_netdevice fails, it would
++	 * oops if assigned before initialising the rest.
++	 */
++	ndev->uninit = ieee80211_if_reinit;
++
+ 	ieee80211_debugfs_add_netdev(sdata);
+ 	ieee80211_if_set_type(ndev, type);
+ 
+@@ -127,6 +133,12 @@ int ieee80211_if_add_mgmt(struct ieee802
+ 	if (ret)
+ 		goto fail;
+ 
++	/*
++	 * Called even when register_netdevice fails, it would
++	 * oops if assigned before initialising the rest.
++	 */
++	ndev->uninit = ieee80211_if_reinit;
++
+ 	ieee80211_debugfs_add_netdev(nsdata);
+ 
+ 	if (local->open_count > 0)
 
 
-On Tue, 18 Sep 2007, Luis R. Rodriguez wrote:
-> 
-> ACK -- driver developers use this just to save themselves a few lines
-> from calling pci_resource_start() and friends. How about having an
-> inline which does what pci_iomap() does except it doesn't call
-> ioport_map() ? I am just not sure where this would go..
-
-I'm not understanding what the problem is?
-
-Why don't these people just use "ioread*()/iowrite*()"? 
-
-In other words, the whole point of *not* using "read*/write*()" is that 
-you get a whole slew of much nicer interfaces.
-
-So can people explain this fundamental issue? Why do people insist on 
-using the old interfaces (and matching them with the new setup)?
-
-			Linus
