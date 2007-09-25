@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2972 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755485AbXISVlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 17:41:46 -0400
-Date: Wed, 19 Sep 2007 17:27:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: jeff@garzik.org, gregkh@suse.de, netdev@vger.kernel.org,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbXIYVnA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 17:43:00 -0400
+Subject: Re: [PATCH] mac80211: fix interface initialisation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org,
-	linux-usb-users@lists.sourceforge.net, zambrano@broadcom.com,
-	mb@bu3sch.de
-Subject: Re: Please pull 'ssb-drivers' branch of wireless-2.6
-Message-ID: <20070919212756.GA3136@tuxdriver.com>
-References: <20070919204428.GE5483@tuxdriver.com> <20070919.142529.03110023.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070919.142529.03110023.davem@davemloft.net>
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200709252332.37064.mb@bu3sch.de>
+References: <200709252206.57855.mb@bu3sch.de>
+	 <1190755892.18521.330.camel@johannes.berg>
+	 <200709252332.37064.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mCDFZtkx4S8VypLEIHYh"
+Date: Tue, 25 Sep 2007 23:44:13 +0200
+Message-Id: <1190756653.18521.332.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2007 at 02:25:29PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 19 Sep 2007 16:44:28 -0400
 
-> > The second patch adds a driver for a USB OHCI device which lives on
-> > the SSB bus.  Again, this is found on a number of SoC devices used
-> > especially in wireless routers and APs.
+--=-mCDFZtkx4S8VypLEIHYh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I'll let Greg take in the OHCI thing.  I would suggest that he
-> queue it up, and then once I get the net-2.6.24 tree into the
-> merge window (which contains the SSB stack) he can push the
-> OHCI change in afterwards.
+On Tue, 2007-09-25 at 23:32 +0200, Michael Buesch wrote:
+> On Tuesday 25 September 2007 23:31:32 Johannes Berg wrote:
+> > When an interface is registered it is still uninitialised so
+> > ieee80211_if_reinit() can't be called on it (it will oops.)
+> > Hence, we need to move the uninit method assignment. Also,
+> > this patch fixes the bug that the master device is never
+> > initialised at all.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> I guess you should send this
+> To: John Linville
+> instead :)
 
-ACK
+yeah, I did reply-to-all and sent before I changed it. John, please pick
+up.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+johannes
+
+--=-mCDFZtkx4S8VypLEIHYh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG+YEt/ETPhpq3jKURAptAAJ0TcMHi5SacIsGRopvYRLJWICcLMgCeJDsS
+hqPFX+1VsqyckJpwHJ4MRJs=
+=v7oR
+-----END PGP SIGNATURE-----
+
+--=-mCDFZtkx4S8VypLEIHYh--
+
