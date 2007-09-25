@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:30763 "HELO
-	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751238AbXIZHZ7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 03:25:59 -0400
-Date: Wed, 26 Sep 2007 00:25:58 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: API to regulatory control (1)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <696484.11170.qm@web51403.mail.re2.yahoo.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbXIYSRI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2007 14:17:08 -0400
+Subject: Re: Guide on how to submit patches for linux-wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: maximilian attems <max@stro.at>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070925165047.GH19918@baikonur.stro.at>
+References: <43e72e890709241209obc236eav5eca6c0828052ee1@mail.gmail.com>
+	 <20070925165047.GH19918@baikonur.stro.at>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9s1kDrjs/pQU+mHXwqXE"
+Date: Tue, 25 Sep 2007 20:18:18 +0200
+Message-Id: <1190744299.18521.318.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-09-25 , Johannes Berg wrote:
->=20
-> Thanks for your offer for patches.
->=20
-> johannes
 
-No reason to get testy. I thought this was about a design and I wanted =
-to point
-out that the assumption, that the regulatory settings are global to all=
- interfaces
-in one machine might not apply in all cases.
+--=-9s1kDrjs/pQU+mHXwqXE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards
-  Joerg
+On Tue, 2007-09-25 at 18:50 +0200, maximilian attems wrote:
 
+> please drop the recommendation of the patch 0.
+> it is a pain not to have it in the start of a serries in git.
 
+I disagree. 0/N is good for giving an overview over the patch series. It
+shouldn't contain info that must be in git, but I think it should be
+present unless the series is obvious.
 
+johannes
 
+--=-9s1kDrjs/pQU+mHXwqXE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-      Jetzt Mails schnell in einem Vorschaufenster =FCberfliegen. Dies =
-und viel mehr bietet das neue Yahoo! Mail - www.yahoo.de/mail
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iD8DBQBG+VDq/ETPhpq3jKURAqBZAJwMbpKlzTTk+sWmMgCS5R7whHbF+wCeIg4+
+IXx5Zz7mfAjUwv1OsEmxY3s=
+=h5IH
+-----END PGP SIGNATURE-----
+
+--=-9s1kDrjs/pQU+mHXwqXE--
+
