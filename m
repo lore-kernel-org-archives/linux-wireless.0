@@ -1,94 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:49738 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756821AbXIAW3A (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:64543 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbXIZBwQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 18:29:00 -0400
-Date: Sun, 2 Sep 2007 00:29:01 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Sam Leffler <sam@errno.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Message-ID: <20070901222901.GO9260@stusta.de>
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <46D9E1B8.2060300@errno.com>
+	Tue, 25 Sep 2007 21:52:16 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3880932pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2007 18:52:15 -0700 (PDT)
+Message-ID: <40f31dec0709251852v39e9dbffm8873d7041215a516@mail.gmail.com>
+Date: Wed, 26 Sep 2007 04:52:15 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/3] Net: ath5k, make its own directory
+Cc: "Jiri Slaby" <jirislaby@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <46D9E1B8.2060300@errno.com>
+Content-Type: text/plain; charset=UTF-8
+References: <2595810412809010611@pripojeni.net>
+	 <1190660419.18521.278.camel@johannes.berg>
+	 <46F80A33.2080201@gmail.com>
+	 <43e72e890709241205j2d020495ufb5f806a4c50ad75@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 03:03:36PM -0700, Sam Leffler wrote:
-> Adrian Bunk wrote:
->> On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
->>   
->>> On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
->>>     
->>>> Constantine A. Murenin wrote:
->>>>       
->>>>> This will hopefully help diminish certain myths about the code 
->>>>> licensing.
->>>>>         
->>>> What myth?  The myth that Theo understands dual licensing?
->>>>       
->>> Reyk's code was never dual licensed, so it's not like it even matters
->>> to the original dispute.
->>>     
->>
->> It's no longer dual licenced in the FreeBSD tree because the FreeBSD 
->> people removed the GPL choice of the dual licenced code 3 months ago.
->>
->> So all of Theo's accusations of people breaking the law by making this 
->> dual licenced code GPL-only apply as well to the FreeBSD people...
->>   
+2007/9/24, Luis R. Rodriguez <mcgrof@gmail.com>:
+> On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> > On 09/24/2007 09:00 PM, Johannes Berg wrote:
+> > > On Mon, 2007-09-24 at 14:39 -0400, Jiri Slaby wrote:
+> > >> ath5k, make its own directory
+> > >
+> > >> rename from drivers/net/wireless/ath5k_regdom.c
+> > >> rename to drivers/net/wireless/ath5k/ath5k_regdom.c
+> > >
+> > > imho you should get rid of the ath5k_ prefixes now.
+> >
+> > It's OK to me, but this is how bcm, prism and zd do it :). If nobody minds, I
+> > will get rid of the prefix.
 >
-> Sigh, why actually check the facts when you can make them up.   The code in 
-> question is my code.  It has my copyright (modulo bits shared with onoe-san 
-> who was consulted on the switch from dual-bsd/gpl to bsd only in freebsd).  
 
-The latter is the code by Video54 Technologies?
-
-> Of course what was amusing was how after I changed the license on the 
-> current code in freebsd certain folks retroactively applied the license 
-> changes to code that was 3 years old.
->
-> But is there a point to all this nonsense?  I dual-licensed the code so 
-> folks could adopt and use it however they saw fit.  As I've said before I 
-> don't care what people do with the work I give away so long as they don't 
-> claim it's their own.
-
-Fully agreed.  :-)
-
->>> That said, I don't see what exact wording you consider inaccurate.
->>>     
->>
->> Both the FreeBSD and Linux people draw the logical conclusion that this 
->> "Alternatively" means everyone can always choose to remove one of the two 
->> choices alternatively offered.
->>
->> According to Theo, that is "breaking the law"...
->
-> I've yet to see "FreeBSD people" speak up so again you're just spouting 
-> jibberish.  I am speaking up as the author of the code that set the dual 
-> license in place.  I have the definitive say and I have said that any of my 
-> code that is dual-licensed can be made gpl only.
-
-Sorry, this has been a thinko on my side:
-
-If noone except you and onoe-san made any contributions to this code 
-that were non-trivial enough for automatically giving its author a 
-copyright on his contributions (whatever this means in various 
-jurisdictions...) it was indeed an author-only change.
-
->    Sam
-
-cu
-Adrian
+O.K. by me too ;-)
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
