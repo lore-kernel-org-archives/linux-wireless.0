@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27240 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751147AbXIUB1e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 21:27:34 -0400
-Subject: Re: Please pull 'iwlwifi' branch of wireless-2.6
-From: Zhu Yi <yi.zhu@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070919101326.GA32432@infradead.org>
-References: <20070918185040.GF4940@tuxdriver.com>
-	 <20070919101326.GA32432@infradead.org>
-Content-Type: text/plain
-Date: Fri, 21 Sep 2007 09:20:30 +0800
-Message-Id: <1190337630.5718.136.camel@debian.sh.intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965AbXIZNY5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 09:24:57 -0400
+Message-Id: <20070926132133.688878000@sipsolutions.net>
+References: <20070926131938.575572000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 15:19:44 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: [patch 06/12] mac80211: fix sparse warning
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-09-19 at 11:13 +0100, Christoph Hellwig wrote:
-> it really needs to be moved into a directory of it's own.
+wme.c triggers a sparse warning; it wasn't noticed before because until
+recently ARRAY_SIZE triggered a sparse error.
 
-It used to be... John?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/wme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> The useless per-file CFLAGS need to go most places can trivially
-> be made unconditional anyway.
+--- wireless-dev.orig/net/mac80211/wme.c	2007-09-25 23:28:21.361570692 +0200
++++ wireless-dev/net/mac80211/wme.c	2007-09-25 23:29:37.301571614 +0200
+@@ -359,7 +359,7 @@ static int wme_qdiscop_init(struct Qdisc
+ 		skb_queue_head_init(&q->requeued[i]);
+ 		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
+ 						 qd->handle);
+-		if (q->queues[i] == 0) {
++		if (!q->queues[i]) {
+ 			q->queues[i] = &noop_qdisc;
+ 			printk(KERN_ERR "%s child qdisc %i creation failed", dev->name, i);
+ 		}
 
-OK.
+-- 
 
-> The depends on m for CONFIG_IWL4965 and CONFIG_IWL3945 needs to go,
-> we don't put drivers int that need to be modular. 
-
-Since we splited the code base for 3945 and 4965 by a simple "fork" of
-file iwl-base.c, some non-static functions names remain the same. Make
-the two drivers build into vmlinux at the same time will cause conflict.
-So to make them depend on m is a current workaround for .24. We will
-abstract a common iwl-core.ko and make driver specific iwl3945.ko and
-iwl4965.ko depend on it in .25 time frame.
-
-Thanks,
--yi
