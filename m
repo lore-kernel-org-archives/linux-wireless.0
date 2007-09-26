@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:10509 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759888AbXISLik (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57221 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbXIZMxD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 07:38:40 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so200860wah
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 04:38:39 -0700 (PDT)
-Message-ID: <1ba2fa240709190438o5032df52mb22a97546bdbe563@mail.gmail.com>
-Date: Wed, 19 Sep 2007 13:38:39 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: add sta_notify callback
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1190197117.4414.0.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1190036530108-git-send-email-tomas.winkler@intel.com>
-	 <1190054680.23521.23.camel@johannes.berg>
-	 <1ba2fa240709180951v3dc0a98ay11205296fd5768a@mail.gmail.com>
-	 <1190197117.4414.0.camel@johannes.berg>
+	Wed, 26 Sep 2007 08:53:03 -0400
+Subject: [PATCH] hostapd: don't try setting the generic IE to the kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 26 Sep 2007 14:54:18 +0200
+Message-Id: <1190811258.4204.7.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/19/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2007-09-18 at 18:51 +0200, Tomas Winkler wrote:
->
-> > Actually I'm interested in this feature 4965AGN HW supports multiple
-> > MAC addresses.
->
-> > > so, would the firmware be able to distinguish between the same STA
-> > > sending WDS frames and trying to associate?
->
-> > Yes it will
->
-> So that means you should add the if_id to the sta callback, no?
->
-Yes, yet I'm not sure I want to deal with it right now. I have no use
-for it currently
-I will add it in next stage  there are no objections. I don't think
-I'm breaking anything right now.
+We have no mac80211 drivers that generate beacons themselves
+and would require this, and we also have no way to support such
+drivers currently. Hence, it seems we should remove this to
+decrease the confusion. Since the generic hostapd code actually
+requires a positive result though we cannot just remove the
+implementation. The same information is put into the beacon,
+however.
 
-> johannes
->
->
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+---
+ hostapd/driver_devicescape.c |   14 --------------
+ 1 file changed, 14 deletions(-)
+
+--- hostap.orig/hostapd/driver_devicescape.c	2007-09-26 14:45:22.000000000 +0200
++++ hostap/hostapd/driver_devicescape.c	2007-09-26 14:47:17.000000000 +0200
+@@ -695,20 +695,6 @@ static int i802_sta_set_flags(void *priv
+ static int i802_set_generic_elem(const char *ifname, void *priv,
+ 				 const u8 *elem, size_t elem_len)
+ {
+-	struct i802_driver_data *drv = priv;
+-	struct iwreq iwr;
+-
+-	memset(&iwr, 0, sizeof(iwr));
+-
+-	os_strlcpy(iwr.ifr_name, drv->hapd->conf->iface, IFNAMSIZ);
+-	iwr.u.data.length = elem_len;
+-	iwr.u.data.pointer = (void*)elem;
+-
+-	if (ioctl(drv->ioctl_sock, SIOCSIWGENIE, &iwr) < 0) {
+-		perror("Failed to set generic info element");
+-		return -1;
+-	}
+-
+ 	return 0;
+ }
+ 
+
+
