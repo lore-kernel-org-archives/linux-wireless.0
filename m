@@ -1,51 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49436 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38532 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184AbXITQPS (ORCPT
+	with ESMTP id S1753350AbXIZNYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 12:15:18 -0400
-Subject: Re: wext 64-bit: network manager and wpa_supplicant
+	Wed, 26 Sep 2007 09:24:30 -0400
+Message-Id: <20070926132133.194911000@sipsolutions.net>
+References: <20070926131938.575572000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 15:19:43 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jean Tourrilhes <jt@hpl.hp.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1190303433.2016.10.camel@xo-3E-67-34.localdomain>
-References: <1190292526.18521.52.camel@johannes.berg>
-	 <1190303433.2016.10.camel@xo-3E-67-34.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pqyzEdbafeVtverl67uT"
-Date: Thu, 20 Sep 2007 18:16:26 +0200
-Message-Id: <1190304986.18521.87.camel@johannes.berg>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: [patch 05/12] mac80211: fix vlan bug
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+VLAN interfaces have yet another bug: they aren't accounted
+for properly in the receive path in prepare_for_handlers().
+I noticed this by code inspection, but it would be easy for
+the compiler to catch such things if we'd just use the proper
+enum where appropriate.
 
---=-pqyzEdbafeVtverl67uT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Thu, 2007-09-20 at 11:50 -0400, Dan Williams wrote:
+---
+ net/mac80211/ieee80211.c       |    7 +++++++
+ net/mac80211/ieee80211_i.h     |    2 +-
+ net/mac80211/ieee80211_iface.c |    3 +++
+ net/mac80211/rx.c              |    8 ++++++++
+ 4 files changed, 19 insertions(+), 1 deletion(-)
 
-> You mean it doesn't work correctly when handling ioctls on 64-bit
-> platforms?  Or is just plain broken in non-ioctl ways?
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-25 23:28:21.581572375 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-25 23:29:36.561571777 +0200
+@@ -345,6 +345,13 @@ static int ieee80211_open(struct net_dev
+ 		if (!sdata->u.vlan.ap)
+ 			return -ENOLINK;
+ 		break;
++	case IEEE80211_IF_TYPE_AP:
++	case IEEE80211_IF_TYPE_MGMT:
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_MNTR:
++	case IEEE80211_IF_TYPE_IBSS:
++		/* no special treatment */
++		break;
+ 	}
+ 
+ 	if (local->open_count == 0) {
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-25 23:28:21.631571018 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-25 23:29:36.561571777 +0200
+@@ -290,7 +290,7 @@ struct ieee80211_if_sta {
+ #define IEEE80211_SDATA_SHORT_PREAMBLE	BIT(3)
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
+-	unsigned int type;
++	enum ieee80211_if_types type;
+ 
+ 	struct wireless_dev wdev;
+ 
+--- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-25 23:28:21.651570910 +0200
++++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-25 23:29:36.571573405 +0200
+@@ -239,6 +239,9 @@ void ieee80211_if_reinit(struct net_devi
+ 	ieee80211_if_sdata_deinit(sdata);
+ 
+ 	switch (sdata->type) {
++	case IEEE80211_IF_TYPE_MGMT:
++		/* nothing to do */
++		break;
+ 	case IEEE80211_IF_TYPE_AP: {
+ 		/* Remove all virtual interfaces that use this BSS
+ 		 * as their sdata->bss */
+--- wireless-dev.orig/net/mac80211/rx.c	2007-09-25 23:29:34.131604926 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-09-25 23:29:36.571573405 +0200
+@@ -1425,6 +1425,7 @@ static int prepare_for_handlers(struct i
+ 			rx->sta = ieee80211_ibss_add_sta(sdata->dev, rx->skb,
+ 							 bssid, hdr->addr2);
+ 		break;
++	case IEEE80211_IF_TYPE_VLAN:
+ 	case IEEE80211_IF_TYPE_AP:
+ 		if (!bssid) {
+ 			if (compare_ether_addr(sdata->dev->dev_addr,
+@@ -1449,6 +1450,13 @@ static int prepare_for_handlers(struct i
+ 		if (compare_ether_addr(sdata->u.wds.remote_addr, hdr->addr2))
+ 			return 0;
+ 		break;
++	case IEEE80211_IF_TYPE_MNTR:
++		/* take everything */
++		break;
++	case IEEE80211_IF_TYPE_MGMT:
++		/* should never get here */
++		WARN_ON(1);
++		break;
+ 	}
+ 
+ 	return 1;
 
-The former. It starts fine but sees no networks, I guess because the
-networks come in a 64-bit format it doesn't interpret. I haven't really
-dug into it.
-
-johannes
-
---=-pqyzEdbafeVtverl67uT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG8pza/ETPhpq3jKURArIgAJwPzXRkF7ESWjZvHlqyEBDLSKwM3wCfV1jl
-5FABgbDu5fKYrZzppYD8PMY=
-=/qaK
------END PGP SIGNATURE-----
-
---=-pqyzEdbafeVtverl67uT--
+-- 
 
