@@ -1,122 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4462 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576AbXIRWK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 18:10:58 -0400
-Date: Tue, 18 Sep 2007 17:32:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, IvDoorn@gmail.com
-Subject: Please pull 'rt2x00' branch of wireless-2.6
-Message-ID: <20070918213202.GJ4940@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753760AbXIZNYd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 09:24:33 -0400
+Message-Id: <20070926132132.308101000@sipsolutions.net>
+References: <20070926131938.575572000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 15:19:41 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: [patch 03/12] mac80211: consolidate encryption
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff & Dave,
+Currently we run through all crypto handlers for each transmitted
+frame although we already know which one will be used. This
+changes the code to invoke only the needed handler. It also moves
+the wep code into wep.c.
 
-This patch adds the rt2x00 drivers for Ralink wireless hardware.
-This collection of drivers has seen lots of action in Fedora (both
-F7 and rawhide) and many people are using them with good results
-(although some problems do remain).
-
-Ivo in particular has been very helpful in responding to bug reports
-for these drivers, including bugs reported at kernel.org and in
-distro bugzillas.  I extend my thanks to him for both his past and
-future support of these drivers.  I'm sure he and the rest of the
-rt2x00 team will continue to support the community and their userbase.
-
-Ivo and his team may feel I am jumping the gun a bit -- they have
-a few more random bugs they wanted to squash before going upstream.
-But since they are bugs, any fixes should still be able to be applied
-in the -rc phase of 2.6.24.  In the meantime, I definitely think it
-would be better to get this code into mainline rather than keeping
-it out of stream.
-
-Thanks,
-
-John
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
+ net/mac80211/tx.c  |   62 ++++++++++++-----------------------------------------
+ net/mac80211/wep.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/wep.h |    5 +---
+ net/mac80211/wpa.c |   10 +++-----
+ net/mac80211/wpa.h |    4 +--
+ 5 files changed, 77 insertions(+), 61 deletions(-)
 
-Patch is available here:
+--- wireless-dev.orig/net/mac80211/tx.c	2007-09-25 23:28:22.131610568 +0200
++++ wireless-dev/net/mac80211/tx.c	2007-09-25 23:29:35.111582139 +0200
+@@ -541,56 +541,26 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	return TXRX_DROP;
+ }
+ 
+-static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
+-{
+-	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+-		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
+-			return -1;
+-	} else {
+-		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
+-		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+-			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
+-				return -1;
+-		}
+-	}
+-	return 0;
+-}
+-
+ static ieee80211_txrx_result
+-ieee80211_tx_h_wep_encrypt(struct ieee80211_txrx_data *tx)
++ieee80211_tx_h_encrypt(struct ieee80211_txrx_data *tx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+-	u16 fc;
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	if (!tx->key || tx->key->conf.alg != ALG_WEP ||
+-	    ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
+-	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+-	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
++	if (!tx->key)
+ 		return TXRX_CONTINUE;
+ 
+-	tx->u.tx.control->iv_len = WEP_IV_LEN;
+-	tx->u.tx.control->icv_len = WEP_ICV_LEN;
+-	ieee80211_tx_set_iswep(tx);
+-
+-	if (wep_encrypt_skb(tx, tx->skb) < 0) {
+-		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
+-		return TXRX_DROP;
+-	}
+-
+-	if (tx->u.tx.extra_frag) {
+-		int i;
+-		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
+-			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
+-				I802_DEBUG_INC(tx->local->
+-					       tx_handlers_drop_wep);
+-				return TXRX_DROP;
+-			}
+-		}
++	switch (tx->key->conf.alg) {
++	case ALG_WEP:
++		return ieee80211_crypto_wep_encrypt(tx);
++	case ALG_TKIP:
++		return ieee80211_crypto_tkip_encrypt(tx);
++	case ALG_CCMP:
++		return ieee80211_crypto_ccmp_encrypt(tx);
++	case ALG_NONE:
++		return TXRX_CONTINUE;
+ 	}
+ 
+-	return TXRX_CONTINUE;
++	/* not reached */
++	WARN_ON(1);
++	return TXRX_DROP;
+ }
+ 
+ static ieee80211_txrx_result
+@@ -805,9 +775,7 @@ ieee80211_tx_handler ieee80211_tx_handle
+ 	ieee80211_tx_h_select_key,
+ 	ieee80211_tx_h_michael_mic_add,
+ 	ieee80211_tx_h_fragment,
+-	ieee80211_tx_h_tkip_encrypt,
+-	ieee80211_tx_h_ccmp_encrypt,
+-	ieee80211_tx_h_wep_encrypt,
++	ieee80211_tx_h_encrypt,
+ 	ieee80211_tx_h_rate_ctrl,
+ 	ieee80211_tx_h_misc,
+ 	ieee80211_tx_h_load_stats,
+--- wireless-dev.orig/net/mac80211/wpa.c	2007-09-25 23:29:34.131604926 +0200
++++ wireless-dev/net/mac80211/wpa.c	2007-09-25 23:29:35.111582139 +0200
+@@ -239,17 +239,16 @@ static int tkip_encrypt_skb(struct ieee8
+ 
+ 
+ ieee80211_txrx_result
+-ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx)
++ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+ 	u16 fc;
+-	struct ieee80211_key *key = tx->key;
+ 	struct sk_buff *skb = tx->skb;
+ 	int wpa_test = 0, test = 0;
+ 
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
+-	if (!key || key->conf.alg != ALG_TKIP || !WLAN_FC_DATA_PRESENT(fc))
++	if (!WLAN_FC_DATA_PRESENT(fc))
+ 		return TXRX_CONTINUE;
+ 
+ 	tx->u.tx.control->icv_len = TKIP_ICV_LEN;
+@@ -491,17 +490,16 @@ static int ccmp_encrypt_skb(struct ieee8
+ 
+ 
+ ieee80211_txrx_result
+-ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx)
++ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+-	struct ieee80211_key *key = tx->key;
+ 	u16 fc;
+ 	struct sk_buff *skb = tx->skb;
+ 	int test = 0;
+ 
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
+-	if (!key || key->conf.alg != ALG_CCMP || !WLAN_FC_DATA_PRESENT(fc))
++	if (!WLAN_FC_DATA_PRESENT(fc))
+ 		return TXRX_CONTINUE;
+ 
+ 	tx->u.tx.control->icv_len = CCMP_MIC_LEN;
+--- wireless-dev.orig/net/mac80211/wpa.h	2007-09-25 23:29:34.131604926 +0200
++++ wireless-dev/net/mac80211/wpa.h	2007-09-25 23:29:35.131571125 +0200
+@@ -19,12 +19,12 @@ ieee80211_txrx_result
+ ieee80211_rx_h_michael_mic_verify(struct ieee80211_txrx_data *rx);
+ 
+ ieee80211_txrx_result
+-ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx);
++ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx);
+ ieee80211_txrx_result
+ ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx);
+ 
+ ieee80211_txrx_result
+-ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx);
++ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx);
+ ieee80211_txrx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx);
+ 
+--- wireless-dev.orig/net/mac80211/wep.c	2007-09-25 23:29:34.131604926 +0200
++++ wireless-dev/net/mac80211/wep.c	2007-09-25 23:29:35.131571125 +0200
+@@ -80,9 +80,9 @@ static void ieee80211_wep_get_iv(struct 
+ }
+ 
+ 
+-u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
+-			  struct sk_buff *skb,
+-			  struct ieee80211_key *key)
++static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
++				struct sk_buff *skb,
++				struct ieee80211_key *key)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	u16 fc;
+@@ -350,3 +350,54 @@ ieee80211_crypto_wep_decrypt(struct ieee
+ 
+ 	return TXRX_CONTINUE;
+ }
++
++static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
++{
++	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
++		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
++			return -1;
++	} else {
++		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
++		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
++			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
++				return -1;
++		}
++	}
++	return 0;
++}
++
++ieee80211_txrx_result
++ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
++	u16 fc;
++
++	fc = le16_to_cpu(hdr->frame_control);
++
++	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
++	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
++	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
++		return TXRX_CONTINUE;
++
++	tx->u.tx.control->iv_len = WEP_IV_LEN;
++	tx->u.tx.control->icv_len = WEP_ICV_LEN;
++	ieee80211_tx_set_iswep(tx);
++
++	if (wep_encrypt_skb(tx, tx->skb) < 0) {
++		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
++		return TXRX_DROP;
++	}
++
++	if (tx->u.tx.extra_frag) {
++		int i;
++		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
++			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
++				I802_DEBUG_INC(tx->local->
++					       tx_handlers_drop_wep);
++				return TXRX_DROP;
++			}
++		}
++	}
++
++	return TXRX_CONTINUE;
++}
+--- wireless-dev.orig/net/mac80211/wep.h	2007-09-25 23:29:34.141573296 +0200
++++ wireless-dev/net/mac80211/wep.h	2007-09-25 23:29:35.131571125 +0200
+@@ -18,9 +18,6 @@
+ 
+ int ieee80211_wep_init(struct ieee80211_local *local);
+ void ieee80211_wep_free(struct ieee80211_local *local);
+-u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
+-			  struct sk_buff *skb,
+-			  struct ieee80211_key *key);
+ void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+ 				size_t klen, u8 *data, size_t data_len);
+ int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+@@ -34,5 +31,7 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_
+ 
+ ieee80211_txrx_result
+ ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx);
++ieee80211_txrx_result
++ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx);
+ 
+ #endif /* WEP_H */
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/rt2x00/0001-rt2x00-add-driver-for-Ralink-wireless-hardware.patch
-
----
-
-The following changes since commit 0d4cbb5e7f60b2f1a4d8b7f6ea4cc264262c7a01:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git rt2x00
-
-Ivo van Doorn (1):
-      rt2x00: add driver for Ralink wireless hardware
-
- CREDITS                                      |   31 +
- MAINTAINERS                                  |    8 +
- drivers/net/wireless/Kconfig                 |    1 +
- drivers/net/wireless/Makefile                |    2 +
- drivers/net/wireless/rt2x00/Kconfig          |  130 ++
- drivers/net/wireless/rt2x00/Makefile         |   22 +
- drivers/net/wireless/rt2x00/rt2400pci.c      | 1689 +++++++++++++++++
- drivers/net/wireless/rt2x00/rt2400pci.h      |  943 ++++++++++
- drivers/net/wireless/rt2x00/rt2500pci.c      | 2000 ++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2500pci.h      | 1236 ++++++++++++
- drivers/net/wireless/rt2x00/rt2500usb.c      | 1837 ++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2500usb.h      |  798 ++++++++
- drivers/net/wireless/rt2x00/rt2x00.h         |  807 ++++++++
- drivers/net/wireless/rt2x00/rt2x00config.c   |  165 ++
- drivers/net/wireless/rt2x00/rt2x00debug.c    |  331 ++++
- drivers/net/wireless/rt2x00/rt2x00debug.h    |   57 +
- drivers/net/wireless/rt2x00/rt2x00dev.c      | 1133 +++++++++++
- drivers/net/wireless/rt2x00/rt2x00firmware.c |  124 ++
- drivers/net/wireless/rt2x00/rt2x00lib.h      |  125 ++
- drivers/net/wireless/rt2x00/rt2x00mac.c      |  459 +++++
- drivers/net/wireless/rt2x00/rt2x00pci.c      |  481 +++++
- drivers/net/wireless/rt2x00/rt2x00pci.h      |  127 ++
- drivers/net/wireless/rt2x00/rt2x00reg.h      |  283 +++
- drivers/net/wireless/rt2x00/rt2x00rfkill.c   |  148 ++
- drivers/net/wireless/rt2x00/rt2x00ring.h     |  255 +++
- drivers/net/wireless/rt2x00/rt2x00usb.c      |  595 ++++++
- drivers/net/wireless/rt2x00/rt2x00usb.h      |  180 ++
- drivers/net/wireless/rt2x00/rt61pci.c        | 2603 ++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt61pci.h        | 1457 ++++++++++++++
- drivers/net/wireless/rt2x00/rt73usb.c        | 2124 +++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt73usb.h        | 1024 ++++++++++
- 31 files changed, 21175 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rt2x00/Kconfig
- create mode 100644 drivers/net/wireless/rt2x00/Makefile
- create mode 100644 drivers/net/wireless/rt2x00/rt2400pci.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2400pci.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2500pci.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2500pci.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2500usb.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2500usb.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00config.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00debug.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00debug.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00dev.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00firmware.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00lib.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00mac.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00pci.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00pci.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00reg.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00rfkill.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00ring.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00usb.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00usb.h
- create mode 100644 drivers/net/wireless/rt2x00/rt61pci.c
- create mode 100644 drivers/net/wireless/rt2x00/rt61pci.h
- create mode 100644 drivers/net/wireless/rt2x00/rt73usb.c
- create mode 100644 drivers/net/wireless/rt2x00/rt73usb.h
 -- 
-John W. Linville
-linville@tuxdriver.com
+
