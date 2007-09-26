@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:52988 "EHLO
-	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbXIECij (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:60178 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbXIZLqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 22:38:39 -0400
-Date: Tue, 4 Sep 2007 19:38:24 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: bridge packets option
-Message-ID: <20070905023824.GE5273@jm.kir.nu>
-References: <1188405071.1757.5.camel@johannes.berg> <20070903235714.GT1835@jm.kir.nu> <1188915742.9942.33.camel@johannes.berg>
+	Wed, 26 Sep 2007 07:46:06 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2756430wah
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2007 04:46:06 -0700 (PDT)
+Message-ID: <1ba2fa240709260446u2facb62fw1a17af1665b25d03@mail.gmail.com>
+Date: Wed, 26 Sep 2007 13:46:05 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: A-MSDU deaggregation support
+Cc: "mohamed salim abbas" <mabbaswireless@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Michael Wu" <flamingice@sourmilk.net>, "Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1190792394.18521.354.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1188915742.9942.33.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1189354526.4506.25.camel@johannes.berg>
+	 <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
+	 <1190747966.18521.320.camel@johannes.berg>
+	 <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com>
+	 <1190792394.18521.354.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2007 at 04:22:22PM +0200, Johannes Berg wrote:
-> On Mon, 2007-09-03 at 16:57 -0700, Jouni Malinen wrote:
+On 9/26/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2007-09-26 at 01:24 +0200, Tomas Winkler wrote:
+>
+> > EAPOL frames should not be filtered out. Everything else should be filtered out
+> > except EAPOL frames till the port is open.
+>
+> Right now though, when we're an AP, we're sending EAPOL frames to the
+> mgmt interface instead of the regular 802.3 interface. This quite sucks
+> wrt. deagg. But it's also very weird, look at ieee80211_rx_h_802_1x_pae.
+> It sends
+>  * eapol frames for non-STA interfaces that are for us -> mgmt iface
+>  * non-eapol frames from unauthorized STAs -> bitbucket
+>  * everything else -> the regular 802.3 interface
+>
+> Right afterwards, unencrypted non-EAPOL frames are dropped.
+>
+> So any STA can actually send EAPOL frames with an arbitrary destination
+> MAC address except our own into our 802.3 interface. Hence, it looks
+> like the first case above is only for having eapol on mgmt iface.
+>
+> The only problem I see with not doing this is that hostapd will have to
+> listen for EAPOL frames on all VLAN interfaces but I suppose that is
+> doable.
+>
+I wonder of port control is done for ethernet. 1X is not WLAN invention.
+I'll try to dig it.
 
-> > Kernel
-> > bridging code does not (or at least did not the last time I looked)
-> > allow packets to be bridged back to the same interface which would be
-> > needed for the case of two wireless stations which are associated to the
-> > same AP sending packets to each other.
-> 
-> I was thinking more of routing in the unicast case, if a packet comes in
-> you'd have to route it back to wireless if the destination is there.
-> Isn't that possible?
+> > The problem is the order of the handlers.  First you need to
+> > deaggregated the frame then filtered out non EAPLOL frames if the port
+> > is not open.
+>
+> Yeah, I know, I had a plan a while back, will see if I can implement it.
+>
+Hope to get there as well in near future.
 
-Well, it may be possible, but that would not be the way IEEE 802.11
-access points normally work. AP is a layer 2 bridge and it should bridge
-the packets regardless of what ethertype is used. There is no need for
-it to keep up ARP tables for the associated stations to figure out where
-to route packets. Furthermore, I would rather not see ICMP redirects
-showing up on the wireless interface because IP routing needed to send
-the packet back to the same interface. I would assume that this can be
-disabled, but anyway, layer 2 bridge is the location that would be much
-close to what AP does between two associated wireless stations.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> johannes
+>
+>
