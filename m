@@ -1,79 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:52980 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbXISUwU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048AbXIZNZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 16:52:20 -0400
-Received: from storm (pool-71-169-154-64.burl.east.verizon.net [71.169.154.64])
-	(authenticated bits=0)
-	by mail3.webfaction.com (8.13.1/8.13.3) with ESMTP id l8JKqJoQ027218
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 15:52:20 -0500
-Date: Wed, 19 Sep 2007 16:52:14 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20070919205214.GC14127@storm.local.network>
-References: <20070919193743.GA14127@storm.local.network>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bAmEntskrkuBymla"
-In-Reply-To: <20070919193743.GA14127@storm.local.network>
+	Wed, 26 Sep 2007 09:25:17 -0400
+Message-Id: <20070926132131.908392000@sipsolutions.net>
+References: <20070926131938.575572000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 15:19:40 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: [patch 02/12] mac80211: consolidate decryption
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, we run through all three crypto algorithms for each
+received frame even though we have previously determined which
+key we have and as such already know which algorithm will be
+used. Change it to invoke only the needed function. Also move
+the WEP decrypt handler to wep.c so that fewer functions need
+to be non-static.
 
---bAmEntskrkuBymla
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Hi,
+---
+ net/mac80211/rx.c  |   40 +++++++++++++++++-----------------------
+ net/mac80211/wep.c |   34 +++++++++++++++++++++++++++++-----
+ net/mac80211/wep.h |    8 +++-----
+ net/mac80211/wpa.c |   12 ++++--------
+ net/mac80211/wpa.h |    4 ++--
+ 5 files changed, 55 insertions(+), 43 deletions(-)
 
-Replying to self:
+--- wireless-dev.orig/net/mac80211/rx.c	2007-09-25 23:29:33.141601345 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-09-25 23:29:34.131604926 +0200
+@@ -662,36 +662,32 @@ ieee80211_rx_h_wep_weak_iv_detection(str
+ }
+ 
+ static ieee80211_txrx_result
+-ieee80211_rx_h_wep_decrypt(struct ieee80211_txrx_data *rx)
++ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
+ {
+-	if ((rx->key && rx->key->conf.alg != ALG_WEP) ||
+-	    !(rx->fc & IEEE80211_FCTL_PROTECTED) ||
+-	    ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
+-	     ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+-	      (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
++	if (!(rx->fc & IEEE80211_FCTL_PROTECTED))
+ 		return TXRX_CONTINUE;
+ 
+ 	if (!rx->key) {
+ 		if (net_ratelimit())
+-			printk(KERN_DEBUG "%s: RX WEP frame, but no key set\n",
+-			       rx->dev->name);
++			printk(KERN_DEBUG "%s: RX protected frame,"
++			       " but have no key\n", rx->dev->name);
+ 		return TXRX_DROP;
+ 	}
+ 
+-	if (!(rx->u.rx.status->flag & RX_FLAG_DECRYPTED)) {
+-		if (ieee80211_wep_decrypt(rx->local, rx->skb, rx->key)) {
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "%s: RX WEP frame, decrypt "
+-				       "failed\n", rx->dev->name);
+-			return TXRX_DROP;
+-		}
+-	} else if (!(rx->u.rx.status->flag & RX_FLAG_IV_STRIPPED)) {
+-		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
+-		/* remove ICV */
+-		skb_trim(rx->skb, rx->skb->len - 4);
++	switch (rx->key->conf.alg) {
++	case ALG_WEP:
++		return ieee80211_crypto_wep_decrypt(rx);
++	case ALG_TKIP:
++		return ieee80211_crypto_tkip_decrypt(rx);
++	case ALG_CCMP:
++		return ieee80211_crypto_ccmp_decrypt(rx);
++	case ALG_NONE:
++		return TXRX_CONTINUE;
+ 	}
+ 
+-	return TXRX_CONTINUE;
++	/* not reached */
++	WARN_ON(1);
++	return TXRX_DROP;
+ }
+ 
+ static inline struct ieee80211_fragment_entry *
+@@ -1371,10 +1367,8 @@ ieee80211_rx_handler ieee80211_rx_handle
+ 	ieee80211_rx_h_check,
+ 	ieee80211_rx_h_load_key,
+ 	ieee80211_rx_h_sta_process,
+-	ieee80211_rx_h_ccmp_decrypt,
+-	ieee80211_rx_h_tkip_decrypt,
+ 	ieee80211_rx_h_wep_weak_iv_detection,
+-	ieee80211_rx_h_wep_decrypt,
++	ieee80211_rx_h_decrypt,
+ 	ieee80211_rx_h_defragment,
+ 	ieee80211_rx_h_ps_poll,
+ 	ieee80211_rx_h_michael_mic_verify,
+--- wireless-dev.orig/net/mac80211/wpa.c	2007-09-25 23:28:22.581570639 +0200
++++ wireless-dev/net/mac80211/wpa.c	2007-09-25 23:29:34.131604926 +0200
+@@ -281,7 +281,7 @@ ieee80211_tx_h_tkip_encrypt(struct ieee8
+ 
+ 
+ ieee80211_txrx_result
+-ieee80211_rx_h_tkip_decrypt(struct ieee80211_txrx_data *rx)
++ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+ 	u16 fc;
+@@ -293,9 +293,7 @@ ieee80211_rx_h_tkip_decrypt(struct ieee8
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 	hdrlen = ieee80211_get_hdrlen(fc);
+ 
+-	if (!rx->key || rx->key->conf.alg != ALG_TKIP ||
+-	    !(rx->fc & IEEE80211_FCTL_PROTECTED) ||
+-	    (rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		return TXRX_CONTINUE;
+ 
+ 	if (!rx->sta || skb->len - hdrlen < 12)
+@@ -535,7 +533,7 @@ ieee80211_tx_h_ccmp_encrypt(struct ieee8
+ 
+ 
+ ieee80211_txrx_result
+-ieee80211_rx_h_ccmp_decrypt(struct ieee80211_txrx_data *rx)
++ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+ 	u16 fc;
+@@ -549,9 +547,7 @@ ieee80211_rx_h_ccmp_decrypt(struct ieee8
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 	hdrlen = ieee80211_get_hdrlen(fc);
+ 
+-	if (!key || key->conf.alg != ALG_CCMP ||
+-	    !(rx->fc & IEEE80211_FCTL_PROTECTED) ||
+-	    (rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		return TXRX_CONTINUE;
+ 
+ 	data_len = skb->len - hdrlen - CCMP_HDR_LEN - CCMP_MIC_LEN;
+--- wireless-dev.orig/net/mac80211/wpa.h	2007-09-25 23:28:22.621573894 +0200
++++ wireless-dev/net/mac80211/wpa.h	2007-09-25 23:29:34.131604926 +0200
+@@ -21,11 +21,11 @@ ieee80211_rx_h_michael_mic_verify(struct
+ ieee80211_txrx_result
+ ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx);
+ ieee80211_txrx_result
+-ieee80211_rx_h_tkip_decrypt(struct ieee80211_txrx_data *rx);
++ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx);
+ 
+ ieee80211_txrx_result
+ ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx);
+ ieee80211_txrx_result
+-ieee80211_rx_h_ccmp_decrypt(struct ieee80211_txrx_data *rx);
++ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx);
+ 
+ #endif /* WPA_H */
+--- wireless-dev.orig/net/mac80211/wep.c	2007-09-25 23:28:22.651574002 +0200
++++ wireless-dev/net/mac80211/wep.c	2007-09-25 23:29:34.131604926 +0200
+@@ -63,8 +63,8 @@ static inline int ieee80211_wep_weak_iv(
+ }
+ 
+ 
+-void ieee80211_wep_get_iv(struct ieee80211_local *local,
+-			  struct ieee80211_key *key, u8 *iv)
++static void ieee80211_wep_get_iv(struct ieee80211_local *local,
++				 struct ieee80211_key *key, u8 *iv)
+ {
+ 	local->wep_iv++;
+ 	if (ieee80211_wep_weak_iv(local->wep_iv, key->conf.keylen))
+@@ -109,9 +109,9 @@ u8 * ieee80211_wep_add_iv(struct ieee802
+ }
+ 
+ 
+-void ieee80211_wep_remove_iv(struct ieee80211_local *local,
+-			     struct sk_buff *skb,
+-			     struct ieee80211_key *key)
++static void ieee80211_wep_remove_iv(struct ieee80211_local *local,
++				    struct sk_buff *skb,
++				    struct ieee80211_key *key)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	u16 fc;
+@@ -326,3 +326,27 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_
+ 
+ 	return NULL;
+ }
++
++ieee80211_txrx_result
++ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx)
++{
++	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
++	    ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
++	     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH))
++		return TXRX_CONTINUE;
++
++	if (!(rx->u.rx.status->flag & RX_FLAG_DECRYPTED)) {
++		if (ieee80211_wep_decrypt(rx->local, rx->skb, rx->key)) {
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: RX WEP frame, decrypt "
++				       "failed\n", rx->dev->name);
++			return TXRX_DROP;
++		}
++	} else if (!(rx->u.rx.status->flag & RX_FLAG_IV_STRIPPED)) {
++		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
++		/* remove ICV */
++		skb_trim(rx->skb, rx->skb->len - 4);
++	}
++
++	return TXRX_CONTINUE;
++}
+--- wireless-dev.orig/net/mac80211/wep.h	2007-09-25 23:28:22.691575630 +0200
++++ wireless-dev/net/mac80211/wep.h	2007-09-25 23:29:34.141573296 +0200
+@@ -18,14 +18,9 @@
+ 
+ int ieee80211_wep_init(struct ieee80211_local *local);
+ void ieee80211_wep_free(struct ieee80211_local *local);
+-void ieee80211_wep_get_iv(struct ieee80211_local *local,
+-			  struct ieee80211_key *key, u8 *iv);
+ u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 			  struct sk_buff *skb,
+ 			  struct ieee80211_key *key);
+-void ieee80211_wep_remove_iv(struct ieee80211_local *local,
+-			     struct sk_buff *skb,
+-			     struct ieee80211_key *key);
+ void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+ 				size_t klen, u8 *data, size_t data_len);
+ int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+@@ -37,4 +32,7 @@ int ieee80211_wep_decrypt(struct ieee802
+ int ieee80211_wep_get_keyidx(struct sk_buff *skb);
+ u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key);
+ 
++ieee80211_txrx_result
++ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx);
++
+ #endif /* WEP_H */
 
-On Wed, Sep 19, 2007 at 03:37:43PM -0400, Forest Bond wrote:
-> Most of the source files contain the following notice:
->=20
->  * Copyright (c) 2003 VIA Networking, Inc. All rights reserved.
->  *
->  * This software is copyrighted by and is the sole property of
->  * VIA Networking, Inc. This software may only be used in accordance
->  * with the corresponding license agreement. Any unauthorized use,
->  * duplication, transmission, distribution, or disclosure of this
->  * software is expressly forbidden.
->  *
->  * This software is provided by VIA Networking, Inc. "as is" and any
->  * express or implied warranties, including, but not limited to, the
->  * implied warranties of merchantability and fitness for a particular
->  * purpose are disclaimed. In no event shall VIA Networking, Inc. be
->  * liable for any direct, indirect, incidental, special, exemplary, or
->  * consequential damages.
->=20
-> This doesn't sound very GPL to me, however, the twist is in main_usb.c:
+-- 
 
-Or, rather, that the package doesn't contain "the corresponding license
-agreement" is the real problem.  Apologies, etc...
-
--Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-
---bAmEntskrkuBymla
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFG8Yv+RO4fQQdv5AwRAr/QAJsER7C+FuIpTNmwzPmpsdJxap/HZQCfSczj
-cbuNhW2KlaqXzc8sQe2WTcw=
-=PcDs
------END PGP SIGNATURE-----
-
---bAmEntskrkuBymla--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
