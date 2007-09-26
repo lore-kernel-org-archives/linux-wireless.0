@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34153
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751482AbXITASC (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57365 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbXIZHDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 20:18:02 -0400
-Date: Wed, 19 Sep 2007 17:18:01 -0700 (PDT)
-Message-Id: <20070919.171801.98863433.davem@davemloft.net>
-To: larry.finger@lwfinger.net
-Cc: joe@perches.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: net-2.6.24 - build failure
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <46F1BAA7.9080701@lwfinger.net>
-References: <1190238802.26101.24.camel@localhost>
-	<20070919.151712.66176476.davem@davemloft.net>
-	<46F1BAA7.9080701@lwfinger.net>
+	Wed, 26 Sep 2007 03:03:18 -0400
+Subject: Re: [PATCH] mac80211: fix interface initialisation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890709251702q27bbfa5eoe65a626ced383dd6@mail.gmail.com>
+References: <200709252206.57855.mb@bu3sch.de>
+	 <1190755892.18521.330.camel@johannes.berg>
+	 <43e72e890709251702q27bbfa5eoe65a626ced383dd6@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BYDV+YcDAxvxpwbA6ru7"
+Date: Wed, 26 Sep 2007 09:04:25 +0200
+Message-Id: <1190790265.18521.334.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <larry.finger@lwfinger.net>
-Date: Wed, 19 Sep 2007 19:11:19 -0500
 
-> The patch below was sent to John Linville yesterday. Obviously, it
-> didn't get included before he pushed to you. With this patch, all
-> the debugfs names become static, and avoid the namespace clash with
-> b43. In addition, Michael Buesch has a similar patch pending for
-> b43.
+--=-BYDV+YcDAxvxpwbA6ru7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've applied this patch and if someone sends me the b43 patch
-I'll apply that one too.
+On Tue, 2007-09-25 at 20:02 -0400, Luis R. Rodriguez wrote:
 
-Thanks Larry!
+> What still uses ieee80211_if_add_mgmt()? I don't see anything using
+> it. Also, did we decide on what to do with IEEE80211_IF_TYPE_MGMT?
+
+We don't have a replacement for hostapd yet.
+
+johannes
+
+--=-BYDV+YcDAxvxpwbA6ru7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG+gR5/ETPhpq3jKURAm29AJ9qxPQbxIMIeRL5ZO3YIKR0xbRWgwCdEX7m
+jyC/IQetLzHUbInEJfhH0DU=
+=5M7P
+-----END PGP SIGNATURE-----
+
+--=-BYDV+YcDAxvxpwbA6ru7--
+
