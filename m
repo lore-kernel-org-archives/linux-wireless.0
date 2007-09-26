@@ -1,58 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:40132 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757586AbXIRQ36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 12:29:58 -0400
-To: linux-wireless@vger.kernel.org
-Subject: AR5006 - should it work?
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Tue, 18 Sep 2007 18:29:56 +0200
-Message-ID: <m3odg0dji3.fsf@maximus.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755109AbXIZTOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 15:14:46 -0400
+Subject: Re: [PATCH] mac80211: bss_tim_clear must use ~ instead of !
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200709262108.47882.mb@bu3sch.de>
+References: <200709262108.47882.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Wed, 26 Sep 2007 21:15:56 +0200
+Message-Id: <1190834156.16048.7.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2007-09-26 at 21:08 +0200, Michael Buesch wrote:
+> We need to use bitwise NOT.
+> This also cleans up the code a little bit to make it more readable.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-I'm trying to use AR5006* mini-PCI cards with no success - should
-I expect them to work with madwifi ath5k branch and/or
-linux/kernel/git/linville/wireless-dev.git ath5k branch on kernel.org?
+Looks good, thanks
 
-AR5004X seems to work fine.
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-Don't work:
-ENGENIUS EMP-8602(+) 400 mW a/b/g AR5413 rev 1.0 and 1.1
-AR5006X PCI ID 168c:001b 168c:2063
+> Index: wireless-2.6/net/mac80211/ieee80211_i.h
+> ===================================================================
+> --- wireless-2.6.orig/net/mac80211/ieee80211_i.h	2007-09-26 21:04:03.000000000 +0200
+> +++ wireless-2.6/net/mac80211/ieee80211_i.h	2007-09-26 21:04:05.000000000 +0200
+> @@ -648,34 +648,34 @@ struct sta_attribute {
+>  	ssize_t (*store)(struct sta_info *, const char *buf, size_t count);
+>  };
+>  
+> -static inline void __bss_tim_set(struct ieee80211_if_ap *bss, int aid)
+> +static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
+>  {
+>  	/*
+> -	 * This format has ben mandated by the IEEE specifications,
+> +	 * This format has been mandated by the IEEE specifications,
+>  	 * so this line may not be changed to use the __set_bit() format.
+>  	 */
+> -	bss->tim[(aid)/8] |= 1<<((aid) % 8);
+> +	bss->tim[aid / 8] |= (1 << (aid % 8));
+>  }
+>  
+>  static inline void bss_tim_set(struct ieee80211_local *local,
+> -			       struct ieee80211_if_ap *bss, int aid)
+> +			       struct ieee80211_if_ap *bss, u16 aid)
+>  {
+>  	read_lock_bh(&local->sta_lock);
+>  	__bss_tim_set(bss, aid);
+>  	read_unlock_bh(&local->sta_lock);
+>  }
+>  
+> -static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, int aid)
+> +static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
+>  {
+>  	/*
+> -	 * This format has ben mandated by the IEEE specifications,
+> +	 * This format has been mandated by the IEEE specifications,
+>  	 * so this line may not be changed to use the __clear_bit() format.
+>  	 */
+> -	bss->tim[(aid)/8] &= !(1<<((aid) % 8));
+> +	bss->tim[aid / 8] &= ~(1 << (aid % 8));
+>  }
+>  
+>  static inline void bss_tim_clear(struct ieee80211_local *local,
+> -				 struct ieee80211_if_ap *bss, int aid)
+> +				 struct ieee80211_if_ap *bss, u16 aid)
+>  {
+>  	read_lock_bh(&local->sta_lock);
+>  	__bss_tim_clear(bss, aid);
+> 
 
-SparkLAN WMIA-166AG a/b/g AR5414A
-AR5006XS PCI ID 168c:001b 17f9:000d
-
-Testing with:
-# modprobe ath5k
-# ifconfig wlan0 up
-# iwlist wlan0 scan
-
-wlan0     No scan results
-
-
-madwifi.org ath5k dmesg (with 2.6.22 kernel, EMP-8602):
-ath5k: MAC revision: 5413  (0xa4)
-ath5k: PHY revision: SChip (0x63)
-ath5k: EEPROM version: 5.2
-wmaster0: Selected rate control algorithm 'simple'
-
-John's git repository (2.6.23-current, EMP-8602):
-wmaster0: Selected rate control algorithm 'simple'
-ath_pci 0000:00:0d.0: AR5212 chip found: mac 10.10 phy 6.1
-
-This is ARM-based system (Intel IXP425) but just tried with
-AMD64 (madwifi ath5k only) - results are the same.
-
-
-AR5004X based card shows few devices in the neighbourhood, max
-signal ~ 20/127.
-
-Any ideas?
--- 
-Krzysztof Halasa
