@@ -1,74 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56219 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57077 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbXIZMg0 (ORCPT
+	with ESMTP id S1752248AbXIZPzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 08:36:26 -0400
-Subject: Re: A-MSDU deaggregation support
+	Wed, 26 Sep 2007 11:55:05 -0400
+Message-Id: <20070926155436.262774000@sipsolutions.net>
+References: <20070926155313.955049000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 17:53:20 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1ba2fa240709260532i17d25d78u63e0829f3002f6c1@mail.gmail.com>
-References: <1189354526.4506.25.camel@johannes.berg>
-	 <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com>
-	 <1190747966.18521.320.camel@johannes.berg>
-	 <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com>
-	 <1190792394.18521.354.camel@johannes.berg>
-	 <1ba2fa240709260446u2facb62fw1a17af1665b25d03@mail.gmail.com>
-	 <1190809015.4204.1.camel@johannes.berg>
-	 <1ba2fa240709260532i17d25d78u63e0829f3002f6c1@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KQR0rzDtzmP8kPmu0RCW"
-Date: Wed, 26 Sep 2007 14:37:39 +0200
-Message-Id: <1190810259.4204.5.camel@johannes.berg>
+To: Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [patch 7/7] mac80211: make userspace-mlme a per-interface setting
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-KQR0rzDtzmP8kPmu0RCW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+---
+ net/mac80211/ieee80211.c       |    2 +-
+ net/mac80211/ieee80211_i.h     |    3 +--
+ net/mac80211/ieee80211_ioctl.c |   12 +++++-------
+ net/mac80211/rx.c              |    2 +-
+ 4 files changed, 8 insertions(+), 11 deletions(-)
 
-On Wed, 2007-09-26 at 14:32 +0200, Tomas Winkler wrote:
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-26 17:51:21.617337342 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-26 17:51:25.817337342 +0200
+@@ -287,6 +287,7 @@ struct ieee80211_if_sta {
+  * generator reports that there are no present stations that cannot support short
+  * preambles */
+ #define IEEE80211_SDATA_SHORT_PREAMBLE	BIT(3)
++#define IEEE80211_SDATA_USERSPACE_MLME	BIT(4)
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
+ 	enum ieee80211_if_types type;
+@@ -553,8 +554,6 @@ struct ieee80211_local {
+ 	unsigned int hw_modes; /* bitfield of supported hardware modes;
+ 				* (1 << MODE_*) */
+ 
+-	int user_space_mlme;
+-
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+ 		struct dentry *channel;
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 17:51:24.757337342 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 17:51:25.827337342 +0200
+@@ -267,7 +267,7 @@ static int ieee80211_open(struct net_dev
+ 		ieee80211_enable_keys(sdata);
+ 
+ 		if (sdata->type == IEEE80211_IF_TYPE_STA &&
+-		    !local->user_space_mlme)
++		    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
+ 			netif_carrier_off(dev);
+ 		else
+ 			netif_carrier_on(dev);
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-09-26 17:44:40.867337342 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-09-26 17:51:25.827337342 +0200
+@@ -105,12 +105,12 @@ static int ieee80211_ioctl_siwgenie(stru
+ 				    struct iw_point *data, char *extra)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 
+-	if (local->user_space_mlme)
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME)
+ 		return -EOPNOTSUPP;
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
+ 		int ret = ieee80211_sta_set_extra_ie(dev, extra, data->length);
+@@ -374,7 +374,6 @@ static int ieee80211_ioctl_siwessid(stru
+ 				    struct iw_request_info *info,
+ 				    struct iw_point *data, char *ssid)
+ {
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata;
+ 	size_t len = data->length;
+ 
+@@ -386,7 +385,7 @@ static int ieee80211_ioctl_siwessid(stru
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
+ 		int ret;
+-		if (local->user_space_mlme) {
++		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
+ 			if (len > IEEE80211_MAX_SSID_LEN)
+ 				return -EINVAL;
+ 			memcpy(sdata->u.sta.ssid, ssid, len);
+@@ -451,14 +450,13 @@ static int ieee80211_ioctl_siwap(struct 
+ 				 struct iw_request_info *info,
+ 				 struct sockaddr *ap_addr, char *extra)
+ {
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
+ 		int ret;
+-		if (local->user_space_mlme) {
++		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
+ 			memcpy(sdata->u.sta.bssid, (u8 *) &ap_addr->sa_data,
+ 			       ETH_ALEN);
+ 			return 0;
+--- wireless-dev.orig/net/mac80211/rx.c	2007-09-26 17:45:32.207337342 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-09-26 17:51:25.837337342 +0200
+@@ -1199,7 +1199,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_txr
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 	if ((sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	     sdata->type == IEEE80211_IF_TYPE_IBSS) &&
+-	    !rx->local->user_space_mlme)
++	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
+ 		ieee80211_sta_rx_mgmt(rx->dev, rx->skb, rx->u.rx.status);
+ 	else
+ 		return TXRX_DROP;
 
-> > > I wonder of port control is done for ethernet. 1X is not WLAN inventi=
-on.
-> > > I'll try to dig it.
-> >
-> > I haven't ever seen it, but I'm not sure.
-
-> I'm sure.
-
-Oh, I know about 802.1X, sorry, meant that I haven't seen port control
-done in Linux.
-
-> > Ok, let me know what you plan to do. John has pushed the deagg patch
-> > into the "dungeon" branch so it's still there for reference.
->=20
-> Oh... another victim.  Getting lost in current patch movement... Looks
-> like most of the decision are happening somewhere else...
-
-That particular patch definitely had problems like the missing
-skb_reserve. Right now I'm thinking we should do PAE stuff after
-converting to 802.3 and do deaggregation at the same time as converting
-to 802.3 because that's basically what it is. But if you want to look at
-it I'll go back to making hostapd work.
-
-johannes
-
---=-KQR0rzDtzmP8kPmu0RCW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG+lKT/ETPhpq3jKURAm8fAJ9qshz5hr+yyU9hSfui0irii3BMLQCfZGa3
-x57fzUGNTmsMU4zpn7VD3pA=
-=zPpD
------END PGP SIGNATURE-----
-
---=-KQR0rzDtzmP8kPmu0RCW--
+-- 
 
