@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49952
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753018AbXI0Mpr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57085 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757980AbXIZPzL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 08:45:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: Fix documentation typos
-Date: Thu, 27 Sep 2007 14:42:42 +0200
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709271442.42808.mb@bu3sch.de>
+	Wed, 26 Sep 2007 11:55:11 -0400
+Message-Id: <20070926155435.685374000@sipsolutions.net>
+References: <20070926155313.955049000@sipsolutions.net>
+Date: Wed, 26 Sep 2007 17:53:19 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [patch 6/7] mac80211: allow only one IBSS interface
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Consider the case of multiple virtual IBSS interfaces
+trying to join the same IBSS. They wouldn't see beacons
+that the other virtual interface sent of course so this
+leads to problems. Disallow it.
 
-Index: wireless-2.6/include/linux/rfkill.h
-===================================================================
---- wireless-2.6.orig/include/linux/rfkill.h	2007-09-25 21:41:11.000000000 +0200
-+++ wireless-2.6/include/linux/rfkill.h	2007-09-27 14:41:31.000000000 +0200
-@@ -29,9 +29,9 @@
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+---
+ net/mac80211/ieee80211.c |   21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-26 17:21:42.667337342 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-26 17:21:51.317337342 +0200
+@@ -170,8 +170,25 @@ static int ieee80211_open(struct net_dev
+ 	list_for_each_entry(nsdata, &local->interfaces, list) {
+ 		struct net_device *ndev = nsdata->dev;
  
- /**
-  * enum rfkill_type - type of rfkill switch.
-- * RFKILL_TYPE_WLAN: switch is no a Wireless network devices.
-- * RFKILL_TYPE_BlUETOOTH: switch is on a bluetooth device.
-- * RFKILL_TYPE_IRDA: switch is on an infrared devices.
-+ * RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
-+ * RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
-+ * RFKILL_TYPE_IRDA: switch is on an infrared device.
-  */
- enum rfkill_type {
- 	RFKILL_TYPE_WLAN = 0,
+-		if (ndev != dev && ndev != local->mdev && netif_running(ndev) &&
+-		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0) {
++		if (ndev != dev && ndev != local->mdev &&
++		    netif_running(ndev)) {
++			/*
++			 * We really only support one IBSS interface, think
++			 * what would happen if they tried to be in the same
++			 * BSS.
++			 */
++			if (sdata->type == IEEE80211_IF_TYPE_IBSS &&
++			    nsdata->type == IEEE80211_IF_TYPE_IBSS &&
++			    netif_running(nsdata->dev))
++				return -EBUSY;
++
++			/*
++			 * The remaining checks are only done for devices
++			 * with the same MAC address.
++			 */
++			if (compare_ether_addr(dev->dev_addr, ndev->dev_addr))
++				continue;
++
+ 			/*
+ 			 * check whether it may have the same address
+ 			 */
 
 -- 
-Greetings Michael.
+
