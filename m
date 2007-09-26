@@ -1,59 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbXIHJf3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 05:35:29 -0400
-Subject: Re: Kernel panic with rt2500pci built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Hussey <robjhussey@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <6b8cef970709080126t517cd2e3r292f6b933d615384@mail.gmail.com>
-References: <6b8cef970709052006q43d5602ewde0cea45500deede@mail.gmail.com>
-	 <6b8cef970709052025w4885b075yc9cf79c9f7f6dd52@mail.gmail.com>
-	 <1189125944.28781.125.camel@johannes.berg>
-	 <6b8cef970709071231s5693b835vaf8493254c8292da@mail.gmail.com>
-	 <1189193840.28781.197.camel@johannes.berg>
-	 <6b8cef970709071438o6870cecej355119fee4396dcb@mail.gmail.com>
-	 <1189202441.28781.208.camel@johannes.berg>
-	 <6b8cef970709072129r5d7658b8v46e5b327638b8f06@mail.gmail.com>
-	 <6b8cef970709072140o23cfd152nee56313db53739ae@mail.gmail.com>
-	 <1189237764.4506.14.camel@johannes.berg>
-	 <6b8cef970709080126t517cd2e3r292f6b933d615384@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k/tsqJhHMy2iiEHbcsU6"
-Date: Sat, 08 Sep 2007 11:36:57 +0200
-Message-Id: <1189244217.4506.16.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:37885 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752431AbXIZPEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 11:04:34 -0400
+Subject: Re: [PATCH 1/5] Move standard wireless defintions out of mac80211
+From: Dan Williams <dcbw@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <43e72e890709241049y63a88d6aoa6456d2f1465ee04@mail.gmail.com>
+References: <20070921210014.GE31768@pogo>
+	 <1190409462.18521.160.camel@johannes.berg>
+	 <43e72e890709211433hf6669f1y97d24663a97b21ff@mail.gmail.com>
+	 <20070924094959.GY10493@thot.informatik.uni-kl.de>
+	 <43e72e890709241049y63a88d6aoa6456d2f1465ee04@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 26 Sep 2007 11:01:02 -0400
+Message-Id: <1190818863.20955.4.camel@xo-3E-67-34.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2007-09-24 at 13:49 -0400, Luis R. Rodriguez wrote:
+> On 9/24/07, Joerg Mayer <jmayer@loplof.de> wrote:
+> > On Fri, Sep 21, 2007 at 05:33:42PM -0400, Luis R. Rodriguez wrote:
+> > > > > + * ieee80211_channel - internal structure definiton for an IEEE-802.11 channel
+> > > > > + *
+> > > > > + * This defines an ieee80211_channel. The IEEE-802.11 regulatory domain agent
+> > > > > + * is in charge of filling most of these fields out. The low-level driver
+> > > > > + * is expected to fill in, if needed, the val field. Note that val is already
+> > > > > + * set by the regulatory agent to the same channel as in chan.
+> > > >
+> > > > Shouldn't you also set chan and freq in the driver?
+> > [...]
+> > > Initially I wanted to move mac80211 to use a linked list of channels
+> > > instead of an array for each mode. As we discussed it over (you, me
+> > > and a few others) we determined it wasn't best to do this (I have a
+> > > patch that allows this just in case we later change our mind). But --
+> > > previous to doing this I had a wrapper on ieee80211_channel as I
+> > > wanted the central regdomain to have a linked list of reg domain
+> > > channels. If we don't want a wrapper we have to add this to the
+> > > ieee8021_channel struct. Otherwise I need to define my own channel
+> > > struct which wraps around ieee80211_channel.
+> > >
+> > > > > +struct ieee80211_channel {
+> > > > > +     /* XXX change to u8 */
+> > > > > +     short chan;
+> > > >
+> > > > Not sure, is a u8 always enough? I thought 802.11a had huge channel
+> > > > numbers?
+> > >
+> > > Not that huge :-) Highest I've heard is 220. u8 should suffice.
+> >
+> > What's the idea of working with channels? Channels are non-uniq numbers.
+> > Internally everything should work with center frequency and not with
+> > channels. If necessary, information should be converted from channels
+> > by the driver when reporting it into the stack. That way there also won't
+> > be any problems if there ever is a channel 417.
+> 
+> I agree. I'm OK with just having center of freq. Right now WE supports
+> channel or freqs and the value is passed directly to the driver (for
+> FullMAC) or mac80211 (for SoftMAC). For nl80211 we can just support
+> channel passing onto the kernel, if the user supplies a channel we'll
+> do the conversion to freq in userspace. On step at a time.
 
---=-k/tsqJhHMy2iiEHbcsU6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Definitely need to use freq and not channel.  Channels are not unique
+(they just _happen_ to be so right now).  Of course remember that we
+can't just pass channel really, we need to pass the tuple of (channel,
+band) or maybe even (channel, [A|B|G|N]) or something.
 
-On Sat, 2007-09-08 at 04:26 -0400, Rob Hussey wrote:
+Dan
 
-> Much like when I commented out the ieee80211_register_hw call, the
-> kernel booted fine, but there was no sign of the wireless card in the
-> logs or otherwise.
-
-?! That shouldn't have an effect like that. Are you positive that you
-put the register_hw call back?
-
-johannes
-
---=-k/tsqJhHMy2iiEHbcsU6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG4m05/ETPhpq3jKURAkmIAKCAXI2Su/d/jvxar+sAvhPR4bP6ngCgrSp4
-zeb4Vp9oDN483nwx9iFD/g0=
-=uwpT
------END PGP SIGNATURE-----
-
---=-k/tsqJhHMy2iiEHbcsU6--
 
