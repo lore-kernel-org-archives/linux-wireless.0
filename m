@@ -1,67 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57876 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755391AbXIJLIA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 07:08:00 -0400
-Subject: Re: [2/2] 2.6.23-rc5: known regressions with patches v2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Pierre Ossman <drzeus-mmc@drzeus.cx>,
-	Christian Casteyde <casteyde.christian@free.fr>,
-	Alan Stern <stern@rowland.harvard.edu>, netdev@vger.kernel.org,
-	Florian Lohoff <flo@rfc822.org>,
-	linux-wireless@vger.kernel.org,
-	Martin Langer <martin-langer@gmx.de>,
-	Stefano Brivio <st3@riseup.net>,
-	Michael Buesch <mbuesch@freenet.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>
-In-Reply-To: <46E2836B.60406@googlemail.com>
-References: <46E28149.2090900@googlemail.com>
-	 <46E2836B.60406@googlemail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RXc8z+5z+ykjplKG/obX"
-Date: Mon, 10 Sep 2007 13:09:22 +0200
-Message-Id: <1189422562.4506.56.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:48006 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750698AbXI0DfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:35:04 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: add debugfs rate scale stats
+Date: Thu, 27 Sep 2007 11:27:43 +0800
+Message-Id: <11908636833477-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636823439-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
+ <119086367088-git-send-email-yi.zhu@intel.com>
+ <11908636712746-git-send-email-yi.zhu@intel.com>
+ <11908636732679-git-send-email-yi.zhu@intel.com>
+ <11908636743625-git-send-email-yi.zhu@intel.com>
+ <11908636753775-git-send-email-yi.zhu@intel.com>
+ <11908636772860-git-send-email-yi.zhu@intel.com>
+ <11908636781043-git-send-email-yi.zhu@intel.com>
+ <1190863679136-git-send-email-yi.zhu@intel.com>
+ <11908636801368-git-send-email-yi.zhu@intel.com>
+ <11908636823439-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds rates scale statistics to debugfs:
+$ cat /sys/kernel/debug/ieee80211/phy<X>/stations/<mac>/rate_stats_table
 
---=-RXc8z+5z+ykjplKG/obX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   40 +++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
-On Sat, 2007-09-08 at 13:11 +0200, Michal Piotrowski wrote:
-
-> Subject         : Unable to access memory card reader anymore
-> References      : http://bugzilla.kernel.org/show_bug.cgi?id=3D8885
-> Last known good : ?
-> Submitter       : Christian Casteyde <casteyde.christian@free.fr>
-> Caused-By       : ?
-> Handled-By      : Alan Stern <stern@rowland.harvard.edu>
-> Patch           : http://bugzilla.kernel.org/attachment.cgi?id=3D12438
-> Status          : patch available
-
-Last known good/caused-by doesn't apply, the bug has been in there ever
-since the mac80211 code was merged into the tree.
-
-johannes
-
---=-RXc8z+5z+ykjplKG/obX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG5SXi/ETPhpq3jKURAonYAJ496VbOMMdBmfXcSIAGj7SP8WHOogCgsAIh
-mPIagbcK0ZbIFGjIpzwROos=
-=gxUL
------END PGP SIGNATURE-----
-
---=-RXc8z+5z+ykjplKG/obX--
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index e5f8cce..287c757 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -124,6 +124,7 @@ struct iwl_rate_scale_priv {
+ 	struct iwl_scale_tbl_info lq_info[LQ_SIZE];
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *rs_sta_dbgfs_scale_table_file;
++	struct dentry *rs_sta_dbgfs_stats_table_file;
+ 	struct iwl_rate dbg_fixed;
+ 	struct iwl_priv *drv;
+ #endif
+@@ -2068,6 +2069,7 @@ static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
+ 
+ 	return count;
+ }
++
+ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			char __user *user_buf, size_t count, loff_t *ppos)
+ {
+@@ -2116,20 +2118,56 @@ static const struct file_operations rs_sta_dbgfs_scale_table_ops = {
+ 	.read = rs_sta_dbgfs_scale_table_read,
+ 	.open = open_file_generic,
+ };
++static ssize_t rs_sta_dbgfs_stats_table_read(struct file *file,
++			char __user *user_buf, size_t count, loff_t *ppos)
++{
++	char buff[1024];
++	int desc = 0;
++	int i, j;
++
++	struct iwl_rate_scale_priv *rs_priv = file->private_data;
++	for (i = 0; i < LQ_SIZE; i++) {
++		desc += sprintf(buff+desc, "%s type=%d SGI=%d FAT=%d DUP=%d\n"
++				"rate=0x%X\n",
++				rs_priv->active_tbl == i?"*":"x",
++				rs_priv->lq_info[i].lq_type,
++				rs_priv->lq_info[i].is_SGI,
++				rs_priv->lq_info[i].is_fat,
++				rs_priv->lq_info[i].is_dup,
++				rs_priv->lq_info[i].current_rate.rate_n_flags);
++		for (j = 0; j < IWL_RATE_COUNT; j++) {
++			desc += sprintf(buff+desc,
++					"counter=%d success=%d %%=%d\n",
++					rs_priv->lq_info[i].win[j].counter,
++					rs_priv->lq_info[i].win[j].success_counter,
++					rs_priv->lq_info[i].win[j].success_ratio);
++		}
++	}
++	return simple_read_from_buffer(user_buf, count, ppos, buff, desc);
++}
++
++static const struct file_operations rs_sta_dbgfs_stats_table_ops = {
++	.read = rs_sta_dbgfs_stats_table_read,
++	.open = open_file_generic,
++};
+ 
+ static void rs_add_debugfs(void *priv, void *priv_sta,
+ 					struct dentry *dir)
+ {
+ 	struct iwl_rate_scale_priv *rs_priv = priv_sta;
+ 	rs_priv->rs_sta_dbgfs_scale_table_file =
+-		debugfs_create_file("rate_scale_table", 0444, dir,
++		debugfs_create_file("rate_scale_table", 0600, dir,
+ 				rs_priv, &rs_sta_dbgfs_scale_table_ops);
++	rs_priv->rs_sta_dbgfs_stats_table_file =
++		debugfs_create_file("rate_stats_table", 0600, dir,
++			rs_priv, &rs_sta_dbgfs_stats_table_ops);
+ }
+ 
+ static void rs_remove_debugfs(void *priv, void *priv_sta)
+ {
+ 	struct iwl_rate_scale_priv *rs_priv = priv_sta;
+ 	debugfs_remove(rs_priv->rs_sta_dbgfs_scale_table_file);
++	debugfs_remove(rs_priv->rs_sta_dbgfs_stats_table_file);
+ }
+ #endif
+ 
+-- 
+1.5.1
