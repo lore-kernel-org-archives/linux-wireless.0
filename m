@@ -1,154 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:58158 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038AbXIDS4v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 14:56:51 -0400
-Date: Tue, 04 Sep 2007 13:53:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix cancellation of work queues crashes
-Message-ID: <46dda9ae.rVFA3HPOna+bGyWP%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:43390 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752549AbXI0DfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:35:02 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: set fixed rate through debugfs
+Date: Thu, 27 Sep 2007 11:27:42 +0800
+Message-Id: <11908636823439-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636801368-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
+ <119086367088-git-send-email-yi.zhu@intel.com>
+ <11908636712746-git-send-email-yi.zhu@intel.com>
+ <11908636732679-git-send-email-yi.zhu@intel.com>
+ <11908636743625-git-send-email-yi.zhu@intel.com>
+ <11908636753775-git-send-email-yi.zhu@intel.com>
+ <11908636772860-git-send-email-yi.zhu@intel.com>
+ <11908636781043-git-send-email-yi.zhu@intel.com>
+ <1190863679136-git-send-email-yi.zhu@intel.com>
+ <11908636801368-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A crash upon booting that is caused by bcm43xx has been reported [1] and
-found to be due to a work queue being reinitialized while work on that
-queue is still pending. This fix modifies the shutdown of work queues and
-prevents periodic work from being requeued during shutdown. With this patch,
-no more crashes on reboot were observed by the original reporter. I do not
-get that particular failure on my system; however, when running a large
-number of ifdown/ifup sequences, my system would kernel panic with the
-'caps lock' light blinking at roughly a 1 Hz rate. In addition, there were
-infrequent failures in the firmware that resulted in 'IRQ READY TIMEOUT'
-errors. With this patch, no more of the first type of failure occur, and
-incidence of the second type is greatly reduced.
+This patch adds fixed rate setting through debugfs
 
-[1] http://bugzilla.kernel.org/show_bug.cgi?id=8937
+$ echo <rate_n_flags> > \
+/sys/kernel/debug/ieee80211/phy<X>/stations/<mac>/rate_scale_table
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Currently there is no way to turn to rate scaling working again.
+Will be fixed in later.
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   72 +++++++++++++++++++++++++++-
+ 1 files changed, 70 insertions(+), 2 deletions(-)
 
-John,
-
-This fix should be sent to 2.6.23. Once it it there, I'll send it on to
--stable.
-
-Larry
-
-
- drivers/net/wireless/bcm43xx/bcm43xx_main.c  |   28 +++++++++++++++++++--------
- drivers/net/wireless/bcm43xx/bcm43xx_main.h  |    2 -
- drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c |    3 +-
- 3 files changed, 23 insertions(+), 10 deletions(-)
-
-Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -3197,6 +3197,9 @@ static void bcm43xx_periodic_work_handle
- 	unsigned long orig_trans_start = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index c4b8ca1..e5f8cce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -123,7 +123,9 @@ struct iwl_rate_scale_priv {
+ 	struct iwl_link_quality_cmd lq;
+ 	struct iwl_scale_tbl_info lq_info[LQ_SIZE];
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-       struct dentry *rs_sta_dbgfs_scale_table_file;
++	struct dentry *rs_sta_dbgfs_scale_table_file;
++	struct iwl_rate dbg_fixed;
++	struct iwl_priv *drv;
+ #endif
+ };
  
- 	mutex_lock(&bcm->mutex);
-+	/* keep from doing and rearming periodic work if shutting down */
-+	if (bcm43xx_status(bcm) == BCM43xx_STAT_UNINIT)
-+		goto unlock_mutex;
- 	if (unlikely(bcm->periodic_state % 60 == 0)) {
- 		/* Periodic work will take a long time, so we want it to
- 		 * be preemtible.
-@@ -3242,14 +3245,10 @@ static void bcm43xx_periodic_work_handle
- 	mmiowb();
- 	bcm->periodic_state++;
- 	spin_unlock_irqrestore(&bcm->irq_lock, flags);
-+unlock_mutex:
- 	mutex_unlock(&bcm->mutex);
- }
+@@ -136,6 +138,14 @@ static void rs_fill_link_cmd(struct iwl_rate_scale_priv *lq_data,
+ 			     struct iwl_link_quality_cmd *tbl);
  
--void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm)
--{
--	cancel_rearming_delayed_work(&bcm->periodic_work);
--}
--
- void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm)
- {
- 	struct delayed_work *work = &bcm->periodic_work;
-@@ -3299,6 +3298,14 @@ static int bcm43xx_rng_init(struct bcm43
- 	return err;
- }
  
-+void bcm43xx_cancel_work(struct bcm43xx_private *bcm)
-+{
-+	/* The system must be unlocked when this routine is entered.
-+	 * If not, the next 2 steps may deadlock */
-+	cancel_work_sync(&bcm->restart_work);
-+	cancel_delayed_work_sync(&bcm->periodic_work);
-+}
++#ifdef CONFIG_MAC80211_DEBUGFS
++static void rs_dbgfs_set_mcs(struct iwl_rate_scale_priv *rs_priv,
++				struct iwl_rate *mcs, int index);
++#else
++static void rs_dbgfs_set_mcs(struct iwl_rate_scale_priv *rs_priv,
++				struct iwl_rate *mcs, int index)
++{}
++#endif
+ static s32 expected_tpt_A[IWL_RATE_COUNT] = {
+ 	0, 0, 0, 0, 40, 57, 72, 98, 121, 154, 177, 186, 186
+ };
+@@ -1866,6 +1876,9 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
+ 	IWL_DEBUG_HT("MIMO RATE 0x%X SISO MASK 0x%X\n", crl->active_siso_rate,
+ 		     crl->active_mimo_rate);
+ #endif /*CONFIG_IWLWIFI_HT*/
++#ifdef CONFIG_MAC80211_DEBUGFS
++	crl->drv = priv;
++#endif
+ 
+ 	if (priv->assoc_station_added)
+ 		priv->lq_mngr.lq_ready = 1;
+@@ -1885,6 +1898,8 @@ static void rs_fill_link_cmd(struct iwl_rate_scale_priv *lq_data,
+ 	struct iwl_rate new_rate;
+ 	struct iwl_scale_tbl_info tbl_type = { 0 };
+ 
++	rs_dbgfs_set_mcs(lq_data, tx_mcs, index);
 +
- static int bcm43xx_shutdown_all_wireless_cores(struct bcm43xx_private *bcm)
- {
- 	int ret = 0;
-@@ -3335,7 +3342,12 @@ static void bcm43xx_free_board(struct bc
- {
- 	bcm43xx_rng_exit(bcm);
- 	bcm43xx_sysfs_unregister(bcm);
--	bcm43xx_periodic_tasks_delete(bcm);
-+
-+	mutex_lock(&(bcm)->mutex);
-+	bcm43xx_set_status(bcm, BCM43xx_STAT_UNINIT);
-+	mutex_unlock(&(bcm)->mutex);
-+
-+	bcm43xx_cancel_work(bcm);
+ 	rs_get_tbl_info_from_mcs(tx_mcs, lq_data->phymode,
+ 				  &tbl_type, &rate_idx);
  
- 	mutex_lock(&(bcm)->mutex);
- 	bcm43xx_shutdown_all_wireless_cores(bcm);
-@@ -4030,7 +4042,7 @@ static int bcm43xx_net_stop(struct net_d
- 	err = bcm43xx_disable_interrupts_sync(bcm);
- 	assert(!err);
- 	bcm43xx_free_board(bcm);
--	flush_scheduled_work();
-+	bcm43xx_cancel_work(bcm);
+@@ -1919,6 +1934,8 @@ static void rs_fill_link_cmd(struct iwl_rate_scale_priv *lq_data,
+ 					ant_toggle_count = 1;
+ 				}
+ 			}
++
++			rs_dbgfs_set_mcs(lq_data, &new_rate, index);
+ 			lq_cmd->rs_table[index].rate_n_flags =
+ 					cpu_to_le32(new_rate.rate_n_flags);
+ 			repeat_rate--;
+@@ -1947,6 +1964,7 @@ static void rs_fill_link_cmd(struct iwl_rate_scale_priv *lq_data,
  
+ 		use_ht_possible = 0;
+ 
++		rs_dbgfs_set_mcs(lq_data, &new_rate, index);
+ 		lq_cmd->rs_table[index].rate_n_flags =
+ 				cpu_to_le32(new_rate.rate_n_flags);
+ 
+@@ -2002,7 +2020,54 @@ static int open_file_generic(struct inode *inode, struct file *file)
+ 	file->private_data = inode->i_private;
  	return 0;
  }
-@@ -4162,9 +4174,9 @@ static void bcm43xx_chip_reset(struct wo
- 	struct bcm43xx_phyinfo *phy;
- 	int err = -ENODEV;
++static void rs_dbgfs_set_mcs(struct iwl_rate_scale_priv *rs_priv,
++				struct iwl_rate *mcs, int index)
++{
++	const u32 cck_rate = 0x820A;
++	if (rs_priv->dbg_fixed.rate_n_flags) {
++		if (index < 12)
++			mcs->rate_n_flags = rs_priv->dbg_fixed.rate_n_flags;
++		else
++			mcs->rate_n_flags = cck_rate;
++		IWL_DEBUG_RATE("Fixed rate ON\n");
++		return;
++	}
++
++	IWL_DEBUG_RATE("Fixed rate OFF\n");
++}
  
-+	bcm43xx_cancel_work(bcm);
- 	mutex_lock(&(bcm)->mutex);
- 	if (bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED) {
--		bcm43xx_periodic_tasks_delete(bcm);
- 		phy = bcm43xx_current_phy(bcm);
- 		err = bcm43xx_select_wireless_core(bcm, phy->type);
- 		if (!err)
-Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-+++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-@@ -122,7 +122,7 @@ void bcm43xx_wireless_core_reset(struct 
- void bcm43xx_mac_suspend(struct bcm43xx_private *bcm);
- void bcm43xx_mac_enable(struct bcm43xx_private *bcm);
++static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
++			const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct iwl_rate_scale_priv *rs_priv = file->private_data;
++	char buf[64];
++	int buf_size;
++	u32 parsed_rate;
++
++	memset(buf, 0, sizeof(buf));
++	buf_size = min(count, sizeof(buf) -  1);
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	if (sscanf(buf, "%x", &parsed_rate) == 1)
++		rs_priv->dbg_fixed.rate_n_flags = parsed_rate;
++	else
++		rs_priv->dbg_fixed.rate_n_flags = 0;
++
++	rs_priv->active_rate = 0x0FFF;
++	rs_priv->active_siso_rate = 0x1FD0;
++	rs_priv->active_mimo_rate = 0x1FD0;
++
++	IWL_DEBUG_RATE("sta_id %d rate 0x%X\n",
++		rs_priv->lq.sta_id, rs_priv->dbg_fixed.rate_n_flags);
++
++	if (rs_priv->dbg_fixed.rate_n_flags) {
++		rs_fill_link_cmd(rs_priv, &rs_priv->dbg_fixed, &rs_priv->lq);
++		rs_send_lq_cmd(rs_priv->drv, &rs_priv->lq, CMD_ASYNC);
++	}
++
++	return count;
++}
+ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			char __user *user_buf, size_t count, loff_t *ppos)
+ {
+@@ -2013,9 +2078,11 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	struct iwl_rate_scale_priv *rs_priv = file->private_data;
  
--void bcm43xx_periodic_tasks_delete(struct bcm43xx_private *bcm);
-+void bcm43xx_cancel_work(struct bcm43xx_private *bcm);
- void bcm43xx_periodic_tasks_setup(struct bcm43xx_private *bcm);
+ 	desc += sprintf(buff+desc, "sta_id %d\n", rs_priv->lq.sta_id);
+-	desc += sprintf(buff+desc, "failed=%d success=%d rate=%X\n",
++	desc += sprintf(buff+desc, "failed=%d success=%d rate=0%X\n",
+ 			rs_priv->total_failed, rs_priv->total_success,
+ 			rs_priv->active_rate);
++	desc += sprintf(buff+desc, "fixed rate 0x%X\n",
++			rs_priv->dbg_fixed.rate_n_flags);
+ 	desc += sprintf(buff+desc, "general:"
+ 		"flags=0x%X mimo-d=%d s-ant0x%x d-ant=0x%x\n",
+ 		rs_priv->lq.general_params.flags,
+@@ -2045,6 +2112,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ }
  
- void bcm43xx_controller_restart(struct bcm43xx_private *bcm, const char *reason);
-Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
-+++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
-@@ -327,8 +327,9 @@ static ssize_t bcm43xx_attr_phymode_stor
- 		goto out;
- 	}
- 
--	bcm43xx_periodic_tasks_delete(bcm);
-+	bcm43xx_cancel_work(bcm);
- 	mutex_lock(&(bcm)->mutex);
-+	bcm43xx_set_status(bcm, BCM43xx_STAT_UNINIT);
- 	err = bcm43xx_select_wireless_core(bcm, phytype);
- 	if (!err)
- 		bcm43xx_periodic_tasks_setup(bcm);
+ static const struct file_operations rs_sta_dbgfs_scale_table_ops = {
++	.write = rs_sta_dbgfs_scale_table_write,
+ 	.read = rs_sta_dbgfs_scale_table_read,
+ 	.open = open_file_generic,
+ };
+-- 
+1.5.1
