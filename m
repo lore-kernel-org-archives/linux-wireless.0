@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:44783 "EHLO venema.h4ckr.net"
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754753AbXI0QRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 12:17:34 -0400
-Message-ID: <3072.194.45.26.221.1190909853.squirrel@webmail.madwifi.org>
-Date: Thu, 27 Sep 2007 18:17:33 +0200 (CEST)
-Subject: SFLC helps ath5k developers contribute back to OpenBSD
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: madwifi-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1752082AbXI0Dew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:52 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Ian Schram <ischram@telenet.be>
+Subject: [PATCH] iwlwifi: fix add_station to avoid FW error
+Date: Thu, 27 Sep 2007 11:27:35 +0800
+Message-Id: <11908636732679-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636712746-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
+ <119086367088-git-send-email-yi.zhu@intel.com>
+ <11908636712746-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SFLC today released what we hope will be the last audit of driver code for
-use in the Linux kernel for Atheros WLAN devices. Specifically this should
-once and for all clear up any doubts about licensing practices we have
-used and details of provenance of code since the project's start all the
-way down to our current ath5k driver code.
+There were a few Firmware errors reported the most reproducible
+http://bughost.org/bugzilla/show_bug.cgi?id=1471
 
-The audit confirms that fixes and improvements to work derived from
-OpenBSD's ar5k - specificially what is in the wireless-legacy respository
-[1] now - can safely be contributed back. We are committing to follow
-SFLC's advise on proper procedures to guarantee that contributing back to
-OpenBSD remains possible in the future.
+The root cause is rate_n_flags isn't set anymore. This patch fixes
+the problem.
 
-In all there are three new documents published by the SFLC:
-
- 1. Code Analysis of the Linux Wireless Team's ath5k Driver [2]
- 2. Maintaining Permissive-Licensed Files in a GPL-Licensed Project:
-Guidelines for Developers [3]
- 3. Originality Requirements under U.S. and E.U. Copyright Law [4]
-
-We would like to take the time to thank the SFLC for their hard work and
-restless dedication. It should be made clear that without the SFLC the
-ath5k driver would simply have not be possible. Please consider donating
-to the SFLC [5].
-
+Signed-off-by: Ian Schram <ischram@telenet.be>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Links:
-[1]
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-legacy.git;a=commit;h=c1928199c27de433d1e81b78e3178be4f0e978d2
-[2] http://www.softwarefreedom.org/resources/2007/ath5k-code-analysis.html
-[3]
-http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
-[4]
-http://www.softwarefreedom.org/resources/2007/originality-requirements.html
-[5] http://www.softwarefreedom.org/about/donate/
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 6e46920..a83934f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -464,6 +464,7 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap, u8 flags)
+ 	struct iwl_station_entry *station;
+ 	unsigned long flags_spin;
+ 	DECLARE_MAC_BUF(mac);
++	u8 rate;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
+ 	if (is_ap)
+@@ -507,6 +508,15 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap, u8 flags)
+ 	station->sta.sta.sta_id = index;
+ 	station->sta.station_flags = 0;
+ 
++	rate = (priv->phymode == MODE_IEEE80211A) ? IWL_RATE_6M_PLCP :
++				IWL_RATE_1M_PLCP | priv->hw_setting.cck_flag;
++
++	/* Turn on both antennas for the station... */
++	station->sta.rate_n_flags =
++			iwl_hw_set_rate_n_flags(rate, RATE_MCS_ANT_AB_MSK);
++	station->current_rate.rate_n_flags =
++			le16_to_cpu(station->sta.rate_n_flags);
++
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
+ 	iwl_send_add_station(priv, &station->sta, flags);
+ 	return index;
+-- 
+1.5.1
