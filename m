@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40699
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917AbXIST4m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 15:56:42 -0400
-Date: Wed, 19 Sep 2007 12:56:41 -0700 (PDT)
-Message-Id: <20070919.125641.62342823.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: linville@tuxdriver.com, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200709192123.16884.mb@bu3sch.de>
-References: <20070919181005.GB5483@tuxdriver.com>
-	<20070919.115903.75429061.davem@davemloft.net>
-	<200709192123.16884.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from khc.piap.pl ([195.187.100.11]:53810 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753068AbXI0URq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 16:17:46 -0400
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: New 'Changes-licensed-under' tag introduced for Linux-wireless
+References: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
+	<20070927110950.0561eca1@freepuppy.rosehill>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Thu, 27 Sep 2007 22:17:43 +0200
+In-Reply-To: <20070927110950.0561eca1@freepuppy.rosehill> (Stephen Hemminger's message of "Thu, 27 Sep 2007 11:09:50 -0700")
+Message-ID: <m34phfsw0o.fsf@maximus.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Wed, 19 Sep 2007 21:23:16 +0200
+Stephen Hemminger <shemminger@linux-foundation.org> writes:
 
-> John, please also note that the following patch is not merged, yet.
-> http://bu3sch.de/patches/wireless-dev/20070915-1740/patches/006-zd-fix-tx-status.patch
-> Without it ratecontrol does not work. It does neither scale the rate
-> up nor down. This patch fixes both.
+> No, please don't down this legal rat hole. It would cause bullshit like
+> people submitting dual licensed patches to the scheduler or GPL only
+> patches to the ath5k or ACPI code.
 
-I agreed with John to merge this in myself, but this patch
-applied to the old driver aparently, not the new z1211 one.
+Precisely. Signed-off-by means the patch author already authorized
+the patch to be applied. With the patch merged the conditions still
+in the file (project etc) apply and not some obscure email tags.
 
-Can you resend this patch against the new driver so I can
-add it to net-2.6.24?
+If someone really wants to change licencing conditions then the
+licence conditions in the source code must be changed.
 
-Thanks!
+> Instead, add a section to Documentation/SubmittingPatches that clearly
+> states that all changes to a file are licensed under the same license
+> as the original file. I don't feel legally qualified to write the correct
+> wording.
+
+Current Documentation/SubmittingPatches:
+        Developer's Certificate of Origin 1.1
+
+        By making a contribution to this project, I certify that:
+
+        (a) The contribution was created in whole or in part by me and I
+            have the right to submit it under the open source license
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            indicated in the file; or
+            ^^^^^^^^^^^^^^^^^^^^^
+-- 
+Krzysztof Halasa
