@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:49758 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbXINRxx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2007 13:53:53 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so814420fkz
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2007 10:53:51 -0700 (PDT)
-Message-ID: <46EACAA5.2050706@gmail.com>
-Date: Fri, 14 Sep 2007 18:53:41 +0100
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/05] orinoco: Agere/Lucent firmware download
-References: <46E8557F.2080401@gmail.com> <1189746312.26312.39.camel@dv>
-In-Reply-To: <1189746312.26312.39.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517AbXI0Dev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:51 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: Fix typo in rate sacling algorithm
+Date: Thu, 27 Sep 2007 11:27:34 +0800
+Message-Id: <11908636712746-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <119086367088-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
+ <119086367088-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> On Wed, 2007-09-12 at 22:09 +0100, Dave wrote:
->> Implements firmware download to RAM for Lucent-Agere firmware.
->> Firmware download is a requirement to implement WPA on these cards.
+This patch fixes tiny typo in 4965 rate sacling algorithm
 
-Hi Pavel,
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks for the tips - not sure I was e-mailing the right lists/people.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index bc5e67b..edcc542 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1672,7 +1672,7 @@ static void rs_initialize_lq(struct iwl_priv *priv,
+ 	tbl->antenna_type = ANT_AUX;
+ 	rs_get_tbl_info_from_mcs(&mcs_rate, priv->phymode, tbl, &rate_idx);
+ 	if (!rs_is_ant_connected(priv->valid_antenna, tbl->antenna_type))
+-	    rs_toggle_antenna(&mcs_rate, tbl),
++	    rs_toggle_antenna(&mcs_rate, tbl);
  
->> The following firmwares download and run on my Dell TrueMobile 1150:
->> 7.65, 8.10, 8.42, 8.58
-> 
-> What some users may want to run is 6.06 or 6.16, as the 7.xx and 8.xx
-> firmwares have stability issues with the monitor mode.
-
-RAM only firmware (ie. Variant 2) is not available prior to firmware 7.52, so unfortunately this patch won't help those users. See driver readme for Summer 2001 release (driver ~v7.06) for the first announcements of variant 2.
- 
->> The following firmwares download, but are not compatible with the
->> current orinoco_cs driver:
->> 9.40, 9.42, 9.48
-> 
-> That's great news anyway.  We may see Hermes II supported eventually.
-
-Those are Hermes I firmwares. Hermes II versions of the same era are ~2.26, and I haven't tried to download these to my Hermes I card :). Also Hermes II download is slightly different.
-
-> Please use sparse to check endianess and other issues.  You can use this
-> command once sparse is in PATH:
-> 
-> make C=2 CF="-Wall -D__CHECK_ENDIAN__"
-
-I'll have a go at that shortly.
- 
-Thanks,
-
-Dave.
+ 	rs_mcs_from_tbl(&mcs_rate, tbl, rate_idx, use_green);
+ 	tbl->current_rate.rate_n_flags = mcs_rate.rate_n_flags;
+-- 
+1.5.1
