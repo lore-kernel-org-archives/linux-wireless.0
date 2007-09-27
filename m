@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39467 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750751AbXIGPZs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 11:25:48 -0400
-Subject: Re: rfkill interface (was Re: [PATCH V3] Add iwlwifi wireless  drivers)
-From: Dan Williams <dcbw@redhat.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-In-Reply-To: <200709061849.36579.IvDoorn@gmail.com>
-References: <f6ca9fed0709051233h69f66aebi45aac65ab1a96f0e@mail.gmail.com>
-	 <1189039823.13730.4.camel@xo-3E-67-34.localdomain>
-	 <200709061849.36579.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Fri, 07 Sep 2007 11:25:05 -0400
-Message-Id: <1189178705.2612.9.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+	id S1752526AbXI0De5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:57 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: limit printouts on hot path
+Date: Thu, 27 Sep 2007 11:27:39 +0800
+Message-Id: <11908636781043-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636772860-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
+ <119086367088-git-send-email-yi.zhu@intel.com>
+ <11908636712746-git-send-email-yi.zhu@intel.com>
+ <11908636732679-git-send-email-yi.zhu@intel.com>
+ <11908636743625-git-send-email-yi.zhu@intel.com>
+ <11908636753775-git-send-email-yi.zhu@intel.com>
+ <11908636772860-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-09-06 at 18:49 +0200, Ivo van Doorn wrote:
-> On Thursday 06 September 2007, Dan Williams wrote:
-> > On Wed, 2007-09-05 at 21:33 +0200, dragoran wrote:
-> > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > > > On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > > > > > On Tuesday 04 September 2007, dragoran wrote:
-> > > > > > > > > >+static ssize_t show_rf_kill(struct device *d,
-> > > > > > > > > >+                        struct device_attribute *attr, char *buf)
-> > > > > > > > > >+{
-> > > > > > > > > >+    /*
-> > > > > > > > > >+     * 0 - RF kill not enabled
-> > > > > > > > > >+     * 1 - SW based RF kill active (sysfs)
-> > > > > > > > > >+     * 2 - HW based RF kill active
-> > > > > > > > > >+     * 3 - Both HW and SW based RF kill active
-> > > > > > > > > >
-> > > > > > > > > >that as well, along with all the other sysfs bits. Also, how about using
-> > > > > > > > > >the generic rfkill infrastructure Ivo did?
-> > > > > > > > >
-> > > > > > > > > is the generic rfkill interface already stable and merged into the linus tree?
-> > > > > > > >
-> > > > > > > > Yes. It currently is only missing users.
-> > > > > > >
-> > > > > > > ok thats great ;) is the (userspace) interface defined somewhere? or
-> > > > > > > should I read the code to understand how it works? (would like to add
-> > > > > > > support to hal)
-> > > > > >
-> > > > > > There isn't a documentation file for it, so best thing to do would be looking at the code.
-> > > > > > basically hal only needs to check the sysfs files:
-> > > > > >
-> > > > > >         name -> Name of device/interface
-> > > > > >         type -> wlan, bluetooth, irda
-> > > > > >         state -> Current device state. 0: Off, 1: On
-> > > > > >         claim -> 0: Kernel handles events, 1: Userspace handles events
-> > > > > >
-> > > > > > "name" and "type" are read-only
-> > > > > > "claim" and "state" are read/writable
-> > > > > >
-> > > > > > Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
-> > > > > > this has been fixed in 2.6.23-rc.
-> > > > >
-> > > > > ok that isn't complicated what is the claim used for?
-> > > > > does It has to be set to userspace to be able to toggle the status via software?
-> > > >
-> > > > By default the kernel will act when the rfkill button is pressed, it will loop
-> > > > through all registered buttons of the same type and change the state.
-> > > > Userspace can read the "state" sysfs file to see the current status,
-> > > > but if a userspace tools wants to take control of taking action when the button is pressed,
-> > > > or at least doesn't want the kernel to do anything, 1 should be written to "claim" to
-> > > > tell the kernel that it should back off and ignore all events.
-> > > 
-> > > ok thx for explaining this will talk to the nm and hal people about it
-> > > and see how they want things to work than I will create patches to
-> > > implement it.
-> > > which drivers support it now? rt2x00 and ?? or are they the only ones right now?
-> > 
-> > Since it's in the kernel, the next step is to get HAL aware of the
-> > killswitches through sysfs and not through fdi files keyed on
-> > Dell/Sony/etc.
-> > 
-> > Ivo: how does one tell whether or not the switch needs to be polled?
-> > That's something that HAL will need to deal with polling/non-polling
-> > intelligently.  I assume that either the layer or the driver
-> > implementing the button will know that it needs to be polled and should
-> > be the thing that sets the value.  Ideally just an attribute in sysfs
-> > like "require-poll" with a value of 1 or 0 or something like that.
-> 
-> No, because like I explained userspace is not in control of polling,
-> because there should be no userspace dependency. This means that
-> if the device requires polling, it should register itself with the input_polldev handler.
-> This way the radio button will allwats work as expected, without requiring
-> some version of HAL..
+This patch change printouts on TX path to the net_ratelimit version.
 
-Awesome.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    3 +++
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-Dan
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index e3a0cca..b9d7ad8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -622,7 +622,7 @@ static void rs_tx_status(void *priv_rate,
+ 	u16 fc = le16_to_cpu(hdr->frame_control);
+ 	s32 tpt = 0;
+ 
+-	IWL_DEBUG_RATE("get frame ack response, update rate scale window\n");
++	IWL_DEBUG_RATE_LIMIT("get frame ack response, update rate scale window\n");
+ 
+ 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
+ 		return;
+@@ -1717,7 +1717,7 @@ static struct ieee80211_rate *rs_get_rate(void *priv_rate,
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_rate;
+ 	struct iwl_rate_scale_priv *lq;
+ 
+-	IWL_DEBUG_RATE("rate scale calculate new rate for skb\n");
++	IWL_DEBUG_RATE_LIMIT("rate scale calculate new rate for skb\n");
+ 
+ 	memset(extra, 0, sizeof(*extra));
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index b704fe7..b41addf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -184,7 +184,7 @@ u8 iwl_hw_find_station(struct iwl_priv *priv, const u8 *addr)
+ 			goto out;
+ 		}
+ 
+-	IWL_DEBUG_ASSOC("can not find STA %s total %d\n",
++	IWL_DEBUG_ASSOC_LIMIT("can not find STA " MAC_FMT " total %d\n",
+ 			print_mac(mac, addr), priv->num_stations);
+ 
+  out:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index abd344c..72318d7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -136,8 +136,11 @@ static inline void IWL_DEBUG_LIMIT(int level, const char *fmt, ...)
+ #define IWL_DEBUG_TXPOWER(f, a...) IWL_DEBUG(IWL_DL_TXPOWER, f, ## a)
+ #define IWL_DEBUG_IO(f, a...) IWL_DEBUG(IWL_DL_IO, f, ## a)
+ #define IWL_DEBUG_RATE(f, a...) IWL_DEBUG(IWL_DL_RATE, f, ## a)
++#define IWL_DEBUG_RATE_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_RATE, f, ## a)
+ #define IWL_DEBUG_NOTIF(f, a...) IWL_DEBUG(IWL_DL_NOTIF, f, ## a)
+ #define IWL_DEBUG_ASSOC(f, a...) IWL_DEBUG(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
++#define IWL_DEBUG_ASSOC_LIMIT(f, a...) \
++	IWL_DEBUG_LIMIT(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
+ #define IWL_DEBUG_HT(f, a...) IWL_DEBUG(IWL_DL_HT, f, ## a)
+ #define IWL_DEBUG_STATS(f, a...) IWL_DEBUG(IWL_DL_STATS, f, ## a)
+ #define IWL_DEBUG_TX_REPLY(f, a...) IWL_DEBUG(IWL_DL_TX_REPLY, f, ## a)
+-- 
+1.5.1
