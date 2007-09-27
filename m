@@ -1,75 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56964
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964843AbXIKUzL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2007 16:55:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-Date: Tue, 11 Sep 2007 22:52:44 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>
-References: <1188875058.13078.428.camel@debian.sh.intel.com> <1189506221.6161.9.camel@johannes.berg> <1ba2fa240709111037u1d48ef25ndf9583ee7dd7635e@mail.gmail.com>
-In-Reply-To: <1ba2fa240709111037u1d48ef25ndf9583ee7dd7635e@mail.gmail.com>
+Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:41767 "HELO
+	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751499AbXI0LoZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 07:44:25 -0400
+Date: Thu, 27 Sep 2007 04:44:23 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [patch 6/7] mac80211: allow only one IBSS interface
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Message-Id: <200709112252.45020.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <2113.93857.qm@web51404.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 September 2007 19:37:40 Tomas Winkler wrote:
-> On 9/11/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Mon, 2007-09-10 at 17:20 +0300, Tomas Winkler wrote:
-> >
-> > > It is my best intention yet first we need native interface which make
-> > > in turn problems in eb tables. So it is a long shot.
-> >
-> > Ok. We've managed long enough without it so I guess we can wait :)
-> >
-> > > I wouldn't appreciate this at all. 11n is major feature of our NIC.
-> > > Major obstacle in finally pushing 11n is constant  code base change of
-> > > iwlwifi. This is already 4th  code base. The latest was because the
-> > > driver didn't look nice enough, what an engineering   reason! In the
-> > > bottom line we are hunting our own tail for wrong reasons
-> >
-> > Well, I believe that there are bad layering violations in your current
-> > driver, namely looking at the packets mac80211 sends, doing 11N
-> > manipulations and everything in the driver and duplicating the sta_info
-> > stuff because mac80211 happens to be missing a few hooks. If you think
-> > those are "wrong reasons" that's fine with me.
-> 
-> There is no doubt that what you currently see is ugly, we reworked the
-> code and added these few hooks the problem is that they don't apply
-> anymore  to recent code, since I'm stabilizing basic flows after each
-> code base in the middle of development.
-> I know I'm not 'release often' complained but I really test the code
-> that I'm publishing, it takes time.
-> I prefer to have stable driver and fix it step by step then releasing
-> 30 patches that nobody have time to consume and review in addition it
-> just kills the functionality. Don't know maybe I'm too old for Linux
-> :)
+Well, the Unix and those the Linux way is "Give 'em enough rope...".
+Sure, things might break if you don't know what you do, but the
+same is true when you do "rm -rf /" as root. I really don't see the
+point of protecting root from itself.
+=20
+-- =20
+Regards
+=20
+       Joerg
+=20
 
-Well, if you post the patches to get included into wireless-dev,
-people will start testing them. So they test them im parallel
-with you (you will do your testing of course as well).
-Of course you do some basic testing before releasing the patches,
-such as "does it compile" or "does the card basically still work".
-But with this you get _more_ review and testing. That's the whole
-point of "release early and often".
-Testing early-released patches is SMP, while testing alone is UP. ;)
 
-> > Personally, I'm just raising these points and marking them down as
-> > "against merging as-is". If others don't care about them, that's ok with
-> > me.
-> >
-> After all it is functional driver. It gets ~60Mps in TCP even more.
+----- Urspr=FCngliche Mail ----
+Von: Johannes Berg <johannes@sipsolutions.net>
+An: Joerg Pommnitz <pommnitz@yahoo.com>
+CC: linux-wireless@vger.kernel.org
+Gesendet: Donnerstag, den 27. September 2007, 10:50:38 Uhr
+Betreff: Re: [patch 6/7] mac80211: allow only one IBSS interface
 
-Well, lots of other functional stuff was rejected, because it was
-simply ugly and a maintanance hell. (I'm not saying that your driver
-is such a thing. I didn't look at it, yet).
+[Could you please use reply-to-all and not break threads? thanks]
 
--- 
-Greetings Michael.
+On Thu, 2007-09-27 at 01:08 -0700, Joerg Pommnitz wrote:
+
+> Well, consider the case that you want to route between
+> two *different* IBSS networks with a single NIC. This=20
+> could be really useful and those a nice feature to have.
+
+Yes, but consider the case where it all breaks because you associate to
+the same IBSS. IMHO correctness is more important than "nice features".
+It would be possible to fix the issue, by keeping track of the beaconin=
+g
+etc. in software and having the two IBSS interfaces see each other via
+software since they can't in hardware, but I'm not interested in
+expending that effort right now.
+
+johannes
+
+
+
+
+
+
+      Machen Sie Yahoo! zu Ihrer Startseite. Los geht's:=20
+http://de.yahoo.com/set
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
