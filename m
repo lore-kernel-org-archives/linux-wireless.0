@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41345
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680AbXIDTSP (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:38788 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbXI0O1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 15:18:15 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] bcm43xx: Fix cancellation of work queue crashes
-Date: Tue, 4 Sep 2007 21:17:49 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46ddae8c.UPc5+Azm3rCZdJxZ%Larry.Finger@lwfinger.net>
-In-Reply-To: <46ddae8c.UPc5+Azm3rCZdJxZ%Larry.Finger@lwfinger.net>
+	Thu, 27 Sep 2007 10:27:33 -0400
+Message-ID: <46FBBD78.2050001@oracle.com>
+Date: Thu, 27 Sep 2007 07:26:00 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709042117.50006.mb@bu3sch.de>
+To: Zhu Yi <yi.zhu@intel.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH] iwlwifi: set fixed rate through debugfs
+References: <11908636643693-git-send-email-yi.zhu@intel.com>	 <11908636662994-git-send-email-yi.zhu@intel.com>	 <11908636683204-git-send-email-yi.zhu@intel.com>	 <11908636692415-git-send-email-yi.zhu@intel.com>	 <119086367088-git-send-email-yi.zhu@intel.com>	 <11908636712746-git-send-email-yi.zhu@intel.com>	 <11908636732679-git-send-email-yi.zhu@intel.com>	 <11908636743625-git-send-email-yi.zhu@intel.com>	 <11908636753775-git-send-email-yi.zhu@intel.com>	 <11908636772860-git-send-email-yi.zhu@intel.com>	 <11908636781043-git-send-email-yi.zhu@intel.com>	 <1190863679136-git-send-email-yi.zhu@intel.com>	 <11908636801368-git-send-email-yi.zhu@intel.com>	 <11908636823439-git-send-email-yi.zhu@intel.com>	 <20070926213517.042008a9.randy.dunlap@oracle.com> <1190868222.25840.89.camel@debian.sh.intel.com>
+In-Reply-To: <1190868222.25840.89.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 September 2007, Larry Finger wrote:
-> A crash upon booting that is caused by bcm43xx has been reported [1] and
-> found to be due to a work queue being reinitialized while work on that
-> queue is still pending. This fix modifies the shutdown of work queues and
-> prevents periodic work from being requeued during shutdown. With this patch,
-> no more crashes on reboot were observed by the original reporter. I do not
-> get that particular failure on my system; however, when running a large
-> number of ifdown/ifup sequences, my system would kernel panic with the
-> 'caps lock' light blinking at roughly a 1 Hz rate. In addition, there were
-> infrequent failures in the firmware that resulted in 'IRQ READY TIMEOUT'
-> errors. With this patch, no more of the first type of failure occur, and
-> incidence of the second type is greatly reduced.
+Zhu Yi wrote:
+> On Wed, 2007-09-26 at 21:35 -0700, Randy Dunlap wrote:
+>> Is this just for developer/tester debug use, not for normal use? 
 > 
-> [1] http://bugzilla.kernel.org/show_bug.cgi?id=8937
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Yeah, this is for developer debug only at this time.
 
-This version of the patch is
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Yes, as long as it's using debugfs, it's forever for developer/tester use.
+You can't expect or require debugfs to be built or mounted for normal use.
+
+-- 
+~Randy
+Phaedrus says that Quality is about caring.
