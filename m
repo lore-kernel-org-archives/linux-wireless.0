@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46633 "EHLO mail.dvmed.net"
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757685AbXIBBnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:43:33 -0400
-Message-ID: <46DA1543.7030505@garzik.org>
-Date: Sat, 01 Sep 2007 21:43:31 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "Constantine A. Murenin" <mureninc@gmail.com>
-CC: Jason Dixon <jason@dixongroup.net>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
-Subject: Re: That whole "Linux stealing our code" thing
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>	 <46D99FB7.6030505@garzik.org>	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>	 <46DA1315.9060002@garzik.org> <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
-In-Reply-To: <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1751501AbXI0Der (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:47 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: workaournd REPLY_COMPRESSED_BA command in iwl_rx_handle
+Date: Thu, 27 Sep 2007 11:27:31 +0800
+Message-Id: <11908636683204-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636662994-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Constantine A. Murenin wrote:
-> On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
->> Jason Dixon wrote:
->>> Once the grantor (Reyk) releases his code under that license, it must
->>> remain.  You are free to derive work and redistribute under your
->>> license, but the original copyright and license permission remains
->>> intact.  Many other entities (Microsoft, Apple, Sun, etc) have used BSD
->>> code and have no problem understanding this.  Why is this so difficult
->>> for the Linux brain share to absorb?
->> Why is it so difficult to understand dual licensing?
-> 
-> Maybe because Reyk's code was never dual-licensed?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-And yet a good portion of Theo's response, in particular his accusations 
-of Alan Cox exhorting people to break the law, were directly related to 
-dual licensing.
-
-	Jeff
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 9ad68b0..8ae7c30 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4613,6 +4613,7 @@ static void iwl_rx_handle(struct iwl_priv *priv)
+ 		reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME) &&
+ 			(pkt->hdr.cmd != REPLY_RX_PHY_CMD) &&
+ 			(pkt->hdr.cmd != REPLY_4965_RX) &&
++			(pkt->hdr.cmd != REPLY_COMPRESSED_BA) &&
+ 			(pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
+ 			(pkt->hdr.cmd != REPLY_TX);
+ 
+-- 
+1.5.1
