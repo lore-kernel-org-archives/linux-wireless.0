@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60676
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752536AbXIYVac (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52654
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757284AbXI0WgW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 17:30:32 -0400
-Date: Tue, 25 Sep 2007 14:30:10 -0700 (PDT)
-Message-Id: <20070925.143010.112603042.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: johannes@sipsolutions.net, kune@deine-taler.de, dsd@gentoo.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: zd1211 or mac80211: SKB invalid truesize
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200709252325.03360.mb@bu3sch.de>
-References: <200709252242.12331.mb@bu3sch.de>
-	<20070925.141816.71108553.davem@davemloft.net>
-	<200709252325.03360.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 27 Sep 2007 18:36:22 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] b43: RF-kill support
+Date: Fri, 28 Sep 2007 00:33:35 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200709272135.35686.mb@bu3sch.de> <200709272303.57040.mb@bu3sch.de> <46FC2BE9.2050705@lwfinger.net>
+In-Reply-To: <46FC2BE9.2050705@lwfinger.net>
+MIME-Version: 1.0
+Message-Id: <200709280033.35765.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Tue, 25 Sep 2007 23:25:02 +0200
+On Friday 28 September 2007 00:17:13 Larry Finger wrote:
+> Michael Buesch wrote:
+> > 
+> > Yeah, sure. But it's not useless. The other functionality is still available.
+> > I'll fix that. But in a seperate patch. No need to delay this one because
+> > of this (IMO) minor issue.
+> > 
+> 
+> How long will the delay be? If relatively short, I'll wait for the final one before submitting the
+> port to b43legacy.
 
-> Yeah, well. But how can this happen? Someone assigning to skb->len?
-> zd1211 doesn't do this.
-> Any slight idea which (kind of) code could trigger this?
+One or two days, maybe.
+I'm currently debugging another important bug.
+And I guess I'll have to sleep in an hour or two, too. :)
 
-Anything which modifies skb->truesize directly would be
-suspect.
+The rfkill fix will be incremental based on this one, then.
 
-Most modifications of skb->len go through the standard
-interfaces like skb_put(), skb_pull() etc. and those
-assert whether we go over and under the limits.
-
-Therefore something that modifies skb->len directly would
-be suspect as well.
+-- 
+Greetings Michael.
