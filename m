@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:34023 "EHLO khc.piap.pl"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2229 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751902AbXITMWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 08:22:15 -0400
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: AR5006 - should it work?
-References: <m3odg0dji3.fsf@maximus.localdomain>
-	<40f31dec0709190755h5ea62e0cv578f2a5ed0788d80@mail.gmail.com>
-	<m3ir66s1zn.fsf@maximus.localdomain>
-	<40f31dec0709191939l6f99b59gd31d5291057692a2@mail.gmail.com>
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Thu, 20 Sep 2007 14:22:13 +0200
-In-Reply-To: <40f31dec0709191939l6f99b59gd31d5291057692a2@mail.gmail.com> (Nick Kossifidis's message of "Thu, 20 Sep 2007 05:39:33 +0300")
-Message-ID: <m3wsul5xxm.fsf@maximus.localdomain>
+	id S1759370AbXI0VJI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 17:09:08 -0400
+Date: Thu, 27 Sep 2007 16:36:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	linux-wireless@vger.kernel.org, rjwysocki@sisk.pl,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas: fix link errors (bz# 9077)
+Message-ID: <20070927203650.GD7991@tuxdriver.com>
+References: <20070927101742.44146651.randy.dunlap@oracle.com> <1190915263.5021.8.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1190915263.5021.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Nick Kossifidis" <mickflemm@gmail.com> writes:
+On Thu, Sep 27, 2007 at 07:47:43PM +0200, Johannes Berg wrote:
+> On Thu, 2007-09-27 at 10:17 -0700, Randy Dunlap wrote:
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> > 
+> > Fix missing symbols in libertas USB driver when it is modular and rest
+> > of libertas is built-in.
+> 
+> Ohhh. Thanks Randy, I stared at this problem for a while and never
+> noticed that it said _USB there.
 
->> Is it possible that a signal which shows as 20/127 on 5004X
->> is too weak for 5006X to be detected by scanning?
->
-> Nope it's fine, it might be that 5006X's RF part is not initialized
-> propertly so it doesn't "hear" 5004X.
+FWIW, the equivalent change seems to already be in net-2.6.24.
 
-Thanks. I will try the binary HAL to see if it changes anything,
-there is always a chance the cards are damaged (not very likely,
-I have 4 AR5006X).
+John
 -- 
-Krzysztof Halasa
+John W. Linville
+linville@tuxdriver.com
