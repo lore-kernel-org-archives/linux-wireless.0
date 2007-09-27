@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.224]:24097 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919AbXIVScF (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:15830 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbXI0RTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Sep 2007 14:32:05 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so868934qbe
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2007 11:32:04 -0700 (PDT)
-Message-ID: <40f31dec0709221132q4e65b975s4e1fa402beab065@mail.gmail.com>
-Date: Sat, 22 Sep 2007 21:32:04 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH] ath5k - Fix filters for AR5212, correct return values for WEP
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <46F2E56D.1040606@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709201413w4cee6ea5v799f4b88e1982e5a@mail.gmail.com>
-	 <46F2E3A9.2040605@gmail.com>
-	 <43e72e890709201424k3a18a5cbnbbb488dbf5bb19d3@mail.gmail.com>
-	 <46F2E56D.1040606@gmail.com>
+	Thu, 27 Sep 2007 13:19:01 -0400
+Date: Thu, 27 Sep 2007 10:17:42 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, rjwysocki@sisk.pl
+Subject: [PATCH] libertas: fix link errors (bz# 9077)
+Message-Id: <20070927101742.44146651.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ppl can someone plz port also these changes from madwifi svn ??? Sorry
-for not doing this myself i'm really out of time these days...
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-http://madwifi.org/changeset/2704
-http://madwifi.org/changeset/2703
-http://madwifi.org/changeset/2701
-http://madwifi.org/changeset/2700
-http://madwifi.org/changeset/2698
+Fix missing symbols in libertas USB driver when it is modular and rest
+of libertas is built-in.
 
-2007/9/21, Jiri Slaby <jirislaby@gmail.com>:
-> On 09/20/2007 11:24 PM, Luis R. Rodriguez wrote:
-> > On 9/20/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> >     int ret = 0;
-> >> +       switch(key->alg) {
-> >> +        case ALG_WEP:
-> >> +               break;
-> >> +        case ALG_TKIP:
-> >> +        case ALG_CCMP:
-> >> +               return -EOPNOTSUPP;
-> >>
-> >> Some broken whitespace here :).
-> >
-> > You mean all the extra spaces on the left instead of Tabs? If so then
-> > ACK, attached v2.
->
-> Yes, nice.
->
-> --
-> Jiri Slaby (jirislaby@gmail.com)
-> Faculty of Informatics, Masaryk University
->
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/net/wireless/Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--- linux-2.6.23-rc8.orig/drivers/net/wireless/Makefile
++++ linux-2.6.23-rc8/drivers/net/wireless/Makefile
+@@ -43,7 +43,7 @@ obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ 
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+-obj-$(CONFIG_LIBERTAS_USB)     += libertas/
++obj-$(CONFIG_LIBERTAS)		+= libertas/
+ 
+ rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
+ obj-$(CONFIG_RTL8187)	+= rtl8187.o
