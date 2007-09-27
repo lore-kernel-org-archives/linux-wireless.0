@@ -1,79 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:20973 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751377AbXIXWNS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 18:13:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 5/6] adm8211: Pass all TXed frames to tx_status_irqsafe
-Date: Mon, 24 Sep 2007 18:10:25 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20070924221025.6870.90503.stgit@magic.sourmilk.net>
-In-Reply-To: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
-References: <20070924221025.6870.53754.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751501AbXI0Des (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:48 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: Correction for sending beacon in config_ap
+Date: Thu, 27 Sep 2007 11:27:32 +0800
+Message-Id: <11908636692415-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636683204-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+This patch takes out sending beacon from conditional in
+config_ap function.
 
-ieee80211_tx_status_irqsafe can handle the freeing of all TXed frames.
-
-Also, set excessive_retries for failed frames.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/adm8211.c |   27 +++++++++++++--------------
- 1 files changed, 13 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index e950a7d..95c8315 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -299,6 +299,7 @@ static void adm8211_interrupt_tci(struct ieee80211_hw *dev)
- 	for (dirty_tx = priv->dirty_tx; priv->cur_tx - dirty_tx; dirty_tx++) {
- 		unsigned int entry = dirty_tx % priv->tx_ring_size;
- 		u32 status = le32_to_cpu(priv->tx_ring[entry].status);
-+		struct ieee80211_tx_status tx_status;
- 		struct adm8211_tx_ring_info *info;
- 		struct sk_buff *skb;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 8ae7c30..af261e6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -7495,9 +7495,8 @@ static void iwl_config_ap(struct iwl_priv *priv)
+ 		iwl_activate_qos(priv, 1);
+ #endif
+ 		iwl_rxon_add_station(priv, BROADCAST_ADDR, 0);
+-		iwl_send_beacon_cmd(priv);
+-	} else
+-		iwl_send_beacon_cmd(priv);
++	}
++	iwl_send_beacon_cmd(priv);
  
-@@ -314,21 +315,19 @@ static void adm8211_interrupt_tci(struct ieee80211_hw *dev)
- 		pci_unmap_single(priv->pdev, info->mapping,
- 				 info->skb->len, PCI_DMA_TODEVICE);
- 
--		if (info->tx_control.flags & IEEE80211_TXCTL_REQ_TX_STATUS) {
--			struct ieee80211_tx_status tx_status = {{0}};
--			struct ieee80211_hdr *hdr;
--			size_t hdrlen = info->hdrlen;
--
--			skb_pull(skb, sizeof(struct adm8211_tx_hdr));
--			hdr = (struct ieee80211_hdr *)skb_push(skb, hdrlen);
--			memcpy(hdr, skb->cb, hdrlen);
--			memcpy(&tx_status.control, &info->tx_control,
--			       sizeof(tx_status.control));
--			if (!(status & TDES0_STATUS_ES))
-+		memset(&tx_status, 0, sizeof(tx_status));
-+		skb_pull(skb, sizeof(struct adm8211_tx_hdr));
-+		memcpy(skb_push(skb, info->hdrlen), skb->cb, info->hdrlen);
-+		memcpy(&tx_status.control, &info->tx_control,
-+		       sizeof(tx_status.control));
-+		if (!(tx_status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
-+			if (status & TDES0_STATUS_ES)
-+				tx_status.excessive_retries = 1;
-+			else
- 				tx_status.flags |= IEEE80211_TX_STATUS_ACK;
--			ieee80211_tx_status_irqsafe(dev, skb, &tx_status);
--		} else
--			dev_kfree_skb_irq(skb);
-+		}
-+		ieee80211_tx_status_irqsafe(dev, skb, &tx_status);
-+
- 		info->skb = NULL;
- 	}
- 
-
+ 	/* FIXME - we need to add code here to detect a totally new
+ 	 * configuration, reset the AP, unassoc, rxon timing, assoc,
+-- 
+1.5.1
