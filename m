@@ -1,103 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52404 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754662AbXIRTGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 15:06:42 -0400
-Subject: Re: iwlist and network-manager bug report
-From: Dan Williams <dcbw@redhat.com>
-To: jt@hpl.hp.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070918173718.GA1466@bougret.hpl.hp.com>
-References: <1189526874.6161.30.camel@johannes.berg>
-	 <1189610572.5644.28.camel@xo-3E-67-34.localdomain>
-	 <20070912170153.GA25785@bougret.hpl.hp.com>
-	 <1189667496.6161.77.camel@johannes.berg>
-	 <20070918003628.GA28939@bougret.hpl.hp.com>
-	 <1190110522.23521.36.camel@johannes.berg>
-	 <20070918173718.GA1466@bougret.hpl.hp.com>
-Content-Type: text/plain
-Date: Tue, 18 Sep 2007 15:02:03 -0400
-Message-Id: <1190142123.12515.3.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34693
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759565AbXI0TfI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 15:35:08 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: Add support for hardware-only rfkill buttons
+Date: Thu, 27 Sep 2007 21:34:23 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709272134.23888.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-09-18 at 10:37 -0700, Jean Tourrilhes wrote:
-> On Tue, Sep 18, 2007 at 12:15:22PM +0200, Johannes Berg wrote:
-> > On Mon, 2007-09-17 at 17:36 -0700, Jean Tourrilhes wrote:
-> > 
-> > > > Yeah, I don't think they cared for non-ascii at the time.
-> > > 
-> > > 	There were not concerned about UI, witness the mess in
-> > > specifying WEP keys (do you want passphrase with that ?).
-> > 
-> > Is passphrase actually specified in 802.11? I always thought it was some
-> > external hashing but didn't look it up.
-> 
-> 	Yes, it's some external hashing, and if I remember there is at
-> least two variants of it.
+Buttons that work directly on hardware cannot support
+the "user_claim" functionality. Add a flag to signal
+this and return -EOPNOTSUPP in this case.
+b43 is such a device.
 
-There are three: a) ASCII passphrase, b) MD5 passphrase (the most
-popular), and c) Apple Airport password.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-All three result in a different key for the same input.
-
-Dan
-
-> > But yes, I don't think in 1999
-> > many people cared about general UIs...
-> > 
-> > > 	I'm talking of all driver that have their own private API :
-> > > --------------------------------
-> > > # cat /proc/driver/aironet/eth0/SSID 
-> > > MY_ESSID
-> > > --------------------------------
-> > 
-> > Oh. I didn't think that existed. Is there any point in that or could we
-> > just remove it?
-> 
-> 	I say we just ignore it, it mostly legacy drivers, and some
-> people may use it.
-> 
-> > > 	I forgot one little issue.
-> > > 	Remember all the fuss about the ESSID API change a long while
-> > > back ? The goal was to support ESSID a array of char as opposed to
-> > > ASCII strings in the API. There was a big fuss, and at that time John
-> > > did a backward compatibility hack to support the old API in the
-> > > kernel.
-> > > 	Well, the hack of John is broken on the receive side. It
-> > > basically prevents us to implement what you want, amongst other
-> > > things. This is what you currently get :
-> > > ---------------------------------------
-> > > >./iwconfig eth0
-> > > eth0      IEEE 802.11b  ESSID:"my_essid\x00"  Nickname:"HERMES I"
-> > >           Mode:Managed  Frequency:2.422 GHz  Access Point: Not-Associated   
-> > >           Bit Rate:11 Mb/s   Sensitivity:1/3  
-> > > ---------------------------------------
-> > 
-> > Hmmm. So we already \x00-escape the trailing NUL?
-> 
-> 	No, that's only in the brand new version of Wireless Tools
-> 30.pre1 that include the escaping code. I coded that following your
-> suggestions, it includes full escaping in output and input. But now
-> I'm stuck because of that bug, I can't really distribute it.
-> 
-> > > 	I've already sent the patch to fix that to John, don't know
-> > > where it went :
-> > > 		http://marc.info/?t=118401941300001&r=1&w=2
-> > > 	I can resend you a copy if you want. I feel this patch ought
-> > > to go also in the various stable series.
-> > 
-> > Probably got lost, you should probably resend and to -stable as well.
-> 
-> 	I'll do, but you seem much more efficient at getting stuff in
-> the kernel ;-)
-> 
-> > johannes
-> 
-> 	Regards,
-> 
-> 	Jean
-> 
-
+Index: wireless-2.6/include/linux/rfkill.h
+===================================================================
+--- wireless-2.6.orig/include/linux/rfkill.h	2007-09-27 16:21:37.000000000 +0200
++++ wireless-2.6/include/linux/rfkill.h	2007-09-27 20:54:25.000000000 +0200
+@@ -52,6 +52,8 @@ enum rfkill_state {
+  * @type: Radio type which the button controls, the value stored
+  *	here should be a value from enum rfkill_type.
+  * @state: State of the switch (on/off).
++ * @user_claim_unsupported: Whether the hardware supports exclusive
++ *	RF-kill control by userspace. Set this before registering.
+  * @user_claim: Set when the switch is controlled exlusively by userspace.
+  * @mutex: Guards switch state transitions
+  * @data: Pointer to the RF button drivers private data which will be
+@@ -69,6 +71,7 @@ struct rfkill {
+ 	enum rfkill_type type;
+ 
+ 	enum rfkill_state state;
++	bool user_claim_unsupported;
+ 	bool user_claim;
+ 
+ 	struct mutex mutex;
+Index: wireless-2.6/net/rfkill/rfkill.c
+===================================================================
+--- wireless-2.6.orig/net/rfkill/rfkill.c	2007-09-27 16:32:30.000000000 +0200
++++ wireless-2.6/net/rfkill/rfkill.c	2007-09-27 20:54:50.000000000 +0200
+@@ -190,6 +190,10 @@ static ssize_t rfkill_claim_store(struct
+ 	if (error)
+ 		return error;
+ 
++	if (rfkill->user_claim_unsupported) {
++		error = -EOPNOTSUPP;
++		goto out_unlock;
++	}
+ 	if (rfkill->user_claim != claim) {
+ 		if (!claim)
+ 			rfkill_toggle_radio(rfkill,
+@@ -197,9 +201,10 @@ static ssize_t rfkill_claim_store(struct
+ 		rfkill->user_claim = claim;
+ 	}
+ 
++out_unlock:
+ 	mutex_unlock(&rfkill_mutex);
+ 
+-	return count;
++	return error ? error : count;
+ }
+ 
+ static struct device_attribute rfkill_dev_attrs[] = {
