@@ -1,112 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41302
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332AbXIYVfS (ORCPT
+Received: from ranger.systems.pipex.net ([62.241.162.32]:53901 "EHLO
+	ranger.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755241AbXI0WjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 17:35:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Thu, 27 Sep 2007 18:39:22 -0400
+From: Adam Baker <linux@baker-net.org.uk>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix interface initialisation
-Date: Tue, 25 Sep 2007 23:32:36 +0200
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-References: <200709252206.57855.mb@bu3sch.de> <1190755892.18521.330.camel@johannes.berg>
-In-Reply-To: <1190755892.18521.330.camel@johannes.berg>
+Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
+Date: Thu, 27 Sep 2007 23:00:29 +0100
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net, jbenc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>
+References: <200708082324.17186.linux@baker-net.org.uk> <1190754547.18521.326.camel@johannes.berg> <1190755233.18521.328.camel@johannes.berg>
+In-Reply-To: <1190755233.18521.328.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200709252332.37064.mb@bu3sch.de>
+  charset="utf-8"
+Message-Id: <200709272300.29829.linux@baker-net.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 25 September 2007 23:31:32 Johannes Berg wrote:
-> When an interface is registered it is still uninitialised so
-> ieee80211_if_reinit() can't be called on it (it will oops.)
-> Hence, we need to move the uninit method assignment. Also,
-> this patch fixes the bug that the master device is never
-> initialised at all.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Tuesday 25 September 2007 22:20, Johannes Berg wrote:
+> On Tue, 2007-09-25 at 23:09 +0200, Johannes Berg wrote:
+> > On Tue, 2007-08-21 at 12:34 +0200, Johannes Berg wrote:
+> > > At that point, sdata->bss should point to the master device, which
+> > > apparently hasn't been initialised yet. The device initialisation code
+> > > is pretty black magic to me, Jiri/Michael?
+> >
+> > No reply. Can you try this patch?
+>
+> Ah, no, there's a bug in this. Try this:
+> http://johannes.sipsolutions.net/patches/kernel/all/2007-09-25-21%3a19/005-
+>mac80211-fix-register-netdevice-error-return-oops.patch
+>
 
-I guess you should send this
-To: John Linville
-instead :)
+I can't currently test it the way I was testing before because rt2x00 
+currently Oopses on unplug (I'll investigate that tomorrow) but it did 
+occasionally crash on scanning even if the interface had been up for a long 
+time before and with this patch it has survived quite a few scans.
 
-Though, I tested this and ACK it.
+I'll keep testing but it looks promising.
 
-> ---
->  net/mac80211/ieee80211.c       |    3 +--
->  net/mac80211/ieee80211_iface.c |   20 +++++++++++++++++++-
->  2 files changed, 20 insertions(+), 3 deletions(-)
-> 
-> --- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-25 22:26:31.341579155 +0200
-> +++ wireless-dev/net/mac80211/ieee80211.c	2007-09-25 23:28:21.581572375 +0200
-> @@ -266,7 +266,6 @@ void ieee80211_if_mgmt_setup(struct net_
->  	dev->stop = ieee80211_mgmt_stop;
->  	dev->type = ARPHRD_IEEE80211_PRISM;
->  	dev->hard_header_parse = header_parse_80211;
-> -	dev->uninit = ieee80211_if_reinit;
->  	dev->destructor = ieee80211_if_free;
->  }
->  
-> @@ -543,7 +542,6 @@ void ieee80211_if_setup(struct net_devic
->  	dev->change_mtu = ieee80211_change_mtu;
->  	dev->open = ieee80211_open;
->  	dev->stop = ieee80211_stop;
-> -	dev->uninit = ieee80211_if_reinit;
->  	dev->destructor = ieee80211_if_free;
->  }
->  
-> @@ -1234,6 +1232,7 @@ int ieee80211_register_hw(struct ieee802
->  		goto fail_dev;
->  
->  	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
-> +	ieee80211_if_set_type(local->mdev, IEEE80211_IF_TYPE_AP);
->  
->  	result = ieee80211_init_rate_ctrl_alg(local, NULL);
->  	if (result < 0) {
-> --- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-25 22:26:40.111572537 +0200
-> +++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-25 23:28:21.651570910 +0200
-> @@ -127,6 +127,12 @@ int ieee80211_if_add_mgmt(struct ieee802
->  	if (ret)
->  		goto fail;
->  
-> +	/*
-> +	 * Called even when register_netdevice fails, it would
-> +	 * oops if assigned before initialising the rest.
-> +	 */
-> +	ndev->uninit = ieee80211_if_reinit;
-> +
->  	ieee80211_debugfs_add_netdev(nsdata);
->  
->  	if (local->open_count > 0)
-> @@ -155,7 +161,19 @@ void ieee80211_if_set_type(struct net_de
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	int oldtype = sdata->type;
->  
-> -	dev->hard_start_xmit = ieee80211_subif_start_xmit;
-> +	/*
-> +	 * We need to call this function on the master interface
-> +	 * which already has a hard_start_xmit routine assigned
-> +	 * which must not be changed.
-> +	 */
-> +	if (!dev->hard_start_xmit)
-> +		dev->hard_start_xmit = ieee80211_subif_start_xmit;
-> +
-> +	/*
-> +	 * Called even when register_netdevice fails, it would
-> +	 * oops if assigned before initialising the rest.
-> +	 */
-> +	dev->uninit = ieee80211_if_reinit;
->  
->  	sdata->type = type;
->  	switch (type) {
-> 
-> 
-> 
-> 
-
-
-
--- 
-Greetings Michael.
+Adam Baker
