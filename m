@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60152 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751646AbXISDCz (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:26056 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756284AbXI0SAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 23:02:55 -0400
-Message-ID: <46F09167.5020606@lwfinger.net>
-Date: Tue, 18 Sep 2007 22:03:03 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 27 Sep 2007 14:00:11 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4958071pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 11:00:10 -0700 (PDT)
+Message-ID: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
+Date: Thu, 27 Sep 2007 14:00:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: New 'Changes-licensed-under' tag introduced for Linux-wireless
+Cc: "linux kernel" <linux-kernel@vger.kernel.org>
 MIME-Version: 1.0
-To: jt@hpl.hp.com
-CC: John Linville <linville@tuxdriver.com>,
-	YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit 4cf92a3c
-References: <20070917.042418.19962472.yoshfuji@linux-ipv6.org> <20070917165435.GA26926@bougret.hpl.hp.com> <46EF5534.3030609@lwfinger.net> <20070918174202.GB1466@bougret.hpl.hp.com>
-In-Reply-To: <20070918174202.GB1466@bougret.hpl.hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jean Tourrilhes wrote:
-> 
-> 	Could you be more explicit ? Reverting the patch will just
-> bring back the old bug, and the old code was obviously wrong. I don't
-> like the idea of trading one bug for another bug. It looks to me like
-> nobody knows what's exactly happening in the driver and we are just
-> trying random fixes and see what breaks.
-> 	Could you figure out what's exactly happening and make a
-> proper fix ?
-> 	Regards,
+Our guidelines for patches [1] for Linux-wireless has been updated.
+One section asks Linux-wireless developers to subscribe to the patch
+guideline wiki page (section 2) and another which introduces the new
+'Changes-licensed-under' (section 10).
 
-It took me nearly two days, but I finally found the correct fix for the bug that made it impossible
-to set the essid. The resulting patch has been sent to John.
+Here I'll cover the new 'Changes-licensed-under' tag but please refer
+to the link and subscribe to the page for the complete details and for
+further changes.
 
-Larry
+--
+
+Based on the new guidelines posted by the SFLC on ''Maintaining
+Permissive-Licensed Files in a GPL-Licensed Project: Guidelines for
+Developers'' [2], specifically section 5, we are introducing a new tag
+for use with patches which deal with files licensed under permissive
+licenses (BSD, ISC) on Linux wireless in our larger GPL project, the
+Linux kernel. The tag is Changes-licensed-under and can be used by
+developers to clarify the intended license for their patch on
+permissive licensed files. It is clear that not all changes qualify a
+patch author for Copyright but a lot of patches do qualify an author
+for copyright. If you want crystal clear details of what constitutes
+as a copyrightable change, at least within the US and the EU, you can
+refer to SFLC's ''Originality Requirements under U.S. and E.U.
+Copyright Law'' [3].
+
+Although some developers have a practice of implying their patches for
+a permissive licensed file abides by the respective permissive license
+of the file being patched, and although some changes are obviously not
+copyrightable, we would like to ''err on the side of caution'', take
+the advice from SFLC, and introduce Changes-licensed-under in order to
+help the BSD family reap benefits of our contributions to permissive
+licensed files.
+
+The Changes-licensed-under tag should be put before the Signed-off-by
+tag. Since this tag is used to cover changes under permissive licenses
+example of possible licenses are 3-Clause-BSD, and ISC. If you are
+making changes to multiple permissive licensed files then please
+specify which license covers what files.
+
+--
+
+For examples of using this tag please refer to the guidelines.
+
+[1] http://linuxwireless.org/en/developers/SubmittingPatches
+[2] http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
+[3] http://www.softwarefreedom.org/resources/2007/originality-requirements.html
+
+  Luis
