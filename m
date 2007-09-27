@@ -1,133 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:27227 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762993AbXIUW5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 18:57:34 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1811468pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2007 15:57:33 -0700 (PDT)
-Message-ID: <43e72e890709211557q2aed1c6ai9e487eff731bebb3@mail.gmail.com>
-Date: Fri, 21 Sep 2007 18:57:32 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/5] Wireless: add IEEE-802.11 regualtory domain module
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Daniel Drake" <dsd@gentoo.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-In-Reply-To: <1190411890.18521.179.camel@johannes.berg>
+Received: from mail.sflc.info ([216.27.154.199]:39409 "EHLO mail.sflc.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759456AbXI0Xeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 19:34:46 -0400
+From: "Bradley M. Kuhn" <bkuhn@softwarefreedom.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: "Matt Norwood" <norwood@softwarefreedom.org>,
+	<fontana@softwarefreedom.org>, <karen@softwarefreedom.org>,
+	<mentor@madwifi.org>, <mcgrof@winlab.rutgers.edu>,
+	<proski@gnu.org>, <jirislaby@gmail.com>
+Subject: [PATCH] ath5k: final correction of copyright notices
+References: <43e72e890709180944r1ba08e23n78a533f403b42c00@mail.gmail.com>
+	<20070918170739.GB4940@tuxdriver.com>
+	<43e72e890709181109la8ad972y2e3dbbcb56550a7@mail.gmail.com>
+	<20070918182128.GC4940@tuxdriver.com>
+	<43e72e890709181217i57aee950o177ed6e988cf8c19@mail.gmail.com>
+	<20070918193423.GG4940@tuxdriver.com>
+	<43e72e890709181324r58a24f61wf4e1de518b8bd47e@mail.gmail.com>
+Date: Thu, 27 Sep 2007 18:58:24 -0400
+In-Reply-To: <43e72e890709181324r58a24f61wf4e1de518b8bd47e@mail.gmail.com> (Luis R. Rodriguez's message of "Tue\, 18 Sep 2007 16\:24\:13 -0400")
+Message-ID: <87ejgj4sxb.fsf_-_@ebb.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20070921210437.GG31768@pogo>
-	 <1190410242.18521.171.camel@johannes.berg>
-	 <43e72e890709211452j743fedfcyab6b981a0a3fce09@mail.gmail.com>
-	 <1190411890.18521.179.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/21/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2007-09-21 at 17:52 -0400, Luis R. Rodriguez wrote:
->
-> > > Then we can use "enum ieee80211_band" below in the structs and get type
-> > > checking. Generally, no new stuff has anything to do with
-> > > include/net/ieee80211.h, that's just for the old "stack".
-> >
-> > Sure, I just wanted to point out the band def existed in another
-> > header. My hopes is we can address all common header stuff once in for
-> > all. I guess it'll have to wait a bit more.
->
-> Oh ok. But I think we should start using sane values (these bits look
-> awfully like you could OR them which is totally bogus) and convert the
-> other stack over.
+The patch below is for application to the wireless-2.6 ath5k branch, and
+takes into account the latest driver directory move and file renames.  I
+believe this patch handles all copyright notice issues that SFLC is
+currently aware of.  Based on our extensive research (which is summarized
+in http://www.softwarefreedom.org/resources/2007/ath5k-code-analysis.html)
+we found that the copyright holders below also have a copyright on some
+files; the patch below adds their copyright notices.
 
-ACK -- we can define any value we want into this. Point taken though.
+We encourage future patchers to add their copyright notice (and any
+appropriate additional licensing notices as needed) into the files when
+they make patches.  We also refer developers to our paper at
+http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
+that recommends ways to incorporate permissive-licensed code like this in
+a GPL-licensed project like Linux.
 
-> > > > + * @name: name for this subband.
-> > >
-> > > Why does it need a name?
-> >
-> > Well to distinguish it.
->
-> But why do we need to distinguish subbands by name? What do we use them
-> for anyway?
+We at SFLC were all very happy to do this work for the Linux Wireless team
+and are glad that a favorable outcome for all was reached.
 
-We use it in:
 
-u16 regdomain_ieee2mhz(u16 chan, u8 band)
+I believe I've used all the patch-submission tags correctly based on
+previous discussions and email exchanges with everyone involved, but I
+obviously don't patch the kernel often (er, at all :), so if I've made a
+mistake, please let me know.
 
-freq_band_id() returns it
-
-print_regdomain() uses it to distinguish the band the subband is in.
-
-static int __alloc_band_channels(u32 regdomain_id,
-        struct ieee80211_regdomain *reg, u8 band,
-        u32 sb_chan_domain)
-
-uses it internally to determine from what what regmap array it should
-use to build channels from. That is, it either uses reg_2ghz_channels
-or reg_5ghz_channels.
-
-> > > > + * @min_freq: minimum frequency for this subband, in MHz. This represents the
-> > > > + *   center of frequency of a channel.
-> > > > + * @max_freq: maximum frequency for this subband, in MHz. This represents the
-> > > > + *   center of frequency of a channel.
-> > >
-> > > How can both be center freq?
-> >
-> > min_freq is the center of frequency for the minimum channel on the
-> > subband. max_freq is the center of frequency for the max channel on
-> > the subband. I guess I should clear that up a little more huh.
->
-> Uh ok, no, I just need to read better :)
-
-:-P
-
-> > > > +/**
-> > > > + * struct ieee80211_regdomain - defines a regulatory domain
-> > > > + *
-> > > > + * @regdomain_id: ID of this regulatory domain. Some come from
-> > > > + *   http://standards.ieee.org/getieee802/download/802.11b-1999_Cor1-2001.pdf
-> > > > + * @regdomain_name: name of this regulatory domain.
-> > > > + * @list: node, part of band_restrictions_list
-> > > > + *
-> > > > + * This structure defines a regulatory domain, which consists of channel and
-> > > > + * power restrictions. Some regulatory domains come from
-> > > > + * 802.11b-1999_Cor1-2001, the rest are based on Reyk Floeter's ar5k. If
-> > > > + * there is need to add more values here, please add one that is either
-> > > > + * defined in a standard or that many hardware devices have adopted. Also
-> > > > + * note that multiple countries can map to the same @regdomain_id
-> > >
-> > > There's no table here where you could add values, is there?.
-> >
-> > There is a lot of them.. but we can add few to show as an example.
->
-> Then again. Why do we have this struct in a header file?
-
-cfg80211 uses it. This is how we create a central regulatory domain.
-cfg80211 creates its own struct based on this.
-
-> > I should have explained that too. Well, if you may recall in my last
-> > implementation of this I actually used a linked list. I then decided
-> > we weren't going to add new 2.4GHz or 5GHz subbands unless a big
-> > IEEE-802.11 change occurs. That doesn't happen so often to either use
-> > linked list or a variable length array.
->
-> Ok I just don't understand why you have this information in a struct.
-> Shouldn't all of this information be essentially internal to the
-> regulatory code, and people who use it simply query it and get back a
-> pointer to the subband that applies to their query?
-
-In order to build things and make things concretely. cfg80211 will
-have a ieee80211_regdomain, but well this ieee80211_regdomain has some
-structs we might as well define to make it easier to build from a map.
-
-> I don't see why
-> everybody needs to see this huge array.
-
-Well you are welcome to provide an alternative solution. I first
-started with a linked list, but then that seemed silly as this remains
-constant.. so I think a static array of subbands is easier. Hmm, I
-think I had even tried a variable length array too..
-
-  Luis
+ 
+Changes-licensed-under: ISC
+Signed-off-by: Richard Fontana <fontana@softwarefreedom.org>
+Signed-off-by: Bradley M. Kuhn <bkuhn@softwarefreedom.org>
+Signed-off-by: Matt Norwood <norwood@softwarefreedom.org>
+Signed-off-by: Karen Sandler <karen@softwarefreedom.org>
+Acked-by: Matthew W. S. Bell  <mentor@madwifi.org>
+Acked-by: Pavel Roskin <proski@gnu.org>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
+Acked-by: Luis Rodriguez <mcgrof@winlab.rutgers.edu>
+Acked-by: Michael Taylor <mike.taylor@apprion.com>
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index a392315..ae4c5b5 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -1,6 +1,9 @@
+  /*
+  * Copyright (c) 2004-2007 Reyk Floeter <reyk@openbsd.org>
+  * Copyright (c) 2006-2007 Nick Kossifidis <mickflemm@gmail.com>
++ * Copyright (c) 2007 Matthew W. S. Bell  <mentor@madwifi.org>
++ * Copyright (c) 2007 Luis Rodriguez <mcgrof@winlab.rutgers.edu>
++ * Copyright (c) 2007 Pavel Roskin <proski@gnu.org>
+  * Copyright (c) 2007 Jiri Slaby <jirislaby@gmail.com>
+  *
+  * Permission to use, copy, modify, and distribute this software for any
+diff --git a/drivers/net/wireless/ath5k/hw.h b/drivers/net/wireless/ath5k/hw.h
+index 55ae849..d48754c 100644
+--- a/drivers/net/wireless/ath5k/hw.h
++++ b/drivers/net/wireless/ath5k/hw.h
+@@ -1,6 +1,8 @@
+ /*
+  * Copyright (c) 2004-2007 Reyk Floeter <reyk@openbsd.org>
+  * Copyright (c) 2006-2007 Nick Kossifidis <mickflemm@gmail.com>
++ * Copyright (c) 2007 Matthew W. S. Bell  <mentor@madwifi.org>
++ * Copyright (c) 2007 Luis Rodriguez <mcgrof@winlab.rutgers.edu>
+  *
+  * Permission to use, copy, modify, and distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index d4a8b7b..0a7b312 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2007 Nick Kossifidis <mickflemm@gmail.com>
+  * Copyright (c) 2004, 2005, 2006, 2007 Reyk Floeter <reyk@openbsd.org>
++ * Copyright (c) 2007 Michael Taylor <mike.taylor@apprion.com>
+  *
+  * Permission to use, copy, modify, and distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
