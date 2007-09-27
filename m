@@ -1,269 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755744AbXIFNqG (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52996
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773AbXI0NNX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:46:06 -0400
-Message-Id: <20070905234629.747014000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:26 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 27 Sep 2007 09:13:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
+Subject: [PATCH] mac80211: Add association LED trigger
+Date: Thu, 27 Sep 2007 15:10:44 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 17/21] mac80211: consolidate encryption
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200709271510.45121.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently we run through all crypto handlers for each transmitted
-frame although we already know which one will be used. This
-changes the code to invoke only the needed handler. It also moves
-the wep code into wep.c.
+Many devices have LEDs to indicate the link status.
+Export this functionality to drivers.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
----
- net/mac80211/tx.c  |   62 ++++++++++++-----------------------------------------
- net/mac80211/wep.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/wep.h |    5 +---
- net/mac80211/wpa.c |   10 +++-----
- net/mac80211/wpa.h |    4 +--
- 5 files changed, 77 insertions(+), 61 deletions(-)
-
---- wireless-dev.orig/net/mac80211/tx.c	2007-09-06 01:35:21.734453431 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-09-06 01:35:25.594453431 +0200
-@@ -532,56 +532,26 @@ ieee80211_tx_h_fragment(struct ieee80211
- 	return TXRX_DROP;
+Index: wireless-2.6/include/net/mac80211.h
+===================================================================
+--- wireless-2.6.orig/include/net/mac80211.h	2007-09-26 20:31:04.000000000 +0200
++++ wireless-2.6/include/net/mac80211.h	2007-09-27 12:02:26.000000000 +0200
+@@ -926,6 +926,7 @@ int ieee80211_register_hw(struct ieee802
+ #ifdef CONFIG_MAC80211_LEDS
+ extern char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw);
+ extern char *__ieee80211_get_rx_led_name(struct ieee80211_hw *hw);
++extern char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw);
+ #endif
+ static inline char *ieee80211_get_tx_led_name(struct ieee80211_hw *hw)
+ {
+@@ -945,6 +946,16 @@ static inline char *ieee80211_get_rx_led
+ #endif
  }
  
--static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
--{
--	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
--		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
--			return -1;
--	} else {
--		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
--		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
--			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
--				return -1;
--		}
--	}
--	return 0;
--}
--
- static ieee80211_txrx_result
--ieee80211_tx_h_wep_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_tx_h_encrypt(struct ieee80211_txrx_data *tx)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
--	u16 fc;
--
--	fc = le16_to_cpu(hdr->frame_control);
--
--	if (!tx->key || tx->key->conf.alg != ALG_WEP ||
--	    ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
--	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
--	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
-+	if (!tx->key)
- 		return TXRX_CONTINUE;
++static inline char *ieee80211_get_assoc_led_name(struct ieee80211_hw *hw)
++{
++#ifdef CONFIG_MAC80211_LEDS
++	return __ieee80211_get_assoc_led_name(hw);
++#else
++	return NULL;
++#endif
++}
++
++
+ /* Register a new hardware PHYMODE capability to the stack. */
+ int ieee80211_register_hwmode(struct ieee80211_hw *hw,
+ 			      struct ieee80211_hw_mode *mode);
+Index: wireless-2.6/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_i.h	2007-09-26 23:28:42.000000000 +0200
++++ wireless-2.6/net/mac80211/ieee80211_i.h	2007-09-27 12:03:32.000000000 +0200
+@@ -510,8 +510,8 @@ struct ieee80211_local {
  
--	tx->u.tx.control->iv_len = WEP_IV_LEN;
--	tx->u.tx.control->icv_len = WEP_ICV_LEN;
--	ieee80211_tx_set_iswep(tx);
--
--	if (wep_encrypt_skb(tx, tx->skb) < 0) {
--		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
--		return TXRX_DROP;
--	}
--
--	if (tx->u.tx.extra_frag) {
--		int i;
--		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
--			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
--				I802_DEBUG_INC(tx->local->
--					       tx_handlers_drop_wep);
--				return TXRX_DROP;
--			}
--		}
-+	switch (tx->key->conf.alg) {
-+	case ALG_WEP:
-+		return ieee80211_crypto_wep_encrypt(tx);
-+	case ALG_TKIP:
-+		return ieee80211_crypto_tkip_encrypt(tx);
-+	case ALG_CCMP:
-+		return ieee80211_crypto_ccmp_encrypt(tx);
-+	case ALG_NONE:
-+		return TXRX_CONTINUE;
+ #ifdef CONFIG_MAC80211_LEDS
+ 	int tx_led_counter, rx_led_counter;
+-	struct led_trigger *tx_led, *rx_led;
+-	char tx_led_name[32], rx_led_name[32];
++	struct led_trigger *tx_led, *rx_led, *assoc_led;
++	char tx_led_name[32], rx_led_name[32], assoc_led_name[32];
+ #endif
+ 
+ 	u32 channel_use;
+Index: wireless-2.6/net/mac80211/ieee80211_led.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_led.c	2007-09-26 17:22:49.000000000 +0200
++++ wireless-2.6/net/mac80211/ieee80211_led.c	2007-09-27 12:16:41.000000000 +0200
+@@ -33,33 +33,58 @@ void ieee80211_led_tx(struct ieee80211_l
+ 		led_trigger_event(local->tx_led, LED_FULL);
+ }
+ 
++void ieee80211_led_assoc(struct ieee80211_local *local, bool associated)
++{
++	if (unlikely(!local->assoc_led))
++		return;
++	if (associated)
++		led_trigger_event(local->assoc_led, LED_FULL);
++	else
++		led_trigger_event(local->assoc_led, LED_OFF);
++}
++
+ void ieee80211_led_init(struct ieee80211_local *local)
+ {
+ 	local->rx_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
+-	if (!local->rx_led)
+-		return;
+-	snprintf(local->rx_led_name, sizeof(local->rx_led_name),
+-		 "%srx", wiphy_name(local->hw.wiphy));
+-	local->rx_led->name = local->rx_led_name;
+-	if (led_trigger_register(local->rx_led)) {
+-		kfree(local->rx_led);
+-		local->rx_led = NULL;
++	if (local->rx_led) {
++		snprintf(local->rx_led_name, sizeof(local->rx_led_name),
++			 "%srx", wiphy_name(local->hw.wiphy));
++		local->rx_led->name = local->rx_led_name;
++		if (led_trigger_register(local->rx_led)) {
++			kfree(local->rx_led);
++			local->rx_led = NULL;
++		}
  	}
  
--	return TXRX_CONTINUE;
-+	/* not reached */
-+	WARN_ON(1);
-+	return TXRX_DROP;
- }
- 
- static ieee80211_txrx_result
-@@ -796,9 +766,7 @@ ieee80211_tx_handler ieee80211_tx_handle
- 	ieee80211_tx_h_select_key,
- 	ieee80211_tx_h_michael_mic_add,
- 	ieee80211_tx_h_fragment,
--	ieee80211_tx_h_tkip_encrypt,
--	ieee80211_tx_h_ccmp_encrypt,
--	ieee80211_tx_h_wep_encrypt,
-+	ieee80211_tx_h_encrypt,
- 	ieee80211_tx_h_rate_ctrl,
- 	ieee80211_tx_h_misc,
- 	ieee80211_tx_h_load_stats,
---- wireless-dev.orig/net/mac80211/wpa.c	2007-09-06 01:35:24.464453431 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-09-06 01:35:25.594453431 +0200
-@@ -321,17 +321,16 @@ skip_iv_inc:
- 
- 
- ieee80211_txrx_result
--ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
- 	u16 fc;
--	struct ieee80211_key *key = tx->key;
- 	struct sk_buff *skb = tx->skb;
- 	int wpa_test = 0, test = 0;
- 
- 	fc = le16_to_cpu(hdr->frame_control);
- 
--	if (!key || key->conf.alg != ALG_TKIP || !WLAN_FC_DATA_PRESENT(fc))
-+	if (!WLAN_FC_DATA_PRESENT(fc))
- 		return TXRX_CONTINUE;
- 
- 	tx->u.tx.control->icv_len = TKIP_ICV_LEN;
-@@ -651,17 +650,16 @@ skip_pn_inc:
- 
- 
- ieee80211_txrx_result
--ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx)
-+ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
--	struct ieee80211_key *key = tx->key;
- 	u16 fc;
- 	struct sk_buff *skb = tx->skb;
- 	int test = 0;
- 
- 	fc = le16_to_cpu(hdr->frame_control);
- 
--	if (!key || key->conf.alg != ALG_CCMP || !WLAN_FC_DATA_PRESENT(fc))
-+	if (!WLAN_FC_DATA_PRESENT(fc))
- 		return TXRX_CONTINUE;
- 
- #ifdef CONFIG_HOSTAPD_WPA_TESTING
---- wireless-dev.orig/net/mac80211/wpa.h	2007-09-06 01:35:24.464453431 +0200
-+++ wireless-dev/net/mac80211/wpa.h	2007-09-06 01:35:25.594453431 +0200
-@@ -19,12 +19,12 @@ ieee80211_txrx_result
- ieee80211_rx_h_michael_mic_verify(struct ieee80211_txrx_data *rx);
- 
- ieee80211_txrx_result
--ieee80211_tx_h_tkip_encrypt(struct ieee80211_txrx_data *tx);
-+ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx);
- ieee80211_txrx_result
- ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx);
- 
- ieee80211_txrx_result
--ieee80211_tx_h_ccmp_encrypt(struct ieee80211_txrx_data *tx);
-+ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx);
- ieee80211_txrx_result
- ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx);
- 
---- wireless-dev.orig/net/mac80211/wep.c	2007-09-06 01:35:24.474453431 +0200
-+++ wireless-dev/net/mac80211/wep.c	2007-09-06 01:35:25.594453431 +0200
-@@ -80,9 +80,9 @@ static void ieee80211_wep_get_iv(struct 
- }
- 
- 
--u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
--			  struct sk_buff *skb,
--			  struct ieee80211_key *key)
-+static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
-+				struct sk_buff *skb,
-+				struct ieee80211_key *key)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u16 fc;
-@@ -350,3 +350,54 @@ ieee80211_crypto_wep_decrypt(struct ieee
- 
- 	return TXRX_CONTINUE;
- }
-+
-+static int wep_encrypt_skb(struct ieee80211_txrx_data *tx, struct sk_buff *skb)
-+{
-+	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
-+		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
-+			return -1;
-+	} else {
-+		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
-+		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
-+			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
-+				return -1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+ieee80211_txrx_result
-+ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
-+	u16 fc;
-+
-+	fc = le16_to_cpu(hdr->frame_control);
-+
-+	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
-+	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
-+	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
-+		return TXRX_CONTINUE;
-+
-+	tx->u.tx.control->iv_len = WEP_IV_LEN;
-+	tx->u.tx.control->icv_len = WEP_ICV_LEN;
-+	ieee80211_tx_set_iswep(tx);
-+
-+	if (wep_encrypt_skb(tx, tx->skb) < 0) {
-+		I802_DEBUG_INC(tx->local->tx_handlers_drop_wep);
-+		return TXRX_DROP;
-+	}
-+
-+	if (tx->u.tx.extra_frag) {
-+		int i;
-+		for (i = 0; i < tx->u.tx.num_extra_frag; i++) {
-+			if (wep_encrypt_skb(tx, tx->u.tx.extra_frag[i]) < 0) {
-+				I802_DEBUG_INC(tx->local->
-+					       tx_handlers_drop_wep);
-+				return TXRX_DROP;
-+			}
+ 	local->tx_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
+-	if (!local->tx_led)
+-		return;
+-	snprintf(local->tx_led_name, sizeof(local->tx_led_name),
+-		 "%stx", wiphy_name(local->hw.wiphy));
+-	local->tx_led->name = local->tx_led_name;
+-	if (led_trigger_register(local->tx_led)) {
+-		kfree(local->tx_led);
+-		local->tx_led = NULL;
++	if (local->tx_led) {
++		snprintf(local->tx_led_name, sizeof(local->tx_led_name),
++			 "%stx", wiphy_name(local->hw.wiphy));
++		local->tx_led->name = local->tx_led_name;
++		if (led_trigger_register(local->tx_led)) {
++			kfree(local->tx_led);
++			local->tx_led = NULL;
 +		}
 +	}
 +
-+	return TXRX_CONTINUE;
++	local->assoc_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
++	if (local->assoc_led) {
++		snprintf(local->assoc_led_name, sizeof(local->assoc_led_name),
++			 "%sassoc", wiphy_name(local->hw.wiphy));
++		local->assoc_led->name = local->assoc_led_name;
++		if (led_trigger_register(local->assoc_led)) {
++			kfree(local->assoc_led);
++			local->assoc_led = NULL;
++		}
+ 	}
+ }
+ 
+ void ieee80211_led_exit(struct ieee80211_local *local)
+ {
++	if (local->assoc_led) {
++		led_trigger_unregister(local->assoc_led);
++		kfree(local->assoc_led);
++	}
+ 	if (local->tx_led) {
+ 		led_trigger_unregister(local->tx_led);
+ 		kfree(local->tx_led);
+@@ -70,6 +95,16 @@ void ieee80211_led_exit(struct ieee80211
+ 	}
+ }
+ 
++char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	if (local->assoc_led)
++		return local->assoc_led_name;
++	return NULL;
 +}
---- wireless-dev.orig/net/mac80211/wep.h	2007-09-06 01:35:24.474453431 +0200
-+++ wireless-dev/net/mac80211/wep.h	2007-09-06 01:35:25.604453431 +0200
-@@ -18,9 +18,6 @@
++EXPORT_SYMBOL(__ieee80211_get_assoc_led_name);
++
+ char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+Index: wireless-2.6/net/mac80211/ieee80211_led.h
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_led.h	2007-09-26 17:22:49.000000000 +0200
++++ wireless-2.6/net/mac80211/ieee80211_led.h	2007-09-27 12:18:02.000000000 +0200
+@@ -14,6 +14,8 @@
+ #ifdef CONFIG_MAC80211_LEDS
+ extern void ieee80211_led_rx(struct ieee80211_local *local);
+ extern void ieee80211_led_tx(struct ieee80211_local *local, int q);
++extern void ieee80211_led_assoc(struct ieee80211_local *local,
++				bool associated);
+ extern void ieee80211_led_init(struct ieee80211_local *local);
+ extern void ieee80211_led_exit(struct ieee80211_local *local);
+ #else
+@@ -23,6 +25,10 @@ static inline void ieee80211_led_rx(stru
+ static inline void ieee80211_led_tx(struct ieee80211_local *local, int q)
+ {
+ }
++static inline void ieee80211_led_assoc(struct ieee80211_local *local,
++				       bool associated)
++{
++}
+ static inline void ieee80211_led_init(struct ieee80211_local *local)
+ {
+ }
+Index: wireless-2.6/net/mac80211/ieee80211_sta.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_sta.c	2007-09-26 20:31:04.000000000 +0200
++++ wireless-2.6/net/mac80211/ieee80211_sta.c	2007-09-27 12:27:04.000000000 +0200
+@@ -31,6 +31,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
++#include "ieee80211_led.h"
+ #include "hostapd_ioctl.h"
  
- int ieee80211_wep_init(struct ieee80211_local *local);
- void ieee80211_wep_free(struct ieee80211_local *local);
--u8 * ieee80211_wep_add_iv(struct ieee80211_local *local,
--			  struct sk_buff *skb,
--			  struct ieee80211_key *key);
- void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
- 				size_t klen, u8 *data, size_t data_len);
- int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
-@@ -34,5 +31,7 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_
+ #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
+@@ -408,8 +409,9 @@ static void ieee80211_sta_send_associnfo
  
- ieee80211_txrx_result
- ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx);
-+ieee80211_txrx_result
-+ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx);
+ static void ieee80211_set_associated(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta,
+-				     unsigned int assoc)
++				     bool assoc)
+ {
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	union iwreq_data wrqu;
  
- #endif /* WEP_H */
-
--- 
-
+ 	if (!!(ifsta->flags & IEEE80211_STA_ASSOCIATED) == assoc)
+@@ -447,6 +449,7 @@ static void ieee80211_set_associated(str
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+ 	ifsta->last_probe = jiffies;
++	ieee80211_led_assoc(local, assoc);
+ }
+ 
+ static void ieee80211_set_disassoc(struct net_device *dev,
