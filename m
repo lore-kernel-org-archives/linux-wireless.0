@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:45709 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249AbXIMXeV (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41998
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784AbXI0Unr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 19:34:21 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1412776pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2007 16:34:20 -0700 (PDT)
-Message-ID: <43e72e890709131634r591b6db4u9f092470567b1cb@mail.gmail.com>
-Date: Thu, 13 Sep 2007 19:34:20 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: remove turbo modes
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>, "Jiri Slaby" <jirislaby@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <1189192606.28781.189.camel@johannes.berg>
+	Thu, 27 Sep 2007 16:43:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] b43: RF-kill support
+Date: Thu, 27 Sep 2007 22:41:06 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200709272135.35686.mb@bu3sch.de> <200709272254.44608.IvDoorn@gmail.com>
+In-Reply-To: <200709272254.44608.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1188485253.3978.22.camel@johannes.berg>
-	 <43e72e890709071014w1f37b4acjac3c98c306a965de@mail.gmail.com>
-	 <1189192606.28781.189.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200709272241.06570.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/7/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2007-09-07 at 13:14 -0400, Luis R. Rodriguez wrote:
->
-> > Can you elaborate a bit on what places (one would suffice) we should
-> > be checking for them that would prevent failure so that we know where
-> > to correct this later when we want to add support for these modes in
-> > ath5k?
->
-> There's the monitor stuff which certainly wasn't correct, turbo A surely
-> uses OFDM/5GHz. Also, ISTR that there was something with turbo G not
-> handled properly, but it's been a while, sorry.
->
-> I'm not sure what we should do, I'm undecided about adding a whole bunch
-> of proprietary rates back since these are basically only supported by
-> one hardware. Let's discuss good ways to do this when you get around to
-> it.
+On Thursday 27 September 2007 22:54:44 Ivo van Doorn wrote:
+> Hi,
+> 
+> > @@ -2401,8 +2401,7 @@ static void b43_periodic_every1sec(struc
+> >  	radio_hw_enable = b43_is_hw_radio_enabled(dev);
+> >  	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
+> >  		dev->radio_hw_enable = radio_hw_enable;
+> > -		b43info(dev->wl, "Radio hardware status changed to %s\n",
+> > -			radio_hw_enable ? "ENABLED" : "DISABLED");
+> > +		b43_rfkill_toggled(dev, radio_hw_enable);
+> 
+> Isn't it better to use the input_polldev for scheduled input device checking?
+> 
+> > +static void b43_notify_rfkill_press(struct work_struct *work)
+> > +{
+> > +	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill,
+> > +					      notify_work);
+> > +	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
+> > +	struct b43_wldev *dev;
+> > +	enum rfkill_state state;
+> 
+> Same here, input_polldev was created especially for hardware
+> devices that don't trigger interrupts when the button was pressed.
 
-The last point I think is enough to give them the boot. Will post
-patches based on this work with some small minor changes and also for
-ath5k.
+Ah, well. Will change that later. This works for now.
 
-  Luis
+-- 
+Greetings Michael.
