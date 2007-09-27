@@ -1,75 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:57212 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755709AbXIQUWI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 16:22:08 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3349039pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2007 13:22:07 -0700 (PDT)
-Message-ID: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
-Date: Mon, 17 Sep 2007 16:22:07 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Linus Torvalds" <torvalds@linux-foundation.org>
-Subject: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	"Jeff Garzik" <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_15876_26305641.1190060527274"
+Received: from mga02.intel.com ([134.134.136.20]:31544 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752163AbXI0Deu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2007 23:34:50 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: clear station table in rxon unconditionally
+Date: Thu, 27 Sep 2007 11:27:33 +0800
+Message-Id: <119086367088-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11908636692415-git-send-email-yi.zhu@intel.com>
+References: <11908636643693-git-send-email-yi.zhu@intel.com>
+ <11908636662994-git-send-email-yi.zhu@intel.com>
+ <11908636683204-git-send-email-yi.zhu@intel.com>
+ <11908636692415-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_15876_26305641.1190060527274
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This patch clears stations table for every rxon command.
+It removes iwl_rxon_add_station function in 3945.
 
-This patch updates the pci_iomap() kernel-doc to make it clarify the
-case when read*()/write*() can be called over ioread*/iowrite*(). When
-driver writers read this documenation sometimes it is assumed you just
-*need* to use ioread*()/iorwrite*(). We have an exception so lets just
-clarify this is not true for the exception.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   55 +++++++--------------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   24 +++--------
+ 2 files changed, 21 insertions(+), 58 deletions(-)
 
- lib/iomap.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
-  Luis
-
-------=_Part_15876_26305641.1190060527274
-Content-Type: text/x-patch; name="pci_iomap-doc-clarification.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="pci_iomap-doc-clarification.diff"
-X-Attachment-Id: f_f6pfahct
-
-ZGlmZiAtLWdpdCBhL2xpYi9pb21hcC5jIGIvbGliL2lvbWFwLmMKaW5kZXggODY0ZjJlYy4uMzM2
-NTFmOCAxMDA2NDQKLS0tIGEvbGliL2lvbWFwLmMKKysrIGIvbGliL2lvbWFwLmMKQEAgLTI0Nyw5
-ICsyNDcsMTQgQEAgRVhQT1JUX1NZTUJPTChpb3BvcnRfdW5tYXApOwogICogQG1heGxlbjogbGVu
-Z3RoIG9mIHRoZSBtZW1vcnkgdG8gbWFwCiAgKgogICogVXNpbmcgdGhpcyBmdW5jdGlvbiB5b3Ug
-d2lsbCBnZXQgYSBfX2lvbWVtIGFkZHJlc3MgdG8geW91ciBkZXZpY2UgQkFSLgotICogWW91IGNh
-biBhY2Nlc3MgaXQgdXNpbmcgaW9yZWFkKigpIGFuZCBpb3dyaXRlKigpLiBUaGVzZSBmdW5jdGlv
-bnMgaGlkZQotICogdGhlIGRldGFpbHMgaWYgdGhpcyBpcyBhIE1NSU8gb3IgUElPIGFkZHJlc3Mg
-c3BhY2UgYW5kIHdpbGwganVzdCBkbyB3aGF0Ci0gKiB5b3UgZXhwZWN0IGZyb20gdGhlbSBpbiB0
-aGUgY29ycmVjdCB3YXkuCisgKiBJZiB5b3UgdXNlIHBjaV9pb21hcCgpIGl0IGlzIHJlY29tbWVu
-ZGVkIHlvdSB1c2UgaW9yZWFkKigpIGFuZCBpb3dyaXRlKigpLiBJZgorICogeW91ciBkZXZpY2Ug
-aXMgTU1JTy1vbmx5IGFuZCBhcyBsb25nIGFzIGZ1dHVyZSBhcmNoaXRlY3R1cmVzIGRvbid0IGJy
-ZWFrIHRoZQorICogYXNzdW1wdGlvbiB0aGF0IHBjaW9faW9tYXAoKS1yZXR1cm5lZCBjb29raWUg
-Y2FuIGJlIHVzZWQgYnkgcmVhZCooKS93cml0ZSooKQorICogdGhlbiB5b3UgY2FuIHVzZSByZWFk
-KigpL3dyaXRlKigpIGluc3RlYWQuIFRoZSBpb3JlYWQqKCkgYW5kIGlvd3JpdGUqKCkgCisgKiBm
-dW5jdGlvbnMgaGlkZSB0aGUgZGV0YWlscyBpZiB0aGlzIGlzIGEgTU1JTyBvciBQSU8gYWRkcmVz
-cyBzcGFjZSBhbmQgd2lsbAorICoganVzdCBkbyB3aGF0IHlvdSBleHBlY3QgZnJvbSB0aGVtIGlu
-IHRoZSBjb3JyZWN0IHdheS4gRHJpdmVycyBmb3IgTU1JTy1vbmx5IAorICogZGV2aWNlcyB3b3Vs
-ZCB1c2UgdGhpcyBvbmx5IHRvIHNhdmUgdGhlbXNlbHZlcyBmcm9tIGhhdmluZyB0byBjYWxsIAor
-ICogJnBjaV9yZXNvdXJjZV9zdGFydCgpLgogICoKICAqIEBtYXhsZW4gc3BlY2lmaWVzIHRoZSBt
-YXhpbXVtIGxlbmd0aCB0byBtYXAuIElmIHlvdSB3YW50IHRvIGdldCBhY2Nlc3MgdG8KICAqIHRo
-ZSBjb21wbGV0ZSBCQVIgd2l0aG91dCBjaGVja2luZyBmb3IgaXRzIGxlbmd0aCBmaXJzdCwgcGFz
-cyAlMCBoZXJlLgo=
-------=_Part_15876_26305641.1190060527274--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c271418..6e46920 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -407,6 +407,7 @@ const u8 BROADCAST_ADDR[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+  */
+ 
+ /**************************************************************/
++#if 0 /* temparary disable till we add real remove station */
+ static u8 iwl_remove_station(struct iwl_priv *priv, const u8 *addr, int is_ap)
+ {
+ 	int index = IWL_INVALID_STATION;
+@@ -442,7 +443,7 @@ out:
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return 0;
+ }
+-
++#endif
+ static void iwl_clear_stations_table(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+@@ -835,25 +836,6 @@ int iwl_send_statistics_request(struct iwl_priv *priv)
+ }
+ 
+ /**
+- * iwl_rxon_add_station - add station into station table.
+- *
+- * there is only one AP station with id= IWL_AP_ID
+- * NOTE: mutex must be held before calling the this fnction
+-*/
+-static int iwl_rxon_add_station(struct iwl_priv *priv,
+-				const u8 *addr, int is_ap)
+-{
+-	u8 rc;
+-
+-	/* Remove this station if it happens to already exist */
+-	iwl_remove_station(priv, addr, is_ap);
+-
+-	rc = iwl_add_station(priv, addr, is_ap, 0);
+-
+-	return rc;
+-}
+-
+-/**
+  * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
+  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
+  * @channel: Any channel valid for the requested phymode
+@@ -1123,16 +1105,6 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 				  "configuration (%d).\n", rc);
+ 			return rc;
+ 		}
+-
+-		/* The RXON bit toggling will have cleared out the
+-		 * station table in the uCode, so blank it in the driver
+-		 * as well */
+-		iwl_clear_stations_table(priv);
+-	} else if (priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) {
+-		/* When switching from non-associated to associated, the
+-		 * uCode clears out the station table; so clear it in the
+-		 * driver as well */
+-		iwl_clear_stations_table(priv);
+ 	}
+ 
+ 	IWL_DEBUG_INFO("Sending RXON\n"
+@@ -1154,6 +1126,8 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 
+ 	memcpy(active_rxon, &priv->staging_rxon, sizeof(*active_rxon));
+ 
++	iwl_clear_stations_table(priv);
++
+ 	/* If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames */
+ 	rc = iwl_hw_reg_send_txpower(priv);
+@@ -1163,7 +1137,7 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 	}
+ 
+ 	/* Add the broadcast address so we can send broadcast frames */
+-	if (iwl_rxon_add_station(priv, BROADCAST_ADDR, 0) ==
++	if (iwl_add_station(priv, BROADCAST_ADDR, 0, 0) ==
+ 	    IWL_INVALID_STATION) {
+ 		IWL_ERROR("Error adding BROADCAST address for transmit.\n");
+ 		return -EIO;
+@@ -1173,7 +1147,7 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 	 * add the IWL_AP_ID to the station rate table */
+ 	if (iwl_is_associated(priv) &&
+ 	    (priv->iw_mode == IEEE80211_IF_TYPE_STA))
+-		if (iwl_rxon_add_station(priv, priv->active_rxon.bssid_addr, 1)
++		if (iwl_add_station(priv, priv->active_rxon.bssid_addr, 1, 0)
+ 		    == IWL_INVALID_STATION) {
+ 			IWL_ERROR("Error adding AP address for transmit.\n");
+ 			return -EIO;
+@@ -4658,7 +4632,7 @@ static void iwl_error_recovery(struct iwl_priv *priv)
+ 	priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	iwl_commit_rxon(priv);
+ 
+-	iwl_rxon_add_station(priv, priv->bssid, 1);
++	iwl_add_station(priv, priv->bssid, 1, 0);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	priv->assoc_id = le16_to_cpu(priv->staging_rxon.assoc_id);
+@@ -6804,8 +6778,8 @@ static void iwl_bg_post_associate(struct work_struct *data)
+ 		/* clear out the station table */
+ 		iwl_clear_stations_table(priv);
+ 
+-		iwl_rxon_add_station(priv, BROADCAST_ADDR, 0);
+-		iwl_rxon_add_station(priv, priv->bssid, 0);
++		iwl_add_station(priv, BROADCAST_ADDR, 0, 0);
++		iwl_add_station(priv, priv->bssid, 0, 0);
+ 		iwl3945_sync_sta(priv, IWL_STA_ID,
+ 				 (priv->phymode == MODE_IEEE80211A)?
+ 				 IWL_RATE_6M_PLCP : IWL_RATE_1M_PLCP,
+@@ -7094,10 +7068,9 @@ static void iwl_config_ap(struct iwl_priv *priv)
+ 		/* restore RXON assoc */
+ 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		iwl_commit_rxon(priv);
+-		iwl_rxon_add_station(priv, BROADCAST_ADDR, 0);
+-		iwl_send_beacon_cmd(priv);
+-	} else
+-		iwl_send_beacon_cmd(priv);
++		iwl_add_station(priv, BROADCAST_ADDR, 0, 0);
++	}
++	iwl_send_beacon_cmd(priv);
+ 
+ 	/* FIXME - we need to add code here to detect a totally new
+ 	 * configuration, reset the AP, unassoc, rxon timing, assoc,
+@@ -7181,8 +7154,8 @@ static int iwl_mac_config_interface(struct ieee80211_hw *hw, int if_id,
+ 						RXON_FILTER_ASSOC_MSK;
+ 			rc = iwl_commit_rxon(priv);
+ 			if ((priv->iw_mode == IEEE80211_IF_TYPE_STA) && rc)
+-				iwl_rxon_add_station(
+-					priv, priv->active_rxon.bssid_addr, 1);
++				iwl_add_station(priv,
++					priv->active_rxon.bssid_addr, 1, 0);
+ 		}
+ 
+ 	} else {
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index af261e6..283c6a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -407,6 +407,7 @@ const u8 BROADCAST_ADDR[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ 
+ /**************************************************************/
+ 
++#if 0 /* temparary disable till we add real remove station */
+ static u8 iwl_remove_station(struct iwl_priv *priv, const u8 *addr, int is_ap)
+ {
+ 	int index = IWL_INVALID_STATION;
+@@ -442,6 +443,7 @@ out:
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return 0;
+ }
++#endif
+ 
+ static void iwl_clear_stations_table(struct iwl_priv *priv)
+ {
+@@ -852,16 +854,12 @@ int iwl_send_statistics_request(struct iwl_priv *priv)
+ static int iwl_rxon_add_station(struct iwl_priv *priv,
+ 				const u8 *addr, int is_ap)
+ {
+-	u8 rc;
+-
+-	/* Remove this station if it happens to already exist */
+-	iwl_remove_station(priv, addr, is_ap);
+-
+-	rc = iwl_add_station(priv, addr, is_ap, 0);
++	u8 sta_id;
+ 
++	sta_id = iwl_add_station(priv, addr, is_ap, 0);
+ 	iwl4965_add_station(priv, addr, is_ap);
+ 
+-	return rc;
++	return sta_id;
+ }
+ 
+ /**
+@@ -1149,16 +1147,6 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 				  "configuration (%d).\n", rc);
+ 			return rc;
+ 		}
+-
+-		/* The RXON bit toggling will have cleared out the
+-		 * station table in the uCode, so blank it in the driver
+-		 * as well */
+-		iwl_clear_stations_table(priv);
+-	} else if (priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) {
+-		/* When switching from non-associated to associated, the
+-		 * uCode clears out the station table; so clear it in the
+-		 * driver as well */
+-		iwl_clear_stations_table(priv);
+ 	}
+ 
+ 	IWL_DEBUG_INFO("Sending RXON\n"
+@@ -1178,6 +1166,8 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 		return rc;
+ 	}
+ 
++	iwl_clear_stations_table(priv);
++
+ #ifdef CONFIG_IWLWIFI_SENSITIVITY
+ 	if (!priv->error_recovering)
+ 		priv->start_calib = 0;
+-- 
+1.5.1
