@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4413 "EHLO c60.cesmail.net"
+Received: from main.gmane.org ([80.91.229.2]:43547 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355AbXIAEhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:37:13 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 440CA618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:37:12 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 31/35] Simplify logic in at76_is_hidden_ssid()
+	id S1754772AbXI0SOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2007 14:14:31 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Iaxr1-0005oF-M3
+	for linux-wireless@vger.kernel.org; Thu, 27 Sep 2007 18:12:51 +0000
+Received: from 069-064-229-129.pdx.net ([69.64.229.129])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 18:12:51 +0000
+Received: from shemminger by 069-064-229-129.pdx.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 18:12:51 +0000
 To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:37:11 -0400
-Message-ID: <20070901043711.2498.5859.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+Subject: Re: New 'Changes-licensed-under' tag introduced for Linux-wireless
+Date: Thu, 27 Sep 2007 11:09:50 -0700
+Message-ID: <20070927110950.0561eca1@freepuppy.rosehill>
+References: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
+Cc: linux-kernel@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+On Thu, 27 Sep 2007 14:00:09 -0400
+"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
 
- drivers/net/wireless/at76_usb.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+> Our guidelines for patches [1] for Linux-wireless has been updated.
+> One section asks Linux-wireless developers to subscribe to the patch
+> guideline wiki page (section 2) and another which introduces the new
+> 'Changes-licensed-under' (section 10).
+> 
+> Here I'll cover the new 'Changes-licensed-under' tag but please refer
+> to the link and subscribe to the page for the complete details and for
+> further changes.
+> 
+
+No, please don't down this legal rat hole. It would cause bullshit like
+people submitting dual licensed patches to the scheduler or GPL only
+patches to the ath5k or ACPI code.
+
+Instead, add a section to Documentation/SubmittingPatches that clearly
+states that all changes to a file are licensed under the same license
+as the original file. I don't feel legally qualified to write the correct
+wording.
 
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index e612dc5..89eca8d 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -542,9 +542,13 @@ static inline int at76_is_hidden_ssid(u8 *ssid, int length)
- {
- 	static const u8 zeros[32];
- 
--	return (length == 0) ||
--	    (length == 1 && *ssid == ' ') ||
--	    (length > 0 && !memcmp(ssid, zeros, length));
-+	if (length == 0)
-+		return 1;
-+
-+	if (length == 1 && ssid[0] == ' ')
-+		return 1;
-+
-+	return (memcmp(ssid, zeros, length) == 0);
- }
- 
- static inline void at76_free_bss_list(struct at76_priv *priv)
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
+
