@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:63637 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbXI0VJd (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:38916 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755795AbXI0Syg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 17:09:33 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so2334084nfb
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 14:09:32 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: RF-kill support
-Date: Thu, 27 Sep 2007 23:23:45 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200709272135.35686.mb@bu3sch.de> <200709272312.43994.IvDoorn@gmail.com> <200709272303.57040.mb@bu3sch.de>
-In-Reply-To: <200709272303.57040.mb@bu3sch.de>
+	Thu, 27 Sep 2007 14:54:36 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1360360ugc
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 11:54:34 -0700 (PDT)
+Date: Thu, 27 Sep 2007 22:54:29 +0400
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>
+Subject: Re: New 'Changes-licensed-under' tag introduced for Linux-wireless
+Message-ID: <20070927185429.GA1748@martell.zuzino.mipt.ru>
+References: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709272323.45730.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890709271100n39f16c18x723dc7a85d418666@mail.gmail.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 27 September 2007, Michael Buesch wrote:
-> On Thursday 27 September 2007 23:12:43 Ivo van Doorn wrote:
-> > On Thursday 27 September 2007, Michael Buesch wrote:
-> > > On Thursday 27 September 2007 22:54:44 Ivo van Doorn wrote:
-> > > > Hi,
-> > > > 
-> > > > > @@ -2401,8 +2401,7 @@ static void b43_periodic_every1sec(struc
-> > > > >  	radio_hw_enable = b43_is_hw_radio_enabled(dev);
-> > > > >  	if (unlikely(dev->radio_hw_enable != radio_hw_enable)) {
-> > > > >  		dev->radio_hw_enable = radio_hw_enable;
-> > > > > -		b43info(dev->wl, "Radio hardware status changed to %s\n",
-> > > > > -			radio_hw_enable ? "ENABLED" : "DISABLED");
-> > > > > +		b43_rfkill_toggled(dev, radio_hw_enable);
-> > > > 
-> > > > Isn't it better to use the input_polldev for scheduled input device checking?
-> > > > 
-> > > > > +static void b43_notify_rfkill_press(struct work_struct *work)
-> > > > > +{
-> > > > > +	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill,
-> > > > > +					      notify_work);
-> > > > > +	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
-> > > > > +	struct b43_wldev *dev;
-> > > > > +	enum rfkill_state state;
-> > > > 
-> > > > Same here, input_polldev was created especially for hardware
-> > > > devices that don't trigger interrupts when the button was pressed.
-> > > 
-> > > Ah, well. Will change that later. This works for now.
-> > 
-> > It might work, but this means that userspace is not made aware of
-> > the key toggling and would thus make rfkill useless in this case.
+On Thu, Sep 27, 2007 at 02:00:09PM -0400, Luis R. Rodriguez wrote:
+> Our guidelines for patches [1] for Linux-wireless has been updated.
+> One section asks Linux-wireless developers to subscribe to the patch
+> guideline wiki page (section 2) and another which introduces the new
+> 'Changes-licensed-under' (section 10).
 > 
-> Yeah, sure. But it's not useless. The other functionality is still available.
-> I'll fix that. But in a seperate patch. No need to delay this one because
-> of this (IMO) minor issue.
+> Here I'll cover the new 'Changes-licensed-under' tag but please refer
+> to the link and subscribe to the page for the complete details and for
+> further changes.
+> 
+> --
+> 
+> Based on the new guidelines posted by the SFLC on ''Maintaining
+> Permissive-Licensed Files in a GPL-Licensed Project: Guidelines for
+> Developers'' [2], specifically section 5, we are introducing a new tag
+> for use with patches which deal with files licensed under permissive
+> licenses (BSD, ISC) on Linux wireless in our larger GPL project, the
+> Linux kernel. The tag is Changes-licensed-under and can be used by
+> developers to clarify the intended license for their patch on
+> permissive licensed files. It is clear that not all changes qualify a
+> patch author for Copyright but a lot of patches do qualify an author
+> for copyright. If you want crystal clear details of what constitutes
+> as a copyrightable change, at least within the US and the EU, you can
+> refer to SFLC's ''Originality Requirements under U.S. and E.U.
+> Copyright Law'' [3].
+> 
+> Although some developers have a practice of implying their patches for
+> a permissive licensed file abides by the respective permissive license
+> of the file being patched, and although some changes are obviously not
+> copyrightable, we would like to ''err on the side of caution'', take
+> the advice from SFLC, and introduce Changes-licensed-under in order to
+> help the BSD family reap benefits of our contributions to permissive
+> licensed files.
+> 
+> The Changes-licensed-under tag should be put before the Signed-off-by
+> tag. Since this tag is used to cover changes under permissive licenses
+> example of possible licenses are 3-Clause-BSD, and ISC. If you are
+> making changes to multiple permissive licensed files then please
+> specify which license covers what files.
+> 
+> --
+> 
+> For examples of using this tag please refer to the guidelines.
+> 
+> [1] http://linuxwireless.org/en/developers/SubmittingPatches
+> [2] http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
+> [3] http://www.softwarefreedom.org/resources/2007/originality-requirements.html
 
-I agree, no need to delay this patch.
-
-But since I never added proper documentation from the start of rfkill,
-and rt2x00 did it wrong for a while as well, I just wanted to make sure you
-were aware of the correct approach. :)
-
-Ivo
+Please, keep this tagged SFLC-waving somewhere out of mainline.
+Thank you.
