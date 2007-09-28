@@ -1,136 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40500 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756160AbXIXWh7 (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.237]:4022 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219AbXI1Q7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 18:37:59 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 6/6] adm8211: Detect interface up/down in suspend/resume hooks correctly
-Date: Mon, 24 Sep 2007 18:36:52 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070924221025.6870.53754.stgit@magic.sourmilk.net> <20070924221025.6870.73757.stgit@magic.sourmilk.net>
-In-Reply-To: <20070924221025.6870.73757.stgit@magic.sourmilk.net>
+	Fri, 28 Sep 2007 12:59:51 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2438637wxd
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 09:59:50 -0700 (PDT)
+Date: Fri, 28 Sep 2007 13:01:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] Adds configure_filter() support for zd1211rw-mac80211
+Message-ID: <20070928170109.GC5687@pogo>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1527855.ny95f7diU1";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709241836.56335.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1527855.ny95f7diU1
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_EwD+GTXKh5qxQQP"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Resending.. it seems my mail setup isn't quite right yet..
 
---Boundary-01=_EwD+GTXKh5qxQQP
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This patch:
 
-On Monday 24 September 2007 18:10, Michael Wu wrote:
-> From: Michael Wu <flamingice@sourmilk.net>
->
-> Interface up/down detection was incorrectly changed during the filter API
-> update.
->
-> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Opps. This patch is missing one part that's needed to make it actually work=
-=2E=20
-Working patch attached. Please use this instead.
+* Moves driver to new start() / stop()
+* Removes the old zd_op_set_multicast_list()
+* Adds the new configure_filter() support
+* Fixes compile errors as it depends on the removed DECLARE_MAC_BUF, 
+  and print_mac()
 
-Thanks,
-=2DMichael Wu
+This has been tested, and applies to the 'everything' branch of wireless-2.6.
 
---Boundary-01=_EwD+GTXKh5qxQQP
-Content-Type: text/x-diff;
-  charset="utf-8";
-  name="fix-suspend"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="fix-suspend"
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>
 
-commit 062677a448a8d8218d09f3f86520646fb4c1afee
-Author: Michael Wu <flamingice@sourmilk.net>
-Date:   Mon Sep 24 18:32:39 2007 -0400
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
 
-    adm8211: Detect interface up/down in suspend/resume hooks correctly
-   =20
-    Interface up/down detection was incorrectly changed during the filter A=
-PI
-    update.
-   =20
-    Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 95c8315..e4fdadb 100644
-=2D-- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1540,6 +1540,7 @@ static int adm8211_start(struct ieee80211_hw *dev)
- 	ADM8211_CSR_WRITE(IER, ADM8211_IER_NIE | ADM8211_IER_AIE |
- 			       ADM8211_IER_RCIE | ADM8211_IER_TCIE |
- 			       ADM8211_IER_TDUIE | ADM8211_IER_GPTIE);
-+	priv->mode =3D IEEE80211_IF_TYPE_MNTR;
- 	adm8211_update_mode(dev);
- 	ADM8211_CSR_WRITE(RDR, 0);
-=20
-@@ -1554,6 +1555,7 @@ static void adm8211_stop(struct ieee80211_hw *dev)
+ drivers/net/wireless/zd1211rw-mac80211/zd_chip.c |    9 +++-
+ drivers/net/wireless/zd1211rw-mac80211/zd_mac.c  |   53 ++++++++++++++-------
+ 2 files changed, 42 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
+index 0dc75c2..d3a578b 100644
+--- a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
+@@ -377,7 +377,9 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
+ 		[0] = { .addr = CR_MAC_ADDR_P1 },
+ 		[1] = { .addr = CR_MAC_ADDR_P2 },
+ 	};
+-	DECLARE_MAC_BUF(mac);
++	/* Add back later when this is added */
++	//DECLARE_MAC_BUF(mac);
++	char mac[18];
+ 
+ 	reqs[0].value = (mac_addr[3] << 24)
+ 		      | (mac_addr[2] << 16)
+@@ -386,8 +388,11 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
+ 	reqs[1].value = (mac_addr[5] <<  8)
+ 		      |  mac_addr[4];
+ 
++	/* same here, add back when print_mac() is added */
+ 	dev_dbg_f(zd_chip_dev(chip),
+-		"mac addr %s\n", print_mac(mac, mac_addr));
++	//	"mac addr %s\n", print_mac(mac, mac_addr));
++		"mac addr %s\n", MAC_FMT, MAC_ARG(mac));
++
+ 
+ 	mutex_lock(&chip->mutex);
+ 	r = zd_iowrite32a_locked(chip, reqs, ARRAY_SIZE(reqs));
+diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
+index 017c3b7..158507d 100644
+--- a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
+@@ -1,5 +1,7 @@
+ /* zd_mac.c
+  *
++ * Copyright (c) 2007 Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
+@@ -206,7 +208,7 @@ static int set_mc_hash(struct zd_mac *mac)
+ 	return zd_chip_set_multicast_hash(&mac->chip, &hash);
+ }
+ 
+-static int zd_op_open(struct ieee80211_hw *hw)
++static int zd_op_start(struct ieee80211_hw *hw)
  {
- 	struct adm8211_priv *priv =3D dev->priv;
-=20
-+	priv->mode =3D IEEE80211_IF_TYPE_MGMT;
- 	priv->nar =3D 0;
- 	ADM8211_CSR_WRITE(NAR, 0);
- 	ADM8211_CSR_WRITE(IER, 0);
-@@ -1896,7 +1898,7 @@ static int __devinit adm8211_probe(struct pci_dev *pd=
-ev,
- 	priv->tx_power =3D 0x40;
- 	priv->lpf_cutoff =3D 0xFF;
- 	priv->lnags_threshold =3D 0xFF;
-=2D	priv->mode =3D IEEE80211_IF_TYPE_MNTR;
-+	priv->mode =3D IEEE80211_IF_TYPE_MGMT;
-=20
- 	/* Power-on issue. EEPROM won't read correctly without */
- 	if (pdev->revision >=3D ADM8211_REV_BA) {
-@@ -1991,7 +1993,7 @@ static int adm8211_suspend(struct pci_dev *pdev, pm_m=
-essage_t state)
- 	struct ieee80211_hw *dev =3D pci_get_drvdata(pdev);
- 	struct adm8211_priv *priv =3D dev->priv;
-=20
-=2D	if (priv->mode !=3D IEEE80211_IF_TYPE_MNTR) {
-+	if (priv->mode !=3D IEEE80211_IF_TYPE_MGMT) {
- 		ieee80211_stop_queues(dev);
- 		adm8211_stop(dev);
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	struct zd_chip *chip = &mac->chip;
+@@ -290,7 +292,7 @@ static void kfree_tx_skb(struct sk_buff *skb)
+ 	dev_kfree_skb_any(skb);
+ }
+ 
+-static int zd_op_stop(struct ieee80211_hw *hw)
++void zd_op_stop(struct ieee80211_hw *hw)
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	struct zd_chip *chip = &mac->chip;
+@@ -313,8 +315,6 @@ static int zd_op_stop(struct ieee80211_hw *hw)
+ 
+ 	while ((skb = skb_dequeue(ack_wait_queue)))
+ 		kfree_tx_skb(skb);
+-
+-	return 0;
+ }
+ 
+ /**
+@@ -765,27 +765,44 @@ static void set_multicast_hash_handler(struct work_struct *work)
+ 	zd_chip_set_multicast_hash(&mac->chip, &hash);
+ }
+ 
+-static void zd_op_set_multicast_list(struct ieee80211_hw *hw,
+-				      unsigned short dev_flags, int mc_count)
++#define SUPPORTED_FIF_FLAGS \
++	FIF_PROMISC_IN_BSS | FIF_ALLMULTI
++static void zd_op_configure_filter(struct ieee80211_hw *hw,
++			unsigned int changed_flags,
++			unsigned int *new_flags,
++			int mc_count, struct dev_mc_list *mclist)
+ {
+ 	struct zd_mc_hash hash;
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	unsigned long flags;
++	int i;
+ 
+-	if ((dev_flags & (IFF_PROMISC|IFF_ALLMULTI)) ||
+-	     has_monitor_interfaces(mac))
+-	{
++	/* Only deal with supported flags */
++	changed_flags &= SUPPORTED_FIF_FLAGS;
++	*new_flags &= SUPPORTED_FIF_FLAGS;
++
++	/* changed_flags is always populated but this driver
++	 * doesn't support all FIF flags so its possible we don't
++	 * need to do anything */
++	if (!changed_flags)
++		return;
++		
++	if ((*new_flags & (FIF_PROMISC_IN_BSS | FIF_ALLMULTI)) ||
++	     has_monitor_interfaces(mac)) {
+ 		zd_mc_add_all(&hash);
+ 	} else {
+-		struct dev_mc_list *mc = NULL;
+-		void *tmp = NULL;
+-		DECLARE_MAC_BUF(macbuf);
+-
++		/* we can add this if added back later, this is 
++		 * char macbuf[18] */
++		//DECLARE_MAC_BUF(macbuf);
+ 		zd_mc_clear(&hash);
+-		while ((mc = ieee80211_get_mc_list_item(hw, mc, &tmp))) {
++		for (i = 0; i < mc_count; i++) {
++			if (!mclist)
++				break;
+ 			dev_dbg_f(zd_mac_dev(mac), "mc addr %s\n",
+-				  print_mac(macbuf, mc->dmi_addr));
+-			zd_mc_add_addr(&hash, mc->dmi_addr);
++				  //print_mac(macbuf, mclist->dmi_addr));
++				  MAC_FMT, MAC_ARG(mclist->dmi_addr));
++			zd_mc_add_addr(&hash, mclist->dmi_addr);
++			mclist = mclist->next;
+ 		}
  	}
-@@ -2009,7 +2011,7 @@ static int adm8211_resume(struct pci_dev *pdev)
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
-=20
-=2D	if (priv->mode !=3D IEEE80211_IF_TYPE_MNTR) {
-+	if (priv->mode !=3D IEEE80211_IF_TYPE_MGMT) {
- 		adm8211_start(dev);
- 		ieee80211_start_queues(dev);
- 	}
-
---Boundary-01=_EwD+GTXKh5qxQQP--
-
---nextPart1527855.ny95f7diU1
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBG+DwIT3Oqt9AH4aERAu5tAKCdMsLJtQCSv2yIIgGeEJHPz1AN9gCfYCih
-K48L2ZxYKqQ9pQucQbvDGfY=
-=omet
------END PGP SIGNATURE-----
-
---nextPart1527855.ny95f7diU1--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+ 
+@@ -836,13 +853,13 @@ static void zd_op_erp_ie_changed(struct ieee80211_hw *hw, u8 changes,
+ 
+ static const struct ieee80211_ops zd_ops = {
+ 	.tx			= zd_op_tx,
+-	.open			= zd_op_open,
++	.start			= zd_op_start,
+ 	.stop			= zd_op_stop,
+ 	.add_interface		= zd_op_add_interface,
+ 	.remove_interface	= zd_op_remove_interface,
+ 	.config			= zd_op_config,
+ 	.config_interface	= zd_op_config_interface,
+-	.set_multicast_list	= zd_op_set_multicast_list,
++	.configure_filter	= zd_op_configure_filter,
+ 	.erp_ie_changed		= zd_op_erp_ie_changed,
+ };
+ 
