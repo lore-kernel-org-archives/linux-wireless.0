@@ -1,55 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:36651 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760780AbXISPH0 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51025
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752362AbXI1MBh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 11:07:26 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so181992nze
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 08:07:17 -0700 (PDT)
-Message-ID: <40f31dec0709190807k5ea36ce8h615764a49c49efc@mail.gmail.com>
-Date: Wed, 19 Sep 2007 18:07:17 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"Jeff Garzik" <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070918232546.004af9ff@the-village.bc.nu>
+	Fri, 28 Sep 2007 08:01:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: r2x00: Wrong rfkill inputdev poll interval
+Date: Fri, 28 Sep 2007 13:58:57 +0200
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
-	 <20070918113401.6a8a737f@the-village.bc.nu>
-	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-	 <20070918232546.004af9ff@the-village.bc.nu>
+Message-Id: <200709281358.57627.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/9/19, Alan Cox <alan@lxorguk.ukuu.org.uk>:
-> > If you use ioport_map/unmap, then you really *should* access them with the
-> > proper iomem accessors (ioread/iowrite). The fact that it may happen to
-> > work (when using the default lib/iomap.c implementation, at least) on
-> > some architectures and with the current implementation still doesn't mean
-> > that you should necessarily use readb/writeb.
->
-> Another reason we should enforce the use of ioread/iowrite is that some
-> platforms do daft things like map mmio type devices through indirect
-> register access. Sparc PCMCIA is a classic example. The only sane way to
-> make these work is to require ioread/iowrite is used with iomap
->
+You pass the poll interval as (HZ/4), but the input
+dev expects milliseconds instead of jiffies.
+So a value of 250 would be right in your case.
+Though, I think polling that often for this event might be overkill.
 
-Hmm, we 've had bug reports about driver (madwifi-old-openhal) not
-working on Sparc64, can someone test if this is the case (the fact
-that we used readl/writel instead of ioread/iowrite on
-madwifi-old-openhal) ? It was really weird because we handle
-big-endian machines ok (madwifi-old-openhal on ppc worked fine).
-
-(ath5k was based on madwifi-old-openhal)
+I'd say polling once a second should be OK for b43, for example.
+We currenty also poll it only once per second.
+But that's up to your choice. :)
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Greetings Michael.
