@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33210 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101AbXIRWVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 18:21:49 -0400
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46F0332D.3050704@garzik.org>
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
-	 <20070918113401.6a8a737f@the-village.bc.nu>
-	 <43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-	 <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-	 <43e72e890709181207j7c85dc29sb355a9f5a4207411@mail.gmail.com>
-	 <alpine.LFD.0.999.0709181219020.16478@woody.linux-foundation.org>
-	 <46F0332D.3050704@garzik.org>
-Content-Type: text/plain
-Date: Wed, 19 Sep 2007 08:20:53 +1000
-Message-Id: <1190154053.6403.125.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:59576 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757490AbXI1Eir (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Sep 2007 00:38:47 -0400
+Message-ID: <46FC854B.2010500@lwfinger.net>
+Date: Thu, 27 Sep 2007 23:38:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Error in compilation of b43
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-09-18 at 16:21 -0400, Jeff Garzik wrote:
-> A new pci_mmio_map() helper, to be used with 100% MMIO hardware, might
-> help eliminate confusion. 
+Michael,
 
-Maybe not the best name in theory but at least would show that it
-relates to existing ioremap would be pci_ioremap()
+When I add your patch "b43: RF-kill support" to my source, I get the fo=
+llowing compilation error:
 
-Ben.
+  CC [M]  drivers/net/wireless/b43/rfkill.o
+In file included from drivers/net/wireless/b43/rfkill.c:25:
+drivers/net/wireless/b43/rfkill.h:17: error: field =E2=80=98notify_work=
+=E2=80=99 has incomplete type
+drivers/net/wireless/b43/rfkill.c: In function =E2=80=98b43_notify_rfki=
+ll_press=E2=80=99:
+drivers/net/wireless/b43/rfkill.c:31: warning: type defaults to =E2=80=98=
+int=E2=80=99 in declaration of =E2=80=98__mptr=E2=80=99
+drivers/net/wireless/b43/rfkill.c:31: warning: initialization from inco=
+mpatible pointer type
+drivers/net/wireless/b43/rfkill.c: In function =E2=80=98b43_rfkill_led_=
+name=E2=80=99:
+drivers/net/wireless/b43/rfkill.c:112: error: implicit declaration of f=
+unction =E2=80=98rfkill_get_led_name=E2=80=99
+drivers/net/wireless/b43/rfkill.c:112: warning: return makes pointer fr=
+om integer without a cast
 
+I assume that I missed some critical patch. Can you tell me which one i=
+t is?
 
+Thanks,
+
+Larry
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
