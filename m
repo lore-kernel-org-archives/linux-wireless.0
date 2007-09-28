@@ -1,67 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59950 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400AbXITNuV (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60847
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751862AbXI1AIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 09:50:21 -0400
-Subject: mac80211 and QoS support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Tomas Winkler <tomasw@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UXQKZI6B8I966uPMQGoA"
-Date: Thu, 20 Sep 2007 11:57:53 +0200
-Message-Id: <1190282273.18521.31.camel@johannes.berg>
+	Thu, 27 Sep 2007 20:08:54 -0400
+Date: Thu, 27 Sep 2007 17:08:54 -0700 (PDT)
+Message-Id: <20070927.170854.11616972.davem@davemloft.net>
+To: jeff@garzik.org
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6  (2007-09-27)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <46FC2D02.9000602@garzik.org>
+References: <20070927215324.GG7991@tuxdriver.com>
+	<46FC2D02.9000602@garzik.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jeff Garzik <jeff@garzik.org>
+Date: Thu, 27 Sep 2007 18:21:54 -0400
 
---=-UXQKZI6B8I966uPMQGoA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> John W. Linville wrote:
+> > Dave & Jeff,
+> > 
+> > Here are some more wireless stack and driver updates for 2.6.24.  Please
+> > pull at your earliest convenience.
+> 
+> ACK (I presume davem will pull)
+> 
+> it looks like this includes my adm feedback, thanks!
 
-Hey,
-
-After looking again into why we were sending frames with invalid QoS
-control fields under certain circumstances it occurred to me that this
-would only happen when CONFIG_NET_SCHED was not set.
-
-That, however, seems wrong: when CONFIG_NET_SCHED is unset we really are
-behaving as a non-QoS STA. However, even if it is set we never announce
-our QoS capability, hostapd will never set the QoS capability field in a
-beacon and neither will we set in our capability information in
-(re)association requests.
-
-On the other hand, in both cases we will start sending QoS frames if the
-other side has announced support for it in their capability information.
-It seems to me that this violates the mandated behaviour if we're an AP
-in that we force a QoS-capable STA to behave as a QoS STA although it is
-associated to a non-QoS BSS and thus should expect to work as a non-QoS
-STA.
-
-It seems to me that we should introduce a new per-interface (where VLAN
-interfaces use the AP setting) "QoS enabled" setting that wpa_supplicant
-(when acting as MLME) or hostapd set. For the in-kernel-MLME, I would
-suggest to force it to be off. Enabling QoS would be disallowed when
-CONFIG_NET_SCHED is unset or when we have only one hardware queue. It
-should then behave like the 802.11 option "dot11QosOptionImplemented",
-but consistency wouldn't be enforced (i.e. hostapd sets this option so
-it is also required to set the QoS capability flag and insert the EDCA
-parameter set or QOS capability IE)
-
-johannes
-
---=-UXQKZI6B8I966uPMQGoA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG8kQh/ETPhpq3jKURApmpAJ0dXNrd1EzmtsSuN695KFHIoTv7sgCeM6f2
-Pmyy+LUASRaMiHPZF4zn+NA=
-=OnGT
------END PGP SIGNATURE-----
-
---=-UXQKZI6B8I966uPMQGoA--
-
+Pulled into net-2.6.24 and pushed back out, thanks!
