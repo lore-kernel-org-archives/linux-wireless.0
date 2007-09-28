@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49253 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932308AbXIJLnQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 07:43:16 -0400
-Subject: [PATCH] cfg80211: fix initialisation if built-in
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Rob Hussey <robjhussey@gmail.com>, stable@kernel.org
-Content-Type: text/plain
-Date: Mon, 10 Sep 2007 13:44:45 +0200
-Message-Id: <1189424685.4506.63.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from post.fh-kl.de ([143.93.17.200]:39224 "EHLO post.fh-kl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751548AbXI1NRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Sep 2007 09:17:07 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by post.fh-kl.de (Postfix) with ESMTP id 9EA8D240D326
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 14:47:59 +0200 (CEST)
+Received: from post.fh-kl.de ([127.0.0.1])
+	by localhost (post.fh-kl.de [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id ZQ6FhCPT6soi for <linux-wireless@vger.kernel.org>;
+	Fri, 28 Sep 2007 14:47:54 +0200 (CEST)
+Received: from [10.0.23.37] (aoip1.informatik.fh-kl.de [143.93.17.33])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by post.fh-kl.de (Postfix) with ESMTP id CB5E5240FFB2
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2007 14:47:49 +0200 (CEST)
+Message-ID: <46FCF7E7.6080706@fh-kl.de>
+Date: Fri, 28 Sep 2007 14:47:35 +0200
+From: Patrick Ziegler <patrick.ziegler@fh-kl.de>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: 802.11n drivers
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cfg80211 is built into the kernel it needs to init earlier
-so that device registrations are run after it has initialised.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/wireless/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- wireless-dev.orig/net/wireless/core.c	2007-09-10 13:00:18.567257487 +0200
-+++ wireless-dev/net/wireless/core.c	2007-09-10 13:00:59.837219347 +0200
-@@ -363,7 +363,7 @@ out_fail_notifier:
- out_fail_sysfs:
- 	return err;
- }
--module_init(cfg80211_init);
-+subsys_initcall(cfg80211_init);
- 
- static void cfg80211_exit(void)
- {
+we are working with new 802.11n Hardware. Is there a driver for some
+kinds of Hardware yet? Especially for Broadcom chipsets ( bcm2055 ) so
+called "Intensi-fi" ?
 
 
+-- 
+
+Dipl. Inf. (FH) Patrick Ziegler
+
+University Of Applied Sciences
+Kaiserslautern
+
+Amerikastrasse 1
+D-66482 Zweibruecken
+Germany
+
+Phone:	+49 6332 914 526
+Mail:	patrick.ziegler@fh-kl.de
+
+http://www.fh-kl.de
