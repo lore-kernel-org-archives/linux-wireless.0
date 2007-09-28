@@ -1,383 +1,655 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:52973 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbXIPMI3 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32788 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbXI1MAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2007 08:08:29 -0400
-Received: by an-out-0708.google.com with SMTP id d31so189208and
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Sep 2007 05:08:28 -0700 (PDT)
+	Fri, 28 Sep 2007 08:00:49 -0400
+Subject: [patch 11b/12] mac80211: remove management interface
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/24] rt2x00: Merge allocation/free register components
-Date: Sun, 16 Sep 2007 14:19:18 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200709161403.11332.IvDoorn@gmail.com>
-In-Reply-To: <200709161403.11332.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200709161419.19810.IvDoorn@gmail.com>
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+In-Reply-To: <1190976518.5021.20.camel@johannes.berg>
+References: <20070926131938.575572000@sipsolutions.net>
+	 <20070926132136.676468000@sipsolutions.net>
+	 <20070927205803.GF7991@tuxdriver.com>
+	 <1190976518.5021.20.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 28 Sep 2007 14:02:09 +0200
+Message-Id: <1190980929.3907.3.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The csr, eeprom and rf register components are always
-allocated and freed at the same locations.
-It will be easier if the 3 allocation and the 3 free functions
-are merged into a single allocation and single free function
-which can be used everywhere.
+Removes the management interface since it is only required
+for hostapd/userspace MLME, will not be in the final tree
+at least in this form and hostapd/userspace MLME currently
+do not work against this tree anyway.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
 ---
- drivers/net/wireless/rt2x00/rt2x00pci.c |  105 +++++++++----------------------
- drivers/net/wireless/rt2x00/rt2x00usb.c |   97 ++++++++--------------------
- 2 files changed, 59 insertions(+), 143 deletions(-)
+ include/net/mac80211.h         |    1 
+ net/mac80211/ieee80211.c       |  182 -----------------------------------------
+ net/mac80211/ieee80211_i.h     |    9 --
+ net/mac80211/ieee80211_iface.c |   66 --------------
+ net/mac80211/ieee80211_rate.c  |    3 
+ net/mac80211/ieee80211_rate.h  |    2 
+ net/mac80211/ieee80211_sta.c   |    2 
+ net/mac80211/rx.c              |   32 +------
+ net/mac80211/tx.c              |   14 ---
+ net/mac80211/wme.c             |   10 --
+ 10 files changed, 14 insertions(+), 307 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index f61cc7f..85629f1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -286,56 +286,45 @@ EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize);
- /*
-  * PCI driver handlers.
-  */
--static int rt2x00pci_alloc_csr(struct rt2x00_dev *rt2x00dev)
-+static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
- {
--	struct pci_dev *pci_dev = rt2x00dev_pci(rt2x00dev);
+--- wireless-dev.orig/include/net/mac80211.h	2007-09-28 13:20:30.321864682 +0200
++++ wireless-dev/include/net/mac80211.h	2007-09-28 13:40:26.451864682 +0200
+@@ -472,7 +472,6 @@ struct ieee80211_conf {
+ enum ieee80211_if_types {
+ 	IEEE80211_IF_TYPE_INVALID,
+ 	IEEE80211_IF_TYPE_AP,
+-	IEEE80211_IF_TYPE_MGMT,
+ 	IEEE80211_IF_TYPE_STA,
+ 	IEEE80211_IF_TYPE_IBSS,
+ 	IEEE80211_IF_TYPE_MNTR,
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-09-28 13:20:30.401864682 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-09-28 13:40:26.461864682 +0200
+@@ -23,7 +23,6 @@
+ #include <linux/bitmap.h>
+ #include <net/cfg80211.h>
+ 
+-#include "ieee80211_common.h"
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
+ #include "wep.h"
+@@ -122,152 +121,6 @@ static void ieee80211_master_set_multica
+ 	ieee80211_configure_filter(local);
+ }
+ 
+-/* management interface */
 -
--	rt2x00dev->csr_addr = ioremap(pci_resource_start(pci_dev, 0),
--				      pci_resource_len(pci_dev, 0));
--	if (!rt2x00dev->csr_addr) {
--		ERROR(rt2x00dev, "Ioremap failed.\n");
--		return -ENOMEM;
+-static void
+-ieee80211_fill_frame_info(struct ieee80211_local *local,
+-			  struct ieee80211_frame_info *fi,
+-			  struct ieee80211_rx_status *status)
+-{
+-	if (status) {
+-		struct timespec ts;
+-		struct ieee80211_rate *rate;
+-
+-		jiffies_to_timespec(jiffies, &ts);
+-		fi->hosttime = cpu_to_be64((u64) ts.tv_sec * 1000000 +
+-					   ts.tv_nsec / 1000);
+-		fi->mactime = cpu_to_be64(status->mactime);
+-		switch (status->phymode) {
+-		case MODE_IEEE80211A:
+-			fi->phytype = htonl(ieee80211_phytype_ofdm_dot11_a);
+-			break;
+-		case MODE_IEEE80211B:
+-			fi->phytype = htonl(ieee80211_phytype_dsss_dot11_b);
+-			break;
+-		case MODE_IEEE80211G:
+-			fi->phytype = htonl(ieee80211_phytype_pbcc_dot11_g);
+-			break;
+-		default:
+-			fi->phytype = htonl(0xAAAAAAAA);
+-			break;
+-		}
+-		fi->channel = htonl(status->channel);
+-		rate = ieee80211_get_rate(local, status->phymode,
+-					  status->rate);
+-		if (rate) {
+-			fi->datarate = htonl(rate->rate);
+-			if (rate->flags & IEEE80211_RATE_PREAMBLE2) {
+-				if (status->rate == rate->val)
+-					fi->preamble = htonl(2); /* long */
+-				else if (status->rate == rate->val2)
+-					fi->preamble = htonl(1); /* short */
+-			} else
+-				fi->preamble = htonl(0);
+-		} else {
+-			fi->datarate = htonl(0);
+-			fi->preamble = htonl(0);
+-		}
+-
+-		fi->antenna = htonl(status->antenna);
+-		fi->priority = htonl(0xffffffff); /* no clue */
+-		fi->ssi_type = htonl(ieee80211_ssi_raw);
+-		fi->ssi_signal = htonl(status->ssi);
+-		fi->ssi_noise = 0x00000000;
+-		fi->encoding = 0;
+-	} else {
+-		/* clear everything because we really don't know.
+-		 * the msg_type field isn't present on monitor frames
+-		 * so we don't know whether it will be present or not,
+-		 * but it's ok to not clear it since it'll be assigned
+-		 * anyway */
+-		memset(fi, 0, sizeof(*fi) - sizeof(fi->msg_type));
+-
+-		fi->ssi_type = htonl(ieee80211_ssi_none);
 -	}
-+	kfree(rt2x00dev->rf);
-+	rt2x00dev->rf = NULL;
- 
+-	fi->version = htonl(IEEE80211_FI_VERSION);
+-	fi->length = cpu_to_be32(sizeof(*fi) - sizeof(fi->msg_type));
+-}
+-
+-/* this routine is actually not just for this, but also
+- * for pushing fake 'management' frames into userspace.
+- * it shall be replaced by a netlink-based system. */
+-void
+-ieee80211_rx_mgmt(struct ieee80211_local *local, struct sk_buff *skb,
+-		  struct ieee80211_rx_status *status, u32 msg_type)
+-{
+-	struct ieee80211_frame_info *fi;
+-	const size_t hlen = sizeof(struct ieee80211_frame_info);
+-	struct net_device *dev = local->apdev;
+-
+-	skb->dev = dev;
+-
+-	if (skb_headroom(skb) < hlen) {
+-		I802_DEBUG_INC(local->rx_expand_skb_head);
+-		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
+-			dev_kfree_skb(skb);
+-			return;
+-		}
+-	}
+-
+-	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
+-
+-	ieee80211_fill_frame_info(local, fi, status);
+-	fi->msg_type = htonl(msg_type);
+-
+-	dev->stats.rx_packets++;
+-	dev->stats.rx_bytes += skb->len;
+-
+-	skb_set_mac_header(skb, 0);
+-	skb->ip_summed = CHECKSUM_UNNECESSARY;
+-	skb->pkt_type = PACKET_OTHERHOST;
+-	skb->protocol = htons(ETH_P_802_2);
+-	memset(skb->cb, 0, sizeof(skb->cb));
+-	netif_rx(skb);
+-}
+-
+-static int ieee80211_mgmt_open(struct net_device *dev)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-
+-	if (!netif_running(local->mdev))
+-		return -EOPNOTSUPP;
 -	return 0;
 -}
-+	kfree(rt2x00dev->eeprom);
-+	rt2x00dev->eeprom = NULL;
- 
--static void rt2x00pci_free_csr(struct rt2x00_dev *rt2x00dev)
+-
+-static int ieee80211_mgmt_stop(struct net_device *dev)
 -{
- 	if (rt2x00dev->csr_addr) {
- 		iounmap(rt2x00dev->csr_addr);
- 		rt2x00dev->csr_addr = NULL;
+-	return 0;
+-}
+-
+-static int ieee80211_change_mtu_apdev(struct net_device *dev, int new_mtu)
+-{
+-	/* FIX: what would be proper limits for MTU?
+-	 * This interface uses 802.11 frames. */
+-	if (new_mtu < 256 || new_mtu > IEEE80211_MAX_DATA_LEN) {
+-		printk(KERN_WARNING "%s: invalid MTU %d\n",
+-		       dev->name, new_mtu);
+-		return -EINVAL;
+-	}
+-
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	printk(KERN_DEBUG "%s: setting MTU %d\n", dev->name, new_mtu);
+-#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+-	dev->mtu = new_mtu;
+-	return 0;
+-}
+-
+-void ieee80211_if_mgmt_setup(struct net_device *dev)
+-{
+-	ether_setup(dev);
+-	dev->hard_start_xmit = ieee80211_mgmt_start_xmit;
+-	dev->change_mtu = ieee80211_change_mtu_apdev;
+-	dev->open = ieee80211_mgmt_open;
+-	dev->stop = ieee80211_mgmt_stop;
+-	dev->type = ARPHRD_IEEE80211_PRISM;
+-	dev->hard_header_parse = header_parse_80211;
+-	dev->destructor = ieee80211_if_free;
+-}
+-
+ /* regular interfaces */
+ 
+ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+@@ -345,7 +198,6 @@ static int ieee80211_open(struct net_dev
+ 			return -ENOLINK;
+ 		break;
+ 	case IEEE80211_IF_TYPE_AP:
+-	case IEEE80211_IF_TYPE_MGMT:
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_MNTR:
+ 	case IEEE80211_IF_TYPE_IBSS:
+@@ -410,10 +262,6 @@ static int ieee80211_open(struct net_dev
+ 	if (local->open_count == 0) {
+ 		res = dev_open(local->mdev);
+ 		WARN_ON(res);
+-		if (local->apdev) {
+-			res = dev_open(local->apdev);
+-			WARN_ON(res);
+-		}
+ 		tasklet_enable(&local->tx_pending_tasklet);
+ 		tasklet_enable(&local->tasklet);
  	}
+@@ -499,9 +347,6 @@ static int ieee80211_stop(struct net_dev
+ 		if (netif_running(local->mdev))
+ 			dev_close(local->mdev);
+ 
+-		if (local->apdev)
+-			dev_close(local->apdev);
+-
+ 		if (local->ops->stop)
+ 			local->ops->stop(local_to_hw(local));
+ 
+@@ -542,7 +387,7 @@ static void ieee80211_set_multicast_list
+ 	dev_mc_sync(local->mdev, dev);
  }
  
--static int rt2x00pci_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
-+static int rt2x00pci_alloc_reg(struct rt2x00_dev *rt2x00dev)
+-/* Must not be called for mdev and apdev */
++/* Must not be called for mdev */
+ void ieee80211_if_setup(struct net_device *dev)
  {
--	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
--	if (!rt2x00dev->eeprom)
--		return -ENOMEM;
-+	struct pci_dev *pci_dev = rt2x00dev_pci(rt2x00dev);
+ 	ether_setup(dev);
+@@ -796,8 +641,6 @@ static void ieee80211_remove_tx_extra(st
+ 		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+ 	if (control->flags & IEEE80211_TXCTL_REQUEUE)
+ 		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
+-	if (control->type == IEEE80211_IF_TYPE_MGMT)
+-		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 	pkt_data->queue = control->queue;
  
--	return 0;
--}
-+	rt2x00dev->csr_addr = ioremap(pci_resource_start(pci_dev, 0),
-+				      pci_resource_len(pci_dev, 0));
-+	if (!rt2x00dev->csr_addr)
-+		goto exit;
- 
--static void rt2x00pci_free_eeprom(struct rt2x00_dev *rt2x00dev)
--{
--	kfree(rt2x00dev->eeprom);
--	rt2x00dev->eeprom = NULL;
--}
-+	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
-+	if (!rt2x00dev->eeprom)
-+		goto exit;
- 
--static int rt2x00pci_alloc_rf(struct rt2x00_dev *rt2x00dev)
--{
- 	rt2x00dev->rf = kzalloc(rt2x00dev->ops->rf_size, GFP_KERNEL);
- 	if (!rt2x00dev->rf)
--		return -ENOMEM;
-+		goto exit;
- 
- 	return 0;
--}
- 
--static void rt2x00pci_free_rf(struct rt2x00_dev *rt2x00dev)
--{
--	kfree(rt2x00dev->rf);
--	rt2x00dev->rf = NULL;
-+exit:
-+	ERROR_PROBE("Failed to allocate registers.\n");
-+
-+	rt2x00pci_free_reg(rt2x00dev);
-+
-+	return -ENOMEM;
- }
- 
- int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
-@@ -383,32 +372,18 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
- 	rt2x00dev->ops = ops;
- 	rt2x00dev->hw = hw;
- 
--	retval = rt2x00pci_alloc_csr(rt2x00dev);
-+	retval = rt2x00pci_alloc_reg(rt2x00dev);
- 	if (retval)
- 		goto exit_free_device;
- 
--	retval = rt2x00pci_alloc_eeprom(rt2x00dev);
--	if (retval)
--		goto exit_free_csr;
--
--	retval = rt2x00pci_alloc_rf(rt2x00dev);
--	if (retval)
--		goto exit_free_eeprom;
--
- 	retval = rt2x00lib_probe_dev(rt2x00dev);
- 	if (retval)
--		goto exit_free_rf;
-+		goto exit_free_reg;
- 
- 	return 0;
- 
--exit_free_rf:
--	rt2x00pci_free_rf(rt2x00dev);
--
--exit_free_eeprom:
--	rt2x00pci_free_eeprom(rt2x00dev);
--
--exit_free_csr:
--	rt2x00pci_free_csr(rt2x00dev);
-+exit_free_reg:
-+	rt2x00pci_free_reg(rt2x00dev);
- 
- exit_free_device:
- 	ieee80211_free_hw(hw);
-@@ -435,9 +410,7 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
- 	 * Free all allocated data.
- 	 */
- 	rt2x00lib_remove_dev(rt2x00dev);
--	rt2x00pci_free_rf(rt2x00dev);
--	rt2x00pci_free_eeprom(rt2x00dev);
--	rt2x00pci_free_csr(rt2x00dev);
-+	rt2x00pci_free_reg(rt2x00dev);
- 	ieee80211_free_hw(hw);
- 
- 	/*
-@@ -460,9 +433,7 @@ int rt2x00pci_suspend(struct pci_dev *pci_dev, pm_message_t state)
- 	if (retval)
- 		return retval;
- 
--	rt2x00pci_free_rf(rt2x00dev);
--	rt2x00pci_free_eeprom(rt2x00dev);
--	rt2x00pci_free_csr(rt2x00dev);
-+	rt2x00pci_free_reg(rt2x00dev);
- 
- 	pci_save_state(pci_dev);
- 	pci_disable_device(pci_dev);
-@@ -483,32 +454,18 @@ int rt2x00pci_resume(struct pci_dev *pci_dev)
- 		return -EIO;
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+@@ -850,7 +693,6 @@ void ieee80211_tx_status(struct ieee8021
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	u16 frag, type;
+-	u32 msg_type;
+ 	struct ieee80211_tx_status_rtap_hdr *rthdr;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int monitors;
+@@ -965,29 +807,9 @@ void ieee80211_tx_status(struct ieee8021
+ 			local->dot11FailedCount++;
  	}
  
--	retval = rt2x00pci_alloc_csr(rt2x00dev);
-+	retval = rt2x00pci_alloc_reg(rt2x00dev);
- 	if (retval)
- 		return retval;
- 
--	retval = rt2x00pci_alloc_eeprom(rt2x00dev);
--	if (retval)
--		goto exit_free_csr;
+-	msg_type = (status->flags & IEEE80211_TX_STATUS_ACK) ?
+-		ieee80211_msg_tx_callback_ack : ieee80211_msg_tx_callback_fail;
 -
--	retval = rt2x00pci_alloc_rf(rt2x00dev);
--	if (retval)
--		goto exit_free_eeprom;
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+ 
+-	if ((status->control.flags & IEEE80211_TXCTL_REQ_TX_STATUS) &&
+-	    local->apdev) {
+-		if (local->monitors) {
+-			skb2 = skb_clone(skb, GFP_ATOMIC);
+-		} else {
+-			skb2 = skb;
+-			skb = NULL;
+-		}
 -
- 	retval = rt2x00lib_resume(rt2x00dev);
- 	if (retval)
--		goto exit_free_rf;
-+		goto exit_free_reg;
- 
- 	return 0;
- 
--exit_free_rf:
--	rt2x00pci_free_rf(rt2x00dev);
+-		if (skb2)
+-			/* Send frame to hostapd */
+-			ieee80211_rx_mgmt(local, skb2, NULL, msg_type);
 -
--exit_free_eeprom:
--	rt2x00pci_free_eeprom(rt2x00dev);
+-		if (!skb)
+-			return;
+-	}
 -
--exit_free_csr:
--	rt2x00pci_free_csr(rt2x00dev);
-+exit_free_reg:
-+	rt2x00pci_free_reg(rt2x00dev);
+ 	if (!local->monitors) {
+ 		dev_kfree_skb(skb);
+ 		return;
+@@ -1334,8 +1156,6 @@ void ieee80211_unregister_hw(struct ieee
+ 	BUG_ON(local->reg_state != IEEE80211_DEV_REGISTERED);
  
- 	return retval;
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index ede3766..a0f05ca 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -432,49 +432,40 @@ EXPORT_SYMBOL_GPL(rt2x00usb_uninitialize);
- /*
-  * USB driver handlers.
-  */
--static int rt2x00usb_alloc_csr(struct rt2x00_dev *rt2x00dev)
-+static void rt2x00usb_free_reg(struct rt2x00_dev *rt2x00dev)
- {
--	rt2x00dev->csr_cache = kzalloc(CSR_CACHE_SIZE, GFP_KERNEL);
--	if (!rt2x00dev->csr_cache)
--		return -ENOMEM;
-+	kfree(rt2x00dev->rf);
-+	rt2x00dev->rf = NULL;
- 
--	return 0;
--}
-+	kfree(rt2x00dev->eeprom);
-+	rt2x00dev->eeprom = NULL;
- 
--static void rt2x00usb_free_csr(struct rt2x00_dev *rt2x00dev)
--{
- 	kfree(rt2x00dev->csr_cache);
- 	rt2x00dev->csr_cache = NULL;
- }
- 
--static int rt2x00usb_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
-+static int rt2x00usb_alloc_reg(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2x00dev->csr_cache = kzalloc(CSR_CACHE_SIZE, GFP_KERNEL);
-+	if (!rt2x00dev->csr_cache)
-+		goto exit;
-+
- 	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
- 	if (!rt2x00dev->eeprom)
--		return -ENOMEM;
--
--	return 0;
--}
--
--static void rt2x00usb_free_eeprom(struct rt2x00_dev *rt2x00dev)
--{
--	kfree(rt2x00dev->eeprom);
--	rt2x00dev->eeprom = NULL;
--}
-+		goto exit;
- 
--static int rt2x00usb_alloc_rf(struct rt2x00_dev *rt2x00dev)
--{
- 	rt2x00dev->rf = kzalloc(rt2x00dev->ops->rf_size, GFP_KERNEL);
- 	if (!rt2x00dev->rf)
--		return -ENOMEM;
-+		goto exit;
- 
- 	return 0;
--}
- 
--static void rt2x00usb_free_rf(struct rt2x00_dev *rt2x00dev)
--{
--	kfree(rt2x00dev->rf);
--	rt2x00dev->rf = NULL;
-+exit:
-+	ERROR_PROBE("Failed to allocate registers.\n");
-+
-+	rt2x00usb_free_reg(rt2x00dev);
-+
-+	return -ENOMEM;
- }
- 
- int rt2x00usb_probe(struct usb_interface *usb_intf,
-@@ -502,32 +493,18 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	rt2x00dev->ops = ops;
- 	rt2x00dev->hw = hw;
- 
--	retval = rt2x00usb_alloc_csr(rt2x00dev);
-+	retval = rt2x00usb_alloc_reg(rt2x00dev);
- 	if (retval)
- 		goto exit_free_device;
- 
--	retval = rt2x00usb_alloc_eeprom(rt2x00dev);
--	if (retval)
--		goto exit_free_cr;
--
--	retval = rt2x00usb_alloc_rf(rt2x00dev);
--	if (retval)
--		goto exit_free_eeprom;
--
- 	retval = rt2x00lib_probe_dev(rt2x00dev);
- 	if (retval)
--		goto exit_free_rf;
-+		goto exit_free_reg;
- 
- 	return 0;
- 
--exit_free_rf:
--	rt2x00usb_free_rf(rt2x00dev);
--
--exit_free_eeprom:
--	rt2x00usb_free_eeprom(rt2x00dev);
--
--exit_free_cr:
--	rt2x00usb_free_csr(rt2x00dev);
-+exit_free_reg:
-+	rt2x00usb_free_reg(rt2x00dev);
- 
- exit_free_device:
- 	ieee80211_free_hw(hw);
-@@ -550,9 +527,7 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf)
- 	 * Free all allocated data.
- 	 */
- 	rt2x00lib_remove_dev(rt2x00dev);
--	rt2x00usb_free_rf(rt2x00dev);
--	rt2x00usb_free_eeprom(rt2x00dev);
--	rt2x00usb_free_csr(rt2x00dev);
-+	rt2x00usb_free_reg(rt2x00dev);
- 	ieee80211_free_hw(hw);
+ 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+-	if (local->apdev)
+-		ieee80211_if_del_mgmt(local);
  
  	/*
-@@ -574,9 +549,7 @@ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state)
- 	if (retval)
- 		return retval;
+ 	 * At this point, interface list manipulations are fine
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-28 13:20:30.421864682 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-28 13:40:26.461864682 +0200
+@@ -141,7 +141,6 @@ struct ieee80211_txrx_data {
+ 			 * when using CTS protection with IEEE 802.11g. */
+ 			struct ieee80211_rate *last_frag_rate;
+ 			int last_frag_hwrate;
+-			int mgmt_interface;
  
--	rt2x00usb_free_rf(rt2x00dev);
--	rt2x00usb_free_eeprom(rt2x00dev);
--	rt2x00usb_free_csr(rt2x00dev);
-+	rt2x00usb_free_reg(rt2x00dev);
+ 			/* Extra fragments (in addition to the first fragment
+ 			 * in skb) */
+@@ -163,7 +162,6 @@ struct ieee80211_txrx_data {
+ #define IEEE80211_TXPD_REQ_TX_STATUS	BIT(0)
+ #define IEEE80211_TXPD_DO_NOT_ENCRYPT	BIT(1)
+ #define IEEE80211_TXPD_REQUEUE		BIT(2)
+-#define IEEE80211_TXPD_MGMT_IFACE	BIT(3)
+ /* Stored in sk_buff->cb */
+ struct ieee80211_tx_packet_data {
+ 	int ifindex;
+@@ -408,7 +406,6 @@ struct ieee80211_local {
+ 	struct list_head modes_list;
  
- 	/*
- 	 * Decrease usbdev refcount.
-@@ -595,32 +568,18 @@ int rt2x00usb_resume(struct usb_interface *usb_intf)
+ 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
+-	struct net_device *apdev; /* wlan#ap - management frames (hostapd) */
+ 	int open_count;
+ 	int monitors;
+ 	unsigned int filter_flags; /* FIF_* */
+@@ -704,14 +701,11 @@ static inline int ieee80211_bssid_match(
+ int ieee80211_hw_config(struct ieee80211_local *local);
+ int ieee80211_if_config(struct net_device *dev);
+ int ieee80211_if_config_beacon(struct net_device *dev);
+-void ieee80211_rx_mgmt(struct ieee80211_local *local, struct sk_buff *skb,
+-		       struct ieee80211_rx_status *status, u32 msg_type);
+ void ieee80211_prepare_rates(struct ieee80211_local *local,
+ 			     struct ieee80211_hw_mode *mode);
+ void ieee80211_tx_set_iswep(struct ieee80211_txrx_data *tx);
+ int ieee80211_if_update_wds(struct net_device *dev, u8 *remote_addr);
+ void ieee80211_if_setup(struct net_device *dev);
+-void ieee80211_if_mgmt_setup(struct net_device *dev);
+ struct ieee80211_rate *ieee80211_get_rate(struct ieee80211_local *local,
+ 					  int phymode, int hwrate);
  
- 	usb_get_dev(interface_to_usbdev(usb_intf));
+@@ -778,8 +772,6 @@ void __ieee80211_if_del(struct ieee80211
+ int ieee80211_if_remove(struct net_device *dev, const char *name, int id);
+ void ieee80211_if_free(struct net_device *dev);
+ void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata);
+-int ieee80211_if_add_mgmt(struct ieee80211_local *local);
+-void ieee80211_if_del_mgmt(struct ieee80211_local *local);
  
--	retval = rt2x00usb_alloc_csr(rt2x00dev);
-+	retval = rt2x00usb_alloc_reg(rt2x00dev);
- 	if (retval)
- 		return retval;
+ /* regdomain.c */
+ void ieee80211_regdomain_init(void);
+@@ -796,7 +788,6 @@ void ieee80211_tx_pending(unsigned long 
+ int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev);
+ int ieee80211_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev);
+ int ieee80211_subif_start_xmit(struct sk_buff *skb, struct net_device *dev);
+-int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev);
  
--	retval = rt2x00usb_alloc_eeprom(rt2x00dev);
--	if (retval)
--		goto exit_free_csr;
--
--	retval = rt2x00usb_alloc_rf(rt2x00dev);
--	if (retval)
--		goto exit_free_eeprom;
--
- 	retval = rt2x00lib_resume(rt2x00dev);
- 	if (retval)
--		goto exit_free_rf;
-+		goto exit_free_reg;
- 
- 	return 0;
- 
--exit_free_rf:
--	rt2x00usb_free_rf(rt2x00dev);
--
--exit_free_eeprom:
--	rt2x00usb_free_eeprom(rt2x00dev);
--
--exit_free_csr:
--	rt2x00usb_free_csr(rt2x00dev);
-+exit_free_reg:
-+	rt2x00usb_free_reg(rt2x00dev);
- 
- 	return retval;
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+--- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-09-28 13:20:30.471864682 +0200
++++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-09-28 13:40:26.461864682 +0200
+@@ -96,66 +96,6 @@ fail:
+ 	return ret;
  }
--- 
-1.5.3
+ 
+-int ieee80211_if_add_mgmt(struct ieee80211_local *local)
+-{
+-	struct net_device *ndev;
+-	struct ieee80211_sub_if_data *nsdata;
+-	int ret;
+-
+-	ASSERT_RTNL();
+-
+-	ndev = alloc_netdev(sizeof(struct ieee80211_sub_if_data), "wmgmt%d",
+-			    ieee80211_if_mgmt_setup);
+-	if (!ndev)
+-		return -ENOMEM;
+-	ret = dev_alloc_name(ndev, ndev->name);
+-	if (ret < 0)
+-		goto fail;
+-
+-	memcpy(ndev->dev_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
+-	SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
+-
+-	nsdata = IEEE80211_DEV_TO_SUB_IF(ndev);
+-	ndev->ieee80211_ptr = &nsdata->wdev;
+-	nsdata->wdev.wiphy = local->hw.wiphy;
+-	nsdata->type = IEEE80211_IF_TYPE_MGMT;
+-	nsdata->dev = ndev;
+-	nsdata->local = local;
+-	ieee80211_if_sdata_init(nsdata);
+-
+-	ret = register_netdevice(ndev);
+-	if (ret)
+-		goto fail;
+-
+-	/*
+-	 * Called even when register_netdevice fails, it would
+-	 * oops if assigned before initialising the rest.
+-	 */
+-	ndev->uninit = ieee80211_if_reinit;
+-
+-	ieee80211_debugfs_add_netdev(nsdata);
+-
+-	if (local->open_count > 0)
+-		dev_open(ndev);
+-	local->apdev = ndev;
+-	return 0;
+-
+-fail:
+-	free_netdev(ndev);
+-	return ret;
+-}
+-
+-void ieee80211_if_del_mgmt(struct ieee80211_local *local)
+-{
+-	struct net_device *apdev;
+-
+-	ASSERT_RTNL();
+-	apdev = local->apdev;
+-	ieee80211_debugfs_remove_netdev(IEEE80211_DEV_TO_SUB_IF(apdev));
+-	local->apdev = NULL;
+-	unregister_netdevice(apdev);
+-}
+-
+ void ieee80211_if_set_type(struct net_device *dev, int type)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -247,9 +187,6 @@ void ieee80211_if_reinit(struct net_devi
+ 		/* cannot happen */
+ 		WARN_ON(1);
+ 		break;
+-	case IEEE80211_IF_TYPE_MGMT:
+-		/* nothing to do */
+-		break;
+ 	case IEEE80211_IF_TYPE_AP: {
+ 		/* Remove all virtual interfaces that use this BSS
+ 		 * as their sdata->bss */
+@@ -357,11 +294,8 @@ int ieee80211_if_remove(struct net_devic
+ 
+ void ieee80211_if_free(struct net_device *dev)
+ {
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	/* local->apdev must be NULL when freeing management interface */
+-	BUG_ON(dev == local->apdev);
+ 	ieee80211_if_sdata_deinit(sdata);
+ 	free_netdev(dev);
+ }
+--- wireless-dev.orig/net/mac80211/tx.c	2007-09-28 13:20:30.541864682 +0200
++++ wireless-dev/net/mac80211/tx.c	2007-09-28 13:40:26.461864682 +0200
+@@ -255,7 +255,7 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 		return TXRX_CONTINUE;
+ 	}
+ 
+-	if (unlikely(!tx->u.tx.mgmt_interface && tx->sdata->ieee802_1x &&
++	if (unlikely(/* !injected && */ tx->sdata->ieee802_1x &&
+ 		     !(sta_flags & WLAN_STA_AUTHORIZED))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		printk(KERN_DEBUG "%s: dropped frame to " MAC_FMT
+@@ -565,8 +565,6 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 
+ 	memset(&extra, 0, sizeof(extra));
+ 	extra.mode = tx->u.tx.mode;
+-	extra.mgmt_data = tx->sdata &&
+-		tx->sdata->type == IEEE80211_IF_TYPE_MGMT;
+ 	extra.ethertype = tx->ethertype;
+ 
+ 	tx->u.tx.rate = rate_control_get_rate(tx->local, tx->dev, tx->skb,
+@@ -1064,7 +1062,7 @@ static int __ieee80211_tx(struct ieee802
+ }
+ 
+ static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb,
+-			struct ieee80211_tx_control *control, int mgmt)
++			struct ieee80211_tx_control *control)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct sta_info *sta;
+@@ -1094,7 +1092,6 @@ static int ieee80211_tx(struct net_devic
+ 	rcu_read_lock();
+ 
+ 	sta = tx.sta;
+-	tx.u.tx.mgmt_interface = mgmt;
+ 	tx.u.tx.mode = local->hw.conf.mode;
+ 
+ 	if (res_prepare == TXRX_QUEUED) { /* if it was an injected packet */
+@@ -1245,8 +1242,7 @@ int ieee80211_master_start_xmit(struct s
+ 		control.flags |= IEEE80211_TXCTL_REQUEUE;
+ 	control.queue = pkt_data->queue;
+ 
+-	ret = ieee80211_tx(odev, skb, &control,
+-			   control.type == IEEE80211_IF_TYPE_MGMT);
++	ret = ieee80211_tx(odev, skb, &control);
+ 	dev_put(odev);
+ 
+ 	return ret;
+@@ -1491,8 +1487,6 @@ int ieee80211_subif_start_xmit(struct sk
+ 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = dev->ifindex;
+-	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
+-		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 
+ 	skb->dev = local->mdev;
+ 	dev->stats.tx_packets++;
+@@ -1550,8 +1544,6 @@ int ieee80211_mgmt_start_xmit(struct sk_
+ 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = sdata->dev->ifindex;
+-	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
+-		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 
+ 	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
+ 	skb->dev = sdata->local->mdev;
+--- wireless-dev.orig/net/mac80211/ieee80211_rate.c	2007-09-28 13:20:30.591864682 +0200
++++ wireless-dev/net/mac80211/ieee80211_rate.c	2007-09-28 13:40:26.461864682 +0200
+@@ -145,8 +145,7 @@ int ieee80211_init_rate_ctrl_alg(struct 
+ 	struct rate_control_ref *ref, *old;
+ 
+ 	ASSERT_RTNL();
+-	if (local->open_count || netif_running(local->mdev) ||
+-	    (local->apdev && netif_running(local->apdev)))
++	if (local->open_count || netif_running(local->mdev))
+ 		return -EBUSY;
+ 
+ 	ref = rate_control_alloc(name, local);
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-09-28 13:20:30.621864682 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-09-28 13:40:26.471864682 +0200
+@@ -472,8 +472,6 @@ static void ieee80211_sta_tx(struct net_
+ 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = sdata->dev->ifindex;
+-	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
+-		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 	if (!encrypt)
+ 		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+ 
+--- wireless-dev.orig/net/mac80211/rx.c	2007-09-28 13:20:30.661864682 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-09-28 13:40:26.471864682 +0200
+@@ -19,7 +19,6 @@
+ 
+ #include "ieee80211_i.h"
+ #include "ieee80211_led.h"
+-#include "ieee80211_common.h"
+ #include "wep.h"
+ #include "wpa.h"
+ #include "tkip.h"
+@@ -412,12 +411,7 @@ ieee80211_rx_h_check(struct ieee80211_tx
+ 			return TXRX_DROP;
+ 		}
+ 
+-		if (!rx->local->apdev)
+-			return TXRX_DROP;
+-
+-		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
+-				  ieee80211_msg_sta_not_assoc);
+-		return TXRX_QUEUED;
++		return TXRX_DROP;
+ 	}
+ 
+ 	return TXRX_CONTINUE;
+@@ -977,15 +971,8 @@ ieee80211_rx_h_802_1x_pae(struct ieee802
+ {
+ 	if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb) &&
+ 	    rx->sdata->type != IEEE80211_IF_TYPE_STA &&
+-	    (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
+-		/* Pass both encrypted and unencrypted EAPOL frames to user
+-		 * space for processing. */
+-		if (!rx->local->apdev)
+-			return TXRX_DROP;
+-		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
+-				  ieee80211_msg_normal);
+-		return TXRX_QUEUED;
+-	}
++	    (rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
++		return TXRX_CONTINUE;
+ 
+ 	if (unlikely(rx->sdata->ieee802_1x &&
+ 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+@@ -1226,15 +1213,11 @@ ieee80211_rx_h_mgmt(struct ieee80211_txr
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 	if ((sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	     sdata->type == IEEE80211_IF_TYPE_IBSS) &&
+-	    !rx->local->user_space_mlme) {
++	    !rx->local->user_space_mlme)
+ 		ieee80211_sta_rx_mgmt(rx->dev, rx->skb, rx->u.rx.status);
+-	} else {
+-		/* Management frames are sent to hostapd for processing */
+-		if (!rx->local->apdev)
+-			return TXRX_DROP;
+-		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
+-				  ieee80211_msg_normal);
+-	}
++	else
++		return TXRX_DROP;
++
+ 	return TXRX_QUEUED;
+ }
+ 
+@@ -1445,7 +1428,6 @@ static int prepare_for_handlers(struct i
+ 		/* take everything */
+ 		break;
+ 	case IEEE80211_IF_TYPE_INVALID:
+-	case IEEE80211_IF_TYPE_MGMT:
+ 		/* should never get here */
+ 		WARN_ON(1);
+ 		break;
+--- wireless-dev.orig/net/mac80211/ieee80211_rate.h	2007-09-28 13:20:30.731864682 +0200
++++ wireless-dev/net/mac80211/ieee80211_rate.h	2007-09-28 13:40:26.471864682 +0200
+@@ -30,8 +30,6 @@ struct rate_control_extra {
+ 
+ 	/* parameters from the caller to rate_control_get_rate(): */
+ 	struct ieee80211_hw_mode *mode;
+-	int mgmt_data; /* this is data frame that is used for management
+-			* (e.g., IEEE 802.1X EAPOL) */
+ 	u16 ethertype;
+ };
+ 
+--- wireless-dev.orig/net/mac80211/wme.c	2007-09-28 13:20:30.811864682 +0200
++++ wireless-dev/net/mac80211/wme.c	2007-09-28 13:40:26.471864682 +0200
+@@ -94,8 +94,6 @@ static inline int wme_downgrade_ac(struc
+ static inline int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ {
+ 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
+-	struct ieee80211_tx_packet_data *pkt_data =
+-		(struct ieee80211_tx_packet_data *) skb->cb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	unsigned short fc = le16_to_cpu(hdr->frame_control);
+ 	int qos;
+@@ -108,12 +106,8 @@ static inline int classify80211(struct s
+ 		return IEEE80211_TX_QUEUE_DATA0;
+ 	}
+ 
+-	if (unlikely(pkt_data->flags & IEEE80211_TXPD_MGMT_IFACE)) {
+-		/* Data frames from hostapd (mainly, EAPOL) use AC_VO
+-		* and they will include QoS control fields if
+-		* the target STA is using WME. */
+-		skb->priority = 7;
+-		return ieee802_1d_to_ac[skb->priority];
++	if (0 /* injected */) {
++		/* use AC from radiotap */
+ 	}
+ 
+ 	/* is this a QoS frame? */
+
 
