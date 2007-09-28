@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:54598 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752971AbXIXPIb (ORCPT
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:49511 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730AbXI1BQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 11:08:31 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: Adapt to filter configuration API
-Date: Mon, 24 Sep 2007 11:07:24 -0400
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-References: <200709241106.04902.flamingice@sourmilk.net>
-In-Reply-To: <200709241106.04902.flamingice@sourmilk.net>
+	Thu, 27 Sep 2007 21:16:44 -0400
+Date: Thu, 27 Sep 2007 18:16:30 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: hostapd: passing sta info struct to drivers?
+Message-ID: <20070928011630.GI27241@jm.kir.nu>
+References: <1190911599.5021.4.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2865436.TKobSlOikP";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200709241107.28275.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1190911599.5021.4.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2865436.TKobSlOikP
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, Sep 27, 2007 at 06:46:39PM +0200, Johannes Berg wrote:
 
-On Monday 24 September 2007 11:06, Michael Wu wrote:
-> From: Michael Wu <flamingice@sourmilk.net>
->
-> This makes p54 use the new filter configuration API in mac80211.
->
-> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Err, and the title should be:
+> During porting the STA management to nl80211 it turned out that it would
+> be much nicer in the kernel if we would always set all the flags on a
+> STA that the kernel needs to get from hostapd.
 
-[PATCH] p54: Adapt to filter configuration API=20
+That I might be able to support at least partially by merging together
+some operations, but still, I would expect there to be valid scenarios
+where it would be useful to be able to just toggle a single flag.
 
-Ugh.
+> To implement that, it would be good to simply pass the sta_info
+> structure, e.g. we currently have this code:
 
-=2DMichael Wu
+This is not going to happen. struct sta_info (the one in hostapd) is
+internal for the core implementation and the driver wrappers should
+never touch it directly, i.e., pointer to this is not passed on purpose.
+If changes to the operation between the driver wrapper and kernel is
+desired, it will need to be done in a different way.
 
---nextPart2865436.TKobSlOikP
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBG99KwT3Oqt9AH4aERAjPuAJ4sYAs0dizWSzECifaeRSCkpmFAOQCgnytP
-fCpsmO6sXoB9t7EW6h4pKeM=
-=2tlI
------END PGP SIGNATURE-----
-
---nextPart2865436.TKobSlOikP--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
