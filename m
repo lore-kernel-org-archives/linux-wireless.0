@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:24949 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbXIHPCE (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:56106 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbXI2ROY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2007 11:02:04 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so353998ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2007 08:02:01 -0700 (PDT)
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: [RFC 0/3] rfkill
-Date: Sat, 8 Sep 2007 17:10:56 +0200
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709081710.56744.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sat, 29 Sep 2007 13:14:24 -0400
+Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
+From: David Woodhouse <dwmw2@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200709291908.24758.mb@bu3sch.de>
+References: <200709281422.34434.mb@bu3sch.de>
+	 <1191084768.8203.10.camel@shinybook.infradead.org>
+	 <200709291908.24758.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Sat, 29 Sep 2007 18:14:34 +0100
+Message-Id: <1191086074.8203.18.camel@shinybook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
+On Sat, 2007-09-29 at 19:08 +0200, Michael Buesch wrote:
+> I'm not sure what you are trying to ask.
 
-I have a few rfkill related patches for which I would prefer if you to could 
-take a look at before I send them for inclusion.
+The hunks I quoted don't seem relevant to the rfkill switch. They seem
+to be related to periodic work, which was the subject of the other patch
+you posted at about the same time. Did you get them mixed up?
+-- 
+dwmw2
 
-Thanks. :)
-
-Ivo
