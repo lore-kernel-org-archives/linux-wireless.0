@@ -1,73 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40524
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbXIOTuK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 15:50:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture with BCM4306/2
-Date: Sat, 15 Sep 2007 21:47:57 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net> <200709152010.07647.mb@bu3sch.de> <46EC2E84.4080901@lwfinger.net>
-In-Reply-To: <46EC2E84.4080901@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200709152147.57431.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from mx1.redhat.com ([66.187.233.31]:33680 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751792AbXI2EzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2007 00:55:24 -0400
+Subject: Re: [PATCH] libertas: fix link errors (bz# 9077)
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	linux-wireless@vger.kernel.org, rjwysocki@sisk.pl
+In-Reply-To: <20070927203650.GD7991@tuxdriver.com>
+References: <20070927101742.44146651.randy.dunlap@oracle.com>
+	 <1190915263.5021.8.camel@johannes.berg>
+	 <20070927203650.GD7991@tuxdriver.com>
+Content-Type: text/plain
+Date: Sat, 29 Sep 2007 00:51:07 -0400
+Message-Id: <1191041467.9155.11.camel@xo-3E-67-34.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 15 September 2007 21:12:04 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Saturday 15 September 2007 20:07:22 Larry Finger wrote:
-> >> Your comments may be correct; however, the fact remains that with a rev 4 BCM4306, the original code
-> >> generates many, many machine checks on PPC architecture, and I get reads with all ones on i386
-> >> indicating that the read is invalid. These all occur before the firmware is loaded. Making the
-> >> "gmode" bit mimic the behavior of the phy_connected variable of bcm43xx gets rid of the problems on
-> >> both platforms.
+On Thu, 2007-09-27 at 16:36 -0400, John W. Linville wrote:
+> On Thu, Sep 27, 2007 at 07:47:43PM +0200, Johannes Berg wrote:
+> > On Thu, 2007-09-27 at 10:17 -0700, Randy Dunlap wrote:
+> > > From: Randy Dunlap <randy.dunlap@oracle.com>
+> > > 
+> > > Fix missing symbols in libertas USB driver when it is modular and rest
+> > > of libertas is built-in.
 > > 
-> > Sure. But if you workaround this like that, you could
-> > as well get completely rid of the gmode bit, as you always force it on.
-> > But I think that's not what we want. The real fix is simple. See below.
-> > 
-> > 
-> >> If you can suggest a reordering of the initialization that delays PHY setup until the "magic step"
-> >> that eliminates this problem is done on/to the ssb backplane, I will be happy to test it. I was
-> >> unable to find such a solution.
-> > 
-> > There is no reordering needed.
-> > You just need to find out why phy->gmode was not set.
-> > I think it's set based on the have_gphy and have_bphy bits.
-> > So you need to look there why one of these is not set. That is the real
-> > cause of the issue.
+> > Ohhh. Thanks Randy, I stared at this problem for a while and never
+> > noticed that it said _USB there.
 > 
-> In the original code, have_gphy was true, and phy->gmode was set. These variables were not the cause.
-> 
-> In bcm43xx, the second argument to wireless_core_reset controls the value of phy->connected at exit.
-> This behavior is missing in the original b43legacy (and in b43). For b43, it seems to have no
-> consequence, but for the early PHYs, phy->connected controls when certain registers can be
-> read/written and affects the program flow through the phy and radio initialization. The lack of the
-> ability to toggle gmode is what leads to the register errors, and this is what my change restores.
-> The name could be changed, but that seems more intrusive than necessary.
+> FWIW, the equivalent change seems to already be in net-2.6.24.
 
-No, your patch doesn't restore anything. It rips out the gmode logic.
-I just want to make sure you understand what you are actually doing there.
-the old phy->connected semantics were completely broken. Forget about them.
-The problem here is, that at some point phy->gmode is not set, where
-it should be set (or the other way around).
-So it's not about renaming or something.
+I 100% certain this was fixed in libertas-2.6 months ago, but my hunch
+is that it got blown away when I rebased the 70-odd libertas-2.6 patches
+on top of 2.6.23 to send to linville for the 2.6.24 cycle.  That section
+specifically conflicted with the addition of the zd1211 driver's config
+variable.  Yay for merging, sorry...
 
-With your patch you remove the "gmode" semantics, so you could
-as well remove the whole variable and always assume it's set.
-But I don't recommend to go that way. I'd suggest you find the
-place in the code where phy->gmode is not set but it should be.
-_that_ is the place where the real bug is.
+Dan
 
-Just want to make sure you understand the consequences of your patch.
-You remove a feature with that.
-If that feature is really needed in legacy; that is another question.
-It's needed if you want to drive APHY devices.
 
--- 
-Greetings Michael.
