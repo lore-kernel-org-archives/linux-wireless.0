@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:22762 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932821AbXIBBjD (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.229]:32322 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574AbXI2J3f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:39:03 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1164276wxd
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 18:39:02 -0700 (PDT)
-Message-ID: <f34ca13c0709011839yb32f419s20c259cbaabdd132@mail.gmail.com>
-Date: Sat, 1 Sep 2007 21:39:02 -0400
-From: "Constantine A. Murenin" <mureninc@gmail.com>
-To: "Jeff Garzik" <jeff@garzik.org>
-Subject: Re: That whole "Linux stealing our code" thing
-Cc: "Jason Dixon" <jason@dixongroup.net>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
-In-Reply-To: <46DA1315.9060002@garzik.org>
+	Sat, 29 Sep 2007 05:29:35 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so2197487nze
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Sep 2007 02:29:34 -0700 (PDT)
+Message-ID: <1197ff4c0709290229v5d78069cv46cdbeb3c12c01eb@mail.gmail.com>
+Date: Sat, 29 Sep 2007 17:29:34 +0800
+From: "Li YanBo" <dreamfly281@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: 802.11n drivers
+Cc: "Patrick Ziegler" <patrick.ziegler@fh-kl.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1191055790.22960.39.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	 <46D99FB7.6030505@garzik.org>
-	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	 <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de>
-	 <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net>
-	 <46DA1315.9060002@garzik.org>
+Content-Type: text/plain; charset=UTF-8
+References: <46FCF7E7.6080706@fh-kl.de> <1190991810.3907.7.camel@johannes.berg>
+	 <1197ff4c0709281909u25421b6ay60f5d059fa3e906a@mail.gmail.com>
+	 <1191055790.22960.39.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> Jason Dixon wrote:
-> > Once the grantor (Reyk) releases his code under that license, it must
-> > remain.  You are free to derive work and redistribute under your
-> > license, but the original copyright and license permission remains
-> > intact.  Many other entities (Microsoft, Apple, Sun, etc) have used BSD
-> > code and have no problem understanding this.  Why is this so difficult
-> > for the Linux brain share to absorb?
+On 9/29/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2007-09-29 at 10:09 +0800, Li YanBo wrote:
 >
-> Why is it so difficult to understand dual licensing?
+> > The Airgo chipset is a pre-n product, and the feature to support
+> > standard 802.11n hasn't been implement yet. we will try to see whether
+> > it can be used to support 80211n later. but if anything I can help you
+> > now, I'd glad to do.
+>
+> Oh, ok, do you know what's different between the pre-N implemented by
+> this chip and standard-N (say draft 2.0 or so)?
+>
 
-Maybe because Reyk's code was never dual-licensed?
+To be honest, I don't know. for what I know, Pre-n products are not
+the same, some of them base on  "TGN SYNC",  but  Airgo is a member of
+WWiSE,(CMIIW) and we haven't get down to make this card work in 80211n
+environment, so I can't tell you more detail of the difference between
+them.
 
-C.
+lyb
