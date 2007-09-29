@@ -1,68 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42859 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54020 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755744AbXIFNq0 (ORCPT
+	with ESMTP id S1751368AbXI2Ls3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 09:46:26 -0400
-Message-Id: <20070905234630.172650000@sipsolutions.net>
-References: <20070905234209.108005000@sipsolutions.net>
-Date: Thu, 06 Sep 2007 01:42:27 +0200
+	Sat, 29 Sep 2007 07:48:29 -0400
+Subject: Re: Kernelspace --> Userspace MLME move and related items
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 18/21] mac80211: remove ieee80211_wep_get_keyidx
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com>
+References: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TOiAONaRRvwpu+b9RFo2"
+Date: Sat, 29 Sep 2007 13:49:41 +0200
+Message-Id: <1191066581.22960.55.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is not used any more.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-TOiAONaRRvwpu+b9RFo2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/mac80211/wep.c |   19 -------------------
- net/mac80211/wep.h |    1 -
- 2 files changed, 20 deletions(-)
+On Fri, 2007-09-28 at 20:25 -0400, Luis R. Rodriguez wrote:
 
---- wireless-dev.orig/net/mac80211/wep.c	2007-09-06 01:35:25.594453431 +0200
-+++ wireless-dev/net/mac80211/wep.c	2007-09-06 01:35:26.984453431 +0200
-@@ -286,25 +286,6 @@ int ieee80211_wep_decrypt(struct ieee802
- }
- 
- 
--int ieee80211_wep_get_keyidx(struct sk_buff *skb)
--{
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	u16 fc;
--	int hdrlen;
--
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!(fc & IEEE80211_FCTL_PROTECTED))
--		return -1;
--
--	hdrlen = ieee80211_get_hdrlen(fc);
--
--	if (skb->len < 8 + hdrlen)
--		return -1;
--
--	return skb->data[hdrlen + 3] >> 6;
--}
--
--
- u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
---- wireless-dev.orig/net/mac80211/wep.h	2007-09-06 01:35:25.604453431 +0200
-+++ wireless-dev/net/mac80211/wep.h	2007-09-06 01:35:26.984453431 +0200
-@@ -26,7 +26,6 @@ int ieee80211_wep_encrypt(struct ieee802
- 			  struct ieee80211_key *key);
- int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
- 			  struct ieee80211_key *key);
--int ieee80211_wep_get_keyidx(struct sk_buff *skb);
- u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key);
- 
- ieee80211_txrx_result
+> What really puzzles me right now is the communication path between
+> userspace and the userspace MLME, and even if this communication
+> should exist. I've edited some draft stuff about this and
+> communication paths. I'd like to ask those of you working on this to
+> please help fix and update it.
+>=20
+> For now I've stashed here:
+>=20
+> http://linuxwireless.org/en/developers/todo_list#userspacemlme
 
--- 
+Ok I looked at this and wasn't really happy with your terminology and
+the diagrams, fixed that up. As for userspace tools (nm, iw) -> umlme
+communication I've included three alternatives. I personally very much
+favour alternative one, will detail that in a separate mail.
+
+> Other items which we should consider:
+>=20
+> * Should umlme be optional or is this desired mandatory down the road?
+
+It'll be mandatory for anything that we don't currently do in the
+kernel, which will probably include
+ * 802.11r (fast roaming)
+ * 802.11s (mesh networking) (not entirely sure what management stuff
+   this includes)
+ * 802.11w (encrypted management)
+ * DLS features of 802.11e
+ * ... more I'm not thinking of right now
+
+> * How long should we wait to swich to a umlme?
+
+Not at all as soon as we can?
+
+johannes
+
+--=-TOiAONaRRvwpu+b9RFo2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARv471KVg1VMiehFYAQLg1g/9EmID8mXTii7x4U2My7/31L6bujWmqHzv
+Pw5K0mfqTAI8VhZJaV4975RzYJY+q8NAtXKT724GXDRHdwE9p0e7yZ7VTtjUnUGL
+G/BM1Ry6G3GMioMrAa4IiS5csy2D87n9LeBNY7y8i249g60T1k5tE+vUnYX+Bart
+g1qeOcaw1NdrQDbv8R5gBYj26bX3YTdFHhYxOGphH+sdC7cYNU0cKR9Ptej7LkUg
+QrU7B9/jiQp2Nrsk8R14GqSif4Xwc3IwBbuyKYuSsHMEwd0gD2MgChgCC+yhFtMf
+jN6W48wLIsKfkoCb1g1OAGSXdxRk3X4ZdSTFUyzTO1KZCKN2BYJlAAq/VhB/eOte
+Cr3bxSVwIHe57Q3IAxApsCkdA/N/LSIw6RU2dVzQSCoOy7Z/derKimmSWIql9dmD
+F4Hgb3AllmOWgCkHkNXFdCdof08GXmCMzhfIr49gpN5eBMMfDAqFHBxatwDqAOSD
+S9Zwll0VHNrIc5bhsWIjB+Q836nxAP4ATwa1QlsswMlmpYC+GNzDaAIgzcFffVmz
+ze3Hgwjg0NcJOmnkzd7+lpgFnHNXbrmgw5NfYLFUjWHlZH/gPYzJlH1j0QbapBL3
+IvX6afMoTgsczZ12LqNXJdVbr4aIVzvSs+6QfTrYAqi8Sj8r/GlAKGM3qH7txvAh
+0Ya/tBM048w=
+=Bjkv
+-----END PGP SIGNATURE-----
+
+--=-TOiAONaRRvwpu+b9RFo2--
 
