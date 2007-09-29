@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45223 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754142AbXIRWTD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2007 18:19:03 -0400
-Date: Tue, 18 Sep 2007 23:25:46 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from ebb.errno.com ([69.12.149.25]:2224 "EHLO ebb.errno.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753130AbXI2QOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2007 12:14:10 -0400
+Message-ID: <46FE792C.6000803@errno.com>
+Date: Sat, 29 Sep 2007 09:11:24 -0700
+From: Sam Leffler <sam@errno.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Li YanBo <dreamfly281@gmail.com>,
+	Patrick Ziegler <patrick.ziegler@fh-kl.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Clarify pci_iomap() usage for MMIO-only devices
-Message-ID: <20070918232546.004af9ff@the-village.bc.nu>
-In-Reply-To: <alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-References: <43e72e890709171322x76ab6b70xd29bf97e3643c553@mail.gmail.com>
-	<20070918113401.6a8a737f@the-village.bc.nu>
-	<43e72e890709181146s604e0f9fl8b0c16627469c77f@mail.gmail.com>
-	<alpine.LFD.0.999.0709181159440.16478@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: 802.11n drivers
+References: <46FCF7E7.6080706@fh-kl.de>	 <1190991810.3907.7.camel@johannes.berg>	 <1197ff4c0709281909u25421b6ay60f5d059fa3e906a@mail.gmail.com> <1191055790.22960.39.camel@johannes.berg>
+In-Reply-To: <1191055790.22960.39.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If you use ioport_map/unmap, then you really *should* access them with the 
-> proper iomem accessors (ioread/iowrite). The fact that it may happen to 
-> work (when using the default lib/iomap.c implementation, at least) on 
-> some architectures and with the current implementation still doesn't mean 
-> that you should necessarily use readb/writeb.
+Johannes Berg wrote:
+> On Sat, 2007-09-29 at 10:09 +0800, Li YanBo wrote:
+>
+>   
+>> The Airgo chipset is a pre-n product, and the feature to support
+>> standard 802.11n hasn't been implement yet. we will try to see whether
+>> it can be used to support 80211n later. but if anything I can help you
+>> now, I'd glad to do.
+>>     
+>
+> Oh, ok, do you know what's different between the pre-N implemented by
+> this chip and standard-N (say draft 2.0 or so)?
+>   
 
-Another reason we should enforce the use of ioread/iowrite is that some
-platforms do daft things like map mmio type devices through indirect
-register access. Sparc PCMCIA is a classic example. The only sane way to
-make these work is to require ioread/iowrite is used with iomap
+I am aware of 3 flavors: pre-N (pre 802.11 working group, like Airgo), 
+D1.x 11n, D2.x 11n.  Getting D1.x and D2.x cards to interop isn't a big 
+deal (at least at some reduced level of operation).  Several things make 
+this confusing:
+
+1. retail labeling is unclear
+2. chips are being rev'd quickly so retail products are typically out of 
+date
+    before they hit the shelves
+3. 11n isn't ratified so in the meantime various groups have defined 
+test plans
+    for interop and compliance w/ one plan doesn't necessarily mean you
+    interop w/ the other(s)
+
+Now is definitely the time to be doing 11n.  There is significant effort 
+getting up to speed on all that is involved.
+
+    Sam
 
