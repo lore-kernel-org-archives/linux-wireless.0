@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51410.mail.re2.yahoo.com ([206.190.38.189]:26292 "HELO
-	web51410.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751248AbXIYOnf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 10:43:35 -0400
-Date: Tue, 25 Sep 2007 07:43:32 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: API to regulatory control (1)
-To: linux-wireless@vger.kernel.org
+Received: from pentafluge.infradead.org ([213.146.154.40]:42562 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbXI2C66 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Sep 2007 22:58:58 -0400
+Date: Fri, 28 Sep 2007 19:42:34 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: devel@linuxdriverproject.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Linux wireless driver procedures
+Message-ID: <20070929024234.GA15696@kroah.com>
+References: <43e72e890709281840h21b1ddebpfe45e6b24dd2c9ac@mail.gmail.com> <43e72e890709281851r7bb7d515le58fb4051761cadf@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <923504.45912.qm@web51410.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890709281851r7bb7d515le58fb4051761cadf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > From what I can see, this finishes the channel restrictions API. Since
- > none of the information in the channels list is specific to some device,
- > it may be allocated statically.
+On Fri, Sep 28, 2007 at 09:51:00PM -0400, Luis R. Rodriguez wrote:
+> On 9/28/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > FYI,
+> >
+> > We have set up procedures for vendors wanting to get free wireless
+> > drivers written for Linux. These procedures can be found at:
+> >
+> > http://linuxwireless.org/en/vendors/DriverDevelopment
+> >
+> > Perhaps we should create sections on the linuxdriverproject.org page
+> > and for each one link to procedures if they exist?
+> 
+> Now that I think about it, these procedures may be a bit outdated,
+> taking into consideration:
+> 
+> http://linuxdriverproject.org/twiki/bin/view/Main/CompanyProcess
+> 
+> should we simply refer to that page and have the companies go through
+> the project managers? Hmm...
 
-Well, I beg to differ. I'm working on a system were we have regulatory
-approval to use a TX power of up to 4W in certain channels. This means
-that the regulatory settings (e.g. allowed channels) are different for
-cards with amplifier and those without, even on the same machine.
---  Regards
- 
-       Joerg
- 
+I'd prefer if there not be a different proceedure for every type of
+driver, in the end, they all need to do the same thing, work :)
 
+thanks,
 
-
-
-
-
-      __________________________________  
-Yahoo! Clever: Sie haben Fragen? Yahoo! Nutzer antworten Ihnen. www.yahoo.de/clever
-
+greg k-h
