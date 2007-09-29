@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56106 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019AbXI2ROY (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58137
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643AbXI2K0S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 13:14:24 -0400
-Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
-From: David Woodhouse <dwmw2@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <200709291908.24758.mb@bu3sch.de>
-References: <200709281422.34434.mb@bu3sch.de>
-	 <1191084768.8203.10.camel@shinybook.infradead.org>
-	 <200709291908.24758.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Sat, 29 Sep 2007 18:14:34 +0100
-Message-Id: <1191086074.8203.18.camel@shinybook.infradead.org>
-Mime-Version: 1.0
+	Sat, 29 Sep 2007 06:26:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] z1211: Make the LEDs warning debug-only
+Date: Sat, 29 Sep 2007 12:23:20 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200709291223.20926.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-09-29 at 19:08 +0200, Michael Buesch wrote:
-> I'm not sure what you are trying to ask.
+This warning triggers now and then with an -ETIMEDOUT error.
+Though the LEDs work fine.
+Make this warning debug-only, as nobody is really interested
+in a LED failure that happens only now and then.
+If the LEDs don't work, one can easily enable debugging to see
+what's going on.
+This reduces dmesg spamming.
 
-The hunks I quoted don't seem relevant to the rfkill switch. They seem
-to be related to periodic work, which was the subject of the other patch
-you posted at about the same time. Did you get them mixed up?
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+
+Index: wireless-2.6/drivers/net/wireless/z1211/zd_mac.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/z1211/zd_mac.c	2007-09-25 22:51:28.000000000 +0200
++++ wireless-2.6/drivers/net/wireless/z1211/zd_mac.c	2007-09-29 12:19:54.000000000 +0200
+@@ -922,7 +922,7 @@ static void link_led_handler(struct work
+ 	r = zd_chip_control_leds(chip,
+ 		                 is_associated ? LED_ASSOCIATED : LED_SCANNING);
+ 	if (r)
+-		dev_err(zd_mac_dev(mac), "zd_chip_control_leds error %d\n", r);
++		dev_dbg_f(zd_mac_dev(mac), "zd_chip_control_leds error %d\n", r);
+ 
+ 	queue_delayed_work(zd_workqueue, &mac->housekeeping.link_led_work,
+ 		           LINK_LED_WORK_DELAY);
+
 -- 
-dwmw2
-
+Greetings Michael.
