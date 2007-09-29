@@ -1,197 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:36226 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778AbXIUCKv (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756104AbXI2MxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 22:10:51 -0400
-Date: Thu, 20 Sep 2007 21:11:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Support for turning the radio off from  software.
-Message-ID: <46f32836.SaYVr1nG4+WJSJ9K%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 29 Sep 2007 08:53:11 -0400
+Subject: Re: userspace mlme configuration (was: Kernelspace --> Userspace  MLME  move and related items)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1191068858.22960.75.camel@johannes.berg>
+References: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com>
+	 <1191066581.22960.55.camel@johannes.berg>
+	 <1191068858.22960.75.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j5hIrt0pjz2rNGHCGKaL"
+Date: Sat, 29 Sep 2007 14:54:30 +0200
+Message-Id: <1191070470.22960.80.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for turning the radio off in software.
-That's useful in environments, where you don't want the RF
-to radiate any signals, but don't want to bring the interface down.
 
-This patch is based on a similar patch of b43 by Michael Buesch.
+--=-j5hIrt0pjz2rNGHCGKaL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
+On Sat, 2007-09-29 at 14:27 +0200, Johannes Berg wrote:
 
- drivers/net/wireless/b43legacy/b43legacy.h |   11 +++++++-
- drivers/net/wireless/b43legacy/main.c      |   16 +++++++++++
- drivers/net/wireless/b43legacy/phy.c       |   14 +---------
- drivers/net/wireless/b43legacy/radio.c     |   39 ++++++++++++++++++++++++-----
- 4 files changed, 61 insertions(+), 19 deletions(-)
+> 1) it is transparent
+> 2) it helps us define the interfaces
+> 3) it is UMLME-agnostic
+> 4) it can support wext
 
-Index: wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/b43legacy.h
-+++ wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -411,7 +411,6 @@ struct b43legacy_phy {
- 	u8 calibrated:1;
- 	u8 radio_rev;		/* Radio revision */
- 
--	bool radio_on;		/* Radio switched on/off */
- 	bool locked;		/* Only used in b43legacy_phy_{un}lock() */
- 	bool dyn_tssi_tbl;	/* tssi2dbm is kmalloc()ed. */
- 
-@@ -420,6 +419,16 @@ struct b43legacy_phy {
- 	bool aci_wlan_automatic;
- 	bool aci_hw_rssi;
- 
-+	/* Radio switched on/off */
-+	bool radio_on;
-+	struct {
-+		/* Values saved when turning the radio off.
-+		 * They are needed when turning it on again. */
-+		bool valid;
-+		u16 rfover;
-+		u16 rfoverval;
-+	} radio_off_context;
-+
- 	u16 minlowsig[2];
- 	u16 minlowsigpos[2];
- 
-Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/main.c
-@@ -2672,6 +2672,22 @@ static int b43legacy_dev_config(struct i
- 		b43legacy_set_beacon_int(dev, conf->beacon_int);
- 
- 
-+	if (!!conf->radio_enabled != phy->radio_on) {
-+		if (conf->radio_enabled) {
-+			b43legacy_radio_turn_on(dev);
-+			b43legacyinfo(dev->wl, "Radio turned on by software\n");
-+			if (!dev->radio_hw_enable)
-+				b43legacyinfo(dev->wl, "The hardware RF-kill"
-+					      " button still turns the radio"
-+					      " physically off. Press the"
-+					      " button to turn it on.\n");
-+		} else {
-+			b43legacy_radio_turn_off(dev);
-+			b43legacyinfo(dev->wl, "Radio turned off by"
-+				      " software\n");
-+		}
-+	}
-+
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 	b43legacy_interrupt_enable(dev, savedirqs);
- 	mmiowb();
-Index: wireless-dev/drivers/net/wireless/b43legacy/phy.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/phy.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/phy.c
-@@ -462,12 +462,7 @@ static void b43legacy_phy_initb2(struct 
- 		val -= 0x0202;
- 	}
- 	b43legacy_phy_write(dev, 0x03E4, 0x3000);
--	if (phy->channel == 0xFF)
--		b43legacy_radio_selectchannel(dev,
--					B43legacy_RADIO_DEFAULT_CHANNEL_BG,
--					0);
--	else
--		b43legacy_radio_selectchannel(dev, phy->channel, 0);
-+	b43legacy_radio_selectchannel(dev, phy->channel, 0);
- 	if (phy->radio_ver != 0x2050) {
- 		b43legacy_radio_write16(dev, 0x0075, 0x0080);
- 		b43legacy_radio_write16(dev, 0x0079, 0x0081);
-@@ -516,12 +511,7 @@ static void b43legacy_phy_initb4(struct 
- 		val -= 0x0202;
- 	}
- 	b43legacy_phy_write(dev, 0x03E4, 0x3000);
--	if (phy->channel == 0xFF)
--		b43legacy_radio_selectchannel(dev,
--					B43legacy_RADIO_DEFAULT_CHANNEL_BG,
--					0);
--	else
--		b43legacy_radio_selectchannel(dev, phy->channel, 0);
-+	b43legacy_radio_selectchannel(dev, phy->channel, 0);
- 	if (phy->radio_ver != 0x2050) {
- 		b43legacy_radio_write16(dev, 0x0075, 0x0080);
- 		b43legacy_radio_write16(dev, 0x0079, 0x0081);
-Index: wireless-dev/drivers/net/wireless/b43legacy/radio.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/radio.c
-+++ wireless-dev/drivers/net/wireless/b43legacy/radio.c
-@@ -1767,6 +1767,17 @@ int b43legacy_radio_selectchannel(struct
- {
- 	struct b43legacy_phy *phy = &dev->phy;
- 
-+	if (channel == 0xFF) {
-+		switch (phy->type) {
-+		case B43legacy_PHYTYPE_B:
-+		case B43legacy_PHYTYPE_G:
-+			channel = B43legacy_RADIO_DEFAULT_CHANNEL_BG;
-+			break;
-+		default:
-+			B43legacy_WARN_ON(1);
-+		}
-+	}
-+
- /* TODO: Check if channel is valid - return -EINVAL if not */
- 	if (synthetic_pu_workaround)
- 		b43legacy_synth_pu_workaround(dev, channel);
-@@ -2070,6 +2081,7 @@ void b43legacy_radio_turn_on(struct b43l
- {
- 	struct b43legacy_phy *phy = &dev->phy;
- 	int err;
-+	u8 channel;
- 
- 	might_sleep();
- 
-@@ -2083,15 +2095,24 @@ void b43legacy_radio_turn_on(struct b43l
- 		b43legacy_phy_write(dev, 0x0015, 0xCC00);
- 		b43legacy_phy_write(dev, 0x0015,
- 				    (phy->gmode ? 0x00C0 : 0x0000));
-+		if (phy->radio_off_context.valid) {
-+			/* Restore the RFover values. */
-+			b43legacy_phy_write(dev, B43legacy_PHY_RFOVER,
-+					    phy->radio_off_context.rfover);
-+			b43legacy_phy_write(dev, B43legacy_PHY_RFOVERVAL,
-+					    phy->radio_off_context.rfoverval);
-+			phy->radio_off_context.valid = 0;
-+		}
-+		channel = phy->channel;
- 		err = b43legacy_radio_selectchannel(dev,
- 					B43legacy_RADIO_DEFAULT_CHANNEL_BG, 1);
--		B43legacy_WARN_ON(err != 0);
-+		err |= b43legacy_radio_selectchannel(dev, channel, 0);
-+		B43legacy_WARN_ON(err);
- 		break;
- 	default:
- 		B43legacy_BUG_ON(1);
- 	}
- 	phy->radio_on = 1;
--	b43legacydbg(dev->wl, "Radio turned on\n");
- 	b43legacy_leds_update(dev, 0);
- }
- 
-@@ -2100,10 +2121,16 @@ void b43legacy_radio_turn_off(struct b43
- 	struct b43legacy_phy *phy = &dev->phy;
- 
- 	if (phy->type == B43legacy_PHYTYPE_G && dev->dev->id.revision >= 5) {
--		b43legacy_phy_write(dev, 0x0811, b43legacy_phy_read(dev, 0x0811)
--				    | 0x008C);
--		b43legacy_phy_write(dev, 0x0812, b43legacy_phy_read(dev, 0x0812)
--				    & 0xFF73);
-+		u16 rfover, rfoverval;
-+
-+		rfover = b43legacy_phy_read(dev, B43legacy_PHY_RFOVER);
-+		rfoverval = b43legacy_phy_read(dev, B43legacy_PHY_RFOVERVAL);
-+		phy->radio_off_context.rfover = rfover;
-+		phy->radio_off_context.rfoverval = rfoverval;
-+		phy->radio_off_context.valid = 1;
-+		b43legacy_phy_write(dev, B43legacy_PHY_RFOVER, rfover | 0x008C);
-+		b43legacy_phy_write(dev, B43legacy_PHY_RFOVERVAL,
-+				    rfoverval & 0xFF73);
- 	} else
- 		b43legacy_phy_write(dev, 0x0015, 0xAA00);
- 	phy->radio_on = 0;
+5) There is no discovery issue
+
+It is always clear which userspace MLME to talk to since it has to
+register with the kernel anyway and it can be looked up by the network
+interface. With alternatives two and three, userspace must somehow be
+able to implement discovery to find the right netlink address/socket/...
+to talk to for a certain network interface.
+
+johannes
+
+--=-j5hIrt0pjz2rNGHCGKaL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARv5LBKVg1VMiehFYAQKAWA/6AwO3O5+PBA3nIWP2USEBSZpX3ucOmefa
+V0khzHjCYiv+cS/MG0WXGPmrjfwzsKhnBagA0solbWwZrBWMzrNRQ8L9y+r80wuC
+SAFYPPBblHJVkUZIcSaZdHRv7K0SR4lLvBkMH9lw02LsWxLJX+4RzUZI9pBmLgPx
+K4kxmWqGk35ZTEyxuEisU4eOegKIOPw6RmtEvhdW+/AMVRu0qfdSsyMtIxRPMKXh
+ImM16ZBLpL4pufBdZuRpQvfbsMzSytDpHj+5MhVkfkOGt+B5iQa5n0R8A457GWwF
+SdTZsW4PkjVAXlArqAyDTVPX9EXzojFNeib8QWFzuzf3vNH0VTItYD1mjz9NxYFt
+Sc/WhFR/xWNESkjeb5RUTVkOxFKdUcDTjeeTvxqfaLroEnk5HKT200w5lcIAq+S1
+sPevBoK89mZjoWTGGOSxJf4D4OdLp4GAjuWc/BPSVplMnuPDh1iKOdJ05P85s65+
+aLMccV/nisdigCYIGuOotfimRL/ss8EXtM9sAq/0bZDNl/SLVbPm8zZrA599YiyX
+lJ1UUAtX798UDj1Ds4Amo0zNZvh+725UXPde5ziab+7oiR0KKbim0tb2XTysWJiD
+/Ccj/Z4cYlfxH23A/77plZ/xQDOt4iPseGXtANe3hCeUX0iffzfURcbtlBGvlSxX
+ypWy+ZI2TuE=
+=+X7L
+-----END PGP SIGNATURE-----
+
+--=-j5hIrt0pjz2rNGHCGKaL--
+
