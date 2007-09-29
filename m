@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2146 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751769AbXIUBid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 21:38:33 -0400
-Date: Thu, 20 Sep 2007 21:34:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, davem@davemloft.net,
-	jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'iwlwifi' branch of wireless-2.6
-Message-ID: <20070921013403.GA3170@tuxdriver.com>
-References: <20070918185040.GF4940@tuxdriver.com> <20070919101326.GA32432@infradead.org> <1190337630.5718.136.camel@debian.sh.intel.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44676
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755769AbXI2RLP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2007 13:11:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
+Date: Sat, 29 Sep 2007 19:08:24 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200709281422.34434.mb@bu3sch.de> <1191084768.8203.10.camel@shinybook.infradead.org>
+In-Reply-To: <1191084768.8203.10.camel@shinybook.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190337630.5718.136.camel@debian.sh.intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200709291908.24758.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2007 at 09:20:30AM +0800, Zhu Yi wrote:
-> On Wed, 2007-09-19 at 11:13 +0100, Christoph Hellwig wrote:
-> > it really needs to be moved into a directory of it's own.
-> 
-> It used to be... John?
+On Saturday 29 September 2007 18:52:48 David Woodhouse wrote:
+> Does this bit belong to your other patch?
 
-Fine by me -- I guess I misinterpreted the some other statements to
-make me think we wanted as flat a directory structure as possible.
+I'm not sure what you are trying to ask.
 
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
