@@ -1,23 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:56322 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751508AbXITEkP (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:37346 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755103AbXI2SJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 00:40:15 -0400
-Date: Wed, 19 Sep 2007 21:40:07 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: ath5k and network manager
-Message-ID: <20070919214007.1a6a9b4a@freepuppy.rosehill>
+	Sat, 29 Sep 2007 14:09:18 -0400
+Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
+From: David Woodhouse <dwmw2@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200709291932.57924.mb@bu3sch.de>
+References: <200709281422.34434.mb@bu3sch.de>
+	 <200709291908.24758.mb@bu3sch.de>
+	 <1191086074.8203.18.camel@shinybook.infradead.org>
+	 <200709291932.57924.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Sat, 29 Sep 2007 19:09:11 +0100
+Message-Id: <1191089351.2911.0.camel@shinybook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Network manager doesn't seem to detect ath5k. Perhaps it is because
-it is name "ath0".  I think device should follow the convention of using
-name "wifi0" rather than BSD convention of putting driver name in device name.
+On Sat, 2007-09-29 at 19:32 +0200, Michael Buesch wrote:
+> The patch is correct as-is. RF-kill was polled by the periodic work.
+
+OK, cool. Just checking.
 
 -- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+dwmw2
+
