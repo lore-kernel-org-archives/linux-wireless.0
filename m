@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:36706 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753095AbXI0Rww (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 13:52:52 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so2286936nfb
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2007 10:52:51 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: Fix documentation typos
-Date: Thu, 27 Sep 2007 20:07:02 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200709271442.42808.mb@bu3sch.de>
-In-Reply-To: <200709271442.42808.mb@bu3sch.de>
+Received: from c60.cesmail.net ([216.154.195.49]:44387 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbXI3Skm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:40:42 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 19/26] at76_usb: Add ID for Corega Wireless LAN USB-11 mini  and mini2
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:40:40 -0400
+Message-ID: <20070930184040.23921.28565.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709272007.02900.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 27 September 2007, Michael Buesch wrote:
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> Index: wireless-2.6/include/linux/rfkill.h
-> ===================================================================
-> --- wireless-2.6.orig/include/linux/rfkill.h	2007-09-25 21:41:11.000000000 +0200
-> +++ wireless-2.6/include/linux/rfkill.h	2007-09-27 14:41:31.000000000 +0200
-> @@ -29,9 +29,9 @@
->  
->  /**
->   * enum rfkill_type - type of rfkill switch.
-> - * RFKILL_TYPE_WLAN: switch is no a Wireless network devices.
-> - * RFKILL_TYPE_BlUETOOTH: switch is on a bluetooth device.
-> - * RFKILL_TYPE_IRDA: switch is on an infrared devices.
-> + * RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
-> + * RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
+Original patch by Weihua Yao <weihuayao@gmail.com>
 
-Ack on the above 2 changes
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-> + * RFKILL_TYPE_IRDA: switch is on an infrared device.
-
-RFKILL_TYPE_IRDA has been removed in the net-2.6.24 tree.
-
-Ivo
+ drivers/net/wireless/at76_usb.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
 
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 1c181bb..fb339ab 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -185,6 +185,10 @@ static struct usb_device_id dev_table[] = {
+ 	{USB_DEVICE(0x2019, 0x3220), USB_DEVICE_DATA(BOARD_503)},
+ 	/* Internal WLAN adapter in h5[4,5]xx series iPAQs */
+ 	{USB_DEVICE(0x049f, 0x0032), USB_DEVICE_DATA(BOARD_503)},
++	/* Corega Wireless LAN USB-11 mini */
++	{USB_DEVICE(0x07aa, 0x0011), USB_DEVICE_DATA(BOARD_503)},
++	/* Corega Wireless LAN USB-11 mini2 */
++	{USB_DEVICE(0x07aa, 0x0018), USB_DEVICE_DATA(BOARD_503)},
+ 	/*
+ 	 * at76c503-rfmd-acc
+ 	 */
