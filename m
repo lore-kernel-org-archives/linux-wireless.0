@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41161 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758163AbXIJMEa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2007 08:04:30 -0400
-Subject: [PATCH] list.h: add list_for_each_entry_continue_rcu
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Content-Type: text/plain
-Date: Mon, 10 Sep 2007 14:05:47 +0200
-Message-Id: <1189425947.4506.78.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:57117 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbXI3Sks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:40:48 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 20/26] at76_usb: Revert to network device names starting with  "wlan"
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:40:47 -0400
+Message-ID: <20070930184046.23921.46695.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To implement the multicast list callback in mac80211 we need to
-do partial list iteration. Since I want to convert the interface
-list to an RCU list, I need a new list walking primitive:
-list_for_each_entry_continue_rcu().
+The change to the default "eth" in 0.16 was unnecessary and broke some
+setups.  Reported by Mark Sansome <msansome@troodos.demon.co.uk>
 
-Additional help text was provided by Paul McKenney.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org
-Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
-John, I don't know if you want to merge this or not. There's no clear
-list.h maintainer and this patch is requisite for the bugfix I'm going
-to send in a minute so it'd probably be best if this goes into the tree
-together.
-If you don't want to take it, however, I have no idea how to handle the
-situation :)
 
- include/linux/list.h |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/net/wireless/at76_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
---- wireless-dev.orig/include/linux/list.h	2007-09-07 22:00:41.234425862 +0200
-+++ wireless-dev/include/linux/list.h	2007-09-07 22:05:08.184425862 +0200
-@@ -665,6 +665,32 @@ static inline void list_splice_init_rcu(
- 		prefetch(rcu_dereference((pos))->next), (pos) != (head); \
-         	(pos) = (pos)->next)
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index fb339ab..6dc8e23 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -5294,6 +5294,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	netdev->wireless_handlers = &at76_handler_def;
+ 	netdev->set_multicast_list = at76_set_multicast;
+ 	netdev->set_mac_address = at76_set_mac_address;
++	dev_alloc_name(netdev, "wlan%d");
  
-+
-+/**
-+ * list_for_each_entry_continue_rcu - continue iteration over rcu list
-+ * @pos:	the type * to use as a loop cursor.
-+ * @head:	the head for your list.
-+ * @member:	the name of the list_struct within the struct.
-+ *
-+ * Continue to iterate over rcu list of given type, continuing after
-+ * the current position.
-+ *
-+ * This list-traversal primitive may safely run concurrently with
-+ * the _rcu list-mutation primitives such as list_add_rcu()
-+ * as long as the traversal is guarded by rcu_read_lock().
-+ *
-+ * Note that the caller is responsible for making sure that
-+ * the element remains in place between the earlier iterator
-+ * and this one.  One way to do this is to ensure that
-+ * both iterators are covered by the same rcu_read_lock(),
-+ * while others involve reference counts, flags, or mutexes.
-+ */
-+#define list_for_each_entry_continue_rcu(pos, head, member) \
-+	for ((pos) = list_entry((pos)->member.next, typeof(*pos), member); \
-+		prefetch(rcu_dereference((pos))->member.next), \
-+			 &pos->member != (head); \
-+        	(pos) = list_entry(pos->member.next, typeof(*pos), member))
-+
- /*
-  * Double linked lists with a single pointer list head.
-  * Mostly useful for hash tables where the two pointer list head is
-
-
+ 	ret = register_netdev(priv->netdev);
+ 	if (ret) {
