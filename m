@@ -1,107 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:32280 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756228AbXIAX3k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 19:29:40 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1143278wxd
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 16:29:39 -0700 (PDT)
-Message-ID: <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
-Date: Sat, 1 Sep 2007 19:29:39 -0400
-From: "Constantine A. Murenin" <mureninc@gmail.com>
-To: "Adrian Bunk" <bunk@kernel.org>
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-Cc: "Jeff Garzik" <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Alan Cox" <alan@lxorguk.ukuu.org.uk>
-In-Reply-To: <20070901215225.GM9260@stusta.de>
+Received: from c60.cesmail.net ([216.154.195.49]:32690 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751083AbXI3Sj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:39:26 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 07/26] at76_usb: Integrate at76_set_monitor_mode() into  at76_dwork_restart()
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:39:23 -0400
+Message-ID: <20070930183923.23921.48573.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
-	 <46D99FB7.6030505@garzik.org>
-	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
-	 <20070901205457.GK9260@stusta.de>
-	 <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
-	 <20070901215225.GM9260@stusta.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
-> On Sat, Sep 01, 2007 at 05:27:03PM -0400, Constantine A. Murenin wrote:
-> > On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
-> > > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
-> > > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > > > > Constantine A. Murenin wrote:
-> > > > > > This will hopefully help diminish certain myths about the code licensing.
-> > > > >
-> > > > > What myth?  The myth that Theo understands dual licensing?
-> > > >
-> > > > Reyk's code was never dual licensed, so it's not like it even matters
-> > > > to the original dispute.
-> > >
-> > > It's no longer dual licenced in the FreeBSD tree because the FreeBSD
-> > > people removed the GPL choice of the dual licenced code 3 months ago.
-> >
-> > FreeBSD doesn't have Reyk's ath(4) HAL, which OpenHAL is based on.
-> >
-> > FreeBSD has a driver written by Sam, and a binary-only HAL, also written by Sam.
-> >
-> > > So all of Theo's accusations of people breaking the law by making this
-> > > dual licenced code GPL-only apply as well to the FreeBSD people...
-> >
-> > How? FreeBSD doesn't have Reyk's ath(4) HAL from OpenBSD, so there are
-> > no possible licensing accusations and violations.
->
-> OK, I begin to understand this, there seem to be three different types
-> of files changed by Jiri's patch:
-> 1. dual licenced files planned to make GPL-only
-> 2. previously dual licenced files with a too recent version used planned
->    to make GPL-only
-> 3. never dual licenced files planned to make GPL-only
->
-> For files under 1. and 2. Reyk did contribute to dual licenced code
-> without touching the licence, but I missed that there's also code unter 3.
->
-> So there is a problem, but not with the code under 1. (unless you plan
-> to change the semantics of the word "alternatively"), the problem is
-> with some headers under 2. plus the code under 3.
->
-> It's funny how Theo missed the part of Jiri's patch that actually is a
-> copyright violation and instead complains about the part that is OK...
+Reorder some statements in at76_dwork_restart()
 
-I'm not sure how you conclude that Theo missed the relevant parts --
-there were many messages posted to misc@openbsd.org mailing list and
-to The OpenBSD Journal in the last few days, and to me it appears as
-all of the problems were discussed ad nauseam.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-After the obvious copyright violations were addressed, I think the
-problem started being an ethical one.
-
-As a free software user and developer, the question I have is how come
-the Linux community feels that they can take the BSD code that was
-reverse-engineered at OpenBSD, and put a more restrictive licence onto
-it, such that there will be no possibility of the changes going back
-to OpenBSD, given that the main work on the code has happened at
-OpenBSD? (Obviously, such a scenario it is permitted by the licence,
-but my question is an ethical one -- after all, most components of
-OpenHAL were specifically based on the OpenBSD's ath(4) HAL code.)
-
-You can see that Christoph Hellwig agrees with this ethical problem,
-as in the message below.
-
-C.
+ drivers/net/wireless/at76_usb.c |   24 ++++++------------------
+ 1 files changed, 6 insertions(+), 18 deletions(-)
 
 
-On 28/08/07, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Aug 28, 2007 at 12:00:50PM -0400, Jiri Slaby wrote:
-> > ath5k, license is GPLv2
-> >
-> > The files are available only under GPLv2 since now.
->
-> Is this really a good idea?  Most of the reverse-engineering was
-> done by the OpenBSD folks, and it would certainly be helpful to
-> work together with them on new hardware revisions, etc..
-
-( from http://lkml.org/lkml/2007/8/28/178 )
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 62ddae7..be578a9 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -965,20 +965,6 @@ static int at76_set_autorate_fallback(struct at76_priv *priv, int onoff)
+ 	return ret;
+ }
+ 
+-/* Set network device type for the current mode */
+-static void at76_set_monitor_mode(struct at76_priv *priv)
+-{
+-	if (priv->iw_mode == IW_MODE_MONITOR) {
+-		at76_dbg(DBG_MONITOR_MODE, "%s: MONITOR MODE ON",
+-			 priv->netdev->name);
+-		priv->netdev->type = ARPHRD_IEEE80211_RADIOTAP;
+-	} else {
+-		at76_dbg(DBG_MONITOR_MODE, "%s: MONITOR MODE OFF",
+-			 priv->netdev->name);
+-		priv->netdev->type = ARPHRD_ETHER;
+-	}
+-}
+-
+ static int at76_add_mac_address(struct at76_priv *priv, void *addr)
+ {
+ 	int ret = 0;
+@@ -3976,8 +3962,6 @@ static int at76_startup_device(struct at76_priv *priv)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	at76_set_monitor_mode(priv);
+-
+ 	if (at76_debug & DBG_MIB) {
+ 		at76_dump_mib_mac(priv);
+ 		at76_dump_mib_mac_addr(priv);
+@@ -3999,15 +3983,19 @@ static void at76_dwork_restart(struct work_struct *work)
+ 
+ 	mutex_lock(&priv->mtx);
+ 
+-	at76_startup_device(priv);
+ 	netif_carrier_off(priv->netdev);	/* stop netdev watchdog */
+ 	netif_stop_queue(priv->netdev);	/* stop tx data packets */
+ 
++	at76_startup_device(priv);
++
+ 	if (priv->iw_mode != IW_MODE_MONITOR) {
++		priv->netdev->type = ARPHRD_ETHER;
+ 		at76_set_mac_state(priv, MAC_SCANNING);
+ 		schedule_work(&priv->work_start_scan);
+-	} else
++	} else {
++		priv->netdev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		at76_start_monitor(priv);
++	}
+ 
+ 	mutex_unlock(&priv->mtx);
+ }
