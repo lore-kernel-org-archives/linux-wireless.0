@@ -1,14 +1,14 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:46658 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:8532 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750947AbXI3Sir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2007 14:38:47 -0400
+	id S1751345AbXI3Skg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:40:36 -0400
 From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 01/26] at76_usb: Use USB_DEVICE_DATA to improve readability of  the device table
+Subject: [PATCH 18/26] at76_usb: Avoid dealing with milliseconds when possible,  use jiffies
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Sep 2007 14:38:45 -0400
-Message-ID: <20070930183845.23921.57275.stgit@tt.roinet.com>
+Date: Sun, 30 Sep 2007 14:40:34 -0400
+Message-ID: <20070930184034.23921.13756.stgit@tt.roinet.com>
 In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
 References: <20070930183409.23921.97762.stgit@tt.roinet.com>
 MIME-Version: 1.0
@@ -19,190 +19,127 @@ List-ID: <linux-wireless.vger.kernel.org>
 Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
 
- drivers/net/wireless/at76_usb.c |  100 ++++++++++++++++++++-------------------
- 1 files changed, 51 insertions(+), 49 deletions(-)
+ drivers/net/wireless/at76_usb.c |   36 +++++++++++++++++-------------------
+ drivers/net/wireless/at76_usb.h |    2 +-
+ 2 files changed, 18 insertions(+), 20 deletions(-)
 
 
 diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 9b418bf..9ef401e 100644
+index fc1b331..1c181bb 100644
 --- a/drivers/net/wireless/at76_usb.c
 +++ b/drivers/net/wireless/at76_usb.c
-@@ -60,127 +60,129 @@ static struct fwentry firmwares[] = {
- 	[BOARD_505AMX] = {"atmel_at76c505amx-rfmd.bin"},
- };
+@@ -335,16 +335,16 @@ static u8 at76_dfu_get_state(struct usb_device *udev, u8 *state)
+ 	return ret;
+ }
  
-+#define USB_DEVICE_DATA(__ops)	.driver_info = (kernel_ulong_t)(__ops)
-+
- static struct usb_device_id dev_table[] = {
- 	/*
- 	 * at76c503-i3861
- 	 */
- 	/* Generic AT76C503/3861 device */
--	{USB_DEVICE(0x03eb, 0x7603), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x03eb, 0x7603), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Linksys WUSB11 v2.1/v2.6 */
--	{USB_DEVICE(0x066b, 0x2211), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x066b, 0x2211), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Netgear MA 101 Rev. A */
--	{USB_DEVICE(0x0864, 0x4100), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0864, 0x4100), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Tekram U-300C / Allnet ALL0193 */
--	{USB_DEVICE(0x0b3b, 0x1612), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0b3b, 0x1612), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* HP HN210W PKW-J7801A */
--	{USB_DEVICE(0x03f0, 0x011c), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x03f0, 0x011c), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Sitecom/Z-Com/Zyxel M4Y-750 */
--	{USB_DEVICE(0x0cde, 0x0001), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0cde, 0x0001), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Dynalink/Askey WLL013 (intersil) */
--	{USB_DEVICE(0x069a, 0x0320), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x069a, 0x0320), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* EZ connect 11Mpbs Wireless USB Adapter SMC2662W (v1) */
--	{USB_DEVICE(0x0d5c, 0xa001), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0d5c, 0xa001), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* AWL-300 */
--	{USB_DEVICE(0x04a5, 0x9000), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x04a5, 0x9000), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* AWU-120, Compex WLU11 */
--	{USB_DEVICE(0x05dd, 0xff31), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x05dd, 0xff31), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* AP310 AnyPoint II USB */
--	{USB_DEVICE(0x8086, 0x0200), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x8086, 0x0200), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Dynalink L11U */
--	{USB_DEVICE(0x0d8e, 0x7100), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0d8e, 0x7100), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* Arescom WL-210, FCC id 07J-GL2411USB */
--	{USB_DEVICE(0x0d8e, 0x7110), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x0d8e, 0x7110), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* IO-DATA WN-B11/USB */
--	{USB_DEVICE(0x04bb, 0x0919), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x04bb, 0x0919), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* BT Voyager 1010 */
--	{USB_DEVICE(0x069a, 0x0821), .driver_info = BOARD_503_ISL3861},
-+	{USB_DEVICE(0x069a, 0x0821), USB_DEVICE_DATA(BOARD_503_ISL3861)},
- 	/* at76c503-i3863 */
- 	/* Generic AT76C503/3863 device */
--	{USB_DEVICE(0x03eb, 0x7604), .driver_info = BOARD_503_ISL3863},
-+	{USB_DEVICE(0x03eb, 0x7604), USB_DEVICE_DATA(BOARD_503_ISL3863)},
- 	/* Samsung SWL-2100U */
--	{USB_DEVICE(0x055d, 0xa000), .driver_info = BOARD_503_ISL3863},
-+	{USB_DEVICE(0x055d, 0xa000), USB_DEVICE_DATA(BOARD_503_ISL3863)},
- 	/*
- 	 * at76c503-rfmd
- 	 */
- 	/* Generic AT76C503/RFMD device */
--	{USB_DEVICE(0x03eb, 0x7605), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x03eb, 0x7605), USB_DEVICE_DATA(BOARD_503)},
- 	/* Dynalink/Askey WLL013 (rfmd) */
--	{USB_DEVICE(0x069a, 0x0321), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x069a, 0x0321), USB_DEVICE_DATA(BOARD_503)},
- 	/* Linksys WUSB11 v2.6 */
--	{USB_DEVICE(0x077b, 0x2219), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x077b, 0x2219), USB_DEVICE_DATA(BOARD_503)},
- 	/* Network Everywhere NWU11B */
--	{USB_DEVICE(0x077b, 0x2227), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x077b, 0x2227), USB_DEVICE_DATA(BOARD_503)},
- 	/* Netgear MA 101 Rev. B */
--	{USB_DEVICE(0x0864, 0x4102), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x0864, 0x4102), USB_DEVICE_DATA(BOARD_503)},
- 	/* DWL-120 rev. E */
--	{USB_DEVICE(0x2001, 0x3200), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x2001, 0x3200), USB_DEVICE_DATA(BOARD_503)},
- 	/* Actiontec 802UAT1, HWU01150-01UK */
--	{USB_DEVICE(0x1668, 0x7605), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x1668, 0x7605), USB_DEVICE_DATA(BOARD_503)},
- 	/* AirVast W-Buddie WN210 */
--	{USB_DEVICE(0x03eb, 0x4102), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x03eb, 0x4102), USB_DEVICE_DATA(BOARD_503)},
- 	/* XH1153 802.11b USB adapter */
--	{USB_DEVICE(0x1371, 0x5743), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x1371, 0x5743), USB_DEVICE_DATA(BOARD_503)},
- 	/* WL-200U */
--	{USB_DEVICE(0x1371, 0x0002), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x1371, 0x0002), USB_DEVICE_DATA(BOARD_503)},
- 	/* BenQ AWL-400 USB stick */
--	{USB_DEVICE(0x04a5, 0x9001), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x04a5, 0x9001), USB_DEVICE_DATA(BOARD_503)},
- 	/* 3COM 3CRSHEW696 */
--	{USB_DEVICE(0x0506, 0x0a01), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x0506, 0x0a01), USB_DEVICE_DATA(BOARD_503)},
- 	/* Siemens Santis ADSL WLAN USB adapter WLL 013 */
--	{USB_DEVICE(0x0681, 0x001b), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x0681, 0x001b), USB_DEVICE_DATA(BOARD_503)},
- 	/* Belkin F5D6050, version 2 */
--	{USB_DEVICE(0x050d, 0x0050), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x050d, 0x0050), USB_DEVICE_DATA(BOARD_503)},
- 	/* iBlitzz, BWU613 (not *B or *SB) */
--	{USB_DEVICE(0x07b8, 0xb000), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x07b8, 0xb000), USB_DEVICE_DATA(BOARD_503)},
- 	/* Gigabyte GN-WLBM101 */
--	{USB_DEVICE(0x1044, 0x8003), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x1044, 0x8003), USB_DEVICE_DATA(BOARD_503)},
- 	/* Planex GW-US11S */
--	{USB_DEVICE(0x2019, 0x3220), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x2019, 0x3220), USB_DEVICE_DATA(BOARD_503)},
- 	/* Internal WLAN adapter in h5[4,5]xx series iPAQs */
--	{USB_DEVICE(0x049f, 0x0032), .driver_info = BOARD_503},
-+	{USB_DEVICE(0x049f, 0x0032), USB_DEVICE_DATA(BOARD_503)},
- 	/*
- 	 * at76c503-rfmd-acc
- 	 */
- 	/* SMC 2664W */
--	{USB_DEVICE(0x083a, 0x3501), .driver_info = BOARD_503_ACC},
-+	{USB_DEVICE(0x083a, 0x3501), USB_DEVICE_DATA(BOARD_503_ACC)},
- 	/* Belkin F5D6050, SMC 2662W v2, SMC 2662W-AR */
--	{USB_DEVICE(0x0d5c, 0xa002), .driver_info = BOARD_503_ACC},
-+	{USB_DEVICE(0x0d5c, 0xa002), USB_DEVICE_DATA(BOARD_503_ACC)},
- 	/*
- 	 * at76c505-rfmd
- 	 */
- 	/* Generic AT76C505/RFMD */
--	{USB_DEVICE(0x03eb, 0x7606), .driver_info = BOARD_505},
-+	{USB_DEVICE(0x03eb, 0x7606), USB_DEVICE_DATA(BOARD_505)},
- 	/*
- 	 * at76c505-rfmd2958
- 	 */
- 	/* Generic AT76C505/RFMD, OvisLink WL-1130USB */
--	{USB_DEVICE(0x03eb, 0x7613), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x03eb, 0x7613), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* Fiberline WL-240U */
--	{USB_DEVICE(0x1371, 0x0014), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x1371, 0x0014), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* CNet CNUSB 611G */
--	{USB_DEVICE(0x1371, 0x0013), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x1371, 0x0013), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* Linksys WUSB11 v2.8 */
--	{USB_DEVICE(0x1915, 0x2233), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x1915, 0x2233), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* Xterasys XN-2122B, IBlitzz BWU613B/BWU613SB */
--	{USB_DEVICE(0x12fd, 0x1001), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x12fd, 0x1001), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* Corega WLAN USB Stick 11 */
--	{USB_DEVICE(0x07aa, 0x7613), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x07aa, 0x7613), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/* Microstar MSI Box MS6978 */
--	{USB_DEVICE(0x0db0, 0x1020), .driver_info = BOARD_505_2958},
-+	{USB_DEVICE(0x0db0, 0x1020), USB_DEVICE_DATA(BOARD_505_2958)},
- 	/*
- 	 * at76c505a-rfmd2958
- 	 */
- 	/* Generic AT76C505A device */
--	{USB_DEVICE(0x03eb, 0x7614), .driver_info = BOARD_505A},
-+	{USB_DEVICE(0x03eb, 0x7614), USB_DEVICE_DATA(BOARD_505A)},
- 	/* Generic AT76C505AS device */
--	{USB_DEVICE(0x03eb, 0x7617), .driver_info = BOARD_505A},
-+	{USB_DEVICE(0x03eb, 0x7617), USB_DEVICE_DATA(BOARD_505A)},
- 	/* Siemens Gigaset USB WLAN Adapter 11 */
--	{USB_DEVICE(0x1690, 0x0701), .driver_info = BOARD_505A},
-+	{USB_DEVICE(0x1690, 0x0701), USB_DEVICE_DATA(BOARD_505A)},
- 	/*
- 	 * at76c505amx-rfmd
- 	 */
- 	/* Generic AT76C505AMX device */
--	{USB_DEVICE(0x03eb, 0x7615), .driver_info = BOARD_505AMX},
-+	{USB_DEVICE(0x03eb, 0x7615), USB_DEVICE_DATA(BOARD_505AMX)},
- 	{}
- };
+-static inline u32 at76_get_timeout(struct dfu_status *s)
++/* Convert timeout from the DFU status to jiffies */
++static inline unsigned long at76_get_timeout(struct dfu_status *s)
+ {
+-	u32 ret = (s->poll_timeout[2] << 16) | (s->poll_timeout[1] << 8) |
+-	    (s->poll_timeout[0]);
+-
+-	return ret;
++	return msecs_to_jiffies((s->poll_timeout[2] << 16)
++				| (s->poll_timeout[1] << 8)
++				| (s->poll_timeout[0]));
+ }
  
+ /* Load internal firmware from the buffer.  If manifest_sync_timeout > 0, use
+- * its value in msec in the MANIFEST_SYNC state.  */
++ * its value in jiffies in the MANIFEST_SYNC state.  */
+ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 				int manifest_sync_timeout)
+ {
+@@ -400,8 +400,7 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 			need_dfu_state = 1;
+ 
+ 			at76_dbg(DBG_DFU, "DFU: Resetting device");
+-			schedule_timeout_interruptible(msecs_to_jiffies
+-						       (dfu_timeout));
++			schedule_timeout_interruptible(dfu_timeout);
+ 			break;
+ 
+ 		case STATE_DFU_DOWNLOAD_IDLE:
+@@ -445,8 +444,7 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 				dfu_timeout = manifest_sync_timeout;
+ 
+ 			at76_dbg(DBG_DFU, "DFU: Waiting for manifest phase");
+-			schedule_timeout_interruptible(msecs_to_jiffies
+-						       (dfu_timeout));
++			schedule_timeout_interruptible(dfu_timeout);
+ 			break;
+ 
+ 		case STATE_DFU_MANIFEST:
+@@ -577,7 +575,7 @@ static void at76_ledtrig_tx_timerfunc(unsigned long data)
+ 	if (tx_lastactivity != tx_activity) {
+ 		tx_lastactivity = tx_activity;
+ 		led_trigger_event(ledtrig_tx, LED_FULL);
+-		mod_timer(&ledtrig_tx_timer, jiffies + msecs_to_jiffies(250));
++		mod_timer(&ledtrig_tx_timer, jiffies + HZ / 4);
+ 	} else
+ 		led_trigger_event(ledtrig_tx, LED_OFF);
+ }
+@@ -586,7 +584,7 @@ static void at76_ledtrig_tx_activity(void)
+ {
+ 	tx_activity++;
+ 	if (!timer_pending(&ledtrig_tx_timer))
+-		mod_timer(&ledtrig_tx_timer, jiffies + msecs_to_jiffies(250));
++		mod_timer(&ledtrig_tx_timer, jiffies + HZ / 4);
+ }
+ 
+ /* Check if the given ssid is hidden */
+@@ -3447,7 +3445,7 @@ static int at76_load_internal_fw(struct usb_device *udev, struct fwentry *fwe)
+ 	int need_remap = !at76_is_505a(fwe->board_type);
+ 
+ 	ret = at76_usbdfu_download(udev, fwe->intfw, fwe->intfw_size,
+-				   need_remap ? 0 : 2000);
++				   need_remap ? 0 : 2 * HZ);
+ 
+ 	if (ret < 0) {
+ 		printk(KERN_ERR DRIVER_NAME
+@@ -4471,17 +4469,17 @@ static void at76_calc_qual(struct at76_priv *priv, struct at76_rx_buffer *buf,
+ 	if (at76_is_intersil(priv->board_type))
+ 		qual->qual = buf->link_quality;
+ 	else {
+-		unsigned long msec;
++		unsigned long elapsed;
+ 
+ 		/* Update qual at most once a second */
+-		msec = jiffies_to_msecs(jiffies) - priv->beacons_last_qual;
+-		if (msec < 1000)
++		elapsed = jiffies - priv->beacons_last_qual;
++		if (elapsed < 1 * HZ)
+ 			return;
+ 
+ 		qual->qual = qual->level * priv->beacons_received *
+-		    priv->beacon_period / msec;
++		    msecs_to_jiffies(priv->beacon_period) / elapsed;
+ 
+-		priv->beacons_last_qual = jiffies_to_msecs(jiffies);
++		priv->beacons_last_qual = jiffies;
+ 		priv->beacons_received = 0;
+ 	}
+ 	qual->qual = (qual->qual > 100) ? 100 : qual->qual;
+@@ -5270,7 +5268,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	priv->txrate = TX_RATE_AUTO;
+ 	priv->preamble_type = PREAMBLE_TYPE_LONG;
+ 	priv->beacon_period = 100;
+-	priv->beacons_last_qual = jiffies_to_msecs(jiffies);
++	priv->beacons_last_qual = jiffies;
+ 	priv->auth_mode = WLAN_AUTH_OPEN;
+ 	priv->scan_min_time = DEF_SCAN_MIN_TIME;
+ 	priv->scan_max_time = DEF_SCAN_MAX_TIME;
+diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
+index 6c3b76b..b20be9d 100644
+--- a/drivers/net/wireless/at76_usb.h
++++ b/drivers/net/wireless/at76_usb.h
+@@ -551,7 +551,7 @@ struct at76_priv {
+ 	struct set_mib_buffer mib_buf;	/* global buffer for set_mib calls */
+ 
+ 	/* beacon counting */
+-	int beacon_period;	/* period of mgmt beacons */
++	int beacon_period;	/* period of mgmt beacons, Kus */
+ 	int beacons_received;
+ 	unsigned long beacons_last_qual;	/* time we restarted counting
+ 						   beacons */
