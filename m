@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35523 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbXIAVNP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 17:13:15 -0400
-Subject: Re: [PATCH] ath5k - License clarification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jacob Meuser <jakemsr@sdf.lonestar.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070901210419.GC23642@SDF.LONESTAR.ORG>
-References: <20070901191405.GB10469@SDF.LONESTAR.ORG>
-	 <46D9BFC2.4080707@garzik.org> <20070901200714.GA23642@SDF.LONESTAR.ORG>
-	 <46D9CC46.4060302@garzik.org>  <20070901210419.GC23642@SDF.LONESTAR.ORG>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m3edREk9JU5yu/xe1R+B"
-Date: Sat, 01 Sep 2007 23:14:31 +0200
-Message-Id: <1188681271.7585.163.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:38263 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbXI3Sl1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:41:27 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 26/26] at76_usb: Add ID for at76c503a based CNETUSB611
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:41:25 -0400
+Message-ID: <20070930184125.23921.90095.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
---=-m3edREk9JU5yu/xe1R+B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ drivers/net/wireless/at76_usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-On Sat, 2007-09-01 at 21:04 +0000, Jacob Meuser wrote:
 
-> I already explained my reasons for interest.
->=20
-> It has nothing to do with what license is which, but about respect
-> for the original author's wishes and the general idea of giving back.
->=20
-> why are you attacking me?
-
-Wait, so you're suddenly the poor victim of an attack when you
-contribute nothing to linux wireless and then out of the blue show up on
-our mailing list and tell us how bad we are behaving? Cute.
-
-johannes
-
---=-m3edREk9JU5yu/xe1R+B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG2dY3/ETPhpq3jKURAgjbAJ9xY8pCzh6/eG0wi9RDpU+vLhfz5QCcDFJa
-z2ORpU2r5BB7hp0jjty9RVs=
-=UXRX
------END PGP SIGNATURE-----
-
---=-m3edREk9JU5yu/xe1R+B--
-
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 8a8fce2..d2e3c55 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -167,6 +167,8 @@ static struct usb_device_id dev_table[] = {
+ 	{USB_DEVICE(0x03eb, 0x4102), USB_DEVICE_DATA(BOARD_503)},
+ 	/* Dick Smith Electronics XH1153 802.11b USB adapter */
+ 	{USB_DEVICE(0x1371, 0x5743), USB_DEVICE_DATA(BOARD_503)},
++	/* CNet CNUSB611 */
++	{USB_DEVICE(0x1371, 0x0001), USB_DEVICE_DATA(BOARD_503)},
+ 	/* FiberLine FL-WL200U */
+ 	{USB_DEVICE(0x1371, 0x0002), USB_DEVICE_DATA(BOARD_503)},
+ 	/* BenQ AWL400 USB stick */
