@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2223 "EHLO ra.tuxdriver.com"
+Received: from c60.cesmail.net ([216.154.195.49]:28704 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755204AbXI0VIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 17:08:10 -0400
-Date: Thu, 27 Sep 2007 16:41:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
+	id S1751289AbXI3SlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:41:14 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 24/26] at76_usb: Use ETH_P_802_2 in monitor mode
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi driver updates
-Message-ID: <20070927204144.GE7991@tuxdriver.com>
-References: <11908636643693-git-send-email-yi.zhu@intel.com>
+Date: Sun, 30 Sep 2007 14:41:12 -0400
+Message-ID: <20070930184112.23921.96075.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11908636643693-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 27, 2007 at 11:27:29AM +0800, Zhu Yi wrote:
-> Here are some updates for iwlwifi against davem's net-2.6.24 GIT.
-> 
-> [PATCH] iwlwifi: replacing IPW with IWL in error messages
-> [PATCH] iwlwifi: workaournd REPLY_COMPRESSED_BA command in iwl_rx_handle
-> [PATCH] iwlwifi: Correction for sending beacon in config_ap
-> [PATCH] iwlwifi: clear station table in rxon unconditionally
-> [PATCH] iwlwifi: Fix typo in rate sacling algorithm
-> [PATCH] iwlwifi: fix add_station to avoid FW error
-> [PATCH] iwlwifi: removing unnecessary memset in 4965 rate scale
-> [PATCH] iwlwifi: add debugfs framework to rate scale
-> [PATCH] iwlwifi: add read rate scale table debugfs function
-> [PATCH] iwlwifi: limit printouts on hot path
-> [PATCH] iwlwifi: add supp_rates to rate scale sta private data
-> [PATCH] iwlwifi: rs_rate_scale_perform clean up
-> [PATCH] iwlwifi: set fixed rate through debugfs
-> [PATCH] iwlwifi: add debugfs rate scale stats
-> [PATCH] iwlwifi: Update iwlwifi version stamp to 1.1.17
+It's used by most other wireless drivers, including mac80211.
+ETH_P_80211_RAW is obsolete.
 
-I'll accept that patches -- thanks for sending an update so
-(relatively) quickly since the upstream push!
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-In the future, please try to be a bit more descriptive in your
-changelog entries.  Several of them seemed to be either obvious
-(and thereby perhaps unnecessary) or they described the patch itself
-rather than the motivation for the change.  Describing the why is
-more important than the what in most cases. :-)
+ drivers/net/wireless/at76_usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 1e3363e..f67dc8e 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -4937,7 +4937,7 @@ static void at76_rx_monitor_mode(struct at76_priv *priv)
+ 	skb->ip_summed = CHECKSUM_NONE;
+ 	skb_reset_mac_header(skb);
+ 	skb->pkt_type = PACKET_OTHERHOST;
+-	skb->protocol = htons(ETH_P_80211_RAW);
++	skb->protocol = htons(ETH_P_802_2);
+ 
+ 	netdev->last_rx = jiffies;
+ 	netif_rx(skb);
