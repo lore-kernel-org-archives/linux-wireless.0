@@ -1,269 +1,808 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51535 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbXIMHKS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2007 03:10:18 -0400
-Subject: documenting mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eN2v7fLtHn8XxNpXdWcM"
-Date: Wed, 12 Sep 2007 23:55:25 +0200
-Message-Id: <1189634125.6161.69.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:32690 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751093AbXI3Sjc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:39:32 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 08/26] at76_usb: Eliminate err(), it's USB specific
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:39:30 -0400
+Message-ID: <20070930183929.23921.94352.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
---=-eN2v7fLtHn8XxNpXdWcM
-Content-Type: multipart/mixed; boundary="=-n7nSHCP+YB5KYd7AJUR2"
-
-
---=-n7nSHCP+YB5KYd7AJUR2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Hey,
-
-After having added all the docbook stuff to mac80211.h I want to
-aggregate it into a document. This is really WIP but I hope to attract
-some others to document things, often bugs/bad assumptions are found
-that way.
-
-Attached is a mac80211.tmpl file suitable for Documentation/DocBook.
-Note, however, that it contains !P directives which are not understood
-by scripts/basic/docproc.c yet, patches will be fixed up and sent soon.
-Hence, I've also uploaded the current documentation to
-http://johannes.sipsolutions.net/files/mac80211/
-
-Of course, most of the chapters in that document are empty, they ought
-to be filled with contents as time permits. I have structured the
-document into four chapters as you can see in the output:
-   I. The basic mac80211 driver interface
-  II. Advanced driver interface
- III. Rate control interface
-  IV. Internals
-
-Obviously, chapter III. can't be written yet because the rate control
-interface hasn't been formalised, but maybe we should actually write the
-documentation before the code.
-
-Also, a new book on cfg80211 should be written that shall include all
-the wiphy stuff and the new regulatory stuff from Luis. But I can only
-do so much at a time :)
-
-johannes
-
---=-n7nSHCP+YB5KYd7AJUR2
-Content-Disposition: attachment; filename=mac80211.tmpl
-Content-Type: application/docbook+xml; name=mac80211.tmpl
-Content-Transfer-Encoding: base64
-
-PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCFET0NUWVBFIGJvb2sgUFVC
-TElDICItLy9PQVNJUy8vRFREIERvY0Jvb2sgWE1MIFY0LjEuMi8vRU4iCgkiaHR0cDovL3d3dy5v
-YXNpcy1vcGVuLm9yZy9kb2Nib29rL3htbC80LjEuMi9kb2Nib29reC5kdGQiIFtdPgoKPGJvb2sg
-aWQ9Im1hYzgwMjExLWRldmVsb3BlcnMtZ3VpZGUiPgogIDxib29raW5mbz4KICAgIDx0aXRsZT5U
-aGUgbWFjODAyMTEgc3Vic3lzdGVtIGZvciBrZXJuZWwgZGV2ZWxvcGVyczwvdGl0bGU+CgogICAg
-PGF1dGhvcmdyb3VwPgogICAgICA8YXV0aG9yPgogICAgICAgIDxmaXJzdG5hbWU+Sm9oYW5uZXM8
-L2ZpcnN0bmFtZT4KICAgICAgICA8c3VybmFtZT5CZXJnPC9zdXJuYW1lPgogICAgICAgIDxhZmZp
-bGlhdGlvbj4KICAgICAgICAgIDxhZGRyZXNzPjxlbWFpbD5qb2hhbm5lc0BzaXBzb2x1dGlvbnMu
-bmV0PC9lbWFpbD48L2FkZHJlc3M+CiAgICAgICAgPC9hZmZpbGlhdGlvbj4KICAgICAgPC9hdXRo
-b3I+CiAgICA8L2F1dGhvcmdyb3VwPgoKICAgIDxjb3B5cmlnaHQ+CiAgICAgIDx5ZWFyPjIwMDc8
-L3llYXI+CiAgICAgIDxob2xkZXI+Sm9oYW5uZXMgQmVyZzwvaG9sZGVyPgogICAgPC9jb3B5cmln
-aHQ+CgogICAgPGxlZ2Fsbm90aWNlPgogICAgICA8cGFyYT4KICAgICAgICBUaGlzIGRvY3VtZW50
-YXRpb24gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUKICAgICAgICBpdCBh
-bmQvb3IgbW9kaWZ5IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGlj
-CiAgICAgICAgTGljZW5zZSB2ZXJzaW9uIDIgYXMgcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3
-YXJlIEZvdW5kYXRpb24uCiAgICAgIDwvcGFyYT4KCiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMg
-ZG9jdW1lbnRhdGlvbiBpcyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUK
-ICAgICAgICB1c2VmdWwsIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5UWTsgd2l0aG91dCBldmVuIHRo
-ZSBpbXBsaWVkCiAgICAgICAgd2FycmFudHkgb2YgTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1Mg
-Rk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFLgogICAgICAgIFNlZSB0aGUgR05VIEdlbmVyYWwgUHVi
-bGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4KICAgICAgPC9wYXJhPgoKICAgICAgPHBhcmE+
-CiAgICAgICAgWW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVy
-YWwgUHVibGljCiAgICAgICAgTGljZW5zZSBhbG9uZyB3aXRoIHRoaXMgZG9jdW1lbnRhdGlvbjsg
-aWYgbm90LCB3cml0ZSB0byB0aGUgRnJlZQogICAgICAgIFNvZnR3YXJlIEZvdW5kYXRpb24sIElu
-Yy4sIDU5IFRlbXBsZSBQbGFjZSwgU3VpdGUgMzMwLCBCb3N0b24sCiAgICAgICAgTUEgMDIxMTEt
-MTMwNyBVU0EKICAgICAgPC9wYXJhPgoKICAgICAgPHBhcmE+CiAgICAgICAgRm9yIG1vcmUgZGV0
-YWlscyBzZWUgdGhlIGZpbGUgQ09QWUlORyBpbiB0aGUgc291cmNlCiAgICAgICAgZGlzdHJpYnV0
-aW9uIG9mIExpbnV4LgogICAgICA8L3BhcmE+CiAgICA8L2xlZ2Fsbm90aWNlPgoKICAgIDxhYnN0
-cmFjdD4KIVBpbmNsdWRlL25ldC9tYWM4MDIxMS5oIEludHJvZHVjdGlvbgohUGluY2x1ZGUvbmV0
-L21hYzgwMjExLmggV2FybmluZwogICAgPC9hYnN0cmFjdD4KICA8L2Jvb2tpbmZvPgoKICA8dG9j
-PjwvdG9jPgoKPCEtLQpHZW5lcmFsbHksIHRoaXMgZG9jdW1lbnQgc2hhbGwgYmUgb3JkZXJlZCBi
-eSBpbmNyZWFzaW5nIGNvbXBsZXhpdHkuCkl0IGlzIGltcG9ydGFudCB0byBub3RlIHRoYXQgcmVh
-ZGVycyBzaG91bGQgYmUgYWJsZSB0byByZWFkIG9ubHkKdGhlIGZpcnN0IGZldyBzZWN0aW9ucyB0
-byBnZXQgYSB3b3JraW5nIGRyaXZlciBhbmQgb25seSBhZHZhbmNlZAp1c2FnZSBzaG91bGQgcmVx
-dWlyZSByZWFkaW5nIHRoZSBmdWxsIGRvY3VtZW50LgotLT4KCiAgPHBhcnQ+CiAgICA8dGl0bGU+
-VGhlIGJhc2ljIG1hYzgwMjExIGRyaXZlciBpbnRlcmZhY2U8L3RpdGxlPgogICAgPHBhcnRpbnRy
-bz4KICAgICAgPHBhcmE+CiAgICAgICAgWW91IHNob3VsZCByZWFkIGFuZCB1bmRlcnN0YW5kIHRo
-ZSBpbmZvcm1hdGlvbiBjb250YWluZWQKICAgICAgICB3aXRoaW4gdGhpcyBwYXJ0IG9mIHRoZSBi
-b29rIHdoaWxlIGltcGxlbWVudGluZyBhIGRyaXZlci4KICAgICAgICBJbiBzb21lIGNoYXB0ZXJz
-LCBhZHZhbmNlZCB1c2FnZSBpcyBub3RlZCwgdGhhdCBtYXkgYmUKICAgICAgICBza2lwcGVkIGF0
-IGZpcnN0LgogICAgICA8L3BhcmE+CiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMgcGFydCBvZiB0
-aGUgYm9vayBvbmx5IGNvdmVycyBzdGF0aW9uIGFuZCBtb25pdG9yIG1vZGUKICAgICAgICBmdW5j
-dGlvbmFsaXR5LCBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHJlcXVpcmVkIHRvIGltcGxlbWVudAog
-ICAgICAgIHRoZSBvdGhlciBtb2RlcyBpcyBjb3ZlcmVkIGluIHRoZSBzZWNvbmQgcGFydCBvZiB0
-aGUgYm9vay4KICAgICAgPC9wYXJhPgogICAgPC9wYXJ0aW50cm8+CgogICAgPGNoYXB0ZXIgaWQ9
-ImJhc2ljcyI+CiAgICAgIDx0aXRsZT5CYXNpYyBoYXJkd2FyZSBoYW5kbGluZzwvdGl0bGU+CiAg
-ICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgICAgVGhpcyBjaGFwdGVyIHNo
-YWxsIGNvbnRhaW4gaW5mb3JtYXRpb24gb24gZ2V0dGluZyBhIGh3CiAgICAgICAgc3RydWN0IGFs
-bG9jYXRlZCBhbmQgcmVnaXN0ZXJlZCB3aXRoIG1hYzgwMjExLgogICAgICA8L3BhcmE+CiAgICAg
-IDxwYXJhPgogICAgICAgIFNpbmNlIGl0IGlzIHJlcXVpcmVkIHRvIGFsbG9jYXRlIHJhdGVzL21v
-ZGVzIGJlZm9yZSByZWdpc3RlcmluZwogICAgICAgIGEgaHcgc3RydWN0LCB0aGlzIGNoYXB0ZXIg
-c2hhbGwgYWxzbyBjb250YWluIGluZm9ybWF0aW9uIG9uIHNldHRpbmcKICAgICAgICB1cCB0aGUg
-cmF0ZS9tb2RlIHN0cnVjdHMuCiAgICAgIDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgICAgQWRk
-aXRpb25hbGx5LCBzb21lIGRpc2N1c3Npb24gYWJvdXQgdGhlIGNhbGxiYWNrcyBhbmQKICAgICAg
-ICB0aGUgZ2VuZXJhbCBwcm9ncmFtbWluZyBtb2RlbCBzaG91bGQgYmUgaW4gaGVyZSwgaW5jbHVk
-aW5nCiAgICAgICAgdGhlIGRlZmluaXRpb24gb2YgaWVlZTgwMjExX29wcyB3aGljaCB3aWxsIGJl
-IHJlZmVycmVkIHRvCiAgICAgICAgYSBsb3QuCiAgICAgIDwvcGFyYT4KICAgICAgPHBhcmE+CiAg
-ICAgICAgRmluYWxseSwgYSBkaXNjdXNzaW9uIG9mIGhhcmR3YXJlIGNhcGFiaWxpdGllcyBzaG91
-bGQgYmUgZG9uZQogICAgICAgIHdpdGggcmVmZXJlbmNlcyB0byBvdGhlciBwYXJ0cyBvZiB0aGUg
-Ym9vay4KICAgICAgPC9wYXJhPgo8IS0tIGludGVudGlvbmFsbHkgbXVsdGlwbGUgIUYgbGluZXMg
-dG8gZ2V0IHByb3BlciBvcmRlciAtLT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIx
-MV9waHltb2RlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfaHdfbW9kZQohRmlu
-Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2h3CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEu
-aCBpZWVlODAyMTFfaHdfZmxhZ3MKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIFNFVF9JRUVFODAy
-MTFfREVWCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBTRVRfSUVFRTgwMjExX1BFUk1fQUREUgoh
-RmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX29wcwohRmluY2x1ZGUvbmV0L21hYzgw
-MjExLmggaWVlZTgwMjExX2FsbG9jX2h3CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
-MTFfcmVnaXN0ZXJfaHcKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZXRfdHhf
-bGVkX25hbWUKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZXRfcnhfbGVkX25h
-bWUKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9yZWdpc3Rlcl9od21vZGUKIUZp
-bmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV91bnJlZ2lzdGVyX2h3CiFGaW5jbHVkZS9u
-ZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfZnJlZV9odwogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFw
-dGVyIGlkPSJwaHktaGFuZGxpbmciPgogICAgICA8dGl0bGU+UEhZIGNvbmZpZ3VyYXRpb248L3Rp
-dGxlPgogICAgICA8cGFyYT5UQkQ8L3BhcmE+CiAgICAgIDxwYXJhPgogICAgICAgIFRoaXMgY2hh
-cHRlciBzaG91bGQgZGVzY3JpYmUgUEhZIGhhbmRsaW5nIGluY2x1ZGluZwogICAgICAgIHN0YXJ0
-L3N0b3AgY2FsbGJhY2tzIGFuZCB0aGUgdmFyaW91cyBzdHJ1Y3R1cmVzIHVzZWQuCiAgICAgIDwv
-cGFyYT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9jb25mCiFGaW5jbHVkZS9u
-ZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfY29uZl9mbGFncwohRmluY2x1ZGUvbmV0L21hYzgwMjEx
-LmggaWVlZTgwMjExX2VycF9jaGFuZ2VfZmxhZ3MKICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRl
-ciBpZD0iaWZhY2UtaGFuZGxpbmciPgogICAgICA8dGl0bGU+VmlydHVhbCBpbnRlcmZhY2VzPC90
-aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgogICAgICA8cGFyYT4KICAgICAgICBUaGlzIGNo
-YXB0ZXIgc2hvdWxkIGRlc2NyaWJlIHZpcnR1YWwgaW50ZXJmYWNlIGJhc2ljcwogICAgICAgIHRo
-YXQgYXJlIHJlbGV2YW50IHRvIHRoZSBkcml2ZXIgKFZMQU5zLCBNR01UIGV0YyBhcmUgbm90LikK
-ICAgICAgICBJdCBzaG91bGQgZXhwbGFpbiB0aGUgdXNlIG9mIHRoZSBhZGRfaWZhY2UvcmVtb3Zl
-X2lmYWNlCiAgICAgICAgY2FsbGJhY2tzIGFzIHdlbGwgYXMgdGhlIGludGVyZmFjZSBjb25maWd1
-cmF0aW9uIGNhbGxiYWNrcy4KICAgICAgPC9wYXJhPgogICAgICA8cGFyYT5UaGluZ3MgcmVsYXRl
-ZCB0byBBUCBtb2RlIHNob3VsZCBiZSBkaXNjdXNzZWQgdGhlcmUuPC9wYXJhPgogICAgICA8cGFy
-YT4KICAgICAgICBUaGluZ3MgcmVsYXRlZCB0byBzdXBwb3J0aW5nIG11bHRpcGxlIGludGVyZmFj
-ZXMgc2hvdWxkIGJlCiAgICAgICAgaW4gdGhlIGFwcHJvcHJpYXRlIGNoYXB0ZXIsIGEgQklHIEZB
-VCBub3RlIHNob3VsZCBiZSBoZXJlIGFib3V0CiAgICAgICAgdGhpcyB0aG91Z2ggYW5kIHRoZSBy
-ZWNvbW1lbmRhdGlvbiB0byBhbGxvdyBvbmx5IGEgc2luZ2xlCiAgICAgICAgaW50ZXJmYWNlIGlu
-IFNUQSBtb2RlIGF0IGZpcnN0IQogICAgICA8L3BhcmE+CiFGaW5jbHVkZS9uZXQvbWFjODAyMTEu
-aCBpZWVlODAyMTFfaWZfdHlwZXMKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9p
-Zl9pbml0X2NvbmYKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9pZl9jb25mCiAg
-ICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9ImZyYW1lLWZvcm1hdCI+CiAgICAgIDx0aXRs
-ZT5GcmFtZSBmb3JtYXQ8L3RpdGxlPgogICAgICAgIDxwYXJhPlRCRDogbW92ZSBpbnRvIHJ4L3R4
-IGNoYXB0ZXI/PC9wYXJhPgohUGluY2x1ZGUvbmV0L21hYzgwMjExLmggRnJhbWUgZm9ybWF0CiAg
-ICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InJ4LXR4Ij4KICAgICAgPHRpdGxlPlJlY2Vp
-dmUgYW5kIHRyYW5zbWl0IHByb2Nlc3Npbmc8L3RpdGxlPgogICAgICA8c2VjdDE+CiAgICAgICAg
-PHRpdGxlPndoYXQgc2hvdWxkIGJlIGhlcmU8L3RpdGxlPgogICAgICAgIDxwYXJhPlRCRDwvcGFy
-YT4KICAgICAgICA8cGFyYT4KICAgICAgICAgIFRoaXMgc2hvdWxkIGRlc2NyaWJlIHRoZSByZWNl
-aXZlIGFuZCB0cmFuc21pdAogICAgICAgICAgcGF0aHMgaW4gbWFjODAyMTEvdGhlIGRyaXZlcnMg
-YXMgd2VsbCBhcwogICAgICAgICAgdHJhbnNtaXQgc3RhdHVzIGhhbmRsaW5nLgogICAgICAgIDwv
-cGFyYT4KICAgICAgPC9zZWN0MT4KICAgICAgPHNlY3QxPgogICAgICAgIDx0aXRsZT5DYWxsaW5n
-IGludG8gbWFjODAyMTEgZnJvbSBpbnRlcnJ1cHRzPC90aXRsZT4KIVBpbmNsdWRlL25ldC9tYWM4
-MDIxMS5oIENhbGxpbmcgbWFjODAyMTEgZnJvbSBpbnRlcnJ1cHRzCiAgICAgIDwvc2VjdDE+CiAg
-ICAgIDxzZWN0MT4KICAgICAgICA8dGl0bGU+ZnVuY3Rpb25zL2RlZmluaXRpb25zPC90aXRsZT4K
-IUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9yeF9zdGF0dXMKIUZpbmNsdWRlL25l
-dC9tYWM4MDIxMS5oIG1hYzgwMjExX3J4X2ZsYWdzCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBp
-ZWVlODAyMTFfdHhfY29udHJvbAohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4
-X3N0YXR1c19mbGFncwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3J4CiFGaW5j
-bHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfcnhfaXJxc2FmZQohRmluY2x1ZGUvbmV0L21h
-YzgwMjExLmggaWVlZTgwMjExX3R4X3N0YXR1cwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVl
-ZTgwMjExX3R4X3N0YXR1c19pcnFzYWZlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
-MTFfcnRzX2dldAohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3J0c19kdXJhdGlv
-bgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2N0c3Rvc2VsZl9nZXQKIUZpbmNs
-dWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9jdHN0b3NlbGZfZHVyYXRpb24KIUZpbmNsdWRl
-L25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9nZW5lcmljX2ZyYW1lX2R1cmF0aW9uCiFGaW5jbHVk
-ZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfZ2V0X2hkcmxlbl9mcm9tX3NrYgohRmluY2x1ZGUv
-bmV0L21hYzgwMjExLmggaWVlZTgwMjExX2dldF9oZHJsZW4KIUZpbmNsdWRlL25ldC9tYWM4MDIx
-MS5oIGllZWU4MDIxMV93YWtlX3F1ZXVlCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAy
-MTFfc3RvcF9xdWV1ZQohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3N0YXJ0X3F1
-ZXVlcwohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3N0b3BfcXVldWVzCiFGaW5j
-bHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfd2FrZV9xdWV1ZXMKICAgICAgPC9zZWN0MT4K
-ICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0iZmlsdGVycyI+CiAgICAgIDx0aXRsZT5G
-cmFtZSBmaWx0ZXJpbmc8L3RpdGxlPgohUGluY2x1ZGUvbmV0L21hYzgwMjExLmggRnJhbWUgZmls
-dGVyaW5nCjwhLS0gaW50ZW50aW9uYWxseSB0d28gIUYgbGluZXMgdG8gZ2V0IHByb3BlciBvcmRl
-ciAtLT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV9maWx0ZXJfZmxhZ3MKICAg
-IDwvY2hhcHRlcj4KICA8L3BhcnQ+CgogIDxwYXJ0IGlkPSJhZHZhbmNlZCI+CiAgICA8dGl0bGU+
-QWR2YW5jZWQgZHJpdmVyIGludGVyZmFjZTwvdGl0bGU+CiAgICA8cGFydGludHJvPgogICAgICA8
-cGFyYT4KICAgICAgCUluZm9ybWF0aW9uIGNvbnRhaW5lZCB3aXRoaW4gdGhpcyBwYXJ0IG9mIHRo
-ZSBib29rIGlzCiAgICAgIAlvZiBpbnRlcmVzdCBvbmx5IGZvciBhZHZhbmNlZCBpbnRlcmFjdGlv
-biBvZiBtYWM4MDIxMQogICAgICAJd2l0aCBkcml2ZXJzIHRvIGV4cGxvaXQgbW9yZSBoYXJkd2Fy
-ZSBjYXBhYmlsaXRpZXMgYW5kCiAgICAgIAlpbXByb3ZlIHBlcmZvcm1hbmNlLgogICAgICA8L3Bh
-cmE+CiAgICA8L3BhcnRpbnRybz4KCiAgICA8Y2hhcHRlciBpZD0iaGFyZHdhcmUtY3J5cHRvLW9m
-ZmxvYWQiPgogICAgICA8dGl0bGU+SGFyZHdhcmUgY3J5cHRvIGFjY2VsZXJhdGlvbjwvdGl0bGU+
-CiFQaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBIYXJkd2FyZSBjcnlwdG8gYWNjZWxlcmF0aW9uCjwh
-LS0gaW50ZW50aW9uYWxseSBkaWZmZXJlbnQgIUYgbGluZXMgdG8gZ2V0IHByb3BlciBvcmRlciAt
-LT4KIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIHNldF9rZXlfY21kCiFGaW5jbHVkZS9uZXQvbWFj
-ODAyMTEuaCBpZWVlODAyMTFfa2V5X2NvbmYKIUZpbmNsdWRlL25ldC9tYWM4MDIxMS5oIGllZWU4
-MDIxMV9rZXlfYWxnCiFGaW5jbHVkZS9uZXQvbWFjODAyMTEuaCBpZWVlODAyMTFfa2V5X2ZsYWdz
-CiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InFvcyI+CiAgICAgIDx0aXRsZT5NdWx0
-aXBsZSBxdWV1ZXMgYW5kIFFvUyBzdXBwb3J0PC90aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJh
-PgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3BhcmFtcwohRmlu
-Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3N0YXRzX2RhdGEKIUZpbmNs
-dWRlL25ldC9tYWM4MDIxMS5oIGllZWU4MDIxMV90eF9xdWV1ZQohRmluY2x1ZGUvbmV0L21hYzgw
-MjExLmggaWVlZTgwMjExX3R4X3F1ZXVlX3N0YXRzCiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0
-ZXIgaWQ9IkFQIj4KICAgICAgPHRpdGxlPkFjY2VzcyBwb2ludCBtb2RlIHN1cHBvcnQ8L3RpdGxl
-PgogICAgICA8cGFyYT5UQkQ8L3BhcmE+CiAgICAgIDxwYXJhPlNvbWUgcGFydHMgb2YgdGhlIGlm
-X2NvbmYgc2hvdWxkIGJlIGRpc2N1c3NlZCBoZXJlIGluc3RlYWQ8L3BhcmE+CiAgICAgIDxwYXJh
-PgogICAgICAgIEluc2VydCBub3RlcyBhYm91dCBWTEFOIGludGVyZmFjZXMgd2l0aCBodyBjcnlw
-dG8gaGVyZSBvcgogICAgICAgIGluIHRoZSBodyBjcnlwdG8gY2hhcHRlci4KICAgICAgPC9wYXJh
-PgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2dldF9idWZmZXJlZF9iYwohRmlu
-Y2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX2JlYWNvbl9nZXQKICAgIDwvY2hhcHRlcj4K
-CiAgICA8Y2hhcHRlciBpZD0ibXVsdGktaWZhY2UiPgogICAgICA8dGl0bGU+U3VwcG9ydGluZyBt
-dWx0aXBsZSB2aXJ0dWFsIGludGVyZmFjZXM8L3RpdGxlPgogICAgICA8cGFyYT5UQkQ8L3BhcmE+
-CiAgICAgIDxwYXJhPgogICAgICAgIE5vdGU6IFdEUyB3aXRoIGlkZW50aWNhbCBNQUMgYWRkcmVz
-cyBzaG91bGQgYWxtb3N0IGFsd2F5cyBiZSBPSwogICAgICA8L3BhcmE+CiAgICAgIDxwYXJhPgog
-ICAgICAgIEluc2VydCBub3RlcyBhYm91dCBoYXZpbmcgbXVsdGlwbGUgdmlydHVhbCBpbnRlcmZh
-Y2VzIHdpdGgKICAgICAgICBkaWZmZXJlbnQgTUFDIGFkZHJlc3NlcyBoZXJlLCBub3RlIHdoaWNo
-IGNvbmZpZ3VyYXRpb25zIGFyZQogICAgICAgIHN1cHBvcnRlZCBieSBtYWM4MDIxMSwgYWRkIG5v
-dGVzIGFib3V0IHN1cHBvcnRpbmcgaHcgY3J5cHRvCiAgICAgICAgd2l0aCBpdC4KICAgICAgPC9w
-YXJhPgogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFwdGVyIGlkPSJoYXJkd2FyZS1zY2FuLW9mZmxv
-YWQiPgogICAgICA8dGl0bGU+SGFyZHdhcmUgc2NhbiBvZmZsb2FkPC90aXRsZT4KICAgICAgPHBh
-cmE+VEJEPC9wYXJhPgohRmluY2x1ZGUvbmV0L21hYzgwMjExLmggaWVlZTgwMjExX3NjYW5fY29t
-cGxldGVkCiAgICA8L2NoYXB0ZXI+CiAgPC9wYXJ0PgoKICA8cGFydCBpZD0icmF0ZS1jb250cm9s
-Ij4KICAgIDx0aXRsZT5SYXRlIGNvbnRyb2wgaW50ZXJmYWNlPC90aXRsZT4KICAgIDxwYXJ0aW50
-cm8+CiAgICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgICAgPHBhcmE+CiAgICAgIAlUaGlzIHBhcnQg
-b2YgdGhlIGJvb2sgZGVzY3JpYmVzIHRoZSByYXRlIGNvbnRyb2wgYWxnb3JpdGhtCiAgICAgIAlp
-bnRlcmZhY2UgYW5kIGhvdyBpdCByZWxhdGVzIHRvIG1hYzgwMjExIGFuZCBkcml2ZXJzLgogICAg
-ICA8L3BhcmE+CiAgICA8L3BhcnRpbnRybz4KICAgIDxjaGFwdGVyIGlkPSJkdW1teSI+CiAgICAg
-IDx0aXRsZT5kdW1teSBjaGFwdGVyPC90aXRsZT4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgogICAg
-PC9jaGFwdGVyPgogIDwvcGFydD4KCiAgPHBhcnQgaWQ9ImludGVybmFsIj4KICAgIDx0aXRsZT5J
-bnRlcm5hbHM8L3RpdGxlPgogICAgPHBhcnRpbnRybz4KICAgICAgPHBhcmE+VEJEPC9wYXJhPgog
-ICAgICA8cGFyYT4KICAgICAgCVRoaXMgcGFydCBvZiB0aGUgYm9vayBkZXNjcmliZXMgbWFjODAy
-MTEgaW50ZXJuYWxzLgogICAgICA8L3BhcmE+CiAgICA8L3BhcnRpbnRybz4KCiAgICA8Y2hhcHRl
-ciBpZD0ia2V5LWhhbmRsaW5nIj4KICAgICAgPHRpdGxlPktleSBoYW5kbGluZzwvdGl0bGU+CiAg
-ICAgIDxwYXJhPlRCRDwvcGFyYT4KICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0icngt
-cHJvY2Vzc2luZyI+CiAgICAgIDx0aXRsZT5SZWNlaXZlIHByb2Nlc3Npbmc8L3RpdGxlPgogICAg
-ICA8cGFyYT5UQkQ8L3BhcmE+CiAgICA8L2NoYXB0ZXI+CgogICAgPGNoYXB0ZXIgaWQ9InR4LXBy
-b2Nlc3NpbmciPgogICAgICA8dGl0bGU+VHJhbnNtaXQgcHJvY2Vzc2luZzwvdGl0bGU+CiAgICAg
-IDxwYXJhPlRCRDwvcGFyYT4KICAgIDwvY2hhcHRlcj4KCiAgICA8Y2hhcHRlciBpZD0ic3RhLWlu
-Zm8iPgogICAgICA8dGl0bGU+U3RhdGlvbiBpbmZvIGhhbmRsaW5nPC90aXRsZT4KICAgICAgPHBh
-cmE+VEJEPC9wYXJhPgogICAgPC9jaGFwdGVyPgoKICAgIDxjaGFwdGVyIGlkPSJzeW5jaHJvbmlz
-YXRpb24iPgogICAgICA8dGl0bGU+U3luY2hyb25pc2F0aW9uPC90aXRsZT4KICAgICAgPHBhcmE+
-VEJEPC9wYXJhPgogICAgICA8cGFyYT5Mb2NraW5nLCBsb3RzIG9mIFJDVTwvcGFyYT4KICAgIDwv
-Y2hhcHRlcj4KICA8L3BhcnQ+CjwvYm9vaz4K
+ drivers/net/wireless/at76_usb.c |  287 +++++++++++++++++++++------------------
+ 1 files changed, 158 insertions(+), 129 deletions(-)
 
 
---=-n7nSHCP+YB5KYd7AJUR2--
-
---=-eN2v7fLtHn8XxNpXdWcM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG6GBN/ETPhpq3jKURAkllAJ9CCu7tdOnzZh2Qezo5hh7TUrM2rwCgqArK
-YvyEkfUMTzNhBag1U6rstak=
-=SVHe
------END PGP SIGNATURE-----
-
---=-eN2v7fLtHn8XxNpXdWcM--
-
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index be578a9..2a9dfb6 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -319,7 +319,7 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 		 manifest_sync_timeout);
+ 
+ 	if (!size) {
+-		err("FW Buffer length invalid!");
++		printk(KERN_ERR DRIVER_NAME ": FW buffer length invalid!\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -331,7 +331,8 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 		if (need_dfu_state) {
+ 			ret = at76_dfu_get_state(udev, &dfu_state);
+ 			if (ret < 0) {
+-				err("DFU: Failed to get DFU state: %d", ret);
++				printk(KERN_ERR DRIVER_NAME
++				       ": cannot get DFU state: %d\n", ret);
+ 				goto exit;
+ 			}
+ 			need_dfu_state = 0;
+@@ -346,7 +347,9 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 				dfu_timeout = at76_get_timeout(&dfu_stat_buf);
+ 				need_dfu_state = 0;
+ 			} else
+-				err("at76_dfu_get_status failed with %d", ret);
++				printk(KERN_ERR DRIVER_NAME
++				       ": at76_dfu_get_status failed with %d\n",
++				       ret);
+ 			break;
+ 
+ 		case STATE_DFU_DOWNLOAD_BUSY:
+@@ -376,7 +379,9 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
+ 			blockno++;
+ 
+ 			if (ret != bsize)
+-				err("dfu_download_block failed with %d", ret);
++				printk(KERN_ERR DRIVER_NAME
++				       ": dfu_download_block failed with %d\n",
++				       ret);
+ 			need_dfu_state = 1;
+ 			break;
+ 
+@@ -665,7 +670,8 @@ static int at76_get_hw_config(struct at76_priv *priv)
+ exit:
+ 	kfree(hwcfg);
+ 	if (ret < 0)
+-		err("Get HW Config failed (%d)", ret);
++		printk(KERN_ERR "%s: cannot get HW Config (error %d)\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -768,15 +774,14 @@ static const char *at76_get_cmd_status_string(u8 cmd_status)
+ /* Wait until the command is completed */
+ static int at76_wait_completion(struct at76_priv *priv, int cmd)
+ {
+-	struct net_device *netdev = priv->netdev;
+ 	int status = 0;
+ 	unsigned long timeout = jiffies + CMD_COMPLETION_TIMEOUT;
+ 
+ 	do {
+ 		status = at76_get_cmd_status(priv->udev, cmd);
+ 		if (status < 0) {
+-			err("%s: at76_get_cmd_status failed: %d", netdev->name,
+-			    status);
++			printk(KERN_ERR "%s: at76_get_cmd_status failed: %d\n",
++			       priv->netdev->name, status);
+ 			break;
+ 		}
+ 
+@@ -791,8 +796,9 @@ static int at76_wait_completion(struct at76_priv *priv, int cmd)
+ 
+ 		schedule_timeout_interruptible(HZ / 10);	/* 100 ms */
+ 		if (time_after(jiffies, timeout)) {
+-			err("%s: timeout waiting for cmd %d completion",
+-			    netdev->name, cmd);
++			printk(KERN_ERR
++			       "%s: completion timeout for command %d\n",
++			       priv->netdev->name, cmd);
+ 			status = -ETIMEDOUT;
+ 			break;
+ 		}
+@@ -835,8 +841,8 @@ static int at76_set_radio(struct at76_priv *priv, int enable)
+ 
+ 	ret = at76_set_card_command(priv->udev, cmd, NULL, 0);
+ 	if (ret < 0)
+-		err("%s: at76_set_card_command(CMD_RADIO) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: at76_set_card_command(%d) failed: %d\n",
++		       priv->netdev->name, cmd, ret);
+ 	else
+ 		ret = 1;
+ 
+@@ -856,8 +862,8 @@ static int at76_set_pm_mode(struct at76_priv *priv)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (pm_mode) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: set_mib (pm_mode) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -874,8 +880,8 @@ static int at76_set_associd(struct at76_priv *priv, u16 id)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (associd) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: set_mib (associd) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -892,8 +898,9 @@ static int at76_set_listen_interval(struct at76_priv *priv, u16 interval)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (listen_interval) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR
++		       "%s: set_mib (listen_interval) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -909,8 +916,8 @@ static int at76_set_preamble(struct at76_priv *priv, u8 type)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (preamble) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: set_mib (preamble) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -926,8 +933,8 @@ static int at76_set_frag(struct at76_priv *priv, u16 size)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (frag threshold) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (frag threshold) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -943,7 +950,8 @@ static int at76_set_rts(struct at76_priv *priv, u16 size)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (rts) failed: %d", priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (rts) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -959,8 +967,8 @@ static int at76_set_autorate_fallback(struct at76_priv *priv, int onoff)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (autorate fallback) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (autorate fallback) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -976,8 +984,8 @@ static int at76_add_mac_address(struct at76_priv *priv, void *addr)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (MAC_ADDR, mac_addr) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (MAC_ADDR, mac_addr) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -997,8 +1005,8 @@ static int at76_set_group_address(struct at76_priv *priv, u8 *addr, int n)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (MIB_MAC_ADDR, group_addr) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: cannot set group address: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	/* I do not know anything about the group_addr_status field... (oku) */
+ 	priv->mib_buf.type = MIB_MAC_ADDR;
+@@ -1009,8 +1017,8 @@ static int at76_set_group_address(struct at76_priv *priv, u8 *addr, int n)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (MIB_MAC_ADDR, group_addr_status) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: cannot set group address status: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	return ret;
+ }
+@@ -1029,8 +1037,8 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
+ 			   sizeof(struct mib_mac_addr));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (MAC_ADDR) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: at76_get_mib (MAC_ADDR) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1058,8 +1066,8 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
+ 			   sizeof(struct mib_mac_wep));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (MAC_WEP) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib (MAC_WEP) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1096,8 +1104,8 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
+ 			   sizeof(struct mib_mac_mgmt));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (MAC_MGMT) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: at76_get_mib (MAC_MGMT) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1135,8 +1143,8 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct mib_mac));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (MAC) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib (MAC) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1171,8 +1179,8 @@ static void at76_dump_mib_phy(struct at76_priv *priv)
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct mib_phy));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (PHY) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib (PHY) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1204,8 +1212,8 @@ static void at76_dump_mib_local(struct at76_priv *priv)
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(struct mib_local));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (LOCAL) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib (LOCAL) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1229,8 +1237,8 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
+ 	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
+ 			   sizeof(struct mib_mdomain));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib (MDOMAIN) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib (MDOMAIN) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -1259,7 +1267,8 @@ static int at76_get_current_bssid(struct at76_priv *priv)
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, mac_mgmt,
+ 			   sizeof(struct mib_mac_mgmt));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib failed: %d", priv->netdev->name, ret);
++		printk(KERN_ERR "%s: at76_get_mib failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto error;
+ 	}
+ 	memcpy(priv->bssid, mac_mgmt->current_bssid, ETH_ALEN);
+@@ -1282,8 +1291,8 @@ static int at76_get_current_channel(struct at76_priv *priv)
+ 	}
+ 	ret = at76_get_mib(priv->udev, MIB_PHY, phy, sizeof(struct mib_phy));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib(MIB_PHY) failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_get_mib(MIB_PHY) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto error;
+ 	}
+ 	priv->channel = phy->channel_id;
+@@ -1380,14 +1389,15 @@ static int at76_start_ibss(struct at76_priv *priv)
+ 	ret = at76_set_card_command(priv->udev, CMD_START_IBSS, &bss,
+ 				    sizeof(struct at76_req_ibss));
+ 	if (ret < 0) {
+-		err("%s: start_ibss failed: %d", priv->netdev->name, ret);
++		printk(KERN_ERR "%s: start_ibss failed: %d\n",
++		       priv->netdev->name, ret);
+ 		return ret;
+ 	}
+ 
+ 	ret = at76_wait_completion(priv, CMD_START_IBSS);
+ 	if (ret != CMD_STATUS_COMPLETE) {
+-		err("%s start_ibss failed to complete, %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: start_ibss failed to complete, %d\n",
++		       priv->netdev->name, ret);
+ 		return ret;
+ 	}
+ 
+@@ -1407,8 +1417,8 @@ static int at76_start_ibss(struct at76_priv *priv)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0) {
+-		err("%s: set_mib (ibss change ok) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (ibss change ok) failed: %d\n",
++		       priv->netdev->name, ret);
+ 		return ret;
+ 	}
+ 
+@@ -1518,8 +1528,8 @@ static void at76_tx_callback(struct urb *urb)
+ 			  AT76_TX_HDRLEN, at76_tx_callback, priv);
+ 	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret)
+-		err("%s: %s error in tx submit urb: %d",
+-		    priv->netdev->name, __func__, ret);
++		printk(KERN_ERR "%s: error in tx submit urb: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	kfree(mgmt_buf);
+ }
+@@ -1549,8 +1559,8 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 		/* a data/mgmt tx is already pending in the URB -
+ 		   if this is no error in some situations we must
+ 		   implement a queue or silently modify the old msg */
+-		err("%s: %s removed pending mgmt buffer %s", priv->netdev->name,
+-		    __func__, hex2str(oldbuf, 64));
++		printk(KERN_ERR "%s: removed pending mgmt buffer %s\n",
++		       priv->netdev->name, hex2str(oldbuf, 64));
+ 		kfree(oldbuf);
+ 		return 0;
+ 	}
+@@ -1559,8 +1569,8 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 	txbuf->padding = at76_calc_padding(le16_to_cpu(txbuf->wlength));
+ 
+ 	if (priv->next_mgmt_bulk)
+-		err("%s: %s URB status %d, but mgmt is pending",
+-		    priv->netdev->name, __func__, urb_status);
++		printk(KERN_ERR "%s: URB status %d, but mgmt is pending\n",
++		       priv->netdev->name, urb_status);
+ 
+ 	at76_dbg(DBG_TX_MGMT,
+ 		 "%s: tx mgmt: wlen %d tx_rate %d pad %d %s",
+@@ -1577,8 +1587,8 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 			  AT76_TX_HDRLEN, at76_tx_callback, priv);
+ 	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret)
+-		err("%s: %s error in tx submit urb: %d",
+-		    priv->netdev->name, __func__, ret);
++		printk(KERN_ERR "%s: error in tx submit urb: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	kfree(txbuf);
+ 
+@@ -3095,24 +3105,24 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 	struct ethhdr *eh = (struct ethhdr *)skb->data;
+ 
+ 	if (netif_queue_stopped(netdev)) {
+-		err("%s: %s called while netdev is stopped", netdev->name,
+-		    __func__);
++		printk(KERN_ERR "%s: %s called while netdev is stopped\n",
++		       netdev->name, __func__);
+ 		/* skip this packet */
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+ 
+ 	if (priv->tx_urb->status == -EINPROGRESS) {
+-		err("%s: %s called while priv->tx_urb is pending for tx",
+-		    netdev->name, __func__);
++		printk(KERN_ERR "%s: %s called while tx urb is pending\n",
++		       netdev->name, __func__);
+ 		/* skip this packet */
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+ 
+ 	if (skb->len < ETH_HLEN) {
+-		err("%s: %s: skb too short (%d)", priv->netdev->name,
+-		    __func__, skb->len);
++		printk(KERN_ERR "%s: %s: skb too short (%d)\n",
++		       netdev->name, __func__, skb->len);
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+@@ -3132,11 +3142,11 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 			       skb->len - ETH_HLEN);
+ 			wlen = IEEE80211_3ADDR_LEN + skb->len - ETH_HLEN;
+ 		} else {
+-			err("%s: %s: no support for non-SNAP 802.2 packets "
+-			    "(DSAP 0x%02x SSAP 0x%02x cntrl 0x%02x)",
+-			    priv->netdev->name, __func__,
+-			    skb->data[ETH_HLEN], skb->data[ETH_HLEN + 1],
+-			    skb->data[ETH_HLEN + 2]);
++			printk(KERN_ERR "%s: dropping non-SNAP 802.2 packet "
++			       "(DSAP 0x%02x SSAP 0x%02x cntrl 0x%02x)\n",
++			       priv->netdev->name, skb->data[ETH_HLEN],
++			       skb->data[ETH_HLEN + 1],
++			       skb->data[ETH_HLEN + 2]);
+ 			dev_kfree_skb(skb);
+ 			return 0;
+ 		}
+@@ -3200,11 +3210,13 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		stats->tx_errors++;
+-		err("%s: error in tx submit urb: %d", netdev->name, ret);
++		printk(KERN_ERR "%s: error in tx submit urb: %d\n",
++		       netdev->name, ret);
+ 		if (ret == -EINVAL)
+-			err("-EINVAL: urb %p urb->hcpriv %p urb->complete %p",
+-			    priv->tx_urb, priv->tx_urb->hcpriv,
+-			    priv->tx_urb->complete);
++			printk(KERN_ERR
++			       "%s: -EINVAL: tx urb %p hcpriv %p complete %p\n",
++			       priv->netdev->name, priv->tx_urb,
++			       priv->tx_urb->hcpriv, priv->tx_urb->complete);
+ 	} else {
+ 		stats->tx_bytes += skb->len;
+ 		dev_kfree_skb(skb);
+@@ -3232,15 +3244,16 @@ static int at76_submit_rx_urb(struct at76_priv *priv)
+ 	struct sk_buff *skb = priv->rx_skb;
+ 
+ 	if (!priv->rx_urb) {
+-		err("%s: priv->rx_urb is NULL", __func__);
++		printk(KERN_ERR "%s: %s: priv->rx_urb is NULL\n",
++		       priv->netdev->name, __func__);
+ 		return -EFAULT;
+ 	}
+ 
+ 	if (!skb) {
+ 		skb = dev_alloc_skb(sizeof(struct at76_rx_buffer));
+ 		if (!skb) {
+-			err("%s: unable to allocate rx skbuff.",
+-			    priv->netdev->name);
++			printk(KERN_ERR "%s: cannot allocate rx skbuff\n",
++			       priv->netdev->name);
+ 			ret = -ENOMEM;
+ 			goto exit;
+ 		}
+@@ -3259,8 +3272,8 @@ static int at76_submit_rx_urb(struct at76_priv *priv)
+ 			at76_dbg(DBG_DEVSTART,
+ 				 "usb_submit_urb returned -ENODEV");
+ 		else
+-			err("%s: rx, usb_submit_urb failed: %d",
+-			    priv->netdev->name, ret);
++			printk(KERN_ERR "%s: rx, usb_submit_urb failed: %d\n",
++			       priv->netdev->name, ret);
+ 	}
+ 
+ exit:
+@@ -3295,7 +3308,8 @@ static int at76_open(struct net_device *netdev)
+ 
+ 	ret = at76_submit_rx_urb(priv);
+ 	if (ret < 0) {
+-		err("%s: open: submit_rx_urb failed: %d", netdev->name, ret);
++		printk(KERN_ERR "%s: open: submit_rx_urb failed: %d\n",
++		       netdev->name, ret);
+ 		goto error;
+ 	}
+ 
+@@ -3383,7 +3397,8 @@ static int at76_load_external_fw(struct usb_device *udev, struct fwentry *fwe)
+ 	at76_dbg(DBG_DEVSTART, "opmode %d", op_mode);
+ 
+ 	if (op_mode != OPMODE_NORMAL_NIC_WITHOUT_FLASH) {
+-		err("unexpected opmode %d", op_mode);
++		printk(KERN_ERR DRIVER_NAME ": unexpected opmode %d\n",
++		       op_mode);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -3402,8 +3417,9 @@ static int at76_load_external_fw(struct usb_device *udev, struct fwentry *fwe)
+ 			 size, bsize, blockno);
+ 		ret = at76_load_ext_fw_block(udev, blockno, block, bsize);
+ 		if (ret != bsize) {
+-			err("loading %dth firmware block failed: %d", blockno,
+-			    ret);
++			printk(KERN_ERR DRIVER_NAME
++			       ": loading %dth firmware block failed: %d\n",
++			       blockno, ret);
+ 			goto exit;
+ 		}
+ 		buf += bsize;
+@@ -3419,7 +3435,8 @@ static int at76_load_external_fw(struct usb_device *udev, struct fwentry *fwe)
+ exit:
+ 	kfree(block);
+ 	if (ret < 0)
+-		err("Downloading external firmware failed: %d", ret);
++		printk(KERN_ERR DRIVER_NAME
++		       ": downloading external firmware failed: %d\n", ret);
+ 	return ret;
+ }
+ 
+@@ -3433,7 +3450,8 @@ static int at76_load_internal_fw(struct usb_device *udev, struct fwentry *fwe)
+ 				   need_remap ? 0 : 2000);
+ 
+ 	if (ret < 0) {
+-		err("downloading internal fw failed with %d", ret);
++		printk(KERN_ERR DRIVER_NAME
++		       ": downloading internal fw failed with %d\n", ret);
+ 		goto exit;
+ 	}
+ 
+@@ -3443,7 +3461,8 @@ static int at76_load_internal_fw(struct usb_device *udev, struct fwentry *fwe)
+ 	if (need_remap) {
+ 		ret = at76_remap(udev);
+ 		if (ret < 0) {
+-			err("sending REMAP failed with %d", ret);
++			printk(KERN_ERR DRIVER_NAME
++			       ": sending REMAP failed with %d\n", ret);
+ 			goto exit;
+ 		}
+ 	}
+@@ -3616,18 +3635,18 @@ static void at76_work_join(struct work_struct *work)
+ 
+ 	ret = at76_join_bss(priv, priv->curr_bss);
+ 	if (ret < 0) {
+-		err("%s: join_bss failed with %d", priv->netdev->name, ret);
++		printk(KERN_ERR "%s: join_bss failed with %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+ 	ret = at76_wait_completion(priv, CMD_JOIN);
+ 	if (ret != CMD_STATUS_COMPLETE) {
+ 		if (ret != CMD_STATUS_TIME_OUT)
+-			err("%s join_bss completed with %d",
+-			    priv->netdev->name, ret);
++			printk(KERN_ERR "%s: join_bss completed with %d\n",
++			       priv->netdev->name, ret);
+ 		else
+-			printk(KERN_INFO
+-			       "%s: join_bss ssid %s timed out\n",
++			printk(KERN_INFO "%s: join_bss ssid %s timed out\n",
+ 			       priv->netdev->name,
+ 			       mac2str(priv->curr_bss->bssid));
+ 
+@@ -3681,8 +3700,8 @@ static void at76_dwork_get_scan(struct work_struct *work)
+ 
+ 	status = at76_get_cmd_status(priv->udev, CMD_SCAN);
+ 	if (status < 0) {
+-		err("%s: %s: at76_get_cmd_status failed with %d",
+-		    priv->netdev->name, __func__, status);
++		printk(KERN_ERR "%s: %s: at76_get_cmd_status failed with %d\n",
++		       priv->netdev->name, __func__, status);
+ 		status = CMD_STATUS_IN_PROGRESS;
+ 		/* INFO: Hope it was a one off error - if not, scanning
+ 		   further down the line and stop this cycle */
+@@ -3695,9 +3714,9 @@ static void at76_dwork_get_scan(struct work_struct *work)
+ 	if (status != CMD_STATUS_COMPLETE) {
+ 		if ((status != CMD_STATUS_IN_PROGRESS) &&
+ 		    (status != CMD_STATUS_IDLE))
+-			err("%s: %s: Bad scan status: %s",
+-			    priv->netdev->name, __func__,
+-			    at76_get_cmd_status_string(status));
++			printk(KERN_ERR "%s: %s: Bad scan status: %s\n",
++			       priv->netdev->name, __func__,
++			       at76_get_cmd_status_string(status));
+ 
+ 		/* the first cmd status after scan start is always a IDLE ->
+ 		   start the timer to poll again until COMPLETED */
+@@ -3715,11 +3734,12 @@ static void at76_dwork_get_scan(struct work_struct *work)
+ 	if (priv->scan_need_any) {
+ 		ret = at76_start_scan(priv, 0);
+ 		if (ret < 0)
+-			err("%s: %s: start_scan (ANY) failed with %d",
+-			    priv->netdev->name, __func__, ret);
++			printk(KERN_ERR
++			       "%s: %s: start_scan (ANY) failed with %d\n",
++			       priv->netdev->name, __func__, ret);
+ 		at76_dbg(DBG_MGMT_TIMER,
+-			 "%s:%d: starting mgmt_timer for %d ticks",
+-			 __func__, __LINE__, SCAN_POLL_INTERVAL);
++			 "%s:%d: starting mgmt_timer for %d ticks", __func__,
++			 __LINE__, SCAN_POLL_INTERVAL);
+ 		schedule_delayed_work(&priv->dwork_get_scan,
+ 				      SCAN_POLL_INTERVAL);
+ 		priv->scan_need_any = 0;
+@@ -3823,7 +3843,6 @@ static void at76_work_new_bss(struct work_struct *work)
+ 	struct at76_priv *priv = container_of(work, struct at76_priv,
+ 					      work_new_bss);
+ 	int ret;
+-	struct net_device *netdev = priv->netdev;
+ 	struct mib_mac_mgmt mac_mgmt;
+ 
+ 	mutex_lock(&priv->mtx);
+@@ -3831,7 +3850,8 @@ static void at76_work_new_bss(struct work_struct *work)
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, &mac_mgmt,
+ 			   sizeof(struct mib_mac_mgmt));
+ 	if (ret < 0) {
+-		err("%s: at76_get_mib failed: %d", netdev->name, ret);
++		printk(KERN_ERR "%s: at76_get_mib failed: %d\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 
+@@ -3848,8 +3868,8 @@ static void at76_work_new_bss(struct work_struct *work)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (ibss change ok) failed: %d", netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: set_mib (ibss change ok) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ exit:
+ 	mutex_unlock(&priv->mtx);
+@@ -3928,8 +3948,8 @@ static int at76_startup_device(struct at76_priv *priv)
+ 	ret = at76_set_card_command(priv->udev, CMD_STARTUP, &priv->card_config,
+ 				    sizeof(struct at76_card_config));
+ 	if (ret < 0) {
+-		err("%s: at76_set_card_command failed: %d", priv->netdev->name,
+-		    ret);
++		printk(KERN_ERR "%s: at76_set_card_command failed: %d\n",
++		       priv->netdev->name, ret);
+ 		return ret;
+ 	}
+ 
+@@ -4024,8 +4044,8 @@ static void at76_work_start_scan(struct work_struct *work)
+ 	ret = at76_start_scan(priv, 1);
+ 
+ 	if (ret < 0)
+-		err("%s: %s: start_scan failed with %d",
+-		    priv->netdev->name, __func__, ret);
++		printk(KERN_ERR "%s: %s: start_scan failed with %d\n",
++		       priv->netdev->name, __func__, ret);
+ 	else {
+ 		at76_dbg(DBG_MGMT_TIMER,
+ 			 "%s:%d: starting mgmt_timer for %d ticks",
+@@ -4054,8 +4074,8 @@ static void at76_work_set_promisc(struct work_struct *work)
+ 
+ 	ret = at76_set_mib(priv, &priv->mib_buf);
+ 	if (ret < 0)
+-		err("%s: set_mib (promiscuous_mode) failed: %d",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "%s: set_mib (promiscuous_mode) failed: %d\n",
++		       priv->netdev->name, ret);
+ 
+ 	mutex_unlock(&priv->mtx);
+ }
+@@ -4898,8 +4918,8 @@ static void at76_rx_monitor_mode(struct at76_priv *priv)
+ 
+ 	skb = dev_alloc_skb(skblen);
+ 	if (!skb) {
+-		err("%s: MONITOR MODE: dev_alloc_skb for radiotap header "
+-		    "returned NULL", priv->netdev->name);
++		printk(KERN_ERR "%s: MONITOR MODE: dev_alloc_skb for radiotap "
++		       "header returned NULL\n", priv->netdev->name);
+ 		return;
+ 	}
+ 
+@@ -5051,9 +5071,11 @@ static struct fwentry *at76_load_firmware(struct usb_device *udev,
+ 	at76_dbg(DBG_FW, "downloading firmware %s", fwe->fwname);
+ 	ret = request_firmware(&fwe->fw, fwe->fwname, &udev->dev);
+ 	if (ret < 0) {
+-		err("firmware %s not found.", fwe->fwname);
+-		err("You may need to download the firmware from "
+-		    "http://developer.berlios.de/projects/at76c503a/");
++		printk(KERN_ERR DRIVER_NAME ": firmware %s not found!\n",
++		       fwe->fwname);
++		printk(KERN_ERR DRIVER_NAME
++		       ": you may need to download the firmware from "
++		       "http://developer.berlios.de/projects/at76c503a/");
+ 		goto exit;
+ 	}
+ 
+@@ -5061,15 +5083,17 @@ static struct fwentry *at76_load_firmware(struct usb_device *udev,
+ 	fwh = (struct at76_fw_header *)(fwe->fw->data);
+ 
+ 	if (fwe->fw->size <= sizeof(*fwh)) {
+-		err("firmware is too short (0x%zx)", fwe->fw->size);
++		printk(KERN_ERR DRIVER_NAME ": firmware is too short (0x%zx)\n",
++		       fwe->fw->size);
+ 		goto exit;
+ 	}
+ 
+ 	/* CRC currently not checked */
+ 	fwe->board_type = le32_to_cpu(fwh->board_type);
+ 	if (fwe->board_type != board_type) {
+-		err("board type mismatch, requested %u, got %u", board_type,
+-		    fwe->board_type);
++		printk(KERN_ERR DRIVER_NAME
++		       ": board type mismatch, requested %u, got %u\n",
++		       board_type, fwe->board_type);
+ 		goto exit;
+ 	}
+ 
+@@ -5112,7 +5136,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ 	/* allocate memory for our device state and initialize it */
+ 	netdev = alloc_etherdev(sizeof(struct at76_priv));
+ 	if (!netdev) {
+-		err("out of memory");
++		printk(KERN_ERR DRIVER_NAME ": out of memory\n");
+ 		return NULL;
+ 	}
+ 
+@@ -5241,7 +5265,8 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	/* MAC address */
+ 	ret = at76_get_hw_config(priv);
+ 	if (ret < 0) {
+-		err("could not get MAC address");
++		printk(KERN_ERR "%s: cannot get MAC address\n",
++		       priv->netdev->name);
+ 		goto exit;
+ 	}
+ 
+@@ -5283,8 +5308,8 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 
+ 	ret = register_netdev(priv->netdev);
+ 	if (ret) {
+-		err("unable to register netdevice %s (status %d)!",
+-		    priv->netdev->name, ret);
++		printk(KERN_ERR "cannot register netdevice %s (status %d)!\n",
++		       priv->netdev->name, ret);
+ 		goto exit;
+ 	}
+ 	priv->netdev_registered = 1;
+@@ -5387,8 +5412,8 @@ static int at76_probe(struct usb_interface *interface,
+ 	   we get 204 with 2.4.23, Fiberline FL-WL240u (505A+RFMD2958) ??? */
+ 
+ 	if (op_mode == OPMODE_HW_CONFIG_MODE) {
+-		err("cannot handle a device in HW_CONFIG_MODE (opmode %d)",
+-		    op_mode);
++		printk(KERN_ERR DRIVER_NAME
++		       ": cannot handle a device in HW_CONFIG_MODE\n");
+ 		ret = -EBUSY;
+ 		goto error;
+ 	}
+@@ -5399,7 +5424,9 @@ static int at76_probe(struct usb_interface *interface,
+ 		at76_dbg(DBG_DEVSTART, "downloading internal firmware");
+ 		ret = at76_load_internal_fw(udev, fwe);
+ 		if (ret < 0) {
+-			err("error %d downloading internal firmware", ret);
++			printk(KERN_ERR DRIVER_NAME
++			       ": error %d downloading internal firmware\n",
++			       ret);
+ 			goto error;
+ 		}
+ 		usb_put_dev(udev);
+@@ -5433,7 +5460,8 @@ static int at76_probe(struct usb_interface *interface,
+ 		/* Re-check firmware version */
+ 		ret = at76_get_mib(udev, MIB_FW_VERSION, &fwv, sizeof(fwv));
+ 		if (ret < 0) {
+-			err("error %d getting firmware version", ret);
++			printk(KERN_ERR DRIVER_NAME
++			       ": error %d getting firmware version\n", ret);
+ 			goto error;
+ 		}
+ 
+@@ -5509,7 +5537,8 @@ static int __init at76_mod_init(void)
+ 	/* register this driver with the USB subsystem */
+ 	result = usb_register(&at76_driver);
+ 	if (result < 0)
+-		err("usb_register failed (status %d)", result);
++		printk(KERN_ERR DRIVER_NAME
++		       ": usb_register failed (status %d)\n", result);
+ 
+ 	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
+ 	return result;
