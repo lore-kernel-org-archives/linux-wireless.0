@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbXITNuk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 09:50:40 -0400
-Subject: wext 64-bit: network manager and wpa_supplicant
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: Jouni Malinen <j@w1.fi>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wqfxczl/id/Rl9mtKMRn"
-Date: Thu, 20 Sep 2007 14:48:46 +0200
-Message-Id: <1190292526.18521.52.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:39822 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751276AbXI3SkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 14:40:16 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 15/26] at76_usb: Clean reserved tx area for mgmt frames like  it's done for data
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Sep 2007 14:40:15 -0400
+Message-ID: <20070930184014.23921.7327.stgit@tt.roinet.com>
+In-Reply-To: <20070930183409.23921.97762.stgit@tt.roinet.com>
+References: <20070930183409.23921.97762.stgit@tt.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
---=-Wqfxczl/id/Rl9mtKMRn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ drivers/net/wireless/at76_usb.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Ahrg. So I was complaining about NM not displaying any networks when
-that umlaut-network I talked about earlier was present. But all that was
-just wrong, the real problem seems to be that NM doesn't work on 64-bit
-platforms. Is there any fix for it? It really should be going into a
-0.6.5.1 version or something so distributions will ship it.
 
-Same seems to go for wpa_supplicant, Debian is shipping 0.6.0 which only
-triggers this in the kernel log:
-
-[  787.877417] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-[  787.877763] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-[  787.877817] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-[  795.264145] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-[  795.264243] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-[  795.264291] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32=
-){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-
-And even the wpa_supplicant git version still seems to parse everything
-itself without any 64-bit workarounds as far as I can tell. I keep
-building wpa_supplicant for 64-bit just to test... Any chance to finally
-get fixes into the stable versions distros are shipping?
-
-Thanks,
-johannes
-
---=-Wqfxczl/id/Rl9mtKMRn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG8mwu/ETPhpq3jKURAkkVAKC09n2pquVrw2Ns9PYG5ZOX3rL1wgCdFupQ
-T2sVSyyLTzdUxrVq8Clk++U=
-=8sk+
------END PGP SIGNATURE-----
-
---=-Wqfxczl/id/Rl9mtKMRn--
-
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 0c9252e..1488a60 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -1529,6 +1529,7 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 
+ 	txbuf->tx_rate = TX_RATE_1MBIT;
+ 	txbuf->padding = at76_calc_padding(le16_to_cpu(txbuf->wlength));
++	memset(txbuf->reserved, 0, sizeof(txbuf->reserved));
+ 
+ 	if (priv->next_mgmt_bulk)
+ 		printk(KERN_ERR "%s: URB status %d, but mgmt is pending\n",
+@@ -3144,7 +3145,7 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 	   seems to choose the highest rate set with CMD_STARTUP in
+ 	   basic_rate_set replacing this value */
+ 
+-	memset(tx_buffer->reserved, 0, 4);
++	memset(tx_buffer->reserved, 0, sizeof(tx_buffer->reserved));
+ 
+ 	tx_buffer->padding = at76_calc_padding(wlen);
+ 	submit_len = wlen + AT76_TX_HDRLEN + tx_buffer->padding;
