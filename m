@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.freeshell.ORG ([192.94.73.19]:65149 "EHLO sdf.lonestar.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752801AbXIAUHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 16:07:33 -0400
-Date: Sat, 1 Sep 2007 20:07:15 +0000
-From: Jacob Meuser <jakemsr@sdf.lonestar.org>
-To: Jeff Garzik <jeff@garzik.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55762 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756460AbXI3OnQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 10:43:16 -0400
+Subject: Re: [PATCH] iw: misc minor updates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mike Kershaw <dragorn@kismetwireless.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k - License clarification
-Message-ID: <20070901200714.GA23642@SDF.LONESTAR.ORG>
-References: <20070901191405.GB10469@SDF.LONESTAR.ORG> <46D9BFC2.4080707@garzik.org>
+In-Reply-To: <20070929232006.GQ12844@drd1813.lan>
+References: <20070929232006.GQ12844@drd1813.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DfjzV51aWS2DwE1vxWkU"
+Date: Sun, 30 Sep 2007 16:44:40 +0200
+Message-Id: <1191163480.22960.168.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46D9BFC2.4080707@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 01, 2007 at 03:38:42PM -0400, Jeff Garzik wrote:
-> Was it slashdot or Theo's rant that made all the OpenBSD fanboys like 
-> you come out of the woodwork?
 
-?
+--=-DfjzV51aWS2DwE1vxWkU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have made contributions to GNU projects, and supplied large patches
-and new files to GPL'd projects, always keeping the GPL license, not for
-any reason other than respect for the wishes of the original author.
+On Sat, 2007-09-29 at 19:20 -0400, Mike Kershaw wrote:
+> Miscellaneous minor updates:
+> 	Fixed char *phydev init in main()
+> 	Whitespace cleanups
+> 	Minimal help
+> 	Aliased 'master' to 'ap' in nl modes list
 
-Earlier this year, I went out of my way to a NetBSD developer to
-change the license of a file he wrote (that added NetBSD/OpenBSD
-support) from BSD to GPL so it could be included in a GNU project,
-because the project leader claimed the BSD license was incompatible
-with GNU projects.  The NetBSD developer agreed to the change, but I
-still have not seen that file added to the project.
+Thanks, applied with some small fixes. It'd help if you could inline
+patches and make the description just in the mail :)
 
-My interest in this matter goes far beyond my interest as an OpenBSD
-developer.
+johannes
 
--- 
-jakemsr@sdf.lonestar.org
-SDF Public Access UNIX System - http://sdf.lonestar.org
+--=-DfjzV51aWS2DwE1vxWkU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARv+2V6Vg1VMiehFYAQLwVQ/+LaNTL3ZVHraSVMMZoBapEYC+j14JKYys
+Jze6Xdv68CiSkGNdoSlJl/RuBgLlP5svICyAixNVa4K7k9G08m9o5A3e6x6Fr1Km
+UQpCXY/TvOCceCtcD+pkUIfA2ri+tPj8yjgiIxZ1LRCpvNnIZ12Gf92KpFYAaLl7
+FsU6cO1gXOwIYPCdWQMTke7kJswSkcG6BxbZsjudRdc+OYv9NzSFDMIlRzHrwQNa
+fPMl0DaCSL1FR/PPoGiF6WMYv7D5uUXtqHpRBfifh50py5iNoGJl6lZCZVmMnaSg
+p0MDB9kSVD9IyPoAvXmClj4PH2I3xi+tf3RZYla7/9j/b7hzKGh0hp1SRCMBFzcO
+AptLm43BQYfL+9Ry67lN6ydmRRdf0y/gw/xmY89ZYSE0ZJ8jhEv1ZPgUxN0Ny9Xl
+3Wc/RMHzNyliUwi+4dUqTrSAuWkmiwh093hy1No1FhJ0h6GoXBoW9FjPuqBIvGWM
+6ef+bj/wNbTG5AdoiT3V34J2B3latVY51MS3uU3zNjfdbSZ8+JgnNETBjdX7dW7X
+H/I3ODGmBFwm7LTegcGWspG+cnxAiL1ldhK/VwNEM4Z6qWY828pp7PHr7oK6rN0O
+IyiQ+HU1wc9+CfVGMEoMCDcA406BzXu9K+veDGAoG8uK/TorftftoAl7WJbTtxQq
+8rTekKB9ODE=
+=vaok
+-----END PGP SIGNATURE-----
+
+--=-DfjzV51aWS2DwE1vxWkU--
+
