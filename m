@@ -1,98 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:53558 "EHLO ozlabs.org"
+Received: from madara.hpl.hp.com ([192.6.19.124]:56887 "EHLO madara.hpl.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561AbXJOFlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 01:41:49 -0400
-Date: Mon, 15 Oct 2007 00:38:01 -0500
-From: Anton Blanchard <anton@samba.org>
-To: yi.zhu@intel.com, jketreno@linux.intel.com
-Cc: arjan@linux.intel.com, linux-kernel@vger.kernel.org,
+	id S1751861AbXJASUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2007 14:20:16 -0400
+Date: Mon, 1 Oct 2007 11:18:17 -0700
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH] jiffies_round -> jiffies_round_relative conversion -
-	ipw2100/ipw2200
-Message-ID: <20071015053801.GB3257@kryten> (sfid-20071015_064153_942538_192A8001)
-References: <20071015053428.GA3257@kryten>
+Subject: Re: wext 64-bit: network manager and wpa_supplicant
+Message-ID: <20071001181817.GA27179@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1190292526.18521.52.camel@johannes.berg> <20070920165545.GA29452@bougret.hpl.hp.com> <1190307669.18521.94.camel@johannes.berg> <20070920205602.GA15373@bougret.hpl.hp.com> <1191248290.4490.21.camel@xo-3E-67-34.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071015053428.GA3257@kryten>
+In-Reply-To: <1191248290.4490.21.camel@xo-3E-67-34.localdomain>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 01, 2007 at 10:18:10AM -0400, Dan Williams wrote:
+> On Thu, 2007-09-20 at 13:56 -0700, Jean Tourrilhes wrote:
+> > 
+> > 	Well, as it happens, 0.6.5 uses wpa_supplicant for the scan if
+> > it's available (more below).
+> 
+> This is mainly to ensure that wpa_supplicant and NM scan in a
+> coordinated manner.  Otherwise you get into a situation where
+> wpa_supplicant scans, and NM's scan timer happens to fall right after
+> wpa_supplicant's, and the driver gets two back-to-back scan requests
+> (maybe the second one even overlaps the first).  Makes drivers confused.
 
-When rounding a relative timeout we need to use round_jiffies_relative(). 
+	Yes, I fully agree with this decision, it look to me the right
+way to do it.
 
-Signed-off-by: Anton Blanchard <anton@samba.org>
----
+> > 	I'm currently stuck because I don't have a box handy to try
+> > NetworkManager on, most of my boxes are without all the Gnome
+> > overhead. I'll try to fix that, but it may take a few days.
+> > 	Meanwhile, I made a few patch just for you for NetworkManager
+> > 0.6.5. I could not even try to compile it (./configure dependancy), so
+> > beware.
+> 
+> I think you already did the patch and sent it, and it was committed on
+> March 2, 2007 to NM CVS.  Unfortunately, I don't think we've cut a
+> release of NM "stable" (which would be 0.6.5) for a long time, which is
+> probably quite overdue.  Most distros should be shipping a 0.6.5
+> snapshot at least.
 
-diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
-index 2d46a16..739d060 100644
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -1769,7 +1769,7 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
- 		if (priv->stop_rf_kill) {
- 			priv->stop_rf_kill = 0;
- 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
--					   round_jiffies(HZ));
-+					   round_jiffies_relative(HZ));
- 		}
- 
- 		deferred = 1;
-@@ -2102,7 +2102,8 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
- 	/* Make sure the RF Kill check timer is running */
- 	priv->stop_rf_kill = 0;
- 	cancel_delayed_work(&priv->rf_kill);
--	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
-+	queue_delayed_work(priv->workqueue, &priv->rf_kill,
-+			   round_jiffies_relative(HZ));
- }
- 
- static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
-@@ -4237,7 +4238,7 @@ static int ipw_radio_kill_sw(struct ipw2100_priv *priv, int disable_radio)
- 			priv->stop_rf_kill = 0;
- 			cancel_delayed_work(&priv->rf_kill);
- 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
--					   round_jiffies(HZ));
-+					   round_jiffies_relative(HZ));
- 		} else
- 			schedule_reset(priv);
- 	}
-@@ -5975,7 +5976,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
- 		IPW_DEBUG_RF_KILL("RF Kill active, rescheduling GPIO check\n");
- 		if (!priv->stop_rf_kill)
- 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
--					   round_jiffies(HZ));
-+					   round_jiffies_relative(HZ));
- 		goto exit_unlock;
- 	}
- 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index feb8fcb..88b0f81 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -1753,7 +1753,7 @@ static int ipw_radio_kill_sw(struct ipw_priv *priv, int disable_radio)
- 			/* Make sure the RF_KILL check timer is running */
- 			cancel_delayed_work(&priv->rf_kill);
- 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
--					   round_jiffies(2 * HZ));
-+					   round_jiffies_relative(2 * HZ));
- 		} else
- 			queue_work(priv->workqueue, &priv->up);
- 	}
-@@ -4364,7 +4364,7 @@ static void handle_scan_event(struct ipw_priv *priv)
- 	if (!priv->user_requested_scan) {
- 		if (!delayed_work_pending(&priv->scan_event))
- 			queue_delayed_work(priv->workqueue, &priv->scan_event,
--					 round_jiffies(msecs_to_jiffies(4000)));
-+					 round_jiffies_relative(msecs_to_jiffies(4000)));
- 	} else {
- 		union iwreq_data wrqu;
- 
-@@ -4728,7 +4728,7 @@ static void ipw_rx_notification(struct ipw_priv *priv,
- 				 && priv->status & STATUS_ASSOCIATED)
- 				queue_delayed_work(priv->workqueue,
- 						   &priv->request_scan,
--						   round_jiffies(HZ));
-+						   round_jiffies_relative(HZ));
- 
- 			/* Send an empty event to user space.
- 			 * We don't send the received data on the event because
+	The patch last march was for the "scanning" code. The new
+patch is for the "event" code. Yes, last march, I totally forgot about
+the event code, sorry about that.
+	From my casual glance around, most distro ship what they call
+"0.6.5". The fact that it's not a release means that all those "0.6.5"
+are probably not the exact same version, as they are most likely at
+different CVS time. This looks to me like the receipe for some
+confusion. I personally don't know which "0.6.5" are good and which
+are not, I assume most are good, but without looking at the actual
+code, who knows...
+	In other words, if you eventually do a release, you may want
+to call it "0.6.6".
+
+> Dan
+
+	Have fun...
+
+	Jean
