@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:41983 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbXJ3Prv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2007 11:47:51 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1913880rvb
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 08:47:50 -0700 (PDT)
-Message-ID: <43e72e890710300847l25208498l5399953611d902c2@mail.gmail.com> (sfid-20071030_154757_915088_8E508843)
-Date: Tue, 30 Oct 2007 11:47:47 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [ath5k-devel] MadWifi HAL register dumps - help reverse engineering
-Cc: "bruno randolf" <bruno@thinktube.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	madwifi-devel <madwifi-devel@lists.sourceforge.net>
-In-Reply-To: <1193757169.29187.19.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890710191255k72c7176fx10592dcfc02cb287@mail.gmail.com>
-	 <200710301749.32236.bruno@thinktube.com>
-	 <1193757169.29187.19.camel@localhost.localdomain>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:43224 "EHLO
+	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbXJAAZS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2007 20:25:18 -0400
+Date: Mon, 1 Oct 2007 02:24:38 +0200 (MEST)
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Richard Knutsson <ricknu-0@student.ltu.se>
+Message-Id: <20071001002440.15772.83520.sendpatchset@thinktank.campus.ltu.se>
+Subject: [PATCH] softmac: Fix compiler-warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/07, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2007-10-30 at 17:49 +0900, bruno randolf wrote:
-> > hi luis!
-> >
-> > adding the following patch lets us log the calling function names as well!
-> > which makes it much easier to make sense to the traces :)
-> >
-> > and i added ALQ=1 MMIOTRACE=1 and the objdump command to the Makefile as well
-> > to avoid forgetting that.
-> >
-> > cheers,
-> > bruno
-> >
-> > this time the patch is included, sorry...
-> >
-> > diff -Nurb madwifi-trace.luis/ath_hal/ah_os.c madwifi-trace/ath_hal/ah_os.c
-> > --- madwifi-trace.luis/ath_hal/ah_os.c        2007-10-30 17:44:48.000000000 +0900
-> > +++ madwifi-trace/ath_hal/ah_os.c     2007-10-30 17:39:52.000000000 +0900
-> > @@ -152,6 +152,7 @@
-> >   * useful for debugging and figuring out, which hal function sets which
-> >   * registers */
-> >  char *ath_hal_func = NULL;
-> > +EXPORT_SYMBOL(ath_hal_func);
->
-> Any particular reason this is not EXPORT_SYMBOL_GPL?
+  CC      net/ieee80211/softmac/ieee80211softmac_wx.o
+/home/kernel/src/net/ieee80211/softmac/ieee80211softmac_wx.c: In functi=
+on =E2=80=98ieee80211softmac_wx_set_essid=E2=80=99:
+/home/kernel/src/net/ieee80211/softmac/ieee80211softmac_wx.c:117: warni=
+ng: label =E2=80=98out=E2=80=99 defined but not used
 
-Technically Dual GPL/3-clause BSD license code is functionally
-equivalent to 3-clause-BSD.
+due to commit: efe870f9f4ad74410a18ecbf0d9ba7c14b50a0fb. Removing the l=
+abel.
 
-  Luis
+Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
+---
+Compile-tested
+
+
+diff --git a/net/ieee80211/softmac/ieee80211softmac_wx.c b/net/ieee8021=
+1/softmac/ieee80211softmac_wx.c
+index 442b987..5742dc8 100644
+--- a/net/ieee80211/softmac/ieee80211softmac_wx.c
++++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
+@@ -114,7 +114,7 @@ check_assoc_again:
+ 	sm->associnfo.associating =3D 1;
+ 	/* queue lower level code to do work (if necessary) */
+ 	schedule_delayed_work(&sm->associnfo.work, 0);
+-out:
++
+ 	mutex_unlock(&sm->associnfo.mutex);
+=20
+ 	return 0;
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
