@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from john.hrz.tu-chemnitz.de ([134.109.132.2]:56214 "EHLO
-	john.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbXJ1UQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 16:16:33 -0400
-Received: from p57aa56fb.dip.t-dialin.net ([87.170.86.251] helo=[192.168.1.8])
-	by john.hrz.tu-chemnitz.de with esmtpa (Exim 4.66)
-	(envelope-from <jenslang@yahoo.de>)
-	id 1ImEYi-00038Q-HP
-	for linux-wireless@vger.kernel.org; Sun, 28 Oct 2007 21:16:32 +0100
-Message-ID: <4724EE1F.1020704@yahoo.de> (sfid-20071028_201636_935427_4A20D32E)
-Date: Sun, 28 Oct 2007 21:16:31 +0100
-From: Jens Lang <jenslang@yahoo.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4824 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752646AbXJAVIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2007 17:08:13 -0400
+Date: Mon, 1 Oct 2007 16:47:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: John Pierce <john.j35@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Belkin Wireless G USB
+Message-ID: <20071001204756.GD5224@tuxdriver.com>
+References: <aa73b9a0709281310w6030e0f5g4e3195cf800b5e7d@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: bcm43xx: 100 % CPU load due to ksoftirqd
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <aa73b9a0709281310w6030e0f5g4e3195cf800b5e7d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Sep 28, 2007 at 03:10:34PM -0500, John Pierce wrote:
 
-I recently bought a Compaq 6715s laptop with a Broadcom 4312 wifi chip.
-Unfortunately it doesn't work with my Ubuntu Gutsy Gibbon.
+> This is the output of dmesg immediately after inserting the usb adapter.
+> 
+> usb 2-2: new high speed USB device using ehci_hcd and address 7
+> usb 2-2: configuration #1 chosen from 1 choice
+> usb 2-2: reset high speed USB device using ehci_hcd and address 7
+> wmaster0: Failed to select rate control algorithm
+> wmaster0: Failed to initialize rate control algorithm
+> usb 2-2: reset high speed USB device using ehci_hcd and address 7
+> zd1211rw_mac80211: probe of 2-2:1.0 failed with error -2
+> usbcore: registered new interface driver zd1211rw_mac80211
 
-When the module is loaded it constantly produces the error
-bcm43xx_irq_xmit_error. The ksoftirqd uses 100 % of my CPU time. When I
-remove the module from the kernel the computer freezes. Before that it
-produced the following output:
+You may want to move this to bugzilla.redhat.com.
 
-Call Trace:
-<IRQ> [<ffffffff8023b5b9>] __do_softirq+0x69/0xe0
-[<ffffffff8020b01c>] call_softirq+0x1c/0x30
-<EOI> [<ffffffff8023b3bb>] local_bh_enabl +0x5b/0xa0
-[<ffffffff803ae47b>] lock_sock_nested+0xcb/0xe0
-[...] sys_sendto+0x146/0x1b0
-[...] sock_fasync+0x82/0x10a0
-[...] sock_close+0x15/0x40
-      __fput+0xc10x1e0
-filp_close+0x54/0x90
-sys_close+0x96/0xf0
-system_call+0x7e/083
+As a first check, did you install the zd1211-firmware package?
 
-Code: 48 8b 2b 90 0f ba 08 01 19 c0 74 c7 fa 65 48 8b 04
-
-RIP [<ffffffff8023b6a8<] tasklet_action+0x58/0xb0
- RSP <ffffffff805d7f68>
-
-Unfortunately I cannot provide a patch but maybe this will help you
-further improving the driver.
-
-
-Jens
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
