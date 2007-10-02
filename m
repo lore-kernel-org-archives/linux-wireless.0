@@ -1,35 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40655
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755794AbXJRN7F (ORCPT
+Received: from serenity.mcc.ac.uk ([130.88.200.93]:63578 "EHLO
+	serenity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753991AbXJBVDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 09:59:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andreas Schwab <schwab@suse.de>
-Subject: Re: b43: cannot set channel to 12
-Date: Thu, 18 Oct 2007 15:58:39 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <jey7e1leh0.fsf@sykes.suse.de>
-In-Reply-To: <jey7e1leh0.fsf@sykes.suse.de>
+	Tue, 2 Oct 2007 17:03:25 -0400
+Message-ID: <4702B1F7.3040100@gentoo.org> (sfid-20071002_220328_824993_D72002E5)
+Date: Tue, 02 Oct 2007 22:02:47 +0100
+From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710181558.39600.mb@bu3sch.de> (sfid-20071018_145910_232507_255A27E3)
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: What happened with z1211?
+References: <200710021147.55506.mb@bu3sch.de> <470272CE.60405@gentoo.org> <200710022239.09217.mb@bu3sch.de>
+In-Reply-To: <200710022239.09217.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 17 October 2007 21:37:31 Andreas Schwab wrote:
-> The b43 driver in current wireless-2.6 cannot set the channel to 12:
-> 
-> # iwconfig wlan0 chan 12
-> Error for wireless request "Set Frequency" (8B04) :
->     SET failed on device wlan0 ; Invalid argument
-> 
-> iwlist still lists the APs on channels 12 and 13.
-> 
-> This is a 4318 in a iBook G4, using firmware version 410.2160.
+Michael Buesch wrote:
+> When is that port going to happen then?
+> I mean, the drop of z1211 is a huge regression for me, as I am
+> using it in production environment.
 
-That seems to be a mac80211 regulatory problem, not a b43 bug.
+We're aiming for 2.6.25. Right now zd1211rw-mac80211 does not really 
+provide any big user advantages over zd1211rw so you should be able to 
+use the existing driver until then.
 
--- 
-Greetings Michael.
+Daniel
+
