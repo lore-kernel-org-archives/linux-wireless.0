@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:36358 "EHLO
-	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755614AbXJCCuw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 22:50:52 -0400
-Date: Tue, 2 Oct 2007 19:50:19 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernelspace --> Userspace MLME move and related items
-Message-ID: <20071003025019.GF933@jm.kir.nu> (sfid-20071003_035058_550541_D2535931)
-References: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com> <1191066581.22960.55.camel@johannes.berg> <20070929161740.GB6130@tuxdriver.com> <1191141815.22960.134.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1191141815.22960.134.camel@johannes.berg>
+Received: from DSL022.labridge.com ([206.117.136.22]:3205 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754006AbXJBT6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2007 15:58:04 -0400
+Subject: [PATCH] - trivial - Correct printk with PFX before KERN_ in
+	drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <st3@riseup.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 02 Oct 2007 12:57:11 -0700
+Message-Id: <1191355031.29929.2.camel@localhost> (sfid-20071002_205812_741565_5881E4EC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 30, 2007 at 10:43:35AM +0200, Johannes Berg wrote:
+Signed-off-by: Joe Perches <joe@perches.com>
 
-> > >  * 802.11r (fast roaming)
-> 
-> Already has a (partial?) implementation in wpa_supplicant.
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+index d6d9413..6acfdc4 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+@@ -444,7 +444,7 @@ static int bcm43xx_wx_set_xmitpower(struct net_device *net_dev,
+ 	u16 maxpower;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM) {
+-		printk(PFX KERN_ERR "TX power not in dBm.\n");
++		printk(KERN_ERR PFX "TX power not in dBm.\n");
+ 		return -EOPNOTSUPP;
+ 	}
+ 
 
-The current implementation is more or less complete for all the required
-functionality. I just updated it for the latest draft (D8.0) that was
-released last week. This includes code for adding new IEs to
-authentication and association frames and also sending/receiving of
-action frames.
 
-> > >  * 802.11w (encrypted management)
-> 
-> All the key handling is in wpa_supplicant so we will not be able to
-> support it in the kernel w/o wpa_supplicant and I don't see a good way
-> to do it in the kernel either (not too familiar with the spec though),
-> and wpa_supplicant already has a (partial?) implementation.
-
-wpa_supplicant has implementation for negotiating the keys and
-configuring them to the driver. It does not implement
-encryption/decryption of the management frames, though, and I do not
-have plans on doing that in user space either. 802.11w actually uses the
-same PTK than data frames for unicast management frames, so the kernel
-side (or firmware/hardware) CCMP should be used for this. As far as
-broadcast/multicast management frames are concerned, they will need a
-new encryption (or well, actually it is not encryption, just integrity
-protection) algorithm in the kernel. The key (IGTK) comes from user
-space in the same way as GTK for data frames.
-
-In general, 802.11w has quite minimal requirements for the MLME parts
-and the key negotiation (part of 4-way handshake) is completely separate
-functionality from the encryption/decryption/integrity protection of
-management frames.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
