@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42579 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754151AbXJYNyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 09:54:46 -0400
-Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
-	network
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, dragoran <drago01@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1193318969.6092.19.camel@johannes.berg>
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-	 <1193127280.3069.261.camel@debian.sh.intel.com>
-	 <1193148453.8648.20.camel@localhost.localdomain>
-	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>
-	 <1193238423.2557.41.camel@localhost.localdomain>
-	 <1193318969.6092.19.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 25 Oct 2007 09:49:00 -0400
-Message-Id: <1193320140.5542.11.camel@localhost.localdomain> (sfid-20071025_145449_671717_22ED9F42)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbXJAX7m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2007 19:59:42 -0400
+Subject: Re: mac80211 hostapd state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200710020151.56539.mb@bu3sch.de> (sfid-20071002_005512_326306_3C3BB318)
+References: <200710020151.56539.mb@bu3sch.de>
+	 (sfid-20071002_005512_326306_3C3BB318)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YWkaqRiig+dmBHsBXabN"
+Date: Tue, 02 Oct 2007 02:01:13 +0200
+Message-Id: <1191283273.16022.5.camel@johannes.berg> (sfid-20071002_005944_453389_FCAA3A50)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-10-25 at 15:29 +0200, Johannes Berg wrote:
-> On Wed, 2007-10-24 at 11:07 -0400, Dan Williams wrote:
-> 
-> > Could you educate me a bit more about the problem if you've got a bit of
-> > time?
-> 
-> As much as I've understood, the problem comes from the privacy mismatch
-> function returning non-zero. This means that wpa_supplicant doesn't set
-> IW_AUTH_KEY_MGMT_802_1X because if you check the function then the
-> key_manegement_enabled variable is checked first thing.
-> 
-> > A normal Dynamic WEP configuration should result in wpa_supplicant
-> > sending IW_AUTH_KEY_MGMT with IW_AUTH_KEY_MGMT_802_1X since ieee8021x is
-> > specified in the wpa_supplicant config.  Is this not happening here?  I
-> > seem to be seeing that wpa_supplicant _should_ be setting key
-> > management, and mac80211 _should_ be returning 0 from
-> > ieee80211_privacy_mismatch() because key management has been set, and
-> > therefore this should succeed...
-> 
-> Yes, it seems that wpa_supplicant is not setting key management
-> properly, possibly because internally it only translates two of the key
-> management possibilities into the right wext state.
 
-Ok, I'll try to track it down starting with wpa_supplicant then.
+--=-YWkaqRiig+dmBHsBXabN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+Hi,
 
+> What's the state of your mac80211 hostapd work?
+> Did you get hostapd compiling and working again on mac80211?
+
+Yeah, it spews a lot of errors because it can't change the regulatory
+stuff until Luis fixes it up, but it works again. You need both the
+changes to hostapd and the kernel changes from my patches:
+http://johannes.sipsolutions.net/patches/hostap/all/LATEST/
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
+(for kernel you want to start at patch 5, some of them have been sent
+already)
+
+> I have several AP and IBSS related patches in my queue that
+> I'd like to test before pushing them out to John.
+
+Great!
+
+johannes
+
+--=-YWkaqRiig+dmBHsBXabN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARwGKSKVg1VMiehFYAQLeZA/+PlP+eSGwu7ijLr3mmD5rqC3k10G2qGg7
+13hncFIUv/sUXmzMhf5OeYrNC2yvwWZ0KhjZXDaaeLFINqdP6s1vcUByS2d3XSa5
+LQqMXgBvOHL0Ieq61kMgDo1YESplxWfYs/q5fiq25+/y3OL9eBBTkTLs1AVy3VLY
+ua65YxnVIANPyi3PMil9a0BleVLO0L76gBe2OoRDX70QFyOjNoJ05rYEIbOVpz/5
+1+OzO8lUmrxabd5Jq8c8sUcX/JKNurez/EzIUntYFW+GF5JKD8cMODW4xSTjeQ6t
+HgXDSUGlVID9RFKnta4eV9LfmrjQVK2hP+4eB0aWR6oSZfK7LCHAS191X9c44Zcg
+NkbQFVcU3U2QQgpQLmjg8QSKEiuHlATwjFADAHnOz/S8avu246j2HAmf/fo0vH//
+IPz+LryFGkOWlvZyD2eiS7o0qwEk2ViWhxYkk43qrr/+kQoxZyiUjBbkyr72nyvk
+x3SIZ+5v0/WuOI0uv5xCzKqFm18CV3vD4Ickqp7q/oVw2nNBQOgvNwUVfFPm8kF9
+FT0Z9V6HVdVDGpX7Q9gkwvPDn4FfPtXQwqkWeADJVXJiL1AeB3dhMmunjawdUeG5
+HIAMQDWP3LSEeC2DbUjPjHXyTcGEZJ+gG9kxK6EfiproaB8+6txycLDesNMfLD3j
+6E1ZjqHfbcQ=
+=/PQn
+-----END PGP SIGNATURE-----
+
+--=-YWkaqRiig+dmBHsBXabN--
 
