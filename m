@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:44603 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbXJAXer (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:7052 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbXJBIIa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2007 19:34:47 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so2739731nze
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2007 16:34:46 -0700 (PDT)
-Message-ID: <1ba2fa240710011634g2361b2fcn7466202f925fc8c4@mail.gmail.com> (sfid-20071002_003455_164035_F48947BC)
-Date: Tue, 2 Oct 2007 01:34:45 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211 multiqueue
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, "Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <20071001201236.GB5224@tuxdriver.com>
+	Tue, 2 Oct 2007 04:08:30 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so2052094ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Oct 2007 01:08:29 -0700 (PDT)
+Message-ID: <4701FC79.3060608@gmail.com> (sfid-20071002_090840_296795_9162D09B)
+Date: Tue, 02 Oct 2007 10:08:25 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-References: <1188875058.13078.428.camel@debian.sh.intel.com>
-	 <1189076408.28781.49.camel@johannes.berg>
-	 <1189146702.16788.103.camel@debian.sh.intel.com>
-	 <1189172436.28781.148.camel@johannes.berg>
-	 <1189390172.24707.36.camel@debian.sh.intel.com>
-	 <20071001201236.GB5224@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jgarzik@pobox.com>
+Subject: Wireless damage [Was: -mm merge plans for 2.6.24]
+References: <20071001142222.fcaa8d57.akpm@linux-foundation.org>
+In-Reply-To: <20071001142222.fcaa8d57.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/1/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Sep 10, 2007 at 10:09:32AM +0800, Zhu Yi wrote:
-> > On Fri, 2007-09-07 at 15:40 +0200, Johannes Berg wrote:
->
-> > > > BTW， the whole 802.11 qdisc hack will be removed with
-> > > > the multiqueue supported in .24.
-> > >
-> > > Yeah, is anybody working on that? I have to admit I didn't look into
-> > > that yet.
-> >
-> > If nobody will work on that, we Intel will do. I remembered Tomas
-> > promised John in this OLS ;)
->
-> Indeed he did...Tomas, any progress on this?
->
+On 10/01/2007 11:22 PM, Andrew Morton wrote:
+> git-net-vs-git-wireless.patch
 
-Not much, yet it's definitely on the list. This will get priority
-after we have proper 11n in mac80211,  hope soon, as I'm getting more
-familiar with Johannes revolution.
+Hum, latest wireless-2.6?h=everything already had a proper fix when this patch
+was merged. But pull/push is stuck somewhere :(.
 
-I'm still wondering how multiqueue will be used effectively with
-stacking it between wlanX and wmasterX as native 80211 interface is
-far to reach.
+> git-wireless-vs-gregkh-driver-driver-core-change-add_uevent_var-to-use-a-struct.patch
+> net-add-ath5k-wireless-driver-fix.patch
 
-Tomas
+let it live in -mm (wireless-2.6) so far.
 
-> John
-> --
-> John W. Linville
-> linville@tuxdriver.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>   Wireless damage control.  Will see what happens.
+
+thanks,
+-- 
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
