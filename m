@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751658AbXJWPEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 11:04:14 -0400
-Subject: [PATCH v2] add myself as mac80211 maintainer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1193080432.9793.46.camel@johannes.berg> (sfid-20071023_105543_791359_D2723EF7)
-References: <1193080432.9793.46.camel@johannes.berg>
-	 (sfid-20071023_105543_791359_D2723EF7)
-Content-Type: text/plain
-Date: Tue, 23 Oct 2007 17:05:25 +0200
-Message-Id: <1193151925.7733.19.camel@johannes.berg> (sfid-20071023_160417_467977_A4B43681)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3189 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753283AbXJBSIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2007 14:08:24 -0400
+Date: Tue, 2 Oct 2007 13:37:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Wireless damage [Was: -mm merge plans for 2.6.24]
+Message-ID: <20071002173745.GA13280@tuxdriver.com> (sfid-20071002_190828_163288_E016A865)
+References: <20071001142222.fcaa8d57.akpm@linux-foundation.org> <4701FC79.3060608@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4701FC79.3060608@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds myself as mac80211 maintainer and updates the git URL to point
-to the wireless-2.6 tree. Also move Jiri down so he isn't first in list.
+On Tue, Oct 02, 2007 at 10:08:25AM +0200, Jiri Slaby wrote:
+> On 10/01/2007 11:22 PM, Andrew Morton wrote:
+> > git-net-vs-git-wireless.patch
+> 
+> Hum, latest wireless-2.6?h=everything already had a proper fix when this patch
+> was merged. But pull/push is stuck somewhere :(.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Michael Wu <flamingice@sourmilk.net>
----
- MAINTAINERS |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+It is in mm-master as well.  No doubt it was just a little too late
+for akpm's pull.
 
---- wireless-dev.orig/MAINTAINERS	2007-10-23 13:37:15.748259069 +0200
-+++ wireless-dev/MAINTAINERS	2007-10-23 17:04:22.791135956 +0200
-@@ -2469,13 +2469,15 @@ W:	http://www.tazenda.demon.co.uk/phil/l
- S:	Maintained
- 
- MAC80211
--P:	Jiri Benc
--M:	jbenc@suse.cz
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-+P:	Johannes Berg
-+M:	johannes@sipsolutions.net
-+P:	Jiri Benc
-+M:	jbenc@suse.cz
- L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
--T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
- S:	Maintained
- 
- MACVLAN DRIVER
+> > net-add-ath5k-wireless-driver-fix.patch
+> 
+> let it live in -mm (wireless-2.6) so far.
 
+Aye.
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
