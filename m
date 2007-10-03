@@ -1,31 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:61229 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650AbXJGK2O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2007 06:28:14 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1822104pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2007 03:28:13 -0700 (PDT)
-Message-ID: <40f31dec0710070328r71d986bcm2b3fa78130052cb3@mail.gmail.com> (sfid-20071007_112820_124701_55F065F6)
-Date: Sun, 7 Oct 2007 03:28:12 -0700
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 2/6] ath5k: Enable radar detection
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <40f31dec0710070256y261199abw54e8e8dafab3ffb6@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:55076 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753384AbXJCRja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2007 13:39:30 -0400
+Message-ID: <4703D3CD.6010509@garzik.org> (sfid-20071003_183945_177334_43C23284)
+Date: Wed, 03 Oct 2007 13:39:25 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
-	 <20071006011837.GB25022@pogo>
-	 <40f31dec0710070256y261199abw54e8e8dafab3ffb6@mail.gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+References: <20071003012044.GD29361@tuxdriver.com>
+In-Reply-To: <20071003012044.GD29361@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take a look here..
-http://thread.gmane.org/gmane.linux.drivers.madwifi.devel/4386/focus=4391
+John W. Linville wrote:
+> The following changes since commit 3146b39c185f8a436d430132457e84fa1d8f8208:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc9
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> 
+> Joe Perches (1):
+>       bcm43xx: Correct printk with PFX before KERN_
+> 
+> Richard Knutsson (1):
+>       softmac: Fix compiler-warning
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+pulled
+
+
