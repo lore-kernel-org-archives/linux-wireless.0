@@ -1,70 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54517 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33590 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752243AbXJIRFs (ORCPT
+	with ESMTP id S1753447AbXJCQca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 13:05:48 -0400
-Subject: Re: Mode selection in mac80211
+	Wed, 3 Oct 2007 12:32:30 -0400
+Subject: Re: Kernelspace --> Userspace MLME move and related items
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mike Kershaw <dragorn@kismetwireless.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071009135538.GA29748@drd1813.lan>
-References: <200710052319.10600.linux@baker-net.org.uk>
-	 <1191837339.4063.25.camel@johannes.berg>
-	 <20071008143207.GB7430@drd1813.lan>
-	 <1191921702.4013.15.camel@johannes.berg>
-	 <20071009135538.GA29748@drd1813.lan>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-peINh5DeHSK6KA7rWHew"
-Date: Tue, 09 Oct 2007 19:06:15 +0200
-Message-Id: <1191949575.4013.36.camel@johannes.berg> (sfid-20071009_180552_729591_E51A3B92)
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20071003025019.GF933@jm.kir.nu> (sfid-20071003_035130_280489_9121CC7D)
+References: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com>
+	 <1191066581.22960.55.camel@johannes.berg>
+	 <20070929161740.GB6130@tuxdriver.com>
+	 <1191141815.22960.134.camel@johannes.berg> <20071003025019.GF933@jm.kir.nu>
+	 (sfid-20071003_035130_280489_9121CC7D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KIZ6sP5hWQTOL0hPUkMK"
+Date: Wed, 03 Oct 2007 18:32:22 +0200
+Message-Id: <1191429142.4178.13.camel@johannes.berg> (sfid-20071003_173235_905918_DAD25CFF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-peINh5DeHSK6KA7rWHew
+--=-KIZ6sP5hWQTOL0hPUkMK
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-10-09 at 09:55 -0400, Mike Kershaw wrote:
+On Tue, 2007-10-02 at 19:50 -0700, Jouni Malinen wrote:
 
-> > Actually, what you're advocating sounds like "please let me restrict th=
-e
-> > bitrates to use" rather than "please lock me to a mode". And we need
-> > that functionality anyway for AP mode.
+> > > >  * 802.11r (fast roaming)
 >=20
-> Not quite, I've had situations where 9mbit at OFDM (11g) performed=20
-> differently than 11mbit at CCK (11b) for whatever reason.  I'm also
-> fairly sure several cards (I want to say Intel 2200?) limit the max tx
-> power differently depending on the encoding type (100mW for 11b vs.
-> something less I don't remember off hand for 11g).
+> The current implementation is more or less complete for all the required
+> functionality. I just updated it for the latest draft (D8.0) that was
+> released last week. This includes code for adding new IEs to
+> authentication and association frames and also sending/receiving of
+> action frames.
 
-Aha, but I'm not saying that you should be able to set a strict bitrate
-limit but rather enable/disable each bitrate by itself.
+Good to know. The latter are passed with SIOCSIWGENIE I assume.
+
+> > > >  * 802.11w (encrypted management)
+
+> wpa_supplicant has implementation for negotiating the keys and
+> configuring them to the driver. It does not implement
+> encryption/decryption of the management frames, though, and I do not
+> have plans on doing that in user space either.
+
+Right, that makes sense.
+
+> 802.11w actually uses the
+> same PTK than data frames for unicast management frames, so the kernel
+> side (or firmware/hardware) CCMP should be used for this.
+
+Yeah we'll probably need a new hw flag for this since I expect there to
+be some hardware that will not like hw-crypto for management frames.
+OTOH, it could probably better be a key flag or something, not sure
+about the details right now. But it should be trivial to solve.
+
+> As far as
+> broadcast/multicast management frames are concerned, they will need a
+> new encryption (or well, actually it is not encryption, just integrity
+> protection) algorithm in the kernel. The key (IGTK) comes from user
+> space in the same way as GTK for data frames.
+
+Right, so we need a new cipher added to nl80211's checking code and make
+mac80211 handle that new cipher. It needs to be implemented too, but
+right now I definitely won't have time for that and the 802.11w draft I
+have may well be outdated too.
+
+In any case, it doesn't look like a hard problem to solve once we have
+the algorithm spec.
 
 johannes
 
---=-peINh5DeHSK6KA7rWHew
+--=-KIZ6sP5hWQTOL0hPUkMK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARwu1BqVg1VMiehFYAQIYEQ//e72j+UwrGdueyWv80qu4ZjPY0Gai6Wg9
-6U8IZnj+YPQP50lWSJEEv3oWXw9qbz5Ox0viT2GvCTd+5MAvDC6YD18Q3qRPVEBB
-9mlklKRA8s2Oj0H6knX0f/DObEgIR5j3DFQvOu+p9owLCovYr0JiVLu06EoSFjcR
-31i2ivuW0cArXd/caT4VneTOGVhz40ukEm14HcEPM3dQprbqFQK3rMC21pa/HwHa
-Mxu5UCEKwXoMPZHhxdOgDrXc/DQHCY1UhC+J+93WvCC2g9Wck01qUlhrE0AxuUlq
-jMBm+wpMMAemzy7uP7+cbkDcbRcX7Kw2BSOCfBsKRwHYuAZnd6Gd5VIs/rIqmFsq
-kvv6xbbQHmigEnCgsYaMpiny8sEX/VfgNQYc70Rx3B+54nkjxicLm01v/LIsS79Y
-EfInIvJbsCFOrWGqtPmssJWUmTKagzKqdkkxX3A9K9fqWv8Y1XT785S6yca50g3V
-62UFFUgjIhsLKlSQMpwDLoV9kK2gscc8W4FtRigNdLKI0i1BvE8bifv2F2/dDurY
-X2/yx8HE9ehDhmPB+VIjrfvsijqKPPFJp/vDinsIjHkqffMwKv07dRR1RhD47yG6
-ZsIpeGoNX5AjkKjuVJgtVJMLqoEV0ST7bRXrxnm3rd7+CcV+0Y6+Q01xSuAh9cmj
-TRZ4c5A8UMM=
-=Dum0
+iQIVAwUARwPEFaVg1VMiehFYAQIr7hAAsUTqdxKuyQMBsLKN5X/8B0y/8k4IUhi9
+HyuZlWxdsxv5n56MFYp3MtocV56AHtQw5DinCzE22EhMMMm5J9Uh9C1bPQP8f/gw
+itNBFfZwvvV1ZOjktl083uYUy8JNol+ByW7AZSC532bSm7hTtyYX0+okex6hEXPD
+WunzdKGxqqyBErAMouz1AqlQ066RQBdYsmBaagPq/2WlIbinvk0zzTrqecYtl7hV
+xtnm8bY73c9ELu7nvhfoPvtZCYA/gqw0lRcBg5CjpP7rWlrOl384ud/z87oaQyyT
+0ge5RVX/cal0o8u+pq0V25L/ytJXfsxn4RQSw6gu0YGwVY3qx2+jL3z3NxbDiz58
+LOWbyEw8+q4wxOy90ia/ZhdD8of6vYi9DAPYMRDqA64bP0in/gYlZAkhL/9KRxOe
+Uu69K8jRUJuucafblN+5z34oexA7vBmbcjgOTReLBSJf3K4SJ8s1LY/IlitCfZtv
+Yd267MzxDYBL0Yk84n29gE+wcrUnStX10OvvqYluPm0UK/9EAD51ulvnCNCqhSy9
+kZ1Nhxjk+oEvROeO4++3X5jCbnfwFu10BRLZYpyAYVsN52vGXnKl6/EngWLpyLcZ
+osRvxLaFq4+L3s84fCESVU6t8aXlyUcINyggAVCvUuNO/cQ/w9mA0/EILHDmSq3R
+DlC+5XJF8Kg=
+=jWPS
 -----END PGP SIGNATURE-----
 
---=-peINh5DeHSK6KA7rWHew--
+--=-KIZ6sP5hWQTOL0hPUkMK--
 
