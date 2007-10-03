@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:60253 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762811AbXJQTuO (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42458
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753318AbXJCCB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 15:50:14 -0400
-Message-ID: <4716676C.5010907@lwfinger.net> (sfid-20071017_205034_434311_6DA82EA3)
-Date: Wed, 17 Oct 2007 14:50:04 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Andreas Schwab <schwab@suse.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43: cannot set channel to 12
-References: <jey7e1leh0.fsf@sykes.suse.de>
-In-Reply-To: <jey7e1leh0.fsf@sykes.suse.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 2 Oct 2007 22:01:57 -0400
+Date: Tue, 02 Oct 2007 19:01:56 -0700 (PDT)
+Message-Id: <20071002.190156.41633562.davem@davemloft.net> (sfid-20071003_030204_164538_1843BD0B)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071003012552.GE29361@tuxdriver.com>
+References: <20071003012552.GE29361@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andreas Schwab wrote:
-> The b43 driver in current wireless-2.6 cannot set the channel to 12:
-> 
-> # iwconfig wlan0 chan 12
-> Error for wireless request "Set Frequency" (8B04) :
->     SET failed on device wlan0 ; Invalid argument
-> 
-> iwlist still lists the APs on channels 12 and 13.
-> 
-> This is a 4318 in a iBook G4, using firmware version 410.2160.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 2 Oct 2007 21:25:52 -0400
 
-This is not a b43 problem. The standard loading of mac80211 sets an FCC regulatory domain, i.e. b/g
-channels 1-11. You need to load mac80211 with a parameter of 'ieee80211_regdom=64'. That will allow
-b/g channels 1-13. Technically, it sets the regulatory domain to Japan, but channel 14 is not allowed.
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
 
-Larry
+This doesn't pull cleanly.
+
+Probably you used a recently cloned Linus tree, pulled
+net-2.6.24 into that (and resolved the conflicts), and
+then put your patches in.
+
+Please don't do it like that, I don't want to pull from
+a tree that has linus vs. net-2.6.24 conflict handling
+in it.  That's why I usually rebase frequently, to minimize
+that as much as is humanly possible.
+
+What you can do is figure out what linus's HEAD was at the last rebase
+(basically 'origin' or parent of net-2.6.24), clone that then pull in
+net-2.6.24, then add your patches.
+
+That way I can always do a clean pull.
+
+My pull from Jeff today was very clean, for example.
+
+I'll add these wireless bits by hand as patches.
+
+Thanks John.
+
