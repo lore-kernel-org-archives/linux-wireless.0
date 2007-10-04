@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp19.orange.fr ([80.12.242.18]:1051 "EHLO smtp19.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235AbXJWVzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 17:55:23 -0400
-Received: from me-wanadoo.net (localhost [127.0.0.1])
-	by mwinf1917.orange.fr (SMTP Server) with ESMTP id A69211C00094
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 23:55:21 +0200 (CEST)
-Subject: Pb rt73
-From: Bruno Vetel <bruno.vetel@wanadoo.fr>
-Reply-To: bruno.vetel@wanadoo.fr
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+Received: from smtp.rutgers.edu ([128.6.72.243]:30623 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757636AbXJDQ6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 12:58:15 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
+Date: Thu, 4 Oct 2007 12:56:15 -0400
+Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 23 Oct 2007 23:54:35 +0200
-Message-Id: <1193176475.5563.3.camel@rigel.esas.fr> (sfid-20071023_225527_304616_1F90CB12)
-Mime-Version: 1.0
+References: <20071004113343.552139D502B@zog.reactivated.net> <20071004085440.008216c6@freepuppy.rosehill>
+In-Reply-To: <20071004085440.008216c6@freepuppy.rosehill>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3822380.ChMOfOQO4F";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710041256.20995.flamingice@sourmilk.net> (sfid-20071004_175826_596971_08602375)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ivo
+--nextPart3822380.ChMOfOQO4F
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I just merge your rt2x00 tree with my development. Now rt73usb works in
-Ad-Hoc Mode between my arm board and a PC.
+On Thursday 04 October 2007 11:54, Stephen Hemminger wrote:
+> Playing with the function pointer is a awkward way to do this.  Shouldn't
+> the state management flags be used instead (dormant, running, stop/wake).=
+=2E.
+> I am concerned about races and dereferencing the NULL ptr.
+This is all under RTNL and the pointer is only modified while the interface=
+ is=20
+down.
 
+=2DMichael Wu
 
-	Many Thanks to you
+--nextPart3822380.ChMOfOQO4F
+Content-Type: application/pgp-signature
 
-	Best regards 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-	Bruno
+iD8DBQBHBRs0T3Oqt9AH4aERAqhjAJwJwuirxBJEqpdxneUd2T0uLq2/CACfaMv4
+wL/Xmkli1yjGD62ROVqXWZ8=
+=7+ee
+-----END PGP SIGNATURE-----
 
--- 
-Bruno Vetel <bruno.vetel@wanadoo.fr>
-
-
+--nextPart3822380.ChMOfOQO4F--
