@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43492 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934511AbXJRT2e (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:37880 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753932AbXJDRNc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 15:28:34 -0400
-Subject: Re: Rate problems with iwl3945
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20071018191102.GI10674@kernel.dk> (sfid-20071018_201111_899199_F92BB71F)
-References: <20071018191102.GI10674@kernel.dk>
-	 (sfid-20071018_201111_899199_F92BB71F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5T/q+0ltUnh/1Lu6Jlbm"
-Date: Thu, 18 Oct 2007 21:29:42 +0200
-Message-Id: <1192735782.15285.48.camel@johannes.berg> (sfid-20071018_202859_223856_E231FA44)
-Mime-Version: 1.0
+	Thu, 4 Oct 2007 13:13:32 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
+Date: Thu, 4 Oct 2007 13:11:33 -0400
+Cc: Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <20071004113343.552139D502B@zog.reactivated.net> <200710041706.06182.mb@bu3sch.de> <20071004151956.GE6037@tuxdriver.com>
+In-Reply-To: <20071004151956.GE6037@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2218133.jPUbnScrFo";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710041311.37997.flamingice@sourmilk.net> (sfid-20071004_181338_430750_D0D3DF94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-5T/q+0ltUnh/1Lu6Jlbm
-Content-Type: text/plain
+--nextPart2218133.jPUbnScrFo
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Hi,
+On Thursday 04 October 2007 11:19, John W. Linville wrote:
+> > The reason why BUG_ON exists is to catch bugs that happen, although
+> > they Should Never Happen (tm) ;)
+>
+> Precisely.
+No really, this bug will never happen. This is function is merely a helper=
+=20
+function which is called from interface removal code (where the interface=20
+*has* to be down) or from changing the interface type (which ensures that t=
+he=20
+interface is down first). There are an unlimited number of bugs which Shoul=
+d=20
+Never Happen. That doesn't mean we should start adding BUG_ONs for every=20
+single one of them. That gives some sort of protection against cosmic rays=
+=20
+flipping bits, but down here on earth, it's bloat.
 
-> Copying some files I noticed it was slow, though.
+=2DMichael Wu
 
-Can you check that the right mode is selected? There's a bugfix pending
-for mac80211 that makes it select 802.11b mode rather than 802.11g. I
-don't remember whether I've asked this already so if I did please accept
-my apology. FWIW, the fix is by me (in all fairness, the regression was
-also introduced by me) titled "[PATCH v2] mac80211: fix set_channel
-regression"
-
-johannes
-
---=-5T/q+0ltUnh/1Lu6Jlbm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart2218133.jPUbnScrFo
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iQIVAwUARxe0JaVg1VMiehFYAQK0bw//YyY0VzXUJJXRTx2W5kVokSYWmqAF815x
-MskIXypGo04DiCE0XUBrbgDtp/2SJLzh9WpX/5MlZpfoHFJ/3P/DzlQylp7aqogw
-EF7bLSqkpNb41M0zkUpOOfLyoumcal3iiX1OrNqn+fcpj3iBYVwf446nO2K7diYb
-TWIzFf+IpNnxfbyYjfNE8quVuzZ8khSYw3SFUuu+JQ8o56PBfkJ7bEloyunVpdPF
-HbzPDQFp1QD81BoPtb8A0V8O3FGg2xKh9v15FBKiVyYYcbEnTMDbwj6tYvov8O0R
-Lrg0hfM6ApociFRQTZmWw+J/Ia2zZEI/gsRHy69E0tPqxs/YlK2A5TJzsAFP+r/z
-ePwzyWY7c+s78pnVEmReYZwGaulCIXXtCGLC+4bxcFS6iUL5TMdldpIsbUKBugP8
-MAyj5BsAQWRhoVBzV1oDW7pgCB7LtmlrauB6X8nQdV1x63UzQTGNCa3oz1GtOrFb
-ZGi6mLrNQFSzU1wqPL2wxVEL69SFrzEpd0kydqW+I7iduDHL3VKQSfsYS468uevE
-/w1TLtGUGPYr1pzIdqw1rfKYlE1anZQm1gs9rpwQ/qfDeBnvmqnlkhliy789bvX2
-Lh7TJxpXd/OTSYUHwpmSf71b9lx35dOt3T3lJBw8YYTUy8mCDAY2aML3RKQTA1vM
-FeJrGZqZex0=
-=7ag9
+iD8DBQBHBR7JT3Oqt9AH4aERApDzAJ9h+BzJpVbrARB5/dWAuxH37jJUSQCZAdXV
+204SkDaDFzBkyKDMfMdWL0M=
+=zXlt
 -----END PGP SIGNATURE-----
 
---=-5T/q+0ltUnh/1Lu6Jlbm--
-
+--nextPart2218133.jPUbnScrFo--
