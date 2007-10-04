@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:35529 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758926AbXJOMDG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 08:03:06 -0400
-Received: by an-out-0708.google.com with SMTP id d31so111324and
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 05:03:04 -0700 (PDT)
-Date: Mon, 15 Oct 2007 19:59:36 +0800
-From: WANG Cong <xiyou.wangcong@gmail.com>
-To: Adrian Bunk <bunk@kernel.org>
-Cc: mb@bu3sch.de, st3@riseup.net, Larry.Finger@lwfinger.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@osdl.org>
-Subject: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize the
-	correct return value
-Message-ID: <20071015115936.GP2444@hacking> (sfid-20071015_130309_975511_F46F5587)
-Reply-To: WANG Cong <xiyou.wangcong@gmail.com>
-References: <20071014175142.GN4211@stusta.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2704 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758520AbXJDWjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 18:39:06 -0400
+Date: Thu, 4 Oct 2007 18:13:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Roland Dreier <rdreier@cisco.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
+	to managed
+Message-ID: <20071004221358.GM6037@tuxdriver.com> (sfid-20071004_233915_998473_B5EB5FE3)
+References: <20071004113343.552139D502B@zog.reactivated.net> <200710041706.06182.mb@bu3sch.de> <20071004151956.GE6037@tuxdriver.com> <200710041311.37997.flamingice@sourmilk.net> <20071004181516.GH6037@tuxdriver.com> <ada4ph6bm8h.fsf@cisco.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071014175142.GN4211@stusta.de>
+In-Reply-To: <ada4ph6bm8h.fsf@cisco.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 04, 2007 at 02:31:26PM -0700, Roland Dreier wrote:
+>  > Programming with assertions (and BUG_ON is a form of that) is
+>  > generally a good practice.  Almost any book or other source on
 
-Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
-in case of returning an uninitialized value.
+> The problem with BUG_ON is that it kills the whole system.  So every
+> time you add a BUG_ON into code, you have to weigh whether the problem
+> you detected is so severe that the right response is to panic.  For
+> example, I can see panicking on something fundamental like corrupted
+> page tables.  However I would submit that the wireless stack should
+> *never* use BUG_ON -- printing a warning and trying to limp on seems
+> preferable to me.
 
-From: Adrian Bunk <bunk@kernel.org>
-Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
+OK, I'll buy that as an argument to use WARN_ON instead of BUG_ON.
+But it doesn't invalidate the desire to have some sort of assertion.
 
----
- drivers/net/wireless/b43/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
-+++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-@@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
- 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
- 	struct b43legacy_wldev *dev = wl->current_dev;
- 	int did_init = 0;
--	int err;
-+	int err = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
