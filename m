@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485AbXJQMp0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 08:45:26 -0400
-Subject: Re: Problem with in-kernel iwl3945 driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ismail =?ISO-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710171518.36393.ismail@pardus.org.tr>
-References: <200710161317.45460.ismail@pardus.org.tr>
-	 <200710161703.51343.ismail@pardus.org.tr>
-	 <1192609081.8841.8.camel@johannes.berg>
-	 <200710171518.36393.ismail@pardus.org.tr>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P9wKEq6DRBM/wtiC0U+6"
-Date: Wed, 17 Oct 2007 14:46:05 +0200
-Message-Id: <1192625165.8841.15.camel@johannes.berg> (sfid-20071017_134530_681618_10D808A4)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4345 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756378AbXJDPig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 11:38:36 -0400
+Date: Thu, 4 Oct 2007 11:19:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>, johannes@sipsolutions.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
+	to managed
+Message-ID: <20071004151956.GE6037@tuxdriver.com> (sfid-20071004_163843_924216_1FB867D5)
+References: <20071004113343.552139D502B@zog.reactivated.net> <200710041034.48533.flamingice@sourmilk.net> <200710041706.06182.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200710041706.06182.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-P9wKEq6DRBM/wtiC0U+6
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2007-10-17 at 15:18 +0300, Ismail D=C3=B6nmez wrote:
-> Wednesday 17 October 2007 Tarihinde 11:18:01 yazm=C4=B1=C5=9Ft=C4=B1:
-> > On Tue, 2007-10-16 at 17:03 +0300, Ismail D=C3=B6nmez wrote:
-> > > Replying to myself,
+On Thu, Oct 04, 2007 at 05:06:05PM +0200, Michael Buesch wrote:
+> On Thursday 04 October 2007 16:34:43 Michael Wu wrote:
+> > On Thursday 04 October 2007 07:33, Daniel Drake wrote:
+> > > Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit.
+> > > It will then be reinitialised to the default (ieee80211_subif_start_xmit)
+> > > in ieee80211_if_set_type.
 > > >
-> > > Tuesday 16 October 2007 Tarihinde 13:17:45 yazm=C4=B1=C5=9Ft=C4=B1n=
-=C4=B1z:
-> > > [...]
-> > >
-> > > > wlan0     IEEE 802.11b  ESSID:"XXYYZZ"
-> > >
-> > >                          ^^^^^^^
-> > > Looks like its in 802.11b mode instead of 802.11g.  That might be a c=
-lue
-> > > for slowdown.
-> >
-> > A fix was committed under the title "fix set_channel regression"
->=20
-> This indeed fixes the slowdown, but can't associate unless I do a iwlist =
-scan=20
-> problem still persists :-/
+> > Well.. this kinda sucks, but we can clean up the logic here later.
+> > 
+> > > +	BUG_ON(netif_running(dev));
+> > This will never happen, so there's no point.
+> 
+> The reason why BUG_ON exists is to catch bugs that happen, although
+> they Should Never Happen (tm) ;)
 
-I don't think that is related to mac80211 changes.
+Precisely.
 
-johannes
-
---=-P9wKEq6DRBM/wtiC0U+6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARxYEC6Vg1VMiehFYAQLZeBAAua58H29Kw9abaJTKxih7YomY+dltlG+z
-BH/gEMSHU7hbZG7CfNHPU5r5W3Gf8ZmT2SEyPkWm/R1IQHqasV2cqF8ON3178/rm
-ziYJzlzFqT5ujVx49fNjLQa4hEykWmeJR2eslXHM1+UvvfpzbmEB2e4qntNTvmOn
-lG5SCPXk/ZrnAK6zo0Fp8v/BssRWqC+mKAGgXFwBt5DdezppLqADPNyuiQPhkLfK
-y1cQfGzkYSbj+xFXA1ydu0VFG3MazlofOCrDem7YymFMzzKPgB/J0oBCZ7MlF6AX
-jCrbP5aNRUkAdaKAZjZS//CVbzGG3E9OVojOKBHNR40kUO149QGnl3gGg/0LmG/Y
-WuFO8h4QZ/osWITSEk3/nVH6peFqhXnsIWwCHw2nzgGnDzPSuwenYqM8LYwe90s+
-Bi8DN/U5DC9J5AAfmPwQKo/XziCSDP/a2LcLfXAUfgFVmV4smJyUF/BQCn6ckc1n
-uAoZ10rzkfm0SFqCEknG+dBye4ZWOjmrnKy16ccDbE8fZqHvmyGVkF2h9V84lL+c
-qMB/kESUHCUl2c5f2/1ya9GFiFMjlC7QEJMVSQODaqv+OGeYBjQvB0vOFWDuyuKK
-Y89xB3TacYH+FAcqiR+EnZHz4ccpqdWaY5GCIbDf9oL55cT9obuWj8bb92i6577d
-R/szkOy/LmM=
-=u+7q
------END PGP SIGNATURE-----
-
---=-P9wKEq6DRBM/wtiC0U+6--
-
+-- 
+John W. Linville
+linville@tuxdriver.com
