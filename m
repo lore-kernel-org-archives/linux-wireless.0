@@ -1,78 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:26931 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbXJJOvk (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:35231 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757661AbXJDV2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 10:51:40 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so120900wra
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 07:51:39 -0700 (PDT)
-Message-ID: <d120d5000710100751n7b43c3cek9a50e88661fa36c6@mail.gmail.com> (sfid-20071010_155148_457033_147757A0)
-Date: Wed, 10 Oct 2007 10:51:38 -0400
-From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200710101636.36082.mb@bu3sch.de>
+	Thu, 4 Oct 2007 17:28:08 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more explicit
+Date: Thu, 4 Oct 2007 17:26:11 -0400
+Cc: Daniel Drake <dsd@gentoo.org>, johannes@sipsolutions.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20071004113343.552139D502B@zog.reactivated.net> <20071004180900.GG6037@tuxdriver.com>
+In-Reply-To: <20071004180900.GG6037@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709281422.34434.mb@bu3sch.de>
-	 <d120d5000710100730j243247e1te570ff57522693eb@mail.gmail.com>
-	 <200710101636.36082.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart2193734.nSyxz73F79";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710041726.11744.flamingice@sourmilk.net> (sfid-20071004_222815_650404_FECAC4E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Wednesday 10 October 2007 16:30:35 Dmitry Torokhov wrote:
-> > Hi Michael,
-> >
-> > On 9/28/07, Michael Buesch <mb@bu3sch.de> wrote:
-> > > This removes the direct call to rfkill on an rfkill event
-> > > and replaces it with an input device. This way userspace is also
-> > > notified about the event.
-> > >
-> > > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > >
-> > > Index: wireless-2.6/drivers/net/wireless/b43/Kconfig
-> > > ===================================================================
-> > > --- wireless-2.6.orig/drivers/net/wireless/b43/Kconfig  2007-09-27 21:31:15.000000000 +0200
-> > > +++ wireless-2.6/drivers/net/wireless/b43/Kconfig       2007-09-28 12:34:23.000000000 +0200
-> > > @@ -70,7 +70,7 @@ config B43_LEDS
-> > >  # RFKILL support
-> > >  config B43_RFKILL
-> > >        bool
-> > > -       depends on B43 && RFKILL
-> > > +       depends on B43 && RFKILL && RFKILL_INPUT && INPUT_POLLDEV
-> > >        default y
-> >
-> > I don't think that broadcom driver should depend on RFKILL_INPUT...
-> > RFKILL_INPUT is a default link between input and rfkill layers but it
-> > is by no means a mandatory component.
-> >
-> > I think proper dependency should be:
-> >
-> >         depends on B43 && RFKILL && INPUT
-> >         select INPUT_POLLDEV
-> >
->
-> b43 rfkill support is useless without also having RFKILL_INPUT, as
-> the button reporting is done though it.
-> b43 does _not_ depend on RFKILL_INPUT, but b43-rfkill support is disabled,
-> if there's no RFKILL_INPUT compiled.
->
+--nextPart2193734.nSyxz73F79
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-No, it is not. One can have a userspace daemon claiming the rfkill
-switch and listening on corresponding evdevX interface and managing
-the switch state.
+On Thursday 04 October 2007 14:09, John W. Linville wrote:
+> diff --git a/net/mac80211/ieee80211_iface.c
+> b/net/mac80211/ieee80211_iface.c index be7e77f..6607b80 100644
+> --- a/net/mac80211/ieee80211_iface.c
+> +++ b/net/mac80211/ieee80211_iface.c
+> @@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, int
+> type) * which already has a hard_start_xmit routine assigned
+>  	 * which must not be changed.
+>  	 */
+> -	if (!dev->hard_start_xmit)
+> +	if (dev->type != ARPHRD_IEEE80211)
+The standard way of checking for the master device is
+dev == sdata->local->mdev
 
-We normally specify dependencies that are needed to build the code,
-not necessarily to use it. It's like various joystick drivers do not
-depend on joydev or evdev modules although most people would need
-these modules as well to use their joysticks. Or SCSI drivers don't
-depend on sd or sr being selected, etc, etc.
+wme.c doesn't quite follow this but that code needs to die anyway.
 
-Thanks.
+This does look nicer than the other patch.
 
--- 
-Dmitry
+-Michael Wu
+
+--nextPart2193734.nSyxz73F79
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBHBVpzT3Oqt9AH4aERAhzbAKCVUUi42jfCZfPcf7VrO1d6AGaG6gCgqZna
+Saxfk2SRBLpjRoaQF2k5AVI=
+=/YjF
+-----END PGP SIGNATURE-----
+
+--nextPart2193734.nSyxz73F79--
