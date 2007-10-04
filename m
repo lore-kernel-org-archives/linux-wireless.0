@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:61939 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbXJUV1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 17:27:12 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so849860nfb
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 14:27:10 -0700 (PDT)
-To: Bruno =?iso-8859-15?q?V=E9tel?= <bvetel@gmail.com>
-Subject: Re: [Fwd: Problem with a Driver rt73 in ad-hoc mode between a arm and a pc]
-Date: Sun, 21 Oct 2007 23:45:36 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <1192979624.9056.23.camel@rigel.esas.fr> <200710211820.13002.IvDoorn@gmail.com> <1192999078.9056.49.camel@rigel.esas.fr>
-In-Reply-To: <1192999078.9056.49.camel@rigel.esas.fr>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3485 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755766AbXJDTi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 15:38:27 -0400
+Date: Thu, 4 Oct 2007 15:13:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
+	explicit
+Message-ID: <20071004191301.GJ6037@tuxdriver.com> (sfid-20071004_203832_603615_C117B8EF)
+References: <20071004113343.552139D502B@zog.reactivated.net> <20071004180900.GG6037@tuxdriver.com> <1191523488.7367.16.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710212345.38619.IvDoorn@gmail.com> (sfid-20071021_222716_137453_2D98FCFF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1191523488.7367.16.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> Sorry again for the noise. I forgot to verify the association of the
-> dongle before running your script.
+On Thu, Oct 04, 2007 at 08:44:48PM +0200, Johannes Berg wrote:
+> On Thu, 2007-10-04 at 14:09 -0400, John W. Linville wrote:
 > 
-> Here are the good registers.
+> > --- a/net/mac80211/ieee80211_iface.c
+> > +++ b/net/mac80211/ieee80211_iface.c
+> > @@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
+> >  	 * which already has a hard_start_xmit routine assigned
+> >  	 * which must not be changed.
+> >  	 */
+> > -	if (!dev->hard_start_xmit)
+> > +	if (dev->type != ARPHRD_IEEE80211)
+> >  		dev->hard_start_xmit = ieee80211_subif_start_xmit;
+> 
+> That should work as well although I think you should update the comment
+> above :)
 
-Thanks, I'll look into them.
-btw, have you ever tried the legacy driver? And if so, did those work?
+The comment still seem applicable.  How would you word it?
 
-Ivo
+-- 
+John W. Linville
+linville@tuxdriver.com
