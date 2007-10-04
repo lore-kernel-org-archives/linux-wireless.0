@@ -1,81 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:27304 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752919AbXJINEF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 09:04:05 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: let get nick return what set nick has set
-Date: Tue, 9 Oct 2007 15:04:14 +0200
+Received: from ra.tuxdriver.com ([70.61.120.52]:3567 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758811AbXJDSi3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 14:38:29 -0400
+Date: Thu, 4 Oct 2007 14:07:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
+	to managed
+Message-ID: <20071004180741.GF6037@tuxdriver.com> (sfid-20071004_193832_329248_54D7B151)
+References: <20071004113343.552139D502B@zog.reactivated.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710091504.14903.hs4233@mail.mn-solutions.de> (sfid-20071009_140420_276007_5D975D3A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071004113343.552139D502B@zog.reactivated.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the get-nickname wireless extension actually work. Before
-this patch, I could do "iwconfig eth1 nick BLAH" but "iwconfig
-eth1" would have still showed "MRVL-USB8388" to me. Hey, and that
-was wrong anyway, I'm on a CF card, not on USB :-)
+On Thu, Oct 04, 2007 at 12:33:43PM +0100, Daniel Drake wrote:
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit. It
+> will then be reinitialised to the default (ieee80211_subif_start_xmit) in
+> ieee80211_if_set_type.
 
-Index: libertas-2.6/drivers/net/wireless/libertas/wext.c
-===================================================================
---- libertas-2.6.orig/drivers/net/wireless/libertas/wext.c	2007-10-09 15:50:49.000000000 +0200
-+++ libertas-2.6/drivers/net/wireless/libertas/wext.c	2007-10-09 16:04:26.000000000 +0200
-@@ -251,37 +251,16 @@ static int wlan_set_nick(struct net_devi
- static int wlan_get_nick(struct net_device *dev, struct iw_request_info *info,
- 			 struct iw_point *dwrq, char *extra)
- {
--	const char *cp;
--	char comm[6] = { "COMM-" };
--	char mrvl[6] = { "MRVL-" };
--	int cnt;
-+	wlan_private *priv = dev->priv;
-+	wlan_adapter *adapter = priv->adapter;
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	/*
--	 * Nick Name is not used internally in this mode,
--	 * therefore return something useful instead. Jean II
--	 */
--
--	strcpy(extra, mrvl);
--
--	cp = strstr(libertas_driver_version, comm);
--	if (cp == libertas_driver_version)	//skip leading "COMM-"
--		cp = libertas_driver_version + strlen(comm);
--	else
--		cp = libertas_driver_version;
--
--	cnt = strlen(mrvl);
--	extra += cnt;
--	while (cnt < 16 && (*cp != '-')) {
--		*extra++ = toupper(*cp++);
--		cnt++;
--	}
-+	dwrq->length = strlen(adapter->nodename);
-+	memcpy(extra, adapter->nodename, dwrq->length);
-+	extra[dwrq->length] = '\0';
- 
--	/*
--	 * Push it out !
--	 */
--	dwrq->length = cnt;
-+	dwrq->flags = 1;	/* active */
- 
- 	lbs_deb_leave(LBS_DEB_WEXT);
- 	return 0;
-@@ -311,6 +290,7 @@ static int mesh_get_nick(struct net_devi
- 	lbs_deb_leave(LBS_DEB_WEXT);
- 	return 0;
- }
-+
- static int wlan_set_rts(struct net_device *dev, struct iw_request_info *info,
- 			struct iw_param *vwrq, char *extra)
- {
+I think I'd rather fix this by making the check in
+ieee80211_if_set_type more explicit for master devices.  Patch to
+follow.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
