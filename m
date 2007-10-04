@@ -1,104 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2771 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498AbXJZEfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 00:35:05 -0400
-Date: Fri, 26 Oct 2007 00:34:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6 (Use this one!)
-Message-ID: <20071026043409.GE14080@tuxdriver.com> (sfid-20071026_053511_136526_9B5F9108)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbXJDIZl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 04:25:41 -0400
+Received: from [131.234.198.4]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IdM1Z-0008EC-AW
+	for linux-wireless@vger.kernel.org; Thu, 04 Oct 2007 09:25:37 +0100
+Subject: [NOTE] driver caveat
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fb9Wi82eRiq6rc8OSH4x"
+Date: Thu, 04 Oct 2007 08:50:34 +0200
+Message-Id: <1191480634.9898.30.camel@johannes.berg> (sfid-20071004_092549_429001_BADF696D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-(Use this one!)
+--=-fb9Wi82eRiq6rc8OSH4x
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-A few fixes for 2.6.24...also adds Johannes Berg as a mac80211
-maintainer, since he probably wrote most of the newest bugs
-there... :-)
+Just a quick note because I ran into it:
 
-Thanks,
+[29106.600017] wlan0: No ProbeResp from current AP 00:15:f2:3d:63:97 -
+assume out of range
+[29106.600030] phy0: Removed STA 00:15:f2:3d:63:97
+[29106.720011] mac80211-phy0: failed to remove key (0,
+00:15:f2:3d:63:97) from hardware (-19)
 
-John
 
----
+This happened during resume, mac80211 was up already but the driver had
+not resumed the device yet, so b43 thankfully detected that and didn't
+try to access the hardware and returned -ENODEV from set_key().
 
-Individual patches available here:
+If you've been experiencing bad behaviour with suspend this may be the
+cause, instead of working around in the driver I suggest you implement
+proper suspend/resume hooks in mac80211 for drivers to call ;)
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
+johannes
 
----
+--=-fb9Wi82eRiq6rc8OSH4x
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-The following changes since commit c9927c2bf4f45bb85e8b502ab3fb79ad6483c244:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc1
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-are available in the git repository at:
+iQIVAwUARwSNOaVg1VMiehFYAQLA9xAAlmlujEM7GlBdrUgy8fKyiTgCk0ncr+DM
+Vp7FMeILfH3ABTJWN5bl/NcqnnRMp6Ae7QUvMj9fQU3d1HIrPw4wEfCxBVmWJrmK
+Zi31k3pxE+EU4aLUyyRv8pT3j854amk6Aq/V8ZIn3GEZZNcj44Iw725xsbGnhLKc
+HJdU2otol3QyL/uYZQPR5V1KJzN32QuRY5vnJzFc4B/HbmtL52fapAxyvYgurb8X
+Lw2Ho+rGzidZisXEMp/9IxvC3AEU4MM4WU6YwLaDFeXD+yW6FrHOP8SMDCkPZ5pI
++YVqp+d5ONvI8EhtaOy+7kzxJ5uo6Qe6H2u8qLY+aQD86D7pd8TadbcdTVzJqAWp
+gPT2p7GL15weHzF1z796yALhakJ2F06f3JKWssd9XiDloB6SI3iIrvLwBff8rrre
+RGp7FeQTnLmL2GThF2ghbHqLT68/HFyRFCeseJ/dT4fKiJZLVTh3NPZ45QE/MV0O
+cMX+hC+EUH7N1+xo8ITXdJmG1zAktZ17N2PNdl4z14TiIQNBJKt6IniclZShK/fd
+AEV2xpD9w3Lay2rW9eoKWkahMZ9VmGWuM+TnzuJZhH6KlAmyPSF1Pmmfh+ryHqHN
+LJtraTUQlU5g9YPk99W4VTlgWmgbHkZ1bnSKJaiQeH7u6lTY1cXqAFHDjDSV2wxk
+hahVY0CpiMY=
+=OLGx
+-----END PGP SIGNATURE-----
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+--=-fb9Wi82eRiq6rc8OSH4x--
 
-Johannes Berg (2):
-      add myself as mac80211 maintainer
-      mac80211: fix printk warning on 64-bit
-
-Michael Wu (1):
-      mac80211: Fix SSID matching in AP selection
-
- MAINTAINERS                  |    8 +++++---
- net/mac80211/ieee80211_sta.c |    5 +++--
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 76b8571..71badfb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2442,13 +2442,15 @@ W:	http://www.tazenda.demon.co.uk/phil/linux-hp
- S:	Maintained
- 
- MAC80211
--P:	Jiri Benc
--M:	jbenc@suse.cz
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-+P:	Johannes Berg
-+M:	johannes@sipsolutions.net
-+P:	Jiri Benc
-+M:	jbenc@suse.cz
- L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
--T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
- S:	Maintained
- 
- MACVLAN DRIVER
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index f7ffeec..fda0e06 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1184,7 +1184,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
- 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=0x%x "
- 	       "status=%d aid=%d)\n",
- 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
--	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
-+	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
- 
- 	if (status_code != WLAN_STATUS_SUCCESS) {
- 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
-@@ -2096,7 +2096,8 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
- {
- 	int tmp, hidden_ssid;
- 
--	if (!memcmp(ifsta->ssid, ssid, ssid_len))
-+	if (ssid_len == ifsta->ssid_len &&
-+	    !memcmp(ifsta->ssid, ssid, ssid_len))
- 		return 1;
- 
- 	if (ifsta->flags & IEEE80211_STA_AUTO_BSSID_SEL)
--- 
-John W. Linville
-linville@tuxdriver.com
