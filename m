@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:19887 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbXJ1MqL (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:41456 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752018AbXJDOgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 08:46:11 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so877053ugc
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 05:46:09 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: Register LED triggers before registering switch
-Date: Sun, 28 Oct 2007 14:05:46 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200710281307.54552.mb@bu3sch.de>
-In-Reply-To: <200710281307.54552.mb@bu3sch.de>
+	Thu, 4 Oct 2007 10:36:42 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
+Date: Thu, 4 Oct 2007 10:34:43 -0400
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20071004113343.552139D502B@zog.reactivated.net>
+In-Reply-To: <20071004113343.552139D502B@zog.reactivated.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710281405.47341.IvDoorn@gmail.com> (sfid-20071028_124615_986813_0D92FF05)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart4274055.lTjFuKTD6v";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710041034.48533.flamingice@sourmilk.net> (sfid-20071004_153653_057908_3D475D74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 October 2007, Michael Buesch wrote:
-> Registering the switch triggers a LED event, so we must register
-> LED triggers before the switch.
-> This has a potential to fix a crash, depending on how the device
-> driver initializes the rfkill data structure.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+--nextPart4274055.lTjFuKTD6v
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> 
-> Index: wireless-2.6/net/rfkill/rfkill.c
-> ===================================================================
-> --- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-27 13:28:33.000000000 +0200
-> +++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 12:57:12.000000000 +0100
-> @@ -388,19 +388,20 @@ int rfkill_register(struct rfkill *rfkil
->  	if (!rfkill->toggle_radio)
->  		return -EINVAL;
->  
-> +	snprintf(dev->bus_id, sizeof(dev->bus_id),
-> +		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
-> +
-> +	rfkill_led_trigger_register(rfkill);
-> +
->  	error = rfkill_add_switch(rfkill);
->  	if (error)
->  		return error;
->  
-> -	snprintf(dev->bus_id, sizeof(dev->bus_id),
-> -		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
-> -
->  	error = device_add(dev);
->  	if (error) {
->  		rfkill_remove_switch(rfkill);
->  		return error;
->  	}
-> -	rfkill_led_trigger_register(rfkill);
->  
->  	return 0;
->  }
-> @@ -416,9 +417,9 @@ EXPORT_SYMBOL(rfkill_register);
->   */
->  void rfkill_unregister(struct rfkill *rfkill)
->  {
-> -	rfkill_led_trigger_unregister(rfkill);
->  	device_del(&rfkill->dev);
->  	rfkill_remove_switch(rfkill);
-> +	rfkill_led_trigger_unregister(rfkill);
->  	put_device(&rfkill->dev);
->  }
->  EXPORT_SYMBOL(rfkill_unregister);
-> 
+On Thursday 04 October 2007 07:33, Daniel Drake wrote:
+> Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit.
+> It will then be reinitialised to the default (ieee80211_subif_start_xmit)
+> in ieee80211_if_set_type.
+>
+Well.. this kinda sucks, but we can clean up the logic here later.
 
+> +	BUG_ON(netif_running(dev));
+This will never happen, so there's no point.
 
+ACK with that bit removed.
+
+Thanks,
+-Michael Wu
+
+--nextPart4274055.lTjFuKTD6v
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBHBPoIT3Oqt9AH4aERAvyWAJ0Yk/x2lgZWeU/vfmXD2Q0+2pNt2ACgwcmf
+G81XOr8CvwL+axSyABIVHY8=
+=hnr9
+-----END PGP SIGNATURE-----
+
+--nextPart4274055.lTjFuKTD6v--
