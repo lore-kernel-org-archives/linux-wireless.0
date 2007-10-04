@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3974 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872AbXJZVHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:07:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: only honor IW_SCAN_THIS_ESSID in STA, IBSS, and AP modes
-Date: Fri, 26 Oct 2007 17:04:34 -0400
-Message-Id: <11934326821301-git-send-email-linville@tuxdriver.com> (sfid-20071026_220725_634483_438DA456)
-In-Reply-To: <11934326823646-git-send-email-linville@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
- <11934326801557-git-send-email-linville@tuxdriver.com>
- <11934326803769-git-send-email-linville@tuxdriver.com>
- <11934326803330-git-send-email-linville@tuxdriver.com>
- <11934326811535-git-send-email-linville@tuxdriver.com>
- <11934326813508-git-send-email-linville@tuxdriver.com>
- <1193432681145-git-send-email-linville@tuxdriver.com>
- <11934326812028-git-send-email-linville@tuxdriver.com>
- <11934326813245-git-send-email-linville@tuxdriver.com>
- <11934326823646-git-send-email-linville@tuxdriver.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755791AbXJDSQf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 14:16:35 -0400
+Subject: Re: [NOTE] driver caveat
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071004131019.GC6037@tuxdriver.com> (sfid-20071004_143906_154438_EAD285D8)
+References: <1191480634.9898.30.camel@johannes.berg>
+	 <20071004131019.GC6037@tuxdriver.com>
+	 (sfid-20071004_143906_154438_EAD285D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-l303yEUErFaa2rTTfPXZ"
+Date: Thu, 04 Oct 2007 20:16:55 +0200
+Message-Id: <1191521815.7367.8.camel@johannes.berg> (sfid-20071004_191639_424586_0FD767B1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
 
-The previous IW_SCAN_THIS_ESSID patch left a hole allowing scan
-requests on interfaces in inappropriate modes.
+--=-l303yEUErFaa2rTTfPXZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_ioctl.c |   37 +++++++++++++++++++------------------
- 1 files changed, 19 insertions(+), 18 deletions(-)
+On Thu, 2007-10-04 at 09:10 -0400, John W. Linville wrote:
+> On Thu, Oct 04, 2007 at 08:50:34AM +0200, Johannes Berg wrote:
+>=20
+> > If you've been experiencing bad behaviour with suspend this may be the
+> > cause, instead of working around in the driver I suggest you implement
+> > proper suspend/resume hooks in mac80211 for drivers to call ;)
+>=20
+> Proper support for suspend/resume in mac80211 seems to be an issue
+> that could use some TLC.  Anyone up for the challenge?
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 5bd103a..7b5b801 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -698,29 +698,30 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
- 
-+	switch (sdata->type) {
-+	case IEEE80211_IF_TYPE_STA:
-+	case IEEE80211_IF_TYPE_IBSS:
-+		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
-+			ssid = sdata->u.sta.ssid;
-+			ssid_len = sdata->u.sta.ssid_len;
-+		}
-+		break;
-+	case IEEE80211_IF_TYPE_AP:
-+		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
-+			ssid = sdata->u.ap.ssid;
-+			ssid_len = sdata->u.ap.ssid_len;
-+		}
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	/* if SSID was specified explicitly then use that */
- 	if (wrqu->data.length == sizeof(struct iw_scan_req) &&
- 	    wrqu->data.flags & IW_SCAN_THIS_ESSID) {
- 		req = (struct iw_scan_req *)extra;
- 		ssid = req->essid;
- 		ssid_len = req->essid_len;
--	} else {
--		switch (sdata->type) {
--		case IEEE80211_IF_TYPE_STA:
--		case IEEE80211_IF_TYPE_IBSS:
--			if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
--				ssid = sdata->u.sta.ssid;
--				ssid_len = sdata->u.sta.ssid_len;
--			}
--			break;
--		case IEEE80211_IF_TYPE_AP:
--			if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
--				ssid = sdata->u.ap.ssid;
--				ssid_len = sdata->u.ap.ssid_len;
--			}
--			break;
--		default:
--			return -EOPNOTSUPP;
--		}
- 	}
- 
- 	return ieee80211_sta_req_scan(dev, ssid, ssid_len);
--- 
-1.5.2.4
+I already added helper functions for the keys which are the most
+difficult part along with the interface configs. Phy config should be
+simple.
+
+johannes
+
+--=-l303yEUErFaa2rTTfPXZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARwUuFqVg1VMiehFYAQKa9Q//Ro1s0g3JWKp6xBubhv0E97sycc4fU56v
+GqPwXf/3I9ZMTZaoOfsJJlT9oL2SFQCbXCL4XTpOUQxjrsNU7rASo+5Aym6neEqB
+w4aSG3KLjwenRAqDeFb23IsJZr2Y2hjkKU/fM6NEIVrRs0nuS0H5KCHiHJkhBvpA
+R0EAQcG9pBzV6iTd905pdYHDb6EXszNFCykuHH/6kG556Dwf3xveSofc5XGx+YDG
+fP4oX7NnuUFGfXD9twi7Jc/DwqDOccqOLZh0LFJj8f07rZuxXJLh6n7etn8PVqqD
+320V/SK/UmoYYbq4PAnvlw/MDCoS6/VyWHMAGXYLXCoYNMT1M9cNMAaO2lJLbCe5
+Wx5CoAKbPQltjbpn2rMetsUSEyJMPlESKTpyb83/AOGRc72ZhgQX+rE2nG5b0DmD
+DFbNmIYNRs94Sj3qPgqSEGLCx0DGbNMRW2vLdyd9cFrTZqWekqxNVP0CdChWtfTe
+xIhzUKLiqetiM4YJhdXFAo7xCG0CMefWw+nxTu8cgHk0atMbFO/xOV88nQ44Fyao
+TI9iHvRflBxgyJZ6ebOAMtGrMyRfJ6oxgVlRxSv/6xNzsgnbWD/No8/muMLuFjZK
+ZV7g8cQDA4hoT6UL2ifxfJmXqtNQbZhqZAFCNT8QireVMi7IQvfgg9emNtO/lZWj
+Al6AAzgaRg0=
+=Q3V6
+-----END PGP SIGNATURE-----
+
+--=-l303yEUErFaa2rTTfPXZ--
 
