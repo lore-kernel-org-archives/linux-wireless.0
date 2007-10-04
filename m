@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41902 "EHLO mga01.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2983 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615AbXJWIVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 04:21:33 -0400
-Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
-	network
-From: Zhu Yi <yi.zhu@intel.com>
-To: dragoran <drago01@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 23 Oct 2007 16:14:40 +0800
-Message-Id: <1193127280.3069.261.camel@debian.sh.intel.com> (sfid-20071023_092137_044454_959EFCD3)
-Mime-Version: 1.0
+	id S1755844AbXJDNjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 09:39:06 -0400
+Date: Thu, 4 Oct 2007 09:08:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostapd: adjust for changed nl80211
+Message-ID: <20071004130825.GB6037@tuxdriver.com> (sfid-20071004_143921_537705_E5B030A6)
+References: <1191069453.22960.77.camel@johannes.berg> <20071003030951.GH933@jm.kir.nu> <1191393995.4178.0.camel@johannes.berg> <20071004040957.GM933@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071004040957.GM933@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 03, 2007 at 09:09:57PM -0700, Jouni Malinen wrote:
+> On Wed, Oct 03, 2007 at 08:46:35AM +0200, Johannes Berg wrote:
+> > On Tue, 2007-10-02 at 20:09 -0700, Jouni Malinen wrote:
+> > > I did not find this change from wireless-dev.git#everything.. Am I
+> > > missing something or has this not been applied to the kernel yet?
+> > 
+> > You missed that wireless-dev is dead and we're using
+> > wireless-2.6#everything now.
+> 
+> OK. Though, hostapd does not build at all against that due to
+> net/mac80211/hostapd_ioctl.h not existing.. Anyway, with a copy of
 
-On Tue, 2007-10-23 at 09:54 +0200, dragoran wrote:
-> I really have bo idea what this means... with ipw3945 (ieee80211
-> based) the same network works just fine.
+Until Johannes starts hosting his mac80211-hostap tree, I think you
+can use wireless-2.6#mac80211-attic.  I've been trying to keep that
+available for those who need it in the meantime.  Fair warning,
+it is untested and may simply not work...
 
-This is related to mac80211, not the driver. That's why ipw3945 works.
-Does this patch work for you?
+Hth?
 
-http://marc.info/?l=linux-wireless&m=118715117523167&w=2
-
-Thanks,
--yi
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
