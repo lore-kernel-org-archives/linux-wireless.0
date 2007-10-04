@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3598 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752227AbXJZOmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 10:42:01 -0400
-Date: Fri, 26 Oct 2007 10:41:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jes Sorensen <jes@sgi.com>
-Cc: Dan Williams <dcbw@redhat.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: iwl4965 detection problem
-Message-ID: <20071026144137.GD23415@tuxdriver.com> (sfid-20071026_154212_791431_0C7DF39B)
-References: <47209C0C.5010505@sgi.com> <1193319925.5542.8.camel@localhost.localdomain> <4720A509.2070708@sgi.com> <1193333545.2111.8.camel@localhost.localdomain> <47219FE6.70900@sgi.com> <20071026123044.GB23415@tuxdriver.com> <4721E17E.2020908@sgi.com> <4721F55F.1030303@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4721F55F.1030303@sgi.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38260 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757351AbXJDP4j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 11:56:39 -0400
+Date: Thu, 4 Oct 2007 08:54:40 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
+ to managed
+Message-ID: <20071004085440.008216c6@freepuppy.rosehill> (sfid-20071004_165647_615120_D78DD0EB)
+In-Reply-To: <20071004113343.552139D502B@zog.reactivated.net>
+References: <20071004113343.552139D502B@zog.reactivated.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 26, 2007 at 04:10:39PM +0200, Jes Sorensen wrote:
+On Thu,  4 Oct 2007 12:33:43 +0100 (BST)
+Daniel Drake <dsd@gentoo.org> wrote:
 
-> Disable interrupts in the iwl4965 before calling request_irq() for
-> the case that the previous OS or the BIOS left a pending interrupt in
-> the chip. This behavior has been observed on some laptops such as T61
-> Thinkpads and Toshiba Portege R500
+> This sequence of events causes loss of connectivity:
+> 
+> <plug in>
+> <associate as normal in managed mode>
+> ifconfig eth7 down
+> iwconfig eth7 mode monitor
+> ifconfig eth7 up
+> ifconfig eth7 down
+> iwconfig eth7 mode managed
+> <associate as normal>
+> 
+> At this point you are associated but TX does not work. This is because
+> the eth7 hard_start_xmit is still ieee80211_monitor_start_xmit.
+> 
+> Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit. It
+> will then be reinitialised to the default (ieee80211_subif_start_xmit) in
+> ieee80211_if_set_type.
+> 
+> Signed-off-by: Daniel Drake <dsd@gentoo.org>
 
-Any reason this would not be appropriate for iwl3945 as well?
+Playing with the function pointer is a awkward way to do this.  Shouldn't
+the state management flags be used instead (dormant, running, stop/wake)...
+I am concerned about races and dereferencing the NULL ptr.
 
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Stephen Hemminger <shemminger@linux-foundation.org>
