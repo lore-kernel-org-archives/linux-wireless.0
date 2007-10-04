@@ -1,110 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:21986 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753438AbXJMOKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:25 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so956439nfb
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:24 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/11] rt2x00: Use enum defines
-Date: Sat, 13 Oct 2007 16:26:18 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710131621.05173.IvDoorn@gmail.com>
-In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3578 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759230AbXJDSi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2007 14:38:58 -0400
+Date: Thu, 4 Oct 2007 14:15:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
+	to managed
+Message-ID: <20071004181516.GH6037@tuxdriver.com> (sfid-20071004_193901_058558_88A0FF5B)
+References: <20071004113343.552139D502B@zog.reactivated.net> <200710041706.06182.mb@bu3sch.de> <20071004151956.GE6037@tuxdriver.com> <200710041311.37997.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Message-Id: <200710131626.19134.IvDoorn@gmail.com> (sfid-20071013_151032_109500_44B7A8D8)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200710041311.37997.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When setting the default EEPROM values use
-the values from the enums instead of "magic" values.
+On Thu, Oct 04, 2007 at 01:11:33PM -0400, Michael Wu wrote:
+> On Thursday 04 October 2007 11:19, John W. Linville wrote:
+> > > The reason why BUG_ON exists is to catch bugs that happen, although
+> > > they Should Never Happen (tm) ;)
+> >
+> > Precisely.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500pci.c |    9 ++++++---
- drivers/net/wireless/rt2x00/rt2500usb.c |    9 ++++++---
- drivers/net/wireless/rt2x00/rt61pci.c   |    6 ++++--
- drivers/net/wireless/rt2x00/rt73usb.c   |    6 ++++--
- 4 files changed, 20 insertions(+), 10 deletions(-)
+> No really, this bug will never happen. This is function is merely a helper 
+> function which is called from interface removal code (where the interface 
+> *has* to be down) or from changing the interface type (which ensures that the 
+> interface is down first). There are an unlimited number of bugs which Should 
+> Never Happen. That doesn't mean we should start adding BUG_ONs for every 
+> single one of them. That gives some sort of protection against cosmic rays 
+> flipping bits, but down here on earth, it's bloat.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index a59590c..c776155 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1418,9 +1418,12 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 0);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 0);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE, 0);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
-+				   ANTENNA_SW_DIVERSITY);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
-+				   ANTENNA_SW_DIVERSITY);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE,
-+				   LED_MODE_DEFAULT);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_RF_TYPE, RF2522);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 625c409..5f02b91 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1161,9 +1161,12 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 0);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 0);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE, 0);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
-+				   ANTENNA_SW_DIVERSITY);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
-+				   ANTENNA_SW_DIVERSITY);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE,
-+				   LED_MODE_DEFAULT);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_RF_TYPE, RF2522);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index d3ef2fc..b9a37ae 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1906,8 +1906,10 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 2);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
-+				   ANTENNA_B);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
-+				   ANTENNA_B);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_FRAME_TYPE, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index f5af999..81ee3e5 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1389,8 +1389,10 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 2);
--		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 2);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
-+				   ANTENNA_B);
-+		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
-+				   ANTENNA_B);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_FRAME_TYPE, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
- 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
+Falling back on bloat as an argument against a BUG_ON in a
+configuration path seems a bit weak. :-)
+
+Programming with assertions (and BUG_ON is a form of that) is
+generally a good practice.  Almost any book or other source on
+good programming practices will agree.  Yes, it can be overdone.
+But I don't really think that is the case here, since the check is
+relatively inexpensive and the consequence should it ever *somehow*
+happen could be a something wierd (crash, corruption, etc) w/o any
+other indication of what occured.
+
+Anyway, the point is probably moot in this case if there is no great
+objection to the alternative patch I proposed.
+
+John
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
