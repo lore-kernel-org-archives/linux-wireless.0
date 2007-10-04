@@ -1,73 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53357 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59440 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbXJOIqx (ORCPT
+	with ESMTP id S1755820AbXJDSoj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 04:46:53 -0400
-Subject: Re: atheros hardware needs padding for QoS data
+	Thu, 4 Oct 2007 14:44:39 -0400
+Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
+	explicit
 From: Johannes Berg <johannes@sipsolutions.net>
-To: bruno randolf <bruno@thinktube.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710151241.17651.bruno@thinktube.com>
-References: <200710121946.30024.bruno@thinktube.com>
-	 <1192190297.4770.48.camel@johannes.berg>
-	 <1192194578.4770.55.camel@johannes.berg>
-	 <200710151241.17651.bruno@thinktube.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BtxuBGU23v1sXue04YjN"
-Date: Mon, 15 Oct 2007 10:47:16 +0200
-Message-Id: <1192438036.3349.16.camel@johannes.berg> (sfid-20071015_094657_680409_1FAA774B)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Drake <dsd@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071004180900.GG6037@tuxdriver.com> (sfid-20071004_193833_064202_C9F1C827)
+References: <20071004113343.552139D502B@zog.reactivated.net>
+	 <20071004180900.GG6037@tuxdriver.com>
+	 (sfid-20071004_193833_064202_C9F1C827)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/u7Wgpxry+VC3Sz0LKq/"
+Date: Thu, 04 Oct 2007 20:44:48 +0200
+Message-Id: <1191523488.7367.16.camel@johannes.berg> (sfid-20071004_194447_669501_672273BE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-BtxuBGU23v1sXue04YjN
+--=-/u7Wgpxry+VC3Sz0LKq/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-10-15 at 12:41 +0900, bruno randolf wrote:
+On Thu, 2007-10-04 at 14:09 -0400, John W. Linville wrote:
 
-> but isn't doing a memmove() quite inefficient? especially since we are de=
-aling=20
-> with QoS packets that might be important.
+> --- a/net/mac80211/ieee80211_iface.c
+> +++ b/net/mac80211/ieee80211_iface.c
+> @@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, in=
+t type)
+>  	 * which already has a hard_start_xmit routine assigned
+>  	 * which must not be changed.
+>  	 */
+> -	if (!dev->hard_start_xmit)
+> +	if (dev->type !=3D ARPHRD_IEEE80211)
+>  		dev->hard_start_xmit =3D ieee80211_subif_start_xmit;
 
-It's only ~20 bytes that are moved, should be within one cache line and
-we touch the packet data anyway. I don't think it's a problem.
-
-> another solution i thought of was signalling the mac80211 layer that we n=
-eed=20
-> padding which could then just adjust it's headerlen. but then different=20
-> drivers might need different padding in different places (i don't know?).=
-=20
-> what do you think of this approach?
-
-That could be worthwhile, though the headerlen calculation is called
-very very often and adding another branch into it could very well impact
-performance worse than doing the memmove.
+That should work as well although I think you should update the comment
+above :)
 
 johannes
 
---=-BtxuBGU23v1sXue04YjN
+--=-/u7Wgpxry+VC3Sz0LKq/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARxMpE6Vg1VMiehFYAQLr0xAArAuErOvOBkxzlqpooKIxB3G8Ex8K3Agm
-K5MGEx+Kh8lzKs3zuZ/WEu39zgOlquwcds0iT4nWcn+FWVWt3/6hXwdVvIMGuEi7
-q7crJ9THYD9i+tOzO9XsrTPrqxijaDtr0rJ0EKaxa46v5WkeIp3kDVpG9MvfZOnF
-ufro5aWTsQyvx5G1c1auB2rSqTQxGzVJTgb/TlMPZxjC2SB3SLM71zjwrgD02rBk
-Eo89RYarT+k7G7hUC62uH1gtIYfK7rR3dyU9ZXMtz33wmxQVVIEraqnD0FvyZ2pb
-6CLKTIVcaoL9gfvgrfzIWhXmhNV0jF09xPWepS5eKlRjqW5DajRl9NqO1ItudP8B
-N1fwUX4c23kQ7kWXgPgkBMV8Fw4GX9yaTaQ6ErXr1TlG6Cq1ShKfRsfagnuSRYaU
-m7yDxKRZq1Rh9hoXj4qx6d3LGGpdkB+GGLxIzCzEOdranNnXTxihIcXcnDDwF1YY
-oUfd/Gq2+Cammu9bwwkBNmOM6+gAho3l6wNUTTKmh3JslXoMFoEDcjdvQ8zCzyWY
-YoQdC5JUjNr+7Vh+W+HGq+PN6HVFoatxw3S0Z8ixctWAENyHCBKwJo08VT/tKkxM
-MADfhnYoihczI9WJUXwCaAcKeaN7RKfykwiaAtGzy+Qy7Spjwyg+fiMZmuns1zeW
-Mi/ZUV3kTbo=
-=lujB
+iQIVAwUARwU0n6Vg1VMiehFYAQK6jg/8C4JpPKFTXd2Sf1VRnqEHj+vwqLp/v5Td
+/yXYwqcSgHY2G5YvSvFBeVjfkKn42i+9fmoxilViouQdKAVaXWIVPF9nGOkMfuHS
+7x3WlRB7COvgiCxMEQl49w0rmhBomIoaT3k8wnLyI37H0RpG3ToVjBs34DXD0lyT
+V89r8ovTQQKoiKKuLh4Npussg1uuxJ7NUMz+tU1eqTdhj2kdJsPdDNEhC3+7OLIc
+TjqXMVMcDrvWG2Fm6ExAloq0FrzCexTyS5UIBQLFm7dTGwjasH+Uz8vJ55BZ0vdC
+CWnTah18RCoyytBy2lNc7JvKA8sPH+j6FMgAC+tC5wZpSNVvIRwEwzS7JIcqVb62
+d76gQIfKGBDLa+MrlZzoeu97n1XAlTorZ9Lp7Ou49C+q+BWEGyfHIe1FG3c8vi9d
+9eO9tdKmEW63w9VNuifR81uU5cjRRoGaAllnfVG6pnL0UVkTH3bMcvavEmzFhavH
+bqo6GsfiLJZLrAaJuLObJpzundeO0C/vwdKIAb31mqCCT9v6rXvSLMmT7zKb0vZ9
+YCNBu5rwNeL8NG33l1tiXC5NqWWh5J6CvvWdGGNDgwm4mmJJHS/qYOEB3msjG5+s
+RpQbTZa+OLPt0COhU91VCiIv2/7HLFMdv7kq5AzClLNqZNZMUpEu9pvXORU1LUip
+MU3LMugqJZE=
+=RM6L
 -----END PGP SIGNATURE-----
 
---=-BtxuBGU23v1sXue04YjN--
+--=-/u7Wgpxry+VC3Sz0LKq/--
 
