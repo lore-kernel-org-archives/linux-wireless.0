@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serenity.mcc.ac.uk ([130.88.200.93]:63578 "EHLO
-	serenity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991AbXJBVDZ (ORCPT
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:49231 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbXJDEND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 17:03:25 -0400
-Message-ID: <4702B1F7.3040100@gentoo.org> (sfid-20071002_220328_824993_D72002E5)
-Date: Tue, 02 Oct 2007 22:02:47 +0100
-From: Daniel Drake <dsd@gentoo.org>
+	Thu, 4 Oct 2007 00:13:03 -0400
+Date: Wed, 3 Oct 2007 21:12:27 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostapd: don't try setting the generic IE to the kernel
+Message-ID: <20071004041227.GN933@jm.kir.nu> (sfid-20071004_051307_445195_1B9BF48A)
+References: <1190811258.4204.7.camel@johannes.berg> <20071003030150.GG933@jm.kir.nu> <1191394054.4178.2.camel@johannes.berg>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: What happened with z1211?
-References: <200710021147.55506.mb@bu3sch.de> <470272CE.60405@gentoo.org> <200710022239.09217.mb@bu3sch.de>
-In-Reply-To: <200710022239.09217.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1191394054.4178.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> When is that port going to happen then?
-> I mean, the drop of z1211 is a huge regression for me, as I am
-> using it in production environment.
+On Wed, Oct 03, 2007 at 08:47:34AM +0200, Johannes Berg wrote:
+> On Tue, 2007-10-02 at 20:01 -0700, Jouni Malinen wrote:
+> > hostapd_set_generic_elem() wrapper for this driver wrapper function
+> > should return 0 if the wrapper is not implemented (function pointer is
+> > NULL).. Did I miss something or shouldn't we just remove
+> > i802_set_generic_elem() function completely instead of leaving the empty
+> > "return 0" version in?
+> 
+> Oh no you're right, somehow I was under the impression that the wrapper
+> function returned an error if it wasn't implemented. Want a new patch?
 
-We're aiming for 2.6.25. Right now zd1211rw-mac80211 does not really 
-provide any big user advantages over zd1211rw so you should be able to 
-use the existing driver until then.
+No need for a new patch; I applied your patch with a modification of
+jusr removing the function completely.
 
-Daniel
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
