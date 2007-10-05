@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hpsmtp-eml18.KPNXCHANGE.COM ([213.75.38.118]:52447 "EHLO
-	hpsmtp-eml18.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752138AbXJVRZn (ORCPT
+Received: from galaxy.systems.pipex.net ([62.241.162.31]:43117 "EHLO
+	galaxy.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759272AbXJEWTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 13:25:43 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Date: Mon, 22 Oct 2007 19:25:37 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200710211316.06772.elendil@planet.nl> <200710221848.27985.elendil@planet.nl> <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com>
-In-Reply-To: <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com>
+	Fri, 5 Oct 2007 18:19:14 -0400
+From: Adam Baker <linux@baker-net.org.uk>
+To: linux-wireless@vger.kernel.org
+Subject: Mode selection in mac80211
+Date: Fri, 5 Oct 2007 23:19:10 +0100
+Cc: rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710221925.37758.elendil@planet.nl> (sfid-20071022_182545_498981_207E0CF7)
+  charset="us-ascii"
+Message-Id: <200710052319.10600.linux@baker-net.org.uk> (sfid-20071005_231916_055041_CD49F30E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 October 2007, Luis R. Rodriguez wrote:
-> >  -==Device Information==-
-> > MAC Version:  5212 (0x50)
-> > MAC Revision: 5213A(0x59)
-> > PHY Revision: 5110 (0x0)
-> > PHY Revision: 5110 (0x0)
->
-> This is the problem. ath5k currently assumes only AR5210s (which are
-> 802.11a only capable) have an RF5110. This is also an 802.11bg card.
-> Essentially support for this is on the TODO list. For now we'll have
-> to just detect this and inform users the card is not supported yet.
+I've observed an undesirable change in behaviour of rt2x00 as a result of 
+Johannes Berg's patch 3d4803379613c763f5a7863e8249b63d190af5e6
+(remove all prism2 ioctls).
 
-OK. Thanks for the info.
-I'd gotten the impression that the driver was a bit further along. No 
-problem though. I'll just stay alert for announcements.
+It used to consistently default to 802.11g mode on g capable hardware. Because 
+that patch removed the lines
 
-Cheers,
-FJP
+-                               /* Use next_mode as the mode preference to
+-                                * resolve non-unique channel numbers. */
+-                               if (set && mode->mode != local->next_mode)
+-                                       continue;
+
+in ieee80211_set_channel it now defaults to 11b unless I change the code that 
+calls ieee80211_register_hwmode. (I realise that the next_mode test is no 
+longer "right").
+
+This is because ieee80211_set_channel will now prefer to select whichever was 
+the last mode for which the driver called ieee80211_register_hwmode whereas 
+the previous behaviour preferred the first registered mode. It seems as 
+though if there was a way to avoid calling Iieee80211_set_channel then the 
+setting of oper_hw_mode in ieee80211_register_hwmode would still prefer the 
+first registered mode.
+
+Is it intended that the order of calling ieee80211_register_hwmode should 
+determine which mode should be preferred when multiple modes exist on the 
+same channel or is there either already or planned a better option for driver 
+writers? If calling order should determine preference should it be first or 
+last registered?
+
+Adam Baker
