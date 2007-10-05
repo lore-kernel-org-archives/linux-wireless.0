@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:11677 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750802AbXJRBla (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60859 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753234AbXJEMBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 21:41:30 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
-Date: Wed, 17 Oct 2007 21:38:37 -0400
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-References: <11926651061687-git-send-email-tomas.winkler@intel.com>
-In-Reply-To: <11926651061687-git-send-email-tomas.winkler@intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2031122.aIXPfZJzxd";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710172138.41444.flamingice@sourmilk.net> (sfid-20071018_024133_968047_F2EC9208)
+	Fri, 5 Oct 2007 08:01:33 -0400
+Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
+	explicit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Drake <dsd@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071004191301.GJ6037@tuxdriver.com> (sfid-20071004_203826_802442_0D32693E)
+References: <20071004113343.552139D502B@zog.reactivated.net>
+	 <20071004180900.GG6037@tuxdriver.com>
+	 <1191523488.7367.16.camel@johannes.berg>
+	 <20071004191301.GJ6037@tuxdriver.com>
+	 (sfid-20071004_203826_802442_0D32693E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DrKh55KpbewEvzlK28S7"
+Date: Fri, 05 Oct 2007 14:01:32 +0200
+Message-Id: <1191585693.7367.23.camel@johannes.berg> (sfid-20071005_130141_531875_FE82046A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2031122.aIXPfZJzxd
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-DrKh55KpbewEvzlK28S7
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 17 October 2007 19:51:46 you wrote:
-> +#define ASSOC_CHNAGED_STATE     (1<<0)
-> +#define ASSOC_CHNAGED_AID       (1<<1)
-> +#define ASSOC_CHNAGED_ERP       (1<<2)
-> +#define ASSOC_CHNAGED_WMM       (1<<3)
-> +
-s/CHNAGED/CHANGED/
+On Thu, 2007-10-04 at 15:13 -0400, John W. Linville wrote:
 
-> +		wrqu.ap_addr.sa_family =3D ARPHRD_ETHER;
-> +		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-> +		ifsta->last_probe =3D jiffies;
-> +		ieee80211_led_assoc(local, bss_data->assoc);
-The SIOCGIOAP event should happen on both association and disassociation, n=
-ot=20
-just association.
+> > That should work as well although I think you should update the comment
+> > above :)
+>=20
+> The comment still seem applicable.  How would you word it?
 
-=2DMichael Wu
+Whoops, you're right, I misremembered explaining the use of the pointer.
 
---nextPart2031122.aIXPfZJzxd
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+johannes
+
+--=-DrKh55KpbewEvzlK28S7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBHFrkhT3Oqt9AH4aERAqvvAKCxarF4FCGZyCWsCSwj9eUXVGeiNwCcD/F6
-gFHoP05JrUaIN1W1TFI9lDc=
-=qPnU
+iQIVAwUARwYnm6Vg1VMiehFYAQJNEhAAi9IdfapJ3nrpRK2rwDzWap9DkwHIUBZ6
+fqfaVLcufxuHGimer+ET5SJ7Ofe3ZSfGjf5vWbF/XJCzJjshJ23BZdBOh1PmDgs0
+okiGEsZAcICOJT3vPFGzOTz1YWxxyGf+XpikHhNWWuzRhoxdSn8DtHZSRNQs7MWN
+dCaFidKNLQbQUvDiCr1LfhjIJNphfLnMRuHXFl6V5hYamSBIDbnVqzGAlngPaeq9
+sKty+HC55wFqJiLBEAcDMLA/JepnEZXXLoHH431IcPUUZfez6WV8zrD51c45Qk+y
+7asNHoSA/ROLXsApcHBGpRkhO0BqBcYtAPjqhaazuBHBgxIqkPW61v6dvoUsGoji
+O7kjxnSRIWzwrB7ba5ygMjzdSS5saHnm+60E0xwyfEl2syo8DufPWi2jY6l1A/MB
+0oXU1fituKaXlFOI8nVFiwpQI+MkBnKYTVxxG6d+h1bqhDFDr6bmtuqovESuoJhD
+Vd4vKuwSyfwoVYefBG5UYVy3EbmfpapRWFEUmRbkRyT3eBD610J1IlUw9UkWNbMe
+TFsiy8P5pNqSsxcGmwBnxRVnN1CtxE1a8USGbCm560477ESGrAZQLoTwurEX335e
+a5V98y1Ve7dCrkrwookplIvHd+Irvz8690eTapAhVlL7PkZW4ijUu5LokYROj04D
+oGalFifCI2w=
+=yMkH
 -----END PGP SIGNATURE-----
 
---nextPart2031122.aIXPfZJzxd--
+--=-DrKh55KpbewEvzlK28S7--
+
