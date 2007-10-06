@@ -1,333 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754240AbXJYJWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:22:48 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 15/30] iwlwifi: rename restricted_mem to targ_mem
-Date: Thu, 25 Oct 2007 17:15:36 +0800
-Message-Id: <1193303773185-git-send-email-yi.zhu@intel.com> (sfid-20071025_104102_645692_543CCCF1)
-In-Reply-To: <11933037721573-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
- <11933037613709-git-send-email-yi.zhu@intel.com>
- <1193303762680-git-send-email-yi.zhu@intel.com>
- <11933037641168-git-send-email-yi.zhu@intel.com>
- <11933037663659-git-send-email-yi.zhu@intel.com>
- <11933037674045-git-send-email-yi.zhu@intel.com>
- <11933037692766-git-send-email-yi.zhu@intel.com>
- <1193303770550-git-send-email-yi.zhu@intel.com>
- <11933037721573-git-send-email-yi.zhu@intel.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757719AbXJFMEK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2007 08:04:10 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:09 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/16] rt2x00: Add get_tx_data_len callback function
+Date: Sat, 6 Oct 2007 14:15:46 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200710061410.31765.IvDoorn@gmail.com>
+In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710061415.47473.IvDoorn@gmail.com> (sfid-20071006_130414_916537_BB509BF9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+The TX datalen must always be converted to a value rt73 and rt2500usb
+understand. Both require to use a different size then skb->len.
+First off this is required because the descriptor must be added,
+but the second is because the value must be a multiple of either 2 or 4,
+and it should not be a multiple of the USB packetmax
 
-This patch renames restricted_mem suffix with more proper
-name targ_mem for function accessing memory on the nic in target mode
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   19 +++++++--------
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   18 +++++++-------
- drivers/net/wireless/iwlwifi/iwl-io.h       |    9 +++----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   30 ++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   34 +++++++++++++-------------
- 5 files changed, 54 insertions(+), 56 deletions(-)
+ drivers/net/wireless/rt2x00/rt2500usb.c |   32 ++++++++++++++++++++----------
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 +
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   29 ++++++++++++++++-----------
+ drivers/net/wireless/rt2x00/rt73usb.c   |   16 +++++++++++++++
+ 4 files changed, 56 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index d761531..08b6917 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -94,7 +94,7 @@ const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
-  *   ... and set IWL_EVT_DISABLE to 1. */
- void iwl_disable_events(struct iwl_priv *priv)
- {
--	int rc;
-+	int ret;
- 	int i;
- 	u32 base;		/* SRAM address of event log header */
- 	u32 disable_ptr;	/* SRAM address of event-disable bitmap array */
-@@ -155,25 +155,24 @@ void iwl_disable_events(struct iwl_priv *priv)
- 		return;
- 	}
- 
--	rc = iwl_grab_restricted_access(priv);
--	if (rc) {
-+	ret = iwl_grab_restricted_access(priv);
-+	if (ret) {
- 		IWL_WARNING("Can not read from adapter at this time.\n");
- 		return;
- 	}
- 
--	disable_ptr = iwl_read_restricted_mem(priv, base + (4 * sizeof(u32)));
--	array_size = iwl_read_restricted_mem(priv, base + (5 * sizeof(u32)));
-+	disable_ptr = iwl_read_targ_mem(priv, base + (4 * sizeof(u32)));
-+	array_size = iwl_read_targ_mem(priv, base + (5 * sizeof(u32)));
- 	iwl_release_restricted_access(priv);
- 
- 	if (IWL_EVT_DISABLE && (array_size == IWL_EVT_DISABLE_SIZE)) {
- 		IWL_DEBUG_INFO("Disabling selected uCode log events at 0x%x\n",
- 			       disable_ptr);
--		rc = iwl_grab_restricted_access(priv);
-+		ret = iwl_grab_restricted_access(priv);
- 		for (i = 0; i < IWL_EVT_DISABLE_SIZE; i++)
--			iwl_write_restricted_mem(priv,
--						 disable_ptr +
--						 (i * sizeof(u32)),
--						 evt_disable[i]);
-+			iwl_write_targ_mem(priv,
-+					   disable_ptr + (i * sizeof(u32)),
-+					   evt_disable[i]);
- 
- 		iwl_release_restricted_access(priv);
- 	} else {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 2d6fe6f..4d76102 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1656,11 +1656,11 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
- 	priv->scd_base_addr = iwl_read_prph(priv, SCD_SRAM_BASE_ADDR);
- 	a = priv->scd_base_addr + SCD_CONTEXT_DATA_OFFSET;
- 	for (; a < priv->scd_base_addr + SCD_TX_STTS_BITMAP_OFFSET; a += 4)
--		iwl_write_restricted_mem(priv, a, 0);
-+		iwl_write_targ_mem(priv, a, 0);
- 	for (; a < priv->scd_base_addr + SCD_TRANSLATE_TBL_OFFSET; a += 4)
--		iwl_write_restricted_mem(priv, a, 0);
-+		iwl_write_targ_mem(priv, a, 0);
- 	for (; a < sizeof(u16) * priv->hw_setting.max_txq_num; a += 4)
--		iwl_write_restricted_mem(priv, a, 0);
-+		iwl_write_targ_mem(priv, a, 0);
- 
- 	iwl_write_prph(priv, SCD_DRAM_BASE_ADDR,
- 		(priv->hw_setting.shared_phys +
-@@ -1671,12 +1671,12 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
- 	for (i = 0; i < priv->hw_setting.max_txq_num; i++) {
- 		iwl_write_prph(priv, SCD_QUEUE_RDPTR(i), 0);
- 		iwl_write_restricted(priv, HBUS_TARG_WRPTR, 0 | (i << 8));
--		iwl_write_restricted_mem(priv, priv->scd_base_addr +
-+		iwl_write_targ_mem(priv, priv->scd_base_addr +
- 					SCD_CONTEXT_QUEUE_OFFSET(i),
- 					(SCD_WIN_SIZE <<
- 					SCD_QUEUE_CTX_REG1_WIN_SIZE_POS) &
- 					SCD_QUEUE_CTX_REG1_WIN_SIZE_MSK);
--		iwl_write_restricted_mem(priv, priv->scd_base_addr +
-+		iwl_write_targ_mem(priv, priv->scd_base_addr +
- 					SCD_CONTEXT_QUEUE_OFFSET(i) +
- 					sizeof(u32),
- 					(SCD_FRAME_LIMIT <<
-@@ -4146,14 +4146,14 @@ static int iwl4965_tx_queue_set_q2ratid(struct iwl_priv *priv, u16 ra_tid,
- 	tbl_dw_addr = priv->scd_base_addr +
- 			SCD_TRANSLATE_TBL_OFFSET_QUEUE(txq_id);
- 
--	tbl_dw = iwl_read_restricted_mem(priv, tbl_dw_addr);
-+	tbl_dw = iwl_read_targ_mem(priv, tbl_dw_addr);
- 
- 	if (txq_id & 0x1)
- 		tbl_dw = (scd_q2ratid << 16) | (tbl_dw & 0x0000FFFF);
- 	else
- 		tbl_dw = scd_q2ratid | (tbl_dw & 0xFFFF0000);
- 
--	iwl_write_restricted_mem(priv, tbl_dw_addr, tbl_dw);
-+	iwl_write_targ_mem(priv, tbl_dw_addr, tbl_dw);
- 
- 	return 0;
- }
-@@ -4197,12 +4197,12 @@ static int iwl4965_tx_queue_agg_enable(struct iwl_priv *priv, int txq_id,
- 	/* supposes that ssn_idx is valid (!= 0xFFF) */
- 	iwl4965_set_wr_ptrs(priv, txq_id, ssn_idx);
- 
--	iwl_write_restricted_mem(priv,
-+	iwl_write_targ_mem(priv,
- 			priv->scd_base_addr + SCD_CONTEXT_QUEUE_OFFSET(txq_id),
- 			(SCD_WIN_SIZE << SCD_QUEUE_CTX_REG1_WIN_SIZE_POS) &
- 			SCD_QUEUE_CTX_REG1_WIN_SIZE_MSK);
- 
--	iwl_write_restricted_mem(priv, priv->scd_base_addr +
-+	iwl_write_targ_mem(priv, priv->scd_base_addr +
- 			SCD_CONTEXT_QUEUE_OFFSET(txq_id) + sizeof(u32),
- 			(SCD_FRAME_LIMIT << SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS)
- 			& SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index b78afed..5cdcfc4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -411,21 +411,20 @@ static inline void iwl_clear_bits_prph(struct iwl_priv
- 	_iwl_write_prph(priv, reg, (val & ~mask));
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index c1f217b..c4aa466 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1057,6 +1057,21 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_desc_write(txd, 0, word);
  }
  
--static inline u32 iwl_read_restricted_mem(struct iwl_priv *priv, u32 addr)
-+static inline u32 iwl_read_targ_mem(struct iwl_priv *priv, u32 addr)
++static int rt2500usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
++				     int maxpacket, struct sk_buff *skb)
++{
++	int length;
++
++	/*
++	 * The length _must_ be a multiple of 2,
++	 * but it must _not_ be a multiple of the USB packet size.
++	 */
++	length = roundup(skb->len, 2);
++	length += (2 * !(length % maxpacket));
++
++	return length;
++}
++
+ /*
+  * TX data initialization
+  */
+@@ -1651,6 +1666,8 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 	    rt2x00lib_get_ring(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+ 	struct data_entry *beacon;
+ 	struct data_entry *guardian;
++	int pipe = usb_sndbulkpipe(usb_dev, 1);
++	int max_packet = usb_maxpacket(usb_dev, pipe, 1);
+ 	int length;
+ 
+ 	/*
+@@ -1677,16 +1694,9 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 							 ring->desc_size),
+ 				skb->len - ring->desc_size, control);
+ 
+-	/*
+-	 * Length passed to usb_fill_urb cannot be an odd number,
+-	 * so add 1 byte to make it even.
+-	 */
+-	length = skb->len;
+-	if (length % 2)
+-		length++;
++	length = rt2500usb_get_tx_data_len(rt2x00dev, max_packet, skb);
+ 
+-	usb_fill_bulk_urb(beacon->priv, usb_dev,
+-			  usb_sndbulkpipe(usb_dev, 1),
++	usb_fill_bulk_urb(beacon->priv, usb_dev, pipe,
+ 			  skb->data, length, rt2500usb_beacondone, beacon);
+ 
+ 	beacon->skb = skb;
+@@ -1697,8 +1707,7 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 	 * the 'flags' field we are not using for beacons.
+ 	 */
+ 	guardian->flags = 0;
+-	usb_fill_bulk_urb(guardian->priv, usb_dev,
+-			  usb_sndbulkpipe(usb_dev, 1),
++	usb_fill_bulk_urb(guardian->priv, usb_dev, pipe,
+ 			  &guardian->flags, 1, rt2500usb_beacondone, guardian);
+ 
+ 	/*
+@@ -1739,6 +1748,7 @@ static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
+ 	.link_tuner		= rt2500usb_link_tuner,
+ 	.write_tx_desc		= rt2500usb_write_tx_desc,
+ 	.write_tx_data		= rt2x00usb_write_tx_data,
++	.get_tx_data_len	= rt2500usb_get_tx_data_len,
+ 	.kick_tx_queue		= rt2500usb_kick_tx_queue,
+ 	.fill_rxdone		= rt2500usb_fill_rxdone,
+ 	.config_mac_addr	= rt2500usb_config_mac_addr,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 27bec6e..a392e2a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -396,6 +396,8 @@ struct rt2x00lib_ops {
+ 	int (*write_tx_data) (struct rt2x00_dev *rt2x00dev,
+ 			      struct data_ring *ring, struct sk_buff *skb,
+ 			      struct ieee80211_tx_control *control);
++	int (*get_tx_data_len) (struct rt2x00_dev *rt2x00dev, int maxpacket,
++				struct sk_buff *skb);
+ 	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev,
+ 			       unsigned int queue);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 66e4761..73cc726 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -157,9 +157,10 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
  {
- 	iwl_write_restricted(priv, HBUS_TARG_MEM_RADDR, addr);
- 	return iwl_read_restricted(priv, HBUS_TARG_MEM_RDAT);
+ 	struct usb_device *usb_dev =
+ 	    interface_to_usbdev(rt2x00dev_usb(rt2x00dev));
+-	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct data_entry *entry = rt2x00_get_data_entry(ring);
+-	u32 length = skb->len;
++	int pipe = usb_sndbulkpipe(usb_dev, 1);
++	int max_packet = usb_maxpacket(usb_dev, pipe, 1);
++	u32 length;
+ 
+ 	if (rt2x00_ring_full(ring)) {
+ 		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
+@@ -178,25 +179,29 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Add the descriptor in front of the skb.
+ 	 */
+-	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
+-	memset(skb->data, 0x00, rt2x00dev->hw->extra_tx_headroom);
++	skb_push(skb, ring->desc_size);
++	memset(skb->data, 0, ring->desc_size);
+ 
+ 	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
+-				ieee80211hdr, length, control);
++				(struct ieee80211_hdr *)(skb->data +
++							 ring->desc_size),
++				skb->len - ring->desc_size, control);
+ 	memcpy(&entry->tx_status.control, control, sizeof(*control));
+ 	entry->skb = skb;
+ 
+ 	/*
+-	 * Length passed to usb_fill_urb cannot be an odd number,
+-	 * so add 1 byte to make it even.
++	 * USB devices cannot blindly pass the skb->len as the
++	 * length of the data to usb_fill_bulk_urb. Pass the skb
++	 * to the driver to determine what the length should be.
+ 	 */
+-	length += rt2x00dev->hw->extra_tx_headroom;
+-	if (length % 2)
+-		length++;
++	length = rt2x00dev->ops->lib->get_tx_data_len(rt2x00dev,
++						      max_packet, skb);
+ 
++	/*
++	 * Initialize URB and send the frame to the device.
++	 */
+ 	__set_bit(ENTRY_OWNER_NIC, &entry->flags);
+-	usb_fill_bulk_urb(entry->priv, usb_dev,
+-			  usb_sndbulkpipe(usb_dev, 1),
++	usb_fill_bulk_urb(entry->priv, usb_dev, pipe,
+ 			  skb->data, length, rt2x00usb_interrupt_txdone, entry);
+ 	usb_submit_urb(entry->priv, GFP_ATOMIC);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index e7887c3..7cfdf65 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1286,6 +1286,21 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_desc_write(txd, 0, word);
  }
  
--static inline void iwl_write_restricted_mem(struct iwl_priv *priv, u32 addr,
--					    u32 val)
-+static inline void iwl_write_targ_mem(struct iwl_priv *priv, u32 addr, u32 val)
- {
- 	iwl_write_restricted(priv, HBUS_TARG_MEM_WADDR, addr);
- 	iwl_write_restricted(priv, HBUS_TARG_MEM_WDAT, val);
- }
- 
--static inline void iwl_write_restricted_mems(struct iwl_priv *priv, u32 addr,
--					     u32 len, u32 *values)
-+static inline void iwl_write_targ_mem_buf(struct iwl_priv *priv, u32 addr,
-+					  u32 len, u32 *values)
- {
- 	iwl_write_restricted(priv, HBUS_TARG_MEM_WADDR, addr);
- 	for (; 0 < len; len -= sizeof(u32), values++)
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 79e5417..28fe9cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4445,7 +4445,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 		return;
- 	}
- 
--	count = iwl_read_restricted_mem(priv, base);
-+	count = iwl_read_targ_mem(priv, base);
- 
- 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
- 		IWL_ERROR("Start IWL Error Log Dump:\n");
-@@ -4458,19 +4458,19 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 	for (i = ERROR_START_OFFSET;
- 	     i < (count * ERROR_ELEM_SIZE) + ERROR_START_OFFSET;
- 	     i += ERROR_ELEM_SIZE) {
--		desc = iwl_read_restricted_mem(priv, base + i);
-+		desc = iwl_read_targ_mem(priv, base + i);
- 		time =
--		    iwl_read_restricted_mem(priv, base + i + 1 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 1 * sizeof(u32));
- 		blink1 =
--		    iwl_read_restricted_mem(priv, base + i + 2 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 2 * sizeof(u32));
- 		blink2 =
--		    iwl_read_restricted_mem(priv, base + i + 3 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 3 * sizeof(u32));
- 		ilink1 =
--		    iwl_read_restricted_mem(priv, base + i + 4 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 4 * sizeof(u32));
- 		ilink2 =
--		    iwl_read_restricted_mem(priv, base + i + 5 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 5 * sizeof(u32));
- 		data1 =
--		    iwl_read_restricted_mem(priv, base + i + 6 * sizeof(u32));
-+		    iwl_read_targ_mem(priv, base + i + 6 * sizeof(u32));
- 
- 		IWL_ERROR
- 		    ("%-13s (#%d) %010u 0x%05X 0x%05X 0x%05X 0x%05X %u\n\n",
-@@ -4513,14 +4513,14 @@ static void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	/* "time" is actually "data" for mode 0 (no timestamp).
- 	 * place event id # at far right for easier visual parsing. */
- 	for (i = 0; i < num_events; i++) {
--		ev = iwl_read_restricted_mem(priv, ptr);
-+		ev = iwl_read_targ_mem(priv, ptr);
- 		ptr += sizeof(u32);
--		time = iwl_read_restricted_mem(priv, ptr);
-+		time = iwl_read_targ_mem(priv, ptr);
- 		ptr += sizeof(u32);
- 		if (mode == 0)
- 			IWL_ERROR("0x%08x\t%04u\n", time, ev); /* data, ev */
- 		else {
--			data = iwl_read_restricted_mem(priv, ptr);
-+			data = iwl_read_targ_mem(priv, ptr);
- 			ptr += sizeof(u32);
- 			IWL_ERROR("%010u\t0x%08x\t%04u\n", time, data, ev);
- 		}
-@@ -4550,10 +4550,10 @@ static void iwl_dump_nic_event_log(struct iwl_priv *priv)
- 	}
- 
- 	/* event log header */
--	capacity = iwl_read_restricted_mem(priv, base);
--	mode = iwl_read_restricted_mem(priv, base + (1 * sizeof(u32)));
--	num_wraps = iwl_read_restricted_mem(priv, base + (2 * sizeof(u32)));
--	next_entry = iwl_read_restricted_mem(priv, base + (3 * sizeof(u32)));
-+	capacity = iwl_read_targ_mem(priv, base);
-+	mode = iwl_read_targ_mem(priv, base + (1 * sizeof(u32)));
-+	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
-+	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
- 
- 	size = num_wraps ? capacity : next_entry;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index b702dd4..0541f71 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4774,7 +4774,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 		return;
- 	}
- 
--	count = iwl_read_restricted_mem(priv, base);
-+	count = iwl_read_targ_mem(priv, base);
- 
- 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
- 		IWL_ERROR("Start IWL Error Log Dump:\n");
-@@ -4782,15 +4782,15 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 			  priv->status, priv->config, count);
- 	}
- 
--	desc = iwl_read_restricted_mem(priv, base + 1 * sizeof(u32));
--	blink1 = iwl_read_restricted_mem(priv, base + 3 * sizeof(u32));
--	blink2 = iwl_read_restricted_mem(priv, base + 4 * sizeof(u32));
--	ilink1 = iwl_read_restricted_mem(priv, base + 5 * sizeof(u32));
--	ilink2 = iwl_read_restricted_mem(priv, base + 6 * sizeof(u32));
--	data1 = iwl_read_restricted_mem(priv, base + 7 * sizeof(u32));
--	data2 = iwl_read_restricted_mem(priv, base + 8 * sizeof(u32));
--	line = iwl_read_restricted_mem(priv, base + 9 * sizeof(u32));
--	time = iwl_read_restricted_mem(priv, base + 11 * sizeof(u32));
-+	desc = iwl_read_targ_mem(priv, base + 1 * sizeof(u32));
-+	blink1 = iwl_read_targ_mem(priv, base + 3 * sizeof(u32));
-+	blink2 = iwl_read_targ_mem(priv, base + 4 * sizeof(u32));
-+	ilink1 = iwl_read_targ_mem(priv, base + 5 * sizeof(u32));
-+	ilink2 = iwl_read_targ_mem(priv, base + 6 * sizeof(u32));
-+	data1 = iwl_read_targ_mem(priv, base + 7 * sizeof(u32));
-+	data2 = iwl_read_targ_mem(priv, base + 8 * sizeof(u32));
-+	line = iwl_read_targ_mem(priv, base + 9 * sizeof(u32));
-+	time = iwl_read_targ_mem(priv, base + 11 * sizeof(u32));
- 
- 	IWL_ERROR("Desc               Time       "
- 		  "data1      data2      line\n");
-@@ -4834,14 +4834,14 @@ static void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	/* "time" is actually "data" for mode 0 (no timestamp).
- 	 * place event id # at far right for easier visual parsing. */
- 	for (i = 0; i < num_events; i++) {
--		ev = iwl_read_restricted_mem(priv, ptr);
-+		ev = iwl_read_targ_mem(priv, ptr);
- 		ptr += sizeof(u32);
--		time = iwl_read_restricted_mem(priv, ptr);
-+		time = iwl_read_targ_mem(priv, ptr);
- 		ptr += sizeof(u32);
- 		if (mode == 0)
- 			IWL_ERROR("0x%08x\t%04u\n", time, ev); /* data, ev */
- 		else {
--			data = iwl_read_restricted_mem(priv, ptr);
-+			data = iwl_read_targ_mem(priv, ptr);
- 			ptr += sizeof(u32);
- 			IWL_ERROR("%010u\t0x%08x\t%04u\n", time, data, ev);
- 		}
-@@ -4871,10 +4871,10 @@ static void iwl_dump_nic_event_log(struct iwl_priv *priv)
- 	}
- 
- 	/* event log header */
--	capacity = iwl_read_restricted_mem(priv, base);
--	mode = iwl_read_restricted_mem(priv, base + (1 * sizeof(u32)));
--	num_wraps = iwl_read_restricted_mem(priv, base + (2 * sizeof(u32)));
--	next_entry = iwl_read_restricted_mem(priv, base + (3 * sizeof(u32)));
-+	capacity = iwl_read_targ_mem(priv, base);
-+	mode = iwl_read_targ_mem(priv, base + (1 * sizeof(u32)));
-+	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
-+	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
- 
- 	size = num_wraps ? capacity : next_entry;
- 
++static int rt73usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
++				   int maxpacket, struct sk_buff *skb)
++{
++	int length;
++
++	/*
++	 * The length _must_ be a multiple of 4,
++	 * but it must _not_ be a multiple of the USB packet size.
++	 */
++	length = roundup(skb->len, 4);
++	length += (4 * !(length % maxpacket));
++
++	return length;
++}
++
+ /*
+  * TX data initialization
+  */
+@@ -2010,6 +2025,7 @@ static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
+ 	.link_tuner		= rt73usb_link_tuner,
+ 	.write_tx_desc		= rt73usb_write_tx_desc,
+ 	.write_tx_data		= rt2x00usb_write_tx_data,
++	.get_tx_data_len	= rt73usb_get_tx_data_len,
+ 	.kick_tx_queue		= rt73usb_kick_tx_queue,
+ 	.fill_rxdone		= rt73usb_fill_rxdone,
+ 	.config_mac_addr	= rt73usb_config_mac_addr,
 -- 
-1.5.2
+1.5.3.4
+
