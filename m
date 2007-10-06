@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35994 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763726AbXJRMja (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 08:39:30 -0400
-Subject: Re: Mode/Channel/Bitrate API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <43e72e890710170715ibeee99eja865dc3291e7e37d@mail.gmail.com> (sfid-20071017_151536_588394_24595448)
-References: <1192222110.4770.81.camel@johannes.berg>
-	 <200710161640.54332.flamingice@sourmilk.net>
-	 <1192608587.8841.2.camel@johannes.berg>
-	 <43e72e890710170715ibeee99eja865dc3291e7e37d@mail.gmail.com>
-	 (sfid-20071017_151536_588394_24595448)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WFAOWVFvPXz5ZZ8XpIxI"
-Date: Thu, 18 Oct 2007 14:40:32 +0200
-Message-Id: <1192711232.15285.13.camel@johannes.berg> (sfid-20071018_133947_166474_15A271A0)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:42627 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893AbXJFD3E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2007 23:29:04 -0400
+Message-ID: <20071005232901.hp6o9em6ocwc0gws@webmail.spamcop.net> (sfid-20071006_042911_022266_05D29DA8)
+Date: Fri, 05 Oct 2007 23:29:01 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Greg Johnson <gregfjohnson@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: usb wifi ad-hoc mode suggestions?
+References: <371947.67660.qm@web33501.mail.mud.yahoo.com>
+In-Reply-To: <371947.67660.qm@web33501.mail.mud.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello!
 
---=-WFAOWVFvPXz5ZZ8XpIxI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Quoting Greg Johnson <gregfjohnson@yahoo.com>:
 
-On Wed, 2007-10-17 at 10:15 -0400, Luis R. Rodriguez wrote:
-> On 10/17/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2007-10-16 at 16:40 -0400, Michael Wu wrote:
-> > > On Friday 12 October 2007 16:48:30 Johannes Berg wrote:
-> > > >  (a) the driver registers which channel center frequencies it can
-> > > >      operate with, it could in theory just be a range (e.g. 2400-25=
-00
-> > > >      MHz) or more practically be list of center frequencies.
-> > > List would be best, but..
-> > >
-> > > >      Just
-> > > >      contains frequencies and possibly hardware dependent values fo=
-r the
-> > > >      frequency. This is done in "bands", something like
-> > > >      FREQUENCY_BAND_2_4GHZ and FREQUENCY_BAND_5GHZ, "bands" replace=
- the
-> > > >      current "modes".
-> > > Being able to just register frequency bands would work for many (but =
-not all)
-> > > drivers out there and would be more convenient than listing everythin=
-g.
-> >
-> > Yeah but it doesn't help when the user wants to enable/disable certain
-> > channels or the regulatory code needs to, so it seems we need to go wit=
-h
-> > a list.
->=20
-> The regulatory work can just iterate over the currently established
-> channels for each wiphy. Who defines those or how is not important to
-> the regulatory work. I'm not sure why the range approach would not
-> work here. A card usually works on a range of frequencies anyway.
+> I'm working on a project where we need to use a USB wifi adapter in ad-hoc
+> mode.
+>
+> We've been struggling with this.  Is there a 'standard' known solid way to
+> do this?  What products and/or chipsets and Linux drivers should we be
+> looking at?
 
-Right. But the regulatory code may need to have power restrictions
-different on different channels and generally wants to be able to
-restrict things for each channel, so it'd be good to have the list
-defined right away by the driver. It seems that if we don't put this
-into the driver but rather have a frequency range there, we need to
-allocate an array of channels later for this work and that's not needed
-if we start out with an array of channels.
+Two suggestions:
 
-johannes
+1) at76_usb, available in wireless-2.6/everything (Atmel USB).
 
---=-WFAOWVFvPXz5ZZ8XpIxI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+2) linux-wlan-ng - separate project, may need updating for the latest  
+kernels.  Supports Prism based USB devices.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Both Atmel and Prism devices are 802.11b only and may be hard to find,  
+but they would definitely work.
 
-iQIVAwUARxdUP6Vg1VMiehFYAQIOBA//S08iCCXY/lYtwI3iL6aIcbt/bIuHZDt8
-oFOaEwfSlV6bTfYMKPU2Yb+0E+b5yE44B4kdpWI2jO+NLeJBamG3AN8pFqi43nO7
-HBPYQdCIeSMYW7vth+BIMfJLDWpUjMDvEG6l9bLvBYlrCsDyv7xTKqZb4/cTDomX
-WWJFMU7IzHZR0USvmskGn5o3OrT5S1Uk8fwfVTknDe3nYkIz9Z4RU4sIIpPmdCsv
-Y7a+Z7zlqBgleMLLhTXFk/7X9mdOMHvZhmpzOmnC01PeBbXaSZYpSljdhAwP1rD6
-zVhYV6VYAl3J0doSaQIgs0l4OWTT8BtEOrX/4D+VFeJIqVOlaPy5LZvsgLks7HtK
-/5rB5hnZCGxnuHBDb9lT6jM5o2hZii6pbFNYOEPeUNKSwPiImUbOQXbASeGG2Y3V
-BoOkNk08TKKySCaXlnj/JA+nySDT2t7YUrTQHLBOVXLG2oeIWDHTr6F7a0i2h9A7
-dM+aJqs3mubk70ZPp1zISQlDVpmd9a7WsPdLj0sIb/LY1YsGYgYMkKKiVZGyTbGK
-tD0xJEPqXk/w/KFOMtA0qVXzXKRp0zuenwhafh669irpBRlumtLo5Cq0r1gymIMH
-4PMVHa5ArPnH+dLxUVnRCnB3wB3rI3mWCU+wdUxlQZmIYFDziVsOvUa8EUpUhBkV
-3IV1wU3sZqY=
-=umhP
------END PGP SIGNATURE-----
+> We're trying the zd1211 with the zd1211rw driver and the mac80211 stack,
+> which doesn't seem to have ad-hoc support currently, but their web site says
+> it should be easy to add.
 
---=-WFAOWVFvPXz5ZZ8XpIxI--
+That's another approach you can take.  At least you have the hardware,  
+and it should be 802.11g capable.  All you need is to fix the code.
 
+-- 
+Regards,
+Pavel Roskin
