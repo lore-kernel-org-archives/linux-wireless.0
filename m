@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:46588 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbXJVV7y (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:17023 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754952AbXJFMDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 17:59:54 -0400
-Date: Tue, 23 Oct 2007 00:00:00 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Daniel Hazelton <dhazelton@enter.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-Message-ID: <20071022220000.GH28190@elf.ucw.cz> (sfid-20071022_225958_828862_3B3496A7)
-References: <20071020184100.GA11640@elf.ucw.cz> <20071022211325.GF28190@elf.ucw.cz> <200710222352.57543.IvDoorn@gmail.com> <200710221742.36693.dhazelton@enter.net>
+	Sat, 6 Oct 2007 08:03:55 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so605537ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:03:55 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/16] rt2x00: Store "STARTED" state during suspend
+Date: Sat, 6 Oct 2007 14:12:42 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200710061410.31765.IvDoorn@gmail.com>
+In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710221742.36693.dhazelton@enter.net>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710061412.43493.IvDoorn@gmail.com> (sfid-20071006_130403_162542_1D24A067)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Store the started state into a new flag DEVICE_STARTED_SUSPEND
+and set this when suspending while the device was started.
+We can't check for is_interface_present() since only mac80211
+knows if there are monitor interfaces present.
 
-> > > Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
-> >
-> > That doesn't say much, some manufacturers add that line to their driver
-> >  just to prevent the module loader complaining about a non-GPL driver...
-> >
-> > There should be a copyright notice or a license file accompanied with
-> > the driver that clearly states the license of the driver.
-> 
-> Lacking an explicitly stated license it can be argued that, since the 
-> MODULE_LICENSE() macro is meant to define the actual license on the code, 
-> this code is GPL. No, it isn't an explicit definition, but lacking any other 
-> signs of the license, the implicit declaration of it being GPL is (or should 
-> be) enough to deflect charges of copyright infringement.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    7 ++++---
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-Yep, I believe this driver is GPLed. They published the source and
-there's nothing to suggest otherwise, and there's explicit:
-
-#define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
-#define DRIVER_DESC                             "IS89C35 802.11bg WLAN USB Driver"
-MODULE_LICENSE("GPL");
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 5d30ca6..d280d0e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -508,6 +508,7 @@ struct rt2x00_dev {
+ #define CONFIG_EXTERNAL_LNA_BG		13
+ #define CONFIG_DOUBLE_ANTENNA		14
+ #define CONFIG_DISABLE_LINK_TUNING	15
++#define DEVICE_STARTED_SUSPEND		16
  
-									Pavel
-
+ 	/*
+ 	 * Chipset identification.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index b6a5c34..f254753 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1088,12 +1088,13 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
+ 	 */
+ 	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
+ 		goto exit;
++	__set_bit(DEVICE_STARTED_SUSPEND, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Disable radio and unitialize all items
+ 	 * that must be recreated on resume.
+ 	 */
+-	rt2x00lib_disable_radio(rt2x00dev);
++	rt2x00mac_stop(rt2x00dev->hw);
+ 	rt2x00lib_uninitialize(rt2x00dev);
+ 	rt2x00debug_deregister(rt2x00dev);
+ 
+@@ -1123,9 +1124,9 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00debug_register(rt2x00dev);
+ 
+ 	/*
+-	 * Only continue if mac80211 has open interfaces.
++	 * Only continue if mac80211 had open interfaces.
+ 	 */
+-	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (!__test_and_clear_bit(DEVICE_STARTED_SUSPEND, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.5.3.4
+
