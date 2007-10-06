@@ -1,144 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:19718 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934092AbXJPVbs (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756750AbXJFMEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 17:31:48 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3937259pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 14:31:46 -0700 (PDT)
-Message-ID: <40f31dec0710161431h188f7d41v7fca16d9ff5fbc46@mail.gmail.com> (sfid-20071016_223152_440656_E40D1D09)
-Date: Wed, 17 Oct 2007 00:31:43 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>
-Subject: [PATCH 1/4] ath5k: Get rid of unused channel list parameters used in binary HAL
+	Sat, 6 Oct 2007 08:04:06 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:06 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/16] rt2x00: get_duration expects values in 100kbs
+Date: Sat, 6 Oct 2007 14:14:58 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200710061410.31765.IvDoorn@gmail.com>
+In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710061414.59128.IvDoorn@gmail.com> (sfid-20071006_130411_783853_415F1597)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some parameters left in the code that were used by binary
-HAL to generate the channel list. Since we don't use binary HAL and
-channel list is handled differently, they are out.
+get_duration expects all speeds to be passed in 100kbs,
+this means that passing 2 is incorrect and should be raised to 20
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-
-Changes to base.c
-Changes-licensed-under: 3-clause-BSD
-
-Changes to ath5k.h, hw.c
-Changes-licensed-under: ISC
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-diff --git a/drivers/net/wireless/ath5k/ath5k.h
-b/drivers/net/wireless/ath5k/ath5k.h
-index bcf1041..de4a53a 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -918,7 +918,6 @@ struct ath_hw {
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-        void                    *ah_sc;
-        void __iomem            *ah_sh;
--       enum ath5k_countrycode  ah_country_code;
-
-        enum ath5k_int          ah_imr;
-
-diff --git a/drivers/net/wireless/ath5k/base.c
-b/drivers/net/wireless/ath5k/base.c
-index 5ca6af1..6f55011 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -98,16 +98,6 @@ enum {
-
- static int ath_calinterval = ATH_SHORT_CALIB;
-
--static int countrycode = CTRY_DEFAULT;
--static int outdoor = true;
--static int xchanmode = true;
--module_param(countrycode, int, 0);
--MODULE_PARM_DESC(countrycode, "Override default country code");
--module_param(outdoor, int, 0);
--MODULE_PARM_DESC(outdoor, "Enable/disable outdoor use");
--module_param(xchanmode, int, 0);
--MODULE_PARM_DESC(xchanmode, "Enable/disable extended channel mode");
--
- #if AR_DEBUG
- static unsigned int ath_debug;
- module_param_named(debug, ath_debug, uint, 0);
-@@ -1981,8 +1971,6 @@ static int ath_getchannels(struct ieee80211_hw *hw)
-
-        BUILD_BUG_ON(ARRAY_SIZE(sc->modes) < 3);
-
--       ah->ah_country_code = countrycode;
--
-        /* The order here does not matter */
-        modes[0].mode = MODE_IEEE80211G;
-        modes[1].mode = MODE_IEEE80211B;
-@@ -2214,10 +2202,10 @@ static int ath_attach(struct pci_dev *pdev,
-struct ieee80211_hw *hw)
-                ath5k_hw_reset_key(ah, i);
-
-        /*
--        * Collect the channel list using the default country
--        * code and including outdoor channels.  The 802.11 layer
--        * is resposible for filtering this list based on settings
--        * like the phy mode.
-+        * Collect the channel list.  The 802.11 layer
-+        * is resposible for filtering this list based
-+        * on settings like the phy mode and regulatory
-+        * domain restrictions.
-         */
-        ret = ath_getchannels(hw);
-        if (ret) {
-@@ -2585,27 +2573,6 @@ static ctl_table ath_static_sysctls[] = {
-        },
- #endif
-        {
--         .procname     = "countrycode",
--         .mode         = 0444,
--         .data         = &countrycode,
--         .maxlen       = sizeof(countrycode),
--         .proc_handler = proc_dointvec
--       },
--       {
--         .procname     = "outdoor",
--         .mode         = 0444,
--         .data         = &outdoor,
--         .maxlen       = sizeof(outdoor),
--         .proc_handler = proc_dointvec
--       },
--       {
--         .procname     = "xchanmode",
--         .mode         = 0444,
--         .data         = &xchanmode,
--         .maxlen       = sizeof(xchanmode),
--         .proc_handler = proc_dointvec
--       },
--       {
-          .procname     = "calibrate",
-          .mode         = 0644,
-          .data         = &ath_calinterval,
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 504f642..8b22416 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -214,8 +214,7 @@ struct ath_hw *ath5k_hw_attach(u16 device, u8
-mac_version, void *sc,
-         * HAL information
-         */
-
--       /* Regulation Stuff */
--       hal->ah_country_code = AR5K_TUNE_CTRY;
-+       /* Get reg domain from eeprom */
-        ath5k_get_regdomain(hal);
-
-        hal->ah_op_mode = IEEE80211_IF_TYPE_STA;
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 5f8df7a..edb5bd1 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -277,7 +277,7 @@ static void rt2400pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
+ 	 */
+ 	rt2x00pci_register_read(rt2x00dev, BCNCSR1, &reg);
+ 	rt2x00_set_field32(&reg, BCNCSR1_PRELOAD,
+-			   PREAMBLE + get_duration(IEEE80211_HEADER, 2));
++			   PREAMBLE + get_duration(IEEE80211_HEADER, 20));
+ 	rt2x00pci_register_write(rt2x00dev, BCNCSR1, reg);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index cac9430..68baccc 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -277,7 +277,7 @@ static void rt2500pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
+ 	 */
+ 	rt2x00pci_register_read(rt2x00dev, BCNCSR1, &reg);
+ 	rt2x00_set_field32(&reg, BCNCSR1_PRELOAD,
+-			   PREAMBLE + get_duration(IEEE80211_HEADER, 2));
++			   PREAMBLE + get_duration(IEEE80211_HEADER, 20));
+ 	rt2x00_set_field32(&reg, BCNCSR1_BEACON_CWMIN,
+ 			   rt2x00lib_get_ring(rt2x00dev,
+ 					      IEEE80211_TX_QUEUE_BEACON)
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 234b34e..c1f217b 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -280,7 +280,7 @@ static void rt2500usb_config_type(struct rt2x00_dev *rt2x00dev, const int type,
+ 	 */
+ 	rt2500usb_register_read(rt2x00dev, TXRX_CSR20, &reg);
+ 	rt2x00_set_field16(&reg, TXRX_CSR20_OFFSET,
+-			   (PREAMBLE + get_duration(IEEE80211_HEADER, 2)) >> 6);
++			   (PREAMBLE + get_duration(IEEE80211_HEADER, 20)) >> 6);
+ 	if (type == IEEE80211_IF_TYPE_STA)
+ 		rt2x00_set_field16(&reg, TXRX_CSR20_BCN_EXPECT_WINDOW, 0);
+ 	else
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.3.4
+
