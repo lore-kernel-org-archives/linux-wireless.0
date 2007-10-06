@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from probity.mcc.ac.uk ([130.88.200.94]:54343 "EHLO
-	probity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbXJDL74 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:17023 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757474AbXJFMEQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 07:59:56 -0400
-Received: from rp073a.halls.manchester.ac.uk ([130.88.180.73])
-	by probity.mcc.ac.uk with esmtp (Exim 4.63 (FreeBSD))
-	(envelope-from <dsd@gentoo.org>)
-	id 1IdPMw-000M3w-NJ
-	for linux-wireless@vger.kernel.org; Thu, 04 Oct 2007 12:59:54 +0100
-Message-ID: <4704D59F.50403@gentoo.org> (sfid-20071004_130009_679703_4A2482E8)
-Date: Thu, 04 Oct 2007 12:59:27 +0100
-From: Daniel Drake <dsd@gentoo.org>
+	Sat, 6 Oct 2007 08:04:16 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so605537ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:15 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/16] rt2x00: Reorganize configuration handler
+Date: Sat, 6 Oct 2007 14:17:39 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200710061410.31765.IvDoorn@gmail.com>
+In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [ANNOUNCE] zd1211-firmware-1.4
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200710061417.40152.IvDoorn@gmail.com> (sfid-20071006_131651_528439_736CE7FC)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New firmware release available from:
+Reorganize configuration handling by creating a extra
+structure which contains precalculated values based
+on the mac80211 values which are usefull for all
+individual drivers.
 
-http://sourceforge.net/project/shownotes.php?release_id=544191&group_id=129083
+This also fixes the preamble configuration problem,
+up untill now preamble was never configured since
+by default the rate->val value was used when changing
+the mode.
+Now rate->val will only be used to set the basic rate mask.
+The preamble configuration will now be done correctly
+through the erp_ie_changed callback function.
 
-VERSION 1.4 (2007-10-04)
-Sync to vendor driver v2.21.0.0
-According to Atheros, this firmware fixes a USB disconnect issue which 
-most commonly appeared when running "lsusb" or "cat /proc/usb/devices" 
-while using the device.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
+---
 
-Daniel
+http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.10/0013-rt2x00-Reorganize-configuration-handler.patch
