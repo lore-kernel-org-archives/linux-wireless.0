@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57872
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752847AbXJGOy3 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757719AbXJFMER (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2007 10:54:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: [PATCH] mac80211: Defer setting of RX_FLAG_DECRYPTED.
-Date: Sun, 7 Oct 2007 16:53:53 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <1191767731.8135.5.camel@localhost>
-In-Reply-To: <1191767731.8135.5.camel@localhost>
+	Sat, 6 Oct 2007 08:04:17 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:17 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/16] rt2x00: Clean disabling of rt73usb_get_tsf
+Date: Sat, 6 Oct 2007 14:18:00 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200710061410.31765.IvDoorn@gmail.com>
+In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710071653.53335.mb@bu3sch.de> (sfid-20071007_155434_925897_2E555CC9)
+  charset="utf-8"
+Message-Id: <200710061418.00743.IvDoorn@gmail.com> (sfid-20071006_131651_128979_E71896FC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 07 October 2007 16:35:31 Mattias Nissler wrote:
-> The decryption handlers will skip the frame if the RX_FLAG_DECRYPTED
-> flag is set, so the early flag setting introduced by Johannes breaks
-> decryption. To work around this, call the handlers first and then set
-> the flag.
-> 
-> Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-> ---
->  net/mac80211/rx.c |   20 +++++++++++---------
->  1 files changed, 11 insertions(+), 9 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index de3f7ae..34699a1 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -424,6 +424,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
->  	int keyidx;
->  	int hdrlen;
-> +	ieee80211_txrx_result result = TXRX_DROP;
->  	struct ieee80211_key *stakey = NULL;
->  
->  	/*
-> @@ -522,21 +523,22 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
->  	    ieee80211_wep_is_weak_iv(rx->skb, rx->key))
->  		rx->sta->wep_weak_iv_count++;
->  
-> -	/* either the frame will be decrypted or dropped */
-> -	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
-> -
->  	switch (rx->key->conf.alg) {
->  	case ALG_WEP:
-> -		return ieee80211_crypto_wep_decrypt(rx);
-> +		result = ieee80211_crypto_wep_decrypt(rx);
-> +		break;
->  	case ALG_TKIP:
-> -		return ieee80211_crypto_tkip_decrypt(rx);
-> +		result = ieee80211_crypto_tkip_decrypt(rx);
-> +		break;
->  	case ALG_CCMP:
-> -		return ieee80211_crypto_ccmp_decrypt(rx);
-> +		result = ieee80211_crypto_ccmp_decrypt(rx);
-> +		break;
->  	}
->  
-> -	/* not reached */
-> -	WARN_ON(1);
-> -	return TXRX_DROP;
-> +	/* either the frame will be decrypted or dropped */
+By defining rt73usb_get_tsf to NULL we only
+have 1 location that needs to be edited
+when rt73usb_get_tsf can be enabled again.
+This also reduces the number of #ifdefs in
+the code which is also a "good thing"
 
-I think this comment doesn't apply then anymore, eh?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-> +	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
-> +
-> +	return result;
->  }
->  
->  static void ap_sta_ps_start(struct net_device *dev, struct sta_info *sta)
-
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index a3555e5..71699a7 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1908,6 +1908,8 @@ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
+ 
+ 	return tsf;
+ }
++#else
++#define rt73usb_get_tsf	NULL
+ #endif
+ 
+ static void rt73usb_reset_tsf(struct ieee80211_hw *hw)
+@@ -1968,12 +1970,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+ 	.erp_ie_changed		= rt2x00mac_erp_ie_changed,
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+-#if 0
+-/*
+- * See comment at the rt73usb_get_tsf function.
+- */
+ 	.get_tsf		= rt73usb_get_tsf,
+-#endif
+ 	.reset_tsf		= rt73usb_reset_tsf,
+ 	.beacon_update		= rt73usb_beacon_update,
+ };
 -- 
-Greetings Michael.
+1.5.3.4
+
