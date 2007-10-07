@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3302 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbXJZVXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:23:36 -0400
-Date: Fri, 26 Oct 2007 17:23:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail.gmx.net ([213.165.64.20]:58825 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752282AbXJGOff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Oct 2007 10:35:35 -0400
+Subject: [PATCH] mac80211: Defer setting of RX_FLAG_DECRYPTED.
+From: Mattias Nissler <mattias.nissler@gmx.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: reorder association debug output
-Message-ID: <20071026212303.GF23415@tuxdriver.com> (sfid-20071026_222346_791066_531A7428)
-References: <11934326793639-git-send-email-linville@tuxdriver.com> <11934326801557-git-send-email-linville@tuxdriver.com> <11934326803769-git-send-email-linville@tuxdriver.com> <11934326803330-git-send-email-linville@tuxdriver.com> <11934326811535-git-send-email-linville@tuxdriver.com> <11934326813508-git-send-email-linville@tuxdriver.com> <1193432681145-git-send-email-linville@tuxdriver.com> <1193433039.15686.12.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1193433039.15686.12.camel@johannes.berg>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Content-Type: text/plain
+Date: Sun, 07 Oct 2007 16:35:31 +0200
+Message-Id: <1191767731.8135.5.camel@localhost> (sfid-20071007_153600_904601_06ED94FD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 26, 2007 at 11:10:39PM +0200, Johannes Berg wrote:
-> 
-> On Fri, 2007-10-26 at 17:04 -0400, John W. Linville wrote:
-> > From: Johannes Berg <johannes@sipsolutions.net>
-> > 
-> > There's no reason to warn about an invalid AID field when the
-> > association was denied.
-> 
-> I don't really see a reason to have this in stable, do we really want
+The decryption handlers will skip the frame if the RX_FLAG_DECRYPTED
+flag is set, so the early flag setting introduced by Johannes breaks
+decryption. To work around this, call the handlers first and then set
+the flag.
 
-Perhaps not.  I'm still not totally clear on the "stable" criteria
-(probably my own fault).
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+---
+ net/mac80211/rx.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
 
-Anyway, this probably got caught-up in a "what recent fixes still
-apply to 2.6.23" sweep.  Still, I don't see why this wouldn't be
-desirable for someone running 2.6.23?
-
-> that? And if so, we should roll in the fix for the warning :)
-
-I was trying to "clear the baffles" before rolling-out the more
-recent fixes.  If this patch isn't rejected for stable then it might
-be worth waiting for the warning fix patch pushed yesterday.
-
-John
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index de3f7ae..34699a1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -424,6 +424,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+ 	int keyidx;
+ 	int hdrlen;
++	ieee80211_txrx_result result = TXRX_DROP;
+ 	struct ieee80211_key *stakey = NULL;
+ 
+ 	/*
+@@ -522,21 +523,22 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
+ 	    ieee80211_wep_is_weak_iv(rx->skb, rx->key))
+ 		rx->sta->wep_weak_iv_count++;
+ 
+-	/* either the frame will be decrypted or dropped */
+-	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
+-
+ 	switch (rx->key->conf.alg) {
+ 	case ALG_WEP:
+-		return ieee80211_crypto_wep_decrypt(rx);
++		result = ieee80211_crypto_wep_decrypt(rx);
++		break;
+ 	case ALG_TKIP:
+-		return ieee80211_crypto_tkip_decrypt(rx);
++		result = ieee80211_crypto_tkip_decrypt(rx);
++		break;
+ 	case ALG_CCMP:
+-		return ieee80211_crypto_ccmp_decrypt(rx);
++		result = ieee80211_crypto_ccmp_decrypt(rx);
++		break;
+ 	}
+ 
+-	/* not reached */
+-	WARN_ON(1);
+-	return TXRX_DROP;
++	/* either the frame will be decrypted or dropped */
++	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
++
++	return result;
+ }
+ 
+ static void ap_sta_ps_start(struct net_device *dev, struct sta_info *sta)
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3
+
