@@ -1,76 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:42610 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756861AbXJLKqd (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:61229 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbXJGK2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 06:46:33 -0400
-Received: from vs30d.wh2.ocn.ne.jp (222.146.55.198)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-019535990
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 19:46:31 +0900 (JST)
-From: bruno randolf <bruno@thinktube.com>
-To: linux-wireless@vger.kernel.org
-Subject: atheros hardware needs padding for QoS data
-Date: Fri, 12 Oct 2007 19:46:29 +0900
+	Sun, 7 Oct 2007 06:28:14 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1822104pyb
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2007 03:28:13 -0700 (PDT)
+Message-ID: <40f31dec0710070328r71d986bcm2b3fa78130052cb3@mail.gmail.com> (sfid-20071007_112820_124701_55F065F6)
+Date: Sun, 7 Oct 2007 03:28:12 -0700
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 2/6] ath5k: Enable radar detection
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <40f31dec0710070256y261199abw54e8e8dafab3ffb6@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710121946.30024.bruno@thinktube.com> (sfid-20071012_114641_137646_A74F979B)
+Content-Type: text/plain; charset=UTF-8
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
+	 <20071006011837.GB25022@pogo>
+	 <40f31dec0710070256y261199abw54e8e8dafab3ffb6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello!
+Take a look here..
+http://thread.gmane.org/gmane.linux.drivers.madwifi.devel/4386/focus=4391
 
-it seems the atheros hardware needs a padding to 4 byte boundaries after the 
-801.11 header when it sends QoS frames and it will add such a padding 
-automatically when it receives QoS data frames. 
-
-in my case this made the ath5k driver associate with an QoS enabled AP (same 
-type of card with the madwifi driver in default config) fine, but i could not 
-get any ARP requests thru - since the padding was missing there were 2 bytes 
-lost in the packet received on the AP side, so no further communication...
-
-this need for padding is also reflected in the madwifi code and this comment:
-	/*
-	 * Indicate we need the 802.11 header padded to a
-	 * 32-bit boundary for 4-address and QoS frames.
-	 */
-
-i created the following simple hack, to see if the problem really is the 
-missing padding. it just adds the padding all the time, so it will only work 
-with QoS enabled APs, but it makes me able to communicate with my QoS AP.
-
-i didn't see how mac80211 would allow to solve this elegantly at this time. 
-are there any other drivers with a similar kind of padding requirement? how 
-could that be implemented cleanly?
-
-luis, does this hack fix your problem with DHCP too?
-
-bruno
-
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 064924c..bb11e63 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1019,6 +1019,8 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
-                return TXRX_DROP;
-
-        hdrlen = ieee80211_get_hdrlen(fc);
-+       if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)
-+               hdrlen = hdrlen + 2;
-
-        /* convert IEEE 802.11 header + possible LLC headers into Ethernet
-         * header
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 957ec3c..6be9b95 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1405,7 +1405,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
-        if (sta) {
-                if (sta->flags & WLAN_STA_WME) {
-                        fc |= IEEE80211_STYPE_QOS_DATA;
--                       hdrlen += 2;
-+                       hdrlen += 4; //2;
-                }
-                sta_info_put(sta);
-        }
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
