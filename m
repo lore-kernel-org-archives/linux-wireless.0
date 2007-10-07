@@ -1,91 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52560 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754750AbXJQOTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:19:19 -0400
-Subject: Re: iwl3945 doesn't work
-From: Dan Williams <dcbw@redhat.com>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Ismail =?ISO-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20071017141111.GM5043@kernel.dk>
-References: <20071017135452.GJ5043@kernel.dk>
-	 <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 17 Oct 2007 10:18:53 -0400
-Message-Id: <1192630733.10567.37.camel@localhost.localdomain> (sfid-20071017_151929_188807_30E8C2C6)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.176]:50541 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbXJGKNa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Oct 2007 06:13:30 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1819084pyb
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2007 03:13:29 -0700 (PDT)
+Message-ID: <40f31dec0710070313k6514882bkf5676d06ced25c53@mail.gmail.com> (sfid-20071007_111332_567582_324F60C6)
+Date: Sun, 7 Oct 2007 03:13:28 -0700
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet supported radios
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071006012057.GF25022@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
+	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
+	 <20071006011949.GD25022@pogo> <20071006012017.GE25022@pogo>
+	 <20071006012057.GF25022@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
-> On Wed, Oct 17 2007, Ismail D=C3=B6nmez wrote:
-> > Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
-> > > Hi,
-> > >
-> > > Seeing that iwl3945 is now merged, I decided to switch my x60 to =
-use
-> > > that instead of ipw3945. That would leave me with zero kernel
-> > > dependencies.
-> > >
-> > > Unfortunately it doesn't work. Loading the module reveals the dev=
-ice:
-> > >
-> > > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driv=
-er for
-> > > Linux, 1.1.17ks
-> > > iwl3945: Copyright(c) 2003-2007 Intel Corporation
-> > > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ=
- 21
-> > > PCI: Setting latency timer of device 0000:03:00.0 to 64
-> > > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
-> > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> > > phy0: Selected rate control algorithm 'iwl-3945-rs'
-> > >
-> > > # iwconfig wlan0
-> > > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
-> > >           Mode:Managed  Channel:0  Access Point: Not-Associated
-> > >           Tx-Power=3D0 dBm
-> > >           Retry min limit:7   RTS thr:off   Fragment thr=3D2346 B
-> > >           Encryption key:XXXX-XXXX-XX
-> > >           Link Quality:0  Signal level:0  Noise level:0
-> > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:=
-0
-> > >           Tx excessive retries:0  Invalid misc:0   Missed beacon:=
-0
-> > >
-> > > and iwconfig sees it, essid/enc settings are fine, but I don't ge=
-t a
-> > > link.
-> >=20
-> > Same issue here, try iwlist wlan0 scan first and then it should wor=
-k.
->=20
-> Huh indeed, now it links fine! Thanks for the hint. Would be nice to
-> have fixed, though :-)
+NACK i have a better fix wich uses chip srev, i had commited it on
+ath5k branch on madwifi svn...
 
-Odd, doesn't the driver need to do a scan _anyway_ to find the right
-BSSID to associate with if the cached scan results are more than a few
-seconds old?  Can you run '/sbin/iwevent' before trying a fresh
-association, try to associate, ensure that it has failed, and report th=
-e
-output?
+what's going on ? noone read my chagnes n ath5k branch on madwifi svn
+? i did this change some time ago (over a month) and it seems you
+didn't even saw it...
 
-If you don't get something like:
+http://madwifi.org/changeset/2703
+http://madwifi.org/changeset/2704
 
-10:17:05.117937   eth1     Scan request completed
+what happened to my changes ? you told me you would commit them here...
 
-shown there, then there's likely a bug in the driver because it's eithe=
-r
-(a) not scanning before trying to associate, or (b) not sending out sca=
-n
-completion events after it's done a scan.
-
-Dan
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
