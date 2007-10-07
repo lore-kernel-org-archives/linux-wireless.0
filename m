@@ -1,55 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64530 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751236AbXJULXz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 07:23:55 -0400
-MIME-Version: 1.0
-Subject: RE: [PATCH 1/1] mac80211: adding bss_config to low driver ops
-Date: Sun, 21 Oct 2007 13:23:49 +0200
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB03E6D304@hasmsx411.ger.corp.intel.com> (sfid-20071021_122359_838304_2E62C998)
-In-Reply-To: <200710172138.41444.flamingice@sourmilk.net>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Michael Wu" <flamingice@sourmilk.net>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.gmx.net ([213.165.64.20]:33099 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752863AbXJGPF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Oct 2007 11:05:59 -0400
+Subject: Re: [PATCH] mac80211: Defer setting of RX_FLAG_DECRYPTED.
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200710071653.53335.mb@bu3sch.de>
+References: <1191767731.8135.5.camel@localhost>
+	 <200710071653.53335.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Sun, 07 Oct 2007 17:05:55 +0200
+Message-Id: <1191769555.8135.8.camel@localhost> (sfid-20071007_160610_867095_94AA695C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both remarks true, thanks
+On Sun, 2007-10-07 at 16:53 +0200, Michael Buesch wrote:
+> On Sunday 07 October 2007 16:35:31 Mattias Nissler wrote:
+> > +	/* either the frame will be decrypted or dropped */
+> 
+> I think this comment doesn't apply then anymore, eh?
 
------Original Message-----
-From: Michael Wu [mailto:flamingice@sourmilk.net] 
-Sent: Thursday, October 18, 2007 3:39 AM
-To: Winkler, Tomas
-Cc: linville@tuxdriver.com; johannes@sipsolutions.net;
-linux-wireless@vger.kernel.org; Rindjunsky, Ron
-Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
+Well, I changed the wording to "has been decrypted or will be dropped".
 
-On Wednesday 17 October 2007 19:51:46 you wrote:
-> +#define ASSOC_CHNAGED_STATE     (1<<0)
-> +#define ASSOC_CHNAGED_AID       (1<<1)
-> +#define ASSOC_CHNAGED_ERP       (1<<2)
-> +#define ASSOC_CHNAGED_WMM       (1<<3)
-> +
-s/CHNAGED/CHANGED/
-
-> +		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
-> +		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-> +		ifsta->last_probe = jiffies;
-> +		ieee80211_led_assoc(local, bss_data->assoc);
-The SIOCGIOAP event should happen on both association and
-disassociation, not 
-just association.
+Mattias
 
 
--Michael Wu
----------------------------------------------------------------------
-Intel Israel (74) Limited
+The decryption handlers will skip the frame if the RX_FLAG_DECRYPTED
+flag is set, so the early flag setting introduced by Johannes breaks
+decryption. To work around this, call the handlers first and then set
+the flag.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+---
+ net/mac80211/rx.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index de3f7ae..34699a1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -424,6 +424,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data
+*rx)
+        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)
+rx->skb->data;
+        int keyidx;
+        int hdrlen;
++       ieee80211_txrx_result result = TXRX_DROP;
+        struct ieee80211_key *stakey = NULL;
+ 
+        /*
+@@ -522,21 +523,22 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data
+*rx)
+            ieee80211_wep_is_weak_iv(rx->skb, rx->key))
+                rx->sta->wep_weak_iv_count++;
+ 
+-       /* either the frame will be decrypted or dropped */
+-       rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
+-
+        switch (rx->key->conf.alg) {
+        case ALG_WEP:
+-               return ieee80211_crypto_wep_decrypt(rx);
++               result = ieee80211_crypto_wep_decrypt(rx);
++               break;
+        case ALG_TKIP:
+-               return ieee80211_crypto_tkip_decrypt(rx);
++               result = ieee80211_crypto_tkip_decrypt(rx);
++               break;
+        case ALG_CCMP:
+-               return ieee80211_crypto_ccmp_decrypt(rx);
++               result = ieee80211_crypto_ccmp_decrypt(rx);
++               break;
+        }
+ 
+-       /* not reached */
+-       WARN_ON(1);
+-       return TXRX_DROP;
++       /* either the frame has been decrypted or will be dropped */
++       rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
++
++       return result;
+ }
+ 
+ static void ap_sta_ps_start(struct net_device *dev, struct sta_info
+*sta)
+-- 
+1.5.3
+
+
