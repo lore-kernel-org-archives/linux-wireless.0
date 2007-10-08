@@ -1,87 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:64453 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbXJMVvQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39297 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbXJHJeU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 17:51:16 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1374630mue
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 14:51:14 -0700 (PDT)
-Message-ID: <47113DCE.5020609@gmail.com> (sfid-20071013_225122_791533_B91CADA8)
-Date: Sat, 13 Oct 2007 23:51:10 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer
- G	for AR5212
-References: <20071012150438.GC9407@pogo> <20071012150543.GD9407@pogo> <20071012150709.GE9407@pogo> <20071012150745.GF9407@pogo> <4af2d03a0710121433r1f32aaabt4bb8d50c61ef12d5@mail.gmail.com> <20071012223757.GA4994@pogo> <40f31dec0710130221o4b38d5fcld4239b48d24e8206@mail.gmail.com> <40f31dec0710130230xa5d4869x814ccdfad10802be@mail.gmail.com> <47109214.3030409@gmail.com> <20071013200829.GA8951@pogo>
-In-Reply-To: <20071013200829.GA8951@pogo>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 8 Oct 2007 05:34:20 -0400
+Subject: Re: [PATCH] mac80211: Defer setting of RX_FLAG_DECRYPTED.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <1191767731.8135.5.camel@localhost> (sfid-20071007_153600_904601_06ED94FD)
+References: <1191767731.8135.5.camel@localhost>
+	 (sfid-20071007_153600_904601_06ED94FD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YXTctA+P8JPmczBOTXmw"
+Date: Mon, 08 Oct 2007 11:34:54 +0200
+Message-Id: <1191836094.4063.9.camel@johannes.berg> (sfid-20071008_103427_297564_F26C48FE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/13/2007 10:08 PM, Luis R. Rodriguez wrote:
-> [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer G for AR5212
-[...]
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 18ee995..db37ceb 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1896,7 +1896,7 @@ static void ath_dump_modes(struct ieee80211_hw_mode *modes)
->  {
->  	unsigned int m, i;
->  
-> -	for (m = 0; m < NUM_IEEE80211_MODES; m++) {
-> +	for (m = 0; m < NUM_DRIVER_MODES; m++) {
->  		printk(KERN_DEBUG "Mode %u: channels %d, rates %d\n", m,
->  				modes[m].num_channels, modes[m].num_rates);
->  		printk(KERN_DEBUG " channels:\n");
-> @@ -1919,71 +1919,92 @@ static void ath_dump_modes(struct ieee80211_hw_mode *modes)
->  static inline void ath_dump_modes(struct ieee80211_hw_mode *modes) {}
->  #endif
->  
-> +static inline int ath5k_register_mode(struct ieee80211_hw *hw, u8 m)
-> +{
-> +	struct ath_softc *sc = hw->priv;
-> +	struct ieee80211_hw_mode *modes = sc->modes;
-> +	int i, ret;
 
-unsigned is usually used for positive iterators, it generates better code almost
-for all platforms.
+--=-YXTctA+P8JPmczBOTXmw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> +
-> +	for (i = 0; i < NUM_DRIVER_MODES; i++) {
-> +		if (modes[i].mode != m || !modes[i].num_channels)
-> +			continue;
-> +		ret = ieee80211_register_hwmode(hw, &modes[i]);
-> +		if (ret) {
-> +			printk(KERN_ERR "can't register hwmode %u\n", m);
-> +			return ret;
-> +		}
-> +		return 0;
-> +	}
+On Sun, 2007-10-07 at 16:35 +0200, Mattias Nissler wrote:
+> The decryption handlers will skip the frame if the RX_FLAG_DECRYPTED
+> flag is set, so the early flag setting introduced by Johannes breaks
+> decryption. To work around this, call the handlers first and then set
+> the flag.
 
-Maybe we should oops here, since it is a bug to get that far. I think, you
-should put BUG() here to not mess userspace with positive retvals.
+Huh. Sorry about that. I had a patch like this initially but then wanted
+to not clutter the code. I think we should instead remove the checks
+from the actual decryption functions though. Mind making a patch for
+that?
 
-> +	return 1;
-> +}
-> +
-> +/* Only tries to register modes our EEPROM says it can support */
-> +#define REGISTER_MODE(m) do { \
-> +	if (test_bit(m, ah->ah_capabilities.cap_mode)) { \
-> +		ret = ath5k_register_mode(hw, m); \
-> +		if (ret) \
-> +			return ret; \
-> +	} \
+johannes
 
-I though you will put the test inside the new ath5k_register_mode function too
-(and return 0 in the case when unsupported) and get rid of the macro. But ok,
-not global macro we can tolerate return-ing from it :).
+--=-YXTctA+P8JPmczBOTXmw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-knowing to be a pain in the ass,
--- 
-Jiri Slaby (jirislaby@gmail.com)
-Faculty of Informatics, Masaryk University
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARwn5vaVg1VMiehFYAQKdLw//TxKatUu6PncLsn/WXrnWfPpFtuxj1mBg
+RbXU8wn+W5/LUuYvebrSFq6qs5fSIGKlsZp4lyC2/PoXXzb2sS9NGVxWNfxJ+fqz
+AG3dAINNU6qk/LQzh6EJbM8H1Zz4GsD9h3kgMnmzAWqbZ5NoGCNWf+UBXbssokAt
+o44NOmnLpuJSNPGp4c7seDiMBKbobtRDQD+ocZJDTdcriqkch5y9zlDCAt7VU47S
+t1pwvKhQ0/TW+ZwdE3/qgrBv9xMQIkfy/6ZwU8fUSCJP0sqhrnk/8TcA+XuRtJYE
+GWIVUFinnTH9UQS1N85XktuT9Xuucxe6oAzv/nnv6eGIJRiU4KWKmGyKlRsBxU/4
+X7i6f9GXu3LGTrTQ9xG6kSIVWaX+pqHLKsccAeJWMAxJNwE3MVf+Pcu/sG53TxrH
+MktmG9mlXEZUT/BF+2rDImDPOQCznYJc5ovDr/G4gmreX9oEXBtA31yTcP4rTu3u
+plDbkDAoLmlTeKzWlLN2abJgGWYAPX9Rt8Wgi3M6aSqfXYUqB11GxvAbjUzrHdbn
+mHNrRkCZrcX2i/FZJBvE/ucUgyQcyWGaNQzz0pRePLTRqsaqCGm5K6LjcrqLaJI4
+MuhhL22BZS2wNba530O4g5GaSAvdg389Rx/A1cuI7TgGWQfbVqFUlnNdMFxMmw8L
+SbEt6WgyouE=
+=2qGd
+-----END PGP SIGNATURE-----
+
+--=-YXTctA+P8JPmczBOTXmw--
+
