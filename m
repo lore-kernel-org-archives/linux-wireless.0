@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754378AbXJLUsT (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10509 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbXJHJSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 16:48:19 -0400
-Subject: Mode/Channel/Bitrate API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ukypSlx8S6+wUM/nDaDf"
-Date: Fri, 12 Oct 2007 22:48:30 +0200
-Message-Id: <1192222110.4770.81.camel@johannes.berg> (sfid-20071012_214822_655609_9AA1C92C)
-Mime-Version: 1.0
+	Mon, 8 Oct 2007 05:18:20 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: fixes for slow hardware
+Date: Mon, 8 Oct 2007 11:18:27 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710081118.27468.hs4233@mail.mn-solutions.de> (sfid-20071008_101842_681487_C36F00EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes issues where either the CF module is slow (and needs 
+more time while downloading the firmware) or where the host 
+computer is slow, so that some card interrupts arrive while
+the system was still downloading the firmware.
 
---=-ukypSlx8S6+wUM/nDaDf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vitaly V. Bursov <vitalyvb@ukr.net>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Hey,
+-- 
 
-So many people seem to agree that the capability registering in mac80211
-is somewhat awkward to use. Also, it doesn't really match how hardware
-works with the separation of B and G mode.
-
-I've been thinking about this for a while and would like to get your
-input on the following replacement API.
-
-First, I think we should completely get rid of the mode stuff. This is
-an artificial distinction between hardware supports operating in
-frequency bands, not in modes, and the actual mode differences are
-controlled differently.
-
-Hence, what I'm thinking is that
-
- (a) the driver registers which channel center frequencies it can
-     operate with, it could in theory just be a range (e.g. 2400-2500
-     MHz) or more practically be list of center frequencies. Just
-     contains frequencies and possibly hardware dependent values for the
-     frequency. This is done in "bands", something like
-     FREQUENCY_BAND_2_4GHZ and FREQUENCY_BAND_5GHZ, "bands" replace the
-     current "modes".
- (b) additionally, the driver registers as flags
-     - whether it can support G mode short slot operation
-     - whether it can receive B mode short barker preambles
-     (both of which are only relevant if it supports 2.4 GHz operation)
- (c) for each registered band, the driver registers which bitrates the
-     hw supports. this implicitly defines the modulation too.
- (d) now, selecting a channel by frequency is unique, but we need to
-     give new options to select short slot, short preamble and allowed
-     bitrates. For client mode, these are initialised to what the AP
-     supports and you can't for example turn off short slot when the AP
-     requires it; for AP mode it's initialised to what the HW supports
-     but if you want less you can select that. Rate control algorithms
-     need to take into account this as well similar to what they already
-     do.
-
-Does anyone see problems with this? I think it matches hardware much
-better than the current scheme where B and G mode almost totally
-overlap. Also, right now we only advertise short preamble for when we
-have G mode support which is wrong since short preamble was an optional
-feature of 11B, currently 11B hardware that supports short preambles
-will never be able to associate to an AP that requires it with mac80211.
-
-johannes
-
---=-ukypSlx8S6+wUM/nDaDf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARw/dnaVg1VMiehFYAQJkdhAArQYkT59BDtttlyJgwyyyPkaBsmmUo/yl
-yNlJBD6QehVrb0ZfNtWhEt4+YCgOgcjjLeOijCGFG7KPHI+CyGnvnzkCQJxx0Q8I
-xY3N2pRZwb9zXAXqAhqnZDYg0b1v0JrRNlUfbxuLpcjIIY/CZ97/L57CtucFMMqN
-ZlwfZKsFdCKlD77H5K9imTcQmMuDRWbuXNFPZqMfV2mWGk7Pu27fj3CRS/6KFAes
-stSZUoPa48lTksvYtSqyxtRtvMsZw0BUnkg5Mze1igWDRgE5YA9m0zTusmKOZe8H
-T57/NLBCeiiXN3rsqRBq2Btc1Q5e1NProxF2Ka4hHzLOKIoPhFZ1KXm24AJAeZGP
-3dfdM2c2CmLcKDjcH7bjdLroOP2/BhDBT/ftVFbRgnk9gMNtNRF20mboNdT23F7T
-50NaCah+Tk+VCx7HXAknIoN0hIJkPdpZTc8MJHk+F5MsQN6eChWsWvfkaJUwkwb5
-uA1YrpFE2/GCJLYmApa/aLPLcDWHPdR0TzZbAxzPycbuUFCNuyMsvOpEn7UhRjUg
-SZ1IJQ55L8DLmjwJU6Z3o3+gmCuCAJ88zdfeSG47cAlUXqrt449NaY6BXEzoI58y
-HzZo3fRS2Px3TK+6e94NfN/KUNQixdo1DUB2XxIxBchkEV0TtzeMnNGgMcjosRea
-FoamVgovF2I=
-=OyNi
------END PGP SIGNATURE-----
-
---=-ukypSlx8S6+wUM/nDaDf--
-
+Index: libertas-2.6/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/if_cs.c	
+2007-10-01 14:05:53.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/if_cs.c	2007-10-01 
+14:06:43.000000000 +0200
+@@ -148,11 +148,11 @@ static int if_cs_poll_while_fw_download(
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 500; i++) {
++	for (i = 0; i < 1000; i++) {
+ 		u8 val = if_cs_read8(card, addr);
+ 		if (val == reg)
+ 			return i;
+-		udelay(100);
++		udelay(500);
+ 	}
+ 	return -ETIME;
+ }
+@@ -405,6 +405,7 @@ static struct sk_buff *if_cs_receive_dat
+ 	skb = dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE + 2);
+ 	if (!skb)
+ 		goto out;
++	skb->dev = priv->dev;
+ 	skb_put(skb, len);
+ 	skb_reserve(skb, 2);/* 16 byte align */
+ 	data = skb->data;
+@@ -878,6 +879,9 @@ static int if_cs_probe(struct pcmcia_dev
+ 		goto out3;
+ 	}
+ 
++	/* Clear any interrupt cause that happend while sending
++	 * firmware/initializing card */
++	if_cs_write16(card, IF_CS_C_INT_CAUSE, IF_CS_C_IC_MASK);
+ 	if_cs_enable_ints(card);
+ 
+ 	/* And finally bring the card up */
