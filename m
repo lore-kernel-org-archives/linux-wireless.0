@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22797 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751780AbXJOWuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 18:50:35 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwifi: Add erp_ie_changed hanlder
-Date: Tue, 16 Oct 2007 00:50:25 +0200
-Message-Id: <1192488625903-git-send-email-tomas.winkler@intel.com> (sfid-20071015_235053_432349_7E51457A)
-Content-Type: text/plain; charset="us-ascii"
+Received: from wx-out-0506.google.com ([66.249.82.227]:10092 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184AbXJHUsy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 16:48:54 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1434599wxd
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2007 13:48:53 -0700 (PDT)
+Date: Mon, 8 Oct 2007 16:48:58 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet
+	supported radios
+Message-ID: <20071008204858.GC7633@pogo> (sfid-20071008_214859_723217_E3CA7812)
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo> <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo> <20071006011949.GD25022@pogo> <20071006012017.GE25022@pogo> <20071006012057.GF25022@pogo> <40f31dec0710070313k6514882bkf5676d06ced25c53@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710070313k6514882bkf5676d06ced25c53@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds erp_ie_changed handler to iwl4956
+On Sun, Oct 07, 2007 at 03:13:28AM -0700, Nick Kossifidis wrote:
+> NACK i have a better fix wich uses chip srev, i had commited it on
+> ath5k branch on madwifi svn...
+> 
+> what's going on ? noone read my chagnes n ath5k branch on madwifi svn
+> ? i did this change some time ago (over a month) and it seems you
+> didn't even saw it...
+> 
+> http://madwifi.org/changeset/2703
+> http://madwifi.org/changeset/2704
+> 
+> what happened to my changes ? you told me you would commit them here...
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+), 0 deletions(-)
+I had said I would but Jiri sent some patches based on your work which
+I thought included your latest changes. Instead of bitching about
+things you should start sending patches, that would be more helpful.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 8b6bb49..32a99a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -7599,6 +7599,29 @@ static void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	IWL_DEBUG_MAC80211("leave\n");
- 
- }
-+static void iwl_mac_erp_ie_changed(struct ieee80211_hw *hw,
-+		u8 changes, int cts_protection, int preamble)
-+{
-+
-+	struct iwl_priv *priv = hw->priv;
-+
-+	if (changes & IEEE80211_ERP_CHANGE_PREAMBLE) {
-+		if (preamble == WLAN_ERP_PREAMBLE_SHORT)
-+			priv->staging_rxon.flags |= RXON_FLG_SHORT_PREAMBLE_MSK;
-+		else
-+			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_PREAMBLE_MSK;
-+	}
-+
-+	if (changes & IEEE80211_ERP_CHANGE_PROTECTION) {
-+		if (cts_protection)
-+			priv->staging_rxon.flags |= RXON_FLG_TGG_PROTECT_MSK;
-+		else
-+			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
-+	}
-+
-+	if (iwl_is_associated(priv))
-+		iwl_send_rxon_assoc(priv);
-+}
- 
- #define IWL_DELAY_NEXT_SCAN (HZ*2)
- static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
-@@ -8841,6 +8864,7 @@ static struct ieee80211_ops iwl_hw_ops = {
- 	.get_tsf = iwl_mac_get_tsf,
- 	.reset_tsf = iwl_mac_reset_tsf,
- 	.beacon_update = iwl_mac_beacon_update,
-+	.erp_ie_changed = iwl_mac_erp_ie_changed,
- #ifdef CONFIG_IWLWIFI_HT
- 	.conf_ht = iwl_mac_conf_ht,
- 	.get_ht_capab = iwl_mac_get_ht_capab,
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Anyway I actually like that approach more, thanks. John -- I'll send in a new
+patch series.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+        Luis
