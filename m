@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:54221 "EHLO ciao.gmane.org"
+Received: from mx1.redhat.com ([66.187.233.31]:57300 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754163AbXJJNri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 09:47:38 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Ifbto-0004U6-JI
-	for linux-wireless@vger.kernel.org; Wed, 10 Oct 2007 13:46:56 +0000
-Received: from dslc-082-082-164-062.pools.arcor-ip.net ([82.82.164.62])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 13:46:56 +0000
-Received: from feldmann_markus by dslc-082-082-164-062.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 13:46:56 +0000
-To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: Re: Patch for Kernel and Ath5k
-Date: Wed, 10 Oct 2007 15:45:50 +0200
-Message-ID: <feil2d$hn2$1@sea.gmane.org> (sfid-20071010_144802_157263_88481644)
-References: <feieb9$nvg$1@sea.gmane.org> <feietp$qf4$1@sea.gmane.org> <40f31dec0710100637w3bfddc67ta32fa244d2cd7343@mail.gmail.com>
+	id S1753378AbXJHMxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 08:53:42 -0400
+Subject: Re: libertas and endianness
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200710081106.06475.hs4233@mail.mn-solutions.de>
+References: <Pine.LNX.4.64.0710071209290.8127@anakin>
+	 <200710081106.06475.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 08 Oct 2007 08:55:20 -0400
+Message-Id: <1191848120.2703.16.camel@localhost.localdomain> (sfid-20071008_135345_384769_184E5856)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-In-Reply-To: <40f31dec0710100637w3bfddc67ta32fa244d2cd7343@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis schrieb:
-> 2007/10/10, Markus Feldmann <feldmann_markus@gmx.de>:
->> Markus Feldmann schrieb:
->>> Hi All,
->>>
->>> i tried to patch the Kernel to get the ATH5k Driver to work but without
->>> success.
->>>
->>> It seems i miss some scripts like check.sh
->>>
->>> Anybody knows how to get my Problem solved?
->>>
->>> bye Markus
->>>
->> Sorry i forgot to say that i am using the kernel Source 2.6.23-rc8 and
->> wanna patch this with a Andrew Morton Patch,
->> 2.6.23-rc8-mm1
->> 2.6.23-rc8-mm2
->>
->> Can anybody write what i have to do?
->>
->> I am on Debian Etch. I have got an Atheros Wlan Chip with the ID
->> 168c:001c (rev 01).
->>
->> Thank you and
->> bye
+On Mon, 2007-10-08 at 11:06 +0200, Holger Schurig wrote:
+> > I.e. it tries to store 0x0100 resp. 0x0200 into keytype[i],
+> > which is is u8.
+> >
+> > Gr{oetje,eeting}s,
 > 
-> 001c wont work anyway it uses the newer 5.3 EEPROM that we don't yet support ;-(
+> Dan Williams partially fixed this on 2nd August. Seems that 
+> libertas patches needs ages to trickle upwards.
+
+The patches are queued for 2.6.24 and are already in net-2.6.24.
+They've been in net-2.6.24 for quite a while.  Anything that's in
+libertas-2.6 is already queued for 2.6.24 when the merge window opens.  
+
+http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.24.git;a=commit;h=1118759a15da6e97e8101a7f025b2947f190505f
+
+The order is:
+
+libertas-2.6 -> wireless-2.6 -> net-2.6.x -> linus
+
+So these will go upstream.  Where these patches _could_ go is to stable,
+for fixing up what's already out there in 2.6.22 and 2.6.23.
+
+Dan
+
+> The patch is buried in the libertas-2.6 tree, in the 
+> branch "libertas". See here:
+> 
+> http://git.infradead.org/?p=libertas-2.6.git;a=commitdiff;h=1bf710a1f1bd816897be3b0441d3c916ea1b9ab9
 > 
 > 
-No Problem. Is there a need for Debugging? I would send you the debug.
-So maybe in the future it will work.
+> 
+> However, in my next mail I'm attaching a cosmetic change for 
+> this. There's no need to define a constant for an u8 as 0x0001
+> and 0x0002 ...
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
