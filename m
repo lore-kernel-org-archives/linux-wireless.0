@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2873 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755173AbXJPSiy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 14:38:54 -0400
-Date: Tue, 16 Oct 2007 14:17:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Daiker <daikerjohn@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Ath5k compile error in wireless-2.6.git
-Message-ID: <20071016181745.GC5677@tuxdriver.com> (sfid-20071016_193859_142678_701CC6C2)
-References: <4713EBCA.8010700@gmail.com> <20071015234601.GA4125@tuxdriver.com> <20071015234748.GB4125@tuxdriver.com> <43e72e890710160914g2caa998cpd7bbb058fd064372@mail.gmail.com> <20071016170155.GB5677@tuxdriver.com> <43e72e890710161105l4dbd5dc4rc43f241aed42ac92@mail.gmail.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:17996 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbXJHJ0o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 05:26:44 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] libertas: fix u8 constant
+Date: Mon, 8 Oct 2007 11:07:27 +0200
+References: <Pine.LNX.4.64.0710071209290.8127@anakin>
+In-Reply-To: <Pine.LNX.4.64.0710071209290.8127@anakin>
+Cc: Dan Williams <dcbw@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890710161105l4dbd5dc4rc43f241aed42ac92@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710081107.27285.hs4233@mail.mn-solutions.de> (sfid-20071008_102650_357060_D469C520)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 16, 2007 at 02:05:24PM -0400, Luis R. Rodriguez wrote:
-> On 10/16/07, John W. Linville <linville@tuxdriver.com> wrote:
+Don't write constants that are (per documentation and struct) u8
+as 0x0001, use 0x01 instead. Also remove an useless cast.
 
-> > I think this has more to do with the git version (i.e. release) than
-> > the architecture.  "Approach 1" worked everywhere for a long time,
-> > while I only became aware of "Approach 2" a few months ago.
-> 
-> On my x86 box I have git 1.5.2.5
-> On my PPC box have git 1.5.3.4
-> 
-> And no dice on the PowerPC box. Maybe I have to do a new pull with the
-> new release.. I'll try.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-It might have to do with whether you started with "git clone" or by
-simply rsync'ing the repository.  In the latter case, "Approach 1"
-probably works fine...?
-
-Anyway, whatever works for you makes me happy. :-)
-
--- 
-John W. Linville
-linville@tuxdriver.com
+Index: libertas-2.6/drivers/net/wireless/libertas/host.h
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/host.h	2007-10-08 11:51:46.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/host.h	2007-10-08 11:52:10.000000000 +0200
+@@ -138,8 +138,8 @@
+ #define CMD_ACT_REMOVE                      0x0004
+ #define CMD_ACT_USE_DEFAULT                 0x0008
+ 
+-#define CMD_TYPE_WEP_40_BIT                 0x0001
+-#define CMD_TYPE_WEP_104_BIT                0x0002
++#define CMD_TYPE_WEP_40_BIT                 0x01
++#define CMD_TYPE_WEP_104_BIT                0x02
+ 
+ #define CMD_NUM_OF_WEP_KEYS                 4
+ 
+Index: libertas-2.6/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/cmd.c	2007-10-08 11:52:13.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/cmd.c	2007-10-08 11:52:36.000000000 +0200
+@@ -181,13 +181,13 @@ static int wlan_cmd_802_11_set_wep(wlan_
+ 
+ 			switch (pkey->len) {
+ 			case KEY_LEN_WEP_40:
+-				wep->keytype[i] = (u8)CMD_TYPE_WEP_40_BIT;
++				wep->keytype[i] = CMD_TYPE_WEP_40_BIT;
+ 				memmove(&wep->keymaterial[i], pkey->key,
+ 				        pkey->len);
+ 				lbs_deb_cmd("SET_WEP: add key %d (40 bit)\n", i);
+ 				break;
+ 			case KEY_LEN_WEP_104:
+-				wep->keytype[i] = (u8)CMD_TYPE_WEP_104_BIT;
++				wep->keytype[i] = CMD_TYPE_WEP_104_BIT;
+ 				memmove(&wep->keymaterial[i], pkey->key,
+ 				        pkey->len);
+ 				lbs_deb_cmd("SET_WEP: add key %d (104 bit)\n", i);
