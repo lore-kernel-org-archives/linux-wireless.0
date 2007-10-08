@@ -1,55 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42682 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbXJaMPu (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10224 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbXJHJrw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 08:15:50 -0400
-Subject: Re: [PATCH 5/7] o80211s: (zd1211rw-mac80211) support for mesh
-	interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4727de15.0abd720a.7b07.ffffb1f7@mx.google.com> (sfid-20071031_014458_772448_CA7B7BC6)
-References: <4727de15.0abd720a.7b07.ffffb1f7@mx.google.com>
-	 (sfid-20071031_014458_772448_CA7B7BC6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SEIR4Kkpb8i9y7H82PyV"
-Date: Wed, 31 Oct 2007 13:17:08 +0100
-Message-Id: <1193833028.12078.16.camel@johannes.berg> (sfid-20071031_121552_500488_A253BC46)
-Mime-Version: 1.0
+	Mon, 8 Oct 2007 05:47:52 -0400
+Received: from lin01.mn-solutions.de (pD95F8393.dip0.t-ipconnect.de [217.95.131.147])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 2D2918B046B
+	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 11:47:51 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id DF1141E002B
+	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 11:44:55 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: fix "warning: Using plain integer as NULL pointer" sparse warnings
+Date: Mon, 8 Oct 2007 11:47:59 +0200
+References: <200710081141.23237.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200710081141.23237.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710081148.00041.hs4233@mail.mn-solutions.de> (sfid-20071008_104759_880773_6B6B7D7A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hmm, I had "wordwrap" turned on :-(
 
---=-SEIR4Kkpb8i9y7H82PyV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-[big fat explanation why driver changes are nessary missing]
-
-johannes
-
---=-SEIR4Kkpb8i9y7H82PyV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyhyQ6Vg1VMiehFYAQIjJA//Z2qr1fgtCqDdAopFEDsatNkDN5NyBaNe
-aKrhOYLxxFTmaEaz7HlwGdIjUI8UgKDTy8ZH8W0CSb4n3HIyD8GbgYxEwhY8zPrH
-5RFVdWqw0eYt83hjb6lG2//C9mwBtjZLg7ukeADfxuRc9r/3XLCcUZFxtuHBfnFX
-sL9aAEPki48ElXb8tFwa2h60tSG5ss5Dsgfjw9lC5hGIyuh8cWivudnhZQIsgUmj
-tWw82PmQHCnxN6YULoli6s3r8eXqo/nqg7pYTVEC0V5XQ0TNRusMQAT7YATb+STa
-1uHFqnw3rGqRSboDER+dY+wfGHpzfYUjfLJlhoc96e9SdvBW/0Zf1iK0JXS19ZI4
-DXzrh7I8/DPu+MA3hCv7psl5NJdUC9aBxZYA+FoyN8XiLhp4npsdneH29aBmU/+X
-2jCwpvgC7dR4lEfd98vvwudTQI08byvK60hwK5wDnzlqVZOhZqTeskhU8as4RGWf
-ELHOy4repM/+JALf24C3ABa1y5yvQMJv8Qho9tSn0LMSS95bhOiW33zgNkG8J5O7
-viEw7L0837gI9yrDJ9KBB5BHG0VHKOV0PO1KyC2rLQWRRX7nn+tp2oUJVcLjhaob
-dOHyveU1Nkhocfcrj0xLIzSNRu/jslFYN43UFi3j74u+k9YyhNkmhGGnlP5nbhEk
-xjtaaN1pkuI=
-=elP9
------END PGP SIGNATURE-----
-
---=-SEIR4Kkpb8i9y7H82PyV--
-
+checkpatch.pl barks on this patch anyway, because of the
+ridiculus 80 columns restriction it wants to impose. Should I 
+rephrase the patch because of this or just ignore this 
+checkpatch warning?
