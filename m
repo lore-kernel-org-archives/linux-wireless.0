@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754073AbXJYJWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:22:42 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 11/30] iwlwifi: using PCI_DEVICE macro
-Date: Thu, 25 Oct 2007 17:15:32 +0800
-Message-Id: <11933037674045-git-send-email-yi.zhu@intel.com> (sfid-20071025_104059_185556_B873B1C3)
-In-Reply-To: <11933037663659-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
- <11933037613709-git-send-email-yi.zhu@intel.com>
- <1193303762680-git-send-email-yi.zhu@intel.com>
- <11933037641168-git-send-email-yi.zhu@intel.com>
- <11933037663659-git-send-email-yi.zhu@intel.com>
+Received: from wx-out-0506.google.com ([66.249.82.224]:4862 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399AbXJHUir (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 16:38:47 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1432085wxd
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2007 13:38:46 -0700 (PDT)
+Date: Mon, 8 Oct 2007 16:38:52 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/6] ath5k: Ported new initval changes from OpenBSD to
+	ath5k
+Message-ID: <20071008203852.GB7633@pogo> (sfid-20071008_213852_457093_D8339C44)
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo> <40f31dec0710070249p5ed648c8u61e8fe3768d934da@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710070249p5ed648c8u61e8fe3768d934da@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Sun, Oct 07, 2007 at 02:49:23AM -0700, Nick Kossifidis wrote:
+> 2007/10/5, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > Ported new initval changes from OpenBSD to ath5k to ar5212_ini[] and
+> > ar5212_ini_mode[].
+> 
+> NACK
+> 
+> Nothing new was introduced in OpenBSD cvs that i haven't already
+> included!, what have you ported ???
 
-PCI_DEVICE macro is more concise when using defualt values
-in device definitions
+Actually, you are right, an oversight by my part. Thanks for catching
+this. However after verying this I did find the one type. Please
+review.
+ 
+> > This also adds an O(log(N)) bitswap for one byte
+> > on ath5k_hw_bitswap(), thanks to Tom from OpenBSD.
+> 
+> ACK it's used for modifying rf buffer settings...
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+I think its easier to just new patches. I'll do so but please first
+review the small change below.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 62b44a4..d4dc30d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2278,8 +2278,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
- }
- 
- struct pci_device_id iwl_hw_card_ids[] = {
--	{0x8086, 0x4222, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{0x8086, 0x4227, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_DEVICE(0x8086, 0x4222)},
-+	{PCI_DEVICE(0x8086, 0x4227)},
- 	{0}
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 4710f6e..f86a24e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4680,8 +4680,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
- }
- 
- struct pci_device_id iwl_hw_card_ids[] = {
--	{0x8086, 0x4229, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{0x8086, 0x4230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_DEVICE(0x8086, 0x4229)},
-+	{PCI_DEVICE(0x8086, 0x4230)},
- 	{0}
- };
- 
--- 
-1.5.2
+  Luis
+
+
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index 1537517..f826422 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1980,4 +1980,4 @@ after DFS is enabled */
+ #define	AR5K_PHY_GAIN_2GHZ		0xa20c
+ #define	AR5K_PHY_GAIN_2GHZ_MARGIN_TXRX	0x00fc0000
+ #define	AR5K_PHY_GAIN_2GHZ_MARGIN_TXRX_S	18
+-#define	AR5K_PHY_GAIN_2GHZ_INI_5111	0x6480416c
++#define	AR5K_PHY_GAIN_2GHZ_INI_5111	0x6448416a
