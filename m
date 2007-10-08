@@ -1,86 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38561 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbXJIOQW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 10:16:22 -0400
-Subject: Re: [PATCH] libertas: let get nick return what set nick has set
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200710091504.14903.hs4233@mail.mn-solutions.de>
-References: <200710091504.14903.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 09 Oct 2007 10:16:47 -0400
-Message-Id: <1191939407.17254.8.camel@localhost.localdomain> (sfid-20071009_151628_842816_E89C9EA0)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752085AbXJHJzJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 05:55:09 -0400
+Subject: Re: Mode selection in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adam Baker <linux@baker-net.org.uk>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <200710052319.10600.linux@baker-net.org.uk> (sfid-20071005_231916_055041_CD49F30E)
+References: <200710052319.10600.linux@baker-net.org.uk>
+	 (sfid-20071005_231916_055041_CD49F30E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CZfSutoKlT7JZ0CFBq99"
+Date: Mon, 08 Oct 2007 11:55:39 +0200
+Message-Id: <1191837339.4063.25.camel@johannes.berg> (sfid-20071008_105523_182608_B8F8BB3E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-10-09 at 15:04 +0200, Holger Schurig wrote:
-> Make the get-nickname wireless extension actually work. Before
-> this patch, I could do "iwconfig eth1 nick BLAH" but "iwconfig
-> eth1" would have still showed "MRVL-USB8388" to me. Hey, and that
-> was wrong anyway, I'm on a CF card, not on USB :-)
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+--=-CZfSutoKlT7JZ0CFBq99
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> Index: libertas-2.6/drivers/net/wireless/libertas/wext.c
-> ===================================================================
-> --- libertas-2.6.orig/drivers/net/wireless/libertas/wext.c	2007-10-09 15:50:49.000000000 +0200
-> +++ libertas-2.6/drivers/net/wireless/libertas/wext.c	2007-10-09 16:04:26.000000000 +0200
-> @@ -251,37 +251,16 @@ static int wlan_set_nick(struct net_devi
->  static int wlan_get_nick(struct net_device *dev, struct iw_request_info *info,
->  			 struct iw_point *dwrq, char *extra)
->  {
-> -	const char *cp;
-> -	char comm[6] = { "COMM-" };
-> -	char mrvl[6] = { "MRVL-" };
-> -	int cnt;
-> +	wlan_private *priv = dev->priv;
-> +	wlan_adapter *adapter = priv->adapter;
->  
->  	lbs_deb_enter(LBS_DEB_WEXT);
->  
-> -	/*
-> -	 * Nick Name is not used internally in this mode,
-> -	 * therefore return something useful instead. Jean II
-> -	 */
-> -
-> -	strcpy(extra, mrvl);
-> -
-> -	cp = strstr(libertas_driver_version, comm);
-> -	if (cp == libertas_driver_version)	//skip leading "COMM-"
-> -		cp = libertas_driver_version + strlen(comm);
-> -	else
-> -		cp = libertas_driver_version;
-> -
-> -	cnt = strlen(mrvl);
-> -	extra += cnt;
-> -	while (cnt < 16 && (*cp != '-')) {
-> -		*extra++ = toupper(*cp++);
-> -		cnt++;
-> -	}
-> +	dwrq->length = strlen(adapter->nodename);
-> +	memcpy(extra, adapter->nodename, dwrq->length);
-> +	extra[dwrq->length] = '\0';
->  
-> -	/*
-> -	 * Push it out !
-> -	 */
-> -	dwrq->length = cnt;
-> +	dwrq->flags = 1;	/* active */
->  
->  	lbs_deb_leave(LBS_DEB_WEXT);
->  	return 0;
-> @@ -311,6 +290,7 @@ static int mesh_get_nick(struct net_devi
->  	lbs_deb_leave(LBS_DEB_WEXT);
->  	return 0;
->  }
-> +
->  static int wlan_set_rts(struct net_device *dev, struct iw_request_info *info,
->  			struct iw_param *vwrq, char *extra)
->  {
+On Fri, 2007-10-05 at 23:19 +0100, Adam Baker wrote:
+> I've observed an undesirable change in behaviour of rt2x00 as a result of=
+=20
+> Johannes Berg's patch 3d4803379613c763f5a7863e8249b63d190af5e6
+> (remove all prism2 ioctls).
+
+> It used to consistently default to 802.11g mode on g capable hardware. Be=
+cause=20
+> that patch removed the lines
+>=20
+> -                               /* Use next_mode as the mode preference t=
+o
+> -                                * resolve non-unique channel numbers. */
+> -                               if (set && mode->mode !=3D local->next_mo=
+de)
+> -                                       continue;
+>=20
+> in ieee80211_set_channel it now defaults to 11b unless I change the code =
+that=20
+> calls ieee80211_register_hwmode. (I realise that the next_mode test is no=
+=20
+> longer "right").
+>=20
+> This is because ieee80211_set_channel will now prefer to select whichever=
+ was=20
+> the last mode for which the driver called ieee80211_register_hwmode where=
+as=20
+> the previous behaviour preferred the first registered mode. It seems as=20
+> though if there was a way to avoid calling Iieee80211_set_channel then th=
+e=20
+> setting of oper_hw_mode in ieee80211_register_hwmode would still prefer t=
+he=20
+> first registered mode.
+
+Yeah, you're right, it was too much to remove the whole conditional and
+the continue, I should've just removed the && mode stuff. Will post a
+patch to add it back.
+
+> Is it intended that the order of calling ieee80211_register_hwmode should=
+=20
+> determine which mode should be preferred when multiple modes exist on the=
+=20
+> same channel or is there either already or planned a better option for dr=
+iver=20
+> writers? If calling order should determine preference should it be first =
+or=20
+> last registered?
+
+That's actually a can of worms. Luis is working (I hope) on resolving
+these issues with mode vs. frequency selection. However, I'm not
+entirely convinced that mode selection should be done by userspace when
+we are acting as a client. I think we should simply exploit hardware
+capabilities as much as possible and then use the set that the AP
+advertised (or rather as much as we can support of that).
+
+Hence, for these questions it'd be good to know whether the ralink
+drivers do anything different based on the selected mode, and if they do
+(I assume they do because they register B *and* G modes) what it is.
+It'd probably help a lot with the design of the interface if you could
+answer that. I feel that mode selection should not be necessary since in
+G mode a device needs to have the capability to talk to B-only stations
+and hence must be able to "fall back" to B mode, we should therefore be
+able to exploit that capability without the driver ever registering
+different modes.
+
+In fact, I think that the driver can probably simply register the
+modulations/bitrates it can support orthogonally to the frequencies it
+supports, and the frequencies consist of only information about the
+frequency and possibly hardware value used to select it. This was part
+of what I posted a while ago when Luis was posting his regulatory stuff,
+and I think should be addressed while cleaning up that whole mess.
+
+Thanks,
+johannes
+
+--=-CZfSutoKlT7JZ0CFBq99
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARwn+mqVg1VMiehFYAQIwuw/9GGlq9KZyTOq+dkTcZtiLa/UaPNO6kwQX
+UT1/ZcRr3O07EMuFKpyG26WDJGV/wC49XmRd1amPxiLLjIh8BDwTzDeDubICHVVA
+Fu5+1v3b2PlzFo6EWCGXCWExf4Nj5GHYM+Uctg4lUEm/zytigdEwU6PPkSP8ChVr
++GM2pt8vwWK2z4EjdMgWHm7+QM7mBkGXnYZXaFC/mro59NE0OOr4s5N86tJKdBY9
+BWVdTtFt8jNlNe/Po5mVGXZuRUPnM9C6vxUoZoMT2Bao4RnhheR9SUYwe5BFwDIc
+w4GNYo6ljQyje+8oB9v76/sj/fdonIIRBKs3fwjcSNch0bR/pRrrDBoZSCg0GGsq
+2Hm6Bmmd6FyDFqlf8VjflOyhWBmqz/QLCOpMyc3LdDkZ3gmg8jhd3UFcNsv+1Pql
+NimHoqBNZhTiuSdUR33VXukDt+teGvCZ8/K4SbIHu/PajM1VbLeG+dGYGMFtxUdb
+TvEXW4tJ7ypvfFqxOUZP4/0uGaCshOtJUNTEWVtFRScUetCfA7v/3ea1WuUUiXHM
+4tIytrgbXdkzR8BKhhoQE+bTTgTlhNxY+BBqbG+qGBZHyX7L1TFRZiusruCHSXvk
+gFyrNInEZvXnQDRTy0Zul4En90/Uu67+Qt0HX90VlRT1PFhAwpinEoDCvEwf4wMV
+dxIguwHfFnU=
+=vx+b
+-----END PGP SIGNATURE-----
+
+--=-CZfSutoKlT7JZ0CFBq99--
 
