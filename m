@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48690 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751935AbXJVRVl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 13:21:41 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1192466593.15225.28.camel@localhost.localdomain>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-	 <200710151628.43425.hs4233@mail.mn-solutions.de>
-	 <1192459352.12009.25.camel@localhost.localdomain>
-	 <200710151649.26864.hs4233@mail.mn-solutions.de>
-	 <1192466593.15225.28.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 13:20:20 -0400
-Message-Id: <1193073620.4325.7.camel@localhost.localdomain> (sfid-20071022_182144_739900_8D70519A)
-Mime-Version: 1.0
+Received: from ananke.telenet-ops.be ([195.130.137.78]:53234 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbXJHHnK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2007 03:43:10 -0400
+Date: Mon, 8 Oct 2007 09:43:02 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+cc: Linux Kernel Development <linux-kernel@vger.kernel.org>
+Subject: [PATCH] libertas link error due to gcc `smartness'
+Message-ID: <Pine.LNX.4.64.0710080940110.8127@anakin> (sfid-20071008_084333_919946_1900A2A5)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-15 at 12:43 -0400, Dan Williams wrote:
-> On Mon, 2007-10-15 at 16:49 +0200, Holger Schurig wrote:
-> > > I assume you've been running it for a few days or so?
-> > 
-> > No. I just made this patch 6 hours ago.
-> > 
-> > I've used it so far only with WEP and no encryption at all, 
-> > always as STA (no ad-hoc, no wpa-supplicant).
-> > 
-> > After all, the patch was created using "perl -pi -e" :-)
-> > 
-> > 
-> > So far I found two quirks:
-> > 
-> > a) it's no longer /lib/modules/libertas/parameters/libertas_debug 
-> > but /lib/modules/libertas/parameters/lbs_debug. As this is an 
-> > ABI change, we might not want it.
-> 
-> Should keep ABI compat here.
-> 
-> > b) it's no longer <debugfs>/libertas_wireless/XXXX but 
-> > <debugfs>/lbs_wireless/XXXX. Also an ABI change.
-> 
-> Should keep ABI compat here.
-> 
-> > 
-> > I could make a "take 2" patch, but because of the size of the 
-> > patch and the hassle to export it in an external git tree I'd 
-> > rather create a fixup patch. But let's see what you un-earth.
-> 
-> Yeah, I'll keep looking through it.
+Some versions of gcc replace strstr() calls with a single-character `needle'
+parameter by strchr() behind our back. This causes a link error if strchr() is
+defined as an inline function in <asm/string.h> (e.g. on m68k):
 
-So, I think the debugfs thing is fine to keep in sync with the driver
-prefix.  But for now, lets keep the module name the same.  Can you
-repost (with a link since it's so huge)?
+| drivers/built-in.o: In function `libertas_parse_chan':
+| linux/drivers/net/wireless/libertas/debugfs.c:209: undefined reference to `strchr'
+| drivers/built-in.o: In function `libertas_parse_ssid':
+| linux/drivers/net/wireless/libertas/debugfs.c:260: undefined reference to `strchr'
 
-I ran the driver for a while and nothing appears to have regressed
-horribly from light testing a few large transfers.  Seems OK to push
-into 2.6.25 to me.
+Avoid this by explicitly calling strchr() instead.
 
-Dan
+Also include <linux/string.h>, because this file calls lots of str*() routines.
 
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+Due to the lack of hardware, I could not test the functionality of this change.
+I was just trying to compile a kernel with a much enabled as possible.
+
+ drivers/net/wireless/libertas/debugfs.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -3,6 +3,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+ #include <linux/mm.h>
++#include <linux/string.h>
+ #include <net/iw_handler.h>
+ 
+ #include "dev.h"
+@@ -205,7 +206,7 @@ static int libertas_parse_chan(char *buf
+ 	if (!start)
+ 		return -EINVAL;
+ 	start += 5;
+-	end = strstr(start, " ");
++	end = strchr(start, ' ');
+ 	if (!end)
+ 		end = buf + count;
+ 	hold = kzalloc((end - start)+1, GFP_KERNEL);
+@@ -256,7 +257,7 @@ static void libertas_parse_ssid(char *bu
+ 	if (!hold)
+ 		return;
+ 	hold += 5;
+-	end = strstr(hold, " ");
++	end = strchr(hold, ' ');
+ 	if (!end)
+ 		end = buf + count - 1;
+ 
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
