@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbXJZKgU (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:16966 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbXJIHCK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 06:36:20 -0400
-Subject: [PATCH] softmac: fix wext MLME request reason code endianness
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	stable <stable@kernel.org>
-Content-Type: text/plain
-Date: Thu, 25 Oct 2007 22:16:23 +0200
-Message-Id: <1193343383.4406.30.camel@johannes.berg> (sfid-20071026_113624_594020_CEB03309)
-Mime-Version: 1.0
+	Tue, 9 Oct 2007 03:02:10 -0400
+Received: from lin01.mn-solutions.de (pD95FA8E3.dip0.t-ipconnect.de [217.95.168.227])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 0A0A65E5992
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 09:02:07 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id B48DC1E002B
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 08:59:10 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet supported radios
+Date: Tue, 9 Oct 2007 09:02:18 +0200
+References: <20071006010449.GA25022@pogo> <20071008204858.GC7633@pogo> <40f31dec0710081937p43048223o4d6826f8de4b9520@mail.gmail.com>
+In-Reply-To: <40f31dec0710081937p43048223o4d6826f8de4b9520@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710090902.18650.hs4233@mail.mn-solutions.de> (sfid-20071009_080216_208456_57AE6F7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MLME request reason code is host-endian and our passing
-it to the low level functions is host-endian as well since
-they do the swapping. I noticed that the reason code 768 was
-sent (0x300) rather than 3 when wpa_supplicant terminates.
-This removes the superfluous cpu_to_le16() call.
+> You are right but i was on a trip 
+...
+> I'll try again wireless-dev and I'll send a
+> patch series here.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-I guess that this bug has been present forever. It's not very critical
-but what we're sending is in violation of the IEEE 802.11 specs.
+If you were away you might not have heard that wireless-dev is 
+dead. Use wireless-2.6 instead.
 
- net/ieee80211/softmac/ieee80211softmac_wx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-10-25 22:09:03.583252548 +0200
-+++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-10-25 22:09:09.973254502 +0200
-@@ -470,7 +470,7 @@ ieee80211softmac_wx_set_mlme(struct net_
- {
- 	struct ieee80211softmac_device *mac = ieee80211_priv(dev);
- 	struct iw_mlme *mlme = (struct iw_mlme *)extra;
--	u16 reason = cpu_to_le16(mlme->reason_code);
-+	u16 reason = mlme->reason_code;
- 	struct ieee80211softmac_network *net;
- 	int err = -EINVAL;
- 
-
+The chance that this boots is higher :-)
 
