@@ -1,62 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55157 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336AbXJXNO7 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:27304 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752919AbXJINEF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 09:14:59 -0400
-Subject: Re: [PATCH 2/2] mac80211: [RFC] eliminating erp_ie_changed from
-	low level driver ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	tomas.winkler@intel.com, flamingice@sourmilk.net
-In-Reply-To: <1193221337148-git-send-email-ron.rindjunsky@intel.com>
-References: <11932213323451-git-send-email-ron.rindjunsky@intel.com>
-	 <11932213374183-git-send-email-ron.rindjunsky@intel.com>
-	 <1193221337148-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ewFPQC4mPEyJRrOR7goe"
-Date: Wed, 24 Oct 2007 13:57:41 +0200
-Message-Id: <1193227061.4510.29.camel@johannes.berg> (sfid-20071024_141514_339750_0949146C)
-Mime-Version: 1.0
+	Tue, 9 Oct 2007 09:04:05 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: let get nick return what set nick has set
+Date: Tue, 9 Oct 2007 15:04:14 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710091504.14903.hs4233@mail.mn-solutions.de> (sfid-20071009_140420_276007_5D975D3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make the get-nickname wireless extension actually work. Before
+this patch, I could do "iwconfig eth1 nick BLAH" but "iwconfig
+eth1" would have still showed "MRVL-USB8388" to me. Hey, and that
+was wrong anyway, I'm on a CF card, not on USB :-)
 
---=-ewFPQC4mPEyJRrOR7goe
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-On Wed, 2007-10-24 at 12:22 +0200, Ron Rindjunsky wrote:
->  			enum sta_notify_cmd, const u8 *addr);
-> -	void (*erp_ie_changed)(struct ieee80211_hw *hw, u8 changes,
-> -			       int cts_protection, int preamble);
-
-you forgot to remove those ERP_CHANGE flags that are passed to changes
-here.
-
-johannes
-
---=-ewFPQC4mPEyJRrOR7goe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARx8zNKVg1VMiehFYAQI36w//VahvtVJkLLs5KGcDo7o4kaQW/O4jBzWY
-bcvada2pyD0aBnqdQQ8T24zHqUaMj9YBAUgt2dubluOcHmVMPKdZ6TXYo+BMIFYF
-+6qyp6zo8bflUCryXmJ7rqcn+9TbKGZk8aXIhZMzm+QBSWwm5sntGWzWoB7D373v
-4w1d6bmOeMFZbNQIilF68c1AyPzU5RCXxvkr0W6PqKaXojGtZya+l8+cXzJp4mjF
-qWZMz2pc0wY7GgkNLSyKc2RQKwyWntEMFF4K611OOQBMZnJO66fnnwaJz7NAbQSr
-YXhQeM5V7qykmNlsOWh8ILxbxIp4bMEWe7dbagWs3vMJRa3ctAq9Kw91UI+ol445
-BloY6FSFCMsX1Df2fbSQBMibUTdFAKLrPt2YQoodf4K0qmEaJrWzRR5tHEQtgUey
-dulpBaqpHrarrpfEmAe/fCjzcd7Zo7IEgljFjkjjq5W1pVubzztKyKaAvR1I/D44
-4rw2ksj/qBIX7ivDEMGwqIv2eki5jJCwoysg5xX2v8AoxSRi/sf1+gu55DTEtwGj
-4f6VY5hG47ygAME+DcNnl+cZoL0/KDQ+uaPWcNAYLT35iIOpUEm2YEtKBiX0ADtN
-E1ZE+9fbDK5thgG82VhoD6X0nKpbTRixgUgOR+zoo/9TgY/NPX+vqTWn2kF8sSFJ
-PDwnxiEmAlQ=
-=sLZW
------END PGP SIGNATURE-----
-
---=-ewFPQC4mPEyJRrOR7goe--
-
+Index: libertas-2.6/drivers/net/wireless/libertas/wext.c
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/wext.c	2007-10-09 15:50:49.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/wext.c	2007-10-09 16:04:26.000000000 +0200
+@@ -251,37 +251,16 @@ static int wlan_set_nick(struct net_devi
+ static int wlan_get_nick(struct net_device *dev, struct iw_request_info *info,
+ 			 struct iw_point *dwrq, char *extra)
+ {
+-	const char *cp;
+-	char comm[6] = { "COMM-" };
+-	char mrvl[6] = { "MRVL-" };
+-	int cnt;
++	wlan_private *priv = dev->priv;
++	wlan_adapter *adapter = priv->adapter;
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	/*
+-	 * Nick Name is not used internally in this mode,
+-	 * therefore return something useful instead. Jean II
+-	 */
+-
+-	strcpy(extra, mrvl);
+-
+-	cp = strstr(libertas_driver_version, comm);
+-	if (cp == libertas_driver_version)	//skip leading "COMM-"
+-		cp = libertas_driver_version + strlen(comm);
+-	else
+-		cp = libertas_driver_version;
+-
+-	cnt = strlen(mrvl);
+-	extra += cnt;
+-	while (cnt < 16 && (*cp != '-')) {
+-		*extra++ = toupper(*cp++);
+-		cnt++;
+-	}
++	dwrq->length = strlen(adapter->nodename);
++	memcpy(extra, adapter->nodename, dwrq->length);
++	extra[dwrq->length] = '\0';
+ 
+-	/*
+-	 * Push it out !
+-	 */
+-	dwrq->length = cnt;
++	dwrq->flags = 1;	/* active */
+ 
+ 	lbs_deb_leave(LBS_DEB_WEXT);
+ 	return 0;
+@@ -311,6 +290,7 @@ static int mesh_get_nick(struct net_devi
+ 	lbs_deb_leave(LBS_DEB_WEXT);
+ 	return 0;
+ }
++
+ static int wlan_set_rts(struct net_device *dev, struct iw_request_info *info,
+ 			struct iw_param *vwrq, char *extra)
+ {
