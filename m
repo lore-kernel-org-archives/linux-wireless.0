@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:30851 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbXJRNCm (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:16857 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbXJIMiD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 09:02:42 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so149443rvb
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2007 06:02:41 -0700 (PDT)
-Message-ID: <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com> (sfid-20071018_140246_586147_CE931299)
-Date: Thu, 18 Oct 2007 15:02:41 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] iwl3945 doesn't work
-Cc: Stephen.Clark@seclark.us, "Jens Axboe" <jens.axboe@oracle.com>,
-	"Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"=?ISO-8859-1?Q?Ismail_D=F6nmez?=" <ismail@pardus.org.tr>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1192710788.15285.4.camel@johannes.berg>
+	Tue, 9 Oct 2007 08:38:03 -0400
+Received: from lin01.mn-solutions.de (pD95FA8E3.dip0.t-ipconnect.de [217.95.168.227])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id C267D5E59FE
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 14:37:59 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 0285B1E002B
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 14:35:04 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: remove one superfluous include
+Date: Tue, 9 Oct 2007 14:38:13 +0200
+References: <200710091430.11043.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200710091430.11043.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071017135452.GJ5043@kernel.dk> <20071017141111.GM5043@kernel.dk>
-	 <1192630733.10567.37.camel@localhost.localdomain>
-	 <20071017142246.GQ5043@kernel.dk>
-	 <1192634183.11584.0.camel@localhost.localdomain>
-	 <20071017163519.GC15552@kernel.dk> <47166B5F.1010804@seclark.us>
-	 <20071018065746.GB5063@kernel.dk> <47175033.1090709@seclark.us>
-	 <1192710788.15285.4.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710091438.13738.hs4233@mail.mn-solutions.de> (sfid-20071009_133807_893575_F559BDC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2007-10-18 at 08:23 -0400, Stephen Clark wrote:
->
-> > >>iwlist eth1 scan would report no scan results, I then switched to loading
-> > >>the kernel module with
-> > >>the option that tells  iwl3945 to do software scanning and it works
-> > >>everytime now.
->
-> > In my modprobe.conf file:
-> > options iwl3945 disable_hw_scan=1
->
-> Hah. Told you it wasn't mac80211's problem. Can somebody remind me again
-> exactly why we have hardware scan offload when we parse each received
-> packet anyway and the hardware doesn't even batch them so the CPU could
-> wake up less?
->
-1. Tuning to each channel is done internally by fw so you don't spend
-cycles and it's is faster to switch channels so overall scanning take
-less time. Sending probe responses is also offloaded.  Returning to
-operational channel is more precisely matched to DTIM period as it is
-handled by RT code.
-2. There are also more advanced modes of scanning such as during voice
-traffic etc.
-3. Yes beacon batching will be nice, but there is a memory tradeoff.
-Tomas
+> This makes scripts/checkincludes.pl happy.
 
-> johannes
->
->
+Hehe, others have problems, too:
+
+$ scripts/checkincludes.pl drivers/net/wireless/*.h
+drivers/net/wireless/ipw2200.h: linux/dma-mapping.h is included 
+more than once.
+
+
+
+(in wireless-2.6 everything)
