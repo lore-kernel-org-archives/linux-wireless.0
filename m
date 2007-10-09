@@ -1,32 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:36023 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755017AbXJLOus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 10:50:48 -0400
-Message-ID: <470F89C1.8030406@lwfinger.net> (sfid-20071012_155117_152339_7AC04EDE)
-Date: Fri, 12 Oct 2007 09:50:41 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Marcus Better <marcus@better.se>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rt2500pci 2.0.9 not working
-References: <fdqhn4$qab$1@sea.gmane.org> <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com> <1192094159.4770.21.camel@johannes.berg> <200710112005.56101.IvDoorn@gmail.com> <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com> <fent23$9gc$1@sea.gmane.org>
-In-Reply-To: <fent23$9gc$1@sea.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([66.187.233.31]:60068 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751262AbXJILS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 07:18:27 -0400
+Subject: Re: [PATCH, take 2] libertas: fixes for slow hardware
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200710091041.57159.hs4233@mail.mn-solutions.de>
+References: <200710081118.27468.hs4233@mail.mn-solutions.de>
+	 <1191849316.2703.26.camel@localhost.localdomain>
+	 <200710091041.57159.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Tue, 09 Oct 2007 07:18:45 -0400
+Message-Id: <1191928725.599.2.camel@localhost.localdomain> (sfid-20071009_121834_166493_55D91AF6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcus Better wrote:
-> Marcus Better wrote:
->> Kind-of works. I can connect but only at 1 Mb according to iwconfig.
+On Tue, 2007-10-09 at 10:41 +0200, Holger Schurig wrote:
+> Fixes for slow hardware.
 > 
-> Now I see that I got the same result even with driver version 2.0.7. I can
-> change it with iwconfig though. Is this normal?
+> Signed-off-by: Vitaly V. Bursov <vitalyvb@ukr.net>
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-In mac80211, the association and authentication steps are always done at 1 Mb to maximize the
-likelihood of that step succeeding. Once communication is established, the rate-setting mechanism in
-rc80211_simple will adjust the rate to what it considers the highest value that works. You always
-have the option of forcing a higher value with iwconfig at the risk of increasing the error rate.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Larry
+> Index: libertas-2.6/drivers/net/wireless/libertas/if_cs.c
+> ===================================================================
+> --- libertas-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:37.000000000 +0200
+> +++ libertas-2.6/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:50.000000000 +0200
+> @@ -148,11 +148,11 @@ static int if_cs_poll_while_fw_download(
+>  {
+>  	int i;
+>  
+> -	for (i = 0; i < 500; i++) {
+> +	for (i = 0; i < 1000; i++) {
+>  		u8 val = if_cs_read8(card, addr);
+>  		if (val == reg)
+>  			return i;
+> -		udelay(100);
+> +		udelay(500);
+>  	}
+>  	return -ETIME;
+>  }
+> @@ -878,6 +878,9 @@ static int if_cs_probe(struct pcmcia_dev
+>  		goto out3;
+>  	}
+>  
+> +	/* Clear any interrupt cause that happend while sending
+> +	 * firmware/initializing card */
+> +	if_cs_write16(card, IF_CS_C_INT_CAUSE, IF_CS_C_IC_MASK);
+>  	if_cs_enable_ints(card);
+>  
+>  	/* And finally bring the card up */
+> 
+
