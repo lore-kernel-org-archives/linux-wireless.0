@@ -1,56 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41456 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752018AbXJDOgm (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:8966 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbXJIMOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 10:36:42 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
-Date: Thu, 4 Oct 2007 10:34:43 -0400
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20071004113343.552139D502B@zog.reactivated.net>
-In-Reply-To: <20071004113343.552139D502B@zog.reactivated.net>
+	Tue, 9 Oct 2007 08:14:18 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: clean up scan debug messages
+Date: Tue, 9 Oct 2007 14:14:28 +0200
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
+References: <200710091344.31107.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200710091344.31107.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4274055.lTjFuKTD6v";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710041034.48533.flamingice@sourmilk.net> (sfid-20071004_153653_057908_3D475D74)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710091414.28401.hs4233@mail.mn-solutions.de> (sfid-20071009_131445_996165_32386A29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4274055.lTjFuKTD6v
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> -	lbs_deb_enter(LBS_DEB_ASSOC);
+> +	lbs_deb_enter_args(LBS_DEB_SCAN, "maxchanperscan %d, filteredscan %d, "
+> +		full_scan %d", maxchanperscan, filteredscan, full_scan);
 
-On Thursday 04 October 2007 07:33, Daniel Drake wrote:
-> Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit.
-> It will then be reinitialised to the default (ieee80211_subif_start_xmit)
-> in ieee80211_if_set_type.
->
-Well.. this kinda sucks, but we can clean up the logic here later.
+Uhh, oh, missing "
 
-> +	BUG_ON(netif_running(dev));
-This will never happen, so there's no point.
+After fiddling a patch so that checkpatch.pl doesn't bark anymore,
+one should at least try to compile the kernel ...
 
-ACK with that bit removed.
-
-Thanks,
--Michael Wu
-
---nextPart4274055.lTjFuKTD6v
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBHBPoIT3Oqt9AH4aERAvyWAJ0Yk/x2lgZWeU/vfmXD2Q0+2pNt2ACgwcmf
-G81XOr8CvwL+axSyABIVHY8=
-=hnr9
------END PGP SIGNATURE-----
-
---nextPart4274055.lTjFuKTD6v--
+Sending take 2 in a minute :-(
