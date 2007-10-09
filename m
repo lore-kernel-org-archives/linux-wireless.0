@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:20550 "EHLO
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:2858 "EHLO
 	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103AbXJJTAP (ORCPT
+	with ESMTP id S1752051AbXJIPNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 15:00:15 -0400
+	Tue, 9 Oct 2007 11:13:24 -0400
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
 Subject: Re: [PATCH] libertas: automatically re-associate
-Date: Wed, 10 Oct 2007 21:00:14 +0200
-References: <200710091404.31491.hs4233@mail.mn-solutions.de> <200710100943.33106.hs4233@mail.mn-solutions.de> <1192028338.9739.28.camel@localhost.localdomain>
-In-Reply-To: <1192028338.9739.28.camel@localhost.localdomain>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Tue, 9 Oct 2007 17:13:35 +0200
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
+References: <200710091404.31491.hs4233@mail.mn-solutions.de> <1191939561.17254.12.camel@localhost.localdomain>
+In-Reply-To: <1191939561.17254.12.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200710102100.15274.hs4233@mail.mn-solutions.de> (sfid-20071010_200024_212617_8C8930E0)
+Message-Id: <200710091713.35595.hs4233@mail.mn-solutions.de> (sfid-20071009_161332_794193_652BA039)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> so in libertas_mac_event_disconnected() it should to be something like
-> the following:
-...
+> Seriously though, even if other drivers don't do it, that
+> doesn't mean libertas shouldn't do it.  If the association
+> fails, doesn't this mean the card just keeps working and keeps
+> trying to associate forever?
+
+Yes, with a HZ/4 rate.
+
+Maybe in the meantime the user is configuring the right WEP key 
+into his AP?
 
 
 
-I'll look in some of the next days again into this. Today and tomorrow 
-I'm busy with other things.
+> It's not that much more complicated to add an item to the
+> association structure for 'count' and to check that from the
+> disassociation event code, and just not reschedule association
+> if that's > 4.
 
-Oh, and BTW, today I found by chance another reason why auto-reassoc is 
-helpful and necessary :-)   On a Cisco 1231 AP I played a bit with the 
-command interface. And there was a command to check how busy all the 
-channels are. When I issued this command, I saw in the log of the Cisco 
-(I'm sending it to the console) and also in the syslog of the machine 
-running the libertas driver that the Cisco IOS sent an disassociation 
-to all clients. Then it went checking for busy channels and gave me 
-some output. After this, two client (one libertas, one other) 
-automatically re-associated and things continued as if nothing would 
-have happened.
+And after this 4 tries the device is again stuck?  That's not 
+nice.
 
-Now, in a Cisco AP you can specify the channel for the AP. And you can 
-also say "Use least congested Frequency". This makes the AP does this 
-channel scanning --- that I issued manually --- do automatically. With 
-the current current code, my libertas driven card would have been 
-stuck ...
+Therefore you need some heuristic (I don't dare to name this 
+logic) to reset this counter again. But when do you do it?  If 
+you say "5 Minutes", then I simply change my HZ/4 into HZ*60*5 
+and have the same effect.
 
+So I see that my HZ/4 is as arbitrary as your 4, but my version 
+is fail-safe, because when you move away from a mis-configured 
+AP to a right on, the device will automatically re-associate. 
+You see, I aim for a roaming client, not for a device that stays 
+put at some office desktop.
 
 
-As for WPA driven environments: you can operate WPA supplicant in two 
-modes. In one modes does WPA does the work of selecting which AP to 
-use. It also sends the equivalent of "iwconfig ethX ap 
-xx:XX:XX:XX:XX:XX" to the card.
+We also get disassociated from an AP when we're away from the 
+channel for too long, busy scanning for a better AP. The case 
+where someone clicks on a "Deassociate Client") is neglibibly. 
 
-In the other mode (I think it is "ap_scan=2"), wpa_supplicant just 
-reacts to a re-association that the driver did without further fuzz.
-
-I guess that your issues are with the first mode?
+But even when I want to have it work automatically, and without 
+any manual user interaction at the WLAN client.
