@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35516
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754101AbXJOOY1 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34032 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbXJIJVF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 10:24:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [patch] ssb: fix build failure
-Date: Mon, 15 Oct 2007 16:23:04 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Ingo Molnar <mingo@elte.hu>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200710151623.04881.mb@bu3sch.de> (sfid-20071015_152430_221420_BA955E9E)
+	Tue, 9 Oct 2007 05:21:05 -0400
+Subject: Re: Mode selection in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mike Kershaw <dragorn@kismetwireless.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071008143207.GB7430@drd1813.lan>
+References: <200710052319.10600.linux@baker-net.org.uk>
+	 <1191837339.4063.25.camel@johannes.berg>
+	 <20071008143207.GB7430@drd1813.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yjc1yUgEIL8RGvDlfkta"
+Date: Tue, 09 Oct 2007 11:21:42 +0200
+Message-Id: <1191921702.4013.15.camel@johannes.berg> (sfid-20071009_102108_661048_09A39C54)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ingo Molnar <mingo@elte.hu>
 
-fix build failure if PCMCIA=m but SSB=y:
+--=-yjc1yUgEIL8RGvDlfkta
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-drivers/built-in.o: In function `ssb_pcmcia_switch_coreidx':
-: undefined reference to `pcmcia_access_configuration_register'
+On Mon, 2007-10-08 at 10:32 -0400, Mike Kershaw wrote:
 
-(fix symmetric bug for PCI too.)
+> I'd vote for allowing the user to set a mode - just like they're
+> allowed to lock an AP association to a specific MAC, bypassing the
+> hardware roaming algos.
+>=20
+> I've hit situations in the past where a card can get a very weak 11g
+> link but a perfectly usable 11b link, and the hw did not want to drop
+> back to 11b on its own.  Being able to lock to 11b only was key. =20
 
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Actually, what you're advocating sounds like "please let me restrict the
+bitrates to use" rather than "please lock me to a mode". And we need
+that functionality anyway for AP mode.
 
----
- drivers/ssb/Kconfig |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+johannes
 
-Index: linux/drivers/ssb/Kconfig
-===================================================================
---- linux.orig/drivers/ssb/Kconfig
-+++ linux/drivers/ssb/Kconfig
-@@ -22,7 +22,7 @@ config SSB
- 
- config SSB_PCIHOST_POSSIBLE
- 	bool
--	depends on SSB && PCI
-+	depends on SSB && (PCI = SSB)
- 	default y
- 
- config SSB_PCIHOST
-@@ -37,7 +37,7 @@ config SSB_PCIHOST
- 
- config SSB_PCMCIAHOST_POSSIBLE
- 	bool
--	depends on SSB && PCMCIA && EXPERIMENTAL
-+	depends on SSB && (PCMCIA = SSB) && EXPERIMENTAL
- 	default y
- 
- config SSB_PCMCIAHOST
+--=-yjc1yUgEIL8RGvDlfkta
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--------------------------------------------------------
+iQIVAwUARwtIJaVg1VMiehFYAQJMfg//cnIb22j9xKJKfXlPpr/qpRZWJ/RY3SoM
+pY3zGjSClsNBgD2FXwDVET3PDzTT2ScFY4oLBc+kBuROp+rCdmTcwrzRRZCDPkit
+0Wk+oP9wYbe2qtST1Ypxzfs4QkwlE2NJQ1LLtUG/K2n/YBS2sMyRD0t4/AmnNPAs
+XajHiu299zuvQR+qE+YRRXkgv769V2GuEe9noz+xm/2B1ozDFp46fCQz6KeWZ0Ac
+N2DnTZAjX2IQZtoKmjU3QVjVFjKMDu5RW9RYRQHig6dYA4OYilpENzfwGhkon6tL
+Aml/IDJ5bn/nSSB1VDLnUXKW2eZ57Vf69TCeBZTDFuFvDA42wOA2QPHiGret2N08
+ta+vHjPC4Ipbwz7SuuN8UO/N5mQlTazHHYJ6YXFa9nsmZBiWrWkAyMsqUsl8gqjm
+e34FGRgHAWo31C/89DPpWTumk99nwG0yp7jLVXgPCDH6lNMbgMJTRg6fQQKvBiq8
+6nqe6SmdnvDwmNqAWF3v8BZ3yyO4V2dn8mv6AtorFywXqHTWbhJBz3eiFkfg3H6I
+CBHEgCWqW/V+1/ejsmpxaGuZnXjsrnu0FqroK+bg+dKpY3+S41k/cEN9c6nFfhlA
+k09syULl01wtAUz/k/Fk77Dy6wiIeZHZgvFySKjOTtUVJuct553Q45S9f7BeBlUZ
+Wcr2n+wBw/I=
+=x7mH
+-----END PGP SIGNATURE-----
 
--- 
-Greetings Michael.
+--=-yjc1yUgEIL8RGvDlfkta--
+
