@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60808 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754341AbXJOPEX (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43733 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070AbXJJIoS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 11:04:23 -0400
-Message-ID: <4713815A.3020300@lwfinger.net> (sfid-20071015_160427_891454_C0767B8E)
-Date: Mon, 15 Oct 2007 10:03:54 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: WANG Cong <xiyou.wangcong@gmail.com>
-CC: Adrian Bunk <bunk@kernel.org>, mb@bu3sch.de,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@osdl.org>
-Subject: Re: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize
- the	correct return value
-References: <20071014175142.GN4211@stusta.de> <20071015115936.GP2444@hacking>
-In-Reply-To: <20071015115936.GP2444@hacking>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Oct 2007 04:44:18 -0400
+Subject: Re: [PATCH] libertas: remove one superfluous include
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200710091438.13738.hs4233@mail.mn-solutions.de> (sfid-20071009_133807_893575_F559BDC1)
+References: <200710091430.11043.hs4233@mail.mn-solutions.de>
+	 <200710091438.13738.hs4233@mail.mn-solutions.de>
+	 (sfid-20071009_133807_893575_F559BDC1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f5zdCs+lyHdPgZNgsTPA"
+Date: Tue, 09 Oct 2007 22:10:08 +0200
+Message-Id: <1191960608.4013.58.camel@johannes.berg> (sfid-20071010_094420_752306_5C20CFD4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WANG Cong wrote:
-> Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
-> in case of returning an uninitialized value.
-> 
-> From: Adrian Bunk <bunk@kernel.org>
-> Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
-> 
-> ---
->  drivers/net/wireless/b43/main.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-> ===================================================================
-> --- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
-> +++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-> @@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
->  	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
->  	struct b43legacy_wldev *dev = wl->current_dev;
->  	int did_init = 0;
-> -	int err;
-> +	int err = 0;
->  
->  	mutex_lock(&wl->mutex);
 
-I sent the equivalent patch to John Linville yesterday.
+--=-f5zdCs+lyHdPgZNgsTPA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Tue, 2007-10-09 at 14:38 +0200, Holger Schurig wrote:
+
+> $ scripts/checkincludes.pl drivers/net/wireless/*.h
+> drivers/net/wireless/ipw2200.h: linux/dma-mapping.h is included=20
+> more than once.
+
+Feel free to post a patch. It doesn't look like anybody is maintaining
+those any more.
+
+johannes
+
+--=-f5zdCs+lyHdPgZNgsTPA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARwvgH6Vg1VMiehFYAQIC+RAAvG/khnmGQxSa3z9aHoLAvYnGUhNbujPT
+38lNqPa31mcUFKunLiZftQTzUUr5yCtDCLisQXkoC9jCXzI+IfZeynoctB1Gj1gR
+8uFfes5mjH8OFZ8Cdn616aCM8KA0qdlpWue++y1j4EIHGNOA9tCLhEVV/Sig9J9Z
+1FwJDbLu7bLhXWwp7FcjS2skhtP5xVsPT0f7Xa36NLPOBEe5ZUEgq4uXZIzaMqNY
+whZOi844xrJfiV000lQEzSO3jg+JVvJ+PaOaxXqT51T4dNbdFReM7TzUjIoqQhkU
+1hLm7BX3z2zCmK0tAGL1T0CLbbnPS1rIOeGYKttP9WMme2E5QE3gkMt4RqQxoybU
+WoDB36zJxOVpt2U8QthWGKkxHgzRF5c3h/K2u20KtRFFp2T3SwqM1JSsBVqEvGBU
+2OT6t6QzqCjXBR3ocv8wdPeZgLVjmpJIuNyY5IzO3LB81+UUZo+ZRoFWjHwe6roQ
+bKvseCGTlhZqJfXOd5hhsP2nWWWU0EpBHb2f8olI9PPWNsL9M/VoVpKtVsb4HC9L
+olXyo7BnqTiareim+91PCvFA5kVf3ttNiftTcx/nr+lreOcM3xqnqjVVGAryvB8l
+OsYPCREx4Jv+oDwVQBtL1ke4GON7xSMmpR39CfD+z1jF8h6U6LtclVum+RCgDcw/
+YHqI/Keeok8=
+=Kblx
+-----END PGP SIGNATURE-----
+
+--=-f5zdCs+lyHdPgZNgsTPA--
 
