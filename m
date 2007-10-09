@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:47815 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.177]:64933 "EHLO
 	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118AbXJSEya (ORCPT
+	with ESMTP id S1751478AbXJICh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 00:54:30 -0400
-Received: by py-out-1112.google.com with SMTP id u77so733783pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2007 21:54:29 -0700 (PDT)
-Message-ID: <bbbeeccd0710182154h5b42384cxb4bd49f5159504eb@mail.gmail.com> (sfid-20071019_055433_034923_A4CDB6B5)
-Date: Thu, 18 Oct 2007 22:54:29 -0600
-From: "Wade Berrier" <wberrier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: realtek 8185
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071018174108.GC8510@tuxdriver.com>
+	Mon, 8 Oct 2007 22:37:57 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2765505pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2007 19:37:56 -0700 (PDT)
+Message-ID: <40f31dec0710081937p43048223o4d6826f8de4b9520@mail.gmail.com> (sfid-20071009_033810_639841_CA5F7114)
+Date: Tue, 9 Oct 2007 05:37:55 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet supported radios
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071008204858.GC7633@pogo>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <bbbeeccd0710160658p7f127bb9if2239287bee33d6c@mail.gmail.com>
-	 <bbbeeccd0710162220u3b276506s68457b4220bec8ae@mail.gmail.com>
-	 <bbbeeccd0710171552x37986f68m906a603e793c7996@mail.gmail.com>
-	 <200710171938.48414.flamingice@sourmilk.net>
-	 <bbbeeccd0710181013g6607423bobb31ca1e817f33c5@mail.gmail.com>
-	 <20071018174108.GC8510@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
+	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
+	 <20071006011949.GD25022@pogo> <20071006012017.GE25022@pogo>
+	 <20071006012057.GF25022@pogo>
+	 <40f31dec0710070313k6514882bkf5676d06ced25c53@mail.gmail.com>
+	 <20071008204858.GC7633@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 10/18/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Oct 18, 2007 at 11:13:00AM -0600, Wade Berrier wrote:
-> > On 10/17/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > > On Wednesday 17 October 2007 18:52:28 Wade Berrier wrote:
-> > > > Another thing I'm noticing is that I can't connect to an 802.11b open
-> > > > network with a hidden essid.
-> > > >
-> > > For those, you should specify the channel, and bssid in one iwconfig command,
-> > > and then ssid in another command. Everything needs to be specified for hidden
-> > > networks. Never tried connecting to hidden networks with network manager so I
-> > > dunno if that's suppose to work.
+2007/10/8, Luis R. Rodriguez <mcgrof@gmail.com>:
+> On Sun, Oct 07, 2007 at 03:13:28AM -0700, Nick Kossifidis wrote:
+> > NACK i have a better fix wich uses chip srev, i had commited it on
+> > ath5k branch on madwifi svn...
 > >
-> > I've been able to connect to this hidden network via network manager.
-> > >From a users experience, I enter in the essid from the "Connect to
-> > other wireless network" dialog, and it connects.  I'm not sure how
-> > networkmanager makes the connection between the essid and the ap.
+> > what's going on ? noone read my chagnes n ath5k branch on madwifi svn
+> > ? i did this change some time ago (over a month) and it seems you
+> > didn't even saw it...
+> >
+> > http://madwifi.org/changeset/2703
+> > http://madwifi.org/changeset/2704
+> >
+> > what happened to my changes ? you told me you would commit them here...
 >
-> If anything, I usually find that I can connect to the hidden networks
-> using iwconfig but _not_ with NetworkManager.  FWIW, mac80211 will
-> send probe requests for unknown SSIDs when trying to associate.
-
-I can connect to this same network with an intel 2200.  The network
-comes up in the networkmanager list, but without and essid.
-
-Is a hidden network the same thing as a network that doesn't broadcast
-the essid?
-
+> I had said I would but Jiri sent some patches based on your work which
+> I thought included your latest changes. Instead of bitching about
+> things you should start sending patches, that would be more helpful.
 >
-> Unfortunately, I'm not really sure how this relates to the problem
-> you are having.  Perhaps probe responses are being lost somehow?
+> Anyway I actually like that approach more, thanks. John -- I'll send in a new
+> patch series.
+>
+>         Luis
+>
 
-I'd assume it was driver related since I can with the intel 2200, but
-not with the realtek 8185.  I'm not sure; I guess I'd have to do some
-more digging.
+You are right but i was on a trip and i couldn't work on it, before i
+left wireless-dev wouldn't boot for me so i couldn't test any patch.
+I'll try again wireless-dev and I'll send a patch series here.
 
-Wade
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
