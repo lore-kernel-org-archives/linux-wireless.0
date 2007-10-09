@@ -1,106 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750AbXJFMEO (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.226]:12251 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbXJICbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:04:14 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:13 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/16] rt2x00: Small optimizations
-Date: Sat, 6 Oct 2007 14:16:30 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710061410.31765.IvDoorn@gmail.com>
-In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+	Mon, 8 Oct 2007 22:31:33 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so813880nze
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2007 19:31:33 -0700 (PDT)
+Message-ID: <40f31dec0710081931y7573dafeidf414c0d89ab11b9@mail.gmail.com> (sfid-20071009_033146_707983_AFDC3D7A)
+Date: Tue, 9 Oct 2007 05:31:32 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/6] ath5k: Ported new initval changes from OpenBSD to ath5k
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071008203852.GB7633@pogo>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710061416.30696.IvDoorn@gmail.com> (sfid-20071006_131653_459670_1C9A72C7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
+	 <40f31dec0710070249p5ed648c8u61e8fe3768d934da@mail.gmail.com>
+	 <20071008203852.GB7633@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make some small optimizations by removing
-some simple if-statements.
+2007/10/8, Luis R. Rodriguez <mcgrof@gmail.com>:
+> On Sun, Oct 07, 2007 at 02:49:23AM -0700, Nick Kossifidis wrote:
+> > 2007/10/5, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > > Ported new initval changes from OpenBSD to ath5k to ar5212_ini[] and
+> > > ar5212_ini_mode[].
+> >
+> > NACK
+> >
+> > Nothing new was introduced in OpenBSD cvs that i haven't already
+> > included!, what have you ported ???
+>
+> Actually, you are right, an oversight by my part. Thanks for catching
+> this. However after verying this I did find the one type. Please
+> review.
+>
+> > > This also adds an O(log(N)) bitswap for one byte
+> > > on ath5k_hw_bitswap(), thanks to Tom from OpenBSD.
+> >
+> > ACK it's used for modifying rf buffer settings...
+>
+> I think its easier to just new patches. I'll do so but please first
+> review the small change below.
+>
+>   Luis
+>
+>
+> diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+> index 1537517..f826422 100644
+> --- a/drivers/net/wireless/ath5k/reg.h
+> +++ b/drivers/net/wireless/ath5k/reg.h
+> @@ -1980,4 +1980,4 @@ after DFS is enabled */
+>  #define        AR5K_PHY_GAIN_2GHZ              0xa20c
+>  #define        AR5K_PHY_GAIN_2GHZ_MARGIN_TXRX  0x00fc0000
+>  #define        AR5K_PHY_GAIN_2GHZ_MARGIN_TXRX_S        18
+> -#define        AR5K_PHY_GAIN_2GHZ_INI_5111     0x6480416c
+> +#define        AR5K_PHY_GAIN_2GHZ_INI_5111     0x6448416a
+>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    6 ++----
- drivers/net/wireless/rt2x00/rt61pci.c   |    6 ++----
- drivers/net/wireless/rt2x00/rt73usb.c   |   19 +++++++++----------
- 3 files changed, 13 insertions(+), 18 deletions(-)
+I'll post a pach series asap here with my fixes against current
+wireless-dev including your fixes on base.c/h and any other fixes
+posted so far that are not included yet i hope now wireless-dev will
+boot for me so i can also test them. About PHY_GAIN i did some tests
+before ending up with this value, it comes from initialization of 5211
+and after testing 5211+5111 and 5212+5111 combinations it seems it
+performs better. The ideal solution would be to read antenna gain from
+eeprom and somehow calculate this value dynamicaly instead of putting
+a static one.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index c4aa466..480527f 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -326,10 +326,8 @@ static void rt2500usb_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR1, reg);
- 
- 	rt2500usb_register_read(rt2x00dev, TXRX_CSR10, &reg);
--	if (preamble == SHORT_PREAMBLE)
--		rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE, 1);
--	else
--		rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE,
-+			   (preamble == SHORT_PREAMBLE));
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR10, reg);
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index b9051a1..e250f0a 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -357,10 +357,8 @@ static void rt61pci_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
- 
- 	rt2x00pci_register_read(rt2x00dev, TXRX_CSR4, &reg);
--	if (preamble == SHORT_PREAMBLE)
--		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE, 1);
--	else
--		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
-+			   (preamble == SHORT_PREAMBLE));
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR4, reg);
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 7cfdf65..d3c57a4 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -195,12 +195,13 @@ rf_write:
- 	reg = 0;
- 	rt2x00_set_field32(&reg, PHY_CSR4_VALUE, value);
- 
--	if (rt2x00_rf(&rt2x00dev->chip, RF5225) ||
--	    rt2x00_rf(&rt2x00dev->chip, RF2527))
--		rt2x00_set_field32(&reg, PHY_CSR4_NUMBER_OF_BITS, 21);
--	else
--		rt2x00_set_field32(&reg, PHY_CSR4_NUMBER_OF_BITS, 20);
--
-+	/*
-+	 * RF5225 and RF2527 contain 21 bits per RF register value,
-+	 * all others contain 20 bits.
-+	 */
-+	rt2x00_set_field32(&reg, PHY_CSR4_NUMBER_OF_BITS,
-+			   20 + !!(rt2x00_rf(&rt2x00dev->chip, RF5225) ||
-+				   rt2x00_rf(&rt2x00dev->chip, RF2527)));
- 	rt2x00_set_field32(&reg, PHY_CSR4_IF_SELECT, 0);
- 	rt2x00_set_field32(&reg, PHY_CSR4_BUSY, 1);
- 
-@@ -331,10 +332,8 @@ static void rt73usb_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR0, reg);
- 
- 	rt73usb_register_read(rt2x00dev, TXRX_CSR4, &reg);
--	if (preamble == SHORT_PREAMBLE)
--		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE, 1);
--	else
--		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
-+			   (preamble == SHORT_PREAMBLE));
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR4, reg);
- }
- 
 -- 
-1.5.3.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
