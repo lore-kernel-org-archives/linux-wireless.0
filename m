@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:51497 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752873AbXJWXPl convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753176AbXJISEy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 19:15:41 -0400
-Received: from midway.site ([71.117.233.180]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 16:15:35 -0700
-Date: Tue, 23 Oct 2007 16:15:35 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 10/12] mac80211: fix warning created by BIT()
-Message-Id: <20071023161535.a526d595.rdunlap@xenotime.net> (sfid-20071024_001545_507325_368E1C48)
-In-Reply-To: <20071023223645.421AB1F81B6@havoc.gtf.org>
-References: <tueoct232007613pm.likjasfdlkjdas987@havoc.gtf.org>
-	<20071023223645.421AB1F81B6@havoc.gtf.org>
+	Tue, 9 Oct 2007 14:04:54 -0400
+Subject: Re: [Rt2400-devel] Mode selection in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: rt2400-devel@lists.sourceforge.net,
+	Adam Baker <linux@baker-net.org.uk>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200710092018.28113.IvDoorn@gmail.com> (sfid-20071009_190220_636461_94582DFE)
+References: <200710052319.10600.linux@baker-net.org.uk>
+	 <200710091954.03727.IvDoorn@gmail.com>
+	 <1191951652.4013.48.camel@johannes.berg>
+	 <200710092018.28113.IvDoorn@gmail.com>
+	 (sfid-20071009_190220_636461_94582DFE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C+vko/i/bcgYntkQgW0r"
+Date: Tue, 09 Oct 2007 20:05:34 +0200
+Message-Id: <1191953134.4013.50.camel@johannes.berg> (sfid-20071009_190456_304611_40827C19)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 23 Oct 2007 18:36:45 -0400 (EDT) Jeff Garzik wrote:
 
-> Now that BIT() forces unsigned long, this warning appears:
+--=-C+vko/i/bcgYntkQgW0r
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2007-10-09 at 20:18 +0200, Ivo van Doorn wrote:
+
+> > > True, but in G mode you are compatible with B. The legacy driver does=
+n't
+> > > switch back to B mode when the AP is in B mode. This means that it wi=
+ll
+> > > be using the G timing values.
+> >=20
+> > That sounds wrong.
 >=20
-> net/mac80211/ieee80211_sta.c: In function =E2=80=98ieee80211_rx_mgmt_=
-assoc_resp=E2=80=99:
-> net/mac80211/ieee80211_sta.c:1187: warning: format =E2=80=98%d=E2=80=99=
- expects type =E2=80=98int=E2=80=99, but argument 7 has type =E2=80=98l=
-ong unsigned int=E2=80=99
+> Not really, this would be the same behavior that you suggested earlier,
+> when you stated that a driver should perhaps not register 802.11B mode
+> when also registering 802.11G mode since it is backward compatible.
 
-LC_ALL=3DC make ...
+Well, in that was the assumption that mac80211 tells the driver whether
+to enable shortslot or not regardless of B/G mode. It is only perfectly
+compatible when B slot timing is used.
 
+johannes
 
-> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-> ---
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_st=
-a.c
-> index f7ffeec..bdfd901 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -1182,7 +1182,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct=
- net_device *dev,
->  	aid =3D le16_to_cpu(mgmt->u.assoc_resp.aid);
-> =20
->  	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=3D0x%x "
-> -	       "status=3D%d aid=3D%d)\n",
-> +	       "status=3D%d aid=3D%ld)\n",
->  	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
->  	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
-> =20
-> -
+--=-C+vko/i/bcgYntkQgW0r
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Patch was submitted yesterday by Johannes Berg, but does need to be
-pushed by someone... (like this)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUARwvC7aVg1VMiehFYAQKRiA//XGvrOwcDBE+FOMrnz2urwrRMdfHUQjpM
+TCkb03edHN368bLUdBTH/SKj5OWfh9IFP0Dba+5nlteqaiy8WRQjYrS37Yk0RvAH
+tmb9B3OujPwQqrzCorogPPduRNrb2myXiAQBLPBW9tkqsYEtGJoidcsXjwfCsAFz
+g1dh22nsy7qcA4TQOUv1vOUxuXVn7+79czFvpL+gJGdL+Ub30GeF0ClRucV43of5
+vVEJrbf1cKus5JPpAHX69GdgusO8GfoIvCBoVrFKw8hV3gFsSQ4N+DjnF+hxsoD4
+00i6mekabcXt7v44V7+z08G7zc/Zjv+MAzUhYKjsmQDwusywGXHiax3WI24h8KuY
+HyfeZQ0dVrRN9iswbqtn2iUBZtUK5vQzdPfczAeZBld9tFtWHr6hAhwoY9zxZ8Te
+hylIf2Eddk5CEL+B76UWQxbJmLr7jB/Kh0oqiBmXuOzTIeb3iLONG1HtRuyPZUen
+t8wUtjmKGbiw8nLjwzG0YGRuvx3xbPa4wrmLMjO0+OAU/BFkOhDAtLujwQ8VLGEz
+mFGYNgiHhmApOtNKCEa3O5/keGgdzc7qqGzWRxFnqLWlQ8gOcHOCFgqM2ppzNw3+
+GJ7z5aoXtP11zy0YJoyJ2nDGnUrrDKGWvJmgLif69Qzxeym/LJJGjweVTKkEtwxr
+VA09YMArF10=
+=3l0J
+-----END PGP SIGNATURE-----
 
----
-~Randy
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-C+vko/i/bcgYntkQgW0r--
+
