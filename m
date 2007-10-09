@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.clemson.edu ([130.127.28.87]:43721 "EHLO CLEMSON.EDU"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753277AbXJQWa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 18:30:58 -0400
-Received: from wm.clemson.edu (wm.clemson.edu [130.127.28.88])
-	by CLEMSON.EDU (8.13.6/8.13.1) with ESMTP id l9HMFtjA012060
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 18:15:56 -0400 (EDT)
-Message-ID: <60980.172.22.4.212.1192659355.squirrel@wm.clemson.edu> (sfid-20071017_233100_913562_5223528C)
-Date: Wed, 17 Oct 2007 18:15:55 -0400 (EDT)
-Subject: Re: iwl3945 doesn't work
-From: bmoss@CLEMSON.EDU
-To: linux-wireless@vger.kernel.org
+Received: from ug-out-1314.google.com ([66.249.92.174]:60807 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbXJIRhp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 13:37:45 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so142344ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2007 10:37:43 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [Rt2400-devel] Mode selection in mac80211
+Date: Tue, 9 Oct 2007 19:54:03 +0200
+Cc: rt2400-devel@lists.sourceforge.net,
+	Adam Baker <linux@baker-net.org.uk>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <200710052319.10600.linux@baker-net.org.uk> <200710091932.45235.IvDoorn@gmail.com> <1191950973.4013.45.camel@johannes.berg>
+In-Reply-To: <1191950973.4013.45.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710091954.03727.IvDoorn@gmail.com> (sfid-20071009_183750_698026_CBC543AE)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have observed that 'iwlist wlan0 scan' sometimes fails to produce a scan
-and manual configuration with iwconfig sometimes fails to produce an
-association. I also observed that the Fedora 8 configuration script issues
-the command 'ip link set wlan0 up' before configuring the wlan0 and it
-always works. I also noted in the Intel documentation that the command
-'ifconfig wlan0 up' should be issued before configuing the wlan0. For
-manual configuration, I now use
+On Tuesday 09 October 2007, Johannes Berg wrote:
+> On Tue, 2007-10-09 at 19:32 +0200, Ivo van Doorn wrote:
+> 
+> > Well that is my point, if the documentation is correct then rt2500usb
+> > has 2 locations to initialize the IFS. So it would always be set and the question
+> > would be what the impact would be to set the IFS per packet only.
+> > But that is something I need to test with just some experiments.
+> 
+> Well, it's not too strange that it has two places since there's the SIFS
+> too which is needed for ACK/CTS timing, these packets aren't sent from
+> the host so you can't have those timings in a per-packet descriptor.
 
-ifconfig wlan0 up
-ip link set wlan0 up
-iwconfig wlan0 mode Managed
-iwconfig wlan0 key xxxxxxxxxxxxxxxxxxxxxxxxxx
-iwconfig wlan0 essid mosswap
-dhclient wlan0
+You mean things like ACK_TIMEOUT, those are all seperate registers in the Ralink hardware.
+ButI think I should be more clearer on this, rt2500pci and rt2500usb are
+basically the same chipset but only the bus type is different.
+What is notable is that _only_ rt2500usb has this IFS register, none of the
+other Ralink chipsets (including rt2500pci) have it.
 
-It always works.
+> > This means that the device would be able to operate correctly for
+> > 802.11B even with the 802.11G timing initialization. Because according
+> > to the way the legacy driver is setup, working in 802.11G while working
+> > with the CCK rates would be possible.
+> > This also means associating to 802.11B AP's while in 802.11G mode.
+> > So we might be making a big deal out of something while the source
+> > of the problem is very simple:  The legacy driver code is just wrong. ;)
+> 
+> Well, no, if you have a pure 802.11B AP then you have to use the 11B
+> slot timing, if you have a G AP then it'll tell you which timing to use
+> (I think)
 
-I believe the iwl3945 driver is broken when there are hidden AP's in the
-scan list. It appears that the scan list returned to wpa_supplicant is
-corrupted which is why the wpa_supplicant setting ap_scan=2 does not for
-hidden AP's.
+True, but in G mode you are compatible with B. The legacy driver doesn't
+switch back to B mode when the AP is in B mode. This means that it will
+be using the G timing values.
+Even if the G AP is telling which timing it is using, it is ignored by the
+legacy driver since the timing value is hardcoded for both B as G mode.
 
-With hardware scanning enabled as a module option, it appears that iwl3945
-does both a background scan and a scan by ssid when the ssid is set unlike
-ipw2200 which does background scans constantly and only does scan by ssid
-when it is requested.
-
-Bill Moss
+Ivo
