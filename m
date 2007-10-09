@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:23463 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756548AbXJORvJ (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:33155 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbXJISCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 13:51:09 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1329814nfb
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:51:05 -0700 (PDT)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] [PATCH] jiffies_round -> jiffies_round_relative conversion - rt2x00
-Date: Mon, 15 Oct 2007 20:08:32 +0200
-Cc: Anton Blanchard <anton@samba.org>, linux-wireless@vger.kernel.org,
-	arjan@linux.intel.com, linux-kernel@vger.kernel.org
-References: <20071015053428.GA3257@kryten> <20071015053801.GB3257@kryten> <20071015054034.GC3257@kryten>
-In-Reply-To: <20071015054034.GC3257@kryten>
+	Tue, 9 Oct 2007 14:02:07 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so147078ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2007 11:02:06 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [Rt2400-devel] Mode selection in mac80211
+Date: Tue, 9 Oct 2007 20:18:27 +0200
+Cc: rt2400-devel@lists.sourceforge.net,
+	Adam Baker <linux@baker-net.org.uk>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <200710052319.10600.linux@baker-net.org.uk> <200710091954.03727.IvDoorn@gmail.com> <1191951652.4013.48.camel@johannes.berg>
+In-Reply-To: <1191951652.4013.48.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710152008.32503.IvDoorn@gmail.com> (sfid-20071015_185119_354185_50CF6AC8)
+  charset="iso-8859-15"
+Message-Id: <200710092018.28113.IvDoorn@gmail.com> (sfid-20071009_190215_916089_4743C31B)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 15 October 2007, Anton Blanchard wrote:
+On Tuesday 09 October 2007, Johannes Berg wrote:
+> On Tue, 2007-10-09 at 19:54 +0200, Ivo van Doorn wrote:
 > 
-> When rounding a relative timeout we need to use round_jiffies_relative(). 
+> > > Well, it's not too strange that it has two places since there's the SIFS
+> > > too which is needed for ACK/CTS timing, these packets aren't sent from
+> > > the host so you can't have those timings in a per-packet descriptor.
+> > 
+> > You mean things like ACK_TIMEOUT, those are all seperate registers in the Ralink hardware.
 > 
-> Signed-off-by: Anton Blanchard <anton@samba.org>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> No, I'm not talking about the ack timeout, I'm thinking of the short
+> interframe space (SIFS) which you wait after receiving a packet before
+> sending the ACK.
 
-> ---
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> index 298faa9..06d9bc0 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> @@ -30,7 +30,7 @@
->   * Interval defines
->   * Both the link tuner as the rfkill will be called once per second.
->   */
-> -#define LINK_TUNE_INTERVAL	( round_jiffies(HZ) )
-> +#define LINK_TUNE_INTERVAL	( round_jiffies_relative(HZ) )
->  #define RFKILL_POLL_INTERVAL	( 1000 )
->  
->  /*
-> 
-> -------------------------------------------------------------------------
-> This SF.net email is sponsored by: Splunk Inc.
-> Still grepping through log files to find problems?  Stop.
-> Now Search log events and configuration files using AJAX and a browser.
-> Download your FREE copy of Splunk now >> http://get.splunk.com/
-> _______________________________________________
-> Rt2400-devel mailing list
-> Rt2400-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
-> 
+ok. That means that my previous point regarding the differences between
+the legacy drivers remains valid. ;)
 
+> > ButI think I should be more clearer on this, rt2500pci and rt2500usb are
+> > basically the same chipset but only the bus type is different.
+> > What is notable is that _only_ rt2500usb has this IFS register, none of the
+> > other Ralink chipsets (including rt2500pci) have it.
+> 
+> That is indeed strange.
 
+:)
+
+> > True, but in G mode you are compatible with B. The legacy driver doesn't
+> > switch back to B mode when the AP is in B mode. This means that it will
+> > be using the G timing values.
+> 
+> That sounds wrong.
+
+Not really, this would be the same behavior that you suggested earlier,
+when you stated that a driver should perhaps not register 802.11B mode
+when also registering 802.11G mode since it is backward compatible.
+
+Ivo
