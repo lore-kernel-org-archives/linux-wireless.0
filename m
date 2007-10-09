@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3808 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755206AbXJJTic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 15:38:32 -0400
-Date: Wed, 10 Oct 2007 15:27:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Markus Feldmann <feldmann_markus@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Patch for Kernel and Ath5k
-Message-ID: <20071010192709.GL5962@tuxdriver.com> (sfid-20071010_203839_109443_B3948F1D)
-References: <feieb9$nvg$1@sea.gmane.org> <200710102132.21790.bruno@thinktube.com> <feih2c$21f$1@sea.gmane.org> <200710101502.20202.hs4233@mail.mn-solutions.de> <feike5$fod$1@sea.gmane.org> <feisop$i4m$1@sea.gmane.org> <20071010173343.GI5962@tuxdriver.com> <470D17F2.7020906@gmx.de>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7712 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752435AbXJIIlq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 04:41:46 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH, take 2] libertas: fixes for slow hardware
+Date: Tue, 9 Oct 2007 10:41:57 +0200
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
+References: <200710081118.27468.hs4233@mail.mn-solutions.de> <1191849316.2703.26.camel@localhost.localdomain>
+In-Reply-To: <1191849316.2703.26.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <470D17F2.7020906@gmx.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710091041.57159.hs4233@mail.mn-solutions.de> (sfid-20071009_094154_833494_338E13F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please respond on the list...
+Fixes for slow hardware.
 
-On Wed, Oct 10, 2007 at 08:20:34PM +0200, Markus Feldmann wrote:
-> 
-> 
-> John W. Linville schrieb:
-> >On Wed, Oct 10, 2007 at 05:57:13PM +0200, Markus Feldmann wrote:
-> >
-> >>I do not find the Entry,
-> >><M> Generic IEEE 802.11 Networking Stack (mac80211)
-> >>in the ".config" File.
-> >>And i do not find any files in the Sources containig ATH5k?
-> >
-> >config ATH5K
-> >        tristate "Atheros 5xxx wireless cards support"
-> >        depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
-> >
-> >Did you select EXPERIMENTAL?
-> What do you mean with EXPERIMENTAL?
-> Have i downloaded the wrong Sources with git ?
-> 
-> If so can you please post how you download the EXPERIMENTAL Sources?
+Signed-off-by: Vitaly V. Bursov <vitalyvb@ukr.net>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I mean did you answer "y" to this:
+Index: libertas-2.6/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:37.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:50.000000000 +0200
+@@ -148,11 +148,11 @@ static int if_cs_poll_while_fw_download(
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 500; i++) {
++	for (i = 0; i < 1000; i++) {
+ 		u8 val = if_cs_read8(card, addr);
+ 		if (val == reg)
+ 			return i;
+-		udelay(100);
++		udelay(500);
+ 	}
+ 	return -ETIME;
+ }
+@@ -878,6 +878,9 @@ static int if_cs_probe(struct pcmcia_dev
+ 		goto out3;
+ 	}
+ 
++	/* Clear any interrupt cause that happend while sending
++	 * firmware/initializing card */
++	if_cs_write16(card, IF_CS_C_INT_CAUSE, IF_CS_C_IC_MASK);
+ 	if_cs_enable_ints(card);
+ 
+ 	/* And finally bring the card up */
 
-	Prompt for development and/or incomplete code/drivers (EXPERIMENTAL) [Y/n/?]
-
-How about this?
-
-	Wireless LAN (IEEE 802.11) (WLAN_80211) [Y/n/?]
-
-And either "y" or "m" to this?
-
-	Generic IEEE 802.11 Networking Stack (mac80211) (MAC80211 [M/n/y/?]
-
-Answering "n" to any of those will hide ATH5K from your choices.
-
-Hth!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
