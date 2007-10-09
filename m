@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12037 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2975 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753523AbXJaBEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2007 21:04:38 -0400
-Subject: Re: iwl3945 in 2.6.24-rc1 dies under load
-From: Zhu Yi <yi.zhu@intel.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-wireless@vger.kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20071031005202.GA1534@elf.ucw.cz>
-References: <20071031005202.GA1534@elf.ucw.cz>
-Content-Type: text/plain
-Date: Wed, 31 Oct 2007 08:54:58 +0800
-Message-Id: <1193792098.9704.16.camel@debian.sh.intel.com> (sfid-20071031_010444_034468_1A0E95CB)
-Mime-Version: 1.0
+	id S1750885AbXJIVmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 17:42:25 -0400
+Date: Tue, 9 Oct 2007 17:18:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH, take 2] libertas: fixes for slow hardware
+Message-ID: <20071009211822.GA3175@tuxdriver.com> (sfid-20071009_224231_969695_64AAEF35)
+References: <200710081118.27468.hs4233@mail.mn-solutions.de> <1191849316.2703.26.camel@localhost.localdomain> <200710091041.57159.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200710091041.57159.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 09, 2007 at 10:41:57AM +0200, Holger Schurig wrote:
 
-On Wed, 2007-10-31 at 01:52 +0100, Pavel Machek wrote:
-> tcpspray -n 1 -b 10000000 10.0.0.2
-> 
-> Oct 31 01:42:56 amd kernel: iwl3945: Microcode SW error detected.
-> Restarting 0x82000008.
-> Oct 31 01:42:56 amd kernel: iwl3945: Error Reply type 0x00000005 cmd
-> REPLY_TX (0x1C) seq 0x02C7 ser 0x0000004B
-> Oct 31 01:42:58 amd kernel: iwl3945: Can't stop Rx DMA.
+> @@ -148,11 +148,11 @@ static int if_cs_poll_while_fw_download(
+>  {
+>  	int i;
+>  
+> -	for (i = 0; i < 500; i++) {
+> +	for (i = 0; i < 1000; i++) {
+>  		u8 val = if_cs_read8(card, addr);
+>  		if (val == reg)
+>  			return i;
+> -		udelay(100);
+> +		udelay(500);
+>  	}
+>  	return -ETIME;
+>  }
 
-Please attach the dmesg with module param debug=0x43fff (make sure
-CONFIG_IWLWIFI_DEBUG is selected). This will dump the firmware event log
-for debug.
+10x the maximum delay?  Is this really necessary?  How did you
+determine this was needed?
 
-Thanks,
--yi
+If it really is necessary, you need to change the "The host polls
+the Card Status register for 50 ms..." comment in if_cs_prog_helper
+as well.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
