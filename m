@@ -1,183 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3977 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42936 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754058AbXJZVHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:07:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: make ieee802_11_parse_elems return void
-Date: Fri, 26 Oct 2007 17:04:35 -0400
-Message-Id: <11934326823109-git-send-email-linville@tuxdriver.com> (sfid-20071026_220729_884134_E79A99DE)
-In-Reply-To: <11934326821301-git-send-email-linville@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
- <11934326801557-git-send-email-linville@tuxdriver.com>
- <11934326803769-git-send-email-linville@tuxdriver.com>
- <11934326803330-git-send-email-linville@tuxdriver.com>
- <11934326811535-git-send-email-linville@tuxdriver.com>
- <11934326813508-git-send-email-linville@tuxdriver.com>
- <1193432681145-git-send-email-linville@tuxdriver.com>
- <11934326812028-git-send-email-linville@tuxdriver.com>
- <11934326813245-git-send-email-linville@tuxdriver.com>
- <11934326823646-git-send-email-linville@tuxdriver.com>
- <11934326821301-git-send-email-linville@tuxdriver.com>
+	id S1754892AbXJJO6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 10:58:51 -0400
+Subject: Re: [PATCH] libertas: automatically re-associate
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200710100943.33106.hs4233@mail.mn-solutions.de>
+References: <200710091404.31491.hs4233@mail.mn-solutions.de>
+	 <200710091713.35595.hs4233@mail.mn-solutions.de>
+	 <1191944257.20014.3.camel@localhost.localdomain>
+	 <200710100943.33106.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 10 Oct 2007 10:58:58 -0400
+Message-Id: <1192028338.9739.28.camel@localhost.localdomain> (sfid-20071010_155856_793154_8ABB5F3D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
+On Wed, 2007-10-10 at 09:43 +0200, Holger Schurig wrote:
+> > > Yes, with a HZ/4 rate.
+> >
+> > I don't care how _fast_ it tries to reassociate.  I care that
+> > it doesn't give up after some amount of time.
+> 
+> And I don't want that the driver get's stuck after some arbitrary 
+> time. *NO OTHER DRIVER* that I know of get's stuck. The current 
+> libertas code has actually a built-in denial of service attack.
+> 
+> Libertas isn't just used in the OLPC, where can make sure some 
+> userspace tools does the job. I'll using libertas in PDA like 
 
-Some APs send management frames with junk padding after the last IE.
-We already account for a similar problem with some Apple Airport
-devices, but at least one device is known to send more than a single
-extra byte.  The device in question is the Draytek Vigor2900:
+I have personally used it on platforms that are !OLPC.  Please don't
+assume that I only care about libertas on OLPC.
 
-	http://www.draytek.com.au/products/Vigor2900.php
+> devices, which used to have some HERMES I or HERMES II chips and 
+> have to switch to some other CF card because you can't buy CF 
+> cards with those chips any more. And on those device you can't 
+> just arbitrarily change the rest of the firmware.
+> 
+> So, at least in the no encryption & WEP obfuscation mode a WLAN 
+> driver should work without special user space software, because 
+> that's how real-life dictates the operation.
 
-The junk in question looks like an IE that runs off the end of the
-frame.  This cause us to return ParseFailed.  Since the frame in
-question is an association response, this causes us to fail to associate
-with this AP.
+I won't throw a hissy fit over the reassociation patch as long as it
+only tries this in open & WEP situations where a supplicant is not
+necessary.  That means you cannot simply requeue an association in
+libertas_mac_event_disconnected(), but you should check the association
+request and not requeue if:
 
-The return code from ieee802_11_parse_elems is superfluous.
-All callers still check for the presence of the specific IEs that
-interest them anyway.  So, remove the return code so the parse never
-"fails".
+1) the assoc request's mode is ad-hoc (is there a point to retrying
+assoc in adhoc?)
+2) the assoc request has secinfo->WPAenabled || secinfo->WPA2enabled
+3) the assoc request has WPA mcast or unicast keys set
+4) the assoc request has a wpa_ie_len > 0
 
-Acked-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_sta.c |   56 ++++++-----------------------------------
- 1 files changed, 9 insertions(+), 47 deletions(-)
+so in libertas_mac_event_disconnected() it should to be something like
+the following:
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index e78b51e..73d39e1 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -108,15 +108,11 @@ struct ieee802_11_elems {
- 	u8 wmm_param_len;
- };
- 
--typedef enum { ParseOK = 0, ParseUnknown = 1, ParseFailed = -1 } ParseRes;
--
--
--static ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
--				       struct ieee802_11_elems *elems)
-+static void ieee802_11_parse_elems(u8 *start, size_t len,
-+				   struct ieee802_11_elems *elems)
- {
- 	size_t left = len;
- 	u8 *pos = start;
--	int unknown = 0;
- 
- 	memset(elems, 0, sizeof(*elems));
- 
-@@ -127,15 +123,8 @@ static ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
- 		elen = *pos++;
- 		left -= 2;
- 
--		if (elen > left) {
--#if 0
--			if (net_ratelimit())
--				printk(KERN_DEBUG "IEEE 802.11 element parse "
--				       "failed (id=%d elen=%d left=%d)\n",
--				       id, elen, left);
--#endif
--			return ParseFailed;
--		}
-+		if (elen > left)
-+			return;
- 
- 		switch (id) {
- 		case WLAN_EID_SSID:
-@@ -202,28 +191,15 @@ static ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
- 			elems->ext_supp_rates_len = elen;
- 			break;
- 		default:
--#if 0
--			printk(KERN_DEBUG "IEEE 802.11 element parse ignored "
--				      "unknown element (id=%d elen=%d)\n",
--				      id, elen);
--#endif
--			unknown++;
- 			break;
- 		}
- 
- 		left -= elen;
- 		pos += elen;
- 	}
--
--	/* Do not trigger error if left == 1 as Apple Airport base stations
--	 * send AssocResps that are one spurious byte too long. */
--
--	return unknown ? ParseUnknown : ParseOK;
- }
- 
- 
--
--
- static int ecw2cw(int ecw)
- {
- 	int cw = 1;
-@@ -907,12 +883,7 @@ static void ieee80211_auth_challenge(struct net_device *dev,
- 
- 	printk(KERN_DEBUG "%s: replying to auth challenge\n", dev->name);
- 	pos = mgmt->u.auth.variable;
--	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
--	    == ParseFailed) {
--		printk(KERN_DEBUG "%s: failed to parse Auth(challenge)\n",
--		       dev->name);
--		return;
--	}
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
- 	if (!elems.challenge) {
- 		printk(KERN_DEBUG "%s: no challenge IE in shared key auth "
- 		       "frame\n", dev->name);
-@@ -1200,12 +1171,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
- 	aid &= ~(BIT(15) | BIT(14));
- 
- 	pos = mgmt->u.assoc_resp.variable;
--	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
--	    == ParseFailed) {
--		printk(KERN_DEBUG "%s: failed to parse AssocResp\n",
--		       dev->name);
--		return;
--	}
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
- 
- 	if (!elems.supp_rates) {
- 		printk(KERN_DEBUG "%s: no SuppRates element in AssocResp\n",
-@@ -1434,7 +1400,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee802_11_elems elems;
- 	size_t baselen;
--	int channel, invalid = 0, clen;
-+	int channel, clen;
- 	struct ieee80211_sta_bss *bss;
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -1478,9 +1444,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 	}
- 
--	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
--				   &elems) == ParseFailed)
--		invalid = 1;
-+	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
- 
- 	if (sdata->type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
- 	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
-@@ -1699,9 +1663,7 @@ static void ieee80211_rx_mgmt_beacon(struct net_device *dev,
- 	if (baselen > len)
- 		return;
- 
--	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
--				   &elems) == ParseFailed)
--		return;
-+	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
- 
- 	if (elems.erp_info && elems.erp_info_len >= 1)
- 		ieee80211_handle_erp_ie(dev, elems.erp_info[0]);
--- 
-1.5.2.4
+if (adapter->pending_assoc_req) {
+    if (test_bit(ASSOC_FLAG_MODE, &assoc_req->flags))
+        if (assoc_req->mode != IW_MODE_INFRA)
+            goto done;
+
+    if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags))
+        if (assoc_req->secinfo.WPAenabled ||assoc_req->secinfo.WPA2enabled)
+            goto done;
+
+    if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags))
+        if (assoc_req->wpa_mcast_key.len)
+            goto done;
+
+    if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags))
+        if (assoc_req->wpa_ucast_key.len)
+            goto done;
+
+    if (test_bit(ASSOC_FLAG_WPA_IE, &assoc_req->flags))
+        if (assoc_req->wpa_ie_len > 0)
+            goto done;
+
+    cancel_delayed_work(&priv->assoc_work);
+    queue_delayed_work(priv->work_thread,
+            &priv->assoc_work, HZ / 4);
+
+done:
+    ;
+}
+
+Dan
+
+> And, as said, otherwise you have a denial of service scenario.
+> 
+> 
+> > That's fine.  The drivers should _not_ be trying to handle all
+> > roaming cornercases themselves.
+> 
+> Either the driver or the firmware should handle all corner cases. 
+> With a HERMES II chip and a wlags49_h2_cs.ko driver, I can 
+> nicely roam with WPA+wpa_supplicant, and also with plain WEP 
+> (and no wpa_supplicant).
+> 
+> I see no technical reason why libertas shouldn't be able to do 
+> the same and behave like all other FULLMAC drivers.
+> 
+> 
+> > Userspace must come into the equation at some point, especially
+> > with WPA!!
+> 
+> I don't see that userspace *MUST* come into the equation at some 
+> point. If it *WISHES* to come into the equation: nothing hinders 
+> it. Running "iwevent" while killing the station at the AP yields 
+> these events:
+> 
+> 10:38:43.139777   eth1     New Access Point/Cell 
+> address:Not-Associated
+> 10:38:43.389217   eth1     Scan request completed
+> 10:38:45.161671   eth1     New Access Point/Cell 
+> address:00:1B:53:11:E2:B0
+> 
 
