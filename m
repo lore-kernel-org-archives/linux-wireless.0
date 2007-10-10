@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7712 "EHLO
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13278 "EHLO
 	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752435AbXJIIlq (ORCPT
+	with ESMTP id S1752636AbXJJHnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 04:41:46 -0400
+	Wed, 10 Oct 2007 03:43:19 -0400
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH, take 2] libertas: fixes for slow hardware
-Date: Tue, 9 Oct 2007 10:41:57 +0200
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
-References: <200710081118.27468.hs4233@mail.mn-solutions.de> <1191849316.2703.26.camel@localhost.localdomain>
-In-Reply-To: <1191849316.2703.26.camel@localhost.localdomain>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas: automatically re-associate
+Date: Wed, 10 Oct 2007 09:43:32 +0200
+References: <200710091404.31491.hs4233@mail.mn-solutions.de> <200710091713.35595.hs4233@mail.mn-solutions.de> <1191944257.20014.3.camel@localhost.localdomain>
+In-Reply-To: <1191944257.20014.3.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710091041.57159.hs4233@mail.mn-solutions.de> (sfid-20071009_094154_833494_338E13F1)
+  charset="iso-8859-1"
+Message-Id: <200710100943.33106.hs4233@mail.mn-solutions.de> (sfid-20071010_084326_649509_E25B3239)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes for slow hardware.
+> > Yes, with a HZ/4 rate.
+>
+> I don't care how _fast_ it tries to reassociate.  I care that
+> it doesn't give up after some amount of time.
 
-Signed-off-by: Vitaly V. Bursov <vitalyvb@ukr.net>
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+And I don't want that the driver get's stuck after some arbitrary 
+time. *NO OTHER DRIVER* that I know of get's stuck. The current 
+libertas code has actually a built-in denial of service attack.
 
-Index: libertas-2.6/drivers/net/wireless/libertas/if_cs.c
-===================================================================
---- libertas-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:37.000000000 +0200
-+++ libertas-2.6/drivers/net/wireless/libertas/if_cs.c	2007-10-09 11:40:50.000000000 +0200
-@@ -148,11 +148,11 @@ static int if_cs_poll_while_fw_download(
- {
- 	int i;
- 
--	for (i = 0; i < 500; i++) {
-+	for (i = 0; i < 1000; i++) {
- 		u8 val = if_cs_read8(card, addr);
- 		if (val == reg)
- 			return i;
--		udelay(100);
-+		udelay(500);
- 	}
- 	return -ETIME;
- }
-@@ -878,6 +878,9 @@ static int if_cs_probe(struct pcmcia_dev
- 		goto out3;
- 	}
- 
-+	/* Clear any interrupt cause that happend while sending
-+	 * firmware/initializing card */
-+	if_cs_write16(card, IF_CS_C_INT_CAUSE, IF_CS_C_IC_MASK);
- 	if_cs_enable_ints(card);
- 
- 	/* And finally bring the card up */
+Libertas isn't just used in the OLPC, where can make sure some 
+userspace tools does the job. I'll using libertas in PDA like 
+devices, which used to have some HERMES I or HERMES II chips and 
+have to switch to some other CF card because you can't buy CF 
+cards with those chips any more. And on those device you can't 
+just arbitrarily change the rest of the firmware.
+
+So, at least in the no encryption & WEP obfuscation mode a WLAN 
+driver should work without special user space software, because 
+that's how real-life dictates the operation.
+
+And, as said, otherwise you have a denial of service scenario.
+
+
+> That's fine.  The drivers should _not_ be trying to handle all
+> roaming cornercases themselves.
+
+Either the driver or the firmware should handle all corner cases. 
+With a HERMES II chip and a wlags49_h2_cs.ko driver, I can 
+nicely roam with WPA+wpa_supplicant, and also with plain WEP 
+(and no wpa_supplicant).
+
+I see no technical reason why libertas shouldn't be able to do 
+the same and behave like all other FULLMAC drivers.
+
+
+> Userspace must come into the equation at some point, especially
+> with WPA!!
+
+I don't see that userspace *MUST* come into the equation at some 
+point. If it *WISHES* to come into the equation: nothing hinders 
+it. Running "iwevent" while killing the station at the AP yields 
+these events:
+
+10:38:43.139777   eth1     New Access Point/Cell 
+address:Not-Associated
+10:38:43.389217   eth1     Scan request completed
+10:38:45.161671   eth1     New Access Point/Cell 
+address:00:1B:53:11:E2:B0
 
