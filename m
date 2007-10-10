@@ -1,313 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:4082 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955AbXJ0LZ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 07:25:26 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so973044nfb
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:25 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/21] rt2x00: Rework rt61 antenna selection.
-Date: Sat, 27 Oct 2007 13:41:53 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710271334.34192.IvDoorn@gmail.com>
-In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+Received: from madara.hpl.hp.com ([192.6.19.124]:63684 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752331AbXJJTXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 15:23:20 -0400
+Date: Wed, 10 Oct 2007 12:21:48 -0700
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: wext 64-bit: network manager and wpa_supplicant
+Message-ID: <20071010192148.GA13734@bougret.hpl.hp.com> (sfid-20071010_202327_708980_8FA1792A)
+Reply-To: jt@hpl.hp.com
+References: <1190292526.18521.52.camel@johannes.berg> <20070920165545.GA29452@bougret.hpl.hp.com> <1190307669.18521.94.camel@johannes.berg> <20070920205602.GA15373@bougret.hpl.hp.com> <1190385414.18521.148.camel@johannes.berg> <20070926235135.GA16051@bougret.hpl.hp.com> <1191921316.4013.5.camel@johannes.berg> <20071010022041.GL14401@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710271341.53905.IvDoorn@gmail.com> (sfid-20071027_124130_228393_B761C4A6)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071010022041.GL14401@jm.kir.nu>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+On Tue, Oct 09, 2007 at 07:20:41PM -0700, Jouni Malinen wrote:
+> On Tue, Oct 09, 2007 at 11:15:16AM +0200, Johannes Berg wrote:
+> 
+> > If I were to venture a guess I'd say that Jouni would accept a (sane)
+> > replacement if you were to license it under dual BSD/GPL as the rest of
+> > wpa_supplicant/hostapd.
+> 
+> Maybe, maybe not. License is just one of the reasons (but a strong one;
+> there's no way I would use GPL-only library here). The other part is in
+> the likelyhood of target systems having the library available. If it is
+> not expected to be available in more or less all targets, I do not
+> really like to start requiring it. wpa_supplicant/hostapd are used in
+> number of embedded designs and the less external libraries are required
+> the better.
+> 
+> Unfortunately, I do not have a device that would show the 64-bit issue.
+> Could you please remind me which devices are affected and how common
+> they are? So far, not very many people have complained about the issues
+> with wpa_supplicant on 64-bit systems.
 
-This patch changes rt61 antenna selection again. It helps at least with the
-rt61 pci card in my box, I hope I haven't broken behaviour on other RF chips.
-RF 2529 antenna setup is incomplete, we need to at code for diversity when we
-figure out how it is done properly.
+	When I sent you the original patch for WT, I proposed you some
+test vectors. I never heard back from you.
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |  143 +++++++++------------------------
- drivers/net/wireless/rt2x00/rt61pci.h |   10 ++-
- 2 files changed, 46 insertions(+), 107 deletions(-)
+> > Could you try wpa_supplicant with kernel patch below on your 32-bit
+> > machine? I think this should make the problem show up on 32-bit
+> > machines. Not having a 64-bit machine needn't stop you from fixing the
+> > alignment problems :) I can then verify that it works and didn't break
+> > 64/64 setups if you want.
+> 
+> This sounds like an interesting way of resolving the lack of hardware
+> part of the problem.. ;-)  If this approach is confirmed to work, I
+> would be quite a bit more likely to actually find time to take a closer
+> look at the problem.
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index d540525..0839946 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -422,40 +422,24 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	rt61pci_bbp_read(rt2x00dev, 77, &r77);
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE,
--			  !rt2x00_rf(&rt2x00dev->chip, RF5225));
--
--	/*
--	 * Configure the TX antenna.
--	 */
--	switch (ant->tx) {
--	case ANTENNA_A:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
--		break;
--	case ANTENNA_SW_DIVERSITY:
--	case ANTENNA_HW_DIVERSITY:
--		/*
--		 * NOTE: We should never come here because rt2x00lib is
--		 * supposed to catch this and send us the correct antenna
--		 * explicitely. However we are nog going to bug about this.
--		 * Instead, just default to antenna B.
--		 */
--	case ANTENNA_B:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
--		break;
--	}
-+			  rt2x00_rf(&rt2x00dev->chip, RF5325));
- 
- 	/*
- 	 * Configure the RX antenna.
- 	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 2);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 				  (rt2x00dev->curr_hwmode != HWMODE_A));
- 		break;
- 	case ANTENNA_A:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
-+		if (rt2x00dev->curr_hwmode == HWMODE_A)
-+			rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 0);
-+		else
-+			rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -465,8 +449,12 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 		 * Instead, just default to antenna B.
- 		 */
- 	case ANTENNA_B:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
-+		if (rt2x00dev->curr_hwmode == HWMODE_A)
-+			rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 3);
-+		else
-+			rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 0);
- 		break;
- 	}
- 
-@@ -487,39 +475,20 @@ static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 	rt61pci_bbp_read(rt2x00dev, 77, &r77);
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE,
--			  !rt2x00_rf(&rt2x00dev->chip, RF2527));
-+			  rt2x00_rf(&rt2x00dev->chip, RF2529));
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 			  !test_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags));
- 
- 	/*
--	 * Configure the TX antenna.
--	 */
--	switch (ant->tx) {
--	case ANTENNA_A:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
--		break;
--	case ANTENNA_SW_DIVERSITY:
--	case ANTENNA_HW_DIVERSITY:
--		/*
--		 * NOTE: We should never come here because rt2x00lib is
--		 * supposed to catch this and send us the correct antenna
--		 * explicitely. However we are nog going to bug about this.
--		 * Instead, just default to antenna B.
--		 */
--	case ANTENNA_B:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
--		break;
--	}
--
--	/*
- 	 * Configure the RX antenna.
- 	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 2);
- 		break;
- 	case ANTENNA_A:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
-+		rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -529,7 +498,8 @@ static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 		 * Instead, just default to antenna B.
- 		 */
- 	case ANTENNA_B:
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
-+		rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 0);
- 		break;
- 	}
- 
-@@ -545,16 +515,13 @@ static void rt61pci_config_antenna_2529_rx(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00pci_register_read(rt2x00dev, MAC_CSR13, &reg);
- 
--	if (p1 != 0xff) {
--		rt2x00_set_field32(&reg, MAC_CSR13_BIT4, !!p1);
--		rt2x00_set_field32(&reg, MAC_CSR13_BIT12, 0);
--		rt2x00pci_register_write(rt2x00dev, MAC_CSR13, reg);
--	}
--	if (p2 != 0xff) {
--		rt2x00_set_field32(&reg, MAC_CSR13_BIT3, !p2);
--		rt2x00_set_field32(&reg, MAC_CSR13_BIT11, 0);
--		rt2x00pci_register_write(rt2x00dev, MAC_CSR13, reg);
--	}
-+	rt2x00_set_field32(&reg, MAC_CSR13_BIT4, p1);
-+	rt2x00_set_field32(&reg, MAC_CSR13_BIT12, 0);
-+
-+	rt2x00_set_field32(&reg, MAC_CSR13_BIT3, !p2);
-+	rt2x00_set_field32(&reg, MAC_CSR13_BIT11, 0);
-+
-+	rt2x00pci_register_write(rt2x00dev, MAC_CSR13, reg);
- }
- 
- static void rt61pci_config_antenna_2529(struct rt2x00_dev *rt2x00dev,
-@@ -570,37 +537,18 @@ static void rt61pci_config_antenna_2529(struct rt2x00_dev *rt2x00dev,
- 	rt61pci_bbp_read(rt2x00dev, 4, &r4);
- 	rt61pci_bbp_read(rt2x00dev, 77, &r77);
- 
--	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
--	rx_ant = !!(rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED) & 2);
--
--	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
--
--	/*
--	 * Configure the TX antenna.
-+	/* FIXME: Antenna selection for the rf 2529 is very confusing in the
-+	 * legacy driver. The code below should be ok for non-diversity setups.
- 	 */
--	switch (ant->tx) {
--	case ANTENNA_A:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
--		break;
--	case ANTENNA_SW_DIVERSITY:
--	case ANTENNA_HW_DIVERSITY:
--		/*
--		 * NOTE: We should never come here because rt2x00lib is
--		 * supposed to catch this and send us the correct antenna
--		 * explicitely. However we are nog going to bug about this.
--		 * Instead, just default to antenna B.
--		 */
--	case ANTENNA_B:
--		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
--		break;
--	}
- 
- 	/*
- 	 * Configure the RX antenna.
- 	 */
- 	switch (ant->rx) {
- 	case ANTENNA_A:
--		rt61pci_config_antenna_2529_rx(rt2x00dev, 0, rx_ant);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
-+		rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 0);
-+		rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 0);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
-@@ -611,27 +559,12 @@ static void rt61pci_config_antenna_2529(struct rt2x00_dev *rt2x00dev,
- 		 * Instead, just default to antenna B.
- 		 */
- 	case ANTENNA_B:
--		rt61pci_config_antenna_2529_rx(rt2x00dev, 1, rx_ant);
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 1);
-+		rt2x00_set_field8(&r77, BBP_R77_RX_ANTENNA, 3);
-+		rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 1);
- 		break;
- 	}
- 
--	/*
--	 * FIXME: We are using the default antenna setup to
--	 * determine the remaining settings. This because we
--	 * need to know what the EEPROM indicated.
--	 * It is however unclear if this is required, and overall
--	 * using the default antenna settings here is incorrect
--	 * since mac80211 might have told us to use fixed settings.
--	 */
--	if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
--	else
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--
--	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
--			  (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY) &&
--			  (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY));
--
- 	rt61pci_bbp_write(rt2x00dev, 77, r77);
- 	rt61pci_bbp_write(rt2x00dev, 3, r3);
- 	rt61pci_bbp_write(rt2x00dev, 4, r4);
-@@ -676,8 +609,6 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	unsigned int i;
- 	u32 reg;
- 
--	rt2x00pci_register_read(rt2x00dev, PHY_CSR0, &reg);
--
- 	if (rt2x00dev->curr_hwmode == HWMODE_A) {
- 		sel = antenna_sel_a;
- 		lna = test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags);
-@@ -686,15 +617,17 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 		lna = test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags);
- 	}
- 
-+	for (i = 0; i < ARRAY_SIZE(antenna_sel_a); i++)
-+		rt61pci_bbp_write(rt2x00dev, sel[i].word, sel[i].value[lna]);
-+
-+	rt2x00pci_register_read(rt2x00dev, PHY_CSR0, &reg);
-+
- 	rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_BG,
- 			   (rt2x00dev->curr_hwmode == HWMODE_B ||
- 			    rt2x00dev->curr_hwmode == HWMODE_G));
- 	rt2x00_set_field32(&reg, PHY_CSR0_PA_PE_A,
- 			   (rt2x00dev->curr_hwmode == HWMODE_A));
- 
--	for (i = 0; i < ARRAY_SIZE(antenna_sel_a); i++)
--		rt61pci_bbp_write(rt2x00dev, sel[i].word, sel[i].value[lna]);
--
- 	rt2x00pci_register_write(rt2x00dev, PHY_CSR0, reg);
- 
- 	if (rt2x00_rf(&rt2x00dev->chip, RF5225) ||
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index ba51016..50d9f6a 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -1077,13 +1077,19 @@ struct hw_pairwise_ta_entry {
-  * R4: RX antenna control
-  * FRAME_END: 1 - DPDT, 0 - SPDT (Only valid for 802.11G, RF2527 & RF2529)
-  */
--#define BBP_R4_RX_ANTENNA		FIELD8(0x03)
-+
-+/*
-+ * ANTENNA_CONTROL semantics (guessed):
-+ * 0x1: Software controlled antenna switching (fixed or SW diversity)
-+ * 0x2: Hardware diversity.
-+ */
-+#define BBP_R4_RX_ANTENNA_CONTROL	FIELD8(0x03)
- #define BBP_R4_RX_FRAME_END		FIELD8(0x20)
- 
- /*
-  * R77
-  */
--#define BBP_R77_TX_ANTENNA		FIELD8(0x03)
-+#define BBP_R77_RX_ANTENNA		FIELD8(0x03)
- 
- /*
-  * RF registers
--- 
-1.5.3.4
+	You don't really need all that complex stuff. Here are a few
+test vectors for i386 (see below). You stuff that in the buffer you
+got from the kernel and attempt to parse it. That's what I used to fix
+the bug and it worked for me.
+	Note : one of the thing to take care is to not screw up 64 bit
+userspace on 64 bit kernel. That's why you should pay attention to the
+way I did it in my patch.
+	Note2 : both the Scanning and the Event code need to be fixed.
 
+> Jouni Malinen                                            PGP id EFC895FA
+
+	Have fun...
+
+	Jean
+
+--------------------------------------------------------------
+
+  //static unsigned char	hack[] = { 0x19, 0x00, 0x1B, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x09, 0x00, 0x01, 0x00, 0x50, 0x8A, 0x35, 0xF0, 0x47, 0x6F, 0x6C, 0x6F, 0x73, 0x4E, 0x65, 0x74, 0x7A };
+  //static unsigned char	hack[] = { 0x18, 0x00, 0x15, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x00, 0x01, 0x00, 0xC0, 0x02, 0xE1, 0xB8, 0x0E, 0xC0, 0x00, 0x00, 0x00, 0x50, 0x8A, 0x35, 0xF0 };
+  static unsigned char	hack[] = { 0x18, 0x00, 0x01, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x49, 0x45, 0x45, 0x45, 0x20, 0x38, 0x30, 0x32, 0x2E, 0x31, 0x31, 0x62, 0x67, 0x00, 0x35, 0xF0 };
+  //static unsigned char	hack[] = { 0x0C, 0x00, 0x07, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x03, 0x00, 0x00, 0x00 };
+  //static unsigned char	hack[] = { 0x19, 0x00, 0x1B, 0x8B, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x01, 0x00, 0x50, 0x8A, 0x35, 0xF0, 0x47, 0x6F, 0x6C, 0x6F, 0x73, 0x4E, 0x65, 0x74, 0x7A };
+  //static unsigned char	hack[] = { 0x10, 0x00, 0x05, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32 };
+  //static unsigned char	hack[] = { 0x10, 0x00, 0x2B, 0x8B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x67, 0x00, 0x35, 0xF0 };
+  //static unsigned char	hack[] = { 0x70, 0x00, 0x21, 0x8B, 0x50, 0x8A, 0x35, 0xE0, 0x40, 0x42, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x32, 0x80, 0x84, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x32, 0x60, 0xEC, 0x53, 0x00, 0x00, 0x00, 0x00, 0x32, 0x80, 0x8D, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x32, 0x40, 0x54, 0x89, 0x00, 0x00, 0x00, 0x00, 0x32, 0xC0, 0xD8, 0xA7, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  static int	hacksize = sizeof(hack);
