@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45118 "EHLO mx1.redhat.com"
+Received: from main.gmane.org ([80.91.229.2]:57087 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752007AbXJVPrj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 11:47:39 -0400
-Subject: Re: [PATCH] ipw2200: batch non-user-requested scan result
-	notifications
-From: Dan Williams <dcbw@redhat.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-In-Reply-To: <1193042719.3069.166.camel@debian.sh.intel.com>
-References: <1191952524.617.7.camel@localhost.localdomain>
-	 <1193042719.3069.166.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 11:47:18 -0400
-Message-Id: <1193068039.30205.13.camel@localhost.localdomain> (sfid-20071022_164741_089796_86530030)
+	id S1752696AbXJJMBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 08:01:25 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1IfaFZ-0007wN-R4
+	for linux-wireless@vger.kernel.org; Wed, 10 Oct 2007 12:01:17 +0000
+Received: from dslc-082-082-164-062.pools.arcor-ip.net ([82.82.164.62])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 12:01:17 +0000
+Received: from feldmann_markus by dslc-082-082-164-062.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 12:01:17 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: Patch for Kernel and Ath5k
+Date: Wed, 10 Oct 2007 14:00:57 +0200
+Message-ID: <feietp$qf4$1@sea.gmane.org> (sfid-20071010_130133_342741_7B4F95FF)
+References: <feieb9$nvg$1@sea.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <feieb9$nvg$1@sea.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-22 at 16:45 +0800, Zhu Yi wrote:
-> On Tue, 2007-10-09 at 13:55 -0400, Dan Williams wrote:
-> > ipw2200 makes extensive use of background scanning when unassociated
-> > or
-> > down.  Unfortunately, the firmware sends scan completed events many
-> > times per second, which the driver pushes directly up to userspace.
-> > This needlessly wakes up processes listening for wireless events many
-> > times per second.  Batch together scan completed events for
-> > non-user-requested scans and send them up to userspace every 4
-> > seconds.
-> > Scan completed events resulting from an SIOCSIWSCAN call are pushed up
-> > without delay.
-> > 
-> > Signed-off-by: Dan Williams <dcbw@redhat.com>
+Markus Feldmann schrieb:
+> Hi All,
 > 
-> I'm OK with this one except the round_jiffies part.
+> i tried to patch the Kernel to get the ATH5k Driver to work but without 
+> success.
+> 
+> It seems i miss some scripts like check.sh
+> 
+> Anybody knows how to get my Problem solved?
+> 
+> bye Markus
+> 
+Sorry i forgot to say that i am using the kernel Source 2.6.23-rc8 and 
+wanna patch this with a Andrew Morton Patch,
+2.6.23-rc8-mm1
+2.6.23-rc8-mm2
 
-I think that it got fixed upstream when the round_jiffies_relative()
-patch went it, is that what you mean?  If not, I'm not sure what you
-mean by "except the round_jiffies part".
+Can anybody write what i have to do?
 
-Dan
+I am on Debian Etch. I have got an Atheros Wlan Chip with the ID 
+168c:001c (rev 01).
 
-> Thanks,
-> -yi
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you and
+bye
 
