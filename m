@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:57757 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbXJUUEw (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:31100 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186AbXJJNh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 16:04:52 -0400
-Date: Sun, 21 Oct 2007 22:04:57 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-Subject: ISSC W89C35 802.11bg (was Re: rt73usb: support for wireless in
-	Kohjinsha subnotebook)
-Message-ID: <20071021200457.GA29024@elf.ucw.cz> (sfid-20071021_210455_524051_5AD3645D)
-References: <20071020184100.GA11640@elf.ucw.cz> <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
+	Wed, 10 Oct 2007 09:37:59 -0400
+Received: by py-out-1112.google.com with SMTP id u77so383391pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 06:37:58 -0700 (PDT)
+Message-ID: <40f31dec0710100637w3bfddc67ta32fa244d2cd7343@mail.gmail.com> (sfid-20071010_143804_691570_00D8D7C4)
+Date: Wed, 10 Oct 2007 16:37:58 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Markus Feldmann" <feldmann_markus@gmx.de>
+Subject: Re: Patch for Kernel and Ath5k
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <feietp$qf4$1@sea.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <feieb9$nvg$1@sea.gmane.org> <feietp$qf4$1@sea.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+2007/10/10, Markus Feldmann <feldmann_markus@gmx.de>:
+> Markus Feldmann schrieb:
+> > Hi All,
+> >
+> > i tried to patch the Kernel to get the ATH5k Driver to work but without
+> > success.
+> >
+> > It seems i miss some scripts like check.sh
+> >
+> > Anybody knows how to get my Problem solved?
+> >
+> > bye Markus
+> >
+> Sorry i forgot to say that i am using the kernel Source 2.6.23-rc8 and
+> wanna patch this with a Andrew Morton Patch,
+> 2.6.23-rc8-mm1
+> 2.6.23-rc8-mm2
+>
+> Can anybody write what i have to do?
+>
+> I am on Debian Etch. I have got an Atheros Wlan Chip with the ID
+> 168c:001c (rev 01).
+>
+> Thank you and
+> bye
 
-> This device is NOT a Ralink USB wifi adapter!
-> 
-> Get the windows driver in this link and see for yourself.
-> http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
-> (ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
+001c wont work anyway it uses the newer 5.3 EEPROM that we don't yet support ;-(
 
-You are right, sorry for confusion.
 
-Now, the strange part comes. They have linux sources on their web
-pages... for 2.6.9 and 2.6.11. If anyone ported them forward, please
-let me know, otherwise I'll take a look at porting them.
-								Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
