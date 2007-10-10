@@ -1,67 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from probity.mcc.ac.uk ([130.88.200.94]:65430 "EHLO
-	probity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757762AbXJOLFq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 07:05:46 -0400
-Message-ID: <4713498E.8040305@gentoo.org> (sfid-20071015_120550_140444_EE1F314A)
-Date: Mon, 15 Oct 2007 12:05:50 +0100
-From: Daniel Drake <dsd@gentoo.org>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3871 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751481AbXJJRMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 13:12:12 -0400
+Date: Wed, 10 Oct 2007 12:59:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: automatically re-associate
+Message-ID: <20071010165921.GG5962@tuxdriver.com> (sfid-20071010_181214_613823_AB9CD9FA)
+References: <200710091404.31491.hs4233@mail.mn-solutions.de> <200710091713.35595.hs4233@mail.mn-solutions.de> <1191944257.20014.3.camel@localhost.localdomain> <200710100943.33106.hs4233@mail.mn-solutions.de> <1192028338.9739.28.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: Marc Pignat <marc.pignat@hevs.ch>, linux-wireless@vger.kernel.org,
-	kune@deine-taler.de, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw, fix oops when ejecting install media
-References: <200710150851.52995.marc.pignat@hevs.ch>
-In-Reply-To: <200710150851.52995.marc.pignat@hevs.ch>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192028338.9739.28.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marc Pignat wrote:
-> The disconnect function can dereference the net_device structure before it is
-> allocated. This is the case when ejecting the device installer.
-> 
-> Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+On Wed, Oct 10, 2007 at 10:58:58AM -0400, Dan Williams wrote:
 
-s/before it is allocated/when it is never allocated/
+> I won't throw a hissy fit over the reassociation patch as long as it
+> only tries this in open & WEP situations where a supplicant is not
+> necessary.  That means you cannot simply requeue an association in
+> libertas_mac_event_disconnected(), but you should check the association
+> request and not requeue if:
+> 
+> 1) the assoc request's mode is ad-hoc (is there a point to retrying
+> assoc in adhoc?)
 
-Acked-by: Daniel Drake <dsd@gentoo.org>
+I'm not sure I see why ad-hoc is a special case?
 
-> ---
-> 
-> Hello!
-> 
-> Patch against 2.6.23.
-> This patch fixes the bug I've submitted to linux-wireless friday in the
-> "zd1211rw on 2.6.23 oops ejecting device" thread.
-> 
-> Regards
-> 
-> Marc
-> 
-> --- drivers/net/wireless/zd1211rw/zd_usb.c.orig	2007-10-15 08:29:16.000000000 +0200
-> +++ drivers/net/wireless/zd1211rw/zd_usb.c	2007-10-15 08:29:32.000000000 +0200
-> @@ -1041,14 +1041,17 @@ error:
->  static void disconnect(struct usb_interface *intf)
->  {
->  	struct net_device *netdev = zd_intf_to_netdev(intf);
-> -	struct zd_mac *mac = zd_netdev_mac(netdev);
-> -	struct zd_usb *usb = &mac->chip.usb;
-> +	struct zd_mac *mac;
-> +	struct zd_usb *usb;
->  
->  	/* Either something really bad happened, or we're just dealing with
->  	 * a DEVICE_INSTALLER. */
->  	if (netdev == NULL)
->  		return;
->  
-> +	mac = zd_netdev_mac(netdev);
-> +	usb = &mac->chip.usb;
-> +
->  	dev_dbg_f(zd_usb_dev(usb), "\n");
->  
->  	zd_netdev_disconnect(netdev);
-> 
-> 
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
