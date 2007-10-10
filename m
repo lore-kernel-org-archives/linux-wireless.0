@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:22219 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997AbXJQOJL (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:6489 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbXJJJp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:09:11 -0400
-Received: by py-out-1112.google.com with SMTP id u77so4340156pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 07:09:09 -0700 (PDT)
-Message-ID: <43e72e890710170709j76f2430el57640cf46d07402c@mail.gmail.com> (sfid-20071017_150914_583533_B54DAAC2)
-Date: Wed, 17 Oct 2007 10:09:08 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] consistently use ath5k in printks
-Cc: "Bruno Randolf" <bruno@thinktube.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <1192619652.8841.13.camel@johannes.berg>
+	Wed, 10 Oct 2007 05:45:28 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so127983nfb
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 02:45:26 -0700 (PDT)
+Message-ID: <470C9F28.1070803@gmail.com> (sfid-20071010_104530_168187_5A3128F1)
+Date: Wed, 10 Oct 2007 11:45:12 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
-	 <1192619652.8841.13.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+CC: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: mac80211/iwlwifi + hidden ssids
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/17/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2007-10-16 at 22:20 +0900, Bruno Randolf wrote:
->
-> > the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
->
-> Ok, and why exactly is there a proc interface at all?
+Hello,
+I am unable to connect to a dynamic wep network with hidden ssid using 
+iwl3945 and the lastest fedora 7 kernel (which should have very recent 
+stuff). The problem is that the card never finds the ap. Running 
+wpa_supplicant directly shows "Got scan results xxx bytes" (can't 
+remeber the exact message).
+While with ipw3945d + ieee80211 it works fine. (NetworkManager does not 
+connect either see http://bugzilla.gnome.org/show_bug.cgi?id=464215 ).
+I haven't tryed the suggestion there yet because I am not near the 
+network right now.
+Any idea whats wrong? Does it work for anybody (maybe with other 
+mac80211 drivers)
+Currently I am not sure whom to blame iwl3945 or mac80211 or both.
 
-That shall be removed as well.
-
-  Luis
