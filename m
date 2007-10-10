@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:41958 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060AbXJMOKj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:39 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so715870ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:38 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/11] rt2x00: Fix residual check in PLCP calculations.
-Date: Sat, 13 Oct 2007 16:26:52 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710131621.05173.IvDoorn@gmail.com>
-In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200710131626.52613.IvDoorn@gmail.com> (sfid-20071013_151054_588086_25DFFC7C)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2226 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752988AbXJJBid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:38:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: filter locally-originated multicast frames
+Date: Tue,  9 Oct 2007 21:30:41 -0400
+Message-Id: <11919798432071-git-send-email-linville@tuxdriver.com> (sfid-20071010_023839_010030_3280B7A7)
+In-Reply-To: <11919798433964-git-send-email-linville@tuxdriver.com>
+References: <11919798433964-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+From: John W. Linville <linville@tuxdriver.com>
 
-Because rt2x00 implements the residual calculation different from what the
-legacy code does (i.e. scaled values), we need to adjust the residual check.
-Again, we are only mimicking the behaviour of the ralink driver without
-actually knowing what we do :-(
+In STA mode, the AP will echo our traffic.  This includes multicast
+traffic.
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Receiving these frames confuses some protocols and applications,
+notably IPv6 Duplicate Address Detection.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/ieee80211.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 71b4a04..360f03a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -697,7 +697,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 			/*
- 			 * Check if we need to set the Length Extension
- 			 */
--			if (bitrate == 110 && residual <= 3)
-+			if (bitrate == 110 && residual <= 30)
- 				desc.service |= 0x80;
- 		}
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index ad73a40..9e0da6e 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2844,9 +2844,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+ 		memcpy(dst, hdr->addr1, ETH_ALEN);
+ 		memcpy(src, hdr->addr3, ETH_ALEN);
  
+-		if (sdata->type != IEEE80211_IF_TYPE_STA) {
++		if (sdata->type != IEEE80211_IF_TYPE_STA ||
++		    (is_multicast_ether_addr(dst) &&
++		     !compare_ether_addr(src, dev->dev_addr)))
+ 			return TXRX_DROP;
+-		}
+ 		break;
+ 	case 0:
+ 		/* DA SA BSSID */
 -- 
-1.5.3.4
+1.5.2.4
 
