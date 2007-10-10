@@ -1,61 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:46650 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755548AbXJ2Q6Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 12:58:25 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1ImXwW-00025L-R0
-	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2007 12:58:24 -0400
-Subject: Re: iwl3945 lists supported rates backwards
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: dragoran <drago01@gmail.com>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <1193667153.5197.48.camel@johannes.berg>
-References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
-	 <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>
-	 <4719BA96.3010609@gmail.com>  <1193644281.27622.12.camel@dv>
-	 (sfid-20071029_075130_793419_DFA19205)  <1193667153.5197.48.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 29 Oct 2007 12:58:15 -0400
-Message-Id: <1193677095.11181.2.camel@dv> (sfid-20071029_165844_385100_2C9CD5AA)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2067 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748AbXJJTJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 15:09:07 -0400
+Date: Wed, 10 Oct 2007 14:32:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, proski@gnu.org,
+	hermes@gibson.dropbear.id.au
+Subject: Re: [RFC PATCH] orinoco: more reliable scan handling
+Message-ID: <20071010183251.GK5962@tuxdriver.com> (sfid-20071010_200913_385104_DC353DE3)
+References: <1191946643.20183.2.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1191946643.20183.2.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-29 at 15:12 +0100, Johannes Berg wrote:
-> > With disable_hw_scan=1, probe requests have the same problem as the
-> > association requests, namely they don't have CCK rates in the supported
-> > rates:
-> 
-> This is because mac80211 uses the order in which the rates are
-> registered, and with iwlwifi that is "OFDM, CCK". See
-> iwl_init_hw_rates() and iwl_init_geos().
+On Tue, Oct 09, 2007 at 12:17:23PM -0400, Dan Williams wrote:
+> Bring scan result handling more in line with drivers like ipw.  Scan
+> results are aggregated and a BSS dropped after 15 seconds if no beacon
+> is received.  This allows the driver to interact better with userspace
+> where more than one process may request scans or results at any time.
 
-Yes, it's working now!  Thank you!  That's the patch I actually applied:
+Are there some orinoco.h changes?  This patch seems to refer to
+orinoco_private fields that don't exist...?
 
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5414,10 +5414,10 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 	 * is supported by a mode -- and the first match is taken
- 	 */
- 
--	if (modes[G].num_channels)
--		ieee80211_register_hwmode(priv->hw, &modes[G]);
- 	if (modes[B].num_channels)
- 		ieee80211_register_hwmode(priv->hw, &modes[B]);
-+	if (modes[G].num_channels)
-+		ieee80211_register_hwmode(priv->hw, &modes[G]);
- 	if (modes[A].num_channels)
- 		ieee80211_register_hwmode(priv->hw, &modes[A]);
- 
-
-Should I submit it formally?
-
+John
 -- 
-Regards,
-Pavel Roskin
-
+John W. Linville
+linville@tuxdriver.com
