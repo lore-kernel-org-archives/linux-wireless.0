@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59440 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51228 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755820AbXJDSoj (ORCPT
+	with ESMTP id S1751478AbXJJJBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 14:44:39 -0400
-Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
-	explicit
+	Wed, 10 Oct 2007 05:01:46 -0400
+Subject: Re: [RFC PATCH 2/2] mac80211: store SSID in sta_bss_list
 From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Daniel Drake <dsd@gentoo.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071004180900.GG6037@tuxdriver.com> (sfid-20071004_193833_064202_C9F1C827)
-References: <20071004113343.552139D502B@zog.reactivated.net>
-	 <20071004180900.GG6037@tuxdriver.com>
-	 (sfid-20071004_193833_064202_C9F1C827)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/u7Wgpxry+VC3Sz0LKq/"
-Date: Thu, 04 Oct 2007 20:44:48 +0200
-Message-Id: <1191523488.7367.16.camel@johannes.berg> (sfid-20071004_194447_669501_672273BE)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1191973799635-git-send-email-linville@tuxdriver.com> (sfid-20071010_010921_998777_FA0E0694)
+References: <11919737992212-git-send-email-linville@tuxdriver.com>
+	 <1191973799635-git-send-email-linville@tuxdriver.com>
+	 (sfid-20071010_010921_998777_FA0E0694)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sfTAZWCO7Uk6i4h61lrj"
+Date: Wed, 10 Oct 2007 11:02:39 +0200
+Message-Id: <1192006959.12541.2.camel@johannes.berg> (sfid-20071010_100148_255607_05560A3C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-/u7Wgpxry+VC3Sz0LKq/
+--=-sfTAZWCO7Uk6i4h61lrj
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-10-04 at 14:09 -0400, John W. Linville wrote:
+On Tue, 2007-10-09 at 19:49 -0400, John W. Linville wrote:
+> From: John W. Linville <linville@tuxdriver.com>
+>=20
+> Some AP equipment "in the wild" services multiple SSIDs using the
+> same BSSID.  This patch changes the key of sta_bss_list to include
+> the SSID as well as the BSSID and the channel so as to prevent one
+> SSID from eclipsing another SSID with the same BSSID.
 
-> --- a/net/mac80211/ieee80211_iface.c
-> +++ b/net/mac80211/ieee80211_iface.c
-> @@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, in=
-t type)
->  	 * which already has a hard_start_xmit routine assigned
->  	 * which must not be changed.
->  	 */
-> -	if (!dev->hard_start_xmit)
-> +	if (dev->type !=3D ARPHRD_IEEE80211)
->  		dev->hard_start_xmit =3D ieee80211_subif_start_xmit;
-
-That should work as well although I think you should update the comment
-above :)
+There's a TODO comment at the top of the file for this which you can
+remove :)
 
 johannes
 
---=-/u7Wgpxry+VC3Sz0LKq/
+--=-sfTAZWCO7Uk6i4h61lrj
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARwU0n6Vg1VMiehFYAQK6jg/8C4JpPKFTXd2Sf1VRnqEHj+vwqLp/v5Td
-/yXYwqcSgHY2G5YvSvFBeVjfkKn42i+9fmoxilViouQdKAVaXWIVPF9nGOkMfuHS
-7x3WlRB7COvgiCxMEQl49w0rmhBomIoaT3k8wnLyI37H0RpG3ToVjBs34DXD0lyT
-V89r8ovTQQKoiKKuLh4Npussg1uuxJ7NUMz+tU1eqTdhj2kdJsPdDNEhC3+7OLIc
-TjqXMVMcDrvWG2Fm6ExAloq0FrzCexTyS5UIBQLFm7dTGwjasH+Uz8vJ55BZ0vdC
-CWnTah18RCoyytBy2lNc7JvKA8sPH+j6FMgAC+tC5wZpSNVvIRwEwzS7JIcqVb62
-d76gQIfKGBDLa+MrlZzoeu97n1XAlTorZ9Lp7Ou49C+q+BWEGyfHIe1FG3c8vi9d
-9eO9tdKmEW63w9VNuifR81uU5cjRRoGaAllnfVG6pnL0UVkTH3bMcvavEmzFhavH
-bqo6GsfiLJZLrAaJuLObJpzundeO0C/vwdKIAb31mqCCT9v6rXvSLMmT7zKb0vZ9
-YCNBu5rwNeL8NG33l1tiXC5NqWWh5J6CvvWdGGNDgwm4mmJJHS/qYOEB3msjG5+s
-RpQbTZa+OLPt0COhU91VCiIv2/7HLFMdv7kq5AzClLNqZNZMUpEu9pvXORU1LUip
-MU3LMugqJZE=
-=RM6L
+iQIVAwUARwyVLqVg1VMiehFYAQJuhxAAu5Vj+nyFnE402VVt8cbAvYYUbuht8+lO
+3PgkAQqftHs3C8bgcIxbjgxDsOmUNFHwW0n18sM779wCjr/jhPqHFXrR+4Ii7S+5
+8vQkT7ur2bD2VP2yjsVi8Cj0xoMqFceAPyyQ4Peu/rhy2mR+XtHbxdQti/crOuJ3
+8oFpE0wofQ+1EGfHN7igen68aB/teEjQSwY4GpydUXRsFtt3992QTOii43X650rs
+STWhSq76IlZ1hLUfgKHAmPbQvUWN2EVwB4WwwgHd+3itDn8EEha43eTbQZVoDH64
+SPYrVz5JhHKGN3fFaoYYsr/AGuWEF97Ue0xOQcQq/q/cXgyKImZVSteLc0/GYTyK
+3QdWZ+FilAVMW/ZWKJANSqYj/ohAyIwkBrzkENWAx/4qVn3YOUS/PQGgJyI+Zxjh
+tO28B02AQcYi9DP8PnQmKybD0RBy1Hc9rpCpqVN3BeGA9Kg+JWgIycdaqB2gHMBz
+3ZjJuZbde5ucXoffj0VRCYMAs1uDNv6F3RGy+xV08+Fs5SVoqwdo2O+upZHPeA7z
+JhcNKKhMSVRsUEDBIz5wUJcRJ4vIYYxTEHYXRSHroVuNt/a2fxtljaYweVWDPBEQ
+zrXDH2d0lvhHZGnHNGY71Jxe7yJbwQqvHn39cGOy5UijsmJHGCVg7LAqbrHTa6UF
+w/4nvN25cPM=
+=9iZh
 -----END PGP SIGNATURE-----
 
---=-/u7Wgpxry+VC3Sz0LKq/--
+--=-sfTAZWCO7Uk6i4h61lrj--
 
