@@ -1,192 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38088 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:22286 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751868AbXJVRSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 13:18:47 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200710111151.06989.hs4233@mail.mn-solutions.de>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 13:17:25 -0400
-Message-Id: <1193073445.4325.3.camel@localhost.localdomain> (sfid-20071022_181850_332534_B4C246C4)
-Mime-Version: 1.0
+	id S1754890AbXJJR4q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 13:56:46 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+Date: Wed, 10 Oct 2007 10:54:46 -0700
+Message-ID: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com> (sfid-20071010_185650_233106_447DB7B4)
+In-Reply-To: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
+References: <470C9F28.1070803@gmail.com><20071010130653.GB5962@tuxdriver.com><1192026847.9739.4.camel@localhost.localdomain><f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com><1192028866.9739.32.camel@localhost.localdomain><20071010152027.GF5962@tuxdriver.com> <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
+From: "Ferguson, Dana R" <dana.r.ferguson@intel.com>
+To: "Ferguson, Dana R" <dana.r.ferguson@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Williams" <dcbw@redhat.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-10-11 at 11:51 +0200, Holger Schurig wrote:
-> Move wlan_postpone_association_work() and wlan_cancel_association_work()
-> from a assoc.h file to the sole user, into wext.c.
-> 
-> In passing, rename the functions to libertas_XXX.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Hey,
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+I bit more info. I am hearing it is a Cisco CCX feature and will not be
+included in the open source code.
 
-> 
-> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.h
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.h	2007-10-11 12:14:50.000000000 +0200
-> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.h	2007-10-11 12:44:12.000000000 +0200
-> @@ -11,22 +11,4 @@ struct assoc_request * wlan_get_associat
->  
->  void libertas_sync_channel(struct work_struct *work);
->  
-> -#define ASSOC_DELAY (HZ / 2)
-> -static inline void wlan_postpone_association_work(wlan_private *priv)
-> -{
-> -	if (priv->adapter->surpriseremoved)
-> -		return;
-> -	cancel_delayed_work(&priv->assoc_work);
-> -	queue_delayed_work(priv->work_thread, &priv->assoc_work, ASSOC_DELAY);
-> -}
-> -
-> -static inline void wlan_cancel_association_work(wlan_private *priv)
-> -{
-> -	cancel_delayed_work(&priv->assoc_work);
-> -	if (priv->adapter->pending_assoc_req) {
-> -		kfree(priv->adapter->pending_assoc_req);
-> -		priv->adapter->pending_assoc_req = NULL;
-> -	}
-> -}
-> -
->  #endif /* _WLAN_ASSOC_H */
-> Index: wireless-2.6/drivers/net/wireless/libertas/wext.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/wext.c	2007-10-11 12:14:50.000000000 +0200
-> +++ wireless-2.6/drivers/net/wireless/libertas/wext.c	2007-10-11 12:50:29.000000000 +0200
-> @@ -21,6 +21,24 @@
->  #include "assoc.h"
->  
-> 
-> +static inline void libertas_postpone_association_work(wlan_private *priv)
-> +{
-> +	if (priv->adapter->surpriseremoved)
-> +		return;
-> +	cancel_delayed_work(&priv->assoc_work);
-> +	queue_delayed_work(priv->work_thread, &priv->assoc_work, HZ / 2);
-> +}
-> +
-> +static inline void libertas_cancel_association_work(wlan_private *priv)
-> +{
-> +	cancel_delayed_work(&priv->assoc_work);
-> +	if (priv->adapter->pending_assoc_req) {
-> +		kfree(priv->adapter->pending_assoc_req);
-> +		priv->adapter->pending_assoc_req = NULL;
-> +	}
-> +}
-> +
-> +
->  /**
->   *  @brief Find the channel frequency power info with specific channel
->   *
-> @@ -949,9 +967,9 @@ static int wlan_set_freq(struct net_devi
->  out:
->  	if (ret == 0) {
->  		set_bit(ASSOC_FLAG_CHANNEL, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	} else {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> @@ -1050,11 +1068,11 @@ static int wlan_set_mode(struct net_devi
->  	assoc_req = wlan_get_association_request(adapter);
->  	if (!assoc_req) {
->  		ret = -ENOMEM;
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	} else {
->  		assoc_req->mode = *uwrq;
->  		set_bit(ASSOC_FLAG_MODE, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  		lbs_deb_wext("Switching to mode: 0x%x\n", *uwrq);
->  	}
->  	mutex_unlock(&adapter->lock);
-> @@ -1335,9 +1353,9 @@ static int wlan_set_encode(struct net_de
->  out:
->  	if (ret == 0) {
->  		set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	} else {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> @@ -1576,9 +1594,9 @@ static int wlan_set_encodeext(struct net
->  
->  out:
->  	if (ret == 0) {
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	} else {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> @@ -1623,9 +1641,9 @@ static int wlan_set_genie(struct net_dev
->  out:
->  	if (ret == 0) {
->  		set_bit(ASSOC_FLAG_WPA_IE, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	} else {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> @@ -1752,9 +1770,9 @@ out:
->  	if (ret == 0) {
->  		if (updated)
->  			set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	} else if (ret != -EOPNOTSUPP) {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> @@ -1929,13 +1947,13 @@ out:
->  			memcpy(&assoc_req->ssid, &ssid, IW_ESSID_MAX_SIZE);
->  			assoc_req->ssid_len = ssid_len;
->  			set_bit(ASSOC_FLAG_SSID, &assoc_req->flags);
-> -			wlan_postpone_association_work(priv);
-> +			libertas_postpone_association_work(priv);
->  		}
->  	}
->  
->  	/* Cancel the association request if there was an error */
->  	if (ret != 0) {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  	}
->  
->  	mutex_unlock(&adapter->lock);
-> @@ -1973,13 +1991,13 @@ static int wlan_set_wap(struct net_devic
->  	/* Get or create the current association request */
->  	assoc_req = wlan_get_association_request(adapter);
->  	if (!assoc_req) {
-> -		wlan_cancel_association_work(priv);
-> +		libertas_cancel_association_work(priv);
->  		ret = -ENOMEM;
->  	} else {
->  		/* Copy the BSSID to the association request */
->  		memcpy(&assoc_req->bssid, awrq->sa_data, ETH_ALEN);
->  		set_bit(ASSOC_FLAG_BSSID, &assoc_req->flags);
-> -		wlan_postpone_association_work(priv);
-> +		libertas_postpone_association_work(priv);
->  	}
->  
->  	mutex_unlock(&adapter->lock);
+Dana
 
+-----Original Message-----
+From: ipw3945-devel-bounces@lists.sourceforge.net
+[mailto:ipw3945-devel-bounces@lists.sourceforge.net] On Behalf Of
+Ferguson, Dana R
+Sent: Wednesday, October 10, 2007 10:43 AM
+To: John W. Linville; Dan Williams
+Cc: linux-wireless@vger.kernel.org; ipw3945-devel
+Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+
+Hi,
+
+Engineers here have brought to my attention that this has been going on
+for several projects and has been reported in Bugzilla on 2915, 3945 and
+now the current. I can't get into the old data bases to provide bug
+ID's. So I can't provide more details.
+
+I am wondering why it keeps getting over looked? Have we narrowed it
+down to where it is failing?
+
+Dana
+  
+
+-----Original Message-----
+From: ipw3945-devel-bounces@lists.sourceforge.net
+[mailto:ipw3945-devel-bounces@lists.sourceforge.net] On Behalf Of John
+W. Linville
+Sent: Wednesday, October 10, 2007 8:20 AM
+To: Dan Williams
+Cc: linux-wireless@vger.kernel.org; ipw3945-devel
+Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+
+On Wed, Oct 10, 2007 at 11:07:46AM -0400, Dan Williams wrote:
+> On Wed, 2007-10-10 at 16:57 +0200, dragoran wrote:
+
+> > btw shouldn't all mac80211 drivers either work or not work because
+the
+> > code for this is in mac80211 and not in the drivers?
+> 
+> Yeah, pretty much; but each driver/firmware may handle hidden ssids
+> slightly differently.  mac80211 should bring some sanity to this area,
+> but I wouldn't discount variation between even mac80211 based drivers.
+
+Hmmm...doesn't the iwlwifi firmware intercede in scanning?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
+
+------------------------------------------------------------------------
+-
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >> http://get.splunk.com/
+_______________________________________________
+Ipw3945-devel mailing list
+Ipw3945-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+
+------------------------------------------------------------------------
+-
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >> http://get.splunk.com/
+_______________________________________________
+Ipw3945-devel mailing list
+Ipw3945-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
