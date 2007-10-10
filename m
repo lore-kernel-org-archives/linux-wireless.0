@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4595 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3515 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752628AbXJCBi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 21:38:27 -0400
-Date: Tue, 2 Oct 2007 21:20:44 -0400
+	id S1753710AbXJJPiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 11:38:51 -0400
+Date: Wed, 10 Oct 2007 11:17:13 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
-Message-ID: <20071003012044.GD29361@tuxdriver.com> (sfid-20071003_023832_069192_2028168E)
+To: Dan Williams <dcbw@redhat.com>
+Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: mac80211/iwlwifi + hidden ssids
+Message-ID: <20071010151713.GE5962@tuxdriver.com> (sfid-20071010_163856_146843_EEA685D0)
+References: <470C9F28.1070803@gmail.com> <20071010130653.GB5962@tuxdriver.com> <1192026847.9739.4.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192026847.9739.4.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 3146b39c185f8a436d430132457e84fa1d8f8208:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc9
+On Wed, Oct 10, 2007 at 10:34:07AM -0400, Dan Williams wrote:
 
-are available in the git repository at:
+> best we can do is set AP_SCAN=2, let wpa_supplicant blow all the
+> settings to the card, and just _hope_ that the card/driver are smart
+> enough to find the hidden SSID on their own and associate.  Which is
+> less often than we'd hope.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+Dan, how does this comport w/ the mac80211 behavior?  I.E. if mac80211
+can find my hidden AP when using WEP (or nothing), why can't ap_scan=2
+find the same AP?
 
-Joe Perches (1):
-      bcm43xx: Correct printk with PFX before KERN_
-
-Richard Knutsson (1):
-      softmac: Fix compiler-warning
-
- drivers/net/wireless/bcm43xx/bcm43xx_wx.c   |    2 +-
- net/ieee80211/softmac/ieee80211softmac_wx.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-index d6d9413..6acfdc4 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-@@ -444,7 +444,7 @@ static int bcm43xx_wx_set_xmitpower(struct net_device *net_dev,
- 	u16 maxpower;
- 
- 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM) {
--		printk(PFX KERN_ERR "TX power not in dBm.\n");
-+		printk(KERN_ERR PFX "TX power not in dBm.\n");
- 		return -EOPNOTSUPP;
- 	}
- 
-diff --git a/net/ieee80211/softmac/ieee80211softmac_wx.c b/net/ieee80211/softmac/ieee80211softmac_wx.c
-index 442b987..5742dc8 100644
---- a/net/ieee80211/softmac/ieee80211softmac_wx.c
-+++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
-@@ -114,7 +114,7 @@ check_assoc_again:
- 	sm->associnfo.associating = 1;
- 	/* queue lower level code to do work (if necessary) */
- 	schedule_delayed_work(&sm->associnfo.work, 0);
--out:
-+
- 	mutex_unlock(&sm->associnfo.mutex);
- 
- 	return 0;
+John
 -- 
 John W. Linville
 linville@tuxdriver.com
