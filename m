@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:20547 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754158AbXJMOKl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:41 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1250541mue
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:40 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/11] rt2x00: Fix antenna selection.
-Date: Sat, 13 Oct 2007 16:26:57 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710131621.05173.IvDoorn@gmail.com>
-In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200710131626.58183.IvDoorn@gmail.com> (sfid-20071013_151055_858306_B4D165C1)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4912 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755233AbXJJVIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 17:08:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: dana.r.ferguson@intel.com, dcbw@redhat.com,
+	ipw3945-devel@lists.sourceforge.net, Bill Moss <bmoss@clemson.edu>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] [PATCH] mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
+Date: Wed, 10 Oct 2007 16:34:56 -0400
+Message-Id: <1192048496718-git-send-email-linville@tuxdriver.com> (sfid-20071010_220853_027330_25461BBA)
+In-Reply-To: 20071010202422.GN5962@tuxdriver.com
+References: 20071010202422.GN5962@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+From: Bill Moss <bmoss@clemson.edu>
 
-In the config() handler, make sure that we do configure an antenna if the
-current active antenna is uninitialized. Furthermore, don't overwrite the
-active antenna with bogus values if we didn't touch the antenna setup.
+This patch fixes the problem of associating with wpa_secured hidden
+AP.  Please try out.
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+The original author of this patch is Bill Moss <bmoss@clemson.edu>
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00config.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+ net/mac80211/ieee80211_ioctl.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 2b0edd2..b4fad74 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -166,6 +166,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 	else if (conf->antenna_sel_rx &&
- 		 conf->antenna_sel_rx != active_ant->rx)
- 		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
-+		flags |= CONFIG_UPDATE_ANTENNA;
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index f95d488..331048f 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -507,10 +507,11 @@ static int ieee80211_ioctl_giwap(struct net_device *dev,
  
- 	if (!conf->antenna_sel_tx &&
- 	    default_ant->tx != ANTENNA_SW_DIVERSITY &&
-@@ -174,6 +176,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 	else if (conf->antenna_sel_tx &&
- 		 conf->antenna_sel_tx != active_ant->tx)
- 		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
-+		flags |= CONFIG_UPDATE_ANTENNA;
+ static int ieee80211_ioctl_siwscan(struct net_device *dev,
+ 				   struct iw_request_info *info,
+-				   struct iw_point *data, char *extra)
++				   union iwreq_data *wrqu, char *extra)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct iw_scan_req *req = NULL;
+ 	u8 *ssid = NULL;
+ 	size_t ssid_len = 0;
  
- 	/*
- 	 * The following configuration options are never
-@@ -262,11 +266,17 @@ config:
- 	if (flags & (CONFIG_UPDATE_CHANNEL | CONFIG_UPDATE_ANTENNA))
- 		rt2x00lib_reset_link_tuner(rt2x00dev);
+@@ -519,6 +520,14 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
  
--	rt2x00dev->curr_hwmode = libconf.phymode;
--	rt2x00dev->rx_status.phymode = conf->phymode;
-+	if (flags & CONFIG_UPDATE_PHYMODE) {
-+		rt2x00dev->curr_hwmode = libconf.phymode;
-+		rt2x00dev->rx_status.phymode = conf->phymode;
-+	}
-+
- 	rt2x00dev->rx_status.freq = conf->freq;
- 	rt2x00dev->rx_status.channel = conf->channel;
- 	rt2x00dev->tx_power = conf->power_level;
--	rt2x00dev->link.ant.active.rx = libconf.ant.rx;
--	rt2x00dev->link.ant.active.tx = libconf.ant.tx;
-+
-+	if (flags & CONFIG_UPDATE_ANTENNA) {
-+		rt2x00dev->link.ant.active.rx = libconf.ant.rx;
-+		rt2x00dev->link.ant.active.tx = libconf.ant.tx;
-+	}
- }
+ 	switch (sdata->type) {
+ 	case IEEE80211_IF_TYPE_STA:
++		if (wrqu->data.length == sizeof(struct iw_scan_req) &&
++		    wrqu->data.flags & IW_SCAN_THIS_ESSID) {
++			req = (struct iw_scan_req *)extra;
++			ssid = req->essid;
++			ssid_len = req->essid_len;
++			break;
++		}
++		/* else fall-through */
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+ 			ssid = sdata->u.sta.ssid;
 -- 
-1.5.3.4
+1.5.2.4
 
