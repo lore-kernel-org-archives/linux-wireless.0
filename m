@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45129 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805AbXJ1Kj4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 06:39:56 -0400
-Subject: Re: [PATCH] mac80211: fix printk() format string
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
-Cc: Joe Jezak <josejx@gentoo.org>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <472473D2.8040102@freemail.hu>
-References: <472473D2.8040102@freemail.hu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1ng2CL/zMFsLTiFI0XE8"
-Date: Sun, 28 Oct 2007 11:41:16 +0100
-Message-Id: <1193568076.3966.17.camel@johannes.berg> (sfid-20071028_104006_252116_CE3A6729)
+Received: from main.gmane.org ([80.91.229.2]:51334 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752458AbXJJLzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 07:55:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Ifa9W-0007LK-Fn
+	for linux-wireless@vger.kernel.org; Wed, 10 Oct 2007 11:55:02 +0000
+Received: from dslc-082-082-164-062.pools.arcor-ip.net ([82.82.164.62])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 11:55:02 +0000
+Received: from feldmann_markus by dslc-082-082-164-062.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 11:55:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Patch for Kernel and Ath5k
+Date: Wed, 10 Oct 2007 13:51:06 +0200
+Message-ID: <feieb9$nvg$1@sea.gmane.org> (sfid-20071010_125513_558973_B85E2247)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi All,
 
---=-1ng2CL/zMFsLTiFI0XE8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+i tried to patch the Kernel to get the ATH5k Driver to work but without 
+success.
 
+It seems i miss some scripts like check.sh
 
+Anybody knows how to get my Problem solved?
 
-> Get rid of the following compiler warning message:
->=20
-> net/mac80211/ieee80211_sta.c: In function 'ieee80211_rx_mgmt_assoc_resp':
-> net/mac80211/ieee80211_sta.c:1187: warning: format '%d' expects type 'int=
-', but argument 7 has type 'long unsigned int'
-
-a different fix is already applied.
-
-johannes
-
---=-1ng2CL/zMFsLTiFI0XE8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyRnS6Vg1VMiehFYAQJWIRAAqmt6jFVH0pVUnODT7Sk8du1uRUQ8T8CL
-2YTQ86HGUE4NoBXm0lpT0f5+V22b1dRmPBWo3TWNCsopHB7xuEJvkxQd+uThalIV
-uPcYX8rvxnCnSf8bceEt5deh4gaGzVXpEqt7VPt6nvEhygBADCZEHKuJ4+Jrg9CT
-pXT6ZeWL2JdPd/dc5hlQHH5a1BWEKy24tjkHS3rbLvI2QPHw430XEkKt37sHlUpS
-xe+uaF6eE3q0al8ecLYz1rLvUMiff8mWrqoStLop4Rop9Vc3qM1UpGuexLaeC2OY
-QAz5ck3wpCWCVvB429lq5fXrmpLeJybZ5aBRHlIJ3gZIusSpX94zbUlcUP+y4VzT
-DMqfLSDCjzI4wgXXYym9gPGQ/7jZKzZ+Snl3j3+KWY5pNsXq6Xf/uPxYfA4DG4gf
-nSCvUUEyY2pKlzaurSFuyWp+atdxi8Mp4PyoRVGfnhB2VIclMmuKjfNjhkQCW+00
-s6yO5jbcFYDZwhfgrAZlpNWz1gJLtGGu05fW9TvzcO0gLKiFyyZnHAtGf5ND07K4
-BHIVCFN3RQaeKOZLrKdOWO3QAQf4hHZtV+j08G+igbihYmcDhf5dKNFbdP0kOT0V
-Si/anoqcuSyQz43DRhNsqWEcDD6+e7ueGFXGI8xnvBAbnKDN3lQUITaJA1bUAMci
-fYQkH2qxrec=
-=FxBT
------END PGP SIGNATURE-----
-
---=-1ng2CL/zMFsLTiFI0XE8--
+bye Markus
 
