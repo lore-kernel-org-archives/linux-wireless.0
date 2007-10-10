@@ -1,119 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.182]:34099 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbXJaTjN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 15:39:13 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so122837ika
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 12:39:10 -0700 (PDT)
-Message-ID: <40f31dec0710311239m7e5e1fa0q62fd212e7631f68c@mail.gmail.com> (sfid-20071031_193917_217627_AAB2240B)
-Date: Wed, 31 Oct 2007 21:39:09 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer chips
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <43e72e890710311214y52bbdfd3y24d3c05c05257ac6@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071027232033.GD5973@localhost.domain.invalid>
-	 <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
-	 <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com>
-	 <43e72e890710311214y52bbdfd3y24d3c05c05257ac6@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2933 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753486AbXJJBks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:40:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: more endianness breakage
+Date: Tue,  9 Oct 2007 21:30:43 -0400
+Message-Id: <11919798434175-git-send-email-linville@tuxdriver.com> (sfid-20071010_024051_190024_8906C73A)
+In-Reply-To: <11919798433964-git-send-email-linville@tuxdriver.com>
+References: <11919798433964-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
-> On 10/31/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > 2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
-> > > On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
-> > >
-> > > > * Give more infos about mac/phy/radio revision during attach.
-> > >
-> > > > @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
-> > > >         if (ret)
-> > > >                 goto err_ah;
-> > > >
-> > > > -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
-> > > > -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
-> > > > -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
-> > > > -                       sc->ah->ah_phy_revision & 0xf);
-> > > > +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> > > > +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
-> > > > +                                       sc->ah->ah_mac_srev,
-> > > > +                                       sc->ah->ah_phy_revision);
-> > > > +
-> > > > +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> > > > +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > > +                                       sc->ah->ah_radio_5ghz_revision);
-> > > > +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> > > > +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > > +                                       sc->ah->ah_radio_5ghz_revision);
-> > > > +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> > > > +                                       sc->ah->ah_radio_2ghz_revision);
-> > > > +       }
-> > > > +
-> > > >
-> > > >         /* ready to process interrupts */
-> > > >         __clear_bit(ATH_STAT_INVALID, sc->status);
-> > > >
-> > >
-> > > I have ACK'd this as I believe its a lot more useful information than
-> > > what we had before but I am confused by what some different prints may
-> > > yield. For example, on AR5213, I get:
-> > >
-> > > ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
-> > > ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
-> > > ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
-> > >
-> > > On my Cardbus card, I then get:
-> > >
-> > > ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
-> > > ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
-> > >
-> > > Now, both are capable of 2 GHz and 5 GHz though and only one prints a
-> > > line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
-> > > my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
-> > > having a print for both RFs here indicate besides the fact we are
-> > > indicating the type of radio and revision? And in the Cardbus card I
-> > > have where only one RF line is printed what does that indicate?
-> > >
-> > >   Luis
-> >
-> > RF5111 is only 5GHz capable without 2111, 2111 is only 2GHz capable
-> > (it's actually an extension to 5111), on the other hand 5112 is
-> > multiband, that's why we don't say it's type.
->
-> Can add in the message that its RF is multiband then (2GHz/5GHz note will work)?
->
-> > On single chip solutions
-> > both revisions are 0 so no RF chip msg is displayed.
->
-> Hm.. interesting.. we probably should inform the band the RF is
-> capable of then at least. What do you think?
->
+From: Al Viro <viro@ftp.linux.org.uk>
 
-Note: We set them to zero (check out attach) to make things easier.
-I believe that for single chips we should check capability bits and
-for b/g only report 2GHz, for a only report 5Ghz and for both report
-multband or nothing.
+	domain->header.len is le16 and has just been assigned
+cpu_to_le16(arithmetical expression).  And all fields of adapter->logmsg
+are __le32; not a single 16-bit among them...
+	That's incremental to the previous one
 
-> > We have to handle this better for b/g only cards but i didn't have
-> > such cards to test so i'll try it later (first we have to see what's
-> > going on and they don't work).
->
-> You have one now?
->
->   Luis
->
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas/11d.c  |    2 +-
+ drivers/net/wireless/libertas/wext.c |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Nope but i believe that regdumps from them should give us something...
-
-
+diff --git a/drivers/net/wireless/libertas/11d.c b/drivers/net/wireless/libertas/11d.c
+index 4cf0ff7..0560270 100644
+--- a/drivers/net/wireless/libertas/11d.c
++++ b/drivers/net/wireless/libertas/11d.c
+@@ -562,7 +562,7 @@ int libertas_cmd_802_11d_domain_info(wlan_private * priv,
+ 		       nr_subband * sizeof(struct ieeetypes_subbandset));
+ 
+ 		cmd->size = cpu_to_le16(sizeof(pdomaininfo->action) +
+-					     domain->header.len +
++					     le16_to_cpu(domain->header.len) +
+ 					     sizeof(struct mrvlietypesheader) +
+ 					     S_DS_GEN);
+ 	} else {
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 2fcc3bf..873c405 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -973,7 +973,7 @@ static struct iw_statistics *wlan_get_wireless_stats(struct net_device *dev)
+ 	/* Quality by TX errors */
+ 	priv->wstats.discard.retries = priv->stats.tx_errors;
+ 
+-	tx_retries = le16_to_cpu(adapter->logmsg.retry);
++	tx_retries = le32_to_cpu(adapter->logmsg.retry);
+ 
+ 	if (tx_retries > 75)
+ 		tx_qual = (90 - tx_retries) * POOR / 15;
+@@ -989,10 +989,10 @@ static struct iw_statistics *wlan_get_wireless_stats(struct net_device *dev)
+ 		    (PERFECT - VERY_GOOD) / 50 + VERY_GOOD;
+ 	quality = min(quality, tx_qual);
+ 
+-	priv->wstats.discard.code = le16_to_cpu(adapter->logmsg.wepundecryptable);
+-	priv->wstats.discard.fragment = le16_to_cpu(adapter->logmsg.rxfrag);
++	priv->wstats.discard.code = le32_to_cpu(adapter->logmsg.wepundecryptable);
++	priv->wstats.discard.fragment = le32_to_cpu(adapter->logmsg.rxfrag);
+ 	priv->wstats.discard.retries = tx_retries;
+-	priv->wstats.discard.misc = le16_to_cpu(adapter->logmsg.ackfailure);
++	priv->wstats.discard.misc = le32_to_cpu(adapter->logmsg.ackfailure);
+ 
+ 	/* Calculate quality */
+ 	priv->wstats.qual.qual = max(quality, (u32)100);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.2.4
+
