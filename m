@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3515 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2231 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753710AbXJJPiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 11:38:51 -0400
-Date: Wed, 10 Oct 2007 11:17:13 -0400
+	id S1753180AbXJJBii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:38:38 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: mac80211/iwlwifi + hidden ssids
-Message-ID: <20071010151713.GE5962@tuxdriver.com> (sfid-20071010_163856_146843_EEA685D0)
-References: <470C9F28.1070803@gmail.com> <20071010130653.GB5962@tuxdriver.com> <1192026847.9739.4.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1192026847.9739.4.camel@localhost.localdomain>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, warmcat <andy@warmcat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Add get_unaligned to ieee80211_get_radiotap_len
+Date: Tue,  9 Oct 2007 21:30:39 -0400
+Message-Id: <11919798433964-git-send-email-linville@tuxdriver.com> (sfid-20071010_023840_809621_58336FD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2007 at 10:34:07AM -0400, Dan Williams wrote:
+From: warmcat <andy@warmcat.com>
 
-> best we can do is set AP_SCAN=2, let wpa_supplicant blow all the
-> settings to the card, and just _hope_ that the card/driver are smart
-> enough to find the hidden SSID on their own and associate.  Which is
-> less often than we'd hope.
+ieee80211_get_radiotap_len() tries to dereference radiotap length without
+taking care that it is completely unaligned and get_unaligned()
+is required.
 
-Dan, how does this comport w/ the mac80211 behavior?  I.E. if mac80211
-can find my hidden AP when using WEP (or nothing), why can't ap_scan=2
-find the same AP?
+Signed-off-by: Andy Green <andy@warmcat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-John
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index ff2172f..9b9d716 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -350,7 +350,7 @@ static int ieee80211_get_radiotap_len(struct sk_buff *skb)
+ 	struct ieee80211_radiotap_header *hdr =
+ 		(struct ieee80211_radiotap_header *) skb->data;
+ 
+-	return le16_to_cpu(hdr->it_len);
++	return le16_to_cpu(get_unaligned(&hdr->it_len));
+ }
+ 
+ #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2.4
+
