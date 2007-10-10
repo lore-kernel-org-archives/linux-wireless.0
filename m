@@ -1,44 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44231 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750861AbXJKECc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 00:02:32 -0400
-Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Ferguson, Dana R" <dana.r.ferguson@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20071010181019.GJ5962@tuxdriver.com>
-References: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
-	 <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com>
-	 <20071010181019.GJ5962@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 11 Oct 2007 00:03:08 -0400
-Message-Id: <1192075388.31110.11.camel@localhost.localdomain> (sfid-20071011_050236_133909_B99997A9)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60139
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751958AbXJJBNo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:13:44 -0400
+Date: Tue, 09 Oct 2007 18:13:31 -0700 (PDT)
+Message-Id: <20071009.181331.130237545.davem@davemloft.net> (sfid-20071010_021347_378140_BC94E02D)
+To: linville@tuxdriver.com
+Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071010002145.GD3175@tuxdriver.com>
+References: <20071010002145.GD3175@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-10 at 14:10 -0400, John W. Linville wrote:
-> On Wed, Oct 10, 2007 at 10:54:46AM -0700, Ferguson, Dana R wrote:
-> > Hey,
-> > 
-> > I bit more info. I am hearing it is a Cisco CCX feature and will not be
-> > included in the open source code.
-> > 
-> > Dana
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 9 Oct 2007 20:21:45 -0400
+
+> Jeff & Dave,
 > 
-> Huh?  I'm not sure what "it" is?  Care to elaborate?
+> A last round of patches, hopefully in time for 2.6.24.
 
-Yeah, it's unclear.   CCX should have _nothing_ to do with hidden SSID
-support since hidden SSIDs (and workarounds to support them) existed
-waaay before Cisco coughed up CCX.
-
-Dan
-
-> I do find it dismaying to hear that Intel is holding back wireless
-> compatibility features from Linux...
-> 
-> John
-
+Pulled and pushed back out, thanks John!
