@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:6712 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbXJaSKo (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.226]:4753 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406AbXJJSLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 14:10:44 -0400
-Received: by py-out-1112.google.com with SMTP id u77so442085pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 11:10:43 -0700 (PDT)
-Message-ID: <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com> (sfid-20071031_181047_033201_926B19BB)
-Date: Wed, 31 Oct 2007 14:10:42 -0400
+	Wed, 10 Oct 2007 14:11:37 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so170803wra
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 11:11:36 -0700 (PDT)
+Message-ID: <43e72e890710101111l10acad42u62eff5c995cfbe47@mail.gmail.com> (sfid-20071010_191140_562411_5C44448A)
+Date: Wed, 10 Oct 2007 14:11:35 -0400
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [PATCH 4/7] ath5k: Add SREV values for newer chips
-In-Reply-To: <20071027232033.GD5973@localhost.domain.invalid>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/6] ath5k: Add proper support for multicast
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>
+In-Reply-To: <1191960084.4013.54.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20071027232033.GD5973@localhost.domain.invalid>
+References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
+	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
+	 <20071006011949.GD25022@pogo> <1191960084.4013.54.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
-
-> * Give more infos about mac/phy/radio revision during attach.
-
-> @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
->         if (ret)
->                 goto err_ah;
+On 10/9/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2007-10-05 at 21:19 -0400, Luis R. Rodriguez wrote:
 >
-> -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
-> -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
-> -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
-> -                       sc->ah->ah_phy_revision & 0xf);
-> +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
-> +                                       sc->ah->ah_mac_srev,
-> +                                       sc->ah->ah_phy_revision);
-> +
-> +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                       sc->ah->ah_radio_5ghz_revision);
-> +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                       sc->ah->ah_radio_5ghz_revision);
-> +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> +                                       sc->ah->ah_radio_2ghz_revision);
-> +       }
-> +
+> > +     /* FIF_CONTROL doc says that if FIF_PROMISC_IN_BSS is not
+> > +      * set we should only pass on control frames for this
+> > +      * station. This needs testing. I believe right now this
+> > +      * enables *all* control frames */
 >
->         /* ready to process interrupts */
->         __clear_bit(ATH_STAT_INVALID, sc->status);
->
+> Which is fine too, but not most efficient. Remember that the docs also
+> say you can pass up more frames, so an implementation that passes up
+> *all* frames at all times is correct in that it supports all filter
+> flags; it is, however, rather inefficient.
 
-I have ACK'd this as I believe its a lot more useful information than
-what we had before but I am confused by what some different prints may
-yield. For example, on AR5213, I get:
-
-ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
-ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
-ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
-
-On my Cardbus card, I then get:
-
-ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
-ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
-
-Now, both are capable of 2 GHz and 5 GHz though and only one prints a
-line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
-my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
-having a print for both RFs here indicate besides the fact we are
-indicating the type of radio and revision? And in the Cardbus card I
-have where only one RF line is printed what does that indicate?
+Right, well I think we might be able to figure out way to do by th
+BSSID, if it doesn't do so already. But I'll clean up the comments to
+reflect this is OK then.
 
   Luis
