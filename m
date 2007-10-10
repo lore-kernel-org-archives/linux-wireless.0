@@ -1,112 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:61198 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbXJ0V5N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 17:57:13 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2101687pyb
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 14:57:12 -0700 (PDT)
-Message-ID: <40f31dec0710271457u4636126bsacd654e017806c6a@mail.gmail.com> (sfid-20071027_225718_831529_7FA997D3)
-Date: Sun, 28 Oct 2007 00:57:11 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: AR5418 abgn part?
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <1192808570.6104.11.camel@localhost.localdomain>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4067 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756280AbXJJVi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 17:38:56 -0400
+Date: Wed, 10 Oct 2007 17:01:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Markus Feldmann <feldmann_markus@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Patch for Kernel and Ath5k
+Message-ID: <20071010210117.GP5962@tuxdriver.com> (sfid-20071010_223900_421044_D6BFEAA1)
+References: <feieb9$nvg$1@sea.gmane.org> <200710102132.21790.bruno@thinktube.com> <feih2c$21f$1@sea.gmane.org> <200710101502.20202.hs4233@mail.mn-solutions.de> <feike5$fod$1@sea.gmane.org> <feisop$i4m$1@sea.gmane.org> <20071010173343.GI5962@tuxdriver.com> <470D17F2.7020906@gmx.de> <20071010192709.GL5962@tuxdriver.com> <470D3438.7060206@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1192808570.6104.11.camel@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <470D3438.7060206@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/19, Dan Williams <dcbw@redhat.com>:
-> Anyone working on this part or is there just not enough bandwidth?  It's
-> completely unrecognized with fairly recent wireless-everything.  I've
-> got a machine with one here, would be happy to test stuff if there's
-> anything to test.
->
-> Dan
->
+Please respond on the list...
 
-I got a macbook pro and working on it, so far i've managed ro read the
-new EEPROM and locate regulatory domain but it needs a lot of work to
-be done...
+On Wed, Oct 10, 2007 at 10:21:12PM +0200, Markus Feldmann wrote:
+> John W. Linville schrieb:
+> >Please respond on the list...
+> >
+> >On Wed, Oct 10, 2007 at 08:20:34PM +0200, Markus Feldmann wrote:
+> >>
+> >>John W. Linville schrieb:
+> >>>On Wed, Oct 10, 2007 at 05:57:13PM +0200, Markus Feldmann wrote:
+> >>>
+> >>>>I do not find the Entry,
+> >>>><M> Generic IEEE 802.11 Networking Stack (mac80211)
+> >>>>in the ".config" File.
+> >>>>And i do not find any files in the Sources containig ATH5k?
+> >>>config ATH5K
+> >>>       tristate "Atheros 5xxx wireless cards support"
+> >>>       depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+> >>>
+> >>>Did you select EXPERIMENTAL?
+> >>What do you mean with EXPERIMENTAL?
+> >>Have i downloaded the wrong Sources with git ?
+> >>
+> >>If so can you please post how you download the EXPERIMENTAL Sources?
+> >
+> >I mean did you answer "y" to this:
+> >
+> >	Prompt for development and/or incomplete code/drivers (EXPERIMENTAL) 
+> >	[Y/n/?]
+> >
+> >How about this?
+> >
+> >	Wireless LAN (IEEE 802.11) (WLAN_80211) [Y/n/?]
+> >
+> >And either "y" or "m" to this?
+> >
+> >	Generic IEEE 802.11 Networking Stack (mac80211) (MAC80211 [M/n/y/?]
+> >
+> >Answering "n" to any of those will hide ATH5K from your choices.
+> >
+> I have all of this above enabled.
+> 
+> Do you also do this,
+> 1.) git-clone 
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+> 2.) cd wireless-2.6
+> 3.) git checkout -b everything origin/everything
+> 
+> At the third Point he says to me that there is nothing to do, because i 
+> have got the newest. Maybe there is a Mistake?
 
-EEPROM of 5418 (and i believe 5416 also) differs a lot from the
-previous versions. On this one you'll have to read register 0x2000 +
-(2* offset) to set offset and then read 0x0407c some times to get the
-data, here is a sample regdump while reading the magic value (it's
-being swapped for some reason, instead of 5aa5 is a55a )...
+That procedure works fine here.  I don't know what mistake you
+are making.  Did you perhaps checkout one tree inside another?
 
-W:0x09880 = 0x00010000 - unknown
-W:0x09880 = 0x00010000 - unknown
-W:0x09880 = 0x00010000 - unknown
-W:0x09880 = 0x00010000 - unknown
-R:0x09c00 = 0x30000000 - unknown
-R:0x02000 = 0xbadc0ffe - unknown
-R:0x0407c = 0x00010000 - unknown
-R:0x0407c = 0x00010000 - unknown
-R:0x0407c = 0x00010000 - unknown
-R:0x0407c = 0x00010000 - unknown
-R:0x0407c = 0x0000a55a - unknown
-R:0x0407c = 0x0000a55a - unknown
-R:0x02400 = 0xbadc0ffe - unknown
-R:0x0407c = 0x0001a55a - unknown
-R:0x0407c = 0x0001a55a - unknown
-R:0x0407c = 0x0001a55a - unknown
-R:0x0407c = 0x0001a55a - unknown
-R:0x0407c = 0x00000cb8 - unknown
-R:0x0407c = 0x00000cb8 - unknown
+John
 
-note that 0x2000 + 2* offset returns 0xbadc0ffe if offset is ok and
-0xffff... when offset is invalid (in that situation 0x0407c returns
-previous reading).
-
-Also here is a sample function to read the EEPROM...
-
-int
-ath5k_hw_eeprom_read(void *mem, u_int32_t offset, u_int16_t *data,
-               u_int8_t mac_version)
-{
-       u_int32_t tmp;
-       int i;
-
-       tmp = AR5K_REG_READ(0x2000 + (2 * (offset)));
-       if(tmp != 0xbadc0ffe){
-               printf("Invalid Offset\n");
-               return -1;
-       }
-       for(i=0;i<7;i++){
-               usleep(10);
-               tmp = (u_int16_t) AR5K_REG_READ(0x0407c);
-/* This looks sane according to regdump but when i try it from
-   userspace it won't work */
-//              if(tmp & 0x00010000){
-//                      continue;
-//              } else {
-//                      break;
-//              }
-       }
-/* I used this to swap data when i saw the magic number
-  being swapped, it seems though that rest of eeprom data
-  is ok. */
-//      tmp = (tmp << 8) | (tmp >> 8);
-       printf("EEPROM READ: 0x%x 0x%x\n",offset,tmp);
-       *data = tmp;
-       return 0;
-}
-
-Also offsets have changed, i was only able to locate regdomain offset
-(0x208) and i believe eeprom's version (0x06 - that reads 6000 in my
-case and having in mind that previous eeproms had version 5.3 it
-looked a sane value to me), i'm still searching for the header (if
-such thing exists) and rest infos. Also note that huge parts of eeprom
-re only 0s or Fs (probably reserved for future use or something).
-
-
+P.S.  Make sure you select PCI in your config as well...
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville
+linville@tuxdriver.com
