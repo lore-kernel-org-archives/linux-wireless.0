@@ -1,64 +1,329 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46387 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbXJHJ4L (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:3316 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbXJJIAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 05:56:11 -0400
-Subject: Re: [PATCH] libertas: fix "warning: Using plain integer as NULL
-	pointer" sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710081148.00041.hs4233@mail.mn-solutions.de> (sfid-20071008_104759_880773_6B6B7D7A)
-References: <200710081141.23237.hs4233@mail.mn-solutions.de>
-	 <200710081148.00041.hs4233@mail.mn-solutions.de>
-	 (sfid-20071008_104759_880773_6B6B7D7A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yg27weEgcfOIBym+unKh"
-Date: Mon, 08 Oct 2007 11:56:38 +0200
-Message-Id: <1191837398.4063.27.camel@johannes.berg> (sfid-20071008_105615_281806_6856D707)
-Mime-Version: 1.0
+	Wed, 10 Oct 2007 04:00:19 -0400
+Received: from lin01.mn-solutions.de (pD95F87ED.dip0.t-ipconnect.de [217.95.135.237])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id C0D755E401B
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 10:00:17 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 2482C1E002B
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 09:57:21 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH, take 2] libertas: clean up association debug messages
+Date: Wed, 10 Oct 2007 10:00:33 +0200
+References: <200710091343.52596.hs4233@mail.mn-solutions.de> <1191938915.17254.3.camel@localhost.localdomain>
+In-Reply-To: <1191938915.17254.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710101000.33210.hs4233@mail.mn-solutions.de> (sfid-20071010_090027_993055_0C500CD4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This makes the debug output of all association stuff clearer by:
 
---=-Yg27weEgcfOIBym+unKh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* adding some lbs_deb_enter()/lbs_deb_leave() calls
+* printing the return level in one place
+* lower-casing some string
 
-On Mon, 2007-10-08 at 11:47 +0200, Holger Schurig wrote:
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-> checkpatch.pl barks on this patch anyway, because of the
-> ridiculus 80 columns restriction it wants to impose. Should I=20
-> rephrase the patch because of this or just ignore this=20
-> checkpatch warning?
-
-Personally, I'd prefer it written as "extended booleans" anyway:
-
-+       if (!pscancfgout || !pchantlvout || !pscanchanlist)
-
-johannes
-
---=-Yg27weEgcfOIBym+unKh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwn+1aVg1VMiehFYAQI1mw//bjT6XIeUN353TO2Yua/mbm+AkqZEEjea
-SdoT3E2n9mS6uPAg1e6YxcZvehcOHfBvs4+pFIY5uuHcykdv4lXdtKu41SpzLn7S
-jptGTVmalawiQhtKMpC0HGdrTCuC6/h/hKouK6wMcBqWwnCZgROMXpqQ3ChVWTL8
-4Km1jt64M6y3y4o5a+TI9aq0FAI5mMk1gQFNgoZ8jorw8M9zNt+rNORq1ZyPOZz7
-abS0hjXgWlVb97RdDPL+QolpGAg1fvXOVf4P0HXu9tAUamnDDBF8FQ4siuR+aBlO
-nJLHfhN7DD3QXEriAR/vKtkIxl77w6pkK4WIsp0Y0refy8XZLZmXFUTJ/MgQpl/9
-vZie+abQRNSJGWXWzAawCziBG0TEuLXBnB1orGDJTtQWPNysgw6fJuiG/PL0sEMI
-He1VHEjAqVr0gFeOV62pp5kegydtkTQTNBzkltKkMtT4pY5ZPrK5lxEcMvatfvaW
-JaNTpgIF9AGviNxUp7daR3zZhKzKQghBC57RlMGCcrii68IV3dXzjKxITlAS3658
-T5anxVYiYKhQK9+Vw0cOyUR4NiHk0/zZUD20/sVoplIbqI5GZCaRGav0u+UGBLDA
-b+mrATDr9k3c2H2rmc9bn0SLj/YHYhtsVzUjt/Li0RtXCK9I1ooktpdhxWzskikk
-iEvdyBsfg8k=
-=tkmP
------END PGP SIGNATURE-----
-
---=-Yg27weEgcfOIBym+unKh--
-
+Index: libertas-2.6/drivers/net/wireless/libertas/assoc.c
+===================================================================
+--- libertas-2.6.orig/drivers/net/wireless/libertas/assoc.c	2007-10-10 10:59:04.000000000 +0200
++++ libertas-2.6/drivers/net/wireless/libertas/assoc.c	2007-10-10 11:00:48.000000000 +0200
+@@ -14,28 +14,6 @@
+ static const u8 bssid_any[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ static const u8 bssid_off[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+ 
+-static void print_assoc_req(const char * extra, struct assoc_request * assoc_req)
+-{
+-	lbs_deb_assoc(
+-	       "#### Association Request: %s\n"
+-	       "       flags:      0x%08lX\n"
+-	       "       SSID:       '%s'\n"
+-	       "       channel:    %d\n"
+-	       "       band:       %d\n"
+-	       "       mode:       %d\n"
+-	       "       BSSID:      " MAC_FMT "\n"
+-	       "       Encryption:%s%s%s\n"
+-	       "       auth:       %d\n",
+-	       extra, assoc_req->flags,
+-	       escape_essid(assoc_req->ssid, assoc_req->ssid_len),
+-	       assoc_req->channel, assoc_req->band, assoc_req->mode,
+-	       MAC_ARG(assoc_req->bssid),
+-	       assoc_req->secinfo.WPAenabled ? " WPA" : "",
+-	       assoc_req->secinfo.WPA2enabled ? " WPA2" : "",
+-	       assoc_req->secinfo.wep_enabled ? " WEP" : "",
+-	       assoc_req->secinfo.auth_mode);
+-}
+-
+ 
+ static int assoc_helper_essid(wlan_private *priv,
+                               struct assoc_request * assoc_req)
+@@ -54,7 +32,7 @@ static int assoc_helper_essid(wlan_priva
+ 	if (test_bit(ASSOC_FLAG_CHANNEL, &assoc_req->flags))
+ 		channel = assoc_req->channel;
+ 
+-	lbs_deb_assoc("New SSID requested: '%s'\n",
++	lbs_deb_assoc("SSID '%s' requested\n",
+ 	              escape_essid(assoc_req->ssid, assoc_req->ssid_len));
+ 	if (assoc_req->mode == IW_MODE_INFRA) {
+ 		libertas_send_specific_ssid_scan(priv, assoc_req->ssid,
+@@ -63,7 +41,6 @@ static int assoc_helper_essid(wlan_priva
+ 		bss = libertas_find_ssid_in_list(adapter, assoc_req->ssid,
+ 				assoc_req->ssid_len, NULL, IW_MODE_INFRA, channel);
+ 		if (bss != NULL) {
+-			lbs_deb_assoc("SSID found in scan list, associating\n");
+ 			memcpy(&assoc_req->bss, bss, sizeof(struct bss_descriptor));
+ 			ret = wlan_associate(priv, assoc_req);
+ 		} else {
+@@ -136,6 +113,8 @@ static int assoc_helper_associate(wlan_p
+ {
+ 	int ret = 0, done = 0;
+ 
++	lbs_deb_enter(LBS_DEB_ASSOC);
++
+ 	/* If we're given and 'any' BSSID, try associating based on SSID */
+ 
+ 	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+@@ -143,19 +122,14 @@ static int assoc_helper_associate(wlan_p
+ 		    && compare_ether_addr(bssid_off, assoc_req->bssid)) {
+ 			ret = assoc_helper_bssid(priv, assoc_req);
+ 			done = 1;
+-			if (ret) {
+-				lbs_deb_assoc("ASSOC: bssid: ret = %d\n", ret);
+-			}
+ 		}
+ 	}
+ 
+ 	if (!done && test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
+ 		ret = assoc_helper_essid(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC: bssid: ret = %d\n", ret);
+-		}
+ 	}
+ 
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+ 	return ret;
+ }
+ 
+@@ -192,18 +166,24 @@ done:
+ 
+ static int update_channel(wlan_private * priv)
+ {
++	int ret;
+ 	/* the channel in f/w could be out of sync, get the current channel */
+-	return libertas_prepare_and_send_command(priv, CMD_802_11_RF_CHANNEL,
++	lbs_deb_enter(LBS_DEB_ASSOC);
++	ret = libertas_prepare_and_send_command(priv, CMD_802_11_RF_CHANNEL,
+ 				    CMD_OPT_802_11_RF_CHANNEL_GET,
+ 				    CMD_OPTION_WAITFORRSP, 0, NULL);
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
++	return ret;
+ }
+ 
+ void libertas_sync_channel(struct work_struct *work)
+ {
+ 	wlan_private *priv = container_of(work, wlan_private, sync_channel);
+ 
++	lbs_deb_enter(LBS_DEB_ASSOC);
+ 	if (update_channel(priv) != 0)
+ 		lbs_pr_info("Channel synchronization failed.");
++	lbs_deb_leave(LBS_DEB_ASSOC);
+ }
+ 
+ static int assoc_helper_channel(wlan_private *priv,
+@@ -435,40 +415,51 @@ static int assoc_helper_wpa_ie(wlan_priv
+ static int should_deauth_infrastructure(wlan_adapter *adapter,
+                                         struct assoc_request * assoc_req)
+ {
++	int ret = 0;
++
++	lbs_deb_enter(LBS_DEB_ASSOC);
++
+ 	if (adapter->connect_status != LIBERTAS_CONNECTED)
+ 		return 0;
+ 
+ 	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
+-		lbs_deb_assoc("Deauthenticating due to new SSID in "
+-			" configuration request.\n");
+-		return 1;
++		lbs_deb_assoc("Deauthenticating due to new SSID\n");
++		ret = 1;
++		goto out;
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
+ 		if (adapter->secinfo.auth_mode != assoc_req->secinfo.auth_mode) {
+-			lbs_deb_assoc("Deauthenticating due to updated security "
+-				"info in configuration request.\n");
+-			return 1;
++			lbs_deb_assoc("Deauthenticating due to new security\n");
++			ret = 1;
++			goto out;
+ 		}
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+-		lbs_deb_assoc("Deauthenticating due to new BSSID in "
+-			" configuration request.\n");
+-		return 1;
++		lbs_deb_assoc("Deauthenticating due to new BSSID\n");
++		ret = 1;
++		goto out;
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_CHANNEL, &assoc_req->flags)) {
+-		lbs_deb_assoc("Deauthenticating due to channel switch.\n");
+-		return 1;
++		lbs_deb_assoc("Deauthenticating due to channel switch\n");
++		ret = 1;
++		goto out;
+ 	}
+ 
+ 	/* FIXME: deal with 'auto' mode somehow */
+ 	if (test_bit(ASSOC_FLAG_MODE, &assoc_req->flags)) {
+-		if (assoc_req->mode != IW_MODE_INFRA)
+-			return 1;
++		if (assoc_req->mode != IW_MODE_INFRA) {
++			lbs_deb_assoc("Deauthenticating due to leaving "
++				"infra mode\n");
++			ret = 1;
++			goto out;
++		}
+ 	}
+ 
++out:
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+ 	return 0;
+ }
+ 
+@@ -476,6 +467,8 @@ static int should_deauth_infrastructure(
+ static int should_stop_adhoc(wlan_adapter *adapter,
+                              struct assoc_request * assoc_req)
+ {
++	lbs_deb_enter(LBS_DEB_ASSOC);
++
+ 	if (adapter->connect_status != LIBERTAS_CONNECTED)
+ 		return 0;
+ 
+@@ -495,6 +488,7 @@ static int should_stop_adhoc(wlan_adapte
+ 			return 1;
+ 	}
+ 
++	lbs_deb_leave(LBS_DEB_ASSOC);
+ 	return 0;
+ }
+ 
+@@ -518,7 +512,24 @@ void libertas_association_worker(struct 
+ 	if (!assoc_req)
+ 		goto done;
+ 
+-	print_assoc_req(__func__, assoc_req);
++	lbs_deb_assoc(
++		"Association Request:\n"
++		"    flags:     0x%08lx\n"
++		"    SSID:      '%s'\n"
++		"    chann:     %d\n"
++		"    band:      %d\n"
++		"    mode:      %d\n"
++		"    BSSID:     " MAC_FMT "\n"
++		"    secinfo:  %s%s%s\n"
++		"    auth_mode: %d\n",
++		assoc_req->flags,
++		escape_essid(assoc_req->ssid, assoc_req->ssid_len),
++		assoc_req->channel, assoc_req->band, assoc_req->mode,
++		MAC_ARG(assoc_req->bssid),
++		assoc_req->secinfo.WPAenabled ? " WPA" : "",
++		assoc_req->secinfo.WPA2enabled ? " WPA2" : "",
++		assoc_req->secinfo.wep_enabled ? " WEP" : "",
++		assoc_req->secinfo.auth_mode);
+ 
+ 	/* If 'any' SSID was specified, find an SSID to associate with */
+ 	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)
+@@ -578,58 +589,40 @@ void libertas_association_worker(struct 
+ 	/* Send the various configuration bits to the firmware */
+ 	if (test_bit(ASSOC_FLAG_MODE, &assoc_req->flags)) {
+ 		ret = assoc_helper_mode(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) mode: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_CHANNEL, &assoc_req->flags)) {
+ 		ret = assoc_helper_channel(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) channel: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+ 	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+ 		ret = assoc_helper_wep_keys(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) wep_keys: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
+ 		ret = assoc_helper_secinfo(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) secinfo: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_WPA_IE, &assoc_req->flags)) {
+ 		ret = assoc_helper_wpa_ie(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) wpa_ie: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)
+ 	    || test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
+ 		ret = assoc_helper_wpa_keys(priv, assoc_req);
+-		if (ret) {
+-			lbs_deb_assoc("ASSOC(:%d) wpa_keys: ret = %d\n",
+-			              __LINE__, ret);
++		if (ret)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	/* SSID/BSSID should be the _last_ config option set, because they
+@@ -693,6 +686,7 @@ struct assoc_request * wlan_get_associat
+ {
+ 	struct assoc_request * assoc_req;
+ 
++	lbs_deb_enter(LBS_DEB_ASSOC);
+ 	if (!adapter->pending_assoc_req) {
+ 		adapter->pending_assoc_req = kzalloc(sizeof(struct assoc_request),
+ 		                                     GFP_KERNEL);
+@@ -759,7 +753,6 @@ struct assoc_request * wlan_get_associat
+ 		assoc_req->wpa_ie_len = adapter->wpa_ie_len;
+ 	}
+ 
+-	print_assoc_req(__func__, assoc_req);
+-
++	lbs_deb_leave(LBS_DEB_ASSOC);
+ 	return assoc_req;
+ }
