@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:24687 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199AbXJHJfc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 05:35:32 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: fix warning about adhoc_rates_b
-Date: Mon, 8 Oct 2007 11:35:39 +0200
+Received: from ra.tuxdriver.com ([70.61.120.52]:3613 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212AbXJJSii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 14:38:38 -0400
+Date: Wed, 10 Oct 2007 14:10:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Ferguson, Dana R" <dana.r.ferguson@intel.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+Message-ID: <20071010181019.GJ5962@tuxdriver.com> (sfid-20071010_193842_506598_B78A7C4D)
+References: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com> <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710081135.39640.hs4233@mail.mn-solutions.de> (sfid-20071008_103539_206330_DA8C2125)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch d2b5c42a113ab03cf32acb99b408041264915e97 made libertas 
-advertise g rades, so remove the now unused b rates.
+On Wed, Oct 10, 2007 at 10:54:46AM -0700, Ferguson, Dana R wrote:
+> Hey,
+> 
+> I bit more info. I am hearing it is a Cisco CCX feature and will not be
+> included in the open source code.
+> 
+> Dana
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Huh?  I'm not sure what "it" is?  Care to elaborate?
 
-Index: libertas-2.6/drivers/net/wireless/libertas/join.c
-===================================================================
---- libertas-2.6.orig/drivers/net/wireless/libertas/join.c	
-2007-10-08 12:12:59.000000000 +0200
-+++ libertas-2.6/drivers/net/wireless/libertas/join.c	2007-10-08 
-12:13:08.000000000 +0200
-@@ -17,9 +17,6 @@
- #include "dev.h"
- #include "assoc.h"
- 
--/* Supported rates for ad-hoc B mode */
--static u8 adhoc_rates_b[5] = { 0x02, 0x04, 0x0b, 0x16, 0x00 };
--
- /* The firmware needs certain bits masked out of the 
-beacon-derviced capability
-  * field when associating/joining to BSSs.
-  */
+I do find it dismaying to hear that Intel is holding back wireless
+compatibility features from Linux...
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
