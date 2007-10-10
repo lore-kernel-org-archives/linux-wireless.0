@@ -1,104 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3947 "EHLO ra.tuxdriver.com"
+Received: from main.gmane.org ([80.91.229.2]:53883 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756715AbXJZDKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 23:10:46 -0400
-Date: Thu, 25 Oct 2007 23:10:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20071026031033.GC14080@tuxdriver.com> (sfid-20071026_041050_303325_6F71507C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754680AbXJJNfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 09:35:42 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Ifbif-0002m8-Mt
+	for linux-wireless@vger.kernel.org; Wed, 10 Oct 2007 13:35:25 +0000
+Received: from dslc-082-082-164-062.pools.arcor-ip.net ([82.82.164.62])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 13:35:25 +0000
+Received: from feldmann_markus by dslc-082-082-164-062.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 13:35:25 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: Patch for Kernel and Ath5k
+Date: Wed, 10 Oct 2007 15:35:01 +0200
+Message-ID: <feike5$fod$1@sea.gmane.org> (sfid-20071010_143602_640518_E13ABA43)
+References: <feieb9$nvg$1@sea.gmane.org> <200710102132.21790.bruno@thinktube.com> <feih2c$21f$1@sea.gmane.org> <200710101502.20202.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <200710101502.20202.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Holger Schurig schrieb:
+>> Do you mean it will fetch the whole Kernel Sources, with the
+>> linux-wireless Sources?
+> 
+> Yes, it will.
+I did what you said, but in the "make menuconfig" do not appear the Option,
+<M>   Atheros 5xxx wireless cards support
 
-A few fixes for 2.6.24...also adds Johannes Berg as a mac80211
-maintainer, since he probably wrote most of the newest bugs
-there... :-)
+Maybe there is some Option Missing?
 
-Thanks,
+Here is what i did,
 
-John
+1.) cd /usr/src
+2.) git-clone 
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+3.)cd wireless-2.6
+4.)git checkout -b everything origin/everything
+5.)make menuconfig
+6.)
+Networking  --->
+   Wireless  --->
+     <M> Improved wireless configuration API
+     <M> Generic IEEE 802.11 Networking Stack (mac80211)
 
----
+Any Idea?
 
-Individual patches available here:
-
-        http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
-
----
-
-The following changes since commit c9927c2bf4f45bb85e8b502ab3fb79ad6483c244:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc1
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Jeff Garzik (1):
-      mac80211: fix warning created by BIT()
-
-Johannes Berg (1):
-      add myself as mac80211 maintainer
-
-Michael Wu (1):
-      mac80211: Fix SSID matching in AP selection
-
- MAINTAINERS                  |    8 +++++---
- net/mac80211/ieee80211_sta.c |    5 +++--
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 76b8571..71badfb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2442,13 +2442,15 @@ W:	http://www.tazenda.demon.co.uk/phil/linux-hp
- S:	Maintained
- 
- MAC80211
--P:	Jiri Benc
--M:	jbenc@suse.cz
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-+P:	Johannes Berg
-+M:	johannes@sipsolutions.net
-+P:	Jiri Benc
-+M:	jbenc@suse.cz
- L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
--T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
- S:	Maintained
- 
- MACVLAN DRIVER
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index f7ffeec..0d996aa 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1182,7 +1182,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
- 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
- 
- 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=0x%x "
--	       "status=%d aid=%d)\n",
-+	       "status=%d aid=%ld)\n",
- 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
- 	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
- 
-@@ -2096,7 +2096,8 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
- {
- 	int tmp, hidden_ssid;
- 
--	if (!memcmp(ifsta->ssid, ssid, ssid_len))
-+	if (ssid_len == ifsta->ssid_len &&
-+	    !memcmp(ifsta->ssid, ssid, ssid_len))
- 		return 1;
- 
- 	if (ifsta->flags & IEEE80211_STA_AUTO_BSSID_SEL)
--- 
-John W. Linville
-linville@tuxdriver.com
