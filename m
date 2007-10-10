@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36233 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3808 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752721AbXJOOm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 10:42:56 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200710151628.43425.hs4233@mail.mn-solutions.de>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-	 <200710150918.02708.hs4233@mail.mn-solutions.de>
-	 <1192457588.12009.5.camel@localhost.localdomain>
-	 <200710151628.43425.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 15 Oct 2007 10:42:32 -0400
-Message-Id: <1192459352.12009.25.camel@localhost.localdomain> (sfid-20071015_154259_626458_8E32D1A4)
-Mime-Version: 1.0
+	id S1755206AbXJJTic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2007 15:38:32 -0400
+Date: Wed, 10 Oct 2007 15:27:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Markus Feldmann <feldmann_markus@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Patch for Kernel and Ath5k
+Message-ID: <20071010192709.GL5962@tuxdriver.com> (sfid-20071010_203839_109443_B3948F1D)
+References: <feieb9$nvg$1@sea.gmane.org> <200710102132.21790.bruno@thinktube.com> <feih2c$21f$1@sea.gmane.org> <200710101502.20202.hs4233@mail.mn-solutions.de> <feike5$fod$1@sea.gmane.org> <feisop$i4m$1@sea.gmane.org> <20071010173343.GI5962@tuxdriver.com> <470D17F2.7020906@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <470D17F2.7020906@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-15 at 16:28 +0200, Holger Schurig wrote:
-> Hi Dan !
-> 
-> > I don't really care.  You've already done the work for 'lbs'
-> > so that's fine by me.
-> 
-> Yeah, but doing something like
-> 
->    perl -pi -e 's:lbs_:lts_:g' XXXX.patch
-> 
-> would be easy enought.
-> 
-> 
-> 
-> Did already look at
-> 
-> http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=commitdiff;h=aff223229493c7c43c8acedc728cdb312f82f3f9
-> 
-> ????   Please review :-)
+Please respond on the list...
 
-Yeah, I got through maybe 1/3 of it so far, it's huge :)  I don't have
-one of my libertas parts to test with me right now, but I'll try to do
-that today or tomorrow.  I'd like to just run through a few scenarios to
-make sure.  I assume you've been running it for a few days or so?
+On Wed, Oct 10, 2007 at 08:20:34PM +0200, Markus Feldmann wrote:
+> 
+> 
+> John W. Linville schrieb:
+> >On Wed, Oct 10, 2007 at 05:57:13PM +0200, Markus Feldmann wrote:
+> >
+> >>I do not find the Entry,
+> >><M> Generic IEEE 802.11 Networking Stack (mac80211)
+> >>in the ".config" File.
+> >>And i do not find any files in the Sources containig ATH5k?
+> >
+> >config ATH5K
+> >        tristate "Atheros 5xxx wireless cards support"
+> >        depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+> >
+> >Did you select EXPERIMENTAL?
+> What do you mean with EXPERIMENTAL?
+> Have i downloaded the wrong Sources with git ?
+> 
+> If so can you please post how you download the EXPERIMENTAL Sources?
 
-Dan
+I mean did you answer "y" to this:
 
+	Prompt for development and/or incomplete code/drivers (EXPERIMENTAL) [Y/n/?]
 
+How about this?
+
+	Wireless LAN (IEEE 802.11) (WLAN_80211) [Y/n/?]
+
+And either "y" or "m" to this?
+
+	Generic IEEE 802.11 Networking Stack (mac80211) (MAC80211 [M/n/y/?]
+
+Answering "n" to any of those will hide ATH5K from your choices.
+
+Hth!
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
