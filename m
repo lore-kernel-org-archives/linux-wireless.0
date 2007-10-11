@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38260 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757351AbXJDP4j (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:24491 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752955AbXJKJxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 11:56:39 -0400
-Date: Thu, 4 Oct 2007 08:54:40 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
- to managed
-Message-ID: <20071004085440.008216c6@freepuppy.rosehill> (sfid-20071004_165647_615120_D78DD0EB)
-In-Reply-To: <20071004113343.552139D502B@zog.reactivated.net>
-References: <20071004113343.552139D502B@zog.reactivated.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 11 Oct 2007 05:53:11 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: remove documentation about EEPROM dump
+Date: Thu, 11 Oct 2007 11:53:29 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710111153.29974.hs4233@mail.mn-solutions.de> (sfid-20071011_105317_146681_258853BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu,  4 Oct 2007 12:33:43 +0100 (BST)
-Daniel Drake <dsd@gentoo.org> wrote:
+The driver doesn't support dumping of the EEPROM, so this patch
+removes the documentation.
 
-> This sequence of events causes loss of connectivity:
-> 
-> <plug in>
-> <associate as normal in managed mode>
-> ifconfig eth7 down
-> iwconfig eth7 mode monitor
-> ifconfig eth7 up
-> ifconfig eth7 down
-> iwconfig eth7 mode managed
-> <associate as normal>
-> 
-> At this point you are associated but TX does not work. This is because
-> the eth7 hard_start_xmit is still ieee80211_monitor_start_xmit.
-> 
-> Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reinit. It
-> will then be reinitialised to the default (ieee80211_subif_start_xmit) in
-> ieee80211_if_set_type.
-> 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Playing with the function pointer is a awkward way to do this.  Shouldn't
-the state management flags be used instead (dormant, running, stop/wake)...
-I am concerned about races and dereferencing the NULL ptr.
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+Index: wireless-2.6/drivers/net/wireless/libertas/README
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/README	2007-10-11 12:14:50.000000000 +0200
++++ wireless-2.6/drivers/net/wireless/libertas/README	2007-10-11 12:44:59.000000000 +0200
+@@ -41,22 +41,6 @@ version: COMM-USB8388-318.p4
+ firmware-version: 5.110.7
+ bus-info:
+ 
+-Use the -e option to read the EEPROM contents of the card.
+-
+-	Usage:
+-	ethtool -e ethX [raw on|off] [offset N] [length N]
+-
+-       -e     retrieves and prints an EEPROM dump for the  specified  ethernet
+-              device.   When raw is enabled, then it dumps the raw EEPROM data
+-              to stdout. The length and offset parameters allow  dumping  cer-
+-              tain portions of the EEPROM.  Default is to dump the entire EEP-
+-              ROM.
+-
+-# ethtool -e eth0 offset 0 length 16
+-Offset          Values
+-------          ------
+-0x0000          38 33 30 58 00 00 34 f4 00 00 10 00 00 c4 17 00
+-
+ ========================
+ DEBUGFS COMMANDS
+ ========================
