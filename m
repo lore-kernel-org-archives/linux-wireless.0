@@ -1,79 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52517 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752425AbXJXPM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 11:12:26 -0400
-Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
-	network
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, dragoran <drago01@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1193161034.7733.38.camel@johannes.berg>
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-	 <1193127280.3069.261.camel@debian.sh.intel.com>
-	 <1193148453.8648.20.camel@localhost.localdomain>
-	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 24 Oct 2007 11:07:03 -0400
-Message-Id: <1193238423.2557.41.camel@localhost.localdomain> (sfid-20071024_161228_714432_B147C57C)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33196 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756448AbXJKJPw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2007 05:15:52 -0400
+Subject: Re: rt2500pci 2.0.9 not working
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcus Better <marcus@better.se>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+References: <fdqhn4$qab$1@sea.gmane.org> <fei4sd$mm0$1@sea.gmane.org>
+	 <1192008384.12541.8.camel@johannes.berg> <fei71k$tu7$1@sea.gmane.org>
+	 <1192009901.12541.15.camel@johannes.berg> <feibbk$de1$1@sea.gmane.org>
+	 <1192015848.12541.20.camel@johannes.berg> <feig3h$urf$1@sea.gmane.org>
+	 <1192038202.4770.3.camel@johannes.berg>
+	 <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E3NfSeI2Tx/sfKBXqbQ1"
+Date: Thu, 11 Oct 2007 11:15:59 +0200
+Message-Id: <1192094159.4770.21.camel@johannes.berg> (sfid-20071011_101555_444857_F2EE459A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-10-23 at 19:37 +0200, Johannes Berg wrote:
-> On Tue, 2007-10-23 at 10:07 -0400, Dan Williams wrote:
-> 
-> > Was there ever a conclusion to this patch?  ISTR it went through a
-> > couple comments and was more or less rejected as the wrong approach.
-> > Can anyone comment as to what the _right_ approach is?  Not being able
-> > to connect to dynamic WEP networks is not acceptable, what needs to be
-> > done to make this work?
-> 
-> My take on it is that it's a wpa_supplicant/wext bug.
-> 
-> See, the log says:
-> eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
-> 
-> So that means ieee80211_privacy_mismatch() returned non-zero. However,
-> ieee80211_privacy_mismatch() will return 0 instantly when key management
-> is enabled, which is obviously true with dynamic WEP.
-> 
-> Hence, IMHO wpa_supplicant should be telling us that it enabled key
-> management. But the wext interface is crappy enough to not have a
-> definition for dynamic WEP which probably means that in the
-> wpa_driver_wext_keymgmt2wext() function in wpa_supplicant's
-> driver_wext.c 0 is returned, while we take anything but zero to be "key
-> management is enabled".
 
-Could you educate me a bit more about the problem if you've got a bit of
-time?
+--=-E3NfSeI2Tx/sfKBXqbQ1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-A normal Dynamic WEP configuration should result in wpa_supplicant
-sending IW_AUTH_KEY_MGMT with IW_AUTH_KEY_MGMT_802_1X since ieee8021x is
-specified in the wpa_supplicant config.  Is this not happening here?  I
-seem to be seeing that wpa_supplicant _should_ be setting key
-management, and mac80211 _should_ be returning 0 from
-ieee80211_privacy_mismatch() because key management has been set, and
-therefore this should succeed...
+On Thu, 2007-10-11 at 11:05 +0200, Marcus Better wrote:
 
-Dan
+> > No, but you can comment out the B mode registration in rt2500pci and se=
+e
+> > if that helps.
+>=20
+> I have very limited time to find out how to do that, but will gladly try =
+a
+> patch...
 
-> The proper fix would be to
->  (a) remove the crap about IW_AUTH_KEY_MGMT values from wext,
->      no drivers except mac80211 care and that cares only about
->      enabled/disabled
->  (b) make the parameter to IW_AUTH_KEY_MGMT a boolean
->      (no code changes required, only comment updates, since no driver
->      cares one bit except mac80211 which treats it as a bool already)
->  (c) update wpa_supplicant's wpa_driver_wext_keymgmt2wext function to
->      return 0 for KEY_MGMT_NONE and 1 for everything else
-> 
-> I'm not going to do it though. Dynamic WEP is just too uninteresting to
-> me.
-> 
-> johannes
+Me neither. It seems to be in rt2x00dev.c, Ivo can you help maybe? Just
+for debugging. I'd have thought that adding the 'break' statement would
+fix it.
+
+Alternatively, could you print out the selected mode in
+ieee80211_ioctl.c:ieee80211_set_channel?
+
+something like
+printk(KERN_DEBUG "selected mode %d\n", local->oper_hw_mode->mode);
+printk(KERN_DEBUG "select channel %d\n", local->oper_channel);
+
+johannes
+
+--=-E3NfSeI2Tx/sfKBXqbQ1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARw3pzqVg1VMiehFYAQKeSQ/7BNlLNmbNn+Uisj2ymMT7QyghDt6axYWL
+tiqywpFin0yJ7cDmrkzcPmNl8kbBtJsnOtvx1qL4nNqHktTI1/4SeumbYmoc5wLN
+dd8/KIbNPzsMQ9VI8TsbgtbEsmf7AqZsgHVibS4xO2ZeNI39jVUK2rOp6CpE2eDe
+YtDDbcDDaik4wBQsEv004NPK3XmH7a9hwlNKqJizFuWlgMokLxCsJtjZFPnDkl8I
+unlOowR17n8rY3Haf/MSaEdqDGLlrTVBtww0gMBXKfadUaC5zMePDHycIAFuGbQi
+fMpEd3hSrLrQFrryOK6vxtGVglxw3wd86aXd7UW/w+VMXXCyty+cA37xQOjLyFXe
+ND+0Wv1ssdghUCTtX5nPh4S43SfdqTNLiK7CZnGFgWdXWpEk36NhT4GseLKHMMTu
+g8raK0TjQvmoezXCktAK1uSwd4RfYdlQ3S/WsF/9q+VQSqibRWsUM+CxnhzwjP3Y
+NlIVMT78mGaC518X26GUHogd2eLixwH6Bgppi6wOmrE8W7CNyAGw57ctAPET1z1A
+hjdhxoZVAo2+UzfQ8m7+TB4tacbn1mgXpFhzUKB29ZjZiVPMjzpft8N5w5WAaOaX
+Vr/OYVUC7k7QutMJCa0l92cEYaOI/mdLZ+AgG+z6MWMiMHsvwpb1sNFiSfobXxYu
+dy7w57giPXI=
+=3xpV
+-----END PGP SIGNATURE-----
+
+--=-E3NfSeI2Tx/sfKBXqbQ1--
 
