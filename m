@@ -1,138 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from av12-1-sn2.hy.skanova.net ([81.228.8.185]:49358 "EHLO
-	av12-1-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753001AbXJKX3U (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:15631 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754777AbXJKTu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 19:29:20 -0400
-Received: from smtp4-2-sn2.hy.skanova.net (smtp4-2-sn2.hy.skanova.net [81.228.8.93])
-	by av12-1-sn2.hy.skanova.net (Postfix) with ESMTP id CAE8B38563
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 01:00:33 +0200 (CEST)
-Received: from visigoth.unternet.org (81-235-183-151-no20.tbcn.telia.com [81.235.183.151])
-	by smtp4-2-sn2.hy.skanova.net (Postfix) with ESMTP id A4E3B37E45
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 01:00:33 +0200 (CEST)
-Received: from [192.168.1.124] (helo=ostrogoth)
-	by visigoth.unternet.org with esmtp (Exim 4.63)
-	(envelope-from <lkml-f@unternet.org>)
-	id 1Ig6xT-0002hG-DU
-	for linux-wireless@vger.kernel.org; Fri, 12 Oct 2007 00:56:47 +0200
-Date: Fri, 12 Oct 2007 01:00:30 +0200
-From: Frank de Lange <lkml-f@unternet.org>
-To: linux-wireless@vger.kernel.org
-Subject: [Oops]  EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23,
-	latest wireless git)
-Message-ID: <20071011230030.GA6725@unternet.org> (sfid-20071012_002923_658660_082A5203)
+	Thu, 11 Oct 2007 15:50:28 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so420076wra
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 12:50:27 -0700 (PDT)
+Date: Thu, 11 Oct 2007 15:50:31 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] Add extensive documenation for the atheros bssid_mask
+Message-ID: <20071011195031.GB9403@pogo> (sfid-20071011_205034_963600_96B18022)
+References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo> <20071011194630.GA9304@pogo> <20071011194934.GA9403@pogo>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071011194934.GA9403@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just got an Atheros-based card from eBay, stuffed it into my Thinkpad
-T23 (ignoring the complaints about two ethernet cards being installed)
-and got myself this Oops:
+Add extensive documenation for the atheros bssid_mask.
+Credit to David Kimdon for figuring this out. I am
+just documenting it.
 
-BUG: unable to handle kernel NULL pointer dereference at virtual address
-00000000
- printing eip:
-f0a3322d
-*pde = 00000000
-Oops: 0000 [#1]
-PREEMPT
-Modules linked in: autofs4 ipv6 speedstep_ich speedstep_lib
-cpufreq_stats cpufreq_conservative cpufreq_userspace cpufreq_powersave
-cpufreq_ondemand freq_table sbs bay dock nfs lockd sunrpc lp arc4 ecb
-blkcipher rc80211_simple snd_intel8x0 snd_ac97_codec ac97_bus
-snd_pcm_oss snd_mixer_oss snd_pcm battery ac pcmcia firmware_class video
-backlight output snd_seq_dummy irtty_sir sir_dev nsc_ircc irda
-snd_seq_oss crc_ccitt ath5k parport_pc parport snd_seq_midi mac80211
-yenta_socket rsrc_nonstatic snd_rawmidi snd_seq_midi_event cfg80211
-button pcmcia_core snd_seq psmouse snd_timer snd_seq_device iTCO_wdt
-serio_raw snd intel_agp agpgart soundcore snd_page_alloc pcspkr evdev
-ext3 jbd mbcache sg sr_mod cdrom sd_mod piix ide_core ata_generic
-ata_piix floppy libata scsi_mod uhci_hcd e100 mii usbcore thermal
-processor fan fuse
-CPU:    0
-   Not tainted VLI
-EFLAGS: 00010246   (2.6.23-t23-01 #3)
-EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k]
-eax: 00000000   ebx: ed6d4f74   ecx: 485683ff   edx: 00000005
-esi: 00000000   edi: 00000000   ebp: edbe4800   esp: eccf6b44
-ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
-Process NetworkManager (pid: 4593, ti=eccf6000 task=edfbf500
-task.ti=eccf6000)
-Stack: ed6d4e00 c01abccd f0a2d4bf ed6d4e00 ed6d4f74 ed6d6cec 00000000
-00000001
-       00000241 00000003 00000001 00000002 00000014 ed6d4e00 00000000
-00000000
-       00000000 f0a2d683 00000be6 ed6d4e00 edb26000 00001002 ed6d4e08
-f0a2d9c1
-Call Trace:
-__delay+0x6/0x7
-ath_stoprecv+0x2f/0x143 [ath5k]
-ath_stop_locked+0xb0/0xc4 [ath5k]
-ath_init+0x6e/0xf5 [ath5k]
-ieee80211_open+0x1d5/0x3ab [mac80211]
-dev_open+0x2d/0x66
-dev_change_flags+0x9d/0x150
-rtnl_setlink+0x0/0xea
-do_setlink+0x1b7/0x281
-rtnl_setlink+0x0/0xea
-rtnl_setlink+0xd0/0xea
-netlink_dump_start+0x104/0x126
-rtnetlink_rcv_msg+0x18f/0x1a9
-rtnl_dump_ifinfo+0x0/0x7d
-netlink_run_queue+0x5c/0xd2
-rtnetlink_rcv_msg+0x0/0x1a9
-rtnetlink_rcv+0x25/0x3d
-netlink_data_ready+0x12/0x4b
-netlink_sendskb+0x19/0x2f
-netlink_sendmsg+0x236/0x242
-sock_sendmsg+0xbb/0xd3
-autoremove_wake_function+0x0/0x35
-autoremove_wake_function+0x0/0x35
-__kfree_skb+0xa1/0xf6
-unix_stream_recvmsg+0x3ef/0x49f
-verify_iovec+0x3e/0x70
-sys_sendmsg+0x194/0x1f9
-sys_recvmsg+0x1be/0x1d2
-netlink_insert+0x110/0x11a
-move_addr_to_user+0x39/0x50
-sys_getsockname+0x91/0xa2
-sock_init_data+0x51/0x145
-sock_setsockopt+0x4d4/0x4ec
-d_alloc+0x1b/0x170
-d_instantiate+0x40/0x5b
-sock_attach_fd+0x53/0xae
-sys_socketcall+0x223/0x242
-sysenter_past_esp+0x5f/0x85
- =======================
-Code: fc ff 00 00 03 5d 08 c7 44 24 04 00 00 00 00 0f b6 46 1c 89 04 24
-89 e8 e8 65 cf ff ff 89 da 0f b7 c0 e8 b0 a3 77 cf ff 44 24 40 <0f> b7
-07 83 c6 14 39 44 24 40 72 b4 83 7d 48 01 76 4f 66 83 7d
-SS:ESP 0068:eccf6b44
+No need to check for ath5k_hw_hasbssidmask() as
+ath5k_hw_set_bssid_mask() will do the check itself.
 
-This Oopsed within NetworkManager but it also crashes/burns when
-activated manually. Setting parameters with iwconfig does not bring it
-down but ifconfig'ing it up does...
+Also add link to Atheros patent 6677779 B1 about buffer
+registers and control registers. Hope this helps.
 
-Card is known as 02:02.0 Ethernet controller: Atheros Communications,
-Inc. AR2413 802.11bg NIC (rev 01), it is an Askey AR2413A (802.11b/g)
-FCC ID:PPD-AR5BMB5 IC:4104A-AR5BMB5
+Changes to base.c
+Changes-licensed-under: 3-clause-BSD
 
-Madwifi (with evil closed HAL code) works on the same card (with
-somewhat weak reception which is annoying as I got an Atheros-based card
-to get a better radio than the Broadcom-based ones I have lying
-around...)
+Changes to hw.c, reg.h
+Changes-licensed-under: ISC
 
-More info available on request...
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |    7 +--
+ drivers/net/wireless/ath5k/hw.c   |   96 +++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath5k/reg.h  |   17 ++++--
+ 3 files changed, 107 insertions(+), 13 deletions(-)
 
-Cheers//Frank
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index f474660..0997577 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2242,10 +2242,9 @@ static int ath_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 
+ 	ath5k_hw_get_lladdr(ah, mac);
+ 	SET_IEEE80211_PERM_ADDR(hw, mac);
+-	if (ath5k_hw_hasbssidmask(ah)) {
+-		memset(sc->bssidmask, 0xff, ETH_ALEN);
+-		ath5k_hw_set_bssid_mask(ah, sc->bssidmask);
+-	}
++	/* All MAC address bits matter for ACKs */
++	memset(sc->bssidmask, 0xff, ETH_ALEN);
++	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
+ 
+ 	ret = ieee80211_register_hw(hw);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 58548ee..00ff6c3 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -2324,9 +2324,99 @@ void ath5k_hw_set_associd(struct ath_hw *hal, const u8 *bssid, u16 assoc_id)
+ 
+ 	ath5k_hw_enable_pspoll(hal, NULL, 0);
+ }
+-
+-/*
+- * Set BSSID mask on 5212
++/**
++ * ath5k_hw_set_bssid_mask - set common bits we should listen to
++ *
++ * The bssid_mask is a utility used by AR5212 hardware to inform the hardware
++ * which bits of the interface's MAC address should be looked at when trying
++ * to decide which packets to ACK. In station mode every bit matters. In AP
++ * mode with a single BSS every bit matters as well. In AP mode with 
++ * multiple BSSes not every bit matters.
++ *
++ * @hal: the &struct ath_hw
++ * @mask: the bssid_mask, a u8 array of size ETH_ALEN
++ *
++ * Note that this is a simple filter and *does* not filter out all
++ * relevant frames. Some non-relevant frames will get through, probability
++ * jocks are welcomed to compute.
++ *
++ * When handling multiple BSSes (or VAPs) you can get the BSSID mask by 
++ * computing the set of:
++ * 
++ *     ~ ( MAC XOR BSSID )
++ *
++ * When you do this you are essentially computing the common bits. Later it 
++ * is assumed the harware will "and" (&) the BSSID mask with the MAC address
++ * to obtain the relevant bits which should match on the destination frame.
++ * 
++ * Simple example: on your card you have have two BSSes you have created with
++ * BSSID-01 and BSSID-02. Lets assume BSSID-01 will not use the MAC address.
++ * There is another BSSID-03 but you are not part of it. For simplicity's sake,
++ * assuming only 4 bits for a mac address and for BSSIDs you can then have:
++ *
++ *                  \
++ * MAC:                0001 |
++ * BSSID-01:   0100 | --> Belongs to us
++ * BSSID-02:   1001 |
++ *                  /
++ * -------------------
++ * BSSID-03:   0110  | --> External
++ * -------------------
++ *
++ * Our bssid_mask would then be:  
++ *
++ *             On loop iteration for BSSID-01:
++ *             ~(0001 ^ 0100)  -> ~(0101)
++ *                             ->   1010
++ *             bssid_mask      =    1010
++ *
++ *             On loop iteration for BSSID-02:
++ *             bssid_mask &= ~(0001   ^   1001)
++ *             bssid_mask =   (1010)  & ~(0001 ^ 1001)
++ *             bssid_mask =   (1010)  & ~(1001)
++ *             bssid_mask =   (1010)  &  (0110)
++ *             bssid_mask =   0010
++ *
++ * A bssid_mask of 0010 means "only pay attention to the second least 
++ * significant bit". This is because its the only bit common
++ * amongst the MAC and all BSSIDs we support. To findout what the real
++ * common bit is we can simply "&" the bssid_mask now with any BSSID we have
++ * or our MAC address (we assume the hardware uses the MAC address).
++ *
++ * Now, suppose there's an incoming frame for BSSID-03:
++ *
++ * IFRAME-01:  0110
++ *
++ * An easy eye-inspeciton of this already should tell you that this frame 
++ * will not pass our check. This is beacuse the bssid_mask tells the 
++ * hardware to only look at the second least significant bit and the 
++ * common bit amongst the MAC and BSSIDs is 0, this frame has the 2nd LSB 
++ * as 1, which does not match 0.
++ *
++ * So with IFRAME-01 we *assume* the hardware will do:
++ *
++ *     allow = (IFRAME-01 & bssid_mask) == (bssid_mask & MAC) ? 1 : 0;
++ *  --> allow = (0110 & 0010) == (0010 & 0001) ? 1 : 0;
++ *  --> allow = (0010) == 0000 ? 1 : 0;
++ *  --> allow = 0
++ *
++ *  Lets now test a frame that should work:
++ *
++ * IFRAME-02:  0001 (we should allow)
++ *
++ *     allow = (0001 & 1010) == 1010
++ *
++ *     allow = (IFRAME-02 & bssid_mask) == (bssid_mask & MAC) ? 1 : 0;
++ *  --> allow = (0001 & 0010) ==  (0010 & 0001) ? 1 :0;
++ *  --> allow = (0010) == (0010)
++ *  --> allow = 1
++ *
++ * Other examples:
++ *
++ * IFRAME-03:  0100 --> allowed
++ * IFRAME-04:  1001 --> allowed
++ * IFRAME-05:  1101 --> allowed but its not for us!!!
++ *
+  */
+ int ath5k_hw_set_bssid_mask(struct ath_hw *hal, const u8 *mask)
+ {
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index 0a7b312..1537517 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1252,10 +1252,13 @@
+ #define	AR5K_RX_FILTER_RADARERR_5212 	0x00000200	/* Don't filter phy radar errors [5212+] */
+ #define AR5K_RX_FILTER_PHYERR_5211	0x00000040	/* [5211] */
+ #define AR5K_RX_FILTER_RADARERR_5211	0x00000080	/* [5211] */
+-#define AR5K_RX_FILTER_PHYERR	(ah->ah_version == AR5K_AR5211 ? \
+-				AR5K_RX_FILTER_PHYERR_5211 : AR5K_RX_FILTER_PHYERR_5212)
+-#define	AR5K_RX_FILTER_RADARERR	(ah->ah_version == AR5K_AR5211 ? \
+-				AR5K_RX_FILTER_RADARERR_5211 : AR5K_RX_FILTER_RADARERR_5212)
++#define AR5K_RX_FILTER_PHYERR  \
++	((ah->ah_version == AR5K_AR5211 ? \
++	AR5K_RX_FILTER_PHYERR_5211 : AR5K_RX_FILTER_PHYERR_5212))
++#define        AR5K_RX_FILTER_RADARERR \
++	((ah->ah_version == AR5K_AR5211 ? \
++	AR5K_RX_FILTER_RADARERR_5211 : AR5K_RX_FILTER_RADARERR_5212))
++
+ /*
+  * Multicast filter register (lower 32 bits)
+  */
+@@ -1755,8 +1758,10 @@
+  * packet, i have no idea. So i'll name them BUFFER_CONTROL_X registers
+  * for now. It's interesting that they are also used for some other operations.
+  *
+- * Also check out ath5k_hw.h and U.S. Patent 6677779 B1 (about buffer
+- * registers and control registers)
++ * Also check out hw.h and U.S. Patent 6677779 B1 (about buffer
++ * registers and control registers):
++ *
++ * http://www.google.com/patents?id=qNURAAAAEBAJ
+  */
+ 
+ #define AR5K_RF_BUFFER			0x989c
 -- 
-   WWWWW      ________________________
-  ## o o\    /     Frank de Lange     \
-  }#   \|   /                          \
-   \ `--| _/     <Hacker for Hire>      \
-    `---'  \       +46-734352015        /
-            \    frank@unternet.org    /
-             `------------------------'
-  [ "Omnis enim res, quae dando non deficit, dum habetur
-     et non datur, nondum habetur, quomodo habenda est."  ]
+1.5.2.5
+
