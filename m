@@ -1,628 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2a.orange.fr ([80.12.242.139]:40351 "EHLO smtp2a.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750764AbXJUU3x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 16:29:53 -0400
-Received: from me-wanadoo.net (localhost [127.0.0.1])
-	by mwinf2a08.orange.fr (SMTP Server) with ESMTP id 8B5A97000091
-	for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 22:29:52 +0200 (CEST)
-Subject: Re: [Fwd: Problem with a Driver rt73 in ad-hoc mode between a arm
-	and a pc]
-From: Bruno Vetel <bruno.vetel@wanadoo.fr>
-Reply-To: bruno.vetel@wanadoo.fr
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200710211820.13002.IvDoorn@gmail.com>
-References: <1192979624.9056.23.camel@rigel.esas.fr>
-	 <200710211745.18430.IvDoorn@gmail.com>
-	 <1192982171.9056.34.camel@rigel.esas.fr>
-	 <200710211820.13002.IvDoorn@gmail.com>
-Content-Type: multipart/mixed; boundary="=-XDtEGMtvnG+Lk7JlYp7O"
-Date: Sun, 21 Oct 2007 22:29:15 +0200
-Message-Id: <1192998555.9056.43.camel@rigel.esas.fr> (sfid-20071021_213008_382343_31CEF884)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.177]:49189 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425AbXJKUPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2007 16:15:50 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1243605pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 13:15:49 -0700 (PDT)
+Message-ID: <43e72e890710111315i681a64ceqae746fa88ae168b8@mail.gmail.com> (sfid-20071011_211555_288614_F41BE4EB)
+Date: Thu, 11 Oct 2007 16:15:49 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [PATCH 3/4] Don't read AR5K_RAC_PISR on AR5210, document ath5k_int
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo>
+	 <20071011194630.GA9304@pogo> <20071011194934.GA9403@pogo>
+	 <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/11/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> I should have added something inside ath5kreg.h, sry for that...
+>
+> (?) = not sure
+>
+> > + * @AR5K_INT_RXDESC: ??
+> Request RX descriptor/Read RX descriptor (?)
+>
+> > + * @AR5K_INT_RXNOFRM: ??
+> No frame received (?)
+>
+> > + * @AR5K_INT_RXEOL: received End Of List for VEOL (Virtual End Of List). The
+> > + *     Queue Control Unit (QCU) signals an EOL interrupt only if a descriptor's
+> > + *     LinkPtr is NULL. For more details, refer to:
+> > + *     http://www.freepatentsonline.com/20030225739.html
+>
+> > + * @AR5K_INT_RXORN: indicates a hardware reset is required
+> Rx overrun is not always fatal, on some chips we can continue
+> operation without reseting the card, that's why int_fatal is not
+> common for all chips ;-)
+>
+> > + * @AR5K_INT_TX: mask to identify received frame interrupts, of type
+> > + *     AR5K_ISR_TXOK or AR5K_ISR_TXERR
+> > + * @AR5K_INT_TXDESC: ??
+> Request TX descriptor/Read TX status descriptor (?)
+>
+> > + * @AR5K_INT_TXURN: received when we should increase the TX trigger threshold
+> > + *     We currently do increments on interrupt by
+> > + *     (AR5K_TUNE_MAX_TX_FIFO_THRES - current_trigger_level) / 2
+> > + * @AR5K_INT_MIB: Indicates the Management Information Base counters should be
+> > + *     checked. We should do this with ath5k_hw_update_mib_counters() but
+> > + *     it seems we should also then do some noise immunity work.
+>
+> > + * @AR5K_INT_RXPHY: ??
+> RX PHY Error
+>
+> > + * @AR5K_INT_RXKCM: ??
+> > + * @AR5K_INT_SWBA: SoftWare Beacon Alert - indicates its time to send a
+> > + *     beacon that must be handled in software. The alternative is if you
+> > + *     have VEOL support, in that case you let the hardware deal with things.
+> > + * @AR5K_INT_BMISS: If in STA mode this indicates we have stopped seeing
+> > + *     beacons from the AP have associated with, we should probably try to
+> > + *     reassociate. When in IBSS mode this might mean we have not received
+> > + *     any beacons from any local stations. Note that every station in an
+> > + *     IBSS schedules to send beacons at the Target Beacon Transmission Time
+> > + *     (TBTT) with a random backoff.
+> > + * @AR5K_INT_BNR: Beacon Not Ready interrupt - ??
+>
+> > + * @AR5K_INT_GPIO: ??
+> GPIO interrupt used for RF Kill, we should handle this inside
+> interrupt handler, until then i've disabled it because it results an
+> interrupt storm in case RF Kill switch is off.
+>
+> > + * @AR5K_INT_NOCARD: signals the card has been removed
+> There is no such interrupt, it's software stuff used in hal. We can
+> always check for pending interrupts by reading that register (check
+> out is_intr_pending) and get rid of this.
 
---=-XDtEGMtvnG+Lk7JlYp7O
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8bit
+Thanks, please send a follow up patch based on this one with your additions.
 
-Le dimanche 21 octobre 2007 à 18:20 +0200, Ivo van Doorn a écrit :
-> Hi,
-
-Hi
-
-Sorry for the noise, I thought a bit late to debugfs.
-
-Here is the file.
-
-
-	Bruno
-> 
-> > > Could you try using wireshark or a similar tool to see if beacons
-> > > are correctly send out?
-> > > There are similar reports regarding rt73 which suggests that in adhoc
-> > > mode
-> > > the beacons are never being send out correctly.
-> > > 
-> > With wireshark on the pc or tcpdump on the arm board, I don't see any
-> > traffic.
-> 
-> Just what I expected. Could you use attached script to create a dump of the
-> registers. That way I can see if all beacon related registers have been initialized.
-> 
-> Ivo
--- 
-Bruno Vetel <bruno.vetel@wanadoo.fr>
-
---=-XDtEGMtvnG+Lk7JlYp7O
-Content-Disposition: attachment; filename=registers
-Content-Type: text/plain; name=registers; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-
-BBP:
-0 0x16
-1 0x00
-2 0x00
-3 0x80
-4 0x10
-5 0x0b
-6 0x10
-7 0x00
-8 0x00
-9 0x00
-10 0x00
-11 0x04
-12 0x04
-13 0x00
-14 0x18
-15 0x30
-16 0x2c
-17 0x40
-18 0x06
-19 0x00
-20 0x1e
-21 0xc8
-22 0x38
-23 0x06
-24 0xfe
-25 0x0a
-26 0x0d
-27 0x27
-28 0x06
-29 0x00
-30 0x00
-31 0x2b
-32 0x0b
-33 0x55
-34 0x12
-35 0x50
-36 0x11
-37 0x07
-38 0x00
-39 0xf8
-40 0x00
-41 0x60
-42 0x00
-43 0x00
-44 0x00
-45 0x00
-46 0x00
-47 0x00
-48 0x00
-49 0x00
-50 0x00
-51 0x00
-52 0x00
-53 0x10
-54 0x18
-55 0x00
-56 0x10
-57 0x08
-58 0x00
-59 0x01
-60 0x10
-61 0x04
-62 0x04
-63 0x00
-64 0x01
-65 0x03
-66 0x00
-67 0x00
-68 0x00
-69 0x00
-70 0x26
-71 0x00
-72 0x00
-73 0x00
-74 0xff
-75 0xfe
-76 0x40
-77 0x00
-78 0x00
-79 0x00
-80 0x05
-81 0x14
-82 0x50
-83 0xc0
-84 0x10
-85 0x00
-86 0xfe
-87 0x40
-88 0xfe
-89 0x40
-90 0x0f
-91 0x08
-92 0x00
-93 0x00
-94 0x06
-95 0x08
-96 0x5a
-97 0x5a
-98 0x5a
-99 0x00
-100 0x20
-101 0x06
-102 0x16
-103 0x00
-104 0x00
-105 0x20
-106 0x90
-107 0x04
-108 0x04
-109 0x00
-110 0x00
-111 0x00
-112 0x00
-113 0x00
-114 0x00
-115 0x00
-116 0x00
-117 0x00
-118 0x00
-119 0x00
-120 0x00
-121 0x00
-122 0x00
-123 0x00
-124 0x00
-125 0x00
-126 0x00
-127 0x00
-CSR:
-0 0x0002573a
-1 0x00000004
-2 0x769a1700
-3 0x00ffe993
-4 0x00000000
-5 0x00030000
-6 0x00000fff
-7 0x00000000
-8 0x013a030a
-9 0x0000a314
-10 0x00000718
-11 0x000a0050
-12 0x00000009
-13 0x00007f80
-14 0x03431e46
-15 0x00000000
-16 0x027eb162
-17 0x9eaa9eaf
-18 0x8a8b8c8d
-19 0x00858687
-20 0x740a0732
-21 0x0000000f
-22 0x0a143870
-23 0x2e31353b
-24 0x2a2a2a2c
-25 0x000d0000
-26 0x00001008
-27 0x0000c78f
-28 0x0b31c31d
-29 0x00000000
-30 0x00000000
-31 0x0000000f
-32 0x00010000
-33 0x000023b0
-34 0x82188200
-35 0x0000ff00
-36 0x140d5a1f
-37 0x00040a06
-38 0x00080606
-39 0x00000408
-40 0x00000000
-41 0x00000000
-42 0x00000000
-43 0x00000000
-44 0x00000000
-45 0x00000000
-46 0x00000000
-47 0x00000000
-48 0x00000000
-49 0x00000000
-50 0x00000000
-51 0x00000000
-52 0x00000000
-53 0x00000000
-54 0x00000000
-55 0x00000000
-56 0x00000000
-57 0x00000000
-58 0x03000000
-59 0x00000000
-60 0x00000000
-61 0x00000000
-62 0x00000000
-63 0x00000000
-64 0xffd5af00
-65 0xffd5af00
-66 0xffd5af00
-67 0xffd5af00
-68 0xffd5af00
-69 0xffd5af00
-70 0xffd5af00
-71 0xffd5af00
-72 0xffd5af00
-73 0xffd5af00
-74 0xffd5af00
-75 0xffd5af00
-76 0xffd5af00
-77 0xffd5af00
-78 0xffd5af00
-79 0xffd5af00
-80 0xffd5af00
-81 0xffd5af00
-82 0xffd5af00
-83 0xffd5af00
-84 0xffd5af00
-85 0xffd5af00
-86 0xffd5af00
-87 0xffd5af00
-88 0xffd5af00
-89 0xffd5af00
-90 0xffd5af00
-91 0xffd5af00
-92 0xffd5af00
-93 0xffd5af00
-94 0xffd5af00
-95 0xffd5af00
-96 0xffd5af00
-97 0xffd5af00
-98 0xffd5af00
-99 0xffd5af00
-100 0xffd5af00
-101 0xffd5af00
-102 0xffd5af00
-103 0xffd5af00
-104 0xffd5af00
-105 0xffd5af00
-106 0xffd5af00
-107 0xffd5af00
-108 0xffd5af00
-109 0xffd5af00
-110 0xffd5af00
-111 0xffd5af00
-112 0xffd5af00
-113 0xffd5af00
-114 0xffd5af00
-115 0xffd5af00
-116 0xffd5af00
-117 0xffd5af00
-118 0xffd5af00
-119 0xffd5af00
-120 0xffd5af00
-121 0xffd5af00
-122 0xffd5af00
-123 0xffd5af00
-124 0xffd5af00
-125 0xffd5af00
-126 0xffd5af00
-127 0xffd5af00
-128 0xffd5af00
-129 0xffd5af00
-130 0xffd5af00
-131 0xffd5af00
-132 0xffd5af00
-133 0xffd5af00
-134 0xffd5af00
-135 0xffd5af00
-136 0xffd5af00
-137 0xffd5af00
-138 0xffd5af00
-139 0xffd5af00
-140 0xffd5af00
-141 0xffd5af00
-142 0xffd5af00
-143 0xffd5af00
-144 0xffd5af00
-145 0xffd5af00
-146 0xffd5af00
-147 0xffd5af00
-148 0xffd5af00
-149 0xffd5af00
-150 0xffd5af00
-151 0xffd5af00
-152 0xffd5af00
-153 0xffd5af00
-154 0xffd5af00
-155 0xffd5af00
-156 0xffd5af00
-157 0xffd5af00
-158 0xffd5af00
-159 0xffd5af00
-160 0xffd5af00
-161 0xffd5af00
-162 0xffd5af00
-163 0xffd5af00
-164 0xffd5af00
-165 0xffd5af00
-166 0xffd5af00
-167 0xffd5af00
-168 0xffd5af00
-169 0xffd5af00
-170 0xffd5af00
-171 0xffd5af00
-172 0xffd5af00
-173 0xffd5af00
-174 0xffd5af00
-175 0xffd5af00
-176 0xffd5af00
-177 0xffd5af00
-178 0xffd5af00
-179 0xffd5af00
-180 0xffd5af00
-181 0xffd5af00
-182 0xffd5af00
-183 0xffd5af00
-184 0xffd5af00
-185 0xffd5af00
-186 0xffd5af00
-187 0xffd5af00
-188 0xffd5af00
-189 0xffd5af00
-190 0xffd5af00
-191 0xffd5af00
-192 0xffd5af00
-193 0xffd5af00
-194 0xffd5af00
-195 0xffd5af00
-196 0xffd5af00
-197 0xffd5af00
-198 0xffd5af00
-199 0xffd5af00
-200 0xffd5af00
-201 0xffd5af00
-202 0xffd5af00
-203 0xffd5af00
-204 0xffd5af00
-205 0xffd5af00
-206 0xffd5af00
-207 0xffd5af00
-208 0xffd5af00
-209 0xffd5af00
-210 0xffd5af00
-211 0xffd5af00
-212 0xffd5af00
-213 0xffd5af00
-214 0xffd5af00
-215 0xffd5af00
-216 0xffd5af00
-217 0xffd5af00
-218 0xffd5af00
-219 0xffd5af00
-220 0xffd5af00
-221 0xffd5af00
-222 0xffd5af00
-223 0xffd5af00
-224 0xffd5af00
-225 0xffd5af00
-226 0xffd5af00
-227 0xffd5af00
-228 0xffd5af00
-229 0xffd5af00
-230 0xffd5af00
-231 0xffd5af00
-232 0xffd5af00
-233 0xffd5af00
-234 0xffd5af00
-235 0xffd5af00
-236 0xffd5af00
-237 0xffd5af00
-238 0xffd5af00
-239 0xffd5af00
-240 0xffd5af00
-241 0xffd5af00
-242 0xffd5af00
-243 0xffd5af00
-244 0xffd5af00
-245 0xffd5af00
-246 0xffd5af00
-247 0xffd5af00
-248 0xffd5af00
-249 0xffd5af00
-250 0xffd5af00
-251 0xffd5af00
-252 0xffd5af00
-253 0xffd5af00
-254 0xffd5af00
-255 0xffd5af00
-256 0xffd5af00
-257 0xffd5af00
-258 0xffd5af00
-259 0xffd5af00
-260 0xffd5af00
-261 0xffd5af00
-262 0xffd5af00
-263 0xffd5af00
-264 0xffd5af00
-265 0xffd5af00
-266 0xffd5af00
-267 0xffd5af00
-268 0xffd5af00
-269 0xffd5af00
-270 0xffd5af00
-271 0xffd5af00
-272 0xffd5af00
-273 0xffd5af00
-274 0xffd5af00
-275 0xffd5af00
-276 0xffd5af00
-277 0xffd5af00
-278 0xffd5af00
-279 0xffd5af00
-280 0xffd5af00
-281 0xffd5af00
-282 0xffd5af00
-283 0xffd5af00
-284 0xffd5af00
-285 0xffd5af00
-286 0xffd5af00
-287 0xffd5af00
-288 0xffd5af00
-289 0xffd5af00
-290 0xffd5af00
-291 0xffd5af00
-292 0xffd5af00
-293 0xffd5af00
-294 0xffd5af00
-295 0xffd5af00
-296 0xffd5af00
-297 0xffd5af00
-298 0xffd5af00
-299 0xffd5af00
-EEPROM:
-0 0x2573
-1 0x0103
-2 0x1700
-3 0x769a
-4 0xe993
-5 0xffff
-6 0xffff
-7 0xffff
-8 0xffff
-9 0xffff
-10 0xffff
-11 0xffff
-12 0xffff
-13 0xffff
-14 0xffff
-15 0xffff
-16 0x1056
-17 0xffef
-18 0x0101
-19 0xffff
-20 0xffff
-21 0xffff
-22 0xffff
-23 0xffff
-24 0xffff
-25 0xffff
-26 0xffff
-27 0xffff
-28 0xffff
-29 0xffff
-30 0xffff
-31 0xffff
-32 0xffff
-33 0xffff
-34 0xffff
-35 0x0807
-36 0x0908
-37 0x0a09
-38 0x0b0a
-39 0x0c0b
-40 0x0d0c
-41 0x0e0d
-42 0xffff
-43 0xffff
-44 0xffff
-45 0xffff
-46 0xffff
-47 0xff15
-48 0xe000
-49 0xffff
-50 0xffff
-51 0xffff
-52 0xffff
-53 0xffff
-54 0xffff
-55 0xffff
-56 0xffff
-57 0xffff
-58 0xffff
-59 0xffff
-60 0xffff
-61 0xffff
-62 0xffff
-63 0xffff
-64 0xffff
-65 0xffff
-66 0xffff
-67 0xffff
-68 0xffff
-69 0xffff
-70 0xffff
-71 0xffff
-72 0xffff
-73 0xffff
-74 0xffff
-75 0xffff
-76 0xffff
-77 0xff00
-78 0x0000
-79 0xffff
-80 0xffff
-81 0xffff
-82 0xffff
-83 0xffff
-84 0xffff
-85 0xffff
-86 0xffff
-87 0xffff
-88 0xffff
-89 0xffff
-90 0xffff
-91 0xffff
-92 0xffff
-93 0xffff
-94 0xffff
-95 0xffff
-96 0xffff
-97 0xffff
-98 0xffff
-99 0xffff
-100 0xffff
-101 0xffff
-102 0xffff
-103 0xffff
-104 0xffff
-105 0xffff
-106 0xffff
-107 0xffff
-108 0xffff
-109 0xffff
-110 0xffff
-111 0xffff
-112 0xffff
-113 0xffff
-114 0xffff
-115 0xffff
-116 0xffff
-117 0xffff
-118 0xffff
-119 0xffff
-120 0xffff
-121 0xffff
-122 0xffff
-123 0xffff
-124 0xffff
-125 0xffff
-126 0x0508
-127 0x000a
-
-
---=-XDtEGMtvnG+Lk7JlYp7O--
-
-
+  Luis
