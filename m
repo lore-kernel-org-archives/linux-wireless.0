@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:53924 "EHLO ciao.gmane.org"
+Received: from mx1.redhat.com ([66.187.233.31]:44231 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754956AbXJOKJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 06:09:30 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1IhMqY-0001J0-2d
-	for linux-wireless@vger.kernel.org; Mon, 15 Oct 2007 10:06:50 +0000
-Received: from 80.169.182.16 ([80.169.182.16])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:06:50 +0000
-Received: from marcus by 80.169.182.16 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:06:50 +0000
-To: linux-wireless@vger.kernel.org
-From: Marcus Better <marcus@better.se>
-Subject: Re: rt2500pci 2.0.9 not working
-Date: Mon, 15 Oct 2007 11:57:19 +0200
-Message-ID: <fevdi0$til$1@ger.gmane.org> (sfid-20071015_110934_435679_E0BEA433)
-References: <fdqhn4$qab$1@sea.gmane.org> <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com> <1192094159.4770.21.camel@johannes.berg> <200710112005.56101.IvDoorn@gmail.com> <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com> <fent23$9gc$1@sea.gmane.org> <470F89C1.8030406@lwfinger.net>
+	id S1750861AbXJKECc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2007 00:02:32 -0400
+Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Ferguson, Dana R" <dana.r.ferguson@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20071010181019.GJ5962@tuxdriver.com>
+References: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
+	 <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com>
+	 <20071010181019.GJ5962@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 11 Oct 2007 00:03:08 -0400
+Message-Id: <1192075388.31110.11.camel@localhost.localdomain> (sfid-20071011_050236_133909_B99997A9)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> is established, the rate-setting mechanism in rc80211_simple will adjust
-> the rate to what it considers the highest value that works.
+On Wed, 2007-10-10 at 14:10 -0400, John W. Linville wrote:
+> On Wed, Oct 10, 2007 at 10:54:46AM -0700, Ferguson, Dana R wrote:
+> > Hey,
+> > 
+> > I bit more info. I am hearing it is a Cisco CCX feature and will not be
+> > included in the open source code.
+> > 
+> > Dana
+> 
+> Huh?  I'm not sure what "it" is?  Care to elaborate?
 
-I get download rates of about 9 Mbit, but iwconfig still says the bit rate
-is 1 Mbit, which seems a bit strange.
+Yeah, it's unclear.   CCX should have _nothing_ to do with hidden SSID
+support since hidden SSIDs (and workarounds to support them) existed
+waaay before Cisco coughed up CCX.
 
-Marcus
+Dan
 
+> I do find it dismaying to hear that Intel is holding back wireless
+> compatibility features from Linux...
+> 
+> John
 
