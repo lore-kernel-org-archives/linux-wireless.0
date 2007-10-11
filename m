@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56945
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbXJ1Njt (ORCPT
+Received: from iggypop2.siwnet.net ([81.216.65.12]:52670 "EHLO
+	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbXJKJR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 09:39:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: Use subsys_initcall
-Date: Sun, 28 Oct 2007 14:39:02 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+	Thu, 11 Oct 2007 05:17:57 -0400
+Message-ID: <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com> (sfid-20071011_101802_304823_2283B71C)
+In-Reply-To: <1192038202.4770.3.camel@johannes.berg>
+References: <fdqhn4$qab$1@sea.gmane.org> <fei4sd$mm0$1@sea.gmane.org>
+    <1192008384.12541.8.camel@johannes.berg> <fei71k$tu7$1@sea.gmane.org>
+    <1192009901.12541.15.camel@johannes.berg> <feibbk$de1$1@sea.gmane.org>
+    <1192015848.12541.20.camel@johannes.berg> <feig3h$urf$1@sea.gmane.org>
+    <1192038202.4770.3.camel@johannes.berg>
+Date: Thu, 11 Oct 2007 11:05:34 +0200 (CEST)
+Subject: Re: rt2500pci 2.0.9 not working
+From: "Marcus Better" <marcus@better.se>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710281439.02701.mb@bu3sch.de> (sfid-20071028_133954_735251_57C26073)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must use subsys_initcall, because we must initialize before a
-driver calls rfkill_register().
+Johannes Berg wrote:
+> First a note: could you please send me copies of mail using
+> reply-to-all?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Yes, sorry, I was using Gmane and Knode, and one of them seems to munge
+the other recipients.
 
-Index: wireless-2.6/net/rfkill/rfkill.c
-===================================================================
---- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-28 13:09:04.000000000 +0100
-+++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 14:27:30.000000000 +0100
-@@ -449,5 +449,5 @@ static void __exit rfkill_exit(void)
- 	class_unregister(&rfkill_class);
- }
- 
--module_init(rfkill_init);
-+subsys_initcall(rfkill_init);
- module_exit(rfkill_exit);
+> No, but you can comment out the B mode registration in rt2500pci and see
+> if that helps.
+
+I have very limited time to find out how to do that, but will gladly try a
+patch...
+
+Thanks,
+
+Marcus
+
+
