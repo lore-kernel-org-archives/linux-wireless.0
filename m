@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:16966 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbXJIHCK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 03:02:10 -0400
-Received: from lin01.mn-solutions.de (pD95FA8E3.dip0.t-ipconnect.de [217.95.168.227])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 0A0A65E5992
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 09:02:07 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id B48DC1E002B
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 08:59:10 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet supported radios
-Date: Tue, 9 Oct 2007 09:02:18 +0200
-References: <20071006010449.GA25022@pogo> <20071008204858.GC7633@pogo> <40f31dec0710081937p43048223o4d6826f8de4b9520@mail.gmail.com>
-In-Reply-To: <40f31dec0710081937p43048223o4d6826f8de4b9520@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710090902.18650.hs4233@mail.mn-solutions.de> (sfid-20071009_080216_208456_57AE6F7D)
+Received: from mx1.redhat.com ([66.187.233.31]:39545 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751478AbXJKOu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2007 10:50:27 -0400
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <20071011141642.GA6976@infradead.org>
+References: <200710111151.06989.hs4233@mail.mn-solutions.de>
+	 <20071011141642.GA6976@infradead.org>
+Content-Type: text/plain
+Date: Thu, 11 Oct 2007 10:50:34 -0400
+Message-Id: <1192114234.31895.5.camel@localhost.localdomain> (sfid-20071011_155029_713240_9418F9C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> You are right but i was on a trip 
-...
-> I'll try again wireless-dev and I'll send a
-> patch series here.
+On Thu, 2007-10-11 at 15:16 +0100, Christoph Hellwig wrote:
+> On Thu, Oct 11, 2007 at 11:51:06AM +0200, Holger Schurig wrote:
+> > Move wlan_postpone_association_work() and wlan_cancel_association_work()
+> > from a assoc.h file to the sole user, into wext.c.
+> > 
+> > In passing, rename the functions to libertas_XXX.
+> 
+> As you seem to do some nice cleanups on libertas is there a chance
+> you could get rid of this horrible wlan_ namespace abuse in the driver?
 
-If you were away you might not have heard that wireless-dev is 
-dead. Use wireless-2.6 instead.
+100% agree...  That's always been part of the plan, just that other
+cleanups were more pressing and time always runs out.
 
-The chance that this boots is higher :-)
+IMHO 'libertas' is too long as a prefix for stuff, and replacing wlan_
+with libertas_ is going to screw up spacing everywhere.  So, any
+objections to, as part of the longer-term plan, replace the usage of
+'libertas_' and 'wlan_' with the prefix "lts"?  Would look like:
+
+wlan_set_essid -> lts_set_essid
+wlan_private -> lts_private
+etc
+
+(I don't really like 'lbs' personally but I'm not that strongly against
+it)
+
+Dan
+
 
