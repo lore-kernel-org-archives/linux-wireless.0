@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:16066 "EHLO kernel.dk"
+Received: from mx1.redhat.com ([66.187.233.31]:44210 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756274AbXJQNzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 09:55:22 -0400
-Date: Wed, 17 Oct 2007 15:54:53 +0200
-From: Jens Axboe <jens.axboe@oracle.com>
-To: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: iwl3945 doesn't work
-Message-ID: <20071017135452.GJ5043@kernel.dk> (sfid-20071017_145526_337393_742E7589)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1750728AbXJKEBM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2007 00:01:12 -0400
+Subject: Re: [PATCH] libertas: automatically re-associate
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071010165921.GG5962@tuxdriver.com>
+References: <200710091404.31491.hs4233@mail.mn-solutions.de>
+	 <200710091713.35595.hs4233@mail.mn-solutions.de>
+	 <1191944257.20014.3.camel@localhost.localdomain>
+	 <200710100943.33106.hs4233@mail.mn-solutions.de>
+	 <1192028338.9739.28.camel@localhost.localdomain>
+	 <20071010165921.GG5962@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 11 Oct 2007 00:00:44 -0400
+Message-Id: <1192075245.31110.9.camel@localhost.localdomain> (sfid-20071011_050121_621559_90BE627B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2007-10-10 at 12:59 -0400, John W. Linville wrote:
+> On Wed, Oct 10, 2007 at 10:58:58AM -0400, Dan Williams wrote:
+> 
+> > I won't throw a hissy fit over the reassociation patch as long as it
+> > only tries this in open & WEP situations where a supplicant is not
+> > necessary.  That means you cannot simply requeue an association in
+> > libertas_mac_event_disconnected(), but you should check the association
+> > request and not requeue if:
+> > 
+> > 1) the assoc request's mode is ad-hoc (is there a point to retrying
+> > assoc in adhoc?)
+> 
+> I'm not sure I see why ad-hoc is a special case?
 
-Seeing that iwl3945 is now merged, I decided to switch my x60 to use
-that instead of ipw3945. That would leave me with zero kernel
-dependencies.
+A STA can't ever get disassociation management frames in an IBSS, right?
+I don't believe the firmware will ever disconnect you once you've
+started an IBSS, but there may be a difference between the start-adhoc
+and join-adhoc commands that get sent to firmware.  However, it's not
+like loss of becaons in IBSS mode will cause a disconnection, because it
+just looks like the network split and you are the only member of it, and
+then your STA takes up beaconing responsibility by itself until the
+world ends.  AFAIK.
 
-Unfortunately it doesn't work. Loading the module reveals the device:
+Dan
 
-iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for
-Linux, 1.1.17ks
-iwl3945: Copyright(c) 2003-2007 Intel Corporation
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 21
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
-iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-phy0: Selected rate control algorithm 'iwl-3945-rs'
-
-# iwconfig wlan0
-wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"  
-          Mode:Managed  Channel:0  Access Point: Not-Associated   
-          Tx-Power=0 dBm   
-          Retry min limit:7   RTS thr:off   Fragment thr=2346 B   
-          Encryption key:XXXX-XXXX-XX
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-and iwconfig sees it, essid/enc settings are fine, but I don't get a
-link.
-
--- 
-Jens Axboe
 
