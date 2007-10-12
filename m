@@ -1,65 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:61190 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117AbXJIOL3 (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.176]:18031 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851AbXJLPDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 10:11:29 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so100712ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2007 07:11:26 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Rt2400-devel] Mode selection in mac80211
-Date: Tue, 9 Oct 2007 16:27:44 +0200
-Cc: rt2400-devel@lists.sourceforge.net,
-	Adam Baker <linux@baker-net.org.uk>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <200710052319.10600.linux@baker-net.org.uk> <200710082308.38260.IvDoorn@gmail.com> <1191921642.4013.13.camel@johannes.berg>
-In-Reply-To: <1191921642.4013.13.camel@johannes.berg>
+	Fri, 12 Oct 2007 11:03:49 -0400
+Received: by el-out-1112.google.com with SMTP id v27so227011ele
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 08:03:48 -0700 (PDT)
+Date: Fri, 12 Oct 2007 11:03:49 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 1/5] ath5k: Fix a bug which pushed us to enable promiscuous
+Message-ID: <20071012150349.GB9407@pogo> (sfid-20071012_160353_198479_03229AAF)
+References: <20071012150052.GA9407@pogo>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710091627.44276.IvDoorn@gmail.com> (sfid-20071009_151134_412802_735A6B53)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071012150052.GA9407@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 09 October 2007, Johannes Berg wrote:
-> On Mon, 2007-10-08 at 23:08 +0200, Ivo van Doorn wrote:
-> 
-> > The only difference currently in rt2x00 is for rt2500usb. The initialization
-> > of the IFS and EIFS register is different.
-> 
-> Ok so that's something we have to do in G-mode-compatible-with-B as
-> well.
+Fix a bug which pushed us to enable the promiscuous filter
+all the time during normal operation. The real problem was caused
+becuase we were reseting the bssid to the broadcast during
+ath5k_hw_reset(). We now cache the bssid value and set the
+bssid again during resets. This gives the driver considerably
+more stability.
 
-Well it might not even be needed at all.
-The IFS is also passed on as argument by mac80211 when it configures the
-TX rings. The EIFS register is something different, all other Ralink devices
-have only 1 value for the EIFS. I am not even sure how the device will react
-when the same value is set for rt2500usb.
+Known issue: if your DHCP server doesn't ACK your IP via the broadcast but
+	instead sends it to the IP it gives you (Cisco seems to do this) you
+	may not get the reply. Work is in progress to figure this issue out.
+	This issue was present before this patch.
 
-> > And is mac80211 doing that correctly at this time?
-> 
-> I'm not entirely sure. Are you setting the IFS/EIFS from any other
-> place? :) I don't think it is doing that correctly.
+Changes to base.c
+Changes-licensed-under: 3-clause-BSD
 
-Well in the drivers the following is done:
-rt2500pci:
-	- config_duration() sets EIFS in the register
-	- write_tx_desc() sets IFS in the package descriptor
-rt2500usb:
-	- config_phymode() sets EIFS and IFS in the registers.
-	- write_tx_desc() sets IFS in the package descriptor
+Changes to ath5k.h, hw.c
+Changes-licensed-under: ISC
 
-Note that both config_duration() and config_phymode() are called by rt2x00lib
-when mac80211 uses the config() callback function.
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/ath5k.h |    4 ++++
+ drivers/net/wireless/ath5k/base.c  |   15 ++++++++-------
+ drivers/net/wireless/ath5k/hw.c    |   23 ++++++++++-------------
+ 3 files changed, 22 insertions(+), 20 deletions(-)
 
-Note that the fact that the IFS is set twice for rt2500usb might suggest the
-documentation for the register is incorrect and perhaps the purpose of the
-register is completely different.
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 9308916..c1d3c9d 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -877,6 +877,10 @@ struct ath_hw {
+ 	enum ieee80211_if_types	ah_op_mode;
+ 	enum ath5k_power_mode	ah_power_mode;
+ 	struct ieee80211_channel ah_current_channel;
++	/* Current BSSID we are trying to assoc to / creating, this
++	 * comes from ieee80211_if_conf. This is passed by mac80211 on
++	 * config_interface() */
++	u8			bssid[ETH_ALEN];
+ 	bool			ah_turbo;
+ 	bool			ah_calibration;
+ 	bool			ah_running;
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index afcc7e1..cda922e 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1368,6 +1368,7 @@ static int ath_config_interface(struct ieee80211_hw *hw, int if_id,
+ 		struct ieee80211_if_conf *conf)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->ah;
+ 	int ret;
+ 
+ 	/* Set to a reasonable value. Note that this will
+@@ -1378,8 +1379,13 @@ static int ath_config_interface(struct ieee80211_hw *hw, int if_id,
+ 		ret = -EIO;
+ 		goto unlock;
+ 	}
+-	if (conf->bssid)
+-		ath5k_hw_set_associd(sc->ah, conf->bssid, 0 /* FIXME: aid */);
++	if (conf->bssid) {
++		/* Cache for later use during resets */
++		memcpy(ah->bssid, conf->bssid, ETH_ALEN);
++		/* XXX: assoc id is set to 0 for now, mac80211 doesn't have
++		 * a clean way of letting us retrieve this yet. */
++		ath5k_hw_set_associd(ah, ah->bssid, 0);
++	}
+ 	mutex_unlock(&sc->lock);
+ 
+ 	return ath_reset(hw);
+@@ -1462,11 +1468,6 @@ static void ath_configure_filter(struct ieee80211_hw *hw,
+ 	if (sc->opmode == IEEE80211_IF_TYPE_STA ||
+ 		sc->opmode == IEEE80211_IF_TYPE_IBSS) {
+ 		rfilt |= AR5K_RX_FILTER_BEACON;
+-		/* Note: AR5212 requires AR5K_RX_FILTER_PROM to receive broadcasts,
+-		 * perhaps the flags are off, for now to be safe we'll enable it for
+-		 * STA and ADHOC until we have this properly mapped */
+-		if (ah->ah_version == AR5K_AR5212)
+-			rfilt |= AR5K_RX_FILTER_PROM;
+ 	}
+ 
+ 	/* Set the cached hw filter flags, this will alter actually
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index ae4c5b5..3fa36f5 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -309,15 +309,6 @@ struct ath_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 
+ 	hal->ah_phy = AR5K_PHY(0);
+ 
+-	/* Set MAC to bcast: ff:ff:ff:ff:ff:ff, this is using 'mac' as a
+-	 * temporary variable for setting our BSSID. Right bellow we update
+-	 * it with ath5k_hw_get_lladdr() */
+-	memset(mac, 0xff, ETH_ALEN);
+-	ath5k_hw_set_associd(hal, mac, 0);
+-
+-	ath5k_hw_get_lladdr(hal, mac);
+-	ath5k_hw_set_opmode(hal);
+-
+ #ifdef AR5K_DEBUG
+ 	ath5k_hw_dump_state(hal);
+ #endif
+@@ -349,6 +340,10 @@ struct ath_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 	}
+ 
+ 	ath5k_hw_set_lladdr(hal, mac);
++	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
++	memset(hal->bssid, 0xff, ETH_ALEN);
++	ath5k_hw_set_associd(hal, hal->bssid, 0);
++	ath5k_hw_set_opmode(hal);
+ 
+ 	ath5k_hw_set_rfgain_opt(hal);
+ 
+@@ -546,7 +541,6 @@ int ath5k_hw_reset(struct ath_hw *hal, enum ieee80211_if_types op_mode,
+ 	const struct ath5k_rate_table *rt;
+ 	struct ath5k_eeprom_info *ee = &hal->ah_capabilities.cap_eeprom;
+ 	u32 data, noise_floor, s_seq, s_ant, s_led[3];
+-	u8 mac[ETH_ALEN];
+ 	unsigned int i, mode, freq, ee_mode, ant[2];
+ 	int ret;
+ 
+@@ -864,8 +858,9 @@ int ath5k_hw_reset(struct ath_hw *hal, enum ieee80211_if_types op_mode,
+ 	/*
+ 	 * Misc
+ 	 */
+-	memset(mac, 0xff, ETH_ALEN);
+-	ath5k_hw_set_associd(hal, mac, 0);
++	/* XXX: add hal->aid once mac80211 gives this to us */
++	ath5k_hw_set_associd(hal, hal->bssid, 0);
++
+ 	ath5k_hw_set_opmode(hal);
+ 	/*PISR/SISR Not available on 5210*/
+ 	if (hal->ah_version != AR5K_AR5210) {
+@@ -1061,7 +1056,9 @@ static int ath5k_hw_nic_reset(struct ath_hw *hal, u32 val)
+ 	ret = ath5k_hw_register_timeout(hal, AR5K_RESET_CTL, mask, val, false);
+ 
+ 	/*
+-	 * Reset configuration register (for hw byte-swap)
++	 * Reset configuration register (for hw byte-swap). Note that this
++	 * is only set for big endian. We do the necessary magic in
++	 * AR5K_INIT_CFG.
+ 	 */
+ 	if ((val & AR5K_RESET_CTL_PCU) == 0)
+ 		ath5k_hw_reg_write(hal, AR5K_INIT_CFG, AR5K_CFG);
+-- 
+1.5.2.5
 
-I guess it requires some experimentation to see if initializing those
-2 registers differently has any effect. (And if it doesn't, then rt2500usb doesn't
-require to know whether it is operating in B or G mode at all).
-
-Ivo
