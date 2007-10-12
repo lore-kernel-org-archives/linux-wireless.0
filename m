@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:60343 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757306AbXJTSk4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756912AbXJLUxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2007 14:40:56 -0400
-Date: Sat, 20 Oct 2007 20:41:00 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-Subject: rt73usb: support for wireless in Kohjinsha subnotebook
-Message-ID: <20071020184100.GA11640@elf.ucw.cz> (sfid-20071020_194100_407951_5E414006)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 12 Oct 2007 16:53:31 -0400
+Subject: Re: [PATCH] rtl8187: remove NICMAC setting in configure_filters
+	callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071012204512.13393.84281.stgit@magic.sourmilk.net> (sfid-20071012_214915_385291_FE84E4EB)
+References: <20071012204512.13393.84281.stgit@magic.sourmilk.net>
+	 (sfid-20071012_214915_385291_FE84E4EB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-a9tkRK+N61oEfgaIjhs9"
+Date: Fri, 12 Oct 2007 22:53:43 +0200
+Message-Id: <1192222423.4770.84.camel@johannes.berg> (sfid-20071012_215346_955349_D5A5FA63)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
 
-Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
-0x6206... I hope that to be compatible with
-net/wireless/rt2x00/rt73usb.c .
+--=-a9tkRK+N61oEfgaIjhs9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[Sidenote: could we add some real author info into rt73usb.c?]
+On Fri, 2007-10-12 at 16:45 -0400, Michael Wu wrote:
+> @@ -602,8 +600,6 @@ static void rtl8187_configure_filter(struct ieee80211=
+_hw *dev,
+>  	if (mc_count > 0)
+>  		priv->rx_conf |=3D RTL818X_RX_CONF_MULTICAST;
+> =20
+> -	if (priv->rx_conf & RTL818X_RX_CONF_NICMAC)
+> -		*total_flags |=3D FIF_PROMISC_IN_BSS;
 
-I did this on 2.6.23-rc8-mm1 kernel (The RT hack may not be
-neccessary), but then it oopses somewhere in softmac layer. I'll try
-to play with it some more.
+Does this mean you're always operating promiscuously, or was this a bug?
+If the latter, do you not support promisc at all? Or should the FIF flag
+always be set?
 
-If you have any ideas, let me know.
-								Pavel
+johannes
 
---- clean-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-09 09:32:08.000000000 +0200
-+++ linux-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-19 22:19:45.000000000 +0200
-@@ -1580,7 +1580,6 @@
- 
- 	if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
--		return -ENODEV;
- 	}
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF5226) &&
-@@ -1588,7 +1587,6 @@
- 	    !rt2x00_rf(&rt2x00dev->chip, RF5225) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2527)) {
- 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
--		return -ENODEV;
- 	}
- 
- 	/*
-@@ -2080,6 +2078,7 @@
- 	{ USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Qcom */
- 	{ USB_DEVICE(0x18e8, 0x6196), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x18e8, 0x6206), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x18e8, 0x6229), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x18e8, 0x6238), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Senao */
+--=-a9tkRK+N61oEfgaIjhs9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARw/e1qVg1VMiehFYAQLNpxAAr5AwnXIs8LC4l1Qfq5U//B7FT49kKB8k
+ckWBX3kfkFJg0mvMBOApjZlpFX7FrH5X0H9wrquoCbPNaF2SJSjbxf8YOnZK0bLR
+55bbuENGfOq0YqL4SOnYsQtiNoPftTGs7RGNTsLyt7XCu6CjYIutkUXKC4LYCG5Z
+zQXLYxkWy4naqJZkH0aKd5HFwXVYnKgam1Krm/pTxeEr196jKUpourMZjpiXY6Ol
+EGutAsr0Ky/mgWxwfAuOigXxVgJNVSLzVIDTNytiI5G5/yVc6mCglXIJiLNVJDvk
+VB7cMkMQ15BfKbp6+sF3zF9LLaOZAnuJLARX6pRCvrs0TzcVumJSubD7ZhqSWGAp
+TcNhUYiQ/P6TXMYU4XAeOfpIm9fFa4awcExI3nt5VvHQC9EVmrDgHTNP196zowns
+CWXqQPwbizFCUIhgGMHmMUZZMYHUJPFMyAud/9RvDmitm4hex2vBveEVD3dTjPQx
+x83fOFagCp5uT18kK0LJBNXzNnGSiln2ZqrlQsPLsfyeQD8+ykz9Uw3qQZT4bQ3B
+L0NNthC991Eu+wBbdm5MlEpaQCoxw0naN/uANdL3uOXR5VT5p3xpyozOXTIamdPq
+iGKv6OPvVfYUc6czz5UybyLc34TLHSq39BWmUjqdZxnCw4JG+S0G+4a07v6lsL6t
+VSoK57trKRo=
+=lgqd
+-----END PGP SIGNATURE-----
+
+--=-a9tkRK+N61oEfgaIjhs9--
+
