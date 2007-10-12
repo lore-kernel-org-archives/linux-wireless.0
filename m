@@ -1,159 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40229
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbXJ1PUQ (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:60866 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874AbXJLCU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 11:20:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Thu, 11 Oct 2007 22:20:58 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so486802wra
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 19:20:57 -0700 (PDT)
+Date: Thu, 11 Oct 2007 22:21:02 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
 To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Use the retry limit parameters from mac80211
-Date: Sun, 28 Oct 2007 16:19:44 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH] ath5k: Fix and clean mode initialization, prefer G for
+	AR5212
+Message-ID: <20071012022102.GA13394@pogo> (sfid-20071012_032105_618059_65336D9D)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710281619.45073.mb@bu3sch.de> (sfid-20071028_152021_322901_48F846E9)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the limits provided by mac80211.
+Currently you get locked on B mode with AR5212s. This could be partly
+mac80211's fault with a recent regression introduced but ath5k mode 
+initialization right now is pretty sloppy. For AR5212s we also currently 
+start scanning in 5GHz. I've made the mode initialization on ath5k a bit
+clearer and only am registering G mode now instead of both B and G for 
+AR5212s. We now start scanning in 2GHz band. 11Mbps is still the only
+stable rate but at least now we can work and test the other rates
+again.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Note: mac80211 simple rate algo throws us to 1Mbps after assoc, this is by
+	design. I recommend users to set rate to 11M for now after assoc.
+
+This has been tested with AR5211, and AR5212.
+
+Changes-licensed-under: 3-clause-BSD
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+
+---
+ drivers/net/wireless/ath5k/base.c |  105 ++++++++++++++++++++-----------------
+ 1 files changed, 56 insertions(+), 49 deletions(-)
 
 
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-10-28 16:09:00.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-10-28 16:12:51.000000000 +0100
-@@ -75,14 +75,6 @@ module_param_named(bad_frames_preempt, m
- MODULE_PARM_DESC(bad_frames_preempt,
- 		 "enable(1) / disable(0) Bad Frames Preemption");
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 0997577..29559df 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1917,67 +1917,74 @@ static void ath_dump_modes(struct ieee80211_hw_mode *modes)
+ static inline void ath_dump_modes(struct ieee80211_hw_mode *modes) {}
+ #endif
  
--static int modparam_short_retry = B43_DEFAULT_SHORT_RETRY_LIMIT;
--module_param_named(short_retry, modparam_short_retry, int, 0444);
--MODULE_PARM_DESC(short_retry, "Short-Retry-Limit (0 - 15)");
--
--static int modparam_long_retry = B43_DEFAULT_LONG_RETRY_LIMIT;
--module_param_named(long_retry, modparam_long_retry, int, 0444);
--MODULE_PARM_DESC(long_retry, "Long-Retry-Limit (0 - 15)");
--
- static char modparam_fwpostfix[16];
- module_param_string(fwpostfix, modparam_fwpostfix, 16, 0444);
- MODULE_PARM_DESC(fwpostfix, "Postfix for the .fw files to load.");
-@@ -3261,6 +3253,22 @@ static void b43_imcfglo_timeouts_workaro
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- }
- 
-+/* Write the short and long frame retry limit values. */
-+static void b43_set_retry_limits(struct b43_wldev *dev,
-+				 unsigned int short_retry,
-+				 unsigned int long_retry)
-+{
-+	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
-+	 * the chip-internal counter. */
-+	short_retry = min(short_retry, (unsigned int)0xF);
-+	long_retry = min(long_retry, (unsigned int)0xF);
++#define REGISTER_MODE(mode) do { \
++	if (modes[mode].num_channels) { \
++		ret = ieee80211_register_hwmode(hw, &modes[mode]); \
++		if (ret) { \
++			printk(KERN_ERR "can't register hwmode %u\n", mode); \
++			goto err; \
++		} \
++	} \
++} while (0)
 +
-+	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_SRLIMIT,
-+			short_retry);
-+	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT,
-+			long_retry);
-+}
-+
- /* Shutdown a wireless core */
- /* Locking: wl->mutex */
- static void b43_wireless_core_exit(struct b43_wldev *dev)
-@@ -3349,15 +3357,8 @@ static int b43_wireless_core_init(struct
- 	}
- 	b43_hf_write(dev, hf);
+ static int ath_getchannels(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->ah;
+ 	struct ieee80211_hw_mode *modes = sc->modes;
+-	unsigned int i, max;
++	unsigned int i, max_r, max_c;
+ 	int ret;
+-	enum {
+-		A = MODE_IEEE80211A,
+-		B = MODE_IEEE80211G, /* this is not a typo, but workaround */
+-		G = MODE_IEEE80211B, /* to prefer g over b */
+-		T = MODE_ATHEROS_TURBO,
+-		TG = MODE_ATHEROS_TURBOG,
+-	};
  
--	/* Short/Long Retry Limit.
--	 * The retry-limit is a 4-bit counter. Enforce this to avoid overflowing
--	 * the chip-internal counter.
--	 */
--	tmp = limit_value(modparam_short_retry, 0, 0xF);
--	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_SRLIMIT, tmp);
--	tmp = limit_value(modparam_long_retry, 0, 0xF);
--	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_LRLIMIT, tmp);
+ 	BUILD_BUG_ON(ARRAY_SIZE(sc->modes) < 3);
+ 
+ 	ah->ah_country_code = countrycode;
+ 
+-	modes[A].mode = MODE_IEEE80211A;
+-	modes[B].mode = MODE_IEEE80211B;
+-	modes[G].mode = MODE_IEEE80211G;
 -
-+	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
-+			     B43_DEFAULT_LONG_RETRY_LIMIT);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_LFFBLIM, 2);
- 
-@@ -3534,19 +3535,40 @@ static void b43_stop(struct ieee80211_hw
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int b43_op_set_retry_limit(struct ieee80211_hw *hw,
-+				  u32 short_retry_limit, u32 long_retry_limit)
-+{
-+	struct b43_wl *wl = hw_to_b43_wl(hw);
-+	struct b43_wldev *dev;
-+	int err = 0;
+-	max = ARRAY_SIZE(sc->rates);
+-	modes[A].rates = sc->rates;
+-	max -= modes[A].num_rates = ath_copy_rates(modes[A].rates,
+-			ath5k_hw_get_rate_table(ah, MODE_IEEE80211A), max);
+-	modes[B].rates = &modes[A].rates[modes[A].num_rates];
+-	max -= modes[B].num_rates = ath_copy_rates(modes[B].rates,
+-			ath5k_hw_get_rate_table(ah, MODE_IEEE80211B), max);
+-	modes[G].rates = &modes[B].rates[modes[B].num_rates];
+-	max -= modes[G].num_rates = ath_copy_rates(modes[G].rates,
+-			ath5k_hw_get_rate_table(ah, MODE_IEEE80211G), max);
+-
+-	if (!max)
+-		printk(KERN_WARNING "yet another rates found, but there is not "
+-				"sufficient space to store them\n");
+-
+-	max = ARRAY_SIZE(sc->channels);
+-	modes[A].channels = sc->channels;
+-	max -= modes[A].num_channels = ath_copy_channels(ah, modes[A].channels,
+-			MODE_IEEE80211A, max);
+-	modes[B].channels = &modes[A].channels[modes[A].num_channels];
+-	max -= modes[B].num_channels = ath_copy_channels(ah, modes[B].channels,
+-			MODE_IEEE80211B, max);
+-	modes[G].channels = &modes[B].channels[modes[B].num_channels];
+-	max -= modes[G].num_channels = ath_copy_channels(ah, modes[G].channels,
+-			MODE_IEEE80211G, max);
+-
+-	if (!max)
+-		printk(KERN_WARNING "yet another modes found, but there is not "
+-				"sufficient space to store them\n");
+-
+-	for (i = 0; i < ARRAY_SIZE(sc->modes); i++)
+-		if (modes[i].num_channels) {
+-			ret = ieee80211_register_hwmode(hw, &modes[i]);
+-			if (ret) {
+-				printk(KERN_ERR "can't register hwmode %u\n",i);
+-				goto err;
+-			}
++	modes[0].mode = MODE_IEEE80211G;
++	modes[1].mode = MODE_IEEE80211B;
++	modes[2].mode = MODE_IEEE80211A;
 +
-+	mutex_lock(&wl->mutex);
-+	dev = wl->current_dev;
-+	if (unlikely(!dev || (b43_status(dev) < B43_STAT_INITIALIZED))) {
-+		err = -ENODEV;
-+		goto out_unlock;
++	max_r = ARRAY_SIZE(sc->rates);
++	max_c = ARRAY_SIZE(sc->channels);
++	modes[0].rates = sc->rates;
++
++	for (i=0; i <= 2; i++) {
++		struct ieee80211_hw_mode *mode = &modes[i];
++		const struct ath5k_rate_table *hw_rates;
++
++		if (i == 0 ) {
++			mode->rates	= sc->rates;
++			modes->channels	= sc->channels;
++		}
++		else {
++			struct ieee80211_hw_mode *prev_mode = &modes[i-1];
++			int prev_num_r	= prev_mode->num_rates;
++			int prev_num_c	= prev_mode->num_channels;
++			mode->rates	= &prev_mode->rates[prev_num_r];
++			mode->channels	= &prev_mode->channels[prev_num_c];
+ 		}
++
++		hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
++		mode->num_rates    = ath_copy_rates(mode->rates, hw_rates,
++			max_r);
++		mode->num_channels = ath_copy_channels(ah, mode->channels, 
++			mode->mode, max_c);
++		max_r -= modes->num_rates;
++		max_c -= mode->num_channels;
 +	}
-+	b43_set_retry_limits(dev, short_retry_limit, long_retry_limit);
-+out_unlock:
-+	mutex_unlock(&wl->mutex);
 +
-+	return err;
-+}
-+
- static const struct ieee80211_ops b43_hw_ops = {
--	.tx = b43_tx,
--	.conf_tx = b43_conf_tx,
--	.add_interface = b43_add_interface,
--	.remove_interface = b43_remove_interface,
--	.config = b43_dev_config,
--	.config_interface = b43_config_interface,
--	.configure_filter = b43_configure_filter,
--	.set_key = b43_dev_set_key,
--	.get_stats = b43_get_stats,
--	.get_tx_stats = b43_get_tx_stats,
--	.start = b43_start,
--	.stop = b43_stop,
-+	.tx			= b43_tx,
-+	.conf_tx		= b43_conf_tx,
-+	.add_interface		= b43_add_interface,
-+	.remove_interface	= b43_remove_interface,
-+	.config			= b43_dev_config,
-+	.config_interface	= b43_config_interface,
-+	.configure_filter	= b43_configure_filter,
-+	.set_key		= b43_dev_set_key,
-+	.get_stats		= b43_get_stats,
-+	.get_tx_stats		= b43_get_tx_stats,
-+	.start			= b43_start,
-+	.stop			= b43_stop,
-+	.set_retry_limit	= b43_op_set_retry_limit,
- };
++	switch(ah->ah_version) {
++		case AR5K_AR5210:
++			REGISTER_MODE(MODE_IEEE80211A);
++			break;
++		case AR5K_AR5211:
++			REGISTER_MODE(MODE_IEEE80211B);
++			break;
++		case AR5K_AR5212:
++			if (!ah->ah_single_chip)
++				REGISTER_MODE(MODE_IEEE80211A);
++			REGISTER_MODE(MODE_IEEE80211G);
++				break;
++	}
+ 	ath_dump_modes(modes);
  
- /* Hard-reset the chip. Do not call this directly.
-Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c	2007-10-28 16:08:36.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/xmit.c	2007-10-28 16:11:27.000000000 +0100
-@@ -294,6 +294,8 @@ static void generate_txhdr_fw4(struct b4
- 		mac_ctl |= B43_TX4_MAC_STMSDU;
- 	if (phy->type == B43_PHYTYPE_A)
- 		mac_ctl |= B43_TX4_MAC_5GHZ;
-+	if (txctl->flags & IEEE80211_TXCTL_LONG_RETRY_LIMIT)
-+		mac_ctl |= B43_TX4_MAC_LONGFRAME;
- 
- 	/* Generate the RTS or CTS-to-self frame */
- 	if ((txctl->flags & IEEE80211_TXCTL_USE_RTS_CTS) ||
-@@ -342,7 +344,6 @@ static void generate_txhdr_fw4(struct b4
- 			    b43_plcp_get_ratecode_cck(rts_rate);
- 		if (rts_rate_fb_ofdm)
- 			extra_ft |= B43_TX4_EFT_RTSFBOFDM;
--		mac_ctl |= B43_TX4_MAC_LONGFRAME;
- 	}
- 
- 	/* Magic cookie */
+ 	return 0;
+-- 
+1.5.2.5
+
