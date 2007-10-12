@@ -1,70 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3284 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764773AbXJZVFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:05:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org, Marc Pignat <marc.pignat@hevs.ch>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] zd1211rw, fix oops when ejecting install media
-Date: Fri, 26 Oct 2007 17:04:39 -0400
-Message-Id: <11934326832747-git-send-email-linville@tuxdriver.com> (sfid-20071026_220600_294339_D9B05AC8)
-In-Reply-To: <11934326831563-git-send-email-linville@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
- <11934326801557-git-send-email-linville@tuxdriver.com>
- <11934326803769-git-send-email-linville@tuxdriver.com>
- <11934326803330-git-send-email-linville@tuxdriver.com>
- <11934326811535-git-send-email-linville@tuxdriver.com>
- <11934326813508-git-send-email-linville@tuxdriver.com>
- <1193432681145-git-send-email-linville@tuxdriver.com>
- <11934326812028-git-send-email-linville@tuxdriver.com>
- <11934326813245-git-send-email-linville@tuxdriver.com>
- <11934326823646-git-send-email-linville@tuxdriver.com>
- <11934326821301-git-send-email-linville@tuxdriver.com>
- <11934326823109-git-send-email-linville@tuxdriver.com>
- <11934326821662-git-send-email-linville@tuxdriver.com>
- <11934326831029-git-send-email-linville@tuxdriver.com>
- <11934326831563-git-send-email-linville@tuxdriver.com>
+Received: from ug-out-1314.google.com ([66.249.92.175]:51224 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbXJLHWb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2007 03:22:31 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so573825ugc
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 00:22:29 -0700 (PDT)
+Message-ID: <4af2d03a0710120022o1aad59b1na6f92712fea4457@mail.gmail.com> (sfid-20071012_082236_222144_8553E601)
+Date: Fri, 12 Oct 2007 09:22:29 +0200
+From: "Jiri Slaby" <jirislaby@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 0/4] ath5k: promiscuous bug, multicast and some docs
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071011193918.GB4334@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071011193918.GB4334@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marc Pignat <marc.pignat@hevs.ch>
+On 10/11/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> This patch series adds a few things which have been sitting in my
+> queue. Nick has better fixes for two of my previous patches so
+> he'll be sending that. In this series I also added some new docs
+> for some hw interrupts.
 
-The disconnect function can dereference the net_device structure when it
-is never allocated. This is the case when ejecting the device installer.
+Hi,
 
-Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
-Acked-by: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/zd1211rw/zd_usb.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index a9c339e..5326301 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -1041,14 +1041,17 @@ error:
- static void disconnect(struct usb_interface *intf)
- {
- 	struct net_device *netdev = zd_intf_to_netdev(intf);
--	struct zd_mac *mac = zd_netdev_mac(netdev);
--	struct zd_usb *usb = &mac->chip.usb;
-+	struct zd_mac *mac;
-+	struct zd_usb *usb;
- 
- 	/* Either something really bad happened, or we're just dealing with
- 	 * a DEVICE_INSTALLER. */
- 	if (netdev == NULL)
- 		return;
- 
-+	mac = zd_netdev_mac(netdev);
-+	usb = &mac->chip.usb;
-+
- 	dev_dbg_f(zd_usb_dev(usb), "\n");
- 
- 	zd_netdev_disconnect(netdev);
--- 
-1.5.2.4
-
+please check your patches with scripts/checkpatch.pl, patch 2, 3, 4
+and the followed fix doesn't comply with codingstyle.
