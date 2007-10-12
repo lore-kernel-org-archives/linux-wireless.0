@@ -1,101 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:25778 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753400AbXJFBTe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 21:19:34 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so634115wxd
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Oct 2007 18:19:33 -0700 (PDT)
-Date: Fri, 5 Oct 2007 21:20:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 6/6] ath5k: Do not let the driver through for not yet
-	supported radios
-Message-ID: <20071006012057.GF25022@pogo> (sfid-20071006_021936_789835_4C2C344D)
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo> <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo> <20071006011949.GD25022@pogo> <20071006012017.GE25022@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071006012017.GE25022@pogo>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4918 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758053AbXJLVI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2007 17:08:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: ignore junk at end of frame when parsing IEs
+Date: Fri, 12 Oct 2007 16:44:22 -0400
+Message-Id: <11922218622135-git-send-email-linville@tuxdriver.com> (sfid-20071012_220843_801334_77C7EDCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IBM AR5424 card uses the same vendor:device ID as an old AR5212. AR5424
-is not yet supported though. We detect this and report it.
+Some APs send management frames with junk padding after the last IE.
+We already account for a similar problem with some Apple Airport
+devices, but at least one device is known to send more than a single
+extra byte.  The device in question is the Draytek Vigor2900:
 
-OpenBSD has similar checks but they check for 64-bit.
+	http://www.draytek.com.au/products/Vigor2900.php
 
-Changes to ath5k_base.[ch]
-Changes-licensed-under: 3-clause-BSD
+The junk in question looks like an IE that runs off the end of the
+frame.  This cause us to return ParseFailed.  Since the frame in
+question is an association response, this causes us to fail to associate
+with this AP.
 
-Changes to hw.c
-Changes-licensed-under: ISC
+The proposed "fix" is to ignore an IE length that overruns the end of
+the frame if the IE type is unknown.  This won't help if the junk type
+value matches a known IE type, but at least it won't fail association
+otherwise.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath5k/base.c |    1 +
- drivers/net/wireless/ath5k/base.h |    1 +
- drivers/net/wireless/ath5k/hw.c   |   22 ++++++++++++++++++++++
- 3 files changed, 24 insertions(+), 0 deletions(-)
+Thoughts?  I'd love a cleaner solution.
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index caf9562..97a7613 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2423,6 +2423,7 @@ static int __devinit ath_pci_probe(struct pci_dev *pdev,
- 	sc->iobase = mem;
- 	sc->cachelsz = csz * sizeof(u32); /* convert to bytes */
- 	sc->opmode = IEEE80211_IF_TYPE_STA;
-+	sc->pci_express = !!pci_find_capability(pdev, PCI_CAP_ID_EXP);
- 	mutex_init(&sc->lock);
- 	spin_lock_init(&sc->rxbuflock);
- 	spin_lock_init(&sc->txbuflock);
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 1bd1d1f..fde51f1 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -131,6 +131,7 @@ struct ath_softc {
- 	struct ieee80211_rate	rates[AR5K_MAX_RATES * NUM_IEEE80211_MODES];
- 	enum ieee80211_if_types	opmode;
- 	struct ath_hw		*ah;		/* Atheros HW */
-+	unsigned int		pci_express : 1;/* indicates PCI Express */
+For reference:
+
+	https://bugzilla.redhat.com/show_bug.cgi?id=324191
+
+ net/mac80211/ieee80211_sta.c |   31 +++++++++++++++++++------------
+ 1 files changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index e804173..3bbc06d 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -122,20 +122,12 @@ static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
  
- 	int			debug;
+ 	while (left >= 2) {
+ 		u8 id, elen;
++		bool elem_unknown;
  
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 445fa96..5f2edce 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -240,6 +240,28 @@ struct ath_hw *ath5k_hw_attach(u16 device,
- 		 */
- 		hal->ah_single_chip = true;
- 		break;
-+	case PCI_DEVICE_ID_ATHEROS_AR5212_IBM:
-+		/*
-+		* IBM ThinkPads use the same device ID for different
-+		* chipset versions... we differentiate by pci_express
-+		*/
-+		if (sc->pci_express) {
-+			/*
-+			* PCI Express "Mini Card" interface based on the
-+			* AR5424 chipset.
-+			*/
-+			hal->ah_single_chip = true;
-+			/* not yet supported */
-+			dev_info(&sc->pdev->dev, 
-+				"PCI-Express AR5424 not yet supported\n");
-+				ret = -EINVAL;
-+			goto err_free;
-+		} else {
-+			/* Classic Mini PCI interface based on AR5212 */
-+			hal->ah_single_chip = false;
+ 		id = *pos++;
+ 		elen = *pos++;
+ 		left -= 2;
+-
+-		if (elen > left) {
+-#if 0
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "IEEE 802.11 element parse "
+-				       "failed (id=%d elen=%d left=%d)\n",
+-				       id, elen, left);
+-#endif
+-			return ParseFailed;
+-		}
++		elem_unknown = false;
+ 
+ 		switch (id) {
+ 		case WLAN_EID_SSID:
+@@ -208,11 +200,26 @@ static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+ 				      id, elen);
+ #endif
+ 			unknown++;
++			elem_unknown = true;
+ 			break;
+ 		}
+ 
+-		left -= elen;
+-		pos += elen;
++		if (elen > left)
++			if (elem_unknown)
++				left = 0;
++			else {
++#if 0
++				if (net_ratelimit())
++					printk(KERN_DEBUG "IEEE 802.11 element parse "
++					       "failed (id=%d elen=%d left=%d)\n",
++					       id, elen, left);
++#endif
++				return ParseFailed;
++			}
++		else {
++			left -= elen;
++			pos += elen;
 +		}
-+		break;
-+
- 	default:
- 		/*
- 		 * Multi chip solutions
+ 	}
+ 
+ 	/* Do not trigger error if left == 1 as Apple Airport base stations
 -- 
-1.5.2.5
+1.5.2.4
 
