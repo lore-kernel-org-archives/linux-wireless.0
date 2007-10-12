@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:54572 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754619AbXJJT22 (ORCPT
+Received: from av8-1-sn3.vrr.skanova.net ([81.228.9.183]:47886 "EHLO
+	av8-1-sn3.vrr.skanova.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761101AbXJLJ0P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 15:28:28 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so243850nze
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 12:28:27 -0700 (PDT)
-Message-ID: <1ba2fa240710101228vef839abj1aeab0fabf60e449@mail.gmail.com> (sfid-20071010_202833_975056_6B378502)
-Date: Wed, 10 Oct 2007 21:28:25 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
-Cc: "Ferguson, Dana R" <dana.r.ferguson@intel.com>,
-	"Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20071010181019.GJ5962@tuxdriver.com>
+	Fri, 12 Oct 2007 05:26:15 -0400
+Date: Fri, 12 Oct 2007 11:05:17 +0200
+From: Frank de Lange <frank@unternet.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Patrick McHardy <kaber@trash.net>,
+	Frank de Lange <lkml-f@unternet.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [Oops] EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23,
+	latest wireless git)
+Message-ID: <20071012090517.GB6725@unternet.org> (sfid-20071012_102629_457917_F44034DC)
+References: <20071011230030.GA6725@unternet.org> <470EFD24.7020206@trash.net> <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
-	 <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com>
-	 <20071010181019.GJ5962@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1. Blan SSID scanning is not CCX feature. It should work just need to
-be properly configured.
-2. Scanning in iwl driver is always initiated by the driver unlike ipw2X.
-3. CCX is closed standard by Cisco and we are not eligible to open it.
-Talk to Cisco
+On Fri, Oct 12, 2007 at 06:48:17AM +0000, Nick Kossifidis wrote:
+> Can you plz run ath_info tool found in madwifi/tools directory and
+> post here the output ???
 
-Tomas
+#lspci -v
 
-On 10/10/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Wed, Oct 10, 2007 at 10:54:46AM -0700, Ferguson, Dana R wrote:
-> > Hey,
-> >
-> > I bit more info. I am hearing it is a Cisco CCX feature and will not be
-> > included in the open source code.
-> >
-> > Dana
->
-> Huh?  I'm not sure what "it" is?  Care to elaborate?
->
-> I do find it dismaying to hear that Intel is holding back wireless
-> compatibility features from Linux...
->
-> John
-> --
-> John W. Linville
-> linville@tuxdriver.com
->
-> -------------------------------------------------------------------------
-> This SF.net email is sponsored by: Splunk Inc.
-> Still grepping through log files to find problems?  Stop.
-> Now Search log events and configuration files using AJAX and a browser.
-> Download your FREE copy of Splunk now >> http://get.splunk.com/
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+02:02.0 Ethernet controller: Atheros Communications, Inc. AR2413
+802.11bg NIC (rev 01)
+        Subsystem: Askey Computer Corp. Unknown device 7094
+        Flags: bus master, medium devsel, latency 96, IRQ 11
+        Memory at c0200000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [44] Power Management version 2
+
+#ath_info 0xc0200000
+ -==Device Information==-
+MAC Version:  5213A(0x70) 
+MAC Revision: 5213A(0x78) 
+PHY Revision: 2112a(0x56) 
+ -==EEPROM Information==-
+EEPROM Version:     5.2 
+EEPROM Size:        16K
+Regulatory Domain:  0x64 
+ -==== Capabilities ====-
+|  802.11a Support: no   |
+|  802.11b Support: yes  |
+|  802.11g Support: yes  |
+|  RFKill  Support: yes  |
+|  32KHz   Crystal: no   |
+ ========================
+GPIO registers: CR 00000000 DO 00000000 DI 00000017
+
+
+Cheers//Frank
+-- 
+   WWWWW      ________________________
+  ## o o\    /     Frank de Lange     \
+  }#   \|   /                          \
+   \ `--| _/     <Hacker for Hire>      \
+    `---'  \       +46-734352015        /
+            \    frank@unternet.org    /
+             `------------------------'
+  [ "Omnis enim res, quae dando non deficit, dum habetur
+     et non datur, nondum habetur, quomodo habenda est."  ]
