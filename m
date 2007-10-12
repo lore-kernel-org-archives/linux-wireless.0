@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4526 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757787AbXJLNJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 09:09:09 -0400
-Date: Fri, 12 Oct 2007 08:51:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: dragoran <drago01@gmail.com>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] [PATCH 2.6.23.RC9] wpa_supplicant didn't work
-	w/ wpa_secured hidden AP
-Message-ID: <20071012125108.GA6596@tuxdriver.com> (sfid-20071012_140914_986341_6A0BFF8F)
-References: <1192040814.12399.4.camel@abhi-desktop> <20071010202422.GN5962@tuxdriver.com> <f6ca9fed0710120216r282bb4b6tbcb063685a993c95@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0710120216r282bb4b6tbcb063685a993c95@mail.gmail.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:51438 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756865AbXJLUtN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2007 16:49:13 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] rtl8187: remove NICMAC setting in configure_filters callback
+Date: Fri, 12 Oct 2007 16:45:12 -0400
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20071012204512.13393.84281.stgit@magic.sourmilk.net> (sfid-20071012_214915_385291_FE84E4EB)
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 12, 2007 at 11:16:52AM +0200, dragoran wrote:
-> The patch seems not to work for me, I tested with 2.6.23-6.fc8 (where
-> the patch is included)... played with ap_scan ... disabled hw_scan but
-> I was unable to acciotate.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Yeah, it seems like a no-op to me as well.  Does it actually help anyone?
+NICMAC should always be set.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+
+ drivers/net/wireless/rtl8187_dev.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 643919a..590f4b4 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -588,8 +588,6 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 
+ 	*total_flags = 0;
+ 
+-	if (changed_flags & FIF_PROMISC_IN_BSS)
+-		priv->rx_conf ^= RTL818X_RX_CONF_NICMAC;
+ 	if (changed_flags & FIF_ALLMULTI)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_MULTICAST;
+ 	if (changed_flags & FIF_FCSFAIL)
+@@ -602,8 +600,6 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 	if (mc_count > 0)
+ 		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
+ 
+-	if (priv->rx_conf & RTL818X_RX_CONF_NICMAC)
+-		*total_flags |= FIF_PROMISC_IN_BSS;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
+ 		*total_flags |= FIF_ALLMULTI;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_FCS)
+
