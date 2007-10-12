@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:6906 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753377AbXJSN6m (ORCPT
+Received: from av9-2-sn2.hy.skanova.net ([81.228.8.180]:55413 "EHLO
+	av9-2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759892AbXJLJHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 09:58:42 -0400
-Received: by an-out-0708.google.com with SMTP id b36so85088ana
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2007 06:58:41 -0700 (PDT)
-Message-ID: <40f31dec0710190658r5bdf5662u47e60afe7178a000@mail.gmail.com> (sfid-20071019_145848_232461_DDD7703A)
-Date: Fri, 19 Oct 2007 16:58:40 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 0/4] ath5k: Misc cleanups
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20071018210748.GE8510@tuxdriver.com>
+	Fri, 12 Oct 2007 05:07:38 -0400
+Date: Fri, 12 Oct 2007 11:07:28 +0200
+From: Frank de Lange <lkml-f@unternet.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Patrick McHardy <kaber@trash.net>,
+	Frank de Lange <lkml-f@unternet.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [Oops] EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23,
+	latest wireless git)
+Message-ID: <20071012090728.GA9037@unternet.org> (sfid-20071012_100800_198994_83335FBF)
+References: <20071011230030.GA6725@unternet.org> <470EFD24.7020206@trash.net> <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <40f31dec0710161418m72e991b2x36428e39f0766e1c@mail.gmail.com>
-	 <4af2d03a0710161507h7fac4117k168c592dd31c7dff@mail.gmail.com>
-	 <40f31dec0710161512q78c21fbv9426817972db2d1d@mail.gmail.com>
-	 <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
-	 <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com>
-	 <20071018210748.GE8510@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/19, John W. Linville <linville@tuxdriver.com>:
-> On Thu, Oct 18, 2007 at 12:34:14AM +0300, Nick Kossifidis wrote:
-> > 2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
-> > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > > > 2007/10/17, Jiri Slaby <jirislaby@gmail.com>:
-> > > > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > > > > > Some cleanups i did today, just to get used to git etc, hope i'm doing
-> > > > > > this right ;-)
-> > > > >
-> > > > > Patches seems to be fine, thanks for them, but your e-mailer seems to
-> > > > > wrap lines and change tabs to 8 spaces in your patches, which makes it
-> > > > > unmergeable...
-> > > > >
-> > > >
-> > > > Ouch ! Sorry for that, it seems gmail did it again. Can i send them as
-> > > > attachments ???
-> > >
-> > > Here's a guide to use gmail with mutt, then you can send as inline attachments.
-> > >
-> > > http://people.aapt.net.au/~adjlstrong/mutt.html
-> > >
-> > > Worked for me.
-> > >
-> > >   Luis
-> > >
-> >
-> > Just tried to commit from another acount (mick@ics.forth.gr) with
-> > squirellmail and last one with horde, let's see how it will arive. If
-> > it doesn't work i'll try with mutt and gmail...
->
-> There was still some line-wrapping.  I fixed 1-3 by hand, but 4
-> ("ath5k: Maintain naming scheme") just had too many instances for me to
-> fix-up.  Please do try to use mutt or another "sane" MUA in the future.
->
-> Thanks!
->
-> John
-> --
-> John W. Linville
-> linville@tuxdriver.com
->
+On Fri, Oct 12, 2007 at 06:48:17AM +0000, Nick Kossifidis wrote:
+> Can you plz run ath_info tool found in madwifi/tools directory and
+> post here the output ???
 
-ACK Thanx to Michael Renzmann i got a @madwifi.org account. Sending
-the last patch from there using mutt. Let me know if it's O.K. so i
-can continue posting patches this way ;-)
+#lspci -v
 
+02:02.0 Ethernet controller: Atheros Communications, Inc. AR2413
+802.11bg NIC (rev 01)
+        Subsystem: Askey Computer Corp. Unknown device 7094
+        Flags: bus master, medium devsel, latency 96, IRQ 11
+        Memory at c0200000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [44] Power Management version 2
+
+#ath_info 0xc0200000
+ -==Device Information==-
+MAC Version:  5213A(0x70)
+MAC Revision: 5213A(0x78)
+PHY Revision: 2112a(0x56)
+ -==EEPROM Information==-
+EEPROM Version:     5.2
+EEPROM Size:        16K
+Regulatory Domain:  0x64
+ -==== Capabilities ====-
+|  802.11a Support: no   |
+|  802.11b Support: yes  |
+|  802.11g Support: yes  |
+|  RFKill  Support: yes  |
+|  32KHz   Crystal: no   |
+ ========================
+GPIO registers: CR 00000000 DO 00000000 DI 00000017
+
+
+Cheers//Frank
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+   WWWWW      ________________________
+  ## o o\    /     Frank de Lange     \
+  }#   \|   /                          \
+   \ `--| _/     <Hacker for Hire>      \
+    `---'  \       +46-734352015        /
+            \    frank@unternet.org    /
+             `------------------------'
+  [ "Omnis enim res, quae dando non deficit, dum habetur
+     et non datur, nondum habetur, quomodo habenda est."  ]
