@@ -1,79 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:61609 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbXJMHef (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:42610 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756861AbXJLKqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 03:34:35 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so969479fkz
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 00:34:34 -0700 (PDT)
-Message-ID: <47107506.3080303@gmail.com> (sfid-20071013_083440_166959_FE789F60)
-Date: Sat, 13 Oct 2007 09:34:30 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 12 Oct 2007 06:46:33 -0400
+Received: from vs30d.wh2.ocn.ne.jp (222.146.55.198)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-019535990
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 19:46:31 +0900 (JST)
+From: bruno randolf <bruno@thinktube.com>
+To: linux-wireless@vger.kernel.org
+Subject: atheros hardware needs padding for QoS data
+Date: Fri, 12 Oct 2007 19:46:29 +0900
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer
- G	for AR5212
-References: <20071012150438.GC9407@pogo> <20071012150543.GD9407@pogo> <20071012150709.GE9407@pogo> <20071012150745.GF9407@pogo> <4af2d03a0710121433r1f32aaabt4bb8d50c61ef12d5@mail.gmail.com> <20071012223757.GA4994@pogo>
-In-Reply-To: <20071012223757.GA4994@pogo>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710121946.30024.bruno@thinktube.com> (sfid-20071012_114641_137646_A74F979B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/13/2007 12:37 AM, Luis R. Rodriguez wrote:
-> [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer G for AR5212
-> 
-> Currently you get locked on B mode with AR5212s. This could be partly
-> mac80211's fault with a recent regression introduced but ath5k mode
-> initialization right now is pretty sloppy. For AR5212s we also currently
-> start scanning in 5GHz. I've made the mode initialization on ath5k a bit
-> clearer and only am registering G mode now instead of both B and G for
-> AR5212s. 11Mbps is still the only stable rate but at least now we can
-> work and test the other rates again.
-> 
-> Note: mac80211 simple rate algo throws us to 1Mbps after assoc, this is by
->         design. I recommend users to set rate to 11M for now after assoc.
-> 
-> Changes-licensed-under: 3-clause-BSD
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+hello!
 
-Acked-by: Jiri Slaby <jirislaby@gmail.com>
+it seems the atheros hardware needs a padding to 4 byte boundaries after the 
+801.11 header when it sends QoS frames and it will add such a padding 
+automatically when it receives QoS data frames. 
 
-> ---
->  drivers/net/wireless/ath5k/base.c |  106 ++++++++++++++++++++-----------------
->  net/mac80211/ieee80211_ioctl.c    |    5 ++-
->  2 files changed, 61 insertions(+), 50 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 18ee995..8413950 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-[...]
-> +	modes[0].mode = MODE_IEEE80211G;
-> +	modes[1].mode = MODE_IEEE80211B;
-> +	modes[2].mode = MODE_IEEE80211A;
-> +
-> +	max_r = ARRAY_SIZE(sc->rates);
-> +	max_c = ARRAY_SIZE(sc->channels);
-> +
-> +	for (i = 0; i <= 2; i++) {
-> +		struct ieee80211_hw_mode *mode = &modes[i];
-> +		const struct ath5k_rate_table *hw_rates;
-> +
-> +		if (i == 0) {
-> +			modes[0].rates	= sc->rates;
-> +			modes->channels	= sc->channels;
+in my case this made the ath5k driver associate with an QoS enabled AP (same 
+type of card with the madwifi driver in default config) fine, but i could not 
+get any ARP requests thru - since the padding was missing there were 2 bytes 
+lost in the packet received on the AP side, so no further communication...
 
-:) some kind of personal diversity :D
+this need for padding is also reflected in the madwifi code and this comment:
+	/*
+	 * Indicate we need the 802.11 header padded to a
+	 * 32-bit boundary for 4-address and QoS frames.
+	 */
 
->  	ath_dump_modes(modes);
+i created the following simple hack, to see if the problem really is the 
+missing padding. it just adds the padding all the time, so it will only work 
+with QoS enabled APs, but it makes me able to communicate with my QoS AP.
 
-BTW. have you tried to compare outputs from this function before the change and
-after it?
+i didn't see how mac80211 would allow to solve this elegantly at this time. 
+are there any other drivers with a similar kind of padding requirement? how 
+could that be implemented cleanly?
 
-regards,
--- 
-Jiri Slaby (jirislaby@gmail.com)
-Faculty of Informatics, Masaryk University
+luis, does this hack fix your problem with DHCP too?
+
+bruno
+
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 064924c..bb11e63 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1019,6 +1019,8 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+                return TXRX_DROP;
+
+        hdrlen = ieee80211_get_hdrlen(fc);
++       if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)
++               hdrlen = hdrlen + 2;
+
+        /* convert IEEE 802.11 header + possible LLC headers into Ethernet
+         * header
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 957ec3c..6be9b95 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1405,7 +1405,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+        if (sta) {
+                if (sta->flags & WLAN_STA_WME) {
+                        fc |= IEEE80211_STYPE_QOS_DATA;
+-                       hdrlen += 2;
++                       hdrlen += 4; //2;
+                }
+                sta_info_put(sta);
+        }
