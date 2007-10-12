@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:41773 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758381AbXIXSqa (ORCPT
+Received: from iggypop2.siwnet.net ([81.216.65.12]:54798 "EHLO
+	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbXJLKHm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 14:46:30 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3072043pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2007 11:46:29 -0700 (PDT)
-Message-ID: <43e72e890709241146o64afcf97qa005d6a2686df183@mail.gmail.com>
-Date: Mon, 24 Sep 2007 14:46:28 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/3] Net: ath5k, make its own directory
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <2595810412809010611@pripojeni.net>
+	Fri, 12 Oct 2007 06:07:42 -0400
+Message-ID: <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com> (sfid-20071012_110748_269160_708B9455)
+In-Reply-To: <200710112005.56101.IvDoorn@gmail.com>
+References: <fdqhn4$qab$1@sea.gmane.org>
+    <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+    <1192094159.4770.21.camel@johannes.berg>
+    <200710112005.56101.IvDoorn@gmail.com>
+Date: Fri, 12 Oct 2007 11:04:05 +0200 (CEST)
+Subject: Re: rt2500pci 2.0.9 not working
+From: "Marcus Better" <marcus@better.se>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2595810412809010611@pripojeni.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/24/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> ath5k, make its own directory
->
-> Changes-licensed-under: ISC
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Ivo van Doorn wrote:
+> Patch added below.
 
-Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Kind-of works. I can connect but only at 1 Mb according to iwconfig.
 
-  Luis
+>> printk(KERN_DEBUG "selected mode %d\n", local->oper_hw_mode->mode);
+>> printk(KERN_DEBUG "select channel %d\n", local->oper_channel);
+
+Oct 12 10:47:23 better kernel: selected mode 2
+Oct 12 10:47:23 better kernel: select channel -539241232
+
+Marcus
+
+
