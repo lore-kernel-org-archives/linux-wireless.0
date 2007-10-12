@@ -1,72 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from duky.chevillot.net ([213.41.185.64]:33589 "EHLO
-	gaia.chevillot.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650AbXJ2NGQ (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:48574 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbXJLOG2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 09:06:16 -0400
-Date: Mon, 29 Oct 2007 13:55:41 +0100
-From: Guillaume Chevillot <guillaume@chevillot.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap <hostap@shmoo.com>, Chuck Tuffli <CTuffli@dspg.com>,
-	Guillaume Chevillot <guillaume@chevillot.net>,
-	Alexander Kotelnikov <sacha@myxomop.com>
-Subject: Re: [FYI] hostapd state with mac80211 on linux
-Message-ID: <20071029125541.GA4304@chevillot.net> (sfid-20071029_130625_292586_78932220)
-References: <1193338400.4406.4.camel@johannes.berg>
+	Fri, 12 Oct 2007 10:06:28 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1672633pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 07:06:26 -0700 (PDT)
+Message-ID: <43e72e890710120706lbcf41a1sbff7845c6323211b@mail.gmail.com> (sfid-20071012_150632_293992_21470C5F)
+Date: Fri, 12 Oct 2007 10:06:26 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [PATCH 3/4] Don't read AR5K_RAC_PISR on AR5210, document ath5k_int
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
-In-Reply-To: <1193338400.4406.4.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo>
+	 <20071011194630.GA9304@pogo> <20071011194934.GA9403@pogo>
+	 <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/11/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> I should have added something inside ath5kreg.h, sry for that...
+>
+> (?) = not sure
+>
+> > + * @AR5K_INT_RXDESC: ??
+> Request RX descriptor/Read RX descriptor (?)
+>
+> > + * @AR5K_INT_RXNOFRM: ??
+> No frame received (?)
+>
+> > + * @AR5K_INT_RXEOL: received End Of List for VEOL (Virtual End Of List). The
+> > + *     Queue Control Unit (QCU) signals an EOL interrupt only if a descriptor's
+> > + *     LinkPtr is NULL. For more details, refer to:
+> > + *     http://www.freepatentsonline.com/20030225739.html
+>
+> > + * @AR5K_INT_RXORN: indicates a hardware reset is required
+> Rx overrun is not always fatal, on some chips we can continue
+> operation without reseting the card, that's why int_fatal is not
+> common for all chips ;-)
+>
+> > + * @AR5K_INT_TX: mask to identify received frame interrupts, of type
+> > + *     AR5K_ISR_TXOK or AR5K_ISR_TXERR
+> > + * @AR5K_INT_TXDESC: ??
+> Request TX descriptor/Read TX status descriptor (?)
+>
+> > + * @AR5K_INT_TXURN: received when we should increase the TX trigger threshold
+> > + *     We currently do increments on interrupt by
+> > + *     (AR5K_TUNE_MAX_TX_FIFO_THRES - current_trigger_level) / 2
+> > + * @AR5K_INT_MIB: Indicates the Management Information Base counters should be
+> > + *     checked. We should do this with ath5k_hw_update_mib_counters() but
+> > + *     it seems we should also then do some noise immunity work.
+>
+> > + * @AR5K_INT_RXPHY: ??
+> RX PHY Error
+>
+> > + * @AR5K_INT_RXKCM: ??
+> > + * @AR5K_INT_SWBA: SoftWare Beacon Alert - indicates its time to send a
+> > + *     beacon that must be handled in software. The alternative is if you
+> > + *     have VEOL support, in that case you let the hardware deal with things.
+> > + * @AR5K_INT_BMISS: If in STA mode this indicates we have stopped seeing
+> > + *     beacons from the AP have associated with, we should probably try to
+> > + *     reassociate. When in IBSS mode this might mean we have not received
+> > + *     any beacons from any local stations. Note that every station in an
+> > + *     IBSS schedules to send beacons at the Target Beacon Transmission Time
+> > + *     (TBTT) with a random backoff.
+> > + * @AR5K_INT_BNR: Beacon Not Ready interrupt - ??
+>
+> > + * @AR5K_INT_GPIO: ??
+> GPIO interrupt used for RF Kill, we should handle this inside
+> interrupt handler, until then i've disabled it because it results an
+> interrupt storm in case RF Kill switch is off.
+>
+> > + * @AR5K_INT_NOCARD: signals the card has been removed
+> There is no such interrupt, it's software stuff used in hal. We can
+> always check for pending interrupts by reading that register (check
+> out is_intr_pending) and get rid of this.
 
---CE+1k2dSO48ffgeK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Since I'm resending, I've added these new comments. However I'm
+leaving @AR5K_INT_NOCARD for now as it does seem to be read in hw:
 
-> hostapd works with
->  - kernel 2.6.24-rc1
->  - plus my patches from http://johannes.sipsolutions.net/patches/kernel/all/
->  - plus the commit 5c58298c2536252ab95aa2b1497ab47eb878ca5d from net-2.6
->    ([NETLINK]: Fix ACK processing after netlink_dump_start)
->  - my hostapd patches from http://johannes.sipsolutions.net/patches/hostap/all/
-I tried with a kernel downloaded from git (so with the netlink commit
-already merge into) without success.
 
-Some code of the old interface has been removed so I had to apply some
-of your patches manually and tried to reinsert the removed code to be able
-to compile. I did this quickly so I suppose I forgot to re-add some
-code.
 
-After compiling kernel and hostapd, hostapd complains the same that
-before with this error message more :
-rmdir[ctrl_interface]: No such file or directory
+        if (hal->ah_version == AR5K_AR5210) {
+                data = ath5k_hw_reg_read(hal, AR5K_ISR);
+                if (unlikely(data == AR5K_INT_NOCARD)) {
+                        *interrupt_mask = data;
+                        return -ENODEV;
+                }
+        } else {
+                /*
+                 * Read interrupt status from the Read-And-Clear shadow register
+                 * Note: PISR/SISR Not available on 5210
+                 */
+                data = ath5k_hw_reg_read(hal, AR5K_RAC_PISR);
+        }
 
-And stops here.
+        /*
+         * Get abstract interrupt mask (HAL-compatible)
+         */
+        *interrupt_mask = (data & AR5K_INT_COMMON) & hal->ah_imr;
 
-So I think, you will have to do one more patch for the rc2, ...
-
-Tell me if I am wrong, but your patches "just" keep the old interface,
-master mode code and others previously removed. So, new code will have
-to be done to re-enable master mode and a driver_mac80211.c (rather than
-a driver_deviscape.c) will have to be done for hostapd ?
-
-Regards,
-Guillaume
-
---CE+1k2dSO48ffgeK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHJdhNPULMpKkMZuMRApEhAJ9lPtdX9Y/iNaNbbFB3sNzwMEy5nQCgskid
-NMwHrmv15SVBLbx7r6GjKHY=
-=GIk4
------END PGP SIGNATURE-----
-
---CE+1k2dSO48ffgeK--
+        if (unlikely(data == AR5K_INT_NOCARD))
+                return -ENODEV;
