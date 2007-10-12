@@ -1,72 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60858 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50592 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765018AbXJRLzY (ORCPT
+	with ESMTP id S1754378AbXJLUsT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 07:55:24 -0400
-Subject: Re: [PATCH] mac80211: make ieee802_11_parse_elems return void
+	Fri, 12 Oct 2007 16:48:19 -0400
+Subject: Mode/Channel/Bitrate API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071017140444.GA5744@tuxdriver.com>
-References: <1192588723322-git-send-email-linville@tuxdriver.com>
-	 <1192608911.8841.6.camel@johannes.berg>
-	 <20071017140444.GA5744@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OleWsM74qjWBtFDRruKi"
-Date: Thu, 18 Oct 2007 13:56:17 +0200
-Message-Id: <1192708577.15285.0.camel@johannes.berg> (sfid-20071018_125532_286528_8B8BBCE2)
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ukypSlx8S6+wUM/nDaDf"
+Date: Fri, 12 Oct 2007 22:48:30 +0200
+Message-Id: <1192222110.4770.81.camel@johannes.berg> (sfid-20071012_214822_655609_9AA1C92C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-OleWsM74qjWBtFDRruKi
+--=-ukypSlx8S6+wUM/nDaDf
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-10-17 at 10:04 -0400, John W. Linville wrote:
-> On Wed, Oct 17, 2007 at 10:15:11AM +0200, Johannes Berg wrote:
-> > On Tue, 2007-10-16 at 22:38 -0400, John W. Linville wrote:
-> >=20
-> > Looks good to me, but
-> >=20
-> > > -	/* Do not trigger error if left =3D=3D 1 as Apple Airport base stat=
-ions
-> > > -	 * send AssocResps that are one spurious byte too long. */
-> > > -
-> > > -	return unknown ? ParseUnknown : ParseOK;
-> > > +	return;
-> >=20
-> > huh?
->=20
-> You don't like the bare return at the end?  Or are you questioning
-> something else?
+Hey,
 
-Bare return at the end of a void functions seems.. pointless.
+So many people seem to agree that the capability registering in mac80211
+is somewhat awkward to use. Also, it doesn't really match how hardware
+works with the separation of B and G mode.
+
+I've been thinking about this for a while and would like to get your
+input on the following replacement API.
+
+First, I think we should completely get rid of the mode stuff. This is
+an artificial distinction between hardware supports operating in
+frequency bands, not in modes, and the actual mode differences are
+controlled differently.
+
+Hence, what I'm thinking is that
+
+ (a) the driver registers which channel center frequencies it can
+     operate with, it could in theory just be a range (e.g. 2400-2500
+     MHz) or more practically be list of center frequencies. Just
+     contains frequencies and possibly hardware dependent values for the
+     frequency. This is done in "bands", something like
+     FREQUENCY_BAND_2_4GHZ and FREQUENCY_BAND_5GHZ, "bands" replace the
+     current "modes".
+ (b) additionally, the driver registers as flags
+     - whether it can support G mode short slot operation
+     - whether it can receive B mode short barker preambles
+     (both of which are only relevant if it supports 2.4 GHz operation)
+ (c) for each registered band, the driver registers which bitrates the
+     hw supports. this implicitly defines the modulation too.
+ (d) now, selecting a channel by frequency is unique, but we need to
+     give new options to select short slot, short preamble and allowed
+     bitrates. For client mode, these are initialised to what the AP
+     supports and you can't for example turn off short slot when the AP
+     requires it; for AP mode it's initialised to what the HW supports
+     but if you want less you can select that. Rate control algorithms
+     need to take into account this as well similar to what they already
+     do.
+
+Does anyone see problems with this? I think it matches hardware much
+better than the current scheme where B and G mode almost totally
+overlap. Also, right now we only advertise short preamble for when we
+have G mode support which is wrong since short preamble was an optional
+feature of 11B, currently 11B hardware that supports short preambles
+will never be able to associate to an AP that requires it with mac80211.
 
 johannes
 
---=-OleWsM74qjWBtFDRruKi
+--=-ukypSlx8S6+wUM/nDaDf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARxdJ4KVg1VMiehFYAQKuyA/+MIO/b83lM+bCSfex/MfQoK4TrpAWos9r
-KXEdIBcZDEbTId8cxMiQsY8tJh73wasEvJbY5on4Rh2RIDV0xH4oO8b036ThgMOT
-P0m17p0CkH5sLozaafHCPTIWdm0EHEq9+r+bSYelVs6rXLhXpgLoxuXzSXvsX5JP
-LPBltEiFtemgAeu//N+k1H2694DYA0C/rra0wy3WmkXsqKJEb+0nhdypWh8+YEg1
-6hpLrTAg35pOeiouo0tXVDE/xRCFCDdagLH/arTTzGT5FiSKSmw/DT6owA0zQWUK
-kxlvZAKky88oczl6toymBIfVLWJKpA+WADcvDEZ8/eVl4uX9t2wqgQDZqjVeWp6F
-TkDrg09V2z//9JgIMVYaM22Hi9Y1Uttwg4GgsmVcHcunrs2ETE/529agfEZZPNvp
-yyD+yEaDhNtibZ4Qrzhhez8MvIbdNaDvOjA5l8ulGgI4MFlEpBU8+V/a3Hdf9D4l
-wcUipbHNQwjNLyuKxCur034U9y0nGJJEsa1aTwvaTk4ZCZ5jJgsnI9IXxHvZzyqL
-UYfkFwXsTobqw5YAiWw+0DiFhiD6GdcahYlxFN/whLj/6+z/PFMOo6wlNGeNWqUd
-vfMYT2caNAPLkD4IYskcTHw9K/aOGIwMhyavsRfA/4AIgAPvWB3RinwJqu2n0uWD
-knWv+c16bXI=
-=2Sbw
+iQIVAwUARw/dnaVg1VMiehFYAQJkdhAArQYkT59BDtttlyJgwyyyPkaBsmmUo/yl
+yNlJBD6QehVrb0ZfNtWhEt4+YCgOgcjjLeOijCGFG7KPHI+CyGnvnzkCQJxx0Q8I
+xY3N2pRZwb9zXAXqAhqnZDYg0b1v0JrRNlUfbxuLpcjIIY/CZ97/L57CtucFMMqN
+ZlwfZKsFdCKlD77H5K9imTcQmMuDRWbuXNFPZqMfV2mWGk7Pu27fj3CRS/6KFAes
+stSZUoPa48lTksvYtSqyxtRtvMsZw0BUnkg5Mze1igWDRgE5YA9m0zTusmKOZe8H
+T57/NLBCeiiXN3rsqRBq2Btc1Q5e1NProxF2Ka4hHzLOKIoPhFZ1KXm24AJAeZGP
+3dfdM2c2CmLcKDjcH7bjdLroOP2/BhDBT/ftVFbRgnk9gMNtNRF20mboNdT23F7T
+50NaCah+Tk+VCx7HXAknIoN0hIJkPdpZTc8MJHk+F5MsQN6eChWsWvfkaJUwkwb5
+uA1YrpFE2/GCJLYmApa/aLPLcDWHPdR0TzZbAxzPycbuUFCNuyMsvOpEn7UhRjUg
+SZ1IJQ55L8DLmjwJU6Z3o3+gmCuCAJ88zdfeSG47cAlUXqrt449NaY6BXEzoI58y
+HzZo3fRS2Px3TK+6e94NfN/KUNQixdo1DUB2XxIxBchkEV0TtzeMnNGgMcjosRea
+FoamVgovF2I=
+=OyNi
 -----END PGP SIGNATURE-----
 
---=-OleWsM74qjWBtFDRruKi--
+--=-ukypSlx8S6+wUM/nDaDf--
 
