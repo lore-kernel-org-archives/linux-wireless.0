@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:14484 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbXJ0LZJ (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:51946 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757232AbXJLVCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 07:25:09 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1035387fkz
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:08 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 9/21] rt2x00: Release rt2x00 2.0.11
-Date: Sat, 27 Oct 2007 13:39:05 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710271334.34192.IvDoorn@gmail.com>
-In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+	Fri, 12 Oct 2007 17:02:32 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rtl8187: remove NICMAC setting in configure_filters callback
+Date: Fri, 12 Oct 2007 16:59:54 -0400
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20071012204512.13393.84281.stgit@magic.sourmilk.net> <1192222423.4770.84.camel@johannes.berg>
+In-Reply-To: <1192222423.4770.84.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710271339.05492.IvDoorn@gmail.com> (sfid-20071027_122522_051164_B8705BF7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart70135652.auGDIGW0ZU";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710121659.58374.flamingice@sourmilk.net> (sfid-20071012_220237_665411_2286910D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Version bump.
+--nextPart70135652.auGDIGW0ZU
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Friday 12 October 2007 16:53, Johannes Berg wrote:
+> Does this mean you're always operating promiscuously, or was this a bug?
+Just a bug.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index e3fbcb8..e488d9b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -42,7 +42,7 @@
-  * Module information.
-  * DRV_NAME should be set within the individual module source files.
-  */
--#define DRV_VERSION	"2.0.10"
-+#define DRV_VERSION	"2.0.11"
- #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
- 
- /*
--- 
-1.5.3.4
+> If the latter, do you not support promisc at all? Or should the FIF flag
+> always be set?
+I think it can be done by a different bit, but I need to check.
 
+-Michael Wu
+
+--nextPart70135652.auGDIGW0ZU
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD4DBQBHD+BOT3Oqt9AH4aERAkEdAJjAdQklUKCLpqxLXV1YwLXYw/apAKCaxFkc
+rzK7JAY+bMR7N+V0ceBA0A==
+=0qbs
+-----END PGP SIGNATURE-----
+
+--nextPart70135652.auGDIGW0ZU--
