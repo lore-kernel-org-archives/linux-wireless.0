@@ -1,62 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:47842 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbXJNErB (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:59205 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758507AbXJLGsU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2007 00:47:01 -0400
-Date: Sat, 13 Oct 2007 23:46:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: kay.sievers@vrfy.org, linux-kernel@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] ssb: Fix regression in 2.6.23-git3 due to change in
- calling add_uevent_var
-Message-ID: <47119f37.hwmEVx/qSP6GAYhm%Larry.Finger@lwfinger.net> (sfid-20071014_054708_735771_875AA025)
+	Fri, 12 Oct 2007 02:48:20 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1490461pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 23:48:18 -0700 (PDT)
+Message-ID: <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com> (sfid-20071012_074827_901304_670C21D4)
+Date: Fri, 12 Oct 2007 06:48:17 +0000
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Patrick McHardy" <kaber@trash.net>
+Subject: Re: [Oops] EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23, latest wireless git)
+Cc: "Frank de Lange" <lkml-f@unternet.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <470EFD24.7020206@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <20071011230030.GA6725@unternet.org> <470EFD24.7020206@trash.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 7eff2e7a8b65c25920207324e56611150eb1cd9a, the calling sequence
-for add_uevent_var was changed, but the ssb driver was not modified, which
-leads to a "Unable to handle kernel paging request" oops. This patch fixes
-the problem.
+Can you plz run ath_info tool found in madwifi/tools directory and
+post here the output ???
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+2007/10/12, Patrick McHardy <kaber@trash.net>:
+> Frank de Lange wrote:
+> > Just got an Atheros-based card from eBay, stuffed it into my Thinkpad
+> > T23 (ignoring the complaints about two ethernet cards being installed)
+> > and got myself this Oops:
+> >
+> > BUG: unable to handle kernel NULL pointer dereference at virtual address
+> > 00000000
+> >  [...]
+> > CPU:    0
+> >    Not tainted VLI
+> > EFLAGS: 00010246   (2.6.23-t23-01 #3)
+> > EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k]
+>
+>
+> I had the same Oops with the internal card of a Thinkpad T42.
+> The reason is that the rate table lookup for MODE_ATHEROS_TURBOG
+> returns NULL because the capability bit is not set. I haven't
+> tracked down the cause yet, but this patch fixes the Oops for me.
+>
+> On a related issue, the same card can receive packets fine,
+> but all packets sent are received with the first 16 bytes of
+> ethernet and IP header missing (the remaining data is fine).
+> I didn't find the cause for this either, the packet appears
+> to be fine up to the tx function. Anyone have a hint where to
+> continue looking? Could this be related to the missing
+> capability bit and an incorrect rate table being used?
+>
+> lspci -vvv:
+>
+> 02:02.0 Ethernet controller: Atheros Communications, Inc. AR5212
+> 802.11abg NIC (rev 01)
+>         Subsystem: AMBIT Microsystem Corp. Unknown device 0408
+>         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV+ VGASnoop-
+> ParErr- Stepping- SERR+ FastB2B-
+>         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR-
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: Memory at c0210000 (32-bit, non-prefetchable) [size=64K]
+>         Capabilities: [44] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
+> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+>
+> iwconfig output:
+>
+> ath0      IEEE 802.11b  ESSID:"wlan"
+>           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+>           Tx-Power=27 dBm
+>           Retry min limit:7   RTS thr:off   Fragment thr=2346 B
+>           Encryption key:[...]
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index ae4c5b5..8018af5 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -499,9 +499,10 @@ const struct ath5k_rate_table *ath5k_hw_get_rate_table(struct ath_hw *hal,
+>  {
+>         AR5K_TRACE;
+>
+> +#if 0
+>         if (!test_bit(mode, hal->ah_capabilities.cap_mode))
+>                 return NULL;
+> -
+> +#endif
+>         /* Get rate tables */
+>         switch (mode) {
+>         case MODE_IEEE80211A:
+>
+>
 
- drivers/ssb/main.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Index: linux-2.6/drivers/ssb/main.c
-===================================================================
---- linux-2.6.orig/drivers/ssb/main.c
-+++ linux-2.6/drivers/ssb/main.c
-@@ -320,22 +320,17 @@ static int ssb_bus_match(struct device *
- 	return 0;
- }
- 
--static int ssb_device_uevent(struct device *dev, char **envp, int num_envp,
--			     char *buffer, int buffer_size)
-+static int ssb_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
- 	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
--	int ret, i = 0, length = 0;
-+	int ret;
- 
- 	if (!dev)
- 		return -ENODEV;
- 
--	ret = add_uevent_var(envp, num_envp, &i,
--			     buffer, buffer_size, &length,
--			     "MODALIAS=ssb:v%04Xid%04Xrev%02X",
-+	ret = add_uevent_var(env, "MODALIAS=ssb:v%04Xid%04Xrev%02X",
- 			     ssb_dev->id.vendor, ssb_dev->id.coreid,
- 			     ssb_dev->id.revision);
--	envp[i] = NULL;
--
- 	return ret;
- }
- 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
