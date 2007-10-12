@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32805 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41021 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbXJCGqj (ORCPT
+	with ESMTP id S1751991AbXJLTSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2007 02:46:39 -0400
-Subject: Re: [PATCH] hostapd: adjust for changed nl80211
+	Fri, 12 Oct 2007 15:18:23 -0400
+Subject: Re: rt2500pci 2.0.9 not working
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20071003030951.GH933@jm.kir.nu> (sfid-20071003_041056_085522_86265313)
-References: <1191069453.22960.77.camel@johannes.berg>
-	 <20071003030951.GH933@jm.kir.nu> (sfid-20071003_041056_085522_86265313)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SM+E4UD6rebcFh/sYnj6"
-Date: Wed, 03 Oct 2007 08:46:35 +0200
-Message-Id: <1191393995.4178.0.camel@johannes.berg> (sfid-20071003_074651_341691_C47A87A8)
+To: Marcus Better <marcus@better.se>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
+References: <fdqhn4$qab$1@sea.gmane.org>
+	 <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+	 <1192094159.4770.21.camel@johannes.berg>
+	 <200710112005.56101.IvDoorn@gmail.com>
+	 <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OZXKc7bCi/xZhCBQfWOf"
+Date: Fri, 12 Oct 2007 21:18:33 +0200
+Message-Id: <1192216713.4770.58.camel@johannes.berg> (sfid-20071012_201826_454397_3502935A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-SM+E4UD6rebcFh/sYnj6
+--=-OZXKc7bCi/xZhCBQfWOf
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-10-02 at 20:09 -0700, Jouni Malinen wrote:
+On Fri, 2007-10-12 at 11:04 +0200, Marcus Better wrote:
 
-> I did not find this change from wireless-dev.git#everything.. Am I
-> missing something or has this not been applied to the kernel yet?
+> Oct 12 10:47:23 better kernel: selected mode 2
 
-You missed that wireless-dev is dead and we're using
-wireless-2.6#everything now.
+That's G. What do you get without this patch but with my 'break' patch?
+
+> Oct 12 10:47:23 better kernel: select channel -539241232
+
+That's weird. Humm. What exactly are you printing there and is it really
+a pointer 0xdfdbd4f0?
 
 johannes
 
---=-SM+E4UD6rebcFh/sYnj6
+--=-OZXKc7bCi/xZhCBQfWOf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARwM6yqVg1VMiehFYAQLkaQ//WJlCRQpSUHEEj95i9F0hF98fZ21KKZuN
-9Eu5QQfAhP+k18E3uuNGgOTPjjg9AQRsiCKjsUOcocK4T4DyNZEwTvs05GgFp6IM
-tV15TTNu1eqN2eLt/4oTavT5GRXPz3AeJdBKyqId9vEh2ck4Rv9bPXgDwuLLu5QF
-XD/O5xCVXiRE4gsuLefNKK+DYEXrb9Kbazz958SfP4XhCEoApVk6/Nh14qZ3eXbs
-8h19Mvw4NilNUhrMYv7SQMhJsOsZkc59gMOopnIhI3sSMNKe7wFemkASoTlR/e75
-nX9Fj2FUSGPMyEj0/ihuuoeLMJUZyQlClgCv7Rjw3hbGYj0IlbExb5yFy9hNcuXN
-sG+0SQ5sXOtXiG/13XbF5/KtD4ESis2nujJjG0CjlOo9pSMYKesfIuWyO4n3xB1H
-CLPJHTGGVp4vmVtOxHwKOfB2qtgYwNj56/LkDfOdcxspbRGM/s5QdBHtJXx8sjIV
-6GLpaNnQcFizRHRNxfxaxuclXwiWnIXFUWK7UQvjAEpkc961xwgXprGzGSKbd2PD
-ipxC/vDLaRUN3kD2ciCfmddI4dOoI/tvmH6wpNY+03dOCk94FdubrloNJbujoi7r
-FBbJCDXZnQVTaC/Y1UZ0aUkaxOEXbX0A2KNzPMnKLXtoUZTOThwwAUEiQqHwyqe1
-nO847aNTxbE=
-=uU+6
+iQIVAwUARw/IiKVg1VMiehFYAQKEkA/9FghqA7FzRc1jV3uw1eKbDug1Z8rqA57H
+lbCUv/DaYnAG5N5MruqODQTNGwRLlb6XXiiOwpnkwTaIHnQ4ZXz+xQUEMum7OvWR
+dQnxdDbjAbVQdjMr8mKf1WENYRf2+GgsYwNappwdc93QUOqRJPtcgoQrQp3jg+ko
+Tppj2gfs+33TRtIPLeAS3fw8Jv3of+RhpdSh2eQM+IxO3U1JuBW/bFfwVorOVPu6
+/ghsp7zV+vkwhBfzxkpnT7j6lfNWdlpFXbikpNtC4nAF6x8mWQGphfpMGRJ9RAx2
+WxcLEl9/lSeFu7oo6t5mZ/CsVgFI4uEX5MAQz2y37ZNI6sYjRaW9iMddTMAB3pDo
+0XVP7tfppu1VE1Sr5+DSrzF/5p96oDCGJRtx6E81yNJw8fhGvPm3DbciYCzZwbzR
+MBCPpD5OkXRrvlVMj7blBUdW4DjVe3ra6BPr2yMUjxtJk/h7cV7H+WckvlQWPi7v
+ng40wudjnOc7+04P3buR0tFdHJ1akPO1LTSFdjQ8aieHgPz+nH8MqrDm3Ist6lZp
+wkNP3pftWyY+kZSvICkvhksPbXoKnAN1XMgmnVBtJWY+TaPCKUznodxmVXDxzLtK
+3ggaCK/ONDnzQa2qUlv9Srnm8ZCaHoll+d2nAiVbJK6uT8jxsjX13xHGGLMSZEFA
+KD1WwL/5Ya8=
+=WN3F
 -----END PGP SIGNATURE-----
 
---=-SM+E4UD6rebcFh/sYnj6--
+--=-OZXKc7bCi/xZhCBQfWOf--
 
