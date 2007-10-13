@@ -1,589 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:41958 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbXJMOK2 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:20959 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032AbXJMJVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:28 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so715870ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:26 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/11] rt2x00: Correctly translate mac80211 antenna setup to rt2x00
-Date: Sat, 13 Oct 2007 16:26:23 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710131621.05173.IvDoorn@gmail.com>
-In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
+	Sat, 13 Oct 2007 05:21:20 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2057572pyb
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 02:21:19 -0700 (PDT)
+Message-ID: <40f31dec0710130221o4b38d5fcld4239b48d24e8206@mail.gmail.com> (sfid-20071013_102129_809875_2AEAB427)
+Date: Sat, 13 Oct 2007 12:21:18 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer G for AR5212
+Cc: "Jiri Slaby" <jirislaby@gmail.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071012223757.GA4994@pogo>
 MIME-Version: 1.0
-Message-Id: <200710131626.23817.IvDoorn@gmail.com> (sfid-20071013_151033_848615_8ED3F872)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20071012150438.GC9407@pogo> <20071012150543.GD9407@pogo>
+	 <20071012150709.GE9407@pogo> <20071012150745.GF9407@pogo>
+	 <4af2d03a0710121433r1f32aaabt4bb8d50c61ef12d5@mail.gmail.com>
+	 <20071012223757.GA4994@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 has 3 values for the antenna setup:
- 0 - default
- 1 - use antenna 1
- 2 - use antenna 2
+You can also check card capabilities before initializing the modes
+instead of ah_version since you have access on cap.mode ;-)
 
-This means that rt2x00 should store the default value
-from the EEPROM somwhere and use that when mac80211 indicates
-that the antenna setup is 0.
-This also implies that rt2x00 should no longer write the
-hw->config.antenna_sel_* values based on the EEPROM input.
+2007/10/13, Luis R. Rodriguez <mcgrof@gmail.com>:
+> On Fri, Oct 12, 2007 at 11:33:05PM +0200, Jiri Slaby wrote:
+> > I didn't sleep too much due to travelling, maybe I'm wrong in some
+> > cases, some comments follows.
+>
+> Seems it was me that didn't get the sleep ;)
+>
+> > On 10/12/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > > +       modes[0].mode = MODE_IEEE80211G;
+> > > +       modes[1].mode = MODE_IEEE80211B;
+> > > +       modes[2].mode = MODE_IEEE80211A;
+> > > +
+> > > +       max_r = ARRAY_SIZE(sc->rates);
+> > > +       max_c = ARRAY_SIZE(sc->channels);
+> > > +       modes[0].rates = sc->rates;
+>
+> I'll delete this line above.
+>
+> > > +
+> > > +       for (i = 0; i <= 2; i++) {
+> > > +               struct ieee80211_hw_mode *mode = &modes[i];
+> > > +               const struct ath5k_rate_table *hw_rates;
+> > > +
+> > > +               if (i == 0) {
+> > > +                       mode->rates     = sc->rates;
+> > > +                       modes->channels = sc->channels;
+> >
+> > mode/modes, it's doesn't matter here, but it doesn't look well
+>
+> And put it above as modes[0].rates = sc->rates then.
+>
+> > > +               } else {
+> > > +                       struct ieee80211_hw_mode *prev_mode = &modes[i-1];
+> > > +                       int prev_num_r  = prev_mode->num_rates;
+> > > +                       int prev_num_c  = prev_mode->num_channels;
+> > > +                       mode->rates     = &prev_mode->rates[prev_num_r];
+> > > +                       mode->channels  = &prev_mode->channels[prev_num_c];
+> > >                 }
+> > > +
+> > > +               hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
+> > > +               mode->num_rates    = ath_copy_rates(mode->rates, hw_rates,
+> > > +                       max_r);
+> > > +               mode->num_channels = ath_copy_channels(ah, mode->channels,
+> > > +                       mode->mode, max_c);
+> > > +               max_r -= modes->num_rates;
+> >
+> > modes? but here it matters...
+>
+> Good catch.
+>
+> > > +               max_c -= mode->num_channels;
+> > > +       }
+> > > +
+> > > +       switch (ah->ah_version) {
+> > > +       case AR5K_AR5210:
+> > > +               REGISTER_MODE(MODE_IEEE80211A);
+> > > +               break;
+> > > +       case AR5K_AR5211:
+> > > +               REGISTER_MODE(MODE_IEEE80211B);
+> > > +               break;
+> > > +       case AR5K_AR5212:
+> > > +               if (!ah->ah_single_chip)
+> > > +                       REGISTER_MODE(MODE_IEEE80211A);
+> > > +               REGISTER_MODE(MODE_IEEE80211G);
+> >
+> > And this seems totally wrong. you use 0, 1, 2 indexes above and here
+> > you index it by mac80211 integers. That's exactly why the enum was
+> > there (a shortcut like in intel drivers) -- to not get into it.
+>
+> Actually you are right, that was not what I intended though. The A, B,
+> and G enums seemed to add confusion so I just got rid of them. What I
+> really *intended* on doing was:
+>
+> #define REGISTER_MODE(m) do { \
+>         for (i=0; i<2; i++) { \
+>                 if (modes[i].mode != m || !modes[i].num_channels) \
+>                         continue; \
+>                 ret = ieee80211_register_hwmode(hw, &modes[i]); \
+>                 if (ret) { \
+>                         printk(KERN_ERR "can't register hwmode %u\n",m); \
+>                         goto err; \
+>                 } \
+>         } \
+> } while (0)
+>
+> Also, you forgot to catch I wasn't registering MODE_IEEE80211A for
+> AR5211, I've added it now :). BTW with johill's patch,
+> [PATCH v2] mac80211: fix set_channel regression
+> the mode that is used first changes now is reversed again depending on
+> the order in which you registered it so I've moved things around to assure
+> we prefer keep preferring G for AR5212s and B for AR5211s.
+>
+> Below you'll find the new revised patch. This was tested with AR5212
+> and AR5211. Checkpatch was run too ;)
+>
+>         Luis
+>
+> [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer G for AR5212
+>
+> Currently you get locked on B mode with AR5212s. This could be partly
+> mac80211's fault with a recent regression introduced but ath5k mode
+> initialization right now is pretty sloppy. For AR5212s we also currently
+> start scanning in 5GHz. I've made the mode initialization on ath5k a bit
+> clearer and only am registering G mode now instead of both B and G for
+> AR5212s. 11Mbps is still the only stable rate but at least now we can
+> work and test the other rates again.
+>
+> Note: mac80211 simple rate algo throws us to 1Mbps after assoc, this is by
+>         design. I recommend users to set rate to 11M for now after assoc.
+>
+> Changes-licensed-under: 3-clause-BSD
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |  106 ++++++++++++++++++++-----------------
+>  net/mac80211/ieee80211_ioctl.c    |    5 ++-
+>  2 files changed, 61 insertions(+), 50 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 18ee995..8413950 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1919,67 +1919,75 @@ static void ath_dump_modes(struct ieee80211_hw_mode *modes)
+>  static inline void ath_dump_modes(struct ieee80211_hw_mode *modes) {}
+>  #endif
+>
+> +#define REGISTER_MODE(m) do { \
+> +       for (i = 0; i <= 2; i++) { \
+> +               if (modes[i].mode != m || !modes[i].num_channels) \
+> +                       continue; \
+> +               ret = ieee80211_register_hwmode(hw, &modes[i]); \
+> +               if (ret) { \
+> +                       printk(KERN_ERR "can't register hwmode %u\n", m); \
+> +                       goto err; \
+> +               } \
+> +       } \
+> +} while (0)
+> +
+>  static int ath_getchannels(struct ieee80211_hw *hw)
+>  {
+>         struct ath_softc *sc = hw->priv;
+>         struct ath_hw *ah = sc->ah;
+>         struct ieee80211_hw_mode *modes = sc->modes;
+> -       unsigned int i, max;
+> +       unsigned int i, max_r, max_c;
+>         int ret;
+> -       enum {
+> -               A = MODE_IEEE80211A,
+> -               B = MODE_IEEE80211G, /* this is not a typo, but workaround */
+> -               G = MODE_IEEE80211B, /* to prefer g over b */
+> -               T = MODE_ATHEROS_TURBO,
+> -               TG = MODE_ATHEROS_TURBOG,
+> -       };
+>
+>         BUILD_BUG_ON(ARRAY_SIZE(sc->modes) < 3);
+>
+>         ah->ah_country_code = countrycode;
+>
+> -       modes[A].mode = MODE_IEEE80211A;
+> -       modes[B].mode = MODE_IEEE80211B;
+> -       modes[G].mode = MODE_IEEE80211G;
+> -
+> -       max = ARRAY_SIZE(sc->rates);
+> -       modes[A].rates = sc->rates;
+> -       max -= modes[A].num_rates = ath_copy_rates(modes[A].rates,
+> -                       ath5k_hw_get_rate_table(ah, MODE_IEEE80211A), max);
+> -       modes[B].rates = &modes[A].rates[modes[A].num_rates];
+> -       max -= modes[B].num_rates = ath_copy_rates(modes[B].rates,
+> -                       ath5k_hw_get_rate_table(ah, MODE_IEEE80211B), max);
+> -       modes[G].rates = &modes[B].rates[modes[B].num_rates];
+> -       max -= modes[G].num_rates = ath_copy_rates(modes[G].rates,
+> -                       ath5k_hw_get_rate_table(ah, MODE_IEEE80211G), max);
+> -
+> -       if (!max)
+> -               printk(KERN_WARNING "yet another rates found, but there is not "
+> -                               "sufficient space to store them\n");
+> -
+> -       max = ARRAY_SIZE(sc->channels);
+> -       modes[A].channels = sc->channels;
+> -       max -= modes[A].num_channels = ath_copy_channels(ah, modes[A].channels,
+> -                       MODE_IEEE80211A, max);
+> -       modes[B].channels = &modes[A].channels[modes[A].num_channels];
+> -       max -= modes[B].num_channels = ath_copy_channels(ah, modes[B].channels,
+> -                       MODE_IEEE80211B, max);
+> -       modes[G].channels = &modes[B].channels[modes[B].num_channels];
+> -       max -= modes[G].num_channels = ath_copy_channels(ah, modes[G].channels,
+> -                       MODE_IEEE80211G, max);
+> -
+> -       if (!max)
+> -               printk(KERN_WARNING "yet another modes found, but there is not "
+> -                               "sufficient space to store them\n");
+> -
+> -       for (i = 0; i < ARRAY_SIZE(sc->modes); i++)
+> -               if (modes[i].num_channels) {
+> -                       ret = ieee80211_register_hwmode(hw, &modes[i]);
+> -                       if (ret) {
+> -                               printk(KERN_ERR "can't register hwmode %u\n",i);
+> -                               goto err;
+> -                       }
+> +       modes[0].mode = MODE_IEEE80211G;
+> +       modes[1].mode = MODE_IEEE80211B;
+> +       modes[2].mode = MODE_IEEE80211A;
+> +
+> +       max_r = ARRAY_SIZE(sc->rates);
+> +       max_c = ARRAY_SIZE(sc->channels);
+> +
+> +       for (i = 0; i <= 2; i++) {
+> +               struct ieee80211_hw_mode *mode = &modes[i];
+> +               const struct ath5k_rate_table *hw_rates;
+> +
+> +               if (i == 0) {
+> +                       modes[0].rates  = sc->rates;
+> +                       modes->channels = sc->channels;
+> +               } else {
+> +                       struct ieee80211_hw_mode *prev_mode = &modes[i-1];
+> +                       int prev_num_r  = prev_mode->num_rates;
+> +                       int prev_num_c  = prev_mode->num_channels;
+> +                       mode->rates     = &prev_mode->rates[prev_num_r];
+> +                       mode->channels  = &prev_mode->channels[prev_num_c];
+>                 }
+> +
+> +               hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
+> +               mode->num_rates    = ath_copy_rates(mode->rates, hw_rates,
+> +                       max_r);
+> +               mode->num_channels = ath_copy_channels(ah, mode->channels,
+> +                       mode->mode, max_c);
+> +               max_r -= mode->num_rates;
+> +               max_c -= mode->num_channels;
+> +       }
+> +
+> +       switch (ah->ah_version) {
+> +       case AR5K_AR5210:
+> +               REGISTER_MODE(MODE_IEEE80211A);
+> +               break;
+> +       case AR5K_AR5211:
+> +               REGISTER_MODE(MODE_IEEE80211B);
+> +               REGISTER_MODE(MODE_IEEE80211A);
+> +               break;
+> +       case AR5K_AR5212:
+> +               REGISTER_MODE(MODE_IEEE80211G);
+> +               if (!ah->ah_single_chip)
+> +                       REGISTER_MODE(MODE_IEEE80211A);
+> +               break;
+> +       }
+>         ath_dump_modes(modes);
+>
+>         return 0;
+>
 
-This also adds the basis in rt2x00lib for correct software
-diversity handling. By default rt2x00lib will now configure
-antenna B instead of hardware diversity.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c    |   25 +++++++++----
- drivers/net/wireless/rt2x00/rt2500pci.c    |   14 +++----
- drivers/net/wireless/rt2x00/rt2500usb.c    |   25 +++++++++----
- drivers/net/wireless/rt2x00/rt2x00.h       |   25 +++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00config.c |   51 ++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00dev.c    |    1 +
- drivers/net/wireless/rt2x00/rt61pci.c      |   32 +++++++----------
- drivers/net/wireless/rt2x00/rt73usb.c      |   23 +++++-------
- 8 files changed, 137 insertions(+), 59 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 31b4f4e..2ceca50 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -397,7 +397,7 @@ static void rt2400pci_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- }
- 
- static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev,
--				     int antenna_tx, int antenna_rx)
-+				     struct antenna_setup *ant)
- {
- 	u8 r1;
- 	u8 r4;
-@@ -408,7 +408,7 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the TX antenna.
- 	 */
--	switch (antenna_tx) {
-+	switch (ant->tx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r1, BBP_R1_TX_ANTENNA, 1);
-@@ -424,7 +424,7 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the RX antenna.
- 	 */
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
-@@ -485,9 +485,7 @@ static void rt2400pci_config(struct rt2x00_dev *rt2x00dev,
- 		rt2400pci_config_txpower(rt2x00dev,
- 					 libconf->conf->power_level);
- 	if (flags & CONFIG_UPDATE_ANTENNA)
--		rt2400pci_config_antenna(rt2x00dev,
--					 libconf->conf->antenna_sel_tx,
--					 libconf->conf->antenna_sel_rx);
-+		rt2400pci_config_antenna(rt2x00dev, &libconf->ant);
- 	if (flags & (CONFIG_UPDATE_SLOT_TIME | CONFIG_UPDATE_BEACON_INT))
- 		rt2400pci_config_duration(rt2x00dev, libconf);
- }
-@@ -1314,12 +1312,23 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel_tx =
-+	rt2x00dev->default_ant.tx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TX_DEFAULT);
--	rt2x00dev->hw->conf.antenna_sel_rx =
-+	rt2x00dev->default_ant.rx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
-+	 * When the eeprom indicates SW_DIVERSITY use HW_DIVERSITY instead.
-+	 * I am not 100% sure about this, but the legacy drivers do not
-+	 * indicate antenna swapping in software is required when
-+	 * diversity is enabled.
-+	 */
-+	if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
-+		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY;
-+	if (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
-+		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY;
-+
-+	/*
- 	 * Store led mode, for correct led behaviour.
- 	 */
- 	rt2x00dev->led_mode =
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index c776155..5c81309 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -424,7 +424,7 @@ static void rt2500pci_config_txpower(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev,
--				     const int antenna_tx, const int antenna_rx)
-+				     struct antenna_setup *ant)
- {
- 	u32 reg;
- 	u8 r14;
-@@ -437,7 +437,7 @@ static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the TX antenna.
- 	 */
--	switch (antenna_tx) {
-+	switch (ant->tx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r2, BBP_R2_TX_ANTENNA, 2);
-@@ -459,7 +459,7 @@ static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the RX antenna.
- 	 */
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r14, BBP_R14_RX_ANTENNA, 2);
-@@ -541,9 +541,7 @@ static void rt2500pci_config(struct rt2x00_dev *rt2x00dev,
- 		rt2500pci_config_txpower(rt2x00dev,
- 					 libconf->conf->power_level);
- 	if (flags & CONFIG_UPDATE_ANTENNA)
--		rt2500pci_config_antenna(rt2x00dev,
--					 libconf->conf->antenna_sel_tx,
--					 libconf->conf->antenna_sel_rx);
-+		rt2500pci_config_antenna(rt2x00dev, &libconf->ant);
- 	if (flags & (CONFIG_UPDATE_SLOT_TIME | CONFIG_UPDATE_BEACON_INT))
- 		rt2500pci_config_duration(rt2x00dev, libconf);
- }
-@@ -1482,9 +1480,9 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel_tx =
-+	rt2x00dev->default_ant.tx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TX_DEFAULT);
--	rt2x00dev->hw->conf.antenna_sel_rx =
-+	rt2x00dev->default_ant.rx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 5f02b91..0b01a02 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -385,7 +385,7 @@ static void rt2500usb_config_txpower(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev,
--				     const int antenna_tx, const int antenna_rx)
-+				     struct antenna_setup *ant)
- {
- 	u8 r2;
- 	u8 r14;
-@@ -400,7 +400,7 @@ static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the TX antenna.
- 	 */
--	switch (antenna_tx) {
-+	switch (ant->tx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r2, BBP_R2_TX_ANTENNA, 1);
-@@ -422,7 +422,7 @@ static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Configure the RX antenna.
- 	 */
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r14, BBP_R14_RX_ANTENNA, 1);
-@@ -487,9 +487,7 @@ static void rt2500usb_config(struct rt2x00_dev *rt2x00dev,
- 		rt2500usb_config_txpower(rt2x00dev,
- 					 libconf->conf->power_level);
- 	if (flags & CONFIG_UPDATE_ANTENNA)
--		rt2500usb_config_antenna(rt2x00dev,
--					 libconf->conf->antenna_sel_tx,
--					 libconf->conf->antenna_sel_rx);
-+		rt2500usb_config_antenna(rt2x00dev, &libconf->ant);
- 	if (flags & (CONFIG_UPDATE_SLOT_TIME | CONFIG_UPDATE_BEACON_INT))
- 		rt2500usb_config_duration(rt2x00dev, libconf);
- }
-@@ -1276,12 +1274,23 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel_tx =
-+	rt2x00dev->default_ant.tx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TX_DEFAULT);
--	rt2x00dev->hw->conf.antenna_sel_rx =
-+	rt2x00dev->default_ant.rx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
-+	 * When the eeprom indicates SW_DIVERSITY use HW_DIVERSITY instead.
-+	 * I am not 100% sure about this, but the legacy drivers do not
-+	 * indicate antenna swapping in software is required when
-+	 * diversity is enabled.
-+	 */
-+	if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
-+		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY;
-+	if (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
-+		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY;
-+
-+	/*
- 	 * Store led mode, for correct led behaviour.
- 	 */
- 	rt2x00dev->led_mode =
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 046c95e..dcf7fd7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -180,6 +180,14 @@ struct rf_channel {
- };
- 
- /*
-+ * Antenna setup values.
-+ */
-+struct antenna_setup {
-+	enum antenna rx;
-+	enum antenna tx;
-+};
-+
-+/*
-  * Quality statistics about the currently active link.
-  */
- struct link_qual {
-@@ -251,6 +259,13 @@ struct link {
- 	struct link_qual qual;
- 
- 	/*
-+	 * Currently active TX/RX antenna setup.
-+	 * When software diversity is used, this will indicate
-+	 * which antenna is actually used at this time.
-+	 */
-+	struct antenna_setup active_ant;
-+
-+	/*
- 	 * Active VGC level
- 	 */
- 	int vgc_level;
-@@ -272,7 +287,6 @@ static inline void rt2x00_clear_link(struct link *link)
- 	link->qual.tx_percentage = 50;
- }
- 
--
- /*
-  * Update the rssi using the walking average approach.
-  */
-@@ -378,6 +392,8 @@ struct rt2x00lib_conf {
- 	struct ieee80211_conf *conf;
- 	struct rf_channel rf;
- 
-+	struct antenna_setup ant;
-+
- 	int phymode;
- 
- 	int basic_rates;
-@@ -583,6 +599,13 @@ struct rt2x00_dev {
- 	struct hw_mode_spec spec;
- 
- 	/*
-+	 * This is the default TX/RX antenna setup as indicated
-+	 * by the device's EEPROM. When mac80211 sets its
-+	 * antenna value to 0 we should be using these values.
-+	 */
-+	struct antenna_setup default_ant;
-+
-+	/*
- 	 * Register pointers
- 	 * csr_addr: Base register address. (PCI)
- 	 * csr_cache: CSR cache for usb_control_msg. (USB)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 12914cf..04518b0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -100,6 +100,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 	struct rt2x00lib_conf libconf;
- 	struct ieee80211_hw_mode *mode;
- 	struct ieee80211_rate *rate;
-+	struct antenna_setup *default_ant = &rt2x00dev->default_ant;
-+	struct antenna_setup *active_ant = &rt2x00dev->link.active_ant;
- 	int flags = 0;
- 	int short_slot_time;
- 
-@@ -122,7 +124,35 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		flags |= CONFIG_UPDATE_CHANNEL;
- 	if (rt2x00dev->tx_power != conf->power_level)
- 		flags |= CONFIG_UPDATE_TXPOWER;
--	if (rt2x00dev->rx_status.antenna == conf->antenna_sel_rx)
-+
-+	/*
-+	 * Determining changes in the antenna setups request several checks:
-+	 * antenna_sel_{r,t}x = 0
-+	 *    -> Does active_{r,t}x match default_{r,t}x
-+	 *    -> Is default_{r,t}x SW_DIVERSITY
-+	 * antenna_sel_{r,t}x = 1/2
-+	 *    -> Does active_{r,t}x match antenna_sel_{r,t}x
-+	 * The reason for not updating the antenna while SW diversity
-+	 * should be used is simple: Software diversity means that
-+	 * we should switch between the antenna's based on the
-+	 * quality. This means that the current antenna is good enough
-+	 * to work with untill the link tuner decides that an antenna
-+	 * switch should be performed.
-+	 */
-+	if (!conf->antenna_sel_rx &&
-+	    default_ant->rx != ANTENNA_SW_DIVERSITY &&
-+	    default_ant->rx != active_ant->rx)
-+		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (conf->antenna_sel_rx &&
-+		 conf->antenna_sel_rx != active_ant->rx)
-+		flags |= CONFIG_UPDATE_ANTENNA;
-+
-+	if (!conf->antenna_sel_tx &&
-+	    default_ant->tx != ANTENNA_SW_DIVERSITY &&
-+	    default_ant->tx != active_ant->tx)
-+		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (conf->antenna_sel_tx &&
-+		 conf->antenna_sel_tx != active_ant->tx)
- 		flags |= CONFIG_UPDATE_ANTENNA;
- 
- 	/*
-@@ -171,6 +201,22 @@ config:
- 		       sizeof(libconf.rf));
- 	}
- 
-+	if (flags & CONFIG_UPDATE_ANTENNA) {
-+		if (conf->antenna_sel_rx)
-+			libconf.ant.rx = conf->antenna_sel_rx;
-+		else if (default_ant->rx != ANTENNA_SW_DIVERSITY)
-+			libconf.ant.rx = default_ant->rx;
-+		else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
-+			libconf.ant.rx = ANTENNA_B;
-+
-+		if (conf->antenna_sel_tx)
-+			libconf.ant.tx = conf->antenna_sel_tx;
-+		else if (default_ant->tx != ANTENNA_SW_DIVERSITY)
-+			libconf.ant.tx = default_ant->tx;
-+		else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
-+			libconf.ant.tx = ANTENNA_B;
-+	}
-+
- 	if (flags & CONFIG_UPDATE_SLOT_TIME) {
- 		short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
- 
-@@ -201,5 +247,6 @@ config:
- 	rt2x00dev->rx_status.freq = conf->freq;
- 	rt2x00dev->rx_status.channel = conf->channel;
- 	rt2x00dev->tx_power = conf->power_level;
--	rt2x00dev->rx_status.antenna = conf->antenna_sel_rx;
-+	rt2x00dev->link.active_ant.rx = libconf.ant.rx;
-+	rt2x00dev->link.active_ant.tx = libconf.ant.tx;
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 604d627..7795f5f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -419,6 +419,7 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
- 	    rt2x00lib_calculate_link_signal(rt2x00dev, desc->rssi);
- 	rx_status->ssi = desc->rssi;
- 	rx_status->flag = desc->flags;
-+	rx_status->antenna = rt2x00dev->link.active_ant.rx;
- 
- 	/*
- 	 * Send frame to mac80211
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index b9a37ae..81fa86f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -411,8 +411,7 @@ static void rt61pci_config_txpower(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
--				      const int antenna_tx,
--				      const int antenna_rx)
-+				      struct antenna_setup *ant)
- {
- 	u8 r3;
- 	u8 r4;
-@@ -425,7 +424,7 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE,
- 			  !rt2x00_rf(&rt2x00dev->chip, RF5225));
- 
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -458,8 +457,7 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
--				      const int antenna_tx,
--				      const int antenna_rx)
-+				      struct antenna_setup *ant)
- {
- 	u8 r3;
- 	u8 r4;
-@@ -474,7 +472,7 @@ static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 			  !test_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags));
- 
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -514,8 +512,7 @@ static void rt61pci_config_antenna_2529_rx(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt61pci_config_antenna_2529(struct rt2x00_dev *rt2x00dev,
--					const int antenna_tx,
--					const int antenna_rx)
-+					struct antenna_setup *ant)
- {
- 	u16 eeprom;
- 	u8 r3;
-@@ -625,7 +622,7 @@ static const struct antenna_sel antenna_sel_bg[] = {
- };
- 
- static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
--				   const int antenna_tx, const int antenna_rx)
-+				   struct antenna_setup *ant)
- {
- 	const struct antenna_sel *sel;
- 	unsigned int lna;
-@@ -655,16 +652,14 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00_rf(&rt2x00dev->chip, RF5225) ||
- 	    rt2x00_rf(&rt2x00dev->chip, RF5325))
--		rt61pci_config_antenna_5x(rt2x00dev, antenna_tx, antenna_rx);
-+		rt61pci_config_antenna_5x(rt2x00dev, ant);
- 	else if (rt2x00_rf(&rt2x00dev->chip, RF2527))
--		rt61pci_config_antenna_2x(rt2x00dev, antenna_tx, antenna_rx);
-+		rt61pci_config_antenna_2x(rt2x00dev, ant);
- 	else if (rt2x00_rf(&rt2x00dev->chip, RF2529)) {
- 		if (test_bit(CONFIG_DOUBLE_ANTENNA, &rt2x00dev->flags))
--			rt61pci_config_antenna_2x(rt2x00dev, antenna_tx,
--						  antenna_rx);
-+			rt61pci_config_antenna_2x(rt2x00dev, ant);
- 		else
--			rt61pci_config_antenna_2529(rt2x00dev, antenna_tx,
--						    antenna_rx);
-+			rt61pci_config_antenna_2529(rt2x00dev, ant);
- 	}
- }
- 
-@@ -709,8 +704,7 @@ static void rt61pci_config(struct rt2x00_dev *rt2x00dev,
- 	if ((flags & CONFIG_UPDATE_TXPOWER) && !(flags & CONFIG_UPDATE_CHANNEL))
- 		rt61pci_config_txpower(rt2x00dev, libconf->conf->power_level);
- 	if (flags & CONFIG_UPDATE_ANTENNA)
--		rt61pci_config_antenna(rt2x00dev, libconf->conf->antenna_sel_tx,
--				       libconf->conf->antenna_sel_rx);
-+		rt61pci_config_antenna(rt2x00dev, &libconf->ant);
- 	if (flags & (CONFIG_UPDATE_SLOT_TIME | CONFIG_UPDATE_BEACON_INT))
- 		rt61pci_config_duration(rt2x00dev, libconf);
- }
-@@ -2015,9 +2009,9 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel_tx =
-+	rt2x00dev->default_ant.tx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TX_DEFAULT);
--	rt2x00dev->hw->conf.antenna_sel_rx =
-+	rt2x00dev->default_ant.rx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 81ee3e5..a872fdb 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -396,8 +396,7 @@ static void rt73usb_config_txpower(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
--				      const int antenna_tx,
--				      const int antenna_rx)
-+				      struct antenna_setup *ant)
- {
- 	u8 r3;
- 	u8 r4;
-@@ -409,7 +408,7 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
- 
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -442,8 +441,7 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- }
- 
- static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
--				      const int antenna_tx,
--				      const int antenna_rx)
-+				      struct antenna_setup *ant)
- {
- 	u8 r3;
- 	u8 r4;
-@@ -457,7 +455,7 @@ static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 			  !test_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags));
- 
--	switch (antenna_rx) {
-+	switch (ant->rx) {
- 	case ANTENNA_SW_DIVERSITY:
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -509,7 +507,7 @@ static const struct antenna_sel antenna_sel_bg[] = {
- };
- 
- static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
--				   const int antenna_tx, const int antenna_rx)
-+				   struct antenna_setup *ant)
- {
- 	const struct antenna_sel *sel;
- 	unsigned int lna;
-@@ -539,10 +537,10 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00_rf(&rt2x00dev->chip, RF5226) ||
- 	    rt2x00_rf(&rt2x00dev->chip, RF5225))
--		rt73usb_config_antenna_5x(rt2x00dev, antenna_tx, antenna_rx);
-+		rt73usb_config_antenna_5x(rt2x00dev, ant);
- 	else if (rt2x00_rf(&rt2x00dev->chip, RF2528) ||
- 		 rt2x00_rf(&rt2x00dev->chip, RF2527))
--		rt73usb_config_antenna_2x(rt2x00dev, antenna_tx, antenna_rx);
-+		rt73usb_config_antenna_2x(rt2x00dev, ant);
- }
- 
- static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
-@@ -586,8 +584,7 @@ static void rt73usb_config(struct rt2x00_dev *rt2x00dev,
- 	if ((flags & CONFIG_UPDATE_TXPOWER) && !(flags & CONFIG_UPDATE_CHANNEL))
- 		rt73usb_config_txpower(rt2x00dev, libconf->conf->power_level);
- 	if (flags & CONFIG_UPDATE_ANTENNA)
--		rt73usb_config_antenna(rt2x00dev, libconf->conf->antenna_sel_tx,
--				       libconf->conf->antenna_sel_rx);
-+		rt73usb_config_antenna(rt2x00dev, &libconf->ant);
- 	if (flags & (CONFIG_UPDATE_SLOT_TIME | CONFIG_UPDATE_BEACON_INT))
- 		rt73usb_config_duration(rt2x00dev, libconf);
- }
-@@ -1501,9 +1498,9 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel_tx =
-+	rt2x00dev->default_ant.tx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TX_DEFAULT);
--	rt2x00dev->hw->conf.antenna_sel_rx =
-+	rt2x00dev->default_ant.rx =
- 	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
 -- 
-1.5.3.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
