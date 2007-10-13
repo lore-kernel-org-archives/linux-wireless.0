@@ -1,94 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:47343 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529AbXJaSzr (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:41958 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbXJMOKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 14:55:47 -0400
-Received: by py-out-1112.google.com with SMTP id u77so467971pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 11:55:46 -0700 (PDT)
-Message-ID: <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com> (sfid-20071031_185605_086089_4414EB46)
-Date: Wed, 31 Oct 2007 20:55:46 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer chips
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
+	Sat, 13 Oct 2007 10:10:39 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so715870ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:38 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/11] rt2x00: Fix residual check in PLCP calculations.
+Date: Sat, 13 Oct 2007 16:26:52 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710131621.05173.IvDoorn@gmail.com>
+In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071027232033.GD5973@localhost.domain.invalid>
-	 <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
+Message-Id: <200710131626.52613.IvDoorn@gmail.com> (sfid-20071013_151054_588086_25DFFC7C)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
-> On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
->
-> > * Give more infos about mac/phy/radio revision during attach.
->
-> > @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
-> >         if (ret)
-> >                 goto err_ah;
-> >
-> > -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
-> > -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
-> > -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
-> > -                       sc->ah->ah_phy_revision & 0xf);
-> > +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> > +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
-> > +                                       sc->ah->ah_mac_srev,
-> > +                                       sc->ah->ah_phy_revision);
-> > +
-> > +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> > +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > +                                       sc->ah->ah_radio_5ghz_revision);
-> > +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> > +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > +                                       sc->ah->ah_radio_5ghz_revision);
-> > +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> > +                                       sc->ah->ah_radio_2ghz_revision);
-> > +       }
-> > +
-> >
-> >         /* ready to process interrupts */
-> >         __clear_bit(ATH_STAT_INVALID, sc->status);
-> >
->
-> I have ACK'd this as I believe its a lot more useful information than
-> what we had before but I am confused by what some different prints may
-> yield. For example, on AR5213, I get:
->
-> ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
-> ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
-> ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
->
-> On my Cardbus card, I then get:
->
-> ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
-> ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
->
-> Now, both are capable of 2 GHz and 5 GHz though and only one prints a
-> line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
-> my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
-> having a print for both RFs here indicate besides the fact we are
-> indicating the type of radio and revision? And in the Cardbus card I
-> have where only one RF line is printed what does that indicate?
->
->   Luis
+From: Mattias Nissler <mattias.nissler@gmx.de>
 
-RF5111 is only 5GHz capable without 2111, 2111 is only 2GHz capable
-(it's actually an extension to 5111), on the other hand 5112 is
-multiband, that's why we don't say it's type. On single chip solutions
-both revisions are 0 so no RF chip msg is displayed.
+Because rt2x00 implements the residual calculation different from what the
+legacy code does (i.e. scaled values), we need to adjust the residual check.
+Again, we are only mimicking the behaviour of the ralink driver without
+actually knowing what we do :-(
 
-We have to handle this better for b/g only cards but i didn't have
-such cards to test so i'll try it later (first we have to see what's
-going on and they don't work).
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 71b4a04..360f03a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -697,7 +697,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 			/*
+ 			 * Check if we need to set the Length Extension
+ 			 */
+-			if (bitrate == 110 && residual <= 3)
++			if (bitrate == 110 && residual <= 30)
+ 				desc.service |= 0x80;
+ 		}
+ 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.3.4
+
