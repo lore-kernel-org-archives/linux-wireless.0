@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42458
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753318AbXJCCB5 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:21986 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754484AbXJMOKs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 22:01:57 -0400
-Date: Tue, 02 Oct 2007 19:01:56 -0700 (PDT)
-Message-Id: <20071002.190156.41633562.davem@davemloft.net> (sfid-20071003_030204_164538_1843BD0B)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071003012552.GE29361@tuxdriver.com>
-References: <20071003012552.GE29361@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 13 Oct 2007 10:10:48 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so956439nfb
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:47 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Sat, 13 Oct 2007 16:27:21 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200710131627.22505.IvDoorn@gmail.com> (sfid-20071013_151715_465714_713E9D14)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 2 Oct 2007 21:25:52 -0400
+Hi John,
 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
+Here is the rt2x00 2.0.11 update.
+Highlights for this release are the fix for the TX problems,
+and the implementation of the Software Diversity Antenna.
 
-This doesn't pull cleanly.
+All indivual patches can also be found here:
+http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.11/
 
-Probably you used a recently cloned Linus tree, pulled
-net-2.6.24 into that (and resolved the conflicts), and
-then put your patches in.
+Ivo
 
-Please don't do it like that, I don't want to pull from
-a tree that has linus vs. net-2.6.24 conflict handling
-in it.  That's why I usually rebase frequently, to minimize
-that as much as is humanly possible.
+---
 
-What you can do is figure out what linus's HEAD was at the last rebase
-(basically 'origin' or parent of net-2.6.24), clone that then pull in
-net-2.6.24, then add your patches.
+The following changes since commit 2d46d1e00056de79e54c622a60f7e6f8818f6cb4:
+  Mattias Nissler (1):
+        mac80211: Defer setting of RX_FLAG_DECRYPTED.
 
-That way I can always do a clean pull.
+are available in the git repository at:
 
-My pull from Jeff today was very clean, for example.
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
 
-I'll add these wireless bits by hand as patches.
+Ivo van Doorn (9):
+      rt2x00: Move quality statistics into seperate structure
+      rt2x00: Use enum defines
+      rt2x00: Correctly translate mac80211 antenna setup to rt2x00
+      rt2x00: SW diversity should default to antenna B
+      rt2x00: Remove rt2x00_clear_link
+      rt2x00: Implement SW diversity
+      rt2x00: Cleanup if-statements
+      rt2x00: Add new rt73usb USB ID
+      rt2x00: Release rt2x00 2.0.11
 
-Thanks John.
+Mattias Nissler (2):
+      rt2x00: Fix residual check in PLCP calculations.
+      rt2x00: Fix antenna selection.
 
+ drivers/net/wireless/rt2x00/rt2400pci.c    |   80 +++++++-----
+ drivers/net/wireless/rt2x00/rt2500pci.c    |   88 ++++++------
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   84 +++++++-----
+ drivers/net/wireless/rt2x00/rt2500usb.h    |   13 ++-
+ drivers/net/wireless/rt2x00/rt2x00.h       |  165 +++++++++++++++++------
+ drivers/net/wireless/rt2x00/rt2x00config.c |   85 +++++++++++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |  201 ++++++++++++++++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    2 +
+ drivers/net/wireless/rt2x00/rt61pci.c      |  116 +++++++++--------
+ drivers/net/wireless/rt2x00/rt73usb.c      |   87 +++++++------
+ 10 files changed, 645 insertions(+), 276 deletions(-)
