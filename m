@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55666
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760065AbXJOM5B (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:8731 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754934AbXJMJid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 08:57:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Richard Purdie <rpurdie@openedhand.com>
-Subject: Re: b43 with upstream-davem stacktrace
-Date: Mon, 15 Oct 2007 14:56:16 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	bcm43xx-dev@lists.berlios.de,
-	Christian Hoffmann <email@christianhoffmann.info>,
-	linux-wireless@vger.kernel.org
-References: <200710131823.33420.email@christianhoffmann.info> <1192354978.4770.100.camel@johannes.berg> <1192439126.5684.13.camel@localhost.localdomain>
-In-Reply-To: <1192439126.5684.13.camel@localhost.localdomain>
+	Sat, 13 Oct 2007 05:38:33 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1183055mue
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 02:38:32 -0700 (PDT)
+Message-ID: <47109214.3030409@gmail.com> (sfid-20071013_103838_176649_41301834)
+Date: Sat, 13 Oct 2007 11:38:28 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710151456.16459.mb@bu3sch.de> (sfid-20071015_135705_787088_6F86ECF2)
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath5k: Fix and clean mode initialization, prefer
+ G for AR5212
+References: <20071012150438.GC9407@pogo> <20071012150543.GD9407@pogo>	 <20071012150709.GE9407@pogo> <20071012150745.GF9407@pogo>	 <4af2d03a0710121433r1f32aaabt4bb8d50c61ef12d5@mail.gmail.com>	 <20071012223757.GA4994@pogo>	 <40f31dec0710130221o4b38d5fcld4239b48d24e8206@mail.gmail.com> <40f31dec0710130230xa5d4869x814ccdfad10802be@mail.gmail.com>
+In-Reply-To: <40f31dec0710130230xa5d4869x814ccdfad10802be@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 15 October 2007 11:05:26 Richard Purdie wrote:
-> On Sun, 2007-10-14 at 11:42 +0200, Johannes Berg wrote:
-> > On Sat, 2007-10-13 at 17:26 +0200, Michael Buesch wrote:
-> > 
-> > > I also saw this sometimes, but I have absolutely no idea how that happens.
-> > > Someone any idea?
-> > 
-> > Nope, but adding more CCs :) I briefly looked at the code and couldn't
-> > track it. Got a powerpc oops with disassembly?
+On 10/13/2007 11:30 AM, Nick Kossifidis wrote:
+> I mean something like this...
 > 
-> It appears to be having a problem in the strcmp in
-> led_trigger_set_default() which is odd. Code above that checks if one of
-> the options is NULL so all I can think it either the default_trigger
-> string being passed in is invalid or there is a trigger with an invalid
-> name registered with the system.
-> 
-> Is this an SMP system and would something else be registering an LED
-> trigger on another processor or similar? There is locking there which
-> should be sufficient though. So no, I'm not sure whats going on
-> either...
-> 
+> if(test_bit(MODE_IEEE80211B,hal->ah_capabilities.cap_mode)) {
 
-I think this is some kind of a race, as it does only happen rarely and
-is not really reproducible.
+this reminds me I wanted to get rid of locked set_bit and use __set_bit instead ;-).
 
+> REGISTER_MODE(MODE_IEEE80211B);
+> }
 
+or do it directly in register_mode. I'm for making function from the macro in
+that case.
+
+regards,
 -- 
-Greetings Michael.
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
