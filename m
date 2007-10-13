@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:24666 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137AbXJUPCU (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:21986 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbXJMOKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 11:02:20 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1918536pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 08:02:19 -0700 (PDT)
-Message-ID: <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com> (sfid-20071021_160231_248932_302A8B1D)
-Date: Sun, 21 Oct 2007 16:02:18 +0100
-From: "Luis Correia" <luis.f.correia@gmail.com>
-To: "Pavel Machek" <pavel@ucw.cz>
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-Cc: "kernel list" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-In-Reply-To: <20071020184100.GA11640@elf.ucw.cz>
+	Sat, 13 Oct 2007 10:10:32 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so956439nfb
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:31 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/11] rt2x00: Remove rt2x00_clear_link
+Date: Sat, 13 Oct 2007 16:26:32 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710131621.05173.IvDoorn@gmail.com>
+In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071020184100.GA11640@elf.ucw.cz>
+Message-Id: <200710131626.32638.IvDoorn@gmail.com> (sfid-20071013_151038_498109_743514AB)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+rt2x00_clear_link() was becoming too large for statically inline,
+also it was used on a single location and shouldn't really be
+used anywhere else. So move the entire code into the function
+rt2x00lib_start_link_tuner()
 
-On 10/20/07, Pavel Machek <pavel@ucw.cz> wrote:
-> Hi!
->
-> Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
-> 0x6206... I hope that to be compatible with
-> net/wireless/rt2x00/rt73usb.c .
->
-> [Sidenote: could we add some real author info into rt73usb.c?]
->
-> I did this on 2.6.23-rc8-mm1 kernel (The RT hack may not be
-> neccessary), but then it oopses somewhere in softmac layer. I'll try
-> to play with it some more.
->
-> If you have any ideas, let me know.
->                                                                 Pavel
->
-> --- clean-mm/drivers/net/wireless/rt2x00/rt73usb.c      2007-10-09 09:32:08.000000000 +0200
-> +++ linux-mm/drivers/net/wireless/rt2x00/rt73usb.c      2007-10-19 22:19:45.000000000 +0200
-> @@ -1580,7 +1580,6 @@
->
->         if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
->                 ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-> -               return -ENODEV;
->         }
->
->         if (!rt2x00_rf(&rt2x00dev->chip, RF5226) &&
-> @@ -1588,7 +1587,6 @@
->             !rt2x00_rf(&rt2x00dev->chip, RF5225) &&
->             !rt2x00_rf(&rt2x00dev->chip, RF2527)) {
->                 ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
-> -               return -ENODEV;
->         }
->
->         /*
-> @@ -2080,6 +2078,7 @@
->         { USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
->         /* Qcom */
->         { USB_DEVICE(0x18e8, 0x6196), USB_DEVICE_DATA(&rt73usb_ops) },
-> +       { USB_DEVICE(0x18e8, 0x6206), USB_DEVICE_DATA(&rt73usb_ops) },
->         { USB_DEVICE(0x18e8, 0x6229), USB_DEVICE_DATA(&rt73usb_ops) },
->         { USB_DEVICE(0x18e8, 0x6238), USB_DEVICE_DATA(&rt73usb_ops) },
->         /* Senao */
->
-> --
-> (english) http://www.livejournal.com/~pavelmachek
-> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |   18 +++---------------
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   16 +++++++++++++++-
+ 2 files changed, 18 insertions(+), 16 deletions(-)
 
-This device is NOT a Ralink USB wifi adapter!
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index dcf7fd7..acf6f1c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -277,25 +277,13 @@ struct link {
+ };
+ 
+ /*
+- * Clear all counters inside the link structure.
+- */
+-static inline void rt2x00_clear_link(struct link *link)
+-{
+-	link->count = 0;
+-	memset(&link->qual, 0, sizeof(link->qual));
+-	link->qual.rx_percentage = 50;
+-	link->qual.tx_percentage = 50;
+-}
+-
+-/*
+  * Update the rssi using the walking average approach.
+  */
+ static inline void rt2x00_update_link_rssi(struct link *link, int rssi)
+ {
+-	if (!link->qual.avg_rssi)
+-		link->qual.avg_rssi = rssi;
+-	else
+-		link->qual.avg_rssi = ((link->qual.avg_rssi * 7) + rssi) / 8;
++	if (link->qual.avg_rssi)
++		rssi = ((link->qual.avg_rssi * 7) + rssi) / 8;
++	link->qual.avg_rssi = rssi;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 7795f5f..1bb7174 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -67,7 +67,21 @@ EXPORT_SYMBOL_GPL(rt2x00lib_get_ring);
+  */
+ static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2x00_clear_link(&rt2x00dev->link);
++	rt2x00dev->link.count = 0;
++	rt2x00dev->link.vgc_level = 0;
++
++	memset(&rt2x00dev->link.qual, 0, sizeof(rt2x00dev->link.qual));
++
++	/*
++	 * The RX and TX percentage should start at 50%
++	 * this will assure we will get at least get some
++	 * decent value when the link tuner starts.
++	 * The value will be dropped and overwritten with
++	 * the correct (measured )value anyway during the
++	 * first run of the link tuner.
++	 */
++	rt2x00dev->link.qual.rx_percentage = 50;
++	rt2x00dev->link.qual.tx_percentage = 50;
+ 
+ 	/*
+ 	 * Reset the link tuner.
+-- 
+1.5.3.4
 
-Get the windows driver in this link and see for yourself.
-http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
-(ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
-
-Case Closed.
-
-Luis Correia
-rt2x00 project administrator
