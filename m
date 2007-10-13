@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:38831 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756898AbXJ2UhJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 16:37:09 -0400
-Message-ID: <4726433A.2070808@linux.intel.com> (sfid-20071029_203715_152240_893D0872)
-Date: Mon, 29 Oct 2007 13:31:54 -0700
-From: mabbas <mabbas@linux.intel.com>
-MIME-Version: 1.0
-To: dragoran <drago01@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [ipw3945-devel] iwl3945 lists supported rates backwards
-References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>	<20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>	<4719BA96.3010609@gmail.com> <1193644281.27622.12.camel@dv>	<1193667153.5197.48.camel@johannes.berg> <1193677095.11181.2.camel@dv>	<1193677748.5197.77.camel@johannes.berg> <f6ca9fed0710291153o68ec2cffqbd2cc3f6d57fa11b@mail.gmail.com>
-In-Reply-To: <f6ca9fed0710291153o68ec2cffqbd2cc3f6d57fa11b@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from gate.crashing.org ([63.228.1.57]:34457 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754457AbXJMIRp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Oct 2007 04:17:45 -0400
+Date: Sat, 13 Oct 2007 12:17:30 +0400
+From: Vitaly Bordug <vitb@kernel.crashing.org>
+To: "John W. Linville" <linville@redhat.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: b43: regression on bcm4318
+Message-ID: <20071013121730.1eef0d93@kernel.crashing.org> (sfid-20071013_091751_024449_0CAD8DB8)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This might break rate scaling for 3945 adapter. I look into rearrange 
-the rate and do what ever needed to make rate scaling wont break.
-Mohamed
-dragoran wrote:
-> On 10/29/07, Johannes Berg <johannes@sipsolutions.net> wrote:
->   
->>> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
->>> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
->>> @@ -5414,10 +5414,10 @@ static int iwl_init_geos(struct iwl_priv *priv)
->>>        * is supported by a mode -- and the first match is taken
->>>        */
->>>
->>> -     if (modes[G].num_channels)
->>> -             ieee80211_register_hwmode(priv->hw, &modes[G]);
->>>       if (modes[B].num_channels)
->>>               ieee80211_register_hwmode(priv->hw, &modes[B]);
->>> +     if (modes[G].num_channels)
->>> +             ieee80211_register_hwmode(priv->hw, &modes[G]);
->>>       if (modes[A].num_channels)
->>>               ieee80211_register_hwmode(priv->hw, &modes[A]);
->>>       
->> Huh no, you misunderstood my mail.
->>
->> This makes mac80211 always select 802.11B mode which is not what you
->> want. You want to change the order of rates within the G mode.
->>
->>     
->
-> shouldn't this one do it?
->  (untested)
->
-> ---
-> diff --git a/origin/iwl-3945-rs.h b/origin/iwl-3945-rs.h
-> index 09fa1a7..18b19a2 100644
-> --- a/origin/iwl-3945-rs.h
-> +++ b/origin/iwl-3945-rs.h
-> @@ -39,7 +39,11 @@ struct iwl_rate_info {
->  };
->
->  enum {
-> -       IWL_RATE_6M_INDEX = 0,
-> +       IWL_RATE_1M_INDEX = 0,
-> +       IWL_RATE_2M_INDEX,
-> +       IWL_RATE_5M_INDEX,
-> +       IWL_RATE_11M_INDEX,
-> +       IWL_RATE_6M_INDEX,
->         IWL_RATE_9M_INDEX,
->         IWL_RATE_12M_INDEX,
->         IWL_RATE_18M_INDEX,
-> @@ -47,10 +51,6 @@ enum {
->         IWL_RATE_36M_INDEX,
->         IWL_RATE_48M_INDEX,
->         IWL_RATE_54M_INDEX,
-> -       IWL_RATE_1M_INDEX,
-> -       IWL_RATE_2M_INDEX,
-> -       IWL_RATE_5M_INDEX,
-> -       IWL_RATE_11M_INDEX,
->         IWL_RATE_COUNT,
->         IWL_RATE_INVM_INDEX,
->         IWL_RATE_INVALID = IWL_RATE_INVM_INDEX
->
-> -------------------------------------------------------------------------
-> This SF.net email is sponsored by: Splunk Inc.
-> Still grepping through log files to find problems?  Stop.
-> Now Search log events and configuration files using AJAX and a browser.
-> Download your FREE copy of Splunk now >> http://get.splunk.com/
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->   
+Hello John et al,
+(previous email had a typo in ML addr, sorry for the extra noise)
+
+Both b43 and b43legacy fail to load on bcm4318 for a while now, while it used to work (with known issues) more or less
+fine. The issue started happening not long before ssb united the support of b44 as well. Therefor, I noticed the difference
+soon, because I am not able to use ndiswrapper instead anymore (it does not like ssb, and my NIC, b44, does not like
+ssb missing either).
+
+dmesg looks like the below:
+
+b43-phy1: Broadcom 4318 WLAN found
+b43-phy1 debug: Found PHY: Analog 3, Type 2, Revision 7
+b43-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+phy1: Failed to select rate control algorithm
+phy1: Failed to initialize rate control algorithm
+b43: probe of ssb0:0 failed with error -2
+
+Currently this is latest rawhide kernel, but has been happening for awhile
+(since, at least, 2.6.22.5, where ssb was not yet merged and I still able to use ndiswrapper.
+
+Any hint to debug/investigate it appreciated. It does not look like hw malfunction, since ndiswrapper,
+when able to load, still works fine.
+
+-- 
+Sincerely, Vitaly
