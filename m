@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:42627 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893AbXJFD3E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 23:29:04 -0400
-Message-ID: <20071005232901.hp6o9em6ocwc0gws@webmail.spamcop.net> (sfid-20071006_042911_022266_05D29DA8)
-Date: Fri, 05 Oct 2007 23:29:01 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Greg Johnson <gregfjohnson@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: usb wifi ad-hoc mode suggestions?
-References: <371947.67660.qm@web33501.mail.mud.yahoo.com>
-In-Reply-To: <371947.67660.qm@web33501.mail.mud.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754977AbXJNJpt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2007 05:45:49 -0400
+Subject: Re: [PATCH 08/11] rt2x00: Fix residual check in PLCP calculations.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <200710131626.52613.IvDoorn@gmail.com> (sfid-20071013_151054_588086_25DFFC7C)
+References: <200710131621.05173.IvDoorn@gmail.com>
+	 <200710131626.52613.IvDoorn@gmail.com>
+	 (sfid-20071013_151054_588086_25DFFC7C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rKsWr/l6jJsU0OxCzkKE"
+Date: Sun, 14 Oct 2007 11:45:55 +0200
+Message-Id: <1192355156.4770.102.camel@johannes.berg> (sfid-20071014_104552_475705_57391A5D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
 
-Quoting Greg Johnson <gregfjohnson@yahoo.com>:
+--=-rKsWr/l6jJsU0OxCzkKE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I'm working on a project where we need to use a USB wifi adapter in ad-hoc
-> mode.
->
-> We've been struggling with this.  Is there a 'standard' known solid way to
-> do this?  What products and/or chipsets and Linux drivers should we be
-> looking at?
+On Sat, 2007-10-13 at 16:26 +0200, Ivo van Doorn wrote:
 
-Two suggestions:
+> Because rt2x00 implements the residual calculation different from what th=
+e
+> legacy code does (i.e. scaled values), we need to adjust the residual che=
+ck.
+> Again, we are only mimicking the behaviour of the ralink driver without
+> actually knowing what we do :-(
 
-1) at76_usb, available in wireless-2.6/everything (Atmel USB).
+I think you're looking for IEEE 802.11 clause 18.2.3.5
 
-2) linux-wlan-ng - separate project, may need updating for the latest  
-kernels.  Supports Prism based USB devices.
+johannes
 
-Both Atmel and Prism devices are 802.11b only and may be hard to find,  
-but they would definitely work.
+--=-rKsWr/l6jJsU0OxCzkKE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> We're trying the zd1211 with the zd1211rw driver and the mac80211 stack,
-> which doesn't seem to have ad-hoc support currently, but their web site says
-> it should be easy to add.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-That's another approach you can take.  At least you have the hardware,  
-and it should be 802.11g capable.  All you need is to fix the code.
+iQIVAwUARxHlUqVg1VMiehFYAQI60Q//YQaTyDMilw2/PKS78qwK9+AVrRsphux8
+deRYoYhcsD9LPTzAVblz2n0GqiZTtrjkqGBVb8gKIbKT7sCYaDLTWDSYHf+IMa2/
+RhYMNQc53VNDL9VgdvFLkLGS0f1oSvkgzKGRxSTLgZ3GPt5tj53eQNNooBBHrFXW
+LDpMGQllsiNBVfmqVzdV1ygD4MNiWvg4KxZ/yQdKsDgPmigRXT4hHdrYt9epgGo1
++ulnDGbTnBUwTso/pT7w4DOVDsypx/DZkJL959hqexTB8aBN2T6Lw5Rl1NIWS+jD
+Jdp5Ki/UbzJJuiGzJ15DhDbx0xav2JJEtj0mE8yXJnBn09knwi0HxsJg6VV0+IDr
+lFwvjSJEOVsBaZNwQnAtt1nsCXTr8kzHA783caruuX9UuWdiGY+6RjclSG5luzPo
+l4xq8QxNZf9VP77TElWL0i9aScZ4HOWm+ZNA38eK5OYUNrTRdxj8DUjcPAdbGee0
+v91H8iS3ZUTXiKBYbRONg7hOJi7Awt8ecQyXiDJ16oh9YLA2TGM/wkUXwPLehvs8
+iWsu9R8VEY3KS0bWYP9qAZ2pNxfo+sH8iEEDG28MogyT6TQGCR9nkGldmn6XLNRC
+l+rCja2U5a+bSrzmdNXuYCPBtXqhLOQzk8VwzrZzbnWoe1+B6Ne3BwkZj57Kkd1j
+JQQKNJtjagM=
+=ON+o
+-----END PGP SIGNATURE-----
 
--- 
-Regards,
-Pavel Roskin
+--=-rKsWr/l6jJsU0OxCzkKE--
+
