@@ -1,130 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59619 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:24399 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753989AbXJQPQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 11:16:58 -0400
-Subject: Re: iwl3945 doesn't work
-From: Dan Williams <dcbw@redhat.com>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Ismail =?ISO-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20071017142246.GQ5043@kernel.dk>
-References: <20071017135452.GJ5043@kernel.dk>
-	 <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk>
-	 <1192630733.10567.37.camel@localhost.localdomain>
-	 <20071017142246.GQ5043@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 17 Oct 2007 11:16:23 -0400
-Message-Id: <1192634183.11584.0.camel@localhost.localdomain> (sfid-20071017_161703_753793_560FB30C)
-Mime-Version: 1.0
+	id S1754372AbXJNUWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2007 16:22:20 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/5] iwlwifi: remove cck_flag from iwl_driver_hw_info
+Date: Sun, 14 Oct 2007 22:20:30 +0200
+Message-Id: <11923932343888-git-send-email-tomas.winkler@intel.com> (sfid-20071014_212229_277737_8C7586B5)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
-> On Wed, Oct 17 2007, Dan Williams wrote:
-> > On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
-> > > On Wed, Oct 17 2007, Ismail D=C3=B6nmez wrote:
-> > > > Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
-> > > > > Hi,
-> > > > >
-> > > > > Seeing that iwl3945 is now merged, I decided to switch my x60=
- to use
-> > > > > that instead of ipw3945. That would leave me with zero kernel
-> > > > > dependencies.
-> > > > >
-> > > > > Unfortunately it doesn't work. Loading the module reveals the=
- device:
-> > > > >
-> > > > > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection =
-driver for
-> > > > > Linux, 1.1.17ks
-> > > > > iwl3945: Copyright(c) 2003-2007 Intel Corporation
-> > > > > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) ->=
- IRQ 21
-> > > > > PCI: Setting latency timer of device 0000:03:00.0 to 64
-> > > > > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connecti=
-on
-> > > > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> > > > > phy0: Selected rate control algorithm 'iwl-3945-rs'
-> > > > >
-> > > > > # iwconfig wlan0
-> > > > > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
-> > > > >           Mode:Managed  Channel:0  Access Point: Not-Associat=
-ed
-> > > > >           Tx-Power=3D0 dBm
-> > > > >           Retry min limit:7   RTS thr:off   Fragment thr=3D23=
-46 B
-> > > > >           Encryption key:XXXX-XXXX-XX
-> > > > >           Link Quality:0  Signal level:0  Noise level:0
-> > > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid f=
-rag:0
-> > > > >           Tx excessive retries:0  Invalid misc:0   Missed bea=
-con:0
-> > > > >
-> > > > > and iwconfig sees it, essid/enc settings are fine, but I don'=
-t get a
-> > > > > link.
-> > > >=20
-> > > > Same issue here, try iwlist wlan0 scan first and then it should=
- work.
-> > >=20
-> > > Huh indeed, now it links fine! Thanks for the hint. Would be nice=
- to
-> > > have fixed, though :-)
-> >=20
-> > Odd, doesn't the driver need to do a scan _anyway_ to find the righ=
-t
-> > BSSID to associate with if the cached scan results are more than a =
-few
-> > seconds old?  Can you run '/sbin/iwevent' before trying a fresh
-> > association, try to associate, ensure that it has failed, and repor=
-t the
-> > output?
-> >=20
-> > If you don't get something like:
-> >=20
-> > 10:17:05.117937   eth1     Scan request completed
-> >=20
-> > shown there, then there's likely a bug in the driver because it's e=
-ither
-> > (a) not scanning before trying to associate, or (b) not sending out=
- scan
-> > completion events after it's done a scan.
->=20
-> Indeed, there is now Scan request completed before I run the iwlist
-> scan. iwevent output:
+This patch remove cck_flag from iwl_driver_hw_info, this flag
+is unused
 
-Hmm, the output below doesn't show the scan request completed, right?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 --
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++++--
+ drivers/net/wireless/iwlwifi/iwlwifi.h      |    3 +--
+ 4 files changed, 5 insertions(+), 7 deletions(-)
 
-> Waiting for Wireless Events from interfaces...
-> 16:20:27.453588   wlan0    Set Mode:Managed
-> 16:20:27.462104   wlan0    Set Encryption key:off
-> 16:20:27.463940   wlan0    Set Encryption key:****-****-**   Security=
- mode:open
-> 16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
->=20
-> waiting, nothing else happens. Then run iwlist scan from another
-> terminal.
->=20
-> 16:20:53.892549   wlan0    Scan request completed
-
-So you only get this when you manually scan right after setting the ssi=
-d
-and key?
-
-Dan
-
-> 16:20:54.025085   wlan0    Custom driver
-> event:ASSOCINFO(ReqIEs=3D000e6b6a656c6c626572676178626f65010402040b16
-> RespIEs=3D010482848b96dd0c00037f0201015b0002a44000)
-> 16:20:54.025123   wlan0    New Access Point/Cell address:00:13:46:97:=
-33:E2
->=20
-> bingo, it associates and it now works.
->=20
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 0f6ef76..fecc008 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2211,7 +2211,6 @@ int iwl_hw_set_hw_setting(struct iwl_priv *priv)
+ 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl_tx_cmd);
+ 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
+ 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
+-	priv->hw_setting.cck_flag = 0;
+ 	priv->hw_setting.max_stations = IWL3945_STATION_COUNT;
+ 	priv->hw_setting.bcast_sta_id = IWL3945_BROADCAST_ID;
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1bfa50f..9b274f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1722,8 +1722,6 @@ int iwl_hw_set_hw_setting(struct iwl_priv *priv)
+ 
+ 	priv->hw_setting.max_txq_num = iwl_param_queues_num;
+ 	priv->hw_setting.ac_queue_count = AC_NUM;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-	priv->hw_setting.cck_flag = RATE_MCS_CCK_MSK;
+ 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl_tx_cmd);
+ 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
+ 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index b601455..7cbfa93 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -507,8 +507,10 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap, u8 flags)
+ 	station->sta.sta.sta_id = index;
+ 	station->sta.station_flags = 0;
+ 
+-	rate = (priv->phymode == MODE_IEEE80211A) ? IWL_RATE_6M_PLCP :
+-				IWL_RATE_1M_PLCP | priv->hw_setting.cck_flag;
++	if (priv->phymode == MODE_IEEE80211A)
++		rate = IWL_RATE_6M_PLCP;
++	else
++		rate =	IWL_RATE_1M_PLCP;
+ 
+ 	/* Turn on both antennas for the station... */
+ 	station->sta.rate_n_flags =
+diff --git a/drivers/net/wireless/iwlwifi/iwlwifi.h b/drivers/net/wireless/iwlwifi/iwlwifi.h
+index e0b97c3..a6983bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwlwifi.h
++++ b/drivers/net/wireless/iwlwifi/iwlwifi.h
+@@ -532,11 +532,10 @@ struct iwl_ibss_seq {
+ struct iwl_driver_hw_info {
+ 	u16 max_txq_num;
+ 	u16 ac_queue_count;
+-	u32 rx_buffer_size;
+ 	u16 tx_cmd_len;
+ 	u16 max_rxq_size;
++	u32 rx_buffer_size;
+ 	u16 max_rxq_log;
+-	u32 cck_flag;
+ 	u8  max_stations;
+ 	u8  bcast_sta_id;
+ 	void *shared_virt;
+-- 
+1.5.2.2
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
