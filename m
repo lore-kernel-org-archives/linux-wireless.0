@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:55806 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750792AbXJ1HfD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 03:35:03 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
-Date: Sun, 28 Oct 2007 03:31:34 -0400
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	Bill Moss <bmoss@clemson.edu>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com> <11934326823646-git-send-email-linville@tuxdriver.com> <200710280329.40757.flamingice@sourmilk.net>
-In-Reply-To: <200710280329.40757.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart10952858.x9b0Kab6u3";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710280331.34515.flamingice@sourmilk.net> (sfid-20071028_073506_757618_72CE9827)
+Received: from mga03.intel.com ([143.182.124.21]:24399 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753208AbXJNUWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2007 16:22:20 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 5/5] iwlwifi: remove cck_power_index_compensation
+Date: Sun, 14 Oct 2007 22:20:34 +0200
+Message-Id: <11923932402777-git-send-email-tomas.winkler@intel.com> (sfid-20071014_212232_137970_7741F810)
+In-Reply-To: <11923932403492-git-send-email-tomas.winkler@intel.com>
+References: <11923932343888-git-send-email-tomas.winkler@intel.com>
+ <11923932403473-git-send-email-tomas.winkler@intel.com>
+ <11923932401165-git-send-email-tomas.winkler@intel.com>
+ <11923932403492-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart10952858.x9b0Kab6u3
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+cck_power_index_compensation variable was never used
 
-On Sunday 28 October 2007 03:29:36 Michael Wu wrote:
-> On Friday 26 October 2007 17:04:33 John W. Linville wrote:
-> > From: Bill Moss <bmoss@clemson.edu>
-> >
-> > This patch fixes the problem of associating with wpa_secured hidden
-> > AP.  Please try out.
-> >
-> > The original author of this patch is Bill Moss <bmoss@clemson.edu>
-> >
-> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> Wrong patch.
->
-Er, actually nevermind. However, I'd much prefer rolling the next patch you=
-=20
-have in this series up into this patch.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-priv.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
+ 2 files changed, 0 insertions(+), 3 deletions(-)
 
-=2DMichael Wu
+diff --git a/drivers/net/wireless/iwlwifi/iwl-priv.h b/drivers/net/wireless/iwlwifi/iwl-priv.h
+index 6b490d0..f43679a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-priv.h
++++ b/drivers/net/wireless/iwlwifi/iwl-priv.h
+@@ -278,7 +278,6 @@ struct iwl_priv {
+ #define IWL_DEFAULT_TX_POWER 0x0F
+ 	s8 user_txpower_limit;
+ 	s8 max_channel_txpower_limit;
+-	u32 cck_power_index_compensation;
+ 
+ #ifdef CONFIG_PM
+ 	u32 pm_state[16];
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index a198b01..9cd8dcb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -8982,8 +8982,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	priv->channel_width = IWL_CHANNEL_WIDTH_40MHZ;
+ 	priv->valid_antenna = 0x7;	/* assume all 3 connected */
+ 	priv->ps_mode = IWL_MIMO_PS_NONE;
+-	priv->cck_power_index_compensation = iwl_read32(
+-		priv, CSR_HW_REV_WA_REG);
+ 
+ 	iwl4965_set_rxon_chain(priv);
+ 
+-- 
+1.5.2.2
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-
-
---nextPart10952858.x9b0Kab6u3
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHJDrWT3Oqt9AH4aERAmzTAJ9PAz0a8nCa/9E6uw3x6R9U/vhvWgCdEJda
-64fhgRgKdlBoconXqxRvTSM=
-=oe2b
------END PGP SIGNATURE-----
-
---nextPart10952858.x9b0Kab6u3--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
