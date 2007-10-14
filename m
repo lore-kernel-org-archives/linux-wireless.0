@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.238]:24710 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757929AbXJONhg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 09:37:36 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so1283114hue
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 06:37:34 -0700 (PDT)
-Date: Mon, 15 Oct 2007 21:33:56 +0800
-From: WANG Cong <xiyou.wangcong@gmail.com>
-To: Adrian Bunk <bunk@kernel.org>
-Cc: WANG Cong <xiyou.wangcong@gmail.com>, mb@bu3sch.de, st3@riseup.net,
-	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>,
-	Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [-mm Patch] drivers/net/wireless/b43/main.c: fix an
-	uninitialized variable
-Message-ID: <20071015133356.GQ2444@hacking> (sfid-20071015_143739_987223_E6F5E7E8)
-Reply-To: WANG Cong <xiyou.wangcong@gmail.com>
-References: <20071014175142.GN4211@stusta.de> <20071015113445.GO2444@hacking> <20071015125644.GB5417@stusta.de>
+Received: from nbd.name ([88.198.39.176]:46554 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757986AbXJNTqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2007 15:46:21 -0400
+Message-ID: <47126836.5000906@openwrt.org> (sfid-20071014_204636_186040_E142AA77)
+Date: Sun, 14 Oct 2007 21:04:22 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071015125644.GB5417@stusta.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] Fix a null pointer check in ssb mipscore init
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 15, 2007 at 02:56:44PM +0200, Adrian Bunk wrote:
->On Mon, Oct 15, 2007 at 07:34:45PM +0800, WANG Cong wrote:
->> 
->> Fix an uninitialized variable in drivers/net/wireless/b43/main.c::b43_start().
->> 
->> From: Adrian Bunk <bunk@kernel.org>
+Fix a null pointer check in ssb mipscore init
 
-Reported-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
->
->A technical remark regarding these two patches:
->
->These are your patches, not mine.
->
->You can note formally or informally that I reported/forwarded these 
->issues, but I'm neither in a legal sense the author of these patches nor
->am I in a technical sense responsible for their correctness [1], and a 
->From: tag is therefore not appropriate.
->
+--- a/drivers/ssb/driver_mipscore.c
++++ b/drivers/ssb/driver_mipscore.c
+@@ -171,20 +171,21 @@ u32 ssb_cpu_clock(struct ssb_mipscore *mcore)
+ 	return rate;
+ }
 
-OK. I look through Jonathan's patch[1], but didn't find a proper tag
-as you suggested. I think the "Reported-by:" tag may be appropriate,
-as the above.
+ void ssb_mipscore_init(struct ssb_mipscore *mcore)
+ {
+-	struct ssb_bus *bus = mcore->dev->bus;
++	struct ssb_bus *bus;
+ 	struct ssb_device *dev;
+ 	unsigned long hz, ns;
+ 	unsigned int irq, i;
 
-So, we need a "Reported-by:" tag, Jonathan. Could you please consider
-to add it into your patch? I didn't see it in -mm1 tree or I can give
-you a patch.
+ 	if (!mcore->dev)
+ 		return; /* We don't have a MIPS core */
 
-CC: Jonathan Corbet <corbet@lwn.net>
+ 	ssb_dprintk(KERN_INFO PFX "Initializing MIPS core...\n");
 
-Thanks!
++	bus = mcore->dev->bus;
+ 	hz = ssb_clockspeed(bus);
+ 	if (!hz)
+ 		hz = 100000000;
+ 	ns = 1000000000 / hz;
 
-[1] http://lkml.org/lkml/2007/10/11/255
 
--- 
-May the Source Be With You.
