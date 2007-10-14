@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:55114 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949AbXJaRx2 (ORCPT
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:35252 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760353AbXJNRup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 13:53:28 -0400
-Received: by py-out-1112.google.com with SMTP id u77so432262pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 10:53:25 -0700 (PDT)
-Message-ID: <43e72e890710311053x2ab9e8a0m492901b91f064c51@mail.gmail.com> (sfid-20071031_175405_155359_7C0665AE)
-Date: Wed, 31 Oct 2007 13:53:25 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [PATCH 1/7] ath5k: Maintain coding style
-In-Reply-To: <20071027230425.GA5973@localhost.domain.invalid>
+	Sun, 14 Oct 2007 13:50:45 -0400
+Date: Sun, 14 Oct 2007 19:51:15 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] iwl4965-base.c: fix off-by-one errors
+Message-ID: <20071014175115.GL4211@stusta.de> (sfid-20071014_185051_121798_242B3550)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071027230425.GA5973@localhost.domain.invalid>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
+This patch fixes two off-by-one errors resulting in array overflows 
+spotted by the Coverity checker.
 
-> Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-This if for your patches 1-7 and the new descriptor rework. I've
-tested this on x86 and big-endian. Big-endian works well except if you
-use dhclient you won't get an IP address, please use dhcpcd-bin. I
-don't have time to debug dhclient but I'll explain the problem. When
-you run dhclient on your wlan%d you will get in your kernel ring
-buffer:
+---
 
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-This is printed by net/ipv6/addrconf.c when there's the event is a
-NETDEV_CHANGE and dev->qdisc == &noop_qdisc.
+--- linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c.old	2007-10-14 16:52:21.000000000 +0200
++++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-14 16:59:37.000000000 +0200
+@@ -4489,23 +4489,23 @@ static u8 ratio2dB[100] = {
+ 	39, 39, 39, 39, 39, 40, 40, 40, 40, 40  /* 90 - 99 */
+ };
+ 
+ /* Calculates a relative dB value from a ratio of linear
+  *   (i.e. not dB) signal levels.
+  * Conversion assumes that levels are voltages (20*log), not powers (10*log). */
+ int iwl_calc_db_from_ratio(int sig_ratio)
+ {
+-	/* Anything above 1000:1 just report as 60 dB */
+-	if (sig_ratio > 1000)
++	/* 1000:1 or higher just report as 60 dB */
++	if (sig_ratio >= 1000)
+ 		return 60;
+ 
+-	/* Above 100:1, divide by 10 and use table,
++	/* 100:1 or higher, divide by 10 and use table,
+ 	 *   add 20 dB to make up for divide by 10 */
+-	if (sig_ratio > 100)
++	if (sig_ratio >= 100)
+ 		return (20 + (int)ratio2dB[sig_ratio/10]);
+ 
+ 	/* We shouldn't see this */
+ 	if (sig_ratio < 1)
+ 		return 0;
+ 
+ 	/* Use table for ratios 1:1 - 99:1 */
+ 	return (int)ratio2dB[sig_ratio];
 
-Using dhcpcd-bin wlan0, however works well.
-
-Then, we have a problem with ath5k on big endian. Any packet > 1470
-bytes will not be passed through the upper layers on the receiving big
-endian box with ath5k. These new patches are not the culprit though,
-I've tested this before this patch series. We'll have to figure that
-out.
-
-So, for patches 1-7 and
-
-[PATCH] ath5k: Remove fill_tx_desc
-[PATCH] ath5k: 4word tx descriptor setup doesn't set BUF_LEN
-
-The last one by Ulrich Meis.
-
-Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
-  Luis
