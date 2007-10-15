@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:35252 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760353AbXJNRup (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2007 13:50:45 -0400
-Date: Sun, 14 Oct 2007 19:51:15 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
-Subject: [2.6 patch] iwl4965-base.c: fix off-by-one errors
-Message-ID: <20071014175115.GL4211@stusta.de> (sfid-20071014_185051_121798_242B3550)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([66.187.233.31]:36233 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752721AbXJOOm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 10:42:56 -0400
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200710151628.43425.hs4233@mail.mn-solutions.de>
+References: <200710111151.06989.hs4233@mail.mn-solutions.de>
+	 <200710150918.02708.hs4233@mail.mn-solutions.de>
+	 <1192457588.12009.5.camel@localhost.localdomain>
+	 <200710151628.43425.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 15 Oct 2007 10:42:32 -0400
+Message-Id: <1192459352.12009.25.camel@localhost.localdomain> (sfid-20071015_154259_626458_8E32D1A4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes two off-by-one errors resulting in array overflows 
-spotted by the Coverity checker.
+On Mon, 2007-10-15 at 16:28 +0200, Holger Schurig wrote:
+> Hi Dan !
+> 
+> > I don't really care.  You've already done the work for 'lbs'
+> > so that's fine by me.
+> 
+> Yeah, but doing something like
+> 
+>    perl -pi -e 's:lbs_:lts_:g' XXXX.patch
+> 
+> would be easy enought.
+> 
+> 
+> 
+> Did already look at
+> 
+> http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=commitdiff;h=aff223229493c7c43c8acedc728cdb312f82f3f9
+> 
+> ????   Please review :-)
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Yeah, I got through maybe 1/3 of it so far, it's huge :)  I don't have
+one of my libertas parts to test with me right now, but I'll try to do
+that today or tomorrow.  I'd like to just run through a few scenarios to
+make sure.  I assume you've been running it for a few days or so?
 
----
+Dan
 
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
---- linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c.old	2007-10-14 16:52:21.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-14 16:59:37.000000000 +0200
-@@ -4489,23 +4489,23 @@ static u8 ratio2dB[100] = {
- 	39, 39, 39, 39, 39, 40, 40, 40, 40, 40  /* 90 - 99 */
- };
- 
- /* Calculates a relative dB value from a ratio of linear
-  *   (i.e. not dB) signal levels.
-  * Conversion assumes that levels are voltages (20*log), not powers (10*log). */
- int iwl_calc_db_from_ratio(int sig_ratio)
- {
--	/* Anything above 1000:1 just report as 60 dB */
--	if (sig_ratio > 1000)
-+	/* 1000:1 or higher just report as 60 dB */
-+	if (sig_ratio >= 1000)
- 		return 60;
- 
--	/* Above 100:1, divide by 10 and use table,
-+	/* 100:1 or higher, divide by 10 and use table,
- 	 *   add 20 dB to make up for divide by 10 */
--	if (sig_ratio > 100)
-+	if (sig_ratio >= 100)
- 		return (20 + (int)ratio2dB[sig_ratio/10]);
- 
- 	/* We shouldn't see this */
- 	if (sig_ratio < 1)
- 		return 0;
- 
- 	/* Use table for ratios 1:1 - 99:1 */
- 	return (int)ratio2dB[sig_ratio];
 
