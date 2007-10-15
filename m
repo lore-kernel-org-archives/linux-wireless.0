@@ -1,102 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:63547 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967AbXJaTOH (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55544
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759595AbXJOMzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 15:14:07 -0400
-Received: by py-out-1112.google.com with SMTP id u77so477823pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 12:14:06 -0700 (PDT)
-Message-ID: <43e72e890710311214y52bbdfd3y24d3c05c05257ac6@mail.gmail.com> (sfid-20071031_191411_546365_24FA17F4)
-Date: Wed, 31 Oct 2007 15:14:06 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer chips
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com>
+	Mon, 15 Oct 2007 08:55:35 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: Fwd: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize the correct return value
+Date: Mon, 15 Oct 2007 14:54:45 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	WANG Cong <xiyou.wangcong@gmail.com>,
+	Adrian Bunk <bunk@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071027232033.GD5973@localhost.domain.invalid>
-	 <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
-	 <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200710151454.46047.mb@bu3sch.de> (sfid-20071015_135551_256929_8905D379)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
-> > On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
-> >
-> > > * Give more infos about mac/phy/radio revision during attach.
-> >
-> > > @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
-> > >         if (ret)
-> > >                 goto err_ah;
-> > >
-> > > -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
-> > > -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
-> > > -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
-> > > -                       sc->ah->ah_phy_revision & 0xf);
-> > > +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> > > +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
-> > > +                                       sc->ah->ah_mac_srev,
-> > > +                                       sc->ah->ah_phy_revision);
-> > > +
-> > > +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> > > +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > +                                       sc->ah->ah_radio_5ghz_revision);
-> > > +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> > > +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > +                                       sc->ah->ah_radio_5ghz_revision);
-> > > +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> > > +                                       sc->ah->ah_radio_2ghz_revision);
-> > > +       }
-> > > +
-> > >
-> > >         /* ready to process interrupts */
-> > >         __clear_bit(ATH_STAT_INVALID, sc->status);
-> > >
-> >
-> > I have ACK'd this as I believe its a lot more useful information than
-> > what we had before but I am confused by what some different prints may
-> > yield. For example, on AR5213, I get:
-> >
-> > ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
-> > ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
-> > ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
-> >
-> > On my Cardbus card, I then get:
-> >
-> > ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
-> > ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
-> >
-> > Now, both are capable of 2 GHz and 5 GHz though and only one prints a
-> > line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
-> > my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
-> > having a print for both RFs here indicate besides the fact we are
-> > indicating the type of radio and revision? And in the Cardbus card I
-> > have where only one RF line is printed what does that indicate?
-> >
-> >   Luis
->
-> RF5111 is only 5GHz capable without 2111, 2111 is only 2GHz capable
-> (it's actually an extension to 5111), on the other hand 5112 is
-> multiband, that's why we don't say it's type.
+From: Adrian Bunk <bunk@kernel.org>
 
-Can add in the message that its RF is multiband then (2GHz/5GHz note will work)?
+Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
+in case of returning an uninitialized value.
 
-> On single chip solutions
-> both revisions are 0 so no RF chip msg is displayed.
+Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Hm.. interesting.. we probably should inform the band the RF is
-capable of then at least. What do you think?
+---
+ drivers/net/wireless/b43/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> We have to handle this better for b/g only cards but i didn't have
-> such cards to test so i'll try it later (first we have to see what's
-> going on and they don't work).
+Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
++++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
+@@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
+ 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+ 	struct b43legacy_wldev *dev = wl->current_dev;
+ 	int did_init = 0;
+-	int err;
++	int err = 0;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
 
-You have one now?
 
-  Luis
+-------------------------------------------------------
+
+-- 
+Greetings Michael.
