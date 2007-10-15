@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755791AbXJDSQf (ORCPT
+Received: from iggypop2.siwnet.net ([81.216.65.12]:63742 "EHLO
+	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701AbXJOHFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 14:16:35 -0400
-Subject: Re: [NOTE] driver caveat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071004131019.GC6037@tuxdriver.com> (sfid-20071004_143906_154438_EAD285D8)
-References: <1191480634.9898.30.camel@johannes.berg>
-	 <20071004131019.GC6037@tuxdriver.com>
-	 (sfid-20071004_143906_154438_EAD285D8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-l303yEUErFaa2rTTfPXZ"
-Date: Thu, 04 Oct 2007 20:16:55 +0200
-Message-Id: <1191521815.7367.8.camel@johannes.berg> (sfid-20071004_191639_424586_0FD767B1)
-Mime-Version: 1.0
+	Mon, 15 Oct 2007 03:05:07 -0400
+Message-ID: <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com> (sfid-20071015_080513_491220_46EFBE78)
+In-Reply-To: <1192217047.4770.61.camel@johannes.berg>
+References: <fdqhn4$qab$1@sea.gmane.org>
+    <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+    <1192094159.4770.21.camel@johannes.berg>
+    <200710112005.56101.IvDoorn@gmail.com>
+    <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
+    <1192216713.4770.58.camel@johannes.berg>
+    <1192217047.4770.61.camel@johannes.berg>
+Date: Mon, 15 Oct 2007 09:04:47 +0200 (CEST)
+Subject: Re: [PATCH v2] mac80211: fix set_channel regression
+From: "Marcus Better" <marcus@better.se>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> Michael Wu just pointed out the error in my previous patch. I missed the
+> outer loop, we need to break from it as well.
 
---=-l303yEUErFaa2rTTfPXZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The new patch doesn't seem to solve the problem either. I get the same
+association failure as before.
 
-On Thu, 2007-10-04 at 09:10 -0400, John W. Linville wrote:
-> On Thu, Oct 04, 2007 at 08:50:34AM +0200, Johannes Berg wrote:
->=20
-> > If you've been experiencing bad behaviour with suspend this may be the
-> > cause, instead of working around in the driver I suggest you implement
-> > proper suspend/resume hooks in mac80211 for drivers to call ;)
->=20
-> Proper support for suspend/resume in mac80211 seems to be an issue
-> that could use some TLC.  Anyone up for the challenge?
+Marcus
 
-I already added helper functions for the keys which are the most
-difficult part along with the interface configs. Phy config should be
-simple.
-
-johannes
-
---=-l303yEUErFaa2rTTfPXZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwUuFqVg1VMiehFYAQKa9Q//Ro1s0g3JWKp6xBubhv0E97sycc4fU56v
-GqPwXf/3I9ZMTZaoOfsJJlT9oL2SFQCbXCL4XTpOUQxjrsNU7rASo+5Aym6neEqB
-w4aSG3KLjwenRAqDeFb23IsJZr2Y2hjkKU/fM6NEIVrRs0nuS0H5KCHiHJkhBvpA
-R0EAQcG9pBzV6iTd905pdYHDb6EXszNFCykuHH/6kG556Dwf3xveSofc5XGx+YDG
-fP4oX7NnuUFGfXD9twi7Jc/DwqDOccqOLZh0LFJj8f07rZuxXJLh6n7etn8PVqqD
-320V/SK/UmoYYbq4PAnvlw/MDCoS6/VyWHMAGXYLXCoYNMT1M9cNMAaO2lJLbCe5
-Wx5CoAKbPQltjbpn2rMetsUSEyJMPlESKTpyb83/AOGRc72ZhgQX+rE2nG5b0DmD
-DFbNmIYNRs94Sj3qPgqSEGLCx0DGbNMRW2vLdyd9cFrTZqWekqxNVP0CdChWtfTe
-xIhzUKLiqetiM4YJhdXFAo7xCG0CMefWw+nxTu8cgHk0atMbFO/xOV88nQ44Fyao
-TI9iHvRflBxgyJZ6ebOAMtGrMyRfJ6oxgVlRxSv/6xNzsgnbWD/No8/muMLuFjZK
-ZV7g8cQDA4hoT6UL2ifxfJmXqtNQbZhqZAFCNT8QireVMi7IQvfgg9emNtO/lZWj
-Al6AAzgaRg0=
-=Q3V6
------END PGP SIGNATURE-----
-
---=-l303yEUErFaa2rTTfPXZ--
 
