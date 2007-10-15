@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:64037 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761958AbXJQVgg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 17:36:36 -0400
-Received: by py-out-1112.google.com with SMTP id u77so4579355pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 14:36:34 -0700 (PDT)
-Message-ID: <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com> (sfid-20071017_223653_972339_CEFEBEDF)
-Date: Wed, 17 Oct 2007 17:36:33 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath5k: avoid oops when ah_capabilities.cap_mode not set
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1192647780430-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1192647780430-git-send-email-linville@tuxdriver.com>
+Received: from mx1.redhat.com ([66.187.233.31]:59645 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754108AbXJOONb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 10:13:31 -0400
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200710150918.02708.hs4233@mail.mn-solutions.de>
+References: <200710111151.06989.hs4233@mail.mn-solutions.de>
+	 <20071011141642.GA6976@infradead.org>
+	 <1192114234.31895.5.camel@localhost.localdomain>
+	 <200710150918.02708.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 15 Oct 2007 10:13:08 -0400
+Message-Id: <1192457588.12009.5.camel@localhost.localdomain> (sfid-20071015_151333_367807_3C7EF42E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/17/07, John W. Linville <linville@tuxdriver.com> wrote:
-> ah_capabilities.cap_mode doesn't get set for some cards, causing the
-> kernel to oops when these unknown/unsupported cards are inserted.
-> Add some NULL checks to avoid this.
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Mon, 2007-10-15 at 09:18 +0200, Holger Schurig wrote:
+> > wlan_set_essid -> lts_set_essid
+> > wlan_private -> lts_private
+> >
+> > (I don't really like 'lbs' personally but I'm not that
+> > strongly against it)
+> 
+> I've used lbs_XXX and LBS_DEB_xxx for the debugging stuff. Do you 
+> want to get that changed to lts_XXX and LTS_DEB_xxx, too?
+> 
+> (I personally like lbs more, but am also not strongly for it or 
+> against something else, I just want to keep things orthogonal)
 
-Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+I don't really care.  You've already done the work for 'lbs' so that's
+fine by me.
 
-  Luis
+Dan
+
+
