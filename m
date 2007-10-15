@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:56359 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756122AbXJ0QA0 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55345
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757963AbXJOMx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 12:00:26 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1011483nfb
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 09:00:24 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-Date: Sat, 27 Oct 2007 18:19:52 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710271334.34192.IvDoorn@gmail.com> <20071027124735.GA16222@tuxdriver.com> <200710271645.37715.IvDoorn@gmail.com>
-In-Reply-To: <200710271645.37715.IvDoorn@gmail.com>
+	Mon, 15 Oct 2007 08:53:58 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: jiffies_round -> jiffies_round_relative conversion - b43/b43legacy
+Date: Mon, 15 Oct 2007 14:52:57 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Anton Blanchard <anton@samba.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
+Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <200710271819.52347.IvDoorn@gmail.com> (sfid-20071027_170037_267572_04574C4F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200710151452.58150.mb@bu3sch.de> (sfid-20071015_135400_220989_6F204EEC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 27 October 2007, Ivo van Doorn wrote:
-> On Saturday 27 October 2007, John W. Linville wrote:
-> > On Sat, Oct 27, 2007 at 01:34:34PM +0200, Ivo van Doorn wrote:
-> > 
-> > > Here is the 2.0.12 release of rt2x00.
-> > > I noticed you only pulled 2 patches from the 2.0.11 release,
-> > > and I don't know why you dropped the remaining patches.
-> > > This means that this pull requests also contains the remaining
-> > > 2.0.11 patches...
-> > 
-> > I haven't dropped them.  I'll be merging them for 2.6.25.  The patches
-> > that got merged were sent as fixes for 2.6.24.
-> 
-> Ah ok. Thanks.
+When rounding a relative timeout we need to use round_jiffies_relative(). 
 
-Btw, is there any branch in wireless-2.6 which in this case contains all
-pending patches? (So those that also includes the patches which will
-be merged for the next kernel).
-I could use that branch to update rt2x00.git from.
+Signed-off-by: Anton Blanchard <anton@samba.org>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+---
 
-Ivo
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index c141a26..41049a4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2392,7 +2392,7 @@ out_requeue:
+ 	if (b43_debug(dev, B43_DBG_PWORK_FAST))
+ 		delay = msecs_to_jiffies(50);
+ 	else
+-		delay = round_jiffies(HZ * 15);
++		delay = round_jiffies_relative(HZ * 15);
+ 	queue_delayed_work(wl->hw->workqueue, &dev->periodic_work, delay);
+ out:
+ 	mutex_unlock(&wl->mutex);
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index f074951..bd0bd9b 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -2260,7 +2260,7 @@ out_requeue:
+ 	if (b43legacy_debug(dev, B43legacy_DBG_PWORK_FAST))
+ 		delay = msecs_to_jiffies(50);
+ 	else
+-		delay = round_jiffies(HZ);
++		delay = round_jiffies_relative(HZ);
+ 	queue_delayed_work(dev->wl->hw->workqueue,
+ 			   &dev->periodic_work, delay);
+ out:
+
+
+-------------------------------------------------------
+
+-- 
+Greetings Michael.
