@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57457 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754851AbXJYJct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:32:49 -0400
-Message-ID: <472062BA.6020102@garzik.org> (sfid-20071025_103252_753645_0652AC6D)
-Date: Thu, 25 Oct 2007 05:32:42 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 11/30] iwlwifi: using PCI_DEVICE macro
-References: <11933037512140-git-send-email-yi.zhu@intel.com> <11933037541699-git-send-email-yi.zhu@intel.com> <11933037553170-git-send-email-yi.zhu@intel.com> <119330375796-git-send-email-yi.zhu@intel.com> <11933037584069-git-send-email-yi.zhu@intel.com> <11933037601236-git-send-email-yi.zhu@intel.com> <11933037613709-git-send-email-yi.zhu@intel.com> <1193303762680-git-send-email-yi.zhu@intel.com> <11933037641168-git-send-email-yi.zhu@intel.com> <11933037663659-git-send-email-yi.zhu@intel.com> <11933037674045-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11933037674045-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbXJOPh6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 11:37:58 -0400
+Subject: [PATCH] ieee80211: fix TKIP QoS bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 15 Oct 2007 16:50:54 +0200
+Message-Id: <1192459854.3349.42.camel@johannes.berg> (sfid-20071015_163812_221834_58A17172)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
-> 
-> PCI_DEVICE macro is more concise when using defualt values
-> in device definitions
-> 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> index 62b44a4..d4dc30d 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> @@ -2278,8 +2278,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
->  }
->  
->  struct pci_device_id iwl_hw_card_ids[] = {
-> -	{0x8086, 0x4222, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> -	{0x8086, 0x4227, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> +	{PCI_DEVICE(0x8086, 0x4222)},
-> +	{PCI_DEVICE(0x8086, 0x4227)},
->  	{0}
->  };
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 4710f6e..f86a24e 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -4680,8 +4680,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
->  }
->  
->  struct pci_device_id iwl_hw_card_ids[] = {
-> -	{0x8086, 0x4229, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> -	{0x8086, 0x4230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> +	{PCI_DEVICE(0x8086, 0x4229)},
-> +	{PCI_DEVICE(0x8086, 0x4230)},
+The commit 65b6a277 titled "ieee80211: Fix header->qos_ctl endian issue"
+*introduced* an endianness bug. Partially revert it.
 
-FWIW I would recommend
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-	PCI_VDEVICE(INTEL, 0x4229)
+---
+Grumble. No comments on this for months so I'll just do this. Looks like
+these people aren't able to follow endianness value swaps at all and the
+code added by that commit is *obviously* wrong, assigning an le16 value
+with only bits set in the low-order bits to a u8...
 
-Regards,
+ net/ieee80211/ieee80211_crypt_tkip.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Jeff
-
+--- wireless-dev.orig/net/ieee80211/ieee80211_crypt_tkip.c	2007-10-15 16:44:11.058510862 +0200
++++ wireless-dev/net/ieee80211/ieee80211_crypt_tkip.c	2007-10-15 16:46:34.898510862 +0200
+@@ -584,7 +584,7 @@ static void michael_mic_hdr(struct sk_bu
+ 	if (stype & IEEE80211_STYPE_QOS_DATA) {
+ 		const struct ieee80211_hdr_3addrqos *qoshdr =
+ 			(struct ieee80211_hdr_3addrqos *)skb->data;
+-		hdr[12] = qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TID);
++		hdr[12] = le16_to_cpu(qoshdr->qos_ctl) & IEEE80211_QCTL_TID;
+ 	} else
+ 		hdr[12] = 0;		/* priority */
+ 
 
 
