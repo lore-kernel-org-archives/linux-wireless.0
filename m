@@ -1,45 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40301
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960AbXJBKUx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 06:20:53 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH #2 fixed] mac80211: Update beacon_update callback documentation
-Date: Tue, 2 Oct 2007 12:17:56 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
+Received: from ozlabs.org ([203.10.76.45]:53558 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752561AbXJOFlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 01:41:49 -0400
+Date: Mon, 15 Oct 2007 00:38:01 -0500
+From: Anton Blanchard <anton@samba.org>
+To: yi.zhu@intel.com, jketreno@linux.intel.com
+Cc: arjan@linux.intel.com, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
+Subject: [PATCH] jiffies_round -> jiffies_round_relative conversion -
+	ipw2100/ipw2200
+Message-ID: <20071015053801.GB3257@kryten> (sfid-20071015_064153_942538_192A8001)
+References: <20071015053428.GA3257@kryten>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710021217.56812.mb@bu3sch.de> (sfid-20071002_112055_982257_E072C542)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071015053428.GA3257@kryten>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Index: wireless-2.6/include/net/mac80211.h
-===================================================================
---- wireless-2.6.orig/include/net/mac80211.h	2007-09-25 22:51:28.000000000 +0200
-+++ wireless-2.6/include/net/mac80211.h	2007-10-02 12:16:59.000000000 +0200
-@@ -890,7 +890,14 @@ struct ieee80211_ops {
+When rounding a relative timeout we need to use round_jiffies_relative(). 
+
+Signed-off-by: Anton Blanchard <anton@samba.org>
+---
+
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index 2d46a16..739d060 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -1769,7 +1769,7 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
+ 		if (priv->stop_rf_kill) {
+ 			priv->stop_rf_kill = 0;
+ 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
+-					   round_jiffies(HZ));
++					   round_jiffies_relative(HZ));
+ 		}
  
- 	/* Setup beacon data for IBSS beacons. Unlike access point (Master),
- 	 * IBSS uses a fixed beacon frame which is configured using this
--	 * function. This handler is required only for IBSS mode. */
-+	 * function.
-+	 * If the driver returns success (0) from this callback, it owns
-+	 * the skb. That means the driver is responsible to kfree_skb() it.
-+	 * The control structure is not dynamically allocated. That means the
-+	 * driver does not own the pointer and if it needs it somewhere
-+	 * outside of the context of this function, it must copy it
-+	 * somewhere else.
-+	 * This handler is required only for IBSS mode. */
- 	int (*beacon_update)(struct ieee80211_hw *hw,
- 			     struct sk_buff *skb,
- 			     struct ieee80211_tx_control *control);
-
--- 
-Greetings Michael.
+ 		deferred = 1;
+@@ -2102,7 +2102,8 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
+ 	/* Make sure the RF Kill check timer is running */
+ 	priv->stop_rf_kill = 0;
+ 	cancel_delayed_work(&priv->rf_kill);
+-	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
++	queue_delayed_work(priv->workqueue, &priv->rf_kill,
++			   round_jiffies_relative(HZ));
+ }
+ 
+ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
+@@ -4237,7 +4238,7 @@ static int ipw_radio_kill_sw(struct ipw2100_priv *priv, int disable_radio)
+ 			priv->stop_rf_kill = 0;
+ 			cancel_delayed_work(&priv->rf_kill);
+ 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
+-					   round_jiffies(HZ));
++					   round_jiffies_relative(HZ));
+ 		} else
+ 			schedule_reset(priv);
+ 	}
+@@ -5975,7 +5976,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
+ 		IPW_DEBUG_RF_KILL("RF Kill active, rescheduling GPIO check\n");
+ 		if (!priv->stop_rf_kill)
+ 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
+-					   round_jiffies(HZ));
++					   round_jiffies_relative(HZ));
+ 		goto exit_unlock;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index feb8fcb..88b0f81 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -1753,7 +1753,7 @@ static int ipw_radio_kill_sw(struct ipw_priv *priv, int disable_radio)
+ 			/* Make sure the RF_KILL check timer is running */
+ 			cancel_delayed_work(&priv->rf_kill);
+ 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
+-					   round_jiffies(2 * HZ));
++					   round_jiffies_relative(2 * HZ));
+ 		} else
+ 			queue_work(priv->workqueue, &priv->up);
+ 	}
+@@ -4364,7 +4364,7 @@ static void handle_scan_event(struct ipw_priv *priv)
+ 	if (!priv->user_requested_scan) {
+ 		if (!delayed_work_pending(&priv->scan_event))
+ 			queue_delayed_work(priv->workqueue, &priv->scan_event,
+-					 round_jiffies(msecs_to_jiffies(4000)));
++					 round_jiffies_relative(msecs_to_jiffies(4000)));
+ 	} else {
+ 		union iwreq_data wrqu;
+ 
+@@ -4728,7 +4728,7 @@ static void ipw_rx_notification(struct ipw_priv *priv,
+ 				 && priv->status & STATUS_ASSOCIATED)
+ 				queue_delayed_work(priv->workqueue,
+ 						   &priv->request_scan,
+-						   round_jiffies(HZ));
++						   round_jiffies_relative(HZ));
+ 
+ 			/* Send an empty event to user space.
+ 			 * We don't send the received data on the event because
