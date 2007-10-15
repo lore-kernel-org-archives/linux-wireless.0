@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:50625 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752733AbXJZIGB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 04:06:01 -0400
-Message-ID: <47219FE6.70900@sgi.com> (sfid-20071026_090617_825749_068086CD)
-Date: Fri, 26 Oct 2007 10:05:58 +0200
-From: Jes Sorensen <jes@sgi.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: iwl4965 detection problem
-References: <47209C0C.5010505@sgi.com>	 <1193319925.5542.8.camel@localhost.localdomain>  <4720A509.2070708@sgi.com> <1193333545.2111.8.camel@localhost.localdomain>
-In-Reply-To: <1193333545.2111.8.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from main.gmane.org ([80.91.229.2]:41895 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932365AbXJPPIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 11:08:09 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Ihnyg-0005cm-Qm
+	for linux-wireless@vger.kernel.org; Tue, 16 Oct 2007 15:05:02 +0000
+Received: from userch028.dsl.pipex.com ([62.190.239.28])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 15:05:02 +0000
+Received: from linux by userch028.dsl.pipex.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 15:05:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Adam Baker <linux@baker-net.org.uk>
+Subject: Re: rt2500pci 2.0.9 not working
+Date: Mon, 15 Oct 2007 21:49:30 +0000 (UTC)
+Message-ID: <loom.20071015T214644-5@post.gmane.org> (sfid-20071016_160812_300281_9777F3E9)
+References: <fdqhn4$qab$1@sea.gmane.org> <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com> <1192094159.4770.21.camel@johannes.berg> <200710112005.56101.IvDoorn@gmail.com> <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com> <fent23$9gc$1@sea.gmane.org> <470F89C1.8030406@lwfinger.net> <fevdi0$til$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> I've had this same problem with one machine and there were problems with
-> those two files.  I fixed it on that machine (and was fixed on a few
-> others using this procedure) by removing those two files and rebooting.
+Marcus Better <marcus@...> writes:
+
 > 
-> The symptom is that the driver loads and recognizes the card, but no
-> wireless devices show up to userspace (via iwconfig, ifconfig, or
-> in /sys/class/net) because device renames by udev and/or init scripts
-> stomped over them (like trying to rename wmaster0 -> eth1 and then
-> renaming wlan0 -> eth1 but failing because it was already taken).
+> I get download rates of about 9 Mbit, but iwconfig still says the bit rate
+> is 1 Mbit, which seems a bit strange.
 > 
-> Try killing those two files, making sure you're up to date, then
-> restarting.
-
-Hi Dan,
-
-I tried that, but no go :-( Even before the card was detected by Fedora,
-when I manually loaded the iwl4965 module, nothing showed up in
-ifconfig -a, I had to unload/reload for anything to happen.
-
-Cheers,
-Jes
+The rate reported by iwconfig is the upstream rate. The rates won't necessarily
+be the same up and downstream.
 
