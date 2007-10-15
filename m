@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43582 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751004AbXJ1Jtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 05:49:31 -0400
-Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id CBCB415125
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 10:49:29 +0100 (CET)
-From: Andreas Schwab <schwab@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: B43: Badness at drivers/net/wireless/b43/dma.c:1095
-Date: Sun, 28 Oct 2007 10:49:29 +0100
-Message-ID: <jeir4rpo0m.fsf@sykes.suse.de> (sfid-20071028_094936_383525_CDEA39CB)
+Received: from iggypop2.siwnet.net ([81.216.65.12]:54653 "EHLO
+	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758942AbXJOLmV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 07:42:21 -0400
+Message-ID: <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com> (sfid-20071015_124224_970564_04299951)
+In-Reply-To: <1192437157.3349.7.camel@johannes.berg>
+References: <fdqhn4$qab$1@sea.gmane.org>
+    <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
+    <1192094159.4770.21.camel@johannes.berg>
+    <200710112005.56101.IvDoorn@gmail.com>
+    <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
+    <1192216713.4770.58.camel@johannes.berg>
+    <1192217047.4770.61.camel@johannes.berg>
+    <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com>
+    <1192437157.3349.7.camel@johannes.berg>
+Date: Mon, 15 Oct 2007 13:37:57 +0200 (CEST)
+Subject: Re: [PATCH v2] mac80211: fix set_channel regression
+From: "Marcus Better" <marcus@better.se>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm getting this badness with b43 on my iBook during network scan,
-because cookie is zero in parse_cookie.  Sometimes the last message
-before the badness is "b43-phy0 ERROR: PHY transmission error".  This i=
-s
-a 4318:
+Johannes Berg wrote:
+> On Mon, 2007-10-15 at 09:04 +0200, Marcus Better wrote:
+>> The new patch doesn't seem to solve the problem either. I get the same
+>> association failure as before.
 
-b43-phy0: Broadcom 4318 WLAN found
-b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+Update: on my second recompile (after adding the printks) it started
+working. I'm not sure why it failed the first time.
 
-Andreas.
+However there is a huge performance regression. "tptest" shows a TCP
+throughput of under 300 kbit for the driver version 2.0.9 (current
+wireless-2.6), compared to 7 Mbit for version 2.0.7 (with kernel
+2.6.23-rc3). The UDP speed was also affected but not as much, down from
+around 5-10 Mbit to 1 Mbit.
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Can you add back your printk patch and check what type 'channel' was and
+> maybe print channel->channel?
+
+With the printks below I get the following:
+
+Oct 15 13:14:43 better kernel: selected mode 2
+Oct 15 13:14:43 better kernel: selected channel 8
+
+Thanks,
+
+Marcus
+
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -314,6 +314,8 @@ int ieee80211_set_channel(struct ieee80211_local
+*local, int
+        }
+
+        if (set) {
++               printk(KERN_DEBUG "selected mode %d\n",
+local->oper_hw_mode->mod
++               printk(KERN_DEBUG "selected channel %d\n",
+local->oper_channel->
+                if (local->sta_scanning)
+                        ret = 0;
+                else
+
+
