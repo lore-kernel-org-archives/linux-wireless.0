@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:57050 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757191AbXJYOPv (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13590 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754238AbXJOOwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 10:15:51 -0400
-Message-ID: <4720A509.2070708@sgi.com> (sfid-20071025_151554_198567_BF3BC89D)
-Date: Thu, 25 Oct 2007 16:15:37 +0200
-From: Jes Sorensen <jes@sgi.com>
+	Mon, 15 Oct 2007 10:52:23 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+Date: Mon, 15 Oct 2007 16:49:26 +0200
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
+References: <200710111151.06989.hs4233@mail.mn-solutions.de> <200710151628.43425.hs4233@mail.mn-solutions.de> <1192459352.12009.25.camel@localhost.localdomain>
+In-Reply-To: <1192459352.12009.25.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: iwl4965 detection problem
-References: <47209C0C.5010505@sgi.com> <1193319925.5542.8.camel@localhost.localdomain>
-In-Reply-To: <1193319925.5542.8.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710151649.26864.hs4233@mail.mn-solutions.de> (sfid-20071015_155228_496588_832D9521)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> You'll need to update more than just the kernel.  There were issues with
-> Test 3 for udev and network init scripts that didn't distinguish between
-> the wmasterX and wlanX interfaces, and since both have the same MAC
-> address things got confused.
-> 
-> Try updating to the latest Rawhide bits rather than using Test 3.  The
-> make sure you remove the following files:
-> 
-> rm -f /etc/sysconfig/network-scripts/ifcfg-wlan0*
-> rm -f /etc/udev/rules.d/70-persistent-net.rules
-> 
-> The initscripts don't care what's after the ifcfg- (because you could
-> name it ifcfg-Home or ifcfg-Some-Other-Place, it doesn't have to be the
-> device name) and therefore even a ifcfg-wlan0.bak will cause the problem
-> too.
+> I assume you've been running it for a few days or so?
 
-Hi Dan,
+No. I just made this patch 6 hours ago.
 
-I think I have the latest updates, provided fedora/core/development is
-rawhide? I got udev-116-3.fc8 and initscripts-8.60-1.
+I've used it so far only with WEP and no encryption at all, 
+always as STA (no ad-hoc, no wpa-supplicant).
 
-That said, I am pretty sure this is a driver issue - even right after
-the install, when Fedora hadn't figured out the device and didn't try
-to load the module, it didn't find the device either unless I loaded it,
-unloaded it and loaded it again.
+After all, the patch was created using "perl -pi -e" :-)
 
-Cheers,
-Jes
+
+So far I found two quirks:
+
+a) it's no longer /lib/modules/libertas/parameters/libertas_debug 
+but /lib/modules/libertas/parameters/lbs_debug. As this is an 
+ABI change, we might not want it.
+
+b) it's no longer <debugfs>/libertas_wireless/XXXX but 
+<debugfs>/lbs_wireless/XXXX. Also an ABI change.
+
+
+I could make a "take 2" patch, but because of the size of the 
+patch and the hassle to export it in an external git tree I'd 
+rather create a fixup patch. But let's see what you un-earth.
+
