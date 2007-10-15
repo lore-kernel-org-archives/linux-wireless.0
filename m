@@ -1,41 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59645 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754108AbXJOONb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 10:13:31 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200710150918.02708.hs4233@mail.mn-solutions.de>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-	 <20071011141642.GA6976@infradead.org>
-	 <1192114234.31895.5.camel@localhost.localdomain>
-	 <200710150918.02708.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 15 Oct 2007 10:13:08 -0400
-Message-Id: <1192457588.12009.5.camel@localhost.localdomain> (sfid-20071015_151333_367807_3C7EF42E)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.181]:40611 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757071AbXJORz7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 13:55:59 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3162090pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:55:58 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: fix set_channel regression
+Date: Mon, 15 Oct 2007 20:13:20 +0200
+Cc: Marcus Better <marcus@better.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+References: <fdqhn4$qab$1@sea.gmane.org> <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com> <1192448723.3349.32.camel@johannes.berg>
+In-Reply-To: <1192448723.3349.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_A36EHueYIlroqfN"
+Message-Id: <200710152013.20777.IvDoorn@gmail.com> (sfid-20071015_185606_013940_A8D48BFC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-15 at 09:18 +0200, Holger Schurig wrote:
-> > wlan_set_essid -> lts_set_essid
-> > wlan_private -> lts_private
-> >
-> > (I don't really like 'lbs' personally but I'm not that
-> > strongly against it)
+--Boundary-00=_A36EHueYIlroqfN
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+> > However there is a huge performance regression. "tptest" shows a TCP
+> > throughput of under 300 kbit for the driver version 2.0.9 (current
+> > wireless-2.6), compared to 7 Mbit for version 2.0.7 (with kernel
+> > 2.6.23-rc3). The UDP speed was also affected but not as much, down from
+> > around 5-10 Mbit to 1 Mbit.
 > 
-> I've used lbs_XXX and LBS_DEB_xxx for the debugging stuff. Do you 
-> want to get that changed to lts_XXX and LTS_DEB_xxx, too?
-> 
-> (I personally like lbs more, but am also not strongly for it or 
-> against something else, I just want to keep things orthogonal)
+> I don't think this would be related to mac80211, I'll let Ivo handle the
+> rest of this.
 
-I don't really care.  You've already done the work for 'lbs' so that's
-fine by me.
+Could you enable debugfs and use attached debugfs script to create a dump
+of the rt2x00 registers. Preferably a dump of both the rt2x00 2.0.7 and 2.0.9 versions.
 
-Dan
+Ivo
 
+--Boundary-00=_A36EHueYIlroqfN
+Content-Type: application/x-shellscript;
+  name="debugfsdump"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="debugfsdump"
 
+#!/bin/sh
+
+echo "BBP:"
+for ((i = 0; i < `cat chipset | grep bbp | cut -d ':' -f 2 | bc`; i++));
+do
+	echo -n "$i "
+	echo $i > bbp_offset
+	cat bbp_value
+done
+
+echo "CSR:"
+for ((i = 0; i < `cat chipset | grep csr | cut -d ':' -f 2 | bc`; i++));
+do
+	echo -n "$i "
+	echo $i > csr_offset
+	cat csr_value
+done
+
+echo "EEPROM:"
+for ((i = 0; i < `cat chipset | grep eeprom | cut -d ':' -f 2 | bc`; i++));
+do
+	echo -n "$i "
+	echo $i > eeprom_offset
+	cat eeprom_value
+done
+
+--Boundary-00=_A36EHueYIlroqfN--
