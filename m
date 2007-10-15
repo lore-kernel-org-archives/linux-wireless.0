@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3255 "EHLO ra.tuxdriver.com"
+Received: from ozlabs.org ([203.10.76.45]:58849 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754449AbXJBUiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 16:38:24 -0400
-Date: Tue, 2 Oct 2007 16:20:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Leds spinlock SMP compilefix
-Message-ID: <20071002202053.GB29361@tuxdriver.com> (sfid-20071002_213914_602838_90999A93)
-References: <200709300004.36905.mb@bu3sch.de>
+	id S1752891AbXJOFq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 01:46:58 -0400
+Date: Mon, 15 Oct 2007 00:42:23 -0500
+From: Anton Blanchard <anton@samba.org>
+To: Larry.Finger@lwfinger.net, mb@bu3sch.de, st3@riseup.net
+Cc: arjan@linux.intel.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] jiffies_round -> jiffies_round_relative conversion -
+	b43/b43legacy
+Message-ID: <20071015054223.GD3257@kryten> (sfid-20071015_064701_861200_36962309)
+References: <20071015053428.GA3257@kryten> <20071015053801.GB3257@kryten> <20071015054034.GC3257@kryten>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200709300004.36905.mb@bu3sch.de>
+In-Reply-To: <20071015054034.GC3257@kryten>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll just roll this into the "b43: LED triggers support" patch.
 
-Thanks,
+When rounding a relative timeout we need to use round_jiffies_relative(). 
 
-John
+Signed-off-by: Anton Blanchard <anton@samba.org>
+---
 
-On Sun, Sep 30, 2007 at 12:04:36AM +0200, Michael Buesch wrote:
-> This was missing an address operator.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> Index: wireless-2.6/drivers/net/wireless/b43/leds.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/b43/leds.c	2007-09-29 12:44:08.000000000 +0200
-> +++ wireless-2.6/drivers/net/wireless/b43/leds.c	2007-09-30 00:02:18.000000000 +0200
-> @@ -37,14 +37,14 @@ static void b43_led_turn_on(struct b43_w
->  	unsigned long flags;
->  	u16 ctl;
->  
-> -	spin_lock_irqsave(wl->leds_lock, flags);
-> +	spin_lock_irqsave(&wl->leds_lock, flags);
->  	ctl = b43_read16(dev, B43_MMIO_GPIO_CONTROL);
->  	if (activelow)
->  		ctl &= ~(1 << led_index);
->  	else
->  		ctl |= (1 << led_index);
->  	b43_write16(dev, B43_MMIO_GPIO_CONTROL, ctl);
-> -	spin_unlock_irqrestore(wl->leds_lock, flags);
-> +	spin_unlock_irqrestore(&wl->leds_lock, flags);
->  }
->  
->  static void b43_led_turn_off(struct b43_wldev *dev, u8 led_index,
-> @@ -54,14 +54,14 @@ static void b43_led_turn_off(struct b43_
->  	unsigned long flags;
->  	u16 ctl;
->  
-> -	spin_lock_irqsave(wl->leds_lock, flags);
-> +	spin_lock_irqsave(&wl->leds_lock, flags);
->  	ctl = b43_read16(dev, B43_MMIO_GPIO_CONTROL);
->  	if (activelow)
->  		ctl |= (1 << led_index);
->  	else
->  		ctl &= ~(1 << led_index);
->  	b43_write16(dev, B43_MMIO_GPIO_CONTROL, ctl);
-> -	spin_unlock_irqrestore(wl->leds_lock, flags);
-> +	spin_unlock_irqrestore(&wl->leds_lock, flags);
->  }
->  
->  /* Callback from the LED subsystem. */
-
--- 
-John W. Linville
-linville@tuxdriver.com
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index c141a26..41049a4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2392,7 +2392,7 @@ out_requeue:
+ 	if (b43_debug(dev, B43_DBG_PWORK_FAST))
+ 		delay = msecs_to_jiffies(50);
+ 	else
+-		delay = round_jiffies(HZ * 15);
++		delay = round_jiffies_relative(HZ * 15);
+ 	queue_delayed_work(wl->hw->workqueue, &dev->periodic_work, delay);
+ out:
+ 	mutex_unlock(&wl->mutex);
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index f074951..bd0bd9b 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -2260,7 +2260,7 @@ out_requeue:
+ 	if (b43legacy_debug(dev, B43legacy_DBG_PWORK_FAST))
+ 		delay = msecs_to_jiffies(50);
+ 	else
+-		delay = round_jiffies(HZ);
++		delay = round_jiffies_relative(HZ);
+ 	queue_delayed_work(dev->wl->hw->workqueue,
+ 			   &dev->periodic_work, delay);
+ out:
