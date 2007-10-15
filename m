@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38784 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323AbXJ2QIr (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60808 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754341AbXJOPEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 12:08:47 -0400
-Subject: [RFC] mac80211: remove unused driver ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Mon, 29 Oct 2007 16:15:33 +0100
-Message-Id: <1193670933.5197.67.camel@johannes.berg> (sfid-20071029_160849_130539_64C7AC97)
-Mime-Version: 1.0
+	Mon, 15 Oct 2007 11:04:23 -0400
+Message-ID: <4713815A.3020300@lwfinger.net> (sfid-20071015_160427_891454_C0767B8E)
+Date: Mon, 15 Oct 2007 10:03:54 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: WANG Cong <xiyou.wangcong@gmail.com>
+CC: Adrian Bunk <bunk@kernel.org>, mb@bu3sch.de,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@osdl.org>
+Subject: Re: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize
+ the	correct return value
+References: <20071014175142.GN4211@stusta.de> <20071015115936.GP2444@hacking>
+In-Reply-To: <20071015115936.GP2444@hacking>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver operations set_ieee8021x(), set_port_auth() and
-set_privacy_invoked() are not used by any drivers, except
-set_privacy_invoked() they aren't even used by mac80211.
-Remove them at least until we need to support drivers with
-mac80211 that require getting this information.
+WANG Cong wrote:
+> Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
+> in case of returning an uninitialized value.
+> 
+> From: Adrian Bunk <bunk@kernel.org>
+> Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
+> 
+> ---
+>  drivers/net/wireless/b43/main.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
+> ===================================================================
+> --- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
+> +++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
+> @@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
+>  	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+>  	struct b43legacy_wldev *dev = wl->current_dev;
+>  	int did_init = 0;
+> -	int err;
+> +	int err = 0;
+>  
+>  	mutex_lock(&wl->mutex);
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I sent the equivalent patch to John Linville yesterday.
 
----
- include/net/mac80211.h         |   21 ---------------------
- net/mac80211/ieee80211_ioctl.c |    7 +------
- 2 files changed, 1 insertion(+), 27 deletions(-)
-
---- linux-2.6.orig/include/net/mac80211.h	2007-10-29 15:51:51.311982367 +0100
-+++ linux-2.6/include/net/mac80211.h	2007-10-29 16:01:40.109048556 +0100
-@@ -941,27 +941,11 @@ enum ieee80211_erp_change_flags {
-  *	and remove_interface calls, i.e. while the interface with the
-  *	given local_address is enabled.
-  *
-- * @set_ieee8021x: Enable/disable IEEE 802.1X. This item requests wlan card
-- *	to pass unencrypted EAPOL-Key frames even when encryption is
-- *	configured. If the wlan card does not require such a configuration,
-- *	this function pointer can be set to NULL.
-- *
-- * @set_port_auth: Set port authorization state (IEEE 802.1X PAE) to be
-- *	authorized (@authorized=1) or unauthorized (=0). This function can be
-- *	used if the wlan hardware or low-level driver implements PAE.
-- *	mac80211 will filter frames based on authorization state in any case,
-- *	so this function pointer can be NULL if low-level driver does not
-- *	require event notification about port state changes.
-- *
-  * @hw_scan: Ask the hardware to service the scan request, no need to start
-  *	the scan state machine in stack.
-  *
-  * @get_stats: return low-level statistics
-  *
-- * @set_privacy_invoked: For devices that generate their own beacons and probe
-- *	response or association responses this updates the state of privacy_invoked
-- *	returns 0 for success or an error number.
-- *
-  * @get_sequence_counter: For devices that have internal sequence counters this
-  *	callback allows mac80211 to access the current value of a counter.
-  *	This callback seems not well-defined, tell us if you need it.
-@@ -1034,14 +1018,9 @@ struct ieee80211_ops {
- 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		       const u8 *local_address, const u8 *address,
- 		       struct ieee80211_key_conf *key);
--	int (*set_ieee8021x)(struct ieee80211_hw *hw, int use_ieee8021x);
--	int (*set_port_auth)(struct ieee80211_hw *hw, u8 *addr,
--			     int authorized);
- 	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
- 	int (*get_stats)(struct ieee80211_hw *hw,
- 			 struct ieee80211_low_level_stats *stats);
--	int (*set_privacy_invoked)(struct ieee80211_hw *hw,
--				   int privacy_invoked);
- 	int (*get_sequence_counter)(struct ieee80211_hw *hw,
- 				    u8* addr, u8 keyidx, u8 txrx,
- 				    u32* iv32, u16* iv16);
---- linux-2.6.orig/net/mac80211/ieee80211_ioctl.c	2007-10-29 15:50:53.209046766 +0100
-+++ linux-2.6/net/mac80211/ieee80211_ioctl.c	2007-10-29 16:01:40.769042535 +0100
-@@ -917,7 +917,6 @@ static int ieee80211_ioctl_siwauth(struc
- 				   struct iw_request_info *info,
- 				   struct iw_param *data, char *extra)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	int ret = 0;
- 
-@@ -927,6 +926,7 @@ static int ieee80211_ioctl_siwauth(struc
- 	case IW_AUTH_CIPHER_GROUP:
- 	case IW_AUTH_WPA_ENABLED:
- 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
-+	case IW_AUTH_PRIVACY_INVOKED:
- 		break;
- 	case IW_AUTH_KEY_MGMT:
- 		if (sdata->type != IEEE80211_IF_TYPE_STA)
-@@ -948,11 +948,6 @@ static int ieee80211_ioctl_siwauth(struc
- 		else
- 			ret = -EOPNOTSUPP;
- 		break;
--	case IW_AUTH_PRIVACY_INVOKED:
--		if (local->ops->set_privacy_invoked)
--			ret = local->ops->set_privacy_invoked(
--					local_to_hw(local), data->value);
--		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		break;
-
+Larry
 
