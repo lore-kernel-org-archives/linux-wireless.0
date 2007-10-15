@@ -1,61 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51362 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751760AbXJWOF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 10:05:59 -0400
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Daniel Hazelton <dhazelton@enter.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-In-Reply-To: <20071022220000.GH28190@elf.ucw.cz>
-References: <20071020184100.GA11640@elf.ucw.cz>
-	 <20071022211325.GF28190@elf.ucw.cz> <200710222352.57543.IvDoorn@gmail.com>
-	 <200710221742.36693.dhazelton@enter.net>
-	 <20071022220000.GH28190@elf.ucw.cz>
-Content-Type: text/plain
-Date: Tue, 23 Oct 2007 10:05:12 -0400
-Message-Id: <1193148312.8648.17.camel@localhost.localdomain> (sfid-20071023_150603_018512_A369F065)
-Mime-Version: 1.0
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:6983 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757848AbXJOLBl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 07:01:41 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: move to uniform lbs_/LBS_ namespace
+Date: Mon, 15 Oct 2007 12:58:44 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	libertas-dev@lists.infradead.org
+References: <200710111151.06989.hs4233@mail.mn-solutions.de> <200710150918.02708.hs4233@mail.mn-solutions.de> <200710151247.31049.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200710151247.31049.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710151258.44645.hs4233@mail.mn-solutions.de> (sfid-20071015_120143_400648_A757EB11)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-10-23 at 00:00 +0200, Pavel Machek wrote:
-> Hi!
-> 
-> > > > Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
-> > >
-> > > That doesn't say much, some manufacturers add that line to their driver
-> > >  just to prevent the module loader complaining about a non-GPL driver...
-> > >
-> > > There should be a copyright notice or a license file accompanied with
-> > > the driver that clearly states the license of the driver.
-> > 
-> > Lacking an explicitly stated license it can be argued that, since the 
-> > MODULE_LICENSE() macro is meant to define the actual license on the code, 
-> > this code is GPL. No, it isn't an explicit definition, but lacking any other 
-> > signs of the license, the implicit declaration of it being GPL is (or should 
-> > be) enough to deflect charges of copyright infringement.
-> 
-> Yep, I believe this driver is GPLed. They published the source and
-> there's nothing to suggest otherwise, and there's explicit:
-> 
-> #define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
-> #define DRIVER_DESC                             "IS89C35 802.11bg WLAN USB Driver"
-> MODULE_LICENSE("GPL");
+Uups, sorry.
 
-If there isn't an explicit COPYING or LICENSE file or something
-distributed with the driver, and if there aren't copyright/license
-headers at the top of the files in question, I have a hard time agreeing
-that MODULE_LICENSE("GPL") _definitely_ means that the author has GPL-ed
-the driver intentionally.  Of course that's the way it's supposed to
-work, but to me this doesn't pass sufficient muster to be definitely
-called GPL without additional clarification.
-
-Dan
-
-
+I didn't change the subject of my previous mail in this thread. 
+Because the patch is rather big, I won't re-sent it. I hope this 
+notification mail is all that is needed.
