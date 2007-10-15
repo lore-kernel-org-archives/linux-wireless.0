@@ -1,90 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58823 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754767AbXJHM4E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 08:56:04 -0400
-Subject: Re: [PATCH] libertas link error due to gcc `smartness'
-From: Dan Williams <dcbw@redhat.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710080940110.8127@anakin>
-References: <Pine.LNX.4.64.0710080940110.8127@anakin>
-Content-Type: text/plain
-Date: Mon, 08 Oct 2007 08:56:30 -0400
-Message-Id: <1191848190.2703.17.camel@localhost.localdomain> (sfid-20071008_135608_222996_584FD610)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbXJOIbc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 04:31:32 -0400
+Subject: Re: [PATCH] Re: atheros hardware needs padding for QoS data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bruno randolf <bruno@thinktube.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200710151634.33480.bruno@thinktube.com>
+References: <200710121946.30024.bruno@thinktube.com>
+	 <1192194578.4770.55.camel@johannes.berg>
+	 <200710151241.17651.bruno@thinktube.com>
+	 <200710151634.33480.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aTzus5Smxl0YHvEZoT/Y"
+Date: Mon, 15 Oct 2007 10:31:56 +0200
+Message-Id: <1192437116.3349.5.camel@johannes.berg> (sfid-20071015_093135_146317_BC58472A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-08 at 09:43 +0200, Geert Uytterhoeven wrote:
-> Some versions of gcc replace strstr() calls with a single-character `needle'
-> parameter by strchr() behind our back. This causes a link error if strchr() is
-> defined as an inline function in <asm/string.h> (e.g. on m68k):
-> 
-> | drivers/built-in.o: In function `libertas_parse_chan':
-> | linux/drivers/net/wireless/libertas/debugfs.c:209: undefined reference to `strchr'
-> | drivers/built-in.o: In function `libertas_parse_ssid':
-> | linux/drivers/net/wireless/libertas/debugfs.c:260: undefined reference to `strchr'
-> 
-> Avoid this by explicitly calling strchr() instead.
-> 
-> Also include <linux/string.h>, because this file calls lots of str*() routines.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+--=-aTzus5Smxl0YHvEZoT/Y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> ---
-> Due to the lack of hardware, I could not test the functionality of this change.
-> I was just trying to compile a kernel with a much enabled as possible.
-> 
->  drivers/net/wireless/libertas/debugfs.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> --- a/drivers/net/wireless/libertas/debugfs.c
-> +++ b/drivers/net/wireless/libertas/debugfs.c
-> @@ -3,6 +3,7 @@
->  #include <linux/debugfs.h>
->  #include <linux/delay.h>
->  #include <linux/mm.h>
-> +#include <linux/string.h>
->  #include <net/iw_handler.h>
->  
->  #include "dev.h"
-> @@ -205,7 +206,7 @@ static int libertas_parse_chan(char *buf
->  	if (!start)
->  		return -EINVAL;
->  	start += 5;
-> -	end = strstr(start, " ");
-> +	end = strchr(start, ' ');
->  	if (!end)
->  		end = buf + count;
->  	hold = kzalloc((end - start)+1, GFP_KERNEL);
-> @@ -256,7 +257,7 @@ static void libertas_parse_ssid(char *bu
->  	if (!hold)
->  		return;
->  	hold += 5;
-> -	end = strstr(hold, " ");
-> +	end = strchr(hold, ' ');
->  	if (!end)
->  		end = buf + count - 1;
->  
-> 
-> Gr{oetje,eeting}s,
-> 
-> 						Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
-> 							    -- Linus Torvalds
-> -
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 2007-10-15 at 16:34 +0900, bruno randolf wrote:
+> what do you think about the following solution?
+
+I don't like it. If we wanted to implement this in mac80211 we should do
+a zero-copy solution with pointers to header/data portion which is very
+hard right now because mac80211 has much assumptions that it's all
+contiguous. Secondly, this adds overhead for all hardware to mac80211
+for something that can be *trivially* solved in the driver, and only a
+single driver so far requires it. I think the driver is a *much* better
+place to do this.
+
+> Atheros hardware requires the header to be padded to 4 byte (32 bit)
+> boundaries. It expects the payload data to start at multiples of 4 byte f=
+or TX
+> frames and will add the padding for received frames. For most headers the=
+re is
+> no need for padding, since they are multiples of 4 already - except QoS a=
+nd 4
+> address headers.
+>=20
+> This adds a new hw flag IEEE80211_HW_HEADER_PADDING to tell mac80211 that=
+ such
+> a padding is needed.
+
+[patch snipped]
+
+johannes
+
+--=-aTzus5Smxl0YHvEZoT/Y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxMle6Vg1VMiehFYAQLDzxAAt0znl1QhhekhewitpJ5pEP2ZqmWbtBQM
+7gfAOkRTa5Fur3POME3mxOj2mO3WHNyx7j4HHFoSvy+jqTQx4rL1yUpslafYIzH3
+ONNMofBzI8t3femSWcwJsWxKNkGk5DFQUhYgRle0kUYXH13/whEDdN7OMG+Yid5G
+iHD3/M2bQrsbjllHOsyR9bZmLgODxy2n7pk4hVVlrJm4bUhNX9JZeMcA5YuErUnb
+djYe72vQdE5Ob4SSD7hLYvRMaH42v5r31mxLwhn1QAsyWM57JHseBeaJAe/cL3Xd
+LHWGAj1Fj4emGsK/as9SLseC7uWcpSm7v29iYiDvRMwNRzy0JVfZjZ0OBUfe2Wh9
+UoBdtAuEaX5viphKR5FUZu/mtCLK7naXuz1ddyvdIYPhxLu4d8oDTwCbDj90n9wJ
+7mB2a3DgQL/ZkYJRLpkt9AcjAvrtbrkMjLFgJifdNmVuKsb4naZNF0SMnOL/yaX+
+P+FDRJN/K13TP5WpX2M5ltoro5sprYc0+JOx9/MUrfPAnwydVE+X9+u5yV6m6Y2M
+VFBfcCIZKwc+YDqvt6X368tTUDDtS8uSL4lg4rP3sd9KUneWWyqWQZ4uGT3BySpo
+rhopfVh596SRjQVHmioawxqdQH2mEiXNvJ9ZiX1ZGurGNVVDVLkH2unwo8m0HBsf
+pliqBCJ/jxY=
+=/j97
+-----END PGP SIGNATURE-----
+
+--=-aTzus5Smxl0YHvEZoT/Y--
 
