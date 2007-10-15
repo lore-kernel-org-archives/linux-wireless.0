@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4274 "EHLO ra.tuxdriver.com"
+Received: from mga11.intel.com ([192.55.52.93]:8116 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759568AbXJXOJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 10:09:10 -0400
-Date: Wed, 24 Oct 2007 09:48:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
-Subject: Re: [RFC] mac80211: no missing key complaint if frame may not be
-	for us
-Message-ID: <20071024134855.GA3435@tuxdriver.com> (sfid-20071024_151029_925688_BC12B460)
-References: <1193175981828-git-send-email-linville@tuxdriver.com> <1193216455.5715.2.camel@johannes.berg>
+	id S1756436AbXJOJVN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 05:21:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1193216455.5715.2.camel@johannes.berg>
+Subject: RE: [ipw3945-devel] [PATCH] [PATCH] mac80211: honorIW_SCAN_THIS_ESSID in siwscan ioctl
+Date: Mon, 15 Oct 2007 11:20:11 +0200
+Message-ID: <C07C4589BE74A34981C3C3525EE1F80102A8EEAE@hasmsx412.ger.corp.intel.com> (sfid-20071015_102118_511046_D9E6F072)
+In-Reply-To: <200710121525.25574.hschaa@suse.de>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: "Helmut Schaa" <hschaa@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <dcbw@redhat.com>, <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Bill Moss" <bmoss@clemson.edu>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 24, 2007 at 11:00:55AM +0200, Johannes Berg wrote:
-> On Tue, 2007-10-23 at 17:46 -0400, John W. Linville wrote:
-> 
-> > +		/* if there are multiple SSIDs on this BSSID, the frame may
-> > +		   not be for us anyway; so, check that either the frame is
-> > +		   unicast or that we are not in managed mode before
-> > +		   complaining about a missing key */
-> > +		if ((!is_multicast_ether_addr(hdr->addr1) ||
-> > +		     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
-> > +		    net_ratelimit())
-> 
-> I think this and the other patch looks good, though I'm not entirely
-> sure about the !STA test yet. I suppose though !STA means that we're in
-> some way an AP and then we're the only one sending real multicast
-> traffic.
-> 
-> Is it worth keeping this message at all?
+You are, we will provide a patch to fix that.
+Thanks.
+Tomas
 
-I considered removing it, and that may be the best bet.  Still, I
-thought it might be worth yelling about it in at least some instances.
+>-----Original Message-----
+>From: ipw3945-devel-bounces@lists.sourceforge.net
+[mailto:ipw3945-devel-
+>bounces@lists.sourceforge.net] On Behalf Of Helmut Schaa
+>Sent: Friday, October 12, 2007 3:25 PM
+>To: John W. Linville
+>Cc: dcbw@redhat.com; linux-wireless@vger.kernel.org; ipw3945-
+>devel@lists.sourceforge.net; Bill Moss
+>Subject: Re: [ipw3945-devel] [PATCH] [PATCH] mac80211:
+>honorIW_SCAN_THIS_ESSID in siwscan ioctl
+>
+>Hi,
+>
+>Am Mittwoch, 10. Oktober 2007 22:34:56 schrieb John W. Linville:
+>> This patch fixes the problem of associating with wpa_secured hidden
+>> AP.  Please try out.
+>
+>The patch did not fix the issue for _some_ APs I have here but it is
+>apparently correct.
+>
+>I was able to track the issue further down to the probe-request iwlwifi
+>sends
+>to connect to a hidden AP (hw_scan is enabled). Attached is a quick
+hack
+>against iwlwifi-1.1.0 which made hidden AP working for me (using
+hw_scan).
+>
+>The patch is only ment as a hint, not as a real fix!
+>
+>The problem seemed to be in the info element "supported rates". The
+>probe-request mac80211 would generate does only attach eight supported
+>rates
+>to this info element, the rest goes to "extended supported rates".
+>
+>Instead iwlwifi puts _all_ (more then eight) rates into "supported
+rates"
+>and
+>omits "extended supported rates". As "supported rates" is specified in
+>802.11b there should only be 802.11b rates (this is an assumption as I
+do
+>not
+>have the 802.11 specs here). This is exactly what my patch does: limit
+the
+>number of supported rates to eight.
+>
+>Can somebody please verify if I'm right?
+>
+>Btw iwlwifi generates the probe-request itself _only_ if hw_scan is
+>enabled.
+>If hw_scan is disabled mac80211 generates the probe-request (which then
+>should be correct) but the request gets somehow corrupted.
+>
+>Thanks,
+>Helmut
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Along those lines, the !STA check was there because that was the
-only case I knew might not be worth complaining about.  For example,
-an IBSS should not be reusing a BSSID for multiple SSIDs...right?
-Heck, maybe that isn't any crazier than doing the same thing in an
-infrastructure network...
-
-Well, what do you think?  Leave it as-is?  Leave only the !multicast
-check?  Or remove the message completely?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
