@@ -1,122 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42936 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754892AbXJJO6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 10:58:51 -0400
-Subject: Re: [PATCH] libertas: automatically re-associate
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200710100943.33106.hs4233@mail.mn-solutions.de>
-References: <200710091404.31491.hs4233@mail.mn-solutions.de>
-	 <200710091713.35595.hs4233@mail.mn-solutions.de>
-	 <1191944257.20014.3.camel@localhost.localdomain>
-	 <200710100943.33106.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 10 Oct 2007 10:58:58 -0400
-Message-Id: <1192028338.9739.28.camel@localhost.localdomain> (sfid-20071010_155856_793154_8ABB5F3D)
-Mime-Version: 1.0
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:19651 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757107AbXJOMah (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 08:30:37 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: atheros hardware needs header padding
+Date: Mon, 15 Oct 2007 21:30:38 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>
+References: <200710121946.30024.bruno@thinktube.com> <200710151634.33480.bruno@thinktube.com> <1192437116.3349.5.camel@johannes.berg>
+In-Reply-To: <1192437116.3349.5.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710152130.38532.bruno@thinktube.com> (sfid-20071015_133041_396232_481C0256)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-10 at 09:43 +0200, Holger Schurig wrote:
-> > > Yes, with a HZ/4 rate.
-> >
-> > I don't care how _fast_ it tries to reassociate.  I care that
-> > it doesn't give up after some amount of time.
-> 
-> And I don't want that the driver get's stuck after some arbitrary 
-> time. *NO OTHER DRIVER* that I know of get's stuck. The current 
-> libertas code has actually a built-in denial of service attack.
-> 
-> Libertas isn't just used in the OLPC, where can make sure some 
-> userspace tools does the job. I'll using libertas in PDA like 
+ok then, lets do it in the driver...
 
-I have personally used it on platforms that are !OLPC.  Please don't
-assume that I only care about libertas on OLPC.
+Author: Bruno Randolf <bruno@thinktube.com>
+Date:   Mon Oct 15 19:46:59 2007 +0900
 
-> devices, which used to have some HERMES I or HERMES II chips and 
-> have to switch to some other CF card because you can't buy CF 
-> cards with those chips any more. And on those device you can't 
-> just arbitrarily change the rest of the firmware.
-> 
-> So, at least in the no encryption & WEP obfuscation mode a WLAN 
-> driver should work without special user space software, because 
-> that's how real-life dictates the operation.
+handle padding between header and data
 
-I won't throw a hissy fit over the reassociation patch as long as it
-only tries this in open & WEP situations where a supplicant is not
-necessary.  That means you cannot simply requeue an association in
-libertas_mac_event_disconnected(), but you should check the association
-request and not requeue if:
+Atheros hardware requires the header to be padded to 4 byte (32 bit)
+boundaries. It expects the payload data to start at multiples of 4 byte for TX
+frames and will add the padding for received frames. For most headers there is
+no need for padding, since they are multiples of 4 already - except QoS and 4
+address headers.
 
-1) the assoc request's mode is ad-hoc (is there a point to retrying
-assoc in adhoc?)
-2) the assoc request has secinfo->WPAenabled || secinfo->WPA2enabled
-3) the assoc request has WPA mcast or unicast keys set
-4) the assoc request has a wpa_ie_len > 0
+Changes-licensed-under: 3-clause-BSD
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 
-so in libertas_mac_event_disconnected() it should to be something like
-the following:
 
-if (adapter->pending_assoc_req) {
-    if (test_bit(ASSOC_FLAG_MODE, &assoc_req->flags))
-        if (assoc_req->mode != IW_MODE_INFRA)
-            goto done;
-
-    if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags))
-        if (assoc_req->secinfo.WPAenabled ||assoc_req->secinfo.WPA2enabled)
-            goto done;
-
-    if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags))
-        if (assoc_req->wpa_mcast_key.len)
-            goto done;
-
-    if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags))
-        if (assoc_req->wpa_ucast_key.len)
-            goto done;
-
-    if (test_bit(ASSOC_FLAG_WPA_IE, &assoc_req->flags))
-        if (assoc_req->wpa_ie_len > 0)
-            goto done;
-
-    cancel_delayed_work(&priv->assoc_work);
-    queue_delayed_work(priv->work_thread,
-            &priv->assoc_work, HZ / 4);
-
-done:
-    ;
-}
-
-Dan
-
-> And, as said, otherwise you have a denial of service scenario.
-> 
-> 
-> > That's fine.  The drivers should _not_ be trying to handle all
-> > roaming cornercases themselves.
-> 
-> Either the driver or the firmware should handle all corner cases. 
-> With a HERMES II chip and a wlags49_h2_cs.ko driver, I can 
-> nicely roam with WPA+wpa_supplicant, and also with plain WEP 
-> (and no wpa_supplicant).
-> 
-> I see no technical reason why libertas shouldn't be able to do 
-> the same and behave like all other FULLMAC drivers.
-> 
-> 
-> > Userspace must come into the equation at some point, especially
-> > with WPA!!
-> 
-> I don't see that userspace *MUST* come into the equation at some 
-> point. If it *WISHES* to come into the equation: nothing hinders 
-> it. Running "iwevent" while killing the station at the AP yields 
-> these events:
-> 
-> 10:38:43.139777   eth1     New Access Point/Cell 
-> address:Not-Associated
-> 10:38:43.389217   eth1     Scan request completed
-> 10:38:45.161671   eth1     New Access Point/Cell 
-> address:00:1B:53:11:E2:B0
-> 
-
+diff --git a/drivers/net/wireless/ath5k/base.c 
+b/drivers/net/wireless/ath5k/base.c
+index 0997577..0a7cb41 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -375,6 +375,8 @@ static void ath_tasklet_rx(unsigned long data)
+ 	u16 len;
+ 	u8 stat;
+ 	int ret;
++	int hdrlen;
++	int pad;
+ 
+ 	spin_lock(&sc->rxbuflock);
+ 	do {
+@@ -449,13 +451,20 @@ accept:
+ 				PCI_DMA_FROMDEVICE);
+ 		bf->skb = NULL;
+ 
+-		if (unlikely((ieee80211_get_hdrlen_from_skb(skb) & 3) &&
+-					net_ratelimit()))
+-			printk(KERN_DEBUG "rx len is not %%4: %u\n",
+-					ieee80211_get_hdrlen_from_skb(skb));
+-
+ 		skb_put(skb, len);
+ 
++		/*
++		 * the hardware adds a padding to 4 byte boundaries between
++		 * the header and the payload data if the header length is
++		 * not multiples of 4 - remove it
++		 */
++		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++		if (hdrlen & 3) {
++			pad = hdrlen % 4;
++			memmove(skb->data + pad, skb->data, hdrlen);
++			skb_pull(skb, pad);
++		}
++
+ 		if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+ 			rxs.mactime = ath_extend_tsf(sc->ah,
+ 					ds->ds_rxstat.rs_tstamp);
+@@ -1153,7 +1162,7 @@ static int ath_tx_bf(struct ath_softc *sc, struct 
+ath_buf *bf,
+ 	struct ath_txq *txq = sc->txq;
+ 	struct ath_desc *ds = bf->desc;
+ 	struct sk_buff *skb = bf->skb;
+-	unsigned int hdrpad, pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
++	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
+ 	int ret;
+ 
+ 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+@@ -1165,12 +1174,7 @@ static int ath_tx_bf(struct ath_softc *sc, struct 
+ath_buf *bf,
+ 	if (ctl->flags & IEEE80211_TXCTL_NO_ACK)
+ 		flags |= AR5K_TXDESC_NOACK;
+ 
+-	if ((ieee80211_get_hdrlen_from_skb(skb) & 3) && net_ratelimit())
+-		printk(KERN_DEBUG "tx len is not %%4: %u\n",
+-				ieee80211_get_hdrlen_from_skb(skb));
+-
+-	hdrpad = 0;
+-	pktlen = skb->len - hdrpad + FCS_LEN;
++	pktlen = skb->len + FCS_LEN;
+ 
+ 	if (!(ctl->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)) {
+ 		keyidx = ctl->key_idx;
+@@ -1214,12 +1218,32 @@ static int ath_tx(struct ieee80211_hw *hw, struct 
+sk_buff *skb,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_buf *bf;
+ 	unsigned long flags;
++	int hdrlen;
++	int pad;
+ 
+ 	ath_dump_skb(skb, "t");
+ 
+ 	if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+ 		DPRINTF(sc, ATH_DEBUG_XMIT, "tx in monitor (scan?)\n");
+ 
++	/*
++	 * the hardware expects the header padded to 4 byte boundaries
++	 * if this is not the case we add the padding after the header
++	 */
++	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	if (hdrlen & 3) {
++		pad = hdrlen % 4;
++		if (skb_headroom(skb) < pad) {
++			if (net_ratelimit())
++				printk(KERN_ERR "ath: tx hdrlen not %%4: %d "
++					"not enough headroom to pad %d\n",
++					hdrlen, pad);
++			return -1;
++		}
++		skb_push(skb, pad);
++		memmove(skb->data, skb->data+pad, hdrlen);
++	}
++
+ 	sc->led_txrate = ctl->tx_rate;
+ 
+ 	spin_lock_irqsave(&sc->txbuflock, flags);
