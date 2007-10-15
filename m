@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:48080 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754314AbXJQOOq convert rfc822-to-8bit (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:16703 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754296AbXJOP2v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:14:46 -0400
-From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
-To: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: iwl3945 doesn't work
-Date: Wed, 17 Oct 2007 17:15:02 +0300
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-References: <20071017135452.GJ5043@kernel.dk> <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk>
-In-Reply-To: <20071017141111.GM5043@kernel.dk>
+	Mon, 15 Oct 2007 11:28:51 -0400
+Message-ID: <471386D6.9030301@oracle.com> (sfid-20071015_162854_697454_6B88D7E1)
+Date: Mon, 15 Oct 2007 08:27:18 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200710171715.02660.ismail@pardus.org.tr> (sfid-20071017_151454_088638_66D0363D)
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: [patch #2] ssb: fix build failure
+References: <200710151723.21423.mb@bu3sch.de>
+In-Reply-To: <200710151723.21423.mb@bu3sch.de>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wednesday 17 October 2007 Tarihinde 17:11:11 yazm=C4=B1=C5=9Ft=C4=B1:
-> Huh indeed, now it links fine! Thanks for the hint. Would be nice to
-> have fixed, though :-)
+Michael Buesch wrote:
+> From: Ingo Molnar <mingo@elte.hu>
+> 
+> fix build failure if PCMCIA=m but SSB=y:
+> 
+> drivers/built-in.o: In function `ssb_pcmcia_switch_coreidx':
+> : undefined reference to `pcmcia_access_configuration_register'
+> 
+> (fix symmetric bug for PCI too.)
+> 
+> Signed-off-by: Ingo Molnar <mingo@elte.hu>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Yeah indeed I sent a mail about this a couple of days ago, waiting for =
-Intel=20
-guys to respond :-)
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com> [choose a patch ;]
 
-Regards,
-ismail
+> ---
+>  drivers/ssb/Kconfig |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: linux/drivers/ssb/Kconfig
+> ===================================================================
+> --- linux.orig/drivers/ssb/Kconfig
+> +++ linux/drivers/ssb/Kconfig
+> @@ -22,7 +22,7 @@ config SSB
+>  
+>  config SSB_PCIHOST_POSSIBLE
+>  	bool
+> -	depends on SSB && PCI
+> +	depends on SSB && (PCI = y || PCI = SSB)
+>  	default y
+>  
+>  config SSB_PCIHOST
+> @@ -37,7 +37,7 @@ config SSB_PCIHOST
+>  
+>  config SSB_PCMCIAHOST_POSSIBLE
+>  	bool
+> -	depends on SSB && PCMCIA && EXPERIMENTAL
+> +	depends on SSB && (PCMCIA = y || PCMCIA = SSB) && EXPERIMENTAL
+>  	default y
+>  
+>  config SSB_PCMCIAHOST
+> 
+> 
+> 
+> -------------------------------------------------------
+> 
 
---=20
-=46aith is believing what you know isn't so -- Mark Twain
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+~Randy
