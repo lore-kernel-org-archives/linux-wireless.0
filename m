@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:2140 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbXJIM37 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:23463 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756548AbXJORvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 08:29:59 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: remove one superfluous include
-Date: Tue, 9 Oct 2007 14:30:10 +0200
+	Mon, 15 Oct 2007 13:51:09 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1329814nfb
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:51:05 -0700 (PDT)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [PATCH] jiffies_round -> jiffies_round_relative conversion - rt2x00
+Date: Mon, 15 Oct 2007 20:08:32 +0200
+Cc: Anton Blanchard <anton@samba.org>, linux-wireless@vger.kernel.org,
+	arjan@linux.intel.com, linux-kernel@vger.kernel.org
+References: <20071015053428.GA3257@kryten> <20071015053801.GB3257@kryten> <20071015054034.GC3257@kryten>
+In-Reply-To: <20071015054034.GC3257@kryten>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710091430.11043.hs4233@mail.mn-solutions.de> (sfid-20071009_133006_261821_4CAD6C7B)
+  charset="iso-8859-1"
+Message-Id: <200710152008.32503.IvDoorn@gmail.com> (sfid-20071015_185119_354185_50CF6AC8)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes scripts/checkincludes.pl happy.
+On Monday 15 October 2007, Anton Blanchard wrote:
+> 
+> When rounding a relative timeout we need to use round_jiffies_relative(). 
+> 
+> Signed-off-by: Anton Blanchard <anton@samba.org>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> ---
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> index 298faa9..06d9bc0 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> @@ -30,7 +30,7 @@
+>   * Interval defines
+>   * Both the link tuner as the rfkill will be called once per second.
+>   */
+> -#define LINK_TUNE_INTERVAL	( round_jiffies(HZ) )
+> +#define LINK_TUNE_INTERVAL	( round_jiffies_relative(HZ) )
+>  #define RFKILL_POLL_INTERVAL	( 1000 )
+>  
+>  /*
+> 
+> -------------------------------------------------------------------------
+> This SF.net email is sponsored by: Splunk Inc.
+> Still grepping through log files to find problems?  Stop.
+> Now Search log events and configuration files using AJAX and a browser.
+> Download your FREE copy of Splunk now >> http://get.splunk.com/
+> _______________________________________________
+> Rt2400-devel mailing list
+> Rt2400-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
+> 
 
-Index: libertas-2.6/drivers/net/wireless/libertas/if_usb.c
-===================================================================
---- libertas-2.6.orig/drivers/net/wireless/libertas/if_usb.c	2007-10-09 15:29:38.000000000 +0200
-+++ libertas-2.6/drivers/net/wireless/libertas/if_usb.c	2007-10-09 15:29:59.000000000 +0200
-@@ -15,7 +15,6 @@
- #include "defs.h"
- #include "dev.h"
- #include "if_usb.h"
--#include "decl.h"
- 
- #define MESSAGE_HEADER_LEN	4
- 
+
