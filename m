@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:16703 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296AbXJOP2v (ORCPT
+Received: from ns2.uludag.org.tr ([193.140.100.220]:37548 "EHLO uludag.org.tr"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932502AbXJPODi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 11:28:51 -0400
-Message-ID: <471386D6.9030301@oracle.com> (sfid-20071015_162854_697454_6B88D7E1)
-Date: Mon, 15 Oct 2007 08:27:18 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 16 Oct 2007 10:03:38 -0400
+Received: from ninjamobile.local (unknown [85.102.69.93])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by uludag.org.tr (Postfix) with ESMTP id 138CA61979C0
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 17:03:30 +0300 (EEST)
+From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Problem with in-kernel iwl3945 driver
+Date: Tue, 16 Oct 2007 17:03:51 +0300
+References: <200710161317.45460.ismail@pardus.org.tr>
+In-Reply-To: <200710161317.45460.ismail@pardus.org.tr>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: [patch #2] ssb: fix build failure
-References: <200710151723.21423.mb@bu3sch.de>
-In-Reply-To: <200710151723.21423.mb@bu3sch.de>
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200710161703.51343.ismail@pardus.org.tr> (sfid-20071016_150340_479148_972107C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> From: Ingo Molnar <mingo@elte.hu>
-> 
-> fix build failure if PCMCIA=m but SSB=y:
-> 
-> drivers/built-in.o: In function `ssb_pcmcia_switch_coreidx':
-> : undefined reference to `pcmcia_access_configuration_register'
-> 
-> (fix symmetric bug for PCI too.)
-> 
-> Signed-off-by: Ingo Molnar <mingo@elte.hu>
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Replying to myself,
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com> [choose a patch ;]
+Tuesday 16 October 2007 Tarihinde 13:17:45 yazm=C4=B1=C5=9Ft=C4=B1n=C4=B1=
+z:
+[...]
+> wlan0     IEEE 802.11b  ESSID:"XXYYZZ"
+                         ^^^^^^^
+Looks like its in 802.11b mode instead of 802.11g.  That might be a clu=
+e for=20
+slowdown.
 
-> ---
->  drivers/ssb/Kconfig |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: linux/drivers/ssb/Kconfig
-> ===================================================================
-> --- linux.orig/drivers/ssb/Kconfig
-> +++ linux/drivers/ssb/Kconfig
-> @@ -22,7 +22,7 @@ config SSB
->  
->  config SSB_PCIHOST_POSSIBLE
->  	bool
-> -	depends on SSB && PCI
-> +	depends on SSB && (PCI = y || PCI = SSB)
->  	default y
->  
->  config SSB_PCIHOST
-> @@ -37,7 +37,7 @@ config SSB_PCIHOST
->  
->  config SSB_PCMCIAHOST_POSSIBLE
->  	bool
-> -	depends on SSB && PCMCIA && EXPERIMENTAL
-> +	depends on SSB && (PCMCIA = y || PCMCIA = SSB) && EXPERIMENTAL
->  	default y
->  
->  config SSB_PCMCIAHOST
-> 
-> 
-> 
-> -------------------------------------------------------
-> 
+Regards,
+ismail
 
-
--- 
-~Randy
+--=20
+=46aith is believing what you know isn't so -- Mark Twain
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
