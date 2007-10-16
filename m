@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:23753 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbXJJO5s (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:8560 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbXJPA1l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 10:57:48 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so175919nze
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 07:57:47 -0700 (PDT)
-Message-ID: <f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com> (sfid-20071010_155751_463490_3A6EB76A)
-Date: Wed, 10 Oct 2007 16:57:46 +0200
-From: dragoran <drago01@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: mac80211/iwlwifi + hidden ssids
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1192026847.9739.4.camel@localhost.localdomain>
+	Mon, 15 Oct 2007 20:27:41 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3355021pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 17:27:41 -0700 (PDT)
+Message-ID: <43e72e890710151727s74beb476h4e5d49fe6840117c@mail.gmail.com> (sfid-20071016_012746_155401_E2CF12A0)
+Date: Mon, 15 Oct 2007 20:27:40 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John Daiker" <daikerjohn@gmail.com>
+Subject: Re: Ath5k compile error in wireless-2.6.git
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4713EBCA.8010700@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <470C9F28.1070803@gmail.com> <20071010130653.GB5962@tuxdriver.com>
-	 <1192026847.9739.4.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
+References: <4713EBCA.8010700@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/07, Dan Williams <dcbw@redhat.com> wrote:
->[..]
-> wpa_supplicant's support for hidden SSIDs sort of sucks; mainly because
-> the drivers implement this in different ways.  wpa_supplicant says you
-> must use "ap_scan=2" for hidden SSIDs (and possibly ssid_scan=1 to do
-> specific ssid probe requests), which causes wpa_supplicant to blast all
-> settings to the card directly and not try to be smart about AP scanning
-> and selection.  However, this doesn't work often because drivers are
-> inconsistent about this.
+On 10/15/07, John Daiker <daikerjohn@gmail.com> wrote:
+> John,
 >
-> The way it _should_ work is that if scan_ssid = 1 for a network,
-> wpa_supplicant should ask that the driver scan the specific ssid using
-> IW_SCAN_THIS_ESSID.  The card would then issue specific SSID scan
-> requests on each channel during the scan, and hopefully find the AP in
-> question.
+> I just checked out the wireless-2.6.git tree from Kernel.org to test the
+> new ath5k driver. I get the following compile error on a 'vanilla'
+> git-clone.
 >
-> Unfortunately, most drivers don't support IW_SCAN_THIS_ESSID.  So the
-> best we can do is set AP_SCAN=2, let wpa_supplicant blow all the
-> settings to the card, and just _hope_ that the card/driver are smart
-> enough to find the hidden SSID on their own and associate.  Which is
-> less often than we'd hope.
+> CC [M] drivers/net/wireless/ath5k/base.o
+> In file included from drivers/net/wireless/ath5k/base.h:49,
+> from drivers/net/wireless/ath5k/base.c:58:
+> drivers/net/wireless/ath5k/ath5k.h:213: error: redeclaration of
+> enumerator 'MODE_ATHEROS_TURBO'
+> include/net/mac80211.h:105: error: previous definition of
+> 'MODE_ATHEROS_TURBO' was here
+> drivers/net/wireless/ath5k/ath5k.h:215: error: redeclaration of
+> enumerator 'MODE_ATHEROS_TURBOG'
+> include/net/mac80211.h:107: error: previous definition of
+> 'MODE_ATHEROS_TURBOG' was here
+> drivers/net/wireless/ath5k/base.c: In function 'ath_configure_filter':
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_PROMISC_IN_BSS'
+> undeclared (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: (Each undeclared
+> identifier is reported only once
+> drivers/net/wireless/ath5k/base.c:1419: error: for each function it
+> appears in.)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_ALLMULTI' undeclared
+> (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_FCSFAIL' undeclared
+> (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_PLCPFAIL' undeclared
+> (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_CONTROL' undeclared
+> (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_OTHER_BSS'
+> undeclared (first use in this function)
+> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_BCN_PRBRESP_PROMISC'
+> undeclared (first use in this function)
+> drivers/net/wireless/ath5k/base.c: At top level:
+> drivers/net/wireless/ath5k/base.c:1479: warning: 'enum set_key_cmd'
+> declared inside parameter list
+> drivers/net/wireless/ath5k/base.c:1479: warning: its scope is only this
+> definition or declaration, which is probably not what you want
+> drivers/net/wireless/ath5k/base.c:1477: error: parameter 2 ('cmd') has
+> incomplete type
+> drivers/net/wireless/ath5k/base.c:1583: error: unknown field 'start'
+> specified in initializer
+> drivers/net/wireless/ath5k/base.c:1584: warning: initialization from
+> incompatible pointer type
+> drivers/net/wireless/ath5k/base.c:1589: error: unknown field
+> 'configure_filter' specified in initializer
+> drivers/net/wireless/ath5k/base.c:1589: warning: initialization from
+> incompatible pointer type
+> drivers/net/wireless/ath5k/base.c:1590: warning: initialization from
+> incompatible pointer type
+> make[4]: *** [drivers/net/wireless/ath5k/base.o] Error 1
+> make[3]: *** [drivers/net/wireless/ath5k] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+>
+>
+> Maybe you can shed some light?
 
-so your are suggestion to use ap_scan=2 and add scan_ssid=1 to the
-network block?
-nm seems not to do this.
-btw shouldn't all mac80211 drivers either work or not work because the
-code for this is in mac80211 and not in the drivers?
+Please use the 'everything' branch, not the 'ath5k' branch. This is
+reflected on the wiki:
 
-I will be able to test again this friday will try this and the
-ap_scan=1 if there are other suggestion feel free to say them so I can
-add them to my "totest" list ;)
+http://linuxwireless.org/en/users/Drivers/ath5k
+
+  Luis
