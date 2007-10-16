@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:17023 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750AbXJFMET (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:27062 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965735AbXJPVi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:04:19 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605537ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:19 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/16] rt2x00: Allways memset memory obtained from skb_push()
-Date: Sat, 6 Oct 2007 14:18:22 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710061410.31765.IvDoorn@gmail.com>
-In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+	Tue, 16 Oct 2007 17:38:29 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3940385pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 14:38:27 -0700 (PDT)
+Message-ID: <40f31dec0710161438r163ece70r9db4e6571f4af30@mail.gmail.com> (sfid-20071016_223835_327595_2E281756)
+Date: Wed, 17 Oct 2007 00:38:26 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>
+Subject: [PATCH 2/4] ath5k: Only one tx descriptor per buffer, no need for ATH_TXDESC
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710061418.23152.IvDoorn@gmail.com> (sfid-20071006_131650_593625_DCF096A1)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When skb_push() is used we should memset the memory before
-usage. This will prevent bugs which could occur when the
-data is treated as TX descriptor.
+Since we don't (and probably won't) support fast frames we'll have
+only one descriptor for each buffer so there is no need for
+ATH_TXDESC.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+Changes-licensed-under: 3-clause-BSD
+
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 ++
- drivers/net/wireless/rt2x00/rt61pci.c   |    2 ++
- drivers/net/wireless/rt2x00/rt73usb.c   |    2 ++
- 3 files changed, 6 insertions(+), 0 deletions(-)
+diff --git a/drivers/net/wireless/ath5k/base.c
+b/drivers/net/wireless/ath5k/base.c
+index 6f55011..3a9652b 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2030,7 +2030,7 @@ static int ath_desc_alloc(struct ath_softc *sc,
+struct pci_dev *pdev)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index dff051e..fc1c60a 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1663,6 +1663,8 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
- 	 * First we create the beacon.
- 	 */
- 	skb_push(skb, ring->desc_size);
-+	memset(skb->data, 0, ring->desc_size);
-+
- 	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
- 				(struct ieee80211_hdr *)(skb->data +
- 							 ring->desc_size),
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 92ca51c..b6fb1ce 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2435,6 +2435,8 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * First we create the beacon.
- 	 */
- 	skb_push(skb, TXD_DESC_SIZE);
-+	memset(skb->data, 0, TXD_DESC_SIZE);
-+
- 	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
- 				(struct ieee80211_hdr *)(skb->data +
- 							 TXD_DESC_SIZE),
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 71699a7..091a37f 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1937,6 +1937,8 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * First we create the beacon.
- 	 */
- 	skb_push(skb, TXD_DESC_SIZE);
-+	memset(skb->data, 0, TXD_DESC_SIZE);
-+
- 	rt2x00lib_write_tx_desc(rt2x00dev, (struct data_desc *)skb->data,
- 				(struct ieee80211_hdr *)(skb->data +
- 							 TXD_DESC_SIZE),
+        /* allocate descriptors */
+        sc->desc_len = sizeof(struct ath_desc) *
+-                       (ATH_TXBUF * ATH_TXDESC + ATH_RXBUF + ATH_BCBUF + 1);
++                       (ATH_TXBUF + ATH_RXBUF + ATH_BCBUF + 1);
+        sc->desc = pci_alloc_consistent(pdev, sc->desc_len, &sc->desc_daddr);
+        if (sc->desc == NULL) {
+                dev_err(&pdev->dev, "can't allocate descriptors\n");
+@@ -2060,8 +2060,8 @@ static int ath_desc_alloc(struct ath_softc *sc,
+struct pci_dev *pdev)
+
+        INIT_LIST_HEAD(&sc->txbuf);
+        sc->txbuf_len = ATH_TXBUF;
+-       for (i = 0; i < ATH_TXBUF; i++, bf++, ds += ATH_TXDESC,
+-                       da += ATH_TXDESC * sizeof(*ds)) {
++       for (i = 0; i < ATH_TXBUF; i++, bf++, ds++,
++                       da += sizeof(*ds)) {
+                bf->desc = ds;
+                bf->daddr = da;
+                list_add_tail(&bf->list, &sc->txbuf);
+diff --git a/drivers/net/wireless/ath5k/base.h
+b/drivers/net/wireless/ath5k/base.h
+index 390d3d7..09e8dbe 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -63,7 +63,6 @@
+
+ #define        ATH_RXBUF       40              /* number of RX buffers */
+ #define        ATH_TXBUF       200             /* number of TX buffers */
+-#define        ATH_TXDESC      1               /* number of
+descriptors per buffer */
+ #define ATH_BCBUF      1               /* number of beacon buffers */
+ #define        ATH_TXMAXTRY    11              /* max number of
+transmit attempts */
+ #define        ATH_TXINTR_PERIOD 5             /* max number of
+batched tx descriptors */
+
+
+
 -- 
-1.5.3.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
