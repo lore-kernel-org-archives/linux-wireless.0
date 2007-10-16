@@ -1,102 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756654AbXJFMD5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:03:57 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:03:56 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/16] rt2x00: Move rt2x00dev flags into enumeration
-Date: Sat, 6 Oct 2007 14:13:06 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710061410.31765.IvDoorn@gmail.com>
-In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2873 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755173AbXJPSiy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 14:38:54 -0400
+Date: Tue, 16 Oct 2007 14:17:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Daiker <daikerjohn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Ath5k compile error in wireless-2.6.git
+Message-ID: <20071016181745.GC5677@tuxdriver.com> (sfid-20071016_193859_142678_701CC6C2)
+References: <4713EBCA.8010700@gmail.com> <20071015234601.GA4125@tuxdriver.com> <20071015234748.GB4125@tuxdriver.com> <43e72e890710160914g2caa998cpd7bbb058fd064372@mail.gmail.com> <20071016170155.GB5677@tuxdriver.com> <43e72e890710161105l4dbd5dc4rc43f241aed42ac92@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710061413.07413.IvDoorn@gmail.com> (sfid-20071006_130404_127048_552EBA38)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890710161105l4dbd5dc4rc43f241aed42ac92@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By putting the flags into a enumeration we can
-make it easier maintable since we don't have to
-assign numbers for each flag. This makes it easier
-to insert and remove flags.
+On Tue, Oct 16, 2007 at 02:05:24PM -0400, Luis R. Rodriguez wrote:
+> On 10/16/07, John W. Linville <linville@tuxdriver.com> wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |   49 +++++++++++++++++++++++-----------
- 1 files changed, 33 insertions(+), 16 deletions(-)
+> > I think this has more to do with the git version (i.e. release) than
+> > the architecture.  "Approach 1" worked everywhere for a long time,
+> > while I only became aware of "Approach 2" a few months ago.
+> 
+> On my x86 box I have git 1.5.2.5
+> On my PPC box have git 1.5.3.4
+> 
+> And no dice on the PowerPC box. Maybe I have to do a new pull with the
+> new release.. I'll try.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index d280d0e..82dfcd9 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -441,6 +441,39 @@ struct rt2x00_ops {
- };
- 
- /*
-+ * rt2x00 device flags
-+ */
-+enum rt2x00_flags {
-+	/*
-+	 * Device state flags
-+	 */
-+	DEVICE_PRESENT,
-+	DEVICE_REGISTERED_HW,
-+	DEVICE_INITIALIZED,
-+	DEVICE_STARTED,
-+	DEVICE_STARTED_SUSPEND,
-+	DEVICE_ENABLED_RADIO,
-+	DEVICE_ENABLED_RADIO_HW,
-+
-+	/*
-+	 * Driver features
-+	 */
-+	DRIVER_REQUIRE_FIRMWARE,
-+	DRIVER_REQUIRE_BEACON_RING,
-+
-+	/*
-+	 * Driver configuration
-+	 */
-+	CONFIG_SUPPORT_HW_BUTTON,
-+	CONFIG_FRAME_TYPE,
-+	CONFIG_RF_SEQUENCE,
-+	CONFIG_EXTERNAL_LNA_A,
-+	CONFIG_EXTERNAL_LNA_BG,
-+	CONFIG_DOUBLE_ANTENNA,
-+	CONFIG_DISABLE_LINK_TUNING,
-+};
-+
-+/*
-  * rt2x00 device structure.
-  */
- struct rt2x00_dev {
-@@ -493,22 +526,6 @@ struct rt2x00_dev {
- 	 * of the device capabilities are stored.
- 	 */
- 	unsigned long flags;
--#define DEVICE_PRESENT			1
--#define DEVICE_REGISTERED_HW		2
--#define DEVICE_INITIALIZED		3
--#define DEVICE_STARTED			4
--#define DEVICE_ENABLED_RADIO		5
--#define DEVICE_ENABLED_RADIO_HW		6
--#define DRIVER_REQUIRE_FIRMWARE		7
--#define DRIVER_REQUIRE_BEACON_RING	8
--#define CONFIG_SUPPORT_HW_BUTTON	9
--#define CONFIG_FRAME_TYPE		10
--#define CONFIG_RF_SEQUENCE		11
--#define CONFIG_EXTERNAL_LNA_A		12
--#define CONFIG_EXTERNAL_LNA_BG		13
--#define CONFIG_DOUBLE_ANTENNA		14
--#define CONFIG_DISABLE_LINK_TUNING	15
--#define DEVICE_STARTED_SUSPEND		16
- 
- 	/*
- 	 * Chipset identification.
+It might have to do with whether you started with "git clone" or by
+simply rsync'ing the repository.  In the latter case, "Approach 1"
+probably works fine...?
+
+Anyway, whatever works for you makes me happy. :-)
+
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
