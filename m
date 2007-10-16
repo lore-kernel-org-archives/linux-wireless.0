@@ -1,29 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48492 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029AbXJWBId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 21:08:33 -0400
-Subject: Re: [PATCH] ipw2200: batch non-user-requested scan result
-	notifications
-From: Zhu Yi <yi.zhu@intel.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-In-Reply-To: <1193068039.30205.13.camel@localhost.localdomain>
-References: <1191952524.617.7.camel@localhost.localdomain>
-	 <1193042719.3069.166.camel@debian.sh.intel.com>
-	 <1193068039.30205.13.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Tue, 23 Oct 2007 08:58:31 +0800
-Message-Id: <1193101111.3069.178.camel@debian.sh.intel.com> (sfid-20071023_020837_193481_4DEF5C8A)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.180]:51689 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425AbXJPQPy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 12:15:54 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3771817pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 09:15:53 -0700 (PDT)
+Message-ID: <40f31dec0710160915h1e0e4376l12173a2c81e850ea@mail.gmail.com> (sfid-20071016_171556_432879_09E7B79B)
+Date: Tue, 16 Oct 2007 19:15:52 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/3] ath5k global rename of hal to hw
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+NACK we'll mess things up because we use hw also for mac80211_hw, too
+much use of "hw" is not recommended (also used in function names etc,
+it'll be difficult to track things down if we go too far). On the
+cleanups i did in madwifi-svn i used the name ath5k_hw for the struct,
+i think  also "ah" or "ahw" or "board" or "card" etc are more
+appropriate for use as a variable name (on my cleanups i left it as
+"hal").
 
-On Mon, 2007-10-22 at 11:47 -0400, Dan Williams wrote:
-> I think that it got fixed upstream when the round_jiffies_relative()
-> patch went it, is that what you mean? 
+Question: Since i don't know how things work, if i want to commit some
+patches should i wait for current patches to be commited on
+wireless-2.6 ? I have a patch series to commit about ath5k (my changes
+on madwifi-svn that weren't ported here) that include lots of cleanups
+and some hw.c updates. Against what code should i diff ??? Should i
+include current fixes along with mine (eg. Luis's fixes on base.c etc)
+?
 
-Yeah, that's what I mean. Thank you for the patch.
 
--yi
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
