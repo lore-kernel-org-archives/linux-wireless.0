@@ -1,89 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:49789 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbXJVAJN (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:15593 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932325AbXJPNUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 20:09:13 -0400
-Date: Mon, 22 Oct 2007 02:09:19 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-Message-ID: <20071022000919.GB29024@elf.ucw.cz> (sfid-20071022_010917_439582_306BF84C)
-References: <20071020184100.GA11640@elf.ucw.cz> <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
+	Tue, 16 Oct 2007 09:20:55 -0400
+From: Bruno Randolf <bruno@thinktube.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 2/3] better readability for skb dumps
+Date: Tue, 16 Oct 2007 22:20:37 +0900
+Message-Id: <1192540838-26985-3-git-send-email-bruno@thinktube.com> (sfid-20071016_142059_945089_8533BAE6)
+In-Reply-To: <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+ <1192540838-26985-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+print "RX  " and "TX  " in front of hexdump
 
-> This device is NOT a Ralink USB wifi adapter!
-> 
-> Get the windows driver in this link and see for yourself.
-> http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
-> (ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+---
+ drivers/net/wireless/ath5k/base.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks a lot. With some patches, I got driver from conitech.it to
-compile and partly work on 2.6.23. I can now transmit packets but not
-yet receive them.
-
-(use Makefile.26 instead of Makefile)
-
-								Pavel
-
---- hal_142_o.ofic/linux/sysdef.h	2006-11-29 11:12:10.000000000 +0100
-+++ hal_142_o/linux/sysdef.h	2007-10-21 22:21:13.000000000 +0200
-@@ -7,7 +7,7 @@
- // The definition WB_LINUX is a keyword for this OS
- //=============================================================================
- #define WB_LINUX
--#define WB_LINUX_WPA_PSK
-+//#define WB_LINUX_WPA_PSK
- //#define _WPA_PSK_DEBUG
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 2f2ae33..15004b2 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -478,7 +478,7 @@ accept:
+ 		rxs.rate = ds->ds_rxstat.rs_rate;
+ 		rxs.flag |= ath_rx_decrypted(sc, ds, skb);
  
- //#define _IBSS_BEACON_SEQ_STICK_
-Only in hal_142_o/linux: w35und.ko
-Only in hal_142_o/linux: w35und.mod.c
---- hal_142_o.ofic/linux/wb35reg.c	2006-11-29 11:43:58.000000000 +0100
-+++ hal_142_o/linux/wb35reg.c	2007-10-21 22:19:27.000000000 +0200
-@@ -879,6 +879,7 @@
- 	if( (pHwData->phy_type == RF_WB_242) ||
- 		(pHwData->phy_type == RF_WB_242_1) ) // 20060619.5 Add
- 	{
-+		extern void phy_calibration_winbond(hw_data_t *phw_data, u32 frequency);
- 		phy_calibration_winbond ( pHwData, 2412 ); // Sync operation
- 		Wb35Reg_ReadSync( pHwData, 0x103c, &BB3c );
- 		Wb35Reg_ReadSync( pHwData, 0x1054, &BB54 );
---- hal_142_o.ofic/linux/wbusb.c	2006-11-29 11:02:54.000000000 +0100
-+++ hal_142_o/linux/wbusb.c	2007-10-21 22:16:19.000000000 +0200
-@@ -28,7 +28,6 @@
- 	};
- #else
- 	static struct usb_driver wb35_driver = {
--			.owner =	THIS_MODULE,
- 			.name =		"w35und",
- 			.probe =	wb35_probe,
- 			.disconnect = wb35_disconnect,
---- hal_142_o.ofic/wblinux.c	2006-11-29 10:39:54.000000000 +0100
-+++ hal_142_o/wblinux.c	2007-10-21 23:49:07.000000000 +0200
-@@ -98,7 +98,8 @@
- 			BufSize = pRxLayer1->BufferQueue[i].BufferSize;
- 			BufAddr = pRxLayer1->BufferQueue[i].pBufferAddress;
- 			//DataDmp(BufAddr, BufSize, 0);
--	        eth_copy_and_sum( skb, BufAddr, BufSize, 0 );
-+			//	        eth_io_copy_and_sum( skb, BufAddr, BufSize, 0 );
-+		skb_copy_from_linear_data(skb, BufAddr, BufSize);
- 	        skb_put( skb, BufSize );
- 		}
+-		ath_dump_skb(skb, "r");
++		ath_dump_skb(skb, "RX  ");
  
-
-I wonder if I got skb_copy right...?
-								Pavel
-
+ 		__ieee80211_rx(sc->hw, skb, &rxs);
+ 		sc->led_rxrate = ds->ds_rxstat.rs_rate;
+@@ -1221,7 +1221,7 @@ static int ath_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	int hdrlen;
+ 	int pad;
+ 
+-	ath_dump_skb(skb, "t");
++	ath_dump_skb(skb, "TX  ");
+ 
+ 	if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+ 		DPRINTF(sc, ATH_DEBUG_XMIT, "tx in monitor (scan?)\n");
+@@ -1623,7 +1623,7 @@ static int ath_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_softc *sc = hw->priv;
+ 	int ret;
+ 
+-	ath_dump_skb(skb, "b");
++	ath_dump_skb(skb, "BC  ");
+ 
+ 	mutex_lock(&sc->lock);
+ 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.5.3.4
+
