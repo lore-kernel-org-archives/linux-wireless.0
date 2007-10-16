@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56802 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756511AbXJYN5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 09:57:20 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200710251037.50057.hs4233@mail.mn-solutions.de>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-	 <1192466593.15225.28.camel@localhost.localdomain>
-	 <1193073620.4325.7.camel@localhost.localdomain>
-	 <200710251037.50057.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 25 Oct 2007 09:55:01 -0400
-Message-Id: <1193320501.5542.13.camel@localhost.localdomain> (sfid-20071025_145725_741632_8359BE88)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.171]:44363 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbXJPQL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 12:11:59 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so110988ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 09:11:58 -0700 (PDT)
+Message-ID: <43e72e890710160911p44404ccbl85ee64ae7a4608fa@mail.gmail.com> (sfid-20071016_171201_876913_7CB5F9B0)
+Date: Tue, 16 Oct 2007 12:11:56 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 3/3] consistently use ath5k in printks
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1192540838-26985-4-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-10-25 at 10:37 +0200, Holger Schurig wrote:
-> Hi John,
-> 
-> I've put both patches that Dan acknowledged with
-> 
-> > I ran the driver for a while and nothing appears to have
-> > regressed horribly from light testing a few large transfers. 
-> > Seems OK to push into 2.6.25 to me.
-> 
-> and
-> 
-> > > In passing, rename the functions to libertas_XXX.
-> > > 
-> > > Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> >
-> > Acked-by: Dan Williams <dcbw@redhat.com>
-> 
-> onto
-> 
->   http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=summary
-> 
-> or
-> 
->   git://git.infradead.org/users/schurig/libertas-cleanup.git
-> 
-> 
-> (The rename patch is so huge). Please apply.
+On 10/16/07, Bruno Randolf <bruno@thinktube.com> wrote:
+> changed all ocurrences of "ath_pci" and "ath" in printks and debug messages to
+> "ath5k", to avoid confusion with the madwifi driver.
+>
+> changed the module version to "0.0.1 (EXPERIMENTAL)" instead of the old one
+> which came from the madwifi-bsd branch.
+>
+> the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Thanks for this too -- it might be easier to stick to using dev_info()
+then. See ath_pci_probe() for a usage of it. This in turn will now
+print "ath5k".
 
-Thanks for fixing the two ABI things.  John, can you pull into whatever
-you're targetting for 2.6.25?
-
-Thanks,
-Dan
-
-
+  Luis
