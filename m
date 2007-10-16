@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:6598 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753802AbXJYKoN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 06:44:13 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Received: from venema.h4ckr.net ([217.24.1.135]:40123 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760178AbXJPFnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 01:43:50 -0400
+Message-ID: <1520.217.24.1.231.1192513428.squirrel@webmail.madwifi.org> (sfid-20071016_064355_152815_5C0A51CA)
+Date: Tue, 16 Oct 2007 07:43:48 +0200 (CEST)
+Subject: [ANNOUNCE] ath5k mailing lists started
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
 To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/30] iwlwifi: using PCI_DEVICE macro
-Date: Thu, 25 Oct 2007 12:44:11 +0200
-Cc: Jeff Garzik <jeff@garzik.org>, Zhu Yi <yi.zhu@intel.com>,
-	linville@tuxdriver.com, Tomas Winkler <tomas.winkler@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com> <11933037674045-git-send-email-yi.zhu@intel.com> <472062BA.6020102@garzik.org>
-In-Reply-To: <472062BA.6020102@garzik.org>
+Cc: madwifi-users@lists.sourceforge.net,
+	madwifi-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710251244.11493.hs4233@mail.mn-solutions.de> (sfid-20071025_114416_523626_9B56958F)
+Content-Type: text/plain; charset=US-ASCII
+References: 
+In-Reply-To: 
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >  struct pci_device_id iwl_hw_card_ids[] = {
-> > -	{0x8086, 0x4222, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> > -	{0x8086, 0x4227, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> > +	{PCI_DEVICE(0x8086, 0x4222)},
-> > +	{PCI_DEVICE(0x8086, 0x4227)},
+Hi all.
 
-> FWIW I would recommend
->
-> 	PCI_VDEVICE(INTEL, 0x4229)
+We have started two mailing lists that are dedicated to ath5k:
 
-I wonder why.
+ * ath5k-devel@lists.ath5k.org is meant as "developers corner", to
+coordinate ath5k development, for a first review of patches, and so on.
+If you intend to contribute code to ath5k you should join this list.
 
-When I do "lspci -n" to find out the id of an unknown card, then 
-I cannot just do
+ * ath5k-users@lists.ath5k.org is for all questions that users might have
+while using the driver. Stuff like "how do I build ath5k" or "how do I
+configure my card so that I can connect to my Access Point" should go
+here.
 
-$ cd linux/drivers
-$ grep -rl 0x8086 .
+Subscription is recommended, but not required for posting to any of these
+lists. However, mail that looks like spam will be held back without
+further note for approval.
 
-to find (from the source), which driver claims to be for the 
-device. Because there is this unneeded indirection via a header 
-file ...
+Subscriptions are handled via https://lists.ath5k.org . If you have any
+questions, please feel free to contact me directly.
 
+Bye, Mike
