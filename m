@@ -1,99 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:42894 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751357AbXJ0XbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 19:31:15 -0400
-Date: Sun, 28 Oct 2007 02:31:13 +0300
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 6/7] ath5k: Add PCI IDs for newer chips
-Message-ID: <20071027233113.GF5973@localhost.domain.invalid> (sfid-20071028_003124_959809_8EA7FD02)
+Received: from py-out-1112.google.com ([64.233.166.180]:19718 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934092AbXJPVbs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 17:31:48 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3937259pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 14:31:46 -0700 (PDT)
+Message-ID: <40f31dec0710161431h188f7d41v7fca16d9ff5fbc46@mail.gmail.com> (sfid-20071016_223152_440656_E40D1D09)
+Date: Wed, 17 Oct 2007 00:31:43 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>
+Subject: [PATCH 1/4] ath5k: Get rid of unused channel list parameters used in binary HAL
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- *Add PCI IDs for 5416/5418.
+There are some parameters left in the code that were used by binary
+HAL to generate the channel list. Since we don't use binary HAL and
+channel list is handled differently, they are out.
 
- *Print a message during attach that 
-  these chips are not yet supported.
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-for base.c
+Changes to base.c
 Changes-licensed-under: 3-clause-BSD
 
-for ath5k.h
+Changes to ath5k.h, hw.c
 Changes-licensed-under: ISC
 
-Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
-
 ---
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index fa9f3ae..ef76f1c 100644
+diff --git a/drivers/net/wireless/ath5k/ath5k.h
+b/drivers/net/wireless/ath5k/ath5k.h
+index bcf1041..de4a53a 100644
 --- a/drivers/net/wireless/ath5k/ath5k.h
 +++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -50,9 +50,9 @@
- #define PCI_DEVICE_ID_ATHEROS_AR5212_FPGA 	0xf013 /* AR5212 (emulation board) */
- #define PCI_DEVICE_ID_ATHEROS_AR5211_LEGACY 	0xff12 /* AR5211 (emulation board) */
- #define PCI_DEVICE_ID_ATHEROS_AR5211_FPGA11B 	0xf11b /* AR5211 (emulation board) */
--#define PCI_DEVICE_ID_ATHEROS_AR5212_REV2 	0x0052 /* AR5312 WMAC (AP31) */
--#define PCI_DEVICE_ID_ATHEROS_AR5212_REV7 	0x0057 /* AR5312 WMAC (AP30-040) */
--#define PCI_DEVICE_ID_ATHEROS_AR5212_REV8 	0x0058 /* AR5312 WMAC (AP43-030) */
-+#define PCI_DEVICE_ID_ATHEROS_AR5312_REV2 	0x0052 /* AR5312 WMAC (AP31) */
-+#define PCI_DEVICE_ID_ATHEROS_AR5312_REV7 	0x0057 /* AR5312 WMAC (AP30-040) */
-+#define PCI_DEVICE_ID_ATHEROS_AR5312_REV8 	0x0058 /* AR5312 WMAC (AP43-030) */
- #define PCI_DEVICE_ID_ATHEROS_AR5212_0014 	0x0014 /* AR5212 compatible */
- #define PCI_DEVICE_ID_ATHEROS_AR5212_0015 	0x0015 /* AR5212 compatible */
- #define PCI_DEVICE_ID_ATHEROS_AR5212_0016 	0x0016 /* AR5212 compatible */
-@@ -62,6 +62,8 @@
- #define PCI_DEVICE_ID_ATHEROS_AR2413 		0x001a /* AR2413 (Griffin-lite) */
- #define PCI_DEVICE_ID_ATHEROS_AR5413 		0x001b /* AR5413 (Eagle) */
- #define PCI_DEVICE_ID_ATHEROS_AR5424 		0x001c /* AR5424 (Condor PCI-E) */
-+#define PCI_DEVICE_ID_ATHEROS_AR5416 		0x0023 /* AR5416 */
-+#define PCI_DEVICE_ID_ATHEROS_AR5418 		0x0024 /* AR5418 */
- 
- /****************************\
-   GENERIC DRIVER DEFINITIONS
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 821ed44..e6a3155 100644
+@@ -918,7 +918,6 @@ struct ath_hw {
+
+        void                    *ah_sc;
+        void __iomem            *ah_sh;
+-       enum ath5k_countrycode  ah_country_code;
+
+        enum ath5k_int          ah_imr;
+
+diff --git a/drivers/net/wireless/ath5k/base.c
+b/drivers/net/wireless/ath5k/base.c
+index 5ca6af1..6f55011 100644
 --- a/drivers/net/wireless/ath5k/base.c
 +++ b/drivers/net/wireless/ath5k/base.c
-@@ -182,7 +182,7 @@ MODULE_VERSION("0.1.1 (EXPERIMENTAL)");
- static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0207), .driver_data = AR5K_AR5210 }, /* 5210 early */
- 	{ PCI_VDEVICE(ATHEROS, 0x0007), .driver_data = AR5K_AR5210 }, /* 5210 */
--	{ PCI_VDEVICE(ATHEROS, 0x0011), .driver_data = AR5K_AR5211 }, /* 5311 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0011), .driver_data = AR5K_AR5211 }, /* 5311 - this is on AHB bus !*/
- 	{ PCI_VDEVICE(ATHEROS, 0x0012), .driver_data = AR5K_AR5211 }, /* 5211 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0013), .driver_data = AR5K_AR5212 }, /* 5212 */
- 	{ PCI_VDEVICE(3COM_2,  0x0013), .driver_data = AR5K_AR5212 }, /* 3com 5212 */
-@@ -197,6 +197,8 @@ static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
- 	{ PCI_VDEVICE(ATHEROS, 0x001a), .driver_data = AR5K_AR5212 }, /* 2413 Griffin-lite */
- 	{ PCI_VDEVICE(ATHEROS, 0x001b), .driver_data = AR5K_AR5212 }, /* 5413 Eagle */
- 	{ PCI_VDEVICE(ATHEROS, 0x001c), .driver_data = AR5K_AR5212 }, /* 5424 Condor (PCI-E)*/
-+	{ PCI_VDEVICE(ATHEROS, 0x0023), .driver_data = AR5K_AR5212 }, /* 5416 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0024), .driver_data = AR5K_AR5212 }, /* 5418 */
- 	{ 0 }
- };
- MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
+@@ -98,16 +98,6 @@ enum {
+
+ static int ath_calinterval = ATH_SHORT_CALIB;
+
+-static int countrycode = CTRY_DEFAULT;
+-static int outdoor = true;
+-static int xchanmode = true;
+-module_param(countrycode, int, 0);
+-MODULE_PARM_DESC(countrycode, "Override default country code");
+-module_param(outdoor, int, 0);
+-MODULE_PARM_DESC(outdoor, "Enable/disable outdoor use");
+-module_param(xchanmode, int, 0);
+-MODULE_PARM_DESC(xchanmode, "Enable/disable extended channel mode");
+-
+ #if AR_DEBUG
+ static unsigned int ath_debug;
+ module_param_named(debug, ath_debug, uint, 0);
+@@ -1981,8 +1971,6 @@ static int ath_getchannels(struct ieee80211_hw *hw)
+
+        BUILD_BUG_ON(ARRAY_SIZE(sc->modes) < 3);
+
+-       ah->ah_country_code = countrycode;
+-
+        /* The order here does not matter */
+        modes[0].mode = MODE_IEEE80211G;
+        modes[1].mode = MODE_IEEE80211B;
+@@ -2214,10 +2202,10 @@ static int ath_attach(struct pci_dev *pdev,
+struct ieee80211_hw *hw)
+                ath5k_hw_reset_key(ah, i);
+
+        /*
+-        * Collect the channel list using the default country
+-        * code and including outdoor channels.  The 802.11 layer
+-        * is resposible for filtering this list based on settings
+-        * like the phy mode.
++        * Collect the channel list.  The 802.11 layer
++        * is resposible for filtering this list based
++        * on settings like the phy mode and regulatory
++        * domain restrictions.
+         */
+        ret = ath_getchannels(hw);
+        if (ret) {
+@@ -2585,27 +2573,6 @@ static ctl_table ath_static_sysctls[] = {
+        },
+ #endif
+        {
+-         .procname     = "countrycode",
+-         .mode         = 0444,
+-         .data         = &countrycode,
+-         .maxlen       = sizeof(countrycode),
+-         .proc_handler = proc_dointvec
+-       },
+-       {
+-         .procname     = "outdoor",
+-         .mode         = 0444,
+-         .data         = &outdoor,
+-         .maxlen       = sizeof(outdoor),
+-         .proc_handler = proc_dointvec
+-       },
+-       {
+-         .procname     = "xchanmode",
+-         .mode         = 0444,
+-         .data         = &xchanmode,
+-         .maxlen       = sizeof(xchanmode),
+-         .proc_handler = proc_dointvec
+-       },
+-       {
+          .procname     = "calibrate",
+          .mode         = 0644,
+          .data         = &ath_calinterval,
 diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 1c10203..c95ae4b 100644
+index 504f642..8b22416 100644
 --- a/drivers/net/wireless/ath5k/hw.c
 +++ b/drivers/net/wireless/ath5k/hw.c
-@@ -278,6 +278,13 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
- 		ah->ah_radio_2ghz_revision = ath5k_hw_radio_revision(ah,
- 				CHANNEL_2GHZ);
- 
-+	/* Return on unsuported chips (unsupported eeprom etc) */
-+	if(srev >= AR5K_SREV_VER_AR5416){
-+		printk(KERN_ERR "ath5k: Device not yet supported.\n");
-+		ret = -ENODEV;
-+		goto err_free;
-+	}
-+
- 	/* Identify single chip solutions */
- 	if((srev <= AR5K_SREV_VER_AR5414) &&
- 	(srev >= AR5K_SREV_VER_AR2424)) {
+@@ -214,8 +214,7 @@ struct ath_hw *ath5k_hw_attach(u16 device, u8
+mac_version, void *sc,
+         * HAL information
+         */
+
+-       /* Regulation Stuff */
+-       hal->ah_country_code = AR5K_TUNE_CTRY;
++       /* Get reg domain from eeprom */
+        ath5k_get_regdomain(hal);
+
+        hal->ah_op_mode = IEEE80211_IF_TYPE_STA;
 
 
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
