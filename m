@@ -1,81 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38127
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290AbXJ1PB6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 11:01:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Dereference of wl->current_dev must be protected by wl->mutex
-Date: Sun, 28 Oct 2007 15:59:58 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+Received: from madara.hpl.hp.com ([192.6.19.124]:50705 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751926AbXJPA67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2007 20:58:59 -0400
+Date: Mon, 15 Oct 2007 17:57:11 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jean Tourrilhes <jt@hpl.hp.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlist and network-manager bug report
+Message-ID: <20071016005711.GA10957@bougret.hpl.hp.com> (sfid-20071016_015902_383886_1F10BCFB)
+Reply-To: jt@hpl.hp.com
+References: <1189526874.6161.30.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710281559.59012.mb@bu3sch.de> (sfid-20071028_150201_890418_5B9A14A4)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1189526874.6161.30.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Put all access to wl->current_dev under protection of the mutex.
+On Tue, Sep 11, 2007 at 06:07:53PM +0200, Johannes Berg wrote:
+> Hi Jean,
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
+	Hi again,
 
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-10-28 15:46:24.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-10-28 15:54:55.000000000 +0100
-@@ -2813,18 +2813,25 @@ static int b43_dev_set_key(struct ieee80
- 			   struct ieee80211_key_conf *key)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
--	struct b43_wldev *dev = wl->current_dev;
-+	struct b43_wldev *dev;
- 	unsigned long flags;
- 	u8 algorithm;
- 	u8 index;
--	int err = -EINVAL;
-+	int err;
- 	DECLARE_MAC_BUF(mac);
- 
- 	if (modparam_nohwcrypt)
- 		return -ENOSPC; /* User disabled HW-crypto */
- 
--	if (!dev)
--		return -ENODEV;
-+	mutex_lock(&wl->mutex);
-+	spin_lock_irqsave(&wl->irq_lock, flags);
-+
-+	dev = wl->current_dev;
-+	err = -ENODEV;
-+	if (!dev || b43_status(dev) < B43_STAT_INITIALIZED)
-+		goto out_unlock;
-+
-+	err = -EINVAL;
- 	switch (key->alg) {
- 	case ALG_WEP:
- 		if (key->keylen == 5)
-@@ -2840,20 +2847,11 @@ static int b43_dev_set_key(struct ieee80
- 		break;
- 	default:
- 		B43_WARN_ON(1);
--		goto out;
-+		goto out_unlock;
- 	}
+> Anyhow, the problem is that my landlord has an AP that broadcasts an
+> SSID with a 0xFC byte in it (supposedly an "=FC" in windows). iwlist,
+> however, just prints
+>=20
+> 		ESSID:"B
+
+	You remember that problem ? Well, we now have a new version of
+Wireless Tools that support that. However, this is blocked because the
+necessary kernel patch has not gone yet in the kernel.
+	I've sent the patch to John twice, with you in cc for the last
+occurence. It seems that John for some reason does not receive e-mail
+from me, or something else. This was the last time :
+		http://marc.info/?l=3Dlinux-wireless&m=3D119022849315111&w=3D2
+	So, would you mind pushing yourself this patch to John ?
+	Thanks in advance...
+
+	Jean
+
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+
+-----------------------------------------------------------
+
+--- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
++++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
+@@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
+ 		int	extra_size;
+ 		int	user_length =3D 0;
+ 		int	err;
+-		int	essid_compat =3D 0;
+=20
+ 		/* Calculate space needed by arguments. Always allocate
+ 		 * for max space. Easier, and won't last long... */
+ 		extra_size =3D descr->max_tokens * descr->token_size;
+=20
+-		/* Check need for ESSID compatibility for WE < 21 */
+-		switch (cmd) {
+-		case SIOCSIWESSID:
+-		case SIOCGIWESSID:
+-		case SIOCSIWNICKN:
+-		case SIOCGIWNICKN:
+-			if (iwr->u.data.length =3D=3D descr->max_tokens + 1)
+-				essid_compat =3D 1;
+-			else if (IW_IS_SET(cmd) && (iwr->u.data.length !=3D 0)) {
+-				char essid[IW_ESSID_MAX_SIZE + 1];
 -
- 	index = (u8) (key->keyidx);
- 	if (index > 3)
--		goto out;
+-				err =3D copy_from_user(essid, iwr->u.data.pointer,
+-						     iwr->u.data.length *
+-						     descr->token_size);
+-				if (err)
+-					return -EFAULT;
 -
--	mutex_lock(&wl->mutex);
--	spin_lock_irqsave(&wl->irq_lock, flags);
+-				if (essid[iwr->u.data.length - 1] =3D=3D '\0')
+-					essid_compat =3D 1;
+-			}
+-			break;
+-		default:
+-			break;
+-		}
 -
--	if (b43_status(dev) < B43_STAT_INITIALIZED) {
--		err = -ENODEV;
- 		goto out_unlock;
--	}
- 
- 	switch (cmd) {
- 	case SET_KEY:
+-		iwr->u.data.length -=3D essid_compat;
+-
+ 		/* Check what user space is giving us */
+ 		if (IW_IS_SET(cmd)) {
+ 			/* Check NULL pointer */
+@@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
+ 		}
+=20
+ 		/* Create the kernel buffer */
+-		/*    kzalloc ensures NULL-termination for essid_compat */
+ 		extra =3D kzalloc(extra_size, GFP_KERNEL);
+ 		if (extra =3D=3D NULL)
+ 			return -ENOMEM;
+@@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
+ 		/* Call the handler */
+ 		ret =3D handler(dev, &info, &(iwr->u), extra);
+=20
+-		iwr->u.data.length +=3D essid_compat;
+-
+ 		/* If we have something to return to the user */
+ 		if (!ret && IW_IS_GET(cmd)) {
+ 			/* Check if there is enough buffer up there */
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
