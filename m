@@ -1,70 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbXJDIZl (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:61592 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932694AbXJPPKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 04:25:41 -0400
-Received: from [131.234.198.4]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IdM1Z-0008EC-AW
-	for linux-wireless@vger.kernel.org; Thu, 04 Oct 2007 09:25:37 +0100
-Subject: [NOTE] driver caveat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fb9Wi82eRiq6rc8OSH4x"
-Date: Thu, 04 Oct 2007 08:50:34 +0200
-Message-Id: <1191480634.9898.30.camel@johannes.berg> (sfid-20071004_092549_429001_BADF696D)
+	Tue, 16 Oct 2007 11:10:13 -0400
+Date: Tue, 16 Oct 2007 08:07:51 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH 4/5] Add extensive documenation for the atheros
+ bssid_mask
+Message-Id: <20071016080751.55bf3dde.randy.dunlap@oracle.com> (sfid-20071016_161016_910260_0BF27189)
+In-Reply-To: <20071012150709.GE9407@pogo>
+References: <20071012150438.GC9407@pogo>
+	<20071012150543.GD9407@pogo>
+	<20071012150709.GE9407@pogo>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 12 Oct 2007 11:07:09 -0400 Luis R. Rodriguez wrote:
 
---=-fb9Wi82eRiq6rc8OSH4x
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Add extensive documenation for the atheros bssid_mask.
+> Credit to David Kimdon for figuring this out. I am
+> just documenting it.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |    7 +--
+>  drivers/net/wireless/ath5k/hw.c   |   96 +++++++++++++++++++++++++++++++++++-
+>  drivers/net/wireless/ath5k/reg.h  |   17 ++++--
+>  3 files changed, 107 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index b106ead..fc00667 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -2323,9 +2323,99 @@ void ath5k_hw_set_associd(struct ath_hw *hal, const u8 *bssid, u16 assoc_id)
+>  
+>  	ath5k_hw_enable_pspoll(hal, NULL, 0);
+>  }
+> -
+> -/*
+> - * Set BSSID mask on 5212
+> +/**
 
-Just a quick note because I ran into it:
+"/**" indicates kernel-doc notation, so I'll make a few comments here.
 
-[29106.600017] wlan0: No ProbeResp from current AP 00:15:f2:3d:63:97 -
-assume out of range
-[29106.600030] phy0: Removed STA 00:15:f2:3d:63:97
-[29106.720011] mac80211-phy0: failed to remove key (0,
-00:15:f2:3d:63:97) from hardware (-19)
+> + * ath5k_hw_set_bssid_mask - set common bits we should listen to
 
+The list of parameters (@hal & @mask) need to be immediatly after
+the function name/short description line, followed by a blank (" *")
+line, then any other function comments/documentation that you want
+to include here.
 
-This happened during resume, mac80211 was up already but the driver had
-not resumed the device yet, so b43 thankfully detected that and didn't
-try to access the hardware and returned -ENODEV from set_key().
+> + *
+> + * The bssid_mask is a utility used by AR5212 hardware to inform the hardware
+> + * which bits of the interface's MAC address should be looked at when trying
+> + * to decide which packets to ACK. In station mode every bit matters. In AP
+> + * mode with a single BSS every bit matters as well. In AP mode with
+> + * multiple BSSes not every bit matters.
+> + *
+> + * @hal: the &struct ath_hw
+> + * @mask: the bssid_mask, a u8 array of size ETH_ALEN
+> + *
+> + * Note that this is a simple filter and *does* not filter out all
+> + * relevant frames. Some non-relevant frames will get through, probability
+> + * jocks are welcomed to compute.
+> + *
+> + * When handling multiple BSSes (or VAPs) you can get the BSSID mask by
+> + * computing the set of:
+> + *
+> + *     ~ ( MAC XOR BSSID )
+> + *
+> + * When you do this you are essentially computing the common bits. Later it
+> + * is assumed the harware will "and" (&) the BSSID mask with the MAC address
+> + * to obtain the relevant bits which should match on the destination frame.
+> + *
+> + * Simple example: on your card you have have two BSSes you have created with
+> + * BSSID-01 and BSSID-02. Lets assume BSSID-01 will not use the MAC address.
+> + * There is another BSSID-03 but you are not part of it. For simplicity's sake,
+> + * assuming only 4 bits for a mac address and for BSSIDs you can then have:
+> + *
+> + *                  \
+> + * MAC:                0001 |
+> + * BSSID-01:   0100 | --> Belongs to us
+> + * BSSID-02:   1001 |
+> + *                  /
+> + * -------------------
+> + * BSSID-03:   0110  | --> External
+> + * -------------------
+> + *
+> + * Our bssid_mask would then be:
+> + *
+> + *             On loop iteration for BSSID-01:
+> + *             ~(0001 ^ 0100)  -> ~(0101)
+> + *                             ->   1010
+> + *             bssid_mask      =    1010
+> + *
+> + *             On loop iteration for BSSID-02:
+> + *             bssid_mask &= ~(0001   ^   1001)
+> + *             bssid_mask =   (1010)  & ~(0001 ^ 1001)
+> + *             bssid_mask =   (1010)  & ~(1001)
+> + *             bssid_mask =   (1010)  &  (0110)
+> + *             bssid_mask =   0010
+> + *
+> + * A bssid_mask of 0010 means "only pay attention to the second least
+> + * significant bit". This is because its the only bit common
+> + * amongst the MAC and all BSSIDs we support. To findout what the real
+> + * common bit is we can simply "&" the bssid_mask now with any BSSID we have
+> + * or our MAC address (we assume the hardware uses the MAC address).
+> + *
+> + * Now, suppose there's an incoming frame for BSSID-03:
+> + *
+> + * IFRAME-01:  0110
+> + *
+> + * An easy eye-inspeciton of this already should tell you that this frame
+> + * will not pass our check. This is beacuse the bssid_mask tells the
+> + * hardware to only look at the second least significant bit and the
+> + * common bit amongst the MAC and BSSIDs is 0, this frame has the 2nd LSB
+> + * as 1, which does not match 0.
+> + *
+> + * So with IFRAME-01 we *assume* the hardware will do:
+> + *
+> + *     allow = (IFRAME-01 & bssid_mask) == (bssid_mask & MAC) ? 1 : 0;
+> + *  --> allow = (0110 & 0010) == (0010 & 0001) ? 1 : 0;
+> + *  --> allow = (0010) == 0000 ? 1 : 0;
+> + *  --> allow = 0
+> + *
+> + *  Lets now test a frame that should work:
+> + *
+> + * IFRAME-02:  0001 (we should allow)
+> + *
+> + *     allow = (0001 & 1010) == 1010
+> + *
+> + *     allow = (IFRAME-02 & bssid_mask) == (bssid_mask & MAC) ? 1 : 0;
+> + *  --> allow = (0001 & 0010) ==  (0010 & 0001) ? 1 :0;
+> + *  --> allow = (0010) == (0010)
+> + *  --> allow = 1
+> + *
+> + * Other examples:
+> + *
+> + * IFRAME-03:  0100 --> allowed
+> + * IFRAME-04:  1001 --> allowed
+> + * IFRAME-05:  1101 --> allowed but its not for us!!!
+> + *
+>   */
 
-If you've been experiencing bad behaviour with suspend this may be the
-cause, instead of working around in the driver I suggest you implement
-proper suspend/resume hooks in mac80211 for drivers to call ;)
-
-johannes
-
---=-fb9Wi82eRiq6rc8OSH4x
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwSNOaVg1VMiehFYAQLA9xAAlmlujEM7GlBdrUgy8fKyiTgCk0ncr+DM
-Vp7FMeILfH3ABTJWN5bl/NcqnnRMp6Ae7QUvMj9fQU3d1HIrPw4wEfCxBVmWJrmK
-Zi31k3pxE+EU4aLUyyRv8pT3j854amk6Aq/V8ZIn3GEZZNcj44Iw725xsbGnhLKc
-HJdU2otol3QyL/uYZQPR5V1KJzN32QuRY5vnJzFc4B/HbmtL52fapAxyvYgurb8X
-Lw2Ho+rGzidZisXEMp/9IxvC3AEU4MM4WU6YwLaDFeXD+yW6FrHOP8SMDCkPZ5pI
-+YVqp+d5ONvI8EhtaOy+7kzxJ5uo6Qe6H2u8qLY+aQD86D7pd8TadbcdTVzJqAWp
-gPT2p7GL15weHzF1z796yALhakJ2F06f3JKWssd9XiDloB6SI3iIrvLwBff8rrre
-RGp7FeQTnLmL2GThF2ghbHqLT68/HFyRFCeseJ/dT4fKiJZLVTh3NPZ45QE/MV0O
-cMX+hC+EUH7N1+xo8ITXdJmG1zAktZ17N2PNdl4z14TiIQNBJKt6IniclZShK/fd
-AEV2xpD9w3Lay2rW9eoKWkahMZ9VmGWuM+TnzuJZhH6KlAmyPSF1Pmmfh+ryHqHN
-LJtraTUQlU5g9YPk99W4VTlgWmgbHkZ1bnSKJaiQeH7u6lTY1cXqAFHDjDSV2wxk
-hahVY0CpiMY=
-=OLGx
------END PGP SIGNATURE-----
-
---=-fb9Wi82eRiq6rc8OSH4x--
-
+Thanks.
+---
+~Randy
