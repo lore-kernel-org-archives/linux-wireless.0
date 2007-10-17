@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7520 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbXJZLnx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 07:43:53 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-Date: Fri, 26 Oct 2007 13:43:51 +0200
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Dan Williams <dcbw@redhat.com>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de> <1193073620.4325.7.camel@localhost.localdomain> <200710251037.50057.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200710251037.50057.hs4233@mail.mn-solutions.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2202 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753965AbXJQCIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 22:08:54 -0400
+Date: Tue, 16 Oct 2007 21:03:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	kay.sievers@vrfy.org, linux-kernel@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] ssb: Fix regression in 2.6.23-git3 due to change in
+	calling add_uevent_var
+Message-ID: <20071017010338.GA3441@tuxdriver.com> (sfid-20071017_030859_743439_024495A7)
+References: <47119f37.hwmEVx/qSP6GAYhm%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710261343.51684.hs4233@mail.mn-solutions.de> (sfid-20071026_124355_926421_BD02CA88)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47119f37.hwmEVx/qSP6GAYhm%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John !
+On Sat, Oct 13, 2007 at 11:46:47PM -0500, Larry Finger wrote:
+> In commit 7eff2e7a8b65c25920207324e56611150eb1cd9a, the calling sequence
+> for add_uevent_var was changed, but the ssb driver was not modified, which
+> leads to a "Unable to handle kernel paging request" oops. This patch fixes
+> the problem.
 
-wireless-2.6/everything is a moving target. The two patches I've 
-sent yesterday no longer apply cleanly. So I've made them new.
+Sorry, Al Viro got a patch merged before I got to yours!
 
-Because of the sheer size of one of them, I've put them there:
+Thanks anyway!
 
-http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=shortlog;h=cleanup
-
-
-Please apply.
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
