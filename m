@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41503
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268AbXJ0NPB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 09:15:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Fix initcall ordering
-Date: Sat, 27 Oct 2007 15:14:39 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Christian Casteyde <casteyde.christian@free.fr>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3018 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752097AbXJQOiz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:38:55 -0400
+Date: Wed, 17 Oct 2007 10:04:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: make ieee802_11_parse_elems return void
+Message-ID: <20071017140444.GA5744@tuxdriver.com> (sfid-20071017_153858_093635_675BE1C7)
+References: <1192588723322-git-send-email-linville@tuxdriver.com> <1192608911.8841.6.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200710271514.40056.mb@bu3sch.de> (sfid-20071027_141505_669105_33177161)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192608911.8841.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb must init after PCI but before the ssb drivers.
+On Wed, Oct 17, 2007 at 10:15:11AM +0200, Johannes Berg wrote:
+> On Tue, 2007-10-16 at 22:38 -0400, John W. Linville wrote:
+> 
+> Looks good to me, but
+> 
+> > -	/* Do not trigger error if left == 1 as Apple Airport base stations
+> > -	 * send AssocResps that are one spurious byte too long. */
+> > -
+> > -	return unknown ? ParseUnknown : ParseOK;
+> > +	return;
+> 
+> huh?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Christian Casteyde <casteyde.christian@free.fr>
-Fixes-bug: #9219
+You don't like the bare return at the end?  Or are you questioning
+something else?
 
-Index: wireless-2.6/drivers/ssb/main.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/main.c	2007-10-27 14:54:40.000000000 +0200
-+++ wireless-2.6/drivers/ssb/main.c	2007-10-27 14:57:15.000000000 +0200
-@@ -1147,7 +1147,10 @@ static int __init ssb_modinit(void)
- 
- 	return err;
- }
--subsys_initcall(ssb_modinit);
-+/* ssb must be initialized after PCI but before the ssb drivers.
-+ * That means we must use some initcall between subsys_initcall
-+ * and device_initcall. */
-+fs_initcall(ssb_modinit);
- 
- static void __exit ssb_modexit(void)
- {
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
