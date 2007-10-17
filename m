@@ -1,52 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51873 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186AbXJVOKD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 10:10:03 -0400
-Subject: [PATCH] mac80211: fix printk warning on 64-bit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 22 Oct 2007 14:51:37 +0200
-Message-Id: <1193057497.9793.3.camel@johannes.berg> (sfid-20071022_151010_468966_C51A16C5)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2348 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755828AbXJQPI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 11:08:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: davem@davemloft.net, flamingice@sourmilk.net,
+	netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: only honor IW_SCAN_THIS_ESSID in STA, IBSS, and AP modes
+Date: Wed, 17 Oct 2007 10:54:54 -0400
+Message-Id: <11926328942540-git-send-email-linville@tuxdriver.com> (sfid-20071017_160900_963532_78F50EFE)
+In-Reply-To: <20071017145315.GC5744@tuxdriver.com>
+References: <200710162329.55966.flamingice@sourmilk.net> <20071017145315.GC5744@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My AID message patch introduced a warning on 64-bit machines because ~
-extends to unsigned long:
+The previous IW_SCAN_THIS_ESSID patch left a hole allowing scan
+requests on interfaces in inappropriate modes.
 
-| net/mac80211/ieee80211_sta.c: In function =E2=80=98ieee80211_rx_mgmt_=
-assoc_resp=E2=80=99:
-| net/mac80211/ieee80211_sta.c:1187: warning: format =E2=80=98%d=E2=80=99=
- expects type =E2=80=98int=E2=80=99, but argument 7 has type =E2=80=98l=
-ong unsigned int=E2=80=99
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211_ioctl.c |   37 +++++++++++++++++++------------------
+ 1 files changed, 19 insertions(+), 18 deletions(-)
 
-This fixes it by explicitly casting the result to u16 (which 'aid' is).
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 83e4035..e1fafb6 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -521,29 +521,30 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
+ 	if (!netif_running(dev))
+ 		return -ENETDOWN;
+ 
++	switch (sdata->type) {
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_IBSS:
++		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
++			ssid = sdata->u.sta.ssid;
++			ssid_len = sdata->u.sta.ssid_len;
++		}
++		break;
++	case IEEE80211_IF_TYPE_AP:
++		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
++			ssid = sdata->u.ap.ssid;
++			ssid_len = sdata->u.ap.ssid_len;
++		}
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	/* if SSID was specified explicitly then use that */
+ 	if (wrqu->data.length == sizeof(struct iw_scan_req) &&
+ 	    wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+ 		req = (struct iw_scan_req *)extra;
+ 		ssid = req->essid;
+ 		ssid_len = req->essid_len;
+-	} else {
+-		switch (sdata->type) {
+-		case IEEE80211_IF_TYPE_STA:
+-		case IEEE80211_IF_TYPE_IBSS:
+-			if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+-				ssid = sdata->u.sta.ssid;
+-				ssid_len = sdata->u.sta.ssid_len;
+-			}
+-			break;
+-		case IEEE80211_IF_TYPE_AP:
+-			if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+-				ssid = sdata->u.ap.ssid;
+-				ssid_len = sdata->u.ap.ssid_len;
+-			}
+-			break;
+-		default:
+-			return -EOPNOTSUPP;
+-		}
+ 	}
+ 
+ 	return ieee80211_sta_req_scan(dev, ssid, ssid_len);
+-- 
+1.5.2.4
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
-c
-index f7ffeec..db3cf23 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1184,7 +1184,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct n=
-et_device *dev,
- 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=3D0x%x "
- 	       "status=3D%d aid=3D%d)\n",
- 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
--	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
-+	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
-=20
- 	if (status_code !=3D WLAN_STATUS_SUCCESS) {
- 		printk(KERN_DEBUG "%s: AP denied association (code=3D%d)\n",
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
