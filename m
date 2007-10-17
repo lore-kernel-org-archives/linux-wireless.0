@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:50632 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752762AbXJNAkN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 20:40:13 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] p54: Make filter configuration atomic
-Date: Sat, 13 Oct 2007 20:35:05 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Dmitry Torokhov <dtor@insightbb.com>
-Message-Id: <20071014003505.16935.43676.stgit@magic.sourmilk.net> (sfid-20071014_014020_881499_764E3FE8)
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from mx1.redhat.com ([66.187.233.31]:50744 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbXJQOMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:12:18 -0400
+Subject: Re: iwl3945 doesn't work
+From: Dan Williams <dcbw@redhat.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20071017135452.GJ5043@kernel.dk>
+References: <20071017135452.GJ5043@kernel.dk>
+Content-Type: text/plain
+Date: Wed, 17 Oct 2007 10:11:11 -0400
+Message-Id: <1192630271.10567.32.camel@localhost.localdomain> (sfid-20071017_151220_313358_F440744A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Wed, 2007-10-17 at 15:54 +0200, Jens Axboe wrote:
+> Hi,
+> 
+> Seeing that iwl3945 is now merged, I decided to switch my x60 to use
+> that instead of ipw3945. That would leave me with zero kernel
+> dependencies.
+> 
+> Unfortunately it doesn't work. Loading the module reveals the device:
+> 
+> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for
+> Linux, 1.1.17ks
+> iwl3945: Copyright(c) 2003-2007 Intel Corporation
+> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 21
+> PCI: Setting latency timer of device 0000:03:00.0 to 64
+> iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+> iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> phy0: Selected rate control algorithm 'iwl-3945-rs'
+> 
+> # iwconfig wlan0
+> wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"  
+>           Mode:Managed  Channel:0  Access Point: Not-Associated   
+>           Tx-Power=0 dBm   
+>           Retry min limit:7   RTS thr:off   Fragment thr=2346 B   
+>           Encryption key:XXXX-XXXX-XX
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> 
+> and iwconfig sees it, essid/enc settings are fine, but I don't get a
+> link.
 
-p54_set_filter is now called from configure_filter, which is not
-allowed to sleep. The filter configuration packet allocation should be
-atomic now.
+You do have the updated firmware, right?  I don't think iwl3945 would
+even load if you didn't, but it doesn't hurt to check.
 
-Thanks to Dmitry Torokhov <dtor@insightbb.com> for reporting this bug.
+Also, what exact kernel version are you using?  2.6.23 release kernel?
+Or something from development series?
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- drivers/net/wireless/p54common.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
-index 2c63cf0..1437db0 100644
---- a/drivers/net/wireless/p54common.c
-+++ b/drivers/net/wireless/p54common.c
-@@ -577,7 +577,7 @@ static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
- 	struct p54_tx_control_filter *filter;
- 
- 	hdr = kzalloc(sizeof(*hdr) + sizeof(*filter) +
--		      priv->tx_hdr_len, GFP_KERNEL);
-+		      priv->tx_hdr_len, GFP_ATOMIC);
- 	if (!hdr)
- 		return -ENOMEM;
- 
+Dan
 
