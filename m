@@ -1,86 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8116 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756436AbXJOJVN convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485AbXJQMp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 05:21:13 -0400
-MIME-Version: 1.0
-Subject: RE: [ipw3945-devel] [PATCH] [PATCH] mac80211: honorIW_SCAN_THIS_ESSID in siwscan ioctl
-Date: Mon, 15 Oct 2007 11:20:11 +0200
-Message-ID: <C07C4589BE74A34981C3C3525EE1F80102A8EEAE@hasmsx412.ger.corp.intel.com> (sfid-20071015_102118_511046_D9E6F072)
-In-Reply-To: <200710121525.25574.hschaa@suse.de>
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-To: "Helmut Schaa" <hschaa@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <dcbw@redhat.com>, <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Bill Moss" <bmoss@clemson.edu>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Oct 2007 08:45:26 -0400
+Subject: Re: Problem with in-kernel iwl3945 driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ismail =?ISO-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200710171518.36393.ismail@pardus.org.tr>
+References: <200710161317.45460.ismail@pardus.org.tr>
+	 <200710161703.51343.ismail@pardus.org.tr>
+	 <1192609081.8841.8.camel@johannes.berg>
+	 <200710171518.36393.ismail@pardus.org.tr>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P9wKEq6DRBM/wtiC0U+6"
+Date: Wed, 17 Oct 2007 14:46:05 +0200
+Message-Id: <1192625165.8841.15.camel@johannes.berg> (sfid-20071017_134530_681618_10D808A4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You are, we will provide a patch to fix that.
-Thanks.
-Tomas
 
->-----Original Message-----
->From: ipw3945-devel-bounces@lists.sourceforge.net
-[mailto:ipw3945-devel-
->bounces@lists.sourceforge.net] On Behalf Of Helmut Schaa
->Sent: Friday, October 12, 2007 3:25 PM
->To: John W. Linville
->Cc: dcbw@redhat.com; linux-wireless@vger.kernel.org; ipw3945-
->devel@lists.sourceforge.net; Bill Moss
->Subject: Re: [ipw3945-devel] [PATCH] [PATCH] mac80211:
->honorIW_SCAN_THIS_ESSID in siwscan ioctl
->
->Hi,
->
->Am Mittwoch, 10. Oktober 2007 22:34:56 schrieb John W. Linville:
->> This patch fixes the problem of associating with wpa_secured hidden
->> AP.  Please try out.
->
->The patch did not fix the issue for _some_ APs I have here but it is
->apparently correct.
->
->I was able to track the issue further down to the probe-request iwlwifi
->sends
->to connect to a hidden AP (hw_scan is enabled). Attached is a quick
-hack
->against iwlwifi-1.1.0 which made hidden AP working for me (using
-hw_scan).
->
->The patch is only ment as a hint, not as a real fix!
->
->The problem seemed to be in the info element "supported rates". The
->probe-request mac80211 would generate does only attach eight supported
->rates
->to this info element, the rest goes to "extended supported rates".
->
->Instead iwlwifi puts _all_ (more then eight) rates into "supported
-rates"
->and
->omits "extended supported rates". As "supported rates" is specified in
->802.11b there should only be 802.11b rates (this is an assumption as I
-do
->not
->have the 802.11 specs here). This is exactly what my patch does: limit
-the
->number of supported rates to eight.
->
->Can somebody please verify if I'm right?
->
->Btw iwlwifi generates the probe-request itself _only_ if hw_scan is
->enabled.
->If hw_scan is disabled mac80211 generates the probe-request (which then
->should be correct) but the request gets somehow corrupted.
->
->Thanks,
->Helmut
----------------------------------------------------------------------
-Intel Israel (74) Limited
+--=-P9wKEq6DRBM/wtiC0U+6
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+On Wed, 2007-10-17 at 15:18 +0300, Ismail D=C3=B6nmez wrote:
+> Wednesday 17 October 2007 Tarihinde 11:18:01 yazm=C4=B1=C5=9Ft=C4=B1:
+> > On Tue, 2007-10-16 at 17:03 +0300, Ismail D=C3=B6nmez wrote:
+> > > Replying to myself,
+> > >
+> > > Tuesday 16 October 2007 Tarihinde 13:17:45 yazm=C4=B1=C5=9Ft=C4=B1n=
+=C4=B1z:
+> > > [...]
+> > >
+> > > > wlan0     IEEE 802.11b  ESSID:"XXYYZZ"
+> > >
+> > >                          ^^^^^^^
+> > > Looks like its in 802.11b mode instead of 802.11g.  That might be a c=
+lue
+> > > for slowdown.
+> >
+> > A fix was committed under the title "fix set_channel regression"
+>=20
+> This indeed fixes the slowdown, but can't associate unless I do a iwlist =
+scan=20
+> problem still persists :-/
+
+I don't think that is related to mac80211 changes.
+
+johannes
+
+--=-P9wKEq6DRBM/wtiC0U+6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxYEC6Vg1VMiehFYAQLZeBAAua58H29Kw9abaJTKxih7YomY+dltlG+z
+BH/gEMSHU7hbZG7CfNHPU5r5W3Gf8ZmT2SEyPkWm/R1IQHqasV2cqF8ON3178/rm
+ziYJzlzFqT5ujVx49fNjLQa4hEykWmeJR2eslXHM1+UvvfpzbmEB2e4qntNTvmOn
+lG5SCPXk/ZrnAK6zo0Fp8v/BssRWqC+mKAGgXFwBt5DdezppLqADPNyuiQPhkLfK
+y1cQfGzkYSbj+xFXA1ydu0VFG3MazlofOCrDem7YymFMzzKPgB/J0oBCZ7MlF6AX
+jCrbP5aNRUkAdaKAZjZS//CVbzGG3E9OVojOKBHNR40kUO149QGnl3gGg/0LmG/Y
+WuFO8h4QZ/osWITSEk3/nVH6peFqhXnsIWwCHw2nzgGnDzPSuwenYqM8LYwe90s+
+Bi8DN/U5DC9J5AAfmPwQKo/XziCSDP/a2LcLfXAUfgFVmV4smJyUF/BQCn6ckc1n
+uAoZ10rzkfm0SFqCEknG+dBye4ZWOjmrnKy16ccDbE8fZqHvmyGVkF2h9V84lL+c
+qMB/kESUHCUl2c5f2/1ya9GFiFMjlC7QEJMVSQODaqv+OGeYBjQvB0vOFWDuyuKK
+Y89xB3TacYH+FAcqiR+EnZHz4ccpqdWaY5GCIbDf9oL55cT9obuWj8bb92i6577d
+R/szkOy/LmM=
+=u+7q
+-----END PGP SIGNATURE-----
+
+--=-P9wKEq6DRBM/wtiC0U+6--
+
