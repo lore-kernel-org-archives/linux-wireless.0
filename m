@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34032 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752084AbXJIJVF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 05:21:05 -0400
-Subject: Re: Mode selection in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mike Kershaw <dragorn@kismetwireless.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071008143207.GB7430@drd1813.lan>
-References: <200710052319.10600.linux@baker-net.org.uk>
-	 <1191837339.4063.25.camel@johannes.berg>
-	 <20071008143207.GB7430@drd1813.lan>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yjc1yUgEIL8RGvDlfkta"
-Date: Tue, 09 Oct 2007 11:21:42 +0200
-Message-Id: <1191921702.4013.15.camel@johannes.berg> (sfid-20071009_102108_661048_09A39C54)
+Received: from mx1.redhat.com ([66.187.233.31]:45670 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754096AbXJQOJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:09:54 -0400
+Subject: Re: [PATCH 3/3] consistently use ath5k in printks
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bruno Randolf <bruno@thinktube.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1192619652.8841.13.camel@johannes.berg>
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
+	 (sfid-20071016_142100_724914_42FE5458)  <1192619652.8841.13.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 17 Oct 2007 10:09:32 -0400
+Message-Id: <1192630172.10567.29.camel@localhost.localdomain> (sfid-20071017_150958_233313_86046006)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-10-17 at 13:14 +0200, Johannes Berg wrote:
+> On Tue, 2007-10-16 at 22:20 +0900, Bruno Randolf wrote:
+> 
+> > the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
+> 
+> Ok, and why exactly is there a proc interface at all?
 
---=-yjc1yUgEIL8RGvDlfkta
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, it needs to die, we're not adding new proc interfaces to the
+kernel.  Stuff should be evaluated to see whether it's _really_ needed,
+and if for some reason it is, merged into mac80211 or cfg80211, and then
+if that doesn't work, then maybe something in sysfs.
 
-On Mon, 2007-10-08 at 10:32 -0400, Mike Kershaw wrote:
+Dan
 
-> I'd vote for allowing the user to set a mode - just like they're
-> allowed to lock an AP association to a specific MAC, bypassing the
-> hardware roaming algos.
->=20
-> I've hit situations in the past where a card can get a very weak 11g
-> link but a perfectly usable 11b link, and the hw did not want to drop
-> back to 11b on its own.  Being able to lock to 11b only was key. =20
-
-Actually, what you're advocating sounds like "please let me restrict the
-bitrates to use" rather than "please lock me to a mode". And we need
-that functionality anyway for AP mode.
-
-johannes
-
---=-yjc1yUgEIL8RGvDlfkta
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwtIJaVg1VMiehFYAQJMfg//cnIb22j9xKJKfXlPpr/qpRZWJ/RY3SoM
-pY3zGjSClsNBgD2FXwDVET3PDzTT2ScFY4oLBc+kBuROp+rCdmTcwrzRRZCDPkit
-0Wk+oP9wYbe2qtST1Ypxzfs4QkwlE2NJQ1LLtUG/K2n/YBS2sMyRD0t4/AmnNPAs
-XajHiu299zuvQR+qE+YRRXkgv769V2GuEe9noz+xm/2B1ozDFp46fCQz6KeWZ0Ac
-N2DnTZAjX2IQZtoKmjU3QVjVFjKMDu5RW9RYRQHig6dYA4OYilpENzfwGhkon6tL
-Aml/IDJ5bn/nSSB1VDLnUXKW2eZ57Vf69TCeBZTDFuFvDA42wOA2QPHiGret2N08
-ta+vHjPC4Ipbwz7SuuN8UO/N5mQlTazHHYJ6YXFa9nsmZBiWrWkAyMsqUsl8gqjm
-e34FGRgHAWo31C/89DPpWTumk99nwG0yp7jLVXgPCDH6lNMbgMJTRg6fQQKvBiq8
-6nqe6SmdnvDwmNqAWF3v8BZ3yyO4V2dn8mv6AtorFywXqHTWbhJBz3eiFkfg3H6I
-CBHEgCWqW/V+1/ejsmpxaGuZnXjsrnu0FqroK+bg+dKpY3+S41k/cEN9c6nFfhlA
-k09syULl01wtAUz/k/Fk77Dy6wiIeZHZgvFySKjOTtUVJuct553Q45S9f7BeBlUZ
-Wcr2n+wBw/I=
-=x7mH
------END PGP SIGNATURE-----
-
---=-yjc1yUgEIL8RGvDlfkta--
 
