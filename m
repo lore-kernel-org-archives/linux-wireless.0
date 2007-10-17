@@ -1,86 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:18113 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750760AbXJUClk (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:3248 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758390AbXJQWtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2007 22:41:40 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 2/2] rtl8187: Allow multicast frames
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sat, 20 Oct 2007 20:05:31 -0400
-Message-ID: <20071021000531.10326.713.stgit@tetra.sourmilk.net> (sfid-20071021_034145_975985_922E003D)
-In-Reply-To: <20071021000530.10326.77030.stgit@tetra.sourmilk.net>
-References: <20071021000530.10326.77030.stgit@tetra.sourmilk.net>
+	Wed, 17 Oct 2007 18:49:46 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4609710pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 15:49:45 -0700 (PDT)
+Date: Wed, 17 Oct 2007 20:49:29 -0200
+From: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zairasai@googlemail.com
+Subject: Re: [Bugme-new] [Bug 9179] New: 2.6.23.1 / USB_ZD1201: Kernel
+	panic with zd1201 driver
+Message-ID: <20071017224929.GB9773@ghostprotocols.net> (sfid-20071017_234951_747302_C5E21C16)
+References: <bug-9179-10286@http.bugzilla.kernel.org/> <20071017132740.eebaed9d.akpm@linux-foundation.org> <1192654011.15090.3.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192654011.15090.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows rtl8187 to receive multicast frames if requested.
+Em Wed, Oct 17, 2007 at 04:46:51PM -0400, Dan Williams escreveu:
+> On Wed, 2007-10-17 at 13:27 -0700, Andrew Morton wrote:
+> > On Wed, 17 Oct 2007 11:34:57 -0700 (PDT)
+> > bugme-daemon@bugzilla.kernel.org wrote:
+> > 
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=9179
+> > > 
+> > >            Summary: 2.6.23.1 / USB_ZD1201: Kernel panic with zd1201 driver
+> > >            Product: Drivers
+> > >            Version: 2.5
+> > >      KernelVersion: 2.6.23.1
+> > >           Platform: All
+> > >         OS/Version: Linux
+> > >               Tree: Mainline
+> > >             Status: NEW
+> > >           Severity: normal
+> > >           Priority: P1
+> > >          Component: network-wireless
+> > >         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
+> > >         ReportedBy: zairasai@googlemail.com
+> > > 
+> > > 
+> > > [1.] One line summary of the problem:
+> > > 
+> > > 2.6.23.1 / USB_ZD1201: Kernel panic with zd1201 driver
+> > > 
+> > > 
+> > > 
+> > > 
+> > > [2.] Full description of the problem:
+> > > 
+> > > The zd1201-driver (symbol: USB_ZD1201) triggers a kernel panic during
+> > > initialization of the WLAN device, showing the following message:
+> > > 
+> > > EIP: [<e095e1d1>] zd1201_usbrx+0x6e1/0xbb0 [zd1201] SS:ESP 0068:c0469d7c
+> > > Kernel panic - not syncing: Fatal exception in interrupt
+> > > 
+> > > According to the init output during bootup, the panic seems to occur right when
+> > > the WLAN device receives an IP address from the DHCP-Server of the
+> > > WLAN/DSL-Router. The WLAN device is (in my case) a 'Belkin F5D6051' based on
+> > > the ZyDAS 1201 chip.
+> > > 
+> > > As far as i know, the only recent change in 'drivers/net/wireless/zd1201.c' was
+> > > done in patch-2.6.22, so the bug probably affects all kernel versions later
+> > > than 2.6.21.7, but at least the ones i've tested (which are listed in the
+> > > summary below). It also recently came up in some different
+> > > distribution-specific forums/bugtrackers, so it does not seem to be specific to
+> > > my machine/setup. A link to another report on this problem is included at the
+> > > end of this report.
+> > > 
+> > > Below is an extract of patch-2.6.22, showing that the lines 330 and 388 have
+> > > been removed from 'drivers/net/wireless/zd1201.c'. I put those two lines back,
+> > > which made things work as expected again; however, that is only meant as a
+> > > hint, since i don't know why they were taken out or what other implications my
+> > > change might have.
+> > > 
+> > > patch-2.6.22, lines 586509-586528:
+> > > {{{
+> > > diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
+> > > index 6cb66a3..935b144 100644
+> > > --- a/drivers/net/wireless/zd1201.c
+> > > +++ b/drivers/net/wireless/zd1201.c
+> > > @@ -327,7 +327,6 @@ static void zd1201_usbrx(struct urb *urb)
+> > >                         memcpy(skb_put(skb, 6), &data[datalen-8], 6);
+> > >                         memcpy(skb_put(skb, 2), &data[datalen-24], 2);
+> > >                         memcpy(skb_put(skb, len), data, len);
+> > > -                       skb->dev = zd->dev;
+> > >                         skb->dev->last_rx = jiffies;
+> > >                         skb->protocol = eth_type_trans(skb, zd->dev);
+> > >                         zd->stats.rx_packets++;
+> > > @@ -385,7 +384,6 @@ static void zd1201_usbrx(struct urb *urb)
+> > >                         memcpy(skb_put(skb, 2), &data[6], 2);
+> > >                         memcpy(skb_put(skb, len), data+8, len);
+> > >                 }
+> > > -               skb->dev = zd->dev;
+> > >                 skb->dev->last_rx = jiffies;
+> > >                 skb->protocol = eth_type_trans(skb, zd->dev);
+> > >                 zd->stats.rx_packets++;
+> > > }}}
+> > > 
+> > 
+> > Arnaldo, we have a pretty solid report here that your
+> > 4c13eb6657fe9ef7b4dc8f1a405c902e9e5234e0 made this driver go crash.
+> 
+> In 2.6.22 and later, eth_type_trans() sets skb->dev.  It looks like the
+> lines tha tset last_rx in the patch above should be moved below the
+> eth_type_trans() lines, otherwise they'll likely oops.
+> 
+> Something like this is probably in order?
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+I think so, its strange that this bisects to me, but Dan's change should
+fix it.
 
- drivers/net/wireless/rtl8187_dev.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index 590f4b4..1533bff 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -433,6 +433,9 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 
- 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
- 
-+	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
-+	rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
-+
- 	rtl8187_init_urbs(dev);
- 
- 	reg = RTL818X_RX_CONF_ONLYERLPKT |
-@@ -582,32 +585,31 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev, int if_id,
- static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 				     unsigned int changed_flags,
- 				     unsigned int *total_flags,
--				     int mc_count, struct dev_addr_list *mc_list)
-+				     int mc_count, struct dev_addr_list *mclist)
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 
--	*total_flags = 0;
--
--	if (changed_flags & FIF_ALLMULTI)
--		priv->rx_conf ^= RTL818X_RX_CONF_MULTICAST;
- 	if (changed_flags & FIF_FCSFAIL)
- 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
- 	if (changed_flags & FIF_CONTROL)
- 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
- 	if (changed_flags & FIF_OTHER_BSS)
- 		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
--
--	if (mc_count > 0)
-+	if (*total_flags & FIF_ALLMULTI || mc_count > 0)
- 		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
-+	else
-+		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
-+
-+	*total_flags = 0;
- 
--	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
--		*total_flags |= FIF_ALLMULTI;
- 	if (priv->rx_conf & RTL818X_RX_CONF_FCS)
- 		*total_flags |= FIF_FCSFAIL;
- 	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
- 		*total_flags |= FIF_CONTROL;
- 	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
- 		*total_flags |= FIF_OTHER_BSS;
-+	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
-+		*total_flags |= FIF_ALLMULTI;
- 
- 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
- }
-
-
+- Arnaldo
