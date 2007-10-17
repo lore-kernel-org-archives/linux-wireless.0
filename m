@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:38003 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbXJJOal (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 10:30:41 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so189440nfb
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 07:30:39 -0700 (PDT)
-Message-ID: <d120d5000710100730j243247e1te570ff57522693eb@mail.gmail.com> (sfid-20071010_153043_720854_9B8FD029)
-Date: Wed, 10 Oct 2007 10:30:35 -0400
-From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: Use input-polldev for the rfkill switch
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200709281422.34434.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709281422.34434.mb@bu3sch.de>
+Received: from mga11.intel.com ([192.55.52.93]:50101 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765476AbXJQCvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 22:51:38 -0400
+Subject: Re: [PATCH] jiffies_round -> jiffies_round_relative conversion -
+	ipw2100/ipw2200
+From: Zhu Yi <yi.zhu@intel.com>
+To: Anton Blanchard <anton@samba.org>,
+	"John W.Linville" <linville@tuxdriver.com>
+Cc: jketreno@linux.intel.com, arjan@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071015053801.GB3257@kryten>
+References: <20071015053428.GA3257@kryten>  <20071015053801.GB3257@kryten>
+Content-Type: text/plain
+Date: Wed, 17 Oct 2007 10:40:06 +0800
+Message-Id: <1192588806.2992.7.camel@debian.sh.intel.com> (sfid-20071017_035144_838484_5F010B7A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
 
-On 9/28/07, Michael Buesch <mb@bu3sch.de> wrote:
-> This removes the direct call to rfkill on an rfkill event
-> and replaces it with an input device. This way userspace is also
-> notified about the event.
->
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
->
-> Index: wireless-2.6/drivers/net/wireless/b43/Kconfig
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/b43/Kconfig  2007-09-27 21:31:15.000000000 +0200
-> +++ wireless-2.6/drivers/net/wireless/b43/Kconfig       2007-09-28 12:34:23.000000000 +0200
-> @@ -70,7 +70,7 @@ config B43_LEDS
->  # RFKILL support
->  config B43_RFKILL
->        bool
-> -       depends on B43 && RFKILL
-> +       depends on B43 && RFKILL && RFKILL_INPUT && INPUT_POLLDEV
->        default y
+On Mon, 2007-10-15 at 00:38 -0500, Anton Blanchard wrote:
+> 
+> When rounding a relative timeout we need to use
+> round_jiffies_relative(). 
 
-I don't think that broadcom driver should depend on RFKILL_INPUT...
-RFKILL_INPUT is a default link between input and rfkill layers but it
-is by no means a mandatory component.
+ACK.
 
-I think proper dependency should be:
+John, please apply this patch to wireless-2.6. Thanks.
 
-        depends on B43 && RFKILL && INPUT
-        select INPUT_POLLDEV
-
--- 
-Dmitry
+-yi
