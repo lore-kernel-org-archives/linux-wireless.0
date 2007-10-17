@@ -1,65 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60859 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234AbXJEMBd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 08:01:33 -0400
-Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
-	explicit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Daniel Drake <dsd@gentoo.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071004191301.GJ6037@tuxdriver.com> (sfid-20071004_203826_802442_0D32693E)
-References: <20071004113343.552139D502B@zog.reactivated.net>
-	 <20071004180900.GG6037@tuxdriver.com>
-	 <1191523488.7367.16.camel@johannes.berg>
-	 <20071004191301.GJ6037@tuxdriver.com>
-	 (sfid-20071004_203826_802442_0D32693E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DrKh55KpbewEvzlK28S7"
-Date: Fri, 05 Oct 2007 14:01:32 +0200
-Message-Id: <1191585693.7367.23.camel@johannes.berg> (sfid-20071005_130141_531875_FE82046A)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4866 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753631AbXJQDIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2007 23:08:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: make ieee802_11_parse_elems return void
+Date: Tue, 16 Oct 2007 22:38:43 -0400
+Message-Id: <1192588723322-git-send-email-linville@tuxdriver.com> (sfid-20071017_040850_773374_BBDC8119)
+In-Reply-To: 11922218622135-git-send-email-linville@tuxdriver.com
+References: 11922218622135-git-send-email-linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some APs send management frames with junk padding after the last IE.
+We already account for a similar problem with some Apple Airport
+devices, but at least one device is known to send more than a single
+extra byte.  The device in question is the Draytek Vigor2900:
 
---=-DrKh55KpbewEvzlK28S7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	http://www.draytek.com.au/products/Vigor2900.php
 
-On Thu, 2007-10-04 at 15:13 -0400, John W. Linville wrote:
+The junk in question looks like an IE that runs off the end of the
+frame.  This cause us to return ParseFailed.  Since the frame in
+question is an association response, this causes us to fail to associate
+with this AP.
 
-> > That should work as well although I think you should update the comment
-> > above :)
->=20
-> The comment still seem applicable.  How would you word it?
+The return code from ieee802_11_parse_elems is superfluous.
+All callers still check for the presence of the specific IEs that
+interest them anyway.  So, remove the return code so the parse never
+"fails".
 
-Whoops, you're right, I misremembered explaining the use of the pointer.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211_sta.c |   53 ++++++++----------------------------------
+ 1 files changed, 10 insertions(+), 43 deletions(-)
 
-johannes
-
---=-DrKh55KpbewEvzlK28S7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwYnm6Vg1VMiehFYAQJNEhAAi9IdfapJ3nrpRK2rwDzWap9DkwHIUBZ6
-fqfaVLcufxuHGimer+ET5SJ7Ofe3ZSfGjf5vWbF/XJCzJjshJ23BZdBOh1PmDgs0
-okiGEsZAcICOJT3vPFGzOTz1YWxxyGf+XpikHhNWWuzRhoxdSn8DtHZSRNQs7MWN
-dCaFidKNLQbQUvDiCr1LfhjIJNphfLnMRuHXFl6V5hYamSBIDbnVqzGAlngPaeq9
-sKty+HC55wFqJiLBEAcDMLA/JepnEZXXLoHH431IcPUUZfez6WV8zrD51c45Qk+y
-7asNHoSA/ROLXsApcHBGpRkhO0BqBcYtAPjqhaazuBHBgxIqkPW61v6dvoUsGoji
-O7kjxnSRIWzwrB7ba5ygMjzdSS5saHnm+60E0xwyfEl2syo8DufPWi2jY6l1A/MB
-0oXU1fituKaXlFOI8nVFiwpQI+MkBnKYTVxxG6d+h1bqhDFDr6bmtuqovESuoJhD
-Vd4vKuwSyfwoVYefBG5UYVy3EbmfpapRWFEUmRbkRyT3eBD610J1IlUw9UkWNbMe
-TFsiy8P5pNqSsxcGmwBnxRVnN1CtxE1a8USGbCm560477ESGrAZQLoTwurEX335e
-a5V98y1Ve7dCrkrwookplIvHd+Irvz8690eTapAhVlL7PkZW4ijUu5LokYROj04D
-oGalFifCI2w=
-=yMkH
------END PGP SIGNATURE-----
-
---=-DrKh55KpbewEvzlK28S7--
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index db81aef..7f873b3 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -108,14 +108,11 @@ struct ieee802_11_elems {
+ 	u8 wmm_param_len;
+ };
+ 
+-enum ParseRes { ParseOK = 0, ParseUnknown = 1, ParseFailed = -1 };
+-
+-static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+-					    struct ieee802_11_elems *elems)
++static void ieee802_11_parse_elems(u8 *start, size_t len,
++				   struct ieee802_11_elems *elems)
+ {
+ 	size_t left = len;
+ 	u8 *pos = start;
+-	int unknown = 0;
+ 
+ 	memset(elems, 0, sizeof(*elems));
+ 
+@@ -126,15 +123,8 @@ static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+ 		elen = *pos++;
+ 		left -= 2;
+ 
+-		if (elen > left) {
+-#if 0
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "IEEE 802.11 element parse "
+-				       "failed (id=%d elen=%d left=%d)\n",
+-				       id, elen, left);
+-#endif
+-			return ParseFailed;
+-		}
++		if (elen > left)
++			return;
+ 
+ 		switch (id) {
+ 		case WLAN_EID_SSID:
+@@ -201,12 +191,6 @@ static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+ 			elems->ext_supp_rates_len = elen;
+ 			break;
+ 		default:
+-#if 0
+-			printk(KERN_DEBUG "IEEE 802.11 element parse ignored "
+-				      "unknown element (id=%d elen=%d)\n",
+-				      id, elen);
+-#endif
+-			unknown++;
+ 			break;
+ 		}
+ 
+@@ -214,10 +198,7 @@ static enum ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+ 		pos += elen;
+ 	}
+ 
+-	/* Do not trigger error if left == 1 as Apple Airport base stations
+-	 * send AssocResps that are one spurious byte too long. */
+-
+-	return unknown ? ParseUnknown : ParseOK;
++	return;
+ }
+ 
+ 
+@@ -931,12 +912,7 @@ static void ieee80211_auth_challenge(struct net_device *dev,
+ 
+ 	printk(KERN_DEBUG "%s: replying to auth challenge\n", dev->name);
+ 	pos = mgmt->u.auth.variable;
+-	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
+-	    == ParseFailed) {
+-		printk(KERN_DEBUG "%s: failed to parse Auth(challenge)\n",
+-		       dev->name);
+-		return;
+-	}
++	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
+ 	if (!elems.challenge) {
+ 		printk(KERN_DEBUG "%s: no challenge IE in shared key auth "
+ 		       "frame\n", dev->name);
+@@ -1230,12 +1206,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	aid &= ~(BIT(15) | BIT(14));
+ 
+ 	pos = mgmt->u.assoc_resp.variable;
+-	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
+-	    == ParseFailed) {
+-		printk(KERN_DEBUG "%s: failed to parse AssocResp\n",
+-		       dev->name);
+-		return;
+-	}
++	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
+ 
+ 	if (!elems.supp_rates) {
+ 		printk(KERN_DEBUG "%s: no SuppRates element in AssocResp\n",
+@@ -1459,7 +1430,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee802_11_elems elems;
+ 	size_t baselen;
+-	int channel, invalid = 0, clen;
++	int channel, clen;
+ 	struct ieee80211_sta_bss *bss;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1505,9 +1476,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 	}
+ 
+-	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
+-				   &elems) == ParseFailed)
+-		invalid = 1;
++	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+ 
+ 	if (sdata->type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
+ 	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
+@@ -1724,9 +1693,7 @@ static void ieee80211_rx_mgmt_beacon(struct net_device *dev,
+ 	if (baselen > len)
+ 		return;
+ 
+-	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
+-				   &elems) == ParseFailed)
+-		return;
++	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+ 
+ 	if (elems.erp_info && elems.erp_info_len >= 1)
+ 		ieee80211_handle_erp_ie(dev, elems.erp_info[0]);
+-- 
+1.5.2.4
 
