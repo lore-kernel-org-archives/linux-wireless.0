@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:44352 "EHLO mga11.intel.com"
+Received: from brick.kernel.dk ([87.55.233.238]:22410 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857AbXJVI1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 04:27:32 -0400
-Subject: Re: [PATCH] ipw2100: send WEXT scan events
-From: Zhu Yi <yi.zhu@intel.com>
+	id S1754692AbXJQORJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:17:09 -0400
+Date: Wed, 17 Oct 2007 16:16:40 +0200
+From: Jens Axboe <jens.axboe@oracle.com>
 To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-In-Reply-To: <1192033687.9739.39.camel@localhost.localdomain>
-References: <1192033687.9739.39.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 16:20:55 +0800
-Message-Id: <1193041255.3069.164.camel@debian.sh.intel.com> (sfid-20071022_092738_274165_684F6D3D)
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945 doesn't work
+Message-ID: <20071017141639.GN5043@kernel.dk> (sfid-20071017_151716_458466_E672BBE6)
+References: <20071017135452.GJ5043@kernel.dk> <1192630271.10567.32.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192630271.10567.32.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Wed, 2007-10-10 at 12:28 -0400, Dan Williams wrote:
-> ipw2100 wasn't sending WEXT scan events at all on scan completion.
-> And
-> like ipw2200, the driver aggressively auto-scans, requiring
-> non-user-requested scan events to be batched together and sent at
-> specific intervals instead of many times per seconds.
+On Wed, Oct 17 2007, Dan Williams wrote:
+> On Wed, 2007-10-17 at 15:54 +0200, Jens Axboe wrote:
+> > Hi,
+> > 
+> > Seeing that iwl3945 is now merged, I decided to switch my x60 to use
+> > that instead of ipw3945. That would leave me with zero kernel
+> > dependencies.
+> > 
+> > Unfortunately it doesn't work. Loading the module reveals the device:
+> > 
+> > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for
+> > Linux, 1.1.17ks
+> > iwl3945: Copyright(c) 2003-2007 Intel Corporation
+> > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 21
+> > PCI: Setting latency timer of device 0000:03:00.0 to 64
+> > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+> > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> > phy0: Selected rate control algorithm 'iwl-3945-rs'
+> > 
+> > # iwconfig wlan0
+> > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"  
+> >           Mode:Managed  Channel:0  Access Point: Not-Associated   
+> >           Tx-Power=0 dBm   
+> >           Retry min limit:7   RTS thr:off   Fragment thr=2346 B   
+> >           Encryption key:XXXX-XXXX-XX
+> >           Link Quality:0  Signal level:0  Noise level:0
+> >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+> >           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> > 
+> > and iwconfig sees it, essid/enc settings are fine, but I don't get a
+> > link.
 > 
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
+> You do have the updated firmware, right?  I don't think iwl3945 would
+> even load if you didn't, but it doesn't hurt to check.
 
-Sorry for the late response. Please see my comments below.
+I'm using the suse firmware package, it claims to be version 2.14.1.5.
 
-> +                       queue_delayed_work(priv->workqueue,
-> +                                       &priv->scan_event_later,
-> +                              round_jiffies(msecs_to_jiffies(4000)));
+> Also, what exact kernel version are you using?  2.6.23 release kernel?
+> Or something from development series?
 
-round_jiffies_relative instead?
+It's -git as of last night, so current 2.6.23-git.
 
-> @@ -6118,6 +6153,8 @@ static struct net_device
-> *ipw2100_alloc_device(struct pci_dev *pci_dev,
->         INIT_DELAYED_WORK(&priv->wx_event_work,
-> ipw2100_wx_event_work);
->         INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
->         INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
-> +       INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
-> +       INIT_DELAYED_WORK(&priv->scan_event_later,
-> ipw2100_scan_event_later);
+As per the last hint, using iwlist scan wlan0 makes it work. I'd prefer
+it it worked out of the box, though :-)
 
-Except the work vs. delayed_work, they are doing the same thing. So you
-can replace scan_event_now by scan_event_later with delay = 0.
+-- 
+Jens Axboe
 
-Thanks,
--yi
- 
