@@ -1,174 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:60866 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874AbXJLCU6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55178 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbXJQIJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 22:20:58 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so486802wra
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 19:20:57 -0700 (PDT)
-Date: Thu, 11 Oct 2007 22:21:02 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH] ath5k: Fix and clean mode initialization, prefer G for
-	AR5212
-Message-ID: <20071012022102.GA13394@pogo> (sfid-20071012_032105_618059_65336D9D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 17 Oct 2007 04:09:05 -0400
+Subject: Re: Mode/Channel/Bitrate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <200710161640.54332.flamingice@sourmilk.net>
+References: <1192222110.4770.81.camel@johannes.berg>
+	 <200710161640.54332.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fCXhTYYnoVupTopcupdj"
+Date: Wed, 17 Oct 2007 10:09:47 +0200
+Message-Id: <1192608587.8841.2.camel@johannes.berg> (sfid-20071017_090916_614810_A59B2BE5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently you get locked on B mode with AR5212s. This could be partly
-mac80211's fault with a recent regression introduced but ath5k mode 
-initialization right now is pretty sloppy. For AR5212s we also currently 
-start scanning in 5GHz. I've made the mode initialization on ath5k a bit
-clearer and only am registering G mode now instead of both B and G for 
-AR5212s. We now start scanning in 2GHz band. 11Mbps is still the only
-stable rate but at least now we can work and test the other rates
-again.
 
-Note: mac80211 simple rate algo throws us to 1Mbps after assoc, this is by
-	design. I recommend users to set rate to 11M for now after assoc.
+--=-fCXhTYYnoVupTopcupdj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This has been tested with AR5211, and AR5212.
+On Tue, 2007-10-16 at 16:40 -0400, Michael Wu wrote:
+> On Friday 12 October 2007 16:48:30 Johannes Berg wrote:
+> >  (a) the driver registers which channel center frequencies it can
+> >      operate with, it could in theory just be a range (e.g. 2400-2500
+> >      MHz) or more practically be list of center frequencies.=20
+> List would be best, but..
+>=20
+> >      Just=20
+> >      contains frequencies and possibly hardware dependent values for th=
+e
+> >      frequency. This is done in "bands", something like
+> >      FREQUENCY_BAND_2_4GHZ and FREQUENCY_BAND_5GHZ, "bands" replace the
+> >      current "modes".
+> Being able to just register frequency bands would work for many (but not =
+all)=20
+> drivers out there and would be more convenient than listing everything.
 
-Changes-licensed-under: 3-clause-BSD
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Yeah but it doesn't help when the user wants to enable/disable certain
+channels or the regulatory code needs to, so it seems we need to go with
+a list.
 
----
- drivers/net/wireless/ath5k/base.c |  105 ++++++++++++++++++++-----------------
- 1 files changed, 56 insertions(+), 49 deletions(-)
+> >  (b) additionally, the driver registers as flags
+> >      - whether it can support G mode short slot operation
+> >      - whether it can receive B mode short barker preambles
+> >      (both of which are only relevant if it supports 2.4 GHz operation)
+> I haven't seen any softmac 11b hardware that doesn't support receiving sh=
+ort=20
+> preamble yet.
 
+Ok, I guess we can add that whenever we have a 2.4GHz channel.
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 0997577..29559df 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1917,67 +1917,74 @@ static void ath_dump_modes(struct ieee80211_hw_mode *modes)
- static inline void ath_dump_modes(struct ieee80211_hw_mode *modes) {}
- #endif
- 
-+#define REGISTER_MODE(mode) do { \
-+	if (modes[mode].num_channels) { \
-+		ret = ieee80211_register_hwmode(hw, &modes[mode]); \
-+		if (ret) { \
-+			printk(KERN_ERR "can't register hwmode %u\n", mode); \
-+			goto err; \
-+		} \
-+	} \
-+} while (0)
-+
- static int ath_getchannels(struct ieee80211_hw *hw)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->ah;
- 	struct ieee80211_hw_mode *modes = sc->modes;
--	unsigned int i, max;
-+	unsigned int i, max_r, max_c;
- 	int ret;
--	enum {
--		A = MODE_IEEE80211A,
--		B = MODE_IEEE80211G, /* this is not a typo, but workaround */
--		G = MODE_IEEE80211B, /* to prefer g over b */
--		T = MODE_ATHEROS_TURBO,
--		TG = MODE_ATHEROS_TURBOG,
--	};
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(sc->modes) < 3);
- 
- 	ah->ah_country_code = countrycode;
- 
--	modes[A].mode = MODE_IEEE80211A;
--	modes[B].mode = MODE_IEEE80211B;
--	modes[G].mode = MODE_IEEE80211G;
--
--	max = ARRAY_SIZE(sc->rates);
--	modes[A].rates = sc->rates;
--	max -= modes[A].num_rates = ath_copy_rates(modes[A].rates,
--			ath5k_hw_get_rate_table(ah, MODE_IEEE80211A), max);
--	modes[B].rates = &modes[A].rates[modes[A].num_rates];
--	max -= modes[B].num_rates = ath_copy_rates(modes[B].rates,
--			ath5k_hw_get_rate_table(ah, MODE_IEEE80211B), max);
--	modes[G].rates = &modes[B].rates[modes[B].num_rates];
--	max -= modes[G].num_rates = ath_copy_rates(modes[G].rates,
--			ath5k_hw_get_rate_table(ah, MODE_IEEE80211G), max);
--
--	if (!max)
--		printk(KERN_WARNING "yet another rates found, but there is not "
--				"sufficient space to store them\n");
--
--	max = ARRAY_SIZE(sc->channels);
--	modes[A].channels = sc->channels;
--	max -= modes[A].num_channels = ath_copy_channels(ah, modes[A].channels,
--			MODE_IEEE80211A, max);
--	modes[B].channels = &modes[A].channels[modes[A].num_channels];
--	max -= modes[B].num_channels = ath_copy_channels(ah, modes[B].channels,
--			MODE_IEEE80211B, max);
--	modes[G].channels = &modes[B].channels[modes[B].num_channels];
--	max -= modes[G].num_channels = ath_copy_channels(ah, modes[G].channels,
--			MODE_IEEE80211G, max);
--
--	if (!max)
--		printk(KERN_WARNING "yet another modes found, but there is not "
--				"sufficient space to store them\n");
--
--	for (i = 0; i < ARRAY_SIZE(sc->modes); i++)
--		if (modes[i].num_channels) {
--			ret = ieee80211_register_hwmode(hw, &modes[i]);
--			if (ret) {
--				printk(KERN_ERR "can't register hwmode %u\n",i);
--				goto err;
--			}
-+	modes[0].mode = MODE_IEEE80211G;
-+	modes[1].mode = MODE_IEEE80211B;
-+	modes[2].mode = MODE_IEEE80211A;
-+
-+	max_r = ARRAY_SIZE(sc->rates);
-+	max_c = ARRAY_SIZE(sc->channels);
-+	modes[0].rates = sc->rates;
-+
-+	for (i=0; i <= 2; i++) {
-+		struct ieee80211_hw_mode *mode = &modes[i];
-+		const struct ath5k_rate_table *hw_rates;
-+
-+		if (i == 0 ) {
-+			mode->rates	= sc->rates;
-+			modes->channels	= sc->channels;
-+		}
-+		else {
-+			struct ieee80211_hw_mode *prev_mode = &modes[i-1];
-+			int prev_num_r	= prev_mode->num_rates;
-+			int prev_num_c	= prev_mode->num_channels;
-+			mode->rates	= &prev_mode->rates[prev_num_r];
-+			mode->channels	= &prev_mode->channels[prev_num_c];
- 		}
-+
-+		hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
-+		mode->num_rates    = ath_copy_rates(mode->rates, hw_rates,
-+			max_r);
-+		mode->num_channels = ath_copy_channels(ah, mode->channels, 
-+			mode->mode, max_c);
-+		max_r -= modes->num_rates;
-+		max_c -= mode->num_channels;
-+	}
-+
-+	switch(ah->ah_version) {
-+		case AR5K_AR5210:
-+			REGISTER_MODE(MODE_IEEE80211A);
-+			break;
-+		case AR5K_AR5211:
-+			REGISTER_MODE(MODE_IEEE80211B);
-+			break;
-+		case AR5K_AR5212:
-+			if (!ah->ah_single_chip)
-+				REGISTER_MODE(MODE_IEEE80211A);
-+			REGISTER_MODE(MODE_IEEE80211G);
-+				break;
-+	}
- 	ath_dump_modes(modes);
- 
- 	return 0;
--- 
-1.5.2.5
+> >  (d) now, selecting a channel by frequency is unique, but we need to
+> >      give new options to select short slot, short preamble and allowed
+> >      bitrates.
+> Short preamble? What would the hardware do with this bit?
+
+Why hardware? For one, we need to advertise whether we support short
+preamble or not in our association frame. So we need to know whether the
+hardware supports it or not (which, together with OFDM support, is
+basically 802.11g iirc).
+
+> > Does anyone see problems with this?
+> More specific examples of the API you have in mind would be helpful.
+
+Don't really have any API in mind yet except for what I posted a long
+time ago in Luis's thread.
+
+johannes
+
+--=-fCXhTYYnoVupTopcupdj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxXDSqVg1VMiehFYAQIbQw/8DjxUJjCdTep8KoERnniUZLyqbQC0/QZQ
+OB0HLcYYni1M5SUI/Y5WhdNEc2s9qsqwbwInReUyUgbSSZ94HagDVhXtKpFNbEsI
+XcnoWGLzKGDU1RhwkiPfzrJumxH0yjTgsgoiakmpJXhMhWR7Cm1J2LrFBCq9kM5s
+OKg5KFC8QWcFfWKCW97UhGTNFhnPbznOLPjKHRnyd021gFhLosQErM8wnyjJ3Xhi
+UrPp/rdEqVA7I28fOg36xwX+FMZtc7tbUHavLUyuPpxAuHQpPAA1jY4hdRSTI6dM
+Ji+4KLEQEhLkgq1rezK7vNh4mQO9/xwsOHoVPVafWnTbNif95VMWYoeqwxXgnC7Q
+bzFANi74r+miEYT8i1TIU8UBZR0ovEwEu933jkOVzzC+mtPqSpXt6uxgNV8eR26r
+vOXBcfXPi9POYDHqoj0yxxTt5WuugJtvFBO8nTugGPqx8cqFVYiB1xmFyEuBoH4z
+40zpvWP3UtfhTtXPgQhii56yb/Lxhz4/6gpjbJTOuP8ulMQDZklhquCwiLrd8aYr
+BJviPwSAw9s0uK6uh8lwmFl16gZ7G+UVH0K/HIHQ7FbeQqIPrKGM2CC2m+PBA+eT
+6T3vVMWK2cXdC5+2mJ2emceCVzmrxdNI9OS7gQU+66PZTgBn01A4iIlTR5Cg7RRE
+C1F556x8+uY=
+=b23B
+-----END PGP SIGNATURE-----
+
+--=-fCXhTYYnoVupTopcupdj--
 
