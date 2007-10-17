@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:47444 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbXJIIPJ (ORCPT
+Received: from ns2.uludag.org.tr ([193.140.100.220]:36903 "EHLO uludag.org.tr"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753727AbXJQOId convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 04:15:09 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2897793pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2007 01:15:08 -0700 (PDT)
-Message-ID: <40f31dec0710090115v58c64f26k6d63e3b734fa711f@mail.gmail.com> (sfid-20071009_091520_959688_26474596)
-Date: Tue, 9 Oct 2007 11:15:07 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/6] ath5k: Ported new initval changes from OpenBSD to ath5k
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <470B2B02.3080609@gmail.com>
+	Wed, 17 Oct 2007 10:08:33 -0400
+From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
+To: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: iwl3945 doesn't work
+Date: Wed, 17 Oct 2007 17:08:48 +0300
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+References: <20071017135452.GJ5043@kernel.dk>
+In-Reply-To: <20071017135452.GJ5043@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
-	 <40f31dec0710070249p5ed648c8u61e8fe3768d934da@mail.gmail.com>
-	 <20071008203852.GB7633@pogo>
-	 <40f31dec0710081931y7573dafeidf414c0d89ab11b9@mail.gmail.com>
-	 <470B2B02.3080609@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200710171708.48654.ismail@pardus.org.tr> (sfid-20071017_150837_183502_1B704061)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/9, Jiri Slaby <jirislaby@gmail.com>:
-> On 10/09/2007 04:31 AM, Nick Kossifidis wrote:
-> > I'll post a pach series asap here with my fixes against current
-> > wireless-dev including your fixes on base.c/h and any other fixes
+Wednesday 17 October 2007 Tarihinde 16:54:53 yazm=C4=B1=C5=9Ft=C4=B1:
+> Hi,
 >
-> Just a note, wireless-2.6 is current wireless tree.
+> Seeing that iwl3945 is now merged, I decided to switch my x60 to use
+> that instead of ipw3945. That would leave me with zero kernel
+> dependencies.
 >
+> Unfortunately it doesn't work. Loading the module reveals the device:
 >
+> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver f=
+or
+> Linux, 1.1.17ks
+> iwl3945: Copyright(c) 2003-2007 Intel Corporation
+> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 21
+> PCI: Setting latency timer of device 0000:03:00.0 to 64
+> iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+> iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> phy0: Selected rate control algorithm 'iwl-3945-rs'
+>
+> # iwconfig wlan0
+> wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
+>           Mode:Managed  Channel:0  Access Point: Not-Associated
+>           Tx-Power=3D0 dBm
+>           Retry min limit:7   RTS thr:off   Fragment thr=3D2346 B
+>           Encryption key:XXXX-XXXX-XX
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> and iwconfig sees it, essid/enc settings are fine, but I don't get a
+> link.
 
-ACK ;-)
+Same issue here, try iwlist wlan0 scan first and then it should work.
 
-Just booted it, i'll start making patches asap...
+Regards,
+ismail
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--=20
+=46aith is believing what you know isn't so -- Mark Twain
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
