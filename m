@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:60824 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191AbXJUJUm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 05:20:42 -0400
-Date: Sun, 21 Oct 2007 11:20:48 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: rt2400-devel@lists.sourceforge.net,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
-Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha
-	subnotebook
-Message-ID: <20071021092048.GA25270@elf.ucw.cz> (sfid-20071021_102056_980855_3A91D028)
-References: <20071020184100.GA11640@elf.ucw.cz> <200710210012.37547.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4505 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754895AbXJQPL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 11:11:59 -0400
+Date: Wed, 17 Oct 2007 10:53:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
+Message-ID: <20071017145315.GC5744@tuxdriver.com> (sfid-20071017_161205_413751_8BF804CE)
+References: <20071017023145.GA2848@tuxdriver.com> <200710162329.55966.flamingice@sourmilk.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710210012.37547.IvDoorn@gmail.com>
+In-Reply-To: <200710162329.55966.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Tue, Oct 16, 2007 at 11:29:51PM -0400, Michael Wu wrote:
+> On Tuesday 16 October 2007 22:31:46 John W. Linville wrote:
+> > Bill Moss (1):
+> >       mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
+> >
+> Where did this patch come from? The original patch looked nothing like this, 
+> and this patch changes the behavior of siwscan incorrectly. If the interface 
 
-> > I did this on 2.6.23-rc8-mm1 kernel (The RT hack may not be
-> > neccessary), but then it oopses somewhere in softmac layer. I'll try
-> > to play with it some more.
-> > 
-> > If you have any ideas, let me know.
-> > 								Pavel
-> > 
-> > --- clean-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-09 09:32:08.000000000 +0200
-> > +++ linux-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-19 22:19:45.000000000 +0200
-> > @@ -1580,7 +1580,6 @@
-> >  
-> >  	if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
-> >  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-> > -		return -ENODEV;
-> >  	}
-> >  
-> >  	if (!rt2x00_rf(&rt2x00dev->chip, RF5226) &&
-> > @@ -1588,7 +1587,6 @@
-> >  	    !rt2x00_rf(&rt2x00dev->chip, RF5225) &&
-> >  	    !rt2x00_rf(&rt2x00dev->chip, RF2527)) {
-> >  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
-> > -		return -ENODEV;
-> >  	}
-> 
-> Both removals of -ENODEV are completely wrong. If the device does not pass the above
-> 2 checks it is _not_ a rt73usb device. And forcing the driver to work with the device will
-> result in all kinds of problems.
+"Nothing like this"?  I moved a conditional from inside a specific
+case to outside the whole switch.  Let's not overstate things.
 
-Of course they are :-).
+> is not STA, IBSS, or AP, scanning should not be permitted. This patch allows 
+> scanning on any interface if a SSID is specified. NACK.
 
-> If rt2x00 is loaded and detected the device, it should print out a debug message that starts with:
-> "Chipset detected - " What is in your case the complete line?
+I refactored the patch in response to Johannes' email on 10/11 that
+said "I think it should be done regardless of mode".
 
-Ok, I guess I should include more complete debug output.
+	http://marc.info/?l=linux-wireless&m=119209214914682&w=2
 
-phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
-phy0 -> rt73usb_validate_eeprom: EEPROM recover - MAC: 66:76:2b:e8:68:e7
-phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x3000 with error -32
-phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0000, rev: c03c0ae0
-phy0 -> rt73usb_init_eeprom: Error - Invalid RF chipset detected
+I seem to have botched the repost -- sorry about that.
 
-...so, I think hardware is indeed quite similar to what rt73usb driver
-expects...?
+Looking closer, it does seem like ieee80211_sta_req_scan may not be
+robust enough to handle an inappropriate interface gracefully.  So,
+let's add a patch that relocates the conditional after the switch,
+and let the switch filter-out the bad interfaces for us.
 
-									Pavel
+Patch to follow (if I've figured-out git-send-email)...
+
+John
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+John W. Linville
+linville@tuxdriver.com
