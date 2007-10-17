@@ -1,41 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iggypop2.siwnet.net ([81.216.65.12]:52670 "EHLO
-	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755347AbXJKJR5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 05:17:57 -0400
-Message-ID: <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com> (sfid-20071011_101802_304823_2283B71C)
-In-Reply-To: <1192038202.4770.3.camel@johannes.berg>
-References: <fdqhn4$qab$1@sea.gmane.org> <fei4sd$mm0$1@sea.gmane.org>
-    <1192008384.12541.8.camel@johannes.berg> <fei71k$tu7$1@sea.gmane.org>
-    <1192009901.12541.15.camel@johannes.berg> <feibbk$de1$1@sea.gmane.org>
-    <1192015848.12541.20.camel@johannes.berg> <feig3h$urf$1@sea.gmane.org>
-    <1192038202.4770.3.camel@johannes.berg>
-Date: Thu, 11 Oct 2007 11:05:34 +0200 (CEST)
-Subject: Re: rt2500pci 2.0.9 not working
-From: "Marcus Better" <marcus@better.se>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga01.intel.com ([192.55.52.88]:27321 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756124AbXJQXya (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 19:54:30 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: adding bss_config to low driver ops
+Date: Thu, 18 Oct 2007 01:51:46 +0200
+Message-Id: <11926651061687-git-send-email-tomas.winkler@intel.com> (sfid-20071018_005434_249362_BC885CB3)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> First a note: could you please send me copies of mail using
-> reply-to-all?
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Yes, sorry, I was using Gmane and Knode, and one of them seems to munge
-the other recipients.
-
-> No, but you can comment out the B mode registration in rt2500pci and see
-> if that helps.
-
-I have very limited time to find out how to do that, but will gladly try a
-patch...
-
-Thanks,
-
-Marcus
+This patch gives a framework that will enable the mac80211 to inform
+to low level driver about association status changes + changes in bss
+status due to changes in BSS capabilities advertised by AP or in AP mode
+changes to be advertised and configured to.
+This will also obsolete current ops for each BSS change such as erp or wmm.
+In legacy networks the B G coexistence is handled by ERP While in HT there
+are many more issues such as 20/40Mhz, GF etc. It will be counterproductive
+to implement handlers for each parameter it is simpler to consolidate all in one
+handler under common structure
 
 
+1 - struct ieee80211_erp_info will be used to inform about erp changes.
+2 - struct ieee80211_wmm_info will be used to inform about wmm changes
+3 - struct ieee80211_bss_data will be used to transfer this data to
+low-level driver
+4 - bss_info_changed will triger the change in low-level driver
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h       |   29 ++++++++++++++++
+ net/mac80211/ieee80211_sta.c |   77 +++++++++++++++++++++++++-----------------
+ 2 files changed, 75 insertions(+), 31 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2b1bffb..fbd7e31 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -237,6 +237,33 @@ struct ieee80211_low_level_stats {
+ 	unsigned int dot11RTSSuccessCount;
+ };
+ 
++/* next structs enable the mac80211 to send association notification
++ * to low-level driver, as well as data that may be changed through
++ * the lifetime of the BSS, after it was parsed to meaningful structs */
++struct ieee80211_erp_info {
++	u8 changes;
++	int cts_protection;
++	int preamble;
++};
++
++struct ieee80211_wmm_info {
++	int queue;
++	struct ieee80211_tx_queue_params *params;
++};
++
++#define ASSOC_CHNAGED_STATE     (1<<0)
++#define ASSOC_CHNAGED_AID       (1<<1)
++#define ASSOC_CHNAGED_ERP       (1<<2)
++#define ASSOC_CHNAGED_WMM       (1<<3)
++
++struct ieee80211_bss_data {
++	u8 changed_map; /* use ASSOC_CHNAGED_.. to indicate changed element */
++	u8 assoc; /* 0 not assoc, 1 assoc */
++	u16 aid;
++	struct ieee80211_erp_info erp_info;
++	struct ieee80211_wmm_info wmm_info;
++};
++
+ /* Transmit control fields. This data structure is passed to low-level driver
+  * with each TX frame. The low-level driver is responsible for configuring
+  * the hardware to use given values (depending on what is supported). */
+@@ -1021,6 +1048,8 @@ struct ieee80211_ops {
+ 	int (*config)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
+ 	int (*config_interface)(struct ieee80211_hw *hw,
+ 				int if_id, struct ieee80211_if_conf *conf);
++	void (*bss_info_changed)(struct ieee80211_hw *hw,
++				 struct ieee80211_bss_data *bss_data);
+ 	void (*configure_filter)(struct ieee80211_hw *hw,
+ 				 unsigned int changed_flags,
+ 				 unsigned int *total_flags,
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7c93f29..f38eb5a 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -408,56 +408,66 @@ static void ieee80211_sta_send_associnfo(struct net_device *dev,
+ 
+ static void ieee80211_set_associated(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta,
+-				     bool assoc)
++				     struct ieee80211_bss_data *bss_data)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	union iwreq_data wrqu;
+ 
+-	if (!!(ifsta->flags & IEEE80211_STA_ASSOCIATED) == assoc)
++	if (!bss_data->changed_map)
+ 		return;
+ 
+-	if (assoc) {
+-		struct ieee80211_sub_if_data *sdata;
+-		struct ieee80211_sta_bss *bss;
++	if (bss_data->changed_map & ASSOC_CHNAGED_STATE) {
++		if (bss_data->assoc) {
++			struct ieee80211_sub_if_data *sdata;
++			struct ieee80211_sta_bss *bss;
+ 
+-		ifsta->flags |= IEEE80211_STA_ASSOCIATED;
++			ifsta->flags |= IEEE80211_STA_ASSOCIATED;
+ 
+-		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-		if (sdata->type != IEEE80211_IF_TYPE_STA)
+-			return;
++			sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++			if (sdata->type != IEEE80211_IF_TYPE_STA)
++				return;
+ 
+-		bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
+-		if (bss) {
+-			if (bss->has_erp_value)
+-				ieee80211_handle_erp_ie(dev, bss->erp_value);
+-			ieee80211_rx_bss_put(dev, bss);
+-		}
++			bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
++			if (bss) {
++				if (bss->has_erp_value)
++				  ieee80211_handle_erp_ie(dev, bss->erp_value);
++				ieee80211_rx_bss_put(dev, bss);
++			}
+ 
+-		netif_carrier_on(dev);
+-		ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
+-		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
+-		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+-		ieee80211_sta_send_associnfo(dev, ifsta);
+-	} else {
+-		ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
++			netif_carrier_on(dev);
++			ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
++			memcpy(ifsta->prev_bssid,
++				sdata->u.sta.bssid, ETH_ALEN);
++			memcpy(wrqu.ap_addr.sa_data,
++				sdata->u.sta.bssid, ETH_ALEN);
++			ieee80211_sta_send_associnfo(dev, ifsta);
++		} else {
++			ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+ 
+-		netif_carrier_off(dev);
+-		ieee80211_reset_erp_info(dev);
+-		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
++			netif_carrier_off(dev);
++			ieee80211_reset_erp_info(dev);
++			memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
++		}
++		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
++		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++		ifsta->last_probe = jiffies;
++		ieee80211_led_assoc(local, bss_data->assoc);
+ 	}
+-	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+-	ifsta->last_probe = jiffies;
+-	ieee80211_led_assoc(local, assoc);
++	if (local->ops->bss_info_changed)
++		local->ops->bss_info_changed(local_to_hw(local), bss_data);
+ }
+ 
+ static void ieee80211_set_disassoc(struct net_device *dev,
+ 				   struct ieee80211_if_sta *ifsta, int deauth)
+ {
++	struct ieee80211_bss_data bss_data;
++
+ 	if (deauth)
+ 		ifsta->auth_tries = 0;
+ 	ifsta->assoc_tries = 0;
+-	ieee80211_set_associated(dev, ifsta, 0);
++	bss_data.assoc = 0;
++	bss_data.changed_map = ASSOC_CHNAGED_STATE;
++	ieee80211_set_associated(dev, ifsta, &bss_data);
+ }
+ 
+ static void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
+@@ -1162,6 +1172,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	u32 rates;
+ 	u16 capab_info, status_code, aid;
+ 	struct ieee802_11_elems elems;
++	struct ieee80211_bss_data bss_data;
+ 	u8 *pos;
+ 	int i, j;
+ 
+@@ -1249,7 +1260,11 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	if (ifsta->assocresp_ies)
+ 		memcpy(ifsta->assocresp_ies, pos, ifsta->assocresp_ies_len);
+ 
+-	ieee80211_set_associated(dev, ifsta, 1);
++	bss_data.assoc = 1;
++	bss_data.changed_map = ASSOC_CHNAGED_STATE;
++	bss_data.aid = aid;
++	bss_data.changed_map |= ASSOC_CHNAGED_AID;
++	ieee80211_set_associated(dev, ifsta, &bss_data);
+ 
+ 	/* Add STA entry for the AP */
+ 	sta = sta_info_get(local, ifsta->bssid);
+-- 
+1.5.2.4
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
