@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:19593 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763120AbXJSVRc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 17:17:32 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] mac80211: Fix SSID matching in AP selection
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Fri, 19 Oct 2007 17:14:36 -0400
-Message-Id: <200710191714.36200.flamingice@sourmilk.net> (sfid-20071019_221736_647584_37E41D58)
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Received: from mx1.redhat.com ([66.187.233.31]:38747 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbXJQTrQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 15:47:16 -0400
+Subject: [PATCH] libertas: fix debug output format warning
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 17 Oct 2007 15:47:01 -0400
+Message-Id: <1192650421.14276.24.camel@localhost.localdomain> (sfid-20071017_204720_514010_E015AADC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The length of the SSID desired should also be compared in addition to
-the memcmp of the SSIDs.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Thanks to Andrea Merello <andreamrl@tiscali.it> for finding this issue.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-This should also go to stable.
-
- net/mac80211/ieee80211_sta.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 7c93f29..dd5415d 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2098,7 +2098,8 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
- {
- 	int tmp, hidden_ssid;
- 
--	if (!memcmp(ifsta->ssid, ssid, ssid_len))
-+	if (ssid_len == ifsta->ssid_len &&
-+	    !memcmp(ifsta->ssid, ssid, ssid_len))
- 		return 1;
- 
- 	if (ifsta->flags & IEEE80211_STA_AUTO_BSSID_SEL)
-
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index 4c37834..0a0bf66 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -890,7 +890,7 @@ int wlan_scan_networks(wlan_private * priv,
+ 	lbs_deb_scan("The scan table contains:\n");
+ 	list_for_each_entry (iter_bss, &adapter->network_list, list) {
+ 		lbs_deb_scan("scan %02d, " MAC_FMT ", RSSI, %d, SSID '%s'\n",
+-		       i++, iter_bss->bssid, (s32) iter_bss->rssi,
++		       i++, MAC_ARG(iter_bss->bssid), (s32) iter_bss->rssi,
+ 		       escape_essid(iter_bss->ssid, iter_bss->ssid_len));
+ 	}
+ 	mutex_unlock(&adapter->lock);
 
