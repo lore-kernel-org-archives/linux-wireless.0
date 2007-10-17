@@ -1,93 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:17481 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299AbXJaTdu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 15:33:50 -0400
-Received: by py-out-1112.google.com with SMTP id u77so488261pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 12:33:48 -0700 (PDT)
-Message-ID: <43e72e890710311233vc2cce3cs71effa69d8394bc9@mail.gmail.com> (sfid-20071031_193353_089319_F8B7B3F7)
-Date: Wed, 31 Oct 2007 15:33:48 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [RFC] ath5k: set rate duration table correctly for non-B channels on ar5212
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <40f31dec0710311230w51aff5a5g98c4f989335d2bda@mail.gmail.com>
+Received: from brick.kernel.dk ([87.55.233.238]:24872 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758294AbXJQQfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 12:35:24 -0400
+Date: Wed, 17 Oct 2007 18:35:19 +0200
+From: Jens Axboe <jens.axboe@oracle.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Ismail =?iso-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945 doesn't work
+Message-ID: <20071017163519.GC15552@kernel.dk> (sfid-20071017_173528_783319_8FF46861)
+References: <20071017135452.GJ5043@kernel.dk> <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk> <1192630733.10567.37.camel@localhost.localdomain> <20071017142246.GQ5043@kernel.dk> <1192634183.11584.0.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1193852696-19589-1-git-send-email-linville@tuxdriver.com>
-	 <40f31dec0710311230w51aff5a5g98c4f989335d2bda@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1192634183.11584.0.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/10/31, John W. Linville <linville@tuxdriver.com>:
-> > Currently we are passing MODE_ATHEROS_TURBO or MODE_ATHEROS_TURBOG to
-> > ath5k_hw_get_rate_table if ah_version is AR5K_AR5212 and the channel
-> > passed to ath5k_hw_reset is not a B channel.  This is a problem if
-> > for no other reason than we are not registering those channels.
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> > This is untested.  Does this look like the right fix?
-> >
-> > Also, just above the change is the comment "For 802.11a/g Turbo/XR mode
-> > (AR5K_MODE_XR here is O.K. for both a/g - OFDM)".  Is this the right
-> > comment?
-> >
-> >  drivers/net/wireless/ath5k/hw.c |    3 +--
-> >  1 files changed, 1 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> > index c8d1fbd..a31443e 100644
-> > --- a/drivers/net/wireless/ath5k/hw.c
-> > +++ b/drivers/net/wireless/ath5k/hw.c
-> > @@ -695,8 +695,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
-> >
-> >                                 /* Get rate table for this operation mode */
-> >                                 rt = ath5k_hw_get_rate_table(ah,
-> > -                                   channel->val & CHANNEL_TURBO ?
-> > -                                   MODE_ATHEROS_TURBO : MODE_ATHEROS_TURBOG);
-> > +                                               MODE_IEEE80211G);
-> >                                 if (!rt)
-> >                                         return -EINVAL;
-> >
-> > --
-> > 1.5.3.3
-> >
-> >
->
-> On madwif-old-openhal we had MODE_XR which is a special (proprietary)
-> mode and returns a special rate table, during porting this bit was
-> misunderstood and xr was changed with turbog. Any one of a/g/xr rate
-> tables would do here i believe (all we want is a rate table with
-> MODULATION_OFDM and the right values in kbps -which are common for
-> a/g- so that computetxtime is ok with it), we prefer xr rate table so
-> that rate duration is also written for xr rates.
->
-> We also have to fix ath5k_hw_get_rate_table because it returns xr rate
-> table for turbog mode and xr has nothing to do with it (it operates on
-> 5Ghz), TURBO table is ok for both turboa/turbog modes (that's why
-> MODE_ATHEROS_TURBO is ok there and shouldn't be removed -rate duration
-> table is different for turbo modes, they have MODULATION_TURBO and
-> computetxtime behaves differently-).
->
-> I believe we should define MODE_XR as we defined TURBOG internally and
-> do the same thing we did on madwifi-old-openhal.
->
-> As for the comment it says:
->
-> /* For 802.11a/g Turbo/XR mode (AR5K_MODE_XR here is
->  * O.K. for both a/g - OFDM) */
->
-> so for a/g and xr we use XR rate table and for turboa/turbog we use
-> TURBO rate table. If it's misleading plz change it to something
-> better.
+On Wed, Oct 17 2007, Dan Williams wrote:
+> On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
+> > On Wed, Oct 17 2007, Dan Williams wrote:
+> > > On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
+> > > > On Wed, Oct 17 2007, Ismail D=F6nmez wrote:
+> > > > > Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
+> > > > > > Hi,
+> > > > > >
+> > > > > > Seeing that iwl3945 is now merged, I decided to switch my x=
+60 to use
+> > > > > > that instead of ipw3945. That would leave me with zero kern=
+el
+> > > > > > dependencies.
+> > > > > >
+> > > > > > Unfortunately it doesn't work. Loading the module reveals t=
+he device:
+> > > > > >
+> > > > > > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connectio=
+n driver for
+> > > > > > Linux, 1.1.17ks
+> > > > > > iwl3945: Copyright(c) 2003-2007 Intel Corporation
+> > > > > > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) =
+-> IRQ 21
+> > > > > > PCI: Setting latency timer of device 0000:03:00.0 to 64
+> > > > > > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connec=
+tion
+> > > > > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> > > > > > phy0: Selected rate control algorithm 'iwl-3945-rs'
+> > > > > >
+> > > > > > # iwconfig wlan0
+> > > > > > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
+> > > > > >           Mode:Managed  Channel:0  Access Point: Not-Associ=
+ated
+> > > > > >           Tx-Power=3D0 dBm
+> > > > > >           Retry min limit:7   RTS thr:off   Fragment thr=3D=
+2346 B
+> > > > > >           Encryption key:XXXX-XXXX-XX
+> > > > > >           Link Quality:0  Signal level:0  Noise level:0
+> > > > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid=
+ frag:0
+> > > > > >           Tx excessive retries:0  Invalid misc:0   Missed b=
+eacon:0
+> > > > > >
+> > > > > > and iwconfig sees it, essid/enc settings are fine, but I do=
+n't get a
+> > > > > > link.
+> > > > >=20
+> > > > > Same issue here, try iwlist wlan0 scan first and then it shou=
+ld work.
+> > > >=20
+> > > > Huh indeed, now it links fine! Thanks for the hint. Would be ni=
+ce to
+> > > > have fixed, though :-)
+> > >=20
+> > > Odd, doesn't the driver need to do a scan _anyway_ to find the ri=
+ght
+> > > BSSID to associate with if the cached scan results are more than =
+a few
+> > > seconds old?  Can you run '/sbin/iwevent' before trying a fresh
+> > > association, try to associate, ensure that it has failed, and rep=
+ort the
+> > > output?
+> > >=20
+> > > If you don't get something like:
+> > >=20
+> > > 10:17:05.117937   eth1     Scan request completed
+> > >=20
+> > > shown there, then there's likely a bug in the driver because it's=
+ either
+> > > (a) not scanning before trying to associate, or (b) not sending o=
+ut scan
+> > > completion events after it's done a scan.
+> >=20
+> > Indeed, there is now Scan request completed before I run the iwlist
+> > scan. iwevent output:
+>=20
+> Hmm, the output below doesn't show the scan request completed, right?
+>=20
+> > Waiting for Wireless Events from interfaces...
+> > 16:20:27.453588   wlan0    Set Mode:Managed
+> > 16:20:27.462104   wlan0    Set Encryption key:off
+> > 16:20:27.463940   wlan0    Set Encryption key:****-****-**   Securi=
+ty mode:open
+> > 16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
+> >=20
+> > waiting, nothing else happens. Then run iwlist scan from another
+> > terminal.
+> >=20
+> > 16:20:53.892549   wlan0    Scan request completed
+>=20
+> So you only get this when you manually scan right after setting the s=
+sid
+> and key?
 
-Actually this caused by a bug I had sent a primer fix to ath5k-devel a
-while back. Let me just post these patches as they're long due... I'll
-post the rework of rates stuff I have been working on later.. This
-just needs to get fixed ASAP.
+If you look at the time stamp, I ran the iwlist scan about 26 seconds
+after loading the module. When the module is loaded, the networking
+script sets the essid and encryption key.
 
-  Luis
+So yes, I only get that 'Scan request completed' line after running
+iwlist scan manually.
+
+--=20
+Jens Axboe
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
