@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44336 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754776AbXJJRoL convert rfc822-to-8bit (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:22219 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997AbXJQOJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 13:44:11 -0400
+	Wed, 17 Oct 2007 10:09:11 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4340156pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 07:09:09 -0700 (PDT)
+Message-ID: <43e72e890710170709j76f2430el57640cf46d07402c@mail.gmail.com> (sfid-20071017_150914_583533_B54DAAC2)
+Date: Wed, 17 Oct 2007 10:09:08 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/3] consistently use ath5k in printks
+Cc: "Bruno Randolf" <bruno@thinktube.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1192619652.8841.13.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
-Date: Wed, 10 Oct 2007 10:43:25 -0700
-Message-ID: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com> (sfid-20071010_184414_950012_C901E69C)
-In-Reply-To: <20071010152027.GF5962@tuxdriver.com>
-References: <470C9F28.1070803@gmail.com> <20071010130653.GB5962@tuxdriver.com><1192026847.9739.4.camel@localhost.localdomain><f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com><1192028866.9739.32.camel@localhost.localdomain> <20071010152027.GF5962@tuxdriver.com>
-From: "Ferguson, Dana R" <dana.r.ferguson@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
+	 <1192619652.8841.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10/17/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2007-10-16 at 22:20 +0900, Bruno Randolf wrote:
+>
+> > the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
+>
+> Ok, and why exactly is there a proc interface at all?
 
-Engineers here have brought to my attention that this has been going on
-for several projects and has been reported in Bugzilla on 2915, 3945 and
-now the current. I can't get into the old data bases to provide bug
-ID's. So I can't provide more details.
+That shall be removed as well.
 
-I am wondering why it keeps getting over looked? Have we narrowed it
-down to where it is failing?
-
-Dana
-  
-
------Original Message-----
-From: ipw3945-devel-bounces@lists.sourceforge.net
-[mailto:ipw3945-devel-bounces@lists.sourceforge.net] On Behalf Of John
-W. Linville
-Sent: Wednesday, October 10, 2007 8:20 AM
-To: Dan Williams
-Cc: linux-wireless@vger.kernel.org; ipw3945-devel
-Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
-
-On Wed, Oct 10, 2007 at 11:07:46AM -0400, Dan Williams wrote:
-> On Wed, 2007-10-10 at 16:57 +0200, dragoran wrote:
-
-> > btw shouldn't all mac80211 drivers either work or not work because
-the
-> > code for this is in mac80211 and not in the drivers?
-> 
-> Yeah, pretty much; but each driver/firmware may handle hidden ssids
-> slightly differently.  mac80211 should bring some sanity to this area,
-> but I wouldn't discount variation between even mac80211 based drivers.
-
-Hmmm...doesn't the iwlwifi firmware intercede in scanning?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
-
-------------------------------------------------------------------------
--
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
-_______________________________________________
-Ipw3945-devel mailing list
-Ipw3945-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+  Luis
