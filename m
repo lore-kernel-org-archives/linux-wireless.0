@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbXJJJBq (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:61567 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760011AbXJQVeP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 05:01:46 -0400
-Subject: Re: [RFC PATCH 2/2] mac80211: store SSID in sta_bss_list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1191973799635-git-send-email-linville@tuxdriver.com> (sfid-20071010_010921_998777_FA0E0694)
-References: <11919737992212-git-send-email-linville@tuxdriver.com>
-	 <1191973799635-git-send-email-linville@tuxdriver.com>
-	 (sfid-20071010_010921_998777_FA0E0694)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sfTAZWCO7Uk6i4h61lrj"
-Date: Wed, 10 Oct 2007 11:02:39 +0200
-Message-Id: <1192006959.12541.2.camel@johannes.berg> (sfid-20071010_100148_255607_05560A3C)
-Mime-Version: 1.0
+	Wed, 17 Oct 2007 17:34:15 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4578207pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 14:34:14 -0700 (PDT)
+Message-ID: <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com> (sfid-20071017_223449_677144_2898D753)
+Date: Thu, 18 Oct 2007 00:34:14 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 0/4] ath5k: Misc cleanups
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <40f31dec0710161418m72e991b2x36428e39f0766e1c@mail.gmail.com>
+	 <4af2d03a0710161507h7fac4117k168c592dd31c7dff@mail.gmail.com>
+	 <40f31dec0710161512q78c21fbv9426817972db2d1d@mail.gmail.com>
+	 <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
+> On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > 2007/10/17, Jiri Slaby <jirislaby@gmail.com>:
+> > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > > Some cleanups i did today, just to get used to git etc, hope i'm doing
+> > > > this right ;-)
+> > >
+> > > Patches seems to be fine, thanks for them, but your e-mailer seems to
+> > > wrap lines and change tabs to 8 spaces in your patches, which makes it
+> > > unmergeable...
+> > >
+> >
+> > Ouch ! Sorry for that, it seems gmail did it again. Can i send them as
+> > attachments ???
+>
+> Here's a guide to use gmail with mutt, then you can send as inline attachments.
+>
+> http://people.aapt.net.au/~adjlstrong/mutt.html
+>
+> Worked for me.
+>
+>   Luis
+>
 
---=-sfTAZWCO7Uk6i4h61lrj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just tried to commit from another acount (mick@ics.forth.gr) with
+squirellmail and last one with horde, let's see how it will arive. If
+it doesn't work i'll try with mutt and gmail...
 
-On Tue, 2007-10-09 at 19:49 -0400, John W. Linville wrote:
-> From: John W. Linville <linville@tuxdriver.com>
->=20
-> Some AP equipment "in the wild" services multiple SSIDs using the
-> same BSSID.  This patch changes the key of sta_bss_list to include
-> the SSID as well as the BSSID and the channel so as to prevent one
-> SSID from eclipsing another SSID with the same BSSID.
-
-There's a TODO comment at the top of the file for this which you can
-remove :)
-
-johannes
-
---=-sfTAZWCO7Uk6i4h61lrj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwyVLqVg1VMiehFYAQJuhxAAu5Vj+nyFnE402VVt8cbAvYYUbuht8+lO
-3PgkAQqftHs3C8bgcIxbjgxDsOmUNFHwW0n18sM779wCjr/jhPqHFXrR+4Ii7S+5
-8vQkT7ur2bD2VP2yjsVi8Cj0xoMqFceAPyyQ4Peu/rhy2mR+XtHbxdQti/crOuJ3
-8oFpE0wofQ+1EGfHN7igen68aB/teEjQSwY4GpydUXRsFtt3992QTOii43X650rs
-STWhSq76IlZ1hLUfgKHAmPbQvUWN2EVwB4WwwgHd+3itDn8EEha43eTbQZVoDH64
-SPYrVz5JhHKGN3fFaoYYsr/AGuWEF97Ue0xOQcQq/q/cXgyKImZVSteLc0/GYTyK
-3QdWZ+FilAVMW/ZWKJANSqYj/ohAyIwkBrzkENWAx/4qVn3YOUS/PQGgJyI+Zxjh
-tO28B02AQcYi9DP8PnQmKybD0RBy1Hc9rpCpqVN3BeGA9Kg+JWgIycdaqB2gHMBz
-3ZjJuZbde5ucXoffj0VRCYMAs1uDNv6F3RGy+xV08+Fs5SVoqwdo2O+upZHPeA7z
-JhcNKKhMSVRsUEDBIz5wUJcRJ4vIYYxTEHYXRSHroVuNt/a2fxtljaYweVWDPBEQ
-zrXDH2d0lvhHZGnHNGY71Jxe7yJbwQqvHn39cGOy5UijsmJHGCVg7LAqbrHTa6UF
-w/4nvN25cPM=
-=9iZh
------END PGP SIGNATURE-----
-
---=-sfTAZWCO7Uk6i4h61lrj--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
