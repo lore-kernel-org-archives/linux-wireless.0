@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:13988 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbXJVVeU (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:36739 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758412AbXJQDUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 17:34:20 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so26584ugc
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 14:34:17 -0700 (PDT)
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-Date: Mon, 22 Oct 2007 23:52:57 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-References: <20071020184100.GA11640@elf.ucw.cz> <1193067896.30205.9.camel@localhost.localdomain> <20071022211325.GF28190@elf.ucw.cz>
-In-Reply-To: <20071022211325.GF28190@elf.ucw.cz>
+	Tue, 16 Oct 2007 23:20:22 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: make ieee802_11_parse_elems return void
+Date: Tue, 16 Oct 2007 23:17:30 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <1192588723322-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1192588723322-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710222352.57543.IvDoorn@gmail.com> (sfid-20071022_223424_554199_A7F839F2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1883843.kKTeMcvcgY";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710162317.34856.flamingice@sourmilk.net> (sfid-20071017_042026_213331_8471ABFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 October 2007, Pavel Machek wrote:
-> Hi!
-> 
-> > > > This device is NOT a Ralink USB wifi adapter!
-> > > > 
-> > > > Get the windows driver in this link and see for yourself.
-> > > > http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
-> > > > (ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
-> > > 
-> > > Thanks a lot. With some patches, I got driver from conitech.it to
-> > > compile and partly work on 2.6.23. I can now transmit packets but not
-> > > yet receive them.
-> > > 
-> > > (use Makefile.26 instead of Makefile)
-> > 
-> > I couldn't find any license info immediately visible; are you sure it's
-> > GPL?
-> 
-> Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
+--nextPart1883843.kKTeMcvcgY
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-That doesn't say much, some manufacturers add that line to their driver
- just to prevent the module loader complaining about a non-GPL driver...
+On Tuesday 16 October 2007 22:38:43 John W. Linville wrote:
+> Some APs send management frames with junk padding after the last IE.
+> We already account for a similar problem with some Apple Airport
+> devices, but at least one device is known to send more than a single
+> extra byte.  The device in question is the Draytek Vigor2900:
+>
+> 	http://www.draytek.com.au/products/Vigor2900.php
+>
+> The junk in question looks like an IE that runs off the end of the
+> frame.  This cause us to return ParseFailed.  Since the frame in
+> question is an association response, this causes us to fail to associate
+> with this AP.
+>
+> The return code from ieee802_11_parse_elems is superfluous.
+> All callers still check for the presence of the specific IEs that
+> interest them anyway.  So, remove the return code so the parse never
+> "fails".
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Acked-by: Michael Wu <flamingice@sourmilk.net>
 
-There should be a copyright notice or a license file accompanied with
-the driver that clearly states the license of the driver.
+-Michael Wu
 
-Ivo
+--nextPart1883843.kKTeMcvcgY
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHFX7OT3Oqt9AH4aERAnd9AKCoK5F8GPMduW8b+s+HjZ4jThfAIQCcDQmL
+9rvwWCKX5jroXEeko6EMFSE=
+=uLjT
+-----END PGP SIGNATURE-----
+
+--nextPart1883843.kKTeMcvcgY--
