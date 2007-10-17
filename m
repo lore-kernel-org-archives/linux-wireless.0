@@ -1,65 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54815 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754253AbXJJPHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 11:07:11 -0400
-Subject: Re: mac80211/iwlwifi + hidden ssids
-From: Dan Williams <dcbw@redhat.com>
-To: dragoran <drago01@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com>
-References: <470C9F28.1070803@gmail.com>
-	 <20071010130653.GB5962@tuxdriver.com>
-	 <1192026847.9739.4.camel@localhost.localdomain>
-	 <f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 10 Oct 2007 11:07:46 -0400
-Message-Id: <1192028866.9739.32.camel@localhost.localdomain> (sfid-20071010_160716_424570_C9F68AD3)
-Mime-Version: 1.0
+Received: from smtpauth03.prod.mesa1.secureserver.net ([64.202.165.183]:59339
+	"HELO smtpauth03.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755899AbXJQUNi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 16:13:38 -0400
+Message-ID: <47166B5F.1010804@seclark.us> (sfid-20071017_211343_143881_6DCA3F92)
+Date: Wed, 17 Oct 2007 16:06:55 -0400
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Reply-To: Stephen.Clark@seclark.us
+MIME-Version: 1.0
+To: Jens Axboe <jens.axboe@oracle.com>
+CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	=?ISO-8859-1?Q?Ismail_D=F6nmez?= <ismail@pardus.org.tr>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] iwl3945 doesn't work
+References: <20071017135452.GJ5043@kernel.dk>	<200710171708.48654.ismail@pardus.org.tr>	<20071017141111.GM5043@kernel.dk>	<1192630733.10567.37.camel@localhost.localdomain>	<20071017142246.GQ5043@kernel.dk>	<1192634183.11584.0.camel@localhost.localdomain> <20071017163519.GC15552@kernel.dk>
+In-Reply-To: <20071017163519.GC15552@kernel.dk>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-10 at 16:57 +0200, dragoran wrote:
-> On 10/10/07, Dan Williams <dcbw@redhat.com> wrote:
-> >[..]
-> > wpa_supplicant's support for hidden SSIDs sort of sucks; mainly because
-> > the drivers implement this in different ways.  wpa_supplicant says you
-> > must use "ap_scan=2" for hidden SSIDs (and possibly ssid_scan=1 to do
-> > specific ssid probe requests), which causes wpa_supplicant to blast all
-> > settings to the card directly and not try to be smart about AP scanning
-> > and selection.  However, this doesn't work often because drivers are
-> > inconsistent about this.
-> >
-> > The way it _should_ work is that if scan_ssid = 1 for a network,
-> > wpa_supplicant should ask that the driver scan the specific ssid using
-> > IW_SCAN_THIS_ESSID.  The card would then issue specific SSID scan
-> > requests on each channel during the scan, and hopefully find the AP in
-> > question.
-> >
-> > Unfortunately, most drivers don't support IW_SCAN_THIS_ESSID.  So the
-> > best we can do is set AP_SCAN=2, let wpa_supplicant blow all the
-> > settings to the card, and just _hope_ that the card/driver are smart
-> > enough to find the hidden SSID on their own and associate.  Which is
-> > less often than we'd hope.
-> 
-> so your are suggestion to use ap_scan=2 and add scan_ssid=1 to the
-> network block?
-> nm seems not to do this.
+Jens Axboe wrote:
 
-It should be doing this...
+>On Wed, Oct 17 2007, Dan Williams wrote:
+> =20
+>
+>>On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
+>>   =20
+>>
+>>>On Wed, Oct 17 2007, Dan Williams wrote:
+>>>     =20
+>>>
+>>>>On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
+>>>>       =20
+>>>>
+>>>>>On Wed, Oct 17 2007, Ismail D=F6nmez wrote:
+>>>>>         =20
+>>>>>
+>>>>>>Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
+>>>>>>           =20
+>>>>>>
+>>>>>>>Hi,
+>>>>>>>
+>>>>>>>Seeing that iwl3945 is now merged, I decided to switch my x60 to=
+ use
+>>>>>>>that instead of ipw3945. That would leave me with zero kernel
+>>>>>>>dependencies.
+>>>>>>>
+>>>>>>>Unfortunately it doesn't work. Loading the module reveals the de=
+vice:
+>>>>>>>
+>>>>>>>iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection dri=
+ver for
+>>>>>>>Linux, 1.1.17ks
+>>>>>>>iwl3945: Copyright(c) 2003-2007 Intel Corporation
+>>>>>>>ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IR=
+Q 21
+>>>>>>>PCI: Setting latency timer of device 0000:03:00.0 to 64
+>>>>>>>iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+>>>>>>>iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+>>>>>>>phy0: Selected rate control algorithm 'iwl-3945-rs'
+>>>>>>>
+>>>>>>># iwconfig wlan0
+>>>>>>>wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
+>>>>>>>          Mode:Managed  Channel:0  Access Point: Not-Associated
+>>>>>>>          Tx-Power=3D0 dBm
+>>>>>>>          Retry min limit:7   RTS thr:off   Fragment thr=3D2346 =
+B
+>>>>>>>          Encryption key:XXXX-XXXX-XX
+>>>>>>>          Link Quality:0  Signal level:0  Noise level:0
+>>>>>>>          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag=
+:0
+>>>>>>>          Tx excessive retries:0  Invalid misc:0   Missed beacon=
+:0
+>>>>>>>
+>>>>>>>and iwconfig sees it, essid/enc settings are fine, but I don't g=
+et a
+>>>>>>>link.
+>>>>>>>             =20
+>>>>>>>
+>>>>>>Same issue here, try iwlist wlan0 scan first and then it should w=
+ork.
+>>>>>>           =20
+>>>>>>
+>>>>>Huh indeed, now it links fine! Thanks for the hint. Would be nice =
+to
+>>>>>have fixed, though :-)
+>>>>>         =20
+>>>>>
+>>>>Odd, doesn't the driver need to do a scan _anyway_ to find the righ=
+t
+>>>>BSSID to associate with if the cached scan results are more than a =
+few
+>>>>seconds old?  Can you run '/sbin/iwevent' before trying a fresh
+>>>>association, try to associate, ensure that it has failed, and repor=
+t the
+>>>>output?
+>>>>
+>>>>If you don't get something like:
+>>>>
+>>>>10:17:05.117937   eth1     Scan request completed
+>>>>
+>>>>shown there, then there's likely a bug in the driver because it's e=
+ither
+>>>>(a) not scanning before trying to associate, or (b) not sending out=
+ scan
+>>>>completion events after it's done a scan.
+>>>>       =20
+>>>>
+>>>Indeed, there is now Scan request completed before I run the iwlist
+>>>scan. iwevent output:
+>>>     =20
+>>>
+>>Hmm, the output below doesn't show the scan request completed, right?
+>>
+>>   =20
+>>
+>>>Waiting for Wireless Events from interfaces...
+>>>16:20:27.453588   wlan0    Set Mode:Managed
+>>>16:20:27.462104   wlan0    Set Encryption key:off
+>>>16:20:27.463940   wlan0    Set Encryption key:****-****-**   Securit=
+y mode:open
+>>>16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
+>>>
+>>>waiting, nothing else happens. Then run iwlist scan from another
+>>>terminal.
+>>>
+>>>16:20:53.892549   wlan0    Scan request completed
+>>>     =20
+>>>
+>>So you only get this when you manually scan right after setting the s=
+sid
+>>and key?
+>>   =20
+>>
+>
+>If you look at the time stamp, I ran the iwlist scan about 26 seconds
+>after loading the module. When the module is loaded, the networking
+>script sets the essid and encryption key.
+>
+>So yes, I only get that 'Scan request completed' line after running
+>iwlist scan manually.
+>
+> =20
+>
+Don't know whether this is related, but I was having all kinds of=20
+trouble getting associated,
+iwlist eth1 scan would report no scan results, I then switched to=20
+loading the kernel module with
+the option that tells  iwl3945 to do software scanning and it works=20
+everytime now.
 
-> btw shouldn't all mac80211 drivers either work or not work because the
-> code for this is in mac80211 and not in the drivers?
+Steve
 
-Yeah, pretty much; but each driver/firmware may handle hidden ssids
-slightly differently.  mac80211 should bring some sanity to this area,
-but I wouldn't discount variation between even mac80211 based drivers.
+--=20
 
-Dan
+"They that give up essential liberty to obtain temporary safety,=20
+deserve neither liberty nor safety."  (Ben Franklin)
 
-> I will be able to test again this friday will try this and the
-> ap_scan=1 if there are other suggestion feel free to say them so I can
-> add them to my "totest" list ;)
+"The course of history shows that as a government grows, liberty=20
+decreases."  (Thomas Jefferson)
 
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
