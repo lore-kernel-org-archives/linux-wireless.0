@@ -1,166 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:57558 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125AbXJKTto (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 15:49:44 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so684780wxd
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 12:49:41 -0700 (PDT)
-Date: Thu, 11 Oct 2007 15:49:34 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] Don't read AR5K_RAC_PISR on AR5210, document ath5k_int
-Message-ID: <20071011194934.GA9403@pogo> (sfid-20071011_204950_564275_70F6545F)
-References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo> <20071011194630.GA9304@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071011194630.GA9304@pogo>
+Received: from mx1.redhat.com ([66.187.233.31]:59619 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753989AbXJQPQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 11:16:58 -0400
+Subject: Re: iwl3945 doesn't work
+From: Dan Williams <dcbw@redhat.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Ismail =?ISO-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20071017142246.GQ5043@kernel.dk>
+References: <20071017135452.GJ5043@kernel.dk>
+	 <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk>
+	 <1192630733.10567.37.camel@localhost.localdomain>
+	 <20071017142246.GQ5043@kernel.dk>
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 17 Oct 2007 11:16:23 -0400
+Message-Id: <1192634183.11584.0.camel@localhost.localdomain> (sfid-20071017_161703_753793_560FB30C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR5210 does not have AR5K_RAC_PISR so do not read it. Also lets start
-trying to document all hardware interrupts.
+On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
+> On Wed, Oct 17 2007, Dan Williams wrote:
+> > On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
+> > > On Wed, Oct 17 2007, Ismail D=C3=B6nmez wrote:
+> > > > Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
+> > > > > Hi,
+> > > > >
+> > > > > Seeing that iwl3945 is now merged, I decided to switch my x60=
+ to use
+> > > > > that instead of ipw3945. That would leave me with zero kernel
+> > > > > dependencies.
+> > > > >
+> > > > > Unfortunately it doesn't work. Loading the module reveals the=
+ device:
+> > > > >
+> > > > > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection =
+driver for
+> > > > > Linux, 1.1.17ks
+> > > > > iwl3945: Copyright(c) 2003-2007 Intel Corporation
+> > > > > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) ->=
+ IRQ 21
+> > > > > PCI: Setting latency timer of device 0000:03:00.0 to 64
+> > > > > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connecti=
+on
+> > > > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> > > > > phy0: Selected rate control algorithm 'iwl-3945-rs'
+> > > > >
+> > > > > # iwconfig wlan0
+> > > > > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
+> > > > >           Mode:Managed  Channel:0  Access Point: Not-Associat=
+ed
+> > > > >           Tx-Power=3D0 dBm
+> > > > >           Retry min limit:7   RTS thr:off   Fragment thr=3D23=
+46 B
+> > > > >           Encryption key:XXXX-XXXX-XX
+> > > > >           Link Quality:0  Signal level:0  Noise level:0
+> > > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid f=
+rag:0
+> > > > >           Tx excessive retries:0  Invalid misc:0   Missed bea=
+con:0
+> > > > >
+> > > > > and iwconfig sees it, essid/enc settings are fine, but I don'=
+t get a
+> > > > > link.
+> > > >=20
+> > > > Same issue here, try iwlist wlan0 scan first and then it should=
+ work.
+> > >=20
+> > > Huh indeed, now it links fine! Thanks for the hint. Would be nice=
+ to
+> > > have fixed, though :-)
+> >=20
+> > Odd, doesn't the driver need to do a scan _anyway_ to find the righ=
+t
+> > BSSID to associate with if the cached scan results are more than a =
+few
+> > seconds old?  Can you run '/sbin/iwevent' before trying a fresh
+> > association, try to associate, ensure that it has failed, and repor=
+t the
+> > output?
+> >=20
+> > If you don't get something like:
+> >=20
+> > 10:17:05.117937   eth1     Scan request completed
+> >=20
+> > shown there, then there's likely a bug in the driver because it's e=
+ither
+> > (a) not scanning before trying to associate, or (b) not sending out=
+ scan
+> > completion events after it's done a scan.
+>=20
+> Indeed, there is now Scan request completed before I run the iwlist
+> scan. iwevent output:
 
-Changes-licensed-under: ISC
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
----
- drivers/net/wireless/ath5k/ath5k.h |   61 ++++++++++++++++++++++++++++++------
- drivers/net/wireless/ath5k/hw.c    |   16 ++++++---
- 2 files changed, 61 insertions(+), 16 deletions(-)
+Hmm, the output below doesn't show the scan request completed, right?
 
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index c1d3c9d..61c717f 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -720,18 +720,61 @@ enum ath5k_ant_setting {
-  * HAL interrupt abstraction
-  */
- 
--/*
-+/**
-+ * enum ath5k_int - Hardware interrupt masks helpers
-+ *
-+ * @AR5K_INT_RX: mask to identify received frame interrupts, of type 
-+ * 	AR5K_ISR_RXOK or AR5K_ISR_RXERR
-+ * @AR5K_INT_RXDESC: ??
-+ * @AR5K_INT_RXNOFRM: ??
-+ * @AR5K_INT_RXEOL: received End Of List for VEOL (Virtual End Of List). The
-+ * 	Queue Control Unit (QCU) signals an EOL interrupt only if a descriptor's 
-+ * 	LinkPtr is NULL. For more details, refer to:
-+ * 	http://www.freepatentsonline.com/20030225739.html
-+ * @AR5K_INT_RXORN: indicates a hardware reset is required
-+ * @AR5K_INT_TX: mask to identify received frame interrupts, of type 
-+ * 	AR5K_ISR_TXOK or AR5K_ISR_TXERR
-+ * @AR5K_INT_TXDESC: ??
-+ * @AR5K_INT_TXURN: received when we should increase the TX trigger threshold
-+ * 	We currently do increments on interrupt by 
-+ * 	(AR5K_TUNE_MAX_TX_FIFO_THRES - current_trigger_level) / 2
-+ * @AR5K_INT_MIB: Indicates the Management Information Base counters should be
-+ * 	checked. We should do this with ath5k_hw_update_mib_counters() but
-+ * 	it seems we should also then do some noise immunity work.
-+ * @AR5K_INT_RXPHY: ??
-+ * @AR5K_INT_RXKCM: ??
-+ * @AR5K_INT_SWBA: SoftWare Beacon Alert - indicates its time to send a 
-+ * 	beacon that must be handled in software. The alternative is if you
-+ * 	have VEOL support, in that case you let the hardware deal with things.
-+ * @AR5K_INT_BMISS: If in STA mode this indicates we have stopped seeing 
-+ * 	beacons from the AP have associated with, we should probably try to
-+ * 	reassociate. When in IBSS mode this might mean we have not received
-+ * 	any beacons from any local stations. Note that every station in an
-+ * 	IBSS schedules to send beacons at the Target Beacon Transmission Time
-+ * 	(TBTT) with a random backoff.
-+ * @AR5K_INT_BNR: Beacon Not Ready interrupt - ??
-+ * @AR5K_INT_GPIO: ??
-+ * @AR5K_INT_FATAL: Fatal errors were encountered, typically caused by DMA
-+ * 	errors. These types of errors we can enable seem to be of type 
-+ * 	AR5K_SIMR2_MCABT, AR5K_SIMR2_SSERR and AR5K_SIMR2_DPERR.
-+ * @AR5K_INT_GLOBAL: Seems to be used to clear and set the IER
-+ * @AR5K_INT_NOCARD: signals the card has been removed
-+ * @AR5K_INT_COMMON: common interrupts shared amogst MACs with the same
-+ * 	bit value
-+ *
-  * These are mapped to take advantage of some common bits
-- * between the MAC chips, to be able to set intr properties
-- * easier. Some of them are not used yet inside OpenHAL.
-+ * between the MACs, to be able to set intr properties
-+ * easier. Some of them are not used yet inside hw.c. Most map
-+ * to the respective hw interrupt value as they are common amogst different
-+ * MACs.
-  */
- enum ath5k_int {
--	AR5K_INT_RX	= 0x00000001,
-+	AR5K_INT_RX	= 0x00000001, /* Not common */
- 	AR5K_INT_RXDESC	= 0x00000002,
- 	AR5K_INT_RXNOFRM = 0x00000008,
- 	AR5K_INT_RXEOL	= 0x00000010,
- 	AR5K_INT_RXORN	= 0x00000020,
--	AR5K_INT_TX	= 0x00000040,
-+	AR5K_INT_TX	= 0x00000040, /* Not common */
- 	AR5K_INT_TXDESC	= 0x00000080,
- 	AR5K_INT_TXURN	= 0x00000800,
- 	AR5K_INT_MIB	= 0x00001000,
-@@ -739,12 +782,11 @@ enum ath5k_int {
- 	AR5K_INT_RXKCM	= 0x00008000,
- 	AR5K_INT_SWBA	= 0x00010000,
- 	AR5K_INT_BMISS	= 0x00040000,
--	AR5K_INT_BNR	= 0x00100000,
-+	AR5K_INT_BNR	= 0x00100000, /* Not common */
- 	AR5K_INT_GPIO	= 0x01000000,
--	AR5K_INT_FATAL	= 0x40000000,
-+	AR5K_INT_FATAL	= 0x40000000, /* Not common */
- 	AR5K_INT_GLOBAL	= 0x80000000,
- 
--	/*A sum of all the common bits*/
- 	AR5K_INT_COMMON  = AR5K_INT_RXNOFRM
- 			| AR5K_INT_RXDESC
- 			| AR5K_INT_RXEOL
-@@ -757,8 +799,7 @@ enum ath5k_int {
- 			| AR5K_INT_SWBA
- 			| AR5K_INT_BMISS
- 			| AR5K_INT_GPIO,
--	AR5K_INT_NOCARD	= 0xffffffff /*Declare that the card
--				       has been removed*/
-+	AR5K_INT_NOCARD	= 0xffffffff
- };
- 
- /*
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 3fa36f5..58548ee 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -1471,11 +1471,13 @@ int ath5k_hw_get_isr(struct ath_hw *hal, enum ath5k_int *interrupt_mask)
- 			return -ENODEV;
- 		}
- 	}
+> Waiting for Wireless Events from interfaces...
+> 16:20:27.453588   wlan0    Set Mode:Managed
+> 16:20:27.462104   wlan0    Set Encryption key:off
+> 16:20:27.463940   wlan0    Set Encryption key:****-****-**   Security=
+ mode:open
+> 16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
+>=20
+> waiting, nothing else happens. Then run iwlist scan from another
+> terminal.
+>=20
+> 16:20:53.892549   wlan0    Scan request completed
+
+So you only get this when you manually scan right after setting the ssi=
+d
+and key?
+
+Dan
+
+> 16:20:54.025085   wlan0    Custom driver
+> event:ASSOCINFO(ReqIEs=3D000e6b6a656c6c626572676178626f65010402040b16
+> RespIEs=3D010482848b96dd0c00037f0201015b0002a44000)
+> 16:20:54.025123   wlan0    New Access Point/Cell address:00:13:46:97:=
+33:E2
+>=20
+> bingo, it associates and it now works.
+>=20
+
 -
--	/*
--	 * Read interrupt status from the Read-And-Clear shadow register
--	 */
--	data = ath5k_hw_reg_read(hal, AR5K_RAC_PISR);
-+	else {
-+		/*
-+		 * Read interrupt status from the Read-And-Clear shadow register
-+		 * Note: PISR/SISR Not available on 5210
-+		 */
-+		data = ath5k_hw_reg_read(hal, AR5K_RAC_PISR);
-+	}
- 
- 	/*
- 	 * Get abstract interrupt mask (HAL-compatible)
-@@ -1503,7 +1505,9 @@ int ath5k_hw_get_isr(struct ath_hw *hal, enum ath5k_int *interrupt_mask)
- 
- 	/*
- 	 * XXX: BMISS interrupts may occur after association.
--	 * I found this on 5210 code but it needs testing
-+	 * I found this on 5210 code but it needs testing. If this is
-+	 * true we should disable them before assoc and re-enable them
-+	 * after a successfull assoc + some jiffies.
- 	 */
- #if 0
- 	interrupt_mask &= ~AR5K_INT_BMISS;
--- 
-1.5.2.5
-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
