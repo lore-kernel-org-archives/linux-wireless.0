@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:61567 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760011AbXJQVeP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 17:34:15 -0400
-Received: by py-out-1112.google.com with SMTP id u77so4578207pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 14:34:14 -0700 (PDT)
-Message-ID: <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com> (sfid-20071017_223449_677144_2898D753)
-Date: Thu, 18 Oct 2007 00:34:14 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 0/4] ath5k: Misc cleanups
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
+Received: from mail.clemson.edu ([130.127.28.87]:43721 "EHLO CLEMSON.EDU"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753277AbXJQWa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2007 18:30:58 -0400
+Received: from wm.clemson.edu (wm.clemson.edu [130.127.28.88])
+	by CLEMSON.EDU (8.13.6/8.13.1) with ESMTP id l9HMFtjA012060
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2007 18:15:56 -0400 (EDT)
+Message-ID: <60980.172.22.4.212.1192659355.squirrel@wm.clemson.edu> (sfid-20071017_233100_913562_5223528C)
+Date: Wed, 17 Oct 2007 18:15:55 -0400 (EDT)
+Subject: Re: iwl3945 doesn't work
+From: bmoss@CLEMSON.EDU
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <40f31dec0710161418m72e991b2x36428e39f0766e1c@mail.gmail.com>
-	 <4af2d03a0710161507h7fac4117k168c592dd31c7dff@mail.gmail.com>
-	 <40f31dec0710161512q78c21fbv9426817972db2d1d@mail.gmail.com>
-	 <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
-> On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > 2007/10/17, Jiri Slaby <jirislaby@gmail.com>:
-> > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > > > Some cleanups i did today, just to get used to git etc, hope i'm doing
-> > > > this right ;-)
-> > >
-> > > Patches seems to be fine, thanks for them, but your e-mailer seems to
-> > > wrap lines and change tabs to 8 spaces in your patches, which makes it
-> > > unmergeable...
-> > >
-> >
-> > Ouch ! Sorry for that, it seems gmail did it again. Can i send them as
-> > attachments ???
->
-> Here's a guide to use gmail with mutt, then you can send as inline attachments.
->
-> http://people.aapt.net.au/~adjlstrong/mutt.html
->
-> Worked for me.
->
->   Luis
->
+I have observed that 'iwlist wlan0 scan' sometimes fails to produce a scan
+and manual configuration with iwconfig sometimes fails to produce an
+association. I also observed that the Fedora 8 configuration script issues
+the command 'ip link set wlan0 up' before configuring the wlan0 and it
+always works. I also noted in the Intel documentation that the command
+'ifconfig wlan0 up' should be issued before configuing the wlan0. For
+manual configuration, I now use
 
-Just tried to commit from another acount (mick@ics.forth.gr) with
-squirellmail and last one with horde, let's see how it will arive. If
-it doesn't work i'll try with mutt and gmail...
+ifconfig wlan0 up
+ip link set wlan0 up
+iwconfig wlan0 mode Managed
+iwconfig wlan0 key xxxxxxxxxxxxxxxxxxxxxxxxxx
+iwconfig wlan0 essid mosswap
+dhclient wlan0
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+It always works.
+
+I believe the iwl3945 driver is broken when there are hidden AP's in the
+scan list. It appears that the scan list returned to wpa_supplicant is
+corrupted which is why the wpa_supplicant setting ap_scan=2 does not for
+hidden AP's.
+
+With hardware scanning enabled as a module option, it appears that iwl3945
+does both a background scan and a scan by ssid when the ssid is set unlike
+ipw2200 which does background scans constantly and only does scan by ssid
+when it is requested.
+
+Bill Moss
