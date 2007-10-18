@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4505 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754895AbXJQPL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 11:11:59 -0400
-Date: Wed, 17 Oct 2007 10:53:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20071017145315.GC5744@tuxdriver.com> (sfid-20071017_161205_413751_8BF804CE)
-References: <20071017023145.GA2848@tuxdriver.com> <200710162329.55966.flamingice@sourmilk.net>
+Received: from py-out-1112.google.com ([64.233.166.177]:12097 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762757AbXJROtl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2007 10:49:41 -0400
+Received: by py-out-1112.google.com with SMTP id u77so354174pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2007 07:49:40 -0700 (PDT)
+Message-ID: <43e72e890710180749v19d3753do85c24c28bb65409@mail.gmail.com> (sfid-20071018_154945_886735_74A59F90)
+Date: Thu, 18 Oct 2007 10:49:40 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Mode/Channel/Bitrate API
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, "Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1192711232.15285.13.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710162329.55966.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=UTF-8
+References: <1192222110.4770.81.camel@johannes.berg>
+	 <200710161640.54332.flamingice@sourmilk.net>
+	 <1192608587.8841.2.camel@johannes.berg>
+	 <43e72e890710170715ibeee99eja865dc3291e7e37d@mail.gmail.com>
+	 <1192711232.15285.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 16, 2007 at 11:29:51PM -0400, Michael Wu wrote:
-> On Tuesday 16 October 2007 22:31:46 John W. Linville wrote:
-> > Bill Moss (1):
-> >       mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
-> >
-> Where did this patch come from? The original patch looked nothing like this, 
-> and this patch changes the behavior of siwscan incorrectly. If the interface 
+On 10/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2007-10-17 at 10:15 -0400, Luis R. Rodriguez wrote:
 
-"Nothing like this"?  I moved a conditional from inside a specific
-case to outside the whole switch.  Let's not overstate things.
+> > The regulatory work can just iterate over the currently established
+> > channels for each wiphy. Who defines those or how is not important to
+> > the regulatory work. I'm not sure why the range approach would not
+> > work here. A card usually works on a range of frequencies anyway.
+>
+> Right. But the regulatory code may need to have power restrictions
+> different on different channels and generally wants to be able to
+> restrict things for each channel,
 
-> is not STA, IBSS, or AP, scanning should not be permitted. This patch allows 
-> scanning on any interface if a SSID is specified. NACK.
+Right but this is independent of how the driver sets his things up.
 
-I refactored the patch in response to Johannes' email on 10/11 that
-said "I think it should be done regardless of mode".
+> so it'd be good to have the list
+> defined right away by the driver.
 
-	http://marc.info/?l=linux-wireless&m=119209214914682&w=2
+The real problem here, as you pointed out to me before, is each driver
+needs its own hw values for channels so I suppose it make sense to let
+the driver set this.
 
-I seem to have botched the repost -- sorry about that.
+> It seems that if we don't put this
+> into the driver but rather have a frequency range there, we need to
+> allocate an array of channels later for this work and that's not needed
+> if we start out with an array of channels.
 
-Looking closer, it does seem like ieee80211_sta_req_scan may not be
-robust enough to handle an inappropriate interface gracefully.  So,
-let's add a patch that relocates the conditional after the switch,
-and let the switch filter-out the bad interfaces for us.
+Right, we can provide a helper for driver to allocate/create the
+channel array structure but as I noted they need to set hw values
+anyway... so blah.
 
-Patch to follow (if I've figured-out git-send-email)...
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
