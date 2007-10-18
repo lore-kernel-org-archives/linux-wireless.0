@@ -1,213 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout04-01.prod.mesa1.secureserver.net ([64.202.165.196]:37316
-	"HELO smtpout04-02.prod.mesa1.secureserver.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756048AbXJRMXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 08:23:18 -0400
-Message-ID: <47175033.1090709@seclark.us> (sfid-20071018_132320_921494_D70D5666)
-Date: Thu, 18 Oct 2007 08:23:15 -0400
-From: Stephen Clark <Stephen.Clark@seclark.us>
-Reply-To: Stephen.Clark@seclark.us
+Received: from brick.kernel.dk ([87.55.233.238]:9188 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752509AbXJRTg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2007 15:36:29 -0400
+Date: Thu, 18 Oct 2007 21:36:24 +0200
+From: Jens Axboe <jens.axboe@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: Rate problems with iwl3945
+Message-ID: <20071018193624.GK10674@kernel.dk> (sfid-20071018_203634_232484_9043C6B7)
+References: <20071018191102.GI10674@kernel.dk> <1192735782.15285.48.camel@johannes.berg>
 MIME-Version: 1.0
-To: Jens Axboe <jens.axboe@oracle.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	=?ISO-8859-1?Q?Ismail_D=F6nmez?= <ismail@pardus.org.tr>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] iwl3945 doesn't work
-References: <20071017135452.GJ5043@kernel.dk> <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk> <1192630733.10567.37.camel@localhost.localdomain> <20071017142246.GQ5043@kernel.dk> <1192634183.11584.0.camel@localhost.localdomain> <20071017163519.GC15552@kernel.dk> <47166B5F.1010804@seclark.us> <20071018065746.GB5063@kernel.dk>
-In-Reply-To: <20071018065746.GB5063@kernel.dk>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1192735782.15285.48.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jens Axboe wrote:
+On Thu, Oct 18 2007, Johannes Berg wrote:
+> Hi,
+> 
+> > Copying some files I noticed it was slow, though.
+> 
+> Can you check that the right mode is selected? There's a bugfix pending
+> for mac80211 that makes it select 802.11b mode rather than 802.11g. I
+> don't remember whether I've asked this already so if I did please accept
+> my apology. FWIW, the fix is by me (in all fairness, the regression was
+> also introduced by me) titled "[PATCH v2] mac80211: fix set_channel
+> regression"
 
->On Wed, Oct 17 2007, Stephen Clark wrote:
-> =20
->
->>Jens Axboe wrote:
->>
->>   =20
->>
->>>On Wed, Oct 17 2007, Dan Williams wrote:
->>>=20
->>>     =20
->>>
->>>>On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
->>>>  =20
->>>>       =20
->>>>
->>>>>On Wed, Oct 17 2007, Dan Williams wrote:
->>>>>    =20
->>>>>         =20
->>>>>
->>>>>>On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
->>>>>>      =20
->>>>>>           =20
->>>>>>
->>>>>>>On Wed, Oct 17 2007, Ismail D=F6nmez wrote:
->>>>>>>        =20
->>>>>>>             =20
->>>>>>>
->>>>>>>>Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
->>>>>>>>          =20
->>>>>>>>               =20
->>>>>>>>
->>>>>>>>>Hi,
->>>>>>>>>
->>>>>>>>>Seeing that iwl3945 is now merged, I decided to switch my x60 =
-to use
->>>>>>>>>that instead of ipw3945. That would leave me with zero kernel
->>>>>>>>>dependencies.
->>>>>>>>>
->>>>>>>>>Unfortunately it doesn't work. Loading the module reveals the=20
->>>>>>>>>device:
->>>>>>>>>
->>>>>>>>>iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection d=
-river=20
->>>>>>>>>for
->>>>>>>>>Linux, 1.1.17ks
->>>>>>>>>iwl3945: Copyright(c) 2003-2007 Intel Corporation
->>>>>>>>>ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> =
-IRQ 21
->>>>>>>>>PCI: Setting latency timer of device 0000:03:00.0 to 64
->>>>>>>>>iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connectio=
-n
->>>>>>>>>iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
->>>>>>>>>phy0: Selected rate control algorithm 'iwl-3945-rs'
->>>>>>>>>
->>>>>>>>># iwconfig wlan0
->>>>>>>>>wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
->>>>>>>>>         Mode:Managed  Channel:0  Access Point: Not-Associated
->>>>>>>>>         Tx-Power=3D0 dBm
->>>>>>>>>         Retry min limit:7   RTS thr:off   Fragment thr=3D2346=
- B
->>>>>>>>>         Encryption key:XXXX-XXXX-XX
->>>>>>>>>         Link Quality:0  Signal level:0  Noise level:0
->>>>>>>>>         Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid fra=
-g:0
->>>>>>>>>         Tx excessive retries:0  Invalid misc:0   Missed beaco=
-n:0
->>>>>>>>>
->>>>>>>>>and iwconfig sees it, essid/enc settings are fine, but I don't=
- get a
->>>>>>>>>link.
->>>>>>>>>            =20
->>>>>>>>>                 =20
->>>>>>>>>
->>>>>>>>Same issue here, try iwlist wlan0 scan first and then it should=
- work.
->>>>>>>>          =20
->>>>>>>>               =20
->>>>>>>>
->>>>>>>Huh indeed, now it links fine! Thanks for the hint. Would be nic=
-e to
->>>>>>>have fixed, though :-)
->>>>>>>        =20
->>>>>>>             =20
->>>>>>>
->>>>>>Odd, doesn't the driver need to do a scan _anyway_ to find the ri=
-ght
->>>>>>BSSID to associate with if the cached scan results are more than =
-a few
->>>>>>seconds old?  Can you run '/sbin/iwevent' before trying a fresh
->>>>>>association, try to associate, ensure that it has failed, and rep=
-ort=20
->>>>>>the
->>>>>>output?
->>>>>>
->>>>>>If you don't get something like:
->>>>>>
->>>>>>10:17:05.117937   eth1     Scan request completed
->>>>>>
->>>>>>shown there, then there's likely a bug in the driver because it's=
-=20
->>>>>>either
->>>>>>(a) not scanning before trying to associate, or (b) not sending o=
-ut=20
->>>>>>scan
->>>>>>completion events after it's done a scan.
->>>>>>      =20
->>>>>>           =20
->>>>>>
->>>>>Indeed, there is now Scan request completed before I run the iwlis=
-t
->>>>>scan. iwevent output:
->>>>>    =20
->>>>>         =20
->>>>>
->>>>Hmm, the output below doesn't show the scan request completed, righ=
-t?
->>>>
->>>>  =20
->>>>       =20
->>>>
->>>>>Waiting for Wireless Events from interfaces...
->>>>>16:20:27.453588   wlan0    Set Mode:Managed
->>>>>16:20:27.462104   wlan0    Set Encryption key:off
->>>>>16:20:27.463940   wlan0    Set Encryption key:****-****-**   Secur=
-ity=20
->>>>>mode:open
->>>>>16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
->>>>>
->>>>>waiting, nothing else happens. Then run iwlist scan from another
->>>>>terminal.
->>>>>
->>>>>16:20:53.892549   wlan0    Scan request completed
->>>>>    =20
->>>>>         =20
->>>>>
->>>>So you only get this when you manually scan right after setting the=
- ssid
->>>>and key?
->>>>  =20
->>>>       =20
->>>>
->>>If you look at the time stamp, I ran the iwlist scan about 26 second=
-s
->>>after loading the module. When the module is loaded, the networking
->>>script sets the essid and encryption key.
->>>
->>>So yes, I only get that 'Scan request completed' line after running
->>>iwlist scan manually.
->>>
->>>=20
->>>     =20
->>>
->>Don't know whether this is related, but I was having all kinds of tro=
-uble=20
->>getting associated,
->>iwlist eth1 scan would report no scan results, I then switched to loa=
-ding=20
->>the kernel module with
->>the option that tells  iwl3945 to do software scanning and it works=20
->>everytime now.
->>   =20
->>
->
->Which option is that?
->
-> =20
->
-In my modprobe.conf file:
-options iwl3945 disable_hw_scan=3D1
+Indeed, it's running 802.11b. Even so, why is it switching down to 5.5M?
+Link quality is around 96/100, I'm sitting about a meter away from the
+AP right now.
 
-HTH,
-Steve
+So where do I find this fix?
 
---=20
+-- 
+Jens Axboe
 
-"They that give up essential liberty to obtain temporary safety,=20
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty=20
-decreases."  (Thomas Jefferson)
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
