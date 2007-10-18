@@ -1,472 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:14625 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675AbXJ0LZN (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:57336 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755749AbXJRI0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 07:25:13 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1035411fkz
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:12 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 11/21] rt2x00: Split rt61/rt73 antenna selection into RX and TX antenna
-Date: Sat, 27 Oct 2007 13:39:57 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710271334.34192.IvDoorn@gmail.com>
-In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710271339.58096.IvDoorn@gmail.com> (sfid-20071027_124132_439064_BEF2B389)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 18 Oct 2007 04:26:38 -0400
+Date: Thu, 18 Oct 2007 09:26:35 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] iwl3945 & iwl4965: mark more functions/variables static
+Message-ID: <20071018082635.GA10343@infradead.org> (sfid-20071018_092645_367624_2B5FC44F)
+References: <20071012123258.GA20794@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071012123258.GA20794@lst.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on investigation of the legacy drivers, I have made the
-following assumptions of the antenna setup:
- - R77 is the TX antenna configuration
- - RF2529 fetches default antenna selection from NIC eeprom word
+ping.
 
-With these assumptions we can change the antenna configuration
-to correctly read both antenna setup values and correctly
-configure the antenna. And we can now also configure the antenna
-for RF2529 without a double antenna.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |  215 +++++++++++++++++++++-----------
- drivers/net/wireless/rt2x00/rt61pci.h |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c |   58 +++++++--
- drivers/net/wireless/rt2x00/rt73usb.h |    2 +-
- 4 files changed, 189 insertions(+), 88 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 0830000..7f0665e 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -424,6 +424,29 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE,
- 			  !rt2x00_rf(&rt2x00dev->chip, RF5225));
- 
-+	/*
-+	 * Configure the TX antenna.
-+	 */
-+	switch (ant->tx) {
-+	case ANTENNA_A:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
-+		break;
-+	}
-+
-+	/*
-+	 * Configure the RX antenna.
-+	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -433,11 +456,6 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	case ANTENNA_A:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
--
--		if (rt2x00dev->curr_hwmode == HWMODE_A)
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
--		else
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -449,11 +467,6 @@ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	case ANTENNA_B:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
--
--		if (rt2x00dev->curr_hwmode == HWMODE_A)
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
--		else
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
- 		break;
- 	}
- 
-@@ -478,13 +491,35 @@ static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 			  !test_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags));
- 
-+	/*
-+	 * Configure the TX antenna.
-+	 */
-+	switch (ant->tx) {
-+	case ANTENNA_A:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
-+		break;
-+	}
-+
-+	/*
-+	 * Configure the RX antenna.
-+	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
- 		break;
- 	case ANTENNA_A:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -495,7 +530,6 @@ static void rt61pci_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 		 */
- 	case ANTENNA_B:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
- 		break;
- 	}
- 
-@@ -530,74 +564,75 @@ static void rt61pci_config_antenna_2529(struct rt2x00_dev *rt2x00dev,
- 	u8 r3;
- 	u8 r4;
- 	u8 r77;
-+	u8 rx_ant;
- 
- 	rt61pci_bbp_read(rt2x00dev, 3, &r3);
- 	rt61pci_bbp_read(rt2x00dev, 4, &r4);
- 	rt61pci_bbp_read(rt2x00dev, 77, &r77);
-+
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
-+	rx_ant = !!(rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED) & 2);
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
- 
--	if (rt2x00_get_field16(eeprom, EEPROM_NIC_ENABLE_DIVERSITY) &&
--	    rt2x00_get_field16(eeprom, EEPROM_NIC_TX_DIVERSITY)) {
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
--		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 1);
--		rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 1);
--	} else if (rt2x00_get_field16(eeprom, EEPROM_NIC_ENABLE_DIVERSITY)) {
--		if (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED) >= 2) {
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
--			rt61pci_bbp_write(rt2x00dev, 77, r77);
--		}
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 1);
--	} else if (!rt2x00_get_field16(eeprom, EEPROM_NIC_ENABLE_DIVERSITY) &&
--		   rt2x00_get_field16(eeprom, EEPROM_NIC_TX_DIVERSITY)) {
--		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
--		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
-+	/*
-+	 * Configure the TX antenna.
-+	 */
-+	switch (ant->tx) {
-+	case ANTENNA_A:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
-+		break;
-+	}
- 
--		switch (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED)) {
--		case 0:
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 1);
--			break;
--		case 1:
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 0);
--			break;
--		case 2:
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 0);
--			break;
--		case 3:
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 1);
--			break;
--		}
--	} else if (!rt2x00_get_field16(eeprom, EEPROM_NIC_ENABLE_DIVERSITY) &&
--		   !rt2x00_get_field16(eeprom, EEPROM_NIC_TX_DIVERSITY)) {
-+	/*
-+	 * Configure the RX antenna.
-+	 */
-+	switch (ant->rx) {
-+	case ANTENNA_A:
-+		rt61pci_config_antenna_2529_rx(rt2x00dev, 0, rx_ant);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt61pci_config_antenna_2529_rx(rt2x00dev, 1, rx_ant);
-+		break;
-+	}
-+
-+	/*
-+	 * FIXME: We are using the default antenna setup to
-+	 * determine the remaining settings. This because we
-+	 * need to know what the EEPROM indicated.
-+	 * It is however unclear if this is required, and overall
-+	 * using the default antenna settings here is incorrect
-+	 * since mac80211 might have told us to use fixed settings.
-+	 */
-+	if (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
-+		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-+	else
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
- 
--		switch (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED)) {
--		case 0:
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
--			rt61pci_bbp_write(rt2x00dev, 77, r77);
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 1);
--			break;
--		case 1:
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
--			rt61pci_bbp_write(rt2x00dev, 77, r77);
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 0);
--			break;
--		case 2:
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
--			rt61pci_bbp_write(rt2x00dev, 77, r77);
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 0, 0);
--			break;
--		case 3:
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
--			rt61pci_bbp_write(rt2x00dev, 77, r77);
--			rt61pci_config_antenna_2529_rx(rt2x00dev, 1, 1);
--			break;
--		}
--	}
-+	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
-+			  (rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY) &&
-+			  (rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY));
- 
-+	rt61pci_bbp_write(rt2x00dev, 77, r77);
- 	rt61pci_bbp_write(rt2x00dev, 3, r3);
- 	rt61pci_bbp_write(rt2x00dev, 4, r4);
- }
-@@ -2019,6 +2054,12 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	/*
-+	 * Determine number of antenna's.
-+	 */
-+	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_NUM) == 2)
-+		__set_bit(CONFIG_DOUBLE_ANTENNA, &rt2x00dev->flags);
-+
-+	/*
- 	 * Identify default antenna configuration.
- 	 */
- 	rt2x00dev->default_ant.tx =
-@@ -2033,12 +2074,6 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags);
- 
- 	/*
--	 * Determine number of antenna's.
--	 */
--	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_NUM) == 2)
--		__set_bit(CONFIG_DOUBLE_ANTENNA, &rt2x00dev->flags);
--
--	/*
- 	 * Detect if this device has an hardware controlled radio.
- 	 */
- #ifdef CONFIG_RT61PCI_RFKILL
-@@ -2066,6 +2101,38 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags);
- 
- 	/*
-+	 * When working with a RF2529 chip without double antenna
-+	 * the antenna settings should be gathered from the NIC
-+	 * eeprom word.
-+	 */
-+	if (rt2x00_rf(&rt2x00dev->chip, RF2529) &&
-+	    !test_bit(CONFIG_DOUBLE_ANTENNA, &rt2x00dev->flags)) {
-+		switch (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED)) {
-+		case 0:
-+			rt2x00dev->default_ant.tx = ANTENNA_B;
-+			rt2x00dev->default_ant.rx = ANTENNA_A;
-+			break;
-+		case 1:
-+			rt2x00dev->default_ant.tx = ANTENNA_B;
-+			rt2x00dev->default_ant.rx = ANTENNA_B;
-+			break;
-+		case 2:
-+			rt2x00dev->default_ant.tx = ANTENNA_A;
-+			rt2x00dev->default_ant.rx = ANTENNA_A;
-+			break;
-+		case 3:
-+			rt2x00dev->default_ant.tx = ANTENNA_A;
-+			rt2x00dev->default_ant.rx = ANTENNA_B;
-+			break;
-+		}
-+
-+		if (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_DIVERSITY))
-+			rt2x00dev->default_ant.tx = ANTENNA_SW_DIVERSITY;
-+		if (rt2x00_get_field16(eeprom, EEPROM_NIC_ENABLE_DIVERSITY))
-+			rt2x00dev->default_ant.rx = ANTENNA_SW_DIVERSITY;
-+	}
-+
-+	/*
- 	 * Store led settings, for correct led behaviour.
- 	 * If the eeprom value is invalid,
- 	 * switch to default led mode.
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index 6721d7d..ba51016 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -1083,7 +1083,7 @@ struct hw_pairwise_ta_entry {
- /*
-  * R77
-  */
--#define BBP_R77_PAIR			FIELD8(0x03)
-+#define BBP_R77_TX_ANTENNA		FIELD8(0x03)
- 
- /*
-  * RF registers
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 048f9f4..d1119e3 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -408,6 +408,29 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
- 
-+	/*
-+	 * Configure the TX antenna.
-+	 */
-+	switch (ant->tx) {
-+	case ANTENNA_A:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
-+		break;
-+	}
-+
-+	/*
-+	 * Configure the RX antenna.
-+	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
-@@ -417,11 +440,6 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	case ANTENNA_A:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
--
--		if (rt2x00dev->curr_hwmode == HWMODE_A)
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
--		else
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -433,11 +451,6 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	case ANTENNA_B:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, 0);
--
--		if (rt2x00dev->curr_hwmode == HWMODE_A)
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
--		else
--			rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
- 		break;
- 	}
- 
-@@ -461,13 +474,35 @@ static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
- 			  !test_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags));
- 
-+	/*
-+	 * Configure the TX antenna.
-+	 */
-+	switch (ant->tx) {
-+	case ANTENNA_A:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 0);
-+		break;
-+	case ANTENNA_SW_DIVERSITY:
-+	case ANTENNA_HW_DIVERSITY:
-+		/*
-+		 * NOTE: We should never come here because rt2x00lib is
-+		 * supposed to catch this and send us the correct antenna
-+		 * explicitely. However we are nog going to bug about this.
-+		 * Instead, just default to antenna B.
-+		 */
-+	case ANTENNA_B:
-+		rt2x00_set_field8(&r77, BBP_R77_TX_ANTENNA, 3);
-+		break;
-+	}
-+
-+	/*
-+	 * Configure the RX antenna.
-+	 */
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 2);
- 		break;
- 	case ANTENNA_A:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt2x00_set_field8(&r77, BBP_R77_PAIR, 3);
- 		break;
- 	case ANTENNA_SW_DIVERSITY:
- 		/*
-@@ -478,7 +513,6 @@ static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 		 */
- 	case ANTENNA_B:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA, 1);
--		rt2x00_set_field8(&r77, BBP_R77_PAIR, 0);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
-index f095151..13f479c 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.h
-+++ b/drivers/net/wireless/rt2x00/rt73usb.h
-@@ -719,7 +719,7 @@ struct hw_pairwise_ta_entry {
- /*
-  * R77
-  */
--#define BBP_R77_PAIR			FIELD8(0x03)
-+#define BBP_R77_TX_ANTENNA		FIELD8(0x03)
- 
- /*
-  * RF registers
--- 
-1.5.3.4
-
+On Fri, Oct 12, 2007 at 02:32:58PM +0200, Christoph Hellwig wrote:
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-3945.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-3945.c	2007-10-12 10:57:09.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-3945.c	2007-10-12 10:59:47.000000000 +0200
+> @@ -698,21 +698,6 @@ u8 iwl3945_sync_sta(struct iwl_priv *pri
+>  	return sta_id;
+>  }
+>  
+> -void iwl_hw_card_show_info(struct iwl_priv *priv)
+> -{
+> -	IWL_DEBUG_INFO("3945ABG HW Version %u.%u.%u\n",
+> -		       ((priv->eeprom.board_revision >> 8) & 0x0F),
+> -		       ((priv->eeprom.board_revision >> 8) >> 4),
+> -		       (priv->eeprom.board_revision & 0x00FF));
+> -
+> -	IWL_DEBUG_INFO("3945ABG PBA Number %.*s\n",
+> -		       (int)sizeof(priv->eeprom.board_pba_number),
+> -		       priv->eeprom.board_pba_number);
+> -
+> -	IWL_DEBUG_INFO("EEPROM_ANTENNA_SWITCH_TYPE is 0x%02X\n",
+> -		       priv->eeprom.antenna_switch_type);
+> -}
+> -
+>  static int iwl3945_nic_set_pwr_src(struct iwl_priv *priv, int pwr_max)
+>  {
+>  	int rc;
+> @@ -1761,7 +1746,7 @@ void iwl3945_reg_txpower_periodic(struct
+>  			   &priv->thermal_periodic, REG_RECALIB_PERIOD * HZ);
+>  }
+>  
+> -void iwl3945_bg_reg_txpower_periodic(struct work_struct *work)
+> +static void iwl3945_bg_reg_txpower_periodic(struct work_struct *work)
+>  {
+>  	struct iwl_priv *priv = container_of(work, struct iwl_priv,
+>  					     thermal_periodic.work);
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-3945.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2007-10-12 10:59:26.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-3945.h	2007-10-12 10:59:29.000000000 +0200
+> @@ -34,7 +34,6 @@ extern int iwl_eeprom_aqcuire_semaphore(
+>  extern __le32 iwl3945_get_antenna_flags(const struct iwl_priv *priv);
+>  extern int iwl3945_init_hw_rate_table(struct iwl_priv *priv);
+>  extern void iwl3945_reg_txpower_periodic(struct iwl_priv *priv);
+> -extern void iwl3945_bg_reg_txpower_periodic(struct work_struct *work);
+>  extern int iwl3945_txpower_set_from_eeprom(struct iwl_priv *priv);
+>  extern u8 iwl3945_sync_sta(struct iwl_priv *priv, int sta_id,
+>  		 u16 tx_rate, u8 flags);
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-4965.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-10-12 10:57:28.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-10-12 10:58:45.000000000 +0200
+> @@ -45,6 +45,8 @@
+>  #include "iwl-4965.h"
+>  #include "iwl-helpers.h"
+>  
+> +static void iwl_hw_card_show_info(struct iwl_priv *priv);
+> +
+>  #define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
+>  	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,      \
+>  				    IWL_RATE_SISO_##s##M_PLCP, \
+> @@ -2750,7 +2752,7 @@ int iwl_hw_txq_attach_buf_to_tfd(struct 
+>  	return 0;
+>  }
+>  
+> -void iwl_hw_card_show_info(struct iwl_priv *priv)
+> +static void iwl_hw_card_show_info(struct iwl_priv *priv)
+>  {
+>  	u16 hw_version = priv->eeprom.board_revision_4965;
+>  
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-12 11:00:11.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-12 11:06:06.000000000 +0200
+> @@ -68,6 +68,9 @@
+>  u32 iwl_debug_level;
+>  #endif
+>  
+> +static int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+> +				  struct iwl_tx_queue *txq);
+> +
+>  /******************************************************************************
+>   *
+>   * module boiler plate
+> @@ -80,7 +83,7 @@ int iwl_param_debug;
+>  int iwl_param_disable;      /* def: enable radio */
+>  int iwl_param_antenna;      /* def: 0 = both antennas (use diversity) */
+>  int iwl_param_hwcrypto;     /* def: using software encryption */
+> -int iwl_param_qos_enable = 1;
+> +static int iwl_param_qos_enable = 1;
+>  int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+>  
+>  /*
+> @@ -118,7 +121,7 @@ MODULE_VERSION(DRV_VERSION);
+>  MODULE_AUTHOR(DRV_COPYRIGHT);
+>  MODULE_LICENSE("GPL");
+>  
+> -__le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr)
+> +static __le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr)
+>  {
+>  	u16 fc = le16_to_cpu(hdr->frame_control);
+>  	int hdr_len = ieee80211_get_hdrlen(fc);
+> @@ -694,7 +697,7 @@ static int iwl_enqueue_hcmd(struct iwl_p
+>  	return ret ? ret : idx;
+>  }
+>  
+> -int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+> +static int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+>  {
+>  	int ret;
+>  
+> @@ -718,7 +721,7 @@ int iwl_send_cmd_async(struct iwl_priv *
+>  	return 0;
+>  }
+>  
+> -int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+> +static int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+>  {
+>  	int cmd_idx;
+>  	int ret;
+> @@ -2198,7 +2201,7 @@ int iwl_is_network_packet(struct iwl_pri
+>  
+>  #define TX_STATUS_ENTRY(x) case TX_STATUS_FAIL_ ## x: return #x
+>  
+> -const char *iwl_get_tx_fail_reason(u32 status)
+> +static const char *iwl_get_tx_fail_reason(u32 status)
+>  {
+>  	switch (status & TX_STATUS_MSK) {
+>  	case TX_STATUS_SUCCESS:
+> @@ -3354,7 +3357,7 @@ static void iwl_txstatus_to_ieee(struct 
+>   * new 'R' index need to be reclaimed. As result, some free space
+>   * forms. If there is enough free space (> low mark), wake Tx queue.
+>   */
+> -int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+> +static int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+>  {
+>  	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+>  	struct iwl_queue *q = &txq->q;
+> @@ -3994,7 +3997,7 @@ static inline __le32 iwl_dma_addr2rbd_pt
+>   * also updates the memory address in the firmware to reference the new
+>   * target buffer.
+>   */
+> -int iwl_rx_queue_restock(struct iwl_priv *priv)
+> +static int iwl_rx_queue_restock(struct iwl_priv *priv)
+>  {
+>  	struct iwl_rx_queue *rxq = &priv->rxq;
+>  	struct list_head *element;
+> @@ -4084,7 +4087,7 @@ void iwl_rx_replenish(void *data)
+>   * This free routine walks the list of POOL entries and if SKB is set to
+>   * non NULL it is unmapped and freed
+>   */
+> -void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+> +static void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+>  {
+>  	int i;
+>  	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
+> @@ -4327,7 +4330,7 @@ static void iwl_rx_handle(struct iwl_pri
+>  	iwl_rx_queue_restock(priv);
+>  }
+>  
+> -int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+> +static int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+>  				  struct iwl_tx_queue *txq)
+>  {
+>  	u32 reg = 0;
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-12 11:01:10.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-12 11:06:19.000000000 +0200
+> @@ -68,6 +68,9 @@
+>  u32 iwl_debug_level;
+>  #endif
+>  
+> +static int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+> +				  struct iwl_tx_queue *txq);
+> +
+>  /******************************************************************************
+>   *
+>   * module boiler plate
+> @@ -80,7 +83,7 @@ int iwl_param_debug;
+>  int iwl_param_disable;      /* def: enable radio */
+>  int iwl_param_antenna;      /* def: 0 = both antennas (use diversity) */
+>  int iwl_param_hwcrypto;     /* def: using software encryption */
+> -int iwl_param_qos_enable = 1;
+> +static int iwl_param_qos_enable = 1;
+>  int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+>  
+>  /*
+> @@ -694,7 +697,7 @@ static int iwl_enqueue_hcmd(struct iwl_p
+>  	return ret ? ret : idx;
+>  }
+>  
+> -int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+> +static int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+>  {
+>  	int ret;
+>  
+> @@ -718,7 +721,7 @@ int iwl_send_cmd_async(struct iwl_priv *
+>  	return 0;
+>  }
+>  
+> -int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+> +static int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+>  {
+>  	int cmd_idx;
+>  	int ret;
+> @@ -2274,7 +2277,7 @@ int iwl_is_network_packet(struct iwl_pri
+>  
+>  #define TX_STATUS_ENTRY(x) case TX_STATUS_FAIL_ ## x: return #x
+>  
+> -const char *iwl_get_tx_fail_reason(u32 status)
+> +static const char *iwl_get_tx_fail_reason(u32 status)
+>  {
+>  	switch (status & TX_STATUS_MSK) {
+>  	case TX_STATUS_SUCCESS:
+> @@ -4315,7 +4318,7 @@ static inline __le32 iwl_dma_addr2rbd_pt
+>   * also updates the memory address in the firmware to reference the new
+>   * target buffer.
+>   */
+> -int iwl_rx_queue_restock(struct iwl_priv *priv)
+> +static int iwl_rx_queue_restock(struct iwl_priv *priv)
+>  {
+>  	struct iwl_rx_queue *rxq = &priv->rxq;
+>  	struct list_head *element;
+> @@ -4405,7 +4408,7 @@ void iwl_rx_replenish(void *data)
+>   * This free routine walks the list of POOL entries and if SKB is set to
+>   * non NULL it is unmapped and freed
+>   */
+> -void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+> +static void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+>  {
+>  	int i;
+>  	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
+> @@ -4651,7 +4654,7 @@ static void iwl_rx_handle(struct iwl_pri
+>  	iwl_rx_queue_restock(priv);
+>  }
+>  
+> -int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+> +static int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+>  				  struct iwl_tx_queue *txq)
+>  {
+>  	u32 reg = 0;
+> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwlwifi.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwlwifi.h	2007-10-12 10:58:56.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwlwifi.h	2007-10-12 11:07:09.000000000 +0200
+> @@ -87,7 +87,6 @@ extern int iwl_param_mode;
+>  extern int iwl_param_disable;
+>  extern int iwl_param_antenna;
+>  extern int iwl_param_hwcrypto;
+> -extern int iwl_param_qos_enable;
+>  extern int iwl_param_queues_num;
+>  
+>  enum iwl_antenna {
+> @@ -580,7 +579,6 @@ struct iwl_driver_hw_info {
+>  struct iwl_addsta_cmd;
+>  extern int iwl_send_add_station(struct iwl_priv *priv,
+>  				struct iwl_addsta_cmd *sta, u8 flags);
+> -extern const char *iwl_get_tx_fail_reason(u32 status);
+>  extern u8 iwl_add_station(struct iwl_priv *priv, const u8 *bssid,
+>  			  int is_ap, u8 flags);
+>  extern int iwl_is_network_packet(struct iwl_priv *priv,
+> @@ -597,8 +595,6 @@ static inline void iwl_report_frame(stru
+>  				    struct ieee80211_hdr *header,
+>  				    int group100) {}
+>  #endif
+> -extern int iwl_tx_queue_update_write_ptr(struct iwl_priv *priv,
+> -					 struct iwl_tx_queue *txq);
+>  extern void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+>  					   struct iwl_rx_mem_buffer *rxb,
+>  					   void *data, short len,
+> @@ -606,7 +602,6 @@ extern void iwl_handle_data_packet_monit
+>  					   u16 phy_flags);
+>  extern int is_duplicate_packet(struct iwl_priv *priv, struct ieee80211_hdr
+>  			       *header);
+> -extern void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
+>  extern int iwl_rx_queue_alloc(struct iwl_priv *priv);
+>  extern void iwl_rx_queue_reset(struct iwl_priv *priv,
+>  			       struct iwl_rx_queue *rxq);
+> @@ -614,15 +609,10 @@ extern int iwl_calc_db_from_ratio(int si
+>  extern int iwl_calc_sig_qual(int rssi_dbm, int noise_dbm);
+>  extern int iwl_tx_queue_init(struct iwl_priv *priv,
+>  			     struct iwl_tx_queue *txq, int count, u32 id);
+> -extern int iwl_rx_queue_restock(struct iwl_priv *priv);
+>  extern void iwl_rx_replenish(void *data);
+>  extern void iwl_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq);
+>  extern int iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u16 len,
+>  			    const void *data);
+> -extern int __must_check iwl_send_cmd_async(struct iwl_priv *priv,
+> -		struct iwl_host_cmd *cmd);
+> -extern int __must_check iwl_send_cmd_sync(struct iwl_priv *priv,
+> -		struct iwl_host_cmd *cmd);
+>  extern int __must_check iwl_send_cmd(struct iwl_priv *priv,
+>  		struct iwl_host_cmd *cmd);
+>  extern unsigned int iwl_fill_beacon_frame(struct iwl_priv *priv,
+> @@ -634,7 +624,9 @@ extern int iwl_send_statistics_request(s
+>  extern void iwl_set_decrypted_flag(struct iwl_priv *priv, struct sk_buff *skb,
+>  				   u32 decrypt_res,
+>  				   struct ieee80211_rx_status *stats);
+> +#if IWL == 4965
+>  extern __le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr);
+> +#endif
+>  
+>  extern const u8 BROADCAST_ADDR[ETH_ALEN];
+>  
+> @@ -672,7 +664,6 @@ extern void iwl_hw_cancel_deferred_work(
+>  extern int iwl_hw_rxq_stop(struct iwl_priv *priv);
+>  extern int iwl_hw_set_hw_setting(struct iwl_priv *priv);
+>  extern int iwl_hw_nic_init(struct iwl_priv *priv);
+> -extern void iwl_hw_card_show_info(struct iwl_priv *priv);
+>  extern int iwl_hw_nic_stop_master(struct iwl_priv *priv);
+>  extern void iwl_hw_txq_ctx_free(struct iwl_priv *priv);
+>  extern void iwl_hw_txq_ctx_stop(struct iwl_priv *priv);
+> @@ -709,5 +700,7 @@ extern int iwl4965_get_temperature(const
+>  extern u8 iwl_hw_find_station(struct iwl_priv *priv, const u8 *bssid);
+>  
+>  extern int iwl_hw_channel_switch(struct iwl_priv *priv, u16 channel);
+> +#if IWL == 4965
+>  extern int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index);
+>  #endif
+> +#endif
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
