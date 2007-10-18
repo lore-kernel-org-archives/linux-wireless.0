@@ -1,90 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:8560 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493AbXJPA1l (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35994 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763726AbXJRMja (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 20:27:41 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3355021pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 17:27:41 -0700 (PDT)
-Message-ID: <43e72e890710151727s74beb476h4e5d49fe6840117c@mail.gmail.com> (sfid-20071016_012746_155401_E2CF12A0)
-Date: Mon, 15 Oct 2007 20:27:40 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John Daiker" <daikerjohn@gmail.com>
-Subject: Re: Ath5k compile error in wireless-2.6.git
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4713EBCA.8010700@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4713EBCA.8010700@gmail.com>
+	Thu, 18 Oct 2007 08:39:30 -0400
+Subject: Re: Mode/Channel/Bitrate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <43e72e890710170715ibeee99eja865dc3291e7e37d@mail.gmail.com> (sfid-20071017_151536_588394_24595448)
+References: <1192222110.4770.81.camel@johannes.berg>
+	 <200710161640.54332.flamingice@sourmilk.net>
+	 <1192608587.8841.2.camel@johannes.berg>
+	 <43e72e890710170715ibeee99eja865dc3291e7e37d@mail.gmail.com>
+	 (sfid-20071017_151536_588394_24595448)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WFAOWVFvPXz5ZZ8XpIxI"
+Date: Thu, 18 Oct 2007 14:40:32 +0200
+Message-Id: <1192711232.15285.13.camel@johannes.berg> (sfid-20071018_133947_166474_15A271A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/07, John Daiker <daikerjohn@gmail.com> wrote:
-> John,
->
-> I just checked out the wireless-2.6.git tree from Kernel.org to test the
-> new ath5k driver. I get the following compile error on a 'vanilla'
-> git-clone.
->
-> CC [M] drivers/net/wireless/ath5k/base.o
-> In file included from drivers/net/wireless/ath5k/base.h:49,
-> from drivers/net/wireless/ath5k/base.c:58:
-> drivers/net/wireless/ath5k/ath5k.h:213: error: redeclaration of
-> enumerator 'MODE_ATHEROS_TURBO'
-> include/net/mac80211.h:105: error: previous definition of
-> 'MODE_ATHEROS_TURBO' was here
-> drivers/net/wireless/ath5k/ath5k.h:215: error: redeclaration of
-> enumerator 'MODE_ATHEROS_TURBOG'
-> include/net/mac80211.h:107: error: previous definition of
-> 'MODE_ATHEROS_TURBOG' was here
-> drivers/net/wireless/ath5k/base.c: In function 'ath_configure_filter':
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_PROMISC_IN_BSS'
-> undeclared (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: (Each undeclared
-> identifier is reported only once
-> drivers/net/wireless/ath5k/base.c:1419: error: for each function it
-> appears in.)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_ALLMULTI' undeclared
-> (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_FCSFAIL' undeclared
-> (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_PLCPFAIL' undeclared
-> (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_CONTROL' undeclared
-> (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_OTHER_BSS'
-> undeclared (first use in this function)
-> drivers/net/wireless/ath5k/base.c:1419: error: 'FIF_BCN_PRBRESP_PROMISC'
-> undeclared (first use in this function)
-> drivers/net/wireless/ath5k/base.c: At top level:
-> drivers/net/wireless/ath5k/base.c:1479: warning: 'enum set_key_cmd'
-> declared inside parameter list
-> drivers/net/wireless/ath5k/base.c:1479: warning: its scope is only this
-> definition or declaration, which is probably not what you want
-> drivers/net/wireless/ath5k/base.c:1477: error: parameter 2 ('cmd') has
-> incomplete type
-> drivers/net/wireless/ath5k/base.c:1583: error: unknown field 'start'
-> specified in initializer
-> drivers/net/wireless/ath5k/base.c:1584: warning: initialization from
-> incompatible pointer type
-> drivers/net/wireless/ath5k/base.c:1589: error: unknown field
-> 'configure_filter' specified in initializer
-> drivers/net/wireless/ath5k/base.c:1589: warning: initialization from
-> incompatible pointer type
-> drivers/net/wireless/ath5k/base.c:1590: warning: initialization from
-> incompatible pointer type
-> make[4]: *** [drivers/net/wireless/ath5k/base.o] Error 1
-> make[3]: *** [drivers/net/wireless/ath5k] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
->
->
-> Maybe you can shed some light?
 
-Please use the 'everything' branch, not the 'ath5k' branch. This is
-reflected on the wiki:
+--=-WFAOWVFvPXz5ZZ8XpIxI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://linuxwireless.org/en/users/Drivers/ath5k
+On Wed, 2007-10-17 at 10:15 -0400, Luis R. Rodriguez wrote:
+> On 10/17/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2007-10-16 at 16:40 -0400, Michael Wu wrote:
+> > > On Friday 12 October 2007 16:48:30 Johannes Berg wrote:
+> > > >  (a) the driver registers which channel center frequencies it can
+> > > >      operate with, it could in theory just be a range (e.g. 2400-25=
+00
+> > > >      MHz) or more practically be list of center frequencies.
+> > > List would be best, but..
+> > >
+> > > >      Just
+> > > >      contains frequencies and possibly hardware dependent values fo=
+r the
+> > > >      frequency. This is done in "bands", something like
+> > > >      FREQUENCY_BAND_2_4GHZ and FREQUENCY_BAND_5GHZ, "bands" replace=
+ the
+> > > >      current "modes".
+> > > Being able to just register frequency bands would work for many (but =
+not all)
+> > > drivers out there and would be more convenient than listing everythin=
+g.
+> >
+> > Yeah but it doesn't help when the user wants to enable/disable certain
+> > channels or the regulatory code needs to, so it seems we need to go wit=
+h
+> > a list.
+>=20
+> The regulatory work can just iterate over the currently established
+> channels for each wiphy. Who defines those or how is not important to
+> the regulatory work. I'm not sure why the range approach would not
+> work here. A card usually works on a range of frequencies anyway.
 
-  Luis
+Right. But the regulatory code may need to have power restrictions
+different on different channels and generally wants to be able to
+restrict things for each channel, so it'd be good to have the list
+defined right away by the driver. It seems that if we don't put this
+into the driver but rather have a frequency range there, we need to
+allocate an array of channels later for this work and that's not needed
+if we start out with an array of channels.
+
+johannes
+
+--=-WFAOWVFvPXz5ZZ8XpIxI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxdUP6Vg1VMiehFYAQIOBA//S08iCCXY/lYtwI3iL6aIcbt/bIuHZDt8
+oFOaEwfSlV6bTfYMKPU2Yb+0E+b5yE44B4kdpWI2jO+NLeJBamG3AN8pFqi43nO7
+HBPYQdCIeSMYW7vth+BIMfJLDWpUjMDvEG6l9bLvBYlrCsDyv7xTKqZb4/cTDomX
+WWJFMU7IzHZR0USvmskGn5o3OrT5S1Uk8fwfVTknDe3nYkIz9Z4RU4sIIpPmdCsv
+Y7a+Z7zlqBgleMLLhTXFk/7X9mdOMHvZhmpzOmnC01PeBbXaSZYpSljdhAwP1rD6
+zVhYV6VYAl3J0doSaQIgs0l4OWTT8BtEOrX/4D+VFeJIqVOlaPy5LZvsgLks7HtK
+/5rB5hnZCGxnuHBDb9lT6jM5o2hZii6pbFNYOEPeUNKSwPiImUbOQXbASeGG2Y3V
+BoOkNk08TKKySCaXlnj/JA+nySDT2t7YUrTQHLBOVXLG2oeIWDHTr6F7a0i2h9A7
+dM+aJqs3mubk70ZPp1zISQlDVpmd9a7WsPdLj0sIb/LY1YsGYgYMkKKiVZGyTbGK
+tD0xJEPqXk/w/KFOMtA0qVXzXKRp0zuenwhafh669irpBRlumtLo5Cq0r1gymIMH
+4PMVHa5ArPnH+dLxUVnRCnB3wB3rI3mWCU+wdUxlQZmIYFDziVsOvUa8EUpUhBkV
+3IV1wU3sZqY=
+=umhP
+-----END PGP SIGNATURE-----
+
+--=-WFAOWVFvPXz5ZZ8XpIxI--
+
