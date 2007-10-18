@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59905
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753941AbXJEN5R (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51672
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751093AbXJREQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 09:57:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: mac80211: What is get_sequence_counter?
-Date: Fri, 5 Oct 2007 15:56:27 +0200
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200710051556.27401.mb@bu3sch.de> (sfid-20071005_145731_918120_FBA6760A)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Thu, 18 Oct 2007 00:16:34 -0400
+Date: Wed, 17 Oct 2007 21:16:32 -0700 (PDT)
+Message-Id: <20071017.211632.40832065.davem@davemloft.net> (sfid-20071018_051638_872167_D50743A4)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: only honor IW_SCAN_THIS_ESSID in STA, IBSS,
+ and AP modes
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <11926328942540-git-send-email-linville@tuxdriver.com>
+References: <200710162329.55966.flamingice@sourmilk.net>
+	<20071017145315.GC5744@tuxdriver.com>
+	<11926328942540-git-send-email-linville@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What is the get_sequence_counter callback for?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 17 Oct 2007 10:54:54 -0400
 
-	/* For devices that have internal sequence counters, allow 802.11
-	 * code to access the current value of a counter */
-	int (*get_sequence_counter)(struct ieee80211_hw *hw,
-				    u8* addr, u8 keyidx, u8 txrx,
-				    u32* iv32, u16* iv16);
+> The previous IW_SCAN_THIS_ESSID patch left a hole allowing scan
+> requests on interfaces in inappropriate modes.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-It doesn't seem to be used in current mac80211 code.
-It seems that this is to fetch the current initial values.
-Is that correct?
-Who is supposed to use this callback? If it's unused, let's remove
-it please. The documentation for it sucks anyway. :)
+John I've pulled from your tree and added this patch on top.
 
--- 
-Greetings Michael.
+Thanks!
