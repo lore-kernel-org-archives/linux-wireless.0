@@ -1,104 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:59205 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758507AbXJLGsU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45353 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758436AbXJRS4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 02:48:20 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1490461pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 23:48:18 -0700 (PDT)
-Message-ID: <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com> (sfid-20071012_074827_901304_670C21D4)
-Date: Fri, 12 Oct 2007 06:48:17 +0000
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Patrick McHardy" <kaber@trash.net>
-Subject: Re: [Oops] EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23, latest wireless git)
-Cc: "Frank de Lange" <lkml-f@unternet.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <470EFD24.7020206@trash.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071011230030.GA6725@unternet.org> <470EFD24.7020206@trash.net>
+	Thu, 18 Oct 2007 14:56:00 -0400
+Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240710181146t111bd63ek97cf0c102d17369@mail.gmail.com> (sfid-20071018_194612_884567_BC7A460B)
+References: <11926651061687-git-send-email-tomas.winkler@intel.com>
+	 <1192726084.15285.31.camel@johannes.berg>
+	 <1ba2fa240710181146t111bd63ek97cf0c102d17369@mail.gmail.com>
+	 (sfid-20071018_194612_884567_BC7A460B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TAZ9vpiHkOmim8NjcB6P"
+Date: Thu, 18 Oct 2007 20:57:07 +0200
+Message-Id: <1192733827.15285.39.camel@johannes.berg> (sfid-20071018_195605_274405_484C1032)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can you plz run ath_info tool found in madwifi/tools directory and
-post here the output ???
 
-2007/10/12, Patrick McHardy <kaber@trash.net>:
-> Frank de Lange wrote:
-> > Just got an Atheros-based card from eBay, stuffed it into my Thinkpad
-> > T23 (ignoring the complaints about two ethernet cards being installed)
-> > and got myself this Oops:
+--=-TAZ9vpiHkOmim8NjcB6P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2007-10-18 at 20:46 +0200, Tomas Winkler wrote:
+
+> > /**
+> >  * DOC: BSS Status changes
+> >  *
+> >  * Describe what is expected of driver here
+> >  */
 > >
-> > BUG: unable to handle kernel NULL pointer dereference at virtual address
-> > 00000000
-> >  [...]
-> > CPU:    0
-> >    Not tainted VLI
-> > EFLAGS: 00010246   (2.6.23-t23-01 #3)
-> > EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k]
->
->
-> I had the same Oops with the internal card of a Thinkpad T42.
-> The reason is that the rate table lookup for MODE_ATHEROS_TURBOG
-> returns NULL because the capability bit is not set. I haven't
-> tracked down the cause yet, but this patch fixes the Oops for me.
->
-> On a related issue, the same card can receive packets fine,
-> but all packets sent are received with the first 16 bytes of
-> ethernet and IP header missing (the remaining data is fine).
-> I didn't find the cause for this either, the packet appears
-> to be fine up to the tx function. Anyone have a hint where to
-> continue looking? Could this be related to the missing
-> capability bit and an incorrect rate table being used?
->
-> lspci -vvv:
->
-> 02:02.0 Ethernet controller: Atheros Communications, Inc. AR5212
-> 802.11abg NIC (rev 01)
->         Subsystem: AMBIT Microsystem Corp. Unknown device 0408
->         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV+ VGASnoop-
-> ParErr- Stepping- SERR+ FastB2B-
->         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR-
->         Interrupt: pin A routed to IRQ 11
->         Region 0: Memory at c0210000 (32-bit, non-prefetchable) [size=64K]
->         Capabilities: [44] Power Management version 2
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
-> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                 Status: D0 PME-Enable- DSel=0 DScale=2 PME-
->
-> iwconfig output:
->
-> ath0      IEEE 802.11b  ESSID:"wlan"
->           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
->           Tx-Power=27 dBm
->           Retry min limit:7   RTS thr:off   Fragment thr=2346 B
->           Encryption key:[...]
->           Link Quality:0  Signal level:0  Noise level:0
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->
-> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> index ae4c5b5..8018af5 100644
-> --- a/drivers/net/wireless/ath5k/hw.c
-> +++ b/drivers/net/wireless/ath5k/hw.c
-> @@ -499,9 +499,10 @@ const struct ath5k_rate_table *ath5k_hw_get_rate_table(struct ath_hw *hal,
->  {
->         AR5K_TRACE;
->
-> +#if 0
->         if (!test_bit(mode, hal->ah_capabilities.cap_mode))
->                 return NULL;
-> -
-> +#endif
->         /* Get rate tables */
->         switch (mode) {
->         case MODE_IEEE80211A:
->
->
+>=20
+> We'll do
 
+Thanks. One of these days I'll get all the kernel-doc stuff sorted out
+and actually post the mac80211 book for inclusion.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> > This seems pretty ad-hoc to me. I think it'd be better to have them all
+> > in one structure and use just a single 'changed' parameter instead of
+> > having an extra one in the erp info. I would also use a 'flags'
+> > parameter instead of 'assoc' and then roll CTS protect and short
+> > preamble into those flags.
+> >
+> The bits in flags are possible just sometimes you need to pass a value
+> such as assoc id
+> or queue num so it will be a little mess.
+
+Oh right. I guess we need good docs as to which "changed" flag implies
+which fields have actually changed since things like "assocation status
+changed" implies that the AID is new *and* the "associated" flag is
+changed too. On the other hand, maybe we should aim for some redundancy
+and have a changed flag for each struct member and each flag?
+
+Hmm. Thinking about this a bit more, the AID can actually change when
+the association status didn't change, in the case where we associated to
+another AP. Though we actually tell the driver that we disassociated
+first, right? That makes me think we should maybe also make the BSSID
+part of this call structure instead of having it in if_conf. Hmm.
+
+> Yes we can have both valid and change bitmap to lower that burden from
+> form driver.
+
+Note that embedding the info might be a lot of work. Then again it might
+just be some code shuffling and simplification. I haven't looked at it,
+from the stuff I see here I just think it'd be worth it. Your tradeoffs
+are probably different than mine though and in either case such a
+callback is an improvement over current behaviour.
+
+johannes
+
+--=-TAZ9vpiHkOmim8NjcB6P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxesgqVg1VMiehFYAQIQKg/+Oan7GYG4evJ3ctVDsB2GI5bAQ6FFyeP1
+O2C3g3OiB+P6irhpOuP96PEKHydA6cI/cLoS7nCXuN8aNi15Y03HvDGT1YkvTp2e
+Of7v5Sz5FYCgvYXBmmFbau2DT9iulV3/w+26itL5FcdCyAylF48LkKCUYkG3bwzm
+MHjmfTnM/cnXyMY/x8D/gQr1wtNw3AvXeArEQ+JlcAR+S9RPPrUVV0W6+3eSJkAB
+6WRPmrEX3wy7l+0RYgybiHCS+CpOTtf1Cnw3nzMAOeZ61Gg50YAWrR1tPqc+G1sl
+ADPqGtpgrlknWIEwdl+MA2FSug9dylDQeohaPP3eUnlXDW0sJimUxIjfwQwgMw6w
+ZC97rn3uhQgpIGkY4qj/Yt9UcuCLnaSrgj0Kcnx/aOy6foTGaTOsSkP8QvFg+c0s
+kxXuBt8X0Ojs96Rv2fDehKYPs1dvR+dYP5IrZKWeEyogSLEBu6BsJf/BEJCvuN8k
+94HhWhjbTJ1Gqb1OnNXBCUm38us+f8ntPMv0BCo16MWwOhNtJCXuIb5rcqe9YUnF
+kV/D8nhTRPecgEDU2n6M4nSD6xgxkr9XCkL3HTZ56pNbVdvPE0NTAhRJB8Fg+Lsm
+m8m+EfDPFG9rsnqGwe+NtSCbt+GIQaBUlvjAH0qAVOPt/2erwIZN+3CuecxdiE2o
+m+AkDqeTikQ=
+=zOmI
+-----END PGP SIGNATURE-----
+
+--=-TAZ9vpiHkOmim8NjcB6P--
+
