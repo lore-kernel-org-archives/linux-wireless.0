@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27423 "EHLO mga02.intel.com"
+Received: from brick.kernel.dk ([87.55.233.238]:3488 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754639AbXJYJXG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:23:06 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 27/30] iwlwifi: Update iwlwifi version stamp to 1.1.19
-Date: Thu, 25 Oct 2007 17:15:48 +0800
-Message-Id: <11933037903508-git-send-email-yi.zhu@intel.com> (sfid-20071025_102314_008624_7F6BAEDE)
-In-Reply-To: <11933037893348-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
- <11933037613709-git-send-email-yi.zhu@intel.com>
- <1193303762680-git-send-email-yi.zhu@intel.com>
- <11933037641168-git-send-email-yi.zhu@intel.com>
- <11933037663659-git-send-email-yi.zhu@intel.com>
- <11933037674045-git-send-email-yi.zhu@intel.com>
- <11933037692766-git-send-email-yi.zhu@intel.com>
- <1193303770550-git-send-email-yi.zhu@intel.com>
- <11933037721573-git-send-email-yi.zhu@intel.com>
- <1193303773185-git-send-email-yi.zhu@intel.com>
- <11933037743841-git-send-email-yi.zhu@intel.com>
- <11933037762104-git-send-email-yi.zhu@intel.com>
- <11933037784073-git-send-email-yi.zhu@intel.com>
- <11933037794199-git-send-email-yi.zhu@intel.com>
- <11933037812209-git-send-email-yi.zhu@intel.com>
- <11933037822284-git-send-email-yi.zhu@intel.com>
- <11933037831480-git-send-email-yi.zhu@intel.com>
- <11933037851697-git-send-email-yi.zhu@intel.com>
- <11933037863641-git-send-email-yi.zhu@intel.com>
- <11933037881944-git-send-email-yi.zhu@intel.com>
- <11933037893348-git-send-email-yi.zhu@intel.com>
+	id S1756874AbXJRTni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2007 15:43:38 -0400
+Date: Thu, 18 Oct 2007 21:43:33 +0200
+From: Jens Axboe <jens.axboe@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: Rate problems with iwl3945
+Message-ID: <20071018194332.GM10674@kernel.dk> (sfid-20071018_204342_688597_8264A338)
+References: <20071018191102.GI10674@kernel.dk> <1192735782.15285.48.camel@johannes.berg> <20071018193624.GK10674@kernel.dk> <20071018194122.GL10674@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071018194122.GL10674@kernel.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On Thu, Oct 18 2007, Jens Axboe wrote:
+> On Thu, Oct 18 2007, Jens Axboe wrote:
+> > On Thu, Oct 18 2007, Johannes Berg wrote:
+> > > Hi,
+> > > 
+> > > > Copying some files I noticed it was slow, though.
+> > > 
+> > > Can you check that the right mode is selected? There's a bugfix pending
+> > > for mac80211 that makes it select 802.11b mode rather than 802.11g. I
+> > > don't remember whether I've asked this already so if I did please accept
+> > > my apology. FWIW, the fix is by me (in all fairness, the regression was
+> > > also introduced by me) titled "[PATCH v2] mac80211: fix set_channel
+> > > regression"
+> > 
+> > Indeed, it's running 802.11b. Even so, why is it switching down to 5.5M?
+> > Link quality is around 96/100, I'm sitting about a meter away from the
+> > AP right now.
+> > 
+> > So where do I find this fix?
+> 
+> Ah found it, in the wireless git repo. Testing...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 560346b..62bbde3 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -101,7 +101,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.1.18k" VD VS
-+#define IWLWIFI_VERSION "1.1.19k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 05faa0f..1f9b565 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -100,7 +100,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.1.18k" VD VS
-+#define IWLWIFI_VERSION "1.1.19k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
+That did the trick! It's now running 802.11g, rate 54 Mb/s. And
+performance is back where it should be, similar to ipw3945.
+
+Thanks a lot for the hint!
+
 -- 
-1.5.2
+Jens Axboe
+
