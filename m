@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.blueoakdb.com ([76.10.130.48]:3374 "EHLO
-	sheldon.hillsandlakes.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754449AbXJaM3E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 08:29:04 -0400
-From: Pablo Sanchez <pablo@blueoakdb.com>
-To: ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] iwl3945 in 2.6.24-rc1 dies under load
-Date: Wed, 31 Oct 2007 08:01:22 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20071031005202.GA1534@elf.ucw.cz> <1193792098.9704.16.camel@debian.sh.intel.com> <20071031110511.GA2194@elf.ucw.cz>
-In-Reply-To: <20071031110511.GA2194@elf.ucw.cz>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2683 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759663AbXJRViw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2007 17:38:52 -0400
+Date: Thu, 18 Oct 2007 17:07:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath5k: Misc cleanups
+Message-ID: <20071018210748.GE8510@tuxdriver.com> (sfid-20071018_223858_534977_2DF55053)
+References: <40f31dec0710161418m72e991b2x36428e39f0766e1c@mail.gmail.com> <4af2d03a0710161507h7fac4117k168c592dd31c7dff@mail.gmail.com> <40f31dec0710161512q78c21fbv9426817972db2d1d@mail.gmail.com> <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com> <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710310801.23005.pablo@blueoakdb.com> (sfid-20071031_122908_637263_1597DCEB)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 31 October 2007 at 7:05 am, Pavel Machek penned
-about "Re: [ipw3945-devel] iwl3945 in 2.6.24-rc1 dies under load:
+On Thu, Oct 18, 2007 at 12:34:14AM +0300, Nick Kossifidis wrote:
+> 2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > 2007/10/17, Jiri Slaby <jirislaby@gmail.com>:
+> > > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > > > Some cleanups i did today, just to get used to git etc, hope i'm doing
+> > > > > this right ;-)
+> > > >
+> > > > Patches seems to be fine, thanks for them, but your e-mailer seems to
+> > > > wrap lines and change tabs to 8 spaces in your patches, which makes it
+> > > > unmergeable...
+> > > >
+> > >
+> > > Ouch ! Sorry for that, it seems gmail did it again. Can i send them as
+> > > attachments ???
+> >
+> > Here's a guide to use gmail with mutt, then you can send as inline attachments.
+> >
+> > http://people.aapt.net.au/~adjlstrong/mutt.html
+> >
+> > Worked for me.
+> >
+> >   Luis
+> >
+> 
+> Just tried to commit from another acount (mick@ics.forth.gr) with
+> squirellmail and last one with horde, let's see how it will arive. If
+> it doesn't work i'll try with mutt and gmail...
 
-> rmmod/insmod w/o debug=, and ...huh... problem is _still_ away?!
+There was still some line-wrapping.  I fixed 1-3 by hand, but 4
+("ath5k: Maintain naming scheme") just had too many instances for me to
+fix-up.  Please do try to use mutt or another "sane" MUA in the future.
 
-At the moment I'm traveling and not using much wireless but at my
-office, I've seen problems similar to what you've seen:  under load
-the card halts transmitting, then after a one to two second halt, it
-picks up again.
+Thanks!
 
-I can reproduce the problem at will.  I just learned about collecting
-debug so once I'm back and settled in, I'll try and reproduce with
-debug.
-
-Perhaps the two problems are related ...
-
-Cheers,
+John
 -- 
-Pablo
-
+John W. Linville
+linville@tuxdriver.com
