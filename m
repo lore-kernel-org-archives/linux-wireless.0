@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ananke.telenet-ops.be ([195.130.137.78]:41609 "EHLO
-	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932AbXJMSiq (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:19593 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763120AbXJSVRc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 14:38:46 -0400
-Date: Sat, 13 Oct 2007 20:38:43 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Larry Finger <larry.finger@lwfinger.net>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Michael Buesch <mb@bu3sch.de>, linux-m68k@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [patch 7/8] b43 wireless needs <linux/io.h>
-In-Reply-To: <4710E2C6.5090302@lwfinger.net>
-Message-ID: <Pine.LNX.4.64.0710132027410.15951@anakin> (sfid-20071013_193852_317229_435FD936)
-References: <20071013123123.085686856@mail.of.borg> <20071013123414.160200918@mail.of.borg>
- <4710E2C6.5090302@lwfinger.net>
+	Fri, 19 Oct 2007 17:17:32 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] mac80211: Fix SSID matching in AP selection
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Fri, 19 Oct 2007 17:14:36 -0400
+Message-Id: <200710191714.36200.flamingice@sourmilk.net> (sfid-20071019_221736_647584_37E41D58)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 13 Oct 2007, Larry Finger wrote:
-> Geert Uytterhoeven wrote:
-> > linux/drivers/net/wireless/b43/pio.h: In function 'b43_pio_write':
-> > linux/drivers/net/wireless/b43/pio.h:89: error: implicit declaration of function 'mmiowb'
-> >
-> > linux/drivers/net/wireless/b43/phy.c: In function 'b43_phy_write':
-> > linux/drivers/net/wireless/b43/phy.c:301: error: implicit declaration of function 'mmiowb'
-> >
-> > linuxdrivers/net/wireless/b43/sysfs.c: In function 'b43_attr_interfmode_store':
-> > linuxdrivers/net/wireless/b43/sysfs.c:147: error: implicit declaration of function 'mmiowb'
-> 
-> From the distribution list for this E-mail, I presume this error occurred for m68k. Is this correct?
+The length of the SSID desired should also be compared in addition to
+the memcmp of the SSIDs.
 
-That's correct.
+Thanks to Andrea Merello <andreamrl@tiscali.it> for finding this issue.
 
-> If so, I will probably need to prepare a similar patch for b43legacy.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+This should also go to stable.
 
-I had no problems compiling b43legacy on m68k, though. Probably
-<linux/io.h> was included through some other include file.
-Of course it's safer to always #include <linux/io.h> when using I/O.
+ net/mac80211/ieee80211_sta.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-During linking, I did get a bunch of `undefined reference to `dma_*''
-errors, with both b43 and b43legacy (and a few other drivers). Probably
-they need to depend on HAS_DMA.
-I'll post separate patches for those after I've sorted them out.
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7c93f29..dd5415d 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2098,7 +2098,8 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
+ {
+ 	int tmp, hidden_ssid;
+ 
+-	if (!memcmp(ifsta->ssid, ssid, ssid_len))
++	if (ssid_len == ifsta->ssid_len &&
++	    !memcmp(ifsta->ssid, ssid, ssid_len))
+ 		return 1;
+ 
+ 	if (ifsta->flags & IEEE80211_STA_AUTO_BSSID_SEL)
 
-Gr{oetje,eeting}s,
 
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
