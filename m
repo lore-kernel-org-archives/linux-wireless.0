@@ -1,463 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iggypop2.siwnet.net ([81.216.65.12]:61803 "EHLO
-	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755621AbXJRJhy (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52908 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758232AbXJSNta (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 05:37:54 -0400
-Message-ID: <54086.80.169.182.16.1192700236.squirrel@www.dactylis.com> (sfid-20071018_103758_357150_9FFDC236)
-In-Reply-To: <200710152013.20777.IvDoorn@gmail.com>
-References: <fdqhn4$qab$1@sea.gmane.org>
-    <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com>
-    <1192448723.3349.32.camel@johannes.berg>
-    <200710152013.20777.IvDoorn@gmail.com>
-Date: Thu, 18 Oct 2007 11:37:16 +0200 (CEST)
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-From: "Marcus Better" <marcus@better.se>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: multipart/mixed;boundary="----=_20071018113716_80833"
+	Fri, 19 Oct 2007 09:49:30 -0400
+Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240710181146t111bd63ek97cf0c102d17369@mail.gmail.com> (sfid-20071018_194612_884567_BC7A460B)
+References: <11926651061687-git-send-email-tomas.winkler@intel.com>
+	 <1192726084.15285.31.camel@johannes.berg>
+	 <1ba2fa240710181146t111bd63ek97cf0c102d17369@mail.gmail.com>
+	 (sfid-20071018_194612_884567_BC7A460B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Fpg2tzGi56k8YsW1GL/k"
+Date: Fri, 19 Oct 2007 14:25:44 +0200
+Message-Id: <1192796744.4167.7.camel@johannes.berg> (sfid-20071019_144933_003455_D9436C99)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_20071018113716_80833
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
 
-[CC list trimmed.]
+--=-Fpg2tzGi56k8YsW1GL/k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo van Doorn wrote:
-> Could you enable debugfs and use attached debugfs script to create a dump
-> of the rt2x00 registers. Preferably a dump of both the rt2x00 2.0.7 and
-> 2.0.9 versions.
+On Thu, 2007-10-18 at 20:46 +0200, Tomas Winkler wrote:
 
-Here's a dump with 2.0.10 from current wireless-2.6 (kernel 2.6.23) to
-start with. However I forgot to include your mode setting patch so it
-doesn't associate. More to follow later.
+> > I think this is a bit dangerous. Above, you defined the structure membe=
+r
+> > 'changed_map' which I personally would read as "take care, in this
+> > structure the fields X, Y and Z changed over what I gave you last time"=
+.
+> > However, the way it's used here is as a 'valid' bitmap, in "In this
+> > struct, only the fields X, Y and Z are valid". This is a huge differenc=
+e
+> > if the driver happens to need multiple things at the same time, with th=
+e
+> > approach you're doing here you'd need to keep track of everything in th=
+e
+> > driver.
+> >
+> Yes we can have both valid and change bitmap to lower that burden from
+> form driver.
 
-Marcus
+Oh I just realised that I didn't read this closely enough. If you
+actually keep this structure around then we don't need a 'valid' bitmap
+at all because all info will be valid all the time. If possible, I think
+that would be much preferable, but I haven't really given much thought
+to how complex it would be to implement.
 
-------=_20071018113716_80833
-Content-Type: text/plain; name="debugfsdump.2.0.10"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="debugfsdump.2.0.10"
+johannes
 
-BBP:
-0 0x12
-1 0xf8
-2 0x02
-3 0x02
-4 0x19
-5 0x0b
-6 0x10
-7 0x00
-8 0x00
-9 0x00
-10 0x00
-11 0x04
-12 0x00
-13 0x70
-14 0x1e
-15 0x30
-16 0xac
-17 0x50
-18 0x18
-19 0xff
-20 0x1e
-21 0x18
-22 0x18
-23 0x08
-24 0x70
-25 0x40
-26 0x08
-27 0x23
-28 0x18
-29 0x18
-30 0x10
-31 0x2b
-32 0xb9
-33 0x55
-34 0x12
-35 0x50
-36 0x11
-37 0x05
-38 0x00
-39 0xc4
-40 0x02
-41 0x60
-42 0x09
-43 0x00
-44 0x4e
-45 0x00
-46 0x5f
-47 0x0a
-48 0x04
-49 0x02
-50 0x78
-51 0x45
-52 0x2e
-53 0x10
-54 0x18
-55 0x7c
-56 0x08
-57 0x10
-58 0x08
-59 0x02
-60 0x01
-61 0x6a
-62 0x00
-63 0x00
-CSR:
-0 0x00000004
-1 0x00000004
-2 0x00000000
-3 0x1df00d00
-4 0x0000a739
-5 0xa76c1400
-6 0x00001060
-7 0x00000000
-8 0x000fff86
-9 0x00000980
-10 0x37b18000
-11 0x070414a5
-12 0x3e803e80
-13 0x000000a0
-14 0x0000000b
-15 0x00000000
-16 0xf08b2c16
-17 0x0000009d
-18 0x001e000a
-19 0x013a0032
-20 0x000005a0
-21 0x00000020
-22 0x00000000
-23 0x00000000
-24 0x00000000
-25 0x01605b62
-26 0x0c010c2c
-27 0x37b28000
-28 0x379b5000
-29 0x37b20000
-30 0x379b1000
-31 0x00000000
-32 0x0000007e
-33 0x00000c2c
-34 0x37b18000
-35 0x000003b8
-36 0xb3aab3af
-37 0x86870885
-38 0x8c8d8b8a
-39 0x0000000f
-40 0x00000000
-41 0x00000000
-42 0x0000009c
-43 0x00000246
-44 0x00000022
-45 0x0003ffff
-46 0x00000000
-47 0x00000000
-48 0x00000000
-49 0x3f3b3100
-50 0x00020002
-51 0x00000002
-52 0x00020002
-53 0x00000002
-54 0x000001fe
-55 0x1ab83f21
-56 0x00213223
-57 0x00000518
-58 0x9a009a11
-59 0x00000000
-60 0x00003f00
-61 0x14063611
-62 0x00031e46
-63 0x0000c78f
-64 0x37b18084
-65 0x37b28000
-66 0x37b201e4
-67 0x379b5000
-68 0x00000020
-69 0x00000000
-70 0x00000001
-71 0x000000aa
-72 0x00000001
-73 0x00000001
-74 0x00000000
-75 0x0002974b
-76 0x000500f0
-77 0x00000040
-78 0x000000f0
-79 0x00700400
-80 0x00380401
-81 0x00140402
-82 0x000a8403
-83 0x7038140a
-84 0x1d21252d
-85 0x1919191d
-86 0x37b28000
-87 0x821a8202
-88 0x00000003
-89 0x00000000
-90 0x00000000
-91 0x00000000
-92 0x76543210
-EEPROM:
-0 0x2560
-1 0xffff
-2 0x0d00
-3 0x1df0
-4 0xa739
-5 0x0201
-6 0x1814
-7 0x0601
-8 0x0000
-9 0x6146
-10 0x18e8
-11 0x0000
-12 0x0002
-13 0x0000
-14 0xffff
-15 0xffff
-16 0x1d6a
-17 0xfff0
-18 0xffff
-19 0x0f30
-20 0x1126
-21 0x1518
-22 0x1618
-23 0x3510
-24 0x3610
-25 0x3d6a
-26 0x3e10
-27 0x2350
-28 0x2960
-29 0x3618
-30 0x3e00
-31 0xffff
-32 0xffff
-33 0xffff
-34 0xffff
-35 0x1818
-36 0x1818
-37 0x1718
-38 0x1717
-39 0x1717
-40 0x1818
-41 0x1717
-42 0xffff
-43 0xffff
-44 0xffff
-45 0xffff
-46 0xffff
-47 0xffff
-48 0xffff
-49 0xffff
-50 0xffff
-51 0xffff
-52 0xffff
-53 0xffff
-54 0xffff
-55 0xffff
-56 0xffff
-57 0xffff
-58 0xffff
-59 0xffff
-60 0xffff
-61 0xffff
-62 0xff6d
-63 0x0102
-64 0x0000
-65 0x0000
-66 0x0000
-67 0x0000
-68 0x0000
-69 0x0000
-70 0x0000
-71 0x0000
-72 0x0000
-73 0x0000
-74 0x0000
-75 0x0000
-76 0x0000
-77 0x0000
-78 0x0000
-79 0x0000
-80 0x0000
-81 0x0000
-82 0x0000
-83 0x0000
-84 0x0000
-85 0x0000
-86 0x0000
-87 0x0000
-88 0x0000
-89 0x0000
-90 0x0000
-91 0x0000
-92 0x0000
-93 0x0000
-94 0x0000
-95 0x0000
-96 0x0000
-97 0x0000
-98 0x0000
-99 0x0000
-100 0x0000
-101 0x0000
-102 0x0000
-103 0x0000
-104 0x0000
-105 0x0000
-106 0x0000
-107 0x0000
-108 0x0000
-109 0x0000
-110 0x0000
-111 0x0000
-112 0x0000
-113 0x0000
-114 0x0000
-115 0x0000
-116 0x0000
-117 0x0000
-118 0x0000
-119 0x0000
-120 0x0000
-121 0x0000
-122 0x0000
-123 0x0000
-124 0x0000
-125 0x0000
-126 0x0000
-127 0x0000
-128 0x2560
-129 0xffff
-130 0x0d00
-131 0x1df0
-132 0xa739
-133 0x0201
-134 0x1814
-135 0x0601
-136 0x0000
-137 0x6146
-138 0x18e8
-139 0x0000
-140 0x0002
-141 0x0000
-142 0xffff
-143 0xffff
-144 0x1d6a
-145 0xffff
-146 0xffff
-147 0x0f30
-148 0x1126
-149 0x1518
-150 0x1618
-151 0x3510
-152 0x3610
-153 0x3d6a
-154 0x3e10
-155 0x2350
-156 0x2960
-157 0x3618
-158 0x3e00
-159 0xffff
-160 0xffff
-161 0xffff
-162 0xffff
-163 0x1818
-164 0x1818
-165 0x1718
-166 0x1717
-167 0x1717
-168 0x1818
-169 0x1717
-170 0xffff
-171 0xffff
-172 0xffff
-173 0xffff
-174 0xffff
-175 0xffff
-176 0xffff
-177 0xffff
-178 0xffff
-179 0xffff
-180 0xffff
-181 0xffff
-182 0xffff
-183 0xffff
-184 0xffff
-185 0xffff
-186 0xffff
-187 0xffff
-188 0xffff
-189 0xffff
-190 0xff6d
-191 0x0102
-192 0x0000
-193 0x0000
-194 0x0000
-195 0x0000
-196 0x0000
-197 0x0000
-198 0x0000
-199 0x0000
-200 0x0000
-201 0x0000
-202 0x0000
-203 0x0000
-204 0x0000
-205 0x0000
-206 0x0000
-207 0x0000
-208 0x0000
-209 0x0000
-210 0x0000
-211 0x0000
-212 0x0000
-213 0x0000
-214 0x0000
-215 0x0000
-216 0x0000
-217 0x0000
-218 0x0000
-219 0x0000
-220 0x0000
-221 0x0000
-222 0x0000
-223 0x0000
-224 0x0000
-225 0x0000
-226 0x0000
-227 0x0000
-228 0x0000
-229 0x0000
-230 0x0000
-231 0x0000
-232 0x0000
-233 0x0000
-234 0x0000
-235 0x0000
-236 0x0000
-237 0x0000
-238 0x0000
-239 0x0000
-240 0x0000
-241 0x0000
-242 0x0000
-243 0x0000
-244 0x0000
-245 0x0000
-246 0x0000
-247 0x0000
-248 0x0000
-249 0x0000
-250 0x0000
-251 0x0000
-252 0x0000
-253 0x0000
-254 0x0000
-255 0x0000
-------=_20071018113716_80833--
+--=-Fpg2tzGi56k8YsW1GL/k
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARxiiR6Vg1VMiehFYAQKkABAAvVB7rsIruP1G+gAWQD3GWpyJpRitLREN
+bh/SsGjwXQn05BxL9DT68yp8MIyl8b6d/pm7T4lwlNvAc552281X2+dCp7ub64Zx
+MZljpb8aKQz+6Vn+FLeG3PT9LBbzYRSjEfUKSIQYo8CW99U6LSApm6k39lOWVDI3
+Xwb+4G7WDN6FK0GDSx4J3pxeZl6Jwg/lVCc1cY5YzR+4Xq4oufYs18trsPrmUReN
+gwWeKs+Vx3Qpi1mqFT8jUwBunBZRXHTGIHmq3gt+H5HmcQ5woRUbiSnJ4QA6s8qw
+EkewGmB1nahLYuwM7bCpu+YLWNE/5lTjbN2JcKKBTrT0Vi11111dGyCni9f93rn+
+wSpP62cSAftEmFIyb2nYEUTQKYLHY+VHEfEMF7gBvSAycqCo9ve1P7aDPQbu0NJA
+WJml8bjCIqXKMnoQLPYSZ7z2zUP/kT35xTSh023/vD4EEMzVvOVr61nhBv0z5yfM
+4K2DRl1xNTLSH8Om5PGgZNolWgM56OYMcw6PckTM04OeTunvoomNHysYKBMpAOPo
+DSHf9s/JWyIvrCmEB3FfnyjM1thr6wzkcztE/6DtErBCRTB7byYy7JfkFuIjhkFt
+PVHz+NIkGBLUjHZBIPqzw4ncfaVRLL7soDae2g4YlGUZTmfTpjULzs2pXI5qtr4p
+lDlB4aguj6c=
+=Nb4o
+-----END PGP SIGNATURE-----
+
+--=-Fpg2tzGi56k8YsW1GL/k--
 
