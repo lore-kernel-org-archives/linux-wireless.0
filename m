@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:41958 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754036AbXJMOKm (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:5652 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759548AbXJSSwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:42 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so715870ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:42 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: PATCH 10/11] rt2x00: Add new rt73usb USB ID
-Date: Sat, 13 Oct 2007 16:27:13 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710131621.05173.IvDoorn@gmail.com>
-In-Reply-To: <200710131621.05173.IvDoorn@gmail.com>
+	Fri, 19 Oct 2007 14:52:31 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so517531nfb
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2007 11:52:29 -0700 (PDT)
+To: "Marcus Better" <marcus@better.se>
+Subject: Re: [PATCH v2] mac80211: fix set_channel regression
+Date: Fri, 19 Oct 2007 21:10:37 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <fdqhn4$qab$1@sea.gmane.org> <200710152013.20777.IvDoorn@gmail.com> <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com>
+In-Reply-To: <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com>
 MIME-Version: 1.0
-Message-Id: <200710131627.13522.IvDoorn@gmail.com> (sfid-20071013_151057_808072_3F15B6C5)
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
+Message-Id: <200710192110.37099.IvDoorn@gmail.com> (sfid-20071019_195234_164615_B9669995)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt73usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> Ivo van Doorn wrote:
+> > Could you enable debugfs and use attached debugfs script to create a
+> > dump of the rt2x00 registers.
+> 
+> If you still need the debug dump for 2.0.7 (the latest working version),
+> can you show me how to get hold of a source tree with that version? I have
+> both the wireless-2.6 and rt2x00 git trees, but seem to have trouble
+> locating the right revision, perhaps because the tree was rebased.
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 14e2b2d..2f3bf4a 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2035,6 +2035,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x050d, 0x7050), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x705a), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x905b), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x050d, 0x905c), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Billionton */
- 	{ USB_DEVICE(0x1631, 0xc019), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Buffalo */
--- 
-1.5.3.4
+I'm afraid that is a bit of a problem, rt2x00 was merged into linus' tree as
+a complete patch of version 2.0.8. This means the complete versioning of
+2.0.7 has been lost.
+The only possible way would be toying with cvs and copying the files
+from there. But that is in no what a guarentee for success.
 
+However I can recommend using 2.0.11 the following patches:
+http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=8927e4ea2933f5f276a7bb505a6b240156a9238f
+http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=32a8da711c3b03a88487dbe48e57c489b5a3031c
+
+Both caused problems with packet throughput. So those might have
+resolved the problem you reported.
+
+Ivo
