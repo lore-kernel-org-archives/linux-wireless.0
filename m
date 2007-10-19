@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iggypop2.siwnet.net ([81.216.65.12]:63742 "EHLO
-	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701AbXJOHFH (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:45995 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936882AbXJSTvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 03:05:07 -0400
-Message-ID: <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com> (sfid-20071015_080513_491220_46EFBE78)
-In-Reply-To: <1192217047.4770.61.camel@johannes.berg>
-References: <fdqhn4$qab$1@sea.gmane.org>
-    <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
-    <1192094159.4770.21.camel@johannes.berg>
-    <200710112005.56101.IvDoorn@gmail.com>
-    <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
-    <1192216713.4770.58.camel@johannes.berg>
-    <1192217047.4770.61.camel@johannes.berg>
-Date: Mon, 15 Oct 2007 09:04:47 +0200 (CEST)
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-From: "Marcus Better" <marcus@better.se>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>
+	Fri, 19 Oct 2007 15:51:53 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1164694pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2007 12:51:52 -0700 (PDT)
+Message-ID: <43e72e890710191251o147d414ycef49847a7a3f957@mail.gmail.com> (sfid-20071019_205221_402202_C9BF2C92)
+Date: Fri, 19 Oct 2007 15:51:51 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: AR5418 abgn part?
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1192808570.6104.11.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <1192808570.6104.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Michael Wu just pointed out the error in my previous patch. I missed the
-> outer loop, we need to break from it as well.
+On 10/19/07, Dan Williams <dcbw@redhat.com> wrote:
+> Anyone working on this part or is there just not enough bandwidth?  It's
+> completely unrecognized with fairly recent wireless-everything.  I've
+> got a machine with one here, would be happy to test stuff if there's
+> anything to test.
 
-The new patch doesn't seem to solve the problem either. I get the same
-association failure as before.
+We will hopefully support this down the road with ath5k. We need
+register dumps of the HAL access for this guy. Instructions on how to
+do this come next.
 
-Marcus
-
-
+  Luis
