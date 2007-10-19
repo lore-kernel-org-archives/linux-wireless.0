@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:25123 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbXJHKBF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 06:01:05 -0400
-Received: from lin01.mn-solutions.de (pD95F8393.dip0.t-ipconnect.de [217.95.131.147])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 5A2525E47DF
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 12:01:04 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 158761E002B
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 11:58:08 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas link error due to gcc `smartness'
-Date: Mon, 8 Oct 2007 12:01:12 +0200
-References: <Pine.LNX.4.64.0710080940110.8127@anakin>
-In-Reply-To: <Pine.LNX.4.64.0710080940110.8127@anakin>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710081201.12268.hs4233@mail.mn-solutions.de> (sfid-20071008_110121_897474_EB7E21B6)
+Received: from ra.tuxdriver.com ([70.61.120.52]:2681 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933425AbXJSCIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2007 22:08:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] zd1211rw: fix a double include
+Date: Thu, 18 Oct 2007 21:51:25 -0400
+Message-Id: <11927586853636-git-send-email-linville@tuxdriver.com> (sfid-20071019_030859_771199_C97F7B76)
+In-Reply-To: <20071018220946.GH8510@tuxdriver.com>
+References: <20071018220946.GH8510@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Due to the lack of hardware, I could not test the
-> functionality of this change. I was just trying to compile a
-> kernel with a much enabled as possible.
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I have the hardware :-)    With it, the driver still compiles and 
-an
+This patch removes all double includes of the same file. This
+makes scripts/checkincludes.pl happy.
 
-   $ echo 'ssid="BLAHFASEL"' \
-     >/proc/sys/debug/libertas_wireless/eth1/setuserscan
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Jeff, I missed the zd1211rw hunk of the "double includes" patch.  Could
+you apply this one manually?
 
-doesn't bark and seems to produce the desired thing.
+Thanks,
 
-Not that I think something like userscanning is actually needed 
-in real life ....  Anyway:
+John
 
-Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+ drivers/net/wireless/zd1211rw/zd_def.h          |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_def.h b/drivers/net/wireless/zd1211rw/zd_def.h
+index deb99d1..505b4d7 100644
+--- a/drivers/net/wireless/zd1211rw/zd_def.h
++++ b/drivers/net/wireless/zd1211rw/zd_def.h
+@@ -21,7 +21,6 @@
+ #include <linux/kernel.h>
+ #include <linux/stringify.h>
+ #include <linux/device.h>
+-#include <linux/kernel.h>
+ 
+ typedef u16 __nocast zd_addr_t;
+ 
+-- 
+1.5.2.4
+
