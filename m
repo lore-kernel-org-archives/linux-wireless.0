@@ -1,152 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:54826 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbXJKTqa (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:6906 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753377AbXJSN6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 15:46:30 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so683883wxd
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 12:46:28 -0700 (PDT)
-Date: Thu, 11 Oct 2007 15:46:30 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] Add proper support for multicast
-Message-ID: <20071011194630.GA9304@pogo> (sfid-20071011_204636_554179_6614B7AA)
-References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo>
+	Fri, 19 Oct 2007 09:58:42 -0400
+Received: by an-out-0708.google.com with SMTP id b36so85088ana
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2007 06:58:41 -0700 (PDT)
+Message-ID: <40f31dec0710190658r5bdf5662u47e60afe7178a000@mail.gmail.com> (sfid-20071019_145848_232461_DDD7703A)
+Date: Fri, 19 Oct 2007 16:58:40 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/4] ath5k: Misc cleanups
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20071018210748.GE8510@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071011194108.GC4334@pogo>
+Content-Type: text/plain; charset=UTF-8
+References: <40f31dec0710161418m72e991b2x36428e39f0766e1c@mail.gmail.com>
+	 <4af2d03a0710161507h7fac4117k168c592dd31c7dff@mail.gmail.com>
+	 <40f31dec0710161512q78c21fbv9426817972db2d1d@mail.gmail.com>
+	 <43e72e890710161517k6f53661arba82c83f304c139a@mail.gmail.com>
+	 <40f31dec0710171434p7a9ed6f3y66bf862b17633559@mail.gmail.com>
+	 <20071018210748.GE8510@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There seems to be several ways to enable multicast. We choose right now
-MadWifi's old implementation. We can later try ath5k_hw_set_mcast_filterindex()
-as well.
+2007/10/19, John W. Linville <linville@tuxdriver.com>:
+> On Thu, Oct 18, 2007 at 12:34:14AM +0300, Nick Kossifidis wrote:
+> > 2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > > 2007/10/17, Jiri Slaby <jirislaby@gmail.com>:
+> > > > > On 10/16/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > > > > Some cleanups i did today, just to get used to git etc, hope i'm doing
+> > > > > > this right ;-)
+> > > > >
+> > > > > Patches seems to be fine, thanks for them, but your e-mailer seems to
+> > > > > wrap lines and change tabs to 8 spaces in your patches, which makes it
+> > > > > unmergeable...
+> > > > >
+> > > >
+> > > > Ouch ! Sorry for that, it seems gmail did it again. Can i send them as
+> > > > attachments ???
+> > >
+> > > Here's a guide to use gmail with mutt, then you can send as inline attachments.
+> > >
+> > > http://people.aapt.net.au/~adjlstrong/mutt.html
+> > >
+> > > Worked for me.
+> > >
+> > >   Luis
+> > >
+> >
+> > Just tried to commit from another acount (mick@ics.forth.gr) with
+> > squirellmail and last one with horde, let's see how it will arive. If
+> > it doesn't work i'll try with mutt and gmail...
+>
+> There was still some line-wrapping.  I fixed 1-3 by hand, but 4
+> ("ath5k: Maintain naming scheme") just had too many instances for me to
+> fix-up.  Please do try to use mutt or another "sane" MUA in the future.
+>
+> Thanks!
+>
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
 
-ath5k_hw_get_rx_filter() may enable AR5K_RX_FILTER_RADARERR or
-AR5K_RX_FILTER_PHYERR. We choose to respect only AR5K_RX_FILTER_PHYERR
-for now because:
+ACK Thanx to Michael Renzmann i got a @madwifi.org account. Sending
+the last patch from there using mutt. Let me know if it's O.K. so i
+can continue posting patches this way ;-)
 
-a. Most radars don't seem to work on 5GHz band now
-b. Some have reported a lot of unnecessary noise is captured
-   when trying to filter for radar
-c. When and if someone wants to work on DFS for ath5k later
-   this can be enabled then
 
-Changes-licensed-under: 3-clause-BSD
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-
----
- drivers/net/wireless/ath5k/base.c |   60 ++++++++++++++++++++++++++++++-------
- 1 files changed, 49 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index cda922e..f474660 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1400,8 +1400,12 @@ unlock:
- 	FIF_BCN_PRBRESP_PROMISC
- /*
-  * o always accept unicast, broadcast, and multicast traffic
-- * o maintain current state of phy error reception (the hal
-- *   may enable phy error frames for noise immunity work)
-+ * o multicast traffic for all BSSIDs will be enabled if mac80211
-+ *   says it should be
-+ * o maintain current state of phy ofdm or phy cck error reception.
-+ *   If the hardware detects any of these type of errors then 
-+ *   ath5k_hw_get_rx_filter() will pass to us the respective 
-+ *   hardware filters to be able to receive these type of frames.
-  * o probe request frames are accepted only when operating in
-  *   hostap, adhoc, or monitor modes
-  * o enable promiscuous mode according to the interface state
-@@ -1419,15 +1423,22 @@ static void ath_configure_filter(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->ah;
--	u32 rfilt;
-+	u32 mfilt[2], val, rfilt;
-+	u8 pos;
-+	int i;
-+
-+	mfilt[0] = mfilt[1] = 0;
- 
- 	/* Only deal with supported flags */
- 	changed_flags &= SUPPORTED_FIF_FLAGS;
- 	*new_flags &= SUPPORTED_FIF_FLAGS;
- 
--	/* XXX: Start by enabling broadcasts and Unicast, move this later
--	 * to mac802111 and add a flag for these */
--	rfilt = AR5K_RX_FILTER_UCAST | AR5K_RX_FILTER_BCAST;
-+	/* If HW detects any phy or radar errors, leave those filters on.
-+	 * Also, always enable Unicast, Broadcasts and Multicast
-+	 * XXX: move unicast, bssid broadcasts and multicast to mac80211 */
-+	rfilt = (ath5k_hw_get_rx_filter(ah) & (AR5K_RX_FILTER_PHYERR)) | 
-+		( AR5K_RX_FILTER_UCAST | AR5K_RX_FILTER_BCAST | 
-+		AR5K_RX_FILTER_MCAST);
- 
- 	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
- 		if (*new_flags & FIF_PROMISC_IN_BSS) {
-@@ -1438,18 +1449,43 @@ static void ath_configure_filter(struct ieee80211_hw *hw,
- 			__clear_bit(ATH_STAT_PROMISC, sc->status);
- 	}
- 
--	if (*new_flags & FIF_ALLMULTI)
--		rfilt |= AR5K_RX_FILTER_MCAST;
-+	/* Note, AR5K_RX_FILTER_MCAST is already enabled */
-+	if (*new_flags & FIF_ALLMULTI) {
-+		mfilt[0] = mfilt[1] = ~0;
-+	} else {
-+		for (i = 0; i < mc_count; i++) {
-+			if (!mclist)
-+				break;
-+			/* calculate XOR of eight 6-bit values */
-+			val = LE_READ_4(mclist->dmi_addr + 0);
-+			pos = (val >> 18) ^ (val >> 12) ^ (val >> 6) ^ val;
-+			val = LE_READ_4(mclist->dmi_addr + 3);
-+			pos ^= (val >> 18) ^ (val >> 12) ^ (val >> 6) ^ val;
-+			pos &= 0x3f;
-+			mfilt[pos / 32] |= (1 << (pos % 32));
-+			/* XXX: we might be able to just do this instead, 
-+			* but not sure, needs testing, if we do use this we'd
-+			* neet to inform below to not reset the mcast */
-+			//ath5k_hw_set_mcast_filterindex(ah, 
-+			//      mclist->dmi_addr[5]);
-+			mclist = mclist->next;
-+		}
-+	}
-+
- 	/* This is the best we can do */
- 	if (*new_flags & (FIF_FCSFAIL | FIF_PLCPFAIL))
- 		rfilt |= AR5K_RX_FILTER_PHYERR;
-+
- 	/* FIF_BCN_PRBRESP_PROMISC really means to enable beacons
- 	* and probes for any BSSID, this needs testing */
- 	if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
- 		rfilt |= AR5K_RX_FILTER_BEACON | AR5K_RX_FILTER_PROBEREQ;
--	/* FIF_CONTROL doc says that FIF_PROMISC_IN_BSS is not set we should
--	* only pass on control frames for this station. This needs testing.
--	* I believe right now this enables *all* control frames */
-+
-+	/* FIF_CONTROL doc says that if FIF_PROMISC_IN_BSS is not 
-+	 * set we should only pass on control frames for this 
-+	 * station. This needs testing. I believe right now this 
-+	 * enables *all* control frames, which is OK.. but
-+	 * but we should see if we can improve on granularity */
- 	if (*new_flags & FIF_CONTROL)
- 		rfilt |= AR5K_RX_FILTER_CONTROL;
- 
-@@ -1470,6 +1506,8 @@ static void ath_configure_filter(struct ieee80211_hw *hw,
- 		rfilt |= AR5K_RX_FILTER_BEACON;
- 	}
- 
-+	/* Set multicast bits */
-+	ath5k_hw_set_mcast_filter(ah, mfilt[0], mfilt[1]);
- 	/* Set the cached hw filter flags, this will alter actually
- 	 * be set in HW */
- 	sc->filter_flags = rfilt;
 -- 
-1.5.2.5
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
