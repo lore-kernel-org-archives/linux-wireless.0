@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:28625 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbXJVQNt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 12:13:49 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so932927ugc
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 09:13:48 -0700 (PDT)
-Message-ID: <2cf3b3170710220913g75b6150fge0d265b34398ce71@mail.gmail.com> (sfid-20071022_171354_194573_AB953B71)
-Date: Mon, 22 Oct 2007 17:13:46 +0100
-From: "Robin Wood" <dninja@gmail.com>
-To: "Michael Wu" <flamingice@sourmilk.net>
-Subject: Re: rtl8187 not being registered
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710212125.34532.flamingice@sourmilk.net>
+Received: from c60.cesmail.net ([216.154.195.49]:41869 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752637AbXJTGF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Oct 2007 02:05:26 -0400
+Message-ID: <20071020020525.bnh9tejfbb400sw0@webmail.spamcop.net> (sfid-20071020_070532_342799_682D1717)
+Date: Sat, 20 Oct 2007 02:05:25 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 lists supported rates backwards
+References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
+	<1ba2fa240710191714j645c8bfp87a2269b9c141c52@mail.gmail.com>
+In-Reply-To: <1ba2fa240710191714j645c8bfp87a2269b9c141c52@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <2cf3b3170710211433t253b6a8ck7d4c6d0913d5256b@mail.gmail.com>
-	 <2cf3b3170710211435k36f17aaeqed5dba65718de21a@mail.gmail.com>
-	 <200710212125.34532.flamingice@sourmilk.net>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22/10/2007, Michael Wu <flamingice@sourmilk.net> wrote:
-> On Sunday 21 October 2007 17:35:27 Robin Wood wrote:
-> > I've just got the latest kernel source (2.6.23) from git and compiled
-> > rtl8187 drivers as modules. When I plug the device in I get the
-> > followoing:
-> >
-> > usb 1-3: new high speed USB device using ehci_hcd and address 3
-> > usb 1-3: configuration #1 chosen from 1 choice
-> > wmaster0: Failed to select rate control algorithm
-> > wmaster0: Failed to initialize rate control algorithm
-> > rtl8187: Cannot register device
-> > rtl8187: probe of 1-3:1.0 failed with error -2
-> >
-> Make sure the rc80211_simple module can be found and is loaded.
->
+Quoting Tomas Winkler <tomasw@gmail.com>:
 
-Just to say thanks to Michael who helped sort the problem off list.
-The problem was that I had module autoload disabled in the kernel.
-After I'd enable that and after a quick rebuild and reboot all is now
-working.
+> I've sent a patch that fixes that few days ago.It should be in the latest
+> version 1.1.18 ''Fix rate setting in probe request for HW sacn'
+> I did test it only with 4965 but it's a same code.
 
-Robin
+Yes, my copy of the repository has that.  It's the most recent commit.  
+  And that patch is already in wireless-2.6/everything, because I  
+tried to apply it manually and got a message that it's already applied.
+
+I'm away from that router, but I remember that I checked carefully  
+that I was testing the right driver.  Either I did something wrong  
+anyway, or the fix for the rates was incomplete.
+
+-- 
+Regards,
+Pavel Roskin
