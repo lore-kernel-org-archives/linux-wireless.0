@@ -1,71 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway.drzeus.cx ([85.8.24.16]:48216 "EHLO smtp.drzeus.cx"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750891AbXJVRFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 13:05:38 -0400
-Date: Mon, 22 Oct 2007 19:05:32 +0200
-From: Pierre Ossman <drzeus@drzeus.cx>
-To: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: make if_sdio align packets
-Message-ID: <20071022190532.5077ce3d@poseidon.drzeus.cx> (sfid-20071022_180541_012397_9EB49925)
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_hera.drzeus.cx-25574-1193072701-0001-2"
+Received: from ug-out-1314.google.com ([66.249.92.169]:13091 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbXJUBiq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Oct 2007 21:38:46 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so768811ugc
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2007 18:38:45 -0700 (PDT)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha subnotebook
+Date: Sun, 21 Oct 2007 00:12:36 +0200
+Cc: Pavel Machek <pavel@ucw.cz>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+References: <20071020184100.GA11640@elf.ucw.cz>
+In-Reply-To: <20071020184100.GA11640@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710210012.37547.IvDoorn@gmail.com> (sfid-20071021_023916_379625_6C0CF417)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+Hi,
 
---=_hera.drzeus.cx-25574-1193072701-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
+> 0x6206... I hope that to be compatible with
+> net/wireless/rt2x00/rt73usb.c .
 
-Incoming packets have to be aligned or the IP stack becomes upset.
-Make sure to shift them two bytes to achieve this.
+Is there any reason you assume it is a rt73usb device,
+or are you just making wild guesses about what the chipset is?
 
-Signed-off-by: Pierre Ossman <drzeus@drzeus.cx>
----
+> [Sidenote: could we add some real author info into rt73usb.c?]
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless=
-/libertas/if_sdio.c
-index 5b13705..56dd568 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -175,12 +175,20 @@ static int if_sdio_handle_data(struct if_sdio_card *c=
-ard,
- 		goto out;
- 	}
-=20
--	skb =3D dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
-+	skb =3D dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE + NET_IP_ALIGN);
- 	if (!skb) {
- 		ret =3D -ENOMEM;
- 		goto out;
- 	}
-=20
-+	/*
-+	 * The IP stack is littered with silly assumptions on alignment,
-+	 * so we need to do a bit of layering violation here and make
-+	 * assumptions about the size of the headers between us and the
-+	 * IP stack.
-+	 */
-+	skb_reserve(skb, NET_IP_ALIGN);
-+
- 	data =3D skb_put(skb, size);
-=20
- 	memcpy(data, buffer, size);
+You mean expanding the project name to the full list of developers in
+the project? I don't see any need for that.
 
---=_hera.drzeus.cx-25574-1193072701-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
+> I did this on 2.6.23-rc8-mm1 kernel (The RT hack may not be
+> neccessary), but then it oopses somewhere in softmac layer. I'll try
+> to play with it some more.
+> 
+> If you have any ideas, let me know.
+> 								Pavel
+> 
+> --- clean-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-09 09:32:08.000000000 +0200
+> +++ linux-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-19 22:19:45.000000000 +0200
+> @@ -1580,7 +1580,6 @@
+>  
+>  	if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
+>  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+> -		return -ENODEV;
+>  	}
+>  
+>  	if (!rt2x00_rf(&rt2x00dev->chip, RF5226) &&
+> @@ -1588,7 +1587,6 @@
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF5225) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2527)) {
+>  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+> -		return -ENODEV;
+>  	}
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+Both removals of -ENODEV are completely wrong. If the device does not pass the above
+2 checks it is _not_ a rt73usb device. And forcing the driver to work with the device will
+result in all kinds of problems.
 
-iD8DBQFHHNhc7b8eESbyJLgRAkD3AKCJxw2E0gwxjybZ6fIx55Ar7yjcZwCdHYXD
-M31OoAywKB6TuIUzPnh6TII=
-=VdJc
------END PGP SIGNATURE-----
+If rt2x00 is loaded and detected the device, it should print out a debug message that starts with:
+"Chipset detected - " What is in your case the complete line?
 
---=_hera.drzeus.cx-25574-1193072701-0001-2--
+Ivo
