@@ -1,30 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49526 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756840AbXJOOCR (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:52057 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751059AbXJUOea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 10:02:17 -0400
-Date: Mon, 15 Oct 2007 07:01:36 -0700
-From: Arjan van de Ven <arjan@linux.intel.com>
-To: Anton Blanchard <anton@samba.org>
-Cc: yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] jiffies_round -> jiffies_round_relative conversion -
- ipw2100/ipw2200
-Message-ID: <20071015070136.2cea656d@laptopd505.fenrus.org> (sfid-20071015_150232_892390_3D51AF3F)
-In-Reply-To: <20071015053801.GB3257@kryten>
-References: <20071015053428.GA3257@kryten>
-	<20071015053801.GB3257@kryten>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 21 Oct 2007 10:34:30 -0400
+Message-ID: <471B6368.7000600@lwfinger.net> (sfid-20071021_153442_737106_9CAB4785)
+Date: Sun, 21 Oct 2007 09:34:16 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Andreas Schwab <schwab@suse.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43: cannot set channel to 12
+References: <jey7e1leh0.fsf@sykes.suse.de> <4716676C.5010907@lwfinger.net> <jesl44n1ax.fsf@sykes.suse.de>
+In-Reply-To: <jesl44n1ax.fsf@sykes.suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 15 Oct 2007 00:38:01 -0500
-Anton Blanchard <anton@samba.org> wrote:
-
+Andreas Schwab wrote:
+> Larry Finger <larry.finger@lwfinger.net> writes:
 > 
-> When rounding a relative timeout we need to use
-> round_jiffies_relative(). 
+>> This is not a b43 problem. The standard loading of mac80211 sets an FCC regulatory domain, i.e. b/g
+>> channels 1-11. You need to load mac80211 with a parameter of 'ieee80211_regdom=64'. That will allow
+>> b/g channels 1-13. Technically, it sets the regulatory domain to Japan, but channel 14 is not allowed.
+> 
+> Thanks, that works.  (But I regard it as a regression.)
 
-Acked-by: Arjan van de Ven <arjan@linux.intel.com>
+That is in the eye of the beholder. For those of us in FCC-land, the default behavior of bcm43xx
+(channels 1-14) was a bug _AND_ a violation of regulations and law.
+
+Handling regulatory domain information including allowed channels, power, etc. is still a big
+weakness of all MAC layers, both hard and soft.
+
+Larry
