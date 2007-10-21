@@ -1,95 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44925 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753193AbXJVPpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 11:45:33 -0400
-Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	mwallis@serialmonkey.com
-In-Reply-To: <20071022000919.GB29024@elf.ucw.cz>
-References: <20071020184100.GA11640@elf.ucw.cz>
-	 <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
-	 <20071022000919.GB29024@elf.ucw.cz>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 11:44:56 -0400
-Message-Id: <1193067896.30205.9.camel@localhost.localdomain> (sfid-20071022_164621_041212_81DF6D8C)
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:64926 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750899AbXJUClm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Oct 2007 22:41:42 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 1/2] rtl8180: Allow multicast frames
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Sat, 20 Oct 2007 20:05:31 -0400
+Message-ID: <20071021000530.10326.77030.stgit@tetra.sourmilk.net> (sfid-20071021_034147_386756_C7902BB9)
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-22 at 02:09 +0200, Pavel Machek wrote:
-> Hi!
-> 
-> > This device is NOT a Ralink USB wifi adapter!
-> > 
-> > Get the windows driver in this link and see for yourself.
-> > http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
-> > (ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
-> 
-> Thanks a lot. With some patches, I got driver from conitech.it to
-> compile and partly work on 2.6.23. I can now transmit packets but not
-> yet receive them.
-> 
-> (use Makefile.26 instead of Makefile)
+This patch allows rtl8180 to receive multicast frames if requested.
 
-I couldn't find any license info immediately visible; are you sure it's
-GPL?
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-Dan
+ drivers/net/wireless/rtl8180_dev.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-> 								Pavel
-> 
-> --- hal_142_o.ofic/linux/sysdef.h	2006-11-29 11:12:10.000000000 +0100
-> +++ hal_142_o/linux/sysdef.h	2007-10-21 22:21:13.000000000 +0200
-> @@ -7,7 +7,7 @@
->  // The definition WB_LINUX is a keyword for this OS
->  //=============================================================================
->  #define WB_LINUX
-> -#define WB_LINUX_WPA_PSK
-> +//#define WB_LINUX_WPA_PSK
->  //#define _WPA_PSK_DEBUG
->  
->  //#define _IBSS_BEACON_SEQ_STICK_
-> Only in hal_142_o/linux: w35und.ko
-> Only in hal_142_o/linux: w35und.mod.c
-> --- hal_142_o.ofic/linux/wb35reg.c	2006-11-29 11:43:58.000000000 +0100
-> +++ hal_142_o/linux/wb35reg.c	2007-10-21 22:19:27.000000000 +0200
-> @@ -879,6 +879,7 @@
->  	if( (pHwData->phy_type == RF_WB_242) ||
->  		(pHwData->phy_type == RF_WB_242_1) ) // 20060619.5 Add
->  	{
-> +		extern void phy_calibration_winbond(hw_data_t *phw_data, u32 frequency);
->  		phy_calibration_winbond ( pHwData, 2412 ); // Sync operation
->  		Wb35Reg_ReadSync( pHwData, 0x103c, &BB3c );
->  		Wb35Reg_ReadSync( pHwData, 0x1054, &BB54 );
-> --- hal_142_o.ofic/linux/wbusb.c	2006-11-29 11:02:54.000000000 +0100
-> +++ hal_142_o/linux/wbusb.c	2007-10-21 22:16:19.000000000 +0200
-> @@ -28,7 +28,6 @@
->  	};
->  #else
->  	static struct usb_driver wb35_driver = {
-> -			.owner =	THIS_MODULE,
->  			.name =		"w35und",
->  			.probe =	wb35_probe,
->  			.disconnect = wb35_disconnect,
-> --- hal_142_o.ofic/wblinux.c	2006-11-29 10:39:54.000000000 +0100
-> +++ hal_142_o/wblinux.c	2007-10-21 23:49:07.000000000 +0200
-> @@ -98,7 +98,8 @@
->  			BufSize = pRxLayer1->BufferQueue[i].BufferSize;
->  			BufAddr = pRxLayer1->BufferQueue[i].pBufferAddress;
->  			//DataDmp(BufAddr, BufSize, 0);
-> -	        eth_copy_and_sum( skb, BufAddr, BufSize, 0 );
-> +			//	        eth_io_copy_and_sum( skb, BufAddr, BufSize, 0 );
-> +		skb_copy_from_linear_data(skb, BufAddr, BufSize);
->  	        skb_put( skb, BufSize );
->  		}
->  
-> 
-> I wonder if I got skb_copy right...?
-> 								Pavel
-> 
+diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
+index 5ec7ea9..517927d 100644
+--- a/drivers/net/wireless/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl8180_dev.c
+@@ -485,13 +485,15 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 
+ 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
+ 
++	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
++	rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
++
+ 	reg = RTL818X_RX_CONF_ONLYERLPKT |
+ 	      RTL818X_RX_CONF_RX_AUTORESETPHY |
+ 	      RTL818X_RX_CONF_MGMT |
+ 	      RTL818X_RX_CONF_DATA |
+ 	      (7 << 8 /* MAX RX DMA */) |
+ 	      RTL818X_RX_CONF_BROADCAST |
+-	      RTL818X_RX_CONF_MULTICAST |
+ 	      RTL818X_RX_CONF_NICMAC;
+ 
+ 	if (priv->r8185)
+@@ -641,21 +643,22 @@ static int rtl8180_config_interface(struct ieee80211_hw *dev, int if_id,
+ static void rtl8180_configure_filter(struct ieee80211_hw *dev,
+ 				     unsigned int changed_flags,
+ 				     unsigned int *total_flags,
+-				     int mc_count, struct dev_addr_list *mc_list
+-)
++				     int mc_count, struct dev_addr_list *mclist)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+ 
+-	*total_flags = 0;
+-
+ 	if (changed_flags & FIF_FCSFAIL)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+ 	if (changed_flags & FIF_CONTROL)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+ 	if (changed_flags & FIF_OTHER_BSS)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
++	if (*total_flags & FIF_ALLMULTI || mc_count > 0)
++		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
++	else
++		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
+ 
+-	/* TODO: Add proper multicast support */
++	*total_flags = 0;
+ 
+ 	if (priv->rx_conf & RTL818X_RX_CONF_FCS)
+ 		*total_flags |= FIF_FCSFAIL;
+@@ -663,6 +666,8 @@ static void rtl8180_configure_filter(struct ieee80211_hw *dev,
+ 		*total_flags |= FIF_CONTROL;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
+ 		*total_flags |= FIF_OTHER_BSS;
++	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
++		*total_flags |= FIF_ALLMULTI;
+ 
+ 	rtl818x_iowrite32(priv, &priv->map->RX_CONF, priv->rx_conf);
+ }
+
 
