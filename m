@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:59966 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbXJWI4t (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:60824 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbXJUJUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 04:56:49 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3009926pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 01:56:48 -0700 (PDT)
-Message-ID: <f6ca9fed0710230156g6b19f6fbu24e3b9ea40c1b433@mail.gmail.com> (sfid-20071023_095655_863003_1DBAB136)
-Date: Tue, 23 Oct 2007 10:56:48 +0200
-From: dragoran <drago01@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep network
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Volker Braun" <volker.braun@physik.hu-berlin.de>
-In-Reply-To: <1193127280.3069.261.camel@debian.sh.intel.com>
+	Sun, 21 Oct 2007 05:20:42 -0400
+Date: Sun, 21 Oct 2007 11:20:48 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: rt2400-devel@lists.sourceforge.net,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha
+	subnotebook
+Message-ID: <20071021092048.GA25270@elf.ucw.cz> (sfid-20071021_102056_980855_3A91D028)
+References: <20071020184100.GA11640@elf.ucw.cz> <200710210012.37547.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-	 <1193127280.3069.261.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200710210012.37547.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/07, Zhu Yi <yi.zhu@intel.com> wrote:
->
-> On Tue, 2007-10-23 at 09:54 +0200, dragoran wrote:
-> > I really have bo idea what this means... with ipw3945 (ieee80211
-> > based) the same network works just fine.
->
-> This is related to mac80211, not the driver. That's why ipw3945 works.
-> Does this patch work for you?
->
-> http://marc.info/?l=linux-wireless&m=118715117523167&w=2
+Hi!
 
-I thought this was already merged. Will build a new kernel with it and
-test again tomorrow.
+> > I did this on 2.6.23-rc8-mm1 kernel (The RT hack may not be
+> > neccessary), but then it oopses somewhere in softmac layer. I'll try
+> > to play with it some more.
+> > 
+> > If you have any ideas, let me know.
+> > 								Pavel
+> > 
+> > --- clean-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-09 09:32:08.000000000 +0200
+> > +++ linux-mm/drivers/net/wireless/rt2x00/rt73usb.c	2007-10-19 22:19:45.000000000 +0200
+> > @@ -1580,7 +1580,6 @@
+> >  
+> >  	if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
+> >  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+> > -		return -ENODEV;
+> >  	}
+> >  
+> >  	if (!rt2x00_rf(&rt2x00dev->chip, RF5226) &&
+> > @@ -1588,7 +1587,6 @@
+> >  	    !rt2x00_rf(&rt2x00dev->chip, RF5225) &&
+> >  	    !rt2x00_rf(&rt2x00dev->chip, RF2527)) {
+> >  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+> > -		return -ENODEV;
+> >  	}
+> 
+> Both removals of -ENODEV are completely wrong. If the device does not pass the above
+> 2 checks it is _not_ a rt73usb device. And forcing the driver to work with the device will
+> result in all kinds of problems.
+
+Of course they are :-).
+
+> If rt2x00 is loaded and detected the device, it should print out a debug message that starts with:
+> "Chipset detected - " What is in your case the complete line?
+
+Ok, I guess I should include more complete debug output.
+
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
+phy0 -> rt73usb_validate_eeprom: EEPROM recover - MAC: 66:76:2b:e8:68:e7
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x3000 with error -32
+phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0000, rev: c03c0ae0
+phy0 -> rt73usb_init_eeprom: Error - Invalid RF chipset detected
+
+...so, I think hardware is indeed quite similar to what rt73usb driver
+expects...?
+
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
