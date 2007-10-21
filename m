@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55544
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759595AbXJOMzf (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.191]:31886 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751294AbXJUGnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 08:55:35 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Fwd: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize the correct return value
-Date: Mon, 15 Oct 2007 14:54:45 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	WANG Cong <xiyou.wangcong@gmail.com>,
-	Adrian Bunk <bunk@kernel.org>
+	Sun, 21 Oct 2007 02:43:47 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1495470mue
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2007 23:43:45 -0700 (PDT)
+Message-ID: <471AF51E.7050901@gmail.com> (sfid-20071021_074354_700471_6B830029)
+Date: Sun, 21 Oct 2007 08:43:42 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200710151454.46047.mb@bu3sch.de> (sfid-20071015_135551_256929_8905D379)
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
+Subject: Re: [PATCH 0/2] ath5k: Further cleanups inside base.c
+References: <20071021012030.GA5817@localhost.domain.invalid>
+In-Reply-To: <20071021012030.GA5817@localhost.domain.invalid>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adrian Bunk <bunk@kernel.org>
+On 10/21/2007 03:20 AM, Nick Kossifidis wrote:
+> A few more cleanups for base.c before i submit the rest of my fixes...
+> 
+> Q: Should we get rid of syctl stuff ? I mean user can only change 
+> calibration interval (which is something tricky for users to play with) 
+> and debug flags. Does anyone use this ? i mean we can put printks wherever
+> we want, there's no need for this stuff IMHO (it comes from madwifi).
 
-Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
-in case of returning an uninitialized value.
-
-Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
- drivers/net/wireless/b43/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
-+++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-@@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
- 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
- 	struct b43legacy_wldev *dev = wl->current_dev;
- 	int did_init = 0;
--	int err;
-+	int err = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
-
-
--------------------------------------------------------
-
--- 
-Greetings Michael.
+Agreed. And if really want it, we can make debug a module_param...
