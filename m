@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:58254 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752229AbXJTFkm convert rfc822-to-8bit (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:1629 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873AbXJULiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2007 01:40:42 -0400
-Message-ID: <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net> (sfid-20071020_064047_193599_A33AFE25)
-Date: Sat, 20 Oct 2007 01:40:40 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 lists supported rates backwards
-References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
-In-Reply-To: <47192F84.1020101@lwfinger.net>
+	Sun, 21 Oct 2007 07:38:07 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so790359ugc
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 04:38:05 -0700 (PDT)
+To: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha subnotebook
+Date: Sun, 21 Oct 2007 15:56:29 +0200
+Cc: rt2400-devel@lists.sourceforge.net,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+References: <20071020184100.GA11640@elf.ucw.cz> <200710210012.37547.IvDoorn@gmail.com> <20071021092048.GA25270@elf.ucw.cz>
+In-Reply-To: <20071021092048.GA25270@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710211556.29469.IvDoorn@gmail.com> (sfid-20071021_123821_215500_8ED0ACC5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Larry Finger <larry.finger@lwfinger.net>:
+Hi,
 
-> Using the latest git pull from Linus, I am able to associate with my  
->  BEFW11S4 AP using the b43
-> driver. The problem is probably not in mac80211.
+> > If rt2x00 is loaded and detected the device, it should print out a debug message that starts with:
+> > "Chipset detected - " What is in your case the complete line?
+> 
+> Ok, I guess I should include more complete debug output.
+> 
+> phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
 
-Sorry, I should have mentioned that.  I tested bcm43xx-mac80211 from  
-the latest Fedora 7 kernel and it was fine with that router.  ath5k  
-from wireless-2.6/everything was also fine.  Current MadWifi is fine.   
-Current at76_usb (not mac80211 based yet) is fine.  It's only the  
-Intel 3945 card that has problems with it.
+- Vendor requests error with the -32 errors often indicate the incorrect device.
 
-I don't know why iwl3945 composes the association request on its own  
-and what happens to it later.  Besides, mac80211 10.0.0 is something  
-heavily patched by Intel AFAIK.  I wanted to test the git version of  
-Intel mac80211, but intellinuxwireless.org appears to be down or  
-unreachable at the moment and I didn't have a recent clone.  The  
-kernel mac80211 is definitely not the suspect.
+> phy0 -> rt73usb_validate_eeprom: EEPROM recover - MAC: 66:76:2b:e8:68:e7
 
-I was aware of "error 18", and when I noticed some activity about  
-rates in wireless-2.6/everything, so I decided to see how that problem  
-would be affected.
+- Incorrect MAC address read from the device. Another hint that the device is not rt73.
 
--- 
-Regards,
-Pavel Roskin
+> phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x3000 with error -32
+> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0000, rev: c03c0ae0
+
+- A incorrect RF chipset. (valid values are: 1, 2, 3 or 4). Another indication of a incorrect device.
+- A completely bogus chipset revision. A valid rt73 device has the revision "2573X" Where only the
+  X is a variable.
+
+> phy0 -> rt73usb_init_eeprom: Error - Invalid RF chipset detected
+> 
+> ...so, I think hardware is indeed quite similar to what rt73usb driver
+> expects...?
+
+No. You can assume you are forcing rt73 to control a non-rt73 device.
+The fact that you had to hack to bypass the RT and RF chipset validation also confirms that,
+those checks were there for a reason. Namely to make sure the corect driver was being used for the device.
+
+Ivo
