@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57360
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751245AbXJWBPJ (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:20454 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249AbXJUP0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 21:15:09 -0400
-Date: Mon, 22 Oct 2007 18:15:30 -0700 (PDT)
-Message-Id: <20071022.181530.28790082.davem@davemloft.net> (sfid-20071023_021515_883496_E9810441)
-To: drzeus@drzeus.cx
-Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com
-Subject: Re: [PATCH] libertas: make if_sdio align packets
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071022190532.5077ce3d@poseidon.drzeus.cx>
-References: <20071022190532.5077ce3d@poseidon.drzeus.cx>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 21 Oct 2007 11:26:53 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so802447ugc
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 08:26:51 -0700 (PDT)
+To: bruno.vetel@wanadoo.fr
+Subject: Re: [Fwd: Problem with a Driver rt73 in ad-hoc mode between a arm and a pc]
+Date: Sun, 21 Oct 2007 17:45:17 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <1192979624.9056.23.camel@rigel.esas.fr>
+In-Reply-To: <1192979624.9056.23.camel@rigel.esas.fr>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200710211745.18430.IvDoorn@gmail.com> (sfid-20071021_162657_476286_30AC4597)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pierre Ossman <drzeus@drzeus.cx>
-Date: Mon, 22 Oct 2007 19:05:32 +0200
+Hi,
 
-> +	/*
-> +	 * The IP stack is littered with silly assumptions on alignment,
-> +	 * so we need to do a bit of layering violation here and make
-> +	 * assumptions about the size of the headers between us and the
-> +	 * IP stack.
-> +	 */
-> +	skb_reserve(skb, NET_IP_ALIGN);
-> +
+> I sent also this mail to the linux-kernel because I didn't know this list.
 
-Please remove this comment.
+I have added rt2400-devel to the CC-list as well.
+Although the name suggests otherwise, that is the mailinglist of the rt2x00 project. ;)
 
-Where else could we possibly ensure that post-link-level headers are
-aligned properly, taking into account DMA engine restrictions and
-whatnot, other than in the driver itself?
+> My board is based on a at91rm9200. I try to connect a dongle wifi
+> DWL-G122 (rt73usb) driver in Ad-Hoc mode with a PC ( dongle linksys
+> rt73usb but the ubuntu version). I trie also this version on my board
+> and the cvs versions with the same problem
+> 
+> My kernel is a 2.6.23.1 with little modifications to support my board
+> which is very closed to the at91rm9200-EK.
+> 
+> In Managed mode, the dongle works perfectly and I ping a router without
+> any problem
 
-It's not about IP, even though the macro has "IP" in it's name.  It's
-meant to ensure reasonable alignment after the link-level header,
-regardless of upper-level protocol.  So your layering violation
-commentary is simply rediculious and frankly starting to annoy the
-crap out of me.
+Good to hear at least that is working. :)
 
-As you were also shown, all of THIS is fully documented in a huge
-comment above the definition of NET_IP_ALIGN.
+> In Ad-hoc mode, on the at91 board the cell is detected but I don't see
+> any transfer. In debug mode, it seems that beacon and cell are detected
+> but only after the driver triggers a new scan.
 
-The irony in all of this is that NET_IP_ALIGN is in fact fully
-documented even in books such as O'Reilly's Understanding Linux
-Network Internals.  See chapter 10, sub-section 4.
+Could you try using wireshark or a similar tool to see if beacons
+are correctly send out?
+There are similar reports regarding rt73 which suggests that in adhoc mode
+the beacons are never being send out correctly.
 
-The skb_reserve() sequence that was so terribly difficult for you to
-discover is used in just about every network driver, and even used in
-the drivers/net/pci-skeleton.c, a skeleton PCI ethernet driver that is
-there exactly to show people how to do things properly.  It uses the
-constant '2' instead of NET_IP_ALIGN, which should obviously be
-corrected.
-
-All of your complaining is simply because you didn't put much
-effort into looking around to see what the existing practice
-was and therefore you got surprising results.  We have nearly
-a hundred ethernet drivers you could have studied to see how
-things are supposed to be done.
-
-I'm sorry for flaming you so much, but you are showing zero respect
-for existing practice in the kernel networking and you behave as if
-you're the only person in the world who has to deal with these issues.
-You accuse us openly of mis-architecting the Linux networking with
-these so-called "layering violations" and having maintained the stack
-for more than 10 years I start to take things like that quite
-personally.
+Ivo
