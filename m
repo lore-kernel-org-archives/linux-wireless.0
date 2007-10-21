@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:49759 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754667AbXJAIlt (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:57757 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbXJUUEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2007 04:41:49 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so4474277wah
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2007 01:41:48 -0700 (PDT)
-Message-ID: <1ba2fa240710010141x24a639a0k5cc3fefe06887557@mail.gmail.com>
-Date: Mon, 1 Oct 2007 10:41:48 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Andrew Morton" <akpm@linux-foundation.org>
-Subject: Re: handle_ba_action
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071001000439.1c9ae7b1.akpm@linux-foundation.org>
+	Sun, 21 Oct 2007 16:04:52 -0400
+Date: Sun, 21 Oct 2007 22:04:57 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mwallis@serialmonkey.com
+Subject: ISSC W89C35 802.11bg (was Re: rt73usb: support for wireless in
+	Kohjinsha subnotebook)
+Message-ID: <20071021200457.GA29024@elf.ucw.cz> (sfid-20071021_210455_524051_5AD3645D)
+References: <20071020184100.GA11640@elf.ucw.cz> <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071001000439.1c9ae7b1.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <efe7343f0710210802v6abc54d9k19293942477dabcc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It will be replaced with something like
+Hi!
 
-#ifdef CONFIG_MAC80211_HT_AGG
-        /* move to Tx aggregation for a certain DA/TID.
-         * return the starting frame's sequence number in start_seq_nums.
-         * If aggregation can not be started on a certain TID return error,
-         * else return success */
-        int (*ht_tx_agg_start)(struct ieee80211_hw *hw, const u8 *ra, u16 tid,
-                                        u16 *start_seq_num);
+> This device is NOT a Ralink USB wifi adapter!
+> 
+> Get the windows driver in this link and see for yourself.
+> http://www.conitech.it/conitech/ita/risorse.asp?cod=CN402USB
+> (ISSC W89C35 802.11bg WLAN USB Adapters (Native Wifi driver))
 
-        /* stop Tx aggregation for a certain DA/TID.
-         * If aggregation can not be stopped on a certain TID return error,
-         * else return success. generator field gives the HW an indication who
-         * requests to stop the aggregation - recipient (0) or initiator (1)
-         */
-        int (*ht_tx_agg_stop)(struct ieee80211_hw *hw, const u8 *ra, u16 tid);
+You are right, sorry for confusion.
 
-        /* move to Rx aggregation for a certain DA/TID.
-         * If aggregation can not be started on a certain TID return error,
-         * else return success */
-        int (*ht_rx_agg_start)(struct ieee80211_hw *hw, const u8 *ra, u16 tid,
-                                u16 start_seq_num);
-
-        /* stop Rx aggregation for a certain DA/TID.
-         * If aggregation can not be stopped on a certain TID return error,
-         * else return success. generator field gives the HW an indication who
-         * requests to stop the aggregation - recipient (0) or initiator (1)
-        */
-        int (*ht_rx_agg_stop)(struct ieee80211_hw *hw, const u8 *ra, u16 tid,
-                                int generator);
-#endif /* CONFIG_MAC80211_HT_AGG */
-
-On 10/1/07, Andrew Morton <akpm@linux-foundation.org> wrote:
-> Whoever added this to include/net/mac80211.h forgot to update
-> the ieee80211_ops comment block.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Now, the strange part comes. They have linux sources on their web
+pages... for 2.6.9 and 2.6.11. If anyone ported them forward, please
+let me know, otherwise I'll take a look at porting them.
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
