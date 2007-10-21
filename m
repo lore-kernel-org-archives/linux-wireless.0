@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:18176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750AbXJFMEG (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:8500 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbXJUL6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:04:06 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605539ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:06 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/16] rt2x00: get_duration expects values in 100kbs
-Date: Sat, 6 Oct 2007 14:14:58 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710061410.31765.IvDoorn@gmail.com>
-In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+	Sun, 21 Oct 2007 07:58:16 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1858098pyb
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 04:58:15 -0700 (PDT)
+Message-ID: <efe7343f0710210458haf18bf2u145402d0de8cf62d@mail.gmail.com> (sfid-20071021_125819_952482_61D23836)
+Date: Sun, 21 Oct 2007 12:58:15 +0100
+From: "Luis Correia" <luis.f.correia@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha subnotebook
+Cc: "Pavel Machek" <pavel@ucw.cz>, rt2400-devel@lists.sourceforge.net,
+	"kernel list" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+In-Reply-To: <200710211609.27675.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710061414.59128.IvDoorn@gmail.com> (sfid-20071006_130411_783853_415F1597)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071020184100.GA11640@elf.ucw.cz>
+	 <200710211549.44955.IvDoorn@gmail.com>
+	 <20071021113815.GF25270@elf.ucw.cz>
+	 <200710211609.27675.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get_duration expects all speeds to be passed in 100kbs,
-this means that passing 2 is incorrect and should be raised to 20
+Hi
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+On 10/21/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Sunday 21 October 2007, Pavel Machek wrote:
+> > On Sun 2007-10-21 15:49:44, Ivo van Doorn wrote:
+> > > On Sunday 21 October 2007, Pavel Machek wrote:
+> > > > Hi!
+> > > >
+> > > > > > Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
+> > > > > > 0x6206... I hope that to be compatible with
+> > > > > > net/wireless/rt2x00/rt73usb.c .
+> > > > >
+> > > > > Is there any reason you assume it is a rt73usb device,
+> > > > > or are you just making wild guesses about what the chipset is?
+> > > >
+> > > > Wild guess. I've seen 18e8:6XXX being handled by rt73usb, so..
+> > >
+> > > Thats an incorrect assumption. USB ID's listed in rt73usb don't even
+> > > guarentee that the device contains a rt73usb chipset since some manufacturers
+> > > produce cards with different chipsets while keeping the USB ID the same.
+> > > So the case that the card false in the 6xxx range says absolutely _nothing_.
+> >
+> > Well, see the other mail, it seems like rt73usb partially communicates
+> > with the card.
+>
+> If you add a USB ID to the driver, then you are telling it to communciate to
+> the device. It doesn't suddenly make the driver compatible with the device.
+>
+> > What info would be useful in determining what is this card similar to?
+> > Boot windows and look for driver name?
+>
+> Looking at the name of the windows driver is indeed usually a good start,
+> but you don't need to boot to windows to check that. How about looking
+> at the driver name on the driver CD, or on the support website of the
+> manufacturer.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 5f8df7a..edb5bd1 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -277,7 +277,7 @@ static void rt2400pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2x00pci_register_read(rt2x00dev, BCNCSR1, &reg);
- 	rt2x00_set_field32(&reg, BCNCSR1_PRELOAD,
--			   PREAMBLE + get_duration(IEEE80211_HEADER, 2));
-+			   PREAMBLE + get_duration(IEEE80211_HEADER, 20));
- 	rt2x00pci_register_write(rt2x00dev, BCNCSR1, reg);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index cac9430..68baccc 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -277,7 +277,7 @@ static void rt2500pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2x00pci_register_read(rt2x00dev, BCNCSR1, &reg);
- 	rt2x00_set_field32(&reg, BCNCSR1_PRELOAD,
--			   PREAMBLE + get_duration(IEEE80211_HEADER, 2));
-+			   PREAMBLE + get_duration(IEEE80211_HEADER, 20));
- 	rt2x00_set_field32(&reg, BCNCSR1_BEACON_CWMIN,
- 			   rt2x00lib_get_ring(rt2x00dev,
- 					      IEEE80211_TX_QUEUE_BEACON)
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 234b34e..c1f217b 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -280,7 +280,7 @@ static void rt2500usb_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2500usb_register_read(rt2x00dev, TXRX_CSR20, &reg);
- 	rt2x00_set_field16(&reg, TXRX_CSR20_OFFSET,
--			   (PREAMBLE + get_duration(IEEE80211_HEADER, 2)) >> 6);
-+			   (PREAMBLE + get_duration(IEEE80211_HEADER, 20)) >> 6);
- 	if (type == IEEE80211_IF_TYPE_STA)
- 		rt2x00_set_field16(&reg, TXRX_CSR20_BCN_EXPECT_WINDOW, 0);
- 	else
--- 
-1.5.3.4
+I'm currently going throught the manufacturer's website (in Japanese)
+to try and figure out which wireless chipset it is.
 
+Only one driver to go and I'm not even sure it is the wireless driver...
+
+Luis Correia
