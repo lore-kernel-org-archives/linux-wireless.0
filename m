@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:64530 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051AbXJYJWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:22:36 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Ian Schram <ischram@telenet.be>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 07/30] iwlwifi: Two comments in iwl-3945.c were longer than 80 columns
-Date: Thu, 25 Oct 2007 17:15:28 +0800
-Message-Id: <11933037613709-git-send-email-yi.zhu@intel.com> (sfid-20071025_102252_408400_2E8A21AA)
-In-Reply-To: <11933037601236-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
+	id S1751236AbXJULXz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Oct 2007 07:23:55 -0400
+MIME-Version: 1.0
+Subject: RE: [PATCH 1/1] mac80211: adding bss_config to low driver ops
+Date: Sun, 21 Oct 2007 13:23:49 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB03E6D304@hasmsx411.ger.corp.intel.com> (sfid-20071021_122359_838304_2E62C998)
+In-Reply-To: <200710172138.41444.flamingice@sourmilk.net>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Michael Wu" <flamingice@sourmilk.net>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Schram <ischram@telenet.be>
+Both remarks true, thanks
 
-This patch shorten two comments lines in iwl-3945.c
+-----Original Message-----
+From: Michael Wu [mailto:flamingice@sourmilk.net] 
+Sent: Thursday, October 18, 2007 3:39 AM
+To: Winkler, Tomas
+Cc: linville@tuxdriver.com; johannes@sipsolutions.net;
+linux-wireless@vger.kernel.org; Rindjunsky, Ron
+Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
 
-Signed-off-by: Ian Schram <ischram@telenet.be>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+On Wednesday 17 October 2007 19:51:46 you wrote:
+> +#define ASSOC_CHNAGED_STATE     (1<<0)
+> +#define ASSOC_CHNAGED_AID       (1<<1)
+> +#define ASSOC_CHNAGED_ERP       (1<<2)
+> +#define ASSOC_CHNAGED_WMM       (1<<3)
+> +
+s/CHNAGED/CHANGED/
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 8b7db0c..62b44a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1136,8 +1136,9 @@ int iwl_hw_nic_reset(struct iwl_priv *priv)
- }
- 
- /**
-- * iwl_hw_reg_adjust_power_by_temp - return index delta into power gain settings table
-- */
-+ * iwl_hw_reg_adjust_power_by_temp
-+ * return index delta into power gain settings table
-+*/
- static int iwl_hw_reg_adjust_power_by_temp(int new_reading, int old_reading)
- {
- 	return (new_reading - old_reading) * (-11) / 100;
-@@ -1157,8 +1158,9 @@ int iwl_hw_get_temperature(struct iwl_priv *priv)
- }
- 
- /**
-- * iwl_hw_reg_txpower_get_temperature - get current temperature by reading from NIC
-- */
-+ * iwl_hw_reg_txpower_get_temperature
-+ * get the current temperature by reading from NIC
-+*/
- static int iwl_hw_reg_txpower_get_temperature(struct iwl_priv *priv)
- {
- 	int temperature;
--- 
-1.5.2
+> +		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+> +		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+> +		ifsta->last_probe = jiffies;
+> +		ieee80211_led_assoc(local, bss_data->assoc);
+The SIOCGIOAP event should happen on both association and
+disassociation, not 
+just association.
+
+
+-Michael Wu
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
