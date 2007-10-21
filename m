@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:4753 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753406AbXJJSLh (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:12641 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbXJULvF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 14:11:37 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so170803wra
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 11:11:36 -0700 (PDT)
-Message-ID: <43e72e890710101111l10acad42u62eff5c995cfbe47@mail.gmail.com> (sfid-20071010_191140_562411_5C44448A)
-Date: Wed, 10 Oct 2007 14:11:35 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 4/6] ath5k: Add proper support for multicast
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <1191960084.4013.54.camel@johannes.berg>
+	Sun, 21 Oct 2007 07:51:05 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so791026ugc
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 04:51:04 -0700 (PDT)
+To: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha subnotebook
+Date: Sun, 21 Oct 2007 16:09:27 +0200
+Cc: rt2400-devel@lists.sourceforge.net,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+References: <20071020184100.GA11640@elf.ucw.cz> <200710211549.44955.IvDoorn@gmail.com> <20071021113815.GF25270@elf.ucw.cz>
+In-Reply-To: <20071021113815.GF25270@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
-	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
-	 <20071006011949.GD25022@pogo> <1191960084.4013.54.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710211609.27675.IvDoorn@gmail.com> (sfid-20071021_125117_632394_40EDBF3A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/9/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2007-10-05 at 21:19 -0400, Luis R. Rodriguez wrote:
->
-> > +     /* FIF_CONTROL doc says that if FIF_PROMISC_IN_BSS is not
-> > +      * set we should only pass on control frames for this
-> > +      * station. This needs testing. I believe right now this
-> > +      * enables *all* control frames */
->
-> Which is fine too, but not most efficient. Remember that the docs also
-> say you can pass up more frames, so an implementation that passes up
-> *all* frames at all times is correct in that it supports all filter
-> flags; it is, however, rather inefficient.
+On Sunday 21 October 2007, Pavel Machek wrote:
+> On Sun 2007-10-21 15:49:44, Ivo van Doorn wrote:
+> > On Sunday 21 October 2007, Pavel Machek wrote:
+> > > Hi!
+> > > 
+> > > > > Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
+> > > > > 0x6206... I hope that to be compatible with
+> > > > > net/wireless/rt2x00/rt73usb.c .
+> > > > 
+> > > > Is there any reason you assume it is a rt73usb device,
+> > > > or are you just making wild guesses about what the chipset is?
+> > > 
+> > > Wild guess. I've seen 18e8:6XXX being handled by rt73usb, so..
+> > 
+> > Thats an incorrect assumption. USB ID's listed in rt73usb don't even
+> > guarentee that the device contains a rt73usb chipset since some manufacturers
+> > produce cards with different chipsets while keeping the USB ID the same.
+> > So the case that the card false in the 6xxx range says absolutely _nothing_.
+> 
+> Well, see the other mail, it seems like rt73usb partially communicates
+> with the card.
 
-Right, well I think we might be able to figure out way to do by th
-BSSID, if it doesn't do so already. But I'll clean up the comments to
-reflect this is OK then.
+If you add a USB ID to the driver, then you are telling it to communciate to
+the device. It doesn't suddenly make the driver compatible with the device.
 
-  Luis
+> What info would be useful in determining what is this card similar to?
+> Boot windows and look for driver name?
+
+Looking at the name of the windows driver is indeed usually a good start,
+but you don't need to boot to windows to check that. How about looking
+at the driver name on the driver CD, or on the support website of the
+manufacturer.
+
+Ivo
