@@ -1,58 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:19146 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbXJVSNM (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:18113 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750760AbXJUClk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 14:13:12 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2622042pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 11:13:01 -0700 (PDT)
-Message-ID: <40f31dec0710221113h79301530pad834f1825989656@mail.gmail.com> (sfid-20071022_191352_809464_C91FD634)
-Date: Mon, 22 Oct 2007 18:13:01 +0000
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Frans Pop" <elendil@planet.nl>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200710221925.37758.elendil@planet.nl>
+	Sat, 20 Oct 2007 22:41:40 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 2/2] rtl8187: Allow multicast frames
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Sat, 20 Oct 2007 20:05:31 -0400
+Message-ID: <20071021000531.10326.713.stgit@tetra.sourmilk.net> (sfid-20071021_034145_975985_922E003D)
+In-Reply-To: <20071021000530.10326.77030.stgit@tetra.sourmilk.net>
+References: <20071021000530.10326.77030.stgit@tetra.sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200710211316.06772.elendil@planet.nl>
-	 <200710221848.27985.elendil@planet.nl>
-	 <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com>
-	 <200710221925.37758.elendil@planet.nl>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/22, Frans Pop <elendil@planet.nl>:
-> On Monday 22 October 2007, Luis R. Rodriguez wrote:
-> > >  -==Device Information==-
-> > > MAC Version:  5212 (0x50)
-> > > MAC Revision: 5213A(0x59)
-> > > PHY Revision: 5110 (0x0)
-> > > PHY Revision: 5110 (0x0)
-> >
-> > This is the problem. ath5k currently assumes only AR5210s (which are
-> > 802.11a only capable) have an RF5110. This is also an 802.11bg card.
-> > Essentially support for this is on the TODO list. For now we'll have
-> > to just detect this and inform users the card is not supported yet.
->
-> OK. Thanks for the info.
-> I'd gotten the impression that the driver was a bit further along. No
-> problem though. I'll just stay alert for announcements.
->
-> Cheers,
-> FJP
-> -
+This patch allows rtl8187 to receive multicast frames if requested.
 
-Your card is a 5213 and doesn't have 5110 PHY (it's a bug in ath_info
-i'm working on it -it reports phy version id = 0 sometimes and that
-matches 5110's version id, ath5k doesn't hve that bug), problem is
-that it is a b/g only card and we didn't have such cards to test. I'll
-send some patches soon that might fix b/g only PHYs but i can't
-guarantee anything ;-(
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+
+ drivers/net/wireless/rtl8187_dev.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 590f4b4..1533bff 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -433,6 +433,9 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 
+ 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
+ 
++	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
++	rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
++
+ 	rtl8187_init_urbs(dev);
+ 
+ 	reg = RTL818X_RX_CONF_ONLYERLPKT |
+@@ -582,32 +585,31 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev, int if_id,
+ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 				     unsigned int changed_flags,
+ 				     unsigned int *total_flags,
+-				     int mc_count, struct dev_addr_list *mc_list)
++				     int mc_count, struct dev_addr_list *mclist)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	*total_flags = 0;
+-
+-	if (changed_flags & FIF_ALLMULTI)
+-		priv->rx_conf ^= RTL818X_RX_CONF_MULTICAST;
+ 	if (changed_flags & FIF_FCSFAIL)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+ 	if (changed_flags & FIF_CONTROL)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+ 	if (changed_flags & FIF_OTHER_BSS)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
+-
+-	if (mc_count > 0)
++	if (*total_flags & FIF_ALLMULTI || mc_count > 0)
+ 		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
++	else
++		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
++
++	*total_flags = 0;
+ 
+-	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
+-		*total_flags |= FIF_ALLMULTI;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_FCS)
+ 		*total_flags |= FIF_FCSFAIL;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
+ 		*total_flags |= FIF_CONTROL;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
+ 		*total_flags |= FIF_OTHER_BSS;
++	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
++		*total_flags |= FIF_ALLMULTI;
+ 
+ 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
+ }
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
