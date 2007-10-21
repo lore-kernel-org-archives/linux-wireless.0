@@ -1,626 +1,610 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51682 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750839AbXJIONZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 10:13:25 -0400
-Subject: Re: [PATCH, take 2] libertas: clean up scan debug messages
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200710091415.19171.hs4233@mail.mn-solutions.de>
-References: <200710091344.31107.hs4233@mail.mn-solutions.de>
-	 <200710091415.19171.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 09 Oct 2007 10:13:49 -0400
-Message-Id: <1191939229.17254.5.camel@localhost.localdomain> (sfid-20071009_151330_250777_FA407243)
+Received: from nf-out-0910.google.com ([64.233.182.190]:3746 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbXJUUil (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Oct 2007 16:38:41 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so842364nfb
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 13:38:39 -0700 (PDT)
+Subject: Re: [Fwd: Problem with a Driver rt73 in ad-hoc mode between a arm
+	and a pc]
+From: Bruno =?ISO-8859-1?Q?V=E9tel?= <bvetel@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200710211820.13002.IvDoorn@gmail.com>
+References: <1192979624.9056.23.camel@rigel.esas.fr>
+	 <200710211745.18430.IvDoorn@gmail.com>
+	 <1192982171.9056.34.camel@rigel.esas.fr>
+	 <200710211820.13002.IvDoorn@gmail.com>
+Content-Type: multipart/mixed; boundary="=-nlFfeV8qyVCjfzxNA+gk"
+Date: Sun, 21 Oct 2007 22:37:58 +0200
+Message-Id: <1192999078.9056.49.camel@rigel.esas.fr> (sfid-20071021_213850_028264_5354A6A3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-10-09 at 14:15 +0200, Holger Schurig wrote:
-> * make scan debug output cleaner
-> * change some LBS_DEB_ASSOC messages to LBS_DEB_SCAN, which is more correct
-> * move helper functions together
-> * print function return value in the tracing code at one central location
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+--=-nlFfeV8qyVCjfzxNA+gk
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-> ---
-> 
-> Index: libertas-2.6/drivers/net/wireless/libertas/scan.c
-> ===================================================================
-> --- libertas-2.6.orig/drivers/net/wireless/libertas/scan.c	2007-10-09 14:38:35.000000000 +0200
-> +++ libertas-2.6/drivers/net/wireless/libertas/scan.c	2007-10-09 15:12:49.000000000 +0200
-> @@ -65,6 +65,15 @@
->  static const u8 zeromac[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
->  static const u8 bcastmac[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
->  
-> +
-> +
-> +
-> +/*********************************************************************/
-> +/*                                                                   */
-> +/*  Misc helper functions                                            */
-> +/*                                                                   */
-> +/*********************************************************************/
-> +
->  static inline void clear_bss_descriptor (struct bss_descriptor * bss)
->  {
->  	/* Don't blow away ->list, just BSS data */
-> @@ -165,7 +174,7 @@ static int is_network_compatible(wlan_ad
->  {
->  	int matched = 0;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	if (bss->mode != mode)
->  		goto done;
-> @@ -214,13 +223,41 @@ static int is_network_compatible(wlan_ad
->  	       (bss->capability & WLAN_CAPABILITY_PRIVACY));
->  
->  done:
-> -	lbs_deb_leave(LBS_DEB_SCAN);
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "matched: %d", matched);
->  	return matched;
->  }
->  
->  /**
-> + *  @brief Compare two SSIDs
-> + *
-> + *  @param ssid1    A pointer to ssid to compare
-> + *  @param ssid2    A pointer to ssid to compare
-> + *
-> + *  @return         0--ssid is same, otherwise is different
-> + */
-> +int libertas_ssid_cmp(u8 *ssid1, u8 ssid1_len, u8 *ssid2, u8 ssid2_len)
-> +{
-> +	if (ssid1_len != ssid2_len)
-> +		return -1;
-> +
-> +	return memcmp(ssid1, ssid2, ssid1_len);
-> +}
-> +
-> +
-> +
-> +
-> +/*********************************************************************/
-> +/*                                                                   */
-> +/*  Main scanning support                                            */
-> +/*                                                                   */
-> +/*********************************************************************/
-> +
-> +
-> +/**
->   *  @brief Create a channel list for the driver to scan based on region info
->   *
-> + *  Only used from wlan_scan_setup_scan_config()
-> + *
->   *  Use the driver region/band information to construct a comprehensive list
->   *    of channels to scan.  This routine is used for any scan that is not
->   *    provided a specific channel list to scan.
-> @@ -248,6 +285,8 @@ static void wlan_scan_create_channel_lis
->  	int nextchan;
->  	u8 scantype;
->  
-> +	lbs_deb_enter_args(LBS_DEB_SCAN, "filteredscan %d", filteredscan);
-> +
->  	chanidx = 0;
->  
->  	/* Set the default scan type to the user specified type, will later
-> @@ -384,6 +423,8 @@ wlan_scan_setup_scan_config(wlan_private
->  	int channel;
->  	int radiotype;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	pscancfgout = kzalloc(MAX_SCAN_CFG_ALLOC, GFP_KERNEL);
->  	if (pscancfgout == NULL)
->  		goto out;
-> @@ -481,13 +522,12 @@ wlan_scan_setup_scan_config(wlan_private
->  
->  	if (!puserscanin || !puserscanin->chanlist[0].channumber) {
->  		/* Create a default channel scan list */
-> -		lbs_deb_scan("Scan: Creating full region channel list\n");
-> +		lbs_deb_scan("creating full region channel list\n");
->  		wlan_scan_create_channel_list(priv, pscanchanlist,
->  					      *pfilteredscan);
->  		goto out;
->  	}
->  
-> -	lbs_deb_scan("Scan: Using supplied channel list\n");
->  	for (chanidx = 0;
->  	     chanidx < WLAN_IOCTL_USER_SCAN_CHAN_MAX
->  	     && puserscanin->chanlist[chanidx].channumber; chanidx++) {
-> @@ -529,7 +569,7 @@ wlan_scan_setup_scan_config(wlan_private
->  	    (puserscanin->chanlist[0].channumber ==
->  			       priv->adapter->curbssparams.channel)) {
->  		*pscancurrentonly = 1;
-> -		lbs_deb_scan("Scan: Scanning current channel only");
-> +		lbs_deb_scan("scanning current channel only");
->  	}
->  
->  out:
-> @@ -539,6 +579,8 @@ out:
->  /**
->   *  @brief Construct and send multiple scan config commands to the firmware
->   *
-> + *  Only used from wlan_scan_networks()
-> + *
->   *  Previous routines have created a wlan_scan_cmd_config with any requested
->   *   TLVs.  This function splits the channel TLV into maxchanperscan lists
->   *   and sends the portion of the channel TLV along with the other TLVs
-> @@ -576,12 +618,14 @@ static int wlan_scan_channel_list(wlan_p
->  	int scanned = 0;
->  	union iwreq_data wrqu;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter_args(LBS_DEB_SCAN, "maxchanperscan %d, filteredscan %d, "
-> +		"full_scan %d", maxchanperscan, filteredscan, full_scan);
->  
->  	if (!pscancfgout || !pchantlvout || !pscanchanlist) {
-> -		lbs_deb_scan("Scan: Null detect: %p, %p, %p\n",
-> -		       pscancfgout, pchantlvout, pscanchanlist);
-> -		return -1;
-> +		lbs_deb_scan("pscancfgout, pchantlvout or "
-> +			"pscanchanlist is NULL\n");
-> +		ret = -1;
-> +		goto out;
->  	}
->  
->  	pchantlvout->header.type = cpu_to_le16(TLV_TYPE_CHANLIST);
-> @@ -613,9 +657,10 @@ static int wlan_scan_channel_list(wlan_p
->  		while (tlvidx < maxchanperscan && ptmpchan->channumber
->  		       && !doneearly && scanned < 2) {
->  
-> -			lbs_deb_scan("Scan: Chan(%3d), Radio(%d), mode(%d,%d), "
-> -			             "Dur(%d)\n",
-> -			             ptmpchan->channumber, ptmpchan->radiotype,
-> +			lbs_deb_scan("channel %d, radio %d, passive %d, "
-> +				"dischanflt %d, maxscantime %d\n",
-> +				ptmpchan->channumber,
-> +				ptmpchan->radiotype,
->  			             ptmpchan->chanscanmode.passivescan,
->  			             ptmpchan->chanscanmode.disablechanfilt,
->  			             ptmpchan->maxscantime);
-> @@ -700,20 +745,25 @@ done:
->  		wireless_send_event(priv->dev, SIOCGIWSCAN, &wrqu, NULL);
->  	}
->  
-> +out:
->  	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", ret);
->  	return ret;
->  }
->  
-> -static void
-> -clear_selected_scan_list_entries(wlan_adapter * adapter,
-> -                                 const struct wlan_ioctl_user_scan_cfg * scan_cfg)
-> +/*
-> + * Only used from wlan_scan_networks()
-> +*/
-> +static void clear_selected_scan_list_entries(wlan_adapter *adapter,
-> +	const struct wlan_ioctl_user_scan_cfg *scan_cfg)
->  {
-> -	struct bss_descriptor * bss;
-> -	struct bss_descriptor * safe;
-> +	struct bss_descriptor *bss;
-> +	struct bss_descriptor *safe;
->  	u32 clear_ssid_flag = 0, clear_bssid_flag = 0;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	if (!scan_cfg)
-> -		return;
-> +		goto out;
->  
->  	if (scan_cfg->clear_ssid && scan_cfg->ssid_len)
->  		clear_ssid_flag = 1;
-> @@ -725,7 +775,7 @@ clear_selected_scan_list_entries(wlan_ad
->  	}
->  
->  	if (!clear_ssid_flag && !clear_bssid_flag)
-> -		return;
-> +		goto out;
->  
->  	mutex_lock(&adapter->lock);
->  	list_for_each_entry_safe (bss, safe, &adapter->network_list, list) {
-> @@ -748,12 +798,16 @@ clear_selected_scan_list_entries(wlan_ad
->  		}
->  	}
->  	mutex_unlock(&adapter->lock);
-> +out:
-> +	lbs_deb_leave(LBS_DEB_SCAN);
->  }
->  
-> 
->  /**
->   *  @brief Internal function used to start a scan based on an input config
->   *
-> + *  Also used from debugfs
-> + *
->   *  Use the input user scan configuration information when provided in
->   *    order to send the appropriate scan commands to firmware to populate or
->   *    update the internal driver scan table
-> @@ -761,6 +815,7 @@ clear_selected_scan_list_entries(wlan_ad
->   *  @param priv          A pointer to wlan_private structure
->   *  @param puserscanin   Pointer to the input configuration for the requested
->   *                       scan.
-> + *  @param full_scan     ???
->   *
->   *  @return              0 or < 0 if error
->   */
-> @@ -781,7 +836,7 @@ int wlan_scan_networks(wlan_private * pr
->  	int i = 0;
->  #endif
->  
-> -	lbs_deb_enter(LBS_DEB_SCAN);
-> +	lbs_deb_enter_args(LBS_DEB_SCAN, "full_scan %d", full_scan);
->  
->  	/* Cancel any partial outstanding partial scans if this scan
->  	 * is a full scan.
-> @@ -832,8 +887,9 @@ int wlan_scan_networks(wlan_private * pr
->  #ifdef CONFIG_LIBERTAS_DEBUG
->  	/* Dump the scan table */
->  	mutex_lock(&adapter->lock);
-> +	lbs_deb_scan("The scan table contains:\n");
->  	list_for_each_entry (iter_bss, &adapter->network_list, list) {
-> -		lbs_deb_scan("Scan:(%02d) " MAC_FMT ", RSSI[%03d], SSID[%s]\n",
-> +		lbs_deb_scan("scan %02d, " MAC_FMT ", RSSI, %d, SSID '%s'\n",
->  		       i++, MAC_ARG(iter_bss->bssid), (s32) iter_bss->rssi,
->  		       escape_essid(iter_bss->ssid, iter_bss->ssid_len));
->  	}
-> @@ -884,7 +940,7 @@ static int libertas_process_bss(struct b
->  	u16 beaconsize = 0;
->  	int ret;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	if (*bytesleft >= sizeof(beaconsize)) {
->  		/* Extract & convert beacon size from the command buffer */
-> @@ -896,7 +952,8 @@ static int libertas_process_bss(struct b
->  	if (beaconsize == 0 || beaconsize > *bytesleft) {
->  		*pbeaconinfo += *bytesleft;
->  		*bytesleft = 0;
-> -		return -1;
-> +		ret = -1;
-> +		goto done;
->  	}
->  
->  	/* Initialize the current working beacon pointer for this BSS iteration */
-> @@ -913,7 +970,8 @@ static int libertas_process_bss(struct b
->  
->  	if ((end - pos) < 12) {
->  		lbs_deb_scan("process_bss: Not enough bytes left\n");
-> -		return -1;
-> +		ret = -1;
-> +		goto done;
->  	}
->  
->  	/*
-> @@ -1089,38 +1147,26 @@ done:
->  }
->  
->  /**
-> - *  @brief Compare two SSIDs
-> - *
-> - *  @param ssid1    A pointer to ssid to compare
-> - *  @param ssid2    A pointer to ssid to compare
-> - *
-> - *  @return         0--ssid is same, otherwise is different
-> - */
-> -int libertas_ssid_cmp(u8 *ssid1, u8 ssid1_len, u8 *ssid2, u8 ssid2_len)
-> -{
-> -	if (ssid1_len != ssid2_len)
-> -		return -1;
-> -
-> -	return memcmp(ssid1, ssid2, ssid1_len);
-> -}
-> -
-> -/**
->   *  @brief This function finds a specific compatible BSSID in the scan list
->   *
-> + *  Used in association code
-> + *
->   *  @param adapter  A pointer to wlan_adapter
->   *  @param bssid    BSSID to find in the scan list
->   *  @param mode     Network mode: Infrastructure or IBSS
->   *
->   *  @return         index in BSSID list, or error return code (< 0)
->   */
-> -struct bss_descriptor * libertas_find_bssid_in_list(wlan_adapter * adapter,
-> +struct bss_descriptor *libertas_find_bssid_in_list(wlan_adapter * adapter,
->  		u8 * bssid, u8 mode)
->  {
->  	struct bss_descriptor * iter_bss;
->  	struct bss_descriptor * found_bss = NULL;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	if (!bssid)
-> -		return NULL;
-> +		goto out;
->  
->  	lbs_deb_hex(LBS_DEB_SCAN, "looking for",
->  		bssid, ETH_ALEN);
-> @@ -1147,12 +1193,16 @@ struct bss_descriptor * libertas_find_bs
->  	}
->  	mutex_unlock(&adapter->lock);
->  
-> +out:
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "found_bss %p", found_bss);
->  	return found_bss;
->  }
->  
->  /**
->   *  @brief This function finds ssid in ssid list.
->   *
-> + *  Used in association code
-> + *
->   *  @param adapter  A pointer to wlan_adapter
->   *  @param ssid     SSID to find in the list
->   *  @param bssid    BSSID to qualify the SSID selection (if provided)
-> @@ -1169,6 +1219,8 @@ struct bss_descriptor * libertas_find_ss
->  	struct bss_descriptor * found_bss = NULL;
->  	struct bss_descriptor * tmp_oldest = NULL;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	mutex_lock(&adapter->lock);
->  
->  	list_for_each_entry (iter_bss, &adapter->network_list, list) {
-> @@ -1213,6 +1265,7 @@ struct bss_descriptor * libertas_find_ss
->  
->  out:
->  	mutex_unlock(&adapter->lock);
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "found_bss %p", found_bss);
->  	return found_bss;
->  }
->  
-> @@ -1233,6 +1286,8 @@ static struct bss_descriptor * libertas_
->  	struct bss_descriptor * iter_bss;
->  	struct bss_descriptor * best_bss = NULL;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	mutex_lock(&adapter->lock);
->  
->  	list_for_each_entry (iter_bss, &adapter->network_list, list) {
-> @@ -1257,12 +1312,15 @@ static struct bss_descriptor * libertas_
->  	}
->  
->  	mutex_unlock(&adapter->lock);
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "best_bss %p", best_bss);
->  	return best_bss;
->  }
->  
->  /**
->   *  @brief Find the AP with specific ssid in the scan list
->   *
-> + *  Used from association worker.
-> + *
->   *  @param priv         A pointer to wlan_private structure
->   *  @param pSSID        A pointer to AP's ssid
->   *
-> @@ -1275,11 +1333,11 @@ int libertas_find_best_network_ssid(wlan
->  	int ret = -1;
->  	struct bss_descriptor * found;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	wlan_scan_networks(priv, NULL, 1);
->  	if (adapter->surpriseremoved)
-> -		return -1;
-> +		goto out;
->  
->  	wait_event_interruptible(adapter->cmd_pending, !adapter->nr_cmd_pending);
->  
-> @@ -1291,6 +1349,7 @@ int libertas_find_best_network_ssid(wlan
->  		ret = 0;
->  	}
->  
-> +out:
->  	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", ret);
->  	return ret;
->  }
-> @@ -1325,10 +1384,17 @@ int libertas_set_scan(struct net_device 
->  	return 0;
->  }
->  
-> +
->  /**
->   *  @brief Send a scan command for all available channels filtered on a spec
->   *
-> + *  Used in association code and from debugfs
-> + *
->   *  @param priv             A pointer to wlan_private structure
-> + *  @param ssid             A pointer to the SSID to scan for
-> + *  @param ssid_len         Length of the SSID
-> + *  @param clear_ssid       Should existing scan results with this SSID
-> + *                          be cleared?
->   *  @param prequestedssid   A pointer to AP's ssid
->   *  @param keeppreviousscan Flag used to save/clear scan table before scan
->   *
-> @@ -1341,7 +1407,8 @@ int libertas_send_specific_ssid_scan(wla
->  	struct wlan_ioctl_user_scan_cfg scancfg;
->  	int ret = 0;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter_args(LBS_DEB_SCAN, "SSID '%s', clear %d",
-> +		escape_essid(ssid, ssid_len), clear_ssid);
->  
->  	if (!ssid_len)
->  		goto out;
-> @@ -1352,15 +1419,26 @@ int libertas_send_specific_ssid_scan(wla
->  	scancfg.clear_ssid = clear_ssid;
->  
->  	wlan_scan_networks(priv, &scancfg, 1);
-> -	if (adapter->surpriseremoved)
-> -		return -1;
-> +	if (adapter->surpriseremoved) {
-> +		ret = -1;
-> +		goto out;
-> +	}
->  	wait_event_interruptible(adapter->cmd_pending, !adapter->nr_cmd_pending);
->  
->  out:
-> -	lbs_deb_leave(LBS_DEB_ASSOC);
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", ret);
->  	return ret;
->  }
->  
-> +
-> +
-> +
-> +/*********************************************************************/
-> +/*                                                                   */
-> +/*  Support for Wireless Extensions                                  */
-> +/*                                                                   */
-> +/*********************************************************************/
-> +
->  #define MAX_CUSTOM_LEN 64
->  
->  static inline char *libertas_translate_scan(wlan_private *priv,
-> @@ -1377,10 +1455,13 @@ static inline char *libertas_translate_s
->  #define RSSI_DIFF    ((u8)(PERFECT_RSSI - WORST_RSSI))
->  	u8 rssi;
->  
-> +	lbs_deb_enter(LBS_DEB_SCAN);
-> +
->  	cfp = libertas_find_cfp_by_band_and_channel(adapter, 0, bss->channel);
->  	if (!cfp) {
->  		lbs_deb_scan("Invalid channel number %d\n", bss->channel);
-> -		return NULL;
-> +		start = NULL;
-> +		goto out;
->  	}
->  
->  	/* First entry *MUST* be the AP BSSID */
-> @@ -1508,11 +1589,13 @@ static inline char *libertas_translate_s
->  			start = iwe_stream_add_point(start, stop, &iwe, custom);
->  	}
->  
-> +out:
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "start %p", start);
->  	return start;
->  }
->  
->  /**
-> - *  @brief  Retrieve the scan table entries via wireless tools IOCTL call
-> + *  @brief  Handle Retrieve scan table ioctl
->   *
->   *  @param dev          A pointer to net_device structure
->   *  @param info         A pointer to iw_request_info structure
-> @@ -1533,7 +1616,7 @@ int libertas_get_scan(struct net_device 
->  	struct bss_descriptor * iter_bss;
->  	struct bss_descriptor * safe;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
->  	if ((adapter->mode == IW_MODE_ADHOC) && adapter->adhoccreate) {
-> @@ -1575,19 +1658,27 @@ int libertas_get_scan(struct net_device 
->  	dwrq->length = (ev - extra);
->  	dwrq->flags = 0;
->  
-> -	lbs_deb_leave(LBS_DEB_ASSOC);
-> +	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", err);
->  	return err;
->  }
->  
-> +
-> +
-> +
-> +/*********************************************************************/
-> +/*                                                                   */
-> +/*  Command execution                                                */
-> +/*                                                                   */
-> +/*********************************************************************/
-> +
-> +
->  /**
->   *  @brief Prepare a scan command to be sent to the firmware
->   *
-> - *  Use the wlan_scan_cmd_config sent to the command processing module in
-> - *   the libertas_prepare_and_send_command to configure a cmd_ds_802_11_scan command
-> - *   struct to send to firmware.
-> + *  Called from libertas_prepare_and_send_command() in cmd.c
->   *
-> - *  The fixed fields specifying the BSS type and BSSID filters as well as a
-> - *   variable number/length of TLVs are sent in the command to firmware.
-> + *  Sends a fixed lenght data part (specifying the BSS type and BSSID filters)
-> + *  as well as a variable number/length of TLVs to the firmware.
->   *
->   *  @param priv       A pointer to wlan_private structure
->   *  @param cmd        A pointer to cmd_ds_command structure to be sent to
-> @@ -1596,18 +1687,14 @@ int libertas_get_scan(struct net_device 
->   *                    to set the fields/TLVs for the command sent to firmware
->   *
->   *  @return           0 or -1
-> - *
-> - *  @sa wlan_scan_create_channel_list
->   */
->  int libertas_cmd_80211_scan(wlan_private * priv,
->  			 struct cmd_ds_command *cmd, void *pdata_buf)
->  {
->  	struct cmd_ds_802_11_scan *pscan = &cmd->params.scan;
-> -	struct wlan_scan_cmd_config *pscancfg;
-> -
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	struct wlan_scan_cmd_config *pscancfg = pdata_buf;
->  
-> -	pscancfg = pdata_buf;
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	/* Set fixed field variables in scan command */
->  	pscan->bsstype = pscancfg->bsstype;
-> @@ -1620,11 +1707,11 @@ int libertas_cmd_80211_scan(wlan_private
->  	cmd->size = cpu_to_le16(sizeof(pscan->bsstype) + ETH_ALEN
->  				+ pscancfg->tlvbufferlen + S_DS_GEN);
->  
-> -	lbs_deb_scan("SCAN_CMD: command=%x, size=%x, seqnum=%x\n",
-> +	lbs_deb_scan("SCAN_CMD: command 0x%04x, size %d, seqnum %d\n",
->  		     le16_to_cpu(cmd->command), le16_to_cpu(cmd->size),
->  		     le16_to_cpu(cmd->seqnum));
->  
-> -	lbs_deb_leave(LBS_DEB_ASSOC);
-> +	lbs_deb_leave(LBS_DEB_SCAN);
->  	return 0;
->  }
->  
-> @@ -1643,6 +1730,8 @@ static inline int is_same_network(struct
->  /**
->   *  @brief This function handles the command response of scan
->   *
-> + *  Called from handle_cmd_response() in cmdrespc.
-> + *
->   *   The response buffer for the scan command has the following
->   *      memory layout:
->   *
-> @@ -1677,7 +1766,7 @@ int libertas_ret_80211_scan(wlan_private
->  	int tlvbufsize;
->  	int ret;
->  
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> +	lbs_deb_enter(LBS_DEB_SCAN);
->  
->  	/* Prune old entries from scan table */
->  	list_for_each_entry_safe (iter_bss, safe, &adapter->network_list, list) {
-> Index: libertas-2.6/drivers/net/wireless/libertas/join.c
-> ===================================================================
-> --- libertas-2.6.orig/drivers/net/wireless/libertas/join.c	2007-10-09 14:38:35.000000000 +0200
-> +++ libertas-2.6/drivers/net/wireless/libertas/join.c	2007-10-09 14:39:39.000000000 +0200
-> @@ -797,8 +797,6 @@ int libertas_ret_80211_associate(wlan_pr
->  		netif_wake_queue(priv->mesh_dev);
->  	}
->  
-> -	lbs_deb_join("ASSOC_RESP: Associated \n");
-> -
->  	memcpy(wrqu.ap_addr.sa_data, adapter->curbssparams.bssid, ETH_ALEN);
->  	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
->  	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
+Hi Ivo
+
+Sorry again for the noise. I forgot to verify the association of the
+dongle before running your script.
+
+Here are the good registers.
+
+
+	Thanks
+
+
+	Bruno
+
+--=-nlFfeV8qyVCjfzxNA+gk
+Content-Disposition: attachment; filename=registers1
+Content-Type: text/plain; name=registers1; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+
+BBP:
+0 0x16
+1 0x48
+2 0x00
+3 0x81
+4 0x11
+5 0x0b
+6 0x10
+7 0x00
+8 0x00
+9 0x00
+10 0x00
+11 0x04
+12 0x06
+13 0xb0
+14 0x18
+15 0x30
+16 0x2c
+17 0x40
+18 0x06
+19 0x00
+20 0x1e
+21 0xc8
+22 0x38
+23 0x06
+24 0xfe
+25 0x00
+26 0x0d
+27 0x27
+28 0x06
+29 0x00
+30 0x72
+31 0x2b
+32 0x0b
+33 0x55
+34 0x12
+35 0x50
+36 0x11
+37 0x07
+38 0x00
+39 0xf8
+40 0xf5
+41 0x60
+42 0x0f
+43 0x3f
+44 0x7f
+45 0x83
+46 0x07
+47 0x14
+48 0x04
+49 0x02
+50 0xa8
+51 0x00
+52 0x08
+53 0x10
+54 0x18
+55 0x00
+56 0x10
+57 0x08
+58 0x01
+59 0x05
+60 0x10
+61 0x04
+62 0x04
+63 0x00
+64 0x01
+65 0x03
+66 0x00
+67 0x00
+68 0x00
+69 0x00
+70 0x26
+71 0x00
+72 0x00
+73 0x00
+74 0xff
+75 0xfe
+76 0x40
+77 0x00
+78 0x00
+79 0x00
+80 0x05
+81 0x14
+82 0x50
+83 0xc0
+84 0x10
+85 0x72
+86 0xfe
+87 0x40
+88 0xfe
+89 0x40
+90 0x0f
+91 0x08
+92 0x00
+93 0x00
+94 0x06
+95 0x08
+96 0x48
+97 0x48
+98 0x48
+99 0x00
+100 0x20
+101 0x06
+102 0x16
+103 0x00
+104 0x2c
+105 0x20
+106 0x90
+107 0x04
+108 0x04
+109 0x00
+110 0x00
+111 0x00
+112 0x00
+113 0x00
+114 0x00
+115 0x00
+116 0x00
+117 0x00
+118 0x00
+119 0x00
+120 0x00
+121 0x00
+122 0x00
+123 0x00
+124 0x00
+125 0x00
+126 0x00
+127 0x00
+CSR:
+0 0x0002573a
+1 0x00000004
+2 0x769a1700
+3 0x00ffe993
+4 0xaf33e096
+5 0x00031afc
+6 0x00000fff
+7 0x00000000
+8 0x013a030a
+9 0x0000a314
+10 0x00000718
+11 0x000a0050
+12 0x00000009
+13 0x00007f80
+14 0x03431e46
+15 0x00000000
+16 0x027eb162
+17 0x9eaa9eaf
+18 0x8a8b8c8d
+19 0x00858687
+20 0x740a0732
+21 0x0000000f
+22 0x0a143870
+23 0x2e31353b
+24 0x2a2a2a2c
+25 0x001d0640
+26 0x00001008
+27 0x0000c78f
+28 0x38368a26
+29 0x00000001
+30 0x0000041d
+31 0x0000000f
+32 0x00010000
+33 0x000023b0
+34 0x82188200
+35 0x00009140
+36 0x140d5a1f
+37 0x00040a06
+38 0x00080606
+39 0x00000408
+40 0x00000000
+41 0x00000000
+42 0x00000000
+43 0x00000000
+44 0x00000000
+45 0x00000000
+46 0x00000000
+47 0x00000000
+48 0x00010000
+49 0x00000000
+50 0x00000000
+51 0x0000022d
+52 0x0000000b
+53 0x00000000
+54 0x00000000
+55 0x00000000
+56 0x00000000
+57 0x00000000
+58 0x03000000
+59 0x00000000
+60 0x00000000
+61 0x00000000
+62 0x00000000
+63 0x00000000
+64 0xffd5af00
+65 0xffd5af00
+66 0xffd5af00
+67 0xffd5af00
+68 0xffd5af00
+69 0xffd5af00
+70 0xffd5af00
+71 0xffd5af00
+72 0xffd5af00
+73 0xffd5af00
+74 0xffd5af00
+75 0xffd5af00
+76 0xffd5af00
+77 0xffd5af00
+78 0xffd5af00
+79 0xffd5af00
+80 0xffd5af00
+81 0xffd5af00
+82 0xffd5af00
+83 0xffd5af00
+84 0xffd5af00
+85 0xffd5af00
+86 0xffd5af00
+87 0xffd5af00
+88 0xffd5af00
+89 0xffd5af00
+90 0xffd5af00
+91 0xffd5af00
+92 0xffd5af00
+93 0xffd5af00
+94 0xffd5af00
+95 0xffd5af00
+96 0xffd5af00
+97 0xffd5af00
+98 0xffd5af00
+99 0xffd5af00
+100 0xffd5af00
+101 0xffd5af00
+102 0xffd5af00
+103 0xffd5af00
+104 0xffd5af00
+105 0xffd5af00
+106 0xffd5af00
+107 0xffd5af00
+108 0xffd5af00
+109 0xffd5af00
+110 0xffd5af00
+111 0xffd5af00
+112 0xffd5af00
+113 0xffd5af00
+114 0xffd5af00
+115 0xffd5af00
+116 0xffd5af00
+117 0xffd5af00
+118 0xffd5af00
+119 0xffd5af00
+120 0xffd5af00
+121 0xffd5af00
+122 0xffd5af00
+123 0xffd5af00
+124 0xffd5af00
+125 0xffd5af00
+126 0xffd5af00
+127 0xffd5af00
+128 0xffd5af00
+129 0xffd5af00
+130 0xffd5af00
+131 0xffd5af00
+132 0xffd5af00
+133 0xffd5af00
+134 0xffd5af00
+135 0xffd5af00
+136 0xffd5af00
+137 0xffd5af00
+138 0xffd5af00
+139 0xffd5af00
+140 0xffd5af00
+141 0xffd5af00
+142 0xffd5af00
+143 0xffd5af00
+144 0xffd5af00
+145 0xffd5af00
+146 0xffd5af00
+147 0xffd5af00
+148 0xffd5af00
+149 0xffd5af00
+150 0xffd5af00
+151 0xffd5af00
+152 0xffd5af00
+153 0xffd5af00
+154 0xffd5af00
+155 0xffd5af00
+156 0xffd5af00
+157 0xffd5af00
+158 0xffd5af00
+159 0xffd5af00
+160 0xffd5af00
+161 0xffd5af00
+162 0xffd5af00
+163 0xffd5af00
+164 0xffd5af00
+165 0xffd5af00
+166 0xffd5af00
+167 0xffd5af00
+168 0xffd5af00
+169 0xffd5af00
+170 0xffd5af00
+171 0xffd5af00
+172 0xffd5af00
+173 0xffd5af00
+174 0xffd5af00
+175 0xffd5af00
+176 0xffd5af00
+177 0xffd5af00
+178 0xffd5af00
+179 0xffd5af00
+180 0xffd5af00
+181 0xffd5af00
+182 0xffd5af00
+183 0xffd5af00
+184 0xffd5af00
+185 0xffd5af00
+186 0xffd5af00
+187 0xffd5af00
+188 0xffd5af00
+189 0xffd5af00
+190 0xffd5af00
+191 0xffd5af00
+192 0xffd5af00
+193 0xffd5af00
+194 0xffd5af00
+195 0xffd5af00
+196 0xffd5af00
+197 0xffd5af00
+198 0xffd5af00
+199 0xffd5af00
+200 0xffd5af00
+201 0xffd5af00
+202 0xffd5af00
+203 0xffd5af00
+204 0xffd5af00
+205 0xffd5af00
+206 0xffd5af00
+207 0xffd5af00
+208 0xffd5af00
+209 0xffd5af00
+210 0xffd5af00
+211 0xffd5af00
+212 0xffd5af00
+213 0xffd5af00
+214 0xffd5af00
+215 0xffd5af00
+216 0xffd5af00
+217 0xffd5af00
+218 0xffd5af00
+219 0xffd5af00
+220 0xffd5af00
+221 0xffd5af00
+222 0xffd5af00
+223 0xffd5af00
+224 0xffd5af00
+225 0xffd5af00
+226 0xffd5af00
+227 0xffd5af00
+228 0xffd5af00
+229 0xffd5af00
+230 0xffd5af00
+231 0xffd5af00
+232 0x00019100
+233 0xffd5af00
+234 0xffd5af00
+235 0xffd5af00
+236 0xffd5af00
+237 0xffd5af00
+238 0xffd5af00
+239 0xffd5af00
+240 0xffd5af00
+241 0xffd5af00
+242 0xffd5af00
+243 0xffd5af00
+244 0xffd5af00
+245 0xffd5af00
+246 0xffd5af00
+247 0xffd5af00
+248 0xffd5af00
+249 0xffd5af00
+250 0xffd5af00
+251 0xffd5af00
+252 0xffd5af00
+253 0xffd5af00
+254 0xffd5af00
+255 0xffd5af00
+256 0xffd5af00
+257 0xffd5af00
+258 0xffd5af00
+259 0xffd5af00
+260 0xffd5af00
+261 0xffd5af00
+262 0xffd5af00
+263 0xffd5af00
+264 0xffd5af00
+265 0xffd5af00
+266 0xffd5af00
+267 0xffd5af00
+268 0xffd5af00
+269 0xffd5af00
+270 0xffd5af00
+271 0xffd5af00
+272 0xffd5af00
+273 0xffd5af00
+274 0xffd5af00
+275 0xffd5af00
+276 0xffd5af00
+277 0xffd5af00
+278 0xffd5af00
+279 0xffd5af00
+280 0xffd5af00
+281 0xffd5af00
+282 0xffd5af00
+283 0xffd5af00
+284 0xffd5af00
+285 0xffd5af00
+286 0xffd5af00
+287 0xffd5af00
+288 0xffd5af00
+289 0xffd5af00
+290 0xffd5af00
+291 0xffd5af00
+292 0xffd5af00
+293 0xffd5af00
+294 0xffd5af00
+295 0xffd5af00
+296 0xffd5af00
+297 0xffd5af00
+298 0xffd5af00
+299 0xffd5af00
+EEPROM:
+0 0x2573
+1 0x0103
+2 0x1700
+3 0x769a
+4 0xe993
+5 0xffff
+6 0xffff
+7 0xffff
+8 0xffff
+9 0xffff
+10 0xffff
+11 0xffff
+12 0xffff
+13 0xffff
+14 0xffff
+15 0xffff
+16 0x1056
+17 0xffef
+18 0x0101
+19 0xffff
+20 0xffff
+21 0xffff
+22 0xffff
+23 0xffff
+24 0xffff
+25 0xffff
+26 0xffff
+27 0xffff
+28 0xffff
+29 0xffff
+30 0xffff
+31 0xffff
+32 0xffff
+33 0xffff
+34 0xffff
+35 0x0807
+36 0x0908
+37 0x0a09
+38 0x0b0a
+39 0x0c0b
+40 0x0d0c
+41 0x0e0d
+42 0xffff
+43 0xffff
+44 0xffff
+45 0xffff
+46 0xffff
+47 0xff15
+48 0xe000
+49 0xffff
+50 0xffff
+51 0xffff
+52 0xffff
+53 0xffff
+54 0xffff
+55 0xffff
+56 0xffff
+57 0xffff
+58 0xffff
+59 0xffff
+60 0xffff
+61 0xffff
+62 0xffff
+63 0xffff
+64 0xffff
+65 0xffff
+66 0xffff
+67 0xffff
+68 0xffff
+69 0xffff
+70 0xffff
+71 0xffff
+72 0xffff
+73 0xffff
+74 0xffff
+75 0xffff
+76 0xffff
+77 0xff00
+78 0x0000
+79 0xffff
+80 0xffff
+81 0xffff
+82 0xffff
+83 0xffff
+84 0xffff
+85 0xffff
+86 0xffff
+87 0xffff
+88 0xffff
+89 0xffff
+90 0xffff
+91 0xffff
+92 0xffff
+93 0xffff
+94 0xffff
+95 0xffff
+96 0xffff
+97 0xffff
+98 0xffff
+99 0xffff
+100 0xffff
+101 0xffff
+102 0xffff
+103 0xffff
+104 0xffff
+105 0xffff
+106 0xffff
+107 0xffff
+108 0xffff
+109 0xffff
+110 0xffff
+111 0xffff
+112 0xffff
+113 0xffff
+114 0xffff
+115 0xffff
+116 0xffff
+117 0xffff
+118 0xffff
+119 0xffff
+120 0xffff
+121 0xffff
+122 0xffff
+123 0xffff
+124 0xffff
+125 0xffff
+126 0x0508
+127 0x000a
+
+--=-nlFfeV8qyVCjfzxNA+gk--
 
