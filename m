@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:52818 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761669AbXJQDcl (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33803
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751678AbXJURfs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 23:32:41 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
-Date: Tue, 16 Oct 2007 23:29:51 -0400
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20071017023145.GA2848@tuxdriver.com>
-In-Reply-To: <20071017023145.GA2848@tuxdriver.com>
+	Sun, 21 Oct 2007 13:35:48 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Daniel Drake <dsd@gentoo.org>
+Subject: Re: reading/writing zd1211 eeprom
+Date: Sun, 21 Oct 2007 18:58:57 +0200
+Cc: kune@deine-taler.de, linux-wireless@vger.kernel.org
+References: <200710211335.39373.mb@bu3sch.de> <471B7B0C.5090900@gentoo.org>
+In-Reply-To: <471B7B0C.5090900@gentoo.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3776809.t8rrTqrduP";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710162329.55966.flamingice@sourmilk.net> (sfid-20071017_043248_178489_6AE93622)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710211858.58020.mb@bu3sch.de> (sfid-20071021_183551_632627_37297F9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3776809.t8rrTqrduP
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sunday 21 October 2007 18:15:08 Daniel Drake wrote:
+> Michael Buesch wrote:
+> > I'd like to read/modify the eeprom of my zd stick.
+> > Do you have software to do so? If not, any advice on how
+> > this has to be done? I'd write the necessary driver patches,
+> > if you just tell me how the eeprom is accessed.
+> 
+> Yep, zd1211memtool.
+> 
+> http://sourceforge.net/project/showfiles.php?group_id=129083&package_id=238745
+> 
+> Usual precautions apply: you could easily break your device, and this 
+> code isn't very widely tested (but it works for me).
 
-On Tuesday 16 October 2007 22:31:46 John W. Linville wrote:
-> Bill Moss (1):
->       mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
->
-Where did this patch come from? The original patch looked nothing like this=
-,=20
-and this patch changes the behavior of siwscan incorrectly. If the interfac=
-e=20
-is not STA, IBSS, or AP, scanning should not be permitted. This patch allow=
-s=20
-scanning on any interface if a SSID is specified. NACK.
+Nice, thanks.
 
-=2DMichael Wu
+Do you also have this in some git repository?
 
---nextPart3776809.t8rrTqrduP
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHFYGzT3Oqt9AH4aERAv4AAJ9DW+5YFUFvdWRWqYAQYquGZUutLACglEEs
-mYLw0WP/fm2vNAWdTbmyuJo=
-=g5W2
------END PGP SIGNATURE-----
-
---nextPart3776809.t8rrTqrduP--
+-- 
+Greetings Michael.
