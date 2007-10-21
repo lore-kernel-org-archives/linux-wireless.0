@@ -1,56 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:31011 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbXJaBpO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2007 21:45:14 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so2040534rvb
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 18:45:13 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Mon, 29 Oct 2007 19:59:14 -0700
-Subject: [PATCH 7/7] o80211s: (nl80211) add basic comments to allow pynl80211 add new virtual interfaces
-Message-ID: <4727de29.0eb48c0a.7fdc.ffffbe7f@mx.google.com> (sfid-20071031_014516_892388_63B11DA2)
+Received: from venema.h4ckr.net ([217.24.1.135]:50241 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750847AbXJUBj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Oct 2007 21:39:26 -0400
+Date: Sun, 21 Oct 2007 01:20:30 +0000
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
+Subject: [PATCH 0/2] ath5k: Further cleanups inside base.c
+Message-ID: <20071021012030.GA5817@localhost.domain.invalid> (sfid-20071021_023929_249476_496FBD63)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A few more cleanups for base.c before i submit the rest of my fixes...
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- include/linux/nl80211.h |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0e6abae..e90e0ea 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -52,6 +52,7 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_GET_INTERFACE,	/* can dump */
- 	NL80211_CMD_SET_INTERFACE,
-+	/* %input: wiphy, ifname, {iftype} */
- 	NL80211_CMD_NEW_INTERFACE,
- 	NL80211_CMD_DEL_INTERFACE,
- 
-@@ -87,12 +88,15 @@ enum nl80211_commands {
- enum nl80211_attrs {
- /* don't change the order or add anything inbetween, this is ABI! */
- 	NL80211_ATTR_UNSPEC,
--
-+	/* %type: u32 */
- 	NL80211_ATTR_WIPHY,
- 	NL80211_ATTR_WIPHY_NAME,
- 
-+	/* %type: u32 */
- 	NL80211_ATTR_IFINDEX,
-+	/* %type: nulstring */
- 	NL80211_ATTR_IFNAME,
-+	/* %type: u32 */
- 	NL80211_ATTR_IFTYPE,
- 
- 	/* add attributes here, update the policy in nl80211.c */
--- 
-1.5.2.5
-
-
+Q: Should we get rid of syctl stuff ? I mean user can only change 
+calibration interval (which is something tricky for users to play with) 
+and debug flags. Does anyone use this ? i mean we can put printks wherever
+we want, there's no need for this stuff IMHO (it comes from madwifi).
 
