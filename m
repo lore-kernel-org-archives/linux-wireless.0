@@ -1,76 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36168 "EHLO mx1.redhat.com"
+Received: from gateway.drzeus.cx ([85.8.24.16]:48216 "EHLO smtp.drzeus.cx"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755234AbXJIPhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 11:37:13 -0400
-Subject: Re: [PATCH] libertas: automatically re-associate
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200710091713.35595.hs4233@mail.mn-solutions.de>
-References: <200710091404.31491.hs4233@mail.mn-solutions.de>
-	 <1191939561.17254.12.camel@localhost.localdomain>
-	 <200710091713.35595.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 09 Oct 2007 11:37:36 -0400
-Message-Id: <1191944257.20014.3.camel@localhost.localdomain> (sfid-20071009_163721_328347_B50E1B8F)
+	id S1750891AbXJVRFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 13:05:38 -0400
+Date: Mon, 22 Oct 2007 19:05:32 +0200
+From: Pierre Ossman <drzeus@drzeus.cx>
+To: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: make if_sdio align packets
+Message-ID: <20071022190532.5077ce3d@poseidon.drzeus.cx> (sfid-20071022_180541_012397_9EB49925)
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_hera.drzeus.cx-25574-1193072701-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-10-09 at 17:13 +0200, Holger Schurig wrote:
-> > Seriously though, even if other drivers don't do it, that
-> > doesn't mean libertas shouldn't do it.  If the association
-> > fails, doesn't this mean the card just keeps working and keeps
-> > trying to associate forever?
-> 
-> Yes, with a HZ/4 rate.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-I don't care how _fast_ it tries to reassociate.  I care that it doesn't
-give up after some amount of time.
+--=_hera.drzeus.cx-25574-1193072701-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Maybe in the meantime the user is configuring the right WEP key 
-> into his AP?
-> 
-> 
-> 
-> > It's not that much more complicated to add an item to the
-> > association structure for 'count' and to check that from the
-> > disassociation event code, and just not reschedule association
-> > if that's > 4.
-> 
-> And after this 4 tries the device is again stuck?  That's not 
-> nice.
-> 
-> Therefore you need some heuristic (I don't dare to name this 
-> logic) to reset this counter again. But when do you do it?  If 
-> you say "5 Minutes", then I simply change my HZ/4 into HZ*60*5 
-> and have the same effect.
-> 
-> So I see that my HZ/4 is as arbitrary as your 4, but my version 
-> is fail-safe, because when you move away from a mis-configured 
-> AP to a right on, the device will automatically re-associate. 
-> You see, I aim for a roaming client, not for a device that stays 
-> put at some office desktop.
+Incoming packets have to be aligned or the IP stack becomes upset.
+Make sure to shift them two bytes to achieve this.
 
-That's fine.  The drivers should _not_ be trying to handle all roaming
-cornercases themselves.  And I believe that includes forever trying
-reassociating.  Userspace must come into the equation at some point,
-especially with WPA!!  This reassociation trick _only_ works for WEP.
-And that immediately makes it less useful.
+Signed-off-by: Pierre Ossman <drzeus@drzeus.cx>
+---
 
-My point is that the _driver_ should only go so far in trying to guess
-the intentions of the user and userspace itself.  It's not the drivers
-job to cover every conceivable use-case, especially where the heuristics
-are quite fuzzy.  That sort of thing just doesn't belong in drivers.
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless=
+/libertas/if_sdio.c
+index 5b13705..56dd568 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -175,12 +175,20 @@ static int if_sdio_handle_data(struct if_sdio_card *c=
+ard,
+ 		goto out;
+ 	}
+=20
+-	skb =3D dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
++	skb =3D dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE + NET_IP_ALIGN);
+ 	if (!skb) {
+ 		ret =3D -ENOMEM;
+ 		goto out;
+ 	}
+=20
++	/*
++	 * The IP stack is littered with silly assumptions on alignment,
++	 * so we need to do a bit of layering violation here and make
++	 * assumptions about the size of the headers between us and the
++	 * IP stack.
++	 */
++	skb_reserve(skb, NET_IP_ALIGN);
++
+ 	data =3D skb_put(skb, size);
+=20
+ 	memcpy(data, buffer, size);
 
-Dan
+--=_hera.drzeus.cx-25574-1193072701-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
-> 
-> We also get disassociated from an AP when we're away from the 
-> channel for too long, busy scanning for a better AP. The case 
-> where someone clicks on a "Deassociate Client") is neglibibly. 
-> 
-> But even when I want to have it work automatically, and without 
-> any manual user interaction at the WLAN client.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
+iD8DBQFHHNhc7b8eESbyJLgRAkD3AKCJxw2E0gwxjybZ6fIx55Ar7yjcZwCdHYXD
+M31OoAywKB6TuIUzPnh6TII=
+=VdJc
+-----END PGP SIGNATURE-----
+
+--=_hera.drzeus.cx-25574-1193072701-0001-2--
