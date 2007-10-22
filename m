@@ -1,135 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:37810 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323AbXJXTcU convert rfc822-to-8bit (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:61366 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750839AbXJVB2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 15:32:20 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so385514ugc
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2007 12:32:19 -0700 (PDT)
-From: Miguel =?iso-8859-1?q?Bot=F3n?= <mboton.lkml@gmail.com>
-To: linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] b44: power down PHY when interface down
-Date: Wed, 24 Oct 2007 20:31:52 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+	Sun, 21 Oct 2007 21:28:35 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Robin Wood" <dninja@gmail.com>
+Subject: Re: rtl8187 not being registered
+Date: Sun, 21 Oct 2007 21:25:28 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <2cf3b3170710211433t253b6a8ck7d4c6d0913d5256b@mail.gmail.com> <2cf3b3170710211435k36f17aaeqed5dba65718de21a@mail.gmail.com>
+In-Reply-To: <2cf3b3170710211435k36f17aaeqed5dba65718de21a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200710242031.52610.mboton.lkml@gmail.com> (sfid-20071024_203225_034175_CCDA0E6E)
+Content-Type: multipart/signed;
+  boundary="nextPart6486497.GLgSYUWJBs";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710212125.34532.flamingice@sourmilk.net> (sfid-20071022_022849_834524_67452C5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is just http://lkml.org/lkml/2007/7/1/51 but adapted to b44 ssb dr=
-iver.
+--nextPart6486497.GLgSYUWJBs
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I couldn't test it as I don't have a b44 ethernet device.
+On Sunday 21 October 2007 17:35:27 Robin Wood wrote:
+> I've just got the latest kernel source (2.6.23) from git and compiled
+> rtl8187 drivers as modules. When I plug the device in I get the
+> followoing:
+>
+> usb 1-3: new high speed USB device using ehci_hcd and address 3
+> usb 1-3: configuration #1 chosen from 1 choice
+> wmaster0: Failed to select rate control algorithm
+> wmaster0: Failed to initialize rate control algorithm
+> rtl8187: Cannot register device
+> rtl8187: probe of 1-3:1.0 failed with error -2
+>
+Make sure the rc80211_simple module can be found and is loaded.
 
-
-diff -ruN linux-2.6.23.orig/drivers/net/b44.c linux-2.6.23/drivers/net/=
-b44.c
---- linux-2.6.23.orig/drivers/net/b44.c	2007-10-24 19:02:33.000000000 +=
-0200
-+++ linux-2.6.23/drivers/net/b44.c	2007-10-24 19:50:46.000000000 +0200
-@@ -113,6 +113,8 @@ static void b44_init_rings(struct b44 *);
- #define B44_FULL_RESET		1
- #define B44_FULL_RESET_SKIP_PHY	2
- #define B44_PARTIAL_RESET	3
-+#define B44_CHIP_RESET_FULL     4
-+#define B44_CHIP_RESET_PARTIAL  5
-
- static void b44_init_hw(struct b44 *, int);
-
-@@ -1283,7 +1285,7 @@ static void b44_clear_stats(struct b44 *bp)
- }
-
- /* bp->lock is held. */
--static void b44_chip_reset(struct b44 *bp)
-+static void b44_chip_reset(struct b44 *bp, int reset_kind)
- {
- 	if (ssb_is_core_up(bp)) {
- 		bw32(bp, B44_RCV_LAZY, 0);
-@@ -1307,6 +1309,13 @@ static void b44_chip_reset(struct b44 *bp)
- 	ssb_device_enable(bp->sdev, 0);
- 	b44_clear_stats(bp);
-
-+	/*
-+	 * Don't enable PHY if we are doing a partial reset
-+	 * we are probably going to power down
-+	 */
-+	if (reset_kind =3D=3D B44_CHIP_RESET_PARTIAL)
-+		return;
-+
- 	switch (sdev->bus->bustype) {
- 	case SSB_BUSTYPE_SSB:
- 		bw32(bp, B44_MDIO_CTRL, (MDIO_CTRL_PREAMBLE |
-@@ -1332,7 +1341,14 @@ static void b44_chip_reset(struct b44 *bp)
- static void b44_halt(struct b44 *bp)
- {
- 	b44_disable_ints(bp);
--	b44_chip_reset(bp);
-+	/* reset PHY */
-+	b44_phy_reset(bp);
-+	/* power down PHY */
-+	printk(KERN_INFO PFX "%s: powering down PHY\n", bp->dev->name);
-+	bw32(bp, B44_MAC_CTRL, MAC_CTRL_PHY_PDOWN);
-+	/* now reset the chip, but without enabling the MAC&PHY
-+	 * part of it. This has to be done _after_ we shut down the PHY */
-+	b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
- }
-
- /* bp->lock is held. */
-@@ -1376,7 +1392,7 @@ static void b44_init_hw(struct b44 *bp, int reset=
-_kind)
- {
- 	u32 val;
-
--	b44_chip_reset(bp);
-+	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
- 	if (reset_kind =3D=3D B44_FULL_RESET) {
- 		b44_phy_reset(bp);
- 		b44_setup_phy(bp);
-@@ -1430,7 +1446,7 @@ static int b44_open(struct net_device *dev)
-
- 	err =3D request_irq(dev->irq, b44_interrupt, IRQF_SHARED, dev->name, =
-dev);
- 	if (unlikely(err < 0)) {
--		b44_chip_reset(bp);
-+		b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
- 		b44_free_rings(bp);
- 		b44_free_consistent(bp);
- 		goto out;
-@@ -2250,7 +2266,7 @@ static int __devinit b44_init_one(struct pci_dev =
-*pdev,
- 	/* Chip reset provides power to the b44 MAC & PCI cores, which
- 	 * is necessary for MAC register access.
- 	 */
--	b44_chip_reset(bp);
-+	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
-
- 	printk(KERN_INFO "%s: Broadcom 4400 10/100BaseT Ethernet ", dev->name=
-);
- 	for (i =3D 0; i < 6; i++)
-@@ -2284,4 +2300,5 @@ static void __devexit b44_remove_one(struct ssb_d=
-ev=20
-*sdev)
- 	free_netdev(dev);
-+	ssb_pci_set_power_state(sdev, PCI_D3hot);
- 	ssb_set_drvdata(sdev, NULL);
- }
-
-@@ -2312,6 +2329,7 @@ static int b44_suspend(struct ssb_dev *sdev,=20
-pm_message_t state)
- 		b44_setup_wol(bp);
- 	}
-=20
-+	ssb_pci_set_power_state(sdev, PCI_D3hot);
- 	return 0;
- }
+-Michael Wu
 
 
 
---=20
-	Miguel Bot=F3n
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nextPart6486497.GLgSYUWJBs
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHG/wNT3Oqt9AH4aERAkjjAKC6mf6099+Q4AxYFLcwxEvmiaMYVwCeMGXe
+1VP94M6EPkJ9xA4WCCV3t64=
+=zSEm
+-----END PGP SIGNATURE-----
+
+--nextPart6486497.GLgSYUWJBs--
