@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3623 "EHLO ra.tuxdriver.com"
+Received: from mga11.intel.com ([192.55.52.93]:10743 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755923AbXJJUij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 16:38:39 -0400
-Date: Wed, 10 Oct 2007 16:24:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: Dana R <dana.r.ferguson@intel.com>, Dan Williams <dcbw@redhat.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [PATCH 2.6.23.RC9] wpa_supplicant didn't work w/ wpa_secured
-	hidden AP
-Message-ID: <20071010202422.GN5962@tuxdriver.com> (sfid-20071010_213845_637104_A2C288DF)
-References: <1192040814.12399.4.camel@abhi-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1192040814.12399.4.camel@abhi-desktop>
+	id S1752060AbXJVIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 04:53:39 -0400
+Subject: Re: [PATCH] ipw2200: batch non-user-requested scan result
+	notifications
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+In-Reply-To: <1191952524.617.7.camel@localhost.localdomain>
+References: <1191952524.617.7.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 22 Oct 2007 16:45:19 +0800
+Message-Id: <1193042719.3069.166.camel@debian.sh.intel.com> (sfid-20071022_095343_071895_C0B3B10B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2007 at 11:26:54AM -0700, Abhijeet Kolekar wrote:
-> This patch fixes the problem of associating with wpa_secured hidden
-> ap.Please try out.
+
+On Tue, 2007-10-09 at 13:55 -0400, Dan Williams wrote:
+> ipw2200 makes extensive use of background scanning when unassociated
+> or
+> down.  Unfortunately, the firmware sends scan completed events many
+> times per second, which the driver pushes directly up to userspace.
+> This needlessly wakes up processes listening for wireless events many
+> times per second.  Batch together scan completed events for
+> non-user-requested scans and send them up to userspace every 4
+> seconds.
+> Scan completed events resulting from an SIOCSIWSCAN call are pushed up
+> without delay.
 > 
-> The original author of this patch is Bill Moss<bmoss@clemson.edu>
-> 
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Wow...that is one busted patch...  Please avoid using editors that
-convert tabs to whitespace.  Probably also need to account for existing
-IEEE80211_SCAN_MATCH_SSID behavior...?
+I'm OK with this one except the round_jiffies part.
 
-Still, the general idea looks fine and I'd really like to make
-wpa_supplicant and mac80211 work together with hidden APs.  I'll fix-up
-the patch and post it as a follow-up to this message...
-
-John
-
-P.S.  Is limiting this to STA mode correct?  Would wpa_supplicant
-ever set that flag for an IBSS?
--- 
-John W. Linville
-linville@tuxdriver.com
+Thanks,
+-yi
