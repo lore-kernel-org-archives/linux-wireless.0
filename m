@@ -1,95 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:46250 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752178AbXJWTnQ (ORCPT
+Received: from hpsmtp-eml19.KPNXCHANGE.COM ([213.75.38.84]:25833 "EHLO
+	hpsmtp-eml19.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755989AbXJVSh4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 15:43:16 -0400
-Date: Tue, 23 Oct 2007 21:43:44 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: drivers/net/wireless/rt2x00/: struct data_desc strangeness
-Message-ID: <20071023194344.GX30533@stusta.de> (sfid-20071023_204319_761492_AC4CAA65)
-References: <20071014175032.GI4211@stusta.de> <200710142106.20409.IvDoorn@gmail.com>
+	Mon, 22 Oct 2007 14:37:56 -0400
+From: Frans Pop <elendil@planet.nl>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
+Date: Mon, 22 Oct 2007 20:37:53 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <200710211316.06772.elendil@planet.nl> <200710221925.37758.elendil@planet.nl> <40f31dec0710221113h79301530pad834f1825989656@mail.gmail.com>
+In-Reply-To: <40f31dec0710221113h79301530pad834f1825989656@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200710142106.20409.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710222037.53760.elendil@planet.nl> (sfid-20071022_193851_335470_AD3CE710)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 14, 2007 at 09:06:20PM +0200, Ivo van Doorn wrote:
-> On Sunday 14 October 2007, Adrian Bunk wrote:
-> > drivers/net/wireless/rt2x00/rt2x00ring.h contains the following:
-> > 
-> > <--  snip  -->
-> > 
-> > ...
-> > /*
-> >  * data_desc
-> >  * Each data entry also contains a descriptor which is used by the
-> >  * device to determine what should be done with the packet and
-> >  * what the current status is.
-> >  * This structure is greatly simplified, but the descriptors
-> >  * are basically a list of little endian 32 bit values.
-> >  * Make the array by default 1 word big, this will allow us
-> >  * to use sizeof() correctly.
-> >  */
-> > struct data_desc {
-> >         __le32 word[1];
-> > };
-> > ...
-> > /*
-> >  * TX/RX Descriptor access functions.
-> >  */
-> > static inline void rt2x00_desc_read(struct data_desc *desc,
-> >                                     const u8 word, u32 *value)
-> > {
-> >         *value = le32_to_cpu(desc->word[word]);
-> > }
-> > 
-> > static inline void rt2x00_desc_write(struct data_desc *desc,
-> >                                      const u8 word, const u32 value)
-> > {
-> >         desc->word[word] = cpu_to_le32(value);
-> > }
-> > ...
-> > 
-> > <--  snip  -->
-> > 
-> > I haven't checked whether it might work in all cases, but passing 
-> > non-zero values as second parameter to rt2x00_desc_{read,write}()
-> > (as is done in many cases) is even in the best case bad coding style.
-> 
-> Access to the array is correct, even with non-zero values the code that is
-> reading/writing to the array knows the exact size of the descriptor. Within
-> rt2x00 are however 5 drivers who have different descriptor sizes. That means
-> I can't create a structure which has the correct array length.
-> 
-> The structure itself is just a simple map over preallocated memory
-> (skb->data in case of USB or dma in case of PCI).
-> 
-> So possible solutions would be:
->  - remove struct data_desc and make it a void* or __le32*
->    This is at the cost of code readibility since the above pointers
->    have less meaning then a pointer to a structure which can be nicely
->    documented.
->...
+On Monday 22 October 2007, Nick Kossifidis wrote:
+> 2007/10/22, Frans Pop <elendil@planet.nl>:
+> > OK. Thanks for the info.
+> > I'd gotten the impression that the driver was a bit further along. No
+> > problem though. I'll just stay alert for announcements.
+>
+> Your card is a 5213 and doesn't have 5110 PHY (it's a bug in ath_info
+> i'm working on it -it reports phy version id = 0 sometimes and that
+> matches 5110's version id, ath5k doesn't hve that bug), problem is
+> that it is a b/g only card and we didn't have such cards to test. I'll
+> send some patches soon that might fix b/g only PHYs but i can't
+> guarantee anything ;-(
 
-The worst is a wrong meaning.
-__le32 word[1] is an array with _one_ element.
-
-And an __le32* can be used as an array.
-
-> Ivo
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+That would be excellent.
+I'll be happy to test any patches. I'm sure we'll get there in the end :-)
