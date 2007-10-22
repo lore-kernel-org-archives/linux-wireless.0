@@ -1,81 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43771 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213AbXJJIpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 04:45:15 -0400
-Subject: Re: wext 64-bit: network manager and wpa_supplicant
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: jt@hpl.hp.com, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071010022041.GL14401@jm.kir.nu>
-References: <1190292526.18521.52.camel@johannes.berg>
-	 <20070920165545.GA29452@bougret.hpl.hp.com>
-	 <1190307669.18521.94.camel@johannes.berg>
-	 <20070920205602.GA15373@bougret.hpl.hp.com>
-	 <1190385414.18521.148.camel@johannes.berg>
-	 <20070926235135.GA16051@bougret.hpl.hp.com>
-	 <1191921316.4013.5.camel@johannes.berg>  <20071010022041.GL14401@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SCcKeDJbKQOrvohCWCiA"
-Date: Wed, 10 Oct 2007 10:46:03 +0200
-Message-Id: <1192005963.4013.66.camel@johannes.berg> (sfid-20071010_094521_032370_D646E2B2)
+Received: from mx1.redhat.com ([66.187.233.31]:38088 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868AbXJVRSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 13:18:47 -0400
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200710111151.06989.hs4233@mail.mn-solutions.de>
+References: <200710111151.06989.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 22 Oct 2007 13:17:25 -0400
+Message-Id: <1193073445.4325.3.camel@localhost.localdomain> (sfid-20071022_181850_332534_B4C246C4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-10-11 at 11:51 +0200, Holger Schurig wrote:
+> Move wlan_postpone_association_work() and wlan_cancel_association_work()
+> from a assoc.h file to the sole user, into wext.c.
+> 
+> In passing, rename the functions to libertas_XXX.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
---=-SCcKeDJbKQOrvohCWCiA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-On Tue, 2007-10-09 at 19:20 -0700, Jouni Malinen wrote:
-
-> Unfortunately, I do not have a device that would show the 64-bit issue.
-> Could you please remind me which devices are affected and how common
-> they are? So far, not very many people have complained about the issues
-> with wpa_supplicant on 64-bit systems.
-
-Every time you run a 32-bit wpa_supplicant on a 64-bit system.
-
-> > Could you try wpa_supplicant with kernel patch below on your 32-bit
-> > machine? I think this should make the problem show up on 32-bit
-> > machines. Not having a 64-bit machine needn't stop you from fixing the
-> > alignment problems :) I can then verify that it works and didn't break
-> > 64/64 setups if you want.
->=20
-> This sounds like an interesting way of resolving the lack of hardware
-> part of the problem.. ;-)  If this approach is confirmed to work, I
-> would be quite a bit more likely to actually find time to take a closer
-> look at the problem.
-
-I think this should reproduce the problem since the actual problem is
-that on a 64-bit kernel you have more padding that 32-bit userspace
-needs to work around.
-
-johannes
-
---=-SCcKeDJbKQOrvohCWCiA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwyRSqVg1VMiehFYAQLPDA//YbvF+SjROPlPc71sLws441EK6ymFoZaV
-pdpEYniBUVQPXg5pOB3etFDG1yUaXUPsDVAKHWm4Gr4uxadSTCizQ9b/KuEkBcwm
-F9XcyYdKNTYEk5oNZ7Zn3JABuBheSjZMgJz4scz289TCdaRrsEFF5+14MZ61jKo6
-48XHtA4fdzqc7G08obMdqY7K9sJIda2Xk3/au7IZGZ+4D4l5wx5ED0sJNM+xmRRv
-gOw/inkP/QtlptYhzwJUBGtwok6e5hCNDnxz6yGfhsFqqQQdmaCiW2VAHpI6Ya+u
-z/P441EvEqz0BwDwfKy2x/PGrPs4D9bQqzLZ1wjF7iHrW4hzs4so53Ez2TEHLL2s
-5rV54iWXL9ew/l9rj1UguEI8qIs2EO9MFp3UqRyx6puO8VgbrAjrPtbpXyUvjAoR
-ng0Nvt4uh7xQNbHJpkY/TYvxnbx73KIOfIFz4AXABae3xVQaeDmQWu2Qc7I2V/PW
-eCDzmVAUY69rYrqYHUvrX7S55A54G6rJZjSfH0yYwNHLb+IcN+CcxdyDAoXXUs49
-4twcuYjCHpn8+LpLjXFYgyc5jVBpaxCRbuWkxppLXbNg0Ny0dgrkdMRF+fbkQCA8
-KGZXLHLoLRDY65+/HLtqQOLJMLkzT7lY6wfFI2Qxpe9k59suINcR27qiZPwgvz6r
-Ch6Z/2s8ciQ=
-=IqFT
------END PGP SIGNATURE-----
-
---=-SCcKeDJbKQOrvohCWCiA--
+> 
+> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.h
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.h	2007-10-11 12:14:50.000000000 +0200
+> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.h	2007-10-11 12:44:12.000000000 +0200
+> @@ -11,22 +11,4 @@ struct assoc_request * wlan_get_associat
+>  
+>  void libertas_sync_channel(struct work_struct *work);
+>  
+> -#define ASSOC_DELAY (HZ / 2)
+> -static inline void wlan_postpone_association_work(wlan_private *priv)
+> -{
+> -	if (priv->adapter->surpriseremoved)
+> -		return;
+> -	cancel_delayed_work(&priv->assoc_work);
+> -	queue_delayed_work(priv->work_thread, &priv->assoc_work, ASSOC_DELAY);
+> -}
+> -
+> -static inline void wlan_cancel_association_work(wlan_private *priv)
+> -{
+> -	cancel_delayed_work(&priv->assoc_work);
+> -	if (priv->adapter->pending_assoc_req) {
+> -		kfree(priv->adapter->pending_assoc_req);
+> -		priv->adapter->pending_assoc_req = NULL;
+> -	}
+> -}
+> -
+>  #endif /* _WLAN_ASSOC_H */
+> Index: wireless-2.6/drivers/net/wireless/libertas/wext.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/wext.c	2007-10-11 12:14:50.000000000 +0200
+> +++ wireless-2.6/drivers/net/wireless/libertas/wext.c	2007-10-11 12:50:29.000000000 +0200
+> @@ -21,6 +21,24 @@
+>  #include "assoc.h"
+>  
+> 
+> +static inline void libertas_postpone_association_work(wlan_private *priv)
+> +{
+> +	if (priv->adapter->surpriseremoved)
+> +		return;
+> +	cancel_delayed_work(&priv->assoc_work);
+> +	queue_delayed_work(priv->work_thread, &priv->assoc_work, HZ / 2);
+> +}
+> +
+> +static inline void libertas_cancel_association_work(wlan_private *priv)
+> +{
+> +	cancel_delayed_work(&priv->assoc_work);
+> +	if (priv->adapter->pending_assoc_req) {
+> +		kfree(priv->adapter->pending_assoc_req);
+> +		priv->adapter->pending_assoc_req = NULL;
+> +	}
+> +}
+> +
+> +
+>  /**
+>   *  @brief Find the channel frequency power info with specific channel
+>   *
+> @@ -949,9 +967,9 @@ static int wlan_set_freq(struct net_devi
+>  out:
+>  	if (ret == 0) {
+>  		set_bit(ASSOC_FLAG_CHANNEL, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	} else {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+>  
+> @@ -1050,11 +1068,11 @@ static int wlan_set_mode(struct net_devi
+>  	assoc_req = wlan_get_association_request(adapter);
+>  	if (!assoc_req) {
+>  		ret = -ENOMEM;
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	} else {
+>  		assoc_req->mode = *uwrq;
+>  		set_bit(ASSOC_FLAG_MODE, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  		lbs_deb_wext("Switching to mode: 0x%x\n", *uwrq);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+> @@ -1335,9 +1353,9 @@ static int wlan_set_encode(struct net_de
+>  out:
+>  	if (ret == 0) {
+>  		set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	} else {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+>  
+> @@ -1576,9 +1594,9 @@ static int wlan_set_encodeext(struct net
+>  
+>  out:
+>  	if (ret == 0) {
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	} else {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+>  
+> @@ -1623,9 +1641,9 @@ static int wlan_set_genie(struct net_dev
+>  out:
+>  	if (ret == 0) {
+>  		set_bit(ASSOC_FLAG_WPA_IE, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	} else {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+>  
+> @@ -1752,9 +1770,9 @@ out:
+>  	if (ret == 0) {
+>  		if (updated)
+>  			set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	} else if (ret != -EOPNOTSUPP) {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  	mutex_unlock(&adapter->lock);
+>  
+> @@ -1929,13 +1947,13 @@ out:
+>  			memcpy(&assoc_req->ssid, &ssid, IW_ESSID_MAX_SIZE);
+>  			assoc_req->ssid_len = ssid_len;
+>  			set_bit(ASSOC_FLAG_SSID, &assoc_req->flags);
+> -			wlan_postpone_association_work(priv);
+> +			libertas_postpone_association_work(priv);
+>  		}
+>  	}
+>  
+>  	/* Cancel the association request if there was an error */
+>  	if (ret != 0) {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  	}
+>  
+>  	mutex_unlock(&adapter->lock);
+> @@ -1973,13 +1991,13 @@ static int wlan_set_wap(struct net_devic
+>  	/* Get or create the current association request */
+>  	assoc_req = wlan_get_association_request(adapter);
+>  	if (!assoc_req) {
+> -		wlan_cancel_association_work(priv);
+> +		libertas_cancel_association_work(priv);
+>  		ret = -ENOMEM;
+>  	} else {
+>  		/* Copy the BSSID to the association request */
+>  		memcpy(&assoc_req->bssid, awrq->sa_data, ETH_ALEN);
+>  		set_bit(ASSOC_FLAG_BSSID, &assoc_req->flags);
+> -		wlan_postpone_association_work(priv);
+> +		libertas_postpone_association_work(priv);
+>  	}
+>  
+>  	mutex_unlock(&adapter->lock);
 
