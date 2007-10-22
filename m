@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:42487 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421AbXJLOKG (ORCPT
+Received: from hpsmtp-eml18.KPNXCHANGE.COM ([213.75.38.118]:52447 "EHLO
+	hpsmtp-eml18.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752138AbXJVRZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 10:10:06 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so533170wra
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 07:10:05 -0700 (PDT)
-Message-ID: <43e72e890710120710s77001179x9700ac77712cfe2d@mail.gmail.com> (sfid-20071012_151011_669837_257A2A63)
-Date: Fri, 12 Oct 2007 10:10:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 0/4] ath5k: promiscuous bug, multicast and some docs
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4af2d03a0710120022o1aad59b1na6f92712fea4457@mail.gmail.com>
+	Mon, 22 Oct 2007 13:25:43 -0400
+From: Frans Pop <elendil@planet.nl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
+Date: Mon, 22 Oct 2007 19:25:37 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200710211316.06772.elendil@planet.nl> <200710221848.27985.elendil@planet.nl> <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com>
+In-Reply-To: <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071011193918.GB4334@pogo>
-	 <4af2d03a0710120022o1aad59b1na6f92712fea4457@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710221925.37758.elendil@planet.nl> (sfid-20071022_182545_498981_207E0CF7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> On 10/11/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > This patch series adds a few things which have been sitting in my
-> > queue. Nick has better fixes for two of my previous patches so
-> > he'll be sending that. In this series I also added some new docs
-> > for some hw interrupts.
+On Monday 22 October 2007, Luis R. Rodriguez wrote:
+> >  -==Device Information==-
+> > MAC Version:  5212 (0x50)
+> > MAC Revision: 5213A(0x59)
+> > PHY Revision: 5110 (0x0)
+> > PHY Revision: 5110 (0x0)
 >
-> Hi,
->
-> please check your patches with scripts/checkpatch.pl, patch 2, 3, 4
-> and the followed fix doesn't comply with codingstyle.
+> This is the problem. ath5k currently assumes only AR5210s (which are
+> 802.11a only capable) have an RF5110. This is also an 802.11bg card.
+> Essentially support for this is on the TODO list. For now we'll have
+> to just detect this and inform users the card is not supported yet.
 
-Those pesky leading spaces.. thanks, I'll resend and add the new patch
-to it with Nick's new comments on IRQs as well.
+OK. Thanks for the info.
+I'd gotten the impression that the driver was a bit further along. No 
+problem though. I'll just stay alert for announcements.
 
-  Luis
+Cheers,
+FJP
