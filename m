@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:1629 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbXJULiH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51873 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186AbXJVOKD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 07:38:07 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so790359ugc
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Oct 2007 04:38:05 -0700 (PDT)
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha subnotebook
-Date: Sun, 21 Oct 2007 15:56:29 +0200
-Cc: rt2400-devel@lists.sourceforge.net,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
-References: <20071020184100.GA11640@elf.ucw.cz> <200710210012.37547.IvDoorn@gmail.com> <20071021092048.GA25270@elf.ucw.cz>
-In-Reply-To: <20071021092048.GA25270@elf.ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710211556.29469.IvDoorn@gmail.com> (sfid-20071021_123821_215500_8ED0ACC5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 22 Oct 2007 10:10:03 -0400
+Subject: [PATCH] mac80211: fix printk warning on 64-bit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 22 Oct 2007 14:51:37 +0200
+Message-Id: <1193057497.9793.3.camel@johannes.berg> (sfid-20071022_151010_468966_C51A16C5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+My AID message patch introduced a warning on 64-bit machines because ~
+extends to unsigned long:
 
-> > If rt2x00 is loaded and detected the device, it should print out a debug message that starts with:
-> > "Chipset detected - " What is in your case the complete line?
-> 
-> Ok, I guess I should include more complete debug output.
-> 
-> phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
+| net/mac80211/ieee80211_sta.c: In function =E2=80=98ieee80211_rx_mgmt_=
+assoc_resp=E2=80=99:
+| net/mac80211/ieee80211_sta.c:1187: warning: format =E2=80=98%d=E2=80=99=
+ expects type =E2=80=98int=E2=80=99, but argument 7 has type =E2=80=98l=
+ong unsigned int=E2=80=99
 
-- Vendor requests error with the -32 errors often indicate the incorrect device.
+This fixes it by explicitly casting the result to u16 (which 'aid' is).
 
-> phy0 -> rt73usb_validate_eeprom: EEPROM recover - MAC: 66:76:2b:e8:68:e7
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-- Incorrect MAC address read from the device. Another hint that the device is not rt73.
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
+c
+index f7ffeec..db3cf23 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1184,7 +1184,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct n=
+et_device *dev,
+ 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=3D0x%x "
+ 	       "status=3D%d aid=3D%d)\n",
+ 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
+-	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
++	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
+=20
+ 	if (status_code !=3D WLAN_STATUS_SUCCESS) {
+ 		printk(KERN_DEBUG "%s: AP denied association (code=3D%d)\n",
 
-> phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x3000 with error -32
-> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0000, rev: c03c0ae0
 
-- A incorrect RF chipset. (valid values are: 1, 2, 3 or 4). Another indication of a incorrect device.
-- A completely bogus chipset revision. A valid rt73 device has the revision "2573X" Where only the
-  X is a variable.
-
-> phy0 -> rt73usb_init_eeprom: Error - Invalid RF chipset detected
-> 
-> ...so, I think hardware is indeed quite similar to what rt73usb driver
-> expects...?
-
-No. You can assume you are forcing rt73 to control a non-rt73 device.
-The fact that you had to hack to bypass the RT and RF chipset validation also confirms that,
-those checks were there for a reason. Namely to make sure the corect driver was being used for the device.
-
-Ivo
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
