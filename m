@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:14278 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbXJZPXw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 11:23:52 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so845129nze
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 08:23:51 -0700 (PDT)
-Message-ID: <f6ca9fed0710260823u302cc2cco6dab40100870dbf8@mail.gmail.com> (sfid-20071026_162400_404498_EAEC0F30)
-Date: Fri, 26 Oct 2007 17:23:50 +0200
-From: dragoran <drago01@gmail.com>
-To: "Jes Sorensen" <jes@sgi.com>
-Subject: Re: iwl4965 detection problem
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Tomas Winkler" <tomas.winkler@intel.com>
-In-Reply-To: <4722051E.8080302@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <47209C0C.5010505@sgi.com>
-	 <1193319925.5542.8.camel@localhost.localdomain>
-	 <4720A509.2070708@sgi.com>
-	 <1193333545.2111.8.camel@localhost.localdomain>
-	 <47219FE6.70900@sgi.com> <20071026123044.GB23415@tuxdriver.com>
-	 <4721E17E.2020908@sgi.com> <4721F55F.1030303@sgi.com>
-	 <4722051E.8080302@sgi.com>
+Received: from mx1.redhat.com ([66.187.233.31]:45061 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750938AbXJVPqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 11:46:46 -0400
+Subject: Re: [PATCH] ipw2100: send WEXT scan events
+From: Dan Williams <dcbw@redhat.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+In-Reply-To: <1193041255.3069.164.camel@debian.sh.intel.com>
+References: <1192033687.9739.39.camel@localhost.localdomain>
+	 <1193041255.3069.164.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Mon, 22 Oct 2007 11:46:27 -0400
+Message-Id: <1193067987.30205.11.camel@localhost.localdomain> (sfid-20071022_164649_110074_A7555F4A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/07, Jes Sorensen <jes@sgi.com> wrote:
-> Jes Sorensen wrote:
-> > I haven't had a chance to build the driver with this change, ie. it's
-> > untested, but I have a suspicion that this patch might do the job.
->
-> So, tested a kernel with this patch applied, and voila! My wireless
-> now works on first boot!
->
-> Should I post it to linux-kernel or Andrew or will someone on this list
-> collect it and push it upstream?
+On Mon, 2007-10-22 at 16:20 +0800, Zhu Yi wrote:
+> On Wed, 2007-10-10 at 12:28 -0400, Dan Williams wrote:
+> > ipw2100 wasn't sending WEXT scan events at all on scan completion.
+> > And
+> > like ipw2200, the driver aggressively auto-scans, requiring
+> > non-user-requested scan events to be batched together and sent at
+> > specific intervals instead of many times per seconds.
+> > 
+> > Signed-off-by: Dan Williams <dcbw@redhat.com>
+> 
+> Sorry for the late response. Please see my comments below.
+> 
+> > +                       queue_delayed_work(priv->workqueue,
+> > +                                       &priv->scan_event_later,
+> > +                              round_jiffies(msecs_to_jiffies(4000)));
+> 
+> round_jiffies_relative instead?
 
-posting it here is enough.
-you should add 3945 repost it in a new thread.
+Yeah, that patch hit after I posted mine.  Can fix up.
+
+> > @@ -6118,6 +6153,8 @@ static struct net_device
+> > *ipw2100_alloc_device(struct pci_dev *pci_dev,
+> >         INIT_DELAYED_WORK(&priv->wx_event_work,
+> > ipw2100_wx_event_work);
+> >         INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
+> >         INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
+> > +       INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
+> > +       INIT_DELAYED_WORK(&priv->scan_event_later,
+> > ipw2100_scan_event_later);
+> 
+> Except the work vs. delayed_work, they are doing the same thing. So you
+> can replace scan_event_now by scan_event_later with delay = 0.
+
+Good catch, will post update.
+
+Thanks!
+Dan
+
+
