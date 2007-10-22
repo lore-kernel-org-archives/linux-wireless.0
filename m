@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2983 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755844AbXJDNjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 09:39:06 -0400
-Date: Thu, 4 Oct 2007 09:08:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostapd: adjust for changed nl80211
-Message-ID: <20071004130825.GB6037@tuxdriver.com> (sfid-20071004_143921_537705_E5B030A6)
-References: <1191069453.22960.77.camel@johannes.berg> <20071003030951.GH933@jm.kir.nu> <1191393995.4178.0.camel@johannes.berg> <20071004040957.GM933@jm.kir.nu>
+Received: from py-out-1112.google.com ([64.233.166.179]:44270 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbXJVPBE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 11:01:04 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2492963pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 08:00:58 -0700 (PDT)
+Message-ID: <43e72e890710220800j3d610b4by58b28598388eb8b8@mail.gmail.com> (sfid-20071022_160110_323746_ED17D411)
+Date: Mon, 22 Oct 2007 11:00:58 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 0/2] ath5k: Further cleanups inside base.c
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <471AF51E.7050901@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071004040957.GM933@jm.kir.nu>
+Content-Type: text/plain; charset=UTF-8
+References: <20071021012030.GA5817@localhost.domain.invalid>
+	 <471AF51E.7050901@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 03, 2007 at 09:09:57PM -0700, Jouni Malinen wrote:
-> On Wed, Oct 03, 2007 at 08:46:35AM +0200, Johannes Berg wrote:
-> > On Tue, 2007-10-02 at 20:09 -0700, Jouni Malinen wrote:
-> > > I did not find this change from wireless-dev.git#everything.. Am I
-> > > missing something or has this not been applied to the kernel yet?
-> > 
-> > You missed that wireless-dev is dead and we're using
-> > wireless-2.6#everything now.
-> 
-> OK. Though, hostapd does not build at all against that due to
-> net/mac80211/hostapd_ioctl.h not existing.. Anyway, with a copy of
+On 10/21/07, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 10/21/2007 03:20 AM, Nick Kossifidis wrote:
+> > A few more cleanups for base.c before i submit the rest of my fixes...
+> >
+> > Q: Should we get rid of syctl stuff ? I mean user can only change
+> > calibration interval (which is something tricky for users to play with)
+> > and debug flags. Does anyone use this ? i mean we can put printks wherever
+> > we want, there's no need for this stuff IMHO (it comes from madwifi).
+>
+> Agreed. And if really want it, we can make debug a module_param...
 
-Until Johannes starts hosting his mac80211-hostap tree, I think you
-can use wireless-2.6#mac80211-attic.  I've been trying to keep that
-available for those who need it in the meantime.  Fair warning,
-it is untested and may simply not work...
+It should be removed, but please use 30 seconds for the calibration
+timer instead of every second. Every second is pretty obsessive
+considering the fact that even though run every second, we don't
+calibrate even if AR5K_PHY_IQ_RUN was set. Most of the times i_coffd
+or q_coffd will be 0, so all we actually do is noise floor
+calibration.
 
-Hth?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
