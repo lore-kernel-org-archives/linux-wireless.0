@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2249 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753403AbXJJNjE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 09:39:04 -0400
-Date: Wed, 10 Oct 2007 09:06:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: dragoran <drago01@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: mac80211/iwlwifi + hidden ssids
-Message-ID: <20071010130653.GB5962@tuxdriver.com> (sfid-20071010_143907_022217_0B118E66)
-References: <470C9F28.1070803@gmail.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:21191 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134AbXJWG6G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 02:58:06 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: make if_sdio align packets
+Date: Tue, 23 Oct 2007 08:57:59 +0200
+Cc: David Miller <davem@davemloft.net>, drzeus@drzeus.cx,
+	dcbw@redhat.com
+References: <20071022190532.5077ce3d@poseidon.drzeus.cx> <20071022.181530.28790082.davem@davemloft.net>
+In-Reply-To: <20071022.181530.28790082.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <470C9F28.1070803@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710230858.00343.hs4233@mail.mn-solutions.de> (sfid-20071023_075814_842200_7FF584E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2007 at 11:45:12AM +0200, dragoran wrote:
-> Hello,
-> I am unable to connect to a dynamic wep network with hidden ssid using 
-> iwl3945 and the lastest fedora 7 kernel (which should have very recent 
-> stuff). The problem is that the card never finds the ap. Running 
-> wpa_supplicant directly shows "Got scan results xxx bytes" (can't 
-> remeber the exact message).
-> While with ipw3945d + ieee80211 it works fine. (NetworkManager does not 
-> connect either see http://bugzilla.gnome.org/show_bug.cgi?id=464215 ).
-> I haven't tryed the suggestion there yet because I am not near the 
-> network right now.
-> Any idea whats wrong? Does it work for anybody (maybe with other 
-> mac80211 drivers)
-> Currently I am not sure whom to blame iwl3945 or mac80211 or both.
+Hi David !
 
-Fedora 7 kernels are a little behind (1-2 weeks behind wireless-2.6)
-ATM, so it might be best to handle this at bugzilla.kernel.org.
+I have been I a similar situation when I wrote if_cs.c. I had 
+virtually no clue about SKBs and how to work with them. I've 
+looked at lwn.net, LDD, googled around, and looked at the 
+in-kernel documentation, which went into fine detail. But I 
+failed to grasp the real picture, e.g. up until now I don't have 
+any idea why there are so many different functions to modify 
+skb's in subtle ways.
 
-F7 _does_ have the kernel patch to probe for hidden SSIDs when
-associating.  What I've found with that patch is that manually
-invoking the wireless tools yields satisfactory results, but that NM
-(which afaik relies on wpa_supplicant) still tends to have problems.
-My hunch is that wpa_supplicant (at least how NM configures it)
-is doing something "too smart", but I really don't know.
+So one can say that I still have virtually no clue about SKBs. 
+That if_cs.c works, might even be coincididence, thanks to 
+try-and-error. :-)
 
-Do you have control over the AP?  If so, can you temporarily try
-using static WEP or an open configuration so that you can test using
-iwconfig?
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+I've not seen if_sdio.c yet, but if Pierre looked at my if_cs.c 
+when surely he started from my incomplete view of things :-(
