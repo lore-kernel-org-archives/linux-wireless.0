@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48466 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666AbXJLL6J (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36682
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbXJWJXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 07:58:09 -0400
-Subject: Re: atheros hardware needs padding for QoS data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: bruno randolf <bruno@thinktube.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710121946.30024.bruno@thinktube.com> (sfid-20071012_114641_137646_A74F979B)
-References: <200710121946.30024.bruno@thinktube.com>
-	 (sfid-20071012_114641_137646_A74F979B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1KGnsh1JxZ6f1e23lXt7"
-Date: Fri, 12 Oct 2007 13:58:17 +0200
-Message-Id: <1192190297.4770.48.camel@johannes.berg> (sfid-20071012_125812_431606_A374717B)
-Mime-Version: 1.0
+	Tue, 23 Oct 2007 05:23:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: b43legacy maintainer needed
+Date: Tue, 23 Oct 2007 11:22:32 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200710231122.32585.mb@bu3sch.de> (sfid-20071023_102335_498094_536C7A31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Forwarding this to more public places. :)
 
---=-1KGnsh1JxZ6f1e23lXt7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+----------  Forwarded Message  ----------
 
-On Fri, 2007-10-12 at 19:46 +0900, bruno randolf wrote:
+Subject: b43legacy maintainer needed
+Date: Tuesday 23 October 2007
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Broadcom Linux <bcm43xx-dev@lists.berlios.de>
 
-> i didn't see how mac80211 would allow to solve this elegantly at this tim=
-e.=20
-> are there any other drivers with a similar kind of padding requirement? h=
-ow=20
-> could that be implemented cleanly?
+As you have seen in a previous E-mail, I have resigned as maintainer of bcm43xx and b43legacy. No
+replacement will be needed for bcm43xx as it will not be in the kernel much longer.
 
-b43 also has padding added on RX which we simply remove with a memmove()
+The effort required to maintain b43legacy should be minimal. For the past several months, most of
+what I have done is take b43 patches written by Michael Buesch and port them to b43legacy.
 
-johannes
+Besides the obvious programming experience, the maintainer should have a BCM4306/2 card. If you have
+a laptop with a PCMCIA slot, I have an extra Linksys WPC54G with that chip that you could have.
 
---=-1KGnsh1JxZ6f1e23lXt7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+If you are interested, please write to me.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Thanks,
 
-iQIVAwUARw9hWKVg1VMiehFYAQL7kBAAia14uj36D9M0jdCQeILLW9iCXB8r4nzH
-jqYbjpFkbSPs0tvbosPtHITz4k5Rj2KCOS6sBEr8Cub3hnrh+pf3m90vyELyNvsX
-m+vcDqg2HAl7t1Bq16crAtopOF3ouH7BeVsWHSzedQZFuMB1gDjtdwJFlQm6opLC
-1cDybAyBp+NT8+l6PDVTlfEluZrQZsfnQhEYEwk2R6wXmbr1TNKRMcab1o8G09pU
-6pv2mMMlnHY+W9asNEU7J8gx6AjhoJmNxOmY5hQILdC6xH+fIdOe4l1Kvwu+LKQv
-NzevL1G/lIIJttJAZgLG7CzGNdPf7pByvRwJamO3i32tkizJDw3j30f//Wez9Ay/
-x0q2OhmAYE97Fb0nZxXMYwXRthQbtfhi59sIwhXnle+j5J2LJo33zHjCMpHf62x6
-vRDtimwrJTuUINZrigEPGmAoUPPXmg7yRpTfuux4OxDGB7hZVXo7/B4d/KCJjMLP
-9Ci5D/hcJ+0Lw1va+im/u9TZ2lUXIl4FYyaIJs+2fohBSRQguVDyI8WA4eazSTsZ
-xzP19tNcrj2kA7iNJ7weCmpMSIwMNuN+P8Po8WM3Nn4XVu1A06CK1am91DMqP/I5
-CmMn+YEalSteYqZ1r8Cz7BE9qkA4srs2JqvOg4tvInrw1J4FybiAXBiHw65xq5ab
-ynmveJVBcwc=
-=tYg3
------END PGP SIGNATURE-----
+Larry
 
---=-1KGnsh1JxZ6f1e23lXt7--
+-------------------------------------------------------
 
+-- 
+Greetings Michael.
