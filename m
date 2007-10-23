@@ -1,45 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:3709 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753743AbXJaTG6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 15:06:58 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so289909wah
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 12:06:56 -0700 (PDT)
-Message-ID: <8e8340660710311206pefafa6bw5cc022637265f4b6@mail.gmail.com> (sfid-20071031_190702_112463_3845A495)
-Date: Wed, 31 Oct 2007 12:06:55 -0700
-From: "Luis Carlos Cobo" <luisca@cozybit.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH 5/7] o80211s: (zd1211rw-mac80211) support for mesh interface
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1193832127.23775.26.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4727de15.0abd720a.7b07.ffffb1f7@mx.google.com>
-	 <1193832127.23775.26.camel@localhost.localdomain>
+Received: from mx1.redhat.com ([66.187.233.31]:57112 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751799AbXJWSzs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 14:55:48 -0400
+Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Hazelton <dhazelton@enter.net>
+Cc: Pavel Machek <pavel@ucw.cz>, Ivo van Doorn <ivdoorn@gmail.com>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mwallis@serialmonkey.com
+In-Reply-To: <200710231307.25301.dhazelton@enter.net>
+References: <20071020184100.GA11640@elf.ucw.cz>
+	 <20071022220000.GH28190@elf.ucw.cz>
+	 <1193148312.8648.17.camel@localhost.localdomain>
+	 <200710231307.25301.dhazelton@enter.net>
+Content-Type: text/plain
+Date: Tue, 23 Oct 2007 14:54:54 -0400
+Message-Id: <1193165694.26768.10.camel@localhost.localdomain> (sfid-20071023_195708_552673_84872FEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/07, Dan Williams <dcbw@redhat.com> wrote:
-> Awesome to see this work.  I assume you're developing on zd1211 then?
+On Tue, 2007-10-23 at 13:07 -0400, Daniel Hazelton wrote:
+> On Tuesday 23 October 2007 10:05:12 Dan Williams wrote:
+> > On Tue, 2007-10-23 at 00:00 +0200, Pavel Machek wrote:
+> > > Hi!
+> > >
+> > > > > > Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
+> > > > >
+> > > > > That doesn't say much, some manufacturers add that line to their
+> > > > > driver just to prevent the module loader complaining about a non-GPL
+> > > > > driver...
+> > > > >
+> > > > > There should be a copyright notice or a license file accompanied with
+> > > > > the driver that clearly states the license of the driver.
+> > > >
+> > > > Lacking an explicitly stated license it can be argued that, since the
+> > > > MODULE_LICENSE() macro is meant to define the actual license on the
+> > > > code, this code is GPL. No, it isn't an explicit definition, but
+> > > > lacking any other signs of the license, the implicit declaration of it
+> > > > being GPL is (or should be) enough to deflect charges of copyright
+> > > > infringement.
+> > >
+> > > Yep, I believe this driver is GPLed. They published the source and
+> > > there's nothing to suggest otherwise, and there's explicit:
+> > >
+> > > #define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
+> > > #define DRIVER_DESC                             "IS89C35 802.11bg WLAN
+> > > USB Driver" MODULE_LICENSE("GPL");
+> >
+> > If there isn't an explicit COPYING or LICENSE file or something
+> > distributed with the driver, and if there aren't copyright/license
+> > headers at the top of the files in question, I have a hard time agreeing
+> > that MODULE_LICENSE("GPL") _definitely_ means that the author has GPL-ed
+> > the driver intentionally.  Of course that's the way it's supposed to
+> > work, but to me this doesn't pass sufficient muster to be definitely
+> > called GPL without additional clarification.
+> >
+> > Dan
+> 
+> Lacking any other indication MODULE_LICENSE is supposed to mark the license 
+> that the code is being distributed under. If companies are intentionally
 
-Yes, we started with this device because it's cheap and easy to find,
-so more people can test this and contribute. We intend to support any
-softmac device with a driver using mac80211.
+Step 1: Ask the author.
 
-> Would similar changes be necessary to support other devices?
+Step 2: if the author doesn't reply, then we can have this discussion
 
-Yes, basically support the mesh interface type and make sure mesh (WDS
-type) frames are not filtered out and are acknowledged (otherwise you
-get tons of duplicates).
+MODULE_LICENSE is just a random string that could have been added by
+anybody, not necessarily the author.  Unless you can determine the
+intent of the author explicitly, a single MODULE_LICENSE is not
+sufficient to concretely determine the license of the code.  It's only
+in one file.  There is nothing to explicitly state the overall license
+of the whole work unless each file has a header referring to the license
+or unless there is a license document distributed with the code as a
+whole.
 
-Apart from that, this driver did not support beaconing, so we had to
-add that too. Fortunately the GPL vendor driver is quite complete so
-we could port the features from there.
+In the absence of any other indication, MODULE_LICENSE doesn't not
+concretely determine the license of the code.  You can assume it does,
+but that's your gun to put to your own head.
+ 
+> mis-using this to get around the "internal interfaces" limitations (where 
+> some interfaces are not available unless the module is GPL'd) and the warning 
+> message printed in the logs when the module is not GPL'd then they are 
+> (technically) in violation of the law. (interfaces that are GPL only are 
+> considered so internal to the kernel that using them makes your code GPL 
+> because of the inclusion of GPL'd code. And no - I am not going to get into 
+> that discussion - it's pointless)
 
-Thanks for the comments, I will include them as well as Johannes' and
-resend the patches.
+Just because the module may be loading illegally says _nothing_ about
+the license of the code.
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+> In the end, using MODULE_LICENSE for any purpose other than declaring the 
+> chosen license for the code is deceptive. So it is easily arguable that by 
+
+"deceptive" is also not "this code code is definitely GPL".  Doesn't
+matter whether it's deceptive or not.  We do not know that the code is
+GPL.
+
+> not including any license with the code other than the MODULE_LICENSE 
+> statement and then trying to prosecute because MODULE_LICENSE doesn't 
+> accurately state the license on the code is entrapment and illegal.
+
+Arguable doesn't mean that it's concrete enough to pass legal muster.  I
+am not a lawyer, but this just doesn't pass the bar.
+
+Dan
+
+
