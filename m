@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:44363 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbXJPQL7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 12:11:59 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so110988ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 09:11:58 -0700 (PDT)
-Message-ID: <43e72e890710160911p44404ccbl85ee64ae7a4608fa@mail.gmail.com> (sfid-20071016_171201_876913_7CB5F9B0)
-Date: Tue, 16 Oct 2007 12:11:56 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 3/3] consistently use ath5k in printks
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <1192540838-26985-4-git-send-email-bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
+Received: from mx1.redhat.com ([66.187.233.31]:51362 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760AbXJWOF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 10:05:59 -0400
+Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
+From: Dan Williams <dcbw@redhat.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Daniel Hazelton <dhazelton@enter.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mwallis@serialmonkey.com
+In-Reply-To: <20071022220000.GH28190@elf.ucw.cz>
+References: <20071020184100.GA11640@elf.ucw.cz>
+	 <20071022211325.GF28190@elf.ucw.cz> <200710222352.57543.IvDoorn@gmail.com>
+	 <200710221742.36693.dhazelton@enter.net>
+	 <20071022220000.GH28190@elf.ucw.cz>
+Content-Type: text/plain
+Date: Tue, 23 Oct 2007 10:05:12 -0400
+Message-Id: <1193148312.8648.17.camel@localhost.localdomain> (sfid-20071023_150603_018512_A369F065)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/16/07, Bruno Randolf <bruno@thinktube.com> wrote:
-> changed all ocurrences of "ath_pci" and "ath" in printks and debug messages to
-> "ath5k", to avoid confusion with the madwifi driver.
->
-> changed the module version to "0.0.1 (EXPERIMENTAL)" instead of the old one
-> which came from the madwifi-bsd branch.
->
-> the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
->
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+On Tue, 2007-10-23 at 00:00 +0200, Pavel Machek wrote:
+> Hi!
+> 
+> > > > Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
+> > >
+> > > That doesn't say much, some manufacturers add that line to their driver
+> > >  just to prevent the module loader complaining about a non-GPL driver...
+> > >
+> > > There should be a copyright notice or a license file accompanied with
+> > > the driver that clearly states the license of the driver.
+> > 
+> > Lacking an explicitly stated license it can be argued that, since the 
+> > MODULE_LICENSE() macro is meant to define the actual license on the code, 
+> > this code is GPL. No, it isn't an explicit definition, but lacking any other 
+> > signs of the license, the implicit declaration of it being GPL is (or should 
+> > be) enough to deflect charges of copyright infringement.
+> 
+> Yep, I believe this driver is GPLed. They published the source and
+> there's nothing to suggest otherwise, and there's explicit:
+> 
+> #define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
+> #define DRIVER_DESC                             "IS89C35 802.11bg WLAN USB Driver"
+> MODULE_LICENSE("GPL");
 
-Thanks for this too -- it might be easier to stick to using dev_info()
-then. See ath_pci_probe() for a usage of it. This in turn will now
-print "ath5k".
+If there isn't an explicit COPYING or LICENSE file or something
+distributed with the driver, and if there aren't copyright/license
+headers at the top of the files in question, I have a hard time agreeing
+that MODULE_LICENSE("GPL") _definitely_ means that the author has GPL-ed
+the driver intentionally.  Of course that's the way it's supposed to
+work, but to me this doesn't pass sufficient muster to be definitely
+called GPL without additional clarification.
 
-  Luis
+Dan
+
+
