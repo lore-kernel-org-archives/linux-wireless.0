@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4824 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4341 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752646AbXJAVIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2007 17:08:13 -0400
-Date: Mon, 1 Oct 2007 16:47:56 -0400
+	id S1752491AbXJWSI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 14:08:56 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: John Pierce <john.j35@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Belkin Wireless G USB
-Message-ID: <20071001204756.GD5224@tuxdriver.com>
-References: <aa73b9a0709281310w6030e0f5g4e3195cf800b5e7d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <aa73b9a0709281310w6030e0f5g4e3195cf800b5e7d@mail.gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: undo overzealous hunk of "ath5k: avoid oops when..."
+Date: Tue, 23 Oct 2007 13:43:23 -0400
+Message-Id: <11931614033102-git-send-email-linville@tuxdriver.com> (sfid-20071023_191016_371960_38BD3AD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 28, 2007 at 03:10:34PM -0500, John Pierce wrote:
+The first hunk of "ath5k: avoid oops when ah_capabilities.cap_mode not
+set" was ill-advised.  It can cause the it's loop to abort prematurely.
 
-> This is the output of dmesg immediately after inserting the usb adapter.
-> 
-> usb 2-2: new high speed USB device using ehci_hcd and address 7
-> usb 2-2: configuration #1 chosen from 1 choice
-> usb 2-2: reset high speed USB device using ehci_hcd and address 7
-> wmaster0: Failed to select rate control algorithm
-> wmaster0: Failed to initialize rate control algorithm
-> usb 2-2: reset high speed USB device using ehci_hcd and address 7
-> zd1211rw_mac80211: probe of 2-2:1.0 failed with error -2
-> usbcore: registered new interface driver zd1211rw_mac80211
+Signed-off-by: John W. Linville <linville.tuxdriver.com>
+---
+ drivers/net/wireless/ath5k/base.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-You may want to move this to bugzilla.redhat.com.
-
-As a first check, did you install the zd1211-firmware package?
-
-John
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index c38adab..e764fd3 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1991,9 +1991,6 @@ static int ath5k_getchannels(struct ieee80211_hw *hw)
+ 		}
+ 
+ 		hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
+-		if (!hw_rates)
+-			return -EINVAL;
+-
+ 		mode->num_rates    = ath5k_copy_rates(mode->rates, hw_rates,
+ 			max_r);
+ 		mode->num_channels = ath5k_copy_channels(ah, mode->channels,
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2.4
+
