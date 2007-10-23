@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:34307 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756554AbXJZPqd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 11:46:33 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1IlROK-0000Wa-Nt
-	for linux-wireless@vger.kernel.org; Fri, 26 Oct 2007 11:46:32 -0400
-Subject: Re: [FYI] hostapd state with mac80211 on linux
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chuck Tuffli <CTuffli@dspg.com>, hostap <hostap@shmoo.com>,
-	Alexander Kotelnikov <sacha@myxomop.com>
-In-Reply-To: <1193338400.4406.4.camel@johannes.berg>
-References: <1193338400.4406.4.camel@johannes.berg>
+Received: from mga01.intel.com ([192.55.52.88]:48492 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751029AbXJWBId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2007 21:08:33 -0400
+Subject: Re: [PATCH] ipw2200: batch non-user-requested scan result
+	notifications
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+In-Reply-To: <1193068039.30205.13.camel@localhost.localdomain>
+References: <1191952524.617.7.camel@localhost.localdomain>
+	 <1193042719.3069.166.camel@debian.sh.intel.com>
+	 <1193068039.30205.13.camel@localhost.localdomain>
 Content-Type: text/plain
-Date: Fri, 26 Oct 2007 11:46:28 -0400
-Message-Id: <1193413588.2026.6.camel@dv> (sfid-20071026_164636_511884_02C351FD)
+Date: Tue, 23 Oct 2007 08:58:31 +0800
+Message-Id: <1193101111.3069.178.camel@debian.sh.intel.com> (sfid-20071023_020837_193481_4DEF5C8A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Thu, 2007-10-25 at 20:53 +0200, Johannes Berg wrote:
-> Since more and more people seem to be interested in it, here's a quick
-> status update:
-> 
-> hostapd works with
->  - kernel 2.6.24-rc1
->  - plus my patches from http://johannes.sipsolutions.net/patches/kernel/all/
->  - plus the commit 5c58298c2536252ab95aa2b1497ab47eb878ca5d from net-2.6
->    ([NETLINK]: Fix ACK processing after netlink_dump_start)
+On Mon, 2007-10-22 at 11:47 -0400, Dan Williams wrote:
+> I think that it got fixed upstream when the round_jiffies_relative()
+> patch went it, is that what you mean? 
 
-Great, thank you!  Can we have all the above in one place in a publicly
-available git repository, please?
+Yeah, that's what I mean. Thank you for the patch.
 
->  - my hostapd patches from http://johannes.sipsolutions.net/patches/hostap/all/
-
-And this too, if possible.  Maybe we could have this in hostap master
-branch?  All patches except 004 affect the devicescape driver only, and
-004 looks benign to me.
-
--- 
-Regards,
-Pavel Roskin
-
+-yi
