@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from av8-1-sn3.vrr.skanova.net ([81.228.9.183]:47886 "EHLO
-	av8-1-sn3.vrr.skanova.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761101AbXJLJ0P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 05:26:15 -0400
-Date: Fri, 12 Oct 2007 11:05:17 +0200
-From: Frank de Lange <frank@unternet.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Patrick McHardy <kaber@trash.net>,
-	Frank de Lange <lkml-f@unternet.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Oops] EIP is at ath5k_hw_reset+0x391/0xc82 [ath5k] (2.6.23,
-	latest wireless git)
-Message-ID: <20071012090517.GB6725@unternet.org> (sfid-20071012_102629_457917_F44034DC)
-References: <20071011230030.GA6725@unternet.org> <470EFD24.7020206@trash.net> <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0710112348s79d652c9j6d6f9701a641a24f@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3362 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751935AbXJWWJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 18:09:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, flamingice@sourmilk.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC] mac80211: no missing key complaint if frame may not be for us
+Date: Tue, 23 Oct 2007 17:46:20 -0400
+Message-Id: <1193175981828-git-send-email-linville@tuxdriver.com> (sfid-20071023_230945_570294_0AD8EAEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 12, 2007 at 06:48:17AM +0000, Nick Kossifidis wrote:
-> Can you plz run ath_info tool found in madwifi/tools directory and
-> post here the output ???
+Some APs implement support for multiple SSIDs using a single BSSID.
+Each SSID might implement a different protection scheme (or none
+at all).
 
-#lspci -v
+If we are associated with an unprotected SSID on an AP operating as
+described above, we might receive multicast frames that are actually
+intended for another SSID.  If that SSID is protected, those frames
+currently cause us to log a KERN_DEBUG message: "RX protected frame
+but have no key".  This can cause a lot of traffic in the logs.
 
-02:02.0 Ethernet controller: Atheros Communications, Inc. AR2413
-802.11bg NIC (rev 01)
-        Subsystem: Askey Computer Corp. Unknown device 7094
-        Flags: bus master, medium devsel, latency 96, IRQ 11
-        Memory at c0200000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
+Rather than complain if we receive a protected frame for which we
+have no key, then let's just keep quiet unless we are in something
+other than managed mode or unless the frame is unicast.
 
-#ath_info 0xc0200000
- -==Device Information==-
-MAC Version:  5213A(0x70) 
-MAC Revision: 5213A(0x78) 
-PHY Revision: 2112a(0x56) 
- -==EEPROM Information==-
-EEPROM Version:     5.2 
-EEPROM Size:        16K
-Regulatory Domain:  0x64 
- -==== Capabilities ====-
-|  802.11a Support: no   |
-|  802.11b Support: yes  |
-|  802.11g Support: yes  |
-|  RFKill  Support: yes  |
-|  32KHz   Crystal: no   |
- ========================
-GPIO registers: CR 00000000 DO 00000000 DI 00000017
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/rx.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-
-Cheers//Frank
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 064924c..1cc67ef 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -509,7 +509,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
+ 		rx->key->tx_rx_count++;
+ 		/* TODO: add threshold stuff again */
+ 	} else {
+-		if (net_ratelimit())
++		/* if there are multiple SSIDs on this BSSID, the frame may
++		   not be for us anyway; so, check that either the frame is
++		   unicast or that we are not in managed mode before
++		   complaining about a missing key */
++		if ((!is_multicast_ether_addr(hdr->addr1) ||
++		     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
++		    net_ratelimit())
+ 			printk(KERN_DEBUG "%s: RX protected frame,"
+ 			       " but have no key\n", rx->dev->name);
+ 		return TXRX_DROP;
 -- 
-   WWWWW      ________________________
-  ## o o\    /     Frank de Lange     \
-  }#   \|   /                          \
-   \ `--| _/     <Hacker for Hire>      \
-    `---'  \       +46-734352015        /
-            \    frank@unternet.org    /
-             `------------------------'
-  [ "Omnis enim res, quae dando non deficit, dum habetur
-     et non datur, nondum habetur, quomodo habenda est."  ]
+1.5.2.4
+
