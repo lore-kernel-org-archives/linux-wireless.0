@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2414 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750AbXJ0Mtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 08:49:42 -0400
-Date: Sat, 27 Oct 2007 08:49:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com, jirislaby@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: Maintain coding style
-Message-ID: <20071027124927.GB16222@tuxdriver.com> (sfid-20071027_134945_515315_14971C2F)
-References: <20071021013630.GB5817@localhost.domain.invalid> <20071026024348.GA14080@tuxdriver.com> <40f31dec0710260228r117c8ccdy13a8c32ffd42c2db@mail.gmail.com> <40f31dec0710261658n6a322a01u5f8a1b00c90f020c@mail.gmail.com>
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:58286 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbXJWMfE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 08:35:04 -0400
+Date: Tue, 23 Oct 2007 13:43:18 +0200
+To: Ian Schram <ischram@telenet.be>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
+Message-ID: <20071023114318.GI25672@gamma.logic.tuwien.ac.at> (sfid-20071023_133516_680184_B460A040)
+References: <47164DA9.3050001@telenet.be> <9f50a7a00710222311u7ae17958w596c3d579fb31536@mail.gmail.com> <1193120114.3069.256.camel@debian.sh.intel.com> <loom.20071023T104428-443@post.gmane.org> <471DDDD0.4060007@telenet.be>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0710261658n6a322a01u5f8a1b00c90f020c@mail.gmail.com>
+In-Reply-To: <471DDDD0.4060007@telenet.be>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 27, 2007 at 02:58:58AM +0300, Nick Kossifidis wrote:
+On Di, 23 Okt 2007, Ian Schram wrote:
+> > I would like to, is there a way to patch this into the git sources?
 
-> Do you mind if i also send the rest of them on the same series (not
-> only cleanups but code changes also) ?
+> the intellinuxwireless.org gits? to make it work it would require an update
 
-That seems fine to me.
+Sorry for being unclear, I meant the iwlwifi git sources (so currently
+the 1.1.18 one).
 
-Thanks,
+> of the mac80211 package, and compatibility with older kernels is probably
+> pretty nasty.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ah, ok, so I would have to use the mac80211.git source, too.
+
+> the association led is only in the very latest git sources, i'm guessing only
+> wireless-2.6 for now.
+
+Ok, so 2.6.23-mm1 should do the trick, am I right?
+
+> I'll try to send a patch a bit later today to fix a few of the outstanding issues.
+
+Thanks.
+
+
+Best wishes
+
+Norbert
+
+-------------------------------------------------------------------------------
+Dr. Norbert Preining <preining@logic.at>        Vienna University of Technology
+Debian Developer <preining@debian.org>                         Debian TeX Group
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+-------------------------------------------------------------------------------
+EWELME (n.)
+The smile bestowed on you by an air hostess.
+			--- Douglas Adams, The Meaning of Liff
