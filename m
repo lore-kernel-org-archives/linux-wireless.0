@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:42881 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476AbXJHUw2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 16:52:28 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so838824ugc
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2007 13:52:26 -0700 (PDT)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] Mode selection in mac80211
-Date: Mon, 8 Oct 2007 23:08:38 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Adam Baker <linux@baker-net.org.uk>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <200710052319.10600.linux@baker-net.org.uk> <1191837339.4063.25.camel@johannes.berg>
-In-Reply-To: <1191837339.4063.25.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710082308.38260.IvDoorn@gmail.com> (sfid-20071008_215234_002961_BA2A6254)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:51429 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751834AbXJWOIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 10:08:06 -0400
+Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
+	network
+From: Dan Williams <dcbw@redhat.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1193127280.3069.261.camel@debian.sh.intel.com>
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Tue, 23 Oct 2007 10:07:33 -0400
+Message-Id: <1193148453.8648.20.camel@localhost.localdomain> (sfid-20071023_150810_118446_E87EE8F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Is it intended that the order of calling ieee80211_register_hwmode should 
-> > determine which mode should be preferred when multiple modes exist on the 
-> > same channel or is there either already or planned a better option for driver 
-> > writers? If calling order should determine preference should it be first or 
-> > last registered?
+On Tue, 2007-10-23 at 16:14 +0800, Zhu Yi wrote:
+> On Tue, 2007-10-23 at 09:54 +0200, dragoran wrote:
+> > I really have bo idea what this means... with ipw3945 (ieee80211
+> > based) the same network works just fine.
 > 
-> That's actually a can of worms. Luis is working (I hope) on resolving
-> these issues with mode vs. frequency selection. However, I'm not
-> entirely convinced that mode selection should be done by userspace when
-> we are acting as a client. I think we should simply exploit hardware
-> capabilities as much as possible and then use the set that the AP
-> advertised (or rather as much as we can support of that).
+> This is related to mac80211, not the driver. That's why ipw3945 works.
+> Does this patch work for you?
 > 
-> Hence, for these questions it'd be good to know whether the ralink
-> drivers do anything different based on the selected mode, and if they do
-> (I assume they do because they register B *and* G modes) what it is.
+> http://marc.info/?l=linux-wireless&m=118715117523167&w=2
 
-The only difference currently in rt2x00 is for rt2500usb. The initialization
-of the IFS and EIFS register is different.
-I haven't gone through the legacy driver to see if there aren't any further
-changes. But since I believe I have extracted all register initializations
-that meant something from the legacy driver, this small difference can
-probably be considered as the only thing.
+Was there ever a conclusion to this patch?  ISTR it went through a
+couple comments and was more or less rejected as the wrong approach.
+Can anyone comment as to what the _right_ approach is?  Not being able
+to connect to dynamic WEP networks is not acceptable, what needs to be
+done to make this work?
 
-> It'd probably help a lot with the design of the interface if you could
-> answer that. I feel that mode selection should not be necessary since in
-> G mode a device needs to have the capability to talk to B-only stations
-> and hence must be able to "fall back" to B mode, we should therefore be
-> able to exploit that capability without the driver ever registering
-> different modes.
+Thanks,
+Dan
 
-And is mac80211 doing that correctly at this time?
-If so I could drop the 802.11B mode registration if that is the preferred action.
 
-> In fact, I think that the driver can probably simply register the
-> modulations/bitrates it can support orthogonally to the frequencies it
-> supports, and the frequencies consist of only information about the
-> frequency and possibly hardware value used to select it. This was part
-> of what I posted a while ago when Luis was posting his regulatory stuff,
-> and I think should be addressed while cleaning up that whole mess.
-
-Only registering the supported rates and channels and let mac80211 sort
-out the modes itself does sound like a good idea. :)
-
-Ivo
