@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33148
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030AbXJ1OSN (ORCPT
+Received: from keil-draco.com ([216.193.185.50]:50579 "EHLO
+	mail.keil-draco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562AbXJWRHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 10:18:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: Use mutex_lock() at register and add sanity check
-Date: Sun, 28 Oct 2007 15:16:50 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+	Tue, 23 Oct 2007 13:07:38 -0400
+From: Daniel Hazelton <dhazelton@enter.net>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
+Date: Tue, 23 Oct 2007 13:07:23 -0400
+Cc: Pavel Machek <pavel@ucw.cz>, Ivo van Doorn <ivdoorn@gmail.com>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mwallis@serialmonkey.com
+References: <20071020184100.GA11640@elf.ucw.cz> <20071022220000.GH28190@elf.ucw.cz> <1193148312.8648.17.camel@localhost.localdomain>
+In-Reply-To: <1193148312.8648.17.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710281516.51356.mb@bu3sch.de> (sfid-20071028_141817_338229_556766AB)
+  charset="utf-8"
+Message-Id: <200710231307.25301.dhazelton@enter.net> (sfid-20071023_180929_175391_0070AC01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace mutex_lock_interruptible() by mutex_lock() in rfkill_register(),
-as interruptible doesn't make sense there.
+On Tuesday 23 October 2007 10:05:12 Dan Williams wrote:
+> On Tue, 2007-10-23 at 00:00 +0200, Pavel Machek wrote:
+> > Hi!
+> >
+> > > > > Yes, I'm quite sure. There's MODULE_LICENCE("GPL"), IIRC.
+> > > >
+> > > > That doesn't say much, some manufacturers add that line to their
+> > > > driver just to prevent the module loader complaining about a non-GPL
+> > > > driver...
+> > > >
+> > > > There should be a copyright notice or a license file accompanied with
+> > > > the driver that clearly states the license of the driver.
+> > >
+> > > Lacking an explicitly stated license it can be argued that, since the
+> > > MODULE_LICENSE() macro is meant to define the actual license on the
+> > > code, this code is GPL. No, it isn't an explicit definition, but
+> > > lacking any other signs of the license, the implicit declaration of it
+> > > being GPL is (or should be) enough to deflect charges of copyright
+> > > infringement.
+> >
+> > Yep, I believe this driver is GPLed. They published the source and
+> > there's nothing to suggest otherwise, and there's explicit:
+> >
+> > #define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
+> > #define DRIVER_DESC                             "IS89C35 802.11bg WLAN
+> > USB Driver" MODULE_LICENSE("GPL");
+>
+> If there isn't an explicit COPYING or LICENSE file or something
+> distributed with the driver, and if there aren't copyright/license
+> headers at the top of the files in question, I have a hard time agreeing
+> that MODULE_LICENSE("GPL") _definitely_ means that the author has GPL-ed
+> the driver intentionally.  Of course that's the way it's supposed to
+> work, but to me this doesn't pass sufficient muster to be definitely
+> called GPL without additional clarification.
+>
+> Dan
 
-Add a sanity check for rfkill->type, as that's used for an unchecked dereference
-in an array and might cause hard to debug crashes if the driver sets this
-to an invalid value.
+Lacking any other indication MODULE_LICENSE is supposed to mark the license 
+that the code is being distributed under. If companies are intentionally 
+mis-using this to get around the "internal interfaces" limitations (where 
+some interfaces are not available unless the module is GPL'd) and the warning 
+message printed in the logs when the module is not GPL'd then they are 
+(technically) in violation of the law. (interfaces that are GPL only are 
+considered so internal to the kernel that using them makes your code GPL 
+because of the inclusion of GPL'd code. And no - I am not going to get into 
+that discussion - it's pointless)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+In the end, using MODULE_LICENSE for any purpose other than declaring the 
+chosen license for the code is deceptive. So it is easily arguable that by 
+not including any license with the code other than the MODULE_LICENSE 
+statement and then trying to prosecute because MODULE_LICENSE doesn't 
+accurately state the license on the code is entrapment and illegal.
 
-Index: wireless-2.6/net/rfkill/rfkill.c
-===================================================================
---- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-28 14:27:30.000000000 +0100
-+++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 15:07:11.000000000 +0100
-@@ -276,21 +276,17 @@ static struct class rfkill_class = {
- 
- static int rfkill_add_switch(struct rfkill *rfkill)
- {
--	int retval;
--
--	retval = mutex_lock_interruptible(&rfkill_mutex);
--	if (retval)
--		return retval;
-+	int error;
- 
--	retval = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
--	if (retval)
--		goto out;
-+	mutex_lock(&rfkill_mutex);
- 
--	list_add_tail(&rfkill->node, &rfkill_list);
-+	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
-+	if (!error)
-+		list_add_tail(&rfkill->node, &rfkill_list);
- 
-- out:
- 	mutex_unlock(&rfkill_mutex);
--	return retval;
-+
-+	return error;
- }
- 
- static void rfkill_remove_switch(struct rfkill *rfkill)
-@@ -387,6 +383,8 @@ int rfkill_register(struct rfkill *rfkil
- 
- 	if (!rfkill->toggle_radio)
- 		return -EINVAL;
-+	if (rfkill->type >= RFKILL_TYPE_MAX)
-+		return -EINVAL;
- 
- 	snprintf(dev->bus_id, sizeof(dev->bus_id),
- 		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
+DRH
+
+-- 
+Dialup is like pissing through a pipette. Slow and excruciatingly painful.
