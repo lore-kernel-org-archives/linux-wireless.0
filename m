@@ -1,100 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:22286 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754890AbXJJR4q convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbXJXIhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 13:56:46 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
-Date: Wed, 10 Oct 2007 10:54:46 -0700
-Message-ID: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3DBF@fmsmsx413.amr.corp.intel.com> (sfid-20071010_185650_233106_447DB7B4)
-In-Reply-To: <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
-References: <470C9F28.1070803@gmail.com><20071010130653.GB5962@tuxdriver.com><1192026847.9739.4.camel@localhost.localdomain><f6ca9fed0710100757gbcd364esdd94f114cfe1019@mail.gmail.com><1192028866.9739.32.camel@localhost.localdomain><20071010152027.GF5962@tuxdriver.com> <4616099B20F1F24C8ADC5B1BFE2A0F88037D3D8B@fmsmsx413.amr.corp.intel.com>
-From: "Ferguson, Dana R" <dana.r.ferguson@intel.com>
-To: "Ferguson, Dana R" <dana.r.ferguson@intel.com>,
+	Wed, 24 Oct 2007 04:37:34 -0400
+Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
+	network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, dragoran <drago01@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
+	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1193148453.8648.20.camel@localhost.localdomain> (sfid-20071023_150810_118446_E87EE8F5)
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
+	 <1193148453.8648.20.camel@localhost.localdomain>
+	 (sfid-20071023_150810_118446_E87EE8F5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FeNzNM67JP+WLXtBR7KX"
+Date: Tue, 23 Oct 2007 19:37:14 +0200
+Message-Id: <1193161034.7733.38.camel@johannes.berg> (sfid-20071024_093751_640850_B7123F51)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
 
-I bit more info. I am hearing it is a Cisco CCX feature and will not be
-included in the open source code.
+--=-FeNzNM67JP+WLXtBR7KX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dana
+On Tue, 2007-10-23 at 10:07 -0400, Dan Williams wrote:
 
------Original Message-----
-From: ipw3945-devel-bounces@lists.sourceforge.net
-[mailto:ipw3945-devel-bounces@lists.sourceforge.net] On Behalf Of
-Ferguson, Dana R
-Sent: Wednesday, October 10, 2007 10:43 AM
-To: John W. Linville; Dan Williams
-Cc: linux-wireless@vger.kernel.org; ipw3945-devel
-Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+> Was there ever a conclusion to this patch?  ISTR it went through a
+> couple comments and was more or less rejected as the wrong approach.
+> Can anyone comment as to what the _right_ approach is?  Not being able
+> to connect to dynamic WEP networks is not acceptable, what needs to be
+> done to make this work?
 
-Hi,
+My take on it is that it's a wpa_supplicant/wext bug.
 
-Engineers here have brought to my attention that this has been going on
-for several projects and has been reported in Bugzilla on 2915, 3945 and
-now the current. I can't get into the old data bases to provide bug
-ID's. So I can't provide more details.
+See, the log says:
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
 
-I am wondering why it keeps getting over looked? Have we narrowed it
-down to where it is failing?
+So that means ieee80211_privacy_mismatch() returned non-zero. However,
+ieee80211_privacy_mismatch() will return 0 instantly when key management
+is enabled, which is obviously true with dynamic WEP.
 
-Dana
-  
+Hence, IMHO wpa_supplicant should be telling us that it enabled key
+management. But the wext interface is crappy enough to not have a
+definition for dynamic WEP which probably means that in the
+wpa_driver_wext_keymgmt2wext() function in wpa_supplicant's
+driver_wext.c 0 is returned, while we take anything but zero to be "key
+management is enabled".
 
------Original Message-----
-From: ipw3945-devel-bounces@lists.sourceforge.net
-[mailto:ipw3945-devel-bounces@lists.sourceforge.net] On Behalf Of John
-W. Linville
-Sent: Wednesday, October 10, 2007 8:20 AM
-To: Dan Williams
-Cc: linux-wireless@vger.kernel.org; ipw3945-devel
-Subject: Re: [ipw3945-devel] mac80211/iwlwifi + hidden ssids
+The proper fix would be to
+ (a) remove the crap about IW_AUTH_KEY_MGMT values from wext,
+     no drivers except mac80211 care and that cares only about
+     enabled/disabled
+ (b) make the parameter to IW_AUTH_KEY_MGMT a boolean
+     (no code changes required, only comment updates, since no driver
+     cares one bit except mac80211 which treats it as a bool already)
+ (c) update wpa_supplicant's wpa_driver_wext_keymgmt2wext function to
+     return 0 for KEY_MGMT_NONE and 1 for everything else
 
-On Wed, Oct 10, 2007 at 11:07:46AM -0400, Dan Williams wrote:
-> On Wed, 2007-10-10 at 16:57 +0200, dragoran wrote:
+I'm not going to do it though. Dynamic WEP is just too uninteresting to
+me.
 
-> > btw shouldn't all mac80211 drivers either work or not work because
-the
-> > code for this is in mac80211 and not in the drivers?
-> 
-> Yeah, pretty much; but each driver/firmware may handle hidden ssids
-> slightly differently.  mac80211 should bring some sanity to this area,
-> but I wouldn't discount variation between even mac80211 based drivers.
+johannes
 
-Hmmm...doesn't the iwlwifi firmware intercede in scanning?
+--=-FeNzNM67JP+WLXtBR7KX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-------------------------------------------------------------------------
--
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
-_______________________________________________
-Ipw3945-devel mailing list
-Ipw3945-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+iQIVAwUARx4xSaVg1VMiehFYAQL5LA//W1WzabpPcfruTLUJnK2PKWnnmip5ygbm
+hEmYej6GDa/dWQgOMuGabC5Aq4HD6Tp64MGpnswRZaoWxO0Cgl5RPE+ttNPXMiJz
+7lj/Bi2FcJ7duxmEw1GcSbQWlUpCvpWxfODlLNOie3YtrEeIl9ArCEmVFxMynUpZ
+XORBEg7HdVSCP5tQ7Abb96u5DZH//MTGsbFFdAYaPDQQ0UPktpdn9S0qASmoYycf
+JzN5BNbWl8WCxK6TQu124BfP+3wEOlKrJ6BV3HXz5qKmAI7XsbcsGdQBOogRHMPh
+aNVf8aR3ukDzi7zWVJZIF+JDhfPO2eTOxf96edNmdQjOiS6AAnvgXY4QG81YYnHy
+9EGYBLcTG4t59QPHIJjqJBAi+49MI2bvhtdDzXN5b00s1df9bqXUlvNU+acn7yRA
+d0Ki8Mo/vkGBHi2sT14++vJMpsb94ztzdf/iE+PhF7HOoAxEwaCDcTjDUHfVB/uE
+6gpb6w2rb5oF1FTXEMwx2biB941uDC0nb1p4mpj1Y8fT0uh2egL1HGytB+7Irh8U
+PWnHDFu2Up2RH90LXXKInizp6J9aUUdU7F95ch+d1Px7HqYRNQS44cOWBuKEcdbK
+Ij2/BMo+9+4oYZW06uCVZOFw/qT+3tUbQLfyYgJNAzFRNJ7xfeGvHFKZdq9B8xEs
+Ww0JXJcclqI=
+=75WC
+-----END PGP SIGNATURE-----
 
-------------------------------------------------------------------------
--
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
-_______________________________________________
-Ipw3945-devel mailing list
-Ipw3945-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+--=-FeNzNM67JP+WLXtBR7KX--
+
