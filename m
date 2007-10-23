@@ -1,106 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:54273 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753954AbXJYNh2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 09:37:28 -0400
-Message-ID: <47209C0C.5010505@sgi.com> (sfid-20071025_143743_052456_74F0E98D)
-Date: Thu, 25 Oct 2007 15:37:16 +0200
-From: Jes Sorensen <jes@sgi.com>
-MIME-Version: 1.0
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: iwl4965 detection problem
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from gateway.drzeus.cx ([85.8.24.16]:33429 "EHLO smtp.drzeus.cx"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750891AbXJWF3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 01:29:10 -0400
+Date: Tue, 23 Oct 2007 07:29:01 +0200
+From: Pierre Ossman <drzeus@drzeus.cx>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com
+Subject: Re: [PATCH] libertas: make if_sdio align packets
+Message-ID: <20071023072901.5ee79aa8@poseidon.drzeus.cx> (sfid-20071023_062916_053141_749452FF)
+In-Reply-To: <20071022.181530.28790082.davem@davemloft.net>
+References: <20071022190532.5077ce3d@poseidon.drzeus.cx>
+	<20071022.181530.28790082.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_hera.drzeus.cx-4372-1193117313-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-I just got my hands on a new Toshiba Portege R500 laptop, which comes
-with the Intel 4965 chip in it. After installing the latest Fedora Core
-8 test 3 on it, and updating the kernel I am still seeing a problem with
-detection of the 4965 in my laptop.
+--=_hera.drzeus.cx-4372-1193117313-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Fedora Core 8 test 3 is based on a 2.6.23.1 kernel.
+On Mon, 22 Oct 2007 18:15:30 -0700 (PDT)
+David Miller <davem@davemloft.net> wrote:
 
-Basically on the first load of the iwl4965 module no interface is
-detected, but if I rmmod and modprobe it again, it shows up and works
-just fine.
+> From: Pierre Ossman <drzeus@drzeus.cx>
+> Date: Mon, 22 Oct 2007 19:05:32 +0200
+>=20
+> > +	/*
+> > +	 * The IP stack is littered with silly assumptions on alignment,
+> > +	 * so we need to do a bit of layering violation here and make
+> > +	 * assumptions about the size of the headers between us and the
+> > +	 * IP stack.
+> > +	 */
+> > +	skb_reserve(skb, NET_IP_ALIGN);
+> > +
+>=20
+> Please remove this comment.
+>=20
+> Where else could we possibly ensure that post-link-level headers are
+> aligned properly, taking into account DMA engine restrictions and
+> whatnot, other than in the driver itself?
+>=20
 
-I haven't yet tried the latest kernel.org tree on this box, but looking
-through the git log, I don't see any commits that look like they were
-addressing this problem.
+If the assumption was that this driver was just below post-link-level, then=
+ fine. But this driver has a header of 4 bytes. The problem is one level up=
+, and even has variable headers at that point.
 
-Is this a problem you have heard about before? Anything information I
-can provide to help?
+> It's not about IP, even though the macro has "IP" in it's name.  It's
+> meant to ensure reasonable alignment after the link-level header,
+> regardless of upper-level protocol.  So your layering violation
+> commentary is simply rediculious and frankly starting to annoy the
+> crap out of me.
+>=20
+> As you were also shown, all of THIS is fully documented in a huge
+> comment above the definition of NET_IP_ALIGN.
+>=20
 
-I have attached the lspci -vv entry for this device, as well as the
-dmesg output.
+And digging through every header file is the norm when trying to figure out=
+ the broad details of writing a network driver? I looked at both of if_sdio=
+'s sister drivers, if_usb and if_cs; only one had the reserve call and it d=
+idn't have a single comment (and not even the right macro). if_cs now has a=
+ call, but with the bare minimum of a comment. I also tried looking through=
+ Documentation/, but all I could find were driver specific docs.
 
-Cheers,
-Jes
+> I'm sorry for flaming you so much, but you are showing zero respect
+> for existing practice in the kernel networking and you behave as if
+> you're the only person in the world who has to deal with these issues.
+> You accuse us openly of mis-architecting the Linux networking with
+> these so-called "layering violations" and having maintained the stack
+> for more than 10 years I start to take things like that quite
+> personally.
 
-02:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or 
-AGN Network Connection (rev 61)
-	Subsystem: Intel Corporation Unknown device 1101
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR-
-	Latency: 0, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 2300
-	Region 0: Memory at ff8fe000 (64-bit, non-prefetchable) [size=8K]
-	Capabilities: [c8] Power Management version 3
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [d0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 
-Enable+
-		Address: 00000000fee0300c  Data: 41a9
-	Capabilities: [e0] Express Endpoint IRQ 0
-		Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag-
-		Device: Latency L0s <512ns, L1 unlimited
-		Device: AtnBtn- AtnInd- PwrInd-
-		Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
-		Device: RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-		Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
-		Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s L1, Port 0
-		Link: Latency L0s <128ns, L1 <64us
-		Link: ASPM L0s Enabled RCB 64 bytes CommClk+ ExtSynch-
-		Link: Speed 2.5Gb/s, Width x1
+It _is_ a layering violation, with the upside of a performance gain. You're=
+ free to make that trade-off, but that doesn't mean I have to like it. If y=
+ou feel offended by that, then I'm sorry. It was never my intention to piss=
+ anyone off.
 
-dmesg output:
+Feel free to remove the comment. I don't see this discussion going anywhere=
+ productive.
 
-First time it's loaded:
+/Pierre
 
-firewire_ohci: Added fw-ohci device 0000:03:0b.1, OHCI version 1.10
-sdhci: SDHCI controller found at 0000:03:0b.3 [104c:803c] (rev 0)
-PCI: Enabling device 0000:03:0b.3 (0000 -> 0002)
-ACPI: PCI Interrupt 0000:03:0b.3[D] -> GSI 23 (level, low) -> IRQ 23
-mmc0: SDHCI at 0x90005800 irq 23 DMA
-iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-iwl4965: Copyright(c) 2003-2007 Intel Corporation
-ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 18 (level, low) -> IRQ 18
-PCI: Setting latency timer of device 0000:02:00.0 to 64
-iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-tpm_inf_pnp 00:0a: Found TPM with ID IFX0102
-tpm_inf_pnp 00:0a: TPM found: config base 0x4e, data base 0x680, chip 
-version 0x000b, vendor id 0x15d1 (Infineon), product id 0x000b (SLB 9635 
-TT 1.2)
-intel_rng: FWH not detected
-.......
-rmmod+modprobe'ing it again:
+--=_hera.drzeus.cx-4372-1193117313-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
-[drm] Initialized drm 1.1.0 20060810
-[drm] Initialized i915 1.6.0 20060119 on minor 0
-ACPI: PCI interrupt for device 0000:02:00.0 disabled
-iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-iwl4965: Copyright(c) 2003-2007 Intel Corporation
-ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 18 (level, low) -> IRQ 18
-PCI: Setting latency timer of device 0000:02:00.0 to 64
-iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-iwl4965: Tunable channels: 13 802.11bg, 19 802.11a channels
-phy1: Selected rate control algorithm 'iwl-4965-rs'
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
+iD8DBQFHHYae7b8eESbyJLgRAv9mAKCfJJ4lYytzBGK3vLq5+sDswQwm2wCfZRWn
+zi7BRWBM8OFWkrB4gIZlvEI=
+=HtC3
+-----END PGP SIGNATURE-----
+
+--=_hera.drzeus.cx-4372-1193117313-0001-2--
