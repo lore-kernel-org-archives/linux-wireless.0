@@ -1,137 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27423 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754752AbXJYJXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:23:05 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mabbas@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 26/30] iwl3945: fix direct scan problem
-Date: Thu, 25 Oct 2007 17:15:47 +0800
-Message-Id: <11933037893348-git-send-email-yi.zhu@intel.com> (sfid-20071025_102313_418509_3938DA4A)
-In-Reply-To: <11933037881944-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
- <11933037613709-git-send-email-yi.zhu@intel.com>
- <1193303762680-git-send-email-yi.zhu@intel.com>
- <11933037641168-git-send-email-yi.zhu@intel.com>
- <11933037663659-git-send-email-yi.zhu@intel.com>
- <11933037674045-git-send-email-yi.zhu@intel.com>
- <11933037692766-git-send-email-yi.zhu@intel.com>
- <1193303770550-git-send-email-yi.zhu@intel.com>
- <11933037721573-git-send-email-yi.zhu@intel.com>
- <1193303773185-git-send-email-yi.zhu@intel.com>
- <11933037743841-git-send-email-yi.zhu@intel.com>
- <11933037762104-git-send-email-yi.zhu@intel.com>
- <11933037784073-git-send-email-yi.zhu@intel.com>
- <11933037794199-git-send-email-yi.zhu@intel.com>
- <11933037812209-git-send-email-yi.zhu@intel.com>
- <11933037822284-git-send-email-yi.zhu@intel.com>
- <11933037831480-git-send-email-yi.zhu@intel.com>
- <11933037851697-git-send-email-yi.zhu@intel.com>
- <11933037863641-git-send-email-yi.zhu@intel.com>
- <11933037881944-git-send-email-yi.zhu@intel.com>
+Received: from xenotime.net ([66.160.160.81]:51497 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752873AbXJWXPl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 19:15:41 -0400
+Received: from midway.site ([71.117.233.180]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 16:15:35 -0700
+Date: Tue, 23 Oct 2007 16:15:35 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 10/12] mac80211: fix warning created by BIT()
+Message-Id: <20071023161535.a526d595.rdunlap@xenotime.net> (sfid-20071024_001545_507325_368E1C48)
+In-Reply-To: <20071023223645.421AB1F81B6@havoc.gtf.org>
+References: <tueoct232007613pm.likjasfdlkjdas987@havoc.gtf.org>
+	<20071023223645.421AB1F81B6@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mabbas@linux.intel.com>
+On Tue, 23 Oct 2007 18:36:45 -0400 (EDT) Jeff Garzik wrote:
 
-This patch fix the follwing for 3945:
-1. Fix direct scan by make sure we set one_direct_scan only when the
-   mac80211 ask for direct scan.
-2. Fix mac_stop and mac_remove_interface calles, we make sure we cancel any
-   scan and disassoc on these call
+> Now that BIT() forces unsigned long, this warning appears:
+>=20
+> net/mac80211/ieee80211_sta.c: In function =E2=80=98ieee80211_rx_mgmt_=
+assoc_resp=E2=80=99:
+> net/mac80211/ieee80211_sta.c:1187: warning: format =E2=80=98%d=E2=80=99=
+ expects type =E2=80=98int=E2=80=99, but argument 7 has type =E2=80=98l=
+ong unsigned int=E2=80=99
 
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+LC_ALL=3DC make ...
+
+
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> ---
+>=20
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_st=
+a.c
+> index f7ffeec..bdfd901 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -1182,7 +1182,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct=
+ net_device *dev,
+>  	aid =3D le16_to_cpu(mgmt->u.assoc_resp.aid);
+> =20
+>  	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=3D0x%x "
+> -	       "status=3D%d aid=3D%d)\n",
+> +	       "status=3D%d aid=3D%ld)\n",
+>  	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
+>  	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
+> =20
+> -
+
+Patch was submitted yesterday by Johannes Berg, but does need to be
+pushed by someone... (like this)
+
+
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   32 +++++++++++++++++++++++---
- 1 files changed, 28 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c060d04..560346b 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6579,7 +6579,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 		memcpy(scan->direct_scan[0].ssid,
- 		       priv->direct_ssid, priv->direct_ssid_len);
- 		direct_mask = 1;
--	} else if (!iwl_is_associated(priv)) {
-+	} else if (!iwl_is_associated(priv) && priv->essid_len) {
- 		scan->direct_scan[0].id = WLAN_EID_SSID;
- 		scan->direct_scan[0].len = priv->essid_len;
- 		memcpy(scan->direct_scan[0].ssid, priv->essid, priv->essid_len);
-@@ -6716,6 +6716,10 @@ static void iwl_bg_post_associate(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	if (!priv->interface_id || !priv->is_open) {
-+		mutex_unlock(&priv->mutex);
-+		return;
-+	}
- 	iwl_scan_cancel_timeout(priv, 200);
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
-@@ -6855,9 +6859,19 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
- 	struct iwl_priv *priv = hw->priv;
- 
- 	IWL_DEBUG_MAC80211("enter\n");
-+
-+
-+	mutex_lock(&priv->mutex);
-+	/* stop mac, cancel any scan request and clear
-+	 * RXON_FILTER_ASSOC_MSK BIT
-+	 */
- 	priv->is_open = 0;
--	/*netif_stop_queue(dev); */
--	flush_workqueue(priv->workqueue);
-+	iwl_scan_cancel_timeout(priv, 100);
-+	cancel_delayed_work(&priv->post_associate);
-+	priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
-+	iwl_commit_rxon(priv);
-+	mutex_unlock(&priv->mutex);
-+
- 	IWL_DEBUG_MAC80211("leave\n");
- }
- 
-@@ -7187,6 +7201,12 @@ static void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	IWL_DEBUG_MAC80211("enter\n");
- 
- 	mutex_lock(&priv->mutex);
-+
-+	iwl_scan_cancel_timeout(priv, 100);
-+	cancel_delayed_work(&priv->post_associate);
-+	priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
-+	iwl_commit_rxon(priv);
-+
- 	if (priv->interface_id == conf->if_id) {
- 		priv->interface_id = 0;
- 		memset(priv->bssid, 0, ETH_ALEN);
-@@ -7239,7 +7259,8 @@ static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
- 		priv->direct_ssid_len = (u8)
- 		    min((u8) len, (u8) IW_ESSID_MAX_SIZE);
- 		memcpy(priv->direct_ssid, ssid, priv->direct_ssid_len);
--	}
-+	} else
-+		priv->one_direct_scan = 0;
- 
- 	rc = iwl_scan_initiate(priv);
- 
-@@ -8540,6 +8561,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
- 		iwl_rate_control_unregister(priv->hw);
- 	}
- 
-+	/*netif_stop_queue(dev); */
-+	flush_workqueue(priv->workqueue);
-+
- 	/* ieee80211_unregister_hw calls iwl_mac_stop, which flushes
- 	 * priv->workqueue... so we can't take down the workqueue
- 	 * until now... */
--- 
-1.5.2
+~Randy
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
