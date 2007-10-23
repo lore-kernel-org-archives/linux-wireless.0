@@ -1,74 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46277 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300AbXJEOC7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 10:02:59 -0400
-Subject: Re: mac80211: What is get_sequence_counter?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200710051556.27401.mb@bu3sch.de> (sfid-20071005_145719_660926_A6741074)
-References: <200710051556.27401.mb@bu3sch.de>
-	 (sfid-20071005_145719_660926_A6741074)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fQiO5FpZovlbpiWIoEOu"
-Date: Fri, 05 Oct 2007 16:03:24 +0200
-Message-Id: <1191593004.7367.32.camel@johannes.berg> (sfid-20071005_150304_138527_70DF26C5)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3363 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752262AbXJWWJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 18:09:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, flamingice@sourmilk.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC] mac80211: no decrypt failed complaint if frame may not be for us
+Date: Tue, 23 Oct 2007 17:46:21 -0400
+Message-Id: <11931759811502-git-send-email-linville@tuxdriver.com> (sfid-20071023_230945_100389_1F2C6A14)
+In-Reply-To: <1193175981828-git-send-email-linville@tuxdriver.com>
+References: <1193175981828-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: John W. Linville <linville@tuxdriver.com>
 
---=-fQiO5FpZovlbpiWIoEOu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please see changelog entry for "mac80211: no missing key complaint if
+frame may not be for us" for background information.
 
-On Fri, 2007-10-05 at 15:56 +0200, Michael Buesch wrote:
-> What is the get_sequence_counter callback for?
->=20
-> 	/* For devices that have internal sequence counters, allow 802.11
-> 	 * code to access the current value of a counter */
-> 	int (*get_sequence_counter)(struct ieee80211_hw *hw,
-> 				    u8* addr, u8 keyidx, u8 txrx,
-> 				    u32* iv32, u16* iv16);
->=20
-> It doesn't seem to be used in current mac80211 code.
-> It seems that this is to fetch the current initial values.
-> Is that correct?
-> Who is supposed to use this callback? If it's unused, let's remove
-> it please. The documentation for it sucks anyway. :)
+If multiple protected SSIDs share a BSSID, then each will see the
+other's encrypted multicast traffic.  Rather than complain about being
+unable to decrypt multicast traffic which may not be for us, just keep
+quiet.
 
-No, it's actually used in a patch I'm about to post:
-http://johannes.sipsolutions.net/patches/kernel/all/2007-09-28-22%3a38/017-=
-mac80211-key-seq-nl80211.patch
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/wep.c |   11 ++++++++++-
+ net/mac80211/wpa.c |   27 +++++++++++++++++++++------
+ 2 files changed, 31 insertions(+), 7 deletions(-)
 
-Mind you, it could be renamed and described better; it's used for
-getting the current sequence number of a hardware TKIP implementation.
-
-johannes
-
---=-fQiO5FpZovlbpiWIoEOu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwZEK6Vg1VMiehFYAQKpOxAAuoOrCbszvbRFiTEUd58ipTQbD6rl+NRH
-EY8ycBwwwEwrD22saGkj4Mg4dtYQtwlKgCISTLQjVxWnu59lxTbB9dRF2uWuX9sw
-xnI+OA+DywV7brcUTPz4bP/eQZb8MwGxSxo1NgtU5k4SW1cAkZAOXjKU5bj++krp
-5xE0q3GCm4YwBVB8JIeaXxzDBc9SbTIRis2iXZI5JhyW7qyE0tv4WVD2evaGS9uf
-6VePOv0sCLlqqAVhveBAAGc+skFERiedPRqU7WgGIi/ImQEXxa+fHYsSbrr6uABd
-5rlxWtuiYyQfpAPjQ0D0WCpLA221Y/+dKpfQ86GZ8F8m3945298y79icvRVrjPZw
-LZm63rqKNkVdl4YoAuLbtSiZnGUyeONMxJbNUmwh9TrU7zoWm9kGhIUp3JkwIRTK
-0uJ9adAgopweqANH3RrMYpeO+9qfNkvomNHrtI6sDDIEEdCqNSEVgUa3zfmY9rYz
-vaavRszMnbQDQoDg5UPyLeqXPoa4rGSVd1Lp05m9glvUMmECLGeiQPbR4ftPi02Y
-t7Ofit7qgYpQ7v619F+oMTj/AjbWobwS/ILHHum37HS7WIy2iPSXld8z6Lu4S1uo
-1cDFzTtJE7eZWOyN43m3UuGFTyOr0jYk2fk5pzs1j0w0jiWgUeBNUADbr5diQsDO
-wv/viP0h2x4=
-=e7iA
------END PGP SIGNATURE-----
-
---=-fQiO5FpZovlbpiWIoEOu--
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 6675261..4b75ccb 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -311,6 +311,8 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key)
+ ieee80211_txrx_result
+ ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx)
+ {
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
++
+ 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
+ 	    ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+ 	     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH))
+@@ -318,7 +320,14 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_txrx_data *rx)
+ 
+ 	if (!(rx->u.rx.status->flag & RX_FLAG_DECRYPTED)) {
+ 		if (ieee80211_wep_decrypt(rx->local, rx->skb, rx->key)) {
+-			if (net_ratelimit())
++			/* if there are multiple SSIDs on this BSSID,
++			   the frame may not be for us anyway; so, check
++			   that either the frame is unicast or that we
++			   are not in managed mode before complaining
++			   about a missing key */
++			if ((!is_multicast_ether_addr(hdr->addr1) ||
++			     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
++			    net_ratelimit())
+ 				printk(KERN_DEBUG "%s: RX WEP frame, decrypt "
+ 				       "failed\n", rx->dev->name);
+ 			return TXRX_DROP;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 0b32ab6..2d5bf83 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -321,9 +321,16 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_txrx_data *rx)
+ 					  &rx->u.rx.tkip_iv32,
+ 					  &rx->u.rx.tkip_iv16);
+ 	if (res != TKIP_DECRYPT_OK || wpa_test) {
+-		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
+-		       MAC_FMT " (res=%d)\n",
+-		       rx->dev->name, MAC_ARG(rx->sta->addr), res);
++		/* if there are multiple SSIDs on this BSSID, the
++		   frame may not be for us anyway; so, check that either
++		   the frame is unicast or that we are not in managed
++		   mode before complaining about a missing key */
++		if ((!is_multicast_ether_addr(hdr->addr1) ||
++		     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
++		    net_ratelimit())
++			printk(KERN_DEBUG "%s: TKIP decrypt failed for RX "
++			       "frame from " MAC_FMT " (res=%d)\n",
++			       rx->dev->name, MAC_ARG(rx->sta->addr), res);
+ 		return TXRX_DROP;
+ 	}
+ 
+@@ -590,9 +597,17 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_txrx_data *rx)
+ 			    skb->data + hdrlen + CCMP_HDR_LEN, data_len,
+ 			    skb->data + skb->len - CCMP_MIC_LEN,
+ 			    skb->data + hdrlen + CCMP_HDR_LEN)) {
+-			printk(KERN_DEBUG "%s: CCMP decrypt failed for RX "
+-			       "frame from " MAC_FMT "\n", rx->dev->name,
+-			       MAC_ARG(rx->sta->addr));
++			/* if there are multiple SSIDs on this BSSID,
++			   the frame may not be for us anyway; so, check
++			   that either the frame is unicast or that we
++			   are not in managed mode before complaining
++			   about a missing key */
++			if ((!is_multicast_ether_addr(hdr->addr1) ||
++			     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
++			    net_ratelimit())
++				printk(KERN_DEBUG "%s: CCMP decrypt failed "
++				       "for RX frame from " MAC_FMT "\n",
++				       rx->dev->name, MAC_ARG(rx->sta->addr));
+ 			return TXRX_DROP;
+ 		}
+ 	}
+-- 
+1.5.2.4
 
