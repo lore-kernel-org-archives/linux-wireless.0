@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:26941 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759854AbXJ2SWI (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:59966 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbXJWI4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 14:22:08 -0400
-Date: Mon, 29 Oct 2007 11:20:26 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, akpm <akpm@linux-foundation.org>
-Subject: [PATCH] hostap: fix section mismatch warning
-Message-Id: <20071029112026.f66473c5.randy.dunlap@oracle.com> (sfid-20071029_182238_606437_9158BFD7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 23 Oct 2007 04:56:49 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3009926pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 01:56:48 -0700 (PDT)
+Message-ID: <f6ca9fed0710230156g6b19f6fbu24e3b9ea40c1b433@mail.gmail.com> (sfid-20071023_095655_863003_1DBAB136)
+Date: Tue, 23 Oct 2007 10:56:48 +0200
+From: dragoran <drago01@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep network
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Volker Braun" <volker.braun@physik.hu-berlin.de>
+In-Reply-To: <1193127280.3069.261.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On 10/23/07, Zhu Yi <yi.zhu@intel.com> wrote:
+>
+> On Tue, 2007-10-23 at 09:54 +0200, dragoran wrote:
+> > I really have bo idea what this means... with ipw3945 (ieee80211
+> > based) the same network works just fine.
+>
+> This is related to mac80211, not the driver. That's why ipw3945 works.
+> Does this patch work for you?
+>
+> http://marc.info/?l=linux-wireless&m=118715117523167&w=2
 
-Fix section mismatch warning:
-
-WARNING: vmlinux.o(.data+0x36fcc): Section mismatch: reference to .init.data:prism2_pci_id_table (between 'prism2_pci_drv_id' and 'prism2_pci_funcs')
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/net/wireless/hostap/hostap_pci.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2624-rc1g4-v1.orig/drivers/net/wireless/hostap/hostap_pci.c
-+++ linux-2624-rc1g4-v1/drivers/net/wireless/hostap/hostap_pci.c
-@@ -444,7 +444,7 @@ static int prism2_pci_resume(struct pci_
- 
- MODULE_DEVICE_TABLE(pci, prism2_pci_id_table);
- 
--static struct pci_driver prism2_pci_drv_id = {
-+static struct pci_driver prism2_pci_driver = {
- 	.name		= "hostap_pci",
- 	.id_table	= prism2_pci_id_table,
- 	.probe		= prism2_pci_probe,
-@@ -458,13 +458,13 @@ static struct pci_driver prism2_pci_drv_
- 
- static int __init init_prism2_pci(void)
- {
--	return pci_register_driver(&prism2_pci_drv_id);
-+	return pci_register_driver(&prism2_pci_driver);
- }
- 
- 
- static void __exit exit_prism2_pci(void)
- {
--	pci_unregister_driver(&prism2_pci_drv_id);
-+	pci_unregister_driver(&prism2_pci_driver);
- }
- 
- 
+I thought this was already merged. Will build a new kernel with it and
+test again tomorrow.
