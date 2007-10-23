@@ -1,71 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754485AbXJYJXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:23:00 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 23/30] iwlwifi: Update iwlwifi version stamp to 1.1.18
-Date: Thu, 25 Oct 2007 17:15:44 +0800
-Message-Id: <11933037851697-git-send-email-yi.zhu@intel.com> (sfid-20071025_104102_205523_D8F092AD)
-In-Reply-To: <11933037831480-git-send-email-yi.zhu@intel.com>
-References: <11933037512140-git-send-email-yi.zhu@intel.com>
- <11933037541699-git-send-email-yi.zhu@intel.com>
- <11933037553170-git-send-email-yi.zhu@intel.com>
- <119330375796-git-send-email-yi.zhu@intel.com>
- <11933037584069-git-send-email-yi.zhu@intel.com>
- <11933037601236-git-send-email-yi.zhu@intel.com>
- <11933037613709-git-send-email-yi.zhu@intel.com>
- <1193303762680-git-send-email-yi.zhu@intel.com>
- <11933037641168-git-send-email-yi.zhu@intel.com>
- <11933037663659-git-send-email-yi.zhu@intel.com>
- <11933037674045-git-send-email-yi.zhu@intel.com>
- <11933037692766-git-send-email-yi.zhu@intel.com>
- <1193303770550-git-send-email-yi.zhu@intel.com>
- <11933037721573-git-send-email-yi.zhu@intel.com>
- <1193303773185-git-send-email-yi.zhu@intel.com>
- <11933037743841-git-send-email-yi.zhu@intel.com>
- <11933037762104-git-send-email-yi.zhu@intel.com>
- <11933037784073-git-send-email-yi.zhu@intel.com>
- <11933037794199-git-send-email-yi.zhu@intel.com>
- <11933037812209-git-send-email-yi.zhu@intel.com>
- <11933037822284-git-send-email-yi.zhu@intel.com>
- <11933037831480-git-send-email-yi.zhu@intel.com>
+Received: from baikonur.stro.at ([213.239.196.228]:59685 "EHLO
+	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbXJWMg4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 08:36:56 -0400
+Date: Tue, 23 Oct 2007 14:36:39 +0200
+From: maximilian attems <max@stro.at>
+To: Norbert Preining <preining@logic.at>
+Cc: Ian Schram <ischram@telenet.be>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
+Message-ID: <20071023123639.GO1362@baikonur.stro.at> (sfid-20071023_133658_579626_4668F171)
+References: <47164DA9.3050001@telenet.be> <9f50a7a00710222311u7ae17958w596c3d579fb31536@mail.gmail.com> <1193120114.3069.256.camel@debian.sh.intel.com> <loom.20071023T104428-443@post.gmane.org> <471DDDD0.4060007@telenet.be> <20071023114318.GI25672@gamma.logic.tuwien.ac.at>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071023114318.GI25672@gamma.logic.tuwien.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On Tue, Oct 23, 2007 at 01:43:18PM +0200, Norbert Preining wrote:
+> Ok, so 2.6.23-mm1 should do the trick, am I right?
+> 
+current git maybe better :P
+but if you are lazy we have backports in 2.6.23 trunk snapshots
+-> http://wiki.debian.org/DebianKernel
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 37513e5..2da0f50 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -101,7 +101,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.1.17k" VD VS
-+#define IWLWIFI_VERSION "1.1.18k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index bf93db5..f07643b 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -100,7 +100,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.1.17k" VD VS
-+#define IWLWIFI_VERSION "1.1.18k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
 -- 
-1.5.2
+maks
