@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3186 "EHLO ra.tuxdriver.com"
+Received: from smtp19.orange.fr ([80.12.242.18]:1051 "EHLO smtp19.orange.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750861AbXJZELr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 00:11:47 -0400
-Date: Fri, 26 Oct 2007 00:11:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20071026041131.GD14080@tuxdriver.com> (sfid-20071026_051202_292143_A230ECDD)
-References: <20071026031033.GC14080@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071026031033.GC14080@tuxdriver.com>
+	id S1752235AbXJWVzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 17:55:23 -0400
+Received: from me-wanadoo.net (localhost [127.0.0.1])
+	by mwinf1917.orange.fr (SMTP Server) with ESMTP id A69211C00094
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 23:55:21 +0200 (CEST)
+Subject: Pb rt73
+From: Bruno Vetel <bruno.vetel@wanadoo.fr>
+Reply-To: bruno.vetel@wanadoo.fr
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 23 Oct 2007 23:54:35 +0200
+Message-Id: <1193176475.5563.3.camel@rigel.esas.fr> (sfid-20071023_225527_304616_1F90CB12)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 25, 2007 at 11:10:33PM -0400, John W. Linville wrote:
+Hi Ivo
 
-> The following changes since commit c9927c2bf4f45bb85e8b502ab3fb79ad6483c244:
->   Linus Torvalds (1):
->         Linux 2.6.24-rc1
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-> 
-> Jeff Garzik (1):
->       mac80211: fix warning created by BIT()
+I just merge your rt2x00 tree with my development. Now rt73usb works in
+Ad-Hoc Mode between my arm board and a PC.
 
-Hmmm...this doesn't actually seem to fix the warning -- oops!
 
-Disregard this request, I'll apply Johannes' fix instead and send
-another pull request.
+	Many Thanks to you
 
-John
+	Best regards 
+
+	Bruno
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Bruno Vetel <bruno.vetel@wanadoo.fr>
+
+
