@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:30623 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757636AbXJDQ6P (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:52486 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627AbXJWJIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 12:58:15 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
-Date: Thu, 4 Oct 2007 12:56:15 -0400
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20071004113343.552139D502B@zog.reactivated.net> <20071004085440.008216c6@freepuppy.rosehill>
-In-Reply-To: <20071004085440.008216c6@freepuppy.rosehill>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3822380.ChMOfOQO4F";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710041256.20995.flamingice@sourmilk.net> (sfid-20071004_175826_596971_08602375)
+	Tue, 23 Oct 2007 05:08:17 -0400
+Date: Tue, 23 Oct 2007 10:08:08 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Daniel Hazelton <dhazelton@enter.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mwallis@serialmonkey.com
+Subject: Re: rt73usb: support for wireless in Kohjinsha subnotebook
+Message-ID: <20071023090808.GB19758@infradead.org> (sfid-20071023_100833_509501_DFEEC8A3)
+References: <20071020184100.GA11640@elf.ucw.cz> <20071022211325.GF28190@elf.ucw.cz> <200710222352.57543.IvDoorn@gmail.com> <200710221742.36693.dhazelton@enter.net> <20071022220000.GH28190@elf.ucw.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071022220000.GH28190@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3822380.ChMOfOQO4F
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Tue, Oct 23, 2007 at 12:00:00AM +0200, Pavel Machek wrote:
+> there's nothing to suggest otherwise, and there's explicit:
+> 
+> #define DRIVER_AUTHOR                   "Jeff Lee<YY_Lee@issc.com.tw>"
+> #define DRIVER_DESC                             "IS89C35 802.11bg WLAN USB Driver"
+> MODULE_LICENSE("GPL");
 
-On Thursday 04 October 2007 11:54, Stephen Hemminger wrote:
-> Playing with the function pointer is a awkward way to do this.  Shouldn't
-> the state management flags be used instead (dormant, running, stop/wake).=
-=2E.
-> I am concerned about races and dereferencing the NULL ptr.
-This is all under RTNL and the pointer is only modified while the interface=
- is=20
-down.
-
-=2DMichael Wu
-
---nextPart3822380.ChMOfOQO4F
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBHBRs0T3Oqt9AH4aERAqhjAJwJwuirxBJEqpdxneUd2T0uLq2/CACfaMv4
-wL/Xmkli1yjGD62ROVqXWZ8=
-=7+ee
------END PGP SIGNATURE-----
-
---nextPart3822380.ChMOfOQO4F--
+So what about contacting the vendor and asking?
