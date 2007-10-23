@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:57087 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752696AbXJJMBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 08:01:25 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1IfaFZ-0007wN-R4
-	for linux-wireless@vger.kernel.org; Wed, 10 Oct 2007 12:01:17 +0000
-Received: from dslc-082-082-164-062.pools.arcor-ip.net ([82.82.164.62])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 12:01:17 +0000
-Received: from feldmann_markus by dslc-082-082-164-062.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 12:01:17 +0000
+Received: from py-out-1112.google.com ([64.233.166.178]:65352 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbXJWHy1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2007 03:54:27 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2983754pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 00:54:26 -0700 (PDT)
+Message-ID: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com> (sfid-20071023_085431_477987_08203BB8)
+Date: Tue, 23 Oct 2007 09:54:25 +0200
+From: dragoran <drago01@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: Re: Patch for Kernel and Ath5k
-Date: Wed, 10 Oct 2007 14:00:57 +0200
-Message-ID: <feietp$qf4$1@sea.gmane.org> (sfid-20071010_130133_342741_7B4F95FF)
-References: <feieb9$nvg$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <feieb9$nvg$1@sea.gmane.org>
+Subject: iwl3945/mac80211 cannot connect to dynamic wep network
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Markus Feldmann schrieb:
-> Hi All,
-> 
-> i tried to patch the Kernel to get the ATH5k Driver to work but without 
-> success.
-> 
-> It seems i miss some scripts like check.sh
-> 
-> Anybody knows how to get my Problem solved?
-> 
-> bye Markus
-> 
-Sorry i forgot to say that i am using the kernel Source 2.6.23-rc8 and 
-wanna patch this with a Andrew Morton Patch,
-2.6.23-rc8-mm1
-2.6.23-rc8-mm2
+When trying to connect to a dynamic wep network using iwl3945 and
+mac80211 I get this errors in dmesg and it fails to acciotate:
+-----
+eth1: Initial auth_alg=0
+eth1: authenticate with AP 00:00:00:00:00:00
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+eth1: Initial auth_alg=0
+eth1: authenticate with AP 00:01:f4:75:16:74
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+eth1: RX authentication from 00:01:f4:75:16:74 (alg=0 transaction=2 status=0)
+eth1: authenticated
+eth1: associate with AP 00:01:f4:75:16:74
+eth1: mismatch in privacy configuration and mixed-cell disabled -
+abort association
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+eth1: Initial auth_alg=0
+eth1: authenticate with AP 00:01:f4:75:16:74
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+eth1: Initial auth_alg=0
+eth1: authenticate with AP 00:01:f4:75:16:74
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+eth1: RX disassociation from 00:01:f4:75:16:74 (reason=7)
+eth1: RX authentication from 00:01:f4:75:16:74 (alg=0 transaction=2 status=0)
+eth1: authenticated
+eth1: associate with AP 00:01:f4:75:16:74
+eth1: mismatch in privacy configuration and mixed-cell disabled -
+abort association
+eth1: authentication frame received from 00:01:f4:75:16:74, but not in
+authenticate state - ignored
+eth1: privacy configuration mismatch and mixed-cell disabled - disassociate
+ADDRCONF(NETDEV_UP): eth1: link is not ready
+---
 
-Can anybody write what i have to do?
-
-I am on Debian Etch. I have got an Atheros Wlan Chip with the ID 
-168c:001c (rev 01).
-
-Thank you and
-bye
-
+I really have bo idea what this means... with ipw3945 (ieee80211
+based) the same network works just fine.
