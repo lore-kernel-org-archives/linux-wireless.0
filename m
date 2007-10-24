@@ -1,109 +1,488 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39044 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754373AbXJ3O45 (ORCPT
+Received: from iggypop2.siwnet.net ([81.216.65.12]:50308 "EHLO
+	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbXJXHgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2007 10:56:57 -0400
-Subject: [PATCH] mac80211: remove unused driver ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Tue, 30 Oct 2007 15:58:18 +0100
-Message-Id: <1193756298.3912.13.camel@johannes.berg> (sfid-20071030_145723_013714_58B9256B)
-Mime-Version: 1.0
+	Wed, 24 Oct 2007 03:36:24 -0400
+From: Marcus Better <marcus@better.se>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2] mac80211: fix set_channel regression
+Date: Wed, 24 Oct 2007 09:36:07 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <fdqhn4$qab$1@sea.gmane.org> <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com> <200710192110.37099.IvDoorn@gmail.com>
+In-Reply-To: <200710192110.37099.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1254916.2AbYc2IeUZ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710240936.10681.marcus@better.se> (sfid-20071024_083631_768869_7C5BDAFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver operations set_ieee8021x(), set_port_auth() and
-set_privacy_invoked() are not used by any drivers, except
-set_privacy_invoked() they aren't even used by mac80211.
-Remove them at least until we need to support drivers with
-mac80211 that require getting this information.
+--nextPart1254916.2AbYc2IeUZ
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_nXvHH/9o1dEUmzE"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Michael Wu <flamingice@sourmilk.net>
+--Boundary-01=_nXvHH/9o1dEUmzE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
----
- include/net/mac80211.h         |   21 ---------------------
- net/mac80211/ieee80211_ioctl.c |    7 +------
- 2 files changed, 1 insertion(+), 27 deletions(-)
+Ivo van Doorn wrote:
+> However I can recommend using 2.0.11 the following patches:
 
---- linux-2.6.orig/include/net/mac80211.h	2007-10-29 15:51:51.311982367 +0100
-+++ linux-2.6/include/net/mac80211.h	2007-10-29 16:01:40.109048556 +0100
-@@ -941,27 +941,11 @@ enum ieee80211_erp_change_flags {
-  *	and remove_interface calls, i.e. while the interface with the
-  *	given local_address is enabled.
-  *
-- * @set_ieee8021x: Enable/disable IEEE 802.1X. This item requests wlan card
-- *	to pass unencrypted EAPOL-Key frames even when encryption is
-- *	configured. If the wlan card does not require such a configuration,
-- *	this function pointer can be set to NULL.
-- *
-- * @set_port_auth: Set port authorization state (IEEE 802.1X PAE) to be
-- *	authorized (@authorized=1) or unauthorized (=0). This function can be
-- *	used if the wlan hardware or low-level driver implements PAE.
-- *	mac80211 will filter frames based on authorization state in any case,
-- *	so this function pointer can be NULL if low-level driver does not
-- *	require event notification about port state changes.
-- *
-  * @hw_scan: Ask the hardware to service the scan request, no need to start
-  *	the scan state machine in stack.
-  *
-  * @get_stats: return low-level statistics
-  *
-- * @set_privacy_invoked: For devices that generate their own beacons and probe
-- *	response or association responses this updates the state of privacy_invoked
-- *	returns 0 for success or an error number.
-- *
-  * @get_sequence_counter: For devices that have internal sequence counters this
-  *	callback allows mac80211 to access the current value of a counter.
-  *	This callback seems not well-defined, tell us if you need it.
-@@ -1034,14 +1018,9 @@ struct ieee80211_ops {
- 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		       const u8 *local_address, const u8 *address,
- 		       struct ieee80211_key_conf *key);
--	int (*set_ieee8021x)(struct ieee80211_hw *hw, int use_ieee8021x);
--	int (*set_port_auth)(struct ieee80211_hw *hw, u8 *addr,
--			     int authorized);
- 	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
- 	int (*get_stats)(struct ieee80211_hw *hw,
- 			 struct ieee80211_low_level_stats *stats);
--	int (*set_privacy_invoked)(struct ieee80211_hw *hw,
--				   int privacy_invoked);
- 	int (*get_sequence_counter)(struct ieee80211_hw *hw,
- 				    u8* addr, u8 keyidx, u8 txrx,
- 				    u32* iv32, u16* iv16);
---- linux-2.6.orig/net/mac80211/ieee80211_ioctl.c	2007-10-29 15:50:53.209046766 +0100
-+++ linux-2.6/net/mac80211/ieee80211_ioctl.c	2007-10-29 16:01:40.769042535 +0100
-@@ -917,7 +917,6 @@ static int ieee80211_ioctl_siwauth(struc
- 				   struct iw_request_info *info,
- 				   struct iw_param *data, char *extra)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	int ret = 0;
- 
-@@ -927,6 +926,7 @@ static int ieee80211_ioctl_siwauth(struc
- 	case IW_AUTH_CIPHER_GROUP:
- 	case IW_AUTH_WPA_ENABLED:
- 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
-+	case IW_AUTH_PRIVACY_INVOKED:
- 		break;
- 	case IW_AUTH_KEY_MGMT:
- 		if (sdata->type != IEEE80211_IF_TYPE_STA)
-@@ -948,11 +948,6 @@ static int ieee80211_ioctl_siwauth(struc
- 		else
- 			ret = -EOPNOTSUPP;
- 		break;
--	case IW_AUTH_PRIVACY_INVOKED:
--		if (local->ops->set_privacy_invoked)
--			ret = local->ops->set_privacy_invoked(
--					local_to_hw(local), data->value);
--		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		break;
+I tried the full 2.0.11. It still has throughput problems. TCP throughput i=
+s=20
+300 kbit/s (tptest and HTTP download). However UDP throughput is 10 Mbit/s=
+=20
+according to tptest (and that may be limited by the bandwidth to the test=20
+server).
 
+Attaching the debugfs dump.
 
+Marcus
+
+--Boundary-01=_nXvHH/9o1dEUmzE
+Content-Type: text/plain;
+  charset="iso-8859-1";
+  name="debugfsdump.2.0.11"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="debugfsdump.2.0.11"
+
+BBP:
+0 0x12
+1 0xf8
+2 0x1a
+3 0x02
+4 0x19
+5 0x09
+6 0x00
+7 0x0e
+8 0x00
+9 0x00
+10 0x00
+11 0x04
+12 0x03
+13 0x48
+14 0x1e
+15 0x30
+16 0xac
+17 0x50
+18 0x18
+19 0xff
+20 0x1e
+21 0x18
+22 0x18
+23 0x08
+24 0x70
+25 0x40
+26 0x08
+27 0x23
+28 0x18
+29 0x18
+30 0x10
+31 0x2b
+32 0xb9
+33 0x55
+34 0x12
+35 0x50
+36 0x11
+37 0x05
+38 0x00
+39 0xc4
+40 0x02
+41 0x60
+42 0x0f
+43 0x2b
+44 0x6c
+45 0x41
+46 0x14
+47 0x0a
+48 0x04
+49 0x02
+50 0xa8
+51 0x44
+52 0x2e
+53 0x10
+54 0x18
+55 0x7d
+56 0x08
+57 0x10
+58 0x08
+59 0x02
+60 0x01
+61 0x6a
+62 0x00
+63 0x00
+CSR:
+0 0x00000004
+1 0x00000004
+2 0x00000000
+3 0x1df00d00
+4 0x0000a739
+5 0xa76c1400
+6 0x00001060
+7 0x00000000
+8 0x000fff86
+9 0x00000980
+10 0x37b38000
+11 0x070414a5
+12 0x3e803e80
+13 0x000000a0
+14 0x0000000b
+15 0x00000000
+16 0xd7cd6ecc
+17 0x00000115
+18 0x001e000a
+19 0x013a0032
+20 0x000005a0
+21 0x00000030
+22 0x00000000
+23 0x00000000
+24 0x00000000
+25 0x01605b1a
+26 0x0c010c2c
+27 0x37b48000
+28 0x37b1f000
+29 0x37b40000
+30 0x37b1e000
+31 0x00000000
+32 0x0000007e
+33 0x00000c2c
+34 0x37b38000
+35 0x000003b8
+36 0xb3aab3af
+37 0x86870885
+38 0x8c8d8b8a
+39 0x0000015f
+40 0x0000000a
+41 0x00000000
+42 0x0000009c
+43 0x0000354e
+44 0x0000043c
+45 0x0003ffff
+46 0x00000001
+47 0x00000000
+48 0x00000000
+49 0x3f3b3100
+50 0x00020002
+51 0x00000002
+52 0x00020002
+53 0x00000002
+54 0x000001fe
+55 0x1ab83f21
+56 0x00213223
+57 0x00000218
+58 0x9a009a11
+59 0x00000000
+60 0x00001150
+61 0x14063611
+62 0x00031e46
+63 0x0000c78f
+64 0x37b381e4
+65 0x37b48134
+66 0x37b40160
+67 0x37b1f000
+68 0x00000020
+69 0x00000009
+70 0x00005d80
+71 0x000000aa
+72 0x00000001
+73 0x00000001
+74 0x00000000
+75 0x0000e472
+76 0x000500f0
+77 0x00000040
+78 0x000000f0
+79 0x00700408
+80 0x00380409
+81 0x0014040a
+82 0x000a840b
+83 0x7038140a
+84 0x1d21252d
+85 0x1919191d
+86 0x37b48000
+87 0x821a8202
+88 0x00000003
+89 0x00000000
+90 0x00000000
+91 0x00000000
+92 0x76543210
+EEPROM:
+0 0x2560
+1 0xffff
+2 0x0d00
+3 0x1df0
+4 0xa739
+5 0x0201
+6 0x1814
+7 0x0601
+8 0x0000
+9 0x6146
+10 0x18e8
+11 0x0000
+12 0x0002
+13 0x0000
+14 0xffff
+15 0xffff
+16 0x1d6a
+17 0xfff0
+18 0xffff
+19 0x0f30
+20 0x1126
+21 0x1518
+22 0x1618
+23 0x3510
+24 0x3610
+25 0x3d6a
+26 0x3e10
+27 0x2350
+28 0x2960
+29 0x3618
+30 0x3e00
+31 0xffff
+32 0xffff
+33 0xffff
+34 0xffff
+35 0x1818
+36 0x1818
+37 0x1718
+38 0x1717
+39 0x1717
+40 0x1818
+41 0x1717
+42 0xffff
+43 0xffff
+44 0xffff
+45 0xffff
+46 0xffff
+47 0xffff
+48 0xffff
+49 0xffff
+50 0xffff
+51 0xffff
+52 0xffff
+53 0xffff
+54 0xffff
+55 0xffff
+56 0xffff
+57 0xffff
+58 0xffff
+59 0xffff
+60 0xffff
+61 0xffff
+62 0xff6d
+63 0x0102
+64 0x0000
+65 0x0000
+66 0x0000
+67 0x0000
+68 0x0000
+69 0x0000
+70 0x0000
+71 0x0000
+72 0x0000
+73 0x0000
+74 0x0000
+75 0x0000
+76 0x0000
+77 0x0000
+78 0x0000
+79 0x0000
+80 0x0000
+81 0x0000
+82 0x0000
+83 0x0000
+84 0x0000
+85 0x0000
+86 0x0000
+87 0x0000
+88 0x0000
+89 0x0000
+90 0x0000
+91 0x0000
+92 0x0000
+93 0x0000
+94 0x0000
+95 0x0000
+96 0x0000
+97 0x0000
+98 0x0000
+99 0x0000
+100 0x0000
+101 0x0000
+102 0x0000
+103 0x0000
+104 0x0000
+105 0x0000
+106 0x0000
+107 0x0000
+108 0x0000
+109 0x0000
+110 0x0000
+111 0x0000
+112 0x0000
+113 0x0000
+114 0x0000
+115 0x0000
+116 0x0000
+117 0x0000
+118 0x0000
+119 0x0000
+120 0x0000
+121 0x0000
+122 0x0000
+123 0x0000
+124 0x0000
+125 0x0000
+126 0x0000
+127 0x0000
+128 0x2560
+129 0xffff
+130 0x0d00
+131 0x1df0
+132 0xa739
+133 0x0201
+134 0x1814
+135 0x0601
+136 0x0000
+137 0x6146
+138 0x18e8
+139 0x0000
+140 0x0002
+141 0x0000
+142 0xffff
+143 0xffff
+144 0x1d6a
+145 0xffff
+146 0xffff
+147 0x0f30
+148 0x1126
+149 0x1518
+150 0x1618
+151 0x3510
+152 0x3610
+153 0x3d6a
+154 0x3e10
+155 0x2350
+156 0x2960
+157 0x3618
+158 0x3e00
+159 0xffff
+160 0xffff
+161 0xffff
+162 0xffff
+163 0x1818
+164 0x1818
+165 0x1718
+166 0x1717
+167 0x1717
+168 0x1818
+169 0x1717
+170 0xffff
+171 0xffff
+172 0xffff
+173 0xffff
+174 0xffff
+175 0xffff
+176 0xffff
+177 0xffff
+178 0xffff
+179 0xffff
+180 0xffff
+181 0xffff
+182 0xffff
+183 0xffff
+184 0xffff
+185 0xffff
+186 0xffff
+187 0xffff
+188 0xffff
+189 0xffff
+190 0xff6d
+191 0x0102
+192 0x0000
+193 0x0000
+194 0x0000
+195 0x0000
+196 0x0000
+197 0x0000
+198 0x0000
+199 0x0000
+200 0x0000
+201 0x0000
+202 0x0000
+203 0x0000
+204 0x0000
+205 0x0000
+206 0x0000
+207 0x0000
+208 0x0000
+209 0x0000
+210 0x0000
+211 0x0000
+212 0x0000
+213 0x0000
+214 0x0000
+215 0x0000
+216 0x0000
+217 0x0000
+218 0x0000
+219 0x0000
+220 0x0000
+221 0x0000
+222 0x0000
+223 0x0000
+224 0x0000
+225 0x0000
+226 0x0000
+227 0x0000
+228 0x0000
+229 0x0000
+230 0x0000
+231 0x0000
+232 0x0000
+233 0x0000
+234 0x0000
+235 0x0000
+236 0x0000
+237 0x0000
+238 0x0000
+239 0x0000
+240 0x0000
+241 0x0000
+242 0x0000
+243 0x0000
+244 0x0000
+245 0x0000
+246 0x0000
+247 0x0000
+248 0x0000
+249 0x0000
+250 0x0000
+251 0x0000
+252 0x0000
+253 0x0000
+254 0x0000
+255 0x0000
+
+--Boundary-01=_nXvHH/9o1dEUmzE--
+
+--nextPart1254916.2AbYc2IeUZ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBHHvXqXjXn6TzcAQkRAup+AJ41i43hDVjFVC399zEx9icjYmsAFgCgyskT
+HawEK8A/Cr0uHDTf3HKGyPw=
+=oVr1
+-----END PGP SIGNATURE-----
+
+--nextPart1254916.2AbYc2IeUZ--
