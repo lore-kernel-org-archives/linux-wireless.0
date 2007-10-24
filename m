@@ -1,156 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36416 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031AbXJZXtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 19:49:47 -0400
-Subject: Re: [PATCH] fix 'and' typo's
-From: Dan Williams <dcbw@redhat.com>
-To: Roel Kluin <12o3l@tiscali.nl>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4722453E.2090801@tiscali.nl>
-References: <4722453E.2090801@tiscali.nl>
-Content-Type: text/plain
-Date: Fri, 26 Oct 2007 19:48:46 -0400
-Message-Id: <1193442527.20185.10.camel@localhost.localdomain> (sfid-20071027_004950_959192_59842B66)
-Mime-Version: 1.0
+Received: from nz-out-0506.google.com ([64.233.162.231]:26302 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756221AbXJXGek (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Oct 2007 02:34:40 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so112318nze
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2007 23:34:39 -0700 (PDT)
+Message-ID: <40f31dec0710232334u38731941ua642583e44fef7a9@mail.gmail.com> (sfid-20071024_073501_113050_C93F791B)
+Date: Wed, 24 Oct 2007 09:34:38 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Eric W Anderson" <Eric.Anderson@colorado.edu>
+Subject: Re: Proc usage (was: Re: [ath5k-devel] [PATCH 3/3] consistently use ath5k in printks)
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <471EC944.2010700@colorado.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
+	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
+	 <1192619652.8841.13.camel@johannes.berg>
+	 <1192630172.10567.29.camel@localhost.localdomain>
+	 <43e72e890710170719o120f9dbak34f33d8218038dfc@mail.gmail.com>
+	 <40f31dec0710170926p3847b796gdf52f80297b7c117@mail.gmail.com>
+	 <471EC944.2010700@colorado.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-10-26 at 21:51 +0200, Roel Kluin wrote:
-> A few patches with changes to net code. I have sent these to the lkml
-> previously, but they were not yet merged. I am fairly new to kernel 
-> programming, so it is possible that I make some mistakes. I'll explain my
-> rationale, please nack if incorrect, an additional bit of explanation is
-> appreciated even more.
-> 
-> The condition '!x & y,' does make little sense: the '!' has a higher
-> priority than '&'. It behaves therefore like '!x && y'. In the case 
-> bitanding flags, however, '!(x & y)' appears to be desired.
-> 
-> Warning: the change of '!x & y,' to '!(x & y)' may change behavior. if
-> not desired, I propose changing this to '!x && y', to make it explicitly
-> clear.
-> 
-> These '&' typo's can be spotted with:
-> a="A-Za-z0-9_"
-> git-grep "\![^$a()]*[$a]\+\([$a.]*\|->\)*\(\[[$a.]*\]\)\?[ \W]*&[^&]\+"
-> 
-> --
->         Fix priority mistakes similar to '!x & y'
->     
->         Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
-> ---
-> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-> index 074055e..e3eca6d 100644
-> --- a/drivers/net/wireless/airo.c
-> +++ b/drivers/net/wireless/airo.c
-> @@ -6407,7 +6407,7 @@ static int airo_set_encode(struct net_device *dev,
->  			set_wep_key(local, index, NULL, 0, perm, 1);
->  		} else
->  			/* Don't complain if only change the mode */
-> -			if(!dwrq->flags & IW_ENCODE_MODE) {
-> +			if(!(dwrq->flags & IW_ENCODE_MODE)) {
->  				return -EINVAL;
->  			}
->  	}
+2007/10/24, Eric W Anderson <Eric.Anderson@colorado.edu>:
+> I realize that primary role of the driver is for actual use, rather than for
+> research, but...  It's very useful in experiments to have /proc entries for all
+> the settings that you don't normally think of as tunable.  (e.g. turning off
+> antenna diversity, or ACKs, or changing the CCA thresholds). I'd really hate for
+> knobs to go away because someone things they're not "really" needed, or because
+> they're not worth merging into the new configuration framework.
+>
+> -Eric
+>
 
-Ack.
+We don't say that these values (eg. diversity) should not be tweaked,
+we say that /proc isn't the right solution. Also have in mind that for
+some of these we don't know if they work ok with the reverse
+engineered HAL, eg. i'm not sure that disabling rx diversity works
+because we haven't tested current hw_setdefantenna implementation
+(disabling tx diversity should work by passing a proper antenna value
+on setup_tx_desc but diversity is something that we might handle on
+mac80211, /proc's purpose is not doing configuration stuff).
 
-> diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-> index 059ce3f..57cc7e5 100644
-> --- a/drivers/net/wireless/atmel.c
-> +++ b/drivers/net/wireless/atmel.c
-> @@ -1759,7 +1759,7 @@ static int atmel_set_encode(struct net_device *dev,
->  			priv->default_key = index;
->  		} else
->  			/* Don't complain if only change the mode */
-> -			if (!dwrq->flags & IW_ENCODE_MODE) {
-> +			if (!(dwrq->flags & IW_ENCODE_MODE)) {
->  				return -EINVAL;
->  			}
->  	}
+Actually only tweakable values at the moment are the calibration
+interval (very few people will play with that) and debug (which is a
+mask for enabling various debug messages) and i think they are both
+useless for someone not working on the driver. You can always use
+madwifi with the binary HAL for such stuff and research. Tweaking is
+not a priority right now for ath5k, we have to make things working
+before we start tweaking  (eg. we can't tweak diversity when we still
+work on phy initialization)...
 
-Ack.
 
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index c6f5aa3..d93438c 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -1380,7 +1380,7 @@ static int wlan_get_encodeext(struct net_device *dev,
->  		index = adapter->wep_tx_keyidx;
->  	}
->  
-> -	if (!ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY &&
-> +	if (!(ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) &&
->  	    ext->alg != IW_ENCODE_ALG_WEP) {
->  		if (index != 0 || adapter->mode != IW_MODE_INFRA)
->  			goto out;
-
-Ack.
-
-> diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
-> index 1437db0..8ee1453 100644
-> --- a/drivers/net/wireless/p54common.c
-> +++ b/drivers/net/wireless/p54common.c
-> @@ -374,7 +374,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
->  			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
->  				pad = entry_data->align[0];
->  
-> -			if (!status.control.flags & IEEE80211_TXCTL_NO_ACK) {
-> +			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
->  				if (!(payload->status & 0x01))
->  					status.flags |= IEEE80211_TX_STATUS_ACK;
->  				else
-> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> index 6d80ca4..b9d0073 100644
-> --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> @@ -1118,7 +1118,7 @@ prism54_set_encode(struct net_device *ndev, struct iw_request_info *info,
->  			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
->  					    &index);
->  		} else {
-> -			if (!dwrq->flags & IW_ENCODE_MODE) {
-> +			if (!(dwrq->flags & IW_ENCODE_MODE)) {
->  				/* we cannot do anything. Complain. */
->  				return -EINVAL;
->  			}
-> @@ -2610,7 +2610,7 @@ prism2_ioctl_set_encryption(struct net_device *dev,
->  			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
->  					    &index);
->  		} else {
-> -			if (!param->u.crypt.flags & IW_ENCODE_MODE) {
-> +			if (!(param->u.crypt.flags & IW_ENCODE_MODE)) {
->  				/* we cannot do anything. Complain. */
->  				return -EINVAL;
->  			}
-> diff --git a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-> index 857dcf3..3c1cca4 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-> @@ -403,7 +403,7 @@ static int uw2453_init_hw(struct zd_rf *rf)
->  		if (r)
->  			return r;
->  
-> -		if (!intr_status & 0xf) {
-> +		if (!(intr_status & 0xf)) {
->  			dev_dbg_f(zd_chip_dev(chip),
->  				"PLL locked on configuration %d\n", i);
->  			found_config = i;
-> diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
-> index d309e8f..623489a 100644
-> --- a/net/ieee80211/ieee80211_wx.c
-> +++ b/net/ieee80211/ieee80211_wx.c
-> @@ -709,7 +709,7 @@ int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
->  	} else
->  		idx = ieee->tx_keyidx;
->  
-> -	if (!ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY &&
-> +	if (!(ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) &&
->  	    ext->alg != IW_ENCODE_ALG_WEP)
->  		if (idx != 0 || ieee->iw_mode != IW_MODE_INFRA)
->  			return -EINVAL;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
