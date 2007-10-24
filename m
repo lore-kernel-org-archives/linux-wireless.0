@@ -1,67 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:34863 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757364AbXJDVS1 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:37810 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753323AbXJXTcU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 17:18:27 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted to managed
-Date: Thu, 4 Oct 2007 17:16:28 -0400
-Cc: Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
-	johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20071004113343.552139D502B@zog.reactivated.net> <200710041311.37997.flamingice@sourmilk.net> <20071004181516.GH6037@tuxdriver.com>
-In-Reply-To: <20071004181516.GH6037@tuxdriver.com>
+	Wed, 24 Oct 2007 15:32:20 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so385514ugc
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2007 12:32:19 -0700 (PDT)
+From: Miguel =?iso-8859-1?q?Bot=F3n?= <mboton.lkml@gmail.com>
+To: linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] b44: power down PHY when interface down
+Date: Wed, 24 Oct 2007 20:31:52 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3810229.ukmq4tXfGv";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710041716.31942.flamingice@sourmilk.net> (sfid-20071004_221832_868374_C3FA198F)
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200710242031.52610.mboton.lkml@gmail.com> (sfid-20071024_203225_034175_CCDA0E6E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3810229.ukmq4tXfGv
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This is just http://lkml.org/lkml/2007/7/1/51 but adapted to b44 ssb dr=
+iver.
 
-On Thursday 04 October 2007 14:15, John W. Linville wrote:
-> Falling back on bloat as an argument against a BUG_ON in a
-> configuration path seems a bit weak. :-)
->
-Seems strong to me. Bloat slows me down and distracts me from what code rea=
-lly=20
-needs to do. Bloat is an indication that one does not understand what the=20
-code really needs to do.
+I couldn't test it as I don't have a b44 ethernet device.
 
-> Programming with assertions (and BUG_ON is a form of that) is
-> generally a good practice.  Almost any book or other source on
-> good programming practices will agree.  Yes, it can be overdone.
-> But I don't really think that is the case here, since the check is
-> relatively inexpensive and the consequence should it ever *somehow*
-> happen could be a something wierd (crash, corruption, etc) w/o any
-> other indication of what occured.
->
-A line has to be drawn somewhere. There's about a billion places where we c=
-an=20
-add checks like this because if an assumption should ever break, the code=20
-will break into pieces. However, we don't, and there's no reason to do so=20
-here other than to needlessly add code just because it makes you feel safer.
 
-=2DMichael Wu
+diff -ruN linux-2.6.23.orig/drivers/net/b44.c linux-2.6.23/drivers/net/=
+b44.c
+--- linux-2.6.23.orig/drivers/net/b44.c	2007-10-24 19:02:33.000000000 +=
+0200
++++ linux-2.6.23/drivers/net/b44.c	2007-10-24 19:50:46.000000000 +0200
+@@ -113,6 +113,8 @@ static void b44_init_rings(struct b44 *);
+ #define B44_FULL_RESET		1
+ #define B44_FULL_RESET_SKIP_PHY	2
+ #define B44_PARTIAL_RESET	3
++#define B44_CHIP_RESET_FULL     4
++#define B44_CHIP_RESET_PARTIAL  5
 
---nextPart3810229.ukmq4tXfGv
-Content-Type: application/pgp-signature
+ static void b44_init_hw(struct b44 *, int);
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+@@ -1283,7 +1285,7 @@ static void b44_clear_stats(struct b44 *bp)
+ }
 
-iD8DBQBHBVgvT3Oqt9AH4aERAgpPAJ9Ub3RvKYnZ7tCM8js1xPscKgFrUgCgmcp+
-+3sdmlJO3OQEaqHChXH+gtc=
-=K82d
------END PGP SIGNATURE-----
+ /* bp->lock is held. */
+-static void b44_chip_reset(struct b44 *bp)
++static void b44_chip_reset(struct b44 *bp, int reset_kind)
+ {
+ 	if (ssb_is_core_up(bp)) {
+ 		bw32(bp, B44_RCV_LAZY, 0);
+@@ -1307,6 +1309,13 @@ static void b44_chip_reset(struct b44 *bp)
+ 	ssb_device_enable(bp->sdev, 0);
+ 	b44_clear_stats(bp);
 
---nextPart3810229.ukmq4tXfGv--
++	/*
++	 * Don't enable PHY if we are doing a partial reset
++	 * we are probably going to power down
++	 */
++	if (reset_kind =3D=3D B44_CHIP_RESET_PARTIAL)
++		return;
++
+ 	switch (sdev->bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+ 		bw32(bp, B44_MDIO_CTRL, (MDIO_CTRL_PREAMBLE |
+@@ -1332,7 +1341,14 @@ static void b44_chip_reset(struct b44 *bp)
+ static void b44_halt(struct b44 *bp)
+ {
+ 	b44_disable_ints(bp);
+-	b44_chip_reset(bp);
++	/* reset PHY */
++	b44_phy_reset(bp);
++	/* power down PHY */
++	printk(KERN_INFO PFX "%s: powering down PHY\n", bp->dev->name);
++	bw32(bp, B44_MAC_CTRL, MAC_CTRL_PHY_PDOWN);
++	/* now reset the chip, but without enabling the MAC&PHY
++	 * part of it. This has to be done _after_ we shut down the PHY */
++	b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
+ }
+
+ /* bp->lock is held. */
+@@ -1376,7 +1392,7 @@ static void b44_init_hw(struct b44 *bp, int reset=
+_kind)
+ {
+ 	u32 val;
+
+-	b44_chip_reset(bp);
++	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
+ 	if (reset_kind =3D=3D B44_FULL_RESET) {
+ 		b44_phy_reset(bp);
+ 		b44_setup_phy(bp);
+@@ -1430,7 +1446,7 @@ static int b44_open(struct net_device *dev)
+
+ 	err =3D request_irq(dev->irq, b44_interrupt, IRQF_SHARED, dev->name, =
+dev);
+ 	if (unlikely(err < 0)) {
+-		b44_chip_reset(bp);
++		b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
+ 		b44_free_rings(bp);
+ 		b44_free_consistent(bp);
+ 		goto out;
+@@ -2250,7 +2266,7 @@ static int __devinit b44_init_one(struct pci_dev =
+*pdev,
+ 	/* Chip reset provides power to the b44 MAC & PCI cores, which
+ 	 * is necessary for MAC register access.
+ 	 */
+-	b44_chip_reset(bp);
++	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
+
+ 	printk(KERN_INFO "%s: Broadcom 4400 10/100BaseT Ethernet ", dev->name=
+);
+ 	for (i =3D 0; i < 6; i++)
+@@ -2284,4 +2300,5 @@ static void __devexit b44_remove_one(struct ssb_d=
+ev=20
+*sdev)
+ 	free_netdev(dev);
++	ssb_pci_set_power_state(sdev, PCI_D3hot);
+ 	ssb_set_drvdata(sdev, NULL);
+ }
+
+@@ -2312,6 +2329,7 @@ static int b44_suspend(struct ssb_dev *sdev,=20
+pm_message_t state)
+ 		b44_setup_wol(bp);
+ 	}
+=20
++	ssb_pci_set_power_state(sdev, PCI_D3hot);
+ 	return 0;
+ }
+
+
+
+--=20
+	Miguel Bot=F3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
