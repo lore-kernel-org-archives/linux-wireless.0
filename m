@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61231 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966787AbXJSW2W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 18:28:22 -0400
-Message-ID: <47192F84.1020101@lwfinger.net> (sfid-20071020_011638_875997_53969014)
-Date: Fri, 19 Oct 2007 17:28:20 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 lists supported rates backwards
-References: <1192832109.19766.14.camel@dv>
-In-Reply-To: <1192832109.19766.14.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.gmx.net ([213.165.64.20]:52292 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753153AbXJXVak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Oct 2007 17:30:40 -0400
+Subject: [PATCH] mac80211: Accept auto txpower setting
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 24 Oct 2007 23:30:36 +0200
+Message-Id: <1193261436.10211.1.camel@localhost> (sfid-20071024_223052_420033_537F0740)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> Hello!
-> 
-> My iwl3945 device cannot associate to Linksys BEFW11S4.  The AP reports
-> code 18 (unsupported rates).
-> 
-> I tried the current master branch from iwlwifi repository with the
-> current wireless-2.6/everything kernel patched by mac80211 10.0.0, and
-> it still exhibits the problem.
-> 
-> It turns out the driver sends CCK rates as extended and OFDM rates as
-> "non-extended":
-> 
->     Tagged parameters (23 bytes)
->         SSID parameter set: "WTEST"
->             Tag Number: 0 (SSID parameter set)
->             Tag length: 5
->             Tag interpretation: WTEST
->         Supported Rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0 
->             Tag Number: 1 (Supported Rates)
->             Tag length: 8
->             Tag interpretation: Supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0  [Mbit/sec]
->         Extended Supported Rates: 1.0 2.0 5.5 11.0 
->             Tag Number: 50 (Extended Supported Rates)
->             Tag length: 4
->             Tag interpretation: Supported rates: 1.0 2.0 5.5 11.0  [Mbit/sec]
-> 
-> The association request captured by WireShark is attached.
-> 
-> I tried swapping WLAN_EID_SUPP_RATES and WLAN_EID_EXT_SUPP_RATES in the
-> sources, but it didn't work.  Maybe mac80211 rewrites the request, I
-> don't know.
-> 
-> Also, iwl3945 refuses to scan more than several times, and the only
-> workaround is to reload the module.  Maybe the association failure
-> triggers that.  If it's not a known problem, I can look closer.
+This changes the SIWTXPOWER ioctl to also accept a txpower setting of
+"automatic". Since mac80211 currently cannot tell drivers to automatically
+adjust tx power, we select the tx power level of the current channel. While
+this is kind of a hack, it certainly saves some iwconfig users from headaches.
 
-Using the latest git pull from Linus, I am able to associate with my BEFW11S4 AP using the b43
-driver. The problem is probably not in mac80211.
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+---
+ net/mac80211/ieee80211_ioctl.c |   21 +++++++++++++++++----
+ 1 files changed, 17 insertions(+), 4 deletions(-)
 
-Larry
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 83e4035..2667a80 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -632,22 +632,35 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	bool need_reconfig = 0;
++	u8 new_power_level;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+ 		return -EINVAL;
+ 	if (data->txpower.flags & IW_TXPOW_RANGE)
+ 		return -EINVAL;
+-	if (!data->txpower.fixed)
+-		return -EINVAL;
+ 
+-	if (local->hw.conf.power_level != data->txpower.value) {
+-		local->hw.conf.power_level = data->txpower.value;
++	if (data->txpower.fixed) {
++		new_power_level = data->txpower.value;
++	} else {
++		/* Automatic power level. Get the px power from the current
++		 * channel. */
++		struct ieee80211_channel* chan = local->oper_channel;
++		if (!chan)
++			return -EINVAL;
++
++		new_power_level = chan->power_level;
++	}
++
++	if (local->hw.conf.power_level != new_power_level) {
++		local->hw.conf.power_level = new_power_level;
+ 		need_reconfig = 1;
+ 	}
++
+ 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+ 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
+ 		need_reconfig = 1;
+ 	}
++
+ 	if (need_reconfig) {
+ 		ieee80211_hw_config(local);
+ 		/* The return value of hw_config is not of big interest here,
+-- 
+1.5.3.4
+
