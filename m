@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:36739 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758412AbXJQDUW (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755336AbXJXNO7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 23:20:22 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: make ieee802_11_parse_elems return void
-Date: Tue, 16 Oct 2007 23:17:30 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <1192588723322-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1192588723322-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1883843.kKTeMcvcgY";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710162317.34856.flamingice@sourmilk.net> (sfid-20071017_042026_213331_8471ABFA)
+	Wed, 24 Oct 2007 09:14:59 -0400
+Subject: Re: [PATCH 2/2] mac80211: [RFC] eliminating erp_ie_changed from
+	low level driver ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net
+In-Reply-To: <1193221337148-git-send-email-ron.rindjunsky@intel.com>
+References: <11932213323451-git-send-email-ron.rindjunsky@intel.com>
+	 <11932213374183-git-send-email-ron.rindjunsky@intel.com>
+	 <1193221337148-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ewFPQC4mPEyJRrOR7goe"
+Date: Wed, 24 Oct 2007 13:57:41 +0200
+Message-Id: <1193227061.4510.29.camel@johannes.berg> (sfid-20071024_141514_339750_0949146C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1883843.kKTeMcvcgY
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On Tuesday 16 October 2007 22:38:43 John W. Linville wrote:
-> Some APs send management frames with junk padding after the last IE.
-> We already account for a similar problem with some Apple Airport
-> devices, but at least one device is known to send more than a single
-> extra byte.  The device in question is the Draytek Vigor2900:
->
-> 	http://www.draytek.com.au/products/Vigor2900.php
->
-> The junk in question looks like an IE that runs off the end of the
-> frame.  This cause us to return ParseFailed.  Since the frame in
-> question is an association response, this causes us to fail to associate
-> with this AP.
->
-> The return code from ieee802_11_parse_elems is superfluous.
-> All callers still check for the presence of the specific IEs that
-> interest them anyway.  So, remove the return code so the parse never
-> "fails".
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Acked-by: Michael Wu <flamingice@sourmilk.net>
+--=-ewFPQC4mPEyJRrOR7goe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--Michael Wu
+On Wed, 2007-10-24 at 12:22 +0200, Ron Rindjunsky wrote:
+>  			enum sta_notify_cmd, const u8 *addr);
+> -	void (*erp_ie_changed)(struct ieee80211_hw *hw, u8 changes,
+> -			       int cts_protection, int preamble);
 
---nextPart1883843.kKTeMcvcgY
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+you forgot to remove those ERP_CHANGE flags that are passed to changes
+here.
+
+johannes
+
+--=-ewFPQC4mPEyJRrOR7goe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBHFX7OT3Oqt9AH4aERAnd9AKCoK5F8GPMduW8b+s+HjZ4jThfAIQCcDQmL
-9rvwWCKX5jroXEeko6EMFSE=
-=uLjT
+iQIVAwUARx8zNKVg1VMiehFYAQI36w//VahvtVJkLLs5KGcDo7o4kaQW/O4jBzWY
+bcvada2pyD0aBnqdQQ8T24zHqUaMj9YBAUgt2dubluOcHmVMPKdZ6TXYo+BMIFYF
++6qyp6zo8bflUCryXmJ7rqcn+9TbKGZk8aXIhZMzm+QBSWwm5sntGWzWoB7D373v
+4w1d6bmOeMFZbNQIilF68c1AyPzU5RCXxvkr0W6PqKaXojGtZya+l8+cXzJp4mjF
+qWZMz2pc0wY7GgkNLSyKc2RQKwyWntEMFF4K611OOQBMZnJO66fnnwaJz7NAbQSr
+YXhQeM5V7qykmNlsOWh8ILxbxIp4bMEWe7dbagWs3vMJRa3ctAq9Kw91UI+ol445
+BloY6FSFCMsX1Df2fbSQBMibUTdFAKLrPt2YQoodf4K0qmEaJrWzRR5tHEQtgUey
+dulpBaqpHrarrpfEmAe/fCjzcd7Zo7IEgljFjkjjq5W1pVubzztKyKaAvR1I/D44
+4rw2ksj/qBIX7ivDEMGwqIv2eki5jJCwoysg5xX2v8AoxSRi/sf1+gu55DTEtwGj
+4f6VY5hG47ygAME+DcNnl+cZoL0/KDQ+uaPWcNAYLT35iIOpUEm2YEtKBiX0ADtN
+E1ZE+9fbDK5thgG82VhoD6X0nKpbTRixgUgOR+zoo/9TgY/NPX+vqTWn2kF8sSFJ
+PDwnxiEmAlQ=
+=sLZW
 -----END PGP SIGNATURE-----
 
---nextPart1883843.kKTeMcvcgY--
+--=-ewFPQC4mPEyJRrOR7goe--
+
