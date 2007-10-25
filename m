@@ -1,143 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40416 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202AbXJYNWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 09:22:35 -0400
-Received: from [131.234.198.68]
-	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Il2fO-0000cu-R9
-	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2007 14:22:31 +0100
-Message-Id: <20071025093714.828230000@sipsolutions.net> (sfid-20071025_142245_249965_63AF6842)
-References: <20071025093618.440937000@sipsolutions.net>
-Date: Thu, 25 Oct 2007 11:36:20 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [patch 2/9] mac80211: support adding/removing keys via cfg80211
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754219AbXJYJWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:44 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Helmut Schaa <hschaa@suse.de>
+Subject: [PATCH 12/30] iwlwifi: fix sending probe request in iwl 4965
+Date: Thu, 25 Oct 2007 17:15:33 +0800
+Message-Id: <11933037692766-git-send-email-yi.zhu@intel.com> (sfid-20071025_104103_935392_4959374F)
+In-Reply-To: <11933037674045-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
+ <11933037674045-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the necessary hooks to mac80211 to allow userspace
-to edit keys with cfg80211 (through nl80211.)
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch removeis TSF flag from probe request. TSF should be added only to
+probe response.
 
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/cfg.c |   91 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 91 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
---- linux-2.6.orig/net/mac80211/cfg.c	2007-10-24 11:32:36.122690568 +0200
-+++ linux-2.6/net/mac80211/cfg.c	2007-10-24 11:35:49.112690568 +0200
-@@ -6,6 +6,7 @@
-  * This file is GPLv2 as found in COPYING.
-  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index f86a24e..81760aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3229,9 +3229,7 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
+ 	tx->rate_n_flags = iwl_hw_set_rate_n_flags(iwl_rates[rate_index].plcp,
+ 						rate_flags);
  
-+#include <linux/ieee80211.h>
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <net/net_namespace.h>
-@@ -99,8 +100,98 @@ static int ieee80211_change_iface(struct
- 	return 0;
- }
- 
-+static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 key_idx, u8 *mac_addr,
-+			     struct key_params *params)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct sta_info *sta = NULL;
-+	enum ieee80211_key_alg alg;
-+	int ret;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	switch (params->cipher) {
-+	case WLAN_CIPHER_SUITE_WEP40:
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		alg = ALG_WEP;
-+		break;
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		alg = ALG_TKIP;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		alg = ALG_CCMP;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	if (mac_addr) {
-+		sta = sta_info_get(sdata->local, mac_addr);
-+		if (!sta)
-+			return -ENOENT;
-+	}
-+
-+	ret = 0;
-+	if (!ieee80211_key_alloc(sdata, sta, alg, key_idx,
-+				 params->key_len, params->key))
-+		ret = -ENOMEM;
-+
-+	if (sta)
-+		sta_info_put(sta);
-+
-+	return ret;
-+}
-+
-+static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 key_idx, u8 *mac_addr)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct sta_info *sta;
-+	int ret;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (mac_addr) {
-+		sta = sta_info_get(sdata->local, mac_addr);
-+		if (!sta)
-+			return -ENOENT;
-+
-+		ret = 0;
-+		if (sta->key)
-+			ieee80211_key_free(sta->key);
-+		else
-+			ret = -ENOENT;
-+
-+		sta_info_put(sta);
-+		return ret;
-+	}
-+
-+	if (!sdata->keys[key_idx])
-+		return -ENOENT;
-+
-+	ieee80211_key_free(sdata->keys[key_idx]);
-+
-+	return 0;
-+}
-+
-+static int ieee80211_config_default_key(struct wiphy *wiphy,
-+					struct net_device *dev,
-+					u8 key_idx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_set_default_key(sdata, key_idx);
-+
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
- 	.change_virtual_intf = ieee80211_change_iface,
-+	.add_key = ieee80211_add_key,
-+	.del_key = ieee80211_del_key,
-+	.set_default_key = ieee80211_config_default_key,
- };
-
+-	if (ieee80211_is_probe_request(fc))
+-		tx->tx_flags |= TX_CMD_FLG_TSF_MSK;
+-	else if (ieee80211_is_back_request(fc))
++	if (ieee80211_is_back_request(fc))
+ 		tx->tx_flags |= TX_CMD_FLG_ACK_MSK |
+ 			TX_CMD_FLG_IMM_BA_RSP_MASK;
+ #ifdef CONFIG_IWLWIFI_HT
 -- 
-
+1.5.2
