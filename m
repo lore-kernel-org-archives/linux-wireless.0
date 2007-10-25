@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2928 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375AbXJJBjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 21:39:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>,
-	Al Viro <viro@zeniv.linux.org.uk>,
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:57050 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757191AbXJYOPv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 10:15:51 -0400
+Message-ID: <4720A509.2070708@sgi.com> (sfid-20071025_151554_198567_BF3BC89D)
+Date: Thu, 25 Oct 2007 16:15:37 +0200
+From: Jes Sorensen <jes@sgi.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: fix endianness breakage
-Date: Tue,  9 Oct 2007 21:30:42 -0400
-Message-Id: <11919798433410-git-send-email-linville@tuxdriver.com> (sfid-20071010_023937_362225_C3B5FF7E)
-In-Reply-To: <11919798433964-git-send-email-linville@tuxdriver.com>
-References: <11919798433964-git-send-email-linville@tuxdriver.com>
+Subject: Re: iwl4965 detection problem
+References: <47209C0C.5010505@sgi.com> <1193319925.5542.8.camel@localhost.localdomain>
+In-Reply-To: <1193319925.5542.8.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Al Viro <viro@ftp.linux.org.uk>
+Dan Williams wrote:
+> You'll need to update more than just the kernel.  There were issues with
+> Test 3 for udev and network init scripts that didn't distinguish between
+> the wmasterX and wlanX interfaces, and since both have the same MAC
+> address things got confused.
+> 
+> Try updating to the latest Rawhide bits rather than using Test 3.  The
+> make sure you remove the following files:
+> 
+> rm -f /etc/sysconfig/network-scripts/ifcfg-wlan0*
+> rm -f /etc/udev/rules.d/70-persistent-net.rules
+> 
+> The initscripts don't care what's after the ifcfg- (because you could
+> name it ifcfg-Home or ifcfg-Some-Other-Place, it doesn't have to be the
+> device name) and therefore even a ifcfg-wlan0.bak will cause the problem
+> too.
 
-	wep->keytype[] is u8
+Hi Dan,
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/libertas/cmd.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+I think I have the latest updates, provided fedora/core/development is
+rawhide? I got udev-116-3.fc8 and initscripts-8.60-1.
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 4a8f5dc..86fff8d 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -185,14 +185,12 @@ static int wlan_cmd_802_11_set_wep(wlan_private * priv,
- 
- 			switch (pkey->len) {
- 			case KEY_LEN_WEP_40:
--				wep->keytype[i] =
--					cpu_to_le16(cmd_type_wep_40_bit);
-+				wep->keytype[i] = cmd_type_wep_40_bit;
- 				memmove(&wep->keymaterial[i], pkey->key,
- 				        pkey->len);
- 				break;
- 			case KEY_LEN_WEP_104:
--				wep->keytype[i] =
--					cpu_to_le16(cmd_type_wep_104_bit);
-+				wep->keytype[i] = cmd_type_wep_104_bit;
- 				memmove(&wep->keymaterial[i], pkey->key,
- 				        pkey->len);
- 				break;
--- 
-1.5.2.4
+That said, I am pretty sure this is a driver issue - even right after
+the install, when Fedora hadn't figured out the device and didn't try
+to load the module, it didn't find the device either unless I loaded it,
+unloaded it and loaded it again.
 
+Cheers,
+Jes
