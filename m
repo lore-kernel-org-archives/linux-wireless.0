@@ -1,67 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:21986 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484AbXJMOKs (ORCPT
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:54273 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753954AbXJYNh2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2007 10:10:48 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so956439nfb
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2007 07:10:47 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sat, 13 Oct 2007 16:27:21 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+	Thu, 25 Oct 2007 09:37:28 -0400
+Message-ID: <47209C0C.5010505@sgi.com> (sfid-20071025_143743_052456_74F0E98D)
+Date: Thu, 25 Oct 2007 15:37:16 +0200
+From: Jes Sorensen <jes@sgi.com>
 MIME-Version: 1.0
-Message-Id: <200710131627.22505.IvDoorn@gmail.com> (sfid-20071013_151715_465714_713E9D14)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: iwl4965 detection problem
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi,
 
-Here is the rt2x00 2.0.11 update.
-Highlights for this release are the fix for the TX problems,
-and the implementation of the Software Diversity Antenna.
+I just got my hands on a new Toshiba Portege R500 laptop, which comes
+with the Intel 4965 chip in it. After installing the latest Fedora Core
+8 test 3 on it, and updating the kernel I am still seeing a problem with
+detection of the 4965 in my laptop.
 
-All indivual patches can also be found here:
-http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.11/
+Fedora Core 8 test 3 is based on a 2.6.23.1 kernel.
 
-Ivo
+Basically on the first load of the iwl4965 module no interface is
+detected, but if I rmmod and modprobe it again, it shows up and works
+just fine.
 
----
+I haven't yet tried the latest kernel.org tree on this box, but looking
+through the git log, I don't see any commits that look like they were
+addressing this problem.
 
-The following changes since commit 2d46d1e00056de79e54c622a60f7e6f8818f6cb4:
-  Mattias Nissler (1):
-        mac80211: Defer setting of RX_FLAG_DECRYPTED.
+Is this a problem you have heard about before? Anything information I
+can provide to help?
 
-are available in the git repository at:
+I have attached the lspci -vv entry for this device, as well as the
+dmesg output.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+Cheers,
+Jes
 
-Ivo van Doorn (9):
-      rt2x00: Move quality statistics into seperate structure
-      rt2x00: Use enum defines
-      rt2x00: Correctly translate mac80211 antenna setup to rt2x00
-      rt2x00: SW diversity should default to antenna B
-      rt2x00: Remove rt2x00_clear_link
-      rt2x00: Implement SW diversity
-      rt2x00: Cleanup if-statements
-      rt2x00: Add new rt73usb USB ID
-      rt2x00: Release rt2x00 2.0.11
+02:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or 
+AGN Network Connection (rev 61)
+	Subsystem: Intel Corporation Unknown device 1101
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR-
+	Latency: 0, Cache Line Size: 32 bytes
+	Interrupt: pin A routed to IRQ 2300
+	Region 0: Memory at ff8fe000 (64-bit, non-prefetchable) [size=8K]
+	Capabilities: [c8] Power Management version 3
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [d0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 
+Enable+
+		Address: 00000000fee0300c  Data: 41a9
+	Capabilities: [e0] Express Endpoint IRQ 0
+		Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag-
+		Device: Latency L0s <512ns, L1 unlimited
+		Device: AtnBtn- AtnInd- PwrInd-
+		Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
+		Device: RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+		Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
+		Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s L1, Port 0
+		Link: Latency L0s <128ns, L1 <64us
+		Link: ASPM L0s Enabled RCB 64 bytes CommClk+ ExtSynch-
+		Link: Speed 2.5Gb/s, Width x1
 
-Mattias Nissler (2):
-      rt2x00: Fix residual check in PLCP calculations.
-      rt2x00: Fix antenna selection.
+dmesg output:
 
- drivers/net/wireless/rt2x00/rt2400pci.c    |   80 +++++++-----
- drivers/net/wireless/rt2x00/rt2500pci.c    |   88 ++++++------
- drivers/net/wireless/rt2x00/rt2500usb.c    |   84 +++++++-----
- drivers/net/wireless/rt2x00/rt2500usb.h    |   13 ++-
- drivers/net/wireless/rt2x00/rt2x00.h       |  165 +++++++++++++++++------
- drivers/net/wireless/rt2x00/rt2x00config.c |   85 +++++++++++-
- drivers/net/wireless/rt2x00/rt2x00dev.c    |  201 ++++++++++++++++++++++++----
- drivers/net/wireless/rt2x00/rt2x00lib.h    |    2 +
- drivers/net/wireless/rt2x00/rt61pci.c      |  116 +++++++++--------
- drivers/net/wireless/rt2x00/rt73usb.c      |   87 +++++++------
- 10 files changed, 645 insertions(+), 276 deletions(-)
+First time it's loaded:
+
+firewire_ohci: Added fw-ohci device 0000:03:0b.1, OHCI version 1.10
+sdhci: SDHCI controller found at 0000:03:0b.3 [104c:803c] (rev 0)
+PCI: Enabling device 0000:03:0b.3 (0000 -> 0002)
+ACPI: PCI Interrupt 0000:03:0b.3[D] -> GSI 23 (level, low) -> IRQ 23
+mmc0: SDHCI at 0x90005800 irq 23 DMA
+iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
+iwl4965: Copyright(c) 2003-2007 Intel Corporation
+ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:02:00.0 to 64
+iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+tpm_inf_pnp 00:0a: Found TPM with ID IFX0102
+tpm_inf_pnp 00:0a: TPM found: config base 0x4e, data base 0x680, chip 
+version 0x000b, vendor id 0x15d1 (Infineon), product id 0x000b (SLB 9635 
+TT 1.2)
+intel_rng: FWH not detected
+.......
+rmmod+modprobe'ing it again:
+
+[drm] Initialized drm 1.1.0 20060810
+[drm] Initialized i915 1.6.0 20060119 on minor 0
+ACPI: PCI interrupt for device 0000:02:00.0 disabled
+iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
+iwl4965: Copyright(c) 2003-2007 Intel Corporation
+ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:02:00.0 to 64
+iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+iwl4965: Tunable channels: 13 802.11bg, 19 802.11a channels
+phy1: Selected rate control algorithm 'iwl-4965-rs'
+
