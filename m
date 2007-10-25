@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:16857 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbXJIMiD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 08:38:03 -0400
-Received: from lin01.mn-solutions.de (pD95FA8E3.dip0.t-ipconnect.de [217.95.168.227])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id C267D5E59FE
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 14:37:59 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 0285B1E002B
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Oct 2007 14:35:04 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: remove one superfluous include
-Date: Tue, 9 Oct 2007 14:38:13 +0200
-References: <200710091430.11043.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200710091430.11043.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710091438.13738.hs4233@mail.mn-solutions.de> (sfid-20071009_133807_893575_F559BDC1)
+Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754051AbXJYJWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ian Schram <ischram@telenet.be>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 07/30] iwlwifi: Two comments in iwl-3945.c were longer than 80 columns
+Date: Thu, 25 Oct 2007 17:15:28 +0800
+Message-Id: <11933037613709-git-send-email-yi.zhu@intel.com> (sfid-20071025_102252_408400_2E8A21AA)
+In-Reply-To: <11933037601236-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This makes scripts/checkincludes.pl happy.
+From: Ian Schram <ischram@telenet.be>
 
-Hehe, others have problems, too:
+This patch shorten two comments lines in iwl-3945.c
 
-$ scripts/checkincludes.pl drivers/net/wireless/*.h
-drivers/net/wireless/ipw2200.h: linux/dma-mapping.h is included 
-more than once.
+Signed-off-by: Ian Schram <ischram@telenet.be>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-
-
-(in wireless-2.6 everything)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 8b7db0c..62b44a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1136,8 +1136,9 @@ int iwl_hw_nic_reset(struct iwl_priv *priv)
+ }
+ 
+ /**
+- * iwl_hw_reg_adjust_power_by_temp - return index delta into power gain settings table
+- */
++ * iwl_hw_reg_adjust_power_by_temp
++ * return index delta into power gain settings table
++*/
+ static int iwl_hw_reg_adjust_power_by_temp(int new_reading, int old_reading)
+ {
+ 	return (new_reading - old_reading) * (-11) / 100;
+@@ -1157,8 +1158,9 @@ int iwl_hw_get_temperature(struct iwl_priv *priv)
+ }
+ 
+ /**
+- * iwl_hw_reg_txpower_get_temperature - get current temperature by reading from NIC
+- */
++ * iwl_hw_reg_txpower_get_temperature
++ * get the current temperature by reading from NIC
++*/
+ static int iwl_hw_reg_txpower_get_temperature(struct iwl_priv *priv)
+ {
+ 	int temperature;
+-- 
+1.5.2
