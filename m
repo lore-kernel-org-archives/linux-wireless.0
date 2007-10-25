@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:47440 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757038AbXJRRND (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54140 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111AbXJZKgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2007 13:13:03 -0400
-Received: by py-out-1112.google.com with SMTP id u77so439153pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2007 10:13:02 -0700 (PDT)
-Message-ID: <bbbeeccd0710181013g6607423bobb31ca1e817f33c5@mail.gmail.com> (sfid-20071018_181311_275798_E64A70E4)
-Date: Thu, 18 Oct 2007 11:13:00 -0600
-From: "Wade Berrier" <wberrier@gmail.com>
-To: "Michael Wu" <flamingice@sourmilk.net>
-Subject: Re: realtek 8185
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710171938.48414.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <bbbeeccd0710160658p7f127bb9if2239287bee33d6c@mail.gmail.com>
-	 <bbbeeccd0710162220u3b276506s68457b4220bec8ae@mail.gmail.com>
-	 <bbbeeccd0710171552x37986f68m906a603e793c7996@mail.gmail.com>
-	 <200710171938.48414.flamingice@sourmilk.net>
+	Fri, 26 Oct 2007 06:36:13 -0400
+Subject: Multiple SSIDs on a single BSSID (was: Multiple SSID)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: hostap@shmoo.com, linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <8704f27d0710100211j2addf0ddl86e9101af15daf09@mail.gmail.com>
+References: <8704f27d0710100208y7a964b5aof60755b22adb7d14@mail.gmail.com>
+	 <8704f27d0710100211j2addf0ddl86e9101af15daf09@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KEkzvRnsISwUufY9OFAW"
+Date: Thu, 25 Oct 2007 21:25:57 +0200
+Message-Id: <1193340357.4406.25.camel@johannes.berg> (sfid-20071026_113618_513803_6107D328)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
 
-I'm also copying the linux wireless list...
+--=-KEkzvRnsISwUufY9OFAW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On 10/17/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> On Wednesday 17 October 2007 18:52:28 Wade Berrier wrote:
-> > Another thing I'm noticing is that I can't connect to an 802.11b open
-> > network with a hidden essid.
-> >
-> For those, you should specify the channel, and bssid in one iwconfig command,
-> and then ssid in another command. Everything needs to be specified for hidden
-> networks. Never tried connecting to hidden networks with network manager so I
-> dunno if that's suppose to work.
+Some further thoughts on this if you want to work on it.
 
-I've been able to connect to this hidden network via network manager.
->From a users experience, I enter in the essid from the "Connect to
-other wireless network" dialog, and it connects.  I'm not sure how
-networkmanager makes the connection between the essid and the ap.
+I think you misunderstood me, but I didn't put that right. mac80211
+doesn't really need to support this, see below.
 
-I did get it working from using your suggested method though:
+But let's discuss the starting point first; I'm thinking that multiple
+SSIDs on the same BSSID are implemented by an AP by treating all
+stations as belonging to the same BSS wrt. QoS, AID assignment etc.,
+hiding the SSID in beacons and then keying off the SSID given in probe
+requests and association requests to determine which network the station
+wants to use. Different group keys can be used to separate the networks.
 
-moby:/etc # iwlist wlan0 scanning
-wlan0     Scan completed :
-          Cell 02 - Address: 00:02:2D:2E:64:FE
-                    ESSID:""
-                    Mode:Master
-                    Channel:4
-                    Frequency:2.427 GHz
-                    Signal level=52/65
-                    Encryption key:off
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
-                    Extra:tsf=000002ae8691fbab
+I'd be very interested in this as well because it would use the VLAN
+interface code in mac80211 on the AP side so that I could test that at
+the same time as client implementations.
 
-iwconfig wlan0 ap 00:02:2D:2E:64:FE channel 4
-iwconfig wlan0 essid onenet
+=46rom the mac80211 perspective it is pretty trivial:
+ - create a VLAN interface for each SSID
+ - beacon with zero-length SSID
+ - put stations into correct VLAN depending on the SSID they used in
+   their association request frame
 
-moby:/home/wberrier # iwconfig
-lo        no wireless extensions.
+If you need help with the kernel side I'm certainly willing to give
+advice and help.
 
-eth0      no wireless extensions.
+It seems to me that the hostapd changes would essentially be:
+ - allow having multiple SSIDs
+ - keep some sort of SSID-structure for each BSS
+ - assign stations to vlans depending on the SSID they used
 
-wmaster0  no wireless extensions.
+I do not, however, know whether the internal hostapd structures
+facilitate this let alone how to implement it.
 
-wlan0     IEEE 802.11g  ESSID:"onenet"
-          Mode:Managed  Frequency:2.427 GHz  Access Point: 00:02:2D:2E:64:FE
-          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
-          Encryption key:off
-          Link Signal level=42/65
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+johannes
 
-wlan0 dhclient
+--=-KEkzvRnsISwUufY9OFAW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Internet Systems Consortium DHCP Client V3.0.6
-Copyright 2004-2007 Internet Systems Consortium.
-All rights reserved.
-For info, please visit http://www.isc.org/sw/dhcp/
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-wmaster0: unknown hardware address type 801
-wmaster0: unknown hardware address type 801
-Listening on LPF/wlan0/00:c0:a8:f4:7e:00
-Sending on   LPF/wlan0/00:c0:a8:f4:7e:00
-Sending on   Socket/fallback
-DHCPREQUEST on wlan0 to 255.255.255.255 port 67
-DHCPACK from 151.155.11.254
-bound to 151.155.10.138 -- renewal in 10908 seconds.
+iQIVAwUARyDtxKVg1VMiehFYAQKN0w//ey6MchfLG7qxVK4OgmCIpE6XcFP6wsU8
+uynq3ncKGMpE7V2cGX4NKF5/dNGyHFj7GsHChgbDppNSm4XVy6waiKsiVf/l8Dkl
+IEidNQsxjH18X09oYQiuP9ONM+b9Euaab0bHprqdveXrkqjOXxtISxdUY2tfOHbE
+qYo5uit8zNjRUduU8clNbauA0qkl3gu/agbt3+iatfSk/akd4jyJjnL2dmWTYHwC
+a7+rq+MocGZoPqOh+ODT4fmEKOuEvDIkkoqlVtVoDxjRPMTSiW6UtvKX3RCRlwjA
+ipiw4n/iM0Y7JSDv/YYZmEcsOdmcOMcUhNzLWJ5QY8YZEkTJEaP5BTiE/k6EXncl
+GJtmeyhUajj4UQkHotIQ9dqyyR91UD+6XEPO8BfrKWzne+/JqMbX9HTNDaYXnldg
+9yJ701UdnK7kA6/mExyEPF9/oqrTvbDalOo0vdxOMfVjnW1C83Lu8M+rJf9+b2qj
+YXndrTep9COi93sGQCWQq2aCTIpEp+atK7fjaxAfaYU8p0spVCTbYZA9QH7zwflG
+zo49oIq026G8q2ohSOE5lr4WmGe21qQcA3m0v7l4dogZ8EbYYWytdN/5OKd4yz6i
+UTQGdwOTq2RL7bqTIOZ69ccihOGVIE/RgIYHyR0NSv7/ltW2x6Q3vTBs+BE4pqE7
+IV3hvYjJrQc=
+=Axuk
+-----END PGP SIGNATURE-----
 
-moby:/home/wberrier # ping www.google.com
-PING www.l.google.com (72.14.235.104) 56(84) bytes of data.
-64 bytes from tw-in-f104.google.com (72.14.235.104): icmp_seq=1
-ttl=242 time=174 ms
+--=-KEkzvRnsISwUufY9OFAW--
 
-
-NetworkManager uses wpa_supplicant, even for connecting to networks
-without encryption, but I'm not sure why it's not working in this
-case.  It actually never sets the essid.
-
-Thanks for your driver and the help,
-
-Wade
