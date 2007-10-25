@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55564 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbXJWJzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 05:55:40 -0400
-Subject: [PATCH] add myself as mac80211 maintainer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 22 Oct 2007 21:13:52 +0200
-Message-Id: <1193080432.9793.46.camel@johannes.berg> (sfid-20071023_105543_791359_D2723EF7)
+Received: from verein.lst.de ([213.95.11.210]:57947 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754427AbXJYKTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 06:19:54 -0400
+Date: Thu, 25 Oct 2007 12:19:48 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwl3945: cleanup namespace
+Message-ID: <20071025101948.GA21698@lst.de> (sfid-20071025_111958_237941_6F2EFE99)
+References: <20071012130500.GA22610@lst.de> <1193303997.3069.389.camel@debian.sh.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1193303997.3069.389.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds myself as mac80211 maintainer and updates the git URL to point
-to the wireless-2.6 tree.
+On Thu, Oct 25, 2007 at 05:19:57PM +0800, Zhu Yi wrote:
+> 
+> On Fri, 2007-10-12 at 15:05 +0200, Christoph Hellwig wrote:
+> > prefix all symbols with iwl3945_ and thus allow building the driver
+> > into the kernel.  Also remove all the useless default statements in
+> > Kconfig while we're at it.
+> > 
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Did you do this manually or with a script? If it is the latter, can you
+> run it again against my latest updates for the driver (30 patches I just
+> sent to linux-wireless) or share the script with me?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Is the list of names within a subsystem supposed to be alphabetically
-sorted as well? I didn't last time I submitted this patch (or rather a
-similar one). Not really sure.
-
-I would appreciate if this could go into 2.6.24 since that has seen many
-changes by me and I can't always read linux-wireless as closely as I
-wish.
-
---- wireless-dev.orig/MAINTAINERS	2007-10-22 21:06:12.538268270 +0200
-+++ wireless-dev/MAINTAINERS	2007-10-22 21:08:14.868268270 +0200
-@@ -2471,11 +2471,13 @@ S:	Maintained
- MAC80211
- P:	Jiri Benc
- M:	jbenc@suse.cz
-+P:	Johannes Berg
-+M:	johannes@sipsolutions.net
- P:	Michael Wu
- M:	flamingice@sourmilk.net
- L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
--T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
- S:	Maintained
- 
- MACVLAN DRIVER
-
-
+Basically just %s/iwl_/iwl<whatever>_/ in vi, with a tiny bit of
+manual fixup. (one iwl_ function is actually coming from a still shared
+beader and the BROADCAST_ADDR IIRC)
