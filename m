@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34370 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873AbXJJKC4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 06:02:56 -0400
-Subject: [PATCH] mac80211: reorder association debug output
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Marcus Better <marcus@better.se>
-In-Reply-To: <fei4sd$mm0$1@sea.gmane.org> (sfid-20071010_100953_396055_10BC12ED)
-References: <fdqhn4$qab$1@sea.gmane.org>   <fei4sd$mm0$1@sea.gmane.org>
-	 (sfid-20071010_100953_396055_10BC12ED)
-Content-Type: text/plain
-Date: Wed, 10 Oct 2007 12:03:41 +0200
-Message-Id: <1192010621.12541.18.camel@johannes.berg> (sfid-20071010_110259_235119_6340094F)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:44560 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754501AbXJYJW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:56 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 20/30] iwlwifi: Renames struct fw_image_desc to struct fw_desc
+Date: Thu, 25 Oct 2007 17:15:41 +0800
+Message-Id: <11933037812209-git-send-email-yi.zhu@intel.com> (sfid-20071025_104103_135865_3B48DA6A)
+In-Reply-To: <11933037794199-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
+ <11933037674045-git-send-email-yi.zhu@intel.com>
+ <11933037692766-git-send-email-yi.zhu@intel.com>
+ <1193303770550-git-send-email-yi.zhu@intel.com>
+ <11933037721573-git-send-email-yi.zhu@intel.com>
+ <1193303773185-git-send-email-yi.zhu@intel.com>
+ <11933037743841-git-send-email-yi.zhu@intel.com>
+ <11933037762104-git-send-email-yi.zhu@intel.com>
+ <11933037784073-git-send-email-yi.zhu@intel.com>
+ <11933037794199-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no reason to warn about an invalid AID field when the
-association was denied.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patche shortens the name of struct fw_image_desc to be struct
+fw_desc.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
-Odd messages in your log btw:
+ drivers/net/wireless/iwlwifi/iwl-priv.h |   12 ++++++------
+ drivers/net/wireless/iwlwifi/iwlwifi.h  |    2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-> Oct 10 10:26:27 better kernel: wlan0: associate with AP 00:14:6c:a7:60:10
-> Oct 10 10:26:27 better kernel: wlan0: invalid aid value 0; bits 15:14 not set
-> Oct 10 10:26:27 better kernel: wlan0: RX AssocResp from 00:14:6c:a7:60:10 (capab=0x431 status=19 aid=0)
-> Oct 10 10:26:27 better kernel: wlan0: AP denied association (code=19)
-> Oct 10 10:26:27 better kernel: wlan0: association with AP 00:14:6c:a7:60:10 timed out
-
-We never use the AID value in this case...
-
- net/mac80211/ieee80211_sta.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-10-10 11:57:36.290680979 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-10-10 12:00:31.490680979 +0200
-@@ -1195,15 +1195,11 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
- 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
- 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
--	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
--		printk(KERN_DEBUG "%s: invalid aid value %d; bits 15:14 not "
--		       "set\n", dev->name, aid);
--	aid &= ~(BIT(15) | BIT(14));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-priv.h b/drivers/net/wireless/iwlwifi/iwl-priv.h
+index f43679a..c25f2ff 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-priv.h
++++ b/drivers/net/wireless/iwlwifi/iwl-priv.h
+@@ -102,12 +102,12 @@ struct iwl_priv {
+ 	void __iomem *hw_base;
  
- 	printk(KERN_DEBUG "%s: RX %sssocResp from " MAC_FMT " (capab=0x%x "
- 	       "status=%d aid=%d)\n",
- 	       dev->name, reassoc ? "Rea" : "A", MAC_ARG(mgmt->sa),
--	       capab_info, status_code, aid);
-+	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
+ 	/* uCode images, save to reload in case of failure */
+-	struct fw_image_desc ucode_code;	/* runtime inst */
+-	struct fw_image_desc ucode_data;	/* runtime data original */
+-	struct fw_image_desc ucode_data_backup;	/* runtime data save/restore */
+-	struct fw_image_desc ucode_init;	/* initialization inst */
+-	struct fw_image_desc ucode_init_data;	/* initialization data */
+-	struct fw_image_desc ucode_boot;	/* bootstrap inst */
++	struct fw_desc ucode_code;	/* runtime inst */
++	struct fw_desc ucode_data;	/* runtime data original */
++	struct fw_desc ucode_data_backup;	/* runtime data save/restore */
++	struct fw_desc ucode_init;	/* initialization inst */
++	struct fw_desc ucode_init_data;	/* initialization data */
++	struct fw_desc ucode_boot;	/* bootstrap inst */
  
- 	if (status_code != WLAN_STATUS_SUCCESS) {
- 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
-@@ -1215,6 +1211,11 @@ static void ieee80211_rx_mgmt_assoc_resp
- 		return;
- 	}
  
-+	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
-+		printk(KERN_DEBUG "%s: invalid aid value %d; bits 15:14 not "
-+		       "set\n", dev->name, aid);
-+	aid &= ~(BIT(15) | BIT(14));
-+
- 	pos = mgmt->u.assoc_resp.variable;
- 	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
- 	    == ParseFailed) {
-
-
+ 	struct iwl_rxon_time_cmd rxon_timing;
+diff --git a/drivers/net/wireless/iwlwifi/iwlwifi.h b/drivers/net/wireless/iwlwifi/iwlwifi.h
+index c5c9c5d..9071600 100644
+--- a/drivers/net/wireless/iwlwifi/iwlwifi.h
++++ b/drivers/net/wireless/iwlwifi/iwlwifi.h
+@@ -497,7 +497,7 @@ struct iwl_station_entry {
+ };
+ 
+ /* one for each uCode image (inst/data, boot/init/runtime) */
+-struct fw_image_desc {
++struct fw_desc {
+ 	void *v_addr;		/* access by driver */
+ 	dma_addr_t p_addr;	/* access by card's busmaster DMA */
+ 	u32 len;		/* bytes */
+-- 
+1.5.2
