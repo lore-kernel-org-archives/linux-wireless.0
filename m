@@ -1,129 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:62510 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754911AbXJQOT2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40411 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbXJYNW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:19:28 -0400
-Date: Wed, 17 Oct 2007 09:19:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Fix namespace pollution and sparse warnings
-Message-ID: <471619df.MJiGpryn7cdyHLRf%Larry.Finger@lwfinger.net> (sfid-20071017_151932_658664_313FBF43)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 25 Oct 2007 09:22:28 -0400
+Received: from [131.234.198.68]
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Il2fK-0000cl-Ql
+	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2007 14:22:27 +0100
+Message-Id: <20071025093718.092951000@sipsolutions.net> (sfid-20071025_142237_720069_4F85B6EC)
+References: <20071025093618.440937000@sipsolutions.net>
+Date: Thu, 25 Oct 2007 11:36:27 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [patch 9/9] mac80211: implement station stats retrieval
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
+This implements the required cfg80211 callback in mac80211
+to allow userspace to get station statistics.
 
-A number of routines should be made static to avoid polluting the namespace.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-There are additional sparse warnings in b43legacy. None of them result
-in program errors, but are fixed for completeness.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ net/mac80211/cfg.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
- drivers/net/wireless/b43legacy/debugfs.c |   14 +++++++-------
- drivers/net/wireless/b43legacy/pio.c     |    6 +++---
- 2 files changed, 10 insertions(+), 10 deletions(-)
+--- linux-2.6.orig/net/mac80211/cfg.c	2007-10-24 11:35:58.552690568 +0200
++++ linux-2.6/net/mac80211/cfg.c	2007-10-24 11:36:00.982690568 +0200
+@@ -571,6 +571,31 @@ static int ieee80211_change_station(stru
+ 	return 0;
+ }
+ 
++static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
++				 u8 *mac, struct station_stats *stats)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++
++	sta = sta_info_get(local, mac);
++	if (!sta)
++		return -ENOENT;
++
++	/* XXX: verify sta->dev == dev */
++
++	stats->filled = STATION_STAT_INACTIVE_TIME |
++			STATION_STAT_RX_BYTES |
++			STATION_STAT_TX_BYTES;
++
++	stats->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
++	stats->rx_bytes = sta->rx_bytes;
++	stats->tx_bytes = sta->tx_bytes;
++
++	sta_info_put(sta);
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -583,4 +608,5 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.add_station = ieee80211_add_station,
+ 	.del_station = ieee80211_del_station,
+ 	.change_station = ieee80211_change_station,
++	.get_station = ieee80211_get_station,
+ };
 
-Index: wireless-2.6/drivers/net/wireless/b43legacy/debugfs.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/debugfs.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/debugfs.c
-@@ -39,7 +39,7 @@
- 
- 
- /* The root directory. */
--struct dentry *rootdir;
-+static struct dentry *rootdir;
- 
- struct b43legacy_debugfs_fops {
- 	ssize_t (*read)(struct b43legacy_wldev *dev, char *buf, size_t bufsize);
-@@ -76,7 +76,7 @@ struct b43legacy_dfs_file * fops_to_dfs_
- 
- 
- /* wl->irq_lock is locked */
--ssize_t tsf_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t tsf_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	u64 tsf;
-@@ -90,7 +90,7 @@ ssize_t tsf_read_file(struct b43legacy_w
- }
- 
- /* wl->irq_lock is locked */
--int tsf_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
-+static int tsf_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
- {
- 	u64 tsf;
- 
-@@ -102,7 +102,7 @@ int tsf_write_file(struct b43legacy_wlde
- }
- 
- /* wl->irq_lock is locked */
--ssize_t ucode_regs_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t ucode_regs_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	int i;
-@@ -116,7 +116,7 @@ ssize_t ucode_regs_read_file(struct b43l
- }
- 
- /* wl->irq_lock is locked */
--ssize_t shm_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t shm_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	ssize_t count = 0;
- 	int i;
-@@ -135,7 +135,7 @@ ssize_t shm_read_file(struct b43legacy_w
- 	return count;
- }
- 
--ssize_t txstat_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
-+static ssize_t txstat_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufsize)
- {
- 	struct b43legacy_txstatus_log *log = &dev->dfsentry->txstatlog;
- 	ssize_t count = 0;
-@@ -183,7 +183,7 @@ out_unlock:
- }
- 
- /* wl->irq_lock is locked */
--int restart_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
-+static int restart_write_file(struct b43legacy_wldev *dev, const char *buf, size_t count)
- {
- 	int err = 0;
- 
-Index: wireless-2.6/drivers/net/wireless/b43legacy/pio.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/pio.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/pio.c
-@@ -66,7 +66,7 @@ static u16 tx_get_next_word(const u8 *tx
- 		source = packet;
- 		i -= txhdr_size;
- 	}
--	ret = le16_to_cpu(*((u16 *)(source + i)));
-+	ret = le16_to_cpu(*((__le16 *)(source + i)));
- 	*pos += 2;
- 
- 	return ret;
-@@ -539,7 +539,7 @@ static void pio_rx_error(struct b43legac
- 
- void b43legacy_pio_rx(struct b43legacy_pioqueue *queue)
- {
--	u16 preamble[21] = { 0 };
-+	__le16 preamble[21] = { 0 };
- 	struct b43legacy_rxhdr_fw3 *rxhdr;
- 	u16 tmp;
- 	u16 len;
-@@ -609,7 +609,7 @@ data_ready:
- 	skb_put(skb, len);
- 	for (i = 0; i < len - 1; i += 2) {
- 		tmp = b43legacy_pio_read(queue, B43legacy_PIO_RXDATA);
--		*((u16 *)(skb->data + i)) = cpu_to_le16(tmp);
-+		*((__le16 *)(skb->data + i)) = cpu_to_le16(tmp);
- 	}
- 	if (len % 2) {
- 		tmp = b43legacy_pio_read(queue, B43legacy_PIO_RXDATA);
+-- 
+
