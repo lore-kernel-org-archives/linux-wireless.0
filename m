@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7825 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbXJOHVE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 03:21:04 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-Date: Mon, 15 Oct 2007 09:18:02 +0200
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-References: <200710111151.06989.hs4233@mail.mn-solutions.de> <20071011141642.GA6976@infradead.org> <1192114234.31895.5.camel@localhost.localdomain>
-In-Reply-To: <1192114234.31895.5.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200710150918.02708.hs4233@mail.mn-solutions.de> (sfid-20071015_082107_105918_E8C589C9)
+Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754051AbXJYJWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:46 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mabbas <mabbas@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 13/30] iwlwifi: accept up to 4K frame size on Rx side to fit A-MSDU frame
+Date: Thu, 25 Oct 2007 17:15:34 +0800
+Message-Id: <1193303770550-git-send-email-yi.zhu@intel.com> (sfid-20071025_104059_625423_DAAC451E)
+In-Reply-To: <11933037692766-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
+ <11933037674045-git-send-email-yi.zhu@intel.com>
+ <11933037692766-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> wlan_set_essid -> lts_set_essid
-> wlan_private -> lts_private
->
-> (I don't really like 'lbs' personally but I'm not that
-> strongly against it)
+From: mabbas <mabbas@linux.intel.com>
 
-I've used lbs_XXX and LBS_DEB_xxx for the debugging stuff. Do you 
-want to get that changed to lts_XXX and LTS_DEB_xxx, too?
+The driver drops any Rx frame larger than 2332 bytes, but with A-MSDU
+frame, it could be up to 4K. This patch makes sure we can process larger
+A-MSDU frame.
 
-(I personally like lbs more, but am also not strongly for it or 
-against something else, I just want to keep things orthogonal)
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 81760aa..39c7d1f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3521,8 +3521,8 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 		rx_start->byte_count = amsdu->byte_count;
+ 		rx_end = (__le32 *) (((u8 *) hdr) + len);
+ 	}
+-	if (len > 2342 || len < 16) {
+-		IWL_DEBUG_DROP("byte count out of range [16,2342]"
++	if (len > IWL_RX_BUF_SIZE || len < 16) {
++		IWL_WARNING("byte count out of range [16,4K]"
+ 			       " : %d\n", len);
+ 		return;
+ 	}
+-- 
+1.5.2
