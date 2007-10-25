@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:61366 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750839AbXJVB2f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 21:28:35 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "Robin Wood" <dninja@gmail.com>
-Subject: Re: rtl8187 not being registered
-Date: Sun, 21 Oct 2007 21:25:28 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <2cf3b3170710211433t253b6a8ck7d4c6d0913d5256b@mail.gmail.com> <2cf3b3170710211435k36f17aaeqed5dba65718de21a@mail.gmail.com>
-In-Reply-To: <2cf3b3170710211435k36f17aaeqed5dba65718de21a@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:57457 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754851AbXJYJct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:32:49 -0400
+Message-ID: <472062BA.6020102@garzik.org> (sfid-20071025_103252_753645_0652AC6D)
+Date: Thu, 25 Oct 2007 05:32:42 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6486497.GLgSYUWJBs";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200710212125.34532.flamingice@sourmilk.net> (sfid-20071022_022849_834524_67452C5B)
+To: Zhu Yi <yi.zhu@intel.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 11/30] iwlwifi: using PCI_DEVICE macro
+References: <11933037512140-git-send-email-yi.zhu@intel.com> <11933037541699-git-send-email-yi.zhu@intel.com> <11933037553170-git-send-email-yi.zhu@intel.com> <119330375796-git-send-email-yi.zhu@intel.com> <11933037584069-git-send-email-yi.zhu@intel.com> <11933037601236-git-send-email-yi.zhu@intel.com> <11933037613709-git-send-email-yi.zhu@intel.com> <1193303762680-git-send-email-yi.zhu@intel.com> <11933037641168-git-send-email-yi.zhu@intel.com> <11933037663659-git-send-email-yi.zhu@intel.com> <11933037674045-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11933037674045-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6486497.GLgSYUWJBs
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Zhu Yi wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> 
+> PCI_DEVICE macro is more concise when using defualt values
+> in device definitions
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index 62b44a4..d4dc30d 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -2278,8 +2278,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
+>  }
+>  
+>  struct pci_device_id iwl_hw_card_ids[] = {
+> -	{0x8086, 0x4222, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> -	{0x8086, 0x4227, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> +	{PCI_DEVICE(0x8086, 0x4222)},
+> +	{PCI_DEVICE(0x8086, 0x4227)},
+>  	{0}
+>  };
+>  
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+> index 4710f6e..f86a24e 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+> @@ -4680,8 +4680,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
+>  }
+>  
+>  struct pci_device_id iwl_hw_card_ids[] = {
+> -	{0x8086, 0x4229, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> -	{0x8086, 0x4230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> +	{PCI_DEVICE(0x8086, 0x4229)},
+> +	{PCI_DEVICE(0x8086, 0x4230)},
 
-On Sunday 21 October 2007 17:35:27 Robin Wood wrote:
-> I've just got the latest kernel source (2.6.23) from git and compiled
-> rtl8187 drivers as modules. When I plug the device in I get the
-> followoing:
->
-> usb 1-3: new high speed USB device using ehci_hcd and address 3
-> usb 1-3: configuration #1 chosen from 1 choice
-> wmaster0: Failed to select rate control algorithm
-> wmaster0: Failed to initialize rate control algorithm
-> rtl8187: Cannot register device
-> rtl8187: probe of 1-3:1.0 failed with error -2
->
-Make sure the rc80211_simple module can be found and is loaded.
+FWIW I would recommend
 
--Michael Wu
+	PCI_VDEVICE(INTEL, 0x4229)
+
+Regards,
+
+	Jeff
 
 
 
---nextPart6486497.GLgSYUWJBs
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHG/wNT3Oqt9AH4aERAkjjAKC6mf6099+Q4AxYFLcwxEvmiaMYVwCeMGXe
-1VP94M6EPkJ9xA4WCCV3t64=
-=zSEm
------END PGP SIGNATURE-----
-
---nextPart6486497.GLgSYUWJBs--
