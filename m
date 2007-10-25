@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alephnull.demon.nl ([83.160.184.112]:51973 "EHLO
-	xi.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbXJZWXx (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40413 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbXJYNWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 18:23:53 -0400
-Date: Fri, 26 Oct 2007 23:58:05 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
-	rmk@arm.linux.org.uk, kernel@wantstofly.org, tony.luck@intel.com,
-	jwboyer@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, dmitry.torokhov@gmail.com,
-	netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-wireless@vger.kernel.org,
-	bryan.wu@analog.com, adaplas@gmail.com
-Subject: Re: [PATCH] Remove pointless casts from void pointers,
-Message-ID: <20071026215805.GD32372@xi.wantstofly.org> (sfid-20071026_232400_026062_35FBECC9)
-References: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
+	Thu, 25 Oct 2007 09:22:30 -0400
+Received: from [131.234.198.68]
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Il2fM-0000cp-Qm
+	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2007 14:22:29 +0100
+Message-Id: <20071025093618.440937000@sipsolutions.net> (sfid-20071025_142242_650160_9EE134E9)
+Date: Thu, 25 Oct 2007 11:36:18 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [patch 0/9] initial round of hostapd support patches
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 26, 2007 at 05:40:22AM -0400, Jeff Garzik wrote:
+Now that 2.6.24-rc1 is released I guess I can throw more new
+patches at you :)
 
->  arch/arm/mach-pxa/ssp.c                    |    2 +-
->  arch/arm/mach-s3c2410/usb-simtec.c         |    2 +-
->  arch/arm/plat-omap/mailbox.c               |    2 +-
+This is a first piece of hostapd support patches, these introduce
+new nl80211 API.
 
-FWIW
+I do not think these patches will apply since I left out some, but
+comments would nonetheless be greatly appreciated.
 
-Acked-by: Lennert Buytenhek <buytenh@wantstofly.org>
+johannes
+
