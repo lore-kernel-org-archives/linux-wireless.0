@@ -1,131 +1,511 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:36005 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754949AbXJXRZM (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:59763 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762012AbXJYPqE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 13:25:12 -0400
-Received: by an-out-0708.google.com with SMTP id b36so46366ana
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2007 10:25:11 -0700 (PDT)
-Message-ID: <43e72e890710241025g3491310fgfcc380cb04280a56@mail.gmail.com> (sfid-20071024_182521_648839_0C0C50A3)
-Date: Wed, 24 Oct 2007 13:25:10 -0400
+	Thu, 25 Oct 2007 11:46:04 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so507789rvb
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2007 08:46:04 -0700 (PDT)
+Message-ID: <43e72e890710250846h5ae85efaqfb5b7b5d0d82e932@mail.gmail.com> (sfid-20071025_164635_321782_2AECEA6B)
+Date: Thu, 25 Oct 2007 11:46:03 -0400
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: Proc usage (was: Re: [ath5k-devel] [PATCH 3/3] consistently use ath5k in printks)
-Cc: "Eric W Anderson" <Eric.Anderson@colorado.edu>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>,
-	"Greg KH" <greg@kroah.com>, "Thomas Graf" <tgraf@suug.ch>
-In-Reply-To: <1193238601.2557.43.camel@localhost.localdomain>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [patch 6/9] nl80211/cfg80211: station handling
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071025093716.685606000@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
-	 <1192619652.8841.13.camel@johannes.berg>
-	 <1192630172.10567.29.camel@localhost.localdomain>
-	 <43e72e890710170719o120f9dbak34f33d8218038dfc@mail.gmail.com>
-	 <40f31dec0710170926p3847b796gdf52f80297b7c117@mail.gmail.com>
-	 <471EC944.2010700@colorado.edu>
-	 <1193238601.2557.43.camel@localhost.localdomain>
+References: <20071025093618.440937000@sipsolutions.net>
+	 <20071025093716.685606000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/07, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2007-10-23 at 22:25 -0600, Eric W Anderson wrote:
-> > I realize that primary role of the driver is for actual use, rather than for
-> > research, but...  It's very useful in experiments to have /proc entries for all
-> > the settings that you don't normally think of as tunable.  (e.g. turning off
-> > antenna diversity, or ACKs, or changing the CCA thresholds). I'd really hate for
-> > knobs to go away because someone things they're not "really" needed, or because
-> > they're not worth merging into the new configuration framework.
+On 10/25/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This patch adds station handling to cfg80211/nl80211.
 >
-> debugfs is one answer here.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> ---
+>  include/linux/nl80211.h |   68 +++++++++++++
+>  include/net/cfg80211.h  |   54 ++++++++++
+>  net/wireless/nl80211.c  |  236 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 358 insertions(+)
+>
+> --- linux-2.6.orig/include/linux/nl80211.h      2007-10-24 16:50:00.170256240 +0200
+> +++ linux-2.6/include/linux/nl80211.h   2007-10-24 16:57:06.090256076 +0200
+> @@ -7,6 +7,18 @@
+>   */
+>
+>  /**
+> + * DOC: Station handling
+> + *
+> + * Stations are added per interface, but a special case exists with VLAN
+> + * interfaces. When a station is bound to an AP interface, it may be moved
+> + * into a VLAN identified by a VLAN interface index (%NL80211_ATTR_STA_VLAN).
+> + * The station is still assumed to belong to the AP interface it was added
+> + * to.
+> + *
+> + * TODO: need more info?
+> + */
+> +
+> +/**
+>   * enum nl80211_commands - supported nl80211 commands
+>   *
+>   * @NL80211_CMD_UNSPEC: unspecified command to catch errors
+> @@ -51,6 +63,16 @@
+>   *     the %NL80211_ATTR_BEACON_INTERVAL, %NL80211_ATTR_DTIM_PERIOD,
+>   *     %NL80211_BEACON_HEAD and %NL80211_BEACON_TAIL attributes.
+>   *
+> + * @NL80211_CMD_GET_STATION: Get station attributes for station identified by
+> + *     %NL80211_ATTR_MAC on the interface identified by %NL80211_ATTR_IFINDEX.
+> + * @NL80211_CMD_SET_STATION: Set station attributes for station identified by
+> + *     %NL80211_ATTR_MAC on the interface identified by %NL80211_ATTR_IFINDEX.
+> + * @NL80211_CMD_NEW_STATION: Add a station with given attributes to the
+> + *     the interface identified by %NL80211_ATTR_IFINDEX.
+> + * @NL80211_CMD_DEL_STATION: Remove a station identified by %NL80211_ATTR_MAC
+> + *     or, if no MAC address given, all stations, on the interface identified
+> + *     by %NL80211_ATTR_IFINDEX.
+> + *
+>   * @NL80211_CMD_MAX: highest used command number
+>   * @__NL80211_CMD_AFTER_LAST: internal use
+>   */
+> @@ -78,6 +100,11 @@ enum nl80211_commands {
+>         NL80211_CMD_NEW_BEACON, /* ? */
+>         NL80211_CMD_DEL_BEACON, /* ? */
+>
+> +       NL80211_CMD_GET_STATION,
+> +       NL80211_CMD_SET_STATION,
+> +       NL80211_CMD_NEW_STATION,
+> +       NL80211_CMD_DEL_STATION,
+> +
+>         /* add commands here */
+>
+>         /* used to define NL80211_CMD_MAX below */
+> @@ -115,6 +142,17 @@ enum nl80211_commands {
+>   * @NL80211_ATTR_BEACON_HEAD: portion of the beacon before the TIM IE
+>   * @NL80211_ATTR_BEACON_TAIL: portion of the beacon after the TIM IE
+>   *
+> + * @NL80211_ATTR_STA_AID: Association ID for the station (u16)
+> + * @NL80211_ATTR_STA_FLAGS: flags, nested element with NLA_FLAG attributes of
+> + *     &enum nl80211_sta_flags.
+> + * @NL80211_ATTR_STA_LISTEN_INTERVAL: listen interval as defined by
+> + *     IEEE 802.11 7.3.1.6 (u16).
+> + * @NL80211_ATTR_STA_SUPPORTED_RATES: supported rates, array of supported
+> + *     rates as defined by IEEE 802.11 7.3.2.2 but without the length
+> + *     restriction (at most %NL80211_MAX_SUPP_RATES).
 
-As it stands debugfs does provide a wide range of useful information.
+Is this necessary? Shouldn't we just embrace the supported rates of
+the hardware? If cfg80211 is extended to have devices register their
+hardware capabilities then we can take it from there perhaps ?
 
-Here's the info for my phy0:
-mcgrof@pogo:~$ ls /debug/ieee80211/phy0/
-antenna_sel_rx           frequency         netdev:wlan3       statistics
-antenna_sel_tx           keys              netdev:wmaster0    total_ps_buffered
-bridge_packets           long_retry_limit  rts_threshold      wep_iv
-channel                  mode              short_retry_limit
-fragmentation_threshold  modes             stations
+> + * @NL80211_ATTR_STA_VLAN: interface index of VLAN interface to move station
+> + *     to, or the AP interface the station was originally added to to.
+> + *
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+>   */
+> @@ -142,12 +180,20 @@ enum nl80211_attrs {
+>         NL80211_ATTR_BEACON_HEAD,
+>         NL80211_ATTR_BEACON_TAIL,
+>
+> +       NL80211_ATTR_STA_AID,
+> +       NL80211_ATTR_STA_FLAGS,
+> +       NL80211_ATTR_STA_LISTEN_INTERVAL,
+> +       NL80211_ATTR_STA_SUPPORTED_RATES,
+> +       NL80211_ATTR_STA_VLAN,
+> +
+>         /* add attributes here, update the policy in nl80211.c */
+>
+>         __NL80211_ATTR_AFTER_LAST,
+>         NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+>  };
+>
+> +#define NL80211_MAX_SUPP_RATES 32
+> +
+>  /**
+>   * enum nl80211_iftype - (virtual) interface types
+>   *
+> @@ -179,4 +225,26 @@ enum nl80211_iftype {
+>         NL80211_IFTYPE_MAX = __NL80211_IFTYPE_AFTER_LAST - 1
+>  };
+>
+> +/**
+> + * enum nl80211_sta_flags - station flags
+> + *
+> + * Station flags. When a station is added to an AP interface, it is
+> + * assumed to be already associated (and hence authenticated.)
+> + *
+> + * @NL80211_STA_FLAG_AUTHORIZED: station is authorized (802.1X)
+> + * @NL80211_STA_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+> + *     with short barker preamble
+> + * @NL80211_STA_FLAG_WME: station is WME/QoS capable
+> + */
+> +enum nl80211_sta_flags {
+> +       __NL80211_STA_FLAG_INVALID,
+> +       NL80211_STA_FLAG_AUTHORIZED,
+> +       NL80211_STA_FLAG_SHORT_PREAMBLE,
+> +       NL80211_STA_FLAG_WME,
+> +
+> +       /* keep last */
+> +       __NL80211_STA_FLAG_AFTER_LAST,
+> +       NL80211_STA_FLAG_MAX = __NL80211_STA_FLAG_AFTER_LAST - 1
+> +};
+> +
+>  #endif /* __LINUX_NL80211_H */
+> --- linux-2.6.orig/include/net/cfg80211.h       2007-10-24 16:50:00.200259495 +0200
+> +++ linux-2.6/include/net/cfg80211.h    2007-10-24 16:56:35.020252386 +0200
+> @@ -89,6 +89,47 @@ struct beacon_parameters {
+>         int head_len, tail_len;
+>  };
+>
+> +/**
+> + * enum station_flags - station flags
+> + *
+> + * Station capability flags. Note that these must be the bits
+> + * according to the nl80211 flags.
+> + *
+> + * @STATION_FLAG_CHANGED: station flags were changed
+> + * @STATION_FLAG_AUTHORIZED: station is authorized to send frames (802.1X)
+> + * @STATION_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+> + *     with short preambles
+> + * @STATION_FLAG_WME: station is WME/QoS capable
+> + */
+> +enum station_flags {
+> +       STATION_FLAG_CHANGED            = 1<<0,
+> +       STATION_FLAG_AUTHORIZED         = 1<<NL80211_STA_FLAG_AUTHORIZED,
+> +       STATION_FLAG_SHORT_PREAMBLE     = 1<<NL80211_STA_FLAG_SHORT_PREAMBLE,
+> +       STATION_FLAG_WME                = 1<<NL80211_STA_FLAG_WME,
+> +};
+> +
+> +/**
+> + * struct station_parameters - station parameters
+> + *
+> + * Used to change and create a new station.
+> + *
+> + * @vlan: vlan interface station should belong to
+> + * @supported_rates: supported rates in IEEE 802.11 format
+> + *     (or NULL for no change)
+> + * @supported_rates_len: number of supported rates
+> + * @station_flags: station flags (see &enum station_flags)
+> + * @listen_interval: listen interval or -1 for no change
+> + * @aid: AID or zero for no change
+> + */
+> +struct station_parameters {
+> +       u8 *supported_rates;
+> +       struct net_device *vlan;
+> +       u32 station_flags;
+> +       int listen_interval;
+> +       u16 aid;
+> +       u8 supported_rates_len;
+> +};
+> +
+>  /* from net/wireless.h */
+>  struct wiphy;
+>
+> @@ -127,6 +168,12 @@ struct wiphy;
+>   * @set_beacon: Set the beacon parameters for an access point mode
+>   *     interface. The @info parameter can be %NULL when the beacon is
+>   *     removed.
+> + *
+> + * @add_station: Add a new station.
+> + *
+> + * @del_station: Remove a station; @mac may be NULL to remove all stations.
+> + *
+> + * @change_station: Modify a given station.
+>   */
+>  struct cfg80211_ops {
+>         int     (*add_virtual_intf)(struct wiphy *wiphy, char *name,
+> @@ -149,6 +196,13 @@ struct cfg80211_ops {
+>
+>         int     (*set_beacon)(struct wiphy *wiphy, struct net_device *dev,
+>                               struct beacon_parameters *info);
+> +
+> +       int     (*add_station)(struct wiphy *wiphy, struct net_device *dev,
+> +                              u8 *mac, struct station_parameters *params);
+> +       int     (*del_station)(struct wiphy *wiphy, struct net_device *dev,
+> +                              u8 *mac);
+> +       int     (*change_station)(struct wiphy *wiphy, struct net_device *dev,
+> +                                 u8 *mac, struct station_parameters *params);
+>  };
+>
+>  #endif /* __NET_CFG80211_H */
+> --- linux-2.6.orig/net/wireless/nl80211.c       2007-10-24 16:50:00.230261882 +0200
+> +++ linux-2.6/net/wireless/nl80211.c    2007-10-24 16:57:23.710253471 +0200
+> @@ -76,6 +76,12 @@ static struct nla_policy nl80211_policy[
+>                                        .len = IEEE80211_MAX_DATA_LEN },
+>         [NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY,
+>                                        .len = IEEE80211_MAX_DATA_LEN },
+> +       [NL80211_ATTR_STA_AID] = { .type = NLA_U16 },
+> +       [NL80211_ATTR_STA_FLAGS] = { .type = NLA_NESTED },
+> +       [NL80211_ATTR_STA_LISTEN_INTERVAL] = { .type = NLA_U16 },
+> +       [NL80211_ATTR_STA_SUPPORTED_RATES] = { .type = NLA_BINARY,
+> +                                              .len = NL80211_MAX_SUPP_RATES },
+> +       [NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
+>  };
+>
+>  /* message building helper */
+> @@ -692,6 +698,211 @@ static int nl80211_del_beacon(struct sk_
+>         return err;
+>  }
+>
+> +static
+> +struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] __read_mostly = {
+> +       [NL80211_STA_FLAG_AUTHORIZED] = { .type = NLA_FLAG },
+> +       [NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
+> +       [NL80211_STA_FLAG_WME] = { .type = NLA_FLAG },
+> +};
+> +
+> +static int parse_station_flags(struct nlattr *nla, u32 *staflags)
+> +{
+> +       struct nlattr *flags[NL80211_STA_FLAG_MAX + 1];
+> +       int flag;
+> +
+> +       *staflags = 0;
+> +
+> +       if (!nla)
+> +               return 0;
+> +
+> +       if (nla_parse_nested(flags, NL80211_STA_FLAG_MAX,
+> +                            nla, sta_flags_policy))
+> +               return -EINVAL;
+> +
+> +       *staflags = STATION_FLAG_CHANGED;
+> +
+> +       for (flag = 1; flag <= NL80211_STA_FLAG_MAX; flag++)
+> +               if (flags[flag])
+> +                       *staflags |= (1<<flag);
+> +
+> +       return 0;
+> +}
+> +
+> +static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       return -EOPNOTSUPP;
+> +}
+> +
+> +/*
+> + * Get vlan interface making sure it is on the right wiphy.
+> + */
+> +static int get_vlan(struct nlattr *vlanattr,
+> +                   struct cfg80211_registered_device *rdev,
+> +                   struct net_device **vlan)
+> +{
+> +       if (vlanattr) {
+> +               *vlan = dev_get_by_index(&init_net, nla_get_u32(vlanattr));
+> +               if (!*vlan)
+> +                       return -ENODEV;
 
 
-Here's statistics:
+> +               if (!(*vlan)->ieee80211_ptr)
+> +                       return -EINVAL;
 
-mcgrof@pogo:~$ ls /debug/ieee80211/phy0/statistics/
-dot11ACKFailureCount               rx_handlers_fragments
-dot11FCSErrorCount                 rx_handlers_queued
-dot11RTSFailureCount               transmitted_fragment_count
-dot11RTSSuccessCount               transmitted_frame_count
-failed_count                       tx_expand_skb_head
-frame_duplicate_count              tx_expand_skb_head_cloned
-multicast_received_frame_count     tx_handlers_drop
-multicast_transmitted_frame_count  tx_handlers_drop_fragment
-multiple_retry_count               tx_handlers_drop_not_assoc
-received_fragment_count            tx_handlers_drop_unauth_port
-retry_count                        tx_handlers_drop_unencrypted
-rx_expand_skb_head                 tx_handlers_drop_wep
-rx_expand_skb_head2                tx_handlers_queued
-rx_handlers_drop                   tx_status_drop
-rx_handlers_drop_defrag            wep_undecryptable_count
-rx_handlers_drop_nullfunc          wme_rx_queue
-rx_handlers_drop_passive_scan      wme_tx_queue
-rx_handlers_drop_short
+Check #1 for (!(*vlan)->ieee80211_ptr)
 
-For wlan3:
+> +               if (!(*vlan)->ieee80211_ptr)
+> +                       return -EINVAL;
 
-mcgrof@pogo:~$ ls /debug/ieee80211/phy0/netdev\:wlan3/
-aid          auth_algs         capab             extra_ie_len  ssid_len
-ap_capab     auth_transaction  channel_use       flags         state
-assoc_tries  auth_tries        drop_unencrypted  ieee8021_x
-auth_alg     bssid             eapol             prev_bssid
+Check #2 for (!(*vlan)->ieee80211_ptr). Double check.
 
-For wmaser0:
+> +               if ((*vlan)->ieee80211_ptr->wiphy != &rdev->wiphy)
+> +                       return -EINVAL;
+> +       }
+> +       return 0;
+> +}
+> +
+> +static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       struct cfg80211_registered_device *drv;
+> +       int err;
+> +       struct net_device *dev;
+> +       struct station_parameters params;
+> +       u8 *mac_addr = NULL;
+> +
+> +       memset(&params, 0, sizeof(params));
+> +
+> +       params.listen_interval = -1;
+> +
+> +       if (info->attrs[NL80211_ATTR_STA_AID])
+> +               return -EINVAL;
+> +
+> +       if (!info->attrs[NL80211_ATTR_MAC])
+> +               return -EINVAL;
+> +
+> +       mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+> +
+> +       if (info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]) {
+> +               params.supported_rates =
+> +                       nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+> +               params.supported_rates_len =
+> +                       nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+> +       }
+> +
+> +       if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+> +               params.listen_interval =
+> +                   nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+> +
+> +       if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+> +                               &params.station_flags))
+> +               return -EINVAL;
+> +
+> +       err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
+> +       if (err)
+> +               return err;
+> +
+> +       err = get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &params.vlan);
+> +       if (err)
+> +               goto out;
 
-mcgrof@pogo:~$ ls /debug/ieee80211/phy0/netdev\:wmaster0/
-beacon_head_len   dtim_count             ieee8021_x              num_sta_ps
-beacon_tail_len   dtim_period            max_ratectrl_rateidx
-channel_use       eapol                  num_beacons
-drop_unencrypted  force_unicast_rateidx  num_buffered_multicast
+This is minor, but how about doing the check of
+info->attrs[NL80211_ATTR_STA_VLAN] outside of get_vlan to make it
+clear here we're setting it to 0 if not found?
 
-
-> The point is to make it 110% crystal clear
-> what options are long-term supportable as API/ABI and which ones are
-> not.
-
-IMHO a lot of this is very useful information and as such probably
-shouldn't be exported as part of debugfs but instead be accessible via
-sysfs or configfs which can later be relied upon in the long term. The
-fine line between whether statistics should go sysfs or configfs is
-vague to me.
-
-As for configuration it was decided a while ago we'd use netlink so
-AFAICT we're sticking to that. This doesn't mean we can't provide
-alternatives for accessing information. My intentions was to start a
-configfs module for the new linux wireless subsystem (cfg80211
-devices), which I have already but used only for changing regulatory
-domain, where we can add things onto a filesystem for configuration.
-The add/remove interface stuff was also pulled from sysfs and now is
-available only through nl80211, the idea was to later add the
-filesystem approach to configfs. Currently you can use the add/remove
-interface with the new iw utility though:
-
-http://git.sipsolutions.net/iw.git/
-
-This requires libnl-HEAD though as we use genl. I hope there's a
-release soon of libnl so distributions can pick up genl support.
-
-The idea with configfs is not to replace nl80211 but to simply provide
-an alternative. I believe this would be the right place to put any of
-these easy tunable values through a filesystem, which experimenters
-just love to use.
-
-Ironing all this will take some time. These types of discussions will
-help us in the end.
-
-  Luis
+> +
+> +       if (!drv->ops->change_station) {
+> +               err = -EOPNOTSUPP;
+> +               goto out;
+> +       }
+> +
+> +       rtnl_lock();
+> +       err = drv->ops->change_station(&drv->wiphy, dev, mac_addr, &params);
+> +       rtnl_unlock();
+> +
+> + out:
+> +       if (params.vlan)
+> +               dev_put(params.vlan);
+> +       cfg80211_put_dev(drv);
+> +       dev_put(dev);
+> +       return err;
+> +}
+> +
+> +static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       struct cfg80211_registered_device *drv;
+> +       int err;
+> +       struct net_device *dev;
+> +       struct station_parameters params;
+> +       u8 *mac_addr = NULL;
+> +
+> +       memset(&params, 0, sizeof(params));
+> +
+> +       if (!info->attrs[NL80211_ATTR_MAC])
+> +               return -EINVAL;
+> +
+> +       if (!info->attrs[NL80211_ATTR_STA_AID])
+> +               return -EINVAL;
+> +
+> +       if (!info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+> +               return -EINVAL;
+> +
+> +       if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
+> +               return -EINVAL;
+> +
+> +       mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+> +       params.supported_rates =
+> +               nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+> +       params.supported_rates_len =
+> +               nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+> +       params.listen_interval =
+> +               nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+> +       params.listen_interval = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+> +
+> +       if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+> +                               &params.station_flags))
+> +               return -EINVAL;
+> +
+> +       err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
+> +       if (err)
+> +               return err;
+> +
+> +       err = get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &params.vlan);
+> +       if (err)
+> +               goto out;
+> +
+> +       if (!drv->ops->add_station) {
+> +               err = -EOPNOTSUPP;
+> +               goto out;
+> +       }
+> +
+> +       rtnl_lock();
+> +       err = drv->ops->add_station(&drv->wiphy, dev, mac_addr, &params);
+> +       rtnl_unlock();
+> +
+> + out:
+> +       if (params.vlan)
+> +               dev_put(params.vlan);
+> +       cfg80211_put_dev(drv);
+> +       dev_put(dev);
+> +       return err;
+> +}
+> +
+> +static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       struct cfg80211_registered_device *drv;
+> +       int err;
+> +       struct net_device *dev;
+> +       u8 *mac_addr = NULL;
+> +
+> +       if (info->attrs[NL80211_ATTR_MAC])
+> +               mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+> +
+> +       err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
+> +       if (err)
+> +               return err;
+> +
+> +       if (!drv->ops->del_station) {
+> +               err = -EOPNOTSUPP;
+> +               goto out;
+> +       }
+> +
+> +       rtnl_lock();
+> +       err = drv->ops->del_station(&drv->wiphy, dev, mac_addr);
+> +       rtnl_unlock();
+> +
+> + out:
+> +       cfg80211_put_dev(drv);
+> +       dev_put(dev);
+> +       return err;
+> +}
+> +
+>  static struct genl_ops nl80211_ops[] = {
+>         {
+>                 .cmd = NL80211_CMD_GET_WIPHY,
+> @@ -774,6 +985,31 @@ static struct genl_ops nl80211_ops[] = {
+>                 .flags = GENL_ADMIN_PERM,
+>                 .doit = nl80211_del_beacon,
+>         },
+> +       {
+> +               .cmd = NL80211_CMD_GET_STATION,
+> +               .doit = nl80211_get_station,
+> +               /* TODO: implement dumpit */
+> +               .policy = nl80211_policy,
+> +               .flags = GENL_ADMIN_PERM,
+> +       },
+> +       {
+> +               .cmd = NL80211_CMD_SET_STATION,
+> +               .doit = nl80211_set_station,
+> +               .policy = nl80211_policy,
+> +               .flags = GENL_ADMIN_PERM,
+> +       },
+> +       {
+> +               .cmd = NL80211_CMD_NEW_STATION,
+> +               .doit = nl80211_new_station,
+> +               .policy = nl80211_policy,
+> +               .flags = GENL_ADMIN_PERM,
+> +       },
+> +       {
+> +               .cmd = NL80211_CMD_DEL_STATION,
+> +               .doit = nl80211_del_station,
+> +               .policy = nl80211_policy,
+> +               .flags = GENL_ADMIN_PERM,
+> +       },
+>  };
+>
+>  /* multicast groups */
+>
+> --
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
