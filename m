@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42752 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751816AbXJ2Hgm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 03:36:42 -0400
-Date: Mon, 29 Oct 2007 00:36:40 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Chris Rankin <rankincj@yahoo.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [2.6.23.1] PCI device locking up the computer when its module
- loads
-Message-Id: <20071029003640.6fe08168.akpm@linux-foundation.org> (sfid-20071029_073646_690171_CA59D4B6)
-In-Reply-To: <511770.44451.qm@web52902.mail.re2.yahoo.com>
-References: <511770.44451.qm@web52902.mail.re2.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754073AbXJYJWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:42 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 11/30] iwlwifi: using PCI_DEVICE macro
+Date: Thu, 25 Oct 2007 17:15:32 +0800
+Message-Id: <11933037674045-git-send-email-yi.zhu@intel.com> (sfid-20071025_104059_185556_B873B1C3)
+In-Reply-To: <11933037663659-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 22 Oct 2007 13:43:16 +0100 (BST) Chris Rankin <rankincj@yahoo.com> wrote:
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> Hi,
-> 
-> I have a Netgear MA301 PLX wireless networking adapter which wants to use the hostap_plx driver in
-> Linux 2.6.23.1. This very same piece of hardware works fine in an old(!) P120 machine running
-> 2.4.33, but makes the 2.6.23.1 kernel freeze as soon as the pci_enable_device() function is called
-> in prism2_plx_probe. What seems to happen is that IRQ 5 is signalled (the adapter's IRQ, according
-> to lspci), but the handler function hasn't been installed yet and so the kernel disables IRQ 5 and
-> locks up. However, the documentation that I have read implies that calling pci_enable_device()
-> before requesting the IRQ number to install the handler on is "The Right Thing to do", because
-> otherwise the IRQ number might change.
-> 
-> I have tried booting with "acpi=off nolapic" to no effect. The kernel is UP with 4K stacks and
-> PREEMPT.
-> 
-> Can anyone suggest what a suitable fix might be, please? Because I am currently thinking "CLI" and
-> "STI"!
-> 
+PCI_DEVICE macro is more concise when using defualt values
+in device definitions
 
-(+linux-wireless)
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 62b44a4..d4dc30d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2278,8 +2278,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
+ }
+ 
+ struct pci_device_id iwl_hw_card_ids[] = {
+-	{0x8086, 0x4222, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{0x8086, 0x4227, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{PCI_DEVICE(0x8086, 0x4222)},
++	{PCI_DEVICE(0x8086, 0x4227)},
+ 	{0}
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 4710f6e..f86a24e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4680,8 +4680,8 @@ void iwl_hw_cancel_deferred_work(struct iwl_priv *priv)
+ }
+ 
+ struct pci_device_id iwl_hw_card_ids[] = {
+-	{0x8086, 0x4229, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{0x8086, 0x4230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{PCI_DEVICE(0x8086, 0x4229)},
++	{PCI_DEVICE(0x8086, 0x4230)},
+ 	{0}
+ };
+ 
+-- 
+1.5.2
