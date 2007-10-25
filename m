@@ -1,77 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47765 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:45631 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361AbXJCOmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2007 10:42:08 -0400
-Subject: [PATCH] libertas: problems setting wpa keys
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	id S1752083AbXJYJ0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:26:35 -0400
+Subject: Re: [PATCH] iwl3945: cleanup namespace
+From: Zhu Yi <yi.zhu@intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20071012130500.GA22610@lst.de>
+References: <20071012130500.GA22610@lst.de>
 Content-Type: text/plain
-Date: Wed, 03 Oct 2007 10:37:45 -0400
-Message-Id: <1191422265.15982.46.camel@localhost.localdomain> (sfid-20071003_154213_825798_901D66B4)
+Date: Thu, 25 Oct 2007 17:19:57 +0800
+Message-Id: <1193303997.3069.389.camel@debian.sh.intel.com> (sfid-20071025_102639_215771_0B91D9A6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 88w8385 chip, using SDIO interface and firmware release 5.0.11p0,
-has problems when both unicast and multicast WPA keys are set in one
-command. This patch ensures the keys are set independently.
 
-The original author of this patch is Marc Pignat <marc.pignat@hevs.ch>
+On Fri, 2007-10-12 at 15:05 +0200, Christoph Hellwig wrote:
+> prefix all symbols with iwl3945_ and thus allow building the driver
+> into the kernel.  Also remove all the useless default statements in
+> Kconfig while we're at it.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Did you do this manually or with a script? If it is the latter, can you
+run it again against my latest updates for the driver (30 patches I just
+sent to linux-wireless) or share the script with me?
 
-
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index 3131afc..d00cf78 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -372,15 +372,40 @@ static int assoc_helper_wpa_keys(wlan_private *priv,
-                                  struct assoc_request * assoc_req)
- {
- 	int ret = 0;
-+	unsigned int flags = assoc_req->flags;
- 
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
--	ret = libertas_prepare_and_send_command(priv,
--				    CMD_802_11_KEY_MATERIAL,
--				    CMD_ACT_SET,
--				    CMD_OPTION_WAITFORRSP,
--				    0, assoc_req);
-+	/* Work around older firmware bug where WPA unicast and multicast
-+	 * keys must be set independently.  Seen in SDIO parts with firmware
-+	 * version 5.0.11p0.
-+	 */
- 
-+	if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
-+		clear_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags);
-+		ret = libertas_prepare_and_send_command(priv,
-+					CMD_802_11_KEY_MATERIAL,
-+					CMD_ACT_SET,
-+					CMD_OPTION_WAITFORRSP,
-+					0, assoc_req);
-+		assoc_req->flags = flags;
-+	}
-+
-+	if (ret)
-+		goto out;
-+
-+	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
-+		clear_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags);
-+
-+		ret = libertas_prepare_and_send_command(priv,
-+					CMD_802_11_KEY_MATERIAL,
-+					CMD_ACT_SET,
-+					CMD_OPTION_WAITFORRSP,
-+					0, assoc_req);
-+		assoc_req->flags = flags;
-+	}
-+
-+out:
- 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
- 	return ret;
- }
-
+Thanks,
+-yi
