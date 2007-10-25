@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:49189 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754425AbXJKUPu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 16:15:50 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1243605pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2007 13:15:49 -0700 (PDT)
-Message-ID: <43e72e890710111315i681a64ceqae746fa88ae168b8@mail.gmail.com> (sfid-20071011_211555_288614_F41BE4EB)
-Date: Thu, 11 Oct 2007 16:15:49 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [PATCH 3/4] Don't read AR5K_RAC_PISR on AR5210, document ath5k_int
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo>
-	 <20071011194630.GA9304@pogo> <20071011194934.GA9403@pogo>
-	 <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:44836 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754187AbXJYJWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:22:41 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 10/30] iwlwifi: remove cck_power_index_compensation
+Date: Thu, 25 Oct 2007 17:15:31 +0800
+Message-Id: <11933037663659-git-send-email-yi.zhu@intel.com> (sfid-20071025_102258_588426_B963B1B2)
+In-Reply-To: <11933037641168-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> I should have added something inside ath5kreg.h, sry for that...
->
-> (?) = not sure
->
-> > + * @AR5K_INT_RXDESC: ??
-> Request RX descriptor/Read RX descriptor (?)
->
-> > + * @AR5K_INT_RXNOFRM: ??
-> No frame received (?)
->
-> > + * @AR5K_INT_RXEOL: received End Of List for VEOL (Virtual End Of List). The
-> > + *     Queue Control Unit (QCU) signals an EOL interrupt only if a descriptor's
-> > + *     LinkPtr is NULL. For more details, refer to:
-> > + *     http://www.freepatentsonline.com/20030225739.html
->
-> > + * @AR5K_INT_RXORN: indicates a hardware reset is required
-> Rx overrun is not always fatal, on some chips we can continue
-> operation without reseting the card, that's why int_fatal is not
-> common for all chips ;-)
->
-> > + * @AR5K_INT_TX: mask to identify received frame interrupts, of type
-> > + *     AR5K_ISR_TXOK or AR5K_ISR_TXERR
-> > + * @AR5K_INT_TXDESC: ??
-> Request TX descriptor/Read TX status descriptor (?)
->
-> > + * @AR5K_INT_TXURN: received when we should increase the TX trigger threshold
-> > + *     We currently do increments on interrupt by
-> > + *     (AR5K_TUNE_MAX_TX_FIFO_THRES - current_trigger_level) / 2
-> > + * @AR5K_INT_MIB: Indicates the Management Information Base counters should be
-> > + *     checked. We should do this with ath5k_hw_update_mib_counters() but
-> > + *     it seems we should also then do some noise immunity work.
->
-> > + * @AR5K_INT_RXPHY: ??
-> RX PHY Error
->
-> > + * @AR5K_INT_RXKCM: ??
-> > + * @AR5K_INT_SWBA: SoftWare Beacon Alert - indicates its time to send a
-> > + *     beacon that must be handled in software. The alternative is if you
-> > + *     have VEOL support, in that case you let the hardware deal with things.
-> > + * @AR5K_INT_BMISS: If in STA mode this indicates we have stopped seeing
-> > + *     beacons from the AP have associated with, we should probably try to
-> > + *     reassociate. When in IBSS mode this might mean we have not received
-> > + *     any beacons from any local stations. Note that every station in an
-> > + *     IBSS schedules to send beacons at the Target Beacon Transmission Time
-> > + *     (TBTT) with a random backoff.
-> > + * @AR5K_INT_BNR: Beacon Not Ready interrupt - ??
->
-> > + * @AR5K_INT_GPIO: ??
-> GPIO interrupt used for RF Kill, we should handle this inside
-> interrupt handler, until then i've disabled it because it results an
-> interrupt storm in case RF Kill switch is off.
->
-> > + * @AR5K_INT_NOCARD: signals the card has been removed
-> There is no such interrupt, it's software stuff used in hal. We can
-> always check for pending interrupts by reading that register (check
-> out is_intr_pending) and get rid of this.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Thanks, please send a follow up patch based on this one with your additions.
+cck_power_index_compensation variable was never used
 
-  Luis
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-priv.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
+ 2 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-priv.h b/drivers/net/wireless/iwlwifi/iwl-priv.h
+index 6b490d0..f43679a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-priv.h
++++ b/drivers/net/wireless/iwlwifi/iwl-priv.h
+@@ -278,7 +278,6 @@ struct iwl_priv {
+ #define IWL_DEFAULT_TX_POWER 0x0F
+ 	s8 user_txpower_limit;
+ 	s8 max_channel_txpower_limit;
+-	u32 cck_power_index_compensation;
+ 
+ #ifdef CONFIG_PM
+ 	u32 pm_state[16];
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 315f3ab..0b1d91e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -8995,8 +8995,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	priv->channel_width = IWL_CHANNEL_WIDTH_40MHZ;
+ 	priv->valid_antenna = 0x7;	/* assume all 3 connected */
+ 	priv->ps_mode = IWL_MIMO_PS_NONE;
+-	priv->cck_power_index_compensation = iwl_read32(
+-		priv, CSR_HW_REV_WA_REG);
+ 
+ 	iwl4965_set_rxon_chain(priv);
+ 
+-- 
+1.5.2
