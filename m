@@ -1,399 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ananke.telenet-ops.be ([195.130.137.78]:54726 "EHLO
-	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759976AbXJRBpA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 21:45:00 -0400
-Message-ID: <4716BAC8.8000008@telenet.be> (sfid-20071018_024507_858219_5624CE1D)
-Date: Thu, 18 Oct 2007 03:45:44 +0200
-From: Ian Schram <ischram@telenet.be>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
-References: <47164DA9.3050001@telenet.be> <1ba2fa240710171621h77e08bb9red6470c695b8f405@mail.gmail.com>
-In-Reply-To: <1ba2fa240710171621h77e08bb9red6470c695b8f405@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:27423 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754639AbXJYJXG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:23:06 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 27/30] iwlwifi: Update iwlwifi version stamp to 1.1.19
+Date: Thu, 25 Oct 2007 17:15:48 +0800
+Message-Id: <11933037903508-git-send-email-yi.zhu@intel.com> (sfid-20071025_102314_008624_7F6BAEDE)
+In-Reply-To: <11933037893348-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
+ <11933037674045-git-send-email-yi.zhu@intel.com>
+ <11933037692766-git-send-email-yi.zhu@intel.com>
+ <1193303770550-git-send-email-yi.zhu@intel.com>
+ <11933037721573-git-send-email-yi.zhu@intel.com>
+ <1193303773185-git-send-email-yi.zhu@intel.com>
+ <11933037743841-git-send-email-yi.zhu@intel.com>
+ <11933037762104-git-send-email-yi.zhu@intel.com>
+ <11933037784073-git-send-email-yi.zhu@intel.com>
+ <11933037794199-git-send-email-yi.zhu@intel.com>
+ <11933037812209-git-send-email-yi.zhu@intel.com>
+ <11933037822284-git-send-email-yi.zhu@intel.com>
+ <11933037831480-git-send-email-yi.zhu@intel.com>
+ <11933037851697-git-send-email-yi.zhu@intel.com>
+ <11933037863641-git-send-email-yi.zhu@intel.com>
+ <11933037881944-git-send-email-yi.zhu@intel.com>
+ <11933037893348-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I do *not* send a led command on each packet. (Unless i made a horrible coding error that I do not see)
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I send a led command when on every association event. But that's only when
-we actually associate. or hw/sw rfkill is activated, or deassociated.
-
-The leds for activity: keep a counter, which counts how many times the led is triggered from mac80211
-right now this is a multiple of the #packets. A delayed work will run every 500 ms and translate this
-amount of packets into a blinking rate for the led. When no packets are transeived, the delayed work
-will not be scheduled until new packets are transeived. This is quite similar to how the leds work in
-ipwraw, and ipw3945, only there the amount of byters were counted in the rx and tx path, which
-was then converted to a blinking rate. This information is not available within the led framework,
-hence i used the amount of led events and translate that into a blinking rate.
-
-I did manage to listen to your comments on my previous patch ;-)
-
-Actually i believe this to be a crossection of what mac80211_leds expects, and how ipw used to
-do it.
-
-Ian
-
-Tomas Winkler wrote:
-> I'm not familiar with the led framework but as far as I see this is
-> not how the LEDs work in iwl. You don't run it upon each packet just
-> define blinking pattern  with on off and period timers. It is too
-> expensive to send the LED command for each packet.
-> Usually you would change the pattern pattern as the throughput changes.
-> 
-> 
-> On 10/17/07, Ian Schram <ischram@telenet.be> wrote:
->> Here's my naive attempt to implement the mac80211_leds, since the addition of the associated led to wireless2.6
->> it works rather well for me. The patch below Is only for the 3945 but it should work for 4965 too afaik by just
->> copy pasting the changes in iwl3945-bace.c to iwl4965-base.c. But I can't test that and this way the email is clearer.
->>
->> I am aware of two problems
->> - when unloading the module it prints a few warnings to dmesg because a send command failing
->> - when loading/unloading the module a few times. it will no longer connect. reloading mac80211 module fixes this
->>
->> I expect there to be problems with the locking
->> - it's basically this way it doesn't crash for me spinlocking what can be spinlocked
->>
->> But anyways, if for no other reason than your viewing pleasure ;-)
->>
->> Signed-of-by: Ian Schram <ischram@telenet.be>
->> ---
->> diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
->> index 25cfc6c..8e8f835 100644
->> --- a/drivers/net/wireless/iwlwifi/Kconfig
->> +++ b/drivers/net/wireless/iwlwifi/Kconfig
->> @@ -126,3 +126,9 @@ config IWL3945
->>           inserted in and remvoed from the running kernel whenever you want),
->>           say M here and read <file:Documentation/modules.txt>.  The module
->>           will be called iwl3945.ko.
->> +config IWLWIFI_LEDS
->> +       bool    "IWLWIFI leds"
->> +       depends IWLWIFI && MAC80211_LEDS
->> +       default y
->> +       ---help---
->> +       This options enables the wireless led.
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-leds.h b/drivers/net/wireless/iwlwifi/iwl-leds.h
->> new file mode 100644
->> index 0000000..07a55f0
->> --- /dev/null
->> +++ b/drivers/net/wireless/iwlwifi/iwl-leds.h
->> @@ -0,0 +1,20 @@
->> +#ifndef __iwl_leds_h__
->> +#define __iwl_leds_h__
->> +
->> +
->> +#include <linux/leds.h>
->> +
->> +
->> +#define IWL_LED_ACTIVITY       (0<<1)
->> +#define IWL_LED_LINK           (1<<1)
->> +#define IWL_LED_INTERVAL       __constant_cpu_to_le32(1000)
->> +#define IWL_LED_ACTIVITY_PERIOD msecs_to_jiffies(500)
->> +#define IWL_LED_MAX_NAME_LEN   31
->> +
->> +struct iwl_led {
->> +       char name[IWL_LED_MAX_NAME_LEN + 1];
->> +       struct led_classdev cdev;
->> +};
->> +
->> +
->> +#endif
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-priv.h b/drivers/net/wireless/iwlwifi/iwl-priv.h
->> index 6b490d0..bdaeb80 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-priv.h
->> +++ b/drivers/net/wireless/iwlwifi/iwl-priv.h
->> @@ -127,11 +128,14 @@ struct iwl_priv {
->>         struct iwl_init_alive_resp card_alive_init;
->>         struct iwl_alive_resp card_alive;
->>
->> -#ifdef LED
->> -       /* LED related variables */
->> -       struct iwl_activity_blink activity;
->> -       unsigned long led_packets;
->> -       int led_state;
->> +
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +       u8 led_state;
->> +       unsigned int rxtxpackets;
->> +       atomic_t ledtimer;
->> +       struct iwl_led tx_led;
->> +       struct iwl_led rx_led;
->> +       struct iwl_led assoc_led;
->>  #endif
->>
->>         u16 active_rate;
->> @@ -274,6 +278,7 @@ struct iwl_priv {
->>         struct delayed_work gather_stats;
->>         struct delayed_work scan_check;
->>         struct delayed_work post_associate;
->> +       struct delayed_work update_led;
->>
->>  #define IWL_DEFAULT_TX_POWER 0x0F
->>         s8 user_txpower_limit;
->> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> index b601455..72317a3 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> @@ -6065,6 +6065,171 @@ static void iwl_init_alive_start(struct iwl_priv *priv)
->>         queue_work(priv->workqueue, &priv->restart);
->>  }
->>
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +static int iwl_led_cmd_callback(struct iwl_priv *priv,
->> +                               struct iwl_cmd *cmd, struct sk_buff *skb)
->> +{
->> +       return 1;
->> +}
->> +
->> +static void iwl_bg_led_update(struct work_struct *data)
->> +{
->> +       struct iwl_priv *priv =
->> +           container_of(data, struct iwl_priv, update_led.work);
->> +       struct iwl_led_cmd led_cmd = {
->> +               .id = IWL_LED_ACTIVITY,
->> +               .interval = IWL_LED_INTERVAL,
->> +       };
->> +       struct iwl_host_cmd cmd = {
->> +               .id = REPLY_LEDS_CMD,
->> +               .len = sizeof(struct iwl_led_cmd),
->> +               .data = &led_cmd,
->> +               .meta.flags = CMD_ASYNC,
->> +               .meta.u.callback = iwl_led_cmd_callback,
->> +       };
->> +       u8 on;
->> +       unsigned long flags;
->> +
->> +
->> +       if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> +               return;
->> +
->> +       spin_lock_irqsave(&priv->lock, flags);
->> +
->> +       if (priv->rxtxpackets){
->> +               on = 1 + 250 / priv->rxtxpackets;
->> +               priv->rxtxpackets = 0;
->> +               queue_delayed_work(priv->workqueue, &priv->update_led,
->> +                                  IWL_LED_ACTIVITY_PERIOD);
->> +
->> +               if (on == priv->led_state)
->> +                       goto exit_unlock;
->> +
->> +               led_cmd.on = led_cmd.off = on;
->> +               priv->led_state = on;
->> +
->> +       }
->> +       else {
->> +
->> +               atomic_set(&priv->ledtimer, 0);
->> +               led_cmd.on = led_cmd.off = 0;
->> +       }
->> +
->> +       spin_unlock_irqrestore(&priv->lock, flags);
->> +       iwl_send_cmd(priv, &cmd);
->> +
->> +       return;
->> +
->> +exit_unlock:
->> +       spin_unlock_irqrestore(&priv->lock, flags);
->> +}
->> +
->> +static void iwl_led_set_rx(struct led_classdev *led_cdev,
->> +                          enum led_brightness value)
->> +{
->> +       struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv,
->> +                                            rx_led.cdev);
->> +       unsigned long flags;
->> +
->> +       if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> +               return;
->> +
->> +       spin_lock_irqsave(&priv->lock, flags);
->> +       if (!atomic_xchg(&priv->ledtimer, 1))
->> +               queue_delayed_work(priv->workqueue, &priv->update_led,
->> +                                  IWL_LED_ACTIVITY_PERIOD);
->> +       priv->rxtxpackets++;
->> +       spin_unlock_irqrestore(&priv->lock, flags);
->> +
->> +}
->> +
->> +static void iwl_led_set_tx(struct led_classdev *led_cdev,
->> +                          enum led_brightness value)
->> +{
->> +       struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv,
->> +                                            tx_led.cdev);
->> +       unsigned long flags;
->> +
->> +       if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> +               return;
->> +
->> +       spin_lock_irqsave(&priv->lock, flags);
->> +       if (!atomic_xchg(&priv->ledtimer, 1))
->> +               queue_delayed_work(priv->workqueue, &priv->update_led,
->> +                                  IWL_LED_ACTIVITY_PERIOD);
->> +
->> +       priv->rxtxpackets++;
->> +       spin_unlock_irqrestore(&priv->lock, flags);
->> +}
->> +
->> +static void iwl_led_set_assoc(struct led_classdev *led_cdev,
->> +                          enum led_brightness value)
->> +{
->> +       struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv,
->> +                                            assoc_led.cdev);
->> +       struct iwl_led_cmd led_cmd = {
->> +               .id = IWL_LED_LINK,
->> +               .interval = IWL_LED_INTERVAL,
->> +       };
->> +       struct iwl_host_cmd cmd = {
->> +               .id = REPLY_LEDS_CMD,
->> +               .len = sizeof(struct iwl_led_cmd),
->> +               .data = &led_cmd,
->> +               .meta.flags = CMD_ASYNC,
->> +               .meta.u.callback = iwl_led_cmd_callback
->> +       };
->> +
->> +       if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> +               return;
->> +
->> +       switch(value)
->> +       {
->> +               case LED_OFF:
->> +                       led_cmd.off = 0;
->> +                       led_cmd.on = 0;
->> +                       break;
->> +               case LED_HALF:
->> +               case LED_FULL:
->> +                       led_cmd.off = 0;
->> +                       led_cmd.on = 40;
->> +       }
->> +       iwl_send_cmd(priv, &cmd);
->> +}
->> +
->> +
->> +static int iwl_register_led(struct iwl_priv *priv, struct iwl_led *led, char *ledname,
->> +                            char *triggername, void (*callback)
->> +                            (struct led_classdev *, enum led_brightness))
->> +{
->> +       snprintf(led->name, sizeof(led->name), ledname,
->> +                wiphy_name(priv->hw->wiphy));
->> +       led->cdev.name = led->name;
->> +       led->cdev.brightness_set = callback;
->> +       led->cdev.default_trigger = triggername;
->> +
->> +       return led_classdev_register(&priv->pci_dev->dev, &led->cdev);
->> +}
->> +
->> +static void iwl_register_leds(struct iwl_priv *priv)
->> +{
->> +       iwl_register_led(priv, &priv->tx_led, "iwl-%s:tx",
->> +                        ieee80211_get_tx_led_name(priv->hw),
->> +                        iwl_led_set_tx);
->> +       iwl_register_led(priv, &priv->rx_led, "iwl-%s:rx",
->> +                        ieee80211_get_rx_led_name(priv->hw),
->> +                        iwl_led_set_rx);
->> +       iwl_register_led(priv, &priv->assoc_led, "iwl-%s:asoc",
->> +                        ieee80211_get_assoc_led_name(priv->hw),
->> +                        iwl_led_set_assoc);
->> +}
->> +
->> +static void iwl_unregister_leds(struct iwl_priv *priv)
->> +{
->> +       led_classdev_unregister(&priv->tx_led.cdev);
->> +       led_classdev_unregister(&priv->rx_led.cdev);
->> +       led_classdev_unregister(&priv->assoc_led.cdev);
->> +}
->> +#endif
->>
->>  /**
->>   * iwl_alive_start - called after REPLY_ALIVE notification received
->> @@ -6140,6 +6140,9 @@ static void iwl_alive_start(struct iwl_priv *priv)
->>         if (iwl_is_rfkill(priv))
->>                 return;
->>
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +       atomic_set(&priv->ledtimer, 0);
->> +#endif
->>         if (!priv->mac80211_registered) {
->>                 /* Unlock so any user space entry points can call back into
->>                  * the driver without a deadlock... */
->> @@ -6158,6 +6161,9 @@ static void iwl_alive_start(struct iwl_priv *priv)
->>                 priv->mac80211_registered = 1;
->>
->>                 iwl_reset_channel_flag(priv);
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +               iwl_register_leds(priv);
->> +#endif
->>         } else
->>                 ieee80211_start_queues(priv->hw);
->>
->> @@ -6217,6 +6223,10 @@ static void __iwl_down(struct iwl_priv *priv)
->>         if (!exit_pending)
->>                 set_bit(STATUS_EXIT_PENDING, &priv->status);
->>
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +       /* Prevent the led callbacks from rescheduling the update_led timer */
->> +       atomic_set(&priv->ledtimer, 1);
->> +#endif
->>         iwl_clear_stations_table(priv);
->>
->>         /* Unblock any waiting calls */
->> @@ -8198,7 +8208,7 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
->>         INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
->>         INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
->>         INIT_DELAYED_WORK(&priv->scan_check, iwl_bg_scan_check);
->> -
->> +       INIT_DELAYED_WORK(&priv->update_led, iwl_bg_led_update);
->>         iwl_hw_setup_deferred_work(priv);
->>
->>         tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
->> @@ -8209,6 +8219,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
->>  {
->>         iwl_hw_cancel_deferred_work(priv);
->>
->> +       cancel_delayed_work(&priv->update_led);
->>         cancel_delayed_work(&priv->scan_check);
->>         cancel_delayed_work(&priv->alive_start);
->>         cancel_delayed_work(&priv->post_associate);
->> @@ -8531,6 +8542,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
->>         iwl_clear_stations_table(priv);
->>
->>         if (priv->mac80211_registered) {
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +               iwl_unregister_leds(priv);
->> +#endif
->>                 ieee80211_unregister_hw(priv->hw);
->>                 iwl_rate_control_unregister(priv->hw);
->>         }
->> diff --git a/drivers/net/wireless/iwlwifi/iwlwifi.h b/drivers/net/wireless/iwlwifi/iwlwifi.h
->> index e0b97c3..ce5d489 100644
->> --- a/drivers/net/wireless/iwlwifi/iwlwifi.h
->> +++ b/drivers/net/wireless/iwlwifi/iwlwifi.h
->> @@ -55,6 +55,9 @@ extern struct pci_device_id iwl_hw_card_ids[];
->>
->>  #include "iwl-prph.h"
->>
->> +#ifdef CONFIG_IWLWIFI_LEDS
->> +#include "iwl-leds.h"
->> +#endif
->>  /*
->>   * Driver implementation data structures, constants, inline
->>   * functions
->>
->>
->>
->> -------------------------------------------------------------------------
->> This SF.net email is sponsored by: Splunk Inc.
->> Still grepping through log files to find problems?  Stop.
->> Now Search log events and configuration files using AJAX and a browser.
->> Download your FREE copy of Splunk now >> http://get.splunk.com/
->> _______________________________________________
->> Ipw3945-devel mailing list
->> Ipw3945-devel@lists.sourceforge.net
->> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->>
-> 
-> 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 560346b..62bbde3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -101,7 +101,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+ #define VS
+ #endif
+ 
+-#define IWLWIFI_VERSION "1.1.18k" VD VS
++#define IWLWIFI_VERSION "1.1.19k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 05faa0f..1f9b565 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -100,7 +100,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+ #define VS
+ #endif
+ 
+-#define IWLWIFI_VERSION "1.1.18k" VD VS
++#define IWLWIFI_VERSION "1.1.19k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+-- 
+1.5.2
