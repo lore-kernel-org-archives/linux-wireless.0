@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:52757 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255AbXJZUJX (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:57066 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752236AbXJYRg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 16:09:23 -0400
-Received: from [82.171.216.234] (helo=[192.168.1.2])
-	by smtp-out1.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
-	id 1IlVUg-0002aK-2D
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:09:22 +0200
-Message-ID: <4722496E.1070301@tiscali.nl> (sfid-20071026_210924_924093_AB022BD4)
-Date: Fri, 26 Oct 2007 22:09:18 +0200
-From: Roel Kluin <12o3l@tiscali.nl>
+	Thu, 25 Oct 2007 13:36:59 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [patch 6/9] nl80211/cfg80211: station handling
+Date: Thu, 25 Oct 2007 13:33:36 -0400
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <20071025093618.440937000@sipsolutions.net> <20071025093716.685606000@sipsolutions.net> <43e72e890710250846h5ae85efaqfb5b7b5d0d82e932@mail.gmail.com>
+In-Reply-To: <43e72e890710250846h5ae85efaqfb5b7b5d0d82e932@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH split 2/8] fix 'and' typo's in atmel wireless
-References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
-In-Reply-To: <472248AC.7080201@tiscali.nl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart2208517.DnRiYMS5O0";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710251333.41410.flamingice@sourmilk.net> (sfid-20071025_183703_997575_DAA2FA78)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-        Fix priority mistakes similar to '!x & y' in atmel wireless
-    
-        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index 059ce3f..57cc7e5 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -1759,7 +1759,7 @@ static int atmel_set_encode(struct net_device *dev,
- 			priv->default_key = index;
- 		} else
- 			/* Don't complain if only change the mode */
--			if (!dwrq->flags & IW_ENCODE_MODE) {
-+			if (!(dwrq->flags & IW_ENCODE_MODE)) {
- 				return -EINVAL;
- 			}
- 	}
+--nextPart2208517.DnRiYMS5O0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Thursday 25 October 2007 11:46:03 you wrote:
+> > + * @NL80211_ATTR_STA_SUPPORTED_RATES: supported rates, array of
+> > supported + *     rates as defined by IEEE 802.11 7.3.2.2 but without t=
+he
+> > length + *     restriction (at most %NL80211_MAX_SUPP_RATES).
+>
+> Is this necessary? Shouldn't we just embrace the supported rates of
+> the hardware? If cfg80211 is extended to have devices register their
+> hardware capabilities then we can take it from there perhaps ?
+>
+This is for the supported rates of the sta we want to TX to. Rate control=20
+needs to know what rates are valid for a particular sta.
+
+=2DMichael Wu
+
+--nextPart2208517.DnRiYMS5O0
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHINN1T3Oqt9AH4aERAkmwAJ9OsjnORhhabkdAgQvRLXjogV1TIgCfefYN
+OEaiIKzzgwVnOhlCAI9g+Q8=
+=f6qs
+-----END PGP SIGNATURE-----
+
+--nextPart2208517.DnRiYMS5O0--
