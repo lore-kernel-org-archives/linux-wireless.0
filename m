@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21191 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbXJWG6G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 02:58:06 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: make if_sdio align packets
-Date: Tue, 23 Oct 2007 08:57:59 +0200
-Cc: David Miller <davem@davemloft.net>, drzeus@drzeus.cx,
-	dcbw@redhat.com
-References: <20071022190532.5077ce3d@poseidon.drzeus.cx> <20071022.181530.28790082.davem@davemloft.net>
-In-Reply-To: <20071022.181530.28790082.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710230858.00343.hs4233@mail.mn-solutions.de> (sfid-20071023_075814_842200_7FF584E2)
+Received: from mga02.intel.com ([134.134.136.20]:47443 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754485AbXJYJXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:23:00 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 23/30] iwlwifi: Update iwlwifi version stamp to 1.1.18
+Date: Thu, 25 Oct 2007 17:15:44 +0800
+Message-Id: <11933037851697-git-send-email-yi.zhu@intel.com> (sfid-20071025_104102_205523_D8F092AD)
+In-Reply-To: <11933037831480-git-send-email-yi.zhu@intel.com>
+References: <11933037512140-git-send-email-yi.zhu@intel.com>
+ <11933037541699-git-send-email-yi.zhu@intel.com>
+ <11933037553170-git-send-email-yi.zhu@intel.com>
+ <119330375796-git-send-email-yi.zhu@intel.com>
+ <11933037584069-git-send-email-yi.zhu@intel.com>
+ <11933037601236-git-send-email-yi.zhu@intel.com>
+ <11933037613709-git-send-email-yi.zhu@intel.com>
+ <1193303762680-git-send-email-yi.zhu@intel.com>
+ <11933037641168-git-send-email-yi.zhu@intel.com>
+ <11933037663659-git-send-email-yi.zhu@intel.com>
+ <11933037674045-git-send-email-yi.zhu@intel.com>
+ <11933037692766-git-send-email-yi.zhu@intel.com>
+ <1193303770550-git-send-email-yi.zhu@intel.com>
+ <11933037721573-git-send-email-yi.zhu@intel.com>
+ <1193303773185-git-send-email-yi.zhu@intel.com>
+ <11933037743841-git-send-email-yi.zhu@intel.com>
+ <11933037762104-git-send-email-yi.zhu@intel.com>
+ <11933037784073-git-send-email-yi.zhu@intel.com>
+ <11933037794199-git-send-email-yi.zhu@intel.com>
+ <11933037812209-git-send-email-yi.zhu@intel.com>
+ <11933037822284-git-send-email-yi.zhu@intel.com>
+ <11933037831480-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David !
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I have been I a similar situation when I wrote if_cs.c. I had 
-virtually no clue about SKBs and how to work with them. I've 
-looked at lwn.net, LDD, googled around, and looked at the 
-in-kernel documentation, which went into fine detail. But I 
-failed to grasp the real picture, e.g. up until now I don't have 
-any idea why there are so many different functions to modify 
-skb's in subtle ways.
-
-So one can say that I still have virtually no clue about SKBs. 
-That if_cs.c works, might even be coincididence, thanks to 
-try-and-error. :-)
-
-I've not seen if_sdio.c yet, but if Pierre looked at my if_cs.c 
-when surely he started from my incomplete view of things :-(
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 37513e5..2da0f50 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -101,7 +101,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+ #define VS
+ #endif
+ 
+-#define IWLWIFI_VERSION "1.1.17k" VD VS
++#define IWLWIFI_VERSION "1.1.18k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index bf93db5..f07643b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -100,7 +100,7 @@ int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
+ #define VS
+ #endif
+ 
+-#define IWLWIFI_VERSION "1.1.17k" VD VS
++#define IWLWIFI_VERSION "1.1.18k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+-- 
+1.5.2
