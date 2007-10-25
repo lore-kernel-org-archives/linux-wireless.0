@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:50541 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227AbXJGKNa (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:51397 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753004AbXJYNJj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2007 06:13:30 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1819084pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2007 03:13:29 -0700 (PDT)
-Message-ID: <40f31dec0710070313k6514882bkf5676d06ced25c53@mail.gmail.com> (sfid-20071007_111332_567582_324F60C6)
-Date: Sun, 7 Oct 2007 03:13:28 -0700
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 6/6] ath5k: Do not let the driver through for not yet supported radios
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <20071006012057.GF25022@pogo>
+	Thu, 25 Oct 2007 09:09:39 -0400
+Date: Thu, 25 Oct 2007 15:09:38 +0200
+To: Ian Schram <ischram@telenet.be>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
+Message-ID: <20071025130938.GA31342@gamma.logic.tuwien.ac.at> (sfid-20071025_140943_854178_CCCCFEDF)
+References: <47164DA9.3050001@telenet.be> <471E92FC.1000305@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
-	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
-	 <20071006011949.GD25022@pogo> <20071006012017.GE25022@pogo>
-	 <20071006012057.GF25022@pogo>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <471E92FC.1000305@telenet.be>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NACK i have a better fix wich uses chip srev, i had commited it on
-ath5k branch on madwifi svn...
+On Mi, 24 Okt 2007, Ian Schram wrote:
+> This is the second version of this patch with a few several bugfixes,
+> please test this one instead. I also included a 4965 part to the patch
 
-what's going on ? noone read my chagnes n ath5k branch on madwifi svn
-? i did this change some time ago (over a month) and it seems you
-didn't even saw it...
+Hmm, patching onto 2.6.24-rc1 does work without problems, but
+configuring not:
+	scripts/kconfig/conf -o arch/i386/Kconfig
+	drivers/net/wireless/iwlwifi/Kconfig:131: invalid option
+	make[1]: *** [oldconfig] Error 1
+Must be this part:
 
-http://madwifi.org/changeset/2703
-http://madwifi.org/changeset/2704
+> --- a/drivers/net/wireless/iwlwifi/Kconfig
+> +++ b/drivers/net/wireless/iwlwifi/Kconfig
+> @@ -126,3 +126,9 @@ config IWL3945
+>  	  inserted in and remvoed from the running kernel whenever you want),
+>  	  say M here and read <file:Documentation/modules.txt>.  The module
+>  	  will be called iwl3945.ko.
+> +config IWLWIFI_LEDS
+> +	bool	"IWLWIFI leds"
+> +	depends IWLWIFI && MAC80211_LEDS	
+> +	default y
+> +	---help---
+> +	This options enables the wireless led.	
 
-what happened to my changes ? you told me you would commit them here...
+I though all necessary changes are in -rc1 already, what else do I need?
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Best wishes
+
+Norbert
+
+-------------------------------------------------------------------------------
+Dr. Norbert Preining <preining@logic.at>        Vienna University of Technology
+Debian Developer <preining@debian.org>                         Debian TeX Group
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+-------------------------------------------------------------------------------
+Aaaargggh...'
+These two words are usually coupled together in the Old
+Pink Dog Bar.
+                 --- Ford in a spot of bother.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
