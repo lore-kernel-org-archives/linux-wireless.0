@@ -1,51 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:39314 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848AbXJ0XoU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 19:44:20 -0400
-Date: Sun, 28 Oct 2007 02:44:18 +0300
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 7/7] ath5k: Warn on partially supported chips
-Message-ID: <20071027234418.GG5973@localhost.domain.invalid> (sfid-20071028_004424_495674_C4BE682B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40416 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbXJYNWf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 09:22:35 -0400
+Received: from [131.234.198.68]
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Il2fO-0000cu-R9
+	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2007 14:22:31 +0100
+Message-Id: <20071025093714.828230000@sipsolutions.net> (sfid-20071025_142245_249965_63AF6842)
+References: <20071025093618.440937000@sipsolutions.net>
+Date: Thu, 25 Oct 2007 11:36:20 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [patch 2/9] mac80211: support adding/removing keys via cfg80211
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- *Warn on partially supported chips (eg. 5414/5424)
+This adds the necessary hooks to mac80211 to allow userspace
+to edit keys with cfg80211 (through nl80211.)
 
-These chips need work on PHY part, recently Reyk posted
-a workaround so that they can work on 2GHz but i believe
-that the problem is related to PHY initialization. Plz
-we need help with these...
-
-I did some tests on a 5414 at 5GHz and it seemed to work
-but i didn't test it at 2GHz.
-
-I'll try to find one of these and play with.
-
-Changes-licensed-under: ISC
-Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index c95ae4b..ac105c6 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -285,6 +285,11 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
- 		goto err_free;
- 	}
+ net/mac80211/cfg.c |   91 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
+
+--- linux-2.6.orig/net/mac80211/cfg.c	2007-10-24 11:32:36.122690568 +0200
++++ linux-2.6/net/mac80211/cfg.c	2007-10-24 11:35:49.112690568 +0200
+@@ -6,6 +6,7 @@
+  * This file is GPLv2 as found in COPYING.
+  */
  
-+	/* Warn for partially supported chips (unsupported phy etc) */
-+	if(srev >= AR5K_SREV_VER_AR2424){
-+		printk(KERN_DEBUG "ath5k: Device partially supported.\n");
++#include <linux/ieee80211.h>
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <net/net_namespace.h>
+@@ -99,8 +100,98 @@ static int ieee80211_change_iface(struct
+ 	return 0;
+ }
+ 
++static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
++			     u8 key_idx, u8 *mac_addr,
++			     struct key_params *params)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct sta_info *sta = NULL;
++	enum ieee80211_key_alg alg;
++	int ret;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	switch (params->cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++	case WLAN_CIPHER_SUITE_WEP104:
++		alg = ALG_WEP;
++		break;
++	case WLAN_CIPHER_SUITE_TKIP:
++		alg = ALG_TKIP;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		alg = ALG_CCMP;
++		break;
++	default:
++		return -EINVAL;
 +	}
 +
- 	/* Identify single chip solutions */
- 	if((srev <= AR5K_SREV_VER_AR5414) &&
- 	(srev >= AR5K_SREV_VER_AR2424)) {
++	if (mac_addr) {
++		sta = sta_info_get(sdata->local, mac_addr);
++		if (!sta)
++			return -ENOENT;
++	}
++
++	ret = 0;
++	if (!ieee80211_key_alloc(sdata, sta, alg, key_idx,
++				 params->key_len, params->key))
++		ret = -ENOMEM;
++
++	if (sta)
++		sta_info_put(sta);
++
++	return ret;
++}
++
++static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
++			     u8 key_idx, u8 *mac_addr)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct sta_info *sta;
++	int ret;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	if (mac_addr) {
++		sta = sta_info_get(sdata->local, mac_addr);
++		if (!sta)
++			return -ENOENT;
++
++		ret = 0;
++		if (sta->key)
++			ieee80211_key_free(sta->key);
++		else
++			ret = -ENOENT;
++
++		sta_info_put(sta);
++		return ret;
++	}
++
++	if (!sdata->keys[key_idx])
++		return -ENOENT;
++
++	ieee80211_key_free(sdata->keys[key_idx]);
++
++	return 0;
++}
++
++static int ieee80211_config_default_key(struct wiphy *wiphy,
++					struct net_device *dev,
++					u8 key_idx)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	ieee80211_set_default_key(sdata, key_idx);
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+ 	.change_virtual_intf = ieee80211_change_iface,
++	.add_key = ieee80211_add_key,
++	.del_key = ieee80211_del_key,
++	.set_default_key = ieee80211_config_default_key,
+ };
 
-
+-- 
 
