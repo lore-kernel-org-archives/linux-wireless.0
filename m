@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:10224 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbXJHJrw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 05:47:52 -0400
-Received: from lin01.mn-solutions.de (pD95F8393.dip0.t-ipconnect.de [217.95.131.147])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 2D2918B046B
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 11:47:51 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id DF1141E002B
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Oct 2007 11:44:55 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: fix "warning: Using plain integer as NULL pointer" sparse warnings
-Date: Mon, 8 Oct 2007 11:47:59 +0200
-References: <200710081141.23237.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200710081141.23237.hs4233@mail.mn-solutions.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4530 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472AbXJZCoO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2007 22:44:14 -0400
+Date: Thu, 25 Oct 2007 22:43:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mcgrof@gmail.com, jirislaby@gmail.com
+Subject: Re: [PATCH 1/2] ath5k: Maintain coding style
+Message-ID: <20071026024348.GA14080@tuxdriver.com> (sfid-20071026_034418_311500_D931EEF0)
+References: <20071021013630.GB5817@localhost.domain.invalid>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710081148.00041.hs4233@mail.mn-solutions.de> (sfid-20071008_104759_880773_6B6B7D7A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071021013630.GB5817@localhost.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm, I had "wordwrap" turned on :-(
+On Sun, Oct 21, 2007 at 01:36:30AM +0000, Nick Kossifidis wrote:
+> * Sort functions in segments like we do on the rest of the code (eg. 
+> hw.c). This improves readability and maintainability.
+> 
+> * Add myself as module author (a patch for this was submited some time 
+> ago as part of SFLC's changes but wasn't applied)
+> 
+> * Declare that this driver is or 5xxx chipset series only in 
+> MODULE_SUPPORTED_DEVICE and MODULE_DESCRIPTION.
 
-checkpatch.pl barks on this patch anyway, because of the
-ridiculus 80 columns restriction it wants to impose. Should I 
-rephrase the patch because of this or just ignore this 
-checkpatch warning?
+This patch and the next one do not apply.  Further, after manually
+fixing-up this patch it removes a bunch of functions that are still
+used.
+
+Would you mind re-diffing and trying again?
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
