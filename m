@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3288 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750745AbXJKNLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 09:11:55 -0400
-Date: Thu, 11 Oct 2007 08:57:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-Message-ID: <20071011125743.GB27421@tuxdriver.com> (sfid-20071011_141203_163885_D98F44AA)
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:52757 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255AbXJZUJX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 16:09:23 -0400
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out1.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1IlVUg-0002aK-2D
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:09:22 +0200
+Message-ID: <4722496E.1070301@tiscali.nl> (sfid-20071026_210924_924093_AB022BD4)
+Date: Fri, 26 Oct 2007 22:09:18 +0200
+From: Roel Kluin <12o3l@tiscali.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710111151.06989.hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH split 2/8] fix 'and' typo's in atmel wireless
+References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
+In-Reply-To: <472248AC.7080201@tiscali.nl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please put "libertas: " at the beginning of your Subject lines...
-
-No need to repost, I've got this one.
-
-John
-
-On Thu, Oct 11, 2007 at 11:51:06AM +0200, Holger Schurig wrote:
-> Move wlan_postpone_association_work() and wlan_cancel_association_work()
-> from a assoc.h file to the sole user, into wext.c.
-> 
-> In passing, rename the functions to libertas_XXX.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
--- 
-John W. Linville
-linville@tuxdriver.com
+        Fix priority mistakes similar to '!x & y' in atmel wireless
+    
+        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 059ce3f..57cc7e5 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -1759,7 +1759,7 @@ static int atmel_set_encode(struct net_device *dev,
+ 			priv->default_key = index;
+ 		} else
+ 			/* Don't complain if only change the mode */
+-			if (!dwrq->flags & IW_ENCODE_MODE) {
++			if (!(dwrq->flags & IW_ENCODE_MODE)) {
+ 				return -EINVAL;
+ 			}
+ 	}
