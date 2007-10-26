@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3480 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752350AbXJ2UyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 16:54:24 -0400
-Date: Mon, 29 Oct 2007 16:52:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi,
-	akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH] hostap: fix section mismatch warning
-Message-ID: <20071029205254.GA27547@tuxdriver.com> (sfid-20071029_205426_869277_F21CD699)
-References: <20071029112026.f66473c5.randy.dunlap@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071029112026.f66473c5.randy.dunlap@oracle.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:53578 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbXJZOqT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 10:46:19 -0400
+Date: Fri, 26 Oct 2007 09:46:10 -0500
+From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
+	rmk@arm.linux.org.uk, kernel@wantstofly.org, tony.luck@intel.com,
+	benh@kernel.crashing.org, paulus@samba.org,
+	dmitry.torokhov@gmail.com, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-wireless@vger.kernel.org, bryan.wu@analog.com,
+	adaplas@gmail.com
+Subject: Re: [PATCH] Remove pointless casts from void pointers,
+Message-ID: <20071026094610.37defcb3@weaponx.rchland.ibm.com> (sfid-20071026_154625_055121_37CE18B9)
+In-Reply-To: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
+References: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 29, 2007 at 11:20:26AM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+On Fri, 26 Oct 2007 05:40:22 -0400 (EDT)
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> mostly in and around irq handlers.
 > 
-> Fix section mismatch warning:
-> 
-> WARNING: vmlinux.o(.data+0x36fcc): Section mismatch: reference to .init.data:prism2_pci_id_table (between 'prism2_pci_drv_id' and 'prism2_pci_funcs')
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 > ---
->  drivers/net/wireless/hostap/hostap_pci.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> --- linux-2624-rc1g4-v1.orig/drivers/net/wireless/hostap/hostap_pci.c
-> +++ linux-2624-rc1g4-v1/drivers/net/wireless/hostap/hostap_pci.c
-> @@ -444,7 +444,7 @@ static int prism2_pci_resume(struct pci_
->  
->  MODULE_DEVICE_TABLE(pci, prism2_pci_id_table);
->  
-> -static struct pci_driver prism2_pci_drv_id = {
-> +static struct pci_driver prism2_pci_driver = {
->  	.name		= "hostap_pci",
->  	.id_table	= prism2_pci_id_table,
->  	.probe		= prism2_pci_probe,
 
-Randy,
+>  drivers/serial/uartlite.c                  |    2 +-
 
-Would you mind explaining how changing the name of the pci_driver
-variable resolves this?  There must be some magic here...
-
-Thanks!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Acked-by: Josh Boyer <jwboyer@linux.vnet.ibm.com
