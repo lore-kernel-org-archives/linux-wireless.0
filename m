@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:26584 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753622AbXJFBVl (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:34307 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756554AbXJZPqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2007 21:21:41 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so634485wxd
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Oct 2007 18:21:40 -0700 (PDT)
-Date: Fri, 5 Oct 2007 21:23:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 0/6] ath5k: initvals, radar, promiscuous bug and
-	multicast
-Message-ID: <20071006012304.GG25022@pogo> (sfid-20071006_022143_766445_C3E53AA4)
-References: <20071006010449.GA25022@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071006010449.GA25022@pogo>
+	Fri, 26 Oct 2007 11:46:33 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IlROK-0000Wa-Nt
+	for linux-wireless@vger.kernel.org; Fri, 26 Oct 2007 11:46:32 -0400
+Subject: Re: [FYI] hostapd state with mac80211 on linux
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chuck Tuffli <CTuffli@dspg.com>, hostap <hostap@shmoo.com>,
+	Alexander Kotelnikov <sacha@myxomop.com>
+In-Reply-To: <1193338400.4406.4.camel@johannes.berg>
+References: <1193338400.4406.4.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 26 Oct 2007 11:46:28 -0400
+Message-Id: <1193413588.2026.6.camel@dv> (sfid-20071026_164636_511884_02C351FD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 05, 2007 at 09:04:49PM -0400, Luis R. Rodriguez wrote:
-> This patch series adds a few things which have been sitting in my
-> queue. The most important change is the proper fix for the promiscuous
-> bug.
 
-And and forgot to add that I've tested the driver now on big endian.
-I'm able to auth and assoc but the big-endian box is in an area where
-the DHCP server sends the ACK to the IP and not broadcast so haven't
-tested further. I can also tcpdump and scan well.
+On Thu, 2007-10-25 at 20:53 +0200, Johannes Berg wrote:
+> Since more and more people seem to be interested in it, here's a quick
+> status update:
+> 
+> hostapd works with
+>  - kernel 2.6.24-rc1
+>  - plus my patches from http://johannes.sipsolutions.net/patches/kernel/all/
+>  - plus the commit 5c58298c2536252ab95aa2b1497ab47eb878ca5d from net-2.6
+>    ([NETLINK]: Fix ACK processing after netlink_dump_start)
 
-I'll keep testing as we go. This box will eventually be available of 
-anyone wanting to test on big endian.
+Great, thank you!  Can we have all the above in one place in a publicly
+available git repository, please?
 
-  Luis
+>  - my hostapd patches from http://johannes.sipsolutions.net/patches/hostap/all/
+
+And this too, if possible.  Maybe we could have this in hostap master
+branch?  All patches except 004 affect the devicescape driver only, and
+004 looks benign to me.
+
+-- 
+Regards,
+Pavel Roskin
+
