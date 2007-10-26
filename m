@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:60857 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbXJUJVb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 05:21:31 -0400
-Date: Sun, 21 Oct 2007 11:21:38 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: rt2400-devel@lists.sourceforge.net,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
-Subject: Re: [Rt2400-devel] rt73usb: support for wireless in Kohjinsha
-	subnotebook
-Message-ID: <20071021092138.GC25270@elf.ucw.cz> (sfid-20071021_102136_740985_6B7D21CC)
-References: <20071020184100.GA11640@elf.ucw.cz> <200710210012.37547.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710210012.37547.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3992 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753003AbXJZVHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:07:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: fix endianness breakage
+Date: Fri, 26 Oct 2007 17:04:27 -0400
+Message-Id: <11934326803330-git-send-email-linville@tuxdriver.com> (sfid-20071026_220751_114041_927EEEE5)
+In-Reply-To: <11934326803769-git-send-email-linville@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+ <11934326801557-git-send-email-linville@tuxdriver.com>
+ <11934326803769-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+From: Al Viro <viro@ftp.linux.org.uk>
 
-> > Kohjinsha subnotebook seems to contain wifi with USB IDs 0x18e8,
-> > 0x6206... I hope that to be compatible with
-> > net/wireless/rt2x00/rt73usb.c .
-> 
-> Is there any reason you assume it is a rt73usb device,
-> or are you just making wild guesses about what the chipset is?
+	wep->keytype[] is u8
 
-Wild guess. I've seen 18e8:6XXX being handled by rt73usb, so..
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas/cmd.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-> > [Sidenote: could we add some real author info into rt73usb.c?]
-> 
-> You mean expanding the project name to the full list of developers in
-> the project? I don't see any need for that.
-
-At least put name and email of lead developer there, or something.
-
-I do not think "copyright sourceforge project" is okay thing to do --
-unless the sf project legaly exists and you did some paperwork.
-								Pavel
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 4a8f5dc..86fff8d 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -185,14 +185,12 @@ static int wlan_cmd_802_11_set_wep(wlan_private * priv,
+ 
+ 			switch (pkey->len) {
+ 			case KEY_LEN_WEP_40:
+-				wep->keytype[i] =
+-					cpu_to_le16(cmd_type_wep_40_bit);
++				wep->keytype[i] = cmd_type_wep_40_bit;
+ 				memmove(&wep->keymaterial[i], pkey->key,
+ 				        pkey->len);
+ 				break;
+ 			case KEY_LEN_WEP_104:
+-				wep->keytype[i] =
+-					cpu_to_le16(cmd_type_wep_104_bit);
++				wep->keytype[i] = cmd_type_wep_104_bit;
+ 				memmove(&wep->keymaterial[i], pkey->key,
+ 				        pkey->len);
+ 				break;
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.5.2.4
+
