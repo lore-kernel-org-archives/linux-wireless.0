@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:14625 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbXJ0LZG (ORCPT
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:35105 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750905AbXJZMpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 07:25:06 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1035411fkz
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:05 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 8/21] rt2x00: Fix antenna selection.
-Date: Sat, 27 Oct 2007 13:38:38 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710271334.34192.IvDoorn@gmail.com>
-In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+	Fri, 26 Oct 2007 08:45:53 -0400
+Message-ID: <4721E17E.2020908@sgi.com> (sfid-20071026_134558_115201_F9810A17)
+Date: Fri, 26 Oct 2007 14:45:50 +0200
+From: Jes Sorensen <jes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710271338.38442.IvDoorn@gmail.com> (sfid-20071027_122521_491302_379D5C1B)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: iwl4965 detection problem
+References: <47209C0C.5010505@sgi.com> <1193319925.5542.8.camel@localhost.localdomain> <4720A509.2070708@sgi.com> <1193333545.2111.8.camel@localhost.localdomain> <47219FE6.70900@sgi.com> <20071026123044.GB23415@tuxdriver.com>
+In-Reply-To: <20071026123044.GB23415@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+John W. Linville wrote:
+> I've been seeing this behaviour _sometimes_ as well.  (/me hates _sometimes_)
+> 
+> Fresh off the presses, an F8-based build w/ the latest round of
+> iwl4965 updates from Zhu Yi and friends:
+> 
+> 	http://koji.fedoraproject.org/koji/taskinfo?taskID=215212
+> 
+> I haven't had a chance to test it yet myself (built it overnight),
+> so YMMV.  Still, there is a lot of iwl4965 churn in there so it is
+> probably worth some testing.  (Newer than wireless-2.6!)
 
-In the config() handler, make sure that we do configure an antenna if the
-current active antenna is uninitialized. Furthermore, don't overwrite the
-active antenna with bogus values if we didn't touch the antenna setup.
+Hi John,
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00config.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+Thanks for the suggestion, just tried it out - seems to behave the
+same way as the old kernel :-(
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 2b0edd2..b4fad74 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -166,6 +166,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 	else if (conf->antenna_sel_rx &&
- 		 conf->antenna_sel_rx != active_ant->rx)
- 		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
-+		flags |= CONFIG_UPDATE_ANTENNA;
- 
- 	if (!conf->antenna_sel_tx &&
- 	    default_ant->tx != ANTENNA_SW_DIVERSITY &&
-@@ -174,6 +176,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 	else if (conf->antenna_sel_tx &&
- 		 conf->antenna_sel_tx != active_ant->tx)
- 		flags |= CONFIG_UPDATE_ANTENNA;
-+	else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
-+		flags |= CONFIG_UPDATE_ANTENNA;
- 
- 	/*
- 	 * The following configuration options are never
-@@ -262,11 +266,17 @@ config:
- 	if (flags & (CONFIG_UPDATE_CHANNEL | CONFIG_UPDATE_ANTENNA))
- 		rt2x00lib_reset_link_tuner(rt2x00dev);
- 
--	rt2x00dev->curr_hwmode = libconf.phymode;
--	rt2x00dev->rx_status.phymode = conf->phymode;
-+	if (flags & CONFIG_UPDATE_PHYMODE) {
-+		rt2x00dev->curr_hwmode = libconf.phymode;
-+		rt2x00dev->rx_status.phymode = conf->phymode;
-+	}
-+
- 	rt2x00dev->rx_status.freq = conf->freq;
- 	rt2x00dev->rx_status.channel = conf->channel;
- 	rt2x00dev->tx_power = conf->power_level;
--	rt2x00dev->link.ant.active.rx = libconf.ant.rx;
--	rt2x00dev->link.ant.active.tx = libconf.ant.tx;
-+
-+	if (flags & CONFIG_UPDATE_ANTENNA) {
-+		rt2x00dev->link.ant.active.rx = libconf.ant.rx;
-+		rt2x00dev->link.ant.active.tx = libconf.ant.tx;
-+	}
- }
--- 
-1.5.3.4
+At least it's consistent here as opposed to sometimes.
 
+One thing I noted is that rmmod often takes a few seconds, no idea
+if it has any value?
+
+Cheers,
+Jes
