@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:40611 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757071AbXJORz7 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45532 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbXJZKys (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 13:55:59 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3162090pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2007 10:55:58 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-Date: Mon, 15 Oct 2007 20:13:20 +0200
-Cc: Marcus Better <marcus@better.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Fri, 26 Oct 2007 06:54:48 -0400
+Subject: Re: [PATCH] fix dynamic wep
+From: Johannes Berg <johannes@sipsolutions.net>
+To: dragoran <drago01@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
 	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-References: <fdqhn4$qab$1@sea.gmane.org> <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com> <1192448723.3349.32.camel@johannes.berg>
-In-Reply-To: <1192448723.3349.32.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_A36EHueYIlroqfN"
-Message-Id: <200710152013.20777.IvDoorn@gmail.com> (sfid-20071015_185606_013940_A8D48BFC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <4721C4D1.3050000@gmail.com> (sfid-20071026_114349_758731_13CC6C41)
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
+	 <1193148453.8648.20.camel@localhost.localdomain>
+	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>
+	 <1193238423.2557.41.camel@localhost.localdomain>
+	 <1193318969.6092.19.camel@johannes.berg>  <4721C4D1.3050000@gmail.com>
+	 (sfid-20071026_114349_758731_13CC6C41)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H+eDx/SZEcxfaOdiCawR"
+Date: Fri, 26 Oct 2007 12:55:48 +0200
+Message-Id: <1193396148.4406.59.camel@johannes.berg> (sfid-20071026_115459_475603_C5F00098)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_A36EHueYIlroqfN
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-> > However there is a huge performance regression. "tptest" shows a TCP
-> > throughput of under 300 kbit for the driver version 2.0.9 (current
-> > wireless-2.6), compared to 7 Mbit for version 2.0.7 (with kernel
-> > 2.6.23-rc3). The UDP speed was also affected but not as much, down from
-> > around 5-10 Mbit to 1 Mbit.
-> 
-> I don't think this would be related to mac80211, I'll let Ivo handle the
-> rest of this.
+--=-H+eDx/SZEcxfaOdiCawR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Could you enable debugfs and use attached debugfs script to create a dump
-of the rt2x00 registers. Preferably a dump of both the rt2x00 2.0.7 and 2.0.9 versions.
+As I said as a reply to the other mail, this is totally bogus, you
+misunderstood the privacy_mismatch() return value.
 
-Ivo
 
---Boundary-00=_A36EHueYIlroqfN
-Content-Type: application/x-shellscript;
-  name="debugfsdump"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="debugfsdump"
+> -            sdata->u.sta.key_management_enabled =3D !!data->value;
+> +            sdata->u.sta.key_management_enabled =3D data->value;
 
-#!/bin/sh
+This is just wrong, !! is there for a reason. I think
+key_management_enabled is a smaller datatype so if data->value is large
+enough you'll get 0 here for nonzero data->value without !!.
 
-echo "BBP:"
-for ((i = 0; i < `cat chipset | grep bbp | cut -d ':' -f 2 | bc`; i++));
-do
-	echo -n "$i "
-	echo $i > bbp_offset
-	cat bbp_value
-done
+johannes
 
-echo "CSR:"
-for ((i = 0; i < `cat chipset | grep csr | cut -d ':' -f 2 | bc`; i++));
-do
-	echo -n "$i "
-	echo $i > csr_offset
-	cat csr_value
-done
+--=-H+eDx/SZEcxfaOdiCawR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-echo "EEPROM:"
-for ((i = 0; i < `cat chipset | grep eeprom | cut -d ':' -f 2 | bc`; i++));
-do
-	echo -n "$i "
-	echo $i > eeprom_offset
-	cat eeprom_value
-done
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---Boundary-00=_A36EHueYIlroqfN--
+iQIVAwUARyHHs6Vg1VMiehFYAQJ6kQ//cCw2YfMJHww7u98ldJ1SoDmhl0RIbeuH
+TPruA/+YWqNrA2CmtrFVeZupuKMeDNQQ1OowoL8tA3oH1SKof8nzw/8wfELdg0yR
+PisLNFdZtdtgV2l+83luMZjfuNFY2bp96Iy1ua29G5Gm1r9Hv8SMjahf9Wpr0xz9
+zFuxXBRL3pN5ID2NHBDO/U+WX0zkLNECZOgatO2JJSG1p8W9u1wi+1wUaaTSsSRA
+CMjV3C2WD0Vz6wdMj//3/SPgtsCFR5eDSnuzG3apQkuxymPMczRYAoDyG8+e5owh
+QQC6AXJmnfYiwuInpSv34mvngd/OyAIB4vASgrtpfD/ndSVBJGocogloTIppoK4f
+auGuovgYdHDlBXy9UO/XGM/3m0gwdK8Xz5sORd5eqidc+yOV2XmvMHqJK/mEKHJq
+gu6auItgAtPuFvHFXnWlbzroZvoOvbBqvOTE+eUBM0RXMG92LuTlr15ssxlqxdLK
+vXUMaYaCu/stXhCkFs4cSyCWKEKHvb42Pk7Y+Uq3ggA3ob+o8hOTr8fioAweLySL
+EDLfeYA6sxQAxTJdHA/cfvCIU3+MuGVrvTqMTtb/oHzNduQeHQYN6tQYvRALWDu5
+CdqF98fXCsEfHVSKTI1hzOw+fyxYqYH3TcTC7vGdvT0YF15Q9eYf5NhKPgOdFb2O
+0gx8Td2CYEU=
+=Dt3I
+-----END PGP SIGNATURE-----
+
+--=-H+eDx/SZEcxfaOdiCawR--
+
