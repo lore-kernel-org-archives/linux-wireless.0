@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45532 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbXJZKys (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 06:54:48 -0400
-Subject: Re: [PATCH] fix dynamic wep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: dragoran <drago01@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <4721C4D1.3050000@gmail.com> (sfid-20071026_114349_758731_13CC6C41)
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-	 <1193127280.3069.261.camel@debian.sh.intel.com>
-	 <1193148453.8648.20.camel@localhost.localdomain>
-	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>
-	 <1193238423.2557.41.camel@localhost.localdomain>
-	 <1193318969.6092.19.camel@johannes.berg>  <4721C4D1.3050000@gmail.com>
-	 (sfid-20071026_114349_758731_13CC6C41)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H+eDx/SZEcxfaOdiCawR"
-Date: Fri, 26 Oct 2007 12:55:48 +0200
-Message-Id: <1193396148.4406.59.camel@johannes.berg> (sfid-20071026_115459_475603_C5F00098)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3968 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753040AbXJZVHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:07:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ieee80211: fix TKIP QoS bug
+Date: Fri, 26 Oct 2007 17:04:29 -0400
+Message-Id: <11934326813508-git-send-email-linville@tuxdriver.com> (sfid-20071026_220718_604511_4B1A4AB0)
+In-Reply-To: <11934326811535-git-send-email-linville@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+ <11934326801557-git-send-email-linville@tuxdriver.com>
+ <11934326803769-git-send-email-linville@tuxdriver.com>
+ <11934326803330-git-send-email-linville@tuxdriver.com>
+ <11934326811535-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
 
---=-H+eDx/SZEcxfaOdiCawR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The commit 65b6a277 titled "ieee80211: Fix header->qos_ctl endian issue"
+*introduced* an endianness bug. Partially revert it.
 
-As I said as a reply to the other mail, this is totally bogus, you
-misunderstood the privacy_mismatch() return value.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/ieee80211/ieee80211_crypt_tkip.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-> -            sdata->u.sta.key_management_enabled =3D !!data->value;
-> +            sdata->u.sta.key_management_enabled =3D data->value;
-
-This is just wrong, !! is there for a reason. I think
-key_management_enabled is a smaller datatype so if data->value is large
-enough you'll get 0 here for nonzero data->value without !!.
-
-johannes
-
---=-H+eDx/SZEcxfaOdiCawR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyHHs6Vg1VMiehFYAQJ6kQ//cCw2YfMJHww7u98ldJ1SoDmhl0RIbeuH
-TPruA/+YWqNrA2CmtrFVeZupuKMeDNQQ1OowoL8tA3oH1SKof8nzw/8wfELdg0yR
-PisLNFdZtdtgV2l+83luMZjfuNFY2bp96Iy1ua29G5Gm1r9Hv8SMjahf9Wpr0xz9
-zFuxXBRL3pN5ID2NHBDO/U+WX0zkLNECZOgatO2JJSG1p8W9u1wi+1wUaaTSsSRA
-CMjV3C2WD0Vz6wdMj//3/SPgtsCFR5eDSnuzG3apQkuxymPMczRYAoDyG8+e5owh
-QQC6AXJmnfYiwuInpSv34mvngd/OyAIB4vASgrtpfD/ndSVBJGocogloTIppoK4f
-auGuovgYdHDlBXy9UO/XGM/3m0gwdK8Xz5sORd5eqidc+yOV2XmvMHqJK/mEKHJq
-gu6auItgAtPuFvHFXnWlbzroZvoOvbBqvOTE+eUBM0RXMG92LuTlr15ssxlqxdLK
-vXUMaYaCu/stXhCkFs4cSyCWKEKHvb42Pk7Y+Uq3ggA3ob+o8hOTr8fioAweLySL
-EDLfeYA6sxQAxTJdHA/cfvCIU3+MuGVrvTqMTtb/oHzNduQeHQYN6tQYvRALWDu5
-CdqF98fXCsEfHVSKTI1hzOw+fyxYqYH3TcTC7vGdvT0YF15Q9eYf5NhKPgOdFb2O
-0gx8Td2CYEU=
-=Dt3I
------END PGP SIGNATURE-----
-
---=-H+eDx/SZEcxfaOdiCawR--
+diff --git a/net/ieee80211/ieee80211_crypt_tkip.c b/net/ieee80211/ieee80211_crypt_tkip.c
+index 5a48d8e..7f11dd9 100644
+--- a/net/ieee80211/ieee80211_crypt_tkip.c
++++ b/net/ieee80211/ieee80211_crypt_tkip.c
+@@ -584,7 +584,7 @@ static void michael_mic_hdr(struct sk_buff *skb, u8 * hdr)
+ 	if (stype & IEEE80211_STYPE_QOS_DATA) {
+ 		const struct ieee80211_hdr_3addrqos *qoshdr =
+ 			(struct ieee80211_hdr_3addrqos *)skb->data;
+-		hdr[12] = qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TID);
++		hdr[12] = le16_to_cpu(qoshdr->qos_ctl) & IEEE80211_QCTL_TID;
+ 	} else
+ 		hdr[12] = 0;		/* priority */
+ 
+-- 
+1.5.2.4
 
