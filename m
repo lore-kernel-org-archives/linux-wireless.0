@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:7052 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbXJBIIa (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:38931 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253AbXJZVcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 04:08:30 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so2052094ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Oct 2007 01:08:29 -0700 (PDT)
-Message-ID: <4701FC79.3060608@gmail.com> (sfid-20071002_090840_296795_9162D09B)
-Date: Tue, 02 Oct 2007 10:08:25 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 26 Oct 2007 17:32:00 -0400
+Date: Fri, 26 Oct 2007 14:31:20 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [stable] [PATCH] mac80211: reorder association debug output
+Message-ID: <20071026213120.GA26072@kroah.com> (sfid-20071026_223205_167230_B341C039)
+References: <11934326793639-git-send-email-linville@tuxdriver.com> <11934326801557-git-send-email-linville@tuxdriver.com> <11934326803769-git-send-email-linville@tuxdriver.com> <11934326803330-git-send-email-linville@tuxdriver.com> <11934326811535-git-send-email-linville@tuxdriver.com> <11934326813508-git-send-email-linville@tuxdriver.com> <1193432681145-git-send-email-linville@tuxdriver.com> <1193433039.15686.12.camel@johannes.berg> <20071026212303.GF23415@tuxdriver.com>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>
-Subject: Wireless damage [Was: -mm merge plans for 2.6.24]
-References: <20071001142222.fcaa8d57.akpm@linux-foundation.org>
-In-Reply-To: <20071001142222.fcaa8d57.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071026212303.GF23415@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/01/2007 11:22 PM, Andrew Morton wrote:
-> git-net-vs-git-wireless.patch
+On Fri, Oct 26, 2007 at 05:23:03PM -0400, John W. Linville wrote:
+> On Fri, Oct 26, 2007 at 11:10:39PM +0200, Johannes Berg wrote:
+> > 
+> > On Fri, 2007-10-26 at 17:04 -0400, John W. Linville wrote:
+> > > From: Johannes Berg <johannes@sipsolutions.net>
+> > > 
+> > > There's no reason to warn about an invalid AID field when the
+> > > association was denied.
+> > 
+> > I don't really see a reason to have this in stable, do we really want
+> 
+> Perhaps not.  I'm still not totally clear on the "stable" criteria
+> (probably my own fault).
 
-Hum, latest wireless-2.6?h=everything already had a proper fix when this patch
-was merged. But pull/push is stuck somewhere :(.
-
-> git-wireless-vs-gregkh-driver-driver-core-change-add_uevent_var-to-use-a-struct.patch
-> net-add-ath5k-wireless-driver-fix.patch
-
-let it live in -mm (wireless-2.6) so far.
-
->   Wireless damage control.  Will see what happens.
+See Documentation/stable_kernel_rules.txt for what the "criteria" is.
 
 thanks,
--- 
-Jiri Slaby (jirislaby@gmail.com)
-Faculty of Informatics, Masaryk University
+
+greg k-h
