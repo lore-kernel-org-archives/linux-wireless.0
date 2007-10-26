@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45965
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbXJ1MI5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 08:08:57 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: Register LED triggers before registering switch
-Date: Sun, 28 Oct 2007 13:07:54 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200710281307.54552.mb@bu3sch.de> (sfid-20071028_120900_993510_66F1E41B)
-Content-Type: text/plain;
-  charset="us-ascii"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3962 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752893AbXJZVGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:06:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] zd1201: avoid null ptr access of skb->dev
+Date: Fri, 26 Oct 2007 17:04:36 -0400
+Message-Id: <11934326821662-git-send-email-linville@tuxdriver.com> (sfid-20071026_220654_434405_EB9234B1)
+In-Reply-To: <11934326823109-git-send-email-linville@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+ <11934326801557-git-send-email-linville@tuxdriver.com>
+ <11934326803769-git-send-email-linville@tuxdriver.com>
+ <11934326803330-git-send-email-linville@tuxdriver.com>
+ <11934326811535-git-send-email-linville@tuxdriver.com>
+ <11934326813508-git-send-email-linville@tuxdriver.com>
+ <1193432681145-git-send-email-linville@tuxdriver.com>
+ <11934326812028-git-send-email-linville@tuxdriver.com>
+ <11934326813245-git-send-email-linville@tuxdriver.com>
+ <11934326823646-git-send-email-linville@tuxdriver.com>
+ <11934326821301-git-send-email-linville@tuxdriver.com>
+ <11934326823109-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Registering the switch triggers a LED event, so we must register
-LED triggers before the switch.
-This has a potential to fix a crash, depending on how the device
-driver initializes the rfkill data structure.
+From: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+skb->dev is not set until eth_type_trans is called...
 
-Index: wireless-2.6/net/rfkill/rfkill.c
-===================================================================
---- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-27 13:28:33.000000000 +0200
-+++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 12:57:12.000000000 +0100
-@@ -388,19 +388,20 @@ int rfkill_register(struct rfkill *rfkil
- 	if (!rfkill->toggle_radio)
- 		return -EINVAL;
- 
-+	snprintf(dev->bus_id, sizeof(dev->bus_id),
-+		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
-+
-+	rfkill_led_trigger_register(rfkill);
-+
- 	error = rfkill_add_switch(rfkill);
- 	if (error)
- 		return error;
- 
--	snprintf(dev->bus_id, sizeof(dev->bus_id),
--		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
--
- 	error = device_add(dev);
- 	if (error) {
- 		rfkill_remove_switch(rfkill);
- 		return error;
- 	}
--	rfkill_led_trigger_register(rfkill);
- 
- 	return 0;
- }
-@@ -416,9 +417,9 @@ EXPORT_SYMBOL(rfkill_register);
-  */
- void rfkill_unregister(struct rfkill *rfkill)
- {
--	rfkill_led_trigger_unregister(rfkill);
- 	device_del(&rfkill->dev);
- 	rfkill_remove_switch(rfkill);
-+	rfkill_led_trigger_unregister(rfkill);
- 	put_device(&rfkill->dev);
- }
- EXPORT_SYMBOL(rfkill_unregister);
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/zd1201.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
+index 935b144..d5c0c66 100644
+--- a/drivers/net/wireless/zd1201.c
++++ b/drivers/net/wireless/zd1201.c
+@@ -327,8 +327,8 @@ static void zd1201_usbrx(struct urb *urb)
+ 			memcpy(skb_put(skb, 6), &data[datalen-8], 6);
+ 			memcpy(skb_put(skb, 2), &data[datalen-24], 2);
+ 			memcpy(skb_put(skb, len), data, len);
+-			skb->dev->last_rx = jiffies;
+ 			skb->protocol = eth_type_trans(skb, zd->dev);
++			skb->dev->last_rx = jiffies;
+ 			zd->stats.rx_packets++;
+ 			zd->stats.rx_bytes += skb->len;
+ 			netif_rx(skb);
+@@ -384,8 +384,8 @@ static void zd1201_usbrx(struct urb *urb)
+ 			memcpy(skb_put(skb, 2), &data[6], 2);
+ 			memcpy(skb_put(skb, len), data+8, len);
+ 		}
+-		skb->dev->last_rx = jiffies;
+ 		skb->protocol = eth_type_trans(skb, zd->dev);
++		skb->dev->last_rx = jiffies;
+ 		zd->stats.rx_packets++;
+ 		zd->stats.rx_bytes += skb->len;
+ 		netif_rx(skb);
+-- 
+1.5.2.4
+
