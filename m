@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57300 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753378AbXJHMxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 08:53:42 -0400
-Subject: Re: libertas and endianness
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710081106.06475.hs4233@mail.mn-solutions.de>
-References: <Pine.LNX.4.64.0710071209290.8127@anakin>
-	 <200710081106.06475.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 08 Oct 2007 08:55:20 -0400
-Message-Id: <1191848120.2703.16.camel@localhost.localdomain> (sfid-20071008_135345_384769_184E5856)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46908 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759846AbXJZVn3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:43:29 -0400
+Subject: Re: [PATCH] mac80211: reorder association debug output
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071026212303.GF23415@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+	 <11934326801557-git-send-email-linville@tuxdriver.com>
+	 <11934326803769-git-send-email-linville@tuxdriver.com>
+	 <11934326803330-git-send-email-linville@tuxdriver.com>
+	 <11934326811535-git-send-email-linville@tuxdriver.com>
+	 <11934326813508-git-send-email-linville@tuxdriver.com>
+	 <1193432681145-git-send-email-linville@tuxdriver.com>
+	 <1193433039.15686.12.camel@johannes.berg>
+	 <20071026212303.GF23415@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TJ3itNRDSq9x4C3oxhVg"
+Date: Fri, 26 Oct 2007 23:44:38 +0200
+Message-Id: <1193435078.15686.14.camel@johannes.berg> (sfid-20071026_224341_561356_3F082C59)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-08 at 11:06 +0200, Holger Schurig wrote:
-> > I.e. it tries to store 0x0100 resp. 0x0200 into keytype[i],
-> > which is is u8.
-> >
-> > Gr{oetje,eeting}s,
-> 
-> Dan Williams partially fixed this on 2nd August. Seems that 
-> libertas patches needs ages to trickle upwards.
 
-The patches are queued for 2.6.24 and are already in net-2.6.24.
-They've been in net-2.6.24 for quite a while.  Anything that's in
-libertas-2.6 is already queued for 2.6.24 when the merge window opens.  
+--=-TJ3itNRDSq9x4C3oxhVg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.24.git;a=commit;h=1118759a15da6e97e8101a7f025b2947f190505f
 
-The order is:
+> Anyway, this probably got caught-up in a "what recent fixes still
+> apply to 2.6.23" sweep.  Still, I don't see why this wouldn't be
+> desirable for someone running 2.6.23?
 
-libertas-2.6 -> wireless-2.6 -> net-2.6.x -> linus
+No drivers in 2.6.23 anyway and Intel ships their own mac80211. Why
+should we care at all?
 
-So these will go upstream.  Where these patches _could_ go is to stable,
-for fixing up what's already out there in 2.6.22 and 2.6.23.
+johannes
 
-Dan
+--=-TJ3itNRDSq9x4C3oxhVg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> The patch is buried in the libertas-2.6 tree, in the 
-> branch "libertas". See here:
-> 
-> http://git.infradead.org/?p=libertas-2.6.git;a=commitdiff;h=1bf710a1f1bd816897be3b0441d3c916ea1b9ab9
-> 
-> 
-> 
-> However, in my next mail I'm attaching a cosmetic change for 
-> this. There's no need to define a constant for an u8 as 0x0001
-> and 0x0002 ...
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyJfxKVg1VMiehFYAQJZxRAAxU87JhMxjEPmwayMoAEt9iLXNvKM0WbW
+vhYCizqLCvjYUHfXGSysxuLjVjO4VI/1fDZSXHNmKYDAVnOQ01KbJ2i1v+myYxSJ
+Bn8BIusCVUqQOuDNPiBeBAPrEFdbsn9k0tUnD+um9rWcqtFv3sOW11QJod6r25DW
+HjpTk1wUTnH/irZMU4UjpvVtIp1MHg1tN8U5DKd0xKXZYkvWtXWB8o9hvLyK3dUU
+lsdYkLaK3p4K1Lgo6Hxx8q0lHsyYtV3tQJUY+5u8TvQuklZNuPyG89+hp0RuVP89
+EholqBkpjN/+49DWEdtIY7q0Bbckd4rT+4diz0uCdVb1Y9y0KuyJMZZu4mOa5QAp
+BT8DNK2ovFIUKwjVuM7/pOJ7WUlX+VNwy80ZnIoTaqzblZWmfUMNpZtVwfp9EhKF
+Qdy39CLu93zJoltFKUy9n5NdA6aaIqMtVlUKFr2bSPy/0WwMdyjI1HMf7+TwrV1U
+j07aLPWEFsARMs9toi7lijD+JGV4uRYOFZStO/RsdJfJFB2ulvhrcfwL4XHk3nR5
+Dwr9MiJ0K7NTWkoEHr0FPt/UpKYEzixMMP9LmWXFV+5iWAMeubJRCtl8Jq/CeK1O
+UijZopAvDg+r/YhCwvWqBqgi7NoAuDi9ppMHHxRYlptpzxg0hdf+nzW4SnBKF15j
+pHmMx7v1xv0=
+=nurK
+-----END PGP SIGNATURE-----
+
+--=-TJ3itNRDSq9x4C3oxhVg--
 
