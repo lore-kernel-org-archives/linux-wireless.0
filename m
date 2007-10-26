@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:2845 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbXJ1OAJ (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7520 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbXJZLnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 10:00:09 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1319129fkz
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 07:00:08 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: Use subsys_initcall
-Date: Sun, 28 Oct 2007 15:19:47 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200710281439.02701.mb@bu3sch.de>
-In-Reply-To: <200710281439.02701.mb@bu3sch.de>
+	Fri, 26 Oct 2007 07:43:53 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+Date: Fri, 26 Oct 2007 13:43:51 +0200
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+References: <200710111151.06989.hs4233@mail.mn-solutions.de> <1193073620.4325.7.camel@localhost.localdomain> <200710251037.50057.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200710251037.50057.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200710281519.47663.IvDoorn@gmail.com> (sfid-20071028_140017_021084_71E03E2F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200710261343.51684.hs4233@mail.mn-solutions.de> (sfid-20071026_124355_926421_BD02CA88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 October 2007, Michael Buesch wrote:
-> We must use subsys_initcall, because we must initialize before a
-> driver calls rfkill_register().
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Hi John !
 
-> Index: wireless-2.6/net/rfkill/rfkill.c
-> ===================================================================
-> --- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-28 13:09:04.000000000 +0100
-> +++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 14:27:30.000000000 +0100
-> @@ -449,5 +449,5 @@ static void __exit rfkill_exit(void)
->  	class_unregister(&rfkill_class);
->  }
->  
-> -module_init(rfkill_init);
-> +subsys_initcall(rfkill_init);
->  module_exit(rfkill_exit);
-> 
+wireless-2.6/everything is a moving target. The two patches I've 
+sent yesterday no longer apply cleanly. So I've made them new.
+
+Because of the sheer size of one of them, I've put them there:
+
+http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=shortlog;h=cleanup
 
 
+Please apply.
