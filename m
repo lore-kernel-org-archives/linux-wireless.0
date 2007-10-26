@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38516
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750997AbXJZFt4 (ORCPT
+Received: from smtp-out0.tiscali.nl ([195.241.79.175]:33272 "EHLO
+	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750702AbXJZUO0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 01:49:56 -0400
-Date: Thu, 25 Oct 2007 22:49:58 -0700 (PDT)
-Message-Id: <20071025.224958.224760716.davem@davemloft.net> (sfid-20071026_064959_852925_0628D879)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6 (Use this
- one!)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071026043409.GE14080@tuxdriver.com>
-References: <20071026043409.GE14080@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 26 Oct 2007 16:14:26 -0400
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out0.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1IlVZZ-0000AS-JY
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:14:25 +0200
+Message-ID: <47224A9E.3050803@tiscali.nl> (sfid-20071026_211428_514073_340595B2)
+Date: Fri, 26 Oct 2007 22:14:22 +0200
+From: Roel Kluin <12o3l@tiscali.nl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH split 5/8] fix 'and' typo's wireless/prism54/isl_ioctl
+ (first)
+References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
+In-Reply-To: <472248AC.7080201@tiscali.nl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 26 Oct 2007 00:34:09 -0400
-
-> Dave,
-> 
-> (Use this one!)
-> 
-> A few fixes for 2.6.24...also adds Johannes Berg as a mac80211
-> maintainer, since he probably wrote most of the newest bugs
-> there... :-)
-
-Pulled, thanks John!
+        Fix priority mistakes similar to '!x & y' wireless/prism54/isl_ioctl (first)
+    
+        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 6d80ca4..b9d0073 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -1118,7 +1118,7 @@ prism54_set_encode(struct net_device *ndev, struct iw_request_info *info,
+ 			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
+ 					    &index);
+ 		} else {
+-			if (!dwrq->flags & IW_ENCODE_MODE) {
++			if (!(dwrq->flags & IW_ENCODE_MODE)) {
+ 				/* we cannot do anything. Complain. */
+ 				return -EINVAL;
+ 			}
