@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:10149 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751128AbXJDEIe (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38516
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750997AbXJZFt4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 00:08:34 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] p54usb: Add device ID for Linksys WUSB54AG
-Date: Thu, 04 Oct 2007 00:06:00 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Martti Huttunen <martti.huttunen@mail.suomi.net>
-Message-Id: <20071004040600.23974.82373.stgit@magic.sourmilk.net> (sfid-20071004_050842_664875_ACD7E674)
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Fri, 26 Oct 2007 01:49:56 -0400
+Date: Thu, 25 Oct 2007 22:49:58 -0700 (PDT)
+Message-Id: <20071025.224958.224760716.davem@davemloft.net> (sfid-20071026_064959_852925_0628D879)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6 (Use this
+ one!)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071026043409.GE14080@tuxdriver.com>
+References: <20071026043409.GE14080@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Martti Huttunen <martti.huttunen@mail.suomi.net>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 26 Oct 2007 00:34:09 -0400
 
-Add the device ID for Linksys WUSB54AG.
+> Dave,
+> 
+> (Use this one!)
+> 
+> A few fixes for 2.6.24...also adds Johannes Berg as a mac80211
+> maintainer, since he probably wrote most of the newest bugs
+> there... :-)
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- drivers/net/wireless/p54usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/p54usb.c b/drivers/net/wireless/p54usb.c
-index 7446c39..755482a 100644
---- a/drivers/net/wireless/p54usb.c
-+++ b/drivers/net/wireless/p54usb.c
-@@ -62,6 +62,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
- 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
- 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
- 	{USB_DEVICE(0x09aa, 0x1000)},	/* Spinnaker Proto board */
-+	{USB_DEVICE(0x13B1, 0x000C)},	/* Linksys WUSB54AG */
- 	{USB_DEVICE(0x1435, 0x0427)},	/* Inventel UR054G */
- 	{USB_DEVICE(0x2001, 0x3704)},	/* DLink DWL-G122 rev A2 */
- 	{USB_DEVICE(0x413c, 0x8102)},	/* Spinnaker DUT */
-
+Pulled, thanks John!
