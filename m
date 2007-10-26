@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Received: from havoc.gtf.org ([69.61.125.42]:41743 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752454AbXJWWoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 18:44:46 -0400
-To: LKML <linux-kernel@vger.kernel.org>
-From: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <tueoct232007613pm.likjasfdlkjdas987@havoc.gtf.org>
-Subject: [PATCH 10/12] mac80211: fix warning created by BIT()
-Message-Id: <20071023223645.421AB1F81B6@havoc.gtf.org> (sfid-20071023_234507_864116_FA3D188D)
-Date: Tue, 23 Oct 2007 18:36:45 -0400 (EDT)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbXJZKg7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 06:36:59 -0400
+Subject: Re: [patch 5/9] mac80211: add beacon configuration via cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890710250859t278155a9v4349d9fc8f85bc98@mail.gmail.com> (sfid-20071025_170007_367868_C6C72358)
+References: <20071025093618.440937000@sipsolutions.net>
+	 <20071025093716.172679000@sipsolutions.net>
+	 <43e72e890710250859t278155a9v4349d9fc8f85bc98@mail.gmail.com>
+	 (sfid-20071025_170007_367868_C6C72358)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U78cevjyGJOi8sVv7EGp"
+Date: Fri, 26 Oct 2007 12:37:18 +0200
+Message-Id: <1193395038.4406.43.camel@johannes.berg> (sfid-20071026_113704_513609_8617B951)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that BIT() forces unsigned long, this warning appears:
 
-net/mac80211/ieee80211_sta.c: In function =E2=80=98ieee80211_rx_mgmt_as=
-soc_resp=E2=80=99:
-net/mac80211/ieee80211_sta.c:1187: warning: format =E2=80=98%d=E2=80=99=
- expects type =E2=80=98int=E2=80=99, but argument 7 has type =E2=80=98l=
-ong unsigned int=E2=80=99
+--=-U78cevjyGJOi8sVv7EGp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
----
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
-c
-index f7ffeec..bdfd901 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1182,7 +1182,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct n=
-et_device *dev,
- 	aid =3D le16_to_cpu(mgmt->u.assoc_resp.aid);
-=20
- 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=3D0x%x "
--	       "status=3D%d aid=3D%d)\n",
-+	       "status=3D%d aid=3D%ld)\n",
- 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
- 	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
-=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> > +static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device=
+ *dev,
+> > +                               struct beacon_parameters *beacon)
+>=20
+> To be consistent how about s/beacon/params here for beacon_parameters.
+
+Heh, I guess I can do that.
+
+johannes
+
+--=-U78cevjyGJOi8sVv7EGp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyHDXaVg1VMiehFYAQK60Q/+JkwjQUYv2KY1IdiFZ+4DPNKmDS+60h8Y
+d32bUlXqUKmkmFQaPS8HGwizZU6dI5EzGGwEFkBcNuwfa37Cccx0qPMcnRA5B7MH
+yoVOyjRRMhnC/TNEhsmoPBsCuw8gVRH4vWRB1T0vpdvT57JRWIA3iuCyXpACFPcb
+eEFXN4WniBkmnglbDvWY6JGzjzbSuAmwInnMqUTwIG1Wrzth/31XfvZzr69UJxDO
+jdyLEGAAnuGLTDdTuz9xnul0crKZA2ozz8/jT5aBcQ1elHjwP7xzas0ZRwTWEMzK
+L+9sXP8rdrbTn8td7JX8B7oKUithm2+YXj7SNWehF8RKDL9D3zB5ng2yJJwHs8q7
+zxVCsD0Dr9rUCoBUaFb1Sh7VevuW8XwznltpXXpoc62N13Q057jiCpJMiuz2ISan
+x1SZHcDJgdzzQuazXd/e6RiQc2kQnVoZOShIokm5VHbNIqcO8K3IrhvBNiJpUs4y
+eTqlz+6MdG/ka5Otk6htq7JFWh79grSKfZhUvPKELQsp/e1wsjWtdjfQhb67Iff3
+MfTXlwxcyKlA2+XE6mwpyuIwcf/phJZOhRQhnNl3FaM8PbofcRpcedaT+yb6qMog
+/81RRf3QH6SDdsNEpMscqxTTHk0MRY7ZU/SWV1+t0B99aOyqjrnnKicb4ITLKZUD
+DUrZRdTZxuQ=
+=uH+H
+-----END PGP SIGNATURE-----
+
+--=-U78cevjyGJOi8sVv7EGp--
+
