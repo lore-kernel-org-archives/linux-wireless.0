@@ -1,111 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:14484 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbXJ0LZP (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:49584 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388AbXJZKxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 07:25:15 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1035387fkz
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:14 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/21] rt2x00: Input-polldev requires input device
-Date: Sat, 27 Oct 2007 13:40:25 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200710271334.34192.IvDoorn@gmail.com>
-In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+	Fri, 26 Oct 2007 06:53:16 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so751347nfb
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 03:53:15 -0700 (PDT)
+Message-ID: <4721C717.5050501@gmail.com> (sfid-20071026_115325_629308_44276C9D)
+Date: Fri, 26 Oct 2007 12:53:11 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710271340.25324.IvDoorn@gmail.com> (sfid-20071027_124113_171763_1167ACE7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH] Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to
+ dynamic wep network
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>	 <1193127280.3069.261.camel@debian.sh.intel.com>	 <1193148453.8648.20.camel@localhost.localdomain>	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>	 <1193238423.2557.41.camel@localhost.localdomain>	 <1193318969.6092.19.camel@johannes.berg>  <4721C23E.501@gmail.com>	 (sfid-20071026_113240_433638_78FBCECA) <1193395405.4406.51.camel@johannes.berg>
+In-Reply-To: <1193395405.4406.51.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-input-polldev requires a correctly allocated
-and initialized input device to be set for the
-input_polled_dev->input field.
-Failure to do that will prevent correct polling
-of the device.
+Johannes Berg wrote:
+>> ieee80211_ioctl_siwauth in ieee80211_ioctl.c sets the 
+>> key_management_enabled variable if the value passed to the ioctl is not 
+>> 0 to true:
+>> sdata->u.sta.key_management_enabled = !!data->value;
+>> why !!data->value ?  that should be the same as data->value ...
+>>     
+>
+> Nope. Think again :) !! normalises to 0/1 rather than 0/!=0
+>
+>   
+oh.. ok ;)
+>> now to wpa_supplicant:
+>> wpa_driver_wext_keymgmt2wext in driver_wext.c  returns 
+>> IW_AUTH_KEY_MGMT_802_1 (which is defined as 1) (when dynamic wep is 
+>> used) wpa_driver_wext_set_auth_param than passes the value using 
+>> ioctl(drv->ioctl_sock, SIOCSIWAUTH, &iwr) to mac80211.
+>>     
+>
+> Are you sure it returns IW_AUTH_KEY_MGMT_802_1(X)? My assumption was
+> that this is what goes wrong.
+>
+>   
+as I said before I don't have access to the ap right now but here:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00rfkill.c |   35 ++++++++++++++++++++++++---
- 1 files changed, 31 insertions(+), 4 deletions(-)
+static int wpa_driver_wext_keymgmt2wext(int keymgmt)
+{
+    switch (keymgmt) {
+    case KEY_MGMT_802_1X:
+        return IW_AUTH_KEY_MGMT_802_1X;
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-index a0f8b8e..db513f1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-@@ -68,8 +68,10 @@ static void rt2x00rfkill_poll(struct input_polled_dev *poll_dev)
- 	struct rt2x00_dev *rt2x00dev = poll_dev->private;
- 	int state = rt2x00dev->ops->lib->rfkill_poll(rt2x00dev);
- 
--	if (rt2x00dev->rfkill->state != state)
-+	if (rt2x00dev->rfkill->state != state) {
- 		input_report_key(poll_dev->input, KEY_WLAN, 1);
-+		input_report_key(poll_dev->input, KEY_WLAN, 0);
-+	}
- }
- 
- int rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
-@@ -114,7 +116,7 @@ int rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->rfkill = rfkill_allocate(device, RFKILL_TYPE_WLAN);
- 	if (!rt2x00dev->rfkill) {
- 		ERROR(rt2x00dev, "Failed to allocate rfkill handler.\n");
--		return -ENOMEM;
-+		goto exit;
- 	}
- 
- 	rt2x00dev->rfkill->name = rt2x00dev->ops->name;
-@@ -125,15 +127,39 @@ int rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->poll_dev = input_allocate_polled_device();
- 	if (!rt2x00dev->poll_dev) {
- 		ERROR(rt2x00dev, "Failed to allocate polled device.\n");
--		rfkill_free(rt2x00dev->rfkill);
--		return -ENOMEM;
-+		goto exit_free_rfkill;
- 	}
- 
- 	rt2x00dev->poll_dev->private = rt2x00dev;
- 	rt2x00dev->poll_dev->poll = rt2x00rfkill_poll;
- 	rt2x00dev->poll_dev->poll_interval = RFKILL_POLL_INTERVAL;
- 
-+	rt2x00dev->poll_dev->input = input_allocate_device();
-+	if (!rt2x00dev->poll_dev->input) {
-+		ERROR(rt2x00dev, "Failed to allocate input device.\n");
-+		goto exit_free_polldev;
-+	}
-+
-+	rt2x00dev->poll_dev->input->name = rt2x00dev->ops->name;
-+	rt2x00dev->poll_dev->input->phys = wiphy_name(rt2x00dev->hw->wiphy);
-+	rt2x00dev->poll_dev->input->id.bustype = BUS_HOST;
-+	rt2x00dev->poll_dev->input->id.vendor = 0x1814;
-+	rt2x00dev->poll_dev->input->id.product = rt2x00dev->chip.rt;
-+	rt2x00dev->poll_dev->input->id.version = rt2x00dev->chip.rev;
-+	rt2x00dev->poll_dev->input->dev.parent = device;
-+	rt2x00dev->poll_dev->input->evbit[0] = BIT(EV_KEY);
-+	set_bit(KEY_WLAN, rt2x00dev->poll_dev->input->keybit);
-+
- 	return 0;
-+
-+exit_free_polldev:
-+	input_free_polled_device(rt2x00dev->poll_dev);
-+
-+exit_free_rfkill:
-+	rfkill_free(rt2x00dev->rfkill);
-+
-+exit:
-+	return -ENOMEM;
- }
- 
- void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
-@@ -141,6 +167,7 @@ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- 	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
- 		return;
- 
-+	input_free_device(rt2x00dev->poll_dev->input);
- 	input_free_polled_device(rt2x00dev->poll_dev);
- 	rfkill_free(rt2x00dev->rfkill);
- }
--- 
-1.5.3.4
-
+that should be tha case for dynamic wep. (key_mgmt=IEEE8021X needed in 
+wpa_supplicant.conf)
+>> ieee80211_privacy_mismatch checks for
+>> if (!ifsta || (ifsta->flags & IEEE80211_STA_MIXED_CELL) ||
+>>         ifsta->key_management_enabled)
+>>
+>> and returns 0 because ifsta->key_management_enabled  true in this case 
+>> !!1 -> 1
+>>     
+>
+> Which is fine, privacy_mismatch() returns 0 if there's no "mismatch" and
+> we should hence proceed with the association.
+>
+> That's bogus, you misunderstood the return value of privacy_mismatch()
+>   
+ok thx for explaing it.
