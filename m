@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hpsmtp-eml19.KPNXCHANGE.COM ([213.75.38.84]:25833 "EHLO
-	hpsmtp-eml19.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755989AbXJVSh4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 14:37:56 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Date: Mon, 22 Oct 2007 20:37:53 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <200710211316.06772.elendil@planet.nl> <200710221925.37758.elendil@planet.nl> <40f31dec0710221113h79301530pad834f1825989656@mail.gmail.com>
-In-Reply-To: <40f31dec0710221113h79301530pad834f1825989656@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710222037.53760.elendil@planet.nl> (sfid-20071022_193851_335470_AD3CE710)
+Received: from ra.tuxdriver.com ([70.61.120.52]:3286 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765576AbXJZVGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:06:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: filter locally-originated multicast frames
+Date: Fri, 26 Oct 2007 17:04:26 -0400
+Message-Id: <11934326803769-git-send-email-linville@tuxdriver.com> (sfid-20071026_220628_504035_19AD7217)
+In-Reply-To: <11934326801557-git-send-email-linville@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+ <11934326801557-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 October 2007, Nick Kossifidis wrote:
-> 2007/10/22, Frans Pop <elendil@planet.nl>:
-> > OK. Thanks for the info.
-> > I'd gotten the impression that the driver was a bit further along. No
-> > problem though. I'll just stay alert for announcements.
->
-> Your card is a 5213 and doesn't have 5110 PHY (it's a bug in ath_info
-> i'm working on it -it reports phy version id = 0 sometimes and that
-> matches 5110's version id, ath5k doesn't hve that bug), problem is
-> that it is a b/g only card and we didn't have such cards to test. I'll
-> send some patches soon that might fix b/g only PHYs but i can't
-> guarantee anything ;-(
+From: John W. Linville <linville@tuxdriver.com>
 
-That would be excellent.
-I'll be happy to test any patches. I'm sure we'll get there in the end :-)
+In STA mode, the AP will echo our traffic.  This includes multicast
+traffic.
+
+Receiving these frames confuses some protocols and applications,
+notably IPv6 Duplicate Address Detection.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index ad73a40..9e0da6e 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2844,9 +2844,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+ 		memcpy(dst, hdr->addr1, ETH_ALEN);
+ 		memcpy(src, hdr->addr3, ETH_ALEN);
+ 
+-		if (sdata->type != IEEE80211_IF_TYPE_STA) {
++		if (sdata->type != IEEE80211_IF_TYPE_STA ||
++		    (is_multicast_ether_addr(dst) &&
++		     !compare_ether_addr(src, dev->dev_addr)))
+ 			return TXRX_DROP;
+-		}
+ 		break;
+ 	case 0:
+ 		/* DA SA BSSID */
+-- 
+1.5.2.4
+
