@@ -1,78 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.apprion.com ([204.16.158.2]:10966 "EHLO MEKONG.apprion.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753224AbXJHVe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 17:34:56 -0400
-Message-ID: <470A9EB1.4030706@apprion.com> (sfid-20071008_223531_815265_623236BA)
-Date: Mon, 08 Oct 2007 14:18:41 -0700
-From: Michael Taylor <mike.taylor@apprion.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 2/6] ath5k: Enable radar detection
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo> <20071006011837.GB25022@pogo> <40f31dec0710070256y261199abw54e8e8dafab3ffb6@mail.gmail.com> <40f31dec0710070328r71d986bcm2b3fa78130052cb3@mail.gmail.com> <20071008203415.GA7633@pogo>
-In-Reply-To: <20071008203415.GA7633@pogo>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:3976 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753606AbXJZVHW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 17:07:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ipw2100: send WEXT scan events
+Date: Fri, 26 Oct 2007 17:04:37 -0400
+Message-Id: <11934326831029-git-send-email-linville@tuxdriver.com> (sfid-20071026_220727_834078_BD7EA113)
+In-Reply-To: <11934326821662-git-send-email-linville@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+ <11934326801557-git-send-email-linville@tuxdriver.com>
+ <11934326803769-git-send-email-linville@tuxdriver.com>
+ <11934326803330-git-send-email-linville@tuxdriver.com>
+ <11934326811535-git-send-email-linville@tuxdriver.com>
+ <11934326813508-git-send-email-linville@tuxdriver.com>
+ <1193432681145-git-send-email-linville@tuxdriver.com>
+ <11934326812028-git-send-email-linville@tuxdriver.com>
+ <11934326813245-git-send-email-linville@tuxdriver.com>
+ <11934326823646-git-send-email-linville@tuxdriver.com>
+ <11934326821301-git-send-email-linville@tuxdriver.com>
+ <11934326823109-git-send-email-linville@tuxdriver.com>
+ <11934326821662-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Dan Williams <dcbw@redhat.com>
 
-> So far I haven't received one AR5K_INT_RXPHY interrupt yet. Mind you we
-> are already setting radar to 1 too -- we do this at the end of
-> ath_reset() with ath5k_hw_enable_radar_alert() -- so not sure what's
-> going on. I do live in front of a cemetery...
->   
-You may be using an AR5210 chip?
+ipw2100 wasn't sending WEXT scan events at all on scan completion.  And
+like ipw2200, the driver aggressively auto-scans, requiring
+non-user-requested scan events to be batched together and sent at
+specific intervals instead of many times per seconds.
 
-Look at madwifi-dfs branch in madwifi.org for an example of how to 
-configure the pulse detector. To get radar pulse detection to work you 
-have to update the pulse detection configuration, disable the filtering 
-of PHY radar errors, and enable the radar detection. Then you should be 
-able to get the errors just by playing a video (such as the one provided 
-by the FCC) between a client and the AP. You should get enough false 
-positives from the pulse detector to notice. You won't get them from an 
-idle AP, and you are very unlikely to detect real radar (in my 
-experience). I work at NASA Research Park at what was formerly Moffett 
-Air Base. There's an airport less than 1 mile away and I've never 
-detected true radar.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ipw2100.c |   39 +++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ipw2100.h |    4 ++++
+ 2 files changed, 43 insertions(+), 0 deletions(-)
 
-IMPORTANT: The Atheros hardware 5212 and higher provides only pulse 
-detection, NOT radar detection. The 5210 stuff doesn't even provide 
-radar errors or pulse detection... it's supposed to be possible to use 
-zero-byte packets with PHYERR or something if you disable filtering of 
-zero byte packets, but I haven't tried it.
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index 8990585..e690609 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -2102,12 +2102,46 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
+ 	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
+ }
+ 
++static void send_scan_event(void *data)
++{
++	struct ipw2100_priv *priv = data;
++	union iwreq_data wrqu;
++
++	wrqu.data.length = 0;
++	wrqu.data.flags = 0;
++	wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
++}
++
++static void ipw2100_scan_event_later(struct work_struct *work)
++{
++	send_scan_event(container_of(work, struct ipw2100_priv,
++					scan_event_later.work));
++}
++
++static void ipw2100_scan_event_now(struct work_struct *work)
++{
++	send_scan_event(container_of(work, struct ipw2100_priv,
++					scan_event_now));
++}
++
+ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
+ {
+ 	IPW_DEBUG_SCAN("scan complete\n");
+ 	/* Age the scan results... */
+ 	priv->ieee->scans++;
+ 	priv->status &= ~STATUS_SCANNING;
++
++	/* Only userspace-requested scan completion events go out immediately */
++	if (!priv->user_requested_scan) {
++		if (!delayed_work_pending(&priv->scan_event_later))
++			queue_delayed_work(priv->workqueue,
++					&priv->scan_event_later,
++					round_jiffies(msecs_to_jiffies(4000)));
++	} else {
++		priv->user_requested_scan = 0;
++		cancel_delayed_work(&priv->scan_event_later);
++		queue_work(priv->workqueue, &priv->scan_event_now);
++	}
+ }
+ 
+ #ifdef CONFIG_IPW2100_DEBUG
+@@ -4376,6 +4410,7 @@ static void ipw2100_kill_workqueue(struct ipw2100_priv *priv)
+ 		cancel_delayed_work(&priv->wx_event_work);
+ 		cancel_delayed_work(&priv->hang_check);
+ 		cancel_delayed_work(&priv->rf_kill);
++		cancel_delayed_work(&priv->scan_event_later);
+ 		destroy_workqueue(priv->workqueue);
+ 		priv->workqueue = NULL;
+ 	}
+@@ -6118,6 +6153,8 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	INIT_DELAYED_WORK(&priv->wx_event_work, ipw2100_wx_event_work);
+ 	INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
+ 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
++	INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
++	INIT_DELAYED_WORK(&priv->scan_event_later, ipw2100_scan_event_later);
+ 
+ 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
+ 		     ipw2100_irq_tasklet, (unsigned long)priv);
+@@ -7427,6 +7464,8 @@ static int ipw2100_wx_set_scan(struct net_device *dev,
+ 	}
+ 
+ 	IPW_DEBUG_WX("Initiating scan...\n");
++
++	priv->user_requested_scan = 1;
+ 	if (ipw2100_set_scan_options(priv) || ipw2100_start_scan(priv)) {
+ 		IPW_DEBUG_WX("Start scan failed.\n");
+ 
+diff --git a/drivers/net/wireless/ipw2100.h b/drivers/net/wireless/ipw2100.h
+index de7d384..1ee3348 100644
+--- a/drivers/net/wireless/ipw2100.h
++++ b/drivers/net/wireless/ipw2100.h
+@@ -588,6 +588,10 @@ struct ipw2100_priv {
+ 	struct delayed_work wx_event_work;
+ 	struct delayed_work hang_check;
+ 	struct delayed_work rf_kill;
++	struct work_struct scan_event_now;
++	struct delayed_work scan_event_later;
++
++	int user_requested_scan;
+ 
+ 	u32 interrupts;
+ 	int tx_interrupts;
+-- 
+1.5.2.4
 
-The driver has to match the pulses to known patterns and filter out the 
-noise. It has to be able to filter out excess pulses and handle missed 
-pulses (you can't detect radar while transmitting). That's why the 
-madwifi-dfs branch has been brewing for longer than you might think. The 
-Atheros proprietary drivers provide one implementation of matching and 
-the madwifi-dfs branch currently works for all short-pulse type radars, 
-and isn't quite ready for prime time for long pulse type radars.
-
-BTW, there are a lot more details to DFS than getting a pulse error from 
-the hardware... but I'll assume you know what has to happen at the 
-higher levels.
-
-For the lower level stuff, feel free to send me any questions you have 
-for Atheros radar detection.
-
-- M
-> Anyway IMO we shouldn't handle radar detection but simply pass it down
-> to the upper layers, in this case mac80211. It seems for DFS this
-> would mean to force to change channels and blacklist the channel for
-> 30 minutes. If this interrupt *does* prove to be very noisy we can 
-> simply disable the AR5K_RX_FILTER_RADARERR and even AR5K_RX_FILTER_PHYERR
-> later. Perhaps AR5K_RX_FILTER_RADARERR should be enabled during
-> configure_filter() through mac80211 to indicate when we do *need* DFS.
-> Right now AR5K_RX_FILTER_PHYERR is enabled when mac80211 tells us
-> about FIF_FCSFAIL | FIF_PLCPFAIL, we also keep the current 
-> hw settings on AR5K_PHY_ERR_FIL (AR5K_PHY_ERR_FIL_RADAR, 
-> AR5K_PHY_ERR_FIL_OFDM or AR5K_PHY_ERR_FIL_CCK).
->
-> Comments?
->
->   Luis
->   
