@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:3205 "EHLO perches.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4726 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754006AbXJBT6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 15:58:04 -0400
-Subject: [PATCH] - trivial - Correct printk with PFX before KERN_ in
-	drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <st3@riseup.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 02 Oct 2007 12:57:11 -0700
-Message-Id: <1191355031.29929.2.camel@localhost> (sfid-20071002_205812_741565_5881E4EC)
-Mime-Version: 1.0
+	id S1750955AbXJZM3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 08:29:44 -0400
+Date: Fri, 26 Oct 2007 08:24:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
+	rmk@arm.linux.org.uk, kernel@wantstofly.org, tony.luck@intel.com,
+	jwboyer@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, dmitry.torokhov@gmail.com,
+	netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-wireless@vger.kernel.org,
+	bryan.wu@analog.com, adaplas@gmail.com
+Subject: Re: [PATCH] Remove pointless casts from void pointers,
+Message-ID: <20071026122447.GA23415@tuxdriver.com> (sfid-20071026_132953_325652_E564139F)
+References: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+On Fri, Oct 26, 2007 at 05:40:22AM -0400, Jeff Garzik wrote:
+> mostly in and around irq handlers.
+> 
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> ---
 
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-index d6d9413..6acfdc4 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
-@@ -444,7 +444,7 @@ static int bcm43xx_wx_set_xmitpower(struct net_device *net_dev,
- 	u16 maxpower;
- 
- 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM) {
--		printk(PFX KERN_ERR "TX power not in dBm.\n");
-+		printk(KERN_ERR PFX "TX power not in dBm.\n");
- 		return -EOPNOTSUPP;
- 	}
- 
+>  drivers/net/wireless/airo.c                |    5 +++--
+>  drivers/net/wireless/hostap/hostap_hw.c    |    2 +-
+>  drivers/net/wireless/libertas/if_cs.c      |    2 +-
 
+ACK
 
+-- 
+John W. Linville
+linville@tuxdriver.com
