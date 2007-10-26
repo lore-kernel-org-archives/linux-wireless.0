@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602AbXJ0M5m (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:17105 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755463AbXJZX7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2007 08:57:42 -0400
-Subject: Re: [PATCH] mac80211: reorder association debug output
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 26 Oct 2007 19:59:13 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1694443pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 16:59:12 -0700 (PDT)
+Message-ID: <40f31dec0710261658n6a322a01u5f8a1b00c90f020c@mail.gmail.com> (sfid-20071027_005917_169279_60205E77)
+Date: Sat, 27 Oct 2007 02:58:58 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20071027125025.GC16222@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
-	 <11934326801557-git-send-email-linville@tuxdriver.com>
-	 <11934326803769-git-send-email-linville@tuxdriver.com>
-	 <11934326803330-git-send-email-linville@tuxdriver.com>
-	 <11934326811535-git-send-email-linville@tuxdriver.com>
-	 <11934326813508-git-send-email-linville@tuxdriver.com>
-	 <1193432681145-git-send-email-linville@tuxdriver.com>
-	 <1193433039.15686.12.camel@johannes.berg>
-	 <20071026212303.GF23415@tuxdriver.com>
-	 <1193435078.15686.14.camel@johannes.berg>
-	 <20071027125025.GC16222@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X7ZNnGNmxS7STcMIFP6O"
-Date: Sat, 27 Oct 2007 14:58:55 +0200
-Message-Id: <1193489935.15686.17.camel@johannes.berg> (sfid-20071027_135745_242097_77C55DC9)
-Mime-Version: 1.0
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: Maintain coding style
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mcgrof@gmail.com, jirislaby@gmail.com
+In-Reply-To: <40f31dec0710260228r117c8ccdy13a8c32ffd42c2db@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071021013630.GB5817@localhost.domain.invalid>
+	 <20071026024348.GA14080@tuxdriver.com>
+	 <40f31dec0710260228r117c8ccdy13a8c32ffd42c2db@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2007/10/26, Nick Kossifidis <mickflemm@gmail.com>:
+> 2007/10/25, John W. Linville <linville@tuxdriver.com>:
+> > On Sun, Oct 21, 2007 at 01:36:30AM +0000, Nick Kossifidis wrote:
+> > > * Sort functions in segments like we do on the rest of the code (eg.
+> > > hw.c). This improves readability and maintainability.
+> > >
+> > > * Add myself as module author (a patch for this was submited some time
+> > > ago as part of SFLC's changes but wasn't applied)
+> > >
+> > > * Declare that this driver is or 5xxx chipset series only in
+> > > MODULE_SUPPORTED_DEVICE and MODULE_DESCRIPTION.
+> >
+> > This patch and the next one do not apply.  Further, after manually
+> > fixing-up this patch it removes a bunch of functions that are still
+> > used.
+> >
+> > Would you mind re-diffing and trying again?
+> >
+> > Thanks,
+> >
+> > John
+>
+> ACK ;-)
+>
 
---=-X7ZNnGNmxS7STcMIFP6O
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Do you mind if i also send the rest of them on the same series (not
+only cleanups but code changes also) ?
 
-
-
-> > No drivers in 2.6.23 anyway and Intel ships their own mac80211. Why
-> > should we care at all?
->=20
-> rtl8187 is in 2.6.23.
-
-Oops, I stand corrected. Still I don't think that the message patch is
-worth doing in stable, although the regression potential is pretty much
-nil.
-
-johannes
-
---=-X7ZNnGNmxS7STcMIFP6O
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyM2DaVg1VMiehFYAQJHrg//fRByVsmaUdCximZN5yHe6jQXe5R0BGm6
-v89qOx3UOHi+Cf7+YqixYZn4+V3UF4OmHzksBUGXdQ76fNBN6SDfNwkNkAq42upG
-VuE52BClmgbY+38DRfEl5hE6Nqy6yG1qfTQeRyaDtYpJ/QjPbxJ6xSmkzBidhL5F
-ajn7F96C5XHp6Ygi9juRRBCpawIKn2CH88odNAUwbDJWVhm/Me5LlEccuytRBs6P
-6nNpCd7nhQFiRUFO3rYzHtaPTncMX8vWpxTyo6xWCYxZ5CPB8leaJ9NfmW80WLEV
-Z3QWUvsb0mAJRIpX8ePdrBZZaLQu+gN2pD0ZUxeCMmgmAwriFj2ECVkLufG6lBhJ
-Izzacno+ofwgZ5Qk/uUFMTZi6+a1hT/e8Wmb67XPqlhji6/Cnoi9SzRCoOXSY3oI
-vcD/JDcAY7mYImBVgN1qP6XtEopS+8UMek8hJ/JU2srTqSEjoxn5EI9PH5rWTnz5
-Vg+iVbbE38/314dSePXMq9+3sE/lAfHY9I043McojdCn940gz5/zZC6Q3dlE2JX/
-p7ngDW2lHI51RImIaxEXAv2W3vb7VjIEyl/HLcxwnByV28+0+ssle+q6dTXcGMGi
-yAC2RNuWY/hOs+akfCixL89zOT/VWZ4pSdI7e/uMaABxoqz+5Ar29b0+B+NgE67+
-NfduHgDlVBs=
-=8zfV
------END PGP SIGNATURE-----
-
---=-X7ZNnGNmxS7STcMIFP6O--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
