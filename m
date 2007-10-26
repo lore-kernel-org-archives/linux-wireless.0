@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176AbXJISEy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 14:04:54 -0400
-Subject: Re: [Rt2400-devel] Mode selection in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: rt2400-devel@lists.sourceforge.net,
-	Adam Baker <linux@baker-net.org.uk>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200710092018.28113.IvDoorn@gmail.com> (sfid-20071009_190220_636461_94582DFE)
-References: <200710052319.10600.linux@baker-net.org.uk>
-	 <200710091954.03727.IvDoorn@gmail.com>
-	 <1191951652.4013.48.camel@johannes.berg>
-	 <200710092018.28113.IvDoorn@gmail.com>
-	 (sfid-20071009_190220_636461_94582DFE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C+vko/i/bcgYntkQgW0r"
-Date: Tue, 09 Oct 2007 20:05:34 +0200
-Message-Id: <1191953134.4013.50.camel@johannes.berg> (sfid-20071009_190456_304611_40827C19)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4736 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752267AbXJZMbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 08:31:08 -0400
+Date: Fri, 26 Oct 2007 08:30:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jes Sorensen <jes@sgi.com>
+Cc: Dan Williams <dcbw@redhat.com>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: iwl4965 detection problem
+Message-ID: <20071026123044.GB23415@tuxdriver.com> (sfid-20071026_133120_235674_EEABE585)
+References: <47209C0C.5010505@sgi.com> <1193319925.5542.8.camel@localhost.localdomain> <4720A509.2070708@sgi.com> <1193333545.2111.8.camel@localhost.localdomain> <47219FE6.70900@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47219FE6.70900@sgi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 26, 2007 at 10:05:58AM +0200, Jes Sorensen wrote:
+> Dan Williams wrote:
+> >I've had this same problem with one machine and there were problems with
+> >those two files.  I fixed it on that machine (and was fixed on a few
+> >others using this procedure) by removing those two files and rebooting.
+> >
+> >The symptom is that the driver loads and recognizes the card, but no
+> >wireless devices show up to userspace (via iwconfig, ifconfig, or
+> >in /sys/class/net) because device renames by udev and/or init scripts
+> >stomped over them (like trying to rename wmaster0 -> eth1 and then
+> >renaming wlan0 -> eth1 but failing because it was already taken).
+> >
+> >Try killing those two files, making sure you're up to date, then
+> >restarting.
 
---=-C+vko/i/bcgYntkQgW0r
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I tried that, but no go :-( Even before the card was detected by Fedora,
+> when I manually loaded the iwl4965 module, nothing showed up in
+> ifconfig -a, I had to unload/reload for anything to happen.
 
-On Tue, 2007-10-09 at 20:18 +0200, Ivo van Doorn wrote:
+I've been seeing this behaviour _sometimes_ as well.  (/me hates _sometimes_)
 
-> > > True, but in G mode you are compatible with B. The legacy driver does=
-n't
-> > > switch back to B mode when the AP is in B mode. This means that it wi=
-ll
-> > > be using the G timing values.
-> >=20
-> > That sounds wrong.
->=20
-> Not really, this would be the same behavior that you suggested earlier,
-> when you stated that a driver should perhaps not register 802.11B mode
-> when also registering 802.11G mode since it is backward compatible.
+Fresh off the presses, an F8-based build w/ the latest round of
+iwl4965 updates from Zhu Yi and friends:
 
-Well, in that was the assumption that mac80211 tells the driver whether
-to enable shortslot or not regardless of B/G mode. It is only perfectly
-compatible when B slot timing is used.
+	http://koji.fedoraproject.org/koji/taskinfo?taskID=215212
 
-johannes
+I haven't had a chance to test it yet myself (built it overnight),
+so YMMV.  Still, there is a lot of iwl4965 churn in there so it is
+probably worth some testing.  (Newer than wireless-2.6!)
 
---=-C+vko/i/bcgYntkQgW0r
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+For any non-iwl4965 F8 users it may still be worthwhiles to give
+those kernels a spin -- the stuff in the current F8 kernels is a
+little old now.(*)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Let me know...
 
-iQIVAwUARwvC7aVg1VMiehFYAQKRiA//XGvrOwcDBE+FOMrnz2urwrRMdfHUQjpM
-TCkb03edHN368bLUdBTH/SKj5OWfh9IFP0Dba+5nlteqaiy8WRQjYrS37Yk0RvAH
-tmb9B3OujPwQqrzCorogPPduRNrb2myXiAQBLPBW9tkqsYEtGJoidcsXjwfCsAFz
-g1dh22nsy7qcA4TQOUv1vOUxuXVn7+79czFvpL+gJGdL+Ub30GeF0ClRucV43of5
-vVEJrbf1cKus5JPpAHX69GdgusO8GfoIvCBoVrFKw8hV3gFsSQ4N+DjnF+hxsoD4
-00i6mekabcXt7v44V7+z08G7zc/Zjv+MAzUhYKjsmQDwusywGXHiax3WI24h8KuY
-HyfeZQ0dVrRN9iswbqtn2iUBZtUK5vQzdPfczAeZBld9tFtWHr6hAhwoY9zxZ8Te
-hylIf2Eddk5CEL+B76UWQxbJmLr7jB/Kh0oqiBmXuOzTIeb3iLONG1HtRuyPZUen
-t8wUtjmKGbiw8nLjwzG0YGRuvx3xbPa4wrmLMjO0+OAU/BFkOhDAtLujwQ8VLGEz
-mFGYNgiHhmApOtNKCEa3O5/keGgdzc7qqGzWRxFnqLWlQ8gOcHOCFgqM2ppzNw3+
-GJ7z5aoXtP11zy0YJoyJ2nDGnUrrDKGWvJmgLif69Qzxeym/LJJGjweVTKkEtwxr
-VA09YMArF10=
-=3l0J
------END PGP SIGNATURE-----
+John
 
---=-C+vko/i/bcgYntkQgW0r--
-
+(*) I had to stop shoving stuff into F8 a couple of weeks back after
+a big wireless update broke a bunch of people's wireless while F8
+was trying to freeze... :-(
+-- 
+John W. Linville
+linville@tuxdriver.com
