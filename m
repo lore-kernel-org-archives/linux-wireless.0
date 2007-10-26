@@ -1,71 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760528AbXJDSM6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 14:12:58 -0400
-Subject: Re: [PATCH] mac80211: Fix TX after monitor interface is converted
-	to managed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200710041034.48533.flamingice@sourmilk.net> (sfid-20071004_153836_867254_585F0EAA)
-References: <20071004113343.552139D502B@zog.reactivated.net>
-	 <200710041034.48533.flamingice@sourmilk.net>
-	 (sfid-20071004_153836_867254_585F0EAA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B37ahHA5eiLWXqkayx/E"
-Date: Thu, 04 Oct 2007 20:12:27 +0200
-Message-Id: <1191521547.7367.4.camel@johannes.berg> (sfid-20071004_191329_445284_B9D2FFE4)
+Received: from mx1.redhat.com ([66.187.233.31]:36416 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751031AbXJZXtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 19:49:47 -0400
+Subject: Re: [PATCH] fix 'and' typo's
+From: Dan Williams <dcbw@redhat.com>
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4722453E.2090801@tiscali.nl>
+References: <4722453E.2090801@tiscali.nl>
+Content-Type: text/plain
+Date: Fri, 26 Oct 2007 19:48:46 -0400
+Message-Id: <1193442527.20185.10.camel@localhost.localdomain> (sfid-20071027_004950_959192_59842B66)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-10-26 at 21:51 +0200, Roel Kluin wrote:
+> A few patches with changes to net code. I have sent these to the lkml
+> previously, but they were not yet merged. I am fairly new to kernel 
+> programming, so it is possible that I make some mistakes. I'll explain my
+> rationale, please nack if incorrect, an additional bit of explanation is
+> appreciated even more.
+> 
+> The condition '!x & y,' does make little sense: the '!' has a higher
+> priority than '&'. It behaves therefore like '!x && y'. In the case 
+> bitanding flags, however, '!(x & y)' appears to be desired.
+> 
+> Warning: the change of '!x & y,' to '!(x & y)' may change behavior. if
+> not desired, I propose changing this to '!x && y', to make it explicitly
+> clear.
+> 
+> These '&' typo's can be spotted with:
+> a="A-Za-z0-9_"
+> git-grep "\![^$a()]*[$a]\+\([$a.]*\|->\)*\(\[[$a.]*\]\)\?[ \W]*&[^&]\+"
+> 
+> --
+>         Fix priority mistakes similar to '!x & y'
+>     
+>         Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+> ---
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index 074055e..e3eca6d 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -6407,7 +6407,7 @@ static int airo_set_encode(struct net_device *dev,
+>  			set_wep_key(local, index, NULL, 0, perm, 1);
+>  		} else
+>  			/* Don't complain if only change the mode */
+> -			if(!dwrq->flags & IW_ENCODE_MODE) {
+> +			if(!(dwrq->flags & IW_ENCODE_MODE)) {
+>  				return -EINVAL;
+>  			}
+>  	}
 
---=-B37ahHA5eiLWXqkayx/E
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ack.
 
-On Thu, 2007-10-04 at 10:34 -0400, Michael Wu wrote:
-> On Thursday 04 October 2007 07:33, Daniel Drake wrote:
-> > Fix this by unsetting the hard_start_xmit handler in ieee80211_if_reini=
-t.
-> > It will then be reinitialised to the default (ieee80211_subif_start_xmi=
-t)
-> > in ieee80211_if_set_type.
-> >
-> Well.. this kinda sucks, but we can clean up the logic here later.
+> diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+> index 059ce3f..57cc7e5 100644
+> --- a/drivers/net/wireless/atmel.c
+> +++ b/drivers/net/wireless/atmel.c
+> @@ -1759,7 +1759,7 @@ static int atmel_set_encode(struct net_device *dev,
+>  			priv->default_key = index;
+>  		} else
+>  			/* Don't complain if only change the mode */
+> -			if (!dwrq->flags & IW_ENCODE_MODE) {
+> +			if (!(dwrq->flags & IW_ENCODE_MODE)) {
+>  				return -EINVAL;
+>  			}
+>  	}
 
-I kinda agree, but the hack in 50e1f4d76a9d45c940733f05ccd42c5bbe6ca132
-which caused this was is hack too. Somebody really need to rewrite the
-whole interface handling, it's a total mess with the master being
-specially treated but initialised by the same functions etc. I think we
-should start having a IEEE80211_IF_TYPE_MASTER for this, maybe then
-things will fall into place nicer.
+Ack.
 
-johannes
+> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+> index c6f5aa3..d93438c 100644
+> --- a/drivers/net/wireless/libertas/wext.c
+> +++ b/drivers/net/wireless/libertas/wext.c
+> @@ -1380,7 +1380,7 @@ static int wlan_get_encodeext(struct net_device *dev,
+>  		index = adapter->wep_tx_keyidx;
+>  	}
+>  
+> -	if (!ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY &&
+> +	if (!(ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) &&
+>  	    ext->alg != IW_ENCODE_ALG_WEP) {
+>  		if (index != 0 || adapter->mode != IW_MODE_INFRA)
+>  			goto out;
 
---=-B37ahHA5eiLWXqkayx/E
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ack.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwUtCqVg1VMiehFYAQLogRAAh7he12whuR2Qr6dRZwa1zF5T/ZK1UFfR
-ulp29b14+krWRBEhZAi568L+2HrzucjCK87k4NB6CrphXddBj83aZp1z8PZSeE47
-vsc5QA/RRe+0l0LVJDEPTPh/YI0XCse32FyBJVkaGZ0H1yWO/eYaZ0CnNfF9IBqe
-3w2c17ERDbKtu2vSK/PvuoRpz4o50RMB5kgw+AKs6UteqCUZSEzFF8GesVIeucfb
-6p2qnLc5i4qJoFxop4oqvxBTQnuTxDwxq0bbo9JLBlQzaQkRYzN3acX1SE5oEEqq
-medFtdJ9U2JYZvydL58qQszjg8OoDrfmHHndAhkVudfu4ZvpEs8SuA+KVH+H0lwK
-ffTDyMufNlJ/zD8IYnoP9bhx2sqcVs6LZE0zuRN5xrUXi7QB+JxSYZeXDy1K0tEC
-KeaUmRgOv3RDTjwqb1RPmblozrms8oe+qffC89lGISmOrK4/LMcmzxAC+fNPbPS8
-xC/8pYAJwEfGkKi8aWlEN2kH6OkmMtW/EEETIgg8z4eAw0BthX0skXLMZn7w5jzn
-aiq34IW0DSCOwkLmzph5G1tiLzvZB0UZVW7BgRwzrfgmtl4RBpcXXNsDlF+AE611
-pHhAfukjKB52WkEQ1gHBUVYg1LG9NZgXIP7sKqL/L0ibRpIFwW7OWKWXiJXbYBn0
-x5jFE6wE+kc=
-=Q+d2
------END PGP SIGNATURE-----
-
---=-B37ahHA5eiLWXqkayx/E--
+> diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+> index 1437db0..8ee1453 100644
+> --- a/drivers/net/wireless/p54common.c
+> +++ b/drivers/net/wireless/p54common.c
+> @@ -374,7 +374,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+>  			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+>  				pad = entry_data->align[0];
+>  
+> -			if (!status.control.flags & IEEE80211_TXCTL_NO_ACK) {
+> +			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
+>  				if (!(payload->status & 0x01))
+>  					status.flags |= IEEE80211_TX_STATUS_ACK;
+>  				else
+> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+> index 6d80ca4..b9d0073 100644
+> --- a/drivers/net/wireless/prism54/isl_ioctl.c
+> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
+> @@ -1118,7 +1118,7 @@ prism54_set_encode(struct net_device *ndev, struct iw_request_info *info,
+>  			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
+>  					    &index);
+>  		} else {
+> -			if (!dwrq->flags & IW_ENCODE_MODE) {
+> +			if (!(dwrq->flags & IW_ENCODE_MODE)) {
+>  				/* we cannot do anything. Complain. */
+>  				return -EINVAL;
+>  			}
+> @@ -2610,7 +2610,7 @@ prism2_ioctl_set_encryption(struct net_device *dev,
+>  			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
+>  					    &index);
+>  		} else {
+> -			if (!param->u.crypt.flags & IW_ENCODE_MODE) {
+> +			if (!(param->u.crypt.flags & IW_ENCODE_MODE)) {
+>  				/* we cannot do anything. Complain. */
+>  				return -EINVAL;
+>  			}
+> diff --git a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
+> index 857dcf3..3c1cca4 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
+> @@ -403,7 +403,7 @@ static int uw2453_init_hw(struct zd_rf *rf)
+>  		if (r)
+>  			return r;
+>  
+> -		if (!intr_status & 0xf) {
+> +		if (!(intr_status & 0xf)) {
+>  			dev_dbg_f(zd_chip_dev(chip),
+>  				"PLL locked on configuration %d\n", i);
+>  			found_config = i;
+> diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
+> index d309e8f..623489a 100644
+> --- a/net/ieee80211/ieee80211_wx.c
+> +++ b/net/ieee80211/ieee80211_wx.c
+> @@ -709,7 +709,7 @@ int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
+>  	} else
+>  		idx = ieee->tx_keyidx;
+>  
+> -	if (!ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY &&
+> +	if (!(ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) &&
+>  	    ext->alg != IW_ENCODE_ALG_WEP)
+>  		if (idx != 0 || ieee->iw_mode != IW_MODE_INFRA)
+>  			return -EINVAL;
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
