@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iggypop2.siwnet.net ([81.216.65.12]:61628 "EHLO
-	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762985AbXJSHug (ORCPT
+Received: from smtp-out0.tiscali.nl ([195.241.79.175]:60943 "EHLO
+	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352AbXJZUSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 03:50:36 -0400
-Message-ID: <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com> (sfid-20071019_085039_528758_7074BA7F)
-In-Reply-To: <200710152013.20777.IvDoorn@gmail.com>
-References: <fdqhn4$qab$1@sea.gmane.org>
-    <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com>
-    <1192448723.3349.32.camel@johannes.berg>
-    <200710152013.20777.IvDoorn@gmail.com>
-Date: Fri, 19 Oct 2007 09:49:54 +0200 (CEST)
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-From: "Marcus Better" <marcus@better.se>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+	Fri, 26 Oct 2007 16:18:13 -0400
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out0.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1IlVdE-0003wY-NL
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:18:12 +0200
+Message-ID: <47224B82.5030704@tiscali.nl> (sfid-20071026_211817_024125_D77E1813)
+Date: Fri, 26 Oct 2007 22:18:10 +0200
+From: Roel Kluin <12o3l@tiscali.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH split 6/8] fix 'and' typo's
+References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
+In-Reply-To: <472248AC.7080201@tiscali.nl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Ivo van Doorn wrote:
-> Could you enable debugfs and use attached debugfs script to create a
-> dump of the rt2x00 registers.
-
-If you still need the debug dump for 2.0.7 (the latest working version),
-can you show me how to get hold of a source tree with that version? I have
-both the wireless-2.6 and rt2x00 git trees, but seem to have trouble
-locating the right revision, perhaps because the tree was rebased.
-
-Thanks,
-
-Marcus
-
-
+could be an error due to the splitting, of this and the former patch?
+Then reply for another one.
+--
+        Fix priority mistakes similar to '!x & y'
+    
+        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 6d80ca4..b9d0073 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -2610,7 +2610,7 @@ prism2_ioctl_set_encryption(struct net_device *dev,
+ 			    mgt_set_request(priv, DOT11_OID_DEFKEYID, 0,
+ 					    &index);
+ 		} else {
+-			if (!param->u.crypt.flags & IW_ENCODE_MODE) {
++			if (!(param->u.crypt.flags & IW_ENCODE_MODE)) {
+ 				/* we cannot do anything. Complain. */
+ 				return -EINVAL;
+ 			}
