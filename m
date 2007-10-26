@@ -1,39 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45670 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2771 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754096AbXJQOJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:09:54 -0400
-Subject: Re: [PATCH 3/3] consistently use ath5k in printks
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bruno Randolf <bruno@thinktube.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <1192619652.8841.13.camel@johannes.berg>
-References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-2-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-3-git-send-email-bruno@thinktube.com>
-	 <1192540838-26985-4-git-send-email-bruno@thinktube.com>
-	 (sfid-20071016_142100_724914_42FE5458)  <1192619652.8841.13.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 17 Oct 2007 10:09:32 -0400
-Message-Id: <1192630172.10567.29.camel@localhost.localdomain> (sfid-20071017_150958_233313_86046006)
-Mime-Version: 1.0
+	id S1751498AbXJZEfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 00:35:05 -0400
+Date: Fri, 26 Oct 2007 00:34:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6 (Use this one!)
+Message-ID: <20071026043409.GE14080@tuxdriver.com> (sfid-20071026_053511_136526_9B5F9108)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-17 at 13:14 +0200, Johannes Berg wrote:
-> On Tue, 2007-10-16 at 22:20 +0900, Bruno Randolf wrote:
-> 
-> > the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys/dev/ath5k/
-> 
-> Ok, and why exactly is there a proc interface at all?
+Dave,
 
-Yeah, it needs to die, we're not adding new proc interfaces to the
-kernel.  Stuff should be evaluated to see whether it's _really_ needed,
-and if for some reason it is, merged into mac80211 or cfg80211, and then
-if that doesn't work, then maybe something in sysfs.
+(Use this one!)
 
-Dan
+A few fixes for 2.6.24...also adds Johannes Berg as a mac80211
+maintainer, since he probably wrote most of the newest bugs
+there... :-)
 
+Thanks,
 
+John
+
+---
+
+Individual patches available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
+
+---
+
+The following changes since commit c9927c2bf4f45bb85e8b502ab3fb79ad6483c244:
+  Linus Torvalds (1):
+        Linux 2.6.24-rc1
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+
+Johannes Berg (2):
+      add myself as mac80211 maintainer
+      mac80211: fix printk warning on 64-bit
+
+Michael Wu (1):
+      mac80211: Fix SSID matching in AP selection
+
+ MAINTAINERS                  |    8 +++++---
+ net/mac80211/ieee80211_sta.c |    5 +++--
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 76b8571..71badfb 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2442,13 +2442,15 @@ W:	http://www.tazenda.demon.co.uk/phil/linux-hp
+ S:	Maintained
+ 
+ MAC80211
+-P:	Jiri Benc
+-M:	jbenc@suse.cz
+ P:	Michael Wu
+ M:	flamingice@sourmilk.net
++P:	Johannes Berg
++M:	johannes@sipsolutions.net
++P:	Jiri Benc
++M:	jbenc@suse.cz
+ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/
+-T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
++T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+ S:	Maintained
+ 
+ MACVLAN DRIVER
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index f7ffeec..fda0e06 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1184,7 +1184,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	printk(KERN_DEBUG "%s: RX %sssocResp from %s (capab=0x%x "
+ 	       "status=%d aid=%d)\n",
+ 	       dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
+-	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
++	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
+ 
+ 	if (status_code != WLAN_STATUS_SUCCESS) {
+ 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+@@ -2096,7 +2096,8 @@ static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
+ {
+ 	int tmp, hidden_ssid;
+ 
+-	if (!memcmp(ifsta->ssid, ssid, ssid_len))
++	if (ssid_len == ifsta->ssid_len &&
++	    !memcmp(ifsta->ssid, ssid, ssid_len))
+ 		return 1;
+ 
+ 	if (ifsta->flags & IEEE80211_STA_AUTO_BSSID_SEL)
+-- 
+John W. Linville
+linville@tuxdriver.com
