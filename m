@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3327 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889AbXJ2VHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 17:07:37 -0400
-Date: Mon, 29 Oct 2007 17:06:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi,
-	akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH] hostap: fix section mismatch warning
-Message-ID: <20071029210620.GB27547@tuxdriver.com> (sfid-20071029_210740_586227_821F2BF1)
-References: <20071029112026.f66473c5.randy.dunlap@oracle.com> <20071029205254.GA27547@tuxdriver.com> <4726497F.2010709@oracle.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:29493 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbXJZNi0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 09:38:26 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so675022ugc
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 06:38:24 -0700 (PDT)
+Message-ID: <d120d5000710260638i4f5d2780ied5bcaabebbaf137@mail.gmail.com> (sfid-20071026_143834_130419_F5C4535D)
+Date: Fri, 26 Oct 2007 09:38:23 -0400
+From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
+To: "Jeff Garzik" <jeff@garzik.org>
+Subject: Re: [PATCH] Remove pointless casts from void pointers,
+Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
+	rmk@arm.linux.org.uk, kernel@wantstofly.org, tony.luck@intel.com,
+	jwboyer@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-wireless@vger.kernel.org, bryan.wu@analog.com,
+	adaplas@gmail.com
+In-Reply-To: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4726497F.2010709@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 29, 2007 at 01:58:39PM -0700, Randy Dunlap wrote:
+On 10/26/07, Jeff Garzik <jeff@garzik.org> wrote:
+>  drivers/input/touchscreen/h3600_ts_input.c |    4 ++--
 
-> >Would you mind explaining how changing the name of the pci_driver
-> >variable resolves this?  There must be some magic here...
-> 
-> Oh, sure.  In scripts/mod/modpost.c, there is a whitelist of variable
-> name suffixes.  Those suffixes are assumed to be safe for referring
-> to non-text code/data.  OTOH, if someone complains enough, another
-> whitelist table element can also be added...
+Acked-by: Dmitry Torokhov <dtor@mail.ru>
 
-Ah, got it.  Thanks!
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Dmitry
