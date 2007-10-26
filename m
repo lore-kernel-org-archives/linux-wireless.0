@@ -1,108 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:48574 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbXJLOG2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148AbXJZKmR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2007 10:06:28 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1672633pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2007 07:06:26 -0700 (PDT)
-Message-ID: <43e72e890710120706lbcf41a1sbff7845c6323211b@mail.gmail.com> (sfid-20071012_150632_293992_21470C5F)
-Date: Fri, 12 Oct 2007 10:06:26 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [PATCH 3/4] Don't read AR5K_RAC_PISR on AR5210, document ath5k_int
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071011193918.GB4334@pogo> <20071011194108.GC4334@pogo>
-	 <20071011194630.GA9304@pogo> <20071011194934.GA9403@pogo>
-	 <40f31dec0710111310l1e78c71cx7c4e318a83d87098@mail.gmail.com>
+	Fri, 26 Oct 2007 06:42:17 -0400
+Subject: Re: [PATCH] Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to
+	dynamic wep network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: dragoran <drago01@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <4721C23E.501@gmail.com> (sfid-20071026_113240_433638_78FBCECA)
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
+	 <1193148453.8648.20.camel@localhost.localdomain>
+	 (sfid-20071023_150810_118446_E87EE8F5)  <1193161034.7733.38.camel@johannes.berg>
+	 <1193238423.2557.41.camel@localhost.localdomain>
+	 <1193318969.6092.19.camel@johannes.berg>  <4721C23E.501@gmail.com>
+	 (sfid-20071026_113240_433638_78FBCECA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-So7jC+YMxhmp4ptxVKRo"
+Date: Fri, 26 Oct 2007 12:43:25 +0200
+Message-Id: <1193395405.4406.51.camel@johannes.berg> (sfid-20071026_114222_418440_98026EAD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> I should have added something inside ath5kreg.h, sry for that...
->
-> (?) = not sure
->
-> > + * @AR5K_INT_RXDESC: ??
-> Request RX descriptor/Read RX descriptor (?)
->
-> > + * @AR5K_INT_RXNOFRM: ??
-> No frame received (?)
->
-> > + * @AR5K_INT_RXEOL: received End Of List for VEOL (Virtual End Of List). The
-> > + *     Queue Control Unit (QCU) signals an EOL interrupt only if a descriptor's
-> > + *     LinkPtr is NULL. For more details, refer to:
-> > + *     http://www.freepatentsonline.com/20030225739.html
->
-> > + * @AR5K_INT_RXORN: indicates a hardware reset is required
-> Rx overrun is not always fatal, on some chips we can continue
-> operation without reseting the card, that's why int_fatal is not
-> common for all chips ;-)
->
-> > + * @AR5K_INT_TX: mask to identify received frame interrupts, of type
-> > + *     AR5K_ISR_TXOK or AR5K_ISR_TXERR
-> > + * @AR5K_INT_TXDESC: ??
-> Request TX descriptor/Read TX status descriptor (?)
->
-> > + * @AR5K_INT_TXURN: received when we should increase the TX trigger threshold
-> > + *     We currently do increments on interrupt by
-> > + *     (AR5K_TUNE_MAX_TX_FIFO_THRES - current_trigger_level) / 2
-> > + * @AR5K_INT_MIB: Indicates the Management Information Base counters should be
-> > + *     checked. We should do this with ath5k_hw_update_mib_counters() but
-> > + *     it seems we should also then do some noise immunity work.
->
-> > + * @AR5K_INT_RXPHY: ??
-> RX PHY Error
->
-> > + * @AR5K_INT_RXKCM: ??
-> > + * @AR5K_INT_SWBA: SoftWare Beacon Alert - indicates its time to send a
-> > + *     beacon that must be handled in software. The alternative is if you
-> > + *     have VEOL support, in that case you let the hardware deal with things.
-> > + * @AR5K_INT_BMISS: If in STA mode this indicates we have stopped seeing
-> > + *     beacons from the AP have associated with, we should probably try to
-> > + *     reassociate. When in IBSS mode this might mean we have not received
-> > + *     any beacons from any local stations. Note that every station in an
-> > + *     IBSS schedules to send beacons at the Target Beacon Transmission Time
-> > + *     (TBTT) with a random backoff.
-> > + * @AR5K_INT_BNR: Beacon Not Ready interrupt - ??
->
-> > + * @AR5K_INT_GPIO: ??
-> GPIO interrupt used for RF Kill, we should handle this inside
-> interrupt handler, until then i've disabled it because it results an
-> interrupt storm in case RF Kill switch is off.
->
-> > + * @AR5K_INT_NOCARD: signals the card has been removed
-> There is no such interrupt, it's software stuff used in hal. We can
-> always check for pending interrupts by reading that register (check
-> out is_intr_pending) and get rid of this.
 
-Since I'm resending, I've added these new comments. However I'm
-leaving @AR5K_INT_NOCARD for now as it does seem to be read in hw:
+--=-So7jC+YMxhmp4ptxVKRo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> ieee80211_ioctl_siwauth in ieee80211_ioctl.c sets the=20
+> key_management_enabled variable if the value passed to the ioctl is not=20
+> 0 to true:
+> sdata->u.sta.key_management_enabled =3D !!data->value;
+> why !!data->value ?  that should be the same as data->value ...
 
-        if (hal->ah_version == AR5K_AR5210) {
-                data = ath5k_hw_reg_read(hal, AR5K_ISR);
-                if (unlikely(data == AR5K_INT_NOCARD)) {
-                        *interrupt_mask = data;
-                        return -ENODEV;
-                }
-        } else {
-                /*
-                 * Read interrupt status from the Read-And-Clear shadow register
-                 * Note: PISR/SISR Not available on 5210
-                 */
-                data = ath5k_hw_reg_read(hal, AR5K_RAC_PISR);
-        }
+Nope. Think again :) !! normalises to 0/1 rather than 0/!=3D0
 
-        /*
-         * Get abstract interrupt mask (HAL-compatible)
-         */
-        *interrupt_mask = (data & AR5K_INT_COMMON) & hal->ah_imr;
+> now to wpa_supplicant:
+> wpa_driver_wext_keymgmt2wext in driver_wext.c  returns=20
+> IW_AUTH_KEY_MGMT_802_1 (which is defined as 1) (when dynamic wep is=20
+> used) wpa_driver_wext_set_auth_param than passes the value using=20
+> ioctl(drv->ioctl_sock, SIOCSIWAUTH, &iwr) to mac80211.
 
-        if (unlikely(data == AR5K_INT_NOCARD))
-                return -ENODEV;
+Are you sure it returns IW_AUTH_KEY_MGMT_802_1(X)? My assumption was
+that this is what goes wrong.
+
+> ieee80211_privacy_mismatch checks for
+> if (!ifsta || (ifsta->flags & IEEE80211_STA_MIXED_CELL) ||
+>         ifsta->key_management_enabled)
+>=20
+> and returns 0 because ifsta->key_management_enabled  true in this case=20
+> !!1 -> 1
+
+Which is fine, privacy_mismatch() returns 0 if there's no "mismatch" and
+we should hence proceed with the association.
+
+> so the attached patch should fix it by doing !data->value (which would=20
+> result in ifsta->key_management_enabled to be 0 here and therefor=20
+> ieee80211_privacy_mismatch won't return 0).
+
+That's bogus, you misunderstood the return value of privacy_mismatch()
+
+johannes
+
+--=-So7jC+YMxhmp4ptxVKRo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyHEzKVg1VMiehFYAQLDDxAArwpg6fLgydATTWQGL5f4JAXA+yT7fH+i
+aEb0bBkGFPJkFDbZpfhX1kVWtatYB7wij2jjXMPBlR292dXkLoMHP5qfxSj7TpaX
+bLDDE9+E0xgdwCUSIbqRQWReVtjzV1FJ6PAwtCxSwWApaUqYrs/AwqOuB4VRXida
+WS3XLPWIEXimXoj55Trt6u2gdQouqPaw1yEJkffVUEaRMfVpRYeYZ+iWhZuM1Dmb
+cyQP6jf6Aw46EAXdlNuQJOYu4CW8hHk9Z7LmJB7WRsBHW8VtTVMA283NXKfuKtQX
+/tWVVRwGKN4mi5gi5RyMaP9Sc+mn2a9mnauUWLH8Xz7/jfkuJUkefSygBlasoLWB
+o37kxXHDVTikoNF8plmZphgCcZWCOz0Sz0GkJ2oW+CMSBTBQKMO/UBK1K9JGJgY/
+sQAElDoMIdvhbkv+Zk488dqxRjrkp+wbOYdWGtJxRwxewrvYF3AqH32GREr17Ylw
+deztAaljNTYxoFZXxpClZD67V2clZqYtpYMeMOYGqa1Lf14wmbJV7CaU4eVeWfyj
+0oAuIKEyXT3ITOfmLthRzPS0Mr5AIRLrPi1w472uIXSH3YobXX45RACgpRoZ5WnQ
+C19i01kX0EW82fhfTa0XG3SbowXhi8fTRKCtsKdEZN68j1WuYbhFgNN9rXN0Igld
+V5GEUMHrXzI=
+=Voc1
+-----END PGP SIGNATURE-----
+
+--=-So7jC+YMxhmp4ptxVKRo--
+
