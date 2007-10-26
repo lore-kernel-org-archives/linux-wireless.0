@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:62120 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbXJ1LoT (ORCPT
+Received: from smtp-out2.tiscali.nl ([195.241.79.177]:50189 "EHLO
+	smtp-out2.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753140AbXJZUNc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 07:44:19 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2286530pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 04:44:19 -0700 (PDT)
-Message-ID: <40f31dec0710280444j43293be0m8a2a6a1df7210658@mail.gmail.com> (sfid-20071028_114435_167976_AFF4C7FA)
-Date: Sun, 28 Oct 2007 13:44:18 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer chips
-In-Reply-To: <20071027232033.GD5973@localhost.domain.invalid>
+	Fri, 26 Oct 2007 16:13:32 -0400
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out2.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1IlVYh-0001CN-De
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:13:31 +0200
+Message-ID: <47224A68.4040407@tiscali.nl> (sfid-20071026_211334_294089_1D34B9CA)
+Date: Fri, 26 Oct 2007 22:13:28 +0200
+From: Roel Kluin <12o3l@tiscali.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071027232033.GD5973@localhost.domain.invalid>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH split 4/8] fix 'and' typo's in wireless/p54common
+References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
+In-Reply-To: <472248AC.7080201@tiscali.nl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-forgot to mention
-
-for ath5k.h
-Changes-licensed-under: ISC
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+        Fix priority mistakes similar to '!x & y' in wireless/p54common
+    
+        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+index 1437db0..8ee1453 100644
+--- a/drivers/net/wireless/p54common.c
++++ b/drivers/net/wireless/p54common.c
+@@ -374,7 +374,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+ 				pad = entry_data->align[0];
+ 
+-			if (!status.control.flags & IEEE80211_TXCTL_NO_ACK) {
++			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
+ 				if (!(payload->status & 0x01))
+ 					status.flags |= IEEE80211_TX_STATUS_ACK;
+ 				else
