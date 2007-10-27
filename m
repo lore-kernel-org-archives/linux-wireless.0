@@ -1,47 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:17023 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757190AbXJFMEI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:04:08 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605537ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:07 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/16] rt2x00: Cut lines down to 80 characters
-Date: Sat, 6 Oct 2007 14:15:20 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200710061410.31765.IvDoorn@gmail.com>
-In-Reply-To: <200710061410.31765.IvDoorn@gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:58796 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751808AbXJ0XNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 19:13:36 -0400
+Date: Sun, 28 Oct 2007 02:13:32 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 3/7] ath5k: Remove obsolete sysctl stuff
+Message-ID: <20071027231332.GC5973@localhost.domain.invalid> (sfid-20071028_001339_682775_19CAA71A)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710061415.21077.IvDoorn@gmail.com> (sfid-20071006_130412_982257_D1987616)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt61pci contained 1 line of 88 characters width,
-this needs to be cut down.
+Remove sysctl tables.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+We shouldn't use /proc to configure things.
+
+Changes-licensed-under: 3-clause-BSD
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 62f1297..b9051a1 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2495,7 +2495,8 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * Write entire beacon with descriptor to register,
- 	 * and kick the beacon generator.
- 	 */
--	rt2x00pci_register_multiwrite(rt2x00dev, HW_BEACON_BASE0, skb->data, skb->len);
-+	rt2x00pci_register_multiwrite(rt2x00dev, HW_BEACON_BASE0,
-+				      skb->data, skb->len);
- 	rt61pci_kick_tx_queue(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 73c0a38..382bb23 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -203,50 +203,6 @@ MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
+ 
+ 
+ /*
+- * Sysctl tables
+- */
+-static int mincalibrate = 1;
+-static int maxcalibrate = INT_MAX / 1000;
+-static ctl_table ath5k_static_sysctls[] = {
+-#if AR_DEBUG
+-	{
+-	  .procname	= "debug",
+-	  .mode		= 0644,
+-	  .data		= &ath5k_debug,
+-	  .maxlen	= sizeof(ath5k_debug),
+-	  .proc_handler	= proc_dointvec
+-	},
+-#endif
+-	{
+-	  .procname	= "calibrate",
+-	  .mode		= 0644,
+-	  .data		= &ath5k_calinterval,
+-	  .maxlen	= sizeof(ath5k_calinterval),
+-	  .extra1	= &mincalibrate,
+-	  .extra2	= &maxcalibrate,
+-	  .proc_handler	= proc_dointvec_minmax
+-	},
+-	{ 0 }
+-};
+-static ctl_table ath5k_ath5k_table[] = {
+-	{
+-	  .procname	= "ath",
+-	  .mode		= 0555,
+-	  .child	= ath5k_static_sysctls
+-	}, { 0 }
+-};
+-static ctl_table ath5k_root_table[] = {
+-	{
+-	  .ctl_name	= CTL_DEV,
+-	  .procname	= "dev",
+-	  .mode		= 0555,
+-	  .child	= ath5k_ath5k_table
+-	}, { 0 }
+-};
+-static struct ctl_table_header *ath5k_sysctl_header;
+-
+-
+-/*
+  * Prototypes - PCI stack related functions
+  */
+ static int __devinit	ath5k_pci_probe(struct pci_dev *pdev,
+@@ -417,7 +373,6 @@ init_ath5k_pci(void)
+ 		printk(KERN_ERR "ath5k_pci: can't register pci driver\n");
+ 		return ret;
+ 	}
+-	ath5k_sysctl_header = register_sysctl_table(ath5k_root_table);
  
  	return 0;
--- 
-1.5.3.4
+ }
+@@ -425,8 +380,6 @@ init_ath5k_pci(void)
+ static void __exit
+ exit_ath5k_pci(void)
+ {
+-	if (ath5k_sysctl_header)
+-		unregister_sysctl_table(ath5k_sysctl_header);
+ 	pci_unregister_driver(&ath5k_pci_drv_id);
+ }
+ 
+@@ -765,8 +718,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	sc->led_on = 0; /* low true */
+ 	/*
+ 	 * Auto-enable soft led processing for IBM cards and for
+-	 * 5211 minipci cards.  Users can also manually enable/disable
+-	 * support with a sysctl.
++	 * 5211 minipci cards.
+ 	 */
+ 	if (pdev->device == PCI_DEVICE_ID_ATHEROS_AR5212_IBM ||
+ 			pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
+
+
 
