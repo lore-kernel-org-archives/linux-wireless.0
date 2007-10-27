@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:57302 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751239AbXJQMSW convert rfc822-to-8bit (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41503
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753268AbXJ0NPB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 08:18:22 -0400
-From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Problem with in-kernel iwl3945 driver
-Date: Wed, 17 Oct 2007 15:18:36 +0300
-Cc: linux-wireless@vger.kernel.org
-References: <200710161317.45460.ismail@pardus.org.tr> <200710161703.51343.ismail@pardus.org.tr> <1192609081.8841.8.camel@johannes.berg>
-In-Reply-To: <1192609081.8841.8.camel@johannes.berg>
+	Sat, 27 Oct 2007 09:15:01 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix initcall ordering
+Date: Sat, 27 Oct 2007 15:14:39 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Christian Casteyde <casteyde.christian@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200710171518.36393.ismail@pardus.org.tr> (sfid-20071017_131830_903211_C472B532)
+Message-Id: <200710271514.40056.mb@bu3sch.de> (sfid-20071027_141505_669105_33177161)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wednesday 17 October 2007 Tarihinde 11:18:01 yazm=C4=B1=C5=9Ft=C4=B1:
-> On Tue, 2007-10-16 at 17:03 +0300, Ismail D=C3=B6nmez wrote:
-> > Replying to myself,
-> >
-> > Tuesday 16 October 2007 Tarihinde 13:17:45 yazm=C4=B1=C5=9Ft=C4=B1n=
-=C4=B1z:
-> > [...]
-> >
-> > > wlan0     IEEE 802.11b  ESSID:"XXYYZZ"
-> >
-> >                          ^^^^^^^
-> > Looks like its in 802.11b mode instead of 802.11g.  That might be a=
- clue
-> > for slowdown.
->
-> A fix was committed under the title "fix set_channel regression"
+ssb must init after PCI but before the ssb drivers.
 
-This indeed fixes the slowdown, but can't associate unless I do a iwlis=
-t scan=20
-problem still persists :-/
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Casteyde <casteyde.christian@free.fr>
+Fixes-bug: #9219
 
-Regards,
-ismail
-
---=20
-=46aith is believing what you know isn't so -- Mark Twain
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-2.6/drivers/ssb/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/ssb/main.c	2007-10-27 14:54:40.000000000 +0200
++++ wireless-2.6/drivers/ssb/main.c	2007-10-27 14:57:15.000000000 +0200
+@@ -1147,7 +1147,10 @@ static int __init ssb_modinit(void)
+ 
+ 	return err;
+ }
+-subsys_initcall(ssb_modinit);
++/* ssb must be initialized after PCI but before the ssb drivers.
++ * That means we must use some initcall between subsys_initcall
++ * and device_initcall. */
++fs_initcall(ssb_modinit);
+ 
+ static void __exit ssb_modexit(void)
+ {
