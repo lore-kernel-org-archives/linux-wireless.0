@@ -1,66 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751992AbXJ1NwR (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:14625 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbXJ0LZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 09:52:17 -0400
-Subject: [PATCH] iwlwifi: select proper rate control algorithm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Sun, 28 Oct 2007 14:53:36 +0100
-Message-Id: <1193579616.5197.13.camel@johannes.berg> (sfid-20071028_135220_635543_907F7A1D)
-Mime-Version: 1.0
+	Sat, 27 Oct 2007 07:25:00 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1035411fkz
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:24:58 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/21] rt2x00: Remove rt2x00_clear_link
+Date: Sat, 27 Oct 2007 13:37:25 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710271334.34192.IvDoorn@gmail.com>
+In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710271337.25474.IvDoorn@gmail.com> (sfid-20071027_122512_311059_3161E9D0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to this patch, iwlwifi would always use the first
-registered rate control algorithm which, depending on system
-setup, could be anything. After the mac80211 patch to make
-the simple algorithm built-in, it would always be simple.
+rt2x00_clear_link() was becoming too large for statically inline,
+also it was used on a single location and shouldn't really be
+used anywhere else. So move the entire code into the function
+rt2x00lib_start_link_tuner()
 
-This has always been a bug in iwlwifi.
-
-This fixes it by requesting that mac80211 selects the right
-rate control algorithm.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-Untested, and the iwlwifi base code that registers rate control
-algorithms is a *total* mess. They should only be registered once at
-module load rather than at hardware probe time! Hence, I have no idea
-whether this will suffice or if rate control algorithm initialisation
-has to be rewritten.
+ drivers/net/wireless/rt2x00/rt2x00.h    |   18 +++---------------
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   16 +++++++++++++++-
+ 2 files changed, 18 insertions(+), 16 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 ++
- 2 files changed, 4 insertions(+)
-
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-28 14:31:02.845330022 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-28 14:31:54.255349989 +0100
-@@ -8317,6 +8317,8 @@ static int iwl_pci_probe(struct pci_dev 
- 	}
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index dcf7fd7..acf6f1c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -277,25 +277,13 @@ struct link {
+ };
  
-+	hw->rate_control_algorithm = "iwl-3945-rs";
-+
- 	IWL_DEBUG_INFO("*** LOAD DRIVER ***\n");
- 	priv = hw->priv;
- 	priv->hw = hw;
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-28 14:31:03.005056368 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-28 14:32:07.735049425 +0100
-@@ -8918,6 +8918,8 @@ static int iwl_pci_probe(struct pci_dev 
- 	}
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ /*
+- * Clear all counters inside the link structure.
+- */
+-static inline void rt2x00_clear_link(struct link *link)
+-{
+-	link->count = 0;
+-	memset(&link->qual, 0, sizeof(link->qual));
+-	link->qual.rx_percentage = 50;
+-	link->qual.tx_percentage = 50;
+-}
+-
+-/*
+  * Update the rssi using the walking average approach.
+  */
+ static inline void rt2x00_update_link_rssi(struct link *link, int rssi)
+ {
+-	if (!link->qual.avg_rssi)
+-		link->qual.avg_rssi = rssi;
+-	else
+-		link->qual.avg_rssi = ((link->qual.avg_rssi * 7) + rssi) / 8;
++	if (link->qual.avg_rssi)
++		rssi = ((link->qual.avg_rssi * 7) + rssi) / 8;
++	link->qual.avg_rssi = rssi;
+ }
  
-+	hw->rate_control_algorithm = "iwl-4965-rs";
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index b2016f4..0f824b2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -67,7 +67,21 @@ EXPORT_SYMBOL_GPL(rt2x00lib_get_ring);
+  */
+ static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2x00_clear_link(&rt2x00dev->link);
++	rt2x00dev->link.count = 0;
++	rt2x00dev->link.vgc_level = 0;
 +
- 	IWL_DEBUG_INFO("*** LOAD DRIVER ***\n");
- 	priv = hw->priv;
- 	priv->hw = hw;
-
++	memset(&rt2x00dev->link.qual, 0, sizeof(rt2x00dev->link.qual));
++
++	/*
++	 * The RX and TX percentage should start at 50%
++	 * this will assure we will get at least get some
++	 * decent value when the link tuner starts.
++	 * The value will be dropped and overwritten with
++	 * the correct (measured )value anyway during the
++	 * first run of the link tuner.
++	 */
++	rt2x00dev->link.qual.rx_percentage = 50;
++	rt2x00dev->link.qual.tx_percentage = 50;
+ 
+ 	/*
+ 	 * Reset the link tuner.
+-- 
+1.5.3.4
 
