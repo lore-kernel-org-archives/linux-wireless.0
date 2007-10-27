@@ -1,73 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58825 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752282AbXJGOff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2007 10:35:35 -0400
-Subject: [PATCH] mac80211: Defer setting of RX_FLAG_DECRYPTED.
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Content-Type: text/plain
-Date: Sun, 07 Oct 2007 16:35:31 +0200
-Message-Id: <1191767731.8135.5.camel@localhost> (sfid-20071007_153600_904601_06ED94FD)
-Mime-Version: 1.0
+Received: from dike.telenet-ops.be ([195.130.132.36]:59104 "EHLO
+	dike.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313AbXJ0CL4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2007 22:11:56 -0400
+Received: from astra.telenet-ops.be (astra.telenet-ops.be [195.130.132.58])
+	by dike.telenet-ops.be (Postfix) with ESMTP id A88B4820625
+	for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 02:22:40 +0200 (CEST)
+Message-ID: <472284A9.3070104@telenet.be> (sfid-20071027_031201_892344_0C82E99A)
+Date: Sat, 27 Oct 2007 02:22:01 +0200
+From: Ian Schram <ischram@telenet.be>
+MIME-Version: 1.0
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The decryption handlers will skip the frame if the RX_FLAG_DECRYPTED
-flag is set, so the early flag setting introduced by Johannes breaks
-decryption. To work around this, call the handlers first and then set
-the flag.
+Tomas Winkler wrote:
+> > On 10/17/07, Ian Schram <ischram@telenet.be> wrote:
+>> >> I do *not* send a led command on each packet. (Unless i made a ho=
+rrible
+>> >> coding error that I do not see)
+>> >>
+>> >> I send a led command when on every association event. But that's =
+only when
+>> >> we actually associate. or hw/sw rfkill is activated, or deassocia=
+ted.
+>> >>
+>> >> The leds for activity: keep a counter, which counts how many time=
+s the led
+>> >> is triggered from mac80211
+>> >> right now this is a multiple of the #packets. A delayed work will=
+ run
+>> >> every 500 ms and translate this
+>> >> amount of packets into a blinking rate for the led. When no packe=
+ts are
+>> >> transeived, the delayed work
+>> >> will not be scheduled until new packets are transeived.
+> >
+> >
+> > When no packets are transmitted correct behaviour is  steady  light=
+  on.
+> >
+> > This is quite similar to how the leds work in
+>> >> ipwraw, and ipw3945, only there the amount of byters were counted=
+ in the
+>> >> rx and tx path, which
+>> >> was then converted to a blinking rate. This information is not av=
+ailable
+>> >> within the led framework,
+>> >> hence i used the amount of led events and translate that into a b=
+linking
+>> >> rate.
+> >
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
----
- net/mac80211/rx.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
+All these comments are on the activity led code. This code is the bulk
+of the patch, and proably isn't the nicest solution to the problem.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index de3f7ae..34699a1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -424,6 +424,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
- 	int keyidx;
- 	int hdrlen;
-+	ieee80211_txrx_result result = TXRX_DROP;
- 	struct ieee80211_key *stakey = NULL;
- 
- 	/*
-@@ -522,21 +523,22 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
- 	    ieee80211_wep_is_weak_iv(rx->skb, rx->key))
- 		rx->sta->wep_weak_iv_count++;
- 
--	/* either the frame will be decrypted or dropped */
--	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
+I could send a stripped down patch, that only registers the association=
+ led trigger.
+This is something that is a lot easier the mac80211_leds way.
+
+This basic functionality of the led being on when associated, is still =
+a nice
+gimmick imho. Second only to the firmware filename it's the comment i m=
+ost
+frequently read in irc.. but perhaps i have tunnel vision.
+
+
+
+> >
+> > I think we can figure out how to do it correctly we already have th=
+rouput
+> > masurement incorporated in.
+> > Second I=B4m not sure that the wrokqueueu is really necessary. I th=
+ink that
+> > the command can be issued right away.
+
+if i'm not mistaking ratescale has this data, and that there is no prob=
+lem
+collecting this data from the rx/tx paths. for activity, this is probab=
+ly more
+efficient and accurate. I just choose to do this the mac80211 way too
+
+
+>> >>
+>> >> I did manage to listen to your comments on my previous patch ;-)
+> >
+> >
+> > I=B4ve  just recalled I wrote already once email as this one :) . Y=
+eah I
+> > didn=B4t read code carefully enough.
+> >
+> > Actually i believe this to be a crossection of what mac80211_leds e=
+xpects,
+>> >> and how ipw used to
+>> >> do it.
+>> >>
+>> >> Ian
+>> >>
+
+Ian
+
 -
- 	switch (rx->key->conf.alg) {
- 	case ALG_WEP:
--		return ieee80211_crypto_wep_decrypt(rx);
-+		result = ieee80211_crypto_wep_decrypt(rx);
-+		break;
- 	case ALG_TKIP:
--		return ieee80211_crypto_tkip_decrypt(rx);
-+		result = ieee80211_crypto_tkip_decrypt(rx);
-+		break;
- 	case ALG_CCMP:
--		return ieee80211_crypto_ccmp_decrypt(rx);
-+		result = ieee80211_crypto_ccmp_decrypt(rx);
-+		break;
- 	}
- 
--	/* not reached */
--	WARN_ON(1);
--	return TXRX_DROP;
-+	/* either the frame will be decrypted or dropped */
-+	rx->u.rx.status->flag |= RX_FLAG_DECRYPTED;
-+
-+	return result;
- }
- 
- static void ap_sta_ps_start(struct net_device *dev, struct sta_info *sta)
--- 
-1.5.3
-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
