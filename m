@@ -1,64 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57296 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753378AbXJHMxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2007 08:53:33 -0400
-Subject: Re: [PATCH] libertas: fix u8 constant
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710081107.27285.hs4233@mail.mn-solutions.de>
-References: <Pine.LNX.4.64.0710071209290.8127@anakin>
-	 <200710081107.27285.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 08 Oct 2007 08:55:10 -0400
-Message-Id: <1191848110.2703.14.camel@localhost.localdomain> (sfid-20071008_135341_332048_BDFA0797)
-Mime-Version: 1.0
+Received: from fk-out-0910.google.com ([209.85.128.185]:14484 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbXJ0LYy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 07:24:54 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1035387fkz
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:24:52 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/21] rt2x00: Use enum defines
+Date: Sat, 27 Oct 2007 13:35:55 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710271334.34192.IvDoorn@gmail.com>
+In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710271335.55486.IvDoorn@gmail.com> (sfid-20071027_122503_071145_DA5E16F1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-10-08 at 11:07 +0200, Holger Schurig wrote:
-> Don't write constants that are (per documentation and struct) u8
-> as 0x0001, use 0x01 instead. Also remove an useless cast.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+When setting the default EEPROM values use
+the values from the enums instead of "magic" values.
 
-Acked-By: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2500pci.c |    9 ++++++---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    9 ++++++---
+ drivers/net/wireless/rt2x00/rt61pci.c   |    6 ++++--
+ drivers/net/wireless/rt2x00/rt73usb.c   |    6 ++++--
+ 4 files changed, 20 insertions(+), 10 deletions(-)
 
-> 
-> Index: libertas-2.6/drivers/net/wireless/libertas/host.h
-> ===================================================================
-> --- libertas-2.6.orig/drivers/net/wireless/libertas/host.h	2007-10-08 11:51:46.000000000 +0200
-> +++ libertas-2.6/drivers/net/wireless/libertas/host.h	2007-10-08 11:52:10.000000000 +0200
-> @@ -138,8 +138,8 @@
->  #define CMD_ACT_REMOVE                      0x0004
->  #define CMD_ACT_USE_DEFAULT                 0x0008
->  
-> -#define CMD_TYPE_WEP_40_BIT                 0x0001
-> -#define CMD_TYPE_WEP_104_BIT                0x0002
-> +#define CMD_TYPE_WEP_40_BIT                 0x01
-> +#define CMD_TYPE_WEP_104_BIT                0x02
->  
->  #define CMD_NUM_OF_WEP_KEYS                 4
->  
-> Index: libertas-2.6/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- libertas-2.6.orig/drivers/net/wireless/libertas/cmd.c	2007-10-08 11:52:13.000000000 +0200
-> +++ libertas-2.6/drivers/net/wireless/libertas/cmd.c	2007-10-08 11:52:36.000000000 +0200
-> @@ -181,13 +181,13 @@ static int wlan_cmd_802_11_set_wep(wlan_
->  
->  			switch (pkey->len) {
->  			case KEY_LEN_WEP_40:
-> -				wep->keytype[i] = (u8)CMD_TYPE_WEP_40_BIT;
-> +				wep->keytype[i] = CMD_TYPE_WEP_40_BIT;
->  				memmove(&wep->keymaterial[i], pkey->key,
->  				        pkey->len);
->  				lbs_deb_cmd("SET_WEP: add key %d (40 bit)\n", i);
->  				break;
->  			case KEY_LEN_WEP_104:
-> -				wep->keytype[i] = (u8)CMD_TYPE_WEP_104_BIT;
-> +				wep->keytype[i] = CMD_TYPE_WEP_104_BIT;
->  				memmove(&wep->keymaterial[i], pkey->key,
->  				        pkey->len);
->  				lbs_deb_cmd("SET_WEP: add key %d (104 bit)\n", i);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 1f65e71..5ecce34 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1421,9 +1421,12 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 0);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 0);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE, 0);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
++				   ANTENNA_SW_DIVERSITY);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
++				   ANTENNA_SW_DIVERSITY);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE,
++				   LED_MODE_DEFAULT);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_RF_TYPE, RF2522);
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 8198531..487d89e 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1163,9 +1163,12 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 0);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 0);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE, 0);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
++				   ANTENNA_SW_DIVERSITY);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
++				   ANTENNA_SW_DIVERSITY);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_LED_MODE,
++				   LED_MODE_DEFAULT);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_RF_TYPE, RF2522);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index f6b8ae8..b8c3da7 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1908,8 +1908,10 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 2);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
++				   ANTENNA_B);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
++				   ANTENNA_B);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_FRAME_TYPE, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index d2b25ff..6297677 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1391,8 +1391,10 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_NUM, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT, 2);
+-		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT, 2);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_TX_DEFAULT,
++				   ANTENNA_B);
++		rt2x00_set_field16(&word, EEPROM_ANTENNA_RX_DEFAULT,
++				   ANTENNA_B);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_FRAME_TYPE, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_DYN_TXAGC, 0);
+ 		rt2x00_set_field16(&word, EEPROM_ANTENNA_HARDWARE_RADIO, 0);
+-- 
+1.5.3.4
 
