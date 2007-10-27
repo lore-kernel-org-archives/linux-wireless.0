@@ -1,86 +1,347 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:13734 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbXJVP1s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 11:27:48 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2512073pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 08:27:48 -0700 (PDT)
-Message-ID: <43e72e890710220827k2aa7a8d9m3653ec51ff461b32@mail.gmail.com> (sfid-20071022_162753_586196_5B25CD82)
-Date: Mon, 22 Oct 2007 11:27:46 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Frans Pop" <elendil@planet.nl>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710211316.06772.elendil@planet.nl>
+Received: from venema.h4ckr.net ([217.24.1.135]:52213 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbXJ0XGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 19:06:47 -0400
+Date: Sun, 28 Oct 2007 02:06:42 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 2/7] ath5k: Rename some functions
+Message-ID: <20071027230642.GB5973@localhost.domain.invalid> (sfid-20071028_000650_331336_B69ADACA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200710211316.06772.elendil@planet.nl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/21/07, Frans Pop <elendil@planet.nl> wrote:
-> Hi,
->
-> I just gave the new ath5k driver a go, but it fails for me with:
-> pccard: CardBus card inserted into slot 0
-> PCI: Enabling device 0000:02:00.0 (0000 -> 0002)
-> ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 18 (level, low) -> IRQ 16
-> ath5k_pci 0000:02:00.0: can't get channels
->
-> I did a git fetch of wireless/everything branch:
-> $ git describe
-> v2.6.23-469-g4bcbd55
->
-> Modules were loaded automatically: mac80211 and ath5k.
->
-> I was hoping for a better result as [1] lists my PCI ID as "OK", but maybe
-> that is for the PCI version and not the PCMCIA one?
-> The card works well with the madwifi driver (see below).
->
-> The host system is a Toshiba Satellite A40 laptop (i386, Mobile Pentium 4)
-> running Debian unstable.
->
-> I can't help with coding, but am willing to test. Feel free ask for any
-> additional info you need. Please CC me as I'm not subscribed.
->
-> [1] http://linuxwireless.org/en/users/Drivers/ath5k
->
-> Cheers,
-> Frans Pop
->
-> From lspci -nn:
-> 01:0b.0 CardBus bridge [0607]: Toshiba America Info Systems ToPIC100 PCI to Cardbus Bridge with ZV Support [1179:0617] (rev 33)
-> 02:00.0 Ethernet controller [0200]: Atheros Communications, Inc. AR5212 802.11abg NIC [168c:0013] (rev 01)
->
-> From lspci -vv:
-> 01:0b.0 CardBus bridge: Toshiba America Info Systems ToPIC100 PCI to Cardbus Bridge with ZV Support (rev 33)
->         Subsystem: Toshiba America Info Systems Unknown device 0001
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
->         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->         Latency: 168
->         Interrupt: pin A routed to IRQ 16
->         Region 0: Memory at cff00000 (32-bit, non-prefetchable) [size=4K]
->         Bus: primary=01, secondary=02, subordinate=02, sec-latency=0
->         Memory window 0: 28000000-2bfff000 (prefetchable)
->         Memory window 1: 30000000-33fff000
->         I/O window 0: 0000c000-0000c0ff
->         I/O window 1: 0000c400-0000c4ff
->         BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt- PostWrite+
->         16-bit legacy interface ports at 0001
->
-> 02:00.0 Ethernet controller: Atheros Communications, Inc. AR5212 802.11abg NIC (rev 01)
->         Subsystem: Global Sun Technology Inc Unknown device 7103
->         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
->         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->         Interrupt: pin A routed to IRQ 16
->         Region 0: Memory at 30000000 (32-bit, non-prefetchable) [size=64K]
+I've renamed some functions for better maintainability...
 
-Get this line again from lspci, and for example if its 30000000 again
-run from madwifi:
+ath5k_mode_init -> ath5k_mode_setup
+ath5k_rxbuf_init -> ath5k_rxbuf_setup
+Because it's not just initialization + we use
+"setup" on the rest of the code (eg. beacon_setup).
 
-./tools/ath_info 0x30000000
+ath5k_tx_bf -> ath5k_txbuf_setup
+Obvious
 
-Note I'm prepending the "0x", otherwise use whatever address it gives you.
+ath5k_cleanup_txbuf -> ath5k_txbuf_free
+Previous name is misleading because someone might
+think that it cleans all tx buffers, we use "free"
+to declare that it only cleans one given buffer.
 
-  Luis
+ath5k_tx_draintxq -> ath5k_txq_drainq
+ath5k_draintxq -> ath5k_txq_cleanup
+Same here ath5k_draintxq seems to refer to only
+one queue when in fact it drains all queues, so
+we use "cleanup" as above.
+
+ath5k_tx_cleanup -> ath5k_txq_release
+This one doesn't do any cleanup, it just calls
+hw_release for each queue.
+
+ath5k_startrecv -> ath5k_rx_start
+ath5k_stoprecv -> ath5k_rx_stop
+As above i try to maintain a naming scheme that links
+with the sorting i've done. Eg. ath5k_desc for descriptor
+related funcions, ath5k_rx/tx for general rx/tx functions,
+ath5k_txq for tx queues, ath5k_hw (inside hw.c and rest) for
+hw related functions and so on. This helps us track down things
+more easily.
+
+
+Changes-licensed-under: 3-clause-BSD
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 7d8e0b5..73c0a38 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -346,32 +346,32 @@ static int 	ath5k_chan_set(struct ath5k_softc *sc,
+ 				struct ieee80211_channel *chan);
+ static void	ath5k_setcurmode(struct ath5k_softc *sc,
+ 				unsigned int mode);
+-static void	ath5k_mode_init(struct ath5k_softc *sc);
++static void	ath5k_mode_setup(struct ath5k_softc *sc);
+ /* Descriptor setup */
+ static int	ath5k_desc_alloc(struct ath5k_softc *sc,
+ 				struct pci_dev *pdev);
+ static void	ath5k_desc_free(struct ath5k_softc *sc,
+ 				struct pci_dev *pdev);
+ /* Buffers setup */
+-static int 	ath5k_rxbuf_init(struct ath5k_softc *sc,
++static int 	ath5k_rxbuf_setup(struct ath5k_softc *sc,
+ 				struct ath5k_buf *bf);
+-static int 	ath5k_tx_bf(struct ath5k_softc *sc,
++static int 	ath5k_txbuf_setup(struct ath5k_softc *sc,
+ 				struct ath5k_buf *bf,
+ 				struct ieee80211_tx_control *ctl);
+-static inline void ath5k_cleanup_txbuf(struct ath5k_softc *sc,
++static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
+ 				struct ath5k_buf *bf);
+ /* Queues setup */
+ static struct 	ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
+ 				int qtype, int subtype);
+ static int 	ath5k_beaconq_setup(struct ath5k_hw *ah);
+ static int 	ath5k_beaconq_config(struct ath5k_softc *sc);
+-static void 	ath5k_tx_draintxq(struct ath5k_softc *sc,
++static void 	ath5k_txq_drainq(struct ath5k_softc *sc,
+ 				struct ath5k_txq *txq);
+-static void 	ath5k_draintxq(struct ath5k_softc *sc);
+-static void 	ath5k_tx_cleanup(struct ath5k_softc *sc);
++static void 	ath5k_txq_cleanup(struct ath5k_softc *sc);
++static void 	ath5k_txq_release(struct ath5k_softc *sc);
+ /* Rx handling */
+-static int 	ath5k_startrecv(struct ath5k_softc *sc);
+-static void 	ath5k_stoprecv(struct ath5k_softc *sc);
++static int 	ath5k_rx_start(struct ath5k_softc *sc);
++static void 	ath5k_rx_stop(struct ath5k_softc *sc);
+ static unsigned int ath5k_rx_decrypted(struct ath5k_softc *sc,
+ 					struct ath5k_desc *ds,
+ 					struct sk_buff *skb);
+@@ -797,7 +797,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 
+ 	return 0;
+ err_queues:
+-	ath5k_tx_cleanup(sc);
++	ath5k_txq_release(sc);
+ err_bhal:
+ 	ath5k_hw_release_tx_queue(ah, sc->bhalq);
+ err_desc:
+@@ -826,7 +826,7 @@ ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	 */
+ 	ieee80211_unregister_hw(hw);
+ 	ath5k_desc_free(sc, pdev);
+-	ath5k_tx_cleanup(sc);
++	ath5k_txq_release(sc);
+ 	ath5k_hw_release_tx_queue(sc->ah, sc->bhalq);
+ 
+ 	/*
+@@ -1071,8 +1071,8 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 		 * the relevant bits of the h/w.
+ 		 */
+ 		ath5k_hw_set_intr(ah, 0);	/* disable interrupts */
+-		ath5k_draintxq(sc);		/* clear pending tx frames */
+-		ath5k_stoprecv(sc);		/* turn off frame recv */
++		ath5k_txq_cleanup(sc);		/* clear pending tx frames */
++		ath5k_rx_stop(sc);		/* turn off frame recv */
+ 		ret = ath5k_hw_reset(ah, sc->opmode, chan, true);
+ 		if (ret) {
+ 			printk(KERN_ERR "%s: unable to reset channel %u "
+@@ -1085,7 +1085,7 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 		/*
+ 		 * Re-enable rx framework.
+ 		 */
+-		ret = ath5k_startrecv(sc);
++		ret = ath5k_rx_start(sc);
+ 		if (ret) {
+ 			printk(KERN_ERR "%s: unable to restart recv logic\n",
+ 					__func__);
+@@ -1173,7 +1173,7 @@ ath5k_setcurmode(struct ath5k_softc *sc, unsigned int mode)
+ }
+ 
+ static void 
+-ath5k_mode_init(struct ath5k_softc *sc)
++ath5k_mode_setup(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	u32 rfilt;
+@@ -1265,11 +1265,11 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
+ {
+ 	struct ath5k_buf *bf;
+ 
+-	ath5k_cleanup_txbuf(sc, sc->bbuf);
++	ath5k_txbuf_free(sc, sc->bbuf);
+ 	list_for_each_entry(bf, &sc->txbuf, list)
+-		ath5k_cleanup_txbuf(sc, bf);
++		ath5k_txbuf_free(sc, bf);
+ 	list_for_each_entry(bf, &sc->rxbuf, list)
+-		ath5k_cleanup_txbuf(sc, bf);
++		ath5k_txbuf_free(sc, bf);
+ 
+ 	/* Free memory associated with all descriptors */
+ 	pci_free_consistent(pdev, sc->desc_len, sc->desc, sc->desc_daddr);
+@@ -1286,7 +1286,7 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
+ \***************/
+ 
+ static int
+-ath5k_rxbuf_init(struct ath5k_softc *sc, struct ath5k_buf *bf)
++ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	struct sk_buff *skb = bf->skb;
+@@ -1354,7 +1354,7 @@ ath5k_rxbuf_init(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ }
+ 
+ static int
+-ath5k_tx_bf(struct ath5k_softc *sc, struct ath5k_buf *bf,
++ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+ 		struct ieee80211_tx_control *ctl)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+@@ -1412,7 +1412,7 @@ err_unmap:
+ }
+ 
+ static inline void
+-ath5k_cleanup_txbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
++ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ {
+ 	BUG_ON(!bf);
+ 	if (!bf->skb)
+@@ -1529,7 +1529,7 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
+ }
+ 
+ static void
+-ath5k_tx_draintxq(struct ath5k_softc *sc, struct ath5k_txq *txq)
++ath5k_txq_drainq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ {
+ 	struct ath5k_buf *bf, *bf0;
+ 
+@@ -1544,7 +1544,7 @@ ath5k_tx_draintxq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 			ath5k_printtxbuf(bf, !sc->ah->ah_proc_tx_desc(sc->ah,
+ 						bf->desc));
+ #endif
+-		ath5k_cleanup_txbuf(sc, bf);
++		ath5k_txbuf_free(sc, bf);
+ 
+ 		spin_lock_bh(&sc->txbuflock);
+ 		sc->tx_stats.data[txq->qnum].len--;
+@@ -1560,7 +1560,7 @@ ath5k_tx_draintxq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+  * Drain the transmit queues and reclaim resources.
+  */
+ static void
+-ath5k_draintxq(struct ath5k_softc *sc)
++ath5k_txq_cleanup(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	unsigned int i;
+@@ -1586,11 +1586,11 @@ ath5k_draintxq(struct ath5k_softc *sc)
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++)
+ 		if (sc->txqs[i].setup)
+-			ath5k_tx_draintxq(sc, &sc->txqs[i]);
++			ath5k_txq_drainq(sc, &sc->txqs[i]);
+ }
+ 
+ static void
+-ath5k_tx_cleanup(struct ath5k_softc *sc)
++ath5k_txq_release(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_txq *txq = sc->txqs;
+ 	unsigned int i;
+@@ -1613,7 +1613,7 @@ ath5k_tx_cleanup(struct ath5k_softc *sc)
+  * Enable the receive h/w following a reset.
+  */
+ static int
+-ath5k_startrecv(struct ath5k_softc *sc)
++ath5k_rx_start(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	struct ath5k_buf *bf;
+@@ -1628,7 +1628,7 @@ ath5k_startrecv(struct ath5k_softc *sc)
+ 
+ 	spin_lock_bh(&sc->rxbuflock);
+ 	list_for_each_entry(bf, &sc->rxbuf, list) {
+-		ret = ath5k_rxbuf_init(sc, bf);
++		ret = ath5k_rxbuf_setup(sc, bf);
+ 		if (ret != 0) {
+ 			spin_unlock_bh(&sc->rxbuflock);
+ 			goto err;
+@@ -1639,7 +1639,7 @@ ath5k_startrecv(struct ath5k_softc *sc)
+ 
+ 	ath5k_hw_put_rx_buf(ah, bf->daddr);
+ 	ath5k_hw_start_rx(ah);		/* enable recv descriptors */
+-	ath5k_mode_init(sc);		/* set filters, etc. */
++	ath5k_mode_setup(sc);		/* set filters, etc. */
+ 	ath5k_hw_start_rx_pcu(ah);	/* re-enable PCU/DMA engine */
+ 
+ 	return 0;
+@@ -1651,7 +1651,7 @@ err:
+  * Disable the receive h/w in preparation for a reset.
+  */
+ static void
+-ath5k_stoprecv(struct ath5k_softc *sc)
++ath5k_rx_stop(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 
+@@ -1828,7 +1828,7 @@ accept:
+ 		ath5k_led_event(sc, ATH_LED_RX);
+ next:
+ 		list_move_tail(&bf->list, &sc->rxbuf);
+-	} while (ath5k_rxbuf_init(sc, bf) == 0);
++	} while (ath5k_rxbuf_setup(sc, bf) == 0);
+ 	spin_unlock(&sc->rxbuflock);
+ }
+ 
+@@ -2189,7 +2189,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 	 * in the frame output path; there's nothing to do
+ 	 * here except setup the interrupt mask.
+ 	 */
+-	ret = ath5k_startrecv(sc);
++	ret = ath5k_rx_start(sc);
+ 	if (ret)
+ 		goto done;
+ 
+@@ -2243,9 +2243,9 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+ 		}
+ 		ath5k_hw_set_intr(ah, 0);
+ 	}
+-	ath5k_draintxq(sc);
++	ath5k_txq_cleanup(sc);
+ 	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+-		ath5k_stoprecv(sc);
++		ath5k_rx_stop(sc);
+ 		ath5k_hw_phy_disable(ah);
+ 	} else
+ 		sc->rxlink = NULL;
+@@ -2290,7 +2290,7 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 			ath5k_hw_set_power(sc->ah, AR5K_PM_FULL_SLEEP, true, 0);
+ 		}
+ 	}
+-	ath5k_cleanup_txbuf(sc, sc->bbuf);
++	ath5k_txbuf_free(sc, sc->bbuf);
+ 	mutex_unlock(&sc->lock);
+ 
+ 	del_timer_sync(&sc->calib_tim);
+@@ -2527,7 +2527,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	bf->skb = skb;
+ 
+-	if (ath5k_tx_bf(sc, bf, ctl)) {
++	if (ath5k_txbuf_setup(sc, bf, ctl)) {
+ 		bf->skb = NULL;
+ 		spin_lock_irqsave(&sc->txbuflock, flags);
+ 		list_add_tail(&bf->list, &sc->txbuf);
+@@ -2555,8 +2555,8 @@ ath5k_reset(struct ieee80211_hw *hw)
+ 	sc->curchan = hw->conf.chan;
+ 
+ 	ath5k_hw_set_intr(ah, 0);
+-	ath5k_draintxq(sc);
+-	ath5k_stoprecv(sc);
++	ath5k_txq_cleanup(sc);
++	ath5k_rx_stop(sc);
+ 
+ 	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+ 	if (unlikely(ret)) {
+@@ -2565,7 +2565,7 @@ ath5k_reset(struct ieee80211_hw *hw)
+ 	}
+ 	ath5k_update_txpow(sc);
+ 
+-	ret = ath5k_startrecv(sc);
++	ret = ath5k_rx_start(sc);
+ 	if (unlikely(ret)) {
+ 		printk(KERN_ERR "ath: can't start recv logic\n");
+ 		goto err;
+@@ -2906,7 +2906,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto end;
+ 	}
+ 
+-	ath5k_cleanup_txbuf(sc, sc->bbuf);
++	ath5k_txbuf_free(sc, sc->bbuf);
+ 	sc->bbuf->skb = skb;
+ 	ret = ath5k_beacon_setup(sc, sc->bbuf, ctl);
+ 	if (ret)
+
+
+
