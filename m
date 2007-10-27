@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:60871 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750701AbXJYP74 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59090
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbXJ0WgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2007 11:59:56 -0400
-Received: by py-out-1112.google.com with SMTP id u77so845431pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2007 08:59:55 -0700 (PDT)
-Message-ID: <43e72e890710250859t278155a9v4349d9fc8f85bc98@mail.gmail.com> (sfid-20071025_170003_077795_0E583E4F)
-Date: Thu, 25 Oct 2007 11:59:54 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [patch 5/9] mac80211: add beacon configuration via cfg80211
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071025093716.172679000@sipsolutions.net>
+	Sat, 27 Oct 2007 18:36:16 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Change error message for failed rc module (was: possible bug in ssb/b43)
+Date: Sun, 28 Oct 2007 00:34:41 +0200
+Cc: "evan foss" <evanfoss@gmail.com>, linux-wireless@vger.kernel.org
+References: <4a55afb80710271456k6c3bbfeah879b67a91a3b8d41@mail.gmail.com>
+In-Reply-To: <4a55afb80710271456k6c3bbfeah879b67a91a3b8d41@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071025093618.440937000@sipsolutions.net>
-	 <20071025093716.172679000@sipsolutions.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710280034.41942.mb@bu3sch.de> (sfid-20071027_233630_278742_CE24B072)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> This patch implements the cfg80211 hooks for configuring beaconing
-> on an access point interface in mac80211. While doing so, it fixes
-> a number of races that could badly crash the machine when the
-> beacon is changed while being requested by the driver.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->
-> ---
-> The dtim_count field should possibly also be part of the beacon
-> structure, but the possible race there doesn't really matter,
-> worst thing is that one beacon will be sent with a wrong dtim
-> count if (and only if) userspace changes the dtim period during
-> operation.
->
->  net/mac80211/cfg.c             |  108 +++++++++++++++++++++++++++++++++++++++++
->  net/mac80211/debugfs_netdev.c  |   27 ----------
->  net/mac80211/ieee80211_i.h     |   14 +++--
->  net/mac80211/ieee80211_iface.c |    4 -
->  net/mac80211/tx.c              |   63 ++++++++++++++---------
->  5 files changed, 156 insertions(+), 60 deletions(-)
->
-> --- linux-2.6.orig/net/mac80211/cfg.c   2007-10-24 11:35:49.722690568 +0200
-> +++ linux-2.6/net/mac80211/cfg.c        2007-10-25 10:46:56.070256998 +0200
-> @@ -10,6 +10,7 @@
->  #include <linux/nl80211.h>
->  #include <linux/rtnetlink.h>
->  #include <net/net_namespace.h>
-> +#include <linux/rcupdate.h>
->  #include <net/cfg80211.h>
->  #include "ieee80211_i.h"
->  #include "cfg.h"
-> @@ -269,6 +270,112 @@ static int ieee80211_config_default_key(
->         return 0;
->  }
->
-> +static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
-> +                               struct beacon_parameters *beacon)
+On Saturday 27 October 2007 23:56:39 evan foss wrote:
+<snip>
+> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
+> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
+> ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
+> ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
+> ssb: Sonics Silicon Backplane found on PCI device 0000:01:00.0
+> b43-phy1: Broadcom 4311 WLAN found
+> b43-phy1 debug: Found PHY: Analog 4, Type 2, Revision 8
+> b43-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+> phy1: Failed to select rate control algorithm
+> phy1: Failed to initialize rate control algorithm
+> b43: probe of ssb0:0 failed with error -2
 
-To be consistent how about s/beacon/params here for beacon_parameters.
+That's not a ssb or b43 bug.
+Please compile and load rc80211_simple.
 
- Luis
+I think we should change this error message, as obviously people don't
+understand that the issue is a failed module request for the rc module.
+Maybe add another message like "Please install a mac80211 rate control module,
+such as rc80211_simple" if the error code is -ENOENT (-2)
+Another suggestion?
+
+-- 
+Greetings Michael.
