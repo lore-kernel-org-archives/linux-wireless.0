@@ -1,113 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3959 "EHLO ra.tuxdriver.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:36274 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757925AbXJZVGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:06:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org, warmcat <andy@warmcat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] Improve sanity checks on injected packets
-Date: Fri, 26 Oct 2007 17:04:25 -0400
-Message-Id: <11934326801557-git-send-email-linville@tuxdriver.com> (sfid-20071026_220653_674024_3AB10EBA)
-In-Reply-To: <11934326793639-git-send-email-linville@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
+	id S1751313AbXJ0XUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 19:20:35 -0400
+Date: Sun, 28 Oct 2007 02:20:33 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 4/7] ath5k: Add SREV values for newer chips
+Message-ID: <20071027232033.GD5973@localhost.domain.invalid> (sfid-20071028_002044_550942_3295DC39)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: warmcat <andy@warmcat.com>
+* Add new Silicon Revision values (hex values written on chip) to be able to identify them.
 
-Michael Wu noticed that the skb length checking is not taken care of enough when
-a packet is presented on the Monitor interface for injection.
+* Give more infos about mac/phy/radio revision during attach.
 
-This patch improves the sanity checking and removes fake offsets placed
-into the skb network and transport header.
+Changes-licensed-under: 3-clause-BSD
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Andy Green <andy@warmcat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/ieee80211.c |   48 ++++++++++++++++++++++++++-------------------
- 1 files changed, 28 insertions(+), 20 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 9b9d716..ad73a40 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -1680,46 +1680,54 @@ int ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_tx_packet_data *pkt_data;
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
--	u16 len;
-+	u16 len_rthdr;
- 
--	/*
--	 * there must be a radiotap header at the
--	 * start in this case
--	 */
--	if (unlikely(prthdr->it_version)) {
--		/* only version 0 is supported */
--		dev_kfree_skb(skb);
--		return NETDEV_TX_OK;
--	}
-+	/* check for not even having the fixed radiotap header part */
-+	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
-+		goto fail; /* too short to be possibly valid */
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 795d7dd..fa9f3ae 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -126,6 +126,18 @@ enum ath5k_radio {
+ /*
+  * Common silicon revision/version values
+  */
 +
-+	/* is it a header version we can trust to find length from? */
-+	if (unlikely(prthdr->it_version))
-+		goto fail; /* only version 0 is supported */
++enum ath5k_srev_type {
++	AR5K_VERSION_VER,
++	AR5K_VERSION_RAD,
++};
 +
-+	/* then there must be a radiotap header with a length we can use */
-+	len_rthdr = ieee80211_get_radiotap_len(skb);
++struct ath5k_srev_name {
++	const char		*sr_name;
++	enum ath5k_srev_type	sr_type;
++	u_int			sr_val;
++};
 +
-+	/* does the skb contain enough to deliver on the alleged length? */
-+	if (unlikely(skb->len < len_rthdr))
-+		goto fail; /* skb too short for claimed rt header extent */
+ #define AR5K_SREV_UNKNOWN	0xffff
  
- 	skb->dev = local->mdev;
+ #define AR5K_SREV_VER_AR5210	0x00
+@@ -135,7 +147,13 @@ enum ath5k_radio {
+ #define AR5K_SREV_VER_AR5211	0x40
+ #define AR5K_SREV_VER_AR5212	0x50
+ #define AR5K_SREV_VER_AR5213	0x55
+-#define AR5K_SREV_VER_UNSUPP	0x60
++#define AR5K_SREV_VER_AR5213A	0x59
++#define AR5K_SREV_VER_AR2424	0xa0
++#define AR5K_SREV_VER_AR5424	0xa3
++#define AR5K_SREV_VER_AR5413	0xa4
++#define AR5K_SREV_VER_AR5414	0xa5
++#define AR5K_SREV_VER_AR5416	0xc0	/* ? */
++#define AR5K_SREV_VER_AR5418	0xca
  
- 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
- 	memset(pkt_data, 0, sizeof(*pkt_data));
-+	/* needed because we set skb device to master */
- 	pkt_data->ifindex = dev->ifindex;
+ #define AR5K_SREV_RAD_5110	0x00
+ #define AR5K_SREV_RAD_5111	0x10
+@@ -145,7 +163,9 @@ enum ath5k_radio {
+ #define AR5K_SREV_RAD_5112A	0x35
+ #define AR5K_SREV_RAD_2112	0x40
+ #define AR5K_SREV_RAD_2112A	0x45
+-#define AR5K_SREV_RAD_UNSUPP	0x50
++#define AR5K_SREV_RAD_SC1	0x63	/* Found on 5413/5414 */
++#define AR5K_SREV_RAD_SC2	0xa2	/* Found on 2424/5424 */
++#define AR5K_SREV_RAD_5133	0xc0	/* MIMO found on 5418 */
+ 
+ /* IEEE defs */
+ 
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 382bb23..821ed44 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -201,6 +201,35 @@ static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
+ };
+ MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
+ 
++/* Known SREVs */
++static struct ath5k_srev_name srev_names[] = {
++	{ "5210",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5210 },	
++	{ "5311",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5311 },
++	{ "5311A",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5311A },
++	{ "5311B",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5311B },
++	{ "5211",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5211 },
++	{ "5212",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5212 },
++	{ "5213",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213 },
++	{ "5213A",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213A },
++	{ "2424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2424 },
++	{ "5424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5424 },
++	{ "5413",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5413 },
++	{ "5414",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5414 },
++	{ "5416",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5416 },
++	{ "5418",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5418 },
++	{ "xxxxx",	AR5K_VERSION_VER,	AR5K_SREV_UNKNOWN },
++	{ "5110",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5110 },
++	{ "5111",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5111 },
++	{ "2111",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2111 },
++	{ "5112",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5112 },
++	{ "5112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5112A },
++	{ "2112",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112 },
++	{ "2112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112A },
++	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC1 },
++	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC2 },
++	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
++	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
++};
+ 
+ /*
+  * Prototypes - PCI stack related functions
+@@ -392,17 +421,21 @@ module_exit(exit_ath5k_pci);
+ \********************/
+ 
+ static const char *
+-ath5k_chip_name(u8 mac_version)
++ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ {
+-	switch (mac_version) {
+-	case AR5K_AR5210:
+-		return "AR5210";
+-	case AR5K_AR5211:
+-		return "AR5211";
+-	case AR5K_AR5212:
+-		return "AR5212";
++	const char *name = "xxxxx";
++	unsigned int i;
 +
- 	pkt_data->mgmt_iface = 0;
- 	pkt_data->do_not_encrypt = 1;
- 
--	/* above needed because we set skb device to master */
--
- 	/*
- 	 * fix up the pointers accounting for the radiotap
- 	 * header still being in there.  We are being given
- 	 * a precooked IEEE80211 header so no need for
- 	 * normal processing
- 	 */
--	len = le16_to_cpu(get_unaligned(&prthdr->it_len));
--	skb_set_mac_header(skb, len);
--	skb_set_network_header(skb, len + sizeof(struct ieee80211_hdr));
--	skb_set_transport_header(skb, len + sizeof(struct ieee80211_hdr));
--
-+	skb_set_mac_header(skb, len_rthdr);
- 	/*
--	 * pass the radiotap header up to
--	 * the next stage intact
-+	 * these are just fixed to the end of the rt area since we
-+	 * don't have any better information and at this point, nobody cares
- 	 */
--	dev_queue_xmit(skb);
-+	skb_set_network_header(skb, len_rthdr);
-+	skb_set_transport_header(skb, len_rthdr);
- 
-+	/* pass the radiotap header up to the next stage intact */
-+	dev_queue_xmit(skb);
- 	return NETDEV_TX_OK;
++	for (i = 0; i < ARRAY_SIZE(srev_names); i++) {
++		if (srev_names[i].sr_type != type)
++			continue;
++		if ((val & 0xff) < srev_names[i + 1].sr_val) {
++			name = srev_names[i].sr_name;
++			break;
++		}
+ 	}
+-	return "Unknown";
 +
-+fail:
-+	dev_kfree_skb(skb);
-+	return NETDEV_TX_OK; /* meaning, we dealt with the skb */
++	return name;
  }
  
+ static int __devinit
+@@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	if (ret)
+ 		goto err_ah;
  
--- 
-1.5.2.4
+-	dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
+-			ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
+-			sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
+-			sc->ah->ah_phy_revision & 0xf);
++	dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
++			ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
++					sc->ah->ah_mac_srev,
++					sc->ah->ah_phy_revision);
++
++	if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
++		dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
++			ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
++					sc->ah->ah_radio_5ghz_revision);
++	} else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
++		dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
++			ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
++					sc->ah->ah_radio_5ghz_revision);
++		dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
++			ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
++					sc->ah->ah_radio_2ghz_revision);
++	}
++
+ 
+ 	/* ready to process interrupts */
+ 	__clear_bit(ATH_STAT_INVALID, sc->status);
+
 
