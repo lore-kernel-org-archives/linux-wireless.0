@@ -1,71 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:35240 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759410AbXJNRuD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2007 13:50:03 -0400
-Date: Sun, 14 Oct 2007 19:50:32 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: drivers/net/wireless/rt2x00/: struct data_desc strangeness
-Message-ID: <20071014175032.GI4211@stusta.de> (sfid-20071014_185010_122038_43B93C3F)
+Received: from ra.tuxdriver.com ([70.61.120.52]:2414 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752750AbXJ0Mtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 08:49:42 -0400
+Date: Sat, 27 Oct 2007 08:49:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mcgrof@gmail.com, jirislaby@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: Maintain coding style
+Message-ID: <20071027124927.GB16222@tuxdriver.com> (sfid-20071027_134945_515315_14971C2F)
+References: <20071021013630.GB5817@localhost.domain.invalid> <20071026024348.GA14080@tuxdriver.com> <40f31dec0710260228r117c8ccdy13a8c32ffd42c2db@mail.gmail.com> <40f31dec0710261658n6a322a01u5f8a1b00c90f020c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0710261658n6a322a01u5f8a1b00c90f020c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/rt2x00/rt2x00ring.h contains the following:
+On Sat, Oct 27, 2007 at 02:58:58AM +0300, Nick Kossifidis wrote:
 
-<--  snip  -->
+> Do you mind if i also send the rest of them on the same series (not
+> only cleanups but code changes also) ?
 
-...
-/*
- * data_desc
- * Each data entry also contains a descriptor which is used by the
- * device to determine what should be done with the packet and
- * what the current status is.
- * This structure is greatly simplified, but the descriptors
- * are basically a list of little endian 32 bit values.
- * Make the array by default 1 word big, this will allow us
- * to use sizeof() correctly.
- */
-struct data_desc {
-        __le32 word[1];
-};
-...
-/*
- * TX/RX Descriptor access functions.
- */
-static inline void rt2x00_desc_read(struct data_desc *desc,
-                                    const u8 word, u32 *value)
-{
-        *value = le32_to_cpu(desc->word[word]);
-}
+That seems fine to me.
 
-static inline void rt2x00_desc_write(struct data_desc *desc,
-                                     const u8 word, const u32 value)
-{
-        desc->word[word] = cpu_to_le32(value);
-}
-...
+Thanks,
 
-<--  snip  -->
-
-I haven't checked whether it might work in all cases, but passing 
-non-zero values as second parameter to rt2x00_desc_{read,write}()
-(as is done in many cases) is even in the best case bad coding style.
-
-Spotted by the Coverity checker.
-
-cu
-Adrian
-
+John
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+John W. Linville
+linville@tuxdriver.com
