@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59061
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbXJNTLl (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:14484 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbXJ0LZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2007 15:11:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] Fix a null pointer check in ssb mipscore init
-Date: Sun, 14 Oct 2007 21:10:27 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <47126836.5000906@openwrt.org>
-In-Reply-To: <47126836.5000906@openwrt.org>
+	Sat, 27 Oct 2007 07:25:09 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1035387fkz
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:08 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 9/21] rt2x00: Release rt2x00 2.0.11
+Date: Sat, 27 Oct 2007 13:39:05 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710271334.34192.IvDoorn@gmail.com>
+In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710142110.28074.mb@bu3sch.de> (sfid-20071014_201146_097052_67948C68)
+  charset="utf-8"
+Message-Id: <200710271339.05492.IvDoorn@gmail.com> (sfid-20071027_122522_051164_B8705BF7)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 14 October 2007 21:04:22 Felix Fietkau wrote:
-> Fix a null pointer check in ssb mipscore init
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Version bump.
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> --- a/drivers/ssb/driver_mipscore.c
-> +++ b/drivers/ssb/driver_mipscore.c
-> @@ -171,20 +171,21 @@ u32 ssb_cpu_clock(struct ssb_mipscore *mcore)
->  	return rate;
->  }
-> 
->  void ssb_mipscore_init(struct ssb_mipscore *mcore)
->  {
-> -	struct ssb_bus *bus = mcore->dev->bus;
-> +	struct ssb_bus *bus;
->  	struct ssb_device *dev;
->  	unsigned long hz, ns;
->  	unsigned int irq, i;
-> 
->  	if (!mcore->dev)
->  		return; /* We don't have a MIPS core */
-> 
->  	ssb_dprintk(KERN_INFO PFX "Initializing MIPS core...\n");
-> 
-> +	bus = mcore->dev->bus;
->  	hz = ssb_clockspeed(bus);
->  	if (!hz)
->  		hz = 100000000;
->  	ns = 1000000000 / hz;
-> 
-> 
-> 
-> 
-
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index e3fbcb8..e488d9b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -42,7 +42,7 @@
+  * Module information.
+  * DRV_NAME should be set within the individual module source files.
+  */
+-#define DRV_VERSION	"2.0.10"
++#define DRV_VERSION	"2.0.11"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
 -- 
-Greetings Michael.
+1.5.3.4
+
