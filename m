@@ -1,94 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4879 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752978AbXJDXjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2007 19:39:39 -0400
-Date: Thu, 4 Oct 2007 19:02:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Daniel Drake <dsd@gentoo.org>, johannes@sipsolutions.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ieee80211_if_set_type: make check for master dev more
-	explicit
-Message-ID: <20071004230248.GN6037@tuxdriver.com> (sfid-20071005_003946_570448_60F74AB7)
-References: <20071004113343.552139D502B@zog.reactivated.net> <20071004180900.GG6037@tuxdriver.com> <200710041726.11744.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200710041726.11744.flamingice@sourmilk.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602AbXJ0M5m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 08:57:42 -0400
+Subject: Re: [PATCH] mac80211: reorder association debug output
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071027125025.GC16222@tuxdriver.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com>
+	 <11934326801557-git-send-email-linville@tuxdriver.com>
+	 <11934326803769-git-send-email-linville@tuxdriver.com>
+	 <11934326803330-git-send-email-linville@tuxdriver.com>
+	 <11934326811535-git-send-email-linville@tuxdriver.com>
+	 <11934326813508-git-send-email-linville@tuxdriver.com>
+	 <1193432681145-git-send-email-linville@tuxdriver.com>
+	 <1193433039.15686.12.camel@johannes.berg>
+	 <20071026212303.GF23415@tuxdriver.com>
+	 <1193435078.15686.14.camel@johannes.berg>
+	 <20071027125025.GC16222@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X7ZNnGNmxS7STcMIFP6O"
+Date: Sat, 27 Oct 2007 14:58:55 +0200
+Message-Id: <1193489935.15686.17.camel@johannes.berg> (sfid-20071027_135745_242097_77C55DC9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 04, 2007 at 05:26:11PM -0400, Michael Wu wrote:
-> On Thursday 04 October 2007 14:09, John W. Linville wrote:
-> > diff --git a/net/mac80211/ieee80211_iface.c
-> > b/net/mac80211/ieee80211_iface.c index be7e77f..6607b80 100644
-> > --- a/net/mac80211/ieee80211_iface.c
-> > +++ b/net/mac80211/ieee80211_iface.c
-> > @@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, int
-> > type) * which already has a hard_start_xmit routine assigned
-> >  	 * which must not be changed.
-> >  	 */
-> > -	if (!dev->hard_start_xmit)
-> > +	if (dev->type != ARPHRD_IEEE80211)
-> The standard way of checking for the master device is
-> dev == sdata->local->mdev
-> 
-> wme.c doesn't quite follow this but that code needs to die anyway.
-> 
-> This does look nicer than the other patch.
 
-Alright...better?
-
----
-
-From: John W. Linville <linville@tuxdriver.com>
-Subject: [PATCH] ieee80211_if_set_type: make check for master dev more explicit
-
-Problem description by Daniel Drake <dsd@gentoo.org>:
-
-"This sequence of events causes loss of connectivity:
-
-<plug in>
-<associate as normal in managed mode>
-ifconfig eth7 down
-iwconfig eth7 mode monitor
-ifconfig eth7 up
-ifconfig eth7 down
-iwconfig eth7 mode managed
-<associate as normal>
-
-At this point you are associated but TX does not work. This is because
-the eth7 hard_start_xmit is still ieee80211_monitor_start_xmit."
-
-The problem is caused by ieee80211_if_set_type checking for a non-zero
-hard_start_xmit pointer value in order to avoid changing that value for
-master devices.  The fix is to make that check more explicitly linked to
-master devices rather than simply checking if the value has been
-previously set.
-
-CC: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_iface.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index be7e77f..43e505d 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -106,7 +106,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 	 * which already has a hard_start_xmit routine assigned
- 	 * which must not be changed.
- 	 */
--	if (!dev->hard_start_xmit)
-+	if (dev != sdata->local->mdev)
- 		dev->hard_start_xmit = ieee80211_subif_start_xmit;
- 
- 	/*
--- 
-1.5.2.4
+--=-X7ZNnGNmxS7STcMIFP6O
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-John W. Linville
-linville@tuxdriver.com
+
+> > No drivers in 2.6.23 anyway and Intel ships their own mac80211. Why
+> > should we care at all?
+>=20
+> rtl8187 is in 2.6.23.
+
+Oops, I stand corrected. Still I don't think that the message patch is
+worth doing in stable, although the regression potential is pretty much
+nil.
+
+johannes
+
+--=-X7ZNnGNmxS7STcMIFP6O
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyM2DaVg1VMiehFYAQJHrg//fRByVsmaUdCximZN5yHe6jQXe5R0BGm6
+v89qOx3UOHi+Cf7+YqixYZn4+V3UF4OmHzksBUGXdQ76fNBN6SDfNwkNkAq42upG
+VuE52BClmgbY+38DRfEl5hE6Nqy6yG1qfTQeRyaDtYpJ/QjPbxJ6xSmkzBidhL5F
+ajn7F96C5XHp6Ygi9juRRBCpawIKn2CH88odNAUwbDJWVhm/Me5LlEccuytRBs6P
+6nNpCd7nhQFiRUFO3rYzHtaPTncMX8vWpxTyo6xWCYxZ5CPB8leaJ9NfmW80WLEV
+Z3QWUvsb0mAJRIpX8ePdrBZZaLQu+gN2pD0ZUxeCMmgmAwriFj2ECVkLufG6lBhJ
+Izzacno+ofwgZ5Qk/uUFMTZi6+a1hT/e8Wmb67XPqlhji6/Cnoi9SzRCoOXSY3oI
+vcD/JDcAY7mYImBVgN1qP6XtEopS+8UMek8hJ/JU2srTqSEjoxn5EI9PH5rWTnz5
+Vg+iVbbE38/314dSePXMq9+3sE/lAfHY9I043McojdCn940gz5/zZC6Q3dlE2JX/
+p7ngDW2lHI51RImIaxEXAv2W3vb7VjIEyl/HLcxwnByV28+0+ssle+q6dTXcGMGi
+yAC2RNuWY/hOs+akfCixL89zOT/VWZ4pSdI7e/uMaABxoqz+5Ar29b0+B+NgE67+
+NfduHgDlVBs=
+=8zfV
+-----END PGP SIGNATURE-----
+
+--=-X7ZNnGNmxS7STcMIFP6O--
+
