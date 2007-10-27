@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33803
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbXJURfs (ORCPT
+Received: from smtp-out3.tiscali.nl ([195.241.79.178]:46697 "EHLO
+	smtp-out3.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763902AbXJ0AFN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 13:35:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: reading/writing zd1211 eeprom
-Date: Sun, 21 Oct 2007 18:58:57 +0200
-Cc: kune@deine-taler.de, linux-wireless@vger.kernel.org
-References: <200710211335.39373.mb@bu3sch.de> <471B7B0C.5090900@gentoo.org>
-In-Reply-To: <471B7B0C.5090900@gentoo.org>
+	Fri, 26 Oct 2007 20:05:13 -0400
+Message-ID: <472280B3.4090406@tiscali.nl> (sfid-20071027_010516_216217_AC5A6DDD)
+Date: Sat, 27 Oct 2007 02:05:07 +0200
+From: Roel Kluin <12o3l@tiscali.nl>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710211858.58020.mb@bu3sch.de> (sfid-20071021_183551_632627_37297F9E)
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] fix 'and' typo's
+References: <4722453E.2090801@tiscali.nl> <1193442527.20185.10.camel@localhost.localdomain>
+In-Reply-To: <1193442527.20185.10.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 21 October 2007 18:15:08 Daniel Drake wrote:
-> Michael Buesch wrote:
-> > I'd like to read/modify the eeprom of my zd stick.
-> > Do you have software to do so? If not, any advice on how
-> > this has to be done? I'd write the necessary driver patches,
-> > if you just tell me how the eeprom is accessed.
-> 
-> Yep, zd1211memtool.
-> 
-> http://sourceforge.net/project/showfiles.php?group_id=129083&package_id=238745
-> 
-> Usual precautions apply: you could easily break your device, and this 
-> code isn't very widely tested (but it works for me).
+Dan Williams wrote:
 
-Nice, thanks.
+>> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+>> index 074055e..e3eca6d 100644
+>> --- a/drivers/net/wireless/airo.c
 
-Do you also have this in some git repository?
+> 
+> Ack.
+> 
+>> diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+>> index 059ce3f..57cc7e5 100644
+>> --- a/drivers/net/wireless/atmel.c
 
--- 
-Greetings Michael.
+> 
+> Ack.
+> 
+>> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+>> index c6f5aa3..d93438c 100644
+>> --- a/drivers/net/wireless/libertas/wext.c
+
+> 
+> Ack.
+> 
+
+Thanks.
+I have sent them as separate patches to the wireless list as well.
