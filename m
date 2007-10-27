@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33051 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753303AbXJaRmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 13:42:04 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id l9VHg3h7031359
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 13:42:03 -0400
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l9VHg38S030480
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 13:42:03 -0400
-Received: from [10.13.248.34] (vpn-248-34.boston.redhat.com [10.13.248.34])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l9VHg2Ld015808
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 13:42:02 -0400
-Subject: InProComm IPN2120
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Wed, 31 Oct 2007 13:40:30 -0400
-Message-Id: <1193852430.11271.3.camel@localhost.localdomain> (sfid-20071031_174213_408924_5CE4697E)
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41240
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957AbXJ0NMH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 09:12:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix initcall ordering
+Date: Sat, 27 Oct 2007 15:11:00 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Christian Casteyde <casteyde.christan@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710271511.00404.mb@bu3sch.de> (sfid-20071027_141212_654174_A88AC5B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I know this hardware has no existing drivers.  However, does anyone know
-anything about this chipset?  It's B-only from about 2003 or so, I
-think.
+ssb must init after PCI but before the ssb drivers.
 
-Dan
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Casteyde <casteyde.christan@free.fr>
+Fixes-bug: #9219
 
-
+Index: wireless-2.6/drivers/ssb/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/ssb/main.c	2007-10-27 14:54:40.000000000 +0200
++++ wireless-2.6/drivers/ssb/main.c	2007-10-27 14:57:15.000000000 +0200
+@@ -1147,7 +1147,10 @@ static int __init ssb_modinit(void)
+ 
+ 	return err;
+ }
+-subsys_initcall(ssb_modinit);
++/* ssb must be initialized after PCI but before the ssb drivers.
++ * That means we must use some initcall between subsys_initcall
++ * and device_initcall. */
++fs_initcall(ssb_modinit);
+ 
+ static void __exit ssb_modexit(void)
+ {
