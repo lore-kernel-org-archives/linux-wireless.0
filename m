@@ -1,76 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756507AbXJSNtV (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:4082 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbXJ0LYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 09:49:21 -0400
-Subject: Re: [PATCH 1/1] mac80211: adding bss_config to low driver ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1192726084.15285.31.camel@johannes.berg> (sfid-20071018_190135_069914_4249F969)
-References: <11926651061687-git-send-email-tomas.winkler@intel.com>
-	 <1192726084.15285.31.camel@johannes.berg>
-	 (sfid-20071018_190135_069914_4249F969)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fzZJUWKmsPwHNyhCozBf"
-Date: Fri, 19 Oct 2007 14:20:08 +0200
-Message-Id: <1192796408.4167.3.camel@johannes.berg> (sfid-20071019_144927_252559_3867C2FD)
-Mime-Version: 1.0
+	Sat, 27 Oct 2007 07:24:49 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so973044nfb
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:24:47 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Sat, 27 Oct 2007 13:34:34 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710271334.34192.IvDoorn@gmail.com> (sfid-20071027_122459_670967_D0B5A150)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
---=-fzZJUWKmsPwHNyhCozBf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here is the 2.0.12 release of rt2x00.
+I noticed you only pulled 2 patches from the 2.0.11 release,
+and I don't know why you dropped the remaining patches.
+This means that this pull requests also contains the remaining
+2.0.11 patches...
 
-On Thu, 2007-10-18 at 18:48 +0200, Johannes Berg wrote:
+Lots of bugfixes this time, finally rfkill is working, link speeds issues
+have been resolved and some packet loss issues are gone.
 
-> Hmm. And here's a thought: don't we need all this information within
-> mac80211 as well? Would it maybe make sense to embed it into the sta
-> sdata structure and have the 'changed_map' not be in the structure but
-> as a second parameter to the callback function? Then we could always use
-> a pointer to the embedded structure that keeps track of this information
-> and build the changed value dynamically. This saves having to initialise
-> the structure all the time when calling the function and makes sure that
-> even the unchanged parameters are always valid should the driver need
-> them. [also see at the very end of this mail]
+All indivual patches can also be found here:
+http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.12/
 
-Re-reading my own mail :)
+Ivo
 
-Don't we need an if_id parameter to the callback so if the driver
-supports multiple virtual STA interfaces it can make an effort to
-support the settings of both BSSes? I'd be tempted to do it in mac80211
-but I guess that different MAC designs have different levels of
-configurability when multiple addresses are programmed so it seems the
-only sane place to do it would be the driver since mac80211 cannot know
-which settings are only supported once and where different settings can
-be supported by the MAC.
+---
 
-johannes
+The following changes since commit 0119130478b1706232d79c768cb587c5e0c615de:
+  John W. Linville (1):
+        Merge branch 'fixes-jgarzik' into everything
 
---=-fzZJUWKmsPwHNyhCozBf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+are available in the git repository at:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
 
-iQIVAwUARxig96Vg1VMiehFYAQK3Yg//Uu3w72WiuiI++vaDKqi9sX5DJO42UphJ
-YbQ5Scb0ZuJb5Lza5EbObWGYwBE2rq9IQIMUOoL4SCbOJ5XzPU/jupm6qUc4MCma
-QubUc4HSAodu56MBgtIttxqQIFhJg3HpBYykjOMU+1dCLiHIyU4yBLlC9G8giaod
-7LhEAoH5p2nMM6mk5HSloUzyD9RrLobJ4i0KMTfVmYuI0KCHrtD+UrT5Esl+xQey
-HwYZvD0GeS1r2UgJwT5qfVW+W3zDBwUGPzEMBlf65uT+dcMkKa1VBzbbYOvE+wQh
-KWNJX2gWiFLBkCUJ5AZabWNC7faEw6lPsLXox1hzi4PRLVKZQsq4Pw8k0uOOQa2x
-R6Ys7fuTcvyetFHxhKkTidt09Gww2vMp7N7k3iyhe1v8T8uhGj6dShX6xACLWM6q
-pzqi3kqO81wYgADZC/WGMlbAIaZqJDhW4h7vZQGw8oYxmviHgaSocHOF6VEkcMHf
-Frn+yCu9BDoU4EyEdHHjvvyiagMaSLbL9dtPiUqMtuV0j/uP9ZXRniuMm3Ozwizg
-AthAoirOlh+CrhiVt8oVUTgpDeSUWLWpxnVGlq//yHBtZEFFe6JnDNCGll5Qt+cy
-KgpXcfB+31QI3c57qgg6FPSihWF99iLx9spfTP/4/SXsuj0nfvjYF+xCXJDR0MVN
-AUA/Oe6dLHQ=
-=zceR
------END PGP SIGNATURE-----
+Adam Baker (2):
+      rt2x00: Unconstify rt2x00dev
+      rt2x00: Place mutex around USB register access
 
---=-fzZJUWKmsPwHNyhCozBf--
+Ivo van Doorn (15):
+      rt2x00: Move quality statistics into seperate structure
+      rt2x00: Use enum defines
+      rt2x00: Correctly translate mac80211 antenna setup to rt2x00
+      rt2x00: SW diversity should default to antenna B
+      rt2x00: Remove rt2x00_clear_link
+      rt2x00: Implement SW diversity
+      rt2x00: Cleanup if-statements
+      rt2x00: Release rt2x00 2.0.11
+      rt2x00: Disable RX when switching antenna
+      rt2x00: Split rt61/rt73 antenna selection into RX and TX antenna
+      rt2x00: Input-polldev requires input device
+      rt2x00: Detect initial rfkill state on register
+      rt2x00: Remove unused variables
+      rt2x00: Remove data_desc structure
+      rt2x00: Release rt2x00 2.0.12
 
+Mattias Nissler (4):
+      rt2x00: Fix antenna selection.
+      rt2x00: Rework rt61 antenna selection.
+      rt2x00: Rework rt73 antenna selection
+      rt2x00: Correctly set ACK bit in tx descriptors
+
+ drivers/net/wireless/rt2x00/rt2400pci.c    |  104 +++++----
+ drivers/net/wireless/rt2x00/rt2400pci.h    |    4 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |  112 +++++-----
+ drivers/net/wireless/rt2x00/rt2500pci.h    |    4 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |  169 +++++++++-----
+ drivers/net/wireless/rt2x00/rt2500usb.h    |   17 ++-
+ drivers/net/wireless/rt2x00/rt2x00.h       |  192 ++++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00config.c |   95 ++++++++-
+ drivers/net/wireless/rt2x00/rt2x00debug.h  |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |  212 +++++++++++++++---
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    2 +
+ drivers/net/wireless/rt2x00/rt2x00pci.c    |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.h    |    8 +-
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |   44 ++++-
+ drivers/net/wireless/rt2x00/rt2x00ring.h   |   23 +--
+ drivers/net/wireless/rt2x00/rt2x00usb.c    |   38 +++-
+ drivers/net/wireless/rt2x00/rt2x00usb.h    |   19 +-
+ drivers/net/wireless/rt2x00/rt61pci.c      |  332 ++++++++++++++--------------
+ drivers/net/wireless/rt2x00/rt61pci.h      |   14 +-
+ drivers/net/wireless/rt2x00/rt73usb.c      |  198 ++++++++++-------
+ drivers/net/wireless/rt2x00/rt73usb.h      |   14 +-
+ 21 files changed, 1071 insertions(+), 538 deletions(-)
