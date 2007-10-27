@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:13891 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbXJVRLL (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:14625 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbXJ0LZG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 13:11:11 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2584206pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2007 10:11:10 -0700 (PDT)
-Message-ID: <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com> (sfid-20071022_181119_132527_A250B414)
-Date: Mon, 22 Oct 2007 13:11:10 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Frans Pop" <elendil@planet.nl>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710221848.27985.elendil@planet.nl>
+	Sat, 27 Oct 2007 07:25:06 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1035411fkz
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2007 04:25:05 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 8/21] rt2x00: Fix antenna selection.
+Date: Sat, 27 Oct 2007 13:38:38 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200710271334.34192.IvDoorn@gmail.com>
+In-Reply-To: <200710271334.34192.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200710211316.06772.elendil@planet.nl>
-	 <43e72e890710220827k2aa7a8d9m3653ec51ff461b32@mail.gmail.com>
-	 <200710221848.27985.elendil@planet.nl>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200710271338.38442.IvDoorn@gmail.com> (sfid-20071027_122521_491302_379D5C1B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/07, Frans Pop <elendil@planet.nl> wrote:
-> On Monday 22 October 2007, Luis R. Rodriguez wrote:
-> > Get this line again from lspci, and for example if its 30000000 again
-> > run from madwifi:
-> >
-> > ./tools/ath_info 0x30000000
->
-> That results in:
->
->  -==Device Information==-
-> MAC Version:  5212 (0x50)
-> MAC Revision: 5213A(0x59)
-> PHY Revision: 5110 (0x0)
-> PHY Revision: 5110 (0x0)
+From: Mattias Nissler <mattias.nissler@gmx.de>
 
-This is the problem. ath5k currently assumes only AR5210s (which are
-802.11a only capable) have an RF5110. This is also an 802.11bg card.
-Essentially support for this is on the TODO list. For now we'll have
-to just detect this and inform users the card is not supported yet.
+In the config() handler, make sure that we do configure an antenna if the
+current active antenna is uninitialized. Furthermore, don't overwrite the
+active antenna with bogus values if we didn't touch the antenna setup.
 
-  Luis
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00config.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 2b0edd2..b4fad74 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -166,6 +166,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 	else if (conf->antenna_sel_rx &&
+ 		 conf->antenna_sel_rx != active_ant->rx)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
++	else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
++		flags |= CONFIG_UPDATE_ANTENNA;
+ 
+ 	if (!conf->antenna_sel_tx &&
+ 	    default_ant->tx != ANTENNA_SW_DIVERSITY &&
+@@ -174,6 +176,8 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 	else if (conf->antenna_sel_tx &&
+ 		 conf->antenna_sel_tx != active_ant->tx)
+ 		flags |= CONFIG_UPDATE_ANTENNA;
++	else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
++		flags |= CONFIG_UPDATE_ANTENNA;
+ 
+ 	/*
+ 	 * The following configuration options are never
+@@ -262,11 +266,17 @@ config:
+ 	if (flags & (CONFIG_UPDATE_CHANNEL | CONFIG_UPDATE_ANTENNA))
+ 		rt2x00lib_reset_link_tuner(rt2x00dev);
+ 
+-	rt2x00dev->curr_hwmode = libconf.phymode;
+-	rt2x00dev->rx_status.phymode = conf->phymode;
++	if (flags & CONFIG_UPDATE_PHYMODE) {
++		rt2x00dev->curr_hwmode = libconf.phymode;
++		rt2x00dev->rx_status.phymode = conf->phymode;
++	}
++
+ 	rt2x00dev->rx_status.freq = conf->freq;
+ 	rt2x00dev->rx_status.channel = conf->channel;
+ 	rt2x00dev->tx_power = conf->power_level;
+-	rt2x00dev->link.ant.active.rx = libconf.ant.rx;
+-	rt2x00dev->link.ant.active.tx = libconf.ant.tx;
++
++	if (flags & CONFIG_UPDATE_ANTENNA) {
++		rt2x00dev->link.ant.active.rx = libconf.ant.rx;
++		rt2x00dev->link.ant.active.tx = libconf.ant.tx;
++	}
+ }
+-- 
+1.5.3.4
+
