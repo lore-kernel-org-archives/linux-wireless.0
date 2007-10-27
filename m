@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40040
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbXJBKSo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2007 06:18:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Update beacon_update callback documentation
-Date: Tue, 2 Oct 2007 12:15:15 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>
+Received: from venema.h4ckr.net ([217.24.1.135]:34599 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751401AbXJ0XZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Oct 2007 19:25:01 -0400
+Date: Sun, 28 Oct 2007 02:24:59 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 5/7] athk: Use SREV to identify single-chip solutions
+Message-ID: <20071027232459.GE5973@localhost.domain.invalid> (sfid-20071028_002505_899736_FF479411)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200710021215.15754.mb@bu3sch.de> (sfid-20071002_111851_211692_46F3FC00)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Use SREV instead of pci id to identify single chip solutions.
 
-Index: wireless-2.6/include/net/mac80211.h
-===================================================================
---- wireless-2.6.orig/include/net/mac80211.h	2007-09-25 22:51:28.000000000 +0200
-+++ wireless-2.6/include/net/mac80211.h	2007-10-02 12:13:43.000000000 +0200
-@@ -890,7 +890,14 @@ struct ieee80211_ops {
+Srev is more accurate info to identify the chip + this makes 
+it possible to identify some 5424 chips found on thinkpads with
+faulty 5212 pci id.
+
+Changes-licensed-under: ISC
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index c8d1fbd..1c10203 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -229,23 +229,6 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 	ah->ah_software_retry = false;
+ 	ah->ah_ant_diversity = AR5K_TUNE_ANT_DIVERSITY;
  
- 	/* Setup beacon data for IBSS beacons. Unlike access point (Master),
- 	 * IBSS uses a fixed beacon frame which is configured using this
--	 * function. This handler is required only for IBSS mode. */
-+	 * function.
-+	 * If the driver returns success (0) from this callback, it own
-+	 * the skb. That means the driver is responsible to kfree_skb() it.
-+	 * The control structure is not dynamically allocated. That means the
-+	 * driver does not own the pointer and if it needs it somewhere
-+	 * outside of the context of this function, it must copy it
-+	 * somewhere else.
-+	 * This handler is required only for IBSS mode. */
- 	int (*beacon_update)(struct ieee80211_hw *hw,
- 			     struct sk_buff *skb,
- 			     struct ieee80211_tx_control *control);
+-	switch (device) {
+-	case PCI_DEVICE_ID_ATHEROS_AR2413:
+-	case PCI_DEVICE_ID_ATHEROS_AR5413:
+-	case PCI_DEVICE_ID_ATHEROS_AR5424:
+-		/*
+-		 * Known single chip solutions
+-		 */
+-		ah->ah_single_chip = true;
+-		break;
+-	default:
+-		/*
+-		 * Multi chip solutions
+-		 */
+-		ah->ah_single_chip = false;
+-		break;
+-	}
+-
+ 	/*
+ 	 * Set the mac revision based on the pci id
+ 	 */
+@@ -295,6 +278,14 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 		ah->ah_radio_2ghz_revision = ath5k_hw_radio_revision(ah,
+ 				CHANNEL_2GHZ);
+ 
++	/* Identify single chip solutions */
++	if((srev <= AR5K_SREV_VER_AR5414) &&
++	(srev >= AR5K_SREV_VER_AR2424)) {
++		ah->ah_single_chip = true;
++	} else {
++		ah->ah_single_chip = false;
++	}
++
+ 	/* Single chip radio */
+ 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
+ 		ah->ah_radio_2ghz_revision = 0;
 
--- 
-Greetings Michael.
+
+
