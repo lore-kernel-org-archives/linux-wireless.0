@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44630
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45965
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbXJZXxf (ORCPT
+	with ESMTP id S1751260AbXJ1MI5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 19:53:35 -0400
+	Sun, 28 Oct 2007 08:08:57 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: Re: some apparently unreferenced CONFIG variables
-Date: Sat, 27 Oct 2007 01:52:31 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.64.0710261420280.3111@localhost.localdomain>
-In-Reply-To: <Pine.LNX.4.64.0710261420280.3111@localhost.localdomain>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: Register LED triggers before registering switch
+Date: Sun, 28 Oct 2007 13:07:54 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Message-Id: <200710281307.54552.mb@bu3sch.de> (sfid-20071028_120900_993510_66F1E41B)
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710270152.31290.mb@bu3sch.de> (sfid-20071027_005338_279200_F81A2FC0)
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 October 2007 20:21:30 Robert P. J. Day wrote:
-> 
-> >>>>> B43_DMA_MODE
-> drivers/net/wireless/b43/Kconfig:110:config B43_DMA_MODE
-> >>>>> B43LEGACY_DMA_MODE
-> drivers/net/wireless/b43legacy/Kconfig:70:config B43LEGACY_DMA_MODE
-> >>>>> B43LEGACY_PCI_AUTOSELECT
-> drivers/net/wireless/b43legacy/Kconfig:24:config B43LEGACY_PCI_AUTOSELECT
-> >>>>> B43LEGACY_PCICORE_AUTOSELECT
-> drivers/net/wireless/b43legacy/Kconfig:31:config B43LEGACY_PCICORE_AUTOSELECT
-> >>>>> B43LEGACY_PIO_MODE
-> drivers/net/wireless/b43legacy/Kconfig:77:config B43LEGACY_PIO_MODE
-> >>>>> B43_PCI_AUTOSELECT
-> drivers/net/wireless/b43/Kconfig:31:config B43_PCI_AUTOSELECT
-> >>>>> B43_PCICORE_AUTOSELECT
-> drivers/net/wireless/b43/Kconfig:38:config B43_PCICORE_AUTOSELECT
-> >>>>> B43_PIO_MODE
-> drivers/net/wireless/b43/Kconfig:117:config B43_PIO_MODE
-> 
-> rday
-> 
+Registering the switch triggers a LED event, so we must register
+LED triggers before the switch.
+This has a potential to fix a crash, depending on how the device
+driver initializes the rfkill data structure.
 
-I suggest you fix your script that found all these false positives for you.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
--- 
-Greetings Michael.
+Index: wireless-2.6/net/rfkill/rfkill.c
+===================================================================
+--- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-27 13:28:33.000000000 +0200
++++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 12:57:12.000000000 +0100
+@@ -388,19 +388,20 @@ int rfkill_register(struct rfkill *rfkil
+ 	if (!rfkill->toggle_radio)
+ 		return -EINVAL;
+ 
++	snprintf(dev->bus_id, sizeof(dev->bus_id),
++		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
++
++	rfkill_led_trigger_register(rfkill);
++
+ 	error = rfkill_add_switch(rfkill);
+ 	if (error)
+ 		return error;
+ 
+-	snprintf(dev->bus_id, sizeof(dev->bus_id),
+-		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
+-
+ 	error = device_add(dev);
+ 	if (error) {
+ 		rfkill_remove_switch(rfkill);
+ 		return error;
+ 	}
+-	rfkill_led_trigger_register(rfkill);
+ 
+ 	return 0;
+ }
+@@ -416,9 +417,9 @@ EXPORT_SYMBOL(rfkill_register);
+  */
+ void rfkill_unregister(struct rfkill *rfkill)
+ {
+-	rfkill_led_trigger_unregister(rfkill);
+ 	device_del(&rfkill->dev);
+ 	rfkill_remove_switch(rfkill);
++	rfkill_led_trigger_unregister(rfkill);
+ 	put_device(&rfkill->dev);
+ }
+ EXPORT_SYMBOL(rfkill_unregister);
