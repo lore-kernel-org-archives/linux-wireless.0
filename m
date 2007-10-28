@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:41869 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752637AbXJTGF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2007 02:05:26 -0400
-Message-ID: <20071020020525.bnh9tejfbb400sw0@webmail.spamcop.net> (sfid-20071020_070532_342799_682D1717)
-Date: Sat, 20 Oct 2007 02:05:25 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 lists supported rates backwards
-References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
-	<1ba2fa240710191714j645c8bfp87a2269b9c141c52@mail.gmail.com>
-In-Reply-To: <1ba2fa240710191714j645c8bfp87a2269b9c141c52@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49752 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbXJ1Nto (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2007 09:49:44 -0400
+Subject: [PATCH] mac80211: allow driver to ask for a rate control algorithm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 28 Oct 2007 14:51:05 +0100
+Message-Id: <1193579465.5197.9.camel@johannes.berg> (sfid-20071028_134946_895020_53CE943F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Tomas Winkler <tomasw@gmail.com>:
+This allows a driver to ask for a specific rate control algorithm.
+The rate control algorithm asked for must be registered and be
+available as a module or built-in.
 
-> I've sent a patch that fixes that few days ago.It should be in the latest
-> version 1.1.18 ''Fix rate setting in probe request for HW sacn'
-> I did test it only with 4965 but it's a same code.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Yes, my copy of the repository has that.  It's the most recent commit.  
-  And that patch is already in wireless-2.6/everything, because I  
-tried to apply it manually and got a message that it's already applied.
+---
+The fix that makes rc80211 simple built-in will break Intel's drivers
+because they never bothered to fix the rate control selection bugs they
+have. This is required to fix those bugs.
 
-I'm away from that router, but I remember that I checked carefully  
-that I was testing the right driver.  Either I did something wrong  
-anyway, or the fix for the rates was incomplete.
+ include/net/mac80211.h   |    5 +++++
+ net/mac80211/ieee80211.c |    3 ++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
--- 
-Regards,
-Pavel Roskin
+--- linux-2.6.orig/include/net/mac80211.h	2007-10-28 14:23:16.625046333 +0100
++++ linux-2.6/include/net/mac80211.h	2007-10-28 14:29:51.925037218 +0100
+@@ -704,11 +704,16 @@ enum ieee80211_hw_flags {
+  *
+  * @queues: number of available hardware transmit queues for
+  *	data packets. WMM/QoS requires at least four.
++ *
++ * @rate_control_algorithm: rate control algorithm for this hardware.
++ *	If unset (NULL), the default algorithm will be used. Must be
++ *	set before calling ieee80211_register_hw().
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+ 	struct wiphy *wiphy;
+ 	struct workqueue_struct *workqueue;
++	const char *rate_control_algorithm;
+ 	void *priv;
+ 	u32 flags;
+ 	unsigned int extra_tx_headroom;
+--- linux-2.6.orig/net/mac80211/ieee80211.c	2007-10-28 14:28:46.655082356 +0100
++++ linux-2.6/net/mac80211/ieee80211.c	2007-10-28 14:29:03.805036512 +0100
+@@ -1272,7 +1272,8 @@ int ieee80211_register_hw(struct ieee802
+ 	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
+ 	ieee80211_if_set_type(local->mdev, IEEE80211_IF_TYPE_AP);
+ 
+-	result = ieee80211_init_rate_ctrl_alg(local, NULL);
++	result = ieee80211_init_rate_ctrl_alg(local,
++					      hw->rate_control_algorithm);
+ 	if (result < 0) {
+ 		printk(KERN_DEBUG "%s: Failed to initialize rate control "
+ 		       "algorithm\n", wiphy_name(local->hw.wiphy));
+
+
