@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:59685 "EHLO
-	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbXJWMg4 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54861
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbXJ1NWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 08:36:56 -0400
-Date: Tue, 23 Oct 2007 14:36:39 +0200
-From: maximilian attems <max@stro.at>
-To: Norbert Preining <preining@logic.at>
-Cc: Ian Schram <ischram@telenet.be>, linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] [RFC][PATCH] iwlwifi using mac80211_leds
-Message-ID: <20071023123639.GO1362@baikonur.stro.at> (sfid-20071023_133658_579626_4668F171)
-References: <47164DA9.3050001@telenet.be> <9f50a7a00710222311u7ae17958w596c3d579fb31536@mail.gmail.com> <1193120114.3069.256.camel@debian.sh.intel.com> <loom.20071023T104428-443@post.gmane.org> <471DDDD0.4060007@telenet.be> <20071023114318.GI25672@gamma.logic.tuwien.ac.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071023114318.GI25672@gamma.logic.tuwien.ac.at>
+	Sun, 28 Oct 2007 09:22:09 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] mac80211: make simple rate control algorithm built-in
+Date: Sun, 28 Oct 2007 14:21:43 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <4a55afb80710271456k6c3bbfeah879b67a91a3b8d41@mail.gmail.com> <200710281148.50859.mb@bu3sch.de> <1193577464.5197.2.camel@johannes.berg>
+In-Reply-To: <1193577464.5197.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710281421.43574.mb@bu3sch.de> (sfid-20071028_132211_858101_6B5B1F5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 23, 2007 at 01:43:18PM +0200, Norbert Preining wrote:
-> Ok, so 2.6.23-mm1 should do the trick, am I right?
+On Sunday 28 October 2007 14:17:44 Johannes Berg wrote:
+> Too frequently people do not have module autoloading enabled
+> or fail to install the rate control module correctly, hence
+> their hardware probing fails due to no rate control algorithm
+> being available. This makes the 'simple' algorithm built into
+> the mac80211 module unless EMBEDDED is enabled in which case
+> it can be disabled (eg. if the wanted driver requires another
+> rate control algorithm.)
 > 
-current git maybe better :P
-but if you are lazy we have backports in 2.6.23 trunk snapshots
--> http://wiki.debian.org/DebianKernel
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+Acked-by: Michael Buesch <mb@bu3sch.de>
 
 -- 
-maks
+Greetings Michael.
