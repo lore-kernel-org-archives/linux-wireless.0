@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:37548 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932502AbXJPODi convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbXJ1Kj4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 10:03:38 -0400
-Received: from ninjamobile.local (unknown [85.102.69.93])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by uludag.org.tr (Postfix) with ESMTP id 138CA61979C0
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 17:03:30 +0300 (EEST)
-From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Problem with in-kernel iwl3945 driver
-Date: Tue, 16 Oct 2007 17:03:51 +0300
-References: <200710161317.45460.ismail@pardus.org.tr>
-In-Reply-To: <200710161317.45460.ismail@pardus.org.tr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200710161703.51343.ismail@pardus.org.tr> (sfid-20071016_150340_479148_972107C4)
+	Sun, 28 Oct 2007 06:39:56 -0400
+Subject: Re: [PATCH] mac80211: fix printk() format string
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
+Cc: Joe Jezak <josejx@gentoo.org>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <472473D2.8040102@freemail.hu>
+References: <472473D2.8040102@freemail.hu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1ng2CL/zMFsLTiFI0XE8"
+Date: Sun, 28 Oct 2007 11:41:16 +0100
+Message-Id: <1193568076.3966.17.camel@johannes.berg> (sfid-20071028_104006_252116_CE3A6729)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replying to myself,
 
-Tuesday 16 October 2007 Tarihinde 13:17:45 yazm=C4=B1=C5=9Ft=C4=B1n=C4=B1=
-z:
-[...]
-> wlan0     IEEE 802.11b  ESSID:"XXYYZZ"
-                         ^^^^^^^
-Looks like its in 802.11b mode instead of 802.11g.  That might be a clu=
-e for=20
-slowdown.
+--=-1ng2CL/zMFsLTiFI0XE8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-ismail
 
---=20
-=46aith is believing what you know isn't so -- Mark Twain
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> Get rid of the following compiler warning message:
+>=20
+> net/mac80211/ieee80211_sta.c: In function 'ieee80211_rx_mgmt_assoc_resp':
+> net/mac80211/ieee80211_sta.c:1187: warning: format '%d' expects type 'int=
+', but argument 7 has type 'long unsigned int'
+
+a different fix is already applied.
+
+johannes
+
+--=-1ng2CL/zMFsLTiFI0XE8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyRnS6Vg1VMiehFYAQJWIRAAqmt6jFVH0pVUnODT7Sk8du1uRUQ8T8CL
+2YTQ86HGUE4NoBXm0lpT0f5+V22b1dRmPBWo3TWNCsopHB7xuEJvkxQd+uThalIV
+uPcYX8rvxnCnSf8bceEt5deh4gaGzVXpEqt7VPt6nvEhygBADCZEHKuJ4+Jrg9CT
+pXT6ZeWL2JdPd/dc5hlQHH5a1BWEKy24tjkHS3rbLvI2QPHw430XEkKt37sHlUpS
+xe+uaF6eE3q0al8ecLYz1rLvUMiff8mWrqoStLop4Rop9Vc3qM1UpGuexLaeC2OY
+QAz5ck3wpCWCVvB429lq5fXrmpLeJybZ5aBRHlIJ3gZIusSpX94zbUlcUP+y4VzT
+DMqfLSDCjzI4wgXXYym9gPGQ/7jZKzZ+Snl3j3+KWY5pNsXq6Xf/uPxYfA4DG4gf
+nSCvUUEyY2pKlzaurSFuyWp+atdxi8Mp4PyoRVGfnhB2VIclMmuKjfNjhkQCW+00
+s6yO5jbcFYDZwhfgrAZlpNWz1gJLtGGu05fW9TvzcO0gLKiFyyZnHAtGf5ND07K4
+BHIVCFN3RQaeKOZLrKdOWO3QAQf4hHZtV+j08G+igbihYmcDhf5dKNFbdP0kOT0V
+Si/anoqcuSyQz43DRhNsqWEcDD6+e7ueGFXGI8xnvBAbnKDN3lQUITaJA1bUAMci
+fYQkH2qxrec=
+=FxBT
+-----END PGP SIGNATURE-----
+
+--=-1ng2CL/zMFsLTiFI0XE8--
+
