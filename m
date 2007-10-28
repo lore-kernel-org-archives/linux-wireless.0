@@ -1,171 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpauth03.prod.mesa1.secureserver.net ([64.202.165.183]:59339
-	"HELO smtpauth03.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755899AbXJQUNi (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53369 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbXJ1Rxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 16:13:38 -0400
-Message-ID: <47166B5F.1010804@seclark.us> (sfid-20071017_211343_143881_6DCA3F92)
-Date: Wed, 17 Oct 2007 16:06:55 -0400
-From: Stephen Clark <Stephen.Clark@seclark.us>
-Reply-To: Stephen.Clark@seclark.us
-MIME-Version: 1.0
-To: Jens Axboe <jens.axboe@oracle.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	=?ISO-8859-1?Q?Ismail_D=F6nmez?= <ismail@pardus.org.tr>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] iwl3945 doesn't work
-References: <20071017135452.GJ5043@kernel.dk>	<200710171708.48654.ismail@pardus.org.tr>	<20071017141111.GM5043@kernel.dk>	<1192630733.10567.37.camel@localhost.localdomain>	<20071017142246.GQ5043@kernel.dk>	<1192634183.11584.0.camel@localhost.localdomain> <20071017163519.GC15552@kernel.dk>
-In-Reply-To: <20071017163519.GC15552@kernel.dk>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Sun, 28 Oct 2007 13:53:34 -0400
+Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
+	network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
+	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <20071028173610.GM4936@jm.kir.nu>
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
+	 <1193127280.3069.261.camel@debian.sh.intel.com>
+	 <1193148453.8648.20.camel@localhost.localdomain>
+	 <1193161034.7733.38.camel@johannes.berg>
+	 <1193238423.2557.41.camel@localhost.localdomain>
+	 <1193318969.6092.19.camel@johannes.berg>
+	 <1193320140.5542.11.camel@localhost.localdomain>
+	 <1193320661.14136.10.camel@johannes.berg>
+	 <1193548708.7779.10.camel@localhost.localdomain>
+	 <1193567294.3966.6.camel@johannes.berg>  <20071028173610.GM4936@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JgvTaNSOKlcrgZZLBbq8"
+Date: Sun, 28 Oct 2007 18:54:45 +0100
+Message-Id: <1193594085.5197.20.camel@johannes.berg> (sfid-20071028_175340_092971_9D727259)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jens Axboe wrote:
 
->On Wed, Oct 17 2007, Dan Williams wrote:
-> =20
->
->>On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
->>   =20
->>
->>>On Wed, Oct 17 2007, Dan Williams wrote:
->>>     =20
->>>
->>>>On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
->>>>       =20
->>>>
->>>>>On Wed, Oct 17 2007, Ismail D=F6nmez wrote:
->>>>>         =20
->>>>>
->>>>>>Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
->>>>>>           =20
->>>>>>
->>>>>>>Hi,
->>>>>>>
->>>>>>>Seeing that iwl3945 is now merged, I decided to switch my x60 to=
- use
->>>>>>>that instead of ipw3945. That would leave me with zero kernel
->>>>>>>dependencies.
->>>>>>>
->>>>>>>Unfortunately it doesn't work. Loading the module reveals the de=
-vice:
->>>>>>>
->>>>>>>iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection dri=
-ver for
->>>>>>>Linux, 1.1.17ks
->>>>>>>iwl3945: Copyright(c) 2003-2007 Intel Corporation
->>>>>>>ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IR=
-Q 21
->>>>>>>PCI: Setting latency timer of device 0000:03:00.0 to 64
->>>>>>>iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
->>>>>>>iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
->>>>>>>phy0: Selected rate control algorithm 'iwl-3945-rs'
->>>>>>>
->>>>>>># iwconfig wlan0
->>>>>>>wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
->>>>>>>          Mode:Managed  Channel:0  Access Point: Not-Associated
->>>>>>>          Tx-Power=3D0 dBm
->>>>>>>          Retry min limit:7   RTS thr:off   Fragment thr=3D2346 =
-B
->>>>>>>          Encryption key:XXXX-XXXX-XX
->>>>>>>          Link Quality:0  Signal level:0  Noise level:0
->>>>>>>          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag=
-:0
->>>>>>>          Tx excessive retries:0  Invalid misc:0   Missed beacon=
-:0
->>>>>>>
->>>>>>>and iwconfig sees it, essid/enc settings are fine, but I don't g=
-et a
->>>>>>>link.
->>>>>>>             =20
->>>>>>>
->>>>>>Same issue here, try iwlist wlan0 scan first and then it should w=
-ork.
->>>>>>           =20
->>>>>>
->>>>>Huh indeed, now it links fine! Thanks for the hint. Would be nice =
-to
->>>>>have fixed, though :-)
->>>>>         =20
->>>>>
->>>>Odd, doesn't the driver need to do a scan _anyway_ to find the righ=
-t
->>>>BSSID to associate with if the cached scan results are more than a =
-few
->>>>seconds old?  Can you run '/sbin/iwevent' before trying a fresh
->>>>association, try to associate, ensure that it has failed, and repor=
-t the
->>>>output?
->>>>
->>>>If you don't get something like:
->>>>
->>>>10:17:05.117937   eth1     Scan request completed
->>>>
->>>>shown there, then there's likely a bug in the driver because it's e=
-ither
->>>>(a) not scanning before trying to associate, or (b) not sending out=
- scan
->>>>completion events after it's done a scan.
->>>>       =20
->>>>
->>>Indeed, there is now Scan request completed before I run the iwlist
->>>scan. iwevent output:
->>>     =20
->>>
->>Hmm, the output below doesn't show the scan request completed, right?
->>
->>   =20
->>
->>>Waiting for Wireless Events from interfaces...
->>>16:20:27.453588   wlan0    Set Mode:Managed
->>>16:20:27.462104   wlan0    Set Encryption key:off
->>>16:20:27.463940   wlan0    Set Encryption key:****-****-**   Securit=
-y mode:open
->>>16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
->>>
->>>waiting, nothing else happens. Then run iwlist scan from another
->>>terminal.
->>>
->>>16:20:53.892549   wlan0    Scan request completed
->>>     =20
->>>
->>So you only get this when you manually scan right after setting the s=
-sid
->>and key?
->>   =20
->>
->
->If you look at the time stamp, I ran the iwlist scan about 26 seconds
->after loading the module. When the module is loaded, the networking
->script sets the essid and encryption key.
->
->So yes, I only get that 'Scan request completed' line after running
->iwlist scan manually.
->
-> =20
->
-Don't know whether this is related, but I was having all kinds of=20
-trouble getting associated,
-iwlist eth1 scan would report no scan results, I then switched to=20
-loading the kernel module with
-the option that tells  iwl3945 to do software scanning and it works=20
-everytime now.
-
-Steve
-
---=20
-
-"They that give up essential liberty to obtain temporary safety,=20
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty=20
-decreases."  (Thomas Jefferson)
+--=-JgvTaNSOKlcrgZZLBbq8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> While there is indeed a bug in wpa_supplicant 0.5.x, I think that
+> another issue here is in mac80211 trying to do something that it was not
+> supposed to do, i.e., to figure out whether privacy is enabled or not
+> based on keymgmt value. This is decided in the supplicant and the value
+> is configured with IW_AUTH_PRIVACY_INVOKED to the kernel. In other
+> words, mac80211 should follow this parameter and not IW_AUTH_KEY_MGMT.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm. Is there a good explanation of all these values? I still haven't
+understood what all the IW_AUTH_* means. I'm fairly sure though that
+this particular instance hasn't changed in terms of behaviour since the
+original devicescape code (not that this means it's bug-free, of course)
+
+> I merged the fix into 0.5.x branch, so it should be included in the next
+> release. This was fixed as part of a more generic cleanup and it did not
+> end up being flagged as a bug fix and consequently, not merged into
+> 0.5.x branch.
+
+Thanks.
+
+johannes
+
+--=-JgvTaNSOKlcrgZZLBbq8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyTM46Vg1VMiehFYAQIo7A//QcylUJZHjU5+dbAz/w87j5CaHKLmpWll
+H8SnWxGMmvikp4Fqx9rZB8pCwAkPjQHQom2j7/hHt20Zbfpm9pwIE3mN0BvoNYdL
+Ow8MTf1fT2s4rsWlKyUIAFJi6RrG5lzqtsMl5IG30qwr38GVPtoCnJbTu5zXJovU
+0B8jfX2WNE/71M0YvNHYkdhGOO6JR/S3FfviEjufBaATv3y6D5xvTDxXhcKTZG3G
+aoVcOVsmIzUU/mcHuetAamlWf6FvtL/Bg1lluYYGJH1c2UJDrDhYlDKHu4AwE8mp
+fnYThIHuGmsAPfxCA7FTBAdAtTdAd7yLufNWo8fDQGFLMyij0A6XfJ5ziOMe8rnn
+iANBvdc9UaKKfXEH71da+1kGNMbjoufVlcIBl95L+yuXJiN5PqZqc1SZJkvyLACu
+4bvXoYZTzU4YSGq1CISLK2jAIEEhiJ3JaLcJFfkB2X3QcRhPVMd7Ma41dpXdeiFW
+tL9g06zGUzqQFnDcMJ6trzhnylnk1jwZjNrTr44KYF8EPJV+yQGwPhiiBmTZwCF2
+MkmwajGddm8/bO4j8KJ9Q/VMSbAe2TAjb8y4PWkjr7h5LHjs5WumyxDXbjp/k2Zo
+YlnfBR5PCug17QFLQfUz69hEPuHCWKzddP+WdXQKsme3e6TkekS7woqegXA37LTh
+i4zFincWcso=
+=nlXi
+-----END PGP SIGNATURE-----
+
+--=-JgvTaNSOKlcrgZZLBbq8--
+
