@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3519 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754898AbXJJPjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 11:39:20 -0400
-Date: Wed, 10 Oct 2007 11:13:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 2/2] mac80211: store SSID in sta_bss_list
-Message-ID: <20071010151319.GD5962@tuxdriver.com> (sfid-20071010_163932_166500_C10062A0)
-References: <11919737992212-git-send-email-linville@tuxdriver.com> <1191973799635-git-send-email-linville@tuxdriver.com> <1192006959.12541.2.camel@johannes.berg> <1192027003.9739.7.camel@localhost.localdomain>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:33442 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751127AbXJ1U5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2007 16:57:07 -0400
+Message-ID: <4724F79B.10008@lwfinger.net> (sfid-20071028_205711_629535_0A0174A2)
+Date: Sun, 28 Oct 2007 15:56:59 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1192027003.9739.7.camel@localhost.localdomain>
+To: Jens Lang <jenslang@yahoo.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: bcm43xx: 100 % CPU load due to ksoftirqd
+References: <4724EE1F.1020704@yahoo.de>
+In-Reply-To: <4724EE1F.1020704@yahoo.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2007 at 10:36:43AM -0400, Dan Williams wrote:
-> On Wed, 2007-10-10 at 11:02 +0200, Johannes Berg wrote:
-> > On Tue, 2007-10-09 at 19:49 -0400, John W. Linville wrote:
-> > > From: John W. Linville <linville@tuxdriver.com>
-> > > 
-> > > Some AP equipment "in the wild" services multiple SSIDs using the
-> > > same BSSID.  This patch changes the key of sta_bss_list to include
-> > > the SSID as well as the BSSID and the channel so as to prevent one
-> > > SSID from eclipsing another SSID with the same BSSID.
+Jens Lang wrote:
+> Hi,
 > 
-> The "standard" (which is a stretch) was that only _one_ SSID can be
-> broadcast in beacons, and the rest of the supported SSIDs must be
-> hidden.  Is that the case?  Or is the AP you're referring to actually
-> pushing out multiple beacons with different not-hidden SSIDs and the
-> same BSSID?
+> I recently bought a Compaq 6715s laptop with a Broadcom 4312 wifi chip.
+> Unfortunately it doesn't work with my Ubuntu Gutsy Gibbon.
+> 
+> When the module is loaded it constantly produces the error
+> bcm43xx_irq_xmit_error. The ksoftirqd uses 100 % of my CPU time. When I
+> remove the module from the kernel the computer freezes. Before that it
+> produced the following output:
+> 
+> Call Trace:
+> <IRQ> [<ffffffff8023b5b9>] __do_softirq+0x69/0xe0
+> [<ffffffff8020b01c>] call_softirq+0x1c/0x30
+> <EOI> [<ffffffff8023b3bb>] local_bh_enabl +0x5b/0xa0
+> [<ffffffff803ae47b>] lock_sock_nested+0xcb/0xe0
+> [...] sys_sendto+0x146/0x1b0
+> [...] sock_fasync+0x82/0x10a0
+> [...] sock_close+0x15/0x40
+>       __fput+0xc10x1e0
+> filp_close+0x54/0x90
+> sys_close+0x96/0xf0
+> system_call+0x7e/083
+> 
+> Code: 48 8b 2b 90 0f ba 08 01 19 c0 74 c7 fa 65 48 8b 04
+> 
+> RIP [<ffffffff8023b6a8<] tasklet_action+0x58/0xb0
+>  RSP <ffffffff805d7f68>
+> 
+> Unfortunately I cannot provide a patch but maybe this will help you
+> further improving the driver.
 
-My impression is that the standard is not particularly clear on this,
-hence the variety of behaviors.  Can you cite specific wording?
+What other bcm43xx messages are in the dmesg output?
 
-My research indicates the existance of both "1 beacon, N-1 hidden"
-and "N beacons" behaviors.  Either way, the sta_bss_list can be
-populated not just from beacons but also from probe responses.
-So even if N-1 SSIDs are hidden, we still need to be able to record
-information about them.
-
-Unfortunately I don't have any hardware that behaves in this fashion.
-I discovered references to this behavior while researching the
-preceding "same BSSID on different frequencies" patch.  Having become
-aware of this behavior, I figured it was worth fixing at the same
-time to avoid future bug reports.
-
-Hth!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Larry
