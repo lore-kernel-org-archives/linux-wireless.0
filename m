@@ -1,211 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58571 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753772AbXJRAF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 20:05:29 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, hschaa@suse.de, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwifi: Fix rate setting in probe request for HW sacn
-Date: Thu, 18 Oct 2007 02:04:15 +0200
-Message-Id: <11926658551263-git-send-email-tomas.winkler@intel.com> (sfid-20071018_010532_498451_CA953D7C)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:32879 "EHLO
+	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756292AbXJ1Rhm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2007 13:37:42 -0400
+Date: Sun, 28 Oct 2007 10:36:10 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
+	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
+	network
+Message-ID: <20071028173610.GM4936@jm.kir.nu> (sfid-20071028_173812_784616_1663B25F)
+References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com> <1193127280.3069.261.camel@debian.sh.intel.com> <1193148453.8648.20.camel@localhost.localdomain> <1193161034.7733.38.camel@johannes.berg> <1193238423.2557.41.camel@localhost.localdomain> <1193318969.6092.19.camel@johannes.berg> <1193320140.5542.11.camel@localhost.localdomain> <1193320661.14136.10.camel@johannes.berg> <1193548708.7779.10.camel@localhost.localdomain> <1193567294.3966.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1193567294.3966.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes setting of rates in probe request used in
-HW scan. The bug was reported by Helmut Schaa <hschaa@suse.de>
+On Sun, Oct 28, 2007 at 11:28:14AM +0100, Johannes Berg wrote:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   42 ++++++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   42 ++++++++++++++++----------
- 2 files changed, 52 insertions(+), 32 deletions(-)
+> > This turned out to be a wpa_supplicant issue.  wpa_supplicant uses
+> > KEY_MGMT_802_1X_NO_WPA (instead of KEY_MGMT_802_1X) to handle Dynamic
+> > WEP where the AP doesn't broadcast WPA IEs (ie, a pure Dynamic WEP
+> > network), and that value wasn't being handled correctly by
+> > wpa_driver_wext_keymgmt2wext().
+> 
+> Great, thanks for tracking this down.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 2581675..618c7c0 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1745,21 +1745,22 @@ static void iwl_unset_hw_setting(struct iwl_priv *priv)
-  * return : set the bit for each supported rate insert in ie
-  */
- static u16 iwl_supported_rate_to_ie(u8 *ie, u16 supported_rate,
--				    u16 basic_rate, int max_count)
-+				    u16 basic_rate, int *left)
- {
- 	u16 ret_rates = 0, bit;
- 	int i;
--	u8 *rates;
--
--	rates = &(ie[1]);
-+	u8 *cnt = ie;
-+	u8 *rates = ie + 1;
- 
- 	for (bit = 1, i = 0; i < IWL_RATE_COUNT; i++, bit <<= 1) {
- 		if (bit & supported_rate) {
- 			ret_rates |= bit;
--			rates[*ie] = iwl_rates[i].ieee |
--			    ((bit & basic_rate) ? 0x80 : 0x00);
--			*ie = *ie + 1;
--			if (*ie >= max_count)
-+			rates[*cnt] = iwl_rates[i].ieee |
-+				((bit & basic_rate) ? 0x80 : 0x00);
-+			(*cnt)++;
-+			(*left)--;
-+			if ((*left <= 0) ||
-+			    (*cnt >= IWL_SUPPORTED_RATES_IE_LEN))
- 				break;
- 		}
- 	}
-@@ -1776,7 +1777,7 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- {
- 	int len = 0;
- 	u8 *pos = NULL;
--	u16 ret_rates;
-+	u16 active_rates, ret_rates, cck_rates;
- 
- 	/* Make sure there is enough space for the probe request,
- 	 * two mandatory IEs and the data */
-@@ -1821,19 +1822,27 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 	left -= 2;
- 	if (left < 0)
- 		return 0;
-+
- 	/* ... fill it in... */
- 	*pos++ = WLAN_EID_SUPP_RATES;
- 	*pos = 0;
--	ret_rates = priv->active_rate = priv->rates_mask;
-+
-+	priv->active_rate = priv->rates_mask;
-+	active_rates = priv->active_rate;
- 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
- 
--	iwl_supported_rate_to_ie(pos, priv->active_rate,
--				 priv->active_rate_basic, left);
-+	cck_rates = IWL_CCK_RATES_MASK & active_rates;
-+	ret_rates = iwl_supported_rate_to_ie(pos, cck_rates,
-+			priv->active_rate_basic, &left);
-+	active_rates &= ~ret_rates;
-+
-+	ret_rates = iwl_supported_rate_to_ie(pos, active_rates,
-+				 priv->active_rate_basic, &left);
-+	active_rates &= ~ret_rates;
-+
- 	len += 2 + *pos;
- 	pos += (*pos) + 1;
--	ret_rates = ~ret_rates & priv->active_rate;
--
--	if (ret_rates == 0)
-+	if (active_rates == 0)
- 		goto fill_end;
- 
- 	/* fill in supported extended rate */
-@@ -1844,7 +1853,8 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 	/* ... fill it in... */
- 	*pos++ = WLAN_EID_EXT_SUPP_RATES;
- 	*pos = 0;
--	iwl_supported_rate_to_ie(pos, ret_rates, priv->active_rate_basic, left);
-+	iwl_supported_rate_to_ie(pos, active_rates,
-+				 priv->active_rate_basic, &left);
- 	if (*pos > 0)
- 		len += 2 + *pos;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 32a99a1..2c84001 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1796,21 +1796,22 @@ static void iwl_unset_hw_setting(struct iwl_priv *priv)
-  * return : set the bit for each supported rate insert in ie
-  */
- static u16 iwl_supported_rate_to_ie(u8 *ie, u16 supported_rate,
--				    u16 basic_rate, int max_count)
-+				    u16 basic_rate, int *left)
- {
- 	u16 ret_rates = 0, bit;
- 	int i;
--	u8 *rates;
--
--	rates = &(ie[1]);
-+	u8 *cnt = ie;
-+	u8 *rates = ie + 1;
- 
- 	for (bit = 1, i = 0; i < IWL_RATE_COUNT; i++, bit <<= 1) {
- 		if (bit & supported_rate) {
- 			ret_rates |= bit;
--			rates[*ie] = iwl_rates[i].ieee |
--			    ((bit & basic_rate) ? 0x80 : 0x00);
--			*ie = *ie + 1;
--			if (*ie >= max_count)
-+			rates[*cnt] = iwl_rates[i].ieee |
-+				((bit & basic_rate) ? 0x80 : 0x00);
-+			(*cnt)++;
-+			(*left)--;
-+			if ((*left <= 0) ||
-+			    (*cnt >= IWL_SUPPORTED_RATES_IE_LEN))
- 				break;
- 		}
- 	}
-@@ -1833,7 +1834,7 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- {
- 	int len = 0;
- 	u8 *pos = NULL;
--	u16 ret_rates;
-+	u16 active_rates, ret_rates, cck_rates;
- 
- 	/* Make sure there is enough space for the probe request,
- 	 * two mandatory IEs and the data */
-@@ -1878,19 +1879,27 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 	left -= 2;
- 	if (left < 0)
- 		return 0;
-+
- 	/* ... fill it in... */
- 	*pos++ = WLAN_EID_SUPP_RATES;
- 	*pos = 0;
--	ret_rates = priv->active_rate = priv->rates_mask;
-+
-+	priv->active_rate = priv->rates_mask;
-+	active_rates = priv->active_rate;
- 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
- 
--	iwl_supported_rate_to_ie(pos, priv->active_rate,
--				 priv->active_rate_basic, left);
-+	cck_rates = IWL_CCK_RATES_MASK & active_rates;
-+	ret_rates = iwl_supported_rate_to_ie(pos, cck_rates,
-+			priv->active_rate_basic, &left);
-+	active_rates &= ~ret_rates;
-+
-+	ret_rates = iwl_supported_rate_to_ie(pos, active_rates,
-+				 priv->active_rate_basic, &left);
-+	active_rates &= ~ret_rates;
-+
- 	len += 2 + *pos;
- 	pos += (*pos) + 1;
--	ret_rates = ~ret_rates & priv->active_rate;
--
--	if (ret_rates == 0)
-+	if (active_rates == 0)
- 		goto fill_end;
- 
- 	/* fill in supported extended rate */
-@@ -1901,7 +1910,8 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 	/* ... fill it in... */
- 	*pos++ = WLAN_EID_EXT_SUPP_RATES;
- 	*pos = 0;
--	iwl_supported_rate_to_ie(pos, ret_rates, priv->active_rate_basic, left);
-+	iwl_supported_rate_to_ie(pos, active_rates,
-+				 priv->active_rate_basic, &left);
- 	if (*pos > 0)
- 		len += 2 + *pos;
- 
+While there is indeed a bug in wpa_supplicant 0.5.x, I think that
+another issue here is in mac80211 trying to do something that it was not
+supposed to do, i.e., to figure out whether privacy is enabled or not
+based on keymgmt value. This is decided in the supplicant and the value
+is configured with IW_AUTH_PRIVACY_INVOKED to the kernel. In other
+words, mac80211 should follow this parameter and not IW_AUTH_KEY_MGMT.
+
+> > This has been fixed on the wpa_supplicant 0.6.x branch but not
+> > backported to the 0.5.x branch yet.  Tested with EAP-TLS and LEAP with
+> > iwl4965 on kernel-2.6.23.1-35.fc8.
+> > 
+> > For Fedora, I've built wpa_supplicant-0.5.7-15.fc8 to fix this issue.
+> 
+> Alright. Jouni, will you push this fix for 0.5.x?
+
+I merged the fix into 0.5.x branch, so it should be included in the next
+release. This was fixed as part of a more generic cleanup and it did not
+end up being flagged as a bug fix and consequently, not merged into
+0.5.x branch.
+
 -- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Jouni Malinen                                            PGP id EFC895FA
