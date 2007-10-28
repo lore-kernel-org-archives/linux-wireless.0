@@ -1,66 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:6495 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbXJaBn7 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:19887 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313AbXJ1MqL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2007 21:43:59 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1619264nze
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 18:43:57 -0700 (PDT)
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Mon, 29 Oct 2007 14:44:01 -0700
-Subject: [PATCH 1/7] o80211s: Export dev_seq_{start,stop,next} symbols.
-Message-ID: <4727ddda.27ed720a.2444.6daf@mx.google.com> (sfid-20071031_014403_512234_289EF21E)
+	Sun, 28 Oct 2007 08:46:11 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so877053ugc
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 05:46:09 -0700 (PDT)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rfkill: Register LED triggers before registering switch
+Date: Sun, 28 Oct 2007 14:05:46 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200710281307.54552.mb@bu3sch.de>
+In-Reply-To: <200710281307.54552.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200710281405.47341.IvDoorn@gmail.com> (sfid-20071028_124615_986813_0D92FF05)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the first patch of a series starting mesh wireless support (802.11s) for
-wireless network cards with drivers using the mac80211 stack.
+On Sunday 28 October 2007, Michael Buesch wrote:
+> Registering the switch triggers a LED event, so we must register
+> LED triggers before the switch.
+> This has a potential to fix a crash, depending on how the device
+> driver initializes the rfkill data structure.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-It is still in an early stage of development but some functionality (static
-forwarding) is quite solid and we would like the code to be integrated in the
-kernel the sooner the better. Please point out any section of the code that
-could pose a problem towards integration. The patches apply against current
-wireless-2.6/everything.
-
-For more information, please visit: http://o11s.org/devel
-
-This patches are being sent just to linux-wireless mailing list. I'm just
-sending this one patch also to netdev since it is not wireless specific.
-
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/core/dev.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 8726589..9c005f2 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2348,6 +2348,7 @@ void *dev_seq_start(struct seq_file *seq, loff_t *pos)
- 
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(dev_seq_start);
- 
- void *dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
-@@ -2356,11 +2357,13 @@ void *dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- 	return v == SEQ_START_TOKEN ?
- 		first_net_device(net) : next_net_device((struct net_device *)v);
- }
-+EXPORT_SYMBOL_GPL(dev_seq_next);
- 
- void dev_seq_stop(struct seq_file *seq, void *v)
- {
- 	read_unlock(&dev_base_lock);
- }
-+EXPORT_SYMBOL_GPL(dev_seq_stop);
- 
- static void dev_seq_printf_stats(struct seq_file *seq, struct net_device *dev)
- {
--- 
-1.5.2.5
-
+> 
+> Index: wireless-2.6/net/rfkill/rfkill.c
+> ===================================================================
+> --- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-27 13:28:33.000000000 +0200
+> +++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 12:57:12.000000000 +0100
+> @@ -388,19 +388,20 @@ int rfkill_register(struct rfkill *rfkil
+>  	if (!rfkill->toggle_radio)
+>  		return -EINVAL;
+>  
+> +	snprintf(dev->bus_id, sizeof(dev->bus_id),
+> +		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
+> +
+> +	rfkill_led_trigger_register(rfkill);
+> +
+>  	error = rfkill_add_switch(rfkill);
+>  	if (error)
+>  		return error;
+>  
+> -	snprintf(dev->bus_id, sizeof(dev->bus_id),
+> -		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
+> -
+>  	error = device_add(dev);
+>  	if (error) {
+>  		rfkill_remove_switch(rfkill);
+>  		return error;
+>  	}
+> -	rfkill_led_trigger_register(rfkill);
+>  
+>  	return 0;
+>  }
+> @@ -416,9 +417,9 @@ EXPORT_SYMBOL(rfkill_register);
+>   */
+>  void rfkill_unregister(struct rfkill *rfkill)
+>  {
+> -	rfkill_led_trigger_unregister(rfkill);
+>  	device_del(&rfkill->dev);
+>  	rfkill_remove_switch(rfkill);
+> +	rfkill_led_trigger_unregister(rfkill);
+>  	put_device(&rfkill->dev);
+>  }
+>  EXPORT_SYMBOL(rfkill_unregister);
+> 
 
 
