@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:5652 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759548AbXJSSwb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49836 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbXJ1NwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 14:52:31 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so517531nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2007 11:52:29 -0700 (PDT)
-To: "Marcus Better" <marcus@better.se>
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-Date: Fri, 19 Oct 2007 21:10:37 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <fdqhn4$qab$1@sea.gmane.org> <200710152013.20777.IvDoorn@gmail.com> <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com>
-In-Reply-To: <39384.80.169.182.16.1192780194.squirrel@www.dactylis.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710192110.37099.IvDoorn@gmail.com> (sfid-20071019_195234_164615_B9669995)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sun, 28 Oct 2007 09:52:17 -0400
+Subject: [PATCH] iwlwifi: select proper rate control algorithm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Sun, 28 Oct 2007 14:53:36 +0100
+Message-Id: <1193579616.5197.13.camel@johannes.berg> (sfid-20071028_135220_635543_907F7A1D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Prior to this patch, iwlwifi would always use the first
+registered rate control algorithm which, depending on system
+setup, could be anything. After the mac80211 patch to make
+the simple algorithm built-in, it would always be simple.
 
-> Ivo van Doorn wrote:
-> > Could you enable debugfs and use attached debugfs script to create a
-> > dump of the rt2x00 registers.
-> 
-> If you still need the debug dump for 2.0.7 (the latest working version),
-> can you show me how to get hold of a source tree with that version? I have
-> both the wireless-2.6 and rt2x00 git trees, but seem to have trouble
-> locating the right revision, perhaps because the tree was rebased.
+This has always been a bug in iwlwifi.
 
-I'm afraid that is a bit of a problem, rt2x00 was merged into linus' tree as
-a complete patch of version 2.0.8. This means the complete versioning of
-2.0.7 has been lost.
-The only possible way would be toying with cvs and copying the files
-from there. But that is in no what a guarentee for success.
+This fixes it by requesting that mac80211 selects the right
+rate control algorithm.
 
-However I can recommend using 2.0.11 the following patches:
-http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=8927e4ea2933f5f276a7bb505a6b240156a9238f
-http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=32a8da711c3b03a88487dbe48e57c489b5a3031c
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Both caused problems with packet throughput. So those might have
-resolved the problem you reported.
+---
+Untested, and the iwlwifi base code that registers rate control
+algorithms is a *total* mess. They should only be registered once at
+module load rather than at hardware probe time! Hence, I have no idea
+whether this will suffice or if rate control algorithm initialisation
+has to be rewritten.
 
-Ivo
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 ++
+ 2 files changed, 4 insertions(+)
+
+--- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-28 14:31:02.845330022 +0100
++++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-10-28 14:31:54.255349989 +0100
+@@ -8317,6 +8317,8 @@ static int iwl_pci_probe(struct pci_dev 
+ 	}
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 
++	hw->rate_control_algorithm = "iwl-3945-rs";
++
+ 	IWL_DEBUG_INFO("*** LOAD DRIVER ***\n");
+ 	priv = hw->priv;
+ 	priv->hw = hw;
+--- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-28 14:31:03.005056368 +0100
++++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-10-28 14:32:07.735049425 +0100
+@@ -8918,6 +8918,8 @@ static int iwl_pci_probe(struct pci_dev 
+ 	}
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 
++	hw->rate_control_algorithm = "iwl-4965-rs";
++
+ 	IWL_DEBUG_INFO("*** LOAD DRIVER ***\n");
+ 	priv = hw->priv;
+ 	priv->hw = hw;
+
+
