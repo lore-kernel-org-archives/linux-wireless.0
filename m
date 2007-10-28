@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60208
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758667AbXJSNrr (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:22618 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbXJ1LMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2007 09:47:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH #3] b43: Fix sparse warnings.
-Date: Fri, 19 Oct 2007 15:47:13 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200710171834.03495.mb@bu3sch.de> <20071018195322.GD8510@tuxdriver.com>
-In-Reply-To: <20071018195322.GD8510@tuxdriver.com>
+	Sun, 28 Oct 2007 07:12:44 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so2253108mue
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2007 04:12:42 -0700 (PDT)
+Message-ID: <47246EA5.2040702@gmail.com> (sfid-20071028_111249_665167_B09BCBD0)
+Date: Sun, 28 Oct 2007 12:12:37 +0100
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200710191547.13533.mb@bu3sch.de> (sfid-20071019_144750_662521_3DBE6302)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: Change error message for failed rc module
+References: <4a55afb80710271456k6c3bbfeah879b67a91a3b8d41@mail.gmail.com>	 <200710280034.41942.mb@bu3sch.de>	 (sfid-20071027_233701_549220_BD0E4B1B) <1193568021.3966.15.camel@johannes.berg>	 <47246844.6020109@gmail.com> (sfid-20071028_104530_132972_8BA4B064) <1193568627.3966.27.camel@johannes.berg>
+In-Reply-To: <1193568627.3966.27.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 October 2007 21:53:22 John W. Linville wrote:
-> On Wed, Oct 17, 2007 at 06:34:03PM +0200, Michael Buesch wrote:
-> > The remaining warning in phy.c will be fixed later.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> > 
-> > John, this is the third time I submit this.
-> > Is something wrong with this patch or did you simply forget to apply it?
-> 
-> Where are you looking?  It is in Linus' tree.
-> 
-> 	http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1a09404a2338163f181d170c7abdc2242b6c6f03
-> 
-> John
-
-Uhm, it still applies to wireless-2.6#everything.
-
--- 
-Greetings Michael.
+Johannes Berg wrote:
+>   
+>> won't this conflict with drivers that want to use their own rate scaling 
+>> modules? (like iwl3945/4965)
+>>     
+>
+> The rate control algorithm should be per-hw struct. We still don't have
+> the "driver preference" patch applied because of some things, but in any
+> case it is possible to have an algorithm for each hw.
+>
+>   
+ok
+> Besides, currently, afaict, if you first load rc80211_simple and then
+> iwlwifi, the latter doesn't really work well if at all due to simple
+> being used. That needs to be fixed anyway, the right solution is that
+> patch we were discussing a long time ago with driver preference for rate
+> control algorithm (though ISTR there were still some issues with it and
+> I don't remember whether the initial version was applied)
+>
+>   
+seems not I was unable to find it in git but I found the thread about it it:
+http://marc.info/?t=118801173400003&r=1&w=2
+seems you had some concerns that have not been adressed yet.
