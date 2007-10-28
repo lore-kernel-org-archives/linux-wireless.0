@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:53110 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561AbXJZUNC (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33148
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbXJ1OSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 16:13:02 -0400
-Received: from [82.171.216.234] (helo=[192.168.1.2])
-	by smtp-out1.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
-	id 1IlVYD-0006nM-6D
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2007 22:13:01 +0200
-Message-ID: <47224A4A.1010901@tiscali.nl> (sfid-20071026_211309_125039_89804667)
-Date: Fri, 26 Oct 2007 22:12:58 +0200
-From: Roel Kluin <12o3l@tiscali.nl>
+	Sun, 28 Oct 2007 10:18:13 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: Use mutex_lock() at register and add sanity check
+Date: Sun, 28 Oct 2007 15:16:50 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH split 3/8] fix 'and' typo's in wireless/libertas/wext
-References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
-In-Reply-To: <472248AC.7080201@tiscali.nl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710281516.51356.mb@bu3sch.de> (sfid-20071028_141817_338229_556766AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-        Fix priority mistakes similar to '!x & y' in wireless/libertas/wext
-    
-        Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index c6f5aa3..d93438c 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1380,7 +1380,7 @@ static int wlan_get_encodeext(struct net_device *dev,
- 		index = adapter->wep_tx_keyidx;
- 	}
+Replace mutex_lock_interruptible() by mutex_lock() in rfkill_register(),
+as interruptible doesn't make sense there.
+
+Add a sanity check for rfkill->type, as that's used for an unchecked dereference
+in an array and might cause hard to debug crashes if the driver sets this
+to an invalid value.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+Index: wireless-2.6/net/rfkill/rfkill.c
+===================================================================
+--- wireless-2.6.orig/net/rfkill/rfkill.c	2007-10-28 14:27:30.000000000 +0100
++++ wireless-2.6/net/rfkill/rfkill.c	2007-10-28 15:07:11.000000000 +0100
+@@ -276,21 +276,17 @@ static struct class rfkill_class = {
  
--	if (!ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY &&
-+	if (!(ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) &&
- 	    ext->alg != IW_ENCODE_ALG_WEP) {
- 		if (index != 0 || adapter->mode != IW_MODE_INFRA)
- 			goto out;
+ static int rfkill_add_switch(struct rfkill *rfkill)
+ {
+-	int retval;
+-
+-	retval = mutex_lock_interruptible(&rfkill_mutex);
+-	if (retval)
+-		return retval;
++	int error;
+ 
+-	retval = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
+-	if (retval)
+-		goto out;
++	mutex_lock(&rfkill_mutex);
+ 
+-	list_add_tail(&rfkill->node, &rfkill_list);
++	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
++	if (!error)
++		list_add_tail(&rfkill->node, &rfkill_list);
+ 
+- out:
+ 	mutex_unlock(&rfkill_mutex);
+-	return retval;
++
++	return error;
+ }
+ 
+ static void rfkill_remove_switch(struct rfkill *rfkill)
+@@ -387,6 +383,8 @@ int rfkill_register(struct rfkill *rfkil
+ 
+ 	if (!rfkill->toggle_radio)
+ 		return -EINVAL;
++	if (rfkill->type >= RFKILL_TYPE_MAX)
++		return -EINVAL;
+ 
+ 	snprintf(dev->bus_id, sizeof(dev->bus_id),
+ 		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
