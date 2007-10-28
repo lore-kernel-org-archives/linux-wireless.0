@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39545 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbXJKOu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2007 10:50:27 -0400
-Subject: Re: [PATCH] move wlan_*_association_work from header to c file
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <20071011141642.GA6976@infradead.org>
-References: <200710111151.06989.hs4233@mail.mn-solutions.de>
-	 <20071011141642.GA6976@infradead.org>
-Content-Type: text/plain
-Date: Thu, 11 Oct 2007 10:50:34 -0400
-Message-Id: <1192114234.31895.5.camel@localhost.localdomain> (sfid-20071011_155029_713240_9418F9C0)
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:55806 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750792AbXJ1HfD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2007 03:35:03 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: honor IW_SCAN_THIS_ESSID in siwscan ioctl
+Date: Sun, 28 Oct 2007 03:31:34 -0400
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	Bill Moss <bmoss@clemson.edu>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+References: <11934326793639-git-send-email-linville@tuxdriver.com> <11934326823646-git-send-email-linville@tuxdriver.com> <200710280329.40757.flamingice@sourmilk.net>
+In-Reply-To: <200710280329.40757.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart10952858.x9b0Kab6u3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710280331.34515.flamingice@sourmilk.net> (sfid-20071028_073506_757618_72CE9827)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-10-11 at 15:16 +0100, Christoph Hellwig wrote:
-> On Thu, Oct 11, 2007 at 11:51:06AM +0200, Holger Schurig wrote:
-> > Move wlan_postpone_association_work() and wlan_cancel_association_work()
-> > from a assoc.h file to the sole user, into wext.c.
-> > 
-> > In passing, rename the functions to libertas_XXX.
-> 
-> As you seem to do some nice cleanups on libertas is there a chance
-> you could get rid of this horrible wlan_ namespace abuse in the driver?
+--nextPart10952858.x9b0Kab6u3
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-100% agree...  That's always been part of the plan, just that other
-cleanups were more pressing and time always runs out.
+On Sunday 28 October 2007 03:29:36 Michael Wu wrote:
+> On Friday 26 October 2007 17:04:33 John W. Linville wrote:
+> > From: Bill Moss <bmoss@clemson.edu>
+> >
+> > This patch fixes the problem of associating with wpa_secured hidden
+> > AP.  Please try out.
+> >
+> > The original author of this patch is Bill Moss <bmoss@clemson.edu>
+> >
+> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> Wrong patch.
+>
+Er, actually nevermind. However, I'd much prefer rolling the next patch you=
+=20
+have in this series up into this patch.
 
-IMHO 'libertas' is too long as a prefix for stuff, and replacing wlan_
-with libertas_ is going to screw up spacing everywhere.  So, any
-objections to, as part of the longer-term plan, replace the usage of
-'libertas_' and 'wlan_' with the prefix "lts"?  Would look like:
-
-wlan_set_essid -> lts_set_essid
-wlan_private -> lts_private
-etc
-
-(I don't really like 'lbs' personally but I'm not that strongly against
-it)
-
-Dan
+=2DMichael Wu
 
 
+
+--nextPart10952858.x9b0Kab6u3
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHJDrWT3Oqt9AH4aERAmzTAJ9PAz0a8nCa/9E6uw3x6R9U/vhvWgCdEJda
+64fhgRgKdlBoconXqxRvTSM=
+=oe2b
+-----END PGP SIGNATURE-----
+
+--nextPart10952858.x9b0Kab6u3--
