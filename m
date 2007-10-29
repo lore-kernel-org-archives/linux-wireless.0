@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:15639 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964976AbXJPSF1 (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.226]:6495 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbXJaBn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 14:05:27 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so1130464wra
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2007 11:05:25 -0700 (PDT)
-Message-ID: <43e72e890710161105l4dbd5dc4rc43f241aed42ac92@mail.gmail.com> (sfid-20071016_190542_362478_7E2C6084)
-Date: Tue, 16 Oct 2007 14:05:24 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Ath5k compile error in wireless-2.6.git
-Cc: "John Daiker" <daikerjohn@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071016170155.GB5677@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4713EBCA.8010700@gmail.com> <20071015234601.GA4125@tuxdriver.com>
-	 <20071015234748.GB4125@tuxdriver.com>
-	 <43e72e890710160914g2caa998cpd7bbb058fd064372@mail.gmail.com>
-	 <20071016170155.GB5677@tuxdriver.com>
+	Tue, 30 Oct 2007 21:43:59 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1619264nze
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 18:43:57 -0700 (PDT)
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Mon, 29 Oct 2007 14:44:01 -0700
+Subject: [PATCH 1/7] o80211s: Export dev_seq_{start,stop,next} symbols.
+Message-ID: <4727ddda.27ed720a.2444.6daf@mx.google.com> (sfid-20071031_014403_512234_289EF21E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/16/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Oct 16, 2007 at 12:14:17PM -0400, Luis R. Rodriguez wrote:
-> > On 10/15/07, John W. Linville <linville@tuxdriver.com> wrote:
-> > > On Mon, Oct 15, 2007 at 07:46:01PM -0400, John W. Linville wrote:
-> > > > On Mon, Oct 15, 2007 at 03:38:02PM -0700, John Daiker wrote:
-> > > > > John,
-> > > > >
-> > > > > I just checked out the wireless-2.6.git tree from Kernel.org to test the
-> > > > > new ath5k driver. I get the following compile error on a 'vanilla'
-> > > > > git-clone.
-> > > >
-> > > > Please use the 'everything' branch for development.
-> > > >
-> > > >       git checkout everything
-> >
-> > Approach 1
-> >
-> > > Hmmm...maybe this instead:
-> > >
-> > >         git checkout -b everything origin/everything
-> >
-> > Approach 2
-> >
-> > What's fun is that the above is approach 1 is actually necessary on
-> > PowerPC. It seems git for powerpc still uses the old branch stuff. For
-> > example I can't use approach 2. I'll add this to the wiki for ath5k,
-> > just a head up in case there's some PowerPC users out there.
->
-> I think this has more to do with the git version (i.e. release) than
-> the architecture.  "Approach 1" worked everywhere for a long time,
-> while I only became aware of "Approach 2" a few months ago.
+This is the first patch of a series starting mesh wireless support (802.11s) for
+wireless network cards with drivers using the mac80211 stack.
 
-On my x86 box I have git 1.5.2.5
-On my PPC box have git 1.5.3.4
+It is still in an early stage of development but some functionality (static
+forwarding) is quite solid and we would like the code to be integrated in the
+kernel the sooner the better. Please point out any section of the code that
+could pose a problem towards integration. The patches apply against current
+wireless-2.6/everything.
 
-And no dice on the PowerPC box. Maybe I have to do a new pull with the
-new release.. I'll try.
+For more information, please visit: http://o11s.org/devel
 
-  Luis
+This patches are being sent just to linux-wireless mailing list. I'm just
+sending this one patch also to netdev since it is not wireless specific.
+
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/core/dev.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 8726589..9c005f2 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2348,6 +2348,7 @@ void *dev_seq_start(struct seq_file *seq, loff_t *pos)
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(dev_seq_start);
+ 
+ void *dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ {
+@@ -2356,11 +2357,13 @@ void *dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ 	return v == SEQ_START_TOKEN ?
+ 		first_net_device(net) : next_net_device((struct net_device *)v);
+ }
++EXPORT_SYMBOL_GPL(dev_seq_next);
+ 
+ void dev_seq_stop(struct seq_file *seq, void *v)
+ {
+ 	read_unlock(&dev_base_lock);
+ }
++EXPORT_SYMBOL_GPL(dev_seq_stop);
+ 
+ static void dev_seq_printf_stats(struct seq_file *seq, struct net_device *dev)
+ {
+-- 
+1.5.2.5
+
+
+
