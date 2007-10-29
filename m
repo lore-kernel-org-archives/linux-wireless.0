@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbXJJIoP (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42752 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751816AbXJ2Hgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 04:44:15 -0400
-Subject: Re: [PATCH 5/6] ath5k: Add documenation for atheros bssid_mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-In-Reply-To: <20071006012017.GE25022@pogo> (sfid-20071006_021900_330401_BFB6BA14)
-References: <20071006010449.GA25022@pogo> <20071006011657.GA24862@pogo>
-	 <20071006011837.GB25022@pogo> <20071006011923.GC25022@pogo>
-	 <20071006011949.GD25022@pogo>  <20071006012017.GE25022@pogo>
-	 (sfid-20071006_021900_330401_BFB6BA14)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/pEdNlP7PQ36fZQ6qiPA"
-Date: Tue, 09 Oct 2007 22:05:32 +0200
-Message-Id: <1191960332.4013.56.camel@johannes.berg> (sfid-20071010_094419_257329_084F5742)
+	Mon, 29 Oct 2007 03:36:42 -0400
+Date: Mon, 29 Oct 2007 00:36:40 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [2.6.23.1] PCI device locking up the computer when its module
+ loads
+Message-Id: <20071029003640.6fe08168.akpm@linux-foundation.org> (sfid-20071029_073646_690171_CA59D4B6)
+In-Reply-To: <511770.44451.qm@web52902.mail.re2.yahoo.com>
+References: <511770.44451.qm@web52902.mail.re2.yahoo.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 22 Oct 2007 13:43:16 +0100 (BST) Chris Rankin <rankincj@yahoo.com> wrote:
 
---=-/pEdNlP7PQ36fZQ6qiPA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Hi,
+> 
+> I have a Netgear MA301 PLX wireless networking adapter which wants to use the hostap_plx driver in
+> Linux 2.6.23.1. This very same piece of hardware works fine in an old(!) P120 machine running
+> 2.4.33, but makes the 2.6.23.1 kernel freeze as soon as the pci_enable_device() function is called
+> in prism2_plx_probe. What seems to happen is that IRQ 5 is signalled (the adapter's IRQ, according
+> to lspci), but the handler function hasn't been installed yet and so the kernel disables IRQ 5 and
+> locks up. However, the documentation that I have read implies that calling pci_enable_device()
+> before requesting the IRQ number to install the handler on is "The Right Thing to do", because
+> otherwise the IRQ number might change.
+> 
+> I have tried booting with "acpi=off nolapic" to no effect. The kernel is UP with 4K stacks and
+> PREEMPT.
+> 
+> Can anyone suggest what a suitable fix might be, please? Because I am currently thinking "CLI" and
+> "STI"!
+> 
 
-On Fri, 2007-10-05 at 21:20 -0400, Luis R. Rodriguez wrote:
-
-> + * Note that this is a simple filter and *does* not filter out all
-> + * relevant frames. Some non-relevant frames will get through, probabili=
-ty
-> + * jocks are welcomed to compute.
-
-> + * IFRAME-05:  1101 --> allowed but its not for us!!!
-
-This is why hostapd will always use a mask that ends with the bits you
-want and basically requires that you reserve the full MAC address space
-for all matching BSSIDs to that station. I.E. hostapd will set the mask
-to 0x3 (or is it ~0x3? you know what I mean) if you have three or four
-BSSIDs and if you only have three it is assumed that the fourth is
-unused.
-
-johannes
-
---=-/pEdNlP7PQ36fZQ6qiPA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwvfC6Vg1VMiehFYAQIOXhAAvICtBtgs9FKp7Jzi4kZvKw22Zb8pS8gD
-Y2kq7RO96TGlVxB77PeP9z7dDQZiDaqxCfGCId/HS/hn0yVigyVsEMUHmOhJrFWD
-avTrGyQn0z0pj6EdMkPU9IJCd00QXSxYNlkLpyJLFcuvft3IBpeWph4mt1VHFmRZ
-RnkjYbJphOQ/BCxaYtXmYBKF9cH0H3uTrInqgZJtbTgsZc99WEjAWi1kLfAaOrd5
-c+4Hlt7Fe13D6JqkYJ1H2/ZHwZYDs4LxsL0wOi3Rwc0P875CAMpYsYeC9epWexJ3
-r9Xe8r4tkb/0kaYB2GrdlREDIPZ/AYqao59P772TqZG22Etvk8Mb2y3HgbnNnYWQ
-XZCIQwTBWxxRPgVkF6m/Lzt6096x/wevE8n5gEQ/RVxKpsv4sp8R6/C9NQQXHfFm
-3cP24kSx4vAVGIJ+KBrX0/lAAI8neigLDk0i2DuJfjhA/bqETiNuWDZ4iDOxzXIL
-HCkwWFDPKylpcn6Qk2/EhPZsQj6cvTvG2dEIsNpdhGGrBGY1hEcekluIXnyKPOwr
-Q8XaXWwWPKp+ERQyvlSMY0im6IgFm/blxmAx235tCpu1BwhBzT6C7MOjQVwt7eno
-PbSrQ09YYmFzQQm4C4QNl+KnuIK0FMNpMrcW2/5wukjApVDJD+zzSN7THzLj+ta5
-NW2IXcejEXw=
-=xjS0
------END PGP SIGNATURE-----
-
---=-/pEdNlP7PQ36fZQ6qiPA--
-
+(+linux-wireless)
