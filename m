@@ -1,107 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.colorado.edu ([128.138.128.141]:57139 "EHLO
-	smtp01.Colorado.EDU" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753023AbXJXEi7 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51160 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774AbXJ2QI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2007 00:38:59 -0400
-Message-ID: <471EC944.2010700@colorado.edu> (sfid-20071024_053905_043502_15F53992)
-Date: Tue, 23 Oct 2007 22:25:40 -0600
-From: Eric W Anderson <Eric.Anderson@Colorado.EDU>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Proc usage (was: Re: [ath5k-devel] [PATCH 3/3] consistently use ath5k
- in printks)
-References: <1192540838-26985-1-git-send-email-bruno@thinktube.com>	<1192540838-26985-2-git-send-email-bruno@thinktube.com>	<1192540838-26985-3-git-send-email-bruno@thinktube.com>	<1192540838-26985-4-git-send-email-bruno@thinktube.com>	<1192619652.8841.13.camel@johannes.berg>	<1192630172.10567.29.camel@localhost.localdomain>	<43e72e890710170719o120f9dbak34f33d8218038dfc@mail.gmail.com> <40f31dec0710170926p3847b796gdf52f80297b7c117@mail.gmail.com>
-In-Reply-To: <40f31dec0710170926p3847b796gdf52f80297b7c117@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig2529AEBFA576CA5DA0869514"
+	Mon, 29 Oct 2007 12:08:26 -0400
+Subject: Re: iwl3945 lists supported rates backwards
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: dragoran <drago01@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1193644281.27622.12.camel@dv> (sfid-20071029_075130_793419_DFA19205)
+References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
+	 <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>
+	 <4719BA96.3010609@gmail.com>  <1193644281.27622.12.camel@dv>
+	 (sfid-20071029_075130_793419_DFA19205)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sZYMZ1rDMc70V/pO7vvc"
+Date: Mon, 29 Oct 2007 15:12:33 +0100
+Message-Id: <1193667153.5197.48.camel@johannes.berg> (sfid-20071029_160829_970924_17BA6409)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2529AEBFA576CA5DA0869514
-Content-Type: text/plain; charset=ISO-8859-1
+
+--=-sZYMZ1rDMc70V/pO7vvc
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-I realize that primary role of the driver is for actual use, rather than =
-for
-research, but...  It's very useful in experiments to have /proc entries f=
-or all
-the settings that you don't normally think of as tunable.  (e.g. turning =
-off
-antenna diversity, or ACKs, or changing the CCA thresholds). I'd really h=
-ate for
-knobs to go away because someone things they're not "really" needed, or b=
-ecause
-they're not worth merging into the new configuration framework.
 
--Eric
+> With disable_hw_scan=3D1, probe requests have the same problem as the
+> association requests, namely they don't have CCK rates in the supported
+> rates:
 
-Nick Kossifidis wrote:
-> 2007/10/17, Luis R. Rodriguez <mcgrof@gmail.com>:
->> On 10/17/07, Dan Williams <dcbw@redhat.com> wrote:
->>> On Wed, 2007-10-17 at 13:14 +0200, Johannes Berg wrote:
->>>> On Tue, 2007-10-16 at 22:20 +0900, Bruno Randolf wrote:
->>>>
->>>>> the proc interface changed too from /proc/sys/dev/ath/ to /proc/sys=
-/dev/ath5k/
->>>> Ok, and why exactly is there a proc interface at all?
->>> Yeah, it needs to die, we're not adding new proc interfaces to the
->>> kernel.  Stuff should be evaluated to see whether it's _really_ neede=
-d,
->>> and if for some reason it is, merged into mac80211 or cfg80211, and t=
-hen
->>> if that doesn't work,
->> Agreed 200%. Die proc usage!
->>
->>> then maybe something in sysfs.
->> Nah, configfs for generic configuration of kernel objects. I already
->> have such module but it just had regdomain support. I plan on adding
->> add/remove iface.
->>
->>   Luis
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-wirele=
-ss" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->=20
-> I've already removed the whole proc stuff along with debug stuff in
-> base.c in madwifi-svn, i'll port patch here asap.
->=20
+This is because mac80211 uses the order in which the rates are
+registered, and with iwlwifi that is "OFDM, CCK". See
+iwl_init_hw_rates() and iwl_init_geos().
 
---=20
-Eric W. Anderson                                   University of Colorado=
+I can't find any ordering requirement in the 802.11 documents but I
+suppose the lower rates should be in the supported rates (rather than
+the extended) element.
 
-eric.anderson@colorado.edu                      Dept. of Computer Science=
+I'll keep this in mind for the pending redesign of the rate/mode
+registration code; for now I suggest to change the registration order to
+be "CCK, OFDM" in the driver, since there are only four CCK rates this
+will work even with old APs that don't parse the "extended supported
+rates" element.
 
-phone: +1-720-984-8864                   Systems Research Lab - ECCR 1B54=
+All other drivers in wireless-2.6#everything behave that way, i.e. they
+register CCK rates first and then OFDM rates, thus they can never run
+into this problem; this explains why it works for Larry with b43.
 
+dragoran: reproducing with a new AP will be futile since it will parse
+the extended supported rates element even in backwards B compatible
+mode, to reproduce you need, as far as I understand this problem, an AP
+that doesn't understand that element yet.
 
-                         PGP key fingerprints:
-       personal: 1BD4 CFCE 8B59 8D6E EA3E  EBD5 4DC9 3E61 656C 462B
-       academic: D3C5 D6FF EDED 9F1F C36D  53A3 74B7 53A6 3C74 5F12
+johannes
 
-
---------------enig2529AEBFA576CA5DA0869514
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+--=-sZYMZ1rDMc70V/pO7vvc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFHHslKdLdTpjx0XxIRAjulAJwJivf3Lx702pI3QmA6II7TLu8ZBQCgrW6x
-L0H5VVx6ETEH9jOlMhtk6kc=
-=/lf4
+iQIVAwUARyXqT6Vg1VMiehFYAQJLjA/9EdyakQpksKAAulVitzWUjvFbAoySKZ17
+q07+hchhZJ8xCx6nE/Zs6n3JV5BonuP+cBvha7Z/lntOxb111BYKEjawodYV7vR2
+PlNy8a2ogQRxYXzkrgWSesMxMazs/qYCuQz7IIrQqUwhjpIk6THUKTITFyq68a5n
+cqJ+LSxm2xkxrF6B0tqfTFe6SCuz+8tbydEIVfi05/hztcRv+d0b4qn1axCjaAcF
+qJ2rNa7677baAzgHmLkXtOZ/NJ5b9hTqx2ossmtOrhCUunI7IjUCD/Pk3WhqsQ5N
+Vvsv6Si0xG6SFKb20IAdb4m5nHQCjSv0UARVGOwAlk/kZPvDJLO4jI0g5CWA9aIg
+AmBaue15GKEnyrcMG7Hq3UYL2UZ1NJTXdJa7N61lxIobAVnMDQVmIAyNvN43SK5J
+MJctXlRYk4X0Vp3YEA18sgHihAtJ9KskRtBAiq0Uj659el25L9f9PtPfREljehSa
+Isue2yrDBgxon2keSNOx8SdmMRls96hgr29oWGMbFukqErgiTq7obcBr59fuvmUv
++dlWYbSnXrUh1dWXvxQeFXrh43kJTh9fmv2SyoV4mAvVdcoInDAgDc1wUOA17HOJ
+xMw1gMOEHLgTxxpvWBxQa8/gpbAzLooZiPZmBkzBhILSXConbXml2YnqyR3MsE7v
+ul3uUIbObRc=
+=Zr6x
 -----END PGP SIGNATURE-----
 
---------------enig2529AEBFA576CA5DA0869514--
+--=-sZYMZ1rDMc70V/pO7vvc--
+
