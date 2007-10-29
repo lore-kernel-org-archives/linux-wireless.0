@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:52252 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbXJJN5y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 09:57:54 -0400
-Received: by py-out-1112.google.com with SMTP id u77so393719pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 06:57:53 -0700 (PDT)
-Message-ID: <40f31dec0710100657g79f7ff22m33f7a2874528d1fb@mail.gmail.com> (sfid-20071010_145759_558596_AB7618DE)
-Date: Wed, 10 Oct 2007 16:57:53 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Markus Feldmann" <feldmann_markus@gmx.de>
-Subject: Re: Patch for Kernel and Ath5k
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <feil2d$hn2$1@sea.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <feieb9$nvg$1@sea.gmane.org> <feietp$qf4$1@sea.gmane.org>
-	 <40f31dec0710100637w3bfddc67ta32fa244d2cd7343@mail.gmail.com>
-	 <feil2d$hn2$1@sea.gmane.org>
+Received: from mx1.redhat.com ([66.187.233.31]:47045 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796AbXJ2Laq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2007 07:30:46 -0400
+Subject: Re: [2.6.23.1] PCI device locking up the computer when its module
+	loads
+From: Dan Williams <dcbw@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Chris Rankin <rankincj@yahoo.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071029003640.6fe08168.akpm@linux-foundation.org>
+References: <511770.44451.qm@web52902.mail.re2.yahoo.com>
+	 <20071029003640.6fe08168.akpm@linux-foundation.org>
+Content-Type: text/plain
+Date: Mon, 29 Oct 2007 07:29:25 -0400
+Message-Id: <1193657365.19938.17.camel@localhost.localdomain> (sfid-20071029_113051_300665_DB0E0790)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/10/10, Markus Feldmann <feldmann_markus@gmx.de>:
-> Nick Kossifidis schrieb:
-> > 2007/10/10, Markus Feldmann <feldmann_markus@gmx.de>:
-> >> Markus Feldmann schrieb:
-> >>> Hi All,
-> >>>
-> >>> i tried to patch the Kernel to get the ATH5k Driver to work but without
-> >>> success.
-> >>>
-> >>> It seems i miss some scripts like check.sh
-> >>>
-> >>> Anybody knows how to get my Problem solved?
-> >>>
-> >>> bye Markus
-> >>>
-> >> Sorry i forgot to say that i am using the kernel Source 2.6.23-rc8 and
-> >> wanna patch this with a Andrew Morton Patch,
-> >> 2.6.23-rc8-mm1
-> >> 2.6.23-rc8-mm2
-> >>
-> >> Can anybody write what i have to do?
-> >>
-> >> I am on Debian Etch. I have got an Atheros Wlan Chip with the ID
-> >> 168c:001c (rev 01).
-> >>
-> >> Thank you and
-> >> bye
-> >
-> > 001c wont work anyway it uses the newer 5.3 EEPROM that we don't yet support ;-(
-> >
-> >
-> No Problem. Is there a need for Debugging? I would send you the debug.
-> So maybe in the future it will work.
->
+On Mon, 2007-10-29 at 00:36 -0700, Andrew Morton wrote:
+> On Mon, 22 Oct 2007 13:43:16 +0100 (BST) Chris Rankin <rankincj@yahoo.com> wrote:
+> 
+> > Hi,
+> > 
+> > I have a Netgear MA301 PLX wireless networking adapter which wants to use the hostap_plx driver in
+> > Linux 2.6.23.1. This very same piece of hardware works fine in an old(!) P120 machine running
+> > 2.4.33, but makes the 2.6.23.1 kernel freeze as soon as the pci_enable_device() function is called
+> > in prism2_plx_probe. What seems to happen is that IRQ 5 is signalled (the adapter's IRQ, according
+> > to lspci), but the handler function hasn't been installed yet and so the kernel disables IRQ 5 and
+> > locks up. However, the documentation that I have read implies that calling pci_enable_device()
+> > before requesting the IRQ number to install the handler on is "The Right Thing to do", because
+> > otherwise the IRQ number might change.
+> > 
+> > I have tried booting with "acpi=off nolapic" to no effect. The kernel is UP with 4K stacks and
+> > PREEMPT.
+> > 
+> > Can anyone suggest what a suitable fix might be, please? Because I am currently thinking "CLI" and
+> > "STI"!
+> > 
 
-Thanx a lot ! there are some things we need to fix first before we go
-for 5424/2424, i'll let you know if there is anything you can do to
-help ;-)
+This same sort of problem was just fixed for iwl4965.  The fix for that
+was to disable device interrupts until everything the driver needed
+(including interrupt handler) was set up and ready before re-enabling
+them, I think.  See the thread "iwl4965 detection problem" and the mail
+from Jes Sorensen on 2007-10-26.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+The orinoco_plx driver appears to enable interrupts (in
+orinoco_plx_hw_init()) after calling request_irq, but there's an
+interesting comment in ..._hw_init():
+
+	/* bjoern: We need to tell the card to enable interrupts, in
+	   case the serial eprom didn't do this already.  See the
+	   PLX9052 data book, p8-1 and 8-24 for reference. */
+
+Perhaps your card's EPROM tells the card to enable interrupts too early?
+Not sure how to fix that though.
+
+Dan
+
