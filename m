@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:53485 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932640AbXJPNkM (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46992 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754715AbXJ2Qek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2007 09:40:12 -0400
-Message-ID: <4714BF2C.6060008@lwfinger.net> (sfid-20071016_144017_454417_D6F046BB)
-Date: Tue, 16 Oct 2007 08:39:56 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	WANG Cong <xiyou.wangcong@gmail.com>,
-	Adrian Bunk <bunk@kernel.org>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Fwd: [-mm Patch] drivers/net/wireless/b43legacy/main.c: initialize
- the correct return value
-References: <200710151454.46047.mb@bu3sch.de>
-In-Reply-To: <200710151454.46047.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 29 Oct 2007 12:34:40 -0400
+Subject: Re: [FYI] hostapd state with mac80211 on linux
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guillaume Chevillot <guillaume@chevillot.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap <hostap@shmoo.com>, Chuck Tuffli <CTuffli@dspg.com>,
+	Alexander Kotelnikov <sacha@myxomop.com>
+In-Reply-To: <20071029163045.GA6000@chevillot.net>
+References: <1193338400.4406.4.camel@johannes.berg>
+	 <20071029125541.GA4304@chevillot.net>
+	 <1193674172.5197.73.camel@johannes.berg>
+	 <20071029163045.GA6000@chevillot.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KjQJjyVHAuusl2Sa9a/c"
+Date: Mon, 29 Oct 2007 17:35:57 +0100
+Message-Id: <1193675757.5197.75.camel@johannes.berg> (sfid-20071029_163454_927231_BB6F494B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> From: Adrian Bunk <bunk@kernel.org>
-> 
-> Initialize "err" in drivers/net/wireless/b43legacy/main.c::b43legacy_start()
-> in case of returning an uninitialized value.
-> 
-> Signed-off-by: WANG Cong <xiyou.wangcong@gmail.com>
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> ---
->  drivers/net/wireless/b43/main.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-> ===================================================================
-> --- linux-2.6.23-mm1.orig/drivers/net/wireless/b43legacy/main.c
-> +++ linux-2.6.23-mm1/drivers/net/wireless/b43legacy/main.c
-> @@ -3306,7 +3306,7 @@ static int b43legacy_start(struct ieee80
->  	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
->  	struct b43legacy_wldev *dev = wl->current_dev;
->  	int did_init = 0;
-> -	int err;
-> +	int err = 0;
->  
->  	mutex_lock(&wl->mutex);
->  
-> 
-> 
-> -------------------------------------------------------
-> 
+
+--=-KjQJjyVHAuusl2Sa9a/c
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+
+> No I'm talking of kernel patches. The 008 patch for example does not
+> fail to hunk automatically on git kernel source (tested on a friday, on
+> the main git kernel tree). It applies on 2.6.21-rc1 (I think not tested)
+> but not on downloaded from git kernel tree (the same probably with
+> 2.6.21-rc1-git5)
+
+Dunno. I make them apply as I update my trees. My patches dir always
+contains the output of git-describe to tell you what tree I diffed
+against.
+
+> So your patches are OK but won't be for the rc2 I presume.
+
+Trust me, I'll update them.
+
+johannes
+
+--=-KjQJjyVHAuusl2Sa9a/c
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyYL7aVg1VMiehFYAQLlHg/+M9M/Wv7NE5E6a5gI5870BRX77KjIjrJR
++FSC+kQWWKOCKUp0hFrIuVa8CWKT/hnig3DS+gBGssq9cAblMf0B4HEK2qn29P8Z
+ZAM13DSElZBvpq5XEyVPulGgHgpln4lYdKdcQyRD/IHdLQFm3AgS5D7b7wEA6YIO
+4MhuR5Fm2KeQhXpH7yO+aZx0IBEG/MSnwTQ3/jyiZxC0ZVonXR4QKWdljDF4a0N7
+XlMkxxRj5e/t89RmRBtnwlwKMQD54H22AtSEChGSmpUl/hyoBVPKcqWs8oZA9vBL
+hNqqxJbUNrlfMEoDXDkbVpuguYjrAHnl7fXZvVFfwWBNmo+4ivk12sAh4Y3lnZwh
+WNWkbLm6lN5wb1cFemU9VQwrzz8su7xkxY2KGUf6UHijjbl8BResHUMTCVsv2ETd
+0TTz7Ni4YtgHYpxE/vulNaJ98IvHe0o+eRvLT6BofIXOv0A9c/HLLQxIyv/rwGmf
+nJyDqcTOCspybiObGPY0f1mmyDvtJ4yYC1SbTGBSEgk8DDo2n2rHWdS/y4yln/tg
+R9Z0dRebFaUQS1k2qzamzuVxO2h43R2Vji5bPx+EcJmS38B7LMXSlb8vUbf+fjrI
+I+8gbIt7ksyI5ZcYSeRPGcdK7P7Uz7KcK9Hsnx2hwPf4GG2AXow22PH+rqwPwJes
+SS0HoOc53zE=
+=aggw
+-----END PGP SIGNATURE-----
+
+--=-KjQJjyVHAuusl2Sa9a/c--
 
