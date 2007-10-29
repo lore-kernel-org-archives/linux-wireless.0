@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:33442 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751127AbXJ1U5H (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:50308 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759958AbXJ2Sx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 16:57:07 -0400
-Message-ID: <4724F79B.10008@lwfinger.net> (sfid-20071028_205711_629535_0A0174A2)
-Date: Sun, 28 Oct 2007 15:56:59 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Mon, 29 Oct 2007 14:53:57 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3054272pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2007 11:53:55 -0700 (PDT)
+Message-ID: <f6ca9fed0710291153o68ec2cffqbd2cc3f6d57fa11b@mail.gmail.com> (sfid-20071029_185503_531685_3A2F5413)
+Date: Mon, 29 Oct 2007 19:53:54 +0100
+From: dragoran <drago01@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwl3945 lists supported rates backwards
+Cc: "Pavel Roskin" <proski@gnu.org>,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1193677748.5197.77.camel@johannes.berg>
 MIME-Version: 1.0
-To: Jens Lang <jenslang@yahoo.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: bcm43xx: 100 % CPU load due to ksoftirqd
-References: <4724EE1F.1020704@yahoo.de>
-In-Reply-To: <4724EE1F.1020704@yahoo.de>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
+	 <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>
+	 <4719BA96.3010609@gmail.com> <1193644281.27622.12.camel@dv>
+	 <1193667153.5197.48.camel@johannes.berg> <1193677095.11181.2.camel@dv>
+	 <1193677748.5197.77.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jens Lang wrote:
-> Hi,
-> 
-> I recently bought a Compaq 6715s laptop with a Broadcom 4312 wifi chip.
-> Unfortunately it doesn't work with my Ubuntu Gutsy Gibbon.
-> 
-> When the module is loaded it constantly produces the error
-> bcm43xx_irq_xmit_error. The ksoftirqd uses 100 % of my CPU time. When I
-> remove the module from the kernel the computer freezes. Before that it
-> produced the following output:
-> 
-> Call Trace:
-> <IRQ> [<ffffffff8023b5b9>] __do_softirq+0x69/0xe0
-> [<ffffffff8020b01c>] call_softirq+0x1c/0x30
-> <EOI> [<ffffffff8023b3bb>] local_bh_enabl +0x5b/0xa0
-> [<ffffffff803ae47b>] lock_sock_nested+0xcb/0xe0
-> [...] sys_sendto+0x146/0x1b0
-> [...] sock_fasync+0x82/0x10a0
-> [...] sock_close+0x15/0x40
->       __fput+0xc10x1e0
-> filp_close+0x54/0x90
-> sys_close+0x96/0xf0
-> system_call+0x7e/083
-> 
-> Code: 48 8b 2b 90 0f ba 08 01 19 c0 74 c7 fa 65 48 8b 04
-> 
-> RIP [<ffffffff8023b6a8<] tasklet_action+0x58/0xb0
->  RSP <ffffffff805d7f68>
-> 
-> Unfortunately I cannot provide a patch but maybe this will help you
-> further improving the driver.
+On 10/29/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > @@ -5414,10 +5414,10 @@ static int iwl_init_geos(struct iwl_priv *priv)
+> >        * is supported by a mode -- and the first match is taken
+> >        */
+> >
+> > -     if (modes[G].num_channels)
+> > -             ieee80211_register_hwmode(priv->hw, &modes[G]);
+> >       if (modes[B].num_channels)
+> >               ieee80211_register_hwmode(priv->hw, &modes[B]);
+> > +     if (modes[G].num_channels)
+> > +             ieee80211_register_hwmode(priv->hw, &modes[G]);
+> >       if (modes[A].num_channels)
+> >               ieee80211_register_hwmode(priv->hw, &modes[A]);
+>
+> Huh no, you misunderstood my mail.
+>
+> This makes mac80211 always select 802.11B mode which is not what you
+> want. You want to change the order of rates within the G mode.
+>
 
-What other bcm43xx messages are in the dmesg output?
+shouldn't this one do it?
+ (untested)
 
-Larry
+---
+diff --git a/origin/iwl-3945-rs.h b/origin/iwl-3945-rs.h
+index 09fa1a7..18b19a2 100644
+--- a/origin/iwl-3945-rs.h
++++ b/origin/iwl-3945-rs.h
+@@ -39,7 +39,11 @@ struct iwl_rate_info {
+ };
+
+ enum {
+-       IWL_RATE_6M_INDEX = 0,
++       IWL_RATE_1M_INDEX = 0,
++       IWL_RATE_2M_INDEX,
++       IWL_RATE_5M_INDEX,
++       IWL_RATE_11M_INDEX,
++       IWL_RATE_6M_INDEX,
+        IWL_RATE_9M_INDEX,
+        IWL_RATE_12M_INDEX,
+        IWL_RATE_18M_INDEX,
+@@ -47,10 +51,6 @@ enum {
+        IWL_RATE_36M_INDEX,
+        IWL_RATE_48M_INDEX,
+        IWL_RATE_54M_INDEX,
+-       IWL_RATE_1M_INDEX,
+-       IWL_RATE_2M_INDEX,
+-       IWL_RATE_5M_INDEX,
+-       IWL_RATE_11M_INDEX,
+        IWL_RATE_COUNT,
+        IWL_RATE_INVM_INDEX,
+        IWL_RATE_INVALID = IWL_RATE_INVM_INDEX
