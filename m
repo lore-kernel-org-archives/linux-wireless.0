@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2226 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752988AbXJJBid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2007 21:38:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: filter locally-originated multicast frames
-Date: Tue,  9 Oct 2007 21:30:41 -0400
-Message-Id: <11919798432071-git-send-email-linville@tuxdriver.com> (sfid-20071010_023839_010030_3280B7A7)
-In-Reply-To: <11919798433964-git-send-email-linville@tuxdriver.com>
-References: <11919798433964-git-send-email-linville@tuxdriver.com>
+Received: from duky.chevillot.net ([213.41.185.64]:37922 "EHLO
+	gaia.chevillot.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758653AbXJ2Qar (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2007 12:30:47 -0400
+Date: Mon, 29 Oct 2007 17:30:45 +0100
+From: Guillaume Chevillot <guillaume@chevillot.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Guillaume Chevillot <guillaume@chevillot.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap <hostap@shmoo.com>, Chuck Tuffli <CTuffli@dspg.com>,
+	Alexander Kotelnikov <sacha@myxomop.com>
+Subject: Re: [FYI] hostapd state with mac80211 on linux
+Message-ID: <20071029163045.GA6000@chevillot.net> (sfid-20071029_163120_837055_E9E84146)
+References: <1193338400.4406.4.camel@johannes.berg> <20071029125541.GA4304@chevillot.net> <1193674172.5197.73.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
+In-Reply-To: <1193674172.5197.73.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
 
-In STA mode, the AP will echo our traffic.  This includes multicast
-traffic.
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Receiving these frames confuses some protocols and applications,
-notably IPv6 Duplicate Address Detection.
+> Which patches? They currently all apply against the version of linux-2.6
+> I'm running. Or are you talking about hostapd?
+No I'm talking of kernel patches. The 008 patch for example does not
+fail to hunk automatically on git kernel source (tested on a friday, on
+the main git kernel tree). It applies on 2.6.21-rc1 (I think not tested)
+but not on downloaded from git kernel tree (the same probably with
+2.6.21-rc1-git5)
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+So your patches are OK but won't be for the rc2 I presume.
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index ad73a40..9e0da6e 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2844,9 +2844,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
- 		memcpy(dst, hdr->addr1, ETH_ALEN);
- 		memcpy(src, hdr->addr3, ETH_ALEN);
- 
--		if (sdata->type != IEEE80211_IF_TYPE_STA) {
-+		if (sdata->type != IEEE80211_IF_TYPE_STA ||
-+		    (is_multicast_ether_addr(dst) &&
-+		     !compare_ether_addr(src, dev->dev_addr)))
- 			return TXRX_DROP;
--		}
- 		break;
- 	case 0:
- 		/* DA SA BSSID */
--- 
-1.5.2.4
+Guillaume
 
+--=20
+Guillaume Chevillot
+
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHJgq1PULMpKkMZuMRAktCAKDqDgPWAdO8zuzdBgz8PZ82hAFr5ACZAca3
+jNRae0mf33PKl59ZqR29TCk=
+=CxfC
+-----END PGP SIGNATURE-----
+
+--J2SCkAp4GZ/dPZZf--
