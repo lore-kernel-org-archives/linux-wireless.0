@@ -1,84 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53369 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbXJ1Rxe (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:44269 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbXJ2Hv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2007 13:53:34 -0400
-Subject: Re: [ipw3945-devel] iwl3945/mac80211 cannot connect to dynamic wep
-	network
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Dan Williams <dcbw@redhat.com>, Zhu Yi <yi.zhu@intel.com>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <20071028173610.GM4936@jm.kir.nu>
-References: <f6ca9fed0710230054i2b2849bfpc79c6090627b8625@mail.gmail.com>
-	 <1193127280.3069.261.camel@debian.sh.intel.com>
-	 <1193148453.8648.20.camel@localhost.localdomain>
-	 <1193161034.7733.38.camel@johannes.berg>
-	 <1193238423.2557.41.camel@localhost.localdomain>
-	 <1193318969.6092.19.camel@johannes.berg>
-	 <1193320140.5542.11.camel@localhost.localdomain>
-	 <1193320661.14136.10.camel@johannes.berg>
-	 <1193548708.7779.10.camel@localhost.localdomain>
-	 <1193567294.3966.6.camel@johannes.berg>  <20071028173610.GM4936@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JgvTaNSOKlcrgZZLBbq8"
-Date: Sun, 28 Oct 2007 18:54:45 +0100
-Message-Id: <1193594085.5197.20.camel@johannes.berg> (sfid-20071028_175340_092971_9D727259)
+	Mon, 29 Oct 2007 03:51:26 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1ImPPB-0000Nt-Ei
+	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2007 03:51:25 -0400
+Subject: Re: iwl3945 lists supported rates backwards
+From: Pavel Roskin <proski@gnu.org>
+To: dragoran <drago01@gmail.com>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <4719BA96.3010609@gmail.com>
+References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
+	 <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>
+	 <4719BA96.3010609@gmail.com>
+Content-Type: text/plain
+Date: Mon, 29 Oct 2007 03:51:21 -0400
+Message-Id: <1193644281.27622.12.camel@dv> (sfid-20071029_075130_793419_DFA19205)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2007-10-20 at 10:21 +0200, dragoran wrote:
 
---=-JgvTaNSOKlcrgZZLBbq8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > I don't know why iwl3945 composes the association request on its own 
+> > and what happens to it later.  Besides, mac80211 10.0.0 is something 
+> > heavily patched by Intel AFAIK.  I wanted to test the git version of 
+> > Intel mac80211, but intellinuxwireless.org appears to be down or 
+> > unreachable at the moment and I didn't have a recent clone.  The 
+> > kernel mac80211 is definitely not the suspect.
+> >
+> > I was aware of "error 18", and when I noticed some activity about 
+> > rates in wireless-2.6/everything, so I decided to see how that problem 
+> > would be affected.
+> >
+> does loading the module with disable_hw_scan=1 helps?
 
+Sorry for delay.  disable_hw_scan=1 makes no difference for association
+requests.  However, it has the opposite effect on the probe requests.
+With disable_hw_scan=1, probe requests have the same problem as the
+association requests, namely they don't have CCK rates in the supported
+rates:
 
-> While there is indeed a bug in wpa_supplicant 0.5.x, I think that
-> another issue here is in mac80211 trying to do something that it was not
-> supposed to do, i.e., to figure out whether privacy is enabled or not
-> based on keymgmt value. This is decided in the supplicant and the value
-> is configured with IW_AUTH_PRIVACY_INVOKED to the kernel. In other
-> words, mac80211 should follow this parameter and not IW_AUTH_KEY_MGMT.
+IEEE 802.11
+    Type/Subtype: Probe Request (0x04)
+    Frame Control: 0x0040 (Normal)
+        Version: 0
+        Type: Management frame (0)
+        Subtype: 4
+        Flags: 0x0
+            DS status: Not leaving DS or network is operating in AD-HOC mode (To DS: 0 From DS: 0) (0x00)
+            .... .0.. = More Fragments: This is the last fragment
+            .... 0... = Retry: Frame is not being retransmitted
+            ...0 .... = PWR MGT: STA will stay up
+            ..0. .... = More Data: No data buffered
+            .0.. .... = Protected flag: Data is not protected
+            0... .... = Order flag: Not strictly ordered
+    Duration: 0
+    Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
+    Source address: IntelCor_c8:77:a3 (00:13:02:c8:77:a3)
+    BSS Id: Broadcast (ff:ff:ff:ff:ff:ff)
+    Fragment number: 0
+    Sequence number: 5
+    Frame check sequence: 0x53ed0507 [correct]
+        [Good: True]
+        [Bad: False]
+IEEE 802.11 wireless LAN management frame
+    Tagged parameters (23 bytes)
+        SSID parameter set: "WTEST"
+            Tag Number: 0 (SSID parameter set)
+            Tag length: 5
+            Tag interpretation: WTEST
+        Supported Rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0 
+            Tag Number: 1 (Supported Rates)
+            Tag length: 8
+            Tag interpretation: Supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0  [Mbit/sec]
+        Extended Supported Rates: 1.0 2.0 5.5 11.0 
+            Tag Number: 50 (Extended Supported Rates)
+            Tag length: 4
+            Tag interpretation: Supported rates: 1.0 2.0 5.5 11.0  [Mbit/sec]
 
-Hmm. Is there a good explanation of all these values? I still haven't
-understood what all the IW_AUTH_* means. I'm fairly sure though that
-this particular instance hasn't changed in terms of behaviour since the
-original devicescape code (not that this means it's bug-free, of course)
+What's even worse, the radiotap header (I'm capturing with the current
+MadWifi) indicates that the probe request is sent at 6 Mbps.  Of course,
+the AP doesn't reply, as it's 802.11b only.
 
-> I merged the fix into 0.5.x branch, so it should be included in the next
-> release. This was fixed as part of a more generic cleanup and it did not
-> end up being flagged as a bug fix and consequently, not merged into
-> 0.5.x branch.
+Association requests are sent at 5.5 and 6 Mbps.  The association
+response is sent, but it's still code 18.
 
-Thanks.
+I'm using current wireless-2.6/everything now (it identifies itself as
+2.6.24-rc1) and the driver from the kernel to avoid any problems with
+Intel's mac80211.
 
-johannes
-
---=-JgvTaNSOKlcrgZZLBbq8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyTM46Vg1VMiehFYAQIo7A//QcylUJZHjU5+dbAz/w87j5CaHKLmpWll
-H8SnWxGMmvikp4Fqx9rZB8pCwAkPjQHQom2j7/hHt20Zbfpm9pwIE3mN0BvoNYdL
-Ow8MTf1fT2s4rsWlKyUIAFJi6RrG5lzqtsMl5IG30qwr38GVPtoCnJbTu5zXJovU
-0B8jfX2WNE/71M0YvNHYkdhGOO6JR/S3FfviEjufBaATv3y6D5xvTDxXhcKTZG3G
-aoVcOVsmIzUU/mcHuetAamlWf6FvtL/Bg1lluYYGJH1c2UJDrDhYlDKHu4AwE8mp
-fnYThIHuGmsAPfxCA7FTBAdAtTdAd7yLufNWo8fDQGFLMyij0A6XfJ5ziOMe8rnn
-iANBvdc9UaKKfXEH71da+1kGNMbjoufVlcIBl95L+yuXJiN5PqZqc1SZJkvyLACu
-4bvXoYZTzU4YSGq1CISLK2jAIEEhiJ3JaLcJFfkB2X3QcRhPVMd7Ma41dpXdeiFW
-tL9g06zGUzqQFnDcMJ6trzhnylnk1jwZjNrTr44KYF8EPJV+yQGwPhiiBmTZwCF2
-MkmwajGddm8/bO4j8KJ9Q/VMSbAe2TAjb8y4PWkjr7h5LHjs5WumyxDXbjp/k2Zo
-YlnfBR5PCug17QFLQfUz69hEPuHCWKzddP+WdXQKsme3e6TkekS7woqegXA37LTh
-i4zFincWcso=
-=nlXi
------END PGP SIGNATURE-----
-
---=-JgvTaNSOKlcrgZZLBbq8--
+-- 
+Regards,
+Pavel Roskin
 
