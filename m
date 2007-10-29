@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hpsmtp-eml13.kpnxchange.com ([213.75.38.113]:29833 "EHLO
-	hpsmtp-eml13.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752026AbXJVQsg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2007 12:48:36 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
-Date: Mon, 22 Oct 2007 18:48:27 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200710211316.06772.elendil@planet.nl> <43e72e890710220827k2aa7a8d9m3653ec51ff461b32@mail.gmail.com>
-In-Reply-To: <43e72e890710220827k2aa7a8d9m3653ec51ff461b32@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3327 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889AbXJ2VHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2007 17:07:37 -0400
+Date: Mon, 29 Oct 2007 17:06:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi,
+	akpm <akpm@linux-foundation.org>
+Subject: Re: [PATCH] hostap: fix section mismatch warning
+Message-ID: <20071029210620.GB27547@tuxdriver.com> (sfid-20071029_210740_586227_821F2BF1)
+References: <20071029112026.f66473c5.randy.dunlap@oracle.com> <20071029205254.GA27547@tuxdriver.com> <4726497F.2010709@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200710221848.27985.elendil@planet.nl> (sfid-20071022_174839_945840_A56884F4)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4726497F.2010709@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 October 2007, Luis R. Rodriguez wrote:
-> Get this line again from lspci, and for example if its 30000000 again
-> run from madwifi:
->
-> ./tools/ath_info 0x30000000
+On Mon, Oct 29, 2007 at 01:58:39PM -0700, Randy Dunlap wrote:
 
-That results in:
+> >Would you mind explaining how changing the name of the pci_driver
+> >variable resolves this?  There must be some magic here...
+> 
+> Oh, sure.  In scripts/mod/modpost.c, there is a whitelist of variable
+> name suffixes.  Those suffixes are assumed to be safe for referring
+> to non-text code/data.  OTOH, if someone complains enough, another
+> whitelist table element can also be added...
 
- -==Device Information==-
-MAC Version:  5212 (0x50)
-MAC Revision: 5213A(0x59)
-PHY Revision: 5110 (0x0)
-PHY Revision: 5110 (0x0)
- -==EEPROM Information==-
-EEPROM Version:     4.6
-EEPROM Size:        16K
-Regulatory Domain:  0x30
- -==== Capabilities ====-
-|  802.11a Support: no   |
-|  802.11b Support: yes  |
-|  802.11g Support: yes  |
-|  RFKill  Support: no   |
-|  32KHz   Crystal: yes  |
- ========================
-GPIO registers: CR 00000000 DO 00000000 DI 00000000
+Ah, got it.  Thanks!
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
