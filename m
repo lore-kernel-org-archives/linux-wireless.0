@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3968 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2708 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753040AbXJZVHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 17:07:14 -0400
+	id S1752387AbXJ3R21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Oct 2007 13:28:27 -0400
+Date: Tue, 30 Oct 2007 13:28:11 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ieee80211: fix TKIP QoS bug
-Date: Fri, 26 Oct 2007 17:04:29 -0400
-Message-Id: <11934326813508-git-send-email-linville@tuxdriver.com> (sfid-20071026_220718_604511_4B1A4AB0)
-In-Reply-To: <11934326811535-git-send-email-linville@tuxdriver.com>
-References: <11934326793639-git-send-email-linville@tuxdriver.com>
- <11934326801557-git-send-email-linville@tuxdriver.com>
- <11934326803769-git-send-email-linville@tuxdriver.com>
- <11934326803330-git-send-email-linville@tuxdriver.com>
- <11934326811535-git-send-email-linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RTS wrong hdrlen computation?
+Message-ID: <20071030172811.GA7478@tuxdriver.com> (sfid-20071030_172832_129137_E22AF67F)
+References: <43e72e890710300956w55740788mc70c63c4bace6d28@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890710300956w55740788mc70c63c4bace6d28@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Tue, Oct 30, 2007 at 12:56:39PM -0400, Luis R. Rodriguez wrote:
+> Perhaps an oversight, gotta go so can't keep looking, perhaps others will know
+> 
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 27203f1..7f7da9c 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -188,8 +188,11 @@ int ieee80211_get_hdrlen(u16 fc)
+>                  *   subtype mask:   0b0000000011110000 (0x00F0)
+>                  *   ACK subtype:    0b0000000011010000 (0x00D0)
+>                  *   CTS subtype:    0b0000000011000000 (0x00C0)
+> +                *   RTS subtype:    0b0000000010110000 (0x00B0) **
+>                  *   bits that matter:         ^^^      (0x00E0)
+>                  *   value of those: 0b0000000011000000 (0x00C0)
+> +                *
+> +                *   Note: this doesn't work for RTS...
+>                  */
+>                 if ((fc & 0xE0) == 0xC0)
+>                         hdrlen = 10;
 
-The commit 65b6a277 titled "ieee80211: Fix header->qos_ctl endian issue"
-*introduced* an endianness bug. Partially revert it.
+It looks like the default case (i.e. "hdrlen = 16") is fine for RTS.
+What am I missing...?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/ieee80211/ieee80211_crypt_tkip.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/ieee80211/ieee80211_crypt_tkip.c b/net/ieee80211/ieee80211_crypt_tkip.c
-index 5a48d8e..7f11dd9 100644
---- a/net/ieee80211/ieee80211_crypt_tkip.c
-+++ b/net/ieee80211/ieee80211_crypt_tkip.c
-@@ -584,7 +584,7 @@ static void michael_mic_hdr(struct sk_buff *skb, u8 * hdr)
- 	if (stype & IEEE80211_STYPE_QOS_DATA) {
- 		const struct ieee80211_hdr_3addrqos *qoshdr =
- 			(struct ieee80211_hdr_3addrqos *)skb->data;
--		hdr[12] = qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TID);
-+		hdr[12] = le16_to_cpu(qoshdr->qos_ctl) & IEEE80211_QCTL_TID;
- 	} else
- 		hdr[12] = 0;		/* priority */
- 
+John
 -- 
-1.5.2.4
-
+John W. Linville
+linville@tuxdriver.com
