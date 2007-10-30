@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iggypop2.siwnet.net ([81.216.65.12]:54653 "EHLO
-	iggypop2.siwnet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758942AbXJOLmV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446AbXJ3MIN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 07:42:21 -0400
-Message-ID: <35945.80.169.182.16.1192448277.squirrel@www.dactylis.com> (sfid-20071015_124224_970564_04299951)
-In-Reply-To: <1192437157.3349.7.camel@johannes.berg>
-References: <fdqhn4$qab$1@sea.gmane.org>
-    <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
-    <1192094159.4770.21.camel@johannes.berg>
-    <200710112005.56101.IvDoorn@gmail.com>
-    <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
-    <1192216713.4770.58.camel@johannes.berg>
-    <1192217047.4770.61.camel@johannes.berg>
-    <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com>
-    <1192437157.3349.7.camel@johannes.berg>
-Date: Mon, 15 Oct 2007 13:37:57 +0200 (CEST)
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-From: "Marcus Better" <marcus@better.se>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	Tue, 30 Oct 2007 08:08:13 -0400
+Subject: Re: [ipw3945-devel] iwl3945 lists supported rates backwards
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mabbas <mabbas@linux.intel.com>
+Cc: dragoran <drago01@gmail.com>, ipw3945-devel@lists.sourceforge.net,
 	linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Larry Finger <larry.finger@lwfinger.net>
+In-Reply-To: <4726433A.2070808@linux.intel.com>
+References: <1192832109.19766.14.camel@dv> <47192F84.1020101@lwfinger.net>
+	 <20071020014040.40pq9hqkw0c4owc8@webmail.spamcop.net>
+	 <4719BA96.3010609@gmail.com> <1193644281.27622.12.camel@dv>
+	 <1193667153.5197.48.camel@johannes.berg> <1193677095.11181.2.camel@dv>
+	 <1193677748.5197.77.camel@johannes.berg>
+	 <f6ca9fed0710291153o68ec2cffqbd2cc3f6d57fa11b@mail.gmail.com>
+	 <4726433A.2070808@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UHMj30Jj0OrkUYi1DX51"
+Date: Tue, 30 Oct 2007 13:09:26 +0100
+Message-Id: <1193746166.3912.11.camel@johannes.berg> (sfid-20071030_120819_691374_DFF8544C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2007-10-15 at 09:04 +0200, Marcus Better wrote:
->> The new patch doesn't seem to solve the problem either. I get the same
->> association failure as before.
 
-Update: on my second recompile (after adding the printks) it started
-working. I'm not sure why it failed the first time.
+--=-UHMj30Jj0OrkUYi1DX51
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-However there is a huge performance regression. "tptest" shows a TCP
-throughput of under 300 kbit for the driver version 2.0.9 (current
-wireless-2.6), compared to 7 Mbit for version 2.0.7 (with kernel
-2.6.23-rc3). The UDP speed was also affected but not as much, down from
-around 5-10 Mbit to 1 Mbit.
 
-> Can you add back your printk patch and check what type 'channel' was and
-> maybe print channel->channel?
+On Mon, 2007-10-29 at 13:31 -0700, mabbas wrote:
+> This might break rate scaling for 3945 adapter.=20
 
-With the printks below I get the following:
+Yeah I was just going to say the same, the rate scaling is a bit
+awkward.
 
-Oct 15 13:14:43 better kernel: selected mode 2
-Oct 15 13:14:43 better kernel: selected channel 8
+> I look into rearrange=20
+> the rate and do what ever needed to make rate scaling wont break.
 
-Thanks,
+Thanks.
 
-Marcus
+johannes
 
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -314,6 +314,8 @@ int ieee80211_set_channel(struct ieee80211_local
-*local, int
-        }
+--=-UHMj30Jj0OrkUYi1DX51
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-        if (set) {
-+               printk(KERN_DEBUG "selected mode %d\n",
-local->oper_hw_mode->mod
-+               printk(KERN_DEBUG "selected channel %d\n",
-local->oper_channel->
-                if (local->sta_scanning)
-                        ret = 0;
-                else
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUARyce9aVg1VMiehFYAQLwiBAAvs95WkrJIVQHsAbd5j0iRrSqsMDZOuoq
+kHzfJPkoiy5+7kaR8RHyqVB4Yy5pB/ZlYkyOMZ0s7qEnNSHFDUub3JwHzjTRvuho
+T2UWvbIeTzN4olb/m0LJeEcpXBLbzXG283c6eoThdQ2gZrkNjCm0WOWgtNhKx/Eq
+67pFiT8QQ3uB8ZV+2Z9cuzifZKBUBh0442uGlcPl/un+0j4cKZ+dYxGItFEikUv9
+D8x1BSZtUS8blwcZQrp0FT1mVuq4FYwm0qYq9kHbnG3/1bxYbqKsqAP5jLBAKQ0S
+E8CdSUnb+ugSLmxo1baFsWJcdd/CZAlHiKggmY+KlmySN3uTNXmelUTPWQPHN6QM
+VfsjZi3JR1ULQRUieiZIwqKqEv/T1CD53mUMC0Ea+koOILAuEkCU8TH5PycmAf6K
+80B3JaLQWlRBwg1s89IE+ZURoi3AS6yS9TlcSVRdKfcpQ2EoCGrzdxKuYA98Jvu+
+BTQP4lSRzZtGRrg9iH0Pmq27OFkAKlKAmLXisQ+ZbUU9x+pizC0FeXD7FiEI1PdS
+NH/6/7xZLwijRb25JwVrVObwToF1Xl4nW83IYTNAvl/2q35FD9jcJEwCRGZV1vnF
+CvvC21/AV+4nQzPPMfFyikv162EqRypthFCr4wezYyBL99WyetmS87400HfyXd35
+jVgv4NPrh1A=
+=s3P9
+-----END PGP SIGNATURE-----
+
+--=-UHMj30Jj0OrkUYi1DX51--
 
