@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43733 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070AbXJJIoS (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.186]:41983 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892AbXJ3Prv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 04:44:18 -0400
-Subject: Re: [PATCH] libertas: remove one superfluous include
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200710091438.13738.hs4233@mail.mn-solutions.de> (sfid-20071009_133807_893575_F559BDC1)
-References: <200710091430.11043.hs4233@mail.mn-solutions.de>
-	 <200710091438.13738.hs4233@mail.mn-solutions.de>
-	 (sfid-20071009_133807_893575_F559BDC1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f5zdCs+lyHdPgZNgsTPA"
-Date: Tue, 09 Oct 2007 22:10:08 +0200
-Message-Id: <1191960608.4013.58.camel@johannes.berg> (sfid-20071010_094420_752306_5C20CFD4)
-Mime-Version: 1.0
+	Tue, 30 Oct 2007 11:47:51 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1913880rvb
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 08:47:50 -0700 (PDT)
+Message-ID: <43e72e890710300847l25208498l5399953611d902c2@mail.gmail.com> (sfid-20071030_154757_915088_8E508843)
+Date: Tue, 30 Oct 2007 11:47:47 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [ath5k-devel] MadWifi HAL register dumps - help reverse engineering
+Cc: "bruno randolf" <bruno@thinktube.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	madwifi-devel <madwifi-devel@lists.sourceforge.net>
+In-Reply-To: <1193757169.29187.19.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890710191255k72c7176fx10592dcfc02cb287@mail.gmail.com>
+	 <200710301749.32236.bruno@thinktube.com>
+	 <1193757169.29187.19.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/30/07, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2007-10-30 at 17:49 +0900, bruno randolf wrote:
+> > hi luis!
+> >
+> > adding the following patch lets us log the calling function names as well!
+> > which makes it much easier to make sense to the traces :)
+> >
+> > and i added ALQ=1 MMIOTRACE=1 and the objdump command to the Makefile as well
+> > to avoid forgetting that.
+> >
+> > cheers,
+> > bruno
+> >
+> > this time the patch is included, sorry...
+> >
+> > diff -Nurb madwifi-trace.luis/ath_hal/ah_os.c madwifi-trace/ath_hal/ah_os.c
+> > --- madwifi-trace.luis/ath_hal/ah_os.c        2007-10-30 17:44:48.000000000 +0900
+> > +++ madwifi-trace/ath_hal/ah_os.c     2007-10-30 17:39:52.000000000 +0900
+> > @@ -152,6 +152,7 @@
+> >   * useful for debugging and figuring out, which hal function sets which
+> >   * registers */
+> >  char *ath_hal_func = NULL;
+> > +EXPORT_SYMBOL(ath_hal_func);
+>
+> Any particular reason this is not EXPORT_SYMBOL_GPL?
 
---=-f5zdCs+lyHdPgZNgsTPA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Technically Dual GPL/3-clause BSD license code is functionally
+equivalent to 3-clause-BSD.
 
-On Tue, 2007-10-09 at 14:38 +0200, Holger Schurig wrote:
-
-> $ scripts/checkincludes.pl drivers/net/wireless/*.h
-> drivers/net/wireless/ipw2200.h: linux/dma-mapping.h is included=20
-> more than once.
-
-Feel free to post a patch. It doesn't look like anybody is maintaining
-those any more.
-
-johannes
-
---=-f5zdCs+lyHdPgZNgsTPA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARwvgH6Vg1VMiehFYAQIC+RAAvG/khnmGQxSa3z9aHoLAvYnGUhNbujPT
-38lNqPa31mcUFKunLiZftQTzUUr5yCtDCLisQXkoC9jCXzI+IfZeynoctB1Gj1gR
-8uFfes5mjH8OFZ8Cdn616aCM8KA0qdlpWue++y1j4EIHGNOA9tCLhEVV/Sig9J9Z
-1FwJDbLu7bLhXWwp7FcjS2skhtP5xVsPT0f7Xa36NLPOBEe5ZUEgq4uXZIzaMqNY
-whZOi844xrJfiV000lQEzSO3jg+JVvJ+PaOaxXqT51T4dNbdFReM7TzUjIoqQhkU
-1hLm7BX3z2zCmK0tAGL1T0CLbbnPS1rIOeGYKttP9WMme2E5QE3gkMt4RqQxoybU
-WoDB36zJxOVpt2U8QthWGKkxHgzRF5c3h/K2u20KtRFFp2T3SwqM1JSsBVqEvGBU
-2OT6t6QzqCjXBR3ocv8wdPeZgLVjmpJIuNyY5IzO3LB81+UUZo+ZRoFWjHwe6roQ
-bKvseCGTlhZqJfXOd5hhsP2nWWWU0EpBHb2f8olI9PPWNsL9M/VoVpKtVsb4HC9L
-olXyo7BnqTiareim+91PCvFA5kVf3ttNiftTcx/nr+lreOcM3xqnqjVVGAryvB8l
-OsYPCREx4Jv+oDwVQBtL1ke4GON7xSMmpR39CfD+z1jF8h6U6LtclVum+RCgDcw/
-YHqI/Keeok8=
-=Kblx
------END PGP SIGNATURE-----
-
---=-f5zdCs+lyHdPgZNgsTPA--
-
+  Luis
