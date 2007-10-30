@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:17023 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757719AbXJFMEY (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:13533 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752379AbXJ3DPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2007 08:04:24 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so605537ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2007 05:04:23 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sat, 6 Oct 2007 14:19:35 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Mon, 29 Oct 2007 23:15:34 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: remove unused driver ops
+Date: Mon, 29 Oct 2007 23:11:49 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <1193670933.5197.67.camel@johannes.berg>
+In-Reply-To: <1193670933.5197.67.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200710061419.36324.IvDoorn@gmail.com> (sfid-20071006_131653_879696_BF6C6947)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1649180.2Pg4c2nVLD";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200710292311.54628.flamingice@sourmilk.net> (sfid-20071030_031538_797920_8CBDDA70)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+--nextPart1649180.2Pg4c2nVLD
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Here is the rt2x00 2.0.10 update.
-Some obvious bugs have been fixed, some not so obvious bugs,
-and the code has been cleaned up a bit by moving more
-into rt2x00lib.
+On Monday 29 October 2007 11:15:33 Johannes Berg wrote:
+> The driver operations set_ieee8021x(), set_port_auth() and
+> set_privacy_invoked() are not used by any drivers, except
+> set_privacy_invoked() they aren't even used by mac80211.
+> Remove them at least until we need to support drivers with
+> mac80211 that require getting this information.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Michael Wu <flamingice@sourmilk.net>
 
-Note that as of now rt2x00.git will be branched from the wireless-2.6
-git tree. I see wireless-dev has already been removed/renamed so
-I won't be using that anymore. ;)
+Let's do this.
 
-All indivual patches can also be found here:
-http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.10/
+-Michael Wu
 
-Ivo
+--nextPart1649180.2Pg4c2nVLD
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
----
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-The following changes since commit f88cf9b6d7c8dad6eb64a972a753584b8006c545:
-  John W. Linville (1):
-        zd1211rw-mac80211: undo print_mac API stuff
+iD8DBQBHJqD6T3Oqt9AH4aERAqPaAJ9CFGZH6d1oIQN73b05abA4EEbzCwCdGWN1
+wqFjlclxr1Z3eEm4j/TJ8J4=
+=wuBQ
+-----END PGP SIGNATURE-----
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
-
-Ivo van Doorn (16):
-      rt2x00: Remove duplicate code in MAC & BSSID handling
-      rt2x00: Remove radio check from rt2x00lib_toggle_rx
-      rt2x00: Store "STARTED" state during suspend
-      rt2x00: Move rt2x00dev flags into enumeration
-      rt2x00: Don't use changed_flags inside configure_packet_filter
-      rt2x00: Fix rfkill handling
-      rt2x00: Move TSF sync values into rt2x00config
-      rt2x00: get_duration expects values in 100kbs
-      rt2x00: Cut lines down to 80 characters
-      rt2x00: Add get_tx_data_len callback function
-      rt2x00: Pass dev_state to rt2x00lib_toggle_rx
-      rt2x00: Small optimizations
-      rt2x00: Reorganize configuration handler
-      rt2x00: Clean disabling of rt73usb_get_tsf
-      rt2x00: Allways memset memory obtained from skb_push()
-      rt2x00: Release 2.0.10
-
- drivers/net/wireless/rt2x00/rt2400pci.c    |  186 ++++++++++----------------
- drivers/net/wireless/rt2x00/rt2500pci.c    |  201 +++++++++++-----------------
- drivers/net/wireless/rt2x00/rt2500usb.c    |  200 ++++++++++++----------------
- drivers/net/wireless/rt2x00/rt2x00.h       |   93 ++++++++++---
- drivers/net/wireless/rt2x00/rt2x00config.c |  113 +++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00dev.c    |   52 +++++---
- drivers/net/wireless/rt2x00/rt2x00lib.h    |   14 +--
- drivers/net/wireless/rt2x00/rt2x00mac.c    |   38 +++++-
- drivers/net/wireless/rt2x00/rt2x00reg.h    |    9 ++
- drivers/net/wireless/rt2x00/rt2x00rfkill.c |    4 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c    |   29 +++--
- drivers/net/wireless/rt2x00/rt61pci.c      |  166 +++++++----------------
- drivers/net/wireless/rt2x00/rt73usb.c      |  195 +++++++++++----------------
- 13 files changed, 642 insertions(+), 658 deletions(-)
+--nextPart1649180.2Pg4c2nVLD--
