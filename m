@@ -1,136 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40818 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757149AbXJQUsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 16:48:11 -0400
-Subject: Re: [Bugme-new] [Bug 9179] New: 2.6.23.1 / USB_ZD1201: Kernel
-	panic with zd1201 driver
-From: Dan Williams <dcbw@redhat.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	bugme-daemon@bugzilla.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zairasai@googlemail.com
-In-Reply-To: <20071017132740.eebaed9d.akpm@linux-foundation.org>
-References: <bug-9179-10286@http.bugzilla.kernel.org/>
-	 <20071017132740.eebaed9d.akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Wed, 17 Oct 2007 16:46:51 -0400
-Message-Id: <1192654011.15090.3.camel@localhost.localdomain> (sfid-20071017_214815_161197_B5653016)
-Mime-Version: 1.0
+Received: from mail-i4.informatik.RWTH-Aachen.DE ([137.226.12.21]:49254 "EHLO
+	mail-i4.informatik.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753975AbXJ3T7y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Oct 2007 15:59:54 -0400
+Received: from info-4.informatik.rwth-aachen.de (cronos.info-4.informatik.rwth-aachen.de [137.226.12.31])
+	by mail-i4.informatik.rwth-aachen.de (Postfix) with ESMTP id A69F79806D
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2007 20:27:32 +0100 (CET)
+Date: Tue, 30 Oct 2007 20:27:40 +0100
+From: Ulrich Meis <meis@nets.rwth-aachen.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Remove fill_tx_desc
+Message-ID: <20071030192740.GA10233@nets.rwth-aachen.de> (sfid-20071030_195957_845795_6F98D0D0)
+References: <20071027235827.GH5973@localhost.domain.invalid> <43e72e890710300945r41bd982bife52835660ff0c10@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890710300945r41bd982bife52835660ff0c10@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-10-17 at 13:27 -0700, Andrew Morton wrote:
-> On Wed, 17 Oct 2007 11:34:57 -0700 (PDT)
-> bugme-daemon@bugzilla.kernel.org wrote:
+On Tue 30.10.07 12:45, Luis R. Rodriguez wrote:
+> On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
+> > fill_tx_desc is used for fast frames operation, since
+> > we don't support fast frames (and since fill_tx_desc
+> > had a bug -thanx to Ulrich Meis for finding that out-)
+> > these functions are not needed (+ they are misleading
+> > because they don't "fill" any tx descriptor).
+> >
+> > I couldn't test this patch much so plz someone ACK it...
+> >
+> > It applies on top of my previous patches (i just thought
+> > that [PATCH 8/7] won't look nice ;-) ).
+> >
+> >
+> > Changes-licensed-under: ISC
+> > Signed-off-by: Ulrich Meis <meis@nets.rwth-aachen.de>
+> > Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9179
-> > 
-> >            Summary: 2.6.23.1 / USB_ZD1201: Kernel panic with zd1201 driver
-> >            Product: Drivers
-> >            Version: 2.5
-> >      KernelVersion: 2.6.23.1
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: network-wireless
-> >         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
-> >         ReportedBy: zairasai@googlemail.com
-> > 
-> > 
-> > [1.] One line summary of the problem:
-> > 
-> > 2.6.23.1 / USB_ZD1201: Kernel panic with zd1201 driver
-> > 
-> > 
-> > 
-> > 
-> > [2.] Full description of the problem:
-> > 
-> > The zd1201-driver (symbol: USB_ZD1201) triggers a kernel panic during
-> > initialization of the WLAN device, showing the following message:
-> > 
-> > EIP: [<e095e1d1>] zd1201_usbrx+0x6e1/0xbb0 [zd1201] SS:ESP 0068:c0469d7c
-> > Kernel panic - not syncing: Fatal exception in interrupt
-> > 
-> > According to the init output during bootup, the panic seems to occur right when
-> > the WLAN device receives an IP address from the DHCP-Server of the
-> > WLAN/DSL-Router. The WLAN device is (in my case) a 'Belkin F5D6051' based on
-> > the ZyDAS 1201 chip.
-> > 
-> > As far as i know, the only recent change in 'drivers/net/wireless/zd1201.c' was
-> > done in patch-2.6.22, so the bug probably affects all kernel versions later
-> > than 2.6.21.7, but at least the ones i've tested (which are listed in the
-> > summary below). It also recently came up in some different
-> > distribution-specific forums/bugtrackers, so it does not seem to be specific to
-> > my machine/setup. A link to another report on this problem is included at the
-> > end of this report.
-> > 
-> > Below is an extract of patch-2.6.22, showing that the lines 330 and 388 have
-> > been removed from 'drivers/net/wireless/zd1201.c'. I put those two lines back,
-> > which made things work as expected again; however, that is only meant as a
-> > hint, since i don't know why they were taken out or what other implications my
-> > change might have.
-> > 
-> > patch-2.6.22, lines 586509-586528:
-> > {{{
-> > diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
-> > index 6cb66a3..935b144 100644
-> > --- a/drivers/net/wireless/zd1201.c
-> > +++ b/drivers/net/wireless/zd1201.c
-> > @@ -327,7 +327,6 @@ static void zd1201_usbrx(struct urb *urb)
-> >                         memcpy(skb_put(skb, 6), &data[datalen-8], 6);
-> >                         memcpy(skb_put(skb, 2), &data[datalen-24], 2);
-> >                         memcpy(skb_put(skb, len), data, len);
-> > -                       skb->dev = zd->dev;
-> >                         skb->dev->last_rx = jiffies;
-> >                         skb->protocol = eth_type_trans(skb, zd->dev);
-> >                         zd->stats.rx_packets++;
-> > @@ -385,7 +384,6 @@ static void zd1201_usbrx(struct urb *urb)
-> >                         memcpy(skb_put(skb, 2), &data[6], 2);
-> >                         memcpy(skb_put(skb, len), data+8, len);
-> >                 }
-> > -               skb->dev = zd->dev;
-> >                 skb->dev->last_rx = jiffies;
-> >                 skb->protocol = eth_type_trans(skb, zd->dev);
-> >                 zd->stats.rx_packets++;
-> > }}}
-> > 
-> 
-> Arnaldo, we have a pretty solid report here that your
-> 4c13eb6657fe9ef7b4dc8f1a405c902e9e5234e0 made this driver go crash.
+> Very nice, I've been testing this on 2.6.24-rc1 for a day without
+> problems. I'll soon post results of of all your patches and your 1-7
+> series on big endian. Compiling takes a while there, heh.. I guess I
+> should be cross compiling huh.
 
-In 2.6.22 and later, eth_type_trans() sets skb->dev.  It looks like the
-lines tha tset last_rx in the patch above should be moved below the
-eth_type_trans() lines, otherwise they'll likely oops.
+People using the 5212 need the line below though if they wanna be able
+to sent out frames :) It's missing in the 4word version. Besides that
+the patches also seem to run fine here.
 
-Something like this is probably in order?
+Uli
 
-diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
-index 6cb66a3..935b144 100644
---- a/drivers/net/wireless/zd1201.c
-+++ b/drivers/net/wireless/zd1201.c
-@@ -327,7 +327,6 @@ static void zd1201_usbrx(struct urb *urb)
-                        memcpy(skb_put(skb, 6), &data[datalen-8], 6);
-                        memcpy(skb_put(skb, 2), &data[datalen-24], 2);
-                        memcpy(skb_put(skb, len), data, len);
--                       skb->dev = zd->dev;
--                       skb->dev->last_rx = jiffies;
-                        skb->protocol = eth_type_trans(skb, zd->dev);
-+                       skb->dev->last_rx = jiffies;
-                        zd->stats.rx_packets++;
-@@ -385,7 +384,6 @@ static void zd1201_usbrx(struct urb *urb)
-                        memcpy(skb_put(skb, 2), &data[6], 2);
-                        memcpy(skb_put(skb, len), data+8, len);
-                }
--               skb->dev = zd->dev;
--               skb->dev->last_rx = jiffies;
-                skb->protocol = eth_type_trans(skb, zd->dev);
-+               skb->dev->last_rx = jiffies;
-                zd->stats.rx_packets++;
+P.S.: Sry Nick, posted this to you yesterday but forgot to include the list.
 
-Dan
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 7b9920c..dc9b881 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -3641,6 +3641,8 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
+        if (buff_len & ~AR5K_4W_TX_DESC_CTL1_BUF_LEN)
+                return -EINVAL;
 
++       tx_desc->tx_control_1 = buff_len & AR5K_2W_TX_DESC_CTL1_BUF_LEN;
++
+        tx_desc->tx_control_0 |=
+                AR5K_REG_SM(tx_power, AR5K_4W_TX_DESC_CTL0_XMIT_POWER) |
+                AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
