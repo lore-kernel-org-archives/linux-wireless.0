@@ -1,43 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:55894 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([66.187.233.31]:38005 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751392AbXJULkY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2007 07:40:24 -0400
-From: Andreas Schwab <schwab@suse.de>
-To: Larry Finger <larry.finger@lwfinger.net>
+	id S1754806AbXJaMDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2007 08:03:42 -0400
+Subject: Re: [PATCH 5/7] o80211s: (zd1211rw-mac80211) support for mesh
+	interface
+From: Dan Williams <dcbw@redhat.com>
+To: Luis Carlos Cobo <luisca@cozybit.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: b43: cannot set channel to 12
-References: <jey7e1leh0.fsf@sykes.suse.de> <4716676C.5010907@lwfinger.net>
-Date: Sun, 21 Oct 2007 13:40:22 +0200
-In-Reply-To: <4716676C.5010907@lwfinger.net> (Larry Finger's message of "Wed\,
-	17 Oct 2007 14\:50\:04 -0500")
-Message-ID: <jesl44n1ax.fsf@sykes.suse.de> (sfid-20071021_124027_795472_E103207C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4727de15.0abd720a.7b07.ffffb1f7@mx.google.com>
+References: <4727de15.0abd720a.7b07.ffffb1f7@mx.google.com>
+Content-Type: text/plain
+Date: Wed, 31 Oct 2007 08:02:07 -0400
+Message-Id: <1193832127.23775.26.camel@localhost.localdomain> (sfid-20071031_120345_544457_7B50921A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <larry.finger@lwfinger.net> writes:
+On Mon, 2007-10-29 at 18:15 -0700, Luis Carlos Cobo wrote:
+> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+> ---
+>  drivers/net/wireless/zd1211rw-mac80211/zd_chip.c |    1 +
+>  drivers/net/wireless/zd1211rw-mac80211/zd_chip.h |    8 +++
+>  drivers/net/wireless/zd1211rw-mac80211/zd_mac.c  |   72 +++++++++++++++++++++-
+>  drivers/net/wireless/zd1211rw-mac80211/zd_mac.h  |    3 +
+>  drivers/net/wireless/zd1211rw-mac80211/zd_usb.c  |   11 +++-
+>  5 files changed, 92 insertions(+), 3 deletions(-)
 
-> This is not a b43 problem. The standard loading of mac80211 sets an F=
-CC regulatory domain, i.e. b/g
-> channels 1-11. You need to load mac80211 with a parameter of 'ieee802=
-11_regdom=3D64'. That will allow
-> b/g channels 1-13. Technically, it sets the regulatory domain to Japa=
-n, but channel 14 is not allowed.
+Hi Luis!
 
-Thanks, that works.  (But I regard it as a regression.)
+Awesome to see this work.  I assume you're developing on zd1211 then?
+Would similar changes be necessary to support other devices?
 
-Andreas.
+> diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
+> index a220420..fb6d27b 100644
+> --- a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
+> +++ b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.c
+> @@ -806,6 +806,7 @@ static int hw_init_hmac(struct zd_chip *chip)
+>  		{ CR_AFTER_PNP,			0x1 },
+>  		{ CR_WEP_PROTECT,		0x114 },
+>  		{ CR_IFS_VALUE,			IFS_VALUE_DEFAULT },
+> +		{ CR_CAM_MODE,			MODE_AP_WDS},
+>  	};
+>  
+>  	ZD_ASSERT(mutex_is_locked(&chip->mutex));
+> diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.h b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.h
+> index a88a569..46900be 100644
+> --- a/drivers/net/wireless/zd1211rw-mac80211/zd_chip.h
+> +++ b/drivers/net/wireless/zd1211rw-mac80211/zd_chip.h
+> @@ -486,6 +486,7 @@ enum {
+>  
+>  #define CR_RX_OFFSET			CTL_REG(0x065c)
+>  
+> +#define CR_BCN_LENGTH			CTL_REG(0x0664)
+>  #define CR_PHY_DELAY			CTL_REG(0x066C)
+>  #define CR_BCN_FIFO			CTL_REG(0x0670)
+>  #define CR_SNIFFER_ON			CTL_REG(0x0674)
+> @@ -542,6 +543,8 @@ enum {
+>  #define RX_FILTER_CTRL (RX_FILTER_RTS | RX_FILTER_CTS | \
+>  	RX_FILTER_CFEND | RX_FILTER_CFACK)
+>  
+> +#define BCN_MODE_IBSS			0x2000000
+> +
+>  /* Monitor mode sets filter to 0xfffff */
+>  
+>  #define CR_ACK_TIMEOUT_EXT		CTL_REG(0x0690)
+> @@ -575,6 +578,11 @@ enum {
+>  
+>  /* CAM: Continuous Access Mode (power management) */
+>  #define CR_CAM_MODE			CTL_REG(0x0700)
+> +#define MODE_IBSS			0x0
+> +#define MODE_AP				0x1
+> +#define MODE_STA			0x2
+> +#define MODE_AP_WDS			0x3
+> +
+>  #define CR_CAM_ROLL_TB_LOW		CTL_REG(0x0704)
+>  #define CR_CAM_ROLL_TB_HIGH		CTL_REG(0x0708)
+>  #define CR_CAM_ADDRESS			CTL_REG(0x070C)
+> diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
+> index ad6a8d5..b668abd 100644
+> --- a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
+> +++ b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.c
+> @@ -493,6 +493,45 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
+>  	/* FIXME: Management frame? */
+>  }
+>  
+> +void zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
+> +{
+> +	struct zd_mac *mac = zd_hw_mac(hw);
+> +	u32 tmp, j = 0;
+> +	/* 4 more bytes for tail CRC */
+> +	u32 full_len = beacon->len + 4;
+> +	zd_iowrite32(&mac->chip, CR_BCN_FIFO_SEMAPHORE, 0);
+> +	zd_ioread32(&mac->chip, CR_BCN_FIFO_SEMAPHORE, &tmp);
+> +	/* 0x2 (BIT_1) in vendor driver, maybe they meant 0x1? */
+> +	while (tmp & 0x2) {
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There should be a break out here to avoid an infinite loop.  Maybe add
+'|| (j > 1000)' or something like that.
+
+> +		zd_ioread32(&mac->chip, CR_BCN_FIFO_SEMAPHORE, &tmp);
+> +		if ((++j % 100) == 0)
+> +			printk(KERN_ERR "CR_BCN_FIFO_SEMAPHORE not ready\n");
+> +		msleep(1);
+> +	}
+> +
+> +	zd_iowrite32(&mac->chip, CR_BCN_FIFO, full_len - 1 );
+> +	if (zd_chip_is_zd1211b(&mac->chip)) {
+> +		zd_iowrite32(&mac->chip, CR_BCN_LENGTH, full_len - 1);
+> +	}
+> +
+> +	for (j=0 ; j < beacon->len; j++) {
+> +		zd_iowrite32(&mac->chip, CR_BCN_FIFO,s
+> +				* ((u8 *)(beacon->data + j)));
+> +	}
+> +
+> +	for (j=0; j< 4; j++) {
+> +		zd_iowrite32(&mac->chip, CR_BCN_FIFO, 0x0);
+> +	}
+> +
+> +	zd_iowrite32(&mac->chip, CR_BCN_FIFO_SEMAPHORE, 1);
+> +	/* 802.11b/g 2.4G CCK 1Mb
+> +	 * 802.11a, not yet implemented, uses different values (see GPL vendor
+> +	 * driver)
+> +	 */
+> +	zd_iowrite32(&mac->chip, CR_BCN_PLCP_CFG, 0x00000400 |
+> +			(full_len << 19));
+> +}
+> +
+>  static int fill_ctrlset(struct zd_mac *mac,
+>  			struct sk_buff *skb,
+>  			struct ieee80211_tx_control *control)
+> @@ -701,6 +740,7 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
+>  
+>  	switch (conf->type) {
+>  	case IEEE80211_IF_TYPE_MNTR:
+> +	case IEEE80211_IF_TYPE_MESH:
+>  	case IEEE80211_IF_TYPE_STA:
+>  		mac->type = conf->type;
+>  		break;
+> @@ -729,15 +769,44 @@ static int zd_op_config_interface(struct ieee80211_hw *hw, int if_id,
+>  				   struct ieee80211_if_conf *conf)
+>  {
+>  	struct zd_mac *mac = zd_hw_mac(hw);
+> +	int associated;
+> +
+> +	if (mac->type == IEEE80211_IF_TYPE_MESH) {
+> +		associated = true ;
+> +		if (hw->flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE) {
+> +			zd_mac_config_beacon(hw, conf->beacon);
+> +			kfree_skb(conf->beacon);
+> +			zd_set_beacon_interval(&mac->chip, BCN_MODE_IBSS | 100);
+> +		}
+> +	}
+> +	else
+
+The } and else should be on the same line.
+
+> +		associated = is_valid_ether_addr(conf->bssid);
+>  
+>  	spin_lock_irq(&mac->lock);
+> -	mac->associated = is_valid_ether_addr(conf->bssid);
+> +	mac->associated = associated;
+>  	spin_unlock_irq(&mac->lock);
+>  
+>  	/* TODO: do hardware bssid filtering */
+>  	return 0;
+>  }
+>  
+> +void zd_process_intr(struct work_struct *work)
+> +{
+> +	u16 int_status;
+> +	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
+> +
+> +	int_status = le16_to_cpu(*(u16*)(mac->intr_buffer+4));
+> +	if (int_status & INT_CFG_NEXT_BCN) {
+> +		dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
+> +	}
+> +	else {
+
+Same here.
+
+Cheers,
+Dan
+
+> +		dev_dbg_f(zd_mac_dev(mac), "Unsupported interrupt\n");
+> +	}
+> +
+> +	zd_chip_enable_hwint(&mac->chip);
+> +}
+> +
+> +
+>  static void set_multicast_hash_handler(struct work_struct *work)
+>  {
+>  	struct zd_mac *mac =
+> @@ -929,6 +998,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
+>  	INIT_WORK(&mac->set_multicast_hash_work, set_multicast_hash_handler);
+>  	INIT_WORK(&mac->set_rts_cts_work, set_rts_cts_work);
+>  	INIT_WORK(&mac->set_rx_filter_work, set_rx_filter_handler);
+> +	INIT_WORK(&mac->process_intr, zd_process_intr);
+>  
+>  	SET_IEEE80211_DEV(hw, &intf->dev);
+>  	return hw;
+> diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.h b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.h
+> index ed5417c..fbfc2e8 100644
+> --- a/drivers/net/wireless/zd1211rw-mac80211/zd_mac.h
+> +++ b/drivers/net/wireless/zd1211rw-mac80211/zd_mac.h
+> @@ -169,12 +169,15 @@ struct zd_tx_skb_control_block {
+>  struct zd_mac {
+>  	struct zd_chip chip;
+>  	spinlock_t lock;
+> +	spinlock_t intr_lock;
+>  	struct ieee80211_hw *hw;
+>  	struct housekeeping housekeeping;
+>  	struct work_struct set_multicast_hash_work;
+>  	struct work_struct set_rts_cts_work;
+>  	struct work_struct set_rx_filter_work;
+> +	struct work_struct process_intr;
+>  	struct zd_mc_hash multicast_hash;
+> +	u8 intr_buffer[USB_MAX_EP_INT_BUFFER];
+>  	u8 regdomain;
+>  	u8 default_regdomain;
+>  	int type;
+> diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
+> index 15ea70e..972a370 100644
+> --- a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
+> +++ b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
+> @@ -92,6 +92,7 @@ MODULE_DEVICE_TABLE(usb, usb_ids);
+>  #define FW_ZD1211B_PREFIX	"zd1211/zd1211b_"
+>  
+>  /* USB device initialization */
+> +static void int_urb_complete(struct urb *urb);
+>  
+>  static int request_fw_file(
+>  	const struct firmware **fw, const char *name, struct device *device)
+> @@ -331,11 +332,18 @@ static inline void handle_regs_int(struct urb *urb)
+>  	struct zd_usb *usb = urb->context;
+>  	struct zd_usb_interrupt *intr = &usb->intr;
+>  	int len;
+> +	u16 int_num;
+>  
+>  	ZD_ASSERT(in_interrupt());
+>  	spin_lock(&intr->lock);
+>  
+> -	if (intr->read_regs_enabled) {
+> +	int_num = le16_to_cpu(*(u16*)(urb->transfer_buffer+2));
+> +	if( int_num == CR_INTERRUPT ){
+> +		struct zd_mac *mac = zd_hw_mac(zd_usb_to_hw(urb->context));
+> +		memcpy(&mac->intr_buffer, urb->transfer_buffer,
+> +				USB_MAX_EP_INT_BUFFER);
+> +		schedule_work(&mac->process_intr);
+> +	} else if (intr->read_regs_enabled) {
+>  		intr->read_regs.length = len = urb->actual_length;
+>  
+>  		if (len > sizeof(intr->read_regs.buffer))
+> @@ -346,7 +354,6 @@ static inline void handle_regs_int(struct urb *urb)
+>  		goto out;
+>  	}
+>  
+> -	dev_dbg_f(urb_dev(urb), "regs interrupt ignored\n");
+>  out:
+>  	spin_unlock(&intr->lock);
+>  }
+
