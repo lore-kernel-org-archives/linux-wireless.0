@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41346
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978AbXJOPYd (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:6712 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbXJaSKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 11:24:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [patch #2] ssb: fix build failure
-Date: Mon, 15 Oct 2007 17:23:21 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Ingo Molnar <mingo@elte.hu>,
-	Randy Dunlap <randy.dunlap@oracle.com>
+	Wed, 31 Oct 2007 14:10:44 -0400
+Received: by py-out-1112.google.com with SMTP id u77so442085pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 11:10:43 -0700 (PDT)
+Message-ID: <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com> (sfid-20071031_181047_033201_926B19BB)
+Date: Wed, 31 Oct 2007 14:10:42 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: Re: [PATCH 4/7] ath5k: Add SREV values for newer chips
+In-Reply-To: <20071027232033.GD5973@localhost.domain.invalid>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200710151723.21423.mb@bu3sch.de> (sfid-20071015_162438_596764_F2521980)
+Content-Type: text/plain; charset=UTF-8
+References: <20071027232033.GD5973@localhost.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ingo Molnar <mingo@elte.hu>
+On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
 
-fix build failure if PCMCIA=m but SSB=y:
+> * Give more infos about mac/phy/radio revision during attach.
 
-drivers/built-in.o: In function `ssb_pcmcia_switch_coreidx':
-: undefined reference to `pcmcia_access_configuration_register'
+> @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>         if (ret)
+>                 goto err_ah;
+>
+> -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
+> -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
+> -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
+> -                       sc->ah->ah_phy_revision & 0xf);
+> +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
+> +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
+> +                                       sc->ah->ah_mac_srev,
+> +                                       sc->ah->ah_phy_revision);
+> +
+> +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
+> +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
+> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                       sc->ah->ah_radio_5ghz_revision);
+> +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
+> +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
+> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                       sc->ah->ah_radio_5ghz_revision);
+> +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
+> +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
+> +                                       sc->ah->ah_radio_2ghz_revision);
+> +       }
+> +
+>
+>         /* ready to process interrupts */
+>         __clear_bit(ATH_STAT_INVALID, sc->status);
+>
 
-(fix symmetric bug for PCI too.)
+I have ACK'd this as I believe its a lot more useful information than
+what we had before but I am confused by what some different prints may
+yield. For example, on AR5213, I get:
 
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
+ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
+ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
 
----
- drivers/ssb/Kconfig |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On my Cardbus card, I then get:
 
-Index: linux/drivers/ssb/Kconfig
-===================================================================
---- linux.orig/drivers/ssb/Kconfig
-+++ linux/drivers/ssb/Kconfig
-@@ -22,7 +22,7 @@ config SSB
- 
- config SSB_PCIHOST_POSSIBLE
- 	bool
--	depends on SSB && PCI
-+	depends on SSB && (PCI = y || PCI = SSB)
- 	default y
- 
- config SSB_PCIHOST
-@@ -37,7 +37,7 @@ config SSB_PCIHOST
- 
- config SSB_PCMCIAHOST_POSSIBLE
- 	bool
--	depends on SSB && PCMCIA && EXPERIMENTAL
-+	depends on SSB && (PCMCIA = y || PCMCIA = SSB) && EXPERIMENTAL
- 	default y
- 
- config SSB_PCMCIAHOST
+ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
+ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
 
+Now, both are capable of 2 GHz and 5 GHz though and only one prints a
+line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
+my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
+having a print for both RFs here indicate besides the fact we are
+indicating the type of radio and revision? And in the Cardbus card I
+have where only one RF line is printed what does that indicate?
 
-
--------------------------------------------------------
-
--- 
-Greetings Michael.
+  Luis
