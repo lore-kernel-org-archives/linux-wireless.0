@@ -1,92 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40766 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbXJZKjZ (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:58074 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbXJaUpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2007 06:39:25 -0400
-Subject: Re: [patch 6/9] nl80211/cfg80211: station handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+	Wed, 31 Oct 2007 16:45:39 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1InKRW-0000PY-Ts
+	for linux-wireless@vger.kernel.org; Wed, 31 Oct 2007 16:45:38 -0400
+Subject: Re: InProComm IPN2120
+From: Pavel Roskin <proski@gnu.org>
+To: Dan Williams <dcbw@redhat.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890710250846h5ae85efaqfb5b7b5d0d82e932@mail.gmail.com> (sfid-20071025_164609_452587_977402E4)
-References: <20071025093618.440937000@sipsolutions.net>
-	 <20071025093716.685606000@sipsolutions.net>
-	 <43e72e890710250846h5ae85efaqfb5b7b5d0d82e932@mail.gmail.com>
-	 (sfid-20071025_164609_452587_977402E4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uiuaAa5n+T0ulSBQJyUz"
-Date: Fri, 26 Oct 2007 12:40:38 +0200
-Message-Id: <1193395238.4406.47.camel@johannes.berg> (sfid-20071026_113937_394718_4ABF3CF8)
+In-Reply-To: <1193852430.11271.3.camel@localhost.localdomain>
+References: <1193852430.11271.3.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 31 Oct 2007 16:45:36 -0400
+Message-Id: <1193863536.9260.11.camel@dv> (sfid-20071031_204543_192053_7263F16C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-uiuaAa5n+T0ulSBQJyUz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2007-10-31 at 13:40 -0400, Dan Williams wrote:
+> I know this hardware has no existing drivers.  However, does anyone know
+> anything about this chipset?  It's B-only from about 2003 or so, I
+> think.
 
+I looked at its Windows drivers.  Normally, it's not hard to find some
+identifiers like "Atmel" or "HERMES" that give away the actual chipset
+manufacturer.  Not in this case.  All I see are strings like:
 
+Inprocomm, Inc.
+C:\Drv_WorkSpace2\v0219_release_driver\winxp\objfre_wxp_x86\i386\ipn2120.pdb
+Driver for INPROCOMM IPN2120 Wireless LAN Cards
+INPROCOMM IPC2120-based 802.11b Wireless LAN Adapter
 
-> > +static int get_vlan(struct nlattr *vlanattr,
-> > +                   struct cfg80211_registered_device *rdev,
-> > +                   struct net_device **vlan)
-> > +{
-> > +       if (vlanattr) {
-> > +               *vlan =3D dev_get_by_index(&init_net, nla_get_u32(vlana=
-ttr));
-> > +               if (!*vlan)
-> > +                       return -ENODEV;
->=20
->=20
-> > +               if (!(*vlan)->ieee80211_ptr)
-> > +                       return -EINVAL;
->=20
-> Check #1 for (!(*vlan)->ieee80211_ptr)
->=20
-> > +               if (!(*vlan)->ieee80211_ptr)
-> > +                       return -EINVAL;
->=20
-> Check #2 for (!(*vlan)->ieee80211_ptr). Double check.
+The WLAN_UI.EXE utility has something more interesting:
+INPROCOMM IPC2120 CardBus/mini-PCI Evaluation Board
 
-Hah. I think the latter was meant to be ->wiphy but that shouldn't be
-necessary.
+It may be a good indication that Inprocomm developed the card itself.
+Amusingly, the utilities also include following strings:
 
-> > +       err =3D get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &para=
-ms.vlan);
-> > +       if (err)
-> > +               goto out;
->=20
-> This is minor, but how about doing the check of
-> info->attrs[NL80211_ATTR_STA_VLAN] outside of get_vlan to make it
-> clear here we're setting it to 0 if not found?
+juji is so cool!
+/I'm a engineer :p
 
-Dunno. That makes the error path more complicated, no? I guess that then
-I'd rather do an *vlan =3D NULL assignment in get_vlan() to make it
-crystal clear.
-
-johannes
-
---=-uiuaAa5n+T0ulSBQJyUz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyHEJaVg1VMiehFYAQIT0w//T5CTfPngW/BrWYO//NgGBCXbJvgKIK1i
-G5uVH9q0uPCHvMaOSQBwe5Im5TqKL5nZnDNyXmWsVNrEQsTQ8knkqxqJ+dFUZqgs
-VyAj6mYJeydUgZ7cQAb0QeOxRqQQ+lDkU81t6goxQj7FiJTRIpoypN/dNgYsdE9H
-EhQBavx0xsurOeWUx4xACY2YsdNUwKsB+jLrB8Z1y7EqX55nbY3shMCZXPSzxA7g
-EyJCHJIgndvZfAWuq/xZCT5VwtAGrHnLMBt0Lp5lOWy/o6MUBaZhjej/gR2qHXeu
-LyFu19uzdCs4tOOCkGePj4quqXGujWEy7k5W3t7c50TCFZxa/99fApOtC91AKqhJ
-vlrB5KJMjaWmQ/Z4UzJmcOzBIqVtKlxc5NlxOqg9Ob/6QGf7Xf4M6KM5YxZK+U2w
-rAtHsBjubfDC5L/RK+wqp0ALXQXFU/7hMCI53fQS8ks3ncUmebiQ3zG4zeJTDqlM
-JIY21mZbcFk1dxP/pTgIA4t9jynHDk/2ERyVuy05/F4sZOaLwN0Fys7NkDI0uhTl
-My5GgKAPzs2zhG/heozirLP5VD6IZjEDWqag6D0z32RSJ1SQI7KiJlmLsh89fiOJ
-UYmwFvaA9Ej16kygtL1EptZpvTn8cjTB5wUTWBkYwn8RHYySpioGfJ5W2+QKYHLA
-9XtgZ/dk7yA=
-=rsoQ
------END PGP SIGNATURE-----
-
---=-uiuaAa5n+T0ulSBQJyUz--
+-- 
+Regards,
+Pavel Roskin
 
