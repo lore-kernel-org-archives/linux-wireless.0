@@ -1,81 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:61277 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755743AbXJJNr3 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:59427 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbXJaUWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2007 09:47:29 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so234915wah
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2007 06:47:28 -0700 (PDT)
-Message-ID: <f6ca9fed0710100647r208b0181xccecf1edd075c635@mail.gmail.com> (sfid-20071010_144801_015794_51401CE5)
-Date: Wed, 10 Oct 2007 15:47:27 +0200
-From: dragoran <drago01@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211/iwlwifi + hidden ssids
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20071010130653.GB5962@tuxdriver.com>
+	Wed, 31 Oct 2007 16:22:36 -0400
+Received: by py-out-1112.google.com with SMTP id u77so512992pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 13:22:35 -0700 (PDT)
+Message-ID: <43e72e890710311322w7acbaae5u83c7abd1d044302c@mail.gmail.com> (sfid-20071031_202239_772019_439F7C1E)
+Date: Wed, 31 Oct 2007 16:22:34 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer chips
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+In-Reply-To: <40f31dec0710311239m7e5e1fa0q62fd212e7631f68c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <470C9F28.1070803@gmail.com> <20071010130653.GB5962@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20071027232033.GD5973@localhost.domain.invalid>
+	 <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
+	 <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com>
+	 <43e72e890710311214y52bbdfd3y24d3c05c05257ac6@mail.gmail.com>
+	 <40f31dec0710311239m7e5e1fa0q62fd212e7631f68c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Wed, Oct 10, 2007 at 11:45:12AM +0200, dragoran wrote:
-> > Hello,
-> > I am unable to connect to a dynamic wep network with hidden ssid using
-> > iwl3945 and the lastest fedora 7 kernel (which should have very recent
-> > stuff). The problem is that the card never finds the ap. Running
-> > wpa_supplicant directly shows "Got scan results xxx bytes" (can't
-> > remeber the exact message).
-> > While with ipw3945d + ieee80211 it works fine. (NetworkManager does not
-> > connect either see http://bugzilla.gnome.org/show_bug.cgi?id=464215 ).
-> > I haven't tryed the suggestion there yet because I am not near the
-> > network right now.
-> > Any idea whats wrong? Does it work for anybody (maybe with other
-> > mac80211 drivers)
-> > Currently I am not sure whom to blame iwl3945 or mac80211 or both.
+On 10/31/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > On 10/31/07, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > 2007/10/31, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > > > On 10/27/07, Nick Kossifidis <mick@madwifi.org> wrote:
+> > > >
+> > > > > * Give more infos about mac/phy/radio revision during attach.
+> > > >
+> > > > > @@ -535,10 +568,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
+> > > > >         if (ret)
+> > > > >                 goto err_ah;
+> > > > >
+> > > > > -       dev_info(&pdev->dev, "%s chip found: mac %d.%d phy %d.%d\n",
+> > > > > -                       ath5k_chip_name(id->driver_data), sc->ah->ah_mac_version,
+> > > > > -                       sc->ah->ah_mac_revision, sc->ah->ah_phy_revision >> 4,
+> > > > > -                       sc->ah->ah_phy_revision & 0xf);
+> > > > > +       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
+> > > > > +                       ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
+> > > > > +                                       sc->ah->ah_mac_srev,
+> > > > > +                                       sc->ah->ah_phy_revision);
+> > > > > +
+> > > > > +       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
+> > > > > +               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
+> > > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> > > > > +                                       sc->ah->ah_radio_5ghz_revision);
+> > > > > +       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
+> > > > > +               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
+> > > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> > > > > +                                       sc->ah->ah_radio_5ghz_revision);
+> > > > > +               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
+> > > > > +                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
+> > > > > +                                       sc->ah->ah_radio_2ghz_revision);
+> > > > > +       }
+> > > > > +
+> > > > >
+> > > > >         /* ready to process interrupts */
+> > > > >         __clear_bit(ATH_STAT_INVALID, sc->status);
+> > > > >
+> > > >
+> > > > I have ACK'd this as I believe its a lot more useful information than
+> > > > what we had before but I am confused by what some different prints may
+> > > > yield. For example, on AR5213, I get:
+> > > >
+> > > > ath5k_pci 0001:11:02.0: Atheros AR5213 chip found: MAC 0x56, PHY: 0x41
+> > > > ath5k_pci 0001:11:02.0: RF5111 5GHz radio found (0x17)
+> > > > ath5k_pci 0001:11:02.0: RF2111 2GHz radio found (0x23)
+> > > >
+> > > > On my Cardbus card, I then get:
+> > > >
+> > > > ath5k_pci 0000:15:00.0: Atheros AR5213A chip found: MAC 0x59, PHY: 0x43
+> > > > ath5k_pci 0000:15:00.0: RF5112A radio found (0x36)
+> > > >
+> > > > Now, both are capable of 2 GHz and 5 GHz though and only one prints a
+> > > > line which shows the type of RF both for 2 GHz and 5 GHz. Essentially
+> > > > my ah_radio_2ghz_revision is 0x00 for that card. What exactly does
+> > > > having a print for both RFs here indicate besides the fact we are
+> > > > indicating the type of radio and revision? And in the Cardbus card I
+> > > > have where only one RF line is printed what does that indicate?
+> > > >
+> > > >   Luis
+> > >
+> > > RF5111 is only 5GHz capable without 2111, 2111 is only 2GHz capable
+> > > (it's actually an extension to 5111), on the other hand 5112 is
+> > > multiband, that's why we don't say it's type.
+> >
+> > Can add in the message that its RF is multiband then (2GHz/5GHz note will work)?
+> >
+> > > On single chip solutions
+> > > both revisions are 0 so no RF chip msg is displayed.
+> >
+> > Hm.. interesting.. we probably should inform the band the RF is
+> > capable of then at least. What do you think?
+> >
 >
-> Fedora 7 kernels are a little behind (1-2 weeks behind wireless-2.6)
-> ATM, so it might be best to handle this at bugzilla.kernel.org.
+> Note: We set them to zero (check out attach) to make things easier.
+> I believe that for single chips we should check capability bits and
+> for b/g only report 2GHz, for a only report 5Ghz and for both report
+> multband or nothing.
 
-Ok, will file a bug after collecting more data (wpa_supplicant output).
+Agreed, and for the last part I think it might be more helpful to
+report 'multiband' instead of nothing.
 
-> F7 _does_ have the kernel patch to probe for hidden SSIDs when
-> associating.  What I've found with that patch is that manually
-> invoking the wireless tools yields satisfactory results, but that NM
-> (which afaik relies on wpa_supplicant) still tends to have problems.
-I know I also followed the thread on the nm list but it seems that I
-cannot even get a connection with wpa_supplicant started by hand.
-
-> My hunch is that wpa_supplicant (at least how NM configures it)
-> is doing something "too smart", but I really don't know.
+> > > We have to handle this better for b/g only cards but i didn't have
+> > > such cards to test so i'll try it later (first we have to see what's
+> > > going on and they don't work).
+> >
+> > You have one now?
+> >
+> >   Luis
+> >
 >
-> Do you have control over the AP?  If so, can you temporarily try
-> using static WEP or an open configuration so that you can test using
-> iwconfig?
+> Nope but i believe that regdumps from them should give us something...
 
-no if I had I could do some more testing. but the only thing I can nod
-with this ap is to test if it works or not.
+Yes, but its easier if we get you an BG card for testing purposes.
+Anyone know where we can reliably purchase them from?
 
-the wpa_supplicant.conf I tryed:
------------
-# this driver requires ap_scan=2 mode when using hidden SSIDs
-# request driver to take care of AP selection and roaming
-ap_scan=2
-
-# enable control interface using UNIX domain sockets
-ctrl_interface=/var/run/wpa_supplicant
-
-# you can include one or more network blocks here
-network={
-    ssid="NETWORKNAME"
-    key_mgmt=IEEE8021X
-    eap=TTLS
-    phase2="auth=MSCHAPV2"
-    identity="username"
-    password="password"
-}
-----------------------------------
-the exact same config works with the old stack.... should I try to
-change the ap_scan value to 1 ?
+  Luis
