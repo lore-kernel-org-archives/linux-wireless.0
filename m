@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940AbXJOIcR (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:42097 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752066AbXJaAZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2007 04:32:17 -0400
-Subject: Re: [PATCH v2] mac80211: fix set_channel regression
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcus Better <marcus@better.se>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tue, 30 Oct 2007 20:25:09 -0400
+Date: Wed, 31 Oct 2007 01:25:12 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jeff Lee <YY_Lee@issc.com.tw>,
+	Daniel Hazelton <dhazelton@enter.net>,
 	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com>
-References: <fdqhn4$qab$1@sea.gmane.org>
-	 <55623.80.169.182.16.1192093534.squirrel@www.dactylis.com>
-	 <1192094159.4770.21.camel@johannes.berg>
-	 <200710112005.56101.IvDoorn@gmail.com>
-	 <47460.80.169.182.16.1192179845.squirrel@www.dactylis.com>
-	 <1192216713.4770.58.camel@johannes.berg>
-	 <1192217047.4770.61.camel@johannes.berg>
-	 <56412.80.169.182.16.1192431887.squirrel@www.dactylis.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dinnaYsMD6jck704Fsdw"
-Date: Mon, 15 Oct 2007 10:32:37 +0200
-Message-Id: <1192437157.3349.7.camel@johannes.berg> (sfid-20071015_093220_295358_C399B236)
-Mime-Version: 1.0
+	Luis Correia <luis.f.correia@gmail.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, mwallis@serialmonkey.com
+Subject: Re: Licensing of IS89C35 WLAN USB driver [was Re: rt73usb: support
+	for wireless in Kohjinsha subnotebook]
+Message-ID: <20071031002512.GB1887@elf.ucw.cz> (sfid-20071031_002519_090970_BA9584DF)
+References: <20071023090808.GB19758@infradead.org> <20071030112221.GA17586@elf.ucw.cz> <1193757119.29187.17.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1193757119.29187.17.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi!
 
---=-dinnaYsMD6jck704Fsdw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > You are listed as author of IS89C35 802.11bg WLAN USB Driver. That
+> > driver has clear MODULE_LICENSE("GPL") tag, but not other notices.
+> > 
+> > Is it safe to assume whole sources are to be distributed under GPLv2?
+> > (Or is it GPLv2 or later?)
+> 
+> Pavel,
+> 
+> I sent mail as you requested on Sunday to Jeff Lee but haven't heard
+> back yet.  
 
-On Mon, 2007-10-15 at 09:04 +0200, Marcus Better wrote:
-> Johannes Berg wrote:
-> > Michael Wu just pointed out the error in my previous patch. I missed th=
-e
-> > outer loop, we need to break from it as well.
->=20
-> The new patch doesn't seem to solve the problem either. I get the same
-> association failure as before.
+Oops, sorry for confusion.
 
-Can you add back your printk patch and check what type 'channel' was and
-maybe print channel->channel?
+> I can't find any generic contact email addresses for ISSC
+> Taiwan or the Italian company that produced the adapter in question,
+> unfortunately.
 
-johannes
+http://www.issc.com.tw/contact.htm seems to be web based form. I
+clicked something into it, lets see what happens.
 
---=-dinnaYsMD6jck704Fsdw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARxMlpKVg1VMiehFYAQKDOA//dqDwOZbKH/2+lQd3ct2YPpVwZIU5/ktn
-WXRit2Y1+cYdB/HmSWsBHSeApyf9GZ3VscKYP2x8E+WOdy7owf4nPyWlM6XsoXKC
-EDgXF6gpeB/FBsPUNAn9mHPWgp2IY7hz7t7ZxYGa/9B5Gn7Z7D6fIIgcgWp5NQpB
-zAT+f6kWcX4qqkw9LUgsAnB4seB52LXl2TCkKs3QuNIeSOsPFIj5Th+C2TOIN9sx
-c53Kl0jz6gH0gLWD1+WdmvmNF5yE0aT21aKQelrUOqWMQGrm4zFrGaLwtn4L46W7
-QEsPMB6Kq9SlcWxWqL/pDtQlPyujARhwCfrdEUsyehX+0moLgq3yL1SGvhz0ps0h
-hz8pKdawd27XpDE+VcmFuMtjXE1uaotD1hFUauwILrVdEVR3hCoCbobyjx51cb5f
-Gr9Hp++MzjATzR4yhCRrVWWtfLDvi+ukbJhloRFFDMNNUAvG9uciZEXTmdKhjYZ0
-KR12SU7q5BFeLeNf9QRjt3Du5EzKX25ysNcRLbEHGvsqokkqh6W6XiBBapazerij
-JlHb6usjAifNipQ/dEyUmAFbyLG3c100KvMIWouFT/xfKV5viN5HindZHDPTOxgV
-Tna0u8fyZPmU3DcJgFwZ+luoFohn5lRTuWxgwXz7rNNraDBeHsyxrJfQ6MTh+X/F
-vLmOgisPzzA=
-=tbZD
------END PGP SIGNATURE-----
-
---=-dinnaYsMD6jck704Fsdw--
-
+(They ask for details like my fax number/phone number, and they can't
+even spell :-().
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
