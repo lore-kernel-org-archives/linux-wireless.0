@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3362 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751935AbXJWWJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2007 18:09:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:22305 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752638AbXJaGOy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2007 02:14:54 -0400
+Received: from vs30c.wh2.ocn.ne.jp (222.146.55.196)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0767761286
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 15:14:52 +0900 (JST)
+From: bruno randolf <bruno@thinktube.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, flamingice@sourmilk.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC] mac80211: no missing key complaint if frame may not be for us
-Date: Tue, 23 Oct 2007 17:46:20 -0400
-Message-Id: <1193175981828-git-send-email-linville@tuxdriver.com> (sfid-20071023_230945_570294_0AD8EAEA)
+Subject: ilog2 overkill in ieee80211_get_hdrlen?
+Date: Wed, 31 Oct 2007 15:14:48 +0900
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200710311514.48896.bruno@thinktube.com> (sfid-20071031_061457_971015_857A735E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some APs implement support for multiple SSIDs using a single BSSID.
-Each SSID might implement a different protection scheme (or none
-at all).
+hello!
 
-If we are associated with an unprotected SSID on an AP operating as
-described above, we might receive multicast frames that are actually
-intended for another SSID.  If that SSID is protected, those frames
-currently cause us to log a KERN_DEBUG message: "RX protected frame
-but have no key".  This can cause a lot of traffic in the logs.
+just a question...
 
-Rather than complain if we receive a protected frame for which we
-have no key, then let's just keep quiet unless we are in something
-other than managed mode or unless the frame is unicast.
+in 'net/mac80211/util.c', in ieee80211_get_hdrlen (line 175), a function ilog2 
+is used to determine the number of bits to shift for 
+IEEE80211_STYPE_QOS_DATA. isn't that a bit of an overkill when we could just 
+do >> 6? i mean IEEE80211_STYPE_QOS_DATA isn't going to change after all...
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/rx.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+		/*
+		 * The QoS Control field is two bytes and its presence is
+		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
+		 * hdrlen if that bit is set.
+		 * This works by masking out the bit and shifting it to
+		 * bit position 1 so the result has the value 0 or 2.
+		 */
+		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
+				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 064924c..1cc67ef 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -509,7 +509,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_txrx_data *rx)
- 		rx->key->tx_rx_count++;
- 		/* TODO: add threshold stuff again */
- 	} else {
--		if (net_ratelimit())
-+		/* if there are multiple SSIDs on this BSSID, the frame may
-+		   not be for us anyway; so, check that either the frame is
-+		   unicast or that we are not in managed mode before
-+		   complaining about a missing key */
-+		if ((!is_multicast_ether_addr(hdr->addr1) ||
-+		     rx->sdata->type != IEEE80211_IF_TYPE_STA) &&
-+		    net_ratelimit())
- 			printk(KERN_DEBUG "%s: RX protected frame,"
- 			       " but have no key\n", rx->dev->name);
- 		return TXRX_DROP;
--- 
-1.5.2.4
+i don't know if there is a reason for this, but it all seems overly 
+complicated to me.
 
+if (fc & IEEE80211_STYPE_QOS_DATA)
+	hdrlen += 2;
+
+would be a bit more readable.
+
+bruno
