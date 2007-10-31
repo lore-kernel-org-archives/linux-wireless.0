@@ -1,128 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:24872 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758294AbXJQQfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2007 12:35:24 -0400
-Date: Wed, 17 Oct 2007 18:35:19 +0200
-From: Jens Axboe <jens.axboe@oracle.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Ismail =?iso-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945 doesn't work
-Message-ID: <20071017163519.GC15552@kernel.dk> (sfid-20071017_173528_783319_8FF46861)
-References: <20071017135452.GJ5043@kernel.dk> <200710171708.48654.ismail@pardus.org.tr> <20071017141111.GM5043@kernel.dk> <1192630733.10567.37.camel@localhost.localdomain> <20071017142246.GQ5043@kernel.dk> <1192634183.11584.0.camel@localhost.localdomain>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:47951 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754478AbXJaAw3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Oct 2007 20:52:29 -0400
+Date: Wed, 31 Oct 2007 01:52:40 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: linux-wireless@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+Subject: iwl3945 in 2.6.24-rc1 dies under load
+Message-ID: <20071031005202.GA1534@elf.ucw.cz> (sfid-20071031_005235_835366_C307F9CD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1192634183.11584.0.camel@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 17 2007, Dan Williams wrote:
-> On Wed, 2007-10-17 at 16:22 +0200, Jens Axboe wrote:
-> > On Wed, Oct 17 2007, Dan Williams wrote:
-> > > On Wed, 2007-10-17 at 16:11 +0200, Jens Axboe wrote:
-> > > > On Wed, Oct 17 2007, Ismail D=F6nmez wrote:
-> > > > > Wednesday 17 October 2007 Tarihinde 16:54:53 yazm????t??:
-> > > > > > Hi,
-> > > > > >
-> > > > > > Seeing that iwl3945 is now merged, I decided to switch my x=
-60 to use
-> > > > > > that instead of ipw3945. That would leave me with zero kern=
-el
-> > > > > > dependencies.
-> > > > > >
-> > > > > > Unfortunately it doesn't work. Loading the module reveals t=
-he device:
-> > > > > >
-> > > > > > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connectio=
-n driver for
-> > > > > > Linux, 1.1.17ks
-> > > > > > iwl3945: Copyright(c) 2003-2007 Intel Corporation
-> > > > > > ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) =
--> IRQ 21
-> > > > > > PCI: Setting latency timer of device 0000:03:00.0 to 64
-> > > > > > iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connec=
-tion
-> > > > > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> > > > > > phy0: Selected rate control algorithm 'iwl-3945-rs'
-> > > > > >
-> > > > > > # iwconfig wlan0
-> > > > > > wlan0     IEEE 802.11g  ESSID:"xxxxxxxxxxxxxx"
-> > > > > >           Mode:Managed  Channel:0  Access Point: Not-Associ=
-ated
-> > > > > >           Tx-Power=3D0 dBm
-> > > > > >           Retry min limit:7   RTS thr:off   Fragment thr=3D=
-2346 B
-> > > > > >           Encryption key:XXXX-XXXX-XX
-> > > > > >           Link Quality:0  Signal level:0  Noise level:0
-> > > > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid=
- frag:0
-> > > > > >           Tx excessive retries:0  Invalid misc:0   Missed b=
-eacon:0
-> > > > > >
-> > > > > > and iwconfig sees it, essid/enc settings are fine, but I do=
-n't get a
-> > > > > > link.
-> > > > >=20
-> > > > > Same issue here, try iwlist wlan0 scan first and then it shou=
-ld work.
-> > > >=20
-> > > > Huh indeed, now it links fine! Thanks for the hint. Would be ni=
-ce to
-> > > > have fixed, though :-)
-> > >=20
-> > > Odd, doesn't the driver need to do a scan _anyway_ to find the ri=
-ght
-> > > BSSID to associate with if the cached scan results are more than =
-a few
-> > > seconds old?  Can you run '/sbin/iwevent' before trying a fresh
-> > > association, try to associate, ensure that it has failed, and rep=
-ort the
-> > > output?
-> > >=20
-> > > If you don't get something like:
-> > >=20
-> > > 10:17:05.117937   eth1     Scan request completed
-> > >=20
-> > > shown there, then there's likely a bug in the driver because it's=
- either
-> > > (a) not scanning before trying to associate, or (b) not sending o=
-ut scan
-> > > completion events after it's done a scan.
-> >=20
-> > Indeed, there is now Scan request completed before I run the iwlist
-> > scan. iwevent output:
->=20
-> Hmm, the output below doesn't show the scan request completed, right?
->=20
-> > Waiting for Wireless Events from interfaces...
-> > 16:20:27.453588   wlan0    Set Mode:Managed
-> > 16:20:27.462104   wlan0    Set Encryption key:off
-> > 16:20:27.463940   wlan0    Set Encryption key:****-****-**   Securi=
-ty mode:open
-> > 16:20:27.466535   wlan0    Set ESSID:"kjellbergaxboe"
-> >=20
-> > waiting, nothing else happens. Then run iwlist scan from another
-> > terminal.
-> >=20
-> > 16:20:53.892549   wlan0    Scan request completed
->=20
-> So you only get this when you manually scan right after setting the s=
-sid
-> and key?
 
-If you look at the time stamp, I ran the iwlist scan about 26 seconds
-after loading the module. When the module is loaded, the networking
-script sets the essid and encryption key.
+Hi!
 
-So yes, I only get that 'Scan request completed' line after running
-iwlist scan manually.
+...does not seem to work too well :-(. It connects with the AP
+(good!), and survives some "normal" use, but it died at first big
+tcpspray (baaaad!).
 
---=20
-Jens Axboe
+Oct 31 01:03:57 amd log1n[1411]: ROOT LOGIN on `tty6'
+Oct 31 01:05:06 amd kernel: iwl3945: Intel(R) PRO/Wireless 3945ABG/BG
+Network Connection driver for Linux, 1.1.17kds
+Oct 31 01:05:06 amd kernel: iwl3945: Copyright(c) 2003-2007 Intel
+Corporation
+Oct 31 01:05:06 amd kernel: PCI: Setting latency timer of device
+0000:03:00.0 to 64
+Oct 31 01:05:06 amd kernel: iwl3945: Detected Intel PRO/Wireless
+3945ABG Network Connection
+Oct 31 01:05:07 amd kernel: iwl3945: Tunable channels: 11 802.11bg, 13
+802.11a channels
+Oct 31 01:05:07 amd kernel: phy4: Selected rate control algorithm
+'simple'
+Oct 31 01:06:05 amd kernel: wlan0: Initial auth_alg=0
+Oct 31 01:06:05 amd kernel: wlan0: authenticate with AP
+00:11:2f:0e:95:a0
+Oct 31 01:06:05 amd kernel: wlan0: RX authentication from
+00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
+Oct 31 01:06:05 amd kernel: wlan0: authenticated
+Oct 31 01:06:05 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Oct 31 01:06:05 amd kernel: wlan0: RX AssocResp from 00:11:2f:0e:95:a0
+(capab=0x401 status=0 aid=1)
+Oct 31 01:06:05 amd kernel: wlan0: associated
+Oct 31 01:06:05 amd kernel: wlan0: switched to short barker preamble
+(BSSID=00:11:2f:0e:95:a0)
+Oct 31 01:06:05 amd kernel: iwl3945: iwl-3945-rs not selected as rate
+control algo!
+Oct 31 01:23:52 amd kernel: wlan0: RX deauthentication from
+00:11:2f:0e:95:a0 (reason=4)
+Oct 31 01:23:52 amd kernel: wlan0: deauthenticated
+Oct 31 01:23:53 amd kernel: wlan0: authenticate with AP
+00:11:2f:0e:95:a0
+Oct 31 01:23:53 amd kernel: wlan0: RX authentication from
+00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
+Oct 31 01:23:53 amd kernel: wlan0: authenticated
+Oct 31 01:23:53 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Oct 31 01:23:53 amd kernel: wlan0: RX ReassocResp from
+00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
+Oct 31 01:23:53 amd kernel: wlan0: associated
+Oct 31 01:23:53 amd kernel: wlan0: switched to short barker preamble
+(BSSID=00:11:2f:0e:95:a0)
+Oct 31 01:23:53 amd kernel: iwl3945: iwl-3945-rs not selected as rate
+control algo!
+Oct 31 01:23:53 amd kernel: wlan0: CTS protection enabled
+(BSSID=00:11:2f:0e:95:a0)
+Oct 31 01:23:53 amd kernel: wlan0: switched to long barker preamble
+(BSSID=00:11:2f:0e:95:a0)
+Oct 31 01:35:44 amd -- MARK --
+Oct 31 01:38:16 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Oct 31 01:38:16 amd kernel: iwl3945: Error Reply type 0x00000005 cmd
+REPLY_TX (0x1C) seq 0x0267 ser 0x0000004B
+Oct 31 01:38:18 amd kernel: iwl3945: Can't stop Rx DMA.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+...unfortunately, microcode sources are not available so Intel should
+fix this, right?
+
+(Actually, it recovered after 3 minutes):
+
+Oct 31 01:41:15 amd kernel: wlan0: RX deauthentication from
+00:11:2f:0e:95:a0 (reason=4)
+Oct 31 01:41:15 amd kernel: wlan0: deauthenticated
+Oct 31 01:41:16 amd kernel: wlan0: authenticate with AP
+00:11:2f:0e:95:a0
+Oct 31 01:41:16 amd kernel: wlan0: RX authentication from
+00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
+Oct 31 01:41:16 amd kernel: wlan0: authenticated
+Oct 31 01:41:16 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Oct 31 01:41:16 amd kernel: wlan0: RX ReassocResp from
+00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
+Oct 31 01:41:16 amd kernel: wlan0: associated
+Oct 31 01:41:16 amd kernel: wlan0: CTS protection enabled
+(BSSID=00:11:2f:0e:95:a0)
+Oct 31 01:41:16 amd kernel: iwl3945: iwl-3945-rs not selected as rate
+control algo!
+Oct 31 01:41:16 amd kernel: wlan0: switched to short barker preamble
+(BSSID=00:11:2f:0e:95:a0)
+
+Hmm, and it is pretty reproducible, with:
+
+tcpspray -n 1 -b 10000000 10.0.0.2
+
+Oct 31 01:42:56 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Oct 31 01:42:56 amd kernel: iwl3945: Error Reply type 0x00000005 cmd
+REPLY_TX (0x1C) seq 0x02C7 ser 0x0000004B
+Oct 31 01:42:58 amd kernel: iwl3945: Can't stop Rx DMA.
+
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
