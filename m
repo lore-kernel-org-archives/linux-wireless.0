@@ -1,131 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:14550 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbXJ2VBh (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:14478 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbXJaTak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2007 17:01:37 -0400
-Message-ID: <4726497F.2010709@oracle.com> (sfid-20071029_210140_076562_A23E009D)
-Date: Mon, 29 Oct 2007 13:58:39 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
+	Wed, 31 Oct 2007 15:30:40 -0400
+Received: by py-out-1112.google.com with SMTP id u77so486599pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 12:30:39 -0700 (PDT)
+Message-ID: <40f31dec0710311230w51aff5a5g98c4f989335d2bda@mail.gmail.com> (sfid-20071031_193044_998540_A8ABCC64)
+Date: Wed, 31 Oct 2007 21:30:38 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, j@w1.fi,
-	akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH] hostap: fix section mismatch warning
-References: <20071029112026.f66473c5.randy.dunlap@oracle.com> <20071029205254.GA27547@tuxdriver.com>
-In-Reply-To: <20071029205254.GA27547@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [RFC] ath5k: set rate duration table correctly for non-B channels on ar5212
+Cc: linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1193852696-19589-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1193852696-19589-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Mon, Oct 29, 2007 at 11:20:26AM -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> Fix section mismatch warning:
->>
->> WARNING: vmlinux.o(.data+0x36fcc): Section mismatch: reference to .init.data:prism2_pci_id_table (between 'prism2_pci_drv_id' and 'prism2_pci_funcs')
->>
->> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->> ---
->>  drivers/net/wireless/hostap/hostap_pci.c |    6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> --- linux-2624-rc1g4-v1.orig/drivers/net/wireless/hostap/hostap_pci.c
->> +++ linux-2624-rc1g4-v1/drivers/net/wireless/hostap/hostap_pci.c
->> @@ -444,7 +444,7 @@ static int prism2_pci_resume(struct pci_
->>  
->>  MODULE_DEVICE_TABLE(pci, prism2_pci_id_table);
->>  
->> -static struct pci_driver prism2_pci_drv_id = {
->> +static struct pci_driver prism2_pci_driver = {
->>  	.name		= "hostap_pci",
->>  	.id_table	= prism2_pci_id_table,
->>  	.probe		= prism2_pci_probe,
-> 
-> Randy,
-> 
-> Would you mind explaining how changing the name of the pci_driver
-> variable resolves this?  There must be some magic here...
+2007/10/31, John W. Linville <linville@tuxdriver.com>:
+> Currently we are passing MODE_ATHEROS_TURBO or MODE_ATHEROS_TURBOG to
+> ath5k_hw_get_rate_table if ah_version is AR5K_AR5212 and the channel
+> passed to ath5k_hw_reset is not a B channel.  This is a problem if
+> for no other reason than we are not registering those channels.
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> This is untested.  Does this look like the right fix?
+>
+> Also, just above the change is the comment "For 802.11a/g Turbo/XR mode
+> (AR5K_MODE_XR here is O.K. for both a/g - OFDM)".  Is this the right
+> comment?
+>
+>  drivers/net/wireless/ath5k/hw.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index c8d1fbd..a31443e 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -695,8 +695,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>
+>                                 /* Get rate table for this operation mode */
+>                                 rt = ath5k_hw_get_rate_table(ah,
+> -                                   channel->val & CHANNEL_TURBO ?
+> -                                   MODE_ATHEROS_TURBO : MODE_ATHEROS_TURBOG);
+> +                                               MODE_IEEE80211G);
+>                                 if (!rt)
+>                                         return -EINVAL;
+>
+> --
+> 1.5.3.3
+>
+>
 
-Oh, sure.  In scripts/mod/modpost.c, there is a whitelist of variable
-name suffixes.  Those suffixes are assumed to be safe for referring
-to non-text code/data.  OTOH, if someone complains enough, another
-whitelist table element can also be added...
+On madwif-old-openhal we had MODE_XR which is a special (proprietary)
+mode and returns a special rate table, during porting this bit was
+misunderstood and xr was changed with turbog. Any one of a/g/xr rate
+tables would do here i believe (all we want is a rate table with
+MODULATION_OFDM and the right values in kbps -which are common for
+a/g- so that computetxtime is ok with it), we prefer xr rate table so
+that rate duration is also written for xr rates.
 
+We also have to fix ath5k_hw_get_rate_table because it returns xr rate
+table for turbog mode and xr has nothing to do with it (it operates on
+5Ghz), TURBO table is ok for both turboa/turbog modes (that's why
+MODE_ATHEROS_TURBO is ok there and shouldn't be removed -rate duration
+table is different for turbo modes, they have MODULATION_TURBO and
+computetxtime behaves differently-).
 
-/**
- * Whitelist to allow certain references to pass with no warning.
- *
- * Pattern 0:
- *   Do not warn if funtion/data are marked with __init_refok/__initdata_refok.
- *   The pattern is identified by:
- *   fromsec = .text.init.refok* | .data.init.refok*
- *
- * Pattern 1:
- *   If a module parameter is declared __initdata and permissions=0
- *   then this is legal despite the warning generated.
- *   We cannot see value of permissions here, so just ignore
- *   this pattern.
- *   The pattern is identified by:
- *   tosec   = .init.data
- *   fromsec = .data*
- *   atsym   =__param*
- *
- * Pattern 2:
- *   Many drivers utilise a *driver container with references to
- *   add, remove, probe functions etc.
- *   These functions may often be marked __init and we do not want to
- *   warn here.
- *   the pattern is identified by:
- *   tosec   = init or exit section
- *   fromsec = data section
- *   atsym = *driver, *_template, *_sht, *_ops, *_probe, *probe_one, *_console, *_timer
- *
- * Pattern 3:
- *   Whitelist all refereces from .text.head to .init.data
- *   Whitelist all refereces from .text.head to .init.text
- *
- * Pattern 4:
- *   Some symbols belong to init section but still it is ok to reference
- *   these from non-init sections as these symbols don't have any memory
- *   allocated for them and symbol address and value are same. So even
- *   if init section is freed, its ok to reference those symbols.
- *   For ex. symbols marking the init section boundaries.
- *   This pattern is identified by
- *   refsymname = __init_begin, _sinittext, _einittext
- *
- * Pattern 5:
- *   Xtensa uses literal sections for constants that are accessed PC-relative.
- *   Literal sections may safely reference their text sections.
- *   (Note that the name for the literal section omits any trailing '.text')
- *   tosec = <section>[.text]
- *   fromsec = <section>.literal
- **/
-static int secref_whitelist(const char *modname, const char *tosec,
-			    const char *fromsec, const char *atsym,
-			    const char *refsymname)
-{
-	int len;
-	const char **s;
-	const char *pat2sym[] = {
-		"driver",
-		"_template", /* scsi uses *_template a lot */
-		"_timer",    /* arm uses ops structures named _timer a lot */
-		"_sht",      /* scsi also used *_sht to some extent */
-		"_ops",
-		"_probe",
-		"_probe_one",
-		"_console",
-		NULL
-	};
+I believe we should define MODE_XR as we defined TURBOG internally and
+do the same thing we did on madwifi-old-openhal.
 
-	const char *pat3refsym[] = {
-		"__init_begin",
-		"_sinittext",
-		"_einittext",
-		NULL
-	};
+As for the comment it says:
+
+/* For 802.11a/g Turbo/XR mode (AR5K_MODE_XR here is
+ * O.K. for both a/g - OFDM) */
+
+so for a/g and xr we use XR rate table and for turboa/turbog we use
+TURBO rate table. If it's misleading plz change it to something
+better.
 
 -- 
-~Randy
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
