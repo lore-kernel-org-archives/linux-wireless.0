@@ -1,186 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3004 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752418AbXKTWKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:10:53 -0500
-Date: Tue, 20 Nov 2007 17:10:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: herbert@gondor.apana.org.au, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20071120221025.GH16090@tuxdriver.com> (sfid-20071120_221059_488273_9ACE2493)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from xenotime.net ([66.160.160.81]:41433 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754344AbXKAWHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2007 18:07:04 -0400
+Received: from midway.site ([71.117.233.180]) by xenotime.net for <linux-wireless@vger.kernel.org>; Thu, 1 Nov 2007 15:06:52 -0700
+Date: Thu, 1 Nov 2007 15:06:51 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH 7/7] ath5k: Add documentation for struct ath5k_rate
+Message-Id: <20071101150651.a61a6f0f.rdunlap@xenotime.net> (sfid-20071101_220710_426008_A3235046)
+In-Reply-To: <20071101215640.GE4182@pogo>
+References: <20071101043520.GC21987@pogo>
+	<20071101043718.GD21987@pogo>
+	<20071101043815.GE21987@pogo>
+	<20071101043855.GF21987@pogo>
+	<20071101043933.GG21987@pogo>
+	<20071101044059.GH21987@pogo>
+	<20071101215640.GE4182@pogo>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Thu, 1 Nov 2007 17:56:40 -0400 Luis R. Rodriguez wrote:
 
-Here are some more fixes for 2.6.24.  There is a whitespace fix for an
-error message, a fix to limit log pollution with ieee80211, and a couple
-of fixes form Johannes related to handling multicast addresses in
-mac80211.
+> ** Resending after checkpatch.pl
+> 
+> This adds documentation for struct ath5k_rate. This also removes
+> some unused variables, lp_ack_duration and sp_ack_duration which
+> are simply unnecessary. We obviously have information about the rest
+> of the rate values, we can add more as we go, this just starts this up.
+> I'll next target cleaning up the RATE macros, think that may be there
+> the other G mode issues are in.
 
-Let me know if there are problems!
+Thanks for doing this... but one more change, please:
+(just move lines around, see below)
 
-Thanks,
+> Changes to ath5k.h
+> Changes-licensed-under: ISC
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
+>  1 files changed, 51 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> index c8ab09a..7147fb4 100644
+> --- a/drivers/net/wireless/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath5k/ath5k.h
+> @@ -549,17 +549,61 @@ struct ath5k_athchan_2ghz {
+>   * 	 used by the rate control algorytm on MadWiFi.
+>   */
+>  
+> -#define AR5K_MAX_RATES	32 /*max number of rates on the rate table*/
+> +/* Max number of rates on the rate table and what it seems
+> + * Atheros hardware supports */
+> +#define AR5K_MAX_RATES 32
 
-John
+As described in Documentation/kernel-doc-nano-HOWTO.txt, the
+structure fields/members should immediately follow the first line.
+After all of the fields/members, you can add general info, like
+the first paragraph that is here.
+
+Example from that doc file:
+
+
+/**
+ * struct my_struct - short description
+ * @a: first member
+ * @b: second member
+ *
+ * Longer description
+ */
+
+
+> +/**
+> + * struct ath5k_rate - rate structure
+> + *
+> + * This structure is used to get the RX rate or set the TX rate on the
+> + * hardware descriptors. It is also used for internal modulation control
+> + * and settings.
+> + *
+> + * @valid: is this a valid rate for the current mode
+> + * @modulation: respective mac80211 modulation
+> + * @rate_kbps: rate in kbit/s
+> + * @rate_code: hardware rate value, used in &struct ath5k_desc, on RX on
+> + *     &struct ath5k_rx_status.rs_rate and on TX on
+> + *     &struct ath5k_tx_status.ts_rate. Seems the ar5xxx harware supports
+> + *     up to 32 rates, indexed by 1-32. This means we really only need
+> + *     6 bits for the rate_code.
+> + * @dot11_rate: respective IEEE-802.11 rate value
+> + * @control_rate: index of rate assumed to be used to send control frames.
+> + *     This can be used to set override the value on the rate duration
+> + *     registers. This is only useful if we can override in the harware at
+> + *     what rate we want to send control frames at. Note that IEEE-802.11
+> + *     Ch. 9.6 (after IEEE 802.11g changes) defines the rate at which we
+> + *     should send ACK/CTS, if we change this value we can be breaking
+> + *     the spec.
+> + *
+> + * On RX after the &struct ath5k_desc is parsed by the appropriate
+> + * ah_proc_rx_desc() the respective hardware rate value is set in
+> + * &struct ath5k_rx_status.rs_rate. On TX the desired rate is set in
+> + * &struct ath5k_tx_status.ts_rate which is later used to setup the
+> + * &struct ath5k_desc correctly. This is the hardware rate map we are
+> + * aware of:
+> + *
+> + * rate_code   1       2       3       4       5       6       7       8
+> + * rate_kbps   3000    ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   9       10      11      12      13      14      15      16
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   17      18      19      20      21      22      23      24
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   25      26      27      28      29      30      31      32
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + */
+>  struct ath5k_rate {
+> -	u8	valid;		/* Valid for rate control */
+> +	u8	valid;
+>  	u32	modulation;
+> -	u16	rate_kbps;	/* Rate in kbps used in computetxtime */
+> -	u8	rate_code;	/* Rate mapping for h/w descriptors */
+> +	u16	rate_kbps;
+> +	u8	rate_code;
+>  	u8	dot11_rate;
+> -	u8	control_rate;	/* Rate for management frames -not used */
+> -	u16	lp_ack_duration;/* long preamble ACK duration -not used */
+> -	u16	sp_ack_duration;/* short preamble ACK duration -not used */
+> +	u8	control_rate;
+>  };
+>  
+>  /* XXX: GRR all this stuff to get leds blinking ??? (check out setcurmode) */
+> -- 
+
 ---
-
-Individual patches available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
-
----
-
-The following changes since commit d9f8bcbf67a0ee67c8cb0734f003dfe916bb5248:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc3
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Bruno Randolf (1):
-      mac80211: add missing space in error message
-
-Guillaume Chazarain (1):
-      ieee80211: Stop net_ratelimit/IEEE80211_DEBUG_DROP log pollution
-
-Johannes Berg (2):
-      mac80211: fix ieee80211_set_multicast_list
-      mac80211: fix allmulti/promisc behaviour
-
- include/net/ieee80211.h              |    8 ++++++++
- net/ieee80211/ieee80211_crypt_ccmp.c |    2 +-
- net/ieee80211/ieee80211_crypt_tkip.c |    4 ++--
- net/mac80211/ieee80211.c             |   27 +++++++++++++++++++++++++--
- net/mac80211/ieee80211_sta.c         |    2 +-
- 5 files changed, 37 insertions(+), 6 deletions(-)
-
-diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
-index 164d132..d8ae484 100644
---- a/include/net/ieee80211.h
-+++ b/include/net/ieee80211.h
-@@ -115,8 +115,16 @@ extern u32 ieee80211_debug_level;
- do { if (ieee80211_debug_level & (level)) \
-   printk(KERN_DEBUG "ieee80211: %c %s " fmt, \
-          in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
-+static inline bool ieee80211_ratelimit_debug(u32 level)
-+{
-+	return (ieee80211_debug_level & level) && net_ratelimit();
-+}
- #else
- #define IEEE80211_DEBUG(level, fmt, args...) do {} while (0)
-+static inline bool ieee80211_ratelimit_debug(u32 level)
-+{
-+	return false;
-+}
- #endif				/* CONFIG_IEEE80211_DEBUG */
- 
- /* escape_essid() is intended to be used in debug (and possibly error)
-diff --git a/net/ieee80211/ieee80211_crypt_ccmp.c b/net/ieee80211/ieee80211_crypt_ccmp.c
-index c6d760d..208bf35 100644
---- a/net/ieee80211/ieee80211_crypt_ccmp.c
-+++ b/net/ieee80211/ieee80211_crypt_ccmp.c
-@@ -338,7 +338,7 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (ccmp_replay_check(pn, key->rx_pn)) {
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("CCMP: replay detected: STA=%s "
- 				 "previous PN %02x%02x%02x%02x%02x%02x "
- 				 "received PN %02x%02x%02x%02x%02x%02x\n",
-diff --git a/net/ieee80211/ieee80211_crypt_tkip.c b/net/ieee80211/ieee80211_crypt_tkip.c
-index 58b2261..8e14694 100644
---- a/net/ieee80211/ieee80211_crypt_tkip.c
-+++ b/net/ieee80211/ieee80211_crypt_tkip.c
-@@ -464,7 +464,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("TKIP: replay detected: STA=%s"
- 			       " previous TSC %08x%04x received TSC "
- 			       "%08x%04x\n", print_mac(mac, hdr->addr2),
-@@ -504,7 +504,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 			 * it needs to be recalculated for the next packet. */
- 			tkey->rx_phase1_done = 0;
- 		}
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("TKIP: ICV error detected: STA="
- 			       "%s\n", print_mac(mac, hdr->addr2));
- 		}
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e0ee65a..59350b8 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -267,6 +267,17 @@ static int ieee80211_open(struct net_device *dev)
- 		tasklet_enable(&local->tasklet);
- 	}
- 
-+	/*
-+	 * set_multicast_list will be invoked by the networking core
-+	 * which will check whether any increments here were done in
-+	 * error and sync them down to the hardware as filter flags.
-+	 */
-+	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
-+		atomic_inc(&local->iff_allmultis);
-+
-+	if (sdata->flags & IEEE80211_SDATA_PROMISC)
-+		atomic_inc(&local->iff_promiscs);
-+
- 	local->open_count++;
- 
- 	netif_start_queue(dev);
-@@ -284,6 +295,18 @@ static int ieee80211_stop(struct net_device *dev)
- 
- 	netif_stop_queue(dev);
- 
-+	/*
-+	 * Don't count this interface for promisc/allmulti while it
-+	 * is down. dev_mc_unsync() will invoke set_multicast_list
-+	 * on the master interface which will sync these down to the
-+	 * hardware as filter flags.
-+	 */
-+	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
-+		atomic_dec(&local->iff_allmultis);
-+
-+	if (sdata->flags & IEEE80211_SDATA_PROMISC)
-+		atomic_dec(&local->iff_promiscs);
-+
- 	dev_mc_unsync(local->mdev, dev);
- 
- 	/* down all dependent devices, that is VLANs */
-@@ -366,8 +389,8 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
- 
- 	allmulti = !!(dev->flags & IFF_ALLMULTI);
- 	promisc = !!(dev->flags & IFF_PROMISC);
--	sdata_allmulti = sdata->flags & IEEE80211_SDATA_ALLMULTI;
--	sdata_promisc = sdata->flags & IEEE80211_SDATA_PROMISC;
-+	sdata_allmulti = !!(sdata->flags & IEEE80211_SDATA_ALLMULTI);
-+	sdata_promisc = !!(sdata->flags & IEEE80211_SDATA_PROMISC);
- 
- 	if (allmulti != sdata_allmulti) {
- 		if (dev->flags & IFF_ALLMULTI)
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 015b3f8..16afd24 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2647,7 +2647,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	local->sta_scanning = 0;
- 
- 	if (ieee80211_hw_config(local))
--		printk(KERN_DEBUG "%s: failed to restore operational"
-+		printk(KERN_DEBUG "%s: failed to restore operational "
- 		       "channel after scan\n", dev->name);
- 
- 
--- 
-John W. Linville
-linville@tuxdriver.com
+~Randy
