@@ -1,74 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50123 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468AbXKVM4z (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:59568 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883AbXKANQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 07:56:55 -0500
-Subject: Re: wpa_supplicant/key deletion with all-zeroes mac (was: security
-	question)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com
-In-Reply-To: <20071122043722.GC8672@jm.kir.nu>
-References: <4743E5DF.9040603@linux.intel.com>
-	 <1195658254.12000.23.camel@johannes.berg> <20071122043722.GC8672@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eKpdxuquPuSEMiy+t+CN"
-Date: Thu, 22 Nov 2007 13:55:26 +0100
-Message-Id: <1195736126.6323.86.camel@johannes.berg> (sfid-20071122_125702_986457_D7575CCC)
-Mime-Version: 1.0
+	Thu, 1 Nov 2007 09:16:34 -0400
+Received: by py-out-1112.google.com with SMTP id u77so923247pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 06:16:33 -0700 (PDT)
+Message-ID: <40f31dec0711010616u4aec7f87k45c6a422d8cde9cf@mail.gmail.com> (sfid-20071101_131638_720345_1BB44768)
+Date: Thu, 1 Nov 2007 15:16:33 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 7/7] ath5k: Add documentation for struct ath5k_rate
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071101044059.GH21987@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo>
+	 <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo>
+	 <20071101043933.GG21987@pogo> <20071101044059.GH21987@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2007/11/1, Luis R. Rodriguez <mcgrof@gmail.com>:
+> This adds documentation for struct ath5k_rate. This also removes
+> some unused variables, lp_ack_duration and sp_ack_duration which
+> are simply unnecessary. We obviously have information about the rest
+> of the rate values, we can add more as we go, this just starts this up.
+> I'll next target cleaning up the RATE macros, think that may be there
+> the other G mode issues are in.
+>
+> Changes to ath5k.h
+> Changes-licensed-under: ISC
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
+>  1 files changed, 51 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> index c8ab09a..7147fb4 100644
+> --- a/drivers/net/wireless/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath5k/ath5k.h
+> @@ -549,17 +549,61 @@ struct ath5k_athchan_2ghz {
+>   *      used by the rate control algorytm on MadWiFi.
+>   */
+>
+> -#define AR5K_MAX_RATES 32 /*max number of rates on the rate table*/
+> +/* Max number of rates on the rate table and what it seems
+> + * Atheros hardware supports */
+> +#define AR5K_MAX_RATES 32
+>
+> +/**
+> + * struct ath5k_rate - rate structure
+> + *
+> + * This structure is used to get the RX rate or set the TX rate on the
+> + * hardware descriptors. It is also used for internal modulation control
+> + * and settings.
+> + *
+> + * @valid: is this a valid rate for the current mode
+> + * @modulation: respective mac80211 modulation
+> + * @rate_kbps: rate in kbit/s
+> + * @rate_code: hardware rate value, used in &struct ath5k_desc, on RX on
+> + *     &struct ath5k_rx_status.rs_rate and on TX on
+> + *     &struct ath5k_tx_status.ts_rate. Seems the ar5xxx harware supports
+> + *     up to 32 rates, indexed by 1-32. This means we really only need
+> + *     6 bits for the rate_code.
+> + * @dot11_rate: respective IEEE-802.11 rate value
+> + * @control_rate: index of rate assumed to be used to send control frames.
+> + *     This can be used to set override the value on the rate duration
+> + *     registers. This is only useful if we can override in the harware at
+> + *     what rate we want to send control frames at. Note that IEEE-802.11
+> + *     Ch. 9.6 (after IEEE 802.11g changes) defines the rate at which we
+> + *     should send ACK/CTS, if we change this value we can be breaking
+> + *     the spec.
+> + *
+> + * On RX after the &struct ath5k_desc is parsed by the appropriate
+> + * ah_proc_rx_desc() the respective hardware rate value is set in
+> + * &struct ath5k_rx_status.rs_rate. On TX the desired rate is set in
+> + * &struct ath5k_tx_status.ts_rate which is later used to setup the
+> + * &struct ath5k_desc correctly. This is the hardware rate map we are
+> + * aware of:
+> + *
+> + * rate_code   1       2       3       4       5       6       7       8
+> + * rate_kbps   3000    ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   9       10      11      12      13      14      15      16
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   17      18      19      20      21      22      23      24
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + * rate_code   25      26      27      28      29      30      31      32
+> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
+> + *
+> + */
+>  struct ath5k_rate {
+> -       u8      valid;          /* Valid for rate control */
+> +       u8      valid;
+>         u32     modulation;
+> -       u16     rate_kbps;      /* Rate in kbps used in computetxtime */
+> -       u8      rate_code;      /* Rate mapping for h/w descriptors */
+> +       u16     rate_kbps;
+> +       u8      rate_code;
+>         u8      dot11_rate;
+> -       u8      control_rate;   /* Rate for management frames -not used */
+> -       u16     lp_ack_duration;/* long preamble ACK duration -not used */
+> -       u16     sp_ack_duration;/* short preamble ACK duration -not used */
+> +       u8      control_rate;
+>  };
+>
+>  /* XXX: GRR all this stuff to get leds blinking ??? (check out setcurmode) */
+> --
+> 1.5.2.5
+>
+>
 
---=-eKpdxuquPuSEMiy+t+CN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
+Also checkout setcurmode function, i believe we can live without all
+this led-timing stuff and clean up both rate tables and related
+functions.
 
-> > > wpa_supplicant will=20
-> > > receives this event then call mac80211 to remove any old security key=
-,=20
-> > > the problem it will pass 00:00:00:00:00:00 as station address.=20
->=20
-> This sounds broken. wpa_supplicant should remove the key for the
-> previous BSSID.
-
-
-> > Interesting. I'd think this is a wpa_supplicant bug, Jouni, how is the
-> > security wext stuff supposed to work here?
->=20
-> Agreed, this sounds like a bug in wpa_supplicant. Unicast keys should be
-> removed with their correct address. I think this used to work, but maybe
-> some of the changes in BSSID processing in disassociation cases caused
-> the old BSSID to be forgotten.
-
-Can you look into it then please?
-
-Thanks,
-johannes
-
---=-eKpdxuquPuSEMiy+t+CN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0V8PKVg1VMiehFYAQLetw//RRc8xup3St0qAibQAQJ5EshXJ5UJAnoq
-jYU8WntQ6V2HshL0nzcjsPTWDbIMMyYyQkDOqT9MFSN/AX/jT1UzV22rwsHmEwE0
-Zsk4HO9QoVyeuGpfPoqnSKpQj/45TqhWCdEvpbHLirYBPNPD3/+iv88Hd+zmo2YE
-v5Yp3Xi2u/gjiiPw3zMJ391ESKgWddd/ILE3rCIvQOQFEmpreLva4QEfwyFN4/+e
-mThRT+rS9vAe2XbbIrlY//5Y9vn5r1wSsWEjSPP3lV7hsSGWDths89m7ntb6xQ9e
-cnlYhfZn7IrgNMq4n7XZdjeeH17CO0RXzEd5PcfyEkyUZaO9lnl215zKSfCJejxk
-NRNHmBvjiSgW/6ZeNGaN3mELkAL0K5MaWDnCYQLIQh+SasNvS2aRJst2nsfRyVd2
-8A+nAZVvakEZsZOIBPzkSQNHFidtcbln1jcfD1a1rvR8qKkF14zDbhx4VNdKtAUv
-Mgk/scWCdsL8VW2LqwQ4NsLlbTWL+mXeu8xBhN9FcViK+u+gNXIG9SvnyO+EV+qJ
-TfHXhuxgsS5oBTdg4E3L632puR2pUgU9KHAL5LHlGNucrV4SJMCpz20yE6scIFnW
-2fqVU/CIbwoK+r5n3M/mj5vZXCLThcy2Pe9WQMYYlQ6Xg0kw48qHr4podNZVKe/s
-VTNa/5Wy/IQ=
-=zvjR
------END PGP SIGNATURE-----
-
---=-eKpdxuquPuSEMiy+t+CN--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
