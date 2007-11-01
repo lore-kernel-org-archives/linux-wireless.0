@@ -1,61 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59001 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753702AbXKSRgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 12:36:08 -0500
-Subject: Re: 88w8335 [Libertas] 802.11b/g
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200711190934.59367.hs4233@mail.mn-solutions.de>
-References: <43e72e890711161733o72b557ccs63fa1c0104bc656a@mail.gmail.com>
-	 <200711190934.59367.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 19 Nov 2007 12:32:38 -0500
-Message-Id: <1195493558.3248.11.camel@localhost.localdomain> (sfid-20071119_173630_533582_BFA83AFD)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.244]:11519 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbXKAEf0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2007 00:35:26 -0400
+Received: by an-out-0708.google.com with SMTP id b36so57682ana
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 21:35:25 -0700 (PDT)
+Date: Thu, 1 Nov 2007 00:35:20 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 2/7] ath5k: Remove opaque pointers from ath5k_hw_attach()
+Message-ID: <20071101043520.GC21987@pogo> (sfid-20071101_043529_197409_4929F0E7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-11-19 at 09:34 +0100, Holger Schurig wrote:
-> > vendor:device -- 11ab:1faa
-> >
-> > libertas_cs isn't picking up though.
-> 
-> libertas wasn't written for 8335 chips. The whole of libertas, 
-> including "if_cs.c", is currently only for 8385 chips.
-> 
-> I saw a driver for 8335 chips at 
-> http://david.woodhou.se/mrv.tar.gz. Do you refer to the same 
-> one?
+Since we don't have a HAL anymore there is no point to use opaque pointers
+in ath5k_hw_attach(). This will also give hw.c access to ath5k_softc
+structure now when needed. While we're at it, lets also give some ah_sh
+a reasonable name, ah_sh --> ah_iobase.
 
-There's also mrv8k which apparently Ubuntu is shipping (although it
-doesn't work).  Google around for it.  OpenSolaris and OpenBSD have the
-'malo(4)' driver for this part, including the 8310 and 8335 chips.
+Changes to base.c
+Changes-licensed-under: 3-clause-BSD
 
-I also picked up a cardbus card with an 8300 or 8335 in it this past
-week.  (TrendNET branded).  I cleaned it up for There are problems with
-the mrv8k driver where it appears to panic in the interrupt handler.
+Changes to ath5k.h, hw.c
+Changes-licensed-under: ISC
 
-The 8335 is a _softmac_ part and therefore won't work (ever) with the
-current libertas driver, which is a fullmac part.  The best solution is
-to write a new mac80211 driver for the 8335 parts.
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/ath5k.h |   10 +++++-----
+ drivers/net/wireless/ath5k/base.c  |    2 +-
+ drivers/net/wireless/ath5k/hw.c    |   11 +++++------
+ 3 files changed, 11 insertions(+), 12 deletions(-)
 
-The firmware situation is a lot like the broadcom parts where you need a
-firmware cutter to pull firmware out of the Windows .sys driver file.
-Two firmware are required, the boot firmware and the main firmware.
-
-Dan
-
-> As this driver was originally written for mac80211, I'd prefer it 
-> over a driver/net/wireless/libertas based driver, e.g. via an 
-> hyptothetical "if_pci.c". Maybe you need to dust of a bit of 
-> bitrot. Maybe it's even worth pushing this driver into shape and 
-> submitting it to Linville for kernel adoption.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 4122466..20567b1 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -943,8 +943,8 @@ struct ath5k_capabilities {
+ struct ath5k_hw {
+ 	u32			ah_magic;
+ 
+-	void			*ah_sc;
+-	void __iomem		*ah_sh;
++	struct ath5k_softc	*ah_sc;
++	void __iomem		*ah_iobase;
+ 
+ 	enum ath5k_int		ah_imr;
+ 
+@@ -1042,7 +1042,7 @@ struct ath5k_hw {
+ /* General Functions */
+ extern int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val, bool is_set);
+ /* Attach/Detach Functions */
+-extern struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc, void __iomem *sh);
++extern struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version);
+ extern const struct ath5k_rate_table *ath5k_hw_get_rate_table(struct ath5k_hw *ah, unsigned int mode);
+ extern void ath5k_hw_detach(struct ath5k_hw *ah);
+ /* Reset Functions */
+@@ -1151,12 +1151,12 @@ extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, unsigned int power);
+ 
+ static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+ {
+-	return ioread32(ah->ah_sh + reg);
++	return ioread32(ah->ah_iobase + reg);
+ }
+ 
+ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+ {
+-	iowrite32(val, ah->ah_sh + reg);
++	iowrite32(val, ah->ah_iobase + reg);
+ }
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4b4ddf4..15ae868 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -559,7 +559,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Initialize device */
+-	sc->ah = ath5k_hw_attach(pdev->device, id->driver_data, sc, sc->iobase);
++	sc->ah = ath5k_hw_attach(sc, id->driver_data);
+ 	if (IS_ERR(sc->ah)) {
+ 		ret = PTR_ERR(sc->ah);
+ 		goto err_irq;
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 8ac88e7..320e32e 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -27,8 +27,8 @@
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+ 
+-#include "ath5k.h"
+ #include "reg.h"
++#include "base.h"
+ 
+ /*Rate tables*/
+ static const struct ath5k_rate_table ath5k_rt_11a = AR5K_RATES_11A;
+@@ -187,8 +187,7 @@ int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
+ /*
+  * Check if the device is supported and initialize the needed structs
+  */
+-struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+-		void __iomem *sh)
++struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ {
+ 	struct ath5k_hw *ah;
+ 	u8 mac[ETH_ALEN];
+@@ -204,7 +203,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 	}
+ 
+ 	ah->ah_sc = sc;
+-	ah->ah_sh = sh;
++	ah->ah_iobase = sc->iobase;
+ 
+ 	/*
+ 	 * HW information
+@@ -323,7 +322,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 	ret = ath5k_hw_get_capabilities(ah);
+ 	if (ret) {
+ 		AR5K_PRINTF("unable to get device capabilities: 0x%04x\n",
+-			device);
++			sc->pdev->device);
+ 		goto err_free;
+ 	}
+ 
+@@ -331,7 +330,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
+ 	ret = ath5k_eeprom_read_mac(ah, mac);
+ 	if (ret) {
+ 		AR5K_PRINTF("unable to read address from EEPROM: 0x%04x\n",
+-			device);
++			sc->pdev->device);
+ 		goto err_free;
+ 	}
+ 
+-- 
+1.5.2.5
 
