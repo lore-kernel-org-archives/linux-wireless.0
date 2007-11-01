@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54430 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbXKPVLo (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:16065 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755585AbXKAXaG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 16:11:44 -0500
-Subject: Re: [PATCH 1/2] mac80211: add power management support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Miguel =?ISO-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	yi.zhu@intel.com
-In-Reply-To: <200711162002.01972.mboton.lkml@gmail.com> (sfid-20071116_190212_726540_E9A85A6C)
-References: <200711161929.36283.mboton.lkml@gmail.com>
-	 <200711161953.26801.mboton.lkml@gmail.com>
-	 <200711162002.01972.mboton.lkml@gmail.com>
-	 (sfid-20071116_190212_726540_E9A85A6C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BS27lmm0qgQr/81lsx8g"
-Date: Fri, 16 Nov 2007 22:13:01 +0100
-Message-Id: <1195247581.26571.5.camel@johannes.berg> (sfid-20071116_211148_867187_E78BFED4)
-Mime-Version: 1.0
+	Thu, 1 Nov 2007 19:30:06 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
+Date: Thu, 1 Nov 2007 19:26:02 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org
+References: <20071101191716.GA3201@pogo>
+In-Reply-To: <20071101191716.GA3201@pogo>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1410679.FUXCYl33qI";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200711011926.07641.flamingice@sourmilk.net> (sfid-20071101_233015_464257_44A9D8A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-BS27lmm0qgQr/81lsx8g
-Content-Type: text/plain
+--nextPart1410679.FUXCYl33qI
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Thursday 01 November 2007 15:17:16 Luis R. Rodriguez wrote:
+> mcgrof@pogo:~/devel/wireless-2.6$ git-describe
+> v2.6.24-rc1-146-g2280253
+>
+> So I hit segfault with lockdep on count_matching_names() on the
+> strcmp() multiple times now. This is reproducible and with different
+> wireless drivers.
+>
+I've found the problem. It appears to be in lockdep. struct lock_class has =
+a=20
+const char *name field which points to a statically allocated string that=20
+comes from the code which uses the lock. If that code/string is in a module=
+=20
+and gets unloaded, the pointer in |name| is no longer valid. Next time this=
+=20
+field is dereferenced (count_matching_names, in this case), we crash.
 
+The following patch fixes the issue but there's probably a better way.
 
-> +	if (ieee80211_hw_config(local))
-> +		return -EINVAL;
+=2DMichael Wu
 
--EINVAL seems not right. Doesn't that already return an error code?
+=2D--
 
-johannes
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index 4c4d236..2aa0d35 100644
+=2D-- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -114,7 +114,7 @@ struct lock_class {
+ 	 */
+ 	unsigned long			ops;
+=20
+=2D	const char			*name;
++	char				name[128];
+ 	int				name_version;
+=20
+ #ifdef CONFIG_LOCK_STAT
+diff --git a/kernel/lockdep.c b/kernel/lockdep.c
+index 55fe0c7..63c4d8f 100644
+=2D-- a/kernel/lockdep.c
++++ b/kernel/lockdep.c
+@@ -768,7 +768,7 @@ register_lock_class(struct lockdep_map *lock, unsigned =
+int=20
+subclass, int force)
+ 	class =3D lock_classes + nr_lock_classes++;
+ 	debug_atomic_inc(&nr_unused_locks);
+ 	class->key =3D key;
+=2D	class->name =3D lock->name;
++	strcpy(class->name, lock->name);
+ 	class->subclass =3D subclass;
+ 	INIT_LIST_HEAD(&class->lock_entry);
+ 	INIT_LIST_HEAD(&class->locks_before);
 
---=-BS27lmm0qgQr/81lsx8g
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1410679.FUXCYl33qI
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-iQIVAwUARz4H3KVg1VMiehFYAQLRCA/+IipQQpYM7dTjwnmJY0Ahcw0s7Z1vrf17
-LgQpndp7NBF8txCOXZ77cqAQ7/g/5/HxUZEGFE9DgN5a4ok3d9ZtIGsnAJYvrzBM
-cONV7vEcxOZXQiLvUQUMdclL6S2dGeWf2yxDQ0G7enr5TJsZ1Mu+aAzjmre5YNkb
-2f6SjHjQbxnEyhSpEeGHl7nRHWyeeZO83o1FeQI64o4pPJ5K1KweJZqujzntoTwW
-QS4pgW0y5VEA06p6W5gpYU2Pr5A9+ReHJXLK4ha42Vd2R2PmjSyawKOSPQVCZzAn
-ai69y5zu1oXPqoK1dCCS6UovsX++exxCBMt06VWwCtVgM0Gl2a1m/0RQjOp0aEZC
-CTNmMPT0rJR2puL7FmjS6S8kGkCfwWBHeUDF/YMVynX4YMtMPjHmQix7V8Vqmy38
-ITFOi7wM8lPOcLsZpCnkIKN45FU8a5OMnz9tzONzobBhHHbvYceFJu5jdUvJbxOR
-LD4je1L9fdhI5IsNhm70auy83STaj5jCqWuvo+B1pBEE8pO1d95Lc73hxDHtlkbl
-uuZ/fU0OeDHsMYRXwTx9DloJFwah/xCFJ17IcPWmbYhybSjP8tfmDLrgUi/QY+/M
-CT6y9wsYjhHHJEWIepZqIZ9V159lqL8p8AjbT4Gg7KF0JL/JHXuV34F0pBne8fhq
-xiLzljMgTfk=
-=2S64
+iD8DBQBHKmCPT3Oqt9AH4aERAojZAJ9fZgCMsLbx/nVbSVAAwiDSYyQ6sQCgirAp
+8B7fJx4HHkFFWt5QD/zIuDA=
+=MGF6
 -----END PGP SIGNATURE-----
 
---=-BS27lmm0qgQr/81lsx8g--
-
+--nextPart1410679.FUXCYl33qI--
