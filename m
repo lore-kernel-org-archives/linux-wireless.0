@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57204 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752210AbXKUVta (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:34234 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbXKAEo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 16:49:30 -0500
-Message-ID: <4744A7E3.6090105@lwfinger.net> (sfid-20071121_214953_936231_024A7CC7)
-Date: Wed, 21 Nov 2007 15:49:23 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 1 Nov 2007 00:44:58 -0400
+Received: by py-out-1112.google.com with SMTP id u77so708303pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 21:44:58 -0700 (PDT)
+Message-ID: <43e72e890710312144w101efe6y198ff876bd201ca2@mail.gmail.com> (sfid-20071101_044501_564838_1F3BB9D9)
+Date: Thu, 1 Nov 2007 00:44:57 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/7] ath5k: Few patches which start fixing G mode
+Cc: linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <20071101044227.GI21987@pogo>
 MIME-Version: 1.0
-To: Chuck Ebbert <cebbert@redhat.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Changes to enable BCM4311 rev 02 with wireless core
- revision 13
-References: <474487a9.9c54/m97tX72L4+l%Larry.Finger@lwfinger.net> <4744A443.6070808@redhat.com>
-In-Reply-To: <4744A443.6070808@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <20071101043157.GA21987@pogo> <20071101044227.GI21987@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chuck Ebbert wrote:
-> On 11/21/2007 02:31 PM, Larry Finger wrote:
->> The BCM94311MCG rev 02 chip has an 802.11 core with revision 13 and
->> has not been supported until now. The changes include the following:
->>
-> 
-> I put this in a private build of the Fedora 8 kernel in place of the
-> the one that was added a few days ago.
-> 
-> This one works, but I get "PHY transmission error", probably because
-> the rfkill switch has disabled it. I see two LED devices and an input
-> device were registered but pushing the rfkill switch has no effect.
-> Googling doesn't yield any directions for enabling the switch...
+On 11/1/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Nov 01, 2007 at 12:31:57AM -0400, Luis R. Rodriguez wrote:
+> > Here are a few patches which start fixing G mode settings.
+>
+> Forgot to mention these depend on Nick's 1-7 series patches plus,
+>
+> [PATCH] ath5k: Remove fill_tx_desc
+> [PATCH] ath5k: 4word tx descriptor setup doesn't set BUF_LEN
+>
+> The last one by Ulrich Meis.
+>
+> I've also tested these patches on AR5211, AR5212, and on big-endian.
 
-I don't think the PHY transmission error is caused by the rfkill switch, but I have no idea where it 
-arises. It has been present since I enabled the device with 64-bit DMA.
+Crap.. I forgot to CC ath5k-devel.. well guys some patches on
+linux-wireless for ath5k, hope you're subscribed. I'll be sure to send
+them next time :T
 
-I have not determined how to get rfkill to react to the LED switch, but now that the BCM4311 rev 02 
-card is working, I should have some time to look at it.
-
-Larry
+  Luis
