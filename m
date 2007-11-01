@@ -1,167 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:44731 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754045AbXKFWNI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 17:13:08 -0500
-Date: Tue, 6 Nov 2007 22:48:12 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: John Linville <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: [PATCH 1/7] b43legacy: use the retry limits provided by mac80211
-Message-ID: <20071106224812.6d144692@morte> (sfid-20071106_221314_023276_50EAC630)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from py-out-1112.google.com ([64.233.166.179]:46499 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756563AbXKANDY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2007 09:03:24 -0400
+Received: by py-out-1112.google.com with SMTP id u77so916918pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 06:03:23 -0700 (PDT)
+Message-ID: <40f31dec0711010603g55705ce5s6c923c26b7c7d9f5@mail.gmail.com> (sfid-20071101_130329_204048_36DD6C79)
+Date: Thu, 1 Nov 2007 15:03:23 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/7] ath5k: Fix initval/eeprom/IQ calibration for G mode
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071101043424.GB21987@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071101043424.GB21987@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the retry limits provided by mac80211.
+2007/11/1, Luis R. Rodriguez <mcgrof@gmail.com>:
+> ath5k_hw_reset() was always setting initval and eeprom settings for B mode
+> when using G mode. This is because a B channel was being picked up first. We
+> should first instead check for G channel. This patch also introduces a
+> driver_mode variable which should be used instead for determing
+> more reliably the mode we're in.
+>
+> This fixing another bug where IQ calibration was not being run for
+> G mode as CHANNEL_B was always being picked up first. We now instead
+> check for driver_mode.
+>
+> Similar problem was occurring in ath5k_hw_rf5112_rfregs(), we fix this
+> there too.
+>
+> Changes to phy.c, hw.c
+> Changes-licensed-under: ISC
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/hw.c  |   27 +++++++++++++++++----------
+>  drivers/net/wireless/ath5k/phy.c |    6 +++---
+>  2 files changed, 20 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index 50ceab0..8ac88e7 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -538,7 +538,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>         struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>         u32 data, s_seq, s_ant, s_led[3];
+>         s32 noise_floor;
+> -       unsigned int i, mode, freq, ee_mode, ant[2];
+> +       unsigned int i, mode, freq, ee_mode, ant[2], driver_mode = -1;
+>         int ret;
+>
+>         AR5K_TRACE;
+> @@ -598,28 +598,32 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                         mode = AR5K_INI_VAL_11A;
+>                         freq = AR5K_INI_RFGAIN_5GHZ;
+>                         ee_mode = AR5K_EEPROM_MODE_11A;
+> +                       driver_mode = MODE_IEEE80211A;
+>                         break;
+> -               case CHANNEL_B:
+> -                       mode = AR5K_INI_VAL_11B;
+> -                       freq = AR5K_INI_RFGAIN_2GHZ;
+> -                       ee_mode = AR5K_EEPROM_MODE_11B;
+> -                       break;
+> -               /* Is this ok on 5211 too ? */
+>                 case CHANNEL_G:
+>                         mode = AR5K_INI_VAL_11G;
+>                         freq = AR5K_INI_RFGAIN_2GHZ;
+>                         ee_mode = AR5K_EEPROM_MODE_11G;
+> +                       driver_mode = MODE_IEEE80211G;
+> +                       break;
+> +               case CHANNEL_B:
+> +                       mode = AR5K_INI_VAL_11B;
+> +                       freq = AR5K_INI_RFGAIN_2GHZ;
+> +                       ee_mode = AR5K_EEPROM_MODE_11B;
+> +                       driver_mode = MODE_IEEE80211B;
+>                         break;
+>                 case CHANNEL_T:
+>                         mode = AR5K_INI_VAL_11A_TURBO;
+>                         freq = AR5K_INI_RFGAIN_5GHZ;
+>                         ee_mode = AR5K_EEPROM_MODE_11A;
+> +                       driver_mode = MODE_ATHEROS_TURBO;
+>                         break;
+>                 /*Is this ok on 5211 too ?*/
+>                 case CHANNEL_TG:
+>                         mode = AR5K_INI_VAL_11G_TURBO;
+>                         freq = AR5K_INI_RFGAIN_2GHZ;
+>                         ee_mode = AR5K_EEPROM_MODE_11G;
+> +                       driver_mode = MODE_ATHEROS_TURBOG;
+>                         break;
+>                 case CHANNEL_XR:
+>                         if (ah->ah_version == AR5K_AR5211) {
+> @@ -629,6 +633,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                         mode = AR5K_INI_VAL_XR;
+>                         freq = AR5K_INI_RFGAIN_5GHZ;
+>                         ee_mode = AR5K_EEPROM_MODE_11A;
+> +                       driver_mode = MODE_IEEE80211A;
+>                         break;
+>                 default:
+>                         AR5K_PRINTF("invalid channel: %d\n", channel->freq);
+> @@ -662,7 +667,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                 if (ah->ah_version == AR5K_AR5212) {
+>
+>                         /*For 802.11b*/
+> -                       if (!(channel->val & CHANNEL_B)) {
+> +                       if (driver_mode == MODE_IEEE80211B) {
+>
+>                                 /*Get rate table for this operation mode*/
+>                                 rt = ath5k_hw_get_rate_table(ah,
+> @@ -773,7 +778,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                 /*Enable/disable 802.11b mode on 5111
+>                 (enable 2111 frequency converter + CCK)*/
+>                 if (ah->ah_radio == AR5K_RF5111) {
+> -                       if (channel->val & CHANNEL_B)
+> +                       if (driver_mode == MODE_IEEE80211B)
+>                                 AR5K_REG_ENABLE_BITS(ah, AR5K_TXCFG,
+>                                     AR5K_TXCFG_B_MODE);
+>                         else
+> @@ -957,7 +962,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>
+>         ah->ah_calibration = false;
+>
+> -       if (!(channel->val & CHANNEL_B)) {
+> +       /* A and G modes can use QAM modulation which requires enabling
+> +        * I and Q calibration. Don't bother in B mode. */
 
-The patch to b43 by Michael Buesch <mb@bu3sch.de> has been ported to
-b43legacy.
+Just a note, BPSK/QPSK also need /q calibration, so you'd better write
+"A and G modes use OFDM modulation which...".
 
+> +       if (!(driver_mode == MODE_IEEE80211B)) {
+>                 ah->ah_calibration = true;
+>                 AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ,
+>                                 AR5K_PHY_IQ_CAL_NUM_LOG_MAX, 15);
+> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+> index d3735bc..14520cd 100644
+> --- a/drivers/net/wireless/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath5k/phy.c
+> @@ -870,10 +870,10 @@ static int ath5k_hw_rf5112_rfregs(struct ath5k_hw *ah,
+>
+>         /* Modify bank 6 */
+>         if (channel->val & CHANNEL_2GHZ) {
+> -               if (channel->val & CHANNEL_B)
+> -                       ee_mode = AR5K_EEPROM_MODE_11B;
+> -               else
+> +               if (channel->val & CHANNEL_G)
+>                         ee_mode = AR5K_EEPROM_MODE_11G;
+> +               else
+> +                       ee_mode = AR5K_EEPROM_MODE_11B;
+>                 obdb = 0;
+>
+>                 if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
+> --
+> 1.5.2.5
+>
+>
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
-----
-
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -75,14 +75,6 @@ module_param_named(bad_frames_preempt, m
- MODULE_PARM_DESC(bad_frames_preempt, "enable(1) / disable(0) Bad Frames"
- 		 " Preemption");
- 
--static int modparam_short_retry = B43legacy_DEFAULT_SHORT_RETRY_LIMIT;
--module_param_named(short_retry, modparam_short_retry, int, 0444);
--MODULE_PARM_DESC(short_retry, "Short-Retry-Limit (0 - 15)");
--
--static int modparam_long_retry = B43legacy_DEFAULT_LONG_RETRY_LIMIT;
--module_param_named(long_retry, modparam_long_retry, int, 0444);
--MODULE_PARM_DESC(long_retry, "Long-Retry-Limit (0 - 15)");
--
- static char modparam_fwpostfix[16];
- module_param_string(fwpostfix, modparam_fwpostfix, 16, 0444);
- MODULE_PARM_DESC(fwpostfix, "Postfix for the firmware files to load.");
-@@ -2927,6 +2919,20 @@ static void b43legacy_imcfglo_timeouts_w
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- }
- 
-+/* Write the short and long frame retry limit values. */
-+static void b43legacy_set_retry_limits(struct b43legacy_wldev *dev,
-+				       unsigned int short_retry,
-+				       unsigned int long_retry)
-+{
-+	/* The retry limit is a 4-bit counter. Enforce this to avoid overflowing
-+	 * the chip-internal counter. */
-+	short_retry = min(short_retry, (unsigned int)0xF);
-+	long_retry = min(long_retry, (unsigned int)0xF);
-+
-+	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0006, short_retry);
-+	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS, 0x0007, long_retry);
-+}
-+
- /* Shutdown a wireless core */
- /* Locking: wl->mutex */
- static void b43legacy_wireless_core_exit(struct b43legacy_wldev *dev)
-@@ -3064,16 +3070,9 @@ static int b43legacy_wireless_core_init(
- 	}
- 	b43legacy_hf_write(dev, hf);
- 
--	/* Short/Long Retry Limit.
--	 * The retry-limit is a 4-bit counter. Enforce this to avoid overflowing
--	 * the chip-internal counter.
--	 */
--	tmp = limit_value(modparam_short_retry, 0, 0xF);
--	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS,
--			      0x0006, tmp);
--	tmp = limit_value(modparam_long_retry, 0, 0xF);
--	b43legacy_shm_write16(dev, B43legacy_SHM_WIRELESS,
--			      0x0007, tmp);
-+	b43legacy_set_retry_limits(dev,
-+				   B43legacy_DEFAULT_SHORT_RETRY_LIMIT,
-+				   B43legacy_DEFAULT_LONG_RETRY_LIMIT);
- 
- 	b43legacy_shm_write16(dev, B43legacy_SHM_SHARED,
- 			      0x0044, 3);
-@@ -3250,19 +3249,41 @@ static void b43legacy_stop(struct ieee80
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int b43legacy_op_set_retry_limit(struct ieee80211_hw *hw,
-+					u32 short_retry_limit,
-+					u32 long_retry_limit)
-+{
-+	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
-+	struct b43legacy_wldev *dev;
-+	int err = 0;
-+
-+	mutex_lock(&wl->mutex);
-+	dev = wl->current_dev;
-+	if (unlikely(!dev ||
-+		     (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED))) {
-+		err = -ENODEV;
-+		goto out_unlock;
-+	}
-+	b43legacy_set_retry_limits(dev, short_retry_limit, long_retry_limit);
-+out_unlock:
-+	mutex_unlock(&wl->mutex);
-+
-+	return err;
-+}
- 
- static const struct ieee80211_ops b43legacy_hw_ops = {
--	.tx = b43legacy_tx,
--	.conf_tx = b43legacy_conf_tx,
--	.add_interface = b43legacy_add_interface,
--	.remove_interface = b43legacy_remove_interface,
--	.config = b43legacy_dev_config,
--	.config_interface = b43legacy_config_interface,
--	.configure_filter = b43legacy_configure_filter,
--	.get_stats = b43legacy_get_stats,
--	.get_tx_stats = b43legacy_get_tx_stats,
--	.start = b43legacy_start,
--	.stop = b43legacy_stop,
-+	.tx			= b43legacy_tx,
-+	.conf_tx		= b43legacy_conf_tx,
-+	.add_interface		= b43legacy_add_interface,
-+	.remove_interface	= b43legacy_remove_interface,
-+	.config			= b43legacy_dev_config,
-+	.config_interface	= b43legacy_config_interface,
-+	.configure_filter	= b43legacy_configure_filter,
-+	.get_stats		= b43legacy_get_stats,
-+	.get_tx_stats		= b43legacy_get_tx_stats,
-+	.start			= b43legacy_start,
-+	.stop			= b43legacy_stop,
-+	.set_retry_limit	= b43legacy_op_set_retry_limit,
- };
- 
- /* Hard-reset the chip. Do not call this directly.
-Index: wireless-2.6/drivers/net/wireless/b43legacy/xmit.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/xmit.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/xmit.c
-@@ -290,6 +290,8 @@ static void generate_txhdr_fw3(struct b4
- 		mac_ctl |= B43legacy_TX4_MAC_STMSDU;
- 	if (rate_fb_ofdm)
- 		mac_ctl |= B43legacy_TX4_MAC_FALLBACKOFDM;
-+	if (txctl->flags & IEEE80211_TXCTL_LONG_RETRY_LIMIT)
-+		mac_ctl |= B43legacy_TX4_MAC_LONGFRAME;
- 
- 	/* Generate the RTS or CTS-to-self frame */
- 	if ((txctl->flags & IEEE80211_TXCTL_USE_RTS_CTS) ||
-@@ -335,7 +337,6 @@ static void generate_txhdr_fw3(struct b4
- 					    len, rts_rate_fb);
- 		hdr = (struct ieee80211_hdr *)(&txhdr->rts_frame);
- 		txhdr->rts_dur_fb = hdr->duration_id;
--		mac_ctl |= B43legacy_TX4_MAC_LONGFRAME;
- 	}
- 
- 	/* Magic cookie */
-
-
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-Ciao
-Stefano
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
