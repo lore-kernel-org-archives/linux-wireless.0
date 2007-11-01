@@ -1,149 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:61839 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755325AbXKLXRu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 18:17:50 -0500
-Received: by an-out-0708.google.com with SMTP id b36so232331ana
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 15:17:49 -0800 (PST)
-Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1194689500.7258.61.camel@johannes.berg>
-References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
-	 (sfid-20071110_022658_985099_309C7497)  <1194689500.7258.61.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:63227 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753384AbXKABni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2007 21:43:38 -0400
+Subject: Re: iwl3945 in 2.6.24-rc1 dies under load
+From: Zhu Yi <yi.zhu@intel.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-wireless@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20071101001221.GA1755@elf.ucw.cz>
+References: <20071031005202.GA1534@elf.ucw.cz>
+	 <1193792098.9704.16.camel@debian.sh.intel.com>
+	 <20071101001221.GA1755@elf.ucw.cz>
 Content-Type: text/plain
-Date: Mon, 12 Nov 2007 15:17:29 -0800
-Message-Id: <1194909449.6980.89.camel@localhost> (sfid-20071112_231754_087978_10ED68FA)
+Date: Thu, 01 Nov 2007 09:37:06 +0800
+Message-Id: <1193881026.31257.52.camel@debian.sh.intel.com> (sfid-20071101_014342_257259_F1AC6F30)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-11-10 at 11:11 +0100, Johannes Berg wrote:
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -474,6 +474,7 @@ enum ieee80211_if_types {
-> >  	IEEE80211_IF_TYPE_AP,
-> >  	IEEE80211_IF_TYPE_STA,
-> >  	IEEE80211_IF_TYPE_IBSS,
-> > +	IEEE80211_IF_TYPE_MESH,
+
+On Thu, 2007-11-01 at 01:12 +0100, Pavel Machek wrote:
+> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> iwl3945: Start IWL Error Log Dump:
+> iwl3945: Status: 0x00010172, Config: 00000000 count: 1
+> iwl3945: Desc       Time       asrtPC  blink2 ilink1  nmiPC   Line
+> iwl3945: SYSASSERT     (#5) 0403761131 0x0089A 0x0025E 0x00300 0x073C2
+> 75
 > 
-> What happened to Dan's suggestion of calling this MESH_STA? And maybe in
-> nl80211 as well? I might've missed something, was there a conclusion?
+> iwl3945: Start IWL Event Log Dump: display count 256, wraps 86422
+> iwl3945: 0000000256     0x0000006a      403761132
+> iwl3945: 0000000217     0x0000012d      403755413
+> iwl3945: 0000000047     0x00000161      8394228
+> iwl3945: 0000228273     0x00000160      403755488
+> iwl3945: 0000000000     0x0000006a      403755497
+> iwl3945: 0000000217     0x0000012d      403755504
+> iwl3945: 0000000000     0x00000161      403755506
+> iwl3945: 0000228274     0x00000160      403755577
+> iwl3945: 0000000000     0x0000006a      403755586
+> iwl3945: 0000000217     0x0000012d      403755593
+> iwl3945: 0000000000     0x00000161      403755595
+> iwl3945: 0000228275     0x00000160      403755668
+> iwl3945: 0000000000     0x0000006a      403755677
+> iwl3945: 0000000217     0x0000012d      403755684
+> iwl3945: 0000000000     0x00000161      403755686
+> iwl3945: 0000228276     0x00000160      403755757
+> iwl3945: 0000000000     0x0000006a      403755766
+> iwl3945: 0000000217     0x0000012d      403755773
+> iwl3945: 0000000000     0x00000161      403755775
+> iwl3945: 0000228277     0x00000160      403755849
+> iwl3945: 0000000000     0x0000006a      403755858
+> iwl3945: 0000000217     0x0000012d      403755865
+> iwl3945: 0000000000     0x00000161      403755866
+> iwl3945: 0000228278     0x00000160      403755941
+> iwl3945: 0000000000     0x0000006a      403755950
+> iwl3945: 0000000217     0x0000012d      403755957
+> iwl3945: 0000000000     0x00000161      403755958
+> iwl3945: 0000228279     0x00000160      403756032
+> iwl3945: 0000000000     0x0000006a      403756041
+> iwl3945: 0000000217     0x0000012d      403756048
+> iwl3945: 0000000000     0x00000161      403756050
+> iwl3945: 0000228280     0x00000160      403756123
+> iwl3945: 0000000000     0x0000006a      403756132
+> iwl3945: 0000000217     0x0000012d      403756139
+> iwl3945: 0000000000     0x00000161      403756141
+> iwl3945: 0000228281     0x00000160      403756212
+> iwl3945: 0000000000     0x0000006a      403756221
+> iwl3945: 0000000217     0x0000012d      403756228
+> iwl3945: 0000000000     0x00000161      403756230
+> iwl3945: 0000228282     0x00000160      403756303
+> iwl3945: 0000000000     0x0000006a      403756312
+> iwl3945: 0000000217     0x0000012d      403756319
+> iwl3945: 0000000000     0x00000161      403756321
+> iwl3945: 0000228283     0x00000160      403756392
+> iwl3945: 0000000000     0x0000006a      403756401
+> iwl3945: 0000000217     0x0000012d      403756408
+> iwl3945: 0000000000     0x00000161      403756410
+> iwl3945: 0000228284     0x00000160      403756484
+> iwl3945: 0000000000     0x0000006a      403756493
+> iwl3945: 0000000217     0x0000012d      403756500
+> iwl3945: 0000000000     0x00000161      403756502
+> iwl3945: 0000228285     0x00000160      403756576
+> iwl3945: 0000000000     0x0000006a      403756585
+> iwl3945: 0000000217     0x0000012d      403756592
+> iwl3945: 0000000000     0x00000161      403756594
+> iwl3945: 0000228286     0x00000160      403756667
+> iwl3945: 0000000000     0x0000006a      403756676
+> iwl3945: 0000000217     0x0000012d      403756683
+> iwl3945: 0000000000     0x00000161      403756685
+> iwl3945: 0000228287     0x00000160      403756758
+> iwl3945: 0000000000     0x0000006a      403756767
+> iwl3945: 0000000217     0x0000012d      403756774
+> iwl3945: 0000000000     0x00000161      403756776
+> iwl3945: 0000228288     0x00000160      403756847
+> iwl3945: 0000000000     0x0000006a      403756856
+> iwl3945: 0000000217     0x0000012d      403756863
+> iwl3945: 0000000000     0x00000161      403756865
+> iwl3945: 0000228289     0x00000160      403756938
+> iwl3945: 0000000000     0x0000006a      403756947
+> iwl3945: 0000000217     0x0000012d      403756954
+> iwl3945: 0000000000     0x00000161      403756956
+> iwl3945: 0000228290     0x00000160      403757027
+> iwl3945: 0000000000     0x0000006a      403757036
+> iwl3945: 0000000217     0x0000012d      403757043
+> iwl3945: 0000000000     0x00000161      403757045
+> iwl3945: 0000228291     0x00000160      403757118
+> iwl3945: 0000000000     0x0000006a      403757127
+> iwl3945: 0000000217     0x0000012d      403757134
+> iwl3945: 0000000000     0x00000161      403757136
+> iwl3945: 0000228292     0x00000160      403757207
+> iwl3945: 0000000000     0x0000006a      403757216
+> iwl3945: 0000000217     0x0000012d      403757223
+> iwl3945: 0000000000     0x00000161      403757225
+> iwl3945: 0000228293     0x00000160      403757296
+> iwl3945: 0000000000     0x0000006a      403757305
+> iwl3945: 0000000217     0x0000012d      403757312
+> iwl3945: 0000000000     0x00000161      403757314
+> iwl3945: 0000228294     0x00000160      403757387
+> iwl3945: 0000000000     0x0000006a      403757396
+> iwl3945: 0000000217     0x0000012d      403757403
+> iwl3945: 0000000000     0x00000161      403757405
+> iwl3945: 0000228295     0x00000160      403757477
+> iwl3945: 0000000000     0x0000006a      403757486
+> iwl3945: 0000000217     0x0000012d      403757493
+> iwl3945: 0000000000     0x00000161      403757494
+> iwl3945: 0000228296     0x00000160      403757566
+> iwl3945: 0000000000     0x0000006a      403757575
+> iwl3945: 0000000217     0x0000012d      403757582
+> iwl3945: 0000000000     0x00000161      403757584
+> iwl3945: 0000228297     0x00000160      403757675
+> iwl3945: 0000000000     0x0000006a      403757684
+> iwl3945: 0000000217     0x0000012d      403757690
+> iwl3945: 0000000000     0x00000161      403757692
+> iwl3945: 0000228298     0x00000160      403757763
+> iwl3945: 0000000000     0x0000006a      403757772
+> iwl3945: 0000000217     0x0000012d      403757779
+> iwl3945: 0000000000     0x00000161      403757781
+> iwl3945: 0000228299     0x00000160      403757852
+> iwl3945: 0000000000     0x0000006a      403757861
+> iwl3945: 0000000217     0x0000012d      403757868
+> iwl3945: 0000000000     0x00000161      403757870
+> iwl3945: 0000228300     0x00000160      403757942
+> iwl3945: 0000000000     0x0000006a      403757951
+> iwl3945: 0000000217     0x0000012d      403757958
+> iwl3945: 0000000000     0x00000161      403757960
+> iwl3945: 0000228301     0x00000160      403758033
+> iwl3945: 0000000000     0x0000006a      403758042
+> iwl3945: 0000000217     0x0000012d      403758049
+> iwl3945: 0000000000     0x00000161      403758051
+> iwl3945: 0000228302     0x00000160      403758123
+> iwl3945: 0000000000     0x0000006a      403758132
+> iwl3945: 0000000217     0x0000012d      403758139
+> iwl3945: 0000000000     0x00000161      403758140
+> iwl3945: 0000228303     0x00000160      403758214
+> iwl3945: 0000000000     0x0000006a      403758222
+> iwl3945: 0000000217     0x0000012d      403758229
+> iwl3945: 0000000000     0x00000161      403758231
+> iwl3945: 0000228304     0x00000160      403758302
+> iwl3945: 0000000000     0x0000006a      403758311
+> iwl3945: 0000000217     0x0000012d      403758318
+> iwl3945: 0000000000     0x00000161      403758320
+> iwl3945: 0000228305     0x00000160      403758391
+> iwl3945: 0000000000     0x0000006a      403758400
+> iwl3945: 0000000217     0x0000012d      403758407
+> iwl3945: 0000000000     0x00000161      403758409
+> iwl3945: 0000228306     0x00000160      403758483
+> iwl3945: 0000000000     0x0000006a      403758492
+> iwl3945: 0000000217     0x0000012d      403758499
+> iwl3945: 0000000000     0x00000161      403758500
+> iwl3945: 0000228307     0x00000160      403758575
+> iwl3945: 0000000000     0x0000006a      403758584
+> iwl3945: 0000000217     0x0000012d      403758591
+> iwl3945: 0000000000     0x00000161      403758592
+> iwl3945: 0000228308     0x00000160      403758666
+> iwl3945: 0000000000     0x0000006a      403758675
+> iwl3945: 0000000217     0x0000012d      403758682
+> iwl3945: 0000000000     0x00000161      403758684
+> iwl3945: 0000228309     0x00000160      403758757
+> iwl3945: 0000000000     0x0000006a      403758766
+> iwl3945: 0000000217     0x0000012d      403758773
+> iwl3945: 0000000000     0x00000161      403758775
+> iwl3945: 0000228310     0x00000160      403758846
+> iwl3945: 0000000000     0x0000006a      403758855
+> iwl3945: 0000000217     0x0000012d      403758862
+> iwl3945: 0000000000     0x00000161      403758864
+> iwl3945: 0000228311     0x00000160      403758937
+> iwl3945: 0000000000     0x0000006a      403758946
+> iwl3945: 0000000217     0x0000012d      403758953
+> iwl3945: 0000000000     0x00000161      403758955
+> iwl3945: 0000228312     0x00000160      403759026
+> iwl3945: 0000000000     0x0000006a      403759035
+> iwl3945: 0000000217     0x0000012d      403759042
+> iwl3945: 0000000000     0x00000161      403759044
+> iwl3945: 0000228313     0x00000160      403759118
+> iwl3945: 0000000000     0x0000006a      403759127
+> iwl3945: 0000000217     0x0000012d      403759134
+> iwl3945: 0000000000     0x00000161      403759136
+> iwl3945: 0000228314     0x00000160      403759210
+> iwl3945: 0000000000     0x0000006a      403759219
+> iwl3945: 0000000217     0x0000012d      403759226
+> iwl3945: 0000000000     0x00000161      403759228
+> iwl3945: 0000228315     0x00000160      403759301
+> iwl3945: 0000000000     0x0000006a      403759310
+> iwl3945: 0000000217     0x0000012d      403759317
+> iwl3945: 0000000000     0x00000161      403759319
+> iwl3945: 0000228316     0x00000160      403759392
+> iwl3945: 0000000000     0x0000006a      403759401
+> iwl3945: 0000000217     0x0000012d      403759408
+> iwl3945: 0000000000     0x00000161      403759410
+> iwl3945: 0000228317     0x00000160      403759481
+> iwl3945: 0000000000     0x0000006a      403759490
+> iwl3945: 0000000217     0x0000012d      403759497
+> iwl3945: 0000000000     0x00000161      403759499
+> iwl3945: 0000228318     0x00000160      403759572
+> iwl3945: 0000000000     0x0000006a      403759580
+> iwl3945: 0000000217     0x0000012d      403759587
+> iwl3945: 0000000000     0x00000161      403759589
+> iwl3945: 0000228319     0x00000160      403759660
+> iwl3945: 0000000000     0x0000006a      403759669
+> iwl3945: 0000000217     0x0000012d      403759676
+> iwl3945: 0000000000     0x00000161      403759678
+> iwl3945: 0000228320     0x00000160      403759749
+> iwl3945: 0000000000     0x0000006a      403759758
+> iwl3945: 0000000217     0x0000012d      403759765
+> iwl3945: 0000000000     0x00000161      403759767
+> iwl3945: 0000228321     0x00000160      403759841
+> iwl3945: 0000000000     0x0000006a      403759850
+> iwl3945: 0000000217     0x0000012d      403759857
+> iwl3945: 0000000000     0x00000161      403759858
+> iwl3945: 0000228322     0x00000160      403759930
+> iwl3945: 0000000000     0x0000006a      403759939
+> iwl3945: 0000000217     0x0000012d      403759946
+> iwl3945: 0000000000     0x00000161      403759948
+> iwl3945: 0000228323     0x00000160      403760019
+> iwl3945: 0000000000     0x0000006a      403760028
+> iwl3945: 0000000217     0x0000012d      403760035
+> iwl3945: 0000000000     0x00000161      403760037
+> iwl3945: 0000228324     0x00000160      403760110
+> iwl3945: 0000000000     0x0000006a      403760119
+> iwl3945: 0000000217     0x0000012d      403760126
+> iwl3945: 0000000000     0x00000161      403760128
+> iwl3945: 0000228325     0x00000160      403760204
+> iwl3945: 0000000000     0x0000006a      403760213
+> iwl3945: 0000000217     0x0000012d      403760220
+> iwl3945: 0000000000     0x00000161      403760222
+> iwl3945: 0000228326     0x00000160      403760293
+> iwl3945: 0000000000     0x0000006a      403760302
+> iwl3945: 0000000217     0x0000012d      403760309
+> iwl3945: 0000000000     0x00000161      403760311
+> iwl3945: 0000228327     0x00000160      403760384
+> iwl3945: 0000000000     0x0000006a      403760392
+> iwl3945: 0000000217     0x0000012d      403760399
+> iwl3945: 0000000000     0x00000161      403760401
+> iwl3945: 0000228328     0x00000160      403760474
+> iwl3945: 0000000000     0x0000006a      403760483
+> iwl3945: 0000000217     0x0000012d      403760490
+> iwl3945: 0000000000     0x00000161      403760492
+> iwl3945: 0000228329     0x00000160      403760565
+> iwl3945: 0000000000     0x0000006a      403760574
+> iwl3945: 0000000217     0x0000012d      403760581
+> iwl3945: 0000000000     0x00000161      403760583
+> iwl3945: 0000228330     0x00000160      403760654
+> iwl3945: 0000000000     0x0000006a      403760663
+> iwl3945: 0000000217     0x0000012d      403760670
+> iwl3945: 0000000000     0x00000161      403760672
+> iwl3945: 0000228331     0x00000160      403760745
+> iwl3945: 0000000000     0x0000006a      403760754
+> iwl3945: 0000000217     0x0000012d      403760761
+> iwl3945: 0000000000     0x00000161      403760763
+> iwl3945: 0000228332     0x00000160      403760836
+> iwl3945: 0000000000     0x0000006a      403760844
+> iwl3945: 0000000217     0x0000012d      403760851
+> iwl3945: 0000000000     0x00000161      403760853
+> iwl3945: 0000228333     0x00000160      403760925
+> iwl3945: 0000000000     0x0000006a      403760934
+> iwl3945: 0000000217     0x0000012d      403760941
+> iwl3945: 0000000000     0x00000161      403760943
+> iwl3945: 0000228334     0x00000160      403761015
+> iwl3945: 0000000000     0x0000006a      403761024
+> iwl3945: 0000000217     0x0000012d      403761031
+> iwl3945: 0000000000     0x00000161      403761033
+> iwl3945: 0000228335     0x00000160      403761104
+> iwl3945: 0000000000     0x0000006a      403761113
+> iwl3945: 0000000217     0x0000012d      403761120
+> iwl3945: 0000000000     0x0000007b      403761122
+> iwl3945: 0000000002     0x0000007d      403761129
+> iwl3945: I iwl_irq_handle_error Restarting adapter due to uCode error.
+> iwl3945: Error Reply type 0x00000005 cmd REPLY_TX (0x1C) seq 0x0203
+> ser 0x0000004B
+> iwl3945: Can't stop Rx DMA.
+> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
+> range
 
-There wasn't such suggestion, we were talking about renaming interface
-state from IEEE80211_MESH to something more specific. I suggested
-_ACTIVE, _ON or something like that... any preferences? As for the
-interface name, we have discussed about how MAP would be a different
-interface type, so it would be a good idea to be more precise with the
-it. I would go for MESH_POINT though, to follow the nomenclature in the
-standard.
+This firmware error dump is useful. Thanks!
 
+> iwl3945: iwl-3945-rs not selected as rate control algo!
 
-> >  	/* FIX: what would be proper limits for MTU?
-> >  	 * This interface uses 802.3 frames. */
-> > -	if (new_mtu < 256 || new_mtu > IEEE80211_MAX_DATA_LEN - 24 - 6) {
-> > +	if (new_mtu < 256 ||
-> > +		new_mtu > IEEE80211_MAX_DATA_LEN - 24 - 6 - meshhdrlen) {
-> >  		printk(KERN_WARNING "%s: invalid MTU %d\n",
-> >  		       dev->name, new_mtu);
-> >  		return -EINVAL;
-> 
-> Are you sure this is appropriate? As the comment says, interface is
-> 802.3 framed. Don't the 802.11 specifications usually keep the frame
-> payload length and require the device to handle longer frames?
+Can you try using the iwl-3945-rs rate scaling algorithm instead of
+rs_simple? (at this moment, try loading iwl-3945-rs before rs_simple, it
+will be fixed later). It increases performance a lot. Not sure about
+stability though.
 
-802.11s does not modify the PHY at all, and AFAIK does not impose any
-additional requirement on the devices. So regardless if the code already
-there was needed, it is necessary to decrease the MTU by meshhdrlen
-bytes. Another problem is that mesh headers do not always have the same
-length, but that will be dealt with when support for different length
-headers is added.
-
-> 
-> > +	atomic_t mesh_seqnum;
-> 
-> Hmm. Do we really need an atomic_t here?
-
-We are only using this from subif_start_xmit and it is a per-interface
-value, so no, not really.
-
->  
-> > +	case IEEE80211_IF_TYPE_MESH:
-> > +		if (!mesh_allocated) {
-> > +			/* Allocate all mesh structures when creating the first
-> > +			 * mesh interface.
-> > +			 */
-> > +			mesh_pathtbl_init();
-> > +			mesh_allocated = 1;
-> > +		}
-> > +		/* fall thru */
-> 
-> Will there be other structures to allocate? Maybe we should instead push
-> the "already" check into the _init()?
-> 
-
-Yes, there will be more soon.
-
-> > +	/* TODO: check for expired neighbors, paths and frames to non resolved
-> > +	 * hw addresses
-> > +	 */
-> 
-> Seems dangerous to actually run the code w/o this, no?
-
-No, right now we only add paths by manually from user space.
-
-> 
-> 
-> > +	mgmt->u.beacon.beacon_int =
-> > +		cpu_to_le16(local->hw.conf.beacon_int);
-> 
-> Hmm. This is interesting. The beacon interval is a pure beacon
-> configuration after my patches, but here we're using it without having
-> userspace set up a beacon. What do we do in the IBSS case?
-> 
-> > +static int o80211s_getmeshpath(struct sk_buff *skb, struct nlmsghdr *nlh,
-> > +		void *arg)
-> > +{
-> > +	return 0;
-> > +}
-> 
-> Uh huh. Why is this here? Should it be filled?
-
-Of course. Please note this is work in progress. I guess I should return
-a ENOTSUPP instead.
-
-> > @@ -230,6 +231,9 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
-> >  	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
-> >  		return TXRX_DROP;
-> >  
-> > +	if (tx->sdata->type == IEEE80211_IF_TYPE_MESH)
-> > +		return TXRX_CONTINUE;
-> 
-> Is this right or should there be some other "is forwarded frame" check
-> to go with this? I'm not sure but it seems that frames we send via the
-> netdev need to be still checked? Or not because they're just injected
-> into the mesh? I think I'm confused.
-
-I'm confused too. ieee80211_subif_start_xmit checks if the frame is
-forwarded, ieee80211_tx_h_check_assoc does not care about if the frame
-is forwarded or not. Since there is no interface-wide "association
-state" in mesh, the association check would always be true.
-
-> I think you should use RCU for the locking in the neighbour table. This
-> code should (IIRC) be under rcu read-side lock already so the neighbour
-> table reading would be lockless. Since updates are infrequent, RCU is a
-> good tradeoff.
-
-Updates are not that infrequent, every mesh path might be updated every
-few seconds (about 5 or 10). Would RCU be a good trade off in this
-situation?
-
-Thanks for the comments!
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+Thanks,
+-yi
