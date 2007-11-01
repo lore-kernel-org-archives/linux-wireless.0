@@ -1,127 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:8541 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbXK1IOV (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:4710 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbXKAN15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 03:14:21 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] less eventcause shifts
-Date: Wed, 28 Nov 2007 09:15:11 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+	Thu, 1 Nov 2007 09:27:57 -0400
+Received: by py-out-1112.google.com with SMTP id u77so928766pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 06:27:56 -0700 (PDT)
+Message-ID: <40f31dec0711010627t2e62edb5g225848d3054c4c97@mail.gmail.com> (sfid-20071101_132801_857215_405120BC)
+Date: Thu, 1 Nov 2007 15:27:55 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 6/7] ath5k: Clear up settings of AR5K_RSSI_THR register settings
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
+In-Reply-To: <20071101043933.GG21987@pogo>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711280915.11300.hs4233@mail.mn-solutions.de> (sfid-20071128_081426_933298_A16C01BB)
+Content-Type: text/plain; charset=UTF-8
+References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo>
+	 <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo>
+	 <20071101043933.GG21987@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* only shift eventcause once
+2007/11/1, Luis R. Rodriguez <mcgrof@gmail.com>:
+> Clear up settings of AR5K_RSSI_THR register settings. These are split between
+> AR5K_TUNE_BMISS_THRES and AR5K_TUNE_RSSI_THRES.
+>
+> Changes to ath5k.h, hw.c
+> Changes-licensed-under: ISC
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h |   10 +++++++++-
+>  drivers/net/wireless/ath5k/hw.c    |   11 ++++-------
+>  2 files changed, 13 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> index 3354b37..c8ab09a 100644
+> --- a/drivers/net/wireless/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath5k/ath5k.h
+> @@ -86,8 +86,16 @@
+>  #define AR5K_TUNE_RADAR_ALERT                  false
+>  #define AR5K_TUNE_MIN_TX_FIFO_THRES            1
+>  #define AR5K_TUNE_MAX_TX_FIFO_THRES            ((IEEE80211_MAX_LEN / 64) + 1)
+> -#define AR5K_TUNE_RSSI_THRES                   1792
+>  #define AR5K_TUNE_REGISTER_TIMEOUT             20000
+> +/* Register for RSSI threshold has a mask of 0xff, so 255 seems to
+> + * be the max value. */
+> +#define AR5K_TUNE_RSSI_THRES                   129
+> +/* This must be set when setting the RSSI threshold otherwise it can
+> + * prevent a reset. If AR5K_RSSI_THR is read after writing to it
+> + * the BMISS_THRES will be seen as 0, seems harware doesn't keep
+> + * track of it. Max value depends on harware. For AR5210 this is just 7.
+> + * For AR5211+ this seems to be up to 255. */
+> +#define AR5K_TUNE_BMISS_THRES                  7
+>  #define AR5K_TUNE_REGISTER_DWELL_TIME          20000
+>  #define AR5K_TUNE_BEACON_INTERVAL              100
+>  #define AR5K_TUNE_AIFS                         2
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index 1b9c4f0..f1ba863 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -849,13 +849,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>         /*PISR/SISR Not available on 5210*/
+>         if (ah->ah_version != AR5K_AR5210) {
+>                 ath5k_hw_reg_write(ah, 0xffffffff, AR5K_PISR);
+> -               /* XXX: AR5K_RSSI_THR has masks and shifts defined for it, so
+> -                * direct write using ath5k_hw_reg_write seems wrong. Test with:
+> -                * AR5K_REG_WRITE_BITS(ah, AR5K_RSSI_THR,
+> -                *   AR5K_RSSI_THR_BMISS, AR5K_TUNE_RSSI_THRES);
+> -                * with different variables and check results compared
+> -                * to ath5k_hw_reg_write(ah, )  */
+> -               ath5k_hw_reg_write(ah, AR5K_TUNE_RSSI_THRES, AR5K_RSSI_THR);
+> +               /* If we later allow tuning for this, store into sc structure */
+> +               data = AR5K_TUNE_RSSI_THRES |
+> +                       AR5K_TUNE_BMISS_THRES << AR5K_RSSI_THR_BMISS_S;
+> +               ath5k_hw_reg_write(ah, data, AR5K_RSSI_THR);
+>         }
+>
+>         /*
+> --
+> 1.5.2.5
+>
+>
 
-* convert mac events to decimal, as this is what the firmware
-  manual uses in section 6.1, too
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 10:07:27.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 10:15:07.000000000 +0100
-@@ -899,12 +899,12 @@ int lbs_process_event(struct lbs_private
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
- 	spin_lock_irq(&adapter->driver_lock);
--	eventcause = adapter->eventcause;
-+	eventcause = adapter->eventcause >> SBI_EVENT_CAUSE_SHIFT;
- 	spin_unlock_irq(&adapter->driver_lock);
- 
--	lbs_deb_cmd("event cause 0x%x\n", eventcause);
-+	lbs_deb_cmd("event cause %d\n", eventcause);
- 
--	switch (eventcause >> SBI_EVENT_CAUSE_SHIFT) {
-+	switch (eventcause) {
- 	case MACREG_INT_CODE_LINK_SENSED:
- 		lbs_deb_cmd("EVENT: MACREG_INT_CODE_LINK_SENSED\n");
- 		break;
-@@ -919,7 +919,7 @@ int lbs_process_event(struct lbs_private
- 		lbs_mac_event_disconnected(priv);
- 		break;
- 
--	case MACREG_INT_CODE_LINK_LOSE_NO_SCAN:
-+	case MACREG_INT_CODE_LINK_LOST_NO_SCAN:
- 		lbs_deb_cmd("EVENT: link lost\n");
- 		lbs_mac_event_disconnected(priv);
- 		break;
-@@ -1013,8 +1013,7 @@ int lbs_process_event(struct lbs_private
- 		break;
- 
- 	default:
--		lbs_pr_alert("EVENT: unknown event id 0x%04x\n",
--		       eventcause >> SBI_EVENT_CAUSE_SHIFT);
-+		lbs_pr_alert("EVENT: unknown event id %d\n", eventcause);
- 		break;
- 	}
- 
-Index: wireless-2.6/drivers/net/wireless/libertas/host.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/host.h	2007-11-28 10:07:40.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/host.h	2007-11-28 10:15:57.000000000 +0100
-@@ -272,27 +272,35 @@ enum cmd_mesh_access_opts {
- };
- 
- /** Card Event definition */
--#define MACREG_INT_CODE_TX_PPA_FREE             0x00000000
--#define MACREG_INT_CODE_TX_DMA_DONE             0x00000001
--#define MACREG_INT_CODE_LINK_LOSE_W_SCAN        0x00000002
--#define MACREG_INT_CODE_LINK_LOSE_NO_SCAN       0x00000003
--#define MACREG_INT_CODE_LINK_SENSED             0x00000004
--#define MACREG_INT_CODE_CMD_FINISHED            0x00000005
--#define MACREG_INT_CODE_MIB_CHANGED             0x00000006
--#define MACREG_INT_CODE_INIT_DONE               0x00000007
--#define MACREG_INT_CODE_DEAUTHENTICATED         0x00000008
--#define MACREG_INT_CODE_DISASSOCIATED           0x00000009
--#define MACREG_INT_CODE_PS_AWAKE                0x0000000a
--#define MACREG_INT_CODE_PS_SLEEP                0x0000000b
--#define MACREG_INT_CODE_MIC_ERR_MULTICAST       0x0000000d
--#define MACREG_INT_CODE_MIC_ERR_UNICAST         0x0000000e
--#define MACREG_INT_CODE_WM_AWAKE                0x0000000f
--#define MACREG_INT_CODE_ADHOC_BCN_LOST          0x00000011
--#define MACREG_INT_CODE_RSSI_LOW		0x00000019
--#define MACREG_INT_CODE_SNR_LOW			0x0000001a
--#define MACREG_INT_CODE_MAX_FAIL		0x0000001b
--#define MACREG_INT_CODE_RSSI_HIGH		0x0000001c
--#define MACREG_INT_CODE_SNR_HIGH		0x0000001d
--#define MACREG_INT_CODE_MESH_AUTO_STARTED	0x00000023
-+#define MACREG_INT_CODE_TX_PPA_FREE             0
-+#define MACREG_INT_CODE_TX_DMA_DONE             1
-+#define MACREG_INT_CODE_LINK_LOST_W_SCAN        2
-+#define MACREG_INT_CODE_LINK_LOST_NO_SCAN       3
-+#define MACREG_INT_CODE_LINK_SENSED             4
-+#define MACREG_INT_CODE_CMD_FINISHED            5
-+#define MACREG_INT_CODE_MIB_CHANGED             6
-+#define MACREG_INT_CODE_INIT_DONE               7
-+#define MACREG_INT_CODE_DEAUTHENTICATED         8
-+#define MACREG_INT_CODE_DISASSOCIATED           9
-+#define MACREG_INT_CODE_PS_AWAKE                10
-+#define MACREG_INT_CODE_PS_SLEEP                11
-+#define MACREG_INT_CODE_MIC_ERR_MULTICAST       13
-+#define MACREG_INT_CODE_MIC_ERR_UNICAST         14
-+#define MACREG_INT_CODE_WM_AWAKE                15
-+#define MACREG_INT_CODE_DEEP_SLEEP_AWAKE        16
-+#define MACREG_INT_CODE_ADHOC_BCN_LOST          17
-+#define MACREG_INT_CODE_HOST_AWAKE              18
-+#define MACREG_INT_CODE_STOP_TX                 19
-+#define MACREG_INT_CODE_START_TX                20
-+#define MACREG_INT_CODE_CHANNEL_SWITCH          21
-+#define MACREG_INT_CODE_MEASUREMENT_RDY         22
-+#define MACREG_INT_CODE_WMM_CHANGE              23
-+#define MACREG_INT_CODE_BG_SCAN_REPORT          24
-+#define MACREG_INT_CODE_RSSI_LOW                25
-+#define MACREG_INT_CODE_SNR_LOW                 26
-+#define MACREG_INT_CODE_MAX_FAIL                27
-+#define MACREG_INT_CODE_RSSI_HIGH               28
-+#define MACREG_INT_CODE_SNR_HIGH                29
-+#define MACREG_INT_CODE_MESH_AUTO_STARTED       35
- 
- #endif
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
