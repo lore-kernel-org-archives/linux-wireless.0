@@ -1,36 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:57007 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419AbXKAFe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 01:34:28 -0400
-Message-ID: <58913.84.58.133.207.1193895266.squirrel@webmail.madwifi.org> (sfid-20071101_053432_059603_ED0F1CE4)
-In-Reply-To: <43e72e890710311322w7acbaae5u83c7abd1d044302c@mail.gmail.com>
-References: <20071027232033.GD5973@localhost.domain.invalid>
-    <43e72e890710311110l4a301f8cpb67b21bd90e251b4@mail.gmail.com>
-    <40f31dec0710311155p78e41515rf74b6243c4decd40@mail.gmail.com>
-    <43e72e890710311214y52bbdfd3y24d3c05c05257ac6@mail.gmail.com>
-    <40f31dec0710311239m7e5e1fa0q62fd212e7631f68c@mail.gmail.com>
-    <43e72e890710311322w7acbaae5u83c7abd1d044302c@mail.gmail.com>
-Date: Thu, 1 Nov 2007 06:34:26 +0100 (CET)
-Subject: Re: [ath5k-devel] [PATCH 4/7] ath5k: Add SREV values for newer
-     chips
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
+Received: from an-out-0708.google.com ([209.85.132.251]:4755 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbXKATW7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2007 15:22:59 -0400
+Received: by an-out-0708.google.com with SMTP id b36so88488ana
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 12:22:58 -0700 (PDT)
+Date: Thu, 1 Nov 2007 15:22:51 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jeff@garzik.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH] RFC: move ath5k to use pci_request_selected_regions()
+Message-ID: <20071101192251.GB3201@pogo> (sfid-20071101_192302_489363_FB17052F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Documentation/pci.txt states:
 
->> Nope but i believe that regdumps from them should give us something...
-> Yes, but its easier if we get you an BG card for testing purposes.
-> Anyone know where we can reliably purchase them from?
+"If your PCI device driver doesn't need I/O port resources assigned to
+I/O Port BARs, you should use pci_enable_device_bars() instead of
+pci_enable_device() in order not to enable I/O port regions for the
+corresponding devices. In addition, you should use
+pci_request_selected_regions() and pci_release_selected_regions()
+instead of pci_request_regions()/pci_release_regions() in order not to
+request/release I/O port regions for the corresponding devices."
 
-I have to check first, but I think that we have received a b/g-only card
-from Compex as part of their donation to MadWifi.
+So shall we? This also re-arranges the pci_release_selected_regions()
+as per the documenation.
 
-Bye, Mike
+Changes to base.c
+Changes-licensed-under: 3-clause-BSD
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 15ae868..a87a47f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -445,11 +445,14 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 		const struct pci_device_id *id)
+ {
+ 	void __iomem *mem;
+-	struct ath5k_softc *sc;
++	struct ath5k_softc *sc = NULL;
+ 	struct ieee80211_hw *hw;
+ 	int ret;
++	int bars;
+ 	u8 csz;
+ 
++	bars = pci_select_bars(pdev, IORESOURCE_MEM);
++
+ 	ret = pci_enable_device(pdev);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "can't enable device\n");
+@@ -495,7 +498,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	 */
+ 	pci_write_config_byte(pdev, 0x41, 0);
+ 
+-	ret = pci_request_region(pdev, 0, "ath5k");
++	ret = pci_request_selected_regions(pdev, bars, "ath5k");
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "cannot reserve PCI memory region\n");
+ 		goto err_dis;
+@@ -528,6 +531,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	sc = hw->priv;
+ 	sc->hw = hw;
+ 	sc->pdev = pdev;
++	sc->bars = bars;
+ 
+ 	/*
+ 	 * Mark the device as detached to avoid processing
+@@ -602,10 +606,10 @@ err_free:
+ 	ieee80211_free_hw(hw);
+ err_map:
+ 	pci_iounmap(pdev, mem);
+-err_reg:
+-	pci_release_region(pdev, 0);
+ err_dis:
+ 	pci_disable_device(pdev);
++err_reg:
++	pci_release_selected_regions(pdev, sc->bars);
+ err:
+ 	return ret;
+ }
+@@ -621,8 +625,8 @@ ath5k_pci_remove(struct pci_dev *pdev)
+ 	free_irq(pdev->irq, sc);
+ 	pci_disable_msi(pdev);
+ 	pci_iounmap(pdev, sc->iobase);
+-	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
++	pci_release_selected_regions(pdev, sc->bars);
+ 	ieee80211_free_hw(hw);
+ }
+ 
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index c13e54b..913d0ab 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -89,6 +89,7 @@ struct ath5k_txq {
+  * associated with an instance of a device */
+ struct ath5k_softc {
+ 	struct pci_dev		*pdev;		/* for dma mapping */
++	int			bars;
+ 	void __iomem		*iobase;	/* address of the device */
+ 	struct mutex		lock;		/* dev-level lock */
+ 	struct ieee80211_tx_queue_stats tx_stats;
