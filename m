@@ -1,71 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59363 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750702AbXKTQaq (ORCPT
+Received: from flatline.sindominio.net ([82.144.4.26]:44362 "EHLO
+	flatline.sindominio.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096AbXKDXNV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 11:30:46 -0500
-Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1195575922.3389.20.camel@localhost.localdomain>
-References: <11955417361539-git-send-email-yi.zhu@intel.com>
-	 <1195565876.10920.29.camel@johannes.berg>
-	 <1195575922.3389.20.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dh3D18WLQF4SEVAviZ/8"
-Date: Tue, 20 Nov 2007 17:31:48 +0100
-Message-Id: <1195576308.10920.56.camel@johannes.berg> (sfid-20071120_163048_272680_DD19A9A4)
-Mime-Version: 1.0
+	Sun, 4 Nov 2007 18:13:21 -0500
+Date: Thu, 1 Nov 2007 08:19:02 +0100
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] Prism54: Convert mgmt_sem to the mutex API
+Message-ID: <20071101071902.GH6092@traven> (sfid-20071104_231327_033578_32B05A04)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Prism54: Convert mgmt_sem to the mutex API
 
---=-dh3D18WLQF4SEVAviZ/8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
+--
 
-> > Yes. But if you do that, the interface won't be down either. Maybe this
-> > should also be done when removing keys?
->=20
-> That seems better to me; although couldn't it also be cleared when
-> setting static WEP keys?  Dynamic WEP shouldn't care about the IE bits
-> either, so any time a WEP key is set and you're _not_ doing WPA the IE
-> could get cleared.
+diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+index 219dd65..dbb538c 100644
+--- a/drivers/net/wireless/prism54/islpci_dev.c
++++ b/drivers/net/wireless/prism54/islpci_dev.c
+@@ -861,7 +861,7 @@ islpci_setup(struct pci_dev *pdev)
+ 	init_waitqueue_head(&priv->reset_done);
+ 
+ 	/* init the queue read locks, process wait counter */
+-	sema_init(&priv->mgmt_sem, 1);
++	mutex_init(&priv->mgmt_lock);
+ 	priv->mgmt_received = NULL;
+ 	init_waitqueue_head(&priv->mgmt_wqueue);
+ 	sema_init(&priv->stats_sem, 1);
+diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/prism54/islpci_dev.h
+index 736666d..4e0182c 100644
+--- a/drivers/net/wireless/prism54/islpci_dev.h
++++ b/drivers/net/wireless/prism54/islpci_dev.h
+@@ -26,6 +26,7 @@
+ #include <linux/wireless.h>
+ #include <net/iw_handler.h>
+ #include <linux/list.h>
++#include <linux/mutex.h>
+ 
+ #include "isl_38xx.h"
+ #include "isl_oid.h"
+@@ -164,7 +165,7 @@ typedef struct {
+ 	wait_queue_head_t reset_done;
+ 
+ 	/* used by islpci_mgt_transaction */
+-	struct semaphore mgmt_sem; /* serialize access to mailbox and wqueue */
++	struct mutex mgmt_lock; /* serialize access to mailbox and wqueue */
+ 	struct islpci_mgmtframe *mgmt_received;	  /* mbox for incoming frame */
+ 	wait_queue_head_t mgmt_wqueue;            /* waitqueue for mbox */
+ 
+-- 
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
 
-Yeah, this is a bit icky. Also, we need to reset the state of the "use
-key management" variable.
-
-> Though on the other hand, the interface isn't going to work much longer
-> after wpa_supplicant goes away anyway, depending on how long the
-> group/multicast rekey interval is.
-
-Actually, we're talking about getting it to work on another AP anyway.
-
-johannes
-
---=-dh3D18WLQF4SEVAviZ/8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0ML86Vg1VMiehFYAQLLyRAAkXlstZxpLhVNl3HCny89ASukNhXJscrs
-ozaduEX8C8VqiMTICpIzPWMCNmHTEM25QeCKUHNPR+0JCmNj1EIL8eYHmokQShSb
-ZUx7Y+SWrigjktZz0CLnMKr7MAsS979DOT9CP//M2j/2PSDTuOGI3xW10hJfU/rx
-uVwsjYWVJZcb6SuHX63F0KLSoaYvDzA6dLqEN99aGq9OFlII6zYSDQ/ZWTW3yfGi
-4tALRNlYiSenxQwczXXqSepCN253H1KQw1DFaq5u3GS1KieIcr2PCdKoMuKQpToA
-YHrSX5qj5jgsAi9jYpFKFL7HzVqnIwgrNRMV/zqEp0aeaQdILBDqjlF4aLWUqE6X
-eWYEM0t+v6arsGAvHzlL35wOkWu2b/p9Gk6ygkpYOkcuspLmy273zcYqarta4VEf
-ldV3iqEJAUERayPmGLZUUm8TARLBgvlItrDZ8Z3m8MD0NLj33UNA9K7VSGw5PXAm
-2uHnlE9QSr97DT9Sm3H2wuShOFRxgMtq7kRYkh+qTBLIhE7YeAHqW8zAN54ZO4+t
-dvuSCMlQoxW+ljKW0R2uDec2jSYzIEFwvOHaQwIaRy9+tbY6SqrnFA7R6ue/P297
-TbFU2Fh+e7YrOW2tpN1Isbw7b3bZRFqVzJKOIXPDrXQyoeQLZgamNQDOMC0lqkdE
-lNwZuLf+284=
-=EQkp
------END PGP SIGNATURE-----
-
---=-dh3D18WLQF4SEVAviZ/8--
-
+       The yellow ships hung in the air just like bricks dont do
+                 (The Hitch-Hiker's Guide to the Galaxy)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
