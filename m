@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49313 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38796 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755268AbXK0QIS (ORCPT
+	with ESMTP id S1753011AbXKBKO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 11:08:18 -0500
-Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
+	Fri, 2 Nov 2007 06:14:28 -0400
+Subject: Re: [PATCH 4/7] o80211s: (mac80211s) basic mesh interface support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ian Schram <ischram@telenet.be>
-In-Reply-To: <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com> (sfid-20071127_160657_238828_CAEE533A)
-References: <20071126225416.467939000@sipsolutions.net>
-	 <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com>
-	 <1196175476.6058.25.camel@johannes.berg>
-	 <1ba2fa240711270800p3312246as51b0a23f77e81f3@mail.gmail.com>
-	 <1196179471.6058.41.camel@johannes.berg>
-	 <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com>
-	 (sfid-20071127_160657_238828_CAEE533A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GvPcHadzwOqL5EZkw4f8"
-Date: Tue, 27 Nov 2007 17:08:07 +0100
-Message-Id: <1196179687.6058.45.camel@johannes.berg> (sfid-20071127_160820_348624_110B745D)
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <472AF59A.4020302@openwrt.org>
+References: <4727de06.0e578c0a.2568.ffffb079@mx.google.com>
+	 <1193832985.12078.14.camel@johannes.berg>
+	 <8e8340660710311736k555474f3ifd7490b5f0f7b623@mail.gmail.com>
+	 (sfid-20071101_003628_984847_78170051) <1193997288.12078.39.camel@johannes.berg>
+	 <472AF59A.4020302@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dVYjx2H7EYiR2ZgzyugX"
+Date: Fri, 02 Nov 2007 11:15:47 +0100
+Message-Id: <1193998547.12078.43.camel@johannes.berg> (sfid-20071102_101432_979032_89ABB257)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GvPcHadzwOqL5EZkw4f8
+--=-dVYjx2H7EYiR2ZgzyugX
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Tue, 2007-11-27 at 18:06 +0200, Tomas Winkler wrote:
-> sorry for stupid question but what is the git for 24.?
 
-I don't think we have anything pending in git or I guess John would
-probably call it upstream-fixes-jgarzik or something. I diff against
-Linus's tree right now.
+> Depends on how big it is. I think merging it without ifdefs is fine for
+> now. If it gets too big, we can make some ifdef patches later.
+
+Fine with me.
+
+> If we're forced to use hostapd for starting the mesh networking, then tha=
+t
+> would probably be a bigger source of bloat than the mesh code itself :)
+
+No no, but for a mesh AP I think we will have to use hostapd like for a
+regular AP because a mesh AP is, afaik, like a mesh STA and a regular AP
+in one station, so it offers mesh networking services to regular
+clients.
 
 johannes
 
---=-GvPcHadzwOqL5EZkw4f8
+--=-dVYjx2H7EYiR2ZgzyugX
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR0xA5qVg1VMiehFYAQJ9lA//YHStGsVDc6rBLORMcEIQCe/u8PKIRKOH
-3IIhbARum6bCDcRXeSIBzHy6rRAFlIGC8BGvUuZCeFniu9I8tm5OAfuRDJaAnSjm
-apUQak9MhNEXjkmwb2sZExNrDv0y/y7tnmYLwp9tD3wvpsE+PfzU1SiDkB3qQ0eF
-QoB4K5puTpzeP7fqfF/Btw5RUTSg/jgtabI9TQxiyXm75autp/ugl2U3eEP1v/z7
-gteLPZTJbXd4+3260gDvUQjHgd4mQK44xut5bO2QfoW7cmiTMx3WuJl6DU3TzhU8
-XrxH9/+C1qx7n40XI5DaOwXt+30pg3J1M5D6EWaBhRQGSKW65I6LHuzBWnIDJAUv
-m4Y9Vgtysf0QZvsRMZg8/wtYTpyes/QCMRSIvbic19Y8kvL6JpIPZWyN+nq4Srbl
-gM/6vPskXgXiO2uGzeOhTHXNwC/n/6YbbZTEah5RcXxpsgRbZdzlJVWwzGmiERwP
-nCHVOBYjS5ujzkUBSsTrUcg6Fu0lYBKzpYXtnZMA36U2W8OvnK58TKGuFZRILP2i
-Y3vxyQ20bM98kOt1VzJwQrBZ3Ou2oLK5lRMw0iOHqmwx7VImt4JOIQy/xjKo2EE9
-nF5ZGON96BdLCwSg1WTvTx5YcbbQUywvqAbtGzpH9MadoUFzPx40ZEyFhoIPV1cH
-Wqw84UpGWv4=
-=wQyE
+iQIVAwUARyr40qVg1VMiehFYAQLIphAAiA6YWkbsZesI5QNrnS+NhrQNe+ATWPHt
+Bl2lZD96N4XevprY+DnVcT9DWBZ7qOlqxwoNCe+VSvjc7ZY+3v9Wz37BWiK74Rxj
+mHoh9DeZzUvPlDbmiMMPBRfalZQQYdJMEIdJA1c1u1cMG0SbZX/lEoccovPMXNzO
+Givm6RG4GWEHdIFs80jM350ul7makf3/ZF8TBlQG9DLhyXQt/CORmoQ6EPZvku4A
+7MGJ8hIodBx4bOQiTqTQYmNvrw3WKyPx7Sgn5XY5ffkpLhSKmZdyCkeNjhrwz03j
+2Z/QImFXTue3svm20tuaJ1cQ++WRilxTnaB1olwFwh+QYFScw5aQHddLOWzymxYA
+01HD6H8TEomffm4x3mqA5xrppwQXpiVMrvZyOT20pDY31P7T0q1ZQdvKrvxOGhi3
+ULMpdFpprp9P2/HQHnrp+H/C+wF72C4YWS/w2fiSWZY3F5xMk/BUemJs04z7phQ5
+zyDh6MC+FUFBSdwZmy9U7lSeXVj6K0fjaq8F9iejPDaIiMHhBcVn4TmnpsN0kX02
+WzangjRATWnP0T6TPAMdLeiQr6Y8/KD9sZALMCp9EmtcTgdprhHeQGDuzv5WXypM
+RaaKycjazNdLL0EEWq238urbdA0EcR6Ivtgw7IOp6Sff6HE87G5LNL2PvmutCgrL
+E82q9Il7t4Y=
+=glg/
 -----END PGP SIGNATURE-----
 
---=-GvPcHadzwOqL5EZkw4f8--
+--=-dVYjx2H7EYiR2ZgzyugX--
 
