@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:45767 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750786AbXKWFDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 00:03:16 -0500
-Message-ID: <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org> (sfid-20071123_050323_075064_4C82813A)
-In-Reply-To: <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com>
-References: <200711222310.01165.virec@inmail.sk>
-    <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com>
-Date: Fri, 23 Nov 2007 06:03:13 +0100 (CET)
-Subject: Re: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Cc: "Majo" <virec@inmail.sk>, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55280 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945AbXKBJs2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Nov 2007 05:48:28 -0400
+Subject: Re: [RFC] mac80211: use IW_AUTH_PRIVACY_INVOKED rather than
+	IW_AUTH_KEY_MGMT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Dan Williams <dcbw@redhat.com>, dragoran <drago01@gmail.com>
+In-Reply-To: <200711011523.03063.flamingice@sourmilk.net>
+References: <1193671155.5197.71.camel@johannes.berg>
+	 <200711011523.03063.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CZ/dfuQDSaCekgi+M6cY"
+Date: Fri, 02 Nov 2007 10:49:46 +0100
+Message-Id: <1193996986.12078.32.camel@johannes.berg> (sfid-20071102_094840_102694_6460C3FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
 
->> 14:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG
->> 802.11 b/g Wireless PCI Express Adapter (rev 01)
-> This is a 2424 pci-express card, we don't support this chip yet ;-(
+--=-CZ/dfuQDSaCekgi+M6cY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Don't be fooled by the PCI ID - we already know that these are not
-reliable to identify the chipset used on a Atheros-based card. See also
-http://madwifi.org/ticket/1192.
 
-I'd suggest Majo to use ath_info from MadWifi trunk, hopefully it allows
-to recognize the chipset more reliably in his case, too. The ticket
-mentioned above also has some instructions on how to use this tool.
+> > -	if (ieee80211_sta_wep_configured(dev) !=3D
+> > -	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
+> > +	privacy =3D !!(bss->capability & WLAN_CAPABILITY_PRIVACY);
+> > +	if ((ieee80211_sta_wep_configured(dev) !=3D privacy) &&
+> > +	    !!((ifsta->flags & IEEE80211_STA_PRIVACY_INVOKED) !=3D privacy))
+> !! for the wrong set of parenthesis, AFAICT.
 
-> (the testbed stuff would really help)
+Oops, you're right, will resend.
 
-Working on it, but it's still a long road. Getting non-profit status is
-just the first step for that, and that's work in progress.
+johannes
 
-Bye, Mike
+--=-CZ/dfuQDSaCekgi+M6cY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARyryuaVg1VMiehFYAQJyjg//QDNnVSGQNiTB1bu4+Kn5v9uNIDMkBDfp
+F+OgNYDdo2vTg9SYmKhkj5lUiuaBY4e2d1VXE4Bm5PvKQ9ph+xOO5O0sQG41kxs1
+V6tW0K4m/1IiStKfwAc3NgWRxGSkkYgj4oLf8zRpk2UOLe4CztnfSPJyfcLTkW5U
+7IV7hiDBOzW/enrIoE7J6jsVAmz4A7seUWCs6Pxfmc8pfGTrZ28wBUwF9Dr3e3KA
+w1O4JEj0ITcFTpS5BgReA1uRsPtH7lquczQEa0wnlBy8ioaa+L+zLY7PmsIVzgxn
+/byvkdBsE3BnFpmYnedwb/nZ3Pj3pT2FSI+bk93tgOaslliDf5WH8uS032ZT6GzJ
+Yr58bdhucKwCgWYBsldiFVMUSVCcdZLFIHOLWUUPSw3Hhxmh3pzY56YIQ0SeGBPG
+MQz9dvw9Xerq5A8ePgOnc4p1jvWFYKl0RZMxazrgdKOo7CF2rjStq3DPhfojT/rz
+hpHG6pZhzvXgvlyT+xPpKC/MzAmmXe6kr4Q1rss3o6lMAFSNWLL06dUK3foT1eMw
+vF0IK7o+xlhv8j+qojHtillJ6s1vDpg+G8FQb3zKhBWqa/XEH45bOYZ79+Aazubx
+X3Ca4fGP8ElydF8wCCeWf+Qz3Uy61ssWj+HZ9LY2oC3nOzsrKzrA+AyhSziQ+OTw
+DK+2c2ePSjc=
+=BtAm
+-----END PGP SIGNATURE-----
+
+--=-CZ/dfuQDSaCekgi+M6cY--
+
