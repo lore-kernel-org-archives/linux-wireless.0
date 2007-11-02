@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:2703 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757774AbXKOSgY (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.235]:11440 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753658AbXKBVZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 13:36:24 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so649630mue
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2007 10:36:22 -0800 (PST)
-Message-ID: <c85cb4470711151036j11fc855fnfde4366c11df97b@mail.gmail.com> (sfid-20071115_183629_764906_52679CCC)
-Date: Thu, 15 Nov 2007 20:36:10 +0200
-From: "Ron Rindzonski" <rindjon@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
-Cc: "Guy Cohen" <guy.cohen@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com
-In-Reply-To: <1195150317.8147.7.camel@johannes.berg>
+	Fri, 2 Nov 2007 17:25:39 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so756446nze
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Nov 2007 14:25:38 -0700 (PDT)
+Message-ID: <40f31dec0711021425y4e4bee5bi1c63ea165e6ed6a7@mail.gmail.com> (sfid-20071102_212544_903819_6787A7CC)
+Date: Fri, 2 Nov 2007 23:25:37 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] ath5k: Set ACK to user lower bit rates
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <40f31dec0711021413u397f9cb9r99ef8b9ca51ea01c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-	 <1195056662.4091.29.camel@johannes.berg>
-	 <247d6d340711150233h7988220fifb0d34170d16a979@mail.gmail.com>
-	 <1195142683.13846.62.camel@johannes.berg>
-	 <c85cb4470711151006j765831f9w2fb941317153712c@mail.gmail.com>
-	 <1195150317.8147.7.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20071102204638.GA3227@pogo>
+	 <40f31dec0711021413u397f9cb9r99ef8b9ca51ea01c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I would have to mention at this point that A-MSDU deaggregation is
-> > obligatory according to the 802.11n, so excluding it would be a spec
-> > violation.
+2007/11/2, Nick Kossifidis <mickflemm@gmail.com>:
+> 2007/11/2, Luis R. Rodriguez <mcgrof@gmail.com>:
+> > Sorry, forgot this last hunk in my patch series... This applies on top
+> > of my series.
+> >
+> > This sets the ACK bitrate to the lower rates. Without this I get
+> > about 70% packet loss when using the 11M rate. Not sure exactly what rates
+> > this is setting the HW to send the ACKs in but it sure does help.
+> >
 >
-> Right. But does that really matter for purposes of getting the code into
-> a development tree? What we're aiming for here is getting the code out
-> of your hands so that it won't conflict with other stuff that's work in
-> progress, rather than aiming for spec compliance (which is something I'd
-> aim for when merging this stuff up into Linus's tree)
+> 6Mbits for OFDM (have checked it out with various sniffers), if not
+> set i usualy get 24Mbits for acks when transmiting on 54Mbit.
+>
+> Haven't checked it for CCK but i guess it's 1 or 2 Mbits, have a look
+> at my comments inside reg.h...
+>
+> #define AR5K_STA_ID1_ACKCTS_6MB         0x01000000      /* Use 6Mbit/s
+> for ACK/CTS (?) */
+> #define AR5K_STA_ID1_BASE_RATE_11B      0x02000000      /* Use 11b
+> base rate (for ACK/CTS ?) [5211+] */
 >
 
-Oh, sorry for misunderstanding you folks.
-Yes, getting the code into the development tree will be excellent.
-I am already working on the rx_h_data fix we talked about, and will sent it
-over early next week to wrap things up.
-Thanks
-ron
+Also note that setting these bits is safe and cause a more stable
+behaviour. If these bits are not set then control_rate is being used
+(check out rate tables -remember these tables are hardcoded in hal,
+that's why they have put control_rate there, to let us know what rate
+is being used for ack/cts frames by hw-).
 
-> > What I will do is to put some out-of-band effort here, fixing the
-> > rx_h_data infrastructure, so it will be able to support rx_h_amsdu as
-> > well, thus eliminating the EAPOL bug.
->
-> Thanks much!
->
-> johannes
->
->
+Here it is...
+(transmision rate) -> (ack/cts rate)
+
+OFDM
+6 - 12 -> 6
+12 - 24 -> 12
+24 - 54 -> 24
+
+CCK
+1 - 2 -> 1
+2 - 11 -> 2
+
+So it still doesn't make sense that you had 70% loss, i mean any rate
+between 2 and 11Mbits would cause the same ack rate (2Mbits), even if
+you didn't set that bit.
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
