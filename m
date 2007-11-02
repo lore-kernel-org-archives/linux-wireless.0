@@ -1,112 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56516 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52876 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbXKWUdb (ORCPT
+	with ESMTP id S1753045AbXKBKX1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 15:33:31 -0500
-Subject: wireless vs. alignment requirements
+	Fri, 2 Nov 2007 06:23:27 -0400
+Subject: Re: [PATCH 4/7] o80211s: (mac80211s) basic mesh interface support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20071123000922.C44009D4A1F@zog.reactivated.net> (sfid-20071123_002828_208061_C7872499)
-References: <20071123000922.C44009D4A1F@zog.reactivated.net>
-	 (sfid-20071123_002828_208061_C7872499)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vIq45vcuYAlwqPGWFLH4"
-Date: Fri, 23 Nov 2007 21:33:21 +0100
-Message-Id: <1195850001.4149.165.camel@johannes.berg> (sfid-20071123_203340_185491_C0FBBCD2)
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <8e8340660710311721m5a8cae83h743dcfb09ea6bba2@mail.gmail.com> (sfid-20071101_002118_447499_78B52EA1)
+References: <4727de06.0e578c0a.2568.ffffb079@mx.google.com>
+	 <1193833372.23775.42.camel@localhost.localdomain>
+	 <8e8340660710311721m5a8cae83h743dcfb09ea6bba2@mail.gmail.com>
+	 (sfid-20071101_002118_447499_78B52EA1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4aE2nviYJ5kZknxPbc9J"
+Date: Fri, 02 Nov 2007 10:20:30 +0000
+Message-Id: <1193998830.25744.1.camel@johannes.berg> (sfid-20071102_102334_022209_34062619)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vIq45vcuYAlwqPGWFLH4
+--=-4aE2nviYJ5kZknxPbc9J
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> David Miller found a problem in a wireless driver where I was using
-> compare_ether_addr() on potentially unaligned data. Document that
-> compare_ether_addr() is not safe for use everywhere, and add an equivalen=
-t
-> function that works regardless of alignment.
+> I do not know either what would be the best place (Johannes?) but I am
+> going to implement specific mesh statistics in sysfs so you could use
+> that or I could add a specific mesh_iface flag in sysfs.
 
-FWIW, as I've said in the other thread I cannot believe this to be true
-since the IP header is required to be aligned anyway. So *iff* this
-really was a problem then we'd have much more problems and better fixed
-the alignment of the received USB urb in zd1211rw.
-
-Let me explain... This is going to take a bit of text...
-
-Marking optional fields with < > for better readability, you have this
-802.11 header layout (including byte sizes):
-
-| FC (2) | durid (2) | A1 (6) | A2 (6) | A3 (6) | seq (2)
-...	< optional A4 (6) > < optional qos (2) >
-...	< optional HT (4) > < optional mesh (4 or 16) >
-(NOTE: not sure about the order of the last two, this will probably
-depend on the order in which 11n/11s are accepted! logically I would
-expect the order as I wrote it)
-
-(which makes it 24, 26, 30 or 32 bytes long plus the optional 11n/11s
-additions which are multiples of four)
-
-After that comes the data which may contain a SNAP header or such and
-then the rest. The SNAP header is six bytes plus two byte ethertype, or
-there could be a bridge tunnel header with six bytes plus two byte
-ethertype, or it could be missing completely, in all of these cases it's
-evenly divisible by four.
-
-Now, the IP stack actually assumes that its header is four-byte aligned
-(see comment at NET_IP_ALIGN, although it is not said explicitly that
-the alignment requirement for an IP header is four) so that is actually
-something for the hardware/firmware (!) to do, for example Broadcom
-firmware will insert two bytes padding before the PLCP header (6 bytes,
-sitting before the 802.11 header) if either the QoS field or A4 was
-present (and the header length thus wasn't a multiple of four). Atheros
-hardware will insert two bytes padding after the QoS field in the same
-cases (IIRC).
-
-Of course, you need to consider the RX header that sits before the
-802.11 stuff. Broadcom's is 30 bytes, but if you add the six byte PLCP
-header you have 36 bytes which is divisible by four. In the QoS XOR A4
-case they add two bytes which makes it 38 with two bytes to spare for
-4-byte alignment which are eaten up by the QoS/A4 field.
-
-I don't know about any other hardware but considering that things work
-as well as they do I'd think they do similar things.
-
-Hence, going back to the 802.11 header and the IP header alignment
-requirement, if we get the IP header alignment requirement right now I
-cannot possibly see any way we would use compare_ether_addr() on an
-address that is not at least two-byte aligned as required.
-
-Whew. Or so I think.
+I'd prefer if it was debugfs for now so we can actually test the API
+first. But it's up to you, if anything having a sysfs interface might
+slow down merging the code into an official kernel though because that
+(in my view) requires more interface testing.
 
 johannes
 
---=-vIq45vcuYAlwqPGWFLH4
+--=-4aE2nviYJ5kZknxPbc9J
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIUAwUAR0c5EKVg1VMiehFYAQJrrw/4sM6Sq7R2RZXWP+Y0+QsVwgbC+W7cnT66
-QX4HdcM8smvWvmkss33MAqNXWEzqci3OwwVW776q8ysVo5NHUoFCwUBAfxR2Mf4D
-K61vwXvFNwuI54JqRLL1W1WCzmD6wMykJUJohfdVkS0jF62ZGAgqjslDQ87O8qYh
-GMofp2TaPJrVXkDtqlxyo+orSyIjxLXNEzSjUDzseYz0Zi0UdBQiK1oGFslpgwPa
-BJ9Od/2O3V8fApNFYRODJ7urORWVPqvn1yVpgUamHMhUT3QIt1r/2IQ0GKsirB03
-KkuPom6/mN6HUSBq03O640dLxYTms+6JOBzmX82itdmROExAgf3YH5HyD1owp6w5
-Ywc8NV/XwoVxiMJdTdkarMht4TVVTUoTWVifRpNFwcDPnK/J2oivX6hTgsuNL/yR
-szdnV+MZ9+Bb3G6w6/YerHgbHHPklJAe13+euyrvaa3bUOGJ5PlmX9NxVM71B3La
-D2VhBJCQhpgHFjBc+WOdPPtwonMO2cZSJFMLZRh/xNqxr8GSQsZnoN1GTV5+ds8w
-NB4UDxtZwHjc3e0ZPkUtGPITC+wYiADvpKIIalpySe3169lG4Gawq/9idD7rJApv
-Rfztj90/gWKaHpdcHeiaxhUv8MVctFSZ3y70XzYWal5tHxssvuKrtESDnHwXOWxl
-zmGd/DCHBg==
-=CMxw
+iQIVAwUARyr57aVg1VMiehFYAQIWDBAAqF5ZbBIXkyBMMoU3jhB7NjrOkk1bRAyl
+KMNgMy8yksHu31kUrbtcMYOF97vxX5aZm6+2XIgCcAc5VYD+MyahLdrIAB7CkaFn
+prxv3um9BeF76j/pqLwxuvr6cZsZyXL42p/PQfTwuQH4WwS5ZS61Ed5kS65yWVzQ
+Z9ZHeaaDHcYXXp+nGTHBUFaQ4bw93XX1DDUFNYRyjT0kqbDvphgVgGWaEkYQkePx
+mRaQHv2qP4vYh89zGb89fp7FU+gWm/CJpnQ0YQUS1X/4+EIG7iSylRbKUAhB+VwD
+2Pgr22CviB+h5bdKhGYQTqtQOoR/oApcBRBCmXjCWbgfz1Bv/l9rJONY5bTfkNe7
+gwPKAeamGZbCsmOyqg3NQP4gjAXueZqmrc+LQTt0rQ8XJ/MozU9HQ+QccKL8+EDV
+dFQCU8TCtzn12i+qv2e6JMpN335Vv8smd4q5K5MQjn4sfKgNlBxe/fsmuUiBwPYY
+j+uKp37WkjVZUnzL0t6LFLT2RjLjQL4BxgTNTm0vXs9ULGU71y1xzh+/ofXSuyq5
+UXW4pLgyXD1tCNiTZTA8+QuU0C0mf8UGjw9q2PRcn47CpCJzOO5wIHWgPZyioD5R
+IjIG62BNjJIpG10yrL+gyZDo8EopW1IHADt+YefUquu3htY7ZVeqtHn1Ted1Ff4l
+aTEU5/clYhU=
+=lN/x
 -----END PGP SIGNATURE-----
 
---=-vIq45vcuYAlwqPGWFLH4--
+--=-4aE2nviYJ5kZknxPbc9J--
 
