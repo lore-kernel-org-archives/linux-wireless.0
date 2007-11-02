@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:62776 "EHLO
-	rn-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758900AbXKTQTM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 11:19:12 -0500
-Received: by rn-out-0102.google.com with SMTP id s46so2928709rnb
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2007 08:19:11 -0800 (PST)
-Message-ID: <40f31dec0711200819p3ef7d5a1p30437f39974d22b8@mail.gmail.com> (sfid-20071120_161916_425055_099DF189)
-Date: Tue, 20 Nov 2007 18:19:11 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Francesco Gringoli" <francesco.gringoli@ing.unibs.it>
-Subject: Re: ath5k driver on MIPS and low level control over the hw
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <E7E9AC02-E136-48B7-8E39-3419B36B6575@ing.unibs.it>
+Received: from nbd.name ([88.198.39.176]:37887 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751763AbXKBKCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Nov 2007 06:02:21 -0400
+Message-ID: <472AF59A.4020302@openwrt.org> (sfid-20071102_100224_065608_44E92D44)
+Date: Fri, 02 Nov 2007 11:02:02 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <E7E9AC02-E136-48B7-8E39-3419B36B6575@ing.unibs.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/7] o80211s: (mac80211s) basic mesh interface support
+References: <4727de06.0e578c0a.2568.ffffb079@mx.google.com>	 <1193832985.12078.14.camel@johannes.berg>	 <8e8340660710311736k555474f3ifd7490b5f0f7b623@mail.gmail.com>	 (sfid-20071101_003628_984847_78170051) <1193997288.12078.39.camel@johannes.berg>
+In-Reply-To: <1193997288.12078.39.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I would like also to report that I did a very simple test connecting
-> a couple of Atheros card with a coaxial cable (impedances adapted and
-> both systems are connected to the same ground). The two PCs involved
-> are running x86 Linux 2.6.24-rc2 when using ath5k and Linux 2.6.23
-> when using standard Madwifi code. I see that independently of the
-> channel rate (from 1Mb/s to 54Mb/s) I always get better performances
-> with standard Madwifi code. Could this depend on how queues are
-> handled on the ath5k code?
->
-> Regards,
-> FG
->
+Johannes Berg wrote:
+>> Agreed about filename length. I would prefer not to make mesh
+>> networking configurable, as STA, IBSS, etc modes aren't configurable
+>> either. I prefer to avoid polluting the data path with ifdefs.
+> 
+> Ok, I'm not sure, it just seems like quite a bit of code especially when
+> all the other features will be added, something people like the OpenWRT
+> folks might not like. nbd?
+Depends on how big it is. I think merging it without ifdefs is fine for
+now. If it gets too big, we can make some ifdef patches later.
 
-Not only queues but mostly tx power setting imho, we don't initialize
-phy properly if we don't set tx power the right way. Madwifi/binary
-hal knows how to propertly initialize phy so it has better performace
-over ath5k. This is mostly seen in OFDM operation (a/g).
+>> Mesh APs are not supported yet, but we plan to support them through a
+>> different interface type (e.g.  ..._TYPE_MAP) or extending the AP
+>> interface type. Mesh STAs and APs will share all the mesh-specific
+>> stuff (peer link discovery, path discovery, etc) but they have little
+>> in common in the data path, so I do not think it makes sense to use
+>> the same interface type for both. Maybe I should rename ..IF_TYPE_MESH
+>> to ..IF_TYPE_MESH_STA?
+> 
+> Probably. Come to think of it, how much mesh networking is actually done
+> by the mesh AP? I guess we need to support this in hostapd rather than
+> the kernel?
+If we're forced to use hostapd for starting the mesh networking, then that
+would probably be a bigger source of bloat than the mesh code itself :)
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+- Felix
