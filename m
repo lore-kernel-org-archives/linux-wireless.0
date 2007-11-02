@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3531 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756786AbXKOPRQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 10:17:16 -0500
-Date: Thu, 15 Nov 2007 10:10:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Ismail =?iso-8859-1?Q?D=F6nmez?= <ismail@pardus.org.tr>,
-	Dan Williams <dcbw@redhat.com>, Stephen.Clark@seclark.us,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] iwl3945 doesn't work
-Message-ID: <20071115151046.GA12902@tuxdriver.com> (sfid-20071115_151724_983791_37B89E0F)
-References: <20071017135452.GJ5043@kernel.dk> <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com> <473514F3.50500@telenet.be> <200711150253.48628.ismail@pardus.org.tr> <20071115093921.GH638@kernel.dk>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44196
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754420AbXKBTTU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Nov 2007 15:19:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: Fix sparse warning
+Date: Fri, 2 Nov 2007 20:18:11 +0100
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20071115093921.GH638@kernel.dk>
+Message-Id: <200711022018.11310.mb@bu3sch.de> (sfid-20071102_191923_609618_02C5ADF2)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 15, 2007 at 10:39:22AM +0100, Jens Axboe wrote:
-> On Thu, Nov 15 2007, Ismail D=F6nmez wrote:
-> > Saturday 10 November 2007 Tarihinde 04:18:27 yazm????t??:
-> > > I wonder if anybody knows something more about this issue by now,
-> > > as it appears to occur to a few people.
-> > >
-> > > I reread the thread (rather quickly) but I do not see many specif=
-ications
-> > > of driver/mac80211/kernel. The few cases that do contain specs al=
-l appear
-> > > to be using fedora (don't want to jump to conclusions). But just =
-wondering
-> > > if anybody experienced this on any other kernel?
-> >=20
-> > Btw this is still not fixed in latest git (post rc2).
->=20
-> I'll second that, using todays snap still requires me to do an iwlist
-> scan before I can use the network.
->=20
-> Is anyone working on this at all? This was reported a month ago, yet =
-no
-> progress or real developer interest in fixing this is apparent.
-
-I don't see any pending patches that seem relevant.  FWIW I'll probably
-round-up what I do have and make them available today (and probably
-in a Fedora kernel too).
-
-Does the disable_hw_scan=3D1 still work for you?  Perhaps we should
-consider making that the default...
-
-John
---=20
-John W. Linville
-linville@tuxdriver.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-2.6/net/rfkill/rfkill.c
+===================================================================
+--- wireless-2.6.orig/net/rfkill/rfkill.c	2007-11-02 20:05:54.000000000 +0100
++++ wireless-2.6/net/rfkill/rfkill.c	2007-11-02 20:16:09.000000000 +0100
+@@ -27,6 +27,10 @@
+ #include <linux/mutex.h>
+ #include <linux/rfkill.h>
+ 
++/* Get declaration of rfkill_switch_all() to shut up sparse. */
++#include "rfkill-input.h"
++
++
+ MODULE_AUTHOR("Ivo van Doorn <IvDoorn@gmail.com>");
+ MODULE_VERSION("1.0");
+ MODULE_DESCRIPTION("RF switch support");
