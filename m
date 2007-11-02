@@ -1,236 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45131 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757235AbXK1VqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 16:46:04 -0500
-Subject: Re: [PATCH] libertas: remove user-specified channel list
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200711281730.21327.hs4233@mail.mn-solutions.de>
-References: <200711281730.21327.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 28 Nov 2007 16:40:16 -0500
-Message-Id: <1196286016.4967.26.camel@localhost.localdomain> (sfid-20071128_214608_679268_A1895928)
-Mime-Version: 1.0
+Received: from mxsf08.insightbb.com ([74.128.0.78]:57246 "EHLO
+	mxsf08.insightbb.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbXKBFzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Nov 2007 01:55:40 -0400
+From: Dmitry Torokhov <dtor@insightbb.com>
+To: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] P54: use temporary variables to reduce size of generated code
+Date: Fri, 2 Nov 2007 01:55:36 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711020155.36919.dtor@insightbb.com> (sfid-20071102_055546_806701_D90BC6F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-11-28 at 17:30 +0100, Holger Schurig wrote:
-> Remove the ability to specify channels to scan via debugfs
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Hi Michael,
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Please consider applying the patch below. It is done against tonight pull
+from Linus and seems to be working fine here on a FullMAC card.
 
-> Index: wireless-2.6/drivers/net/wireless/libertas/README
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/README	2007-11-28 18:18:45.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/README	2007-11-28 18:20:09.000000000 +0100
-> @@ -195,8 +195,6 @@ setuserscan
->  
->           where [ARGS]:
->  
-> -      chan=[chan#][band][mode] where band is [a,b,g] and mode is
-> -                               blank for active or 'p' for passive
->        bssid=xx:xx:xx:xx:xx:xx  specify a BSSID filter for the scan
->        ssid="[SSID]"            specify a SSID filter for the scan
->        keep=[0 or 1]            keep the previous scan results (1), discard (0)
-> @@ -204,35 +202,26 @@ setuserscan
->        type=[1,2,3]             BSS type: 1 (Infra), 2(Adhoc), 3(Any)
->  
->      Any combination of the above arguments can be supplied on the command
-> -      line.  If the chan token is absent, a full channel scan will be
-> -      completed by the driver.  If dur tokens are absent, the driver default
-> -      setting will be used.  The bssid and ssid fields, if blank, will
-> -      produce an unfiltered scan. The type field will default to 3 (Any) and
-> -      the keep field will default to 0 (Discard).
-> +    line. If dur tokens are absent, the driver default setting will be used.
-> +    The bssid and ssid fields, if blank, will produce an unfiltered scan.
-> +    The type field will default to 3 (Any) and the keep field will default
-> +    to 0 (Discard).
->  
->      Examples:
-> -    1) Perform an active scan on channels 1, 6, and 11 in the 'g' band:
-> -            echo "chan=1g,6g,11g" > setuserscan
-> -
-> -    2) Perform a passive scan on channel 11 for 20 ms:
-> -            echo "chan=11gp dur=20" > setuserscan
-> -
-> -    3) Perform an active scan on channels 1, 6, and 11; and a passive scan on
-> -       channel 36 in the 'a' band:
-> -
-> -            echo "chan=1g,6g,11g,36ap" > setuserscan
-> +    1) Perform a passive scan on all channels for 20 ms per channel:
-> +            echo "dur=20" > setuserscan
->  
-> -    4) Perform an active scan on channel 6 and 36 for a specific SSID:
-> -            echo "chan=6g,36a ssid="TestAP"" > setuserscan
-> +    2) Perform an active scan for a specific SSID:
-> +            echo "ssid="TestAP"" > setuserscan
->  
-> -    5) Scan all available channels (B/G, A bands) for a specific BSSID, keep
-> +    3) Scan all available channels (B/G, A bands) for a specific BSSID, keep
->         the current scan table intact, update existing or append new scan data:
->              echo "bssid=00:50:43:20:12:82 keep=1" > setuserscan
->  
-> -    6) Scan channel 6, for all infrastructure networks.
-> +    4) Scan for all infrastructure networks.
->         Keep the previous scan table intact. Update any duplicate BSSID/SSID
->         matches with the new scan data:
-> -            echo "chan=6g type=1 keep=1" > setuserscan
-> +            echo "type=1 keep=1" > setuserscan
->  
->      All entries in the scan table (not just the new scan data when keep=1)
->      will be displayed upon completion by use of the getscantable ioctl.
-> Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:22:36.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:23:27.000000000 +0100
-> @@ -196,43 +196,6 @@ out_unlock:
->  	return count;
->  }
->  
-> -static int lbs_parse_chan(char *buf, size_t count,
-> -			struct lbs_ioctl_user_scan_cfg *scan_cfg, int dur)
-> -{
-> -	char *start, *end, *hold, *str;
-> -	int i = 0;
-> -
-> -	start = strstr(buf, "chan=");
-> -	if (!start)
-> -		return -EINVAL;
-> -	start += 5;
-> -	end = strchr(start, ' ');
-> -	if (!end)
-> -		end = buf + count;
-> -	hold = kzalloc((end - start)+1, GFP_KERNEL);
-> -	if (!hold)
-> -		return -ENOMEM;
-> -	strncpy(hold, start, end - start);
-> -	hold[(end-start)+1] = '\0';
-> -	while(hold && (str = strsep(&hold, ","))) {
-> -		int chan;
-> -		char band, passive = 0;
-> -		sscanf(str, "%d%c%c", &chan, &band, &passive);
-> -		scan_cfg->chanlist[i].channumber = chan;
-> -		scan_cfg->chanlist[i].scantype = passive ? 1 : 0;
-> -		if (band == 'b' || band == 'g')
-> -			scan_cfg->chanlist[i].radiotype = 0;
-> -		else if (band == 'a')
-> -			scan_cfg->chanlist[i].radiotype = 1;
-> -
-> -		scan_cfg->chanlist[i].scantime = dur;
-> -		i++;
-> -	}
-> -
-> -	kfree(hold);
-> -	return i;
-> -}
-> -
->  static void lbs_parse_bssid(char *buf, size_t count,
->  	struct lbs_ioctl_user_scan_cfg *scan_cfg)
->  {
-> @@ -345,7 +308,6 @@ static ssize_t lbs_setuserscan(struct fi
->  	scan_cfg->bsstype = LBS_SCAN_BSS_TYPE_ANY;
->  
->  	dur = lbs_parse_dur(buf, count, scan_cfg);
-> -	lbs_parse_chan(buf, count, scan_cfg, dur);
->  	lbs_parse_bssid(buf, count, scan_cfg);
->  	scan_cfg->clear_bssid = lbs_parse_clear(buf, count, "clear_bssid=");
->  	lbs_parse_ssid(buf, count, scan_cfg);
-> Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2007-11-28 18:21:10.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2007-11-28 18:23:01.000000000 +0100
-> @@ -415,11 +415,6 @@ lbs_scan_setup_scan_config(struct lbs_pr
->  	struct mrvlietypes_ssidparamset *pssidtlv;
->  	struct lbs_scan_cmd_config *pscancfgout = NULL;
->  	u8 *ptlvpos;
-> -	int chanidx;
-> -	int scantype;
-> -	int scandur;
-> -	int channel;
-> -	int radiotype;
->  
->  	lbs_deb_enter(LBS_DEB_SCAN);
->  
-> @@ -504,58 +499,8 @@ lbs_scan_setup_scan_config(struct lbs_pr
->  	 */
->  	*ppchantlvout = (struct mrvlietypes_chanlistparamset *) ptlvpos;
->  
-> -	if (!puserscanin || !puserscanin->chanlist[0].channumber) {
-> -		/* Create a default channel scan list */
-> -		lbs_deb_scan("creating full region channel list\n");
-> -		lbs_scan_create_channel_list(priv, pscanchanlist,
-> -					      *pfilteredscan);
-> -		goto out;
-> -	}
-> -
-> -	for (chanidx = 0;
-> -	     chanidx < LBS_IOCTL_USER_SCAN_CHAN_MAX
-> -	     && puserscanin->chanlist[chanidx].channumber; chanidx++) {
-> -
-> -		channel = puserscanin->chanlist[chanidx].channumber;
-> -		(pscanchanlist + chanidx)->channumber = channel;
-> -
-> -		radiotype = puserscanin->chanlist[chanidx].radiotype;
-> -		(pscanchanlist + chanidx)->radiotype = radiotype;
-> -
-> -		scantype = puserscanin->chanlist[chanidx].scantype;
-> -
-> -		if (scantype == CMD_SCAN_TYPE_PASSIVE) {
-> -			(pscanchanlist +
-> -			 chanidx)->chanscanmode.passivescan = 1;
-> -		} else {
-> -			(pscanchanlist +
-> -			 chanidx)->chanscanmode.passivescan = 0;
-> -		}
-> -
-> -		if (puserscanin->chanlist[chanidx].scantime) {
-> -			scandur = puserscanin->chanlist[chanidx].scantime;
-> -		} else {
-> -			if (scantype == CMD_SCAN_TYPE_PASSIVE) {
-> -				scandur = MRVDRV_PASSIVE_SCAN_CHAN_TIME;
-> -			} else {
-> -				scandur = MRVDRV_ACTIVE_SCAN_CHAN_TIME;
-> -			}
-> -		}
-> -
-> -		(pscanchanlist + chanidx)->minscantime =
-> -		    cpu_to_le16(scandur);
-> -		(pscanchanlist + chanidx)->maxscantime =
-> -		    cpu_to_le16(scandur);
-> -	}
-> -
-> -	/* Check if we are only scanning the current channel */
-> -	if ((chanidx == 1) &&
-> -	    (puserscanin->chanlist[0].channumber ==
-> -			       priv->adapter->curbssparams.channel)) {
-> -		*pscancurrentonly = 1;
-> -		lbs_deb_scan("scanning current channel only");
-> -	}
-> -
-> +	lbs_scan_create_channel_list(priv, pscanchanlist,
-> +				      *pfilteredscan);
->  out:
->  	return pscancfgout;
->  }
-> Index: wireless-2.6/drivers/net/wireless/libertas/scan.h
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/scan.h	2007-11-28 18:20:13.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/scan.h	2007-11-28 18:20:50.000000000 +0100
-> @@ -121,11 +121,6 @@ struct lbs_ioctl_user_scan_cfg {
->  
->  	/* Clear existing scan results matching this SSID */
->  	u8 clear_ssid;
-> -
-> -    /**
-> -     *  @brief Variable number (fixed maximum) of channels to scan up
-> -     */
-> -	struct lbs_ioctl_user_scan_chan chanlist[LBS_IOCTL_USER_SCAN_CHAN_MAX];
->  };
->  
->  /**
+Thanks.
 
+-- 
+Dmitry
+
+Subject: P54: use temporary variables to reduce size of generated code
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+
+When there are 2 linked structures, using a temporary variable to hold a pointer
+to the often used structure usually produces better code (smaller and faster)
+since compiler does not have to constantly re-fetch data from the first structure.
+
+Signed-off-by: Dmitry Torokhov <dtor@mail.ru>
+---
+ drivers/net/wireless/p54pci.c |   77 ++++++++++++++++++++++--------------------
+ 1 file changed, 41 insertions(+), 36 deletions(-)
+
+Index: work/drivers/net/wireless/p54pci.c
+===================================================================
+--- work.orig/drivers/net/wireless/p54pci.c
++++ work/drivers/net/wireless/p54pci.c
+@@ -141,6 +141,7 @@ static irqreturn_t p54p_simple_interrupt
+ static int p54p_read_eeprom(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	int err;
+ 	struct p54_control_hdr *hdr;
+ 	void *eeprom;
+@@ -164,7 +165,7 @@ static int p54p_read_eeprom(struct ieee8
+ 		goto out;
+ 	}
+ 
+-	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
++	memset(ring_control, 0, sizeof(*ring_control));
+ 	P54P_WRITE(ring_control_base, priv->ring_control_dma);
+ 	P54P_READ(ring_control_base);
+ 	udelay(10);
+@@ -194,14 +195,14 @@ static int p54p_read_eeprom(struct ieee8
+ 	tx_mapping = pci_map_single(priv->pdev, (void *)hdr,
+ 				    EEPROM_READBACK_LEN, PCI_DMA_TODEVICE);
+ 
+-	priv->ring_control->rx_mgmt[0].host_addr = cpu_to_le32(rx_mapping);
+-	priv->ring_control->rx_mgmt[0].len = cpu_to_le16(0x2010);
+-	priv->ring_control->tx_data[0].host_addr = cpu_to_le32(tx_mapping);
+-	priv->ring_control->tx_data[0].device_addr = hdr->req_id;
+-	priv->ring_control->tx_data[0].len = cpu_to_le16(EEPROM_READBACK_LEN);
++	ring_control->rx_mgmt[0].host_addr = cpu_to_le32(rx_mapping);
++	ring_control->rx_mgmt[0].len = cpu_to_le16(0x2010);
++	ring_control->tx_data[0].host_addr = cpu_to_le32(tx_mapping);
++	ring_control->tx_data[0].device_addr = hdr->req_id;
++	ring_control->tx_data[0].len = cpu_to_le16(EEPROM_READBACK_LEN);
+ 
+-	priv->ring_control->host_idx[2] = cpu_to_le32(1);
+-	priv->ring_control->host_idx[1] = cpu_to_le32(1);
++	ring_control->host_idx[2] = cpu_to_le32(1);
++	ring_control->host_idx[1] = cpu_to_le32(1);
+ 
+ 	wmb();
+ 	mdelay(100);
+@@ -215,8 +216,8 @@ static int p54p_read_eeprom(struct ieee8
+ 	pci_unmap_single(priv->pdev, rx_mapping,
+ 			 0x2010, PCI_DMA_FROMDEVICE);
+ 
+-	alen = le16_to_cpu(priv->ring_control->rx_mgmt[0].len);
+-	if (le32_to_cpu(priv->ring_control->device_idx[2]) != 1 ||
++	alen = le16_to_cpu(ring_control->rx_mgmt[0].len);
++	if (le32_to_cpu(ring_control->device_idx[2]) != 1 ||
+ 	    alen < 0x10) {
+ 		printk(KERN_ERR "%s (prism54pci): Cannot read eeprom!\n",
+ 		       pci_name(priv->pdev));
+@@ -239,16 +240,17 @@ static int p54p_read_eeprom(struct ieee8
+ static void p54p_refill_rx_ring(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	u32 limit, host_idx, idx;
+ 
+-	host_idx = le32_to_cpu(priv->ring_control->host_idx[0]);
++	host_idx = le32_to_cpu(ring_control->host_idx[0]);
+ 	limit = host_idx;
+-	limit -= le32_to_cpu(priv->ring_control->device_idx[0]);
+-	limit = ARRAY_SIZE(priv->ring_control->rx_data) - limit;
++	limit -= le32_to_cpu(ring_control->device_idx[0]);
++	limit = ARRAY_SIZE(ring_control->rx_data) - limit;
+ 
+-	idx = host_idx % ARRAY_SIZE(priv->ring_control->rx_data);
++	idx = host_idx % ARRAY_SIZE(ring_control->rx_data);
+ 	while (limit-- > 1) {
+-		struct p54p_desc *desc = &priv->ring_control->rx_data[idx];
++		struct p54p_desc *desc = &ring_control->rx_data[idx];
+ 
+ 		if (!desc->host_addr) {
+ 			struct sk_buff *skb;
+@@ -270,17 +272,18 @@ static void p54p_refill_rx_ring(struct i
+ 
+ 		idx++;
+ 		host_idx++;
+-		idx %= ARRAY_SIZE(priv->ring_control->rx_data);
++		idx %= ARRAY_SIZE(ring_control->rx_data);
+ 	}
+ 
+ 	wmb();
+-	priv->ring_control->host_idx[0] = cpu_to_le32(host_idx);
++	ring_control->host_idx[0] = cpu_to_le32(host_idx);
+ }
+ 
+ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
+ {
+ 	struct ieee80211_hw *dev = dev_id;
+ 	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	__le32 reg;
+ 
+ 	spin_lock(&priv->lock);
+@@ -298,12 +301,12 @@ static irqreturn_t p54p_interrupt(int ir
+ 		struct p54p_desc *desc;
+ 		u32 idx, i;
+ 		i = priv->tx_idx;
+-		i %= ARRAY_SIZE(priv->ring_control->tx_data);
+-		priv->tx_idx = idx = le32_to_cpu(priv->ring_control->device_idx[1]);
+-		idx %= ARRAY_SIZE(priv->ring_control->tx_data);
++		i %= ARRAY_SIZE(ring_control->tx_data);
++		priv->tx_idx = idx = le32_to_cpu(ring_control->device_idx[1]);
++		idx %= ARRAY_SIZE(ring_control->tx_data);
+ 
+ 		while (i != idx) {
+-			desc = &priv->ring_control->tx_data[i];
++			desc = &ring_control->tx_data[i];
+ 			if (priv->tx_buf[i]) {
+ 				kfree(priv->tx_buf[i]);
+ 				priv->tx_buf[i] = NULL;
+@@ -318,17 +321,17 @@ static irqreturn_t p54p_interrupt(int ir
+ 			desc->flags = 0;
+ 
+ 			i++;
+-			i %= ARRAY_SIZE(priv->ring_control->tx_data);
++			i %= ARRAY_SIZE(ring_control->tx_data);
+ 		}
+ 
+ 		i = priv->rx_idx;
+-		i %= ARRAY_SIZE(priv->ring_control->rx_data);
+-		priv->rx_idx = idx = le32_to_cpu(priv->ring_control->device_idx[0]);
+-		idx %= ARRAY_SIZE(priv->ring_control->rx_data);
++		i %= ARRAY_SIZE(ring_control->rx_data);
++		priv->rx_idx = idx = le32_to_cpu(ring_control->device_idx[0]);
++		idx %= ARRAY_SIZE(ring_control->rx_data);
+ 		while (i != idx) {
+ 			u16 len;
+ 			struct sk_buff *skb;
+-			desc = &priv->ring_control->rx_data[i];
++			desc = &ring_control->rx_data[i];
+ 			len = le16_to_cpu(desc->len);
+ 			skb = priv->rx_buf[i];
+ 
+@@ -347,7 +350,7 @@ static irqreturn_t p54p_interrupt(int ir
+ 			}
+ 
+ 			i++;
+-			i %= ARRAY_SIZE(priv->ring_control->rx_data);
++			i %= ARRAY_SIZE(ring_control->rx_data);
+ 		}
+ 
+ 		p54p_refill_rx_ring(dev);
+@@ -366,6 +369,7 @@ static void p54p_tx(struct ieee80211_hw 
+ 		    size_t len, int free_on_tx)
+ {
+ 	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	unsigned long flags;
+ 	struct p54p_desc *desc;
+ 	dma_addr_t mapping;
+@@ -373,19 +377,19 @@ static void p54p_tx(struct ieee80211_hw 
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+-	device_idx = le32_to_cpu(priv->ring_control->device_idx[1]);
+-	idx = le32_to_cpu(priv->ring_control->host_idx[1]);
+-	i = idx % ARRAY_SIZE(priv->ring_control->tx_data);
++	device_idx = le32_to_cpu(ring_control->device_idx[1]);
++	idx = le32_to_cpu(ring_control->host_idx[1]);
++	i = idx % ARRAY_SIZE(ring_control->tx_data);
+ 
+ 	mapping = pci_map_single(priv->pdev, data, len, PCI_DMA_TODEVICE);
+-	desc = &priv->ring_control->tx_data[i];
++	desc = &ring_control->tx_data[i];
+ 	desc->host_addr = cpu_to_le32(mapping);
+ 	desc->device_addr = data->req_id;
+ 	desc->len = cpu_to_le16(len);
+ 	desc->flags = 0;
+ 
+ 	wmb();
+-	priv->ring_control->host_idx[1] = cpu_to_le32(idx + 1);
++	ring_control->host_idx[1] = cpu_to_le32(idx + 1);
+ 
+ 	if (free_on_tx)
+ 		priv->tx_buf[i] = data;
+@@ -397,7 +401,7 @@ static void p54p_tx(struct ieee80211_hw 
+ 
+ 	/* FIXME: unlikely to happen because the device usually runs out of
+ 	   memory before we fill the ring up, but we can make it impossible */
+-	if (idx - device_idx > ARRAY_SIZE(priv->ring_control->tx_data) - 2)
++	if (idx - device_idx > ARRAY_SIZE(ring_control->tx_data) - 2)
+ 		printk(KERN_INFO "%s: tx overflow.\n", wiphy_name(dev->wiphy));
+ }
+ 
+@@ -457,6 +461,7 @@ static int p54p_open(struct ieee80211_hw
+ static void p54p_stop(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	unsigned int i;
+ 	struct p54p_desc *desc;
+ 
+@@ -469,7 +474,7 @@ static void p54p_stop(struct ieee80211_h
+ 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+ 
+ 	for (i = 0; i < ARRAY_SIZE(priv->rx_buf); i++) {
+-		desc = &priv->ring_control->rx_data[i];
++		desc = &ring_control->rx_data[i];
+ 		if (desc->host_addr)
+ 			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+ 					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
+@@ -478,7 +483,7 @@ static void p54p_stop(struct ieee80211_h
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(priv->tx_buf); i++) {
+-		desc = &priv->ring_control->tx_data[i];
++		desc = &ring_control->tx_data[i];
+ 		if (desc->host_addr)
+ 			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+ 					 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
+@@ -487,7 +492,7 @@ static void p54p_stop(struct ieee80211_h
+ 		priv->tx_buf[i] = NULL;
+ 	}
+ 
+-	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
++	memset(ring_control, 0, sizeof(ring_control));
+ }
+ 
+ static int __devinit p54p_probe(struct pci_dev *pdev,
