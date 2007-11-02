@@ -1,102 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:36530 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755901AbXK0XeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 18:34:09 -0500
-Date: Wed, 28 Nov 2007 00:29:02 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [RFC/T][PATCH][V3] mac80211: Exponential moving average
- estimate for rc80211_simple
-Message-ID: <20071128002902.5dad5804@morte> (sfid-20071127_233413_131457_C2C39227)
-In-Reply-To: <1196199484.8298.23.camel@localhost>
-References: <1196112605.8318.6.camel@localhost>
-	<20071127163520.028f91fb@morte>
-	<1196199484.8298.23.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wx-out-0506.google.com ([66.249.82.233]:44503 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbXKBDLk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2007 23:11:40 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so733111wxd
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 20:11:39 -0700 (PDT)
+Date: Thu, 1 Nov 2007 23:11:31 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH 7/7] ath5k: Add documentation for struct ath5k_rate
+Message-ID: <20071102031131.GA4070@pogo> (sfid-20071102_031151_816812_48921F74)
+References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo> <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo> <20071101043933.GG21987@pogo> <20071101044059.GH21987@pogo> <20071101215640.GE4182@pogo> <20071101150651.a61a6f0f.rdunlap@xenotime.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071101150651.a61a6f0f.rdunlap@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Nov 2007 22:38:04 +0100
-Mattias Nissler <mattias.nissler@gmx.de> wrote:
+On Thu, Nov 01, 2007 at 03:06:51PM -0700, Randy Dunlap wrote:
+> On Thu, 1 Nov 2007 17:56:40 -0400 Luis R. Rodriguez wrote:
+> 
+> > ** Resending after checkpatch.pl
+> > 
+> > This adds documentation for struct ath5k_rate. This also removes
+> > some unused variables, lp_ack_duration and sp_ack_duration which
+> > are simply unnecessary. We obviously have information about the rest
+> > of the rate values, we can add more as we go, this just starts this up.
+> > I'll next target cleaning up the RATE macros, think that may be there
+> > the other G mode issues are in.
+> 
+> Thanks for doing this... but one more change, please:
+> (just move lines around, see below)
+> 
+> > Changes to ath5k.h
+> > Changes-licensed-under: ISC
+> > 
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> > ---
+> >  drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
+> >  1 files changed, 51 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> > index c8ab09a..7147fb4 100644
+> > --- a/drivers/net/wireless/ath5k/ath5k.h
+> > +++ b/drivers/net/wireless/ath5k/ath5k.h
+> > @@ -549,17 +549,61 @@ struct ath5k_athchan_2ghz {
+> >   * 	 used by the rate control algorytm on MadWiFi.
+> >   */
+> >  
+> > -#define AR5K_MAX_RATES	32 /*max number of rates on the rate table*/
+> > +/* Max number of rates on the rate table and what it seems
+> > + * Atheros hardware supports */
+> > +#define AR5K_MAX_RATES 32
+> 
+> As described in Documentation/kernel-doc-nano-HOWTO.txt, the
+> structure fields/members should immediately follow the first line.
+> After all of the fields/members, you can add general info, like
+> the first paragraph that is here.
+> 
+> Example from that doc file:
+> 
+> 
+> /**
+>  * struct my_struct - short description
+>  * @a: first member
+>  * @b: second member
+>  *
+>  * Longer description
+>  */
 
+New patch, completes the docs and addresses Randy's points.
 
-> Is it sensible to preprocess (i.e. calculate a smoothed average) the
-> input data for a PID controller? If so, should we compute a time average
-> or just average over the last N frames?
+This adds documentation for struct ath5k_rate. This also removes
+some unused variables, lp_ack_duration and sp_ack_duration which
+are simply unnecessary.
 
-By computing an average, you won't be able to implement differentiation,
-even if you could implement integration.
+We're now just missing information about rate hw values:
 
-In fact, the integration here means considering error values occurred over
-some time (and I'd think of some 'windowing' approach, as explained below),
-and so if we make an average, that doesn't really matter because all the
-input numbers would weigh the same in the term to be integrated, as in an
-average.
+3-5
+16
+17-23
+28-32
 
-But in order to differentiate, you need to have some array of values for
-the slope calculation (if you get a value only, you can't find the slope of
-the line which is passing by - or near to, if we consider more than two
-values - two points). 
+If anyone knows what those are, please let us know.
 
-Maybe it doesn't even make sense to have more than two values, and it would
-be better to just compute a regular slope between two points, so that we
-would just need to keep an average value and two values. Plus, the
-differentiation here would just mean to make a difference between the
-latest two values and divide it by the time difference between the two
-frames, so we would get just two input values.
+Changes to ath5k.h
+Changes-licensed-under: ISC
 
-I would take this approach for computing the ID terms:
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
+ 1 files changed, 51 insertions(+), 7 deletions(-)
 
-[number of bad frames]
-[2][3][5][6][9][7]
-|      |        |
-0      S <-n->  E  <-- S is where the sliding window starts, E where it
-ends, n is the length of the window (here it's 4 as an example, that'll be
-subject to tuning).
-
-- in order to integrate, we make the average of the bad frame values
-ranging from S to E; if that average is going to be over a reasonable
-threshold for bad frame values we preset, the I factor will be negative,
-positive otherwise;
-- in order to differentiate, we'll just subtract the preset threshold
-from the values stored in E, E-1 from the preset threshold, then subtract
-the resulting E value from the resulting E-1 value and divide by the time
-which passed between the two bad frames computation; if this value is
-positive, the D factor will be negative, positive otherwise;
-- after we did these computation, we wait for some time and make the
-sliding window shift right, and then repeat.
-
-What we would avoid here - by properly tuning the n value - is the
-so-called integral wind-up [1], which could be really bad if the quality of
-the link varies rapidly, because we would take too much into account the
-past events, which could be meaningless to some degree if considering a not
-recent past.
-
-> Note that the rates (or actually modulations) are not a continuous
-> entity, but we only have a limited set of choices. Normally, the PID
-> would output a value from some continuous range. What are good ways to
-> map the PID controller output to a rate?
-
-The quick approach would be to round it to the nearest rate. A better one
-could be to keep a map of (1):[rate] <-> (2):[k1*rate + k2*recent errors at
-this rate], so that if we do have to decide whether to switch between two
-rates, we could actually evaluate the device performance - mainly
-sensitivity - at different rates(1), and accordingly think of the real
-difference between two rates(2). Then we round the output to the nearest
-rate(2) and choose the corresponding rate(1).
-
-I understand this could look a bit obscure, if you are still interested
-however feel free to ask questions. :)
-
-
-[1] http://en.wikipedia.org/wiki/Integral_windup
-
--- 
-Ciao
-Stefano
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index c8ab09a..72c24bc 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -549,17 +549,60 @@ struct ath5k_athchan_2ghz {
+  * 	 used by the rate control algorytm on MadWiFi.
+  */
+ 
+-#define AR5K_MAX_RATES	32 /*max number of rates on the rate table*/
++/* Max number of rates on the rate table and what it seems
++ * Atheros hardware supports */
++#define AR5K_MAX_RATES 32
+ 
++/**
++ * struct ath5k_rate - rate structure
++ * @valid: is this a valid rate for the current mode
++ * @modulation: respective mac80211 modulation
++ * @rate_kbps: rate in kbit/s
++ * @rate_code: hardware rate value, used in &struct ath5k_desc, on RX on
++ *     &struct ath5k_rx_status.rs_rate and on TX on
++ *     &struct ath5k_tx_status.ts_rate. Seems the ar5xxx harware supports
++ *     up to 32 rates, indexed by 1-32. This means we really only need
++ *     6 bits for the rate_code.
++ * @dot11_rate: respective IEEE-802.11 rate value
++ * @control_rate: index of rate assumed to be used to send control frames.
++ *     This can be used to set override the value on the rate duration
++ *     registers. This is only useful if we can override in the harware at
++ *     what rate we want to send control frames at. Note that IEEE-802.11
++ *     Ch. 9.6 (after IEEE 802.11g changes) defines the rate at which we
++ *     should send ACK/CTS, if we change this value we can be breaking
++ *     the spec.
++ *
++ * This structure is used to get the RX rate or set the TX rate on the
++ * hardware descriptors. It is also used for internal modulation control
++ * and settings.
++ *
++ * On RX after the &struct ath5k_desc is parsed by the appropriate
++ * ah_proc_rx_desc() the respective hardware rate value is set in
++ * &struct ath5k_rx_status.rs_rate. On TX the desired rate is set in
++ * &struct ath5k_tx_status.ts_rate which is later used to setup the
++ * &struct ath5k_desc correctly. This is the hardware rate map we are
++ * aware of:
++ *
++ * rate_code   1       2       3       4       5       6       7       8
++ * rate_kbps   3000    1000    ?       ?       ?       2000    500     48000
++ *
++ * rate_code   9       10      11      12      13      14      15      16
++ * rate_kbps   24000   12000   6000    54000   36000   18000   9000    ?
++ *
++ * rate_code   17      18      19      20      21      22      23      24
++ * rate_kbps   ?       ?       ?       ?       ?       ?       ?       11000
++ *
++ * rate_code   25      26      27      28      29      30      31      32
++ * rate_kbps   5500    2000    1000    ?       ?       ?       ?       ?
++ *
++ */
+ struct ath5k_rate {
+-	u8	valid;		/* Valid for rate control */
++	u8	valid;
+ 	u32	modulation;
+-	u16	rate_kbps;	/* Rate in kbps used in computetxtime */
+-	u8	rate_code;	/* Rate mapping for h/w descriptors */
++	u16	rate_kbps;
++	u8	rate_code;
+ 	u8	dot11_rate;
+-	u8	control_rate;	/* Rate for management frames -not used */
+-	u16	lp_ack_duration;/* long preamble ACK duration -not used */
+-	u16	sp_ack_duration;/* short preamble ACK duration -not used */
++	u8	control_rate;
+ };
+ 
+ /* XXX: GRR all this stuff to get leds blinking ??? (check out setcurmode) */
