@@ -1,128 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:23631 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbXK0Tjl (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56254
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756AbXKCNhj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:39:41 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1321058ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:40 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/11] rt2x00: Extend PLCP descriptor definition for rt2400pci
-Date: Tue, 27 Nov 2007 21:47:56 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711272146.53518.IvDoorn@gmail.com>
-In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+	Sat, 3 Nov 2007 09:37:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Rewrite and fix rfkill init
+Date: Sat, 3 Nov 2007 14:34:32 +0100
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272147.57024.IvDoorn@gmail.com> (sfid-20071127_194249_301923_3634E0DA)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200711031434.32541.mb@bu3sch.de> (sfid-20071103_133803_695526_26755617)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend word field definitions for the PLCP words
-in the TX descriptor to contain the BBP fields as well.
-This will remove rt2400pci_write_tx_desc() from the
-checkstack script.
+The rfkill subsystem doesn't like code like that
+rfkill_allocate();
+rfkill_register();
+rfkill_unregister();
+rfkill_register(); /* <- This will crash */
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+This sequence happens with
+modprobe b43
+ifconfig wlanX up
+ifconfig wlanX down
+ifconfig wlanX up
+
+Fix this by always re-allocating the rfkill stuff before register.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c |   40 +++++++++---------------------
- drivers/net/wireless/rt2x00/rt2400pci.h |   20 +++++++++++----
- 2 files changed, 27 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 6d3cdaf..c9a234f 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1019,30 +1019,6 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct ieee80211_tx_control *control)
+Note that this has to be ported to b43legacy.
+Some volunteers? :)
+
+
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-11-03 14:19:21.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-11-03 14:26:39.000000000 +0100
+@@ -3686,7 +3686,6 @@ static int b43_setup_modes(struct b43_wl
+ 
+ static void b43_wireless_core_detach(struct b43_wldev *dev)
  {
- 	u32 word;
--	u32 signal = 0;
--	u32 service = 0;
--	u32 length_high = 0;
--	u32 length_low = 0;
--
--	/*
--	 * The PLCP values should be treated as if they
--	 * were BBP values.
--	 */
--	rt2x00_set_field32(&signal, BBPCSR_VALUE, desc->signal);
--	rt2x00_set_field32(&signal, BBPCSR_REGNUM, 5);
--	rt2x00_set_field32(&signal, BBPCSR_BUSY, 1);
--
--	rt2x00_set_field32(&service, BBPCSR_VALUE, desc->service);
--	rt2x00_set_field32(&service, BBPCSR_REGNUM, 6);
--	rt2x00_set_field32(&service, BBPCSR_BUSY, 1);
--
--	rt2x00_set_field32(&length_high, BBPCSR_VALUE, desc->length_high);
--	rt2x00_set_field32(&length_high, BBPCSR_REGNUM, 7);
--	rt2x00_set_field32(&length_high, BBPCSR_BUSY, 1);
--
--	rt2x00_set_field32(&length_low, BBPCSR_VALUE, desc->length_low);
--	rt2x00_set_field32(&length_low, BBPCSR_REGNUM, 8);
--	rt2x00_set_field32(&length_low, BBPCSR_BUSY, 1);
+-	b43_rfkill_free(dev);
+ 	/* We release firmware that late to not be required to re-request
+ 	 * is all the time when we reinit the core. */
+ 	b43_release_firmware(dev);
+@@ -3772,7 +3771,6 @@ static int b43_wireless_core_attach(stru
+ 	if (!wl->current_dev)
+ 		wl->current_dev = dev;
+ 	INIT_WORK(&dev->restart_work, b43_chip_reset);
+-	b43_rfkill_alloc(dev);
  
- 	/*
- 	 * Start writing the descriptor words.
-@@ -1052,13 +1028,21 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_desc_write(txd, 2, word);
+ 	b43_radio_turn_off(dev, 1);
+ 	b43_switch_analog(dev, 0);
+Index: wireless-2.6/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/rfkill.c	2007-11-02 20:16:14.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/rfkill.c	2007-11-03 14:19:38.000000000 +0100
+@@ -47,18 +47,21 @@ static void b43_rfkill_poll(struct input
+ 	struct b43_wldev *dev = poll_dev->private;
+ 	struct b43_wl *wl = dev->wl;
+ 	bool enabled;
++	bool report_change = 0;
  
- 	rt2x00_desc_read(txd, 3, &word);
--	rt2x00_set_field32(&word, TXD_W3_PLCP_SIGNAL, signal);
--	rt2x00_set_field32(&word, TXD_W3_PLCP_SERVICE, service);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SIGNAL, desc->signal);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SIGNAL_REGNUM, 5);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SIGNAL_BUSY, 1);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SERVICE, desc->service);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SERVICE_REGNUM, 6);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_SERVICE_BUSY, 1);
- 	rt2x00_desc_write(txd, 3, word);
- 
- 	rt2x00_desc_read(txd, 4, &word);
--	rt2x00_set_field32(&word, TXD_W4_PLCP_LENGTH_LOW, length_low);
--	rt2x00_set_field32(&word, TXD_W4_PLCP_LENGTH_HIGH, length_high);
-+	rt2x00_set_field32(&word, TXD_W4_PLCP_LENGTH_LOW, desc->length_low);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_LENGTH_LOW_REGNUM, 8);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_LENGTH_LOW_BUSY, 1);
-+	rt2x00_set_field32(&word, TXD_W4_PLCP_LENGTH_HIGH, desc->length_high);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_LENGTH_HIGH_REGNUM, 7);
-+	rt2x00_set_field32(&word, TXD_W3_PLCP_LENGTH_HIGH_BUSY, 1);
- 	rt2x00_desc_write(txd, 4, word);
- 
- 	rt2x00_desc_read(txd, 0, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
-index f5dbde7..369aac6 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.h
-@@ -839,11 +839,21 @@
- 
- /*
-  * Word3 & 4: PLCP information
-- */
--#define TXD_W3_PLCP_SIGNAL		FIELD32(0x0000ffff)
--#define TXD_W3_PLCP_SERVICE		FIELD32(0xffff0000)
--#define TXD_W4_PLCP_LENGTH_LOW		FIELD32(0x0000ffff)
--#define TXD_W4_PLCP_LENGTH_HIGH		FIELD32(0xffff0000)
-+ * The PLCP values should be treated as if they were BBP values.
-+ */
-+#define TXD_W3_PLCP_SIGNAL		FIELD32(0x000000ff)
-+#define TXD_W3_PLCP_SIGNAL_REGNUM	FIELD32(0x00007f00)
-+#define TXD_W3_PLCP_SIGNAL_BUSY		FIELD32(0x00008000)
-+#define TXD_W3_PLCP_SERVICE		FIELD32(0x00ff0000)
-+#define TXD_W3_PLCP_SERVICE_REGNUM	FIELD32(0x7f000000)
-+#define TXD_W3_PLCP_SERVICE_BUSY	FIELD32(0x80000000)
+ 	mutex_lock(&wl->mutex);
+ 	B43_WARN_ON(b43_status(dev) < B43_STAT_INITIALIZED);
+ 	enabled = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
++		report_change = 1;
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+-		mutex_unlock(&wl->mutex);
++	}
++	mutex_unlock(&wl->mutex);
 +
-+#define TXD_W4_PLCP_LENGTH_LOW		FIELD32(0x000000ff)
-+#define TXD_W3_PLCP_LENGTH_LOW_REGNUM	FIELD32(0x00007f00)
-+#define TXD_W3_PLCP_LENGTH_LOW_BUSY	FIELD32(0x00008000)
-+#define TXD_W4_PLCP_LENGTH_HIGH		FIELD32(0x00ff0000)
-+#define TXD_W3_PLCP_LENGTH_HIGH_REGNUM	FIELD32(0x7f000000)
-+#define TXD_W3_PLCP_LENGTH_HIGH_BUSY	FIELD32(0x80000000)
++	if (unlikely(report_change))
+ 		input_report_key(poll_dev->input, KEY_WLAN, enabled);
+-	} else
+-		mutex_unlock(&wl->mutex);
+ }
  
- /*
-  * Word5
--- 
-1.5.3.6
-
+ /* Called when the RFKILL toggled in software. */
+@@ -68,18 +71,11 @@ static int b43_rfkill_soft_toggle(void *
+ 	struct b43_wl *wl = dev->wl;
+ 	int err = 0;
+ 
+-	/* When RFKILL is registered, it will call back into this callback.
+-	 * wl->mutex will already be locked when this happens.
+-	 * So first trylock. On contention check if we are in initialization.
+-	 * Silently return if that happens to avoid a deadlock. */
+-	if (mutex_trylock(&wl->mutex) == 0) {
+-		if (b43_status(dev) < B43_STAT_INITIALIZED)
+-			return 0;
+-		mutex_lock(&wl->mutex);
+-	}
+-	if (b43_status(dev) < B43_STAT_INITIALIZED)
+-		goto out_unlock;
++	if (!wl->rfkill.registered)
++		return 0;
+ 
++	mutex_lock(&wl->mutex);
++	B43_WARN_ON(b43_status(dev) < B43_STAT_INITIALIZED);
+ 	switch (state) {
+ 	case RFKILL_STATE_ON:
+ 		if (!dev->radio_hw_enable) {
+@@ -104,11 +100,11 @@ out_unlock:
+ 
+ char * b43_rfkill_led_name(struct b43_wldev *dev)
+ {
+-	struct b43_wl *wl = dev->wl;
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
+-	if (!wl->rfkill.rfkill)
++	if (!rfk->registered)
+ 		return NULL;
+-	return rfkill_get_led_name(wl->rfkill.rfkill);
++	return rfkill_get_led_name(rfk->rfkill);
+ }
+ 
+ void b43_rfkill_init(struct b43_wldev *dev)
+@@ -117,53 +113,13 @@ void b43_rfkill_init(struct b43_wldev *d
+ 	struct b43_rfkill *rfk = &(wl->rfkill);
+ 	int err;
+ 
+-	if (rfk->rfkill) {
+-		err = rfkill_register(rfk->rfkill);
+-		if (err) {
+-			b43warn(wl, "Failed to register RF-kill button\n");
+-			goto err_free_rfk;
+-		}
+-	}
+-	if (rfk->poll_dev) {
+-		err = input_register_polled_device(rfk->poll_dev);
+-		if (err) {
+-			b43warn(wl, "Failed to register RF-kill polldev\n");
+-			goto err_free_polldev;
+-		}
+-	}
+-
+-	return;
+-err_free_rfk:
+-	rfkill_free(rfk->rfkill);
+-	rfk->rfkill = NULL;
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+-}
+-
+-void b43_rfkill_exit(struct b43_wldev *dev)
+-{
+-	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+-
+-	if (rfk->poll_dev)
+-		input_unregister_polled_device(rfk->poll_dev);
+-	if (rfk->rfkill)
+-		rfkill_unregister(rfk->rfkill);
+-}
+-
+-void b43_rfkill_alloc(struct b43_wldev *dev)
+-{
+-	struct b43_wl *wl = dev->wl;
+-	struct b43_rfkill *rfk = &(wl->rfkill);
++	rfk->registered = 0;
+ 
++	rfk->rfkill = rfkill_allocate(dev->dev->dev, RFKILL_TYPE_WLAN);
++	if (!rfk->rfkill)
++		goto out_error;
+ 	snprintf(rfk->name, sizeof(rfk->name),
+ 		 "b43-%s", wiphy_name(wl->hw->wiphy));
+-
+-	rfk->rfkill = rfkill_allocate(dev->dev->dev, RFKILL_TYPE_WLAN);
+-	if (!rfk->rfkill) {
+-		b43warn(wl, "Failed to allocate RF-kill button\n");
+-		return;
+-	}
+ 	rfk->rfkill->name = rfk->name;
+ 	rfk->rfkill->state = RFKILL_STATE_ON;
+ 	rfk->rfkill->data = dev;
+@@ -171,18 +127,45 @@ void b43_rfkill_alloc(struct b43_wldev *
+ 	rfk->rfkill->user_claim_unsupported = 1;
+ 
+ 	rfk->poll_dev = input_allocate_polled_device();
+-	if (rfk->poll_dev) {
+-		rfk->poll_dev->private = dev;
+-		rfk->poll_dev->poll = b43_rfkill_poll;
+-		rfk->poll_dev->poll_interval = 1000; /* msecs */
+-	} else
+-		b43warn(wl, "Failed to allocate RF-kill polldev\n");
++	if (!rfk->poll_dev)
++		goto err_free_rfk;
++	rfk->poll_dev->private = dev;
++	rfk->poll_dev->poll = b43_rfkill_poll;
++	rfk->poll_dev->poll_interval = 1000; /* msecs */
++
++	err = rfkill_register(rfk->rfkill);
++	if (err)
++		goto err_free_polldev;
++	err = input_register_polled_device(rfk->poll_dev);
++	if (err)
++		goto err_unreg_rfk;
++
++	rfk->registered = 1;
++
++	return;
++err_unreg_rfk:
++	rfkill_unregister(rfk->rfkill);
++err_free_polldev:
++	input_free_polled_device(rfk->poll_dev);
++	rfk->poll_dev = NULL;
++err_free_rfk:
++	rfkill_free(rfk->rfkill);
++	rfk->rfkill = NULL;
++out_error:
++	rfk->registered = 0;
++	b43warn(wl, "RF-kill button init failed\n");
+ }
+ 
+-void b43_rfkill_free(struct b43_wldev *dev)
++void b43_rfkill_exit(struct b43_wldev *dev)
+ {
+ 	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
++	if (!rfk->registered)
++		return;
++	rfk->registered = 0;
++
++	input_unregister_polled_device(rfk->poll_dev);
++	rfkill_unregister(rfk->rfkill);
+ 	input_free_polled_device(rfk->poll_dev);
+ 	rfk->poll_dev = NULL;
+ 	rfkill_free(rfk->rfkill);
+Index: wireless-2.6/drivers/net/wireless/b43/rfkill.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/rfkill.h	2007-10-27 13:28:16.000000000 +0200
++++ wireless-2.6/drivers/net/wireless/b43/rfkill.h	2007-11-03 14:19:38.000000000 +0100
+@@ -15,14 +15,14 @@ struct b43_rfkill {
+ 	struct rfkill *rfkill;
+ 	/* The poll device for the RFKILL input button */
+ 	struct input_polled_dev *poll_dev;
++	/* Did initialization succeed? Used for freeing. */
++	bool registered;
+ 	/* The unique name of this rfkill switch */
+-	char name[32];
++	char name[sizeof("b43-phy4294967295")];
+ };
+ 
+-/* All the init functions return void, because we are not interested
++/* The init function returns void, because we are not interested
+  * in failing the b43 init process when rfkill init failed. */
+-void b43_rfkill_alloc(struct b43_wldev *dev);
+-void b43_rfkill_free(struct b43_wldev *dev);
+ void b43_rfkill_init(struct b43_wldev *dev);
+ void b43_rfkill_exit(struct b43_wldev *dev);
+ 
+@@ -36,12 +36,6 @@ struct b43_rfkill {
+ 	/* empty */
+ };
+ 
+-static inline void b43_rfkill_alloc(struct b43_wldev *dev)
+-{
+-}
+-static inline void b43_rfkill_free(struct b43_wldev *dev)
+-{
+-}
+ static inline void b43_rfkill_init(struct b43_wldev *dev)
+ {
+ }
