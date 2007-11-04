@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38318 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753389AbXKMSZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2007 13:25:19 -0500
-From: Oliver Neukum <oneukum@suse.de>
-To: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH]iwlwifi not correctly dealing with hotunplug
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34449
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbXKDXhF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Nov 2007 18:37:05 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: Re: [PATCH] Prism54: Convert mgmt_sem to the mutex API
+Date: Mon, 5 Nov 2007 00:36:13 +0100
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20071101071902.GH6092@traven>
+In-Reply-To: <20071101071902.GH6092@traven>
 MIME-Version: 1.0
-Date: Tue, 13 Nov 2007 19:26:53 +0100
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200711131926.53732.oneukum@suse.de> (sfid-20071113_182525_069813_860862FB)
+Message-Id: <200711050036.13654.mb@bu3sch.de> (sfid-20071104_233711_717789_81E032FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It makes no sense to enable interrupts if a device has been unplugged.
-In addition if in doubt IRQ_HANDLED should be returned.
+On Thursday 01 November 2007 08:19:02 Matthias Kaehlcke wrote:
+> Prism54: Convert mgmt_sem to the mutex API
+> 
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> 
+> --
+> 
+> diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+> index 219dd65..dbb538c 100644
+> --- a/drivers/net/wireless/prism54/islpci_dev.c
+> +++ b/drivers/net/wireless/prism54/islpci_dev.c
+> @@ -861,7 +861,7 @@ islpci_setup(struct pci_dev *pdev)
+>  	init_waitqueue_head(&priv->reset_done);
+>  
+>  	/* init the queue read locks, process wait counter */
+> -	sema_init(&priv->mgmt_sem, 1);
+> +	mutex_init(&priv->mgmt_lock);
+>  	priv->mgmt_received = NULL;
+>  	init_waitqueue_head(&priv->mgmt_wqueue);
+>  	sema_init(&priv->stats_sem, 1);
+> diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/prism54/islpci_dev.h
+> index 736666d..4e0182c 100644
+> --- a/drivers/net/wireless/prism54/islpci_dev.h
+> +++ b/drivers/net/wireless/prism54/islpci_dev.h
+> @@ -26,6 +26,7 @@
+>  #include <linux/wireless.h>
+>  #include <net/iw_handler.h>
+>  #include <linux/list.h>
+> +#include <linux/mutex.h>
+>  
+>  #include "isl_38xx.h"
+>  #include "isl_oid.h"
+> @@ -164,7 +165,7 @@ typedef struct {
+>  	wait_queue_head_t reset_done;
+>  
+>  	/* used by islpci_mgt_transaction */
+> -	struct semaphore mgmt_sem; /* serialize access to mailbox and wqueue */
+> +	struct mutex mgmt_lock; /* serialize access to mailbox and wqueue */
+>  	struct islpci_mgmtframe *mgmt_received;	  /* mbox for incoming frame */
+>  	wait_queue_head_t mgmt_wqueue;            /* waitqueue for mbox */
+>  
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
+Uhm, so this mutex is not used? Why not remove it then?
 
-	Regards
-		Oliver
-
-----
-
---- linux-2.6.24-rc1/drivers/net/wireless/iwlwifi/iwl3945-base.c.alt	2007-11-13 12:23:07.000000000 +0100
-+++ linux-2.6.24-rc1/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-11-13 12:26:00.000000000 +0100
-@@ -4850,7 +4850,7 @@ static irqreturn_t iwl_isr(int irq, void
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared */
- 		IWL_WARNING("HARDWARE GONE?? INTA == 0x%080x\n", inta);
--		goto none;
-+		goto unplugged;
- 	}
- 
- 	IWL_DEBUG_ISR("ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
-@@ -4858,6 +4858,7 @@ static irqreturn_t iwl_isr(int irq, void
- 
- 	/* iwl_irq_tasklet() will service interrupts and re-enable them */
- 	tasklet_schedule(&priv->irq_tasklet);
-+unplugged:
- 	spin_unlock(&priv->lock);
- 
- 	return IRQ_HANDLED;
+-- 
+Greetings Michael.
