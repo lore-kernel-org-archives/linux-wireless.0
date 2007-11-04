@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from there.is.no.cabal.ca ([134.117.69.58]:52774 "EHLO
-	fattire.cabal.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbXKTXqv (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:11330 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755028AbXKDK2j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 18:46:51 -0500
-Date: Tue, 20 Nov 2007 18:46:50 -0500
-From: Kyle McMartin <kyle@mcmartin.ca>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: avoid oops when ah_capabilities.cap_mode not set
-Message-ID: <20071120234650.GB8093@fattire.cabal.ca> (sfid-20071120_234656_079900_953EC1B8)
-References: <1192647780430-git-send-email-linville@tuxdriver.com> <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com>
+	Sun, 4 Nov 2007 05:28:39 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1279084fkz
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2007 02:28:37 -0800 (PST)
+Message-ID: <472D9ED3.6000202@gmail.com> (sfid-20071104_102844_783416_46C0247A)
+Date: Sun, 04 Nov 2007 11:28:35 +0100
+From: drago01 <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] iwl3945 in 2.6.24-rc1 dies under load
+References: <20071031005202.GA1534@elf.ucw.cz>	<1193792098.9704.16.camel@debian.sh.intel.com>	<20071101001221.GA1755@elf.ucw.cz>	<1193881026.31257.52.camel@debian.sh.intel.com> <20071103183446.GD13202@elf.ucw.cz>
+In-Reply-To: <20071103183446.GD13202@elf.ucw.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 17, 2007 at 05:36:33PM -0400, Luis R. Rodriguez wrote:
-> On 10/17/07, John W. Linville <linville@tuxdriver.com> wrote:
-> > ah_capabilities.cap_mode doesn't get set for some cards, causing the
-> > kernel to oops when these unknown/unsupported cards are inserted.
-> > Add some NULL checks to avoid this.
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> 
+Pavel Machek wrote:
+> BTW... the wireless light does not seem to work on x60. It used to
+> work with some -mm versions...
+>   
+iwl3945 and ilw4965 don't support the wireless leds. There is a patch on 
+this list that enables it but it is not merged yet.
 
-Actually, this hunk in ath5k_getchannels can't return -EINVAL
-immediately, since there are ath5k cards that do only MODE_IEEE80211A,
-which is searched last.
 
-comments?
-
-cheers,
-	Kyle
-
---- a/drivers/net/wireless/ath5k/base.c	2007-11-20 18:35:37.000000000 -0500
-+++ b/drivers/net/wireless/ath5k/base.c	2007-11-20 18:35:46.000000000 -0500
-@@ -1041,6 +1041,8 @@
- 		}
- 
- 		hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
-+		if (!hw_rates)
-+			continue;
- 		mode->num_rates    = ath5k_copy_rates(mode->rates, hw_rates,
- 			max_r);
- 		mode->num_channels = ath5k_copy_channels(ah, mode->channels,
---- a/drivers/net/wireless/ath5k/hw.c	2007-11-20 18:35:34.000000000 -0500
-+++ b/drivers/net/wireless/ath5k/hw.c	2007-11-20 18:36:08.000000000 -0500
-@@ -536,6 +536,8 @@
- 	/* Get rate table for the current operating mode */
- 	rt = ath5k_hw_get_rate_table(ah,
- 		driver_mode);
-+	if (!rt)
-+		return -EINVAL;
- 
- 	/* Write rate duration table */
- 	for (i = 0; i < rt->rate_count; i++) {
