@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:46896 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755354AbXK0Oyb (ORCPT
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:58961 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754518AbXKESrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 09:54:31 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so904822rvb
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 06:54:29 -0800 (PST)
-Message-ID: <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com> (sfid-20071127_145443_306024_DCD37EF0)
-Date: Tue, 27 Nov 2007 16:54:29 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Reinette Chatre" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20071126225416.467939000@sipsolutions.net>
+	Mon, 5 Nov 2007 13:47:33 -0500
+Date: Mon, 5 Nov 2007 10:47:31 -0800 (PST)
+From: Christoph Lameter <clameter@sgi.com>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Pekka Enberg <penberg@cs.helsinki.fi>,
+	Peter Zijlstra <peterz@infradead.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, Michael Chan <mchan@broadcom.com>,
+	netdev@vger.kernel.org
+Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
+In-Reply-To: <200711051526.41273.mb@bu3sch.de>
+Message-ID: <Pine.LNX.4.64.0711051046210.13139@schroedinger.engr.sgi.com> (sfid-20071105_184750_467513_8BD00020)
+References: <20071101191716.GA3201@pogo> <200711051403.39479.mb@bu3sch.de>
+ <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com>
+ <200711051526.41273.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071126225416.467939000@sipsolutions.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In general it is possible to change the mac address and there was a
-patch for it if I remember correctly. It had some issues so I nacked
-it, it slipped from my attention after that. I'll try to dig the
-history.
-Tomas
+On Mon, 5 Nov 2007, Michael Buesch wrote:
 
-On Nov 27, 2007 12:54 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> So I took another look at iwlwifi and identified a bunch of user-visible
-> problems with the drivers. Unfortunately, I was unable to fix one of them
-> (MAC address setting ignored) so I added a workaround. I've repeatedly
-> pointed out that iwlwifi needs fixing here but I guess for .24 we'll just
-> have to live with not being able to change the MAC address.
->
-> johannes
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Hm, I don't really remember. Though, I usually have all almost kernel-hacking
+> options enabled.
+> I'll check and enable some more.
+
+slub_debug must be specified on the command line. Alternately switch on
+CONFIG_SLUB_DEBUG_ON in the .config to force it to be always on.
