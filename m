@@ -1,73 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c-71-202-97-155.hsd1.ca.comcast.net ([71.202.97.155]:54964 "EHLO
-	mail.compnerd.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751846AbXKSIGm (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:43420 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbXKECIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 03:06:42 -0500
-Date: Sun, 18 Nov 2007 23:59:08 -0800
-From: Saleem Abdulrasool <compnerd@compnerd.org>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org, greg@kroah.com,
-	chrisw@sous-sol.org, stable@kernel.org
-Subject: [PATCH] iwlwifi: fix possible NULL dereference in iwl_set_rate()
-Message-ID: <20071119075908.GA958@compnerd.org> (sfid-20071119_080656_531198_31462892)
+	Sun, 4 Nov 2007 21:08:14 -0500
+Date: Sun, 4 Nov 2007 21:07:31 -0500
+From: Forest Bond <forest@alittletooquiet.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: VT6656 driver source available from VIA
+Message-ID: <20071105020730.GA4414@storm.local.network> (sfid-20071105_020819_130277_93164FBC)
+References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com> <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="FCuugMFkClbJLl1L"
+In-Reply-To: <20071101191250.GE14943@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As per Zhu Yi's request, Im forwarding along a patch for CVE-2007-5938, a NULL
-dereference vulnerability in the iwlwifi driver.  All current versions are
-effected by this.
 
-Thanks.
+--FCuugMFkClbJLl1L
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Saleem Abdulrasool
-compnerd (at) compnerd (dot) org
+On Thu, Nov 01, 2007 at 03:12:50PM -0400, John W. Linville wrote:
+> On Thu, Nov 01, 2007 at 03:07:11PM -0400, Forest Bond wrote:
+> > On Thu, Nov 01, 2007 at 02:59:00PM -0400, John W. Linville wrote:
+> > > On Wed, Sep 19, 2007 at 03:37:43PM -0400, Forest Bond wrote:
+>=20
+> > > > A few months ago, VIA quietly released the source for their VT6656 =
+USB WiFi
+> > > > chip.  The original VIA archive can be downloaded here:
+>=20
+> > > Any luck getting license clarification from VIA?
+>=20
+> > I did send a few e-mails (one to the driver developer, and one to a per=
+sonal
+> > contact at VIA), but neither has yielded anything useful.  I think the =
+only
+> > remaining effective option is to bring it up on viaarena.com.  Consumer=
+ angst
+> > runs thick in those parts, and VIA has occasionally been known to respo=
+nd
+> > semi-positively.  In this case, that just might be enough, since their
+> > intentions were clearly to open-source the driver, despite their appare=
+nt
+> > inability to document this properly.
+> >=20
+> > Does that seem like a good path to you?
+>=20
+> Thas sounds great to me.  I look forward to hearing the results!
 
->From 25db44d4cdfe31d59223d74cb577f4a71aff1a40 Mon Sep 17 00:00:00 2001
-From: Saleem Abdulrasool <compnerd@compnerd.org>
-Date: Mon, 19 Nov 2007 15:28:58 +0800
-Subject: [PATCH] iwlwifi: fix possible NULL dereference in iwl_set_rate()
+The post is here:
 
-Signed-off-by: Saleem Abdulrasool <compnerd@compnerd.org>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- origin/iwl3945-base.c |    4 ++++
- origin/iwl4965-base.c |    4 ++++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+http://forums.viaarena.com/messageview.aspx?catid=3D28&threadid=3D78745
 
-diff --git a/origin/iwl3945-base.c b/origin/iwl3945-base.c
-index 5d3e5fe..0885b56 100644
---- a/origin/iwl3945-base.c
-+++ b/origin/iwl3945-base.c
-@@ -2984,6 +2984,10 @@ static void iwl3945_set_rate(struct iwl3945_priv *priv)
- 	int i;
- 
- 	hw = iwl3945_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
- 
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
-diff --git a/origin/iwl4965-base.c b/origin/iwl4965-base.c
-index abb8016..c57ec27 100644
---- a/origin/iwl4965-base.c
-+++ b/origin/iwl4965-base.c
-@@ -3093,6 +3093,10 @@ static void iwl4965_set_rate(struct iwl4965_priv *priv)
- 	int i;
- 
- 	hw = iwl4965_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
- 
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
--- 
-1.5.3.5
+Any noise that can be contributed is welcome and appreciated.  You'll need =
+to
+create an account to post, though.
 
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+
+--FCuugMFkClbJLl1L
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHLnriRO4fQQdv5AwRAlghAKCbCujov2HFa7Shy+akc30W+QFaIwCg2r7b
+VF9DD1vVZpzfx+TTjldpnuk=
+=Z2G2
+-----END PGP SIGNATURE-----
+
+--FCuugMFkClbJLl1L--
