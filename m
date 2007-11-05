@@ -1,109 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flatline.sindominio.net ([82.144.4.26]:45314 "EHLO
-	flatline.sindominio.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752393AbXKEIlH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2007 03:41:07 -0500
-Date: Mon, 5 Nov 2007 09:41:01 +0100
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] Prism54: Convert mgmt_sem to the mutex API
-Message-ID: <20071105084101.GB18236@traven> (sfid-20071105_084112_390113_EBEB89E2)
-References: <20071101071902.GH6092@traven> <200711050036.13654.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200711050036.13654.mb@bu3sch.de>
+Received: from mx1.redhat.com ([66.187.233.31]:59987 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882AbXKEPWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2007 10:22:54 -0500
+Subject: Re: [PATCH] libertas: Retry frame transmission when driver is busy.
+From: Dan Williams <dcbw@redhat.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <472d2e3e.18b38c0a.2c31.1a76@mx.google.com>
+References: <472d2e3e.18b38c0a.2c31.1a76@mx.google.com>
+Content-Type: text/plain
+Date: Mon, 05 Nov 2007 10:20:41 -0500
+Message-Id: <1194276041.18807.28.camel@localhost.localdomain> (sfid-20071105_152258_823599_9056EC0A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Mon, Nov 05, 2007 at 12:36:13AM +0100 Michael Buesch ha dit:
-
-> On Thursday 01 November 2007 08:19:02 Matthias Kaehlcke wrote:
-> > Prism54: Convert mgmt_sem to the mutex API
-> > 
-> > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> > 
+On Sat, 2007-11-03 at 19:28 -0700, Ashish Shukla wrote:
+> The driver silently discards frames when some command is pending -- returns
+> NETDEV_TX_OK to kernel. The following patch fixes this problem.  This
+> significantly improves file transfers while scanning (ticket #3341).
 > 
-> Uhm, so this mutex is not used? Why not remove it then?
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> 
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 83d534b..f72ebe2 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -509,22 +509,25 @@ static int libertas_close(struct net_device *dev)
+>  
+>  static int libertas_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  {
+> -	int ret = 0;
+> +	int ret = NETDEV_TX_OK;
+>  	wlan_private *priv = dev->priv;
+>  
+>  	lbs_deb_enter(LBS_DEB_NET);
+>  
+> -	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
+> -		priv->stats.tx_dropped++;
+> -		goto done;
+> -	}
+> -
+>  	netif_stop_queue(priv->dev);
+>  	if (priv->mesh_dev)
+>  		netif_stop_queue(priv->mesh_dev);
+>  
+> -	if (libertas_process_tx(priv, skb) == 0)
+> +	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
+> +		ret = NETDEV_TX_BUSY;
+> +		goto done;
+> +	}
+> +
+> +	ret = libertas_process_tx(priv, skb);
+> +	if (ret == NETDEV_TX_OK)
+>  		dev->trans_start = jiffies;
+> +	else if (ret == -1)
+> +		ret = NETDEV_TX_OK;
 
-i apologize, the patch i submitted is incorrect, a file is
-missing. here is the correct version
+The one concern I have here (and I admit I don't know much about network
+driver TX paths) is that SendSinglePacket() will return -1 on error
+(like adapter got removed), which returns to libertas_process_tx() which
+returns here and would then return NETDEV_TX_OK.  Is that an OK thing to
+do?
 
---
+Dan
 
-Prism54: Convert mgmt_sem to the mutex API
- 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+>  done:
+>  	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
+>  	return ret;
+> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+> index bc9c2e1..1dc92ee 100644
+> --- a/drivers/net/wireless/libertas/tx.c
+> +++ b/drivers/net/wireless/libertas/tx.c
+> @@ -218,6 +218,7 @@ int libertas_process_tx(wlan_private * priv, struct sk_buff *skb)
+>  	if (priv->dnld_sent) {
+>  		lbs_pr_alert( "TX error: dnld_sent = %d, not sending\n",
+>  		       priv->dnld_sent);
+> +		ret = NETDEV_TX_BUSY;
+>  		goto done;
+>  	}
+>  
 
---
-
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index 219dd65..dbb538c 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -861,7 +861,7 @@ islpci_setup(struct pci_dev *pdev)
- 	init_waitqueue_head(&priv->reset_done);
- 
- 	/* init the queue read locks, process wait counter */
--	sema_init(&priv->mgmt_sem, 1);
-+	mutex_init(&priv->mgmt_lock);
- 	priv->mgmt_received = NULL;
- 	init_waitqueue_head(&priv->mgmt_wqueue);
- 	sema_init(&priv->stats_sem, 1);
-diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/prism54/islpci_dev.h
-index 736666d..4e0182c 100644
---- a/drivers/net/wireless/prism54/islpci_dev.h
-+++ b/drivers/net/wireless/prism54/islpci_dev.h
-@@ -26,6 +26,7 @@
- #include <linux/wireless.h>
- #include <net/iw_handler.h>
- #include <linux/list.h>
-+#include <linux/mutex.h>
- 
- #include "isl_38xx.h"
- #include "isl_oid.h"
-@@ -164,7 +165,7 @@ typedef struct {
- 	wait_queue_head_t reset_done;
- 
- 	/* used by islpci_mgt_transaction */
--	struct semaphore mgmt_sem; /* serialize access to mailbox and wqueue */
-+	struct mutex mgmt_lock; /* serialize access to mailbox and wqueue */
- 	struct islpci_mgmtframe *mgmt_received;	  /* mbox for incoming frame */
- 	wait_queue_head_t mgmt_wqueue;            /* waitqueue for mbox */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_mgt.c b/drivers/net/wireless/prism54/islpci_mgt.c
-index 2246f79..f7c677e 100644
---- a/drivers/net/wireless/prism54/islpci_mgt.c
-+++ b/drivers/net/wireless/prism54/islpci_mgt.c
-@@ -460,7 +460,7 @@ islpci_mgt_transaction(struct net_device *ndev,
- 
- 	*recvframe = NULL;
- 
--	if (down_interruptible(&priv->mgmt_sem))
-+	if (mutex_lock_interruptible(&priv->mgmt_lock))
- 		return -ERESTARTSYS;
- 
- 	prepare_to_wait(&priv->mgmt_wqueue, &wait, TASK_UNINTERRUPTIBLE);
-@@ -504,7 +504,7 @@ islpci_mgt_transaction(struct net_device *ndev,
- 	/* TODO: we should reset the device here */
-  out:
- 	finish_wait(&priv->mgmt_wqueue, &wait);
--	up(&priv->mgmt_sem);
-+	mutex_unlock(&priv->mgmt_lock);
- 	return err;
- }
- 
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
-
-     La guerra es un acto abominable en el que se matan personas que no
-      se conocen, dirigidas por personas que se conocen y no se matan
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
