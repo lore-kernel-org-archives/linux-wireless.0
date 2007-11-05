@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:54120 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751144AbXKSUbx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 15:31:53 -0500
-Date: Mon, 19 Nov 2007 21:31:23 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
-Message-ID: <20071119213123.084d40f7@morte> (sfid-20071119_203155_247500_A476013A)
-In-Reply-To: <1195502746.6479.11.camel@localhost.localdomain>
-References: <20071117023548.79a7a33c@morte>
-	<1195493707.3248.14.camel@localhost.localdomain>
-	<20071119190749.7a9e857c@morte>
-	<1195502746.6479.11.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp-out0.tiscali.nl ([195.241.79.175]:59799 "EHLO
+	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbXKEAnQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Nov 2007 19:43:16 -0500
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out0.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1Ioq3e-0000cY-W6
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2007 01:43:15 +0100
+Message-ID: <472E671F.80907@tiscali.nl> (sfid-20071105_004320_951770_BD1F6965)
+Date: Mon, 05 Nov 2007 01:43:11 +0100
+From: Roel Kluin <12o3l@tiscali.nl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] postfix decrement error in ipw2100_start_adapter(); drivers/net/wireless/ipw2100.c
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 19 Nov 2007 15:05:46 -0500
-Dan Williams <dcbw@redhat.com> wrote:
+If i reaches zero, the loop ends, but the postfix decrement subtracts it to -1.
+Testing for 'i == 0', later in the function, will not fulfill its purpose.
 
-> Which branch of wireless-2.6 are you running?  What kernel version?
-
-Branch everything, head: 1efded8eb6a7554748ca9486a9902fa6e86ff4a7.
-
-
--- 
-Ciao
-Stefano
+Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index a6c7904..84870f4 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -1267,7 +1267,7 @@ static int ipw2100_start_adapter(struct ipw2100_priv *priv)
+ 				       IPW2100_INTA_FATAL_ERROR |
+ 				       IPW2100_INTA_PARITY_ERROR);
+ 		}
+-	} while (i--);
++	} while (--i);
+ 
+ 	/* Clear out any pending INTAs since we aren't supposed to have
+ 	 * interrupts enabled at this point... */
