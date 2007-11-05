@@ -1,138 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:10778 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbXKITZL (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59371
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754803AbXKEO1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 14:25:11 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so479051wxd
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2007 11:25:10 -0800 (PST)
-Date: Fri, 9 Nov 2007 14:21:54 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jeff Garzik <jeff@garzik.org>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
-Message-ID: <20071109192033.GB22714@pogo> (sfid-20071109_192526_966112_6A21A882)
-References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo> <1194635236.19522.3.camel@localhost>
+	Mon, 5 Nov 2007 09:27:31 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Pekka Enberg" <penberg@cs.helsinki.fi>
+Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
+Date: Mon, 5 Nov 2007 15:26:40 +0100
+Cc: "Peter Zijlstra" <peterz@infradead.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Ingo Molnar" <mingo@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, "Michael Chan" <mchan@broadcom.com>,
+	netdev@vger.kernel.org, "Christoph Lameter" <clameter@sgi.com>
+References: <20071101191716.GA3201@pogo> <200711051403.39479.mb@bu3sch.de> <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com>
+In-Reply-To: <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1194635236.19522.3.camel@localhost>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711051526.41273.mb@bu3sch.de> (sfid-20071105_142735_612024_8139E53E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 09, 2007 at 11:07:16AM -0800, Joe Perches wrote:
-> On Fri, 2007-11-09 at 13:51 -0500, Luis R. Rodriguez wrote:
-> > While reviewing net/core/dev_mcast.c I found what I think is an 
-> > infinite loop on dev_mc_unsync(). This fixes it. We make use of
-> > this guy on mac80211 in ieee80211_stop(). This is untested.
-> > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-> > 
-> > diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
-> > index 15241cf..5373c03 100644
-> > --- a/net/core/dev_mcast.c
-> > +++ b/net/core/dev_mcast.c
-> > @@ -168,8 +168,10 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
-> >  	da = from->mc_list;
-> >  	while (da != NULL) {
-> >  		next = da->next;
-> > -		if (!da->da_synced)
-> > +		if (!da->da_synced) {
-> > +			da = next;
-> >  			continue;
-> > +		}
-> >  		__dev_addr_delete(&to->mc_list, &to->mc_count,
-> >  				  da->da_addr, da->da_addrlen, 0);
-> >  		da->da_synced = 0;
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe netdev" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Monday 05 November 2007 14:56:22 Pekka Enberg wrote:
+> Hi Michael,
 > 
-> Perhaps this is clearer as:
+> On Monday 05 November 2007 13:23:50 Pekka Enberg wrote:
+> > > Is CONFIG_DEBUG_SLAB enabled? Usually these kind of random corruptions
+> > > are caused by someone passing a bad pointer to kfree() or
+> > > kmem_cache_free().
 > 
-> void dev_mc_unsync(struct net_device *to, struct net_device *from)
-> {
-> 	struct dev_addr_list *da;
+> On 11/5/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > Yeah.
+> >
+> > What I also saw was random "one-bit-errors" once and then on rmmod of modules.
+> > I have absolutely no idea how they were caused, though (I read the freeing
+> > codes of the stuff hundreds of times). I don't have any of the oops messages
+> > anymore.
+> > But I do _not_ see this behaviour with slub anymore.
 > 
-> 	netif_tx_lock_bh(from);
-> 	netif_tx_lock_bh(to);
+> It is possible that the corruption is still there but SLUB doesn't
+> show it. Have you tried with slub_debug enabled?
+
+Hm, I don't really remember. Though, I usually have all almost kernel-hacking
+options enabled.
+I'll check and enable some more.
+
+> > BUG: unable to handle kernel paging request at virtual address f88a4a05
+> > printing eip: f88a4a05 *pde = 02000067 *pte = 00000000
+> >
+> > EIP: 0060:[<f88a4a05>] EFLAGS: 00010086 CPU: 0
+> > EIP is at 0xf88a4a05
+> > EAX: c20b75c8 EBX: c2f86f38 ECX: f88a4a05 EDX: c2f86f38
+> > ESI: c20b75c8 EDI: c2f89c00 EBP: c3897bfc ESP: c3897be0
+> >  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> > Process modprobe (pid: 2908, ti=c3896000 task=c3935150 task.ti=c3896000)
+> > Stack: c01b2afc c2f82d98 c3897bf4 c01ba8b6 c2f86f38 c20b75c8 c2f82c00 c3897c24
+> >       c02186dd c2f86f38 c3897c24 c01b54c0 c20b75c8 00000001 c20b75c8 c2f86f38
+> >       c20b75c8 c3897c30 c01b54ed 00000001 c3897c54 c01b556c 00000001 c3897cd4
+> > Call Trace:
+> >  [<c0104cec>] show_trace_log_lvl+0x1a/0x2f
+> >  [<c0104d9e>] show_stack_log_lvl+0x9d/0xa5
+> >  [<c0104e53>] show_registers+0xad/0x17c
+> >  [<c0105017>] die+0xf5/0x1c6
+> >  [<c0112715>] do_page_fault+0x450/0x537
+> >  [<c02a835a>] error_code+0x6a/0x70
+> >  [<c02186dd>] scsi_request_fn+0x5f/0x2ec
+> >  [<c01b54ed>] __generic_unplug_device+0x20/0x23
 > 
-> 	da = from->mc_list;
-> 	while (da) {
-> 		if (da->da_synced) {
-> 			__dev_addr_delete(&to->mc_list, &to->mc_count,
-> 					  da->da_addr, da->da_addrlen, 0);
-> 			__dev_addr_delete(&from->mc_list, &from->mc_count,
-> 					  da->da_addr, da->da_addrlen, 0);
-> 			da->da_synced = 0;
-> 		}
-> 		da = da->next;
-> 	}
-> 
-> 	__dev_set_rx_mode(to);
-> 
-> 	netif_tx_unlock_bh(to);
-> 	netif_tx_unlock_bh(from);
-> }
-> EXPORT_SYMBOL(dev_mc_unsync);
+> We jump to a bogus address 0xf88a4a05 via a function pointer from
+> scsi_request_fn(). Can you work out the exact file and line for
+> scsi_request_fn+0x5f (look for "gdb vmlinux" in
+> Documentation/BUG-HUNTING) please?
 
-Sure, or better with a for loop and do away with next pointer then:
+That'd be Luis' task then :)
 
-void dev_mc_unsync(struct net_device *to, struct net_device *from)
-{
-        struct dev_addr_list *da;
 
-        netif_tx_lock_bh(from);
-        netif_tx_lock_bh(to);
-
-        for (da = from->mc_list; da; da = da->next) {
-                if (!da->da_synced)
-                        continue;
-                __dev_addr_delete(&to->mc_list, &to->mc_count,
-                                  da->da_addr, da->da_addrlen, 0);
-                da->da_synced = 0;
-                __dev_addr_delete(&from->mc_list, &from->mc_count,
-                                  da->da_addr, da->da_addrlen, 0);
-        }
-        __dev_set_rx_mode(to);
-
-        netif_tx_unlock_bh(to);
-        netif_tx_unlock_bh(from);
-}
-EXPORT_SYMBOL(dev_mc_unsync);
-
-Patch below.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-
-diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
-index 15241cf..2aea8e1 100644
---- a/net/core/dev_mcast.c
-+++ b/net/core/dev_mcast.c
-@@ -160,14 +160,12 @@ EXPORT_SYMBOL(dev_mc_sync);
-  */
- void dev_mc_unsync(struct net_device *to, struct net_device *from)
- {
--	struct dev_addr_list *da, *next;
-+	struct dev_addr_list *da;
- 
- 	netif_tx_lock_bh(from);
- 	netif_tx_lock_bh(to);
- 
--	da = from->mc_list;
--	while (da != NULL) {
--		next = da->next;
-+	for (da = from->mc_list; da; da = da->next) {
- 		if (!da->da_synced)
- 			continue;
- 		__dev_addr_delete(&to->mc_list, &to->mc_count,
-@@ -175,7 +173,6 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
- 		da->da_synced = 0;
- 		__dev_addr_delete(&from->mc_list, &from->mc_count,
- 				  da->da_addr, da->da_addrlen, 0);
--		da = next;
- 	}
- 	__dev_set_rx_mode(to);
- 
+-- 
+Greetings Michael.
