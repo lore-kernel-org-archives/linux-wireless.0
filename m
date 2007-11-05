@@ -1,146 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:57682 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762652AbXKOGnJ (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:38291 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753754AbXKEMXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 01:43:09 -0500
-Date: Wed, 14 Nov 2007 22:41:16 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 14/16] ipw2100: send WEXT scan events
-Message-ID: <20071115064116.GO18951@kroah.com> (sfid-20071115_064317_638799_DB5A4491)
-References: <20071115060353.071060513@mini.kroah.org>
+	Mon, 5 Nov 2007 07:23:50 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1502119rvb
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2007 04:23:50 -0800 (PST)
+Message-ID: <84144f020711050423r7a1f0e55g36c8c5ad29bfc700@mail.gmail.com> (sfid-20071105_122356_473844_D061F17C)
+Date: Mon, 5 Nov 2007 14:23:50 +0200
+From: "Pekka Enberg" <penberg@cs.helsinki.fi>
+To: "Peter Zijlstra" <peterz@infradead.org>
+Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Ingo Molnar" <mingo@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, "Michael Chan" <mchan@broadcom.com>,
+	netdev@vger.kernel.org, "Christoph Lameter" <clameter@sgi.com>
+In-Reply-To: <1194264016.27652.428.camel@twins>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071115063921.GA18827@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071101191716.GA3201@pogo> <1194001120.27652.353.camel@twins>
+	 <43e72e890711031258g4ccd9cd0hc4520e9473f6ce49@mail.gmail.com>
+	 <200711032106.56569.mb@bu3sch.de> <1194264016.27652.428.camel@twins>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Michael,
 
+On Sat, 2007-11-03 at 21:06 +0100, Michael Buesch wrote:
+> Who is responsible for slab btw?
+> I mean, someone should be interested in getting this bug fixed. :)
+> When using slab I see random corruptions. I think related to rmmod, but
+> I'm not sure. I don't see this with slub.
 
--stable review patch.  If anyone has any objections, please let us know.
+Is CONFIG_DEBUG_SLAB enabled? Usually these kind of random corruptions
+are caused by someone passing a bad pointer to kfree() or
+kmem_cache_free().
 
-------------------
-
-From: Dan Williams <dcbw@redhat.com>
-
-patch d20c678a450a25c1c12925f60c1b4cc040acc17d in mainline
-
-ipw2100 wasn't sending WEXT scan events at all on scan completion.  And
-like ipw2200, the driver aggressively auto-scans, requiring
-non-user-requested scan events to be batched together and sent at
-specific intervals instead of many times per seconds.
-
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/net/wireless/ipw2100.c |   39 +++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ipw2100.h |    4 ++++
- 2 files changed, 43 insertions(+)
-
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -2102,12 +2102,46 @@ static void isr_indicate_rf_kill(struct 
- 	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
- }
- 
-+static void send_scan_event(void *data)
-+{
-+	struct ipw2100_priv *priv = data;
-+	union iwreq_data wrqu;
-+
-+	wrqu.data.length = 0;
-+	wrqu.data.flags = 0;
-+	wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
-+}
-+
-+static void ipw2100_scan_event_later(struct work_struct *work)
-+{
-+	send_scan_event(container_of(work, struct ipw2100_priv,
-+					scan_event_later.work));
-+}
-+
-+static void ipw2100_scan_event_now(struct work_struct *work)
-+{
-+	send_scan_event(container_of(work, struct ipw2100_priv,
-+					scan_event_now));
-+}
-+
- static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
- {
- 	IPW_DEBUG_SCAN("scan complete\n");
- 	/* Age the scan results... */
- 	priv->ieee->scans++;
- 	priv->status &= ~STATUS_SCANNING;
-+
-+	/* Only userspace-requested scan completion events go out immediately */
-+	if (!priv->user_requested_scan) {
-+		if (!delayed_work_pending(&priv->scan_event_later))
-+			queue_delayed_work(priv->workqueue,
-+					&priv->scan_event_later,
-+					round_jiffies(msecs_to_jiffies(4000)));
-+	} else {
-+		priv->user_requested_scan = 0;
-+		cancel_delayed_work(&priv->scan_event_later);
-+		queue_work(priv->workqueue, &priv->scan_event_now);
-+	}
- }
- 
- #ifdef CONFIG_IPW2100_DEBUG
-@@ -4376,6 +4410,7 @@ static void ipw2100_kill_workqueue(struc
- 		cancel_delayed_work(&priv->wx_event_work);
- 		cancel_delayed_work(&priv->hang_check);
- 		cancel_delayed_work(&priv->rf_kill);
-+		cancel_delayed_work(&priv->scan_event_later);
- 		destroy_workqueue(priv->workqueue);
- 		priv->workqueue = NULL;
- 	}
-@@ -6118,6 +6153,8 @@ static struct net_device *ipw2100_alloc_
- 	INIT_DELAYED_WORK(&priv->wx_event_work, ipw2100_wx_event_work);
- 	INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
- 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
-+	INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
-+	INIT_DELAYED_WORK(&priv->scan_event_later, ipw2100_scan_event_later);
- 
- 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
- 		     ipw2100_irq_tasklet, (unsigned long)priv);
-@@ -7427,6 +7464,8 @@ static int ipw2100_wx_set_scan(struct ne
- 	}
- 
- 	IPW_DEBUG_WX("Initiating scan...\n");
-+
-+	priv->user_requested_scan = 1;
- 	if (ipw2100_set_scan_options(priv) || ipw2100_start_scan(priv)) {
- 		IPW_DEBUG_WX("Start scan failed.\n");
- 
---- a/drivers/net/wireless/ipw2100.h
-+++ b/drivers/net/wireless/ipw2100.h
-@@ -588,6 +588,10 @@ struct ipw2100_priv {
- 	struct delayed_work wx_event_work;
- 	struct delayed_work hang_check;
- 	struct delayed_work rf_kill;
-+	struct work_struct scan_event_now;
-+	struct delayed_work scan_event_later;
-+
-+	int user_requested_scan;
- 
- 	u32 interrupts;
- 	int tx_interrupts;
-
--- 
+                                  Pekka
