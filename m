@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbXKXIfl (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:42558 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755540AbXKEN4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 03:35:41 -0500
-Subject: Re: timeout problems with certain APs and b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200711232321.58516.rjw@sisk.pl>
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
-	 <200711232258.25965.rjw@sisk.pl> <1195855050.4149.179.camel@johannes.berg>
-	 <200711232321.58516.rjw@sisk.pl>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q8dRgYyVV5+6jEzfIAX+"
-Date: Sat, 24 Nov 2007 09:35:31 +0100
-Message-Id: <1195893331.4149.190.camel@johannes.berg> (sfid-20071124_083543_373642_0AA2F0F5)
-Mime-Version: 1.0
+	Mon, 5 Nov 2007 08:56:24 -0500
+Received: by py-out-1112.google.com with SMTP id u77so3042963pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2007 05:56:23 -0800 (PST)
+Message-ID: <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com> (sfid-20071105_135634_392793_E8565560)
+Date: Mon, 5 Nov 2007 15:56:22 +0200
+From: "Pekka Enberg" <penberg@cs.helsinki.fi>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
+Cc: "Peter Zijlstra" <peterz@infradead.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Ingo Molnar" <mingo@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, "Michael Chan" <mchan@broadcom.com>,
+	netdev@vger.kernel.org, "Christoph Lameter" <clameter@sgi.com>
+In-Reply-To: <200711051403.39479.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071101191716.GA3201@pogo> <1194264016.27652.428.camel@twins>
+	 <84144f020711050423r7a1f0e55g36c8c5ad29bfc700@mail.gmail.com>
+	 <200711051403.39479.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Michael,
 
---=-q8dRgYyVV5+6jEzfIAX+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Monday 05 November 2007 13:23:50 Pekka Enberg wrote:
+> > Is CONFIG_DEBUG_SLAB enabled? Usually these kind of random corruptions
+> > are caused by someone passing a bad pointer to kfree() or
+> > kmem_cache_free().
 
+On 11/5/07, Michael Buesch <mb@bu3sch.de> wrote:
+> Yeah.
+>
+> What I also saw was random "one-bit-errors" once and then on rmmod of modules.
+> I have absolutely no idea how they were caused, though (I read the freeing
+> codes of the stuff hundreds of times). I don't have any of the oops messages
+> anymore.
+> But I do _not_ see this behaviour with slub anymore.
 
-> > > It seems that I can reproduce something similar on demand with an SMC=
- wireless
-> > > router by moving my box sufficiently far away from it. :-)
-> >=20
-> > Well, yeah, that's expected though, you lose signal at some point. Not
-> > expected is that it happens without moving anything. Unless the
-> > calibration code is wrong which wouldn't really surprise me either.
->=20
-> In my case, everything works just fine when the box is 6 meters away from=
- the
-> AP (including a thick wall in between), but when I move it another 5-6 me=
-ters
-> away from the AP, things break down ...
->=20
-> I'd expect it to work at longer distances, but well. :-)
+It is possible that the corruption is still there but SLUB doesn't
+show it. Have you tried with slub_debug enabled?
 
-Yeah, but keep in mind we reverse engineered all the calibration code.
+Anyway, looking at the oops:
 
-johannes
+> BUG: unable to handle kernel paging request at virtual address f88a4a05
+> printing eip: f88a4a05 *pde = 02000067 *pte = 00000000
+>
+> EIP: 0060:[<f88a4a05>] EFLAGS: 00010086 CPU: 0
+> EIP is at 0xf88a4a05
+> EAX: c20b75c8 EBX: c2f86f38 ECX: f88a4a05 EDX: c2f86f38
+> ESI: c20b75c8 EDI: c2f89c00 EBP: c3897bfc ESP: c3897be0
+>  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> Process modprobe (pid: 2908, ti=c3896000 task=c3935150 task.ti=c3896000)
+> Stack: c01b2afc c2f82d98 c3897bf4 c01ba8b6 c2f86f38 c20b75c8 c2f82c00 c3897c24
+>       c02186dd c2f86f38 c3897c24 c01b54c0 c20b75c8 00000001 c20b75c8 c2f86f38
+>       c20b75c8 c3897c30 c01b54ed 00000001 c3897c54 c01b556c 00000001 c3897cd4
+> Call Trace:
+>  [<c0104cec>] show_trace_log_lvl+0x1a/0x2f
+>  [<c0104d9e>] show_stack_log_lvl+0x9d/0xa5
+>  [<c0104e53>] show_registers+0xad/0x17c
+>  [<c0105017>] die+0xf5/0x1c6
+>  [<c0112715>] do_page_fault+0x450/0x537
+>  [<c02a835a>] error_code+0x6a/0x70
+>  [<c02186dd>] scsi_request_fn+0x5f/0x2ec
+>  [<c01b54ed>] __generic_unplug_device+0x20/0x23
 
---=-q8dRgYyVV5+6jEzfIAX+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+We jump to a bogus address 0xf88a4a05 via a function pointer from
+scsi_request_fn(). Can you work out the exact file and line for
+scsi_request_fn+0x5f (look for "gdb vmlinux" in
+Documentation/BUG-HUNTING) please?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0fiUaVg1VMiehFYAQKhkg//TEbLoZdHfrrrofLitzM9MuTIPoTygZBA
-6eb/7Fn3YtroO2i4tDB6zwuuaBPQkas23D+b5wAtzglscwqNe1DqnTBblfMIit8M
-hapL1msLK6cirAGYqnIG+2djCjcNYRtt3OvYsPbVJKf5y/WsIsPPDYY7xVsTs8Jy
-HTK+UrLKK0iresPmhXvjKTUPFdm3EcieYjiiBVyY7amhxz/I7NtAj+brXiabwwnm
-rgl9M/GMtWYGnYgsHcMVAsNON8P9QFxD5Ok2fv4bHf2pG5cxM3sK2OdbEsFD77Zt
-KctigeTV0ONm7P6LtQuZDCgKOfum/1+wJOLtWnGQWZNObA8DKtoaaU56vjv+ueY1
-4Y3J/CS2pCotwUYSh1jPBWgzBrXWaJmtrDWgIvUY2K5jsDZYS0ZSB9dEza2UgTf+
-+HUFZB4nkCxBsRVuxJZHf2RPMI6cGkiQvxbwjCJEMyylJIAG+uoRt9ifazcg6VxS
-AyLGtE/7KOuQ/sVB5SaKvQ/CocuA/4Nki2YSUgkfoEN7biUMAS7RGtodOIkEb6Ql
-8clg3olDDp8IUhG0rakUMO17+ZXm2fK+g29Oweu3d9ALyWpTjT+g3MyvsN4pcT1G
-vHobF+/3j4lJchLIi13iyy8CGokddOLWLukhMNo4pY5jaOyYsm6pD5Vcmod0DCib
-5tiAVR/b9Fg=
-=avz1
------END PGP SIGNATURE-----
-
---=-q8dRgYyVV5+6jEzfIAX+--
-
+                                                   Pekka
