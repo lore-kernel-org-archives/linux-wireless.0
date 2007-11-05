@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54706 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753397AbXK1PBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 10:01:44 -0500
-Subject: Re: [PATCH] libertas: tweak tx path debugging
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200711281408.13037.hs4233@mail.mn-solutions.de>
-References: <200711281408.13037.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 28 Nov 2007 09:56:03 -0500
-Message-Id: <1196261763.28264.3.camel@localhost.localdomain> (sfid-20071128_150149_916999_ED5532ED)
-Mime-Version: 1.0
+Received: from smtp-out2.tiscali.nl ([195.241.79.177]:33400 "EHLO
+	smtp-out2.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754107AbXKEWzI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2007 17:55:08 -0500
+Received: from [82.171.216.234] (helo=[192.168.1.2])
+	by smtp-out2.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1IpAqY-0001GX-Q2
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2007 23:55:06 +0100
+Message-ID: <472F9F46.3030604@tiscali.nl> (sfid-20071105_225515_040659_0616C516)
+Date: Mon, 05 Nov 2007 23:55:02 +0100
+From: Roel Kluin <12o3l@tiscali.nl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] postfix decrement error in ipw2100_start_adapter(); drivers/net/wireless/ipw2100.c
+References: <472E671F.80907@tiscali.nl>
+In-Reply-To: <472E671F.80907@tiscali.nl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-11-28 at 14:08 +0100, Holger Schurig wrote:
-> Make two functions in the TX packet path emit
-> their debug messages with LBS_DEB_TX, not LBS_DEB_MAIN.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+It appears there was another. The patch below includes both fixes.
+--
+If i reaches zero, the loop ends, but the postfix decrement subtracts it to -1.
+Testing for 'i == 0', later in the function, will not fulfill its purpose.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> ---
-> Before this, any TXed packed did emit some messages with
-> "lbsdebug +enter +main", which was a bit annoying.
-> 
-> Index: wireless-2.6/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/main.c	2007-11-28 14:35:45.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/main.c	2007-11-28 14:37:13.000000000 +0100
-> @@ -514,7 +514,7 @@ static int lbs_hard_start_xmit(struct sk
->  	int ret = 0;
->  	struct lbs_private *priv = dev->priv;
->  
-> -	lbs_deb_enter(LBS_DEB_NET);
-> +	lbs_deb_enter(LBS_DEB_TX);
->  
->  	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
->  		priv->stats.tx_dropped++;
-> @@ -528,7 +528,7 @@ static int lbs_hard_start_xmit(struct sk
->  	if (lbs_process_tx(priv, skb) == 0)
->  		dev->trans_start = jiffies;
->  done:
-> -	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
-> +	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
->  	return ret;
->  }
->  
-> @@ -564,7 +564,7 @@ static int lbs_pre_start_xmit(struct sk_
->  	struct lbs_private *priv = dev->priv;
->  	int ret;
->  
-> -	lbs_deb_enter(LBS_DEB_NET);
-> +	lbs_deb_enter(LBS_DEB_TX);
->  
->  	if (priv->adapter->monitormode != LBS_MONITOR_OFF) {
->  		netif_stop_queue(dev);
-> @@ -574,7 +574,7 @@ static int lbs_pre_start_xmit(struct sk_
->  	UNSET_MESH_FRAME(skb);
->  
->  	ret = lbs_hard_start_xmit(skb, dev);
-> -	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
-> +	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
->  	return ret;
->  }
->  
+Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index a6c7904..14632d8 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -1267,7 +1267,7 @@ static int ipw2100_start_adapter(struct ipw2100_priv *priv)
+ 				       IPW2100_INTA_FATAL_ERROR |
+ 				       IPW2100_INTA_PARITY_ERROR);
+ 		}
+-	} while (i--);
++	} while (--i);
+ 
+ 	/* Clear out any pending INTAs since we aren't supposed to have
+ 	 * interrupts enabled at this point... */
+@@ -1339,7 +1339,7 @@ static int ipw2100_power_cycle_adapter(struct ipw2100_priv *priv)
+ 
+ 		if (reg & IPW_AUX_HOST_RESET_REG_MASTER_DISABLED)
+ 			break;
+-	} while (i--);
++	} while (--i);
+ 
+ 	priv->status &= ~STATUS_RESET_PENDING;
+ 
 
