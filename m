@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:49270 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757583AbXKGXbR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 18:31:17 -0500
-Date: Thu, 8 Nov 2007 00:29:46 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix sparse warning
-Message-ID: <20071108002946.2fa90b5d@morte> (sfid-20071107_233121_727430_E7B4C2B6)
-In-Reply-To: <200711072121.55828.mb@bu3sch.de>
-References: <200711072121.55828.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ra.tuxdriver.com ([70.61.120.52]:2086 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755181AbXKFBRP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2007 20:17:15 -0500
+Date: Mon, 5 Nov 2007 20:16:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] move wlan_*_association_work from header to c file
+Message-ID: <20071106011607.GA23747@tuxdriver.com> (sfid-20071106_011717_068642_5D696534)
+References: <200710111151.06989.hs4233@mail.mn-solutions.de> <1193073620.4325.7.camel@localhost.localdomain> <200710251037.50057.hs4233@mail.mn-solutions.de> <200710261343.51684.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200710261343.51684.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 7 Nov 2007 21:21:55 +0100
-Michael Buesch <mb@bu3sch.de> wrote:
-
-> Fix a sparse warning about a nonstatic function.
+On Fri, Oct 26, 2007 at 01:43:51PM +0200, Holger Schurig wrote:
+> Hi John !
 > 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> wireless-2.6/everything is a moving target. The two patches I've 
+> sent yesterday no longer apply cleanly. So I've made them new.
+> 
+> Because of the sheer size of one of them, I've put them there:
+> 
+> http://git.infradead.org/?p=users/schurig/libertas-cleanup.git;a=shortlog;h=cleanup
+> 
+> 
+> Please apply.
 
-Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
+The 2nd patch "libertas: move to uniform lbs_/LBS_ namespace" breaks
+the compile of if_sdio.c, so I had to drop it.  I dropped "libertas:
+clean up association debug messages" as well.
 
-
+John
 -- 
-Ciao
-Stefano
+John W. Linville
+linville@tuxdriver.com
