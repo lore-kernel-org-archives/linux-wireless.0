@@ -1,77 +1,356 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:22809 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191AbXKXB4K (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:46934 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbXKFTPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 20:56:10 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2768104rvb
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 17:56:09 -0800 (PST)
-Message-ID: <5b9417770711231756i68f6f9d0sdb7cff0b6bcf1896@mail.gmail.com> (sfid-20071124_015613_787775_338E425D)
-Date: Fri, 23 Nov 2007 19:56:09 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: timeout problems with certain APs and b43
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	bcm43xx-dev@lists.berlios.de,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
-In-Reply-To: <200711232321.58516.rjw@sisk.pl>
+	Tue, 6 Nov 2007 14:15:48 -0500
+Date: Tue, 06 Nov 2007 13:15:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC 4 of 6] b43: Convert to use of the new SPROM structure
+Message-ID: <4730bd63.SCEMV/0C8ibw0lSX%Larry.Finger@lwfinger.net> (sfid-20071106_191551_234903_83433DE6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
-	 <200711232258.25965.rjw@sisk.pl>
-	 <1195855050.4149.179.camel@johannes.berg>
-	 <200711232321.58516.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 23, 2007 4:21 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, 23 of November 2007, Johannes Berg wrote:
-> >
->
-> > > > > on certain APs, the internet works for a long time then stops, and I
-> > > > > get authentication time outs, why?  It usually works again if I reset
-> > > > > the AP itself, which i should not have to do and don't have to if in
-> > > > > XP....
-> > > >
-> > > > > wlan0: Initial auth_alg=0
-> > > > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > > > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
-> > > >
-> > > > Does it help to reload the b43 module? I think I have seen this problem
-> > > > before but always associated it with suspend/resume rather than a long
-> > > > time elapsing, I also thought it was due to bad power recalibration.
-> > >
-> > > It seems that I can reproduce something similar on demand with an SMC wireless
-> > > router by moving my box sufficiently far away from it. :-)
-> >
-> > Well, yeah, that's expected though, you lose signal at some point. Not
-> > expected is that it happens without moving anything. Unless the
-> > calibration code is wrong which wouldn't really surprise me either.
->
-> In my case, everything works just fine when the box is 6 meters away from the
-> AP (including a thick wall in between), but when I move it another 5-6 meters
-> away from the AP, things break down ...
->
-> I'd expect it to work at longer distances, but well. :-)
->
-> Greetings,
-> Rafael
->
+Patch 4 of 6.
 
+The b43 driver is modified to use the new SPROM structure.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-wlan0     IEEE 802.11g  ESSID:"Network4Home"
-          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:0F:66:53:3E:24
-          Bit Rate=1 Mb/s   Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Link Quality=68/100  Signal level=-58 dBm  Noise level=-69 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
-I'd say 68/100 is a good signal strength.  I do use suspend/resume a
-lot, but sometimes only a reboot of the laptop or the AP seems to get
-it working normally again.
+Index: wireless-2.6/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.c
++++ wireless-2.6/drivers/net/wireless/b43/leds.c
+@@ -187,10 +187,10 @@ void b43_leds_init(struct b43_wldev *dev
+ 	enum b43_led_behaviour behaviour;
+ 	bool activelow;
+ 
+-	sprom[0] = bus->sprom.r1.gpio0;
+-	sprom[1] = bus->sprom.r1.gpio1;
+-	sprom[2] = bus->sprom.r1.gpio2;
+-	sprom[3] = bus->sprom.r1.gpio3;
++	sprom[0] = bus->sprom.data.gpio0;
++	sprom[1] = bus->sprom.data.gpio1;
++	sprom[2] = bus->sprom.data.gpio2;
++	sprom[3] = bus->sprom.data.gpio3;
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		if (sprom[i] == 0xFF) {
+Index: wireless-2.6/drivers/net/wireless/b43/lo.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/lo.c
++++ wireless-2.6/drivers/net/wireless/b43/lo.c
+@@ -264,8 +264,8 @@ static u16 lo_measure_feedthrough(struct
+ 		rfover |= pga;
+ 		rfover |= lna;
+ 		rfover |= trsw_rx;
+-		if ((dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_EXTLNA) &&
+-		    phy->rev > 6)
++		if ((dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_EXTLNA)
++		    && phy->rev > 6)
+ 			rfover |= B43_PHY_RFOVERVAL_EXTLNA;
+ 
+ 		b43_phy_write(dev, B43_PHY_PGACTL, 0xE300);
+@@ -634,7 +634,7 @@ static void lo_measure_setup(struct b43_
+ 			      & 0xFFFC);
+ 		if (phy->type == B43_PHYTYPE_G) {
+ 			if ((phy->rev >= 7) &&
+-			    (sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++			    (sprom->data.boardflags_lo & B43_BFL_EXTLNA)) {
+ 				b43_phy_write(dev, B43_PHY_RFOVER, 0x933);
+ 			} else {
+ 				b43_phy_write(dev, B43_PHY_RFOVER, 0x133);
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -1924,7 +1924,7 @@ static int b43_gpio_init(struct b43_wlde
+ 		mask |= 0x0180;
+ 		set |= 0x0180;
+ 	}
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL) {
++	if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_PACTRL) {
+ 		b43_write16(dev, B43_MMIO_GPIO_MASK,
+ 			    b43_read16(dev, B43_MMIO_GPIO_MASK)
+ 			    | 0x0200);
+@@ -2289,7 +2289,7 @@ static void b43_periodic_every60sec(stru
+ 
+ 	if (!b43_has_hardware_pctl(phy))
+ 		b43_lo_g_ctl_mark_all_unused(dev);
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++	if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_RSSI) {
+ 		b43_mac_suspend(dev);
+ 		b43_calc_nrssi_slope(dev);
+ 		if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 8)) {
+@@ -3205,13 +3205,13 @@ static void b43_bluetooth_coext_enable(s
+ 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
+ 	u32 hf;
+ 
+-	if (!(sprom->r1.boardflags_lo & B43_BFL_BTCOEXIST))
++	if (!(sprom->data.boardflags_lo & B43_BFL_BTCOEXIST))
+ 		return;
+ 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
+ 		return;
+ 
+ 	hf = b43_hf_read(dev);
+-	if (sprom->r1.boardflags_lo & B43_BFL_BTCMOD)
++	if (sprom->data.boardflags_lo & B43_BFL_BTCMOD)
+ 		hf |= B43_HF_BTCOEXALT;
+ 	else
+ 		hf |= B43_HF_BTCOEX;
+@@ -3345,7 +3345,7 @@ static int b43_wireless_core_init(struct
+ 		hf |= B43_HF_SYMW;
+ 		if (phy->rev == 1)
+ 			hf |= B43_HF_GDCW;
+-		if (sprom->r1.boardflags_lo & B43_BFL_PACTRL)
++		if (sprom->data.boardflags_lo & B43_BFL_PACTRL)
+ 			hf |= B43_HF_OFDMPABOOST;
+ 	} else if (phy->type == B43_PHYTYPE_B) {
+ 		hf |= B43_HF_SYMW;
+@@ -3856,20 +3856,20 @@ static void b43_sprom_fixup(struct ssb_b
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
+-		bus->sprom.r1.boardflags_lo |= B43_BFL_BTCOEXIST;
++		bus->sprom.data.boardflags_lo |= B43_BFL_BTCOEXIST;
+ 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
+ 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
+-		bus->sprom.r1.boardflags_lo |= B43_BFL_PACTRL;
++		bus->sprom.data.boardflags_lo |= B43_BFL_PACTRL;
+ 
+ 	/* Handle case when gain is not set in sprom */
+-	if (bus->sprom.r1.antenna_gain_a == 0xFF)
+-		bus->sprom.r1.antenna_gain_a = 2;
+-	if (bus->sprom.r1.antenna_gain_bg == 0xFF)
+-		bus->sprom.r1.antenna_gain_bg = 2;
++	if (bus->sprom.data.antenna_gain_a == 0xFF)
++		bus->sprom.data.antenna_gain_a = 2;
++	if (bus->sprom.data.antenna_gain_bg == 0xFF)
++		bus->sprom.data.antenna_gain_bg = 2;
+ 
+ 	/* Convert Antennagain values to Q5.2 */
+-	bus->sprom.r1.antenna_gain_a <<= 2;
+-	bus->sprom.r1.antenna_gain_bg <<= 2;
++	bus->sprom.data.antenna_gain_a <<= 2;
++	bus->sprom.data.antenna_gain_bg <<= 2;
+ }
+ 
+ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
+@@ -3902,10 +3902,10 @@ static int b43_wireless_init(struct ssb_
+ 	hw->max_noise = -110;
+ 	hw->queues = 1;		/* FIXME: hardware has more queues */
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+-	if (is_valid_ether_addr(sprom->r1.et1mac))
+-		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.et1mac);
++	if (is_valid_ether_addr(sprom->data.et1mac))
++		SET_IEEE80211_PERM_ADDR(hw, sprom->data.et1mac);
+ 	else
+-		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.il0mac);
++		SET_IEEE80211_PERM_ADDR(hw, sprom->data.il0mac);
+ 
+ 	/* Get and initialize struct b43_wl */
+ 	wl = hw_to_b43_wl(hw);
+Index: wireless-2.6/drivers/net/wireless/b43/phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/phy.c
++++ wireless-2.6/drivers/net/wireless/b43/phy.c
+@@ -1139,7 +1139,7 @@ static void b43_phy_inita(struct b43_wld
+ 	} else {
+ 		b43_phy_setupg(dev);
+ 		if (phy->gmode &&
+-		    (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL))
++		    (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_PACTRL))
+ 			b43_phy_write(dev, 0x046E, 0x03CF);
+ 		return;
+ 	}
+@@ -1286,7 +1286,7 @@ static void b43_phy_initb4(struct b43_wl
+ 	if (phy->radio_ver == 0x2050)
+ 		b43_phy_write(dev, 0x002A, 0x88C2);
+ 	b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt, phy->tx_control);
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++	if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_RSSI) {
+ 		b43_calc_nrssi_slope(dev);
+ 		b43_calc_nrssi_threshold(dev);
+ 	}
+@@ -1433,7 +1433,7 @@ static void b43_phy_initb6(struct b43_wl
+ 		b43_radio_write16(dev, 0x5A, 0x88);
+ 		b43_radio_write16(dev, 0x5B, 0x6B);
+ 		b43_radio_write16(dev, 0x5C, 0x0F);
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_ALTIQ) {
++		if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_ALTIQ) {
+ 			b43_radio_write16(dev, 0x5D, 0xFA);
+ 			b43_radio_write16(dev, 0x5E, 0xD8);
+ 		} else {
+@@ -1525,7 +1525,7 @@ static void b43_phy_initb6(struct b43_wl
+ 		b43_phy_write(dev, 0x0062, 0x0007);
+ 		b43_radio_init2050(dev);
+ 		b43_lo_g_measure(dev);
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++		if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_RSSI) {
+ 			b43_calc_nrssi_slope(dev);
+ 			b43_calc_nrssi_threshold(dev);
+ 		}
+@@ -1645,7 +1645,7 @@ static void b43_calc_loopback_gain(struc
+ 	b43_phy_write(dev, B43_PHY_RFOVERVAL,
+ 		      b43_phy_read(dev, B43_PHY_RFOVERVAL) & 0xCFFF);
+ 
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_EXTLNA) {
++	if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_EXTLNA) {
+ 		if (phy->rev >= 7) {
+ 			b43_phy_write(dev, B43_PHY_RFOVER,
+ 				      b43_phy_read(dev, B43_PHY_RFOVER)
+@@ -1812,7 +1812,7 @@ static void b43_phy_initg(struct b43_wld
+ 				       & 0x0FFF) | (phy->lo_control->
+ 						    tx_bias << 12));
+ 		}
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL)
++		if (dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_PACTRL)
+ 			b43_phy_write(dev, B43_PHY_BASE(0x2E), 0x8075);
+ 		else
+ 			b43_phy_write(dev, B43_PHY_BASE(0x2E), 0x807F);
+@@ -1826,7 +1826,7 @@ static void b43_phy_initg(struct b43_wld
+ 		b43_phy_write(dev, B43_PHY_LO_MASK, 0x8078);
+ 	}
+ 
+-	if (!(dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI)) {
++	if (!(dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_RSSI)) {
+ 		/* The specs state to update the NRSSI LT with
+ 		 * the value 0x7FFFFFFF here. I think that is some weird
+ 		 * compiler optimization in the original driver.
+@@ -2036,16 +2036,15 @@ void b43_phy_xmitpower(struct b43_wldev 
+ 			estimated_pwr =
+ 			    b43_phy_estimate_power_out(dev, average);
+ 
+-			max_pwr = dev->dev->bus->sprom.r1.maxpwr_bg;
+-			if ((dev->dev->bus->sprom.r1.
+-			     boardflags_lo & B43_BFL_PACTRL)
+-			    && (phy->type == B43_PHYTYPE_G))
++			max_pwr = dev->dev->bus->sprom.data.maxpwr_bg;
++			if ((dev->dev->bus->sprom.data.boardflags_lo
++			    & B43_BFL_PACTRL) && (phy->type == B43_PHYTYPE_G))
+ 				max_pwr -= 0x3;
+ 			if (unlikely(max_pwr <= 0)) {
+ 				b43warn(dev->wl,
+ 					"Invalid max-TX-power value in SPROM.\n");
+ 				max_pwr = 60;	/* fake it */
+-				dev->dev->bus->sprom.r1.maxpwr_bg = max_pwr;
++				dev->dev->bus->sprom.data.maxpwr_bg = max_pwr;
+ 			}
+ 
+ 			/*TODO:
+@@ -2103,7 +2102,7 @@ void b43_phy_xmitpower(struct b43_wldev 
+ 						    B43_TXCTL_TXMIX;
+ 						rfatt += 2;
+ 						bbatt += 2;
+-					} else if (dev->dev->bus->sprom.r1.
++					} else if (dev->dev->bus->sprom.data.
+ 						   boardflags_lo &
+ 						   B43_BFL_PACTRL) {
+ 						bbatt += 4 * (rfatt - 2);
+@@ -2179,13 +2178,13 @@ int b43_phy_init_tssi2dbm_table(struct b
+ 	s8 *dyn_tssi2dbm;
+ 
+ 	if (phy->type == B43_PHYTYPE_A) {
+-		pab0 = (s16) (dev->dev->bus->sprom.r1.pa1b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.r1.pa1b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.r1.pa1b2);
++		pab0 = (s16) (dev->dev->bus->sprom.data.pa1b0);
++		pab1 = (s16) (dev->dev->bus->sprom.data.pa1b1);
++		pab2 = (s16) (dev->dev->bus->sprom.data.pa1b2);
+ 	} else {
+-		pab0 = (s16) (dev->dev->bus->sprom.r1.pa0b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.r1.pa0b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.r1.pa0b2);
++		pab0 = (s16) (dev->dev->bus->sprom.data.pa0b0);
++		pab1 = (s16) (dev->dev->bus->sprom.data.pa0b1);
++		pab2 = (s16) (dev->dev->bus->sprom.data.pa0b2);
+ 	}
+ 
+ 	if ((dev->dev->bus->chip_id == 0x4301) && (phy->radio_ver != 0x2050)) {
+@@ -2198,17 +2197,17 @@ int b43_phy_init_tssi2dbm_table(struct b
+ 	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
+ 		/* The pabX values are set in SPROM. Use them. */
+ 		if (phy->type == B43_PHYTYPE_A) {
+-			if ((s8) dev->dev->bus->sprom.r1.itssi_a != 0 &&
+-			    (s8) dev->dev->bus->sprom.r1.itssi_a != -1)
++			if ((s8) dev->dev->bus->sprom.data.itssi_a != 0 &&
++			    (s8) dev->dev->bus->sprom.data.itssi_a != -1)
+ 				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.r1.itssi_a);
++				    (s8) (dev->dev->bus->sprom.data.itssi_a);
+ 			else
+ 				phy->tgt_idle_tssi = 62;
+ 		} else {
+-			if ((s8) dev->dev->bus->sprom.r1.itssi_bg != 0 &&
+-			    (s8) dev->dev->bus->sprom.r1.itssi_bg != -1)
++			if ((s8) dev->dev->bus->sprom.data.itssi_bg != 0 &&
++			    (s8) dev->dev->bus->sprom.data.itssi_bg != -1)
+ 				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.r1.itssi_bg);
++				    (s8) (dev->dev->bus->sprom.data.itssi_bg);
+ 			else
+ 				phy->tgt_idle_tssi = 62;
+ 		}
+@@ -3114,7 +3113,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 			if (phy->radio_ver != 0x2050)
+ 				return;
+ 			if (!
+-			    (dev->dev->bus->sprom.r1.
++			    (dev->dev->bus->sprom.data.
+ 			     boardflags_lo & B43_BFL_RSSI))
+ 				return;
+ 
+@@ -3145,7 +3144,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 		}
+ 	case B43_PHYTYPE_G:
+ 		if (!phy->gmode ||
+-		    !(dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI)) {
++		    !(dev->dev->bus->sprom.data.boardflags_lo & B43_BFL_RSSI)) {
+ 			tmp16 = b43_nrssi_hw_read(dev, 0x20);
+ 			if (tmp16 >= 0x20)
+ 				tmp16 -= 0x40;
+@@ -3667,7 +3666,7 @@ static u16 radio2050_rfover_val(struct b
+ 		}
+ 
+ 		if ((phy->rev < 7) ||
+-		    !(sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++		    !(sprom->data.boardflags_lo & B43_BFL_EXTLNA)) {
+ 			if (phy_register == B43_PHY_RFOVER) {
+ 				return 0x1B3;
+ 			} else if (phy_register == B43_PHY_RFOVERVAL) {
+@@ -3707,7 +3706,7 @@ static u16 radio2050_rfover_val(struct b
+ 		}
+ 	} else {
+ 		if ((phy->rev < 7) ||
+-		    !(sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++		    !(sprom->data.boardflags_lo & B43_BFL_EXTLNA)) {
+ 			if (phy_register == B43_PHY_RFOVER) {
+ 				return 0x1B3;
+ 			} else if (phy_register == B43_PHY_RFOVERVAL) {
+@@ -4186,7 +4185,7 @@ int b43_radio_selectchannel(struct b43_w
+ 		b43_write16(dev, B43_MMIO_CHANNEL, channel2freq_bg(channel));
+ 
+ 		if (channel == 14) {
+-			if (dev->dev->bus->sprom.r1.country_code ==
++			if (dev->dev->bus->sprom.data.country_code ==
+ 			    SSB_SPROM1CCODE_JAPAN)
+ 				b43_hf_write(dev,
+ 					     b43_hf_read(dev) & ~B43_HF_ACPR);
+Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c
++++ wireless-2.6/drivers/net/wireless/b43/xmit.c
+@@ -385,7 +385,7 @@ static s8 b43_rssi_postprocess(struct b4
+ 			else
+ 				tmp -= 3;
+ 		} else {
+-			if (dev->dev->bus->sprom.r1.
++			if (dev->dev->bus->sprom.data.
+ 			    boardflags_lo & B43_BFL_RSSI) {
+ 				if (in_rssi > 63)
+ 					in_rssi = 63;
