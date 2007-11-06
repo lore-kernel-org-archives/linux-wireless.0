@@ -1,43 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41783
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754980AbXK0UWc (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbXKFKWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 15:22:32 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
-Date: Tue, 27 Nov 2007 21:20:44 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711271713.02698.mb@bu3sch.de> <474C77E7.9030202@lwfinger.net>
-In-Reply-To: <474C77E7.9030202@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711272120.44575.mb@bu3sch.de> (sfid-20071127_211142_119218_39CC2105)
+	Tue, 6 Nov 2007 05:22:07 -0500
+Subject: [PATCH] mac80211: remove ieee80211_common.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Robert P. J. Day" <rpjday@crashcourse.ca>,
+	Michael Wu <flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Tue, 06 Nov 2007 11:23:29 +0100
+Message-Id: <1194344609.4066.3.camel@johannes.berg> (sfid-20071106_102212_178267_A2E4FAA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 November 2007 21:02:47 Larry Finger wrote:
-> Michael,
-> 
-> I'm getting a little closer. The problem I discovered now is that b43_leds_init() was being called
-> before b43_rfkill_init(), which prevented registration of the "radio" LED. Now, the LED is flashed
-> on for about 1 second, then it goes off. Changing the switch does nothing.
+Robert pointed out that I missed this file when removing the management
+interface. Do it now.
 
-Ok, good catch.
-Is the switch properly polled and is the status change properly reported upstream?
-If yes, you might want to check (add printk to rfkill code) if the LED
-is properly triggered.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_common.h |   91 ----------------------------------------
+ 1 file changed, 91 deletions(-)
 
-> This version uses mutex_trylock() to see if the mutex is already locked. It should do until rfkill
-> is fixed.
+--- linux-2.6.orig/net/mac80211/ieee80211_common.h	2007-11-06 11:16:13.018487846 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,91 +0,0 @@
+-/*
+- * IEEE 802.11 driver (80211.o) -- hostapd interface
+- * Copyright 2002-2004, Instant802 Networks, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-#ifndef IEEE80211_COMMON_H
+-#define IEEE80211_COMMON_H
+-
+-#include <linux/types.h>
+-
+-/*
+- * This is common header information with user space. It is used on all
+- * frames sent to wlan#ap interface.
+- */
+-
+-#define IEEE80211_FI_VERSION 0x80211001
+-
+-struct ieee80211_frame_info {
+-	__be32 version;
+-	__be32 length;
+-	__be64 mactime;
+-	__be64 hosttime;
+-	__be32 phytype;
+-	__be32 channel;
+-	__be32 datarate;
+-	__be32 antenna;
+-	__be32 priority;
+-	__be32 ssi_type;
+-	__be32 ssi_signal;
+-	__be32 ssi_noise;
+-	__be32 preamble;
+-	__be32 encoding;
+-
+-	/* Note: this structure is otherwise identical to capture format used
+-	 * in linux-wlan-ng, but this additional field is used to provide meta
+-	 * data about the frame to hostapd. This was the easiest method for
+-	 * providing this information, but this might change in the future. */
+-	__be32 msg_type;
+-} __attribute__ ((packed));
+-
+-
+-enum ieee80211_msg_type {
+-	ieee80211_msg_normal = 0,
+-	ieee80211_msg_tx_callback_ack = 1,
+-	ieee80211_msg_tx_callback_fail = 2,
+-	/* hole at 3, was ieee80211_msg_passive_scan but unused */
+-	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
+-	ieee80211_msg_michael_mic_failure = 5,
+-	/* hole at 6, was monitor but never sent to userspace */
+-	ieee80211_msg_sta_not_assoc = 7,
+-	/* 8 was ieee80211_msg_set_aid_for_sta */
+-	/* 9 was ieee80211_msg_key_threshold_notification */
+-	/* 11 was ieee80211_msg_radar */
+-};
+-
+-struct ieee80211_msg_key_notification {
+-	int tx_rx_count;
+-	char ifname[IFNAMSIZ];
+-	u8 addr[ETH_ALEN]; /* ff:ff:ff:ff:ff:ff for broadcast keys */
+-};
+-
+-
+-enum ieee80211_phytype {
+-	ieee80211_phytype_fhss_dot11_97  = 1,
+-	ieee80211_phytype_dsss_dot11_97  = 2,
+-	ieee80211_phytype_irbaseband     = 3,
+-	ieee80211_phytype_dsss_dot11_b   = 4,
+-	ieee80211_phytype_pbcc_dot11_b   = 5,
+-	ieee80211_phytype_ofdm_dot11_g   = 6,
+-	ieee80211_phytype_pbcc_dot11_g   = 7,
+-	ieee80211_phytype_ofdm_dot11_a   = 8,
+-};
+-
+-enum ieee80211_ssi_type {
+-	ieee80211_ssi_none = 0,
+-	ieee80211_ssi_norm = 1, /* normalized, 0-1000 */
+-	ieee80211_ssi_dbm = 2,
+-	ieee80211_ssi_raw = 3, /* raw SSI */
+-};
+-
+-struct ieee80211_radar_info {
+-		int channel;
+-		int radar;
+-		int radar_type;
+-};
+-
+-#endif /* IEEE80211_COMMON_H */
 
-No it doesn't. This still introduces a race.
 
-I'm wondering who causes this deadlock. "registered" should be false if
-we are called back from rfkill_initialize, so it should return early before
-the lock.
-
--- 
-Greetings Michael.
