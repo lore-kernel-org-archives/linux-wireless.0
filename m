@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52553
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756921AbXKWNxC (ORCPT
+Received: from qmta03.westchester.pa.mail.comcast.net ([76.96.62.32]:58211
+	"EHLO QMTA03.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754561AbXKFM6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 08:53:02 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43: include FCS in frames handed to mac80211
-Date: Fri, 23 Nov 2007 14:51:58 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1195814776.4149.90.camel@johannes.berg>
-In-Reply-To: <1195814776.4149.90.camel@johannes.berg>
+	Tue, 6 Nov 2007 07:58:34 -0500
+Message-ID: <47306332.1020507@gentoo.org> (sfid-20071106_125837_230880_50E8CAB9)
+Date: Tue, 06 Nov 2007 07:50:58 -0500
+From: Joseph Jezak <josejx@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711231451.58564.mb@bu3sch.de> (sfid-20071123_135328_675358_39285591)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] softmac: MAINTAINERS update
+References: <1194269555.4567.4.camel@johannes.berg>
+In-Reply-To: <1194269555.4567.4.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 November 2007 11:46:16 Johannes Berg wrote:
-> Sometimes it can be useful to see the FCS, especially when
-> bad-FCS frames are shown. Pass the FCS to mac80211 and let
-> it worry about snipping it off when required.
+Johannes Berg wrote:
+> This patch marks softmac as obsolete in MAINTAINERS and removes Joe and
+> myself as maintainers, we're no longer using it nor interested in the
+> code in any way. Also remove the website reference because I took it
+> offline. Hopefully the code will go away in 2.6.25.
 > 
 > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->  drivers/net/wireless/b43/main.c |    3 ++-
->  drivers/net/wireless/b43/xmit.c |    1 -
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  MAINTAINERS |    7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
 > 
-> --- everything.orig/drivers/net/wireless/b43/main.c	2007-11-22 23:35:41.208716199 +0100
-> +++ everything/drivers/net/wireless/b43/main.c	2007-11-22 23:36:03.138677951 +0100
-> @@ -4158,7 +4158,8 @@ static int b43_wireless_init(struct ssb_
->  	}
+> --- linux-2.6.orig/MAINTAINERS	2007-11-05 14:27:07.323066514 +0100
+> +++ linux-2.6/MAINTAINERS	2007-11-05 14:28:14.433057291 +0100
+> @@ -3450,15 +3450,10 @@ L:	lm-sensors@lm-sensors.org
+>  S:	Maintained
 >  
->  	/* fill hw info */
-> -	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-> +	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
-> +		    IEEE80211_HW_RX_INCLUDES_FCS;
->  	hw->max_signal = 100;
->  	hw->max_rssi = -110;
->  	hw->max_noise = -110;
-> --- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:05.668676810 +0100
-> +++ everything/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:22.668677190 +0100
-> @@ -489,7 +489,6 @@ void b43_rx(struct b43_wldev *dev, struc
->  	}
->  	wlhdr = (struct ieee80211_hdr *)(skb->data);
->  	fctl = le16_to_cpu(wlhdr->frame_control);
-> -	skb_trim(skb, skb->len - FCS_LEN);
+>  SOFTMAC LAYER (IEEE 802.11)
+> -P:	Johannes Berg
+> -M:	johannes@sipsolutions.net
+> -P:	Joe Jezak
+> -M:	josejx@gentoo.org
+>  P:	Daniel Drake
+>  M:	dsd@gentoo.org
+> -W:	http://softmac.sipsolutions.net/
+>  L:	linux-wireless@vger.kernel.org
+> -S:	Maintained
+> +S:	Obsolete
 >  
->  	if (macstat & B43_RX_MAC_DEC) {
->  		unsigned int keyidx;
-> 
-> 
-> 
-> 
+>  SOFTWARE RAID (Multiple Disks) SUPPORT
+>  P:	Ingo Molnar
 
-Does this work with all encryption and non-encryption modes?
-There was a crypto related reason why we snipped off the FCS.
-Maybe that's gone, though.
+Acked-by: Joseph Jezak <josejx@gentoo.org>
 
--- 
-Greetings Michael.
