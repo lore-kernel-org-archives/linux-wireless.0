@@ -1,54 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.comnets.rwth-aachen.de ([137.226.4.160]:33333 "EHLO
-	gin.comnets.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754483AbXKNAjQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2007 19:39:16 -0500
-Message-ID: <473A43AF.6050207@ieee.org> (sfid-20071114_003919_157739_C32ADA99)
-Date: Wed, 14 Nov 2007 01:39:11 +0100
-From: "Guido R. Hiertz" <hiertz@ieee.org>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Javier Cardona <javier@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
-References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>	 <1194689500.7258.61.camel@johannes.berg>	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>	 <1194866072.5229.8.camel@johannes.berg>	 <445f43ac0711131231s5bfd173v1c9105e9f23d83b2@mail.gmail.com> <1194986213.28937.10.camel@localhost.localdomain>
-In-Reply-To: <1194986213.28937.10.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:44731 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753697AbXKFWND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2007 17:13:03 -0500
+Date: Tue, 6 Nov 2007 22:48:45 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: John Linville <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: [PATCH 4/7] b43legacy: rewrite and fix rfkill initialization
+Message-ID: <20071106224845.7735a4f1@morte> (sfid-20071106_221309_099653_A3AA17B7)
+In-Reply-To: <20071106222313.31e9bcd9@morte>
+References: <20071106222313.31e9bcd9@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+The rfkill subsystem doesn't like code like that
+rfkill_allocate();
+rfkill_register();
+rfkill_unregister();
+rfkill_register(); /* <- This will crash */
 
->> Anyway, I see no problem in renaming this IEEE80211_IF_TYPE_MESH_POINT
->> (even though I just heard of a proposal to rename Mesh Points as Mesh
->> Stations... )
-> 
-> How concrete is that?
+This sequence happens with
+modprobe b43
+ifconfig wlanX up
+ifconfig wlanX down
+ifconfig wlanX up
 
-Well ... I have plans to propose to change some terminology.
+Fix this by always re-allocating the rfkill stuff before register.
 
-> It could obviously be changed later but best to keep the code
-> terminology consistent with the standards terminology unless the
-> standards terminology is completely wack.
+The patch to b43 by Michael Buesch <mb@bu3sch.de> has been ported to
+b43legacy.
 
-Please consider that 802.11s had tremendous changes since 2003. While 
-the original PAR discussed meshing of APs only, the revised PAR is much 
-broader and considers meshing of 802.11 devices in general.
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-Therefore, some of our old terminology doesn't really fit any longer. 
-Furthermore, the adoption of 802.11 terms for single-hop case often 
-confuses people when being used in the context of a mesh network. It's 
-always painful when the 802.11s task group wastes time because people 
-have different understanding of the words the use ...
+----
 
-Best regards,
+Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/rfkill.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
+@@ -48,18 +48,21 @@ static void b43legacy_rfkill_poll(struct
+ 	struct b43legacy_wldev *dev = poll_dev->private;
+ 	struct b43legacy_wl *wl = dev->wl;
+ 	bool enabled;
++	bool report_change = 0;
+ 
+ 	mutex_lock(&wl->mutex);
+ 	B43legacy_WARN_ON(b43legacy_status(dev) < B43legacy_STAT_INITIALIZED);
+ 	enabled = b43legacy_is_hw_radio_enabled(dev);
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
++		report_change = 1;
+ 		b43legacyinfo(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+-		mutex_unlock(&wl->mutex);
++	}
++	mutex_unlock(&wl->mutex);
++
++	if (unlikely(report_change))
+ 		input_report_key(poll_dev->input, KEY_WLAN, enabled);
+-	} else
+-		mutex_unlock(&wl->mutex);
+ }
+ 
+ /* Called when the RFKILL toggled in software. */
+@@ -69,18 +72,11 @@ static int b43legacy_rfkill_soft_toggle(
+ 	struct b43legacy_wl *wl = dev->wl;
+ 	int err = 0;
+ 
+-	/* When RFKILL is registered, it will call back into this callback.
+-	 * wl->mutex will already be locked when this happens.
+-	 * So first trylock. On contention check if we are in initialization.
+-	 * Silently return if that happens to avoid a deadlock. */
+-	if (mutex_trylock(&wl->mutex) == 0) {
+-		if (b43legacy_status(dev) < B43_STAT_INITIALIZED)
+-			return 0;
+-		mutex_lock(&wl->mutex);
+-	}
+-	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED)
+-		goto out_unlock;
++	if (!wl->rfkill.registered)
++		return 0;
+ 
++	mutex_lock(&wl->mutex);
++	B43legacy_WARN_ON(b43legacy_status(dev) < B43legacy_STAT_INITIALIZED);
+ 	switch (state) {
+ 	case RFKILL_STATE_ON:
+ 		if (!dev->radio_hw_enable) {
+Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/rfkill.h
++++ wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
+@@ -16,14 +16,14 @@ struct b43legacy_rfkill {
+ 	struct rfkill *rfkill;
+ 	/* The poll device for the RFKILL input button */
+ 	struct input_polled_dev *poll_dev;
++	/* Did initialization succeed? Used for freeing. */
++	bool registered;
+ 	/* The unique name of this rfkill switch */
+-	char name[32];
++	char name[sizeof("b43legacy-phy4294967295")];
+ };
+ 
+-/* All the init functions return void, because we are not interested
++/* The init function returns void, because we are not interested
+  * in failing the b43 init process when rfkill init failed. */
+-void b43legacy_rfkill_alloc(struct b43legacy_wldev *dev);
+-void b43legacy_rfkill_free(struct b43legacy_wldev *dev);
+ void b43legacy_rfkill_init(struct b43legacy_wldev *dev);
+ void b43legacy_rfkill_exit(struct b43legacy_wldev *dev);
 
-Guido
+Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -3360,7 +3381,6 @@ static int b43legacy_setup_modes(struct b43legacy_wldev *dev,
+ 
+ static void b43legacy_wireless_core_detach(struct b43legacy_wldev *dev)
+ {
+-	b43legacy_rfkill_free(dev);
+ 	/* We release firmware that late to not be required to re-request
+ 	 * is all the time when we reinit the core. */
+ 	b43legacy_release_firmware(dev);
+@@ -3442,7 +3462,6 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
+ 	if (!wl->current_dev)
+ 		wl->current_dev = dev;
+ 	INIT_WORK(&dev->restart_work, b43legacy_chip_reset);
+-	b43legacy_rfkill_alloc(dev);
+ 
+ 	b43legacy_radio_turn_off(dev, 1);
+ 	b43legacy_switch_analog(dev, 0);
+
+
 
 -- 
-Dipl.-Ing. Guido R. Hiertz      | mailto:grh@comnets.rwth-aachen.de
-Chair of Communication Networks | http://www.comnets.rwth-aachen.de/~grh
-RWTH Aachen University          | Phone: +49 241 802 5829
+Ciao
+Stefano
