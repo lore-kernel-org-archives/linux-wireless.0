@@ -1,76 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:23631 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbXK0Tjx (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45135 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754041AbXKFTM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:39:53 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1321058ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:53 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/11] rt2x00: Use IEEE80211_IF_TYPE_INVALID directly
-Date: Tue, 27 Nov 2007 21:49:50 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711272146.53518.IvDoorn@gmail.com>
-In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+	Tue, 6 Nov 2007 14:12:57 -0500
+Message-ID: <4730BCB8.900@lwfinger.net> (sfid-20071106_191302_744902_07A72509)
+Date: Tue, 06 Nov 2007 13:12:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272149.50809.IvDoorn@gmail.com> (sfid-20071127_194249_300331_22C91BC1)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: [RFC 0/6] ssb and friends: Change layout and naming of SPROM data
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to use a seperate define INVALID_INTERFACE while
-we can use IEEE80211_IF_TYPE_INVALID directly.
+In the various Broadcom devices that are supported, several revisions of the SPROM have been
+encountered. Current code takes advantage of the fact that Revision 2 inherits all the data of
+1, and that Revision 3 inherits from 2. This scheme breaks down with revision 4, which does not
+inherit from the earlier models. In deciding how best to implement the new design, a fresh approach
+is warranted. Furthermore, we decided not to include any SPROM variables not used in b44, b43 or
+b43legacy, the supported drivers. To keep the patches small while preserving compilation and correct
+execution during bisection, the change has been split into the following pieces:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
- 3 files changed, 2 insertions(+), 4 deletions(-)
+1. Introduce new structure while maintaining the old.
+2. Convert the ssb module to the new structure.
+3. Convert the b44 driver.
+4. Convert b43.
+5. convert b43legacy.
+6. Remove the old structures from ssb.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index ba874cf..103a122 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -369,10 +369,8 @@ struct interface {
- 
- 	/*
- 	 * Current working type (IEEE80211_IF_TYPE_*).
--	 * When set to INVALID_INTERFACE, no interface is configured.
- 	 */
- 	int type;
--#define INVALID_INTERFACE	IEEE80211_IF_TYPE_INVALID
- 
- 	/*
- 	 * MAC of the device.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 48e2515..bd7b738 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1170,7 +1170,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Reset current working type.
- 	 */
--	rt2x00dev->interface.type = INVALID_INTERFACE;
-+	rt2x00dev->interface.type = IEEE80211_IF_TYPE_INVALID;
- 
- 	/*
- 	 * Allocate ring array.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index e216c34..bae4442 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -242,7 +242,7 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
- 		return;
- 
- 	intf->id = 0;
--	intf->type = INVALID_INTERFACE;
-+	intf->type = IEEE80211_IF_TYPE_INVALID;
- 	memset(&intf->bssid, 0x00, ETH_ALEN);
- 	memset(&intf->mac, 0x00, ETH_ALEN);
- 
--- 
-1.5.3.6
+Larry
 
