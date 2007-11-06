@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60012 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752317AbXKXK7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 05:59:42 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: timeout problems with certain APs and b43
-Date: Sat, 24 Nov 2007 12:17:37 +0100
-Cc: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> <200711232321.58516.rjw@sisk.pl> <1195893331.4149.190.camel@johannes.berg>
-In-Reply-To: <1195893331.4149.190.camel@johannes.berg>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33477
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbXKFTXK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2007 14:23:10 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC 1 of 6] ssb: Add new SPROM structure while keeping the old
+Date: Tue, 6 Nov 2007 20:22:41 +0100
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4730bd03.rGmiNlJ18XBoW/Yb%Larry.Finger@lwfinger.net>
+In-Reply-To: <4730bd03.rGmiNlJ18XBoW/Yb%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711241217.38559.rjw@sisk.pl> (sfid-20071124_105946_352438_DCC44EA1)
+  charset="iso-8859-1"
+Message-Id: <200711062022.41248.mb@bu3sch.de> (sfid-20071106_192320_634054_E3B01AEF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, 24 of November 2007, Johannes Berg wrote:
+On Tuesday 06 November 2007 20:14:11 Larry Finger wrote:
+> This is patch 1 of 6.
 > 
-> > > > It seems that I can reproduce something similar on demand with an SMC wireless
-> > > > router by moving my box sufficiently far away from it. :-)
-> > > 
-> > > Well, yeah, that's expected though, you lose signal at some point. Not
-> > > expected is that it happens without moving anything. Unless the
-> > > calibration code is wrong which wouldn't really surprise me either.
-> > 
-> > In my case, everything works just fine when the box is 6 meters away from the
-> > AP (including a thick wall in between), but when I move it another 5-6 meters
-> > away from the AP, things break down ...
-> > 
-> > I'd expect it to work at longer distances, but well. :-)
+> The SPROM's for various devices utilizing the Sonics Silicon Backplane come
+> with various revisions. The Revision 2 SPROM inherited the data layout of 1, and
+> Revision 3 inherited the layout of 2. The first instance of Revision 4 has
+> now been found in a BCM4328 wireless LAN card. This device does not inherit any
+> layout from previous versions. Although it was possible to create a data
+> structure that kept all the old layouts, we decided to start fresh, keep only
+> those SPROM variables that are used by the drivers that utilize ssb, and to
+> do the conversion in such a manner that neither compilation or execution will
+> be affected if a bisection lands in the middle of these changes, while keeping
+> the patches as small as possible.
 > 
-> Yeah, but keep in mind we reverse engineered all the calibration code.
+> In this patch, the sprom structures are changed while maintaining the old ones.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Index: wireless-2.6/include/linux/ssb/ssb.h
+> ===================================================================
+> --- wireless-2.6.orig/include/linux/ssb/ssb.h
+> +++ wireless-2.6/include/linux/ssb/ssb.h
+> @@ -78,8 +78,32 @@ struct ssb_sprom_r3 {
+>  	u32 ofdmgpo;		/* G-PHY OFDM Power Offset */
+>  };
+>  
+> -struct ssb_sprom_r4 {
+> -	/* TODO */
+> +struct ssb_sprom_data {
+> +	u8 il0mac[6];		/* MAC address for 802.11b/g */
+> +	u8 et0mac[6];		/* MAC address for Ethernet */
+> +	u8 et1mac[6];		/* MAC address for 802.11a */
+> +	u8 et0phyaddr:5;	/* MII address for enet0 */
+> +	u8 et1phyaddr:5;	/* MII address for enet1 */
 
-Sure. :-)
+While we are at it, please also get rid of these ugly foo:X bitfields.
 
-For me it's not a problem (everywhere I use the wireless, there are APs close
-enough ;-)), but it seems related to what's been reported in this thread.
-
-Greetings,
-Rafael
+-- 
+Greetings Michael.
