@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:3172 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493AbXKUTfr (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:58800 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753891AbXKFCKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 14:35:47 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2895445wah
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2007 11:35:46 -0800 (PST)
-Message-ID: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> (sfid-20071121_193550_720363_FAED080D)
-Date: Wed, 21 Nov 2007 13:35:46 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: timeout problems with certain APs and b43
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 5 Nov 2007 21:10:40 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IpDtn-0003KC-9S
+	for linux-wireless@vger.kernel.org; Mon, 05 Nov 2007 21:10:39 -0500
+Subject: Re: Problem with wireless-2.6
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <472F57A6.3020107@lwfinger.net>
+References: <472F57A6.3020107@lwfinger.net>
+Content-Type: text/plain
+Date: Mon, 05 Nov 2007 21:10:35 -0500
+Message-Id: <1194315035.22337.13.camel@dv> (sfid-20071106_021044_507559_7AECF5F2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- uname -a
-Linux laptop 2.6.23.1-49.fc8 #1 SMP Thu Nov 8 21:41:26 EST 2007 i686
-i686 i386 GNU/Linux
-fedora 8
+Hello, Larry!
 
-on certain APs, the internet works for a long time then stops, and I
-get authentication time outs, why?  It usually works again if I reset
-the AP itself, which i should not have to do and don't have to if in
-XP....
+On Mon, 2007-11-05 at 11:49 -0600, Larry Finger wrote:
+> John,
+> 
+> I did the following set of steps:
+> 
+> git clone --reference ~/linux-2.6 \
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git junk
+> 
+> cd junk
+> git checkout -b everything origin/everything
+> git pull
+> Warning: No merge candidate found because value of config option
+>          "branch.everything.merge" does not match any remote branch fetched.
+> No changes.
 
+Just add "--track" to the git-checkout command, and it will be fine:
 
-wlan0: switched to long barker preamble (BSSID=00:0f:66:53:3e:24)
-wlan0: switched to short barker preamble (BSSID=00:0f:66:53:3e:24)
+[proski@dv junk]$ git checkout --track -b everything origin/everything
+Branch everything set up to track remote branch refs/remotes/origin/everything.
+Switched to a new branch "everything"
+[proski@dv junk]$ git-pull
+Already up-to-date.
+[proski@dv junk]$
 
+Or better yet, add this to ~/.gitconfig:
 
+[branch]
+        autosetupmerge = true
 
-wlan0: Initial auth_alg=0
-wlan0: authenticate with AP 00:0f:66:53:3e:24
-wlan0: authenticate with AP 00:0f:66:53:3e:24
-wlan0: authenticate with AP 00:0f:66:53:3e:24
-wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
+This would be equivalent to using "--track" by default.  Please make
+sure you have a recent version of git, as --track appeared first in
+git-1.5.1.
+
+-- 
+Regards,
+Pavel Roskin
+
