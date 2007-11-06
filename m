@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbXKVPNi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 10:13:38 -0500
-Subject: Re: mac80211 regression: doesn't associate automatically
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200711221605.55506.hs4233@mail.mn-solutions.de> (sfid-20071122_150536_458314_211D8F87)
-References: <200711220912.10452.hs4233@mail.mn-solutions.de>
-	 <200711221514.37906.hs4233@mail.mn-solutions.de>
-	 <1195742483.4149.6.camel@johannes.berg>
-	 <200711221605.55506.hs4233@mail.mn-solutions.de>
-	 (sfid-20071122_150536_458314_211D8F87)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1smWmK31+UA9WUwVjsi+"
-Date: Thu, 22 Nov 2007 16:13:34 +0100
-Message-Id: <1195744414.4149.14.camel@johannes.berg> (sfid-20071122_151342_939915_A4CAA654)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2983 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754310AbXKFQsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2007 11:48:12 -0500
+Date: Tue, 6 Nov 2007 11:47:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Claudio Matsuoka <claudio@mandriva.com>
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	dsd@gentoo.org, kune@deine-taler.de
+Subject: Re: RTL8187 rate control problems
+Message-ID: <20071106164749.GD4440@tuxdriver.com> (sfid-20071106_164829_671476_6A4A06A2)
+References: <200711061323.16302.claudio@mandriva.com> <20071106164148.GB4440@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071106164148.GB4440@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I botched Michael's email address -- please not that when composing
+your replies (or reply to this message instead)...
 
---=-1smWmK31+UA9WUwVjsi+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+John
 
-[what's so hard about copying me?]
+On Tue, Nov 06, 2007 at 11:41:48AM -0500, John W. Linville wrote:
+> On Tue, Nov 06, 2007 at 01:23:16PM -0200, Claudio Matsuoka wrote:
+> 
+> > I've been reported a problem with RTL8187 working only at very close ranges 
+> > (4-5m) in Linux while the same hardware works at much higher distances in 
+> > Windows. Investigating the problem, I found that it's caused by the mac80211 
+> > rate control incrementing the bit rate to 54M and never going down because 
+> > the fail counter stays at zero. What would be a good way to check 
+> > transmission retries or failures in the RTL8187 to prevent this problem? Is 
+> > it possible to have a retry count sent to the tx callback so 
+> > status->retry_count could be set accordingly?   
+> 
+> I think you are right -- it looks like rtl8187 never sets
+> excessive_retries for transmit status.  I don't see anything obvious
+> in the specs that would give us an actual indication of that either,
+> which probably explains why it is missing.
+> 
+> The zd1211rw(-mac80211) driver(s) have a mechanism for matching-up
+> received ACKs with transmitted frames so that they can synthesize the
+> required excessive_retries data.  Probably rtl8186 needs something
+> similar.  Maybe this would even be worth generalizing?
+> 
+> John
+> -- 
+> John W. Linville
+> linville@tuxdriver.com
 
-Bottom line is, I don't care.
-
-johannes
-
---=-1smWmK31+UA9WUwVjsi+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0WcnaVg1VMiehFYAQItDg/8DeSXJm+3QDpQ+/XKLmHlJ07w39TgdtEJ
-fDQPUi1oEtmM65I+3p45uEpeTaEIdr5PkCFaNd/k9lNOx4Q5wnU8T5bYPhel86hC
-kaKrx8SzTqOFSl0dxHtOfL7TpCmTBjxGV9FWVPcEy0DXdBzWd+ITZ5Dx9P1Obtcr
-KbA4Czw4sQlf6MNCyeNCSTGyfbdOuMTENhK3pNEAbaIjCuHqjJ2lvwIN6acTEZdU
-Jj/6T2uMTUc+AX0p7TL0evFWa0W51vUTw4cC+uVYs3CXEqne09J0JkiXxq+okmnp
-PtGLdCcXVDO/jFpCE9rb21sTP5eJyxBIpVcjzyM/V7YtAjDAkdbgzr0NDWu2aY1J
-YN+SuLfOrY81ldS4qwyltLNWbsMUJcHJx2RdSjlKkx0WtU2/qkZSWUoodzEwRlfN
-uxJBn5sPK/T3nS0qZxcRRq8M0bZoF9TziHS/VaoXGHp5wq0A85lSQGPHml+CdvvX
-aFj6YOn+7dS+xMHPwPHTwDbvOMjnIPnpbDFCaTPpL6tDwGuxKtVQHTPbzXCD9GVx
-P+FYBxemDoNGXjYRngT/eIpjz3qqmbDQ2Bi2dNH8uOsIEQ8SYh4qyJduG3IvNocu
-inEswxDpTTa0l9icK8iJr24JJews6ZtIO5emoHuhWzSjrBKsipU6n+ciBB3KgOKu
-R64kXZWhppo=
-=d5O4
------END PGP SIGNATURE-----
-
---=-1smWmK31+UA9WUwVjsi+--
-
+-- 
+John W. Linville
+linville@tuxdriver.com
