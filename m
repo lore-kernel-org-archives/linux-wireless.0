@@ -1,86 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51154 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753598AbXK0CQu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 21:16:50 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Tony Breeds <tony@bakeyournoodle.com>
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Date: Mon, 26 Nov 2007 21:20:08 -0500
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	akpm@linux-foundation.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <4742DFC3.80305@linux.vnet.ibm.com> <20071127005950.GZ24243@bakeyournoodle.com>
-In-Reply-To: <20071127005950.GZ24243@bakeyournoodle.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5837485.7axB9uEovt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711262120.13218.flamingice@sourmilk.net> (sfid-20071127_021655_770784_68DBCDF6)
+Received: from mfe1.polimi.it ([131.175.12.23]:47688 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755874AbXKGJWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 04:22:36 -0500
+Date: Wed, 7 Nov 2007 10:21:58 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Wu <flamingice.sourmilk.net@polimi.it>,
+	Johannes Berg <johannes.sipsolutions.net@polimi.it>,
+	Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: mac80211 doesn't reassociate after failed ProbeResp
+Message-ID: <20071107102158.61b4ca3d@morte> (sfid-20071107_092252_538647_2789CD0F)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5837485.7axB9uEovt
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+I got a quite reproducible bug with mac80211. Sometimes, this happens
+(phy0 is a b43 PHY):
 
-(Trimmed CC list a bit, hopefully didn't cut anyone interested out)
+Nov  7 02:06:23 morte [123784.591945] wlan0: No ProbeResp from current AP 00:14:c1:35:8d:eb - assume out of range
+Nov  7 02:06:23 morte [123784.591968] phy0: Removed STA 00:14:c1:35:8d:eb
 
-On Monday 26 November 2007 19:59:50 Tony Breeds wrote:
-> On Tue, Nov 20, 2007 at 06:53:15PM +0530, Kamalesh Babulal wrote:
-> > Hi Andrew,
-> >
-> > The kernel build fails, with following message
-> >
-> >   LD      drivers/net/wireless/built-in.o
-> > drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
-> > (.opd+0x180): multiple definition of `rtl8225z2_rf_init'
-> > drivers/net/wireless/rtl8180.o:(.opd+0x1b0): first defined here
-> > drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
-> > /root/linux-2.6.24-rc3/drivers/net/wireless/rtl8187_rtl8225.c:571:
-> > multiple definition of `.rtl8225z2_rf_init'
-> > drivers/net/wireless/rtl8180.o:/root/linux-2.6.24-rc3/drivers/net/wirel=
-es
-> >s/rtl8180_rtl8225.c:561: first defined here ld: Warning: size of symbol
-> > `.rtl8225z2_rf_init' changed from 3836 in drivers/net/wireless/rtl8180.o
-> > to 3544 in drivers/net/wireless/rtl8187.o
->
-> <snip>
->
-> The patch below is a little ugly but will allow allyesconfig to work.  I
-> don't know enough about the Realtek devices to make intellegent
-> suggestions on how to fix this particular problem.  Clearly the 2
-> drivers share a lot of common code so perhaps they can be merged?
->
-I would rather have a patch to temporarily not allow them to be built into =
-the=20
-kernel. (or only allow one at a time to be built as a module) There's no=20
-issues when these drivers are compiled as modules.
+then, instead of trying to reassociate, mac80211 acts like this:
+Nov  7 02:06:25 morte [123785.138041] wlan0: dropped data frame to not associated station 00:14:c1:35:8d:eb
+Nov  7 02:06:25 morte [123785.138243] wlan0: dropped data frame to not associated station 00:14:c1:35:8d:eb
+Nov  7 02:06:55 morte [123798.704732] wlan0: No STA entry for own AP 00:14:c1:35:8d:eb
 
-It's mostly the rtl8225 radio tuning code that's similar. They're not exact=
-ly=20
-the same though, so it'll be a bit messy to merge the usb rtl8225 radio=20
-tuning and pci rtl8225 radio tuning code. However, I do think it'll be bett=
-er=20
-overall so the merger of that code is planned.
+I guess that's a mac80211 bug. I'll be happy to provide you with more
+testing.
 
-=2DMichael Wu
 
---nextPart5837485.7axB9uEovt
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHS37dT3Oqt9AH4aERArqJAJ0SvSrgdX16cVwr9CaDUeQpEdqCzgCfalsA
-AOuXFAxt7r9Zxz4hSgftZn4=
-=hrvI
------END PGP SIGNATURE-----
-
---nextPart5837485.7axB9uEovt--
+-- 
+Ciao
+Stefano
