@@ -1,101 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46403
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752508AbXKYKL4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39147 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbXKGPIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 05:11:56 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: reinit on too many PHY TX errors
-Date: Sun, 25 Nov 2007 11:10:33 +0100
-Cc: stefano.brivio@polimi.it, bcm43xx-dev@lists.berlios.de,
+	Wed, 7 Nov 2007 10:08:35 -0500
+Subject: Re: RTL8187 rate control problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Claudio Matsuoka <claudio@mandriva.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200711251110.33613.mb@bu3sch.de> (sfid-20071125_101159_694602_86D5BC92)
+In-Reply-To: <200711061947.21927.flamingice@sourmilk.net> (sfid-20071107_005157_014757_0E6753FD)
+References: <200711061323.16302.claudio@mandriva.com>
+	 <20071106164148.GB4440@tuxdriver.com>
+	 <200711062239.13052.claudio@mandriva.com>
+	 <200711061947.21927.flamingice@sourmilk.net>
+	 (sfid-20071107_005157_014757_0E6753FD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gx9mnqKGEvQQiwasIRUZ"
+Date: Wed, 07 Nov 2007 15:20:43 +0100
+Message-Id: <1194445243.4470.25.camel@johannes.berg> (sfid-20071107_150841_477747_FC1E2B2B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stefano Brivio <stefano.brivio@polimi.it>
 
-Restart the hardware on too many PHY TX errors. A thousand PHY TX errors
-per 15 seconds means we won't be able to recover for sure.
-
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-Index: wireless-2.6/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/b43.h
-+++ wireless-2.6/drivers/net/wireless/b43/b43.h
-@@ -391,6 +391,8 @@ enum {
- #define B43_DEFAULT_SHORT_RETRY_LIMIT	7
- #define B43_DEFAULT_LONG_RETRY_LIMIT	4
- 
-+#define B43_PHY_TX_BADNESS_LIMIT	1000
-+
- /* Max size of a security key */
- #define B43_SEC_KEYSIZE			16
- /* Security algorithms. */
-@@ -546,6 +548,9 @@ struct b43_phy {
- 	/* OFDM address read/write caching for hardware auto-increment. */
- 	u16 ofdm_addr;
- 	u8 ofdm_valid; /* 0: invalid, 1: read, 2: write */
-+
-+	/* PHY TX errors counter. */
-+	atomic_t txerr_cnt;
- };
- 
- /* Data structures for DMA transmission, per 80211 core. */
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c
-+++ wireless-2.6/drivers/net/wireless/b43/main.c
-@@ -1394,8 +1394,17 @@ static void b43_interrupt_tasklet(struct
- 	if (unlikely(reason & B43_IRQ_MAC_TXERR))
- 		b43err(dev->wl, "MAC transmission error\n");
- 
--	if (unlikely(reason & B43_IRQ_PHY_TXERR))
-+	if (unlikely(reason & B43_IRQ_PHY_TXERR)) {
- 		b43err(dev->wl, "PHY transmission error\n");
-+		rmb();
-+		if (unlikely(atomic_dec_and_test(&dev->phy.txerr_cnt))) {
-+			atomic_set(&dev->phy.txerr_cnt,
-+				   B43_PHY_TX_BADNESS_LIMIT);
-+			b43err(dev->wl, "Too many PHY TX errors, "
-+					"restarting the controller\n");
-+			b43_controller_restart(dev, "PHY TX errors");
-+		}
-+	}
- 
- 	if (unlikely(merged_dma_reason & (B43_DMAIRQ_FATALMASK |
- 					  B43_DMAIRQ_NONFATALMASK))) {
-@@ -2259,6 +2268,9 @@ static int b43_chip_init(struct b43_wlde
- 	/* OFDM address caching. */
- 	phy->ofdm_valid = 0;
- 
-+	/* PHY TX errors counter. */
-+	atomic_set(&phy->txerr_cnt, B43_PHY_TX_BADNESS_LIMIT);
-+
- 	err = 0;
- 	b43dbg(dev->wl, "Chip initialized\n");
- out:
-@@ -2344,6 +2356,9 @@ static void b43_periodic_every15sec(stru
- 	}
- 	b43_phy_xmitpower(dev);	//FIXME: unless scanning?
- 	//TODO for APHY (temperature?)
-+
-+	atomic_set(&phy->txerr_cnt, B43_PHY_TX_BADNESS_LIMIT);
-+	wmb();
- }
- 
- static void do_periodic_work(struct b43_wldev *dev)
+--=-gx9mnqKGEvQQiwasIRUZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--------------------------------------------------------
+> There's no easy way to do tx ack reporting on the rtl8187.=20
 
--- 
-Greetings Michael.
+This also means it doesn't show you outgoing frames on a monitor. We
+really need to find a solution here that takes into account our current
+use of tx status reports for outgoing frame monitor as well as rate
+control.
+
+At the higher network speeds of 802.11n equipment we'll not want to do
+this anyway.
+
+Since hostapd needs to know whether the packets it sent were acked,
+we'll have to go back to using IEEE80211_TXCTL_REQ_TX_STATUS for those
+injected frames.
+
+Then we need to decide whether we want to report all outgoing frames on
+monitor interfaces or only those where the hardware was able to provide
+a status report. The latter would be sufficient for hostapd, of course.
+
+Finally, we need to create a new hardware flag that determines whether
+the driver will report status for all frames or not, this influences the
+possible rate control algorithm choices. Of course we still need to
+write rate control algorithms that are able to work with synthesized
+information...
+
+johannes
+
+--=-gx9mnqKGEvQQiwasIRUZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzHJuqVg1VMiehFYAQIIyRAAntBA5ZrU6pRyfxu9ex4wB9Jf3WS37Kdx
+P/LunnnzlzlbtAFZnonEp66MRttsrI3s4DXqhcebs0ZVVsFSlOVggBl0UsCygZLW
+0Vz7mNPVzImLZCxEYcVb5flx0IBxD1HTp7Xj5Y5sOqjvoJIICGZggRVQl7EQtSCS
+MzdUmJ/Sm0iJyPRRCLuGlx32uz06CsUUtoF5fyVYxiPvY5v20LSRuRQkOOM7ONjR
+aGFS06H+JSJ7F5dPBcO/njMCgG7u1DhEJ/e0RFXa/K+YXEjGlzqSk7vlmbtBmCVu
+fb/7dN4572R6kD0FHEDrqRl6SQVhc1vgbw6zIK7C/gMdnWST/8PlwoSVoFTBZTwM
+OTXYBQROZhmMhq6BHkofNkETCQC+iQeHbiaJa5HUrGmDnWCs1Sl3KOi/sKHq0rVE
+a6SisAX0Jlqhc+mtZOWN3o+zDeNd77I/qhx1tAk9wIjWe50ZIGzS1WoCskQfAn6r
+zPmtvJOzK9jxnIqeJWjKAAPe3SHkub07yVzqSDYV+1V1cOLo8BlrI0ZrKBk8pscX
+2jNcO0OesylLd0/nq2NuofLWqIiqR5HDlwKuoBuJKuyHTsV6577mmiozyQzhq0TA
+Uai4ISKOwklNlNnDPwDH81KhE87T6uqR9R6o7POnwWGIVZ5T5sYTwThjdYEI0VQM
+p6KN5bW4ORM=
+=dLhM
+-----END PGP SIGNATURE-----
+
+--=-gx9mnqKGEvQQiwasIRUZ--
+
