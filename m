@@ -1,35 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:48651 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232AbXK1Cz1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 21:55:27 -0500
-Message-ID: <474CD592.2020108@zytor.com> (sfid-20071128_025532_297962_520ED368)
-Date: Tue, 27 Nov 2007 18:42:26 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-CC: Herbert Xu <herbert@gondor.apana.org.au>,
-	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
+Received: from ra.tuxdriver.com ([70.61.120.52]:4525 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752460AbXKGSwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 13:52:30 -0500
+Date: Wed, 7 Nov 2007 13:51:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au>	<1195893216.4149.186.camel@johannes.berg>	<20071124133200.GA27531@gondor.apana.org.au>	<1195912176.4149.194.camel@johannes.berg>	<20071124141319.GA27819@gondor.apana.org.au>	<4748855C.5090103@linux-foundation.org>	<474C50D7.5010901@zytor.com> <20071127103940.314c7844@freepuppy.rosehill>
-In-Reply-To: <20071127103940.314c7844@freepuppy.rosehill>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
+Message-ID: <20071107185147.GA21097@tuxdriver.com> (sfid-20071107_185234_384201_10D26E71)
+References: <20071107001314.GH4440@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071107001314.GH4440@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Hemminger wrote:
+Dave,
+
+Hold-off on this one for now if -- clearly Johannes and I need to
+brush-up on our Kconfig skills... :-(
+
+I'll post a new pull request soon.
+
+Thanks,
+
+John
+
+On Tue, Nov 06, 2007 at 07:13:14PM -0500, John W. Linville wrote:
+> Dave,
 > 
-> Is there any standard kernel config define for "this platform can't do
-> unaligned accesses"?
+> Here are some fixes for 2.6.24...
 > 
+> The iwlwifi patch is needed because the iwlwifi drivers routinely end-up
+> associated with the "simple" rate control algorithm, yet those drivers
+> really only work with their own custom algorithms.  The other rate
+> control patches are there to satisfy dependencies for this patch.
+> 
+> "mac80211: remove ieee80211_common.h" cleans-up an unused file left
+> hanging-around after an earlier patch already in 2.6.24.
+> 
+> "mac80211: remove unused driver ops" is really a clean-up, but
+> "mac80211: use IW_AUTH_PRIVACY_INVOKED rather than IW_AUTH_KEY_MGMT"
+> depends on it.
+> 
+> "ssb: Fix initcall ordering" changes a subsys_initcall to an
+> fs_initcall.  This seems like a bit of a hack, but it fixes a real
+> problem and I'm not sure what cleaner solution is either reasonable
+> or available.  The comment in the patch explains the reasoning for this
+> somewhat unique situation.
+> 
+> I think the other patches are plain enough to not require further
+> comment.  Let me know if there are any problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> Individual patches are available here:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
+> 
+> ---
+> 
+> The following changes since commit 2655e2cee2d77459fcb7e10228259e4ee0328697:
+>   Alan Cox (1):
+>         ata_piix: Add additional PCI identifier for 40 wire short cable
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+> 
+> Johannes Berg (9):
+>       softmac: fix wext MLME request reason code endianness
+>       mac80211: make simple rate control algorithm built-in
+>       mac80211: don't allow registering the same rate control twice
+>       mac80211: allow driver to ask for a rate control algorithm
+>       iwlwifi: select proper rate control algorithm
+>       softmac: MAINTAINERS update
+>       mac80211: remove ieee80211_common.h
+>       mac80211: remove unused driver ops
+>       mac80211: use IW_AUTH_PRIVACY_INVOKED rather than IW_AUTH_KEY_MGMT
+> 
+> John W. Linville (1):
+>       mac80211: make "decrypt failed" messages conditional upon MAC80211_DEBUG
+> 
+> Michael Buesch (5):
+>       ssb: Fix initcall ordering
+>       rfkill: Register LED triggers before registering switch
+>       rfkill: Use subsys_initcall
+>       rfkill: Use mutex_lock() at register and add sanity check
+>       rfkill: Fix sparse warning
+> 
+>  MAINTAINERS                                 |    7 +--
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +
+>  drivers/ssb/main.c                          |    5 +-
+>  include/net/mac80211.h                      |   26 ++------
+>  net/ieee80211/softmac/ieee80211softmac_wx.c |    2 +-
+>  net/mac80211/Kconfig                        |   12 ++++
+>  net/mac80211/Makefile                       |    3 +-
+>  net/mac80211/ieee80211.c                    |   16 +++++-
+>  net/mac80211/ieee80211_common.h             |   91 ---------------------------
+>  net/mac80211/ieee80211_i.h                  |    2 +-
+>  net/mac80211/ieee80211_ioctl.c              |   21 +++----
+>  net/mac80211/ieee80211_rate.c               |   24 ++++++-
+>  net/mac80211/ieee80211_rate.h               |    3 +
+>  net/mac80211/ieee80211_sta.c                |   18 +++--
+>  net/mac80211/rc80211_simple.c               |   25 +-------
+>  net/mac80211/rx.c                           |    2 +
+>  net/mac80211/wep.c                          |    2 +
+>  net/mac80211/wpa.c                          |   18 ++++--
+>  net/rfkill/rfkill.c                         |   37 ++++++-----
+>  20 files changed, 126 insertions(+), 192 deletions(-)
+>  delete mode 100644 net/mac80211/ieee80211_common.h
 
-Not that I know of, but there should be.
-
-To be somewhat more complexicated, some platforms (e.g. MIPS) can do 
-unaligned references quite cheaply, but they need different opcodes to 
-do so.
-
-	-hpa
+-- 
+John W. Linville
+linville@tuxdriver.com
