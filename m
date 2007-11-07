@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:49368 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757856AbXKOTtT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 14:49:19 -0500
-Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Will Dyson <will.dyson@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Florian Lohoff <flo@rfc822.org>,
-	Marcus Better <marcus@better.se>,
-	linux-wireless@vger.kernel.org,
-	rt2400-devel <rt2400-devel@lists.sourceforge.net>
-In-Reply-To: <200711152058.40520.IvDoorn@gmail.com>
-References: <20071111102315.GC10486@paradigm.rfc822.org>
-	 <8e6f94720711141840g7346f4eak577477d735b72f39@mail.gmail.com>
-	 <1195121518.28648.46.camel@localhost>
-	 <200711152058.40520.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Thu, 15 Nov 2007 20:48:56 +0100
-Message-Id: <1195156136.28648.84.camel@localhost> (sfid-20071115_194922_591731_D1C4F4B8)
+Received: from mfe1.polimi.it ([131.175.12.23]:43399 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751414AbXKGLVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 06:21:39 -0500
+Date: Wed, 7 Nov 2007 12:18:47 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 doesn't reassociate after failed ProbeResp
+Message-ID: <20071107121847.72d46dac@morte> (sfid-20071107_112146_238671_702CC72C)
+In-Reply-To: <20071107104222.1fa0b728@morte>
+References: <20071107102158.61b4ca3d@morte>
+	<20071107104222.1fa0b728@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes the issue for me. Note that this is a dirty hack and may break
+roaming and everything badly. Will try to fix this better.
 
-On Thu, 2007-11-15 at 20:58 +0100, Ivo van Doorn wrote:
-> 
-> Perhaps we should test if clearing the ENTRY_TXD_ACK unconditionally
-> for cts and rts frames would help. (patch located at the bottom).
-> In fact I wonder if clearing that flag would fix the rt61pci to run txdone
-> for all frames (opposed to skipping an occasional entry).
+--- net/mac80211/ieee80211_sta.c~       2007-11-07 12:08:08.847346973 +0100
++++ net/mac80211/ieee80211_sta.c        2007-11-07 12:08:08.848346821 +0100
+@@ -785,7 +785,7 @@
+                                       "range\n",
+                                       dev->name, print_mac(mac, ifsta->bssid));
+                                disassoc = 1;
+-                               sta_info_free(sta);
++//                             sta_info_free(sta);
+                        } else
+                                ieee80211_send_probe_req(dev, ifsta->bssid,
+                                                         local->scan_ssid,
 
-Hm, I would think we actually should *set* the flag for rts frames,
-cause we expected them to be acked by cts, right? IIRC, this actually is
-what the legacy driver does.
 
-Concerning the rt61 problem, I've done an experiment: I changed the
-code to drop out of the interrupt handler on every second interrupt
-without doing anything. That way, the driver doesn't execute the txdone
-logic for some txdone interrupts. This change triggered the missing tx
-report messages. So the rt61 hardware probably proceeds to the next
-entry after the interrupt is handled by the host. Question now is
-whether it is possible that we actually miss an interrupt? This would be
-an explanation for the missing tx status reports. I plan to have a
-closer look at interrupt handling in the kernel to see whether I can
-find something.
-
-Mattias
-
+-- 
+Ciao
+Stefano
