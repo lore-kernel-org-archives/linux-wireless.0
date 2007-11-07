@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:27990 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758257AbXKLMgt convert rfc822-to-8bit (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:47341 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753940AbXKGQoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 07:36:49 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Output message at startup if hardware switch for radio is off
-Date: Mon, 12 Nov 2007 13:36:42 +0100
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de
-References: <4734e389.AF3t4zZIQw1IryOf%Larry.Finger@lwfinger.net> <200711101624.50808.mb@bu3sch.de>
-In-Reply-To: <200711101624.50808.mb@bu3sch.de>
+	Wed, 7 Nov 2007 11:44:12 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so2061462nfb
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Nov 2007 08:44:10 -0800 (PST)
+Message-ID: <4731EB59.3020305@gmail.com> (sfid-20071107_164421_194029_D67E36C1)
+Date: Wed, 07 Nov 2007 17:44:09 +0100
+From: drago01 <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200711121336.42389.hs4233@mail.mn-solutions.de> (sfid-20071112_123653_364292_FB85D065)
+To: Claudio Matsuoka <claudio@mandriva.com>
+CC: Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Wu <flamingice.sourmilk.net@polimi.it>,
+	Johannes Berg <johannes.sipsolutions.net@polimi.it>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 doesn't reassociate after failed ProbeResp
+References: <20071107102158.61b4ca3d@morte> <200711070849.53931.claudio@mandriva.com>
+In-Reply-To: <200711070849.53931.claudio@mandriva.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Well... Pressing the rfkill button is the _FIRST_ thing that I
-> would do, if the device does not work. I'm wondering why
-> people have a problem with that. On other operating systems
-> it's the very same. On Windows there is no dmesg.
+Claudio Matsuoka wrote:
+> On Wednesday 07 November 2007 07:21:58 Stefano Brivio wrote:
+>
+>   
+>> then, instead of trying to reassociate, mac80211 acts like this:
+>> Nov  7 02:06:25 morte [123785.138041] wlan0: dropped data frame to not
+>> associated station 00:14:c1:35:8d:eb Nov  7 02:06:25 morte [123785.138243]
+>>     
+>
+> I confirm this problem with the b43, and also rtl8187 (which sometimes 
+> reassociates spontaneously, sometimes not).
+>
+>   
+I have also seen some reports where this happened with iwl3945/4965
 
-On Windows, the "Wireless Network Connection" wizard displays
-
------------------------------------------------------
-No wireless networks were found in range
-
-Make sure the wireless switch on your computer is on.
-To see an updated list, click "Refresh network list".
------------------------------------------------------
-
-The Linux =E4quivalent would be NetworkManager or the KDE tools for=20
-this job.
-
-
-That's at least displayed on the WinXP Embedded device that I=20
-just created :-)
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
