@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759901AbXKHRXd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2007 12:23:33 -0500
-Subject: Re: [FYI] hostapd state with mac80211 on linux
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: hostap <hostap@shmoo.com>, Chuck Tuffli <CTuffli@dspg.com>,
-	Guillaume Chevillot <guillaume@chevillot.net>,
-	Alexander Kotelnikov <sacha@myxomop.com>
-In-Reply-To: <1193338400.4406.4.camel@johannes.berg> (sfid-20071026_113617_589897_6D21318C)
-References: <1193338400.4406.4.camel@johannes.berg>
-	 (sfid-20071026_113617_589897_6D21318C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PC7rXhhmudzju1NAZG7S"
-Date: Thu, 08 Nov 2007 18:24:55 +0100
-Message-Id: <1194542695.4793.16.camel@johannes.berg> (sfid-20071108_172342_980902_F2BD15D1)
+Received: from mfe1.polimi.it ([131.175.12.23]:44581 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752495AbXKGJpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 04:45:43 -0500
+Date: Wed, 7 Nov 2007 10:42:22 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 doesn't reassociate after failed ProbeResp
+Message-ID: <20071107104222.1fa0b728@morte> (sfid-20071107_094554_926754_7BA8D944)
+In-Reply-To: <20071107102158.61b4ca3d@morte>
+References: <20071107102158.61b4ca3d@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 7 Nov 2007 10:21:58 +0100
+Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
---=-PC7rXhhmudzju1NAZG7S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I got a quite reproducible bug with mac80211. Sometimes, this happens
+> (phy0 is a b43 PHY):
+> 
+> Nov  7 02:06:23 morte [123784.591945] wlan0: No ProbeResp from current AP
+> 00:14:c1:35:8d:eb - assume out of range Nov  7 02:06:23 morte
+> [123784.591968] phy0: Removed STA 00:14:c1:35:8d:eb
+> 
+> then, instead of trying to reassociate, mac80211 acts like this:
+> Nov  7 02:06:25 morte [123785.138041] wlan0: dropped data frame to not
+> associated station 00:14:c1:35:8d:eb Nov  7 02:06:25 morte
+> [123785.138243] wlan0: dropped data frame to not associated station
+> 00:14:c1:35:8d:eb Nov  7 02:06:55 morte [123798.704732] wlan0: No STA
+> entry for own AP 00:14:c1:35:8d:eb
+
+BTW, what I have to do to get mac80211 to associate is to set a bogus ESSID
+and then the correct one back, then it will associate.
 
 
-> hostapd works with
->  - kernel 2.6.24-rc1
->  - plus my patches from http://johannes.sipsolutions.net/patches/kernel/a=
-ll/
->  - plus the commit 5c58298c2536252ab95aa2b1497ab47eb878ca5d from net-2.6
->    ([NETLINK]: Fix ACK processing after netlink_dump_start)
->  - my hostapd patches from http://johannes.sipsolutions.net/patches/hosta=
-p/all/
-
-I forgot to mention that it needs libnl, but now I can fix that: while
-it used to require libnl from git it should work with the recently
-released libnl 1.0-pre7. Hopefully distros will pick that up in the same
-way they picked up 1.0-pre6.
-
-johannes
-
---=-PC7rXhhmudzju1NAZG7S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzNGZqVg1VMiehFYAQJRahAAvD1lS1gVaA+7ntHwnKptGvTrHYHgbMn1
-3hFhKKqm4j2EOSRz7ANgFgFC3SFDXkZ6NouQWAUiHknb8xdALH7rrnxaZ1o6slD6
-R8jHXmoXcBS8HOgsvPiP+lXR4eJpV28xrT6lMMOOKPEHq1LihWymAy+bXzPEh9pu
-UvU3vhBi1DiOEi+ldM3QGSuWRYxsUIxoOoFPRGP0ho4Ggd7nkhMXzwCmbX+vQwM5
-S2dPX5NpjhDRDK6+lmsyVFORops6yOntNLrAWOMqJ5FF3RdRXLA4NrcjdN82FAMv
-9ckCRSVPgjfvrXzU0UOftDz+FRxuFNliARZ6oI70lvMbYi6awXhmwudmBQPBH/Od
-vG/4NlI6F0E7rgAJCPgWUnO147No1haSlEDRUew4kiRWMWmibcxW9wHK1x9eC3no
-pBFZKMs6cVnVvCF4t5D9VX/qy9B2vn4ay1DIquocjXgzHHfgy/ikhPSzf/8OCTxy
-DGbhcpzAESMyGnKNUGzKhNUjPV2zoSNYly9KEsK4gEzd59otuZU7l20vDUT0uP+1
-Ry0q1FJH9Px0OOYobH7dYS7Sj+UIG9yRhImtg6AuMsSOqHVeCVD+HVc8Iccow/lG
-2k2xyCLKYjrMDEDKn16v7Vyd2MEdfh1TeGHlyQz9DOcTdWSkw0wkMoZy1p1BFJ7Y
-7ZWZs0MQ3yY=
-=gdfV
------END PGP SIGNATURE-----
-
---=-PC7rXhhmudzju1NAZG7S--
-
+-- 
+Ciao
+Stefano
