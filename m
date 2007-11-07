@@ -1,84 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:37336 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754727AbXKAT7L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 15:59:11 -0400
-Date: Thu, 1 Nov 2007 15:07:11 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20071101190711.GB17825@storm.local.network> (sfid-20071101_195916_363066_72B80B61)
-References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4634 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754812AbXKGDJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2007 22:09:07 -0500
+Date: Tue, 6 Nov 2007 22:08:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'upstream-davem' branch of wireless-2.6
+Message-ID: <20071107030853.GB30169@tuxdriver.com> (sfid-20071107_030911_140480_6754D7F5)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2B/JsCI69OhZNC5r"
-In-Reply-To: <20071101185900.GD14943@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---2B/JsCI69OhZNC5r
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi John,
-
-On Thu, Nov 01, 2007 at 02:59:00PM -0400, John W. Linville wrote:
-> On Wed, Sep 19, 2007 at 03:37:43PM -0400, Forest Bond wrote:
-> > Hi,
-> >=20
-> > A few months ago, VIA quietly released the source for their VT6656 USB =
-WiFi
-> > chip.  The original VIA archive can be downloaded here:
-> >=20
-> > http://www.viaarena.com/Driver/vt6656-linux-x86-src-v113.rar
->=20
-> Forest,
->=20
-> Any luck getting license clarification from VIA?
-
-Sorry for the silence.
-
-I think I might have mentioned before that the company I work for has an
-established relationship with VIA which in most circumstances can be helpfu=
-l for
-handling situations like this one.  Unfortunately, I've not been able to br=
-ing
-it up as a business-related item due to some unfortunate circumstances that=
- I'm
-not permitted to elaborate upon here.
-
-I did send a few e-mails (one to the driver developer, and one to a personal
-contact at VIA), but neither has yielded anything useful.  I think the only
-remaining effective option is to bring it up on viaarena.com.  Consumer ang=
-st
-runs thick in those parts, and VIA has occasionally been known to respond
-semi-positively.  In this case, that just might be enough, since their
-intentions were clearly to open-source the driver, despite their apparent
-inability to document this properly.
-
-Does that seem like a good path to you?
+Here are a few for when you decide to open net-2.6.25... :-)
 
 Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
 
---2B/JsCI69OhZNC5r
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+John
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+---
 
-iD8DBQFHKiPfRO4fQQdv5AwRAhwSAKDCdul1ChjI9XEfJgqJKZ0UWqRs+wCglupP
-hiPHOVs6HQ9o4JV5BeTkFKg=
-=0uEP
------END PGP SIGNATURE-----
+Individual patches are available here:
 
---2B/JsCI69OhZNC5r--
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
+
+---
+
+The following changes since commit 2655e2cee2d77459fcb7e10228259e4ee0328697:
+  Alan Cox (1):
+        ata_piix: Add additional PCI identifier for 40 wire short cable
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
+
+Mattias Nissler (1):
+      mac80211: Accept auto txpower setting
+
+Michael Wu (1):
+      ieee80211: Add IEEE80211_MAX_FRAME_LEN to linux/ieee80211.h
+
+ include/linux/ieee80211.h      |   14 +++++++-------
+ net/mac80211/ieee80211_ioctl.c |   21 +++++++++++++++++----
+ 2 files changed, 24 insertions(+), 11 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 30621c2..214821a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -81,18 +81,18 @@
+ 
+ 
+ /* miscellaneous IEEE 802.11 constants */
+-#define IEEE80211_MAX_FRAG_THRESHOLD	2346
+-#define IEEE80211_MAX_RTS_THRESHOLD	2347
++#define IEEE80211_MAX_FRAG_THRESHOLD	2352
++#define IEEE80211_MAX_RTS_THRESHOLD	2353
+ #define IEEE80211_MAX_AID		2007
+ #define IEEE80211_MAX_TIM_LEN		251
+-#define IEEE80211_MAX_DATA_LEN		2304
+ /* Maximum size for the MA-UNITDATA primitive, 802.11 standard section
+    6.2.1.1.2.
+ 
+-   The figure in section 7.1.2 suggests a body size of up to 2312
+-   bytes is allowed, which is a bit confusing, I suspect this
+-   represents the 2304 bytes of real data, plus a possible 8 bytes of
+-   WEP IV and ICV. (this interpretation suggested by Ramiro Barreiro) */
++   802.11e clarifies the figure in section 7.1.2. The frame body is
++   up to 2304 octets long (maximum MSDU size) plus any crypt overhead. */
++#define IEEE80211_MAX_DATA_LEN		2304
++/* 30 byte 4 addr hdr, 2 byte QoS, 2304 byte MSDU, 12 byte crypt, 4 byte FCS */
++#define IEEE80211_MAX_FRAME_LEN		2352
+ 
+ #define IEEE80211_MAX_SSID_LEN		32
+ 
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 6caa3ec..6d67217 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -634,22 +634,35 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	bool need_reconfig = 0;
++	u8 new_power_level;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+ 		return -EINVAL;
+ 	if (data->txpower.flags & IW_TXPOW_RANGE)
+ 		return -EINVAL;
+-	if (!data->txpower.fixed)
+-		return -EINVAL;
+ 
+-	if (local->hw.conf.power_level != data->txpower.value) {
+-		local->hw.conf.power_level = data->txpower.value;
++	if (data->txpower.fixed) {
++		new_power_level = data->txpower.value;
++	} else {
++		/* Automatic power level. Get the px power from the current
++		 * channel. */
++		struct ieee80211_channel* chan = local->oper_channel;
++		if (!chan)
++			return -EINVAL;
++
++		new_power_level = chan->power_level;
++	}
++
++	if (local->hw.conf.power_level != new_power_level) {
++		local->hw.conf.power_level = new_power_level;
+ 		need_reconfig = 1;
+ 	}
++
+ 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+ 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
+ 		need_reconfig = 1;
+ 	}
++
+ 	if (need_reconfig) {
+ 		ieee80211_hw_config(local);
+ 		/* The return value of hw_config is not of big interest here,
+-- 
+John W. Linville
+linville@tuxdriver.com
