@@ -1,55 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3854 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785AbXKJAWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 19:22:16 -0500
-Date: Fri, 9 Nov 2007 19:21:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Ruggiero <rugg.argos@tiscali.it>, bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Help with wireless on Fedora 8
-Message-ID: <20071110002158.GB32472@tuxdriver.com> (sfid-20071110_002219_359771_40B5C377)
-References: <000b01c8231a$b78c82a0$0601a8c0@ruggiero> <001001c8231c$04413d60$0601a8c0@ruggiero> <4734E1BC.1060608@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4734E1BC.1060608@lwfinger.net>
+Received: from mfe1.polimi.it ([131.175.12.23]:50826 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754316AbXKGXaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 18:30:24 -0500
+Date: Thu, 8 Nov 2007 00:28:55 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Fix kconfig dependencies for rfkill and leds
+Message-ID: <20071108002855.719f5e43@morte> (sfid-20071107_233028_606602_223E3177)
+In-Reply-To: <200711072124.07308.mb@bu3sch.de>
+References: <200711072124.07308.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 09, 2007 at 04:39:56PM -0600, Larry Finger wrote:
-> I need some Fedora help. This new b43 user is having problems making a connection. He has a b-only
-> AP of unspecified make with no encryption. He is using F8 with the default kernel (I think). He has
-> done the following:
-> 
-> Ruggiero wrote:
-> > i used "system->adminstration>Network" and i configurated everything from 
-> > there...and the clicking on "activate wlan0" for a while my access point 
-> > communicate and in the log i see that it's connected... here are outputs:
-> > if i use NetworkManager i see it's connecting...but after a while i get the 
-> > message "disconnected"
-> 
-> Tail of dmesg:
-> 
-> > wlan0: Initial auth_alg=0
-> > wlan0: authenticate with AP 00:0c:41:19:2d:c1
-> > wlan0: authenticate with AP 00:0c:41:19:2d:c1
-> > wlan0: authenticate with AP 00:0c:41:19:2d:c1
-> > wlan0: authentication with AP 00:0c:41:19:2d:c1 timed out
-> > wlan0: authentication frame received from 00:0c:41:19:2d:c1, but not in
-> > authenticate state - ignored
-> > wlan0: RX disassociation from 00:0c:41:19:2d:c1 (reason=4)
-> 
-> All the b43 messages are normal. He sees the AP with a scan, but never authenticates. Any suggestions?
+On Wed, 7 Nov 2007 21:24:07 +0100
+Michael Buesch <mb@bu3sch.de> wrote:
 
-FWIW, the F8 install kernel has wireless bits that are a month or
-so old.  You may want to have him try these kernels:
+> Stefano, can you check if this patch is already applied to b43legacy?
 
-	http://koji.fedoraproject.org/koji/buildinfo?buildID=23734
+It wasn't, I just sent it. Thank you.
 
-Those at least have wireless bits that are up-to-date w/ wireless-2.6.
 
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Ciao
+Stefano
