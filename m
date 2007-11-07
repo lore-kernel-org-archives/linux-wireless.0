@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:14858 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754148AbXKNS5y (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55496
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754399AbXKGSJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 13:57:54 -0500
-Received: by py-out-1112.google.com with SMTP id u77so2943060pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 10:57:52 -0800 (PST)
-Message-ID: <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com> (sfid-20071114_185759_193799_3BD1F401)
-Date: Wed, 14 Nov 2007 13:57:52 -0500
-From: "Will Dyson" <will.dyson@gmail.com>
-To: "Florian Lohoff" <flo@rfc822.org>
-Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
-Cc: "Marcus Better" <marcus@better.se>, linux-wireless@vger.kernel.org
-In-Reply-To: <20071114153347.GA3512@paradigm.rfc822.org>
+	Wed, 7 Nov 2007 13:09:23 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: properly request pcmcia IRQ
+Date: Wed, 7 Nov 2007 19:08:26 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071111102315.GC10486@paradigm.rfc822.org>
-	 <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com>
-	 <20071113192330.GA19601@paradigm.rfc822.org>
-	 <fhedc4$5l9$1@ger.gmane.org>
-	 <20071114153347.GA3512@paradigm.rfc822.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711071908.26195.mb@bu3sch.de> (sfid-20071107_180925_629942_5A13CC0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 14, 2007 10:33 AM, Florian Lohoff <flo@rfc822.org> wrote:
+PCMCIA needs an additional step to request the IRQ.
 
-> Did you actually try setting the rate manually? I just tried
-> when i came home from work. I set it to 36MBit/s and it actually
-> works ... I am now transferring with 2.5MByte/s instead of 30Kbyte/s
->
-> So i guess the auto rate selection is broken ... Or 1 MBit/s is default
-> or something ...
+No need to add code to release the IRQ here, as that's done
+automatically in pcmcia_disable_device().
 
-Ah, that is probably this isssue:
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=d37cabfb5f60a3bb56585a74fd3f140ba2960fe0
-
-The patch is in the wireless-2.6/everything tree, but not Linus's tree.
-
--- 
-Will Dyson
+Index: wireless-2.6/drivers/net/wireless/b43/pcmcia.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/pcmcia.c	2007-11-07 15:54:21.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/pcmcia.c	2007-11-07 18:45:08.000000000 +0100
+@@ -112,6 +112,14 @@ static int __devinit b43_pcmcia_probe(st
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
+ 
++	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING | IRQ_FIRST_SHARED;
++	dev->irq.IRQInfo1 = IRQ_LEVEL_ID | IRQ_SHARE_ID;
++	dev->irq.Handler = NULL; /* The handler is registered later. */
++	dev->irq.Instance = NULL;
++	res = pcmcia_request_irq(dev, &dev->irq);
++	if (res != CS_SUCCESS)
++		goto err_disable;
++
+ 	res = pcmcia_request_configuration(dev, &dev->conf);
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
