@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47542 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754122AbXK0QNM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 11:13:12 -0500
-Subject: Re: [PATCH] libertas: let more than one MAC event through
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200711260935.44469.hs4233@mail.mn-solutions.de>
-References: <200711260935.44469.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 27 Nov 2007 11:08:38 -0500
-Message-Id: <1196179718.5194.2.camel@localhost.localdomain> (sfid-20071127_161325_584572_5BBCDCFC)
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56626
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758275AbXKGUW2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 15:22:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43legacy: Fix sparse warning
+Date: Wed, 7 Nov 2007 21:21:55 +0100
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711072121.55828.mb@bu3sch.de> (sfid-20071107_202259_140457_DCAE6644)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-11-26 at 09:35 +0100, Holger Schurig wrote:
-> lbs_mac_event_disconnected() was called once and then never again
-> upon a hardware MAC event.
-> 
-> The reason was that the driver didn't clean the correct bit in the interrupt
-> cause register of the chip.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Fix a sparse warning about a nonstatic function.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-11-26 10:18:05.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2007-11-26 10:18:32.000000000 +0100
-> @@ -170,7 +170,8 @@ static int if_cs_poll_while_fw_download(
->  #define IF_CS_H_IC_TX_OVER		0x0001
->  #define IF_CS_H_IC_RX_OVER		0x0002
->  #define IF_CS_H_IC_DNLD_OVER		0x0004
-> -#define IF_CS_H_IC_HOST_EVENT		0x0008
-> +#define IF_CS_H_IC_POWER_DOWN		0x0008
-> +#define IF_CS_H_IC_HOST_EVENT		0x0010
->  #define IF_CS_H_IC_MASK			0x001f
->  
->  #define IF_CS_H_INT_MASK		0x00000004
+---
 
+Note that this patch might collide with Stefano's recently
+sent patches. But it should be trivial enough to fix that.
+
+Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c	2007-11-07 20:31:06.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c	2007-11-07 20:47:36.000000000 +0100
+@@ -3238,7 +3238,7 @@ out_mutex_unlock:
+ 	return err;
+ }
+ 
+-void b43legacy_stop(struct ieee80211_hw *hw)
++static void b43legacy_stop(struct ieee80211_hw *hw)
+ {
+ 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+ 	struct b43legacy_wldev *dev = wl->current_dev;
