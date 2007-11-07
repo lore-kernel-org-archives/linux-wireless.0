@@ -1,124 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:15905 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760271AbXKQAOA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 19:14:00 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1054816fkz
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 16:13:58 -0800 (PST)
-From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: add power management support -v2
-Date: Sat, 17 Nov 2007 01:13:58 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	yi.zhu@intel.com
-References: <200711170007.01676.mboton.lkml@gmail.com>
-In-Reply-To: <200711170007.01676.mboton.lkml@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4015 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753625AbXKGCdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2007 21:33:18 -0500
+Date: Tue, 6 Nov 2007 21:32:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mb@bu3sch.de
+Subject: Re: [PATCH 1/2] ssb: Add "ssb_pci_set_power_state" function
+Message-ID: <20071107023253.GA30169@tuxdriver.com> (sfid-20071107_023325_064103_2596C138)
+References: <200710242131.21959.mboton.lkml@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200711170113.58396.mboton.lkml@gmail.com> (sfid-20071117_001406_559173_F461DAA4)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200710242131.21959.mboton.lkml@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, the previous patch wasn't correct. This one is valid.
+Miguel,
 
---
+Along with the style point Michael suggested, I'll need you to repost
+both this one and the b44 patch with at least a Signed-off-by line.
 
-This patch adds power management support in mac80211.
+	http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt
 
-This allows us to enable power management through the "iwconfig <device=
-> power <off/on>" command.
-The code is based on "mac80211-10.0.0" but it is a little bit modified.
+Also, please include the patches as plain text using a mailer that
+does not damage whitespace.
 
-Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
+Thanks,
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5fcc4c1..c82b6fa 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -452,6 +452,8 @@ struct ieee80211_conf {
- 	u8 antenna_max;
- 	u8 antenna_sel_tx;
- 	u8 antenna_sel_rx;
-+
-+	u8 power_management_enable;     /* flag to enable/disable power manag=
-ement */
- };
-=20
- /**
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
-ctl.c
-index 6caa3ec..f5eebec 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
-evice *dev,
- 	return 0;
- }
-=20
-+static int ieee80211_ioctl_siwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	if (wrqu->power.disabled) {
-+		conf->power_management_enable =3D 0;
-+		if (ieee80211_hw_config(local))
-+			return -EINVAL;
-+		return 0;
-+	}
-+
-+	switch (wrqu->power.flags & IW_POWER_MODE) {
-+	case IW_POWER_ON:       /* If not specified */
-+	case IW_POWER_MODE:     /* If set all mask */
-+	case IW_POWER_ALL_R:    /* If explicitely state all */
-+		break;
-+	default:                /* Otherwise we don't support it */
-+		return -EINVAL;
-+	}
-+
-+	conf->power_management_enable =3D 1;
-+
-+	if (ieee80211_hw_config(local))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int ieee80211_ioctl_giwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	wrqu->power.disabled =3D !conf->power_management_enable;
-+
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
- 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) NULL,				/* SIOCSIWPOWER */
--	(iw_handler) NULL,				/* SIOCGIWPOWER */
-+	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
+John
 
+On Wed, Oct 24, 2007 at 09:31:21PM +0200, Miguel Bot=F3n wrote:
+> Add "ssb_pci_set_power_state" function. This allows set the power sta=
+te of a=20
+> PCI device (for example b44 ethernet device).
+>=20
+> diff -ruN linux-2.6.23/include/linux/ssb/ssb.h=20
+> linux-2.6.23.orig/include/linux/ssb/ssb.h
+> --- linux-2.6.23.orig/include/linux/ssb/ssb.h	2007-10-24 19:02:33.000=
+000000=20
+> +0200
+> +++ linux-2.6.23/include/linux/ssb/ssb.h	2007-10-24 19:49:37.00000000=
+0 +0200
+> @@ -402,6 +402,14 @@
+>  {
+>  	pci_unregister_driver(driver);
+>  }
+> +
+> +/* Set PCI device power state */
+> +static inline
+> +void ssb_pci_set_power_state(struct ssb_device *dev, pci_power_t sta=
+te)
+> +{
+> +	if(dev->bus->bustype =3D=3D SSB_BUSTYPE_PCI)
+> +		pci_set_power_state(dev->bus->host_pci, state);
+> +}
+>  #endif /* CONFIG_SSB_PCIHOST */
+> =20
+> =20
+>=20
+> --=20
+> 	Miguel Bot=F3n
 
 --=20
-	Miguel Bot=C3=B3n
+John W. Linville
+linville@tuxdriver.com
 -
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
