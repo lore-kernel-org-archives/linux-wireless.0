@@ -1,311 +1,512 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:38685 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755062AbXKIW5g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 17:57:36 -0500
-Date: Fri, 09 Nov 2007 16:57:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 5/6] b43legacy: Convert to use of the new SPROM structure
-Message-ID: <4734e5de.lq2tynVQPACFW5qg%Larry.Finger@lwfinger.net> (sfid-20071109_225738_957392_2E382EC2)
+Received: from ra.tuxdriver.com ([70.61.120.52]:3606 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752460AbXKHBfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 20:35:03 -0500
+Date: Wed, 7 Nov 2007 20:34:29 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6 (this time for
+	real!)
+Message-ID: <20071108013429.GA11957@tuxdriver.com> (sfid-20071108_013513_829658_5D1E7555)
+References: <20071106200700.GF4440@tuxdriver.com> <20071107191329.GC30169@tuxdriver.com> <20071107192419.GA15784@havoc.gtf.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071107192419.GA15784@havoc.gtf.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch 5 of 6.
+On Wed, Nov 07, 2007 at 02:24:19PM -0500, Jeff Garzik wrote:
+> On Wed, Nov 07, 2007 at 02:13:29PM -0500, John W. Linville wrote:
+> > Jeff,
+> > 
+> > If you haven't already pulled this then please hold-off.  I'll post
+> > a new request soon.
+> 
+> Haven't pulled yet...
 
-The b43legacy driver is modified to use the new SPROM structure.
+Jeff,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+These fixes are additive on top of the previous request in this thread.
+That request is archived here:
+
+	http://marc.info/?l=linux-wireless&m=119438263704232&w=2
+
+Also, note that the first three from Michael Buesch in the list below
+were already sent to you directed for 2.6.25, but I think they belong in
+2.6.24 instead.  I cherry-picked them, so I'm fairly certain git will be
+smart enough to drop them from your 2.6.25 branch when you rebase.
+
+Let me know if there are any problems!
+
+Thanks,
+
+John
+
 ---
 
-Index: wireless-2.6/drivers/net/wireless/b43legacy/leds.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/leds.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/leds.c
-@@ -189,10 +189,10 @@ void b43legacy_leds_init(struct b43legac
- 	enum b43legacy_led_behaviour behaviour;
- 	bool activelow;
+The entire series (i.e. both from yesterday and today) is available
+here:
+
+	http://www.kernel.org/pub//linux/kernel/people/linville/wireless-2.6/fixes-jgarzik/
+
+---
+
+The following changes since commit 33a463d0c82cad08a64526c217f6d835a51dfc1c:
+  Michael Buesch (1):
+        b43: pcmcia-host initialization bugfixes
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+
+Michael Buesch (6):
+      b43: Fix rfkill callback deadlock
+      b43: debugfs SHM read buffer overrun fix
+      b43: Rewrite and fix rfkill init
+      b43: properly request pcmcia IRQ
+      b43legacy: Fix sparse warning
+      b43: Fix kconfig dependencies for rfkill and leds
+
+Stefano Brivio (4):
+      b43legacy: fix possible buffer overrun in debugfs
+      b43legacy: add me as maintainer and fix URLs
+      b43: fix shared IRQ race condition
+      b43legacy: fix shared IRQ race condition
+
+ MAINTAINERS                              |   10 ++-
+ drivers/net/wireless/b43/Kconfig         |   10 ++-
+ drivers/net/wireless/b43/debugfs.c       |    2 +-
+ drivers/net/wireless/b43/main.c          |   19 +++---
+ drivers/net/wireless/b43/pcmcia.c        |    8 ++
+ drivers/net/wireless/b43/rfkill.c        |  115 +++++++++++++----------------
+ drivers/net/wireless/b43/rfkill.h        |   14 +---
+ drivers/net/wireless/b43legacy/debugfs.c |    2 +-
+ drivers/net/wireless/b43legacy/main.c    |   21 +++---
+ 9 files changed, 100 insertions(+), 101 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1c7c229..6a97027 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -787,23 +787,25 @@ B43 WIRELESS DRIVER
+ P:	Michael Buesch
+ M:	mb@bu3sch.de
+ P:	Stefano Brivio
+-M:	st3@riseup.net
++M:	stefano.brivio@polimi.it
+ L:	linux-wireless@vger.kernel.org
+-W:	http://bcm43xx.berlios.de/
++W:	http://linuxwireless.org/en/users/Drivers/b43
+ S:	Maintained
  
--	sprom[0] = bus->sprom.r1.gpio0;
--	sprom[1] = bus->sprom.r1.gpio1;
--	sprom[2] = bus->sprom.r1.gpio2;
--	sprom[3] = bus->sprom.r1.gpio3;
-+	sprom[0] = bus->sprom.gpio0;
-+	sprom[1] = bus->sprom.gpio1;
-+	sprom[2] = bus->sprom.gpio2;
-+	sprom[3] = bus->sprom.gpio3;
+ B43LEGACY WIRELESS DRIVER
+ P:	Larry Finger
+ M:	Larry.Finger@lwfinger.net
++P:	Stefano Brivio
++M:	stefano.brivio@polimi.it
+ L:	linux-wireless@vger.kernel.org
+-W:	http://bcm43xx.berlios.de/
++W:	http://linuxwireless.org/en/users/Drivers/b43
+ S:	Maintained
  
- 	for (i = 0; i < 4; i++) {
- 		if (sprom[i] == 0xFF) {
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -1753,7 +1753,7 @@ static int b43legacy_gpio_init(struct b4
- 		mask |= 0x0060;
- 		set |= 0x0060;
- 	}
--	if (dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_PACTRL) {
-+	if (dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_PACTRL) {
- 		b43legacy_write16(dev, B43legacy_MMIO_GPIO_MASK,
- 				  b43legacy_read16(dev,
- 				  B43legacy_MMIO_GPIO_MASK)
-@@ -2130,7 +2130,7 @@ static void b43legacy_periodic_every120s
- static void b43legacy_periodic_every60sec(struct b43legacy_wldev *dev)
+ BCM43XX WIRELESS DRIVER (SOFTMAC BASED VERSION)
+ P:	Larry Finger
+ M:	Larry.Finger@lwfinger.net
+ P:	Stefano Brivio
+-M:	st3@riseup.net
++M:	stefano.brivio@polimi.it
+ L:	linux-wireless@vger.kernel.org
+ W:	http://bcm43xx.berlios.de/
+ S:	Maintained
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index e3c573e..fdbc351 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -61,16 +61,18 @@ config B43_PCMCIA
+ 
+ 	  If unsure, say N.
+ 
+-# LED support
++# This config option automatically enables b43 LEDS support,
++# if it's possible.
+ config B43_LEDS
+ 	bool
+-	depends on B43 && MAC80211_LEDS
++	depends on B43 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = B43)
+ 	default y
+ 
+-# RFKILL support
++# This config option automatically enables b43 RFKILL support,
++# if it's possible.
+ config B43_RFKILL
+ 	bool
+-	depends on B43 && RFKILL && RFKILL_INPUT && INPUT_POLLDEV
++	depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
+ 	default y
+ 
+ config B43_DEBUG
+diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/b43/debugfs.c
+index 734e70e..ef0075d 100644
+--- a/drivers/net/wireless/b43/debugfs.c
++++ b/drivers/net/wireless/b43/debugfs.c
+@@ -128,7 +128,7 @@ static ssize_t shm_read_file(struct b43_wldev *dev,
+ 	__le16 *le16buf = (__le16 *)buf;
+ 
+ 	for (i = 0; i < 0x1000; i++) {
+-		if (bufsize <= 0)
++		if (bufsize < sizeof(tmp))
+ 			break;
+ 		tmp = b43_shm_read16(dev, B43_SHM_SHARED, 2 * i);
+ 		le16buf[i] = cpu_to_le16(tmp);
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 5058e60..2b17c1d 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2985,6 +2985,16 @@ static void b43_wireless_core_stop(struct b43_wldev *dev)
+ 
+ 	if (b43_status(dev) < B43_STAT_STARTED)
+ 		return;
++
++	/* Disable and sync interrupts. We must do this before than
++	 * setting the status to INITIALIZED, as the interrupt handler
++	 * won't care about IRQs then. */
++	spin_lock_irqsave(&wl->irq_lock, flags);
++	dev->irq_savedstate = b43_interrupt_disable(dev, B43_IRQ_ALL);
++	b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);	/* flush */
++	spin_unlock_irqrestore(&wl->irq_lock, flags);
++	b43_synchronize_irq(dev);
++
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+ 	mutex_unlock(&wl->mutex);
+@@ -2995,13 +3005,6 @@ static void b43_wireless_core_stop(struct b43_wldev *dev)
+ 
+ 	ieee80211_stop_queues(wl->hw);	//FIXME this could cause a deadlock, as mac80211 seems buggy.
+ 
+-	/* Disable and sync interrupts. */
+-	spin_lock_irqsave(&wl->irq_lock, flags);
+-	dev->irq_savedstate = b43_interrupt_disable(dev, B43_IRQ_ALL);
+-	b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);	/* flush */
+-	spin_unlock_irqrestore(&wl->irq_lock, flags);
+-	b43_synchronize_irq(dev);
+-
+ 	b43_mac_suspend(dev);
+ 	free_irq(dev->dev->irq, dev);
+ 	b43dbg(wl, "Wireless interface stopped\n");
+@@ -3661,7 +3664,6 @@ static int b43_setup_modes(struct b43_wldev *dev,
+ 
+ static void b43_wireless_core_detach(struct b43_wldev *dev)
  {
- 	b43legacy_phy_lo_mark_all_unused(dev);
--	if (dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_RSSI) {
-+	if (dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_RSSI) {
- 		b43legacy_mac_suspend(dev);
- 		b43legacy_calc_nrssi_slope(dev);
- 		b43legacy_mac_enable(dev);
-@@ -3058,7 +3058,7 @@ static int b43legacy_wireless_core_init(
- 		hf |= B43legacy_HF_SYMW;
- 		if (phy->rev == 1)
- 			hf |= B43legacy_HF_GDCW;
--		if (sprom->r1.boardflags_lo & B43legacy_BFL_PACTRL)
-+		if (sprom->boardflags_lo & B43legacy_BFL_PACTRL)
- 			hf |= B43legacy_HF_OFDMPABOOST;
- 	} else if (phy->type == B43legacy_PHYTYPE_B) {
- 		hf |= B43legacy_HF_SYMW;
-@@ -3537,12 +3537,12 @@ static void b43legacy_sprom_fixup(struct
- 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
- 	    bus->boardinfo.type == 0x4E &&
- 	    bus->boardinfo.rev > 0x40)
--		bus->sprom.r1.boardflags_lo |= B43legacy_BFL_PACTRL;
-+		bus->sprom.boardflags_lo |= B43legacy_BFL_PACTRL;
+-	b43_rfkill_free(dev);
+ 	/* We release firmware that late to not be required to re-request
+ 	 * is all the time when we reinit the core. */
+ 	b43_release_firmware(dev);
+@@ -3747,7 +3749,6 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
+ 	if (!wl->current_dev)
+ 		wl->current_dev = dev;
+ 	INIT_WORK(&dev->restart_work, b43_chip_reset);
+-	b43_rfkill_alloc(dev);
  
- 	/* Convert Antennagain values to Q5.2 */
--	if (bus->sprom.r1.antenna_gain_bg == 0xFF)
--		bus->sprom.r1.antenna_gain_bg = 2; /* if unset, use 2 dBm */
--	bus->sprom.r1.antenna_gain_bg <<= 2;
-+	if (bus->sprom.antenna_gain_bg == 0xFF)
-+		bus->sprom.antenna_gain_bg = 2; /* if unset, use 2 dBm */
-+	bus->sprom.antenna_gain_bg <<= 2;
+ 	b43_radio_turn_off(dev, 1);
+ 	b43_switch_analog(dev, 0);
+diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
+index 4b6648f..b79a6bd 100644
+--- a/drivers/net/wireless/b43/pcmcia.c
++++ b/drivers/net/wireless/b43/pcmcia.c
+@@ -112,6 +112,14 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
+ 
++	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING | IRQ_FIRST_SHARED;
++	dev->irq.IRQInfo1 = IRQ_LEVEL_ID | IRQ_SHARE_ID;
++	dev->irq.Handler = NULL; /* The handler is registered later. */
++	dev->irq.Instance = NULL;
++	res = pcmcia_request_irq(dev, &dev->irq);
++	if (res != CS_SUCCESS)
++		goto err_disable;
++
+ 	res = pcmcia_request_configuration(dev, &dev->conf);
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index 800e0a6..9b1f905 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -47,32 +47,35 @@ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
+ 	struct b43_wldev *dev = poll_dev->private;
+ 	struct b43_wl *wl = dev->wl;
+ 	bool enabled;
++	bool report_change = 0;
+ 
+ 	mutex_lock(&wl->mutex);
+ 	B43_WARN_ON(b43_status(dev) < B43_STAT_INITIALIZED);
+ 	enabled = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
++		report_change = 1;
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+-		mutex_unlock(&wl->mutex);
++	}
++	mutex_unlock(&wl->mutex);
++
++	if (unlikely(report_change))
+ 		input_report_key(poll_dev->input, KEY_WLAN, enabled);
+-	} else
+-		mutex_unlock(&wl->mutex);
  }
  
- static void b43legacy_wireless_exit(struct ssb_device *dev,
-@@ -3577,10 +3577,10 @@ static int b43legacy_wireless_init(struc
- 	hw->max_noise = -110;
- 	hw->queues = 1; /* FIXME: hardware has more queues */
- 	SET_IEEE80211_DEV(hw, dev->dev);
--	if (is_valid_ether_addr(sprom->r1.et1mac))
--		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.et1mac);
-+	if (is_valid_ether_addr(sprom->et1mac))
-+		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
- 	else
--		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.il0mac);
-+		SET_IEEE80211_PERM_ADDR(hw, sprom->il0mac);
+-/* Called when the RFKILL toggled in software.
+- * This is called without locking. */
++/* Called when the RFKILL toggled in software. */
+ static int b43_rfkill_soft_toggle(void *data, enum rfkill_state state)
+ {
+ 	struct b43_wldev *dev = data;
+ 	struct b43_wl *wl = dev->wl;
+ 	int err = 0;
  
- 	/* Get and initialize struct b43legacy_wl */
- 	wl = hw_to_b43legacy_wl(hw);
-Index: wireless-2.6/drivers/net/wireless/b43legacy/phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/phy.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/phy.c
-@@ -441,7 +441,7 @@ static void b43legacy_phy_inita(struct b
- 	might_sleep();
+-	mutex_lock(&wl->mutex);
+-	if (b43_status(dev) < B43_STAT_INITIALIZED)
+-		goto out_unlock;
++	if (!wl->rfkill.registered)
++		return 0;
  
- 	b43legacy_phy_setupg(dev);
--	if (dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_PACTRL)
-+	if (dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_PACTRL)
- 		b43legacy_phy_write(dev, 0x046E, 0x03CF);
++	mutex_lock(&wl->mutex);
++	B43_WARN_ON(b43_status(dev) < B43_STAT_INITIALIZED);
+ 	switch (state) {
+ 	case RFKILL_STATE_ON:
+ 		if (!dev->radio_hw_enable) {
+@@ -89,7 +92,6 @@ static int b43_rfkill_soft_toggle(void *data, enum rfkill_state state)
+ 			b43_radio_turn_off(dev, 0);
+ 		break;
+ 	}
+-
+ out_unlock:
+ 	mutex_unlock(&wl->mutex);
+ 
+@@ -98,11 +100,11 @@ out_unlock:
+ 
+ char * b43_rfkill_led_name(struct b43_wldev *dev)
+ {
+-	struct b43_wl *wl = dev->wl;
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 
+-	if (!wl->rfkill.rfkill)
++	if (!rfk->registered)
+ 		return NULL;
+-	return rfkill_get_led_name(wl->rfkill.rfkill);
++	return rfkill_get_led_name(rfk->rfkill);
  }
  
-@@ -543,7 +543,7 @@ static void b43legacy_phy_initb4(struct 
- 	if (phy->radio_ver == 0x2050)
- 		b43legacy_phy_write(dev, 0x002A, 0x88C2);
- 	b43legacy_radio_set_txpower_bg(dev, 0xFFFF, 0xFFFF, 0xFFFF);
--	if (dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_RSSI) {
-+	if (dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_RSSI) {
- 		b43legacy_calc_nrssi_slope(dev);
- 		b43legacy_calc_nrssi_threshold(dev);
- 	}
-@@ -699,7 +699,7 @@ static void b43legacy_phy_initb6(struct 
- 		b43legacy_radio_write16(dev, 0x005A, 0x0088);
- 		b43legacy_radio_write16(dev, 0x005B, 0x006B);
- 		b43legacy_radio_write16(dev, 0x005C, 0x000F);
--		if (dev->dev->bus->sprom.r1.boardflags_lo & 0x8000) {
-+		if (dev->dev->bus->sprom.boardflags_lo & 0x8000) {
- 			b43legacy_radio_write16(dev, 0x005D, 0x00FA);
- 			b43legacy_radio_write16(dev, 0x005E, 0x00D8);
- 		} else {
-@@ -797,7 +797,7 @@ static void b43legacy_phy_initb6(struct 
- 		b43legacy_phy_write(dev, 0x0062, 0x0007);
- 		b43legacy_radio_init2050(dev);
- 		b43legacy_phy_lo_g_measure(dev);
--		if (dev->dev->bus->sprom.r1.boardflags_lo &
-+		if (dev->dev->bus->sprom.boardflags_lo &
- 		    B43legacy_BFL_RSSI) {
- 			b43legacy_calc_nrssi_slope(dev);
- 			b43legacy_calc_nrssi_threshold(dev);
-@@ -921,7 +921,7 @@ static void b43legacy_calc_loopback_gain
- 			    b43legacy_phy_read(dev, 0x0811) | 0x0100);
- 	b43legacy_phy_write(dev, 0x0812,
- 			    b43legacy_phy_read(dev, 0x0812) & 0xCFFF);
--	if (dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_EXTLNA) {
-+	if (dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_EXTLNA) {
- 		if (phy->rev >= 7) {
- 			b43legacy_phy_write(dev, 0x0811,
- 					    b43legacy_phy_read(dev, 0x0811)
-@@ -1072,7 +1072,7 @@ static void b43legacy_phy_initg(struct b
- 			b43legacy_phy_write(dev, 0x0036,
- 					    (b43legacy_phy_read(dev, 0x0036)
- 					     & 0x0FFF) | (phy->txctl2 << 12));
--		if (dev->dev->bus->sprom.r1.boardflags_lo &
-+		if (dev->dev->bus->sprom.boardflags_lo &
- 		    B43legacy_BFL_PACTRL)
- 			b43legacy_phy_write(dev, 0x002E, 0x8075);
- 		else
-@@ -1087,7 +1087,7 @@ static void b43legacy_phy_initg(struct b
- 		b43legacy_phy_write(dev, 0x080F, 0x8078);
- 	}
+ void b43_rfkill_init(struct b43_wldev *dev)
+@@ -111,53 +113,13 @@ void b43_rfkill_init(struct b43_wldev *dev)
+ 	struct b43_rfkill *rfk = &(wl->rfkill);
+ 	int err;
  
--	if (!(dev->dev->bus->sprom.r1.boardflags_lo & B43legacy_BFL_RSSI)) {
-+	if (!(dev->dev->bus->sprom.boardflags_lo & B43legacy_BFL_RSSI)) {
- 		/* The specs state to update the NRSSI LT with
- 		 * the value 0x7FFFFFFF here. I think that is some weird
- 		 * compiler optimization in the original driver.
-@@ -1838,9 +1838,9 @@ void b43legacy_phy_xmitpower(struct b43l
+-	if (rfk->rfkill) {
+-		err = rfkill_register(rfk->rfkill);
+-		if (err) {
+-			b43warn(wl, "Failed to register RF-kill button\n");
+-			goto err_free_rfk;
+-		}
+-	}
+-	if (rfk->poll_dev) {
+-		err = input_register_polled_device(rfk->poll_dev);
+-		if (err) {
+-			b43warn(wl, "Failed to register RF-kill polldev\n");
+-			goto err_free_polldev;
+-		}
+-	}
+-
+-	return;
+-err_free_rfk:
+-	rfkill_free(rfk->rfkill);
+-	rfk->rfkill = NULL;
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+-}
+-
+-void b43_rfkill_exit(struct b43_wldev *dev)
+-{
+-	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+-
+-	if (rfk->poll_dev)
+-		input_unregister_polled_device(rfk->poll_dev);
+-	if (rfk->rfkill)
+-		rfkill_unregister(rfk->rfkill);
+-}
+-
+-void b43_rfkill_alloc(struct b43_wldev *dev)
+-{
+-	struct b43_wl *wl = dev->wl;
+-	struct b43_rfkill *rfk = &(wl->rfkill);
++	rfk->registered = 0;
  
- 	estimated_pwr = b43legacy_phy_estimate_power_out(dev, average);
++	rfk->rfkill = rfkill_allocate(dev->dev->dev, RFKILL_TYPE_WLAN);
++	if (!rfk->rfkill)
++		goto out_error;
+ 	snprintf(rfk->name, sizeof(rfk->name),
+ 		 "b43-%s", wiphy_name(wl->hw->wiphy));
+-
+-	rfk->rfkill = rfkill_allocate(dev->dev->dev, RFKILL_TYPE_WLAN);
+-	if (!rfk->rfkill) {
+-		b43warn(wl, "Failed to allocate RF-kill button\n");
+-		return;
+-	}
+ 	rfk->rfkill->name = rfk->name;
+ 	rfk->rfkill->state = RFKILL_STATE_ON;
+ 	rfk->rfkill->data = dev;
+@@ -165,18 +127,45 @@ void b43_rfkill_alloc(struct b43_wldev *dev)
+ 	rfk->rfkill->user_claim_unsupported = 1;
  
--	max_pwr = dev->dev->bus->sprom.r1.maxpwr_bg;
-+	max_pwr = dev->dev->bus->sprom.maxpwr_bg;
+ 	rfk->poll_dev = input_allocate_polled_device();
+-	if (rfk->poll_dev) {
+-		rfk->poll_dev->private = dev;
+-		rfk->poll_dev->poll = b43_rfkill_poll;
+-		rfk->poll_dev->poll_interval = 1000; /* msecs */
+-	} else
+-		b43warn(wl, "Failed to allocate RF-kill polldev\n");
++	if (!rfk->poll_dev)
++		goto err_free_rfk;
++	rfk->poll_dev->private = dev;
++	rfk->poll_dev->poll = b43_rfkill_poll;
++	rfk->poll_dev->poll_interval = 1000; /* msecs */
++
++	err = rfkill_register(rfk->rfkill);
++	if (err)
++		goto err_free_polldev;
++	err = input_register_polled_device(rfk->poll_dev);
++	if (err)
++		goto err_unreg_rfk;
++
++	rfk->registered = 1;
++
++	return;
++err_unreg_rfk:
++	rfkill_unregister(rfk->rfkill);
++err_free_polldev:
++	input_free_polled_device(rfk->poll_dev);
++	rfk->poll_dev = NULL;
++err_free_rfk:
++	rfkill_free(rfk->rfkill);
++	rfk->rfkill = NULL;
++out_error:
++	rfk->registered = 0;
++	b43warn(wl, "RF-kill button init failed\n");
+ }
  
--	if ((dev->dev->bus->sprom.r1.boardflags_lo
-+	if ((dev->dev->bus->sprom.boardflags_lo
- 	     & B43legacy_BFL_PACTRL) &&
- 	    (phy->type == B43legacy_PHYTYPE_G))
- 		max_pwr -= 0x3;
-@@ -1848,7 +1848,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 		b43legacywarn(dev->wl, "Invalid max-TX-power value in SPROM."
- 			"\n");
- 		max_pwr = 74; /* fake it */
--		dev->dev->bus->sprom.r1.maxpwr_bg = max_pwr;
-+		dev->dev->bus->sprom.maxpwr_bg = max_pwr;
- 	}
+-void b43_rfkill_free(struct b43_wldev *dev)
++void b43_rfkill_exit(struct b43_wldev *dev)
+ {
+ 	struct b43_rfkill *rfk = &(dev->wl->rfkill);
  
- 	/* Use regulatory information to get the maximum power.
-@@ -1858,7 +1858,8 @@ void b43legacy_phy_xmitpower(struct b43l
- 	 * and 1.5 dBm (a safety factor??). The result is in Q5.2 format
- 	 * which accounts for the factor of 4 */
- #define REG_MAX_PWR 20
--	max_pwr = min(REG_MAX_PWR * 4 - dev->dev->bus->sprom.r1.antenna_gain_bg
-+	max_pwr = min(REG_MAX_PWR * 4
-+		      - dev->dev->bus->sprom.antenna_gain_bg
- 		      - 0x6, max_pwr);
++	if (!rfk->registered)
++		return;
++	rfk->registered = 0;
++
++	input_unregister_polled_device(rfk->poll_dev);
++	rfkill_unregister(rfk->rfkill);
+ 	input_free_polled_device(rfk->poll_dev);
+ 	rfk->poll_dev = NULL;
+ 	rfkill_free(rfk->rfkill);
+diff --git a/drivers/net/wireless/b43/rfkill.h b/drivers/net/wireless/b43/rfkill.h
+index 29544e8..adacf93 100644
+--- a/drivers/net/wireless/b43/rfkill.h
++++ b/drivers/net/wireless/b43/rfkill.h
+@@ -15,14 +15,14 @@ struct b43_rfkill {
+ 	struct rfkill *rfkill;
+ 	/* The poll device for the RFKILL input button */
+ 	struct input_polled_dev *poll_dev;
++	/* Did initialization succeed? Used for freeing. */
++	bool registered;
+ 	/* The unique name of this rfkill switch */
+-	char name[32];
++	char name[sizeof("b43-phy4294967295")];
+ };
  
- 	/* find the desired power in Q5.2 - power_level is in dBm
-@@ -1918,7 +1919,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 				txpower = 3;
- 				radio_attenuation += 2;
- 				baseband_attenuation += 2;
--			} else if (dev->dev->bus->sprom.r1.boardflags_lo
-+			} else if (dev->dev->bus->sprom.boardflags_lo
- 				   & B43legacy_BFL_PACTRL) {
- 				baseband_attenuation += 4 *
- 						     (radio_attenuation - 2);
-@@ -2000,9 +2001,9 @@ int b43legacy_phy_init_tssi2dbm_table(st
+-/* All the init functions return void, because we are not interested
++/* The init function returns void, because we are not interested
+  * in failing the b43 init process when rfkill init failed. */
+-void b43_rfkill_alloc(struct b43_wldev *dev);
+-void b43_rfkill_free(struct b43_wldev *dev);
+ void b43_rfkill_init(struct b43_wldev *dev);
+ void b43_rfkill_exit(struct b43_wldev *dev);
  
- 	B43legacy_WARN_ON(!(phy->type == B43legacy_PHYTYPE_B ||
- 			  phy->type == B43legacy_PHYTYPE_G));
--	pab0 = (s16)(dev->dev->bus->sprom.r1.pa0b0);
--	pab1 = (s16)(dev->dev->bus->sprom.r1.pa0b1);
--	pab2 = (s16)(dev->dev->bus->sprom.r1.pa0b2);
-+	pab0 = (s16)(dev->dev->bus->sprom.pa0b0);
-+	pab1 = (s16)(dev->dev->bus->sprom.pa0b1);
-+	pab2 = (s16)(dev->dev->bus->sprom.pa0b2);
+@@ -36,12 +36,6 @@ struct b43_rfkill {
+ 	/* empty */
+ };
  
- 	if ((dev->dev->bus->chip_id == 0x4301) && (phy->radio_ver != 0x2050)) {
- 		phy->idle_tssi = 0x34;
-@@ -2013,9 +2014,10 @@ int b43legacy_phy_init_tssi2dbm_table(st
- 	if (pab0 != 0 && pab1 != 0 && pab2 != 0 &&
- 	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
- 		/* The pabX values are set in SPROM. Use them. */
--		if ((s8)dev->dev->bus->sprom.r1.itssi_bg != 0 &&
--		    (s8)dev->dev->bus->sprom.r1.itssi_bg != -1)
--			phy->idle_tssi = (s8)(dev->dev->bus->sprom.r1.itssi_bg);
-+		if ((s8)dev->dev->bus->sprom.itssi_bg != 0 &&
-+		    (s8)dev->dev->bus->sprom.itssi_bg != -1)
-+			phy->idle_tssi = (s8)(dev->dev->bus->sprom.
-+					  itssi_bg);
- 		else
- 			phy->idle_tssi = 62;
- 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
-Index: wireless-2.6/drivers/net/wireless/b43legacy/radio.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/radio.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/radio.c
-@@ -827,7 +827,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 	case B43legacy_PHYTYPE_B: {
- 		if (phy->radio_ver != 0x2050)
- 			return;
--		if (!(dev->dev->bus->sprom.r1.boardflags_lo &
-+		if (!(dev->dev->bus->sprom.boardflags_lo &
- 		    B43legacy_BFL_RSSI))
- 			return;
+-static inline void b43_rfkill_alloc(struct b43_wldev *dev)
+-{
+-}
+-static inline void b43_rfkill_free(struct b43_wldev *dev)
+-{
+-}
+ static inline void b43_rfkill_init(struct b43_wldev *dev)
+ {
+ }
+diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
+index eefa6fb..619b453 100644
+--- a/drivers/net/wireless/b43legacy/debugfs.c
++++ b/drivers/net/wireless/b43legacy/debugfs.c
+@@ -124,7 +124,7 @@ static ssize_t shm_read_file(struct b43legacy_wldev *dev, char *buf, size_t bufs
+ 	__le16 *le16buf = (__le16 *)buf;
  
-@@ -857,7 +857,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 	}
- 	case B43legacy_PHYTYPE_G:
- 		if (!phy->gmode ||
--		    !(dev->dev->bus->sprom.r1.boardflags_lo &
-+		    !(dev->dev->bus->sprom.boardflags_lo &
- 		    B43legacy_BFL_RSSI)) {
- 			tmp16 = b43legacy_nrssi_hw_read(dev, 0x20);
- 			if (tmp16 >= 0x20)
-@@ -1406,7 +1406,7 @@ static u16 b43legacy_get_812_value(struc
- 	if (!phy->gmode)
- 		return 0;
- 	if (!has_loopback_gain(phy)) {
--		if (phy->rev < 7 || !(dev->dev->bus->sprom.r1.boardflags_lo
-+		if (phy->rev < 7 || !(dev->dev->bus->sprom.boardflags_lo
- 		    & B43legacy_BFL_EXTLNA)) {
- 			switch (lpd) {
- 			case LPD(0, 1, 1):
-@@ -1459,7 +1459,7 @@ static u16 b43legacy_get_812_value(struc
- 		}
+ 	for (i = 0; i < 0x1000; i++) {
+-		if (bufsize <= 0)
++		if (bufsize < sizeof(tmp))
+ 			break;
+ 		tmp = b43legacy_shm_read16(dev, B43legacy_SHM_SHARED, 2 * i);
+ 		le16buf[i] = cpu_to_le16(tmp);
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index f0e56df..3bde1e9 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -2781,6 +2781,17 @@ static void b43legacy_wireless_core_stop(struct b43legacy_wldev *dev)
  
- 		loop_or = (loop << 8) | extern_lna_control;
--		if (phy->rev >= 7 && dev->dev->bus->sprom.r1.boardflags_lo
-+		if (phy->rev >= 7 && dev->dev->bus->sprom.boardflags_lo
- 		    & B43legacy_BFL_EXTLNA) {
- 			if (extern_lna_control)
- 				loop_or |= 0x8000;
-@@ -1550,7 +1550,7 @@ u16 b43legacy_radio_init2050(struct b43l
- 					    b43legacy_get_812_value(dev,
- 					    LPD(0, 1, 1)));
- 			if (phy->rev < 7 ||
--			    !(dev->dev->bus->sprom.r1.boardflags_lo
-+			    !(dev->dev->bus->sprom.boardflags_lo
- 			    & B43legacy_BFL_EXTLNA))
- 				b43legacy_phy_write(dev, 0x0811, 0x01B3);
- 			else
-@@ -1786,7 +1786,7 @@ int b43legacy_radio_selectchannel(struct
- 			  channel2freq_bg(channel));
+ 	if (b43legacy_status(dev) < B43legacy_STAT_STARTED)
+ 		return;
++
++	/* Disable and sync interrupts. We must do this before than
++	 * setting the status to INITIALIZED, as the interrupt handler
++	 * won't care about IRQs then. */
++	spin_lock_irqsave(&wl->irq_lock, flags);
++	dev->irq_savedstate = b43legacy_interrupt_disable(dev,
++							  B43legacy_IRQ_ALL);
++	b43legacy_read32(dev, B43legacy_MMIO_GEN_IRQ_MASK); /* flush */
++	spin_unlock_irqrestore(&wl->irq_lock, flags);
++	b43legacy_synchronize_irq(dev);
++
+ 	b43legacy_set_status(dev, B43legacy_STAT_INITIALIZED);
  
- 	if (channel == 14) {
--		if (dev->dev->bus->sprom.r1.country_code == 5)   /* JAPAN) */
-+		if (dev->dev->bus->sprom.country_code == 5)   /* JAPAN) */
- 			b43legacy_shm_write32(dev, B43legacy_SHM_SHARED,
- 					      B43legacy_UCODEFLAGS_OFFSET,
- 					      b43legacy_shm_read32(dev,
-Index: wireless-2.6/drivers/net/wireless/b43legacy/xmit.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/xmit.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/xmit.c
-@@ -378,7 +378,7 @@ static s8 b43legacy_rssi_postprocess(str
- 			else
- 				tmp -= 3;
- 		} else {
--			if (dev->dev->bus->sprom.r1.boardflags_lo
-+			if (dev->dev->bus->sprom.boardflags_lo
- 			    & B43legacy_BFL_RSSI) {
- 				if (in_rssi > 63)
- 					in_rssi = 63;
+ 	mutex_unlock(&wl->mutex);
+@@ -2791,14 +2802,6 @@ static void b43legacy_wireless_core_stop(struct b43legacy_wldev *dev)
+ 
+ 	ieee80211_stop_queues(wl->hw); /* FIXME this could cause a deadlock */
+ 
+-	/* Disable and sync interrupts. */
+-	spin_lock_irqsave(&wl->irq_lock, flags);
+-	dev->irq_savedstate = b43legacy_interrupt_disable(dev,
+-							  B43legacy_IRQ_ALL);
+-	b43legacy_read32(dev, B43legacy_MMIO_GEN_IRQ_MASK); /* flush */
+-	spin_unlock_irqrestore(&wl->irq_lock, flags);
+-	b43legacy_synchronize_irq(dev);
+-
+ 	b43legacy_mac_suspend(dev);
+ 	free_irq(dev->dev->irq, dev);
+ 	b43legacydbg(wl, "Wireless interface stopped\n");
+@@ -3332,7 +3335,7 @@ out_mutex_unlock:
+ 	return err;
+ }
+ 
+-void b43legacy_stop(struct ieee80211_hw *hw)
++static void b43legacy_stop(struct ieee80211_hw *hw)
+ {
+ 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+ 	struct b43legacy_wldev *dev = wl->current_dev;
+-- 
+John W. Linville
+linville@tuxdriver.com
