@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:60155 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbXKXUAo (ORCPT
+Received: from relay.post.naumen.ru ([77.222.34.75]:51309 "EHLO
+	relay.post.naumen.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760493AbXKHTTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 15:00:44 -0500
-Date: Sat, 24 Nov 2007 12:00:16 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com
-Subject: Re: wpa_supplicant/key deletion with all-zeroes mac (was: security
-	question)
-Message-ID: <20071124200016.GK8672@jm.kir.nu> (sfid-20071124_200056_437591_F9ECD0D7)
-References: <4743E5DF.9040603@linux.intel.com> <1195658254.12000.23.camel@johannes.berg> <20071122043722.GC8672@jm.kir.nu> <1195736126.6323.86.camel@johannes.berg>
+	Thu, 8 Nov 2007 14:19:32 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by relay.post.naumen.ru (Postfix) with ESMTP id 467CBA31B3
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Nov 2007 21:46:34 +0300 (MSK)
+Received: from relay.post.naumen.ru ([127.0.0.1])
+	by localhost (post.naumen.ru [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id wCAbXsoxO0hJ for <linux-wireless@vger.kernel.org>;
+	Thu,  8 Nov 2007 21:46:27 +0300 (MSK)
+Received: from smtp.post.naumen.ru (smtp.post.naumen.ru [77.222.34.74])
+	by relay.post.naumen.ru (Postfix) with ESMTP id 68AF5A31B2
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Nov 2007 21:46:27 +0300 (MSK)
+Received: from [192.168.225.193] (unknown [195.151.207.66])
+	by smtp.post.naumen.ru (Postfix) with ESMTP id 46C8657837
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Nov 2007 21:46:27 +0300 (MSK)
+Message-ID: <47335980.4070103@naumen.ru> (sfid-20071108_191935_692038_02B0E548)
+Date: Thu, 08 Nov 2007 23:46:24 +0500
+From: =?windows-1251?Q?=C2=E5=F2=EE=F8=EA=E8=ED_=CD=E8=EA=E8=F2=E0?=
+	<nvetoshkin@naumen.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195736126.6323.86.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 and SIOCSIWAUTH
+Content-Type: text/plain; charset=windows-1251; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2007 at 01:55:26PM +0100, Johannes Berg wrote:
+Hi, I'm a user of Lenovo R61 laptop with Intel 3945 wireless card. I 
+have Gentoo and would like to use the iwlwifi + wpa_supplicant driver, 
+but I can't because Wi-Fi installed in our office needs WPA2 
+authentication and I can't connect to it. There no problems using ipw3945d.
+#wpa_supplicant config
+ap_scan=2
+network={
+         ssid="point1"
+         key_mgmt=WPA-EAP
+         scan_ssid=1
+         identity="nvetoshkin"
+         proto=WPA2
+         eap=TLS
+         ca_cert="/home/nekto/certificate.pem"
+         private_key="/home/nekto/nvetoshkin.p12"
+         private_key_passwd="nvetoshkin"
+}
+ioctl[SIOCSIWAUTH]: Operation not supported - this error always appears 
+in wpa_supplicant output. I digged a bit in source code and found out 
+that it is mac80211 subsystem who returns ENOTSUP.
+Is it really the cause of my problems or am I just confused?
 
-> > > > wpa_supplicant will 
-> > > > receives this event then call mac80211 to remove any old security key, 
-> > > > the problem it will pass 00:00:00:00:00:00 as station address. 
-
-> Can you look into it then please?
-
-It looks like this was fixed more than a year ago.. Which wpa_supplicant
-version was used here? Can the problem be reproduced on something more
-recent (e.g., 0.5.8 or the current 0.6.x snapshot)? If yes, I would like
-to see debug log from wpa_supplicant showing what exactly happens.
-
-The fix was to reorder clearing of the BSSID:
-http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=3103d0a7f91a48ebfa0d08c6599babd0c556e6a9
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-=-=-=-
+Vetoshkin Nikita
