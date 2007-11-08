@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:39560 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbXK0EGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 23:06:13 -0500
-Date: Mon, 26 Nov 2007 20:05:36 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211: unencrypted packet vulnerability
-Message-ID: <20071127040536.GF5698@jm.kir.nu> (sfid-20071127_040616_869011_91ABBC38)
-References: <1195686097.6323.22.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195686097.6323.22.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:48945 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758555AbXKHUDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2007 15:03:30 -0500
+Subject: Re: mac80211 and SIOCSIWAUTH
+From: Dan Williams <dcbw@redhat.com>
+To: =?UTF-8?Q?=D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=D0=B8=D0=BD_?=
+	 =?UTF-8?Q?=D0=9D=D0=B8=D0=BA=D0=B8=D1=82=D0=B0?=
+	<nvetoshkin@naumen.ru>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47335980.4070103@naumen.ru>
+References: <47335980.4070103@naumen.ru>
+Content-Type: text/plain; charset=utf-8
+Date: Thu, 08 Nov 2007 15:00:53 -0500
+Message-Id: <1194552053.31657.0.camel@localhost.localdomain> (sfid-20071108_200338_034151_864C1C1D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2007 at 12:01:37AM +0100, Johannes Berg wrote:
+On Thu, 2007-11-08 at 23:46 +0500, =D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=
+=D0=B8=D0=BD =D0=9D=D0=B8=D0=BA=D0=B8=D1=82=D0=B0 wrote:
+> Hi, I'm a user of Lenovo R61 laptop with Intel 3945 wireless card. I=20
+> have Gentoo and would like to use the iwlwifi + wpa_supplicant driver=
+,=20
+> but I can't because Wi-Fi installed in our office needs WPA2=20
+> authentication and I can't connect to it. There no problems using ipw=
+3945d.
+> #wpa_supplicant config
+> ap_scan=3D2
+> network=3D{
+>          ssid=3D"point1"
+>          key_mgmt=3DWPA-EAP
+>          scan_ssid=3D1
+>          identity=3D"nvetoshkin"
+>          proto=3DWPA2
+>          eap=3DTLS
+>          ca_cert=3D"/home/nekto/certificate.pem"
+>          private_key=3D"/home/nekto/nvetoshkin.p12"
+>          private_key_passwd=3D"nvetoshkin"
+> }
+> ioctl[SIOCSIWAUTH]: Operation not supported - this error always appea=
+rs=20
+> in wpa_supplicant output. I digged a bit in source code and found out=
+=20
+> that it is mac80211 subsystem who returns ENOTSUP.
+> Is it really the cause of my problems or am I just confused?
 
-> As I just found, mac80211 is susceptible to an attack where the attacker
-> simply sends frames it wants us to see unencrypted instead of bothering
-> with replay attacks or such. This could possibly cause us to reply to
-> these frames or worse yet, a mac80211 based AP could encrypt the frames
-> and broadcast them if the attacker uses a MAC address of another station
-> that is properly associated!
+There's a number of SIOCSIWAUTH sub-options, and not all are necessary,
+and not all are supported by every driver.  That's normal.  Ignore the
+wpa_supplicant message.
 
-> The reason is that ieee80211_rx_h_drop_unencrypted() drops unencrypted
-> frames, but only if "sdata->drop_unencrypted" is set which never
-> happens!
+Dan
 
-Hmm.. What happened to the original code that had (rx->key ||
-rx->sdata->drop_unencrypted)?
 
-The drop_unencrypted was originally designed as just an extra layer of
-protection and it was not really needed in most configurations. There
-might have been some odd corner cases where it was needed in
-multi-SSID/BSSID case, but other than that, the rx->key part would have
-taken care of this.
-
-> The patch below is necessary for wpa_supplicant to be able to set the
-> drop_unencrypted setting, but I'm not convinced it actually needs to be
-> able to set it. Can't the kernel just do a sane default?
-
-I thought it did.. By the use of rx->key here, not by use of
-drop_unencrypted. Anyway, like I said, drop_unencrypted is an extra
-layer of security, so having possibility of using it may be nice safety
-net should something else go wrong in the RX logic.
-
-> Considering the AP case, on the other hand, hostapd will need to be able
-> to set the setting since we don't actually look into the beacon it tells
-> us to transmit. But hostapd on the other hand doesn't even invoke the
-> iwauth ioctl! I have to admit to being rather confused.
-
-The Devicescape version of hostapd did.. I do not remember why this was
-not merged, but I would assume it was just something that I never got to
-and since it was using a private ioctl for setting the parameter that
-option already disappeared. Sure, it would be reasonable to add support
-for it now that the parameter is available with WE-18.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
