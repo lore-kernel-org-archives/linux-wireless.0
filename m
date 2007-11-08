@@ -1,226 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46074 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763395AbXKOGWg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 01:22:36 -0500
-Date: Wed, 14 Nov 2007 22:21:07 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 20/23] mac80211: store SSID in sta_bss_list
-Message-ID: <20071115062107.GU8282@kroah.com> (sfid-20071115_062241_811794_887137A1)
-References: <20071115055238.692814352@mini.kroah.org>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2620 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752495AbXKHCLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Nov 2007 21:11:38 -0500
+Date: Wed, 7 Nov 2007 21:11:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6 (this time for
+	real!)
+Message-ID: <20071108021119.GD11957@tuxdriver.com> (sfid-20071108_021144_087325_E0485CB5)
+References: <20071107001314.GH4440@tuxdriver.com> <20071107185147.GA21097@tuxdriver.com> <20071107.163200.25509588.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071115061806.GA8282@kroah.com>
+In-Reply-To: <20071107.163200.25509588.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--stable review patch.  If anyone has any objections, please let us know.
+On Wed, Nov 07, 2007 at 04:32:00PM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 7 Nov 2007 13:51:54 -0500
+> 
+> > Hold-off on this one for now if -- clearly Johannes and I need to
+> > brush-up on our Kconfig skills... :-(
+> > 
+> > I'll post a new pull request soon.
+> 
+> Ok.
 
-------------------
+Dave,
 
+These fixes are additive on top of the previous request archived here:
 
-From: John W. Linville <linville@tuxdriver.com>
+	http://marc.info/?l=linux-wireless&m=119439453721827&w=2
 
-patch cffdd30d20d163343b1c6de25bcb0cc978a1ebf9 in mainline.
+I've been sending ssb patches to you, but I'm not sure if that is the
+right place to send them.  If you don't want them, can you suggest where
+else I should send them?
 
-Some AP equipment "in the wild" services multiple SSIDs using the
-same BSSID.  This patch changes the key of sta_bss_list to include
-the SSID as well as the BSSID and the channel so as to prevent one
-SSID from eclipsing another SSID with the same BSSID.
+Anyway, let me know if there are any problems!
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Thanks,
+
+John
 
 ---
- net/mac80211/ieee80211_sta.c |   54 ++++++++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 21 deletions(-)
 
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -12,7 +12,6 @@
-  */
- 
- /* TODO:
-- * BSS table: use <BSSID,SSID> as the key to support multi-SSID APs
-  * order BSS list by RSSI(?) ("quality of AP")
-  * scan result table filtering (by capability (privacy, IBSS/BSS, WPA/RSN IE,
-  *    SSID)
-@@ -61,7 +60,8 @@
- static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
- 				     u8 *ssid, size_t ssid_len);
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel);
-+ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel,
-+		     u8 *ssid, u8 ssid_len);
- static void ieee80211_rx_bss_put(struct net_device *dev,
- 				 struct ieee80211_sta_bss *bss);
- static int ieee80211_sta_find_ibss(struct net_device *dev,
-@@ -403,7 +403,8 @@ static void ieee80211_set_associated(str
- 			return;
- 
- 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
--					   local->hw.conf.channel);
-+					   local->hw.conf.channel,
-+					   ifsta->ssid, ifsta->ssid_len);
- 		if (bss) {
- 			if (bss->has_erp_value)
- 				ieee80211_handle_erp_ie(dev, bss->erp_value);
-@@ -545,7 +546,8 @@ static void ieee80211_send_assoc(struct 
- 		capab |= WLAN_CAPABILITY_SHORT_SLOT_TIME |
- 			WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	}
--	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
-+	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel,
-+				   ifsta->ssid, ifsta->ssid_len);
- 	if (bss) {
- 		if (bss->capability & WLAN_CAPABILITY_PRIVACY)
- 			capab |= WLAN_CAPABILITY_PRIVACY;
-@@ -705,7 +707,8 @@ static int ieee80211_privacy_mismatch(st
- 	    ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
- 		return 0;
- 
--	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
-+	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel,
-+				   ifsta->ssid, ifsta->ssid_len);
- 	if (!bss)
- 		return 0;
- 
-@@ -1215,7 +1218,8 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	if (elems.erp_info && elems.erp_info_len >= 1) {
- 		struct ieee80211_sta_bss *bss
- 			= ieee80211_rx_bss_get(dev, ifsta->bssid,
--					       local->hw.conf.channel);
-+					       local->hw.conf.channel,
-+					       ifsta->ssid, ifsta->ssid_len);
- 		if (bss) {
- 			bss->erp_value = elems.erp_info[0];
- 			bss->has_erp_value = 1;
-@@ -1246,7 +1250,8 @@ static void ieee80211_rx_mgmt_assoc_resp
- 			return;
- 		}
- 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
--					   local->hw.conf.channel);
-+					   local->hw.conf.channel,
-+					   ifsta->ssid, ifsta->ssid_len);
- 		if (bss) {
- 			sta->last_rssi = bss->rssi;
- 			sta->last_signal = bss->signal;
-@@ -1327,7 +1332,8 @@ static void __ieee80211_rx_bss_hash_del(
- 
- 
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid, int channel)
-+ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid, int channel,
-+		     u8 *ssid, u8 ssid_len)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
-@@ -1339,6 +1345,10 @@ ieee80211_rx_bss_add(struct net_device *
- 	atomic_inc(&bss->users);
- 	memcpy(bss->bssid, bssid, ETH_ALEN);
- 	bss->channel = channel;
-+	if (ssid && ssid_len <= IEEE80211_MAX_SSID_LEN) {
-+		memcpy(bss->ssid, ssid, ssid_len);
-+		bss->ssid_len = ssid_len;
-+	}
- 
- 	spin_lock_bh(&local->sta_bss_lock);
- 	/* TODO: order by RSSI? */
-@@ -1350,7 +1360,8 @@ ieee80211_rx_bss_add(struct net_device *
- 
- 
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel)
-+ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel,
-+		     u8 *ssid, u8 ssid_len)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
-@@ -1358,8 +1369,10 @@ ieee80211_rx_bss_get(struct net_device *
- 	spin_lock_bh(&local->sta_bss_lock);
- 	bss = local->sta_bss_hash[STA_HASH(bssid)];
- 	while (bss) {
--		if (memcmp(bss->bssid, bssid, ETH_ALEN) == 0 &&
--		    bss->channel == channel) {
-+		if (!memcmp(bss->bssid, bssid, ETH_ALEN) &&
-+		    bss->channel == channel &&
-+		    bss->ssid_len == ssid_len &&
-+		    (ssid_len == 0 || !memcmp(bss->ssid, ssid, ssid_len))) {
- 			atomic_inc(&bss->users);
+The entire series (i.e. both from yesterday and today) is available
+here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
+
+---
+
+The following changes since commit d81bd04a737c102481c0ee7b46443796e14b6b5c:
+  John W. Linville (1):
+        mac80211: make "decrypt failed" messages conditional upon MAC80211_DEBUG
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+
+Johannes Berg (1):
+      mac80211: fix MAC80211_RCSIMPLE Kconfig
+
+Michael Buesch (1):
+      ssb: Fix PCMCIA-host lowlevel bus access
+
+ drivers/ssb/main.c   |    1 +
+ drivers/ssb/pcmcia.c |   56 +++++++++++++++++++++++++-------------------------
+ net/mac80211/Kconfig |    4 +-
+ 3 files changed, 31 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index fc1d589..85a2054 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -440,6 +440,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
  			break;
- 		}
-@@ -1527,9 +1540,11 @@ static void ieee80211_rx_bss_info(struct
- 	else
- 		channel = rx_status->channel;
+ 		case SSB_BUSTYPE_PCMCIA:
+ #ifdef CONFIG_SSB_PCMCIAHOST
++			sdev->irq = bus->host_pcmcia->irq.AssignedIRQ;
+ 			dev->parent = &bus->host_pcmcia->dev;
+ #endif
+ 			break;
+diff --git a/drivers/ssb/pcmcia.c b/drivers/ssb/pcmcia.c
+index b6abee8..bb44a76 100644
+--- a/drivers/ssb/pcmcia.c
++++ b/drivers/ssb/pcmcia.c
+@@ -63,17 +63,17 @@ int ssb_pcmcia_switch_coreidx(struct ssb_bus *bus,
+ 		err = pcmcia_access_configuration_register(pdev, &reg);
+ 		if (err != CS_SUCCESS)
+ 			goto error;
+-		read_addr |= (reg.Value & 0xF) << 12;
++		read_addr |= ((u32)(reg.Value & 0x0F)) << 12;
+ 		reg.Offset = 0x30;
+ 		err = pcmcia_access_configuration_register(pdev, &reg);
+ 		if (err != CS_SUCCESS)
+ 			goto error;
+-		read_addr |= reg.Value << 16;
++		read_addr |= ((u32)reg.Value) << 16;
+ 		reg.Offset = 0x32;
+ 		err = pcmcia_access_configuration_register(pdev, &reg);
+ 		if (err != CS_SUCCESS)
+ 			goto error;
+-		read_addr |= reg.Value << 24;
++		read_addr |= ((u32)reg.Value) << 24;
  
--	bss = ieee80211_rx_bss_get(dev, mgmt->bssid, channel);
-+	bss = ieee80211_rx_bss_get(dev, mgmt->bssid, channel,
-+				   elems.ssid, elems.ssid_len);
- 	if (!bss) {
--		bss = ieee80211_rx_bss_add(dev, mgmt->bssid, channel);
-+		bss = ieee80211_rx_bss_add(dev, mgmt->bssid, channel,
-+					   elems.ssid, elems.ssid_len);
- 		if (!bss)
- 			return;
- 	} else {
-@@ -1555,10 +1570,6 @@ static void ieee80211_rx_bss_info(struct
+ 		cur_core = (read_addr - SSB_ENUM_BASE) / SSB_CORE_SIZE;
+ 		if (cur_core == coreidx)
+@@ -152,28 +152,29 @@ error:
+ 	goto out_unlock;
+ }
  
- 	bss->beacon_int = le16_to_cpu(mgmt->u.beacon.beacon_int);
- 	bss->capability = le16_to_cpu(mgmt->u.beacon.capab_info);
--	if (elems.ssid && elems.ssid_len <= IEEE80211_MAX_SSID_LEN) {
--		memcpy(bss->ssid, elems.ssid, elems.ssid_len);
--		bss->ssid_len = elems.ssid_len;
--	}
- 
- 	bss->supp_rates_len = 0;
- 	if (elems.supp_rates) {
-@@ -2339,7 +2350,7 @@ static int ieee80211_sta_create_ibss(str
+-/* These are the main device register access functions.
+- * do_select_core is inline to have the likely hotpath inline.
+- * All unlikely codepaths are out-of-line. */
+-static inline int do_select_core(struct ssb_bus *bus,
+-				 struct ssb_device *dev,
+-				 u16 *offset)
++static int select_core_and_segment(struct ssb_device *dev,
++				   u16 *offset)
  {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_hw_mode *mode;
- 	u8 bssid[ETH_ALEN], *pos;
- 	int i;
-@@ -2361,11 +2372,11 @@ static int ieee80211_sta_create_ibss(str
- 	printk(KERN_DEBUG "%s: Creating new IBSS network, BSSID " MAC_FMT "\n",
- 	       dev->name, MAC_ARG(bssid));
++	struct ssb_bus *bus = dev->bus;
+ 	int err;
+-	u8 need_seg = (*offset >= 0x800) ? 1 : 0;
++	u8 need_segment;
++
++	if (*offset >= 0x800) {
++		*offset -= 0x800;
++		need_segment = 1;
++	} else
++		need_segment = 0;
  
--	bss = ieee80211_rx_bss_add(dev, bssid, local->hw.conf.channel);
-+	bss = ieee80211_rx_bss_add(dev, bssid, local->hw.conf.channel,
-+				   sdata->u.sta.ssid, sdata->u.sta.ssid_len);
- 	if (!bss)
- 		return -ENOMEM;
+ 	if (unlikely(dev != bus->mapped_device)) {
+ 		err = ssb_pcmcia_switch_core(bus, dev);
+ 		if (unlikely(err))
+ 			return err;
+ 	}
+-	if (unlikely(need_seg != bus->mapped_pcmcia_seg)) {
+-		err = ssb_pcmcia_switch_segment(bus, need_seg);
++	if (unlikely(need_segment != bus->mapped_pcmcia_seg)) {
++		err = ssb_pcmcia_switch_segment(bus, need_segment);
+ 		if (unlikely(err))
+ 			return err;
+ 	}
+-	if (need_seg == 1)
+-		*offset -= 0x800;
  
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	mode = local->oper_hw_mode;
+ 	return 0;
+ }
+@@ -181,32 +182,31 @@ static inline int do_select_core(struct ssb_bus *bus,
+ static u16 ssb_pcmcia_read16(struct ssb_device *dev, u16 offset)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+-	u16 x;
  
- 	if (local->hw.conf.beacon_int == 0)
-@@ -2431,7 +2442,8 @@ static int ieee80211_sta_find_ibss(struc
- 	       MAC_FMT "\n", MAC_ARG(bssid), MAC_ARG(ifsta->bssid));
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
--	    (bss = ieee80211_rx_bss_get(dev, bssid, local->hw.conf.channel))) {
-+	    (bss = ieee80211_rx_bss_get(dev, bssid, local->hw.conf.channel,
-+					ifsta->ssid, ifsta->ssid_len))) {
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID " MAC_FMT
- 		       " based on configured SSID\n",
- 		       dev->name, MAC_ARG(bssid));
-
+-	if (unlikely(do_select_core(bus, dev, &offset)))
++	if (unlikely(select_core_and_segment(dev, &offset)))
+ 		return 0xFFFF;
+-	x = readw(bus->mmio + offset);
+ 
+-	return x;
++	return readw(bus->mmio + offset);
+ }
+ 
+ static u32 ssb_pcmcia_read32(struct ssb_device *dev, u16 offset)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+-	u32 x;
++	u32 lo, hi;
+ 
+-	if (unlikely(do_select_core(bus, dev, &offset)))
++	if (unlikely(select_core_and_segment(dev, &offset)))
+ 		return 0xFFFFFFFF;
+-	x = readl(bus->mmio + offset);
++	lo = readw(bus->mmio + offset);
++	hi = readw(bus->mmio + offset + 2);
+ 
+-	return x;
++	return (lo | (hi << 16));
+ }
+ 
+ static void ssb_pcmcia_write16(struct ssb_device *dev, u16 offset, u16 value)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+ 
+-	if (unlikely(do_select_core(bus, dev, &offset)))
++	if (unlikely(select_core_and_segment(dev, &offset)))
+ 		return;
+ 	writew(value, bus->mmio + offset);
+ }
+@@ -215,12 +215,12 @@ static void ssb_pcmcia_write32(struct ssb_device *dev, u16 offset, u32 value)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+ 
+-	if (unlikely(do_select_core(bus, dev, &offset)))
++	if (unlikely(select_core_and_segment(dev, &offset)))
+ 		return;
+-	readw(bus->mmio + offset);
+-	writew(value >> 16, bus->mmio + offset + 2);
+-	readw(bus->mmio + offset);
+-	writew(value, bus->mmio + offset);
++	writeb((value & 0xFF000000) >> 24, bus->mmio + offset + 3);
++	writeb((value & 0x00FF0000) >> 16, bus->mmio + offset + 2);
++	writeb((value & 0x0000FF00) >> 8, bus->mmio + offset + 1);
++	writeb((value & 0x000000FF) >> 0, bus->mmio + offset + 0);
+ }
+ 
+ /* Not "static", as it's used in main.c */
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 32c8c08..ce176e6 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -14,9 +14,9 @@ config MAC80211
+ 	networking stack.
+ 
+ config MAC80211_RCSIMPLE
+-	bool "'simple' rate control algorithm"
++	bool "'simple' rate control algorithm" if EMBEDDED
+ 	default y
+-	depends on MAC80211 && EMBEDDED
++	depends on MAC80211
+ 	help
+ 	  This option allows you to turn off the 'simple' rate
+ 	  control algorithm in mac80211. If you do turn it off,
 -- 
+John W. Linville
+linville@tuxdriver.com
