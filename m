@@ -1,65 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:55013 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbXKVI17 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 03:27:59 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2374551nfb
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 00:27:57 -0800 (PST)
-Message-ID: <c85cb4470711220027vd75153fl4335279b9f96d3e5@mail.gmail.com> (sfid-20071122_082803_325849_8E89ED09)
-Date: Thu, 22 Nov 2007 10:27:56 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: restructuring data Rx handlers
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <1195661640.12000.52.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11956348193070-git-send-email-ron.rindjunsky@intel.com>
-	 <1195661640.12000.52.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:39714 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753879AbXKHJDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2007 04:03:33 -0500
+Subject: Re: [PATCH] WIRELESS:  Use more obvious "is_power_of_2" macro.
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0711060945510.5429@localhost.localdomain>
+References: <Pine.LNX.4.64.0711060945510.5429@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 08 Nov 2007 16:56:58 +0800
+Message-Id: <1194512218.31257.308.camel@debian.sh.intel.com> (sfid-20071108_090339_911373_48B49626)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +static ieee80211_txrx_result
-> > +ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
-> > +{
-> > +     struct net_device *dev = rx->dev;
-> > +     struct ieee80211_local *local = rx->local;
-> > +     u16 fc;
-> > +     int err;
-> > +     struct sk_buff *skb, *skb2;
-> > +     struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> > +
-> > +     fc = rx->fc;
-> > +     if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
-> > +             return TXRX_CONTINUE;
-> > +
-> > +     err = ieee80211_data_to_8023(rx);
-> > +     if (unlikely(err))
-> > +             return TXRX_DROP;
-> > +
-> > +     if ((ieee80211_drop_802_1x_pae(rx, sizeof(struct ethhdr))) ||
-> > +         (ieee80211_drop_unencrypted(rx, sizeof(struct ethhdr))))
-> > +             return TXRX_DROP;
->
-> I like this.
->
-> > +     skb = rx->skb;
-> > +     skb->dev = dev;
-> >       skb2 = NULL;
-> >
-> >       dev->stats.rx_packets++;
->
-> Ok so the stuff that comes after this until the ned of the function is
-> responsible for delivering the packet. Maybe that should be split out
-> from the function too into something like ieee80211_deliver_skb()? In
-> the A-MSDU code you've had to basically copy all this code into the loop
-> as far as I can tell, something which I'd like to avoid very much.
 
-I agree, it will be more readable that way. i'll do the needed changes.
+On Tue, 2007-11-06 at 09:47 -0500, Robert P. J. Day wrote:
+> Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+> 
 
->
-> johannes
->
->
+NACK. is_power_of_2() cannot do compile time check for
+TFD_QUEUE_SIZE_MAX. Furthermore, the runtime check for
+TFD_QUEUE_SIZE_MAX is already done by iwl_queue_init().
+
+Thanks,
+-yi
+
+> ---
+> 
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 4f22a71..53b4b4e 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/etherdevice.h>
+>  #include <linux/if_arp.h>
+> +#include <linux/log2.h>
+> 
+>  #include <net/ieee80211_radiotap.h>
+>  #include <net/mac80211.h>
+> @@ -343,7 +344,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
+> 
+>  	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+>  	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
+> -	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
+> +	BUILD_BUG_ON(!is_power_of_2(TFD_QUEUE_SIZE_MAX));
+>  	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
+> 
+>  	iwl_hw_tx_queue_init(priv, txq);
+> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> index d60adcb..5f3bcb3 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/etherdevice.h>
+>  #include <linux/if_arp.h>
+> +#include <linux/log2.h>
+> 
+>  #include <net/ieee80211_radiotap.h>
+>  #include <net/mac80211.h>
+> @@ -342,7 +343,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
+> 
+>  	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+>  	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
+> -	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
+> +	BUILD_BUG_ON(!is_power_of_2(TFD_QUEUE_SIZE_MAX));
+>  	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
+> 
+>  	iwl_hw_tx_queue_init(priv, txq);
+> 
