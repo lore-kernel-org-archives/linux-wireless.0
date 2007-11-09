@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:40650 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbXK0Lqq (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:27575 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751181AbXKIWVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 06:46:46 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by hiems2.ing.unibs.it (Postfix) with ESMTP id 753A8182553A
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 12:46:44 +0100 (CET)
-Received: from hiems2.ing.unibs.it ([127.0.0.1])
-	by localhost (hiems1.ing.unibs.it [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id GKWjcaIHEGSV for <linux-wireless@vger.kernel.org>;
-	Tue, 27 Nov 2007 12:46:44 +0100 (CET)
-Mime-Version: 1.0 (Apple Message framework v752.3)
-In-Reply-To: <43e72e890711201448k54bd4d64kaf9887de83f07def@mail.gmail.com>
-References: <E7E9AC02-E136-48B7-8E39-3419B36B6575@ing.unibs.it> <43e72e890711201448k54bd4d64kaf9887de83f07def@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <42996941-C9EA-46FD-8B84-E9A99F2501D9@ing.unibs.it> (sfid-20071127_114700_024818_E67A03E6)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: ath5k: driver fails to enter RTS/CTS procedure
-Date: Tue, 27 Nov 2007 12:46:47 +0100
-To: linux-wireless@vger.kernel.org
+	Fri, 9 Nov 2007 17:21:39 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Deauthentication cycles
+Date: Fri, 9 Nov 2007 17:21:17 -0500
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <473490A0.2050403@lwfinger.net>
+In-Reply-To: <473490A0.2050403@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1292831.54zCvD2aFU";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200711091721.22517.flamingice@sourmilk.net> (sfid-20071109_222143_123710_F21B314F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+--nextPart1292831.54zCvD2aFU
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-(sorry if you already know, however) I was debugging the driver on my  
-mips board and I discovered a problem with the RTS/CTS procedure. I  
-see that even if I set the threshold for RTS, packets that are longer  
-than the threshold are correctly scheduled by net/mac80211 as to be  
-led by the RTS/CTS procedure (this means that timing is correctly  
-calculated to take into account the CTS that follows the RTS): this  
-is then correctly reported to the ath5k_tx() funtion inside the  
-control structure, but the driver actually misses to setup the  
-hardware to enter the RTS procedure.
+On Friday 09 November 2007 11:53:52 Larry Finger wrote:
+> WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
+>
+> Is this the correct code? If so, any ideas on why this deauthentication is
+> happening? As can be seen, it isn't fatal and the system always recovers.
+>
+I think some APs automatically disconnect clients after a period of=20
+inactivity. After all, clients aren't guaranteed to deauthenticate when=20
+they're done. Though.. some APs seem to deauthenticate really fast.
 
-For the sake of clarity, the issue affects also Intel code.
-
-Regards,
-FG
+=2DMichael Wu
 
 
+--nextPart1292831.54zCvD2aFU
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
+iD8DBQBHNN1iT3Oqt9AH4aERAsVuAJ9uQvYy9q45sF1tal18t2xVkYlCgQCg1eGJ
+nDDrxwaQBrk/B1gzbowZVYM=
+=7PDF
+-----END PGP SIGNATURE-----
+
+--nextPart1292831.54zCvD2aFU--
