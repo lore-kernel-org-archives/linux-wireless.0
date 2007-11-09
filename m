@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:20840 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757501AbXKNQpH (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56427 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753987AbXKIQxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 11:45:07 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so210688nfb
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 08:45:05 -0800 (PST)
-Message-ID: <c85cb4470711140845m138df42pbbd15f7f666d74ef@mail.gmail.com> (sfid-20071114_164626_270867_04BDCBD6)
-Date: Wed, 14 Nov 2007 18:45:04 +0200
-From: "Ron Rindzonski" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 02/15] mac80211: adding 802.11n definitions in ieee80211.h
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <1195056268.4091.24.camel@johannes.berg>
+	Fri, 9 Nov 2007 11:53:54 -0500
+Message-ID: <473490A0.2050403@lwfinger.net> (sfid-20071109_165359_386695_518B888E)
+Date: Fri, 09 Nov 2007 10:53:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Deauthentication cycles
 Content-Type: text/plain; charset=ISO-8859-1
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-	 <11950542003481-git-send-email-ron.rindjunsky@intel.com>
-	 <1195056268.4091.24.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > This patch adds several structs and definitions to ieee80211.h
-> > to support 802.11n draft specifications.
-> > As 802.11n depends on and extends the 802.11e standard in several issues,
-> > there are also several definitions that belong to 802.11e.
->
-> Do I remember wrongly or didn't you want to add comments here to explain
-> the structure names?
->
+In my network using WPA-PSK TKIP with mac80211 and b43, I see several of these cycles per day:
 
-correct, i will add them and resend this patch
-thanks
+eth1: RX deauthentication from 00:1a:70:46:ba:b1 (reason=7)
+eth1: deauthenticated
+eth1: authenticate with AP 00:1a:70:46:ba:b1
+eth1: RX authentication from 00:1a:70:46:ba:b1 (alg=0 transaction=2 status=0)
+eth1: authenticated
+eth1: associate with AP 00:1a:70:46:ba:b1
+eth1: RX ReassocResp from 00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=1)
+eth1: associated
+eth1: switched to short barker preamble (BSSID=00:1a:70:46:ba:b1)
 
-> Thanks,
-> Johannes
->
->
+In searching through the various 802.11-related header files, the only reason code of 7 that I could
+find is
+
+WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
+
+Is this the correct code? If so, any ideas on why this deauthentication is happening? As can be
+seen, it isn't fatal and the system always recovers.
+
+Thanks,
+
+Larry
