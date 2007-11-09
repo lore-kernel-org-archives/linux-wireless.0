@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51846 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755128AbXKTGp3 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:61654 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbXKIWrk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 01:45:29 -0500
-Date: Mon, 19 Nov 2007 21:41:22 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: devel@linuxdriverproject.org,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux Drivers needed for 802.11
-Message-ID: <20071120054122.GA16693@kroah.com> (sfid-20071120_064531_596695_E6E1399D)
-References: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com>
+	Fri, 9 Nov 2007 17:47:40 -0500
+Date: Fri, 09 Nov 2007 16:47:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Output message at startup if hardware switch for
+ radio is off
+Message-ID: <4734e389.AF3t4zZIQw1IryOf%Larry.Finger@lwfinger.net> (sfid-20071109_224746_886207_DF3E8755)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 20, 2007 at 12:24:20AM -0500, Luis R. Rodriguez wrote:
-> Greg,
-> 
-> http://linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded#802_11_Wireless_Network_cards
-> 
-> This has a list of "needed" 802.11 drivers. It needs some updating as
-> we have quite a few new drivers and some are already in the works. I
-> was about to update this list to reflect our current driver list and
-> also add all 802.11n info I have but considered fist moving it to
-> linuxwireless.org so we can arrange this a bit better. Reason for
-> doing so is to let us arrange it as we can keep better track of it.
+Now that the radio is controlled by rfkill, there is a potential
+difficulty in helping a new user get started, as it is unlikely
+that they will have setup rfkill. This patch prints a message if
+the interface is started with the hardware switch off.
 
-If you want to pull from the wiki, please do so, and feel free to point
-that section at your page.  But unless you have a spot that users can
-edit on their own, it might be good to leave something on the
-linuxdriverproject wiki for people to do so.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-And along the 802.11n front, I'm _this_ close to getting a major
-chipset's specs, so hopefully we might have some more work for you to do
-soon :)
+John,
 
-Now of only the lawyers would hurry up...
+This patch is intended for the everything branch of wireless-2.6.
 
-thanks,
+Larry
 
-greg k-h
+ main.c   |   10 +++++++---
+ main.h   |    2 ++
+ rfkill.c |    2 +-
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -3181,11 +3181,15 @@ static void setup_struct_phy_for_init(st
+ 
+ static void setup_struct_wldev_for_init(struct b43_wldev *dev)
+ {
++	struct b43_wl *wl = dev->wl;
++
+ 	/* Flags */
+ 	dev->reg124_set_0x4 = 0;
+-	/* Assume the radio is enabled. If it's not enabled, the state will
+-	 * immediately get fixed on the first periodic work run. */
+-	dev->radio_hw_enable = 1;
++	dev->radio_hw_enable = b43_is_hw_radio_enabled(dev);
++	if (!dev->radio_hw_enable)
++		b43info(wl, "***** The hardware switch for your radio switch"
++			" is off.\n          ***** Until it is switched on,"
++			" your device will not work.\n");
+ 
+ 	/* Stats */
+ 	memset(&dev->stats, 0, sizeof(dev->stats));
+Index: wireless-2.6/drivers/net/wireless/b43/main.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.h
++++ wireless-2.6/drivers/net/wireless/b43/main.h
+@@ -116,6 +116,8 @@ void b43_mac_enable(struct b43_wldev *de
+ 
+ void b43_controller_restart(struct b43_wldev *dev, const char *reason);
+ 
++bool b43_is_hw_radio_enabled(struct b43_wldev *dev);
++
+ #define B43_PS_ENABLED	(1 << 0)	/* Force enable hardware power saving */
+ #define B43_PS_DISABLED	(1 << 1)	/* Force disable hardware power saving */
+ #define B43_PS_AWAKE	(1 << 2)	/* Force device awake */
+Index: wireless-2.6/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-2.6/drivers/net/wireless/b43/rfkill.c
+@@ -27,7 +27,7 @@
+ 
+ 
+ /* Returns TRUE, if the radio is enabled in hardware. */
+-static bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
++bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
+ {
+ 	if (dev->phy.rev >= 3) {
+ 		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
