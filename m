@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:4216 "EHLO
-	rn-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755914AbXKWPgb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbXKIMKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 10:36:31 -0500
-Received: by rn-out-0102.google.com with SMTP id s46so4290697rnb
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 07:36:30 -0800 (PST)
-Message-ID: <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com> (sfid-20071123_153635_036678_CB6CB695)
-Date: Fri, 23 Nov 2007 10:36:28 -0500
-From: "Vadim Peretokin" <vperetokin@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Belin FD7010 v7
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1195784707.11966.38.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-	 <1195781993.11966.27.camel@dv>
-	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
-	 <1195784707.11966.38.camel@dv>
+	Fri, 9 Nov 2007 07:10:54 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <1194572631.4793.64.camel@johannes.berg>
+References: <1194572631.4793.64.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bDdwABlLxuA+x7ZTvmk5"
+Date: Fri, 09 Nov 2007 11:33:26 +0100
+Message-Id: <1194604406.4793.79.camel@johannes.berg> (sfid-20071109_121057_070235_10CDFE5F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That didn't quite work. iwconfig and ifconfig couldn't see the card,
-but lswh -C network showed my card. It said "* - network UNCLAIMED",
-but it didn't say any logical adresses. I tried a host of adresses
-with "sudo ifconfig <adress> up", but nothing would work.
 
-I had a friend help me do some hacks involving telling the driver the
-adress of my card, and then iwconfig saw it - but for some reason Wicd
-couldn't see it (I'll try again when I get back home and install
-Network Manager again.). I have a log of what we did to get it
-"working", if it's any help.
+--=-bDdwABlLxuA+x7ZTvmk5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-And yes, the card does work if you install the net8185.inf driver in
-ndiswrapper and then use the -a command to link the card to the
-driver. I was just hoping that the card would work out of the box :)
+> This patch adds support for multiple virtual interfaces (up to 65536)
+> to b43. This requires modified firmware which is detected by an invalid
+> day in the firmware timestamp (254), and then the firmware time and the
+> rest of the date is used for feature bits.
 
-On Nov 22, 2007 9:25 PM, Pavel Roskin <proski@gnu.org> wrote:
->
-> On Thu, 2007-11-22 at 21:04 -0500, Vadim Peretokin wrote:
-> > Ahh I'm afraid no, I'm not quite there yet and need my laptop
-> > functional. But I'll let you know then when the next version of Ubuntu
-> > comes about, thank you!
->
-> Actually, there is a compatibility package with the latest wireless
-> drivers:
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
->
-> It's much easier to compile.  No configuration is required.  Just run
-> "make" and then "make install" (as root).  Then use "modprobe rtl8180"
-> to load the driver.  Ubuntu will probably load it automatically after
-> reboot.  Linux 2.6.22 and newer is supported.  No kernel patching is
-> needed.  Just make sure to recompile the package when upgrading to the
-> next kernel.
->
-> Even if that doesn't work, it's possible to use ndiswrapper with the
-> Windows driver, so that you don't have to choose your OS because of
-> issues with just one driver.
->
-> --
-> Regards,
-> Pavel Roskin
->
->
+One thing I forgot to mention is that currently, mac80211 is not able to
+associate different virtual stations with the same BSSID. I had a patch
+to fix this but because I had so many patches I dropped that one. I'll
+try to revive it next week if I get around, basically it consisted of
+adding an sdata pointer to the station get routine. The bigger problem
+was making the RX path happy about it :)
+
+johannes
+
+--=-bDdwABlLxuA+x7ZTvmk5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzQ3daVg1VMiehFYAQLWYQ/9G4Iv936OTe2JHw5tud6wx+q88FXbCGh1
+lDSii4C1kGxt0cyylOqKuEe1fC3hZH/MFgHZkhGbiF31vRfJq1ZBcXnnZamCGhIL
+pB8ng3MaAk9O2D/r03jyPL8/bvqLQm36SdVZiaBzzCKlZCqUtcHSnJe+Hor+jOI5
+GCyLPCpbs97dcFVUvIeAxnAdqCJk2AXUz/qlcH8dMdYI+Aq15Kx6aY44e7rK8IX4
++VApDeQlkcE7F4yLk13vaz0xrNzBK4ZuVamCKeTsXgcOX3BQKk8/ExJSKb8/UkKp
+P2FPD5rDuPE2/hWwoVr+tkMPNky5OcqibPWDdTCg+djsId59vx7Vugi52/Iqyprd
+qghdoFbzwV1ochxwo9cVxmaO1vCz6fDElH4hQBkk5wQbRcWNN/IdoCcwFSZU0YMV
+GXC9Qmat7MXLbrzoiV3ZJg3j6/DAddhMWC8fVRjUIEPa5Qgh359Jr9f9W01UeSuQ
+5Q/VIApvYfLPeso/eZd1m2/8HRt1Y3dJ3tfxYMLNmYluBYUWLVj1I3+umHVO/xT0
+FZJ7vHVf5aCeB1tD73YlNn3tq0ffEm232j7hlYGkpBEjnentqmnD2DqxV4FXxLqd
+77TCp4+vnT6T/AjBgq9ZWa+qcOHnWRu7CoH9EibxwYh39HV0pYZ6yn8DOTEn8FD1
+n9k7At5vpps=
+=aEms
+-----END PGP SIGNATURE-----
+
+--=-bDdwABlLxuA+x7ZTvmk5--
+
