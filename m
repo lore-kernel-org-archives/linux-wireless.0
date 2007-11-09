@@ -1,138 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45750 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750887AbXKEQD5 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:64661 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbXKIW6V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2007 11:03:57 -0500
-Message-ID: <472F3EE3.5040201@lwfinger.net> (sfid-20071105_160406_997867_4D1F356F)
-Date: Mon, 05 Nov 2007 10:03:47 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 9 Nov 2007 17:58:21 -0500
+Date: Fri, 09 Nov 2007 16:58:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] ssb: Remove the old, now unused, data structures
+Message-ID: <4734e60c.mXHHDefHDb29vGwY%Larry.Finger@lwfinger.net> (sfid-20071109_225825_046696_C53F2FA4)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] ssb: Add code for SPROM Rev 4
-References: <472c9192.8nd7AOTgl+jWptik%Larry.Finger@lwfinger.net> <200711051351.37252.mb@bu3sch.de>
-In-Reply-To: <200711051351.37252.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> Larry, I did not forget your patch.
-> But I need to think a little bit more about this.
+Patch 6 of 6.
 
-I knew that this one would take some time.
+The old, now unused, data structures and SPROM extraction routines
+are removed.
 
-> The union above is not really what I'd like to have here. In fact,
-> I think to get the v4 sprom implemented the sprom struct has to be
-> redesigned.
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+---
 
-The way I implemented it was as a "straw man" designed to get shot down. :-) The only benefit it had
-was that this format has allowed my tester to get started enough to get b43 loaded. He is rapidly
-implementing that part of the specs that are needed to get the BCM4328 with an N PHY working in G mode.
-
-> I think we must leave the path of partitioning the sprom struct into
-> versions, because that obviously doesn't work anymore.
-> Instead, I think we must develop _one_ common struct that is capable
-> of holding the information from any sprom. (Note that the struct layout
-> does not need to reflect the real hardware layout).
-> 
-> And I think we should also remove the fields that are not needed at all,
-> like the PCI ID stuff.
-
-I agree.
-
-> something like this:
-> 
-> 
-> struct ssb_sprom_pathvar {
-> 	bool this_pathvar_is_available;
-> 
-> 	...foobar data
-> };
-> 
-> struct ssb_sprom {
-> 	u8 wl_mac_addr[ETH_ALEN];
-> 	u8 eth0_mac_addr[ETH_ALEN];
-> 	u8 eth1_mac_addr[ETH_ALEN];
-> 
-> 	...
-> 
-> 	u8 gpio0;
-> 	u8 gpio1;
-> 	...
-> 
-> 	antennagain...
-> 
-> 	struct ssb_sprom_pathvar pv0;
-> 	struct ssb_sprom_pathvar pv1;
-
-I think this section can be
-
-	u8 path_data0[SPROM_PATH_DATA_SIZE];
-	u8 path_data1 ...
-
-where SPROM_PATH_DATA_SIZE = 0x26. Once we see how the data are used, it may make more sense to have
-these data be u16, or even a union so that we can have it both ways.
-
-> 	...
-> };
-> 
-> Note that I did _not_ look closely at the pathvar stuff, so this
-> might be a bad idea to design it this way.
-> But the point I was going to make with that was; we probably need
-> some "this data is valid" bits for different parts of the sprom
-> struct, as for example v1-3 don't have these pathvars (So the drivers
-> must be told it's invalid data).
-> The reason for all this "valid-bit" stuff is that I think we should
-> remove any sprom-versioning knowledge from the drivers. That
-> should be abstracted.
-
-I agree.
-
-> Any idea on how to improve that?
-
-I'm not sure we need a separate "valid bit" for path data. In the sprom that we are working with,
-only paths 1 & 2 are implemented - the paths 3 & 4 region contains all 1's just like any
-unimplemented sprom data. It should be OK to initialize the first word of each path to 0xFFFF to
-indicate it is unused.
-
-To let you know how the specs translate into a device, here is the dump of the BCM4328 sprom:
-
-ssb: SPROM r4 dump
-ssb: 0x0000: 0x2801 0x0000 0x0009 0x1028 0x0000 0x0DBE 0xFF00 0x2BC4
-ssb: 0x0010: 0x2A64 0x2964 0x2C64 0x3CE7 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0020: 0x4328 0x8000 0x0002 0x0000 0x1001 0x1800 0x0000 0x0000
-ssb: 0x0030: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0040: 0x5372 0x004C 0x4A01 0x0000 0x0004 0x0000 0x0019 0x7DA5
-ssb: 0x0050: 0x1912 0x0000 0x0001 0x83FF 0xFFFF 0xFFFF 0x0303 0x0202
-ssb: 0x0060: 0xFFFF 0x3437 0x5B5B 0x1420 0x5B5B 0x0D0C 0x5B5B 0x1A1E
-ssb: 0x0070: 0x5B5B 0x3844 0x3838 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0080: 0x3E4E 0xFEC6 0x15D3 0xFB3D 0x0000 0x3E3C 0x3C3C 0xFE6C
-ssb: 0x0090: 0x1664 0xFA7B 0x0000 0xFE37 0x1401 0xFAE7 0x0000 0xFE5A
-ssb: 0x00A0: 0x147E 0xFAC7 0x0000 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0x3E4E
-ssb: 0x00B0: 0xFEC1 0x15BC 0xFB2F 0x0000 0x3E3C 0x3C3C 0xFE69 0x1608
-ssb: 0x00C0: 0xFA81 0x0000 0xFE2A 0x1321 0xFB0B 0x0000 0xFE66 0x1595
-ssb: 0x00D0: 0xFA88 0x0000 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x00E0: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x00F0: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0100: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0110: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0120: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x0130: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0140: 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0150: 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0160: 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0170: 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0180: 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-ssb: 0x0190: 0x0000 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x01A0: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
-ssb: 0x01B0: 0xFFFF 0xFFFF 0xFFFF 0x9404
-
-As I said earlier, my current patch is working OK for present needs. Once we come to an agreement
-regarding the sprom data structures, I will begin implementing them. As I see it, conversion will be
-a 3-step process. We will need a patch to add the new structure, a second to populate that
-structure, patches to convert b44, b43, and b43legacy to use the new data, and a final patch to
-remove the old structure. In this manner, bisection will be supported.
-
-Larry
+Index: wireless-2.6/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-2.6.orig/include/linux/ssb/ssb.h
++++ wireless-2.6/include/linux/ssb/ssb.h
+@@ -15,72 +15,7 @@ struct pcmcia_device;
+ struct ssb_bus;
+ struct ssb_driver;
+ 
+-
+-struct ssb_sprom_r1 {
+-	u16 pci_spid;		/* Subsystem Product ID for PCI */
+-	u16 pci_svid;		/* Subsystem Vendor ID for PCI */
+-	u16 pci_pid;		/* Product ID for PCI */
+-	u8 il0mac[6];		/* MAC address for 802.11b/g */
+-	u8 et0mac[6];		/* MAC address for Ethernet */
+-	u8 et1mac[6];		/* MAC address for 802.11a */
+-	u8 et0phyaddr:5;	/* MII address for enet0 */
+-	u8 et1phyaddr:5;	/* MII address for enet1 */
+-	u8 et0mdcport:1;	/* MDIO for enet0 */
+-	u8 et1mdcport:1;	/* MDIO for enet1 */
+-	u8 board_rev;		/* Board revision */
+-	u8 country_code:4;	/* Country Code */
+-	u8 antenna_a:2;		/* Antenna 0/1 available for A-PHY */
+-	u8 antenna_bg:2;	/* Antenna 0/1 available for B-PHY and G-PHY */
+-	u16 pa0b0;
+-	u16 pa0b1;
+-	u16 pa0b2;
+-	u16 pa1b0;
+-	u16 pa1b1;
+-	u16 pa1b2;
+-	u8 gpio0;		/* GPIO pin 0 */
+-	u8 gpio1;		/* GPIO pin 1 */
+-	u8 gpio2;		/* GPIO pin 2 */
+-	u8 gpio3;		/* GPIO pin 3 */
+-	u16 maxpwr_a;		/* A-PHY Power Amplifier Max Power (in dBm Q5.2) */
+-	u16 maxpwr_bg;		/* B/G-PHY Power Amplifier Max Power (in dBm Q5.2) */
+-	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
+-	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
+-	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
+-	u8 antenna_gain_a;	/* A-PHY Antenna gain (in dBm Q5.2) */
+-	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
+-	u8 oem[8];		/* OEM string (rev 1 only) */
+-};
+-
+-struct ssb_sprom_r2 {
+-	u16 boardflags_hi;	/* Boardflags (high 16 bits) */
+-	u8 maxpwr_a_lo;		/* A-PHY Max Power Low */
+-	u8 maxpwr_a_hi;		/* A-PHY Max Power High */
+-	u16 pa1lob0;		/* A-PHY PA Low Settings */
+-	u16 pa1lob1;		/* A-PHY PA Low Settings */
+-	u16 pa1lob2;		/* A-PHY PA Low Settings */
+-	u16 pa1hib0;		/* A-PHY PA High Settings */
+-	u16 pa1hib1;		/* A-PHY PA High Settings */
+-	u16 pa1hib2;		/* A-PHY PA High Settings */
+-	u8 ofdm_pwr_off;	/* OFDM Power Offset from CCK Level */
+-	u8 country_str[2];	/* Two char Country Code */
+-};
+-
+-struct ssb_sprom_r3 {
+-	u32 ofdmapo;		/* A-PHY OFDM Mid Power Offset */
+-	u32 ofdmalpo;		/* A-PHY OFDM Low Power Offset */
+-	u32 ofdmahpo;		/* A-PHY OFDM High Power Offset */
+-	u8 gpioldc_on_cnt;	/* GPIO LED Powersave Duty Cycle ON count */
+-	u8 gpioldc_off_cnt;	/* GPIO LED Powersave Duty Cycle OFF count */
+-	u8 cckpo_1M:4;		/* CCK Power Offset for Rate 1M */
+-	u8 cckpo_2M:4;		/* CCK Power Offset for Rate 2M */
+-	u8 cckpo_55M:4;		/* CCK Power Offset for Rate 5.5M */
+-	u8 cckpo_11M:4;		/* CCK Power Offset for Rate 11M */
+-	u32 ofdmgpo;		/* G-PHY OFDM Power Offset */
+-};
+-
+ struct ssb_sprom {
+-	u8 revision;
+-	u8 temp_fill[2 * sizeof(struct ssb_sprom_r1)];
+ 	u8 il0mac[6];		/* MAC address for 802.11b/g */
+ 	u8 et0mac[6];		/* MAC address for Ethernet */
+ 	u8 et1mac[6];		/* MAC address for 802.11a */
+@@ -106,16 +41,6 @@ struct ssb_sprom {
+ 	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
+ 
+ 	/* TODO - add any parameters needed from rev 2, 3, or 4 SPROMs */
+-	/* The valid r# fields are selected by the "revision".
+-	 * Revision 3 and lower inherit from lower revisions.
+-	 */
+-	union {
+-		struct {
+-			struct ssb_sprom_r1 r1;
+-			struct ssb_sprom_r2 r2;
+-			struct ssb_sprom_r3 r3;
+-		};
+-	};
+ };
+ 
+ /* Information about the PCB the circuitry is soldered on. */
+Index: wireless-2.6/drivers/ssb/pci.c
+===================================================================
+--- wireless-2.6.orig/drivers/ssb/pci.c
++++ wireless-2.6/drivers/ssb/pci.c
+@@ -297,62 +297,6 @@ err_ctlreg:
+ 	return err;
+ }
+ 
+-static void sprom_extract_r1(struct ssb_sprom_r1 *out, const u16 *in)
+-{
+-	int i;
+-	u16 v;
+-
+-	SPEX(pci_spid, SSB_SPROM1_SPID, 0xFFFF, 0);
+-	SPEX(pci_svid, SSB_SPROM1_SVID, 0xFFFF, 0);
+-	SPEX(pci_pid, SSB_SPROM1_PID, 0xFFFF, 0);
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(SSB_SPROM1_IL0MAC) + i];
+-		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+-	}
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(SSB_SPROM1_ET0MAC) + i];
+-		*(((__be16 *)out->et0mac) + i) = cpu_to_be16(v);
+-	}
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(SSB_SPROM1_ET1MAC) + i];
+-		*(((__be16 *)out->et1mac) + i) = cpu_to_be16(v);
+-	}
+-	SPEX(et0phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0A, 0);
+-	SPEX(et1phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1A,
+-	     SSB_SPROM1_ETHPHY_ET1A_SHIFT);
+-	SPEX(et0mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0M, 14);
+-	SPEX(et1mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1M, 15);
+-	SPEX(board_rev, SSB_SPROM1_BINF, SSB_SPROM1_BINF_BREV, 0);
+-	SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
+-	     SSB_SPROM1_BINF_CCODE_SHIFT);
+-	SPEX(antenna_a, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTA,
+-	     SSB_SPROM1_BINF_ANTA_SHIFT);
+-	SPEX(antenna_bg, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTBG,
+-	     SSB_SPROM1_BINF_ANTBG_SHIFT);
+-	SPEX(pa0b0, SSB_SPROM1_PA0B0, 0xFFFF, 0);
+-	SPEX(pa0b1, SSB_SPROM1_PA0B1, 0xFFFF, 0);
+-	SPEX(pa0b2, SSB_SPROM1_PA0B2, 0xFFFF, 0);
+-	SPEX(pa1b0, SSB_SPROM1_PA1B0, 0xFFFF, 0);
+-	SPEX(pa1b1, SSB_SPROM1_PA1B1, 0xFFFF, 0);
+-	SPEX(pa1b2, SSB_SPROM1_PA1B2, 0xFFFF, 0);
+-	SPEX(gpio0, SSB_SPROM1_GPIOA, SSB_SPROM1_GPIOA_P0, 0);
+-	SPEX(gpio1, SSB_SPROM1_GPIOA, SSB_SPROM1_GPIOA_P1,
+-	     SSB_SPROM1_GPIOA_P1_SHIFT);
+-	SPEX(gpio2, SSB_SPROM1_GPIOB, SSB_SPROM1_GPIOB_P2, 0);
+-	SPEX(gpio3, SSB_SPROM1_GPIOB, SSB_SPROM1_GPIOB_P3,
+-	     SSB_SPROM1_GPIOB_P3_SHIFT);
+-	SPEX(maxpwr_a, SSB_SPROM1_MAXPWR, SSB_SPROM1_MAXPWR_A,
+-	     SSB_SPROM1_MAXPWR_A_SHIFT);
+-	SPEX(maxpwr_bg, SSB_SPROM1_MAXPWR, SSB_SPROM1_MAXPWR_BG, 0);
+-	SPEX(itssi_a, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_A,
+-	     SSB_SPROM1_ITSSI_A_SHIFT);
+-	SPEX(itssi_bg, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_BG, 0);
+-	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
+-	SPEX(antenna_gain_a, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_A, 0);
+-	SPEX(antenna_gain_bg, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_BG,
+-	     SSB_SPROM1_AGAIN_BG_SHIFT);
+-}
+-
+ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+ {
+ 	int i;
+@@ -414,7 +358,7 @@ static void sprom_extract_r4(struct ssb_
+ 	int i;
+ 	u16 v;
+ 
+-	/* extract the r1 variables */
++	/* extract the equivalent of the r1 variables */
+ 	for (i = 0; i < 3; i++) {
+ 		v = in[SPOFF(SSB_SPROM4_IL0MAC) + i];
+ 		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+@@ -435,6 +379,18 @@ static void sprom_extract_r4(struct ssb_
+ 	SPEX(antenna_gain_a, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_0, 0);
+ 	SPEX(antenna_gain_bg, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_1,
+ 	     SSB_SPROM4_AGAIN_1_SHIFT);
++	SPEX(maxpwr_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_MAXP_BG_MASK, 0);
++	SPEX(itssi_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_ITSSI_BG,
++	     SSB_SPROM4_ITSSI_BG_SHIFT);
++	SPEX(maxpwr_a, SSB_SPROM4_MAXP_A, SSB_SPROM4_MAXP_A_MASK, 0);
++	SPEX(itssi_a, SSB_SPROM4_MAXP_A, SSB_SPROM4_ITSSI_A,
++	     SSB_SPROM4_ITSSI_A_SHIFT);
++	SPEX(gpio0, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P0, 0);
++	SPEX(gpio1, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P1,
++	     SSB_SPROM4_GPIOA_P1_SHIFT);
++	SPEX(gpio2, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P2, 0);
++	SPEX(gpio3, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P3,
++	     SSB_SPROM4_GPIOB_P3_SHIFT);
+ 	/* TODO - get remaining rev 4 stuff needed */
+ }
+ 
+@@ -444,13 +400,13 @@ static int sprom_extract(struct ssb_bus 
+ 	memset(out, 0, sizeof(*out));
+ 
+ 	out->revision = in[size - 1] & 0x00FF;
++	ssb_printk(KERN_INFO PFX "SPROM revision %d detected.\n", out->revision);
+ 	if ((bus->chip_id & 0xFF00) == 0x4400) {
+ 		/* Workaround: The BCM44XX chip has a stupid revision
+ 		 * number stored in the SPROM.
+ 		 * Always extract r1. */
+ 		out->revision = 1;
+ 		sprom_extract_r123(out, in);
+-		sprom_extract_r1(&out->r1, in);
+ 	} else if (bus->chip_id == 0x4321) {
+ 		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
+ 		out->revision = 4;
+@@ -460,7 +416,6 @@ static int sprom_extract(struct ssb_bus 
+ 			goto unsupported;
+ 		if (out->revision >= 1 && out->revision <= 3) {
+ 			sprom_extract_r123(out, in);
+-			sprom_extract_r1(&out->r1, in);
+ 		}
+ 		if (out->revision == 4)
+ 			sprom_extract_r4(out, in);
+@@ -472,7 +427,7 @@ static int sprom_extract(struct ssb_bus 
+ unsupported:
+ 	ssb_printk(KERN_WARNING PFX "Unsupported SPROM revision %d "
+ 		   "detected. Will extract v1\n", out->revision);
+-	sprom_extract_r1(&out->r1, in);
++	sprom_extract_r123(out, in);
+ 	return 0;
+ }
+ 
+Index: wireless-2.6/include/linux/ssb/ssb_regs.h
+===================================================================
+--- wireless-2.6.orig/include/linux/ssb/ssb_regs.h
++++ wireless-2.6/include/linux/ssb/ssb_regs.h
+@@ -175,6 +175,7 @@
+ #define  SSB_SPROM_REVISION_REV		0x00FF	/* SPROM Revision number */
+ #define  SSB_SPROM_REVISION_CRC		0xFF00	/* SPROM CRC8 value */
+ #define  SSB_SPROM_REVISION_CRC_SHIFT	8
++
+ /* SPROM Revision 1 */
+ #define SSB_SPROM1_SPID			0x1004	/* Subsystem Product ID for PCI */
+ #define SSB_SPROM1_SVID			0x1006	/* Subsystem Vendor ID for PCI */
+@@ -223,7 +224,7 @@
+ #define  SSB_SPROM1_AGAIN_A		0x00FF	/* A-PHY */
+ #define  SSB_SPROM1_AGAIN_BG		0xFF00	/* B-PHY and G-PHY */
+ #define  SSB_SPROM1_AGAIN_BG_SHIFT	8
+-#define SSB_SPROM1_OEM			0x1076	/* 8 bytes OEM string (rev 1 only) */
++
+ /* SPROM Revision 2 (inherits from rev 1) */
+ #define SSB_SPROM2_BFLHI		0x1038	/* Boardflags (high 16 bits) */
+ #define SSB_SPROM2_MAXP_A		0x103A	/* A-PHY Max Power */
+@@ -240,6 +241,7 @@
+ #define  SSB_SPROM2_OPO_VALUE		0x00FF
+ #define  SSB_SPROM2_OPO_UNUSED		0xFF00
+ #define SSB_SPROM2_CCODE		0x107C	/* Two char Country Code */
++
+ /* SPROM Revision 3 (inherits most data from rev 2) */
+ #define SSB_SPROM3_IL0MAC		0x104A	/* 6 bytes MAC address for 802.11b/g */
+ #define SSB_SPROM3_ET0MAC		0x1050	/* 6 bytes MAC address for Ethernet ?? */
+@@ -261,11 +263,12 @@
+ #define  SSB_SPROM3_CCKPO_11M		0xF000	/* 11M Rate PO */
+ #define  SSB_SPROM3_CCKPO_11M_SHIFT	12
+ #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
++
+ /* SPROM Revision 4 		entries with ?? in comment are unknown */
+-#define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for b/g */
++#define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for a/b/g/n */
+ #define SSB_SPROM4_ET0MAC		0x1018	/* 6 bytes MAC address for Ethernet ?? */
+ #define SSB_SPROM4_ET1MAC		0x1018	/* 6 bytes MAC address for 802.11a ?? */
+-#define SSB_SPROM4_ETHPHY		0x105A	/* Ethernet PHY settings */
++#define SSB_SPROM4_ETHPHY		0x105A	/* Ethernet PHY settings ?? */
+ #define  SSB_SPROM4_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
+ #define  SSB_SPROM4_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
+ #define  SSB_SPROM4_ETHPHY_ET1A_SHIFT	5
+@@ -280,24 +283,28 @@
+ #define  SSB_SPROM4_AGAIN_1		0xFF00	/* Antenna 1 */
+ #define  SSB_SPROM4_AGAIN_1_SHIFT	8
+ #define SSB_SPROM4_BFLHI		0x1046  /* Board Flags Hi */
+-#define SSB_SPROM4_MAXP_A		0x1000  /* Max Power A ?? */
+-#define SSB_SPROM4_MAXP_A_HI		0x00FF  /* Mask for Hi */
+-#define SSB_SPROM4_MAXP_A_LO		0xFF00  /* Mask for Lo */
+-#define SSB_SPROM4_MAXP_A_LO_SHIFT	16	/* Shift for Lo */
+-#define SSB_SPROM4_PA1LOB0		0x1000  /* ?? */
+-#define SSB_SPROM4_PA1LOB1		0x1000  /* ?? */
+-#define SSB_SPROM4_PA1LOB2		0x1000  /* ?? */
+-#define SSB_SPROM4_PA1HIB0		0x1000	/* ?? */
+-#define SSB_SPROM4_PA1HIB1		0x1000	/* ?? */
+-#define SSB_SPROM4_PA1HIB2		0x1000	/* ?? */
+-#define SSB_SPROM4_OPO			0x1000	/* ?? */
+-#define SSB_SPROM4_OPO_VALUE		0x0000	/* ?? */
+-#define SSB_SPROM4_GPIOLDC		0x105A	/* LED Powersave Duty Cycle */
+-#define  SSB_SPROM4_GPIOLDC_OFF		0x0000FF00	/* Off Count */
+-#define  SSB_SPROM4_GPIOLDC_OFF_SHIFT	8
+-#define  SSB_SPROM4_GPIOLDC_ON		0x00FF0000	/* On Count */
+-#define  SSB_SPROM4_GPIOLDC_ON_SHIFT	16
+-
++#define SSB_SPROM4_MAXP_BG		0x1080  /* Max Power BG in path 1 */
++#define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
++#define  SSB_SPROM4_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
++#define  SSB_SPROM4_ITSSI_BG_SHIFT	8
++#define SSB_SPROM4_MAXP_A		0x108A  /* Max Power A in path 1 */
++#define  SSB_SPROM4_MAXP_A_MASK		0x00FF  /* Mask for Max Power A */
++#define  SSB_SPROM4_ITSSI_A		0xFF00	/* Mask for path 1 itssi_a */
++#define  SSB_SPROM4_ITSSI_A_SHIFT	8
++#define SSB_SPROM4_GPIOA		0x1056	/* Gen. Purpose IO # 0 and 1 */
++#define  SSB_SPROM4_GPIOA_P0		0x00FF	/* Pin 0 */
++#define  SSB_SPROM4_GPIOA_P1		0xFF00	/* Pin 1 */
++#define  SSB_SPROM4_GPIOA_P1_SHIFT	8
++#define SSB_SPROM4_GPIOB		0x1058	/* Gen. Purpose IO # 2 and 3 */
++#define  SSB_SPROM4_GPIOB_P2		0x00FF	/* Pin 2 */
++#define  SSB_SPROM4_GPIOB_P3		0xFF00	/* Pin 3 */
++#define  SSB_SPROM4_GPIOB_P3_SHIFT	8
++#define SSB_SPROM4_PA0B0		0x1082	/* The paXbY locations are */
++#define SSB_SPROM4_PA0B1		0x1084	/*   only guesses */
++#define SSB_SPROM4_PA0B2		0x1086
++#define SSB_SPROM4_PA1B0		0x108E
++#define SSB_SPROM4_PA1B1		0x1090
++#define SSB_SPROM4_PA1B2		0x1092
+ 
+ /* Values for SSB_SPROM1_BINF_CCODE */
+ enum {
