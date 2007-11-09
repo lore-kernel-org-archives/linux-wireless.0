@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hydra.gt.owl.de ([195.71.99.218]:40967 "EHLO hydra.gt.owl.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751806AbXKNMRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 07:17:54 -0500
-Date: Wed, 14 Nov 2007 13:17:53 +0100
-From: Florian Lohoff <flo@rfc822.org>
-To: Marcus Better <marcus@better.se>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
-Message-ID: <20071114121753.GB30575@paradigm.rfc822.org> (sfid-20071114_121759_090228_18513A4C)
-References: <20071111102315.GC10486@paradigm.rfc822.org> <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> <20071113192330.GA19601@paradigm.rfc822.org> <fhedc4$5l9$1@ger.gmane.org>
+Received: from nf-out-0910.google.com ([64.233.182.191]:29994 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbXKIPLk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 10:11:40 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so496305nfb
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2007 07:11:35 -0800 (PST)
+Date: Fri, 9 Nov 2007 10:11:35 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] Fix infinite loop on dev_mc_unsync()
+Message-ID: <20071109151135.GA12982@pogo> (sfid-20071109_151146_735380_27047ED2)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="TRYliJ5NKNqkz5bu"
-In-Reply-To: <fhedc4$5l9$1@ger.gmane.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+While reviewing net/core/dev_mcast.c I found what I think is an 
+infinite loop on dev_mc_unsync(). This fixes it. We make use of
+this guy on mac80211 in ieee80211_stop(). This is untested.
 
---TRYliJ5NKNqkz5bu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-On Wed, Nov 14, 2007 at 09:58:44AM +0100, Marcus Better wrote:
-> Florian Lohoff wrote:
-> > You are right - its caused by a VERY low bitrate:
->=20
-> Looks similar to the problem I have:
->=20
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/6830
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D9273
-
-As you mention a quite young tree (2.6.23-rc3) - did you try bisecting
-it on the wireless-dev tree?
-
-It sound like the exact same problem i am seeing ...
-
-Flo
---=20
-Florian Lohoff                  flo@rfc822.org             +49-171-2280134
-	Those who would give up a little freedom to get a little=20
-          security shall soon have neither - Benjamin Franklin
-
---TRYliJ5NKNqkz5bu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHOudxUaz2rXW+gJcRAvD0AKDSaTZhWblvY59ErfQYU7NVUYOFYQCfQpD6
-ppVX5PCuoV0gK/tKDodC0BY=
-=UDXg
------END PGP SIGNATURE-----
-
---TRYliJ5NKNqkz5bu--
+diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
+index 15241cf..5373c03 100644
+--- a/net/core/dev_mcast.c
++++ b/net/core/dev_mcast.c
+@@ -168,8 +168,10 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+ 	da = from->mc_list;
+ 	while (da != NULL) {
+ 		next = da->next;
+-		if (!da->da_synced)
++		if (!da->da_synced) {
++			da = next;
+ 			continue;
++		}
+ 		__dev_addr_delete(&to->mc_list, &to->mc_count,
+ 				  da->da_addr, da->da_addrlen, 0);
+ 		da->da_synced = 0;
