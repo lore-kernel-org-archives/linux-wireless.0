@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:33578 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756340AbXK2EIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 23:08:24 -0500
-Date: Thu, 29 Nov 2007 05:02:46 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [RFC/T][PATCH][V3] mac80211: Exponential moving average
- estimate for rc80211_simple
-Message-ID: <20071129050246.6d8deacc@morte> (sfid-20071129_040828_774606_A860F76A)
-In-Reply-To: <1196301583.7622.11.camel@localhost>
-References: <1196112605.8318.6.camel@localhost>
-	<20071127163520.028f91fb@morte>
-	<1196199484.8298.23.camel@localhost>
-	<20071128002902.5dad5804@morte>
-	<1196267661.8234.19.camel@localhost>
-	<20071128184348.2d5843d1@morte>
-	<1196301583.7622.11.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga09.intel.com ([134.134.136.24]:60606 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751202AbXKIICS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 03:02:18 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net
+Subject: [PATCH 0/14] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
+Date: Fri,  9 Nov 2007 10:01:52 +0200
+Message-Id: <1194595326527-git-send-email-ron.rindjunsky@intel.com> (sfid-20071109_080230_546084_6718B511)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 29 Nov 2007 02:59:43 +0100
-Mattias Nissler <mattias.nissler@gmx.de> wrote:
+This series of patches splits into two parts:
+ - patches 1-7 add 802.11n support to mac80211.
+ - patches 8-14 demonstrates the use of the above mac80211's 802.11n framework through iwl4965 low level driver
+ 
+In order to be compatible with the 802.11n requirements for an HT station,
+patches 1-7 should not be treated as stand alone patches, but as a complete framework,
+although separation to patches by subjects was made for ease of handling.
+This applies to patches 8-14 as well.
+ 
+The patches do _not_ break any existing driver.
+ 
+patches were made (and tested to work) with wireless branch 2.6.24-rc1 (#everything)
+ 
+The framework includes the following:
+- HT probing.
+- HT association.
+- Support in Rx A-MSDU.
+- Support in A-MPDU apackage contains the ddBA request.
+- HT information and configuration delivery to both low-level driver and rate scaling.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-> Ok, I your case study sounds reasonable :-) So I guess I'll stick with
-> averaging over fix sized time intervals. The interpolation approach you
-> suggest seems good enough. How I'd expect the rate control algorithm to
-> behave in situations with not much input data is:
-> 
-> a) Stay at the current rate, just assume conditions didn't change.
-> b) Be optimistic: Slowly ramp up tx rate, so if more data to be
-> transmitted is available, it'll get good rates from the beginning, if
-> possible.
-> 
-> I think the approach you suggest is basically a) if we aren't adjusting
-> rate heavily at the moment.
-
-Yes, because:
-1) if the number of frame errors is over some threshold, by interpolating
-the way I suggested we will probably switch to a lower rate (mostly because
-of the I term - as the slope there would be 1); this should be just fine
-because anyway we didn't need the extra bitrate, and once we need it, we'll
-have enough data to switch to an higher rate, in case. A caveat here: what
-if we don't want an high throughput but we want low latency? We'll have to
-see if your b) approach is reasonable - i.e. if the increased latency
-provided by a lower bitrate is significant;
-2) if the frame errors are below the threshold, no problem because we won't
-switch rate (if we are near to the threshold) or we'll switch to an higher
-one. We don't aim to 0 frame errors, but we aim to the threshold (and this
-threshold could be meant as a userspace parameter, maybe, and may be seen as
-a 'reliability over throughput' parameter).
-
-> Ok, this whole thing sounds very promising to me. Now that we've
-> discussed some important points, I'll go ahead and write some code,
-> probably over the weekend.
-
-If I'm not too busy, I'm going to help you.
-
-
---
-Ciao
-Stefano
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
