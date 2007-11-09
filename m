@@ -1,114 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:24271 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295AbXKVOOM (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbXKIUSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 09:14:12 -0500
-Received: from lin01.mn-solutions.de (pD95F8740.dip0.t-ipconnect.de [217.95.135.64])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 09D1B5E45C5
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 15:14:10 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 33AFE1E00FD
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 15:11:15 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 regression: doesn't associate automatically
-Date: Thu, 22 Nov 2007 15:14:37 +0100
-References: <200711220912.10452.hs4233@mail.mn-solutions.de> <1195736752.6323.97.camel@johannes.berg>
-In-Reply-To: <1195736752.6323.97.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711221514.37906.hs4233@mail.mn-solutions.de> (sfid-20071122_141421_164627_CF0FF330)
+	Fri, 9 Nov 2007 15:18:39 -0500
+Subject: Re: [PATCH 05/14] mac80211: adding 802.11n essential A-MPDU addBA
+	capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net
+In-Reply-To: <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953311871-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312850-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312367-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595331658-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aps4xuyjnndOlSVgP6Aj"
+Date: Fri, 09 Nov 2007 17:34:35 +0100
+Message-Id: <1194626075.4793.128.camel@johannes.berg> (sfid-20071109_201841_666712_0B278E40)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> As you can see, it doesn't find anything that matches the
-> current configuration.
 
-Right.
-
-And correct behavior.
+--=-aps4xuyjnndOlSVgP6Aj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-> > $ iwconfig eth1 key s:11111
-> > b43-phy0 debug: Using hardware based encryption for keyidx:
-> > 0, mac: ff:ff:ff:ff:ff:ff
->
-> You've now enabled a key, but not told it to associate using
-> that key.
+> As this series of patches only adds HT handling with no aggregations,
+> (A-MPDU aggregations acceptance is not obligatory according to 802.11n dr=
+aft)
+> we are currently sending back a refusal upon this request.
 
-Wrong, because of an false assumption.
+Heh. In the Kconfig you just wrote that it handles AMPDU and AMSDU
+aggregation which I'd expect to imply deaggregation too. Nothing
+serious, just seemed a bit weird! :)
 
-On first sight, you might be right. I haven't told to associate. 
-But at the second sight, there is no EXPLICIT iwconfig-based way 
-to say "now associate". For 6 drivers (see below) the "iwconfig 
-XXX key YYY" command is an IMPLICIT way to say "try to associate 
-with what you know so far. That's because those drivers have a 
-heuristic like
+And isn't one of the two (I always forget which one) rather a feature of
+the hardware?
 
-  "If I'm not successfully associated yet, then I try to
-  associate whenver I get a new bit of info".
+> +#ifdef CONFIG_MAC80211_HT
+> +/* mgmt header + 1 byte action code */
+> +#define IEEE80211_MIN_ACTION_SIZE (24 + 1)
+> +
+> +#define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+> +#define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+> +#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
+> +#endif /* CONFIG_MAC80211_HT */
 
-And this bit of info might be ESSID, wep key, wpa key, on some 
-drivers even rate or b/g limitations.
-
-
-It's mac80211 that falsely thinks "iwconfig XXX essid" is the 
-only (!) command that triggers an association. Something that is 
-nowhere seen in "man iwconfig". Before many commands did trigger 
-an association, e.g. "iwconfig essid", "iwconfig key", "iwconfig 
-ap" and also several ioctl's used only by wpa-supplicant.
+Leave out the ifdefs please when they only protect definitions or such,
+i.e. nothing that will generate code/allocate structure space.
 
 
+> +	capab |=3D (u16)(buf_size << 6);	/* bit 15:6 max size of aggergation */
 
-> > As you can see, I'm not associated. However, this sequence
-> > used to work with non-mac80211 based WLAN drivers. However,
-> > I can actually associate if I reverse the essid/key, e.g.
-> > first set the key, then the ssid.
->
-> Can't say that matters since wext is actually sufficiently
-> undefined to allow both behaviours. :)
+typo: aggregation. Interesting what an email program with a spell
+checker makes you notice :) (No, I'm not suggesting you run a spell
+checker, I'm rather saying that I probably wouldn't have noticed
+otherwise)
 
-Wrong.
-
-Of course I can say that the ESSID,KEY sequence used to work with 
-non-mac80211 based WLAN drivers. Because it worked. I have proof 
-that it worked.
-
-I might not be able to say that it worked for *ALL* non-mac80211 
-based WLAN drivers. But I haven't said that.
-
-And as of now, I can say that 6 drivers didn't care if I first 
-feed the ESSID and the the WEP KEY:
-
-* orinoco_cs works that way
-* ipw2200 (in kernel) also
-* wlags49_h1_cs (an out-of-kernel driver) also
-* wlags49_h2_cs also
-* bcm43xx (sucky in many ways) worked too
-* libertas_cs/usb8xxx (in kernel) also
-* madwifi also
-
-One can say that if so many drivers behave identically, then this 
-is a behavior that many users assume. And, oh, by the way, many 
-distros.
-
-It's the behavior of mac80211 with wext-compatibilty layer that 
-behaves unusually or out-of-the-order.
+> +static void ieee80211_sta_process_addba_request(struct net_device *dev,
 
 
+> +	/* TODO - add here aggregation support */
 
-> That sucks, I guess debian's scripts need to be fixed.
+I think that comment is misleading. We don't add aggregation support
+here but rather when adding it we must change this code, but anyway.
+Don't bother.
 
-No, it doesn't. it worked for many years with various WLAN cards. 
-How should Debian suck if it doesn't work when done manually?
+> +			printk(KERN_DEBUG "%s: received unsupported BACK\n",
+> +					dev->name);
 
-In this case: what sucks is in the eye of the beholder.
+net_ratelimit() please, otherwise people can flood our logs by just
+sending us strange frames.
 
-Surely your own baby never sucks, compared with other babies. 
-However, some other moms and fathers might say that the baby 
-that is out-of-the-order sucks.
+Btw. I'd like to remove code from ieee80211_sta.c rather than add this
+much. Do you see any way to partition your code differently? The
+ieee80211_sta.c file is a huge file and barely understandable when you
+just read it... I was at one time working on extracting the scan code
+out from it and keep only MLME stuff in there. My goal was to be able to
+not compile ieee80211_sta.c unless the user wanted the in-kernel MLME,
+but maybe I should rather put the MLME into a new file then. I'd
+appreciate if you could give it (partitioning the code otherwise) a
+thought, but I promise I won't be disappointed if you don't want to do
+it.
 
-But then, ALL babies suck (breast, thumbs) during their first 
-months ... :-)
+johannes
+
+--=-aps4xuyjnndOlSVgP6Aj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzSMGqVg1VMiehFYAQKxqRAAldDWhPa9ZeHlRq3GKU37Yeges+1oCPND
+V+DZFzoO6NMCpeB9xivEbb9OyjhDBE0GwJ5/2xb0Ej0qHmcS7QvMMje4HiKBbj8m
+ZzYazeeerimFFXI+o0LQnauKDh1Lz0CohvJhIpt9RkhnI0uikGmeeSRMYl2A9r+T
+Af2nQuV7eGk8bfDUOT4nnrMwNtjV7cJA88Vgk/o4CSugt9NUCPla1rB938bvSxA4
+XLWRCfFM56qIfKQs5OegQQRvzEfx0zrR9Nvk8/4a3BmpUJeSmFqH3+00w3hqzFrf
+eFvwAC73mNHnTQe+sDSCyNzl++Gh8yT3+pWFSRZbMtnHwhqPS2+h3BI1y9jQXCD1
+p2qqnP6piJ2mnNNAytEwvkjqqp6JLOrJ+D4hIVWiqHDyMTUX82TpmPSDa00HmKtR
+lvR32k+MEU0BUa5oePnJo+FGbGrUYyxE+3jIjljXbwNIM2CyK1dHImYyaCAF4IqK
+4XgziYnKpWg5swnUpmekDwub94Czu1ncQk3GPIKiQ0fKNWeVIoBes0/YFqAmBoAE
+Gyu4T5H1sxxT3bt6fxZRqvjktOmTlNaIKPnQbIQas3YJlx24SR3R2KT+eQdQ/6TY
+CbJGYwP64csy3Rfo6Dt8lUEkgwzENwyQfPxKkw25TpedOtwzG3w7gAyym3SRv3O9
+j0UAZp12jJk=
+=LZQh
+-----END PGP SIGNATURE-----
+
+--=-aps4xuyjnndOlSVgP6Aj--
+
