@@ -1,116 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214AbXKIUSj (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.237]:10778 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbXKITZL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 15:18:39 -0500
-Subject: Re: [PATCH 05/14] mac80211: adding 802.11n essential A-MPDU addBA
-	capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	tomas.winkler@intel.com, flamingice@sourmilk.net
-In-Reply-To: <11945953312456-git-send-email-ron.rindjunsky@intel.com>
-References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
-	 <11945953311871-git-send-email-ron.rindjunsky@intel.com>
-	 <11945953312850-git-send-email-ron.rindjunsky@intel.com>
-	 <11945953312367-git-send-email-ron.rindjunsky@intel.com>
-	 <1194595331658-git-send-email-ron.rindjunsky@intel.com>
-	 <11945953312456-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aps4xuyjnndOlSVgP6Aj"
-Date: Fri, 09 Nov 2007 17:34:35 +0100
-Message-Id: <1194626075.4793.128.camel@johannes.berg> (sfid-20071109_201841_666712_0B278E40)
-Mime-Version: 1.0
+	Fri, 9 Nov 2007 14:25:11 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so479051wxd
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2007 11:25:10 -0800 (PST)
+Date: Fri, 9 Nov 2007 14:21:54 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Jeff Garzik <jeff@garzik.org>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
+Message-ID: <20071109192033.GB22714@pogo> (sfid-20071109_192526_966112_6A21A882)
+References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo> <1194635236.19522.3.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1194635236.19522.3.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 09, 2007 at 11:07:16AM -0800, Joe Perches wrote:
+> On Fri, 2007-11-09 at 13:51 -0500, Luis R. Rodriguez wrote:
+> > While reviewing net/core/dev_mcast.c I found what I think is an 
+> > infinite loop on dev_mc_unsync(). This fixes it. We make use of
+> > this guy on mac80211 in ieee80211_stop(). This is untested.
+> > 
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> > 
+> > diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
+> > index 15241cf..5373c03 100644
+> > --- a/net/core/dev_mcast.c
+> > +++ b/net/core/dev_mcast.c
+> > @@ -168,8 +168,10 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+> >  	da = from->mc_list;
+> >  	while (da != NULL) {
+> >  		next = da->next;
+> > -		if (!da->da_synced)
+> > +		if (!da->da_synced) {
+> > +			da = next;
+> >  			continue;
+> > +		}
+> >  		__dev_addr_delete(&to->mc_list, &to->mc_count,
+> >  				  da->da_addr, da->da_addrlen, 0);
+> >  		da->da_synced = 0;
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe netdev" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Perhaps this is clearer as:
+> 
+> void dev_mc_unsync(struct net_device *to, struct net_device *from)
+> {
+> 	struct dev_addr_list *da;
+> 
+> 	netif_tx_lock_bh(from);
+> 	netif_tx_lock_bh(to);
+> 
+> 	da = from->mc_list;
+> 	while (da) {
+> 		if (da->da_synced) {
+> 			__dev_addr_delete(&to->mc_list, &to->mc_count,
+> 					  da->da_addr, da->da_addrlen, 0);
+> 			__dev_addr_delete(&from->mc_list, &from->mc_count,
+> 					  da->da_addr, da->da_addrlen, 0);
+> 			da->da_synced = 0;
+> 		}
+> 		da = da->next;
+> 	}
+> 
+> 	__dev_set_rx_mode(to);
+> 
+> 	netif_tx_unlock_bh(to);
+> 	netif_tx_unlock_bh(from);
+> }
+> EXPORT_SYMBOL(dev_mc_unsync);
 
---=-aps4xuyjnndOlSVgP6Aj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sure, or better with a for loop and do away with next pointer then:
 
+void dev_mc_unsync(struct net_device *to, struct net_device *from)
+{
+        struct dev_addr_list *da;
 
-> As this series of patches only adds HT handling with no aggregations,
-> (A-MPDU aggregations acceptance is not obligatory according to 802.11n dr=
-aft)
-> we are currently sending back a refusal upon this request.
+        netif_tx_lock_bh(from);
+        netif_tx_lock_bh(to);
 
-Heh. In the Kconfig you just wrote that it handles AMPDU and AMSDU
-aggregation which I'd expect to imply deaggregation too. Nothing
-serious, just seemed a bit weird! :)
+        for (da = from->mc_list; da; da = da->next) {
+                if (!da->da_synced)
+                        continue;
+                __dev_addr_delete(&to->mc_list, &to->mc_count,
+                                  da->da_addr, da->da_addrlen, 0);
+                da->da_synced = 0;
+                __dev_addr_delete(&from->mc_list, &from->mc_count,
+                                  da->da_addr, da->da_addrlen, 0);
+        }
+        __dev_set_rx_mode(to);
 
-And isn't one of the two (I always forget which one) rather a feature of
-the hardware?
+        netif_tx_unlock_bh(to);
+        netif_tx_unlock_bh(from);
+}
+EXPORT_SYMBOL(dev_mc_unsync);
 
-> +#ifdef CONFIG_MAC80211_HT
-> +/* mgmt header + 1 byte action code */
-> +#define IEEE80211_MIN_ACTION_SIZE (24 + 1)
-> +
-> +#define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
-> +#define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
-> +#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
-> +#endif /* CONFIG_MAC80211_HT */
+Patch below.
 
-Leave out the ifdefs please when they only protect definitions or such,
-i.e. nothing that will generate code/allocate structure space.
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-
-> +	capab |=3D (u16)(buf_size << 6);	/* bit 15:6 max size of aggergation */
-
-typo: aggregation. Interesting what an email program with a spell
-checker makes you notice :) (No, I'm not suggesting you run a spell
-checker, I'm rather saying that I probably wouldn't have noticed
-otherwise)
-
-> +static void ieee80211_sta_process_addba_request(struct net_device *dev,
-
-
-> +	/* TODO - add here aggregation support */
-
-I think that comment is misleading. We don't add aggregation support
-here but rather when adding it we must change this code, but anyway.
-Don't bother.
-
-> +			printk(KERN_DEBUG "%s: received unsupported BACK\n",
-> +					dev->name);
-
-net_ratelimit() please, otherwise people can flood our logs by just
-sending us strange frames.
-
-Btw. I'd like to remove code from ieee80211_sta.c rather than add this
-much. Do you see any way to partition your code differently? The
-ieee80211_sta.c file is a huge file and barely understandable when you
-just read it... I was at one time working on extracting the scan code
-out from it and keep only MLME stuff in there. My goal was to be able to
-not compile ieee80211_sta.c unless the user wanted the in-kernel MLME,
-but maybe I should rather put the MLME into a new file then. I'd
-appreciate if you could give it (partitioning the code otherwise) a
-thought, but I promise I won't be disappointed if you don't want to do
-it.
-
-johannes
-
---=-aps4xuyjnndOlSVgP6Aj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzSMGqVg1VMiehFYAQKxqRAAldDWhPa9ZeHlRq3GKU37Yeges+1oCPND
-V+DZFzoO6NMCpeB9xivEbb9OyjhDBE0GwJ5/2xb0Ej0qHmcS7QvMMje4HiKBbj8m
-ZzYazeeerimFFXI+o0LQnauKDh1Lz0CohvJhIpt9RkhnI0uikGmeeSRMYl2A9r+T
-Af2nQuV7eGk8bfDUOT4nnrMwNtjV7cJA88Vgk/o4CSugt9NUCPla1rB938bvSxA4
-XLWRCfFM56qIfKQs5OegQQRvzEfx0zrR9Nvk8/4a3BmpUJeSmFqH3+00w3hqzFrf
-eFvwAC73mNHnTQe+sDSCyNzl++Gh8yT3+pWFSRZbMtnHwhqPS2+h3BI1y9jQXCD1
-p2qqnP6piJ2mnNNAytEwvkjqqp6JLOrJ+D4hIVWiqHDyMTUX82TpmPSDa00HmKtR
-lvR32k+MEU0BUa5oePnJo+FGbGrUYyxE+3jIjljXbwNIM2CyK1dHImYyaCAF4IqK
-4XgziYnKpWg5swnUpmekDwub94Czu1ncQk3GPIKiQ0fKNWeVIoBes0/YFqAmBoAE
-Gyu4T5H1sxxT3bt6fxZRqvjktOmTlNaIKPnQbIQas3YJlx24SR3R2KT+eQdQ/6TY
-CbJGYwP64csy3Rfo6Dt8lUEkgwzENwyQfPxKkw25TpedOtwzG3w7gAyym3SRv3O9
-j0UAZp12jJk=
-=LZQh
------END PGP SIGNATURE-----
-
---=-aps4xuyjnndOlSVgP6Aj--
-
+diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
+index 15241cf..2aea8e1 100644
+--- a/net/core/dev_mcast.c
++++ b/net/core/dev_mcast.c
+@@ -160,14 +160,12 @@ EXPORT_SYMBOL(dev_mc_sync);
+  */
+ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+ {
+-	struct dev_addr_list *da, *next;
++	struct dev_addr_list *da;
+ 
+ 	netif_tx_lock_bh(from);
+ 	netif_tx_lock_bh(to);
+ 
+-	da = from->mc_list;
+-	while (da != NULL) {
+-		next = da->next;
++	for (da = from->mc_list; da; da = da->next) {
+ 		if (!da->da_synced)
+ 			continue;
+ 		__dev_addr_delete(&to->mc_list, &to->mc_count,
+@@ -175,7 +173,6 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+ 		da->da_synced = 0;
+ 		__dev_addr_delete(&from->mc_list, &from->mc_count,
+ 				  da->da_addr, da->da_addrlen, 0);
+-		da = next;
+ 	}
+ 	__dev_set_rx_mode(to);
+ 
