@@ -1,102 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail12.tpgi.com.au ([203.12.160.162]:42872 "EHLO
-	mail12.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbXKUNWI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758617AbXKIMJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 08:22:08 -0500
-Message-ID: <47443035.1070702@hotmail.com> (sfid-20071121_132215_066386_363BDDC5)
-Date: Thu, 22 Nov 2007 00:18:45 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	   jt@hpl.hp.com, Johannes Berg <johannes@sipsolutions.net>,
-	   David Miller <davem@davemloft.net>
-MIME-Version: 1.0
-To: jt@hpl.hp.com
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com>
-In-Reply-To: <20071119180423.GA19250@bougret.hpl.hp.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+	Fri, 9 Nov 2007 07:09:25 -0500
+Subject: [PATCH] mac80211: provide interface iterator for drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 09 Nov 2007 01:57:29 +0100
+Message-Id: <1194569850.4793.38.camel@johannes.berg> (sfid-20071109_120928_819255_2705D7AD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jean
+Sometimes drivers need to know which interfaces are associated with
+their hardware. Rather than forcing those drivers to keep track of
+the interfaces that were added, this adds an iteration function to
+mac80211.
 
-Jean Tourrilhes wrote:
-> On Mon, Nov 19, 2007 at 04:03:02PM +0100, Johannes Berg wrote:
->>>> The first noticeable problem is when using iwconfig on the device. I 
->>>> cannot set a key for the device, and a query of the configuration always 
->>>> claims that the "<encryption key is too long>".
->>> Likely some wireless ioctl compat layer bug in the kernel.
->> Is this 32/64 interop? The kernel has never been fixed and never will
->> be. New wireless tools should "support" this, but imnsho you're *much*
->> better off compiling 64-bit wireless tools.
-> 
-> 	There was a patch for this kind of issue from Masakazu Mokuno
-> that went in 2.6.22 or 2.6.23 that was touching that part. I don't
-> think he went in the stable series, but probably should have. There
-> are other potential cause of problem here, and I suspect he might get
-> the same error with 64 bits userspace.
-> 	Can you give me the exact error text as reported by iwconfig ?
-> I'll probably have to send you a test version to see what's happening
-> under the cover.
+As it is intended to be used from the interface add/remove callbacks,
+the iteration function may currently only be called under RTNL.
 
-Please find this in-lined below (with key protected):
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |   16 ++++++++++++++++
+ net/mac80211/util.c    |   33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
 
-# iwconfig eth2
-eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
-           Bit Rate=1 Mb/s
-           Encryption key:<too big>
-
-# iwconfig eth2 essid dixieland key "GGGGGGGGGG"
-# iwconfig eth2
-eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: 
-GG:GG:GG:GG:GG:GG
-           Bit Rate=24 Mb/s
-           Encryption key:<too big>
-
-#
-
->>>> If I try to scan for APs using iwlist, I get one AP listed, before a bus 
->>>> error occurs. This of course, does not suggest that the problem is with 
->>>> the driver, but I mention it for the record.
->>> This is an unaligned data access in the userland tools.
->>> Try to catch it with GDB and give us ths backtrace.
->> For Jean.
-> 
-> 	Definitely, it sounds familiar.
-> 	This is that I need :
-> 		o version of the kernel
-
-Debian sparc64 2.6.22 (built myself, using make-kpg, to include the driver)
-
-> 		o version of the driver if not stock driver
-As stock with the kernel described above
-
-> 		o version of Wireless Tools (iwconfig --version).
-> 	Most likely, you need to upgrade your Wireless Tools to
-> version 29 which fixes this 32/64 interop problem.
-> 	With the latest kernel and the latest wireless tools, the only
-> known bugs are the two ESSID bugs.
-
-I think I'm right for version:
-# iwconfig --version
-iwconfig  Wireless-Tools version 29
-           Compatible with Wireless Extension v11 to v22.
-
-Kernel    Currently compiled with Wireless Extension v22.
-
-eth2      Recommend Wireless Extension v20 or later,
-           Currently compiled with Wireless Extension v22.
-
-
-Hope that helps.
-
-Regards,
-Shaddy
+--- everything.orig/include/net/mac80211.h	2007-11-09 00:31:40.828983181 +0100
++++ everything/include/net/mac80211.h	2007-11-09 00:39:51.208974663 +0100
+@@ -1403,4 +1403,20 @@ void ieee80211_wake_queues(struct ieee80
+  */
+ void ieee80211_scan_completed(struct ieee80211_hw *hw);
+ 
++/**
++ * ieee80211_iterate_active_interfaces - iterate active interfaces
++ *
++ * This function iterates over the interfaces associated with a given
++ * hardware that are currently active and calls the callback for them.
++ * Must be called under RTNL.
++ *
++ * @hw: the hardware struct of which the interfaces should be iterated over
++ * @iterator: the iterator function to call
++ * @data: first argument of the iterator function
++ */
++void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
++					 void (*iterator)(void *data, u8 *mac,
++					 		  int if_id),
++					 void *data);
++
+ #endif /* MAC80211_H */
+--- everything.orig/net/mac80211/util.c	2007-11-09 00:35:18.418983343 +0100
++++ everything/net/mac80211/util.c	2007-11-09 01:50:03.408972493 +0100
+@@ -22,6 +22,7 @@
+ #include <linux/bitmap.h>
+ #include <net/net_namespace.h>
+ #include <net/cfg80211.h>
++#include <net/rtnetlink.h>
+ 
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
+@@ -484,3 +485,35 @@ void ieee80211_wake_queues(struct ieee80
+ 		ieee80211_wake_queue(hw, i);
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queues);
++
++void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
++					 void (*iterator)(void *data, u8 *mac,
++							  int if_id),
++					 void *data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++
++	ASSERT_RTNL();
++
++	/* we hold the RTNL here so can safely walk the list */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		switch (sdata->type) {
++		case IEEE80211_IF_TYPE_INVALID:
++		case IEEE80211_IF_TYPE_MNTR:
++		case IEEE80211_IF_TYPE_VLAN:
++			continue;
++		case IEEE80211_IF_TYPE_AP:
++		case IEEE80211_IF_TYPE_STA:
++		case IEEE80211_IF_TYPE_IBSS:
++		case IEEE80211_IF_TYPE_WDS:
++			break;
++		}
++		if (sdata->dev == local->mdev)
++			continue;
++		if (netif_running(sdata->dev))
++			iterator(data, sdata->dev->dev_addr,
++				 sdata->dev->ifindex);
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
 
 
