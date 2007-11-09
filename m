@@ -1,231 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2620 "EHLO ra.tuxdriver.com"
+Received: from mga09.intel.com ([134.134.136.24]:60606 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752495AbXKHCLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 21:11:38 -0500
-Date: Wed, 7 Nov 2007 21:11:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6 (this time for
-	real!)
-Message-ID: <20071108021119.GD11957@tuxdriver.com> (sfid-20071108_021144_087325_E0485CB5)
-References: <20071107001314.GH4440@tuxdriver.com> <20071107185147.GA21097@tuxdriver.com> <20071107.163200.25509588.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071107.163200.25509588.davem@davemloft.net>
+	id S1751218AbXKIICT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 03:02:19 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 06/14] mac80211: adding 802.11n essential A-MSDU Rx capability
+Date: Fri,  9 Nov 2007 10:01:58 +0200
+Message-Id: <11945953313491-git-send-email-ron.rindjunsky@intel.com> (sfid-20071109_080236_537785_962440D7)
+In-Reply-To: <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
+ <11945953311871-git-send-email-ron.rindjunsky@intel.com>
+ <11945953312850-git-send-email-ron.rindjunsky@intel.com>
+ <11945953312367-git-send-email-ron.rindjunsky@intel.com>
+ <1194595331658-git-send-email-ron.rindjunsky@intel.com>
+ <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 07, 2007 at 04:32:00PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 7 Nov 2007 13:51:54 -0500
-> 
-> > Hold-off on this one for now if -- clearly Johannes and I need to
-> > brush-up on our Kconfig skills... :-(
-> > 
-> > I'll post a new pull request soon.
-> 
-> Ok.
+This patch adds the ability to receive and handle A-MSDU frames.
 
-Dave,
-
-These fixes are additive on top of the previous request archived here:
-
-	http://marc.info/?l=linux-wireless&m=119439453721827&w=2
-
-I've been sending ssb patches to you, but I'm not sure if that is the
-right place to send them.  If you don't want them, can you suggest where
-else I should send them?
-
-Anyway, let me know if there are any problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/rx.c          |  220 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 221 insertions(+), 0 deletions(-)
 
-The entire series (i.e. both from yesterday and today) is available
-here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
-
----
-
-The following changes since commit d81bd04a737c102481c0ee7b46443796e14b6b5c:
-  John W. Linville (1):
-        mac80211: make "decrypt failed" messages conditional upon MAC80211_DEBUG
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Johannes Berg (1):
-      mac80211: fix MAC80211_RCSIMPLE Kconfig
-
-Michael Buesch (1):
-      ssb: Fix PCMCIA-host lowlevel bus access
-
- drivers/ssb/main.c   |    1 +
- drivers/ssb/pcmcia.c |   56 +++++++++++++++++++++++++-------------------------
- net/mac80211/Kconfig |    4 +-
- 3 files changed, 31 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index fc1d589..85a2054 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -440,6 +440,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
- 			break;
- 		case SSB_BUSTYPE_PCMCIA:
- #ifdef CONFIG_SSB_PCMCIAHOST
-+			sdev->irq = bus->host_pcmcia->irq.AssignedIRQ;
- 			dev->parent = &bus->host_pcmcia->dev;
- #endif
- 			break;
-diff --git a/drivers/ssb/pcmcia.c b/drivers/ssb/pcmcia.c
-index b6abee8..bb44a76 100644
---- a/drivers/ssb/pcmcia.c
-+++ b/drivers/ssb/pcmcia.c
-@@ -63,17 +63,17 @@ int ssb_pcmcia_switch_coreidx(struct ssb_bus *bus,
- 		err = pcmcia_access_configuration_register(pdev, &reg);
- 		if (err != CS_SUCCESS)
- 			goto error;
--		read_addr |= (reg.Value & 0xF) << 12;
-+		read_addr |= ((u32)(reg.Value & 0x0F)) << 12;
- 		reg.Offset = 0x30;
- 		err = pcmcia_access_configuration_register(pdev, &reg);
- 		if (err != CS_SUCCESS)
- 			goto error;
--		read_addr |= reg.Value << 16;
-+		read_addr |= ((u32)reg.Value) << 16;
- 		reg.Offset = 0x32;
- 		err = pcmcia_access_configuration_register(pdev, &reg);
- 		if (err != CS_SUCCESS)
- 			goto error;
--		read_addr |= reg.Value << 24;
-+		read_addr |= ((u32)reg.Value) << 24;
- 
- 		cur_core = (read_addr - SSB_ENUM_BASE) / SSB_CORE_SIZE;
- 		if (cur_core == coreidx)
-@@ -152,28 +152,29 @@ error:
- 	goto out_unlock;
+Index: wl2_6_24_HT/net/mac80211/ieee80211_i.h
+===================================================================
+--- wl2_6_24_HT.orig/net/mac80211/ieee80211_i.h
++++ wl2_6_24_HT/net/mac80211/ieee80211_i.h
+@@ -157,6 +157,7 @@ struct ieee80211_txrx_data {
+ 			int load;
+ 			u32 tkip_iv32;
+ 			u16 tkip_iv16;
++			u16 amsdu_frame;
+ 		} rx;
+ 	} u;
+ };
+Index: wl2_6_24_HT/net/mac80211/rx.c
+===================================================================
+--- wl2_6_24_HT.orig/net/mac80211/rx.c
++++ wl2_6_24_HT/net/mac80211/rx.c
+@@ -243,6 +243,10 @@ ieee80211_rx_h_parse_qos(struct ieee8021
+ 		u8 *qc = data + ieee80211_get_hdrlen(rx->fc) - QOS_CONTROL_LEN;
+ 		/* frame has qos control */
+ 		tid = qc[0] & QOS_CONTROL_TID_MASK;
++		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
++			rx->u.rx.amsdu_frame = 1;
++		else
++			rx->u.rx.amsdu_frame = 0;
+ 	} else {
+ 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
+ 			/* Separate TID for management frames */
+@@ -1007,6 +1011,219 @@ ieee80211_rx_h_drop_unencrypted(struct i
+ 	return TXRX_CONTINUE;
  }
  
--/* These are the main device register access functions.
-- * do_select_core is inline to have the likely hotpath inline.
-- * All unlikely codepaths are out-of-line. */
--static inline int do_select_core(struct ssb_bus *bus,
--				 struct ssb_device *dev,
--				 u16 *offset)
-+static int select_core_and_segment(struct ssb_device *dev,
-+				   u16 *offset)
- {
-+	struct ssb_bus *bus = dev->bus;
- 	int err;
--	u8 need_seg = (*offset >= 0x800) ? 1 : 0;
-+	u8 need_segment;
++#ifdef CONFIG_MAC80211_HT
 +
-+	if (*offset >= 0x800) {
-+		*offset -= 0x800;
-+		need_segment = 1;
-+	} else
-+		need_segment = 0;
- 
- 	if (unlikely(dev != bus->mapped_device)) {
- 		err = ssb_pcmcia_switch_core(bus, dev);
- 		if (unlikely(err))
- 			return err;
- 	}
--	if (unlikely(need_seg != bus->mapped_pcmcia_seg)) {
--		err = ssb_pcmcia_switch_segment(bus, need_seg);
-+	if (unlikely(need_segment != bus->mapped_pcmcia_seg)) {
-+		err = ssb_pcmcia_switch_segment(bus, need_segment);
- 		if (unlikely(err))
- 			return err;
- 	}
--	if (need_seg == 1)
--		*offset -= 0x800;
- 
- 	return 0;
- }
-@@ -181,32 +182,31 @@ static inline int do_select_core(struct ssb_bus *bus,
- static u16 ssb_pcmcia_read16(struct ssb_device *dev, u16 offset)
++static ieee80211_txrx_result
++ieee80211_rx_h_data_agg(struct ieee80211_txrx_data *rx)
++{
++	struct net_device *dev = rx->dev;
++	struct ieee80211_local *local = rx->local;
++	u16 fc, hdrlen, ethertype;
++	u8 *payload;
++	struct sk_buff *skb = rx->skb, *skb2, *frame = NULL;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	const struct ethhdr *eth;
++	int remaining;
++	u8 dst[ETH_ALEN];
++	u8 src[ETH_ALEN];
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
++	DECLARE_MAC_BUF(mac);
++
++	fc = rx->fc;
++	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
++		return TXRX_CONTINUE;
++
++	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
++		return TXRX_DROP;
++
++	if (!rx->u.rx.amsdu_frame)
++		return TXRX_CONTINUE;
++
++	hdrlen = ieee80211_get_hdrlen(fc);
++
++	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
++	case IEEE80211_FCTL_TODS:
++		/* BSSID SA DA */
++		if (unlikely(sdata->type != IEEE80211_IF_TYPE_AP &&
++		    sdata->type != IEEE80211_IF_TYPE_VLAN)) {
++			printk(KERN_DEBUG "%s: dropped ToDS frame (BSSID=%s"
++			       " SA=%s DA=%s)\n",
++			       dev->name, print_mac(mac, hdr->addr1),
++			       print_mac(mac, hdr->addr2),
++			       print_mac(mac, hdr->addr3));
++			return TXRX_DROP;
++		}
++		break;
++	case (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS):
++		/* RA TA DA SA */
++		if (unlikely(sdata->type != IEEE80211_IF_TYPE_WDS)) {
++			printk(KERN_DEBUG "%s: dropped FromDS&ToDS frame"
++			       " (RA=%s TA=%s DA=%s SA=%s)\n",
++			       rx->dev->name, print_mac(mac, hdr->addr1),
++			       print_mac(mac, hdr->addr2),
++			       print_mac(mac, hdr->addr3),
++			       print_mac(mac, hdr->addr4));
++			return TXRX_DROP;
++		}
++		break;
++	case IEEE80211_FCTL_FROMDS:
++		/* DA BSSID SA */
++		if (sdata->type != IEEE80211_IF_TYPE_STA)
++			return TXRX_DROP;
++		break;
++	case 0:
++		/* DA SA BSSID */
++		if (sdata->type != IEEE80211_IF_TYPE_IBSS) {
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: dropped IBSS frame"
++				       " (DA=%s SA=%s BSSID=%s)\n",
++				       dev->name, print_mac(mac, hdr->addr1),
++				       print_mac(mac, hdr->addr2),
++				       print_mac(mac, hdr->addr3));
++			return TXRX_DROP;
++		}
++		break;
++	}
++
++	if (unlikely((skb->len - hdrlen) < 8)) {
++		if (net_ratelimit())
++			printk(KERN_DEBUG "%s: RX too short data frame "
++			       "payload\n", dev->name);
++		return TXRX_DROP;
++	}
++
++	eth = (struct ethhdr *) skb_pull(skb, hdrlen);
++
++	payload = skb->data;
++	ethertype = (payload[6] << 8) | payload[7];
++
++	if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
++	    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
++	    compare_ether_addr(payload,
++	    bridge_tunnel_header) == 0))
++		eth = (struct ethhdr *) skb_pull(skb, 8);
++
++	if (!eth)
++		return TXRX_DROP;
++
++	while (skb != frame) {
++		u8 padding;
++		__be16 len = eth->h_proto;
++		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
++
++		remaining = skb->len;
++		memcpy(dst, eth->h_dest, ETH_ALEN);
++		memcpy(src, eth->h_source, ETH_ALEN);
++
++		padding = ((4 - subframe_len) & 0x3);
++		/* the last MSDU has no padding */
++		if (subframe_len > remaining) {
++			printk(KERN_DEBUG "%s: wrong buffer size", dev->name);
++			return TXRX_DROP;
++		}
++
++		skb_pull(skb, sizeof(struct ethhdr));
++		/* if last subframe reuse skb */
++		if (remaining  <= subframe_len + padding)
++			frame = skb;
++		else {
++			frame = dev_alloc_skb(local->hw.extra_tx_headroom +
++					      subframe_len);
++
++			if (frame == NULL)
++				return TXRX_DROP;
++
++			skb_reserve(frame, local->hw.extra_tx_headroom +
++				    sizeof(struct ethhdr));
++			memcpy(skb_put(frame, ntohs(len)), skb->data,
++				ntohs(len));
++
++			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
++							padding);
++			if (!eth) {
++				printk(KERN_DEBUG "%s: wrong buffer size ",
++				       dev->name);
++				dev_kfree_skb(frame);
++				return TXRX_DROP;
++			}
++		}
++		skb2 = NULL;
++
++		payload = frame->data;
++		ethertype = (payload[6] << 8) | payload[7];
++
++		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
++			ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
++			compare_ether_addr(payload,
++					   bridge_tunnel_header) == 0)) {
++			/* remove RFC1042 or Bridge-Tunnel
++			 * encapsulation and replace EtherType */
++			skb_pull(frame, 6);
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		} else {
++			memcpy(skb_push(frame, sizeof(__be16)), &len,
++				sizeof(__be16));
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		}
++
++		if (local->bridge_packets &&
++		    (sdata->type == IEEE80211_IF_TYPE_AP ||
++		     sdata->type == IEEE80211_IF_TYPE_VLAN) &&
++		     (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
++			if (is_multicast_ether_addr(frame->data)) {
++				/* send multicast frames both to higher layers
++				 * in local net stack and back to the wireless
++				 * media */
++				skb2 = skb_copy(frame, GFP_ATOMIC);
++				if (!skb2)
++					printk(KERN_DEBUG "%s: failed to clone"
++					       " multicast frame\n", dev->name);
++			} else {
++				struct sta_info *dsta;
++
++				dsta = sta_info_get(local, frame->data);
++				if (dsta && !dsta->dev)
++					printk(KERN_DEBUG "Station with null "
++					       "dev structure!\n");
++				else if (dsta && dsta->dev == dev) {
++					/* Destination station is associated
++					 *to this AP, so send the frame
++					 * directly to it and do not pass
++					 * the frame to local net stack.
++					 */
++					skb2 = frame;
++					frame = NULL;
++				}
++				if (dsta)
++					sta_info_put(dsta);
++			}
++		}
++		if (frame) {
++			/* deliver to local stack */
++			skb_set_network_header(frame, 0);
++			frame->protocol = eth_type_trans(frame, dev);
++			frame->priority = skb->priority;
++			netif_rx(frame);
++		}
++
++		if (skb2) {
++			/* send to wireless media */
++			skb2->protocol = __constant_htons(ETH_P_802_3);
++			skb_set_network_header(skb2, 0);
++			skb_set_mac_header(skb2, 0);
++			skb2->priority = skb->priority;
++			skb2->dev = dev;
++			dev_queue_xmit(skb2);
++		}
++	}
++
++	return TXRX_QUEUED;
++}
++
++#endif /* CONFIG_MAC80211_HT */
++
+ static ieee80211_txrx_result
+ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
  {
- 	struct ssb_bus *bus = dev->bus;
--	u16 x;
- 
--	if (unlikely(do_select_core(bus, dev, &offset)))
-+	if (unlikely(select_core_and_segment(dev, &offset)))
- 		return 0xFFFF;
--	x = readw(bus->mmio + offset);
- 
--	return x;
-+	return readw(bus->mmio + offset);
- }
- 
- static u32 ssb_pcmcia_read32(struct ssb_device *dev, u16 offset)
- {
- 	struct ssb_bus *bus = dev->bus;
--	u32 x;
-+	u32 lo, hi;
- 
--	if (unlikely(do_select_core(bus, dev, &offset)))
-+	if (unlikely(select_core_and_segment(dev, &offset)))
- 		return 0xFFFFFFFF;
--	x = readl(bus->mmio + offset);
-+	lo = readw(bus->mmio + offset);
-+	hi = readw(bus->mmio + offset + 2);
- 
--	return x;
-+	return (lo | (hi << 16));
- }
- 
- static void ssb_pcmcia_write16(struct ssb_device *dev, u16 offset, u16 value)
- {
- 	struct ssb_bus *bus = dev->bus;
- 
--	if (unlikely(do_select_core(bus, dev, &offset)))
-+	if (unlikely(select_core_and_segment(dev, &offset)))
- 		return;
- 	writew(value, bus->mmio + offset);
- }
-@@ -215,12 +215,12 @@ static void ssb_pcmcia_write32(struct ssb_device *dev, u16 offset, u32 value)
- {
- 	struct ssb_bus *bus = dev->bus;
- 
--	if (unlikely(do_select_core(bus, dev, &offset)))
-+	if (unlikely(select_core_and_segment(dev, &offset)))
- 		return;
--	readw(bus->mmio + offset);
--	writew(value >> 16, bus->mmio + offset + 2);
--	readw(bus->mmio + offset);
--	writew(value, bus->mmio + offset);
-+	writeb((value & 0xFF000000) >> 24, bus->mmio + offset + 3);
-+	writeb((value & 0x00FF0000) >> 16, bus->mmio + offset + 2);
-+	writeb((value & 0x0000FF00) >> 8, bus->mmio + offset + 1);
-+	writeb((value & 0x000000FF) >> 0, bus->mmio + offset + 0);
- }
- 
- /* Not "static", as it's used in main.c */
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 32c8c08..ce176e6 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -14,9 +14,9 @@ config MAC80211
- 	networking stack.
- 
- config MAC80211_RCSIMPLE
--	bool "'simple' rate control algorithm"
-+	bool "'simple' rate control algorithm" if EMBEDDED
- 	default y
--	depends on MAC80211 && EMBEDDED
-+	depends on MAC80211
- 	help
- 	  This option allows you to turn off the 'simple' rate
- 	  control algorithm in mac80211. If you do turn it off,
--- 
-John W. Linville
-linville@tuxdriver.com
+@@ -1343,6 +1560,9 @@ ieee80211_rx_handler ieee80211_rx_handle
+ 	ieee80211_rx_h_remove_qos_control,
+ 	ieee80211_rx_h_802_1x_pae,
+ 	ieee80211_rx_h_drop_unencrypted,
++#ifdef CONFIG_MAC80211_HT
++	ieee80211_rx_h_data_agg,
++#endif /* CONFIG_MAC80211_HT */
+ 	ieee80211_rx_h_data,
+ 	ieee80211_rx_h_mgmt,
+ 	NULL
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
