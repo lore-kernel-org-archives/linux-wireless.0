@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:42761 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760791AbXKOSiX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 13:38:23 -0500
-Received: by py-out-1112.google.com with SMTP id u77so3664559pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2007 10:38:22 -0800 (PST)
-Message-ID: <43e72e890711151038k68d102f9m7f421ea301433cf@mail.gmail.com> (sfid-20071115_183848_841461_9D57A90F)
-Date: Thu, 15 Nov 2007 13:38:20 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [PATCH 2/4] ath5k: Fix device info reporting
-In-Reply-To: <20071114161440.GB6365@localhost.domain.invalid>
+Received: from ns.suse.de ([195.135.220.2]:55510 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763160AbXKIPWZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 10:22:25 -0500
+From: Helmut Schaa <hschaa@suse.de>
+To: linville@tuxdriver.com
+Subject: [PATCH 1/2] mac80211: Fix queuing of scan containing a SSID
+Date: Fri, 9 Nov 2007 16:25:08 +0100
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <200711091622.16671.hschaa@suse.de>
+In-Reply-To: <200711091622.16671.hschaa@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071114161440.GB6365@localhost.domain.invalid>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711091625.08261.hschaa@suse.de> (sfid-20071109_152250_451310_5B6891D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 14, 2007 11:14 AM, Nick Kossifidis <mick@madwifi.org> wrote:
-> *Fix device info code
->
-> Changes-licensed-under: 3-clause-BSD
-> Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
->
-> ---
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 4c4837f..0d0e060 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -570,22 +570,40 @@ ath5k_pci_probe(struct pci_dev *pdev,
->         if (ret)
->                 goto err_ah;
->
-> -       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> +       dev_info(&pdev->dev, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
->                         ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
->                                         sc->ah->ah_mac_srev,
->                                         sc->ah->ah_phy_revision);
->
-> -       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> -               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> -                                       sc->ah->ah_radio_5ghz_revision);
-> -       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> -               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> -                                       sc->ah->ah_radio_5ghz_revision);
-> -               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> -                                       sc->ah->ah_radio_2ghz_revision);
-> +       if(!sc->ah->ah_single_chip){
+This patch fixes scanning for specific ssid's which is broken due to the 
+scan being queued up without respecting the ssid to scan for.
 
-I'm a bit confused here you check for not single chip
-
-> +               /* Single chip radio (!RF5111) */
-> +               if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision) {
-
-And here you say it is. Can you elaborate a bit on this?
-
-> +                       /* No 5GHz support -> report 2GHz radio */
-> +                       if(!test_bit(MODE_IEEE80211A, sc->ah->ah_capabilities.cap_mode)){
-> +                               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                                       sc->ah->ah_radio_5ghz_revision);
-> +                       /* No 2GHz support (5110 and some 5Ghz only cards) -> report 5Ghz radio */
-> +                       } else if(!test_bit(MODE_IEEE80211B, sc->ah->ah_capabilities.cap_mode)){
-> +                               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                                       sc->ah->ah_radio_5ghz_revision);
-> +                       /* Multiband radio */
-> +                       } else {
-> +                               dev_info(&pdev->dev, "RF%s multiband radio found (0x%x)\n",
-> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                                       sc->ah->ah_radio_5ghz_revision);
-> +                       }
-> +               }
-> +               /* Multi chip radio (RF5111 - RF2111) -> report both 2GHz/5GHz radios */
-> +               else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> +                       dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> +                               ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> +                                               sc->ah->ah_radio_5ghz_revision);
-> +                       dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> +                               ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> +                                               sc->ah->ah_radio_2ghz_revision);
-> +               }
->         }
->
-
-Thanks,
-
-  Luis
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+---
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4b4ed2a..d575ccd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -241,6 +241,8 @@ struct ieee80211_if_sta {
+ 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t ssid_len;
++	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
++	size_t scan_ssid_len;
+ 	u16 aid;
+ 	u16 ap_capab, capab;
+ 	u8 *extra_ie; /* to be added to the end of AssocReq */
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index f7ffeec..0b47328 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1998,7 +1998,10 @@ void ieee80211_sta_work(struct work_struct *work)
+ 	if (ifsta->state != IEEE80211_AUTHENTICATE &&
+ 	    ifsta->state != IEEE80211_ASSOCIATE &&
+ 	    test_and_clear_bit(IEEE80211_STA_REQ_SCAN, &ifsta->request)) {
+-		ieee80211_sta_start_scan(dev, NULL, 0);
++ 		if (ifsta->scan_ssid_len)
++ 			ieee80211_sta_start_scan(dev, ifsta->scan_ssid, ifsta->scan_ssid_len);
++ 		else
++ 			ieee80211_sta_start_scan(dev, NULL, 0);
+ 		return;
+ 	}
+ 
+@@ -2867,6 +2870,9 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 
+*ssid, size_t ssid_len)
+ 		return -EBUSY;
+ 	}
+ 
++	ifsta->scan_ssid_len = ssid_len;
++	if (ssid_len)
++		memcpy(ifsta->scan_ssid, ssid, ssid_len);
+ 	set_bit(IEEE80211_STA_REQ_SCAN, &ifsta->request);
+ 	queue_work(local->hw.workqueue, &ifsta->work);
+ 	return 0;
