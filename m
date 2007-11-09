@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:57671 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762246AbXKOGnF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 01:43:05 -0500
-Date: Wed, 14 Nov 2007 22:41:06 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 13/16] zd1201: avoid null ptr access of skb->dev
-Message-ID: <20071115064106.GM18951@kroah.com> (sfid-20071115_064317_212313_915E023A)
-References: <20071115060353.071060513@mini.kroah.org>
+Received: from v32413.1blu.de ([88.84.155.73]:40344 "EHLO mail.lenk.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356AbXKIIdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 03:33:46 -0500
+From: Frank Lichtenheld <frank@lichtenheld.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Frank Lichtenheld <frank@lichtenheld.de>
+Subject: [PATCH][B43]: silence a bogus gcc warning
+Date: Fri,  9 Nov 2007 09:13:50 +0100
+Message-Id: <1194596030-23531-1-git-send-email-frank@lichtenheld.de> (sfid-20071109_083350_189497_57A14516)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071115063921.GA18827@kroah.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+inititalise ret to 0 to avoid the following bogus warning:
+  CC [M]  drivers/net/wireless/b43/debugfs.o
+drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debugfs_re=
+ad=E2=80=99:
+drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=99 =
+may be used uninitialized in this function
 
-
--stable review patch.  If anyone has any objections, please let us know.
-
-------------------
-
-From: John W. Linville <linville@tuxdriver.com>
-
-patch 3ba72b25211217de195e3f528dd36132b38a205b in mainline.
-
-skb->dev is not set until eth_type_trans is called...
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
 ---
- drivers/net/wireless/zd1201.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/b43/debugfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---- a/drivers/net/wireless/zd1201.c
-+++ b/drivers/net/wireless/zd1201.c
-@@ -327,8 +327,8 @@ static void zd1201_usbrx(struct urb *urb
- 			memcpy(skb_put(skb, 6), &data[datalen-8], 6);
- 			memcpy(skb_put(skb, 2), &data[datalen-24], 2);
- 			memcpy(skb_put(skb, len), data, len);
--			skb->dev->last_rx = jiffies;
- 			skb->protocol = eth_type_trans(skb, zd->dev);
-+			skb->dev->last_rx = jiffies;
- 			zd->stats.rx_packets++;
- 			zd->stats.rx_bytes += skb->len;
- 			netif_rx(skb);
-@@ -384,8 +384,8 @@ static void zd1201_usbrx(struct urb *urb
- 			memcpy(skb_put(skb, 2), &data[6], 2);
- 			memcpy(skb_put(skb, len), data+8, len);
- 		}
--		skb->dev->last_rx = jiffies;
- 		skb->protocol = eth_type_trans(skb, zd->dev);
-+		skb->dev->last_rx = jiffies;
- 		zd->stats.rx_packets++;
- 		zd->stats.rx_bytes += skb->len;
- 		netif_rx(skb);
+diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/=
+b43/debugfs.c
+index 734e70e..d8ac058 100644
+--- a/drivers/net/wireless/b43/debugfs.c
++++ b/drivers/net/wireless/b43/debugfs.c
+@@ -352,7 +352,7 @@ static ssize_t b43_debugfs_read(struct file *file, =
+char __user *userbuf,
+ 	struct b43_wldev *dev;
+ 	struct b43_debugfs_fops *dfops;
+ 	struct b43_dfs_file *dfile;
+-	ssize_t ret;
++	ssize_t ret =3D 0;
+ 	char *buf;
+ 	const size_t bufsize =3D 1024 * 128;
+ 	const size_t buforder =3D get_order(bufsize);
+--=20
+1.5.3.4
 
--- 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
