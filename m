@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52601 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753859AbXK1N3q (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:35885 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249AbXKIW4M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 08:29:46 -0500
-Subject: [PATCH (2.6.24)] mac80211: drop unencrypted frames if encryption
-	is expected
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 9 Nov 2007 17:56:12 -0500
+Date: Fri, 09 Nov 2007 16:56:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 28 Nov 2007 11:07:57 +0100
-Message-Id: <1196244477.6058.125.camel@johannes.berg> (sfid-20071128_132950_856419_855BAF5E)
-Mime-Version: 1.0
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/6] b44: Convert to use of the new SPROM structure
+Message-ID: <4734e58a.3cN0AKWadrMywLAZ%Larry.Finger@lwfinger.net> (sfid-20071109_225617_967121_C33F0B3C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a regression I (most likely) introduced, namely that
-unencrypted frames are right now accepted even if we have a key for that
-specific sender. That has very bad security implications.
+Patch 3 of 6.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The b44 driver is changed to use the new SPROM data structure.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-This applies to 2.6.24.
 
- net/mac80211/rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-2.6.orig/net/mac80211/rx.c	2007-11-28 10:59:56.988928439 +0100
-+++ linux-2.6/net/mac80211/rx.c	2007-11-28 11:00:21.718922363 +0100
-@@ -997,7 +997,7 @@ ieee80211_rx_h_drop_unencrypted(struct i
- 	if (unlikely(!(rx->fc & IEEE80211_FCTL_PROTECTED) &&
- 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
- 		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
--		     rx->sdata->drop_unencrypted &&
-+		     (rx->key || rx->sdata->drop_unencrypted) &&
- 		     (rx->sdata->eapol == 0 || !ieee80211_is_eapol(rx->skb)))) {
- 		if (net_ratelimit())
- 			printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
-
-
+Index: wireless-2.6/drivers/net/b44.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/b44.c
++++ wireless-2.6/drivers/net/b44.c
+@@ -2060,11 +2060,11 @@ static int __devinit b44_get_invariants(
+ 
+ 	if (sdev->bus->bustype == SSB_BUSTYPE_SSB &&
+ 	    instance > 1) {
+-		addr = sdev->bus->sprom.r1.et1mac;
+-		bp->phy_addr = sdev->bus->sprom.r1.et1phyaddr;
++		addr = sdev->bus->sprom.et1mac;
++		bp->phy_addr = sdev->bus->sprom.et1phyaddr;
+ 	} else {
+-		addr = sdev->bus->sprom.r1.et0mac;
+-		bp->phy_addr = sdev->bus->sprom.r1.et0phyaddr;
++		addr = sdev->bus->sprom.et0mac;
++		bp->phy_addr = sdev->bus->sprom.et0phyaddr;
+ 	}
+ 	memcpy(bp->dev->dev_addr, addr, 6);
+ 
