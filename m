@@ -1,43 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:15818 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752806AbXKZH0u (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43458 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbXKIUS5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 02:26:50 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 regression: doesn't associate automatically
-Date: Mon, 26 Nov 2007 08:27:31 +0100
-Cc: Will Dyson <will.dyson@gmail.com>, linux-wireless@vger.kernel.org
-References: <200711220912.10452.hs4233@mail.mn-solutions.de> <8e6f94720711241439x27c1a48dxe3f3698043fb05a8@mail.gmail.com> <1195988035.4149.218.camel@johannes.berg>
-In-Reply-To: <1195988035.4149.218.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711260827.31368.hs4233@mail.mn-solutions.de> (sfid-20071126_072654_896351_F534446D)
+	Fri, 9 Nov 2007 15:18:57 -0500
+Subject: Re: [PATCH 09/14] iwlwifi: 802.11n configuring hw_mode parameters
+	to support HT in A/G
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net
+In-Reply-To: <1194595331715-git-send-email-ron.rindjunsky@intel.com>
+References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953311871-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312850-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312367-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595331658-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953313491-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953313626-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953311042-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595331715-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RBHWISSjvS/6IlMUpcFP"
+Date: Fri, 09 Nov 2007 17:51:18 +0100
+Message-Id: <1194627078.4793.148.camel@johannes.berg> (sfid-20071109_201859_766929_34BA6ADB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Simply triggering a scan won't trigger association either
-> though, will it? So we'd have to manipulate the mlme state
-> machine too. I don't like it much but I guess we don't have
-> too much choice.
 
-In my case, an "iwlist eth1 scan" triggers a scan, and also 
-always an association. Well, always = three times :-)
+--=-RBHWISSjvS/6IlMUpcFP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Also, there might be some race here. When I turned on my laptop 
-and inserted the b43 card freshly, I *DID* get an association 
-with my standard Debian script. After
+> +	if (mode =3D=3D MODE_IEEE80211A) {
+> +		ht_info->cap |=3D (u16)IEEE80211_HT_CAP_SUP_WIDTH;
+> +		ht_info->cap |=3D (u16)IEEE80211_HT_CAP_SGI_40;
+> +		ht_info->supp_mcs_set[4] =3D 0x01;
+> +	}
+> +	ht_info->cap |=3D (u16)IEEE80211_HT_CAP_GRN_FLD;
+> +	ht_info->cap |=3D (u16)IEEE80211_HT_CAP_SGI_20;
+> +	ht_info->cap |=3D (u16)(IEEE80211_HT_CAP_MIMO_PS &
+> +			     (IWL_MIMO_PS_NONE << 2));
+> +
+> +	ht_info->ampdu_factor =3D CFG_HT_RX_AMPDU_FACTOR_DEF;
+> +	ht_info->ampdu_density =3D CFG_HT_MPDU_DENSITY_DEF;
+> +
+> +	ht_info->supp_mcs_set[0] =3D 0xFF;
+> +	ht_info->supp_mcs_set[1] =3D 0xFF;
 
-$ pccarcctl eject
-$ rmmod b43
-$ rmmod ssb
-$ pccardctl insert
+Good to see an example. I see you're actually using the IEEE80211A mode
+as "5 GHz" and IEEE80211G as "2.4 GHz". Big thanks for doing it that way
+rather than adding new modes or some weird stuff, this makes it a lot
+simpler to abstract it away into bands.
 
-I needed to trigger a scan.
+It'll probably look differently with no ht_info part of a band but
+rather all the information clustered into a single structure, but this
+looks pretty good to me given the current crappy infrastructure.
 
+johannes
 
-It might also be the case that in this case the card was by 
-change on the frequency of the AP (2.437 MHz).
+--=-RBHWISSjvS/6IlMUpcFP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzSQBaVg1VMiehFYAQKJ4RAAqfDZ3hQMZtaksGj5UFXd3UNIpaBuU2nC
+c/sXtcYAGJXWjxX0pB6SQ+sFRaVcijvn/yWfbBAnxb0xh+nz0VEbE0Lj/R2RFjnN
+bO34WTsLuX/D/1WhlMi3LVuJHL1DKSON/qJozqymDD1FqYMNr9haGeu+XMUGkp3o
+5xAMn+8Ea9JlJ+JiWLYX9D6L9sfItc03ySicbo+sFtNeUf1R0GJhExp2fzxhURvn
+z0JzrgXgEw50tkpYji6VZ1x3RNKAB/a0SBchx6OntNmucnuTdm6ROm5jAtmNl/mQ
+a0xQMHMZmUoTLGd400dfs6Tmf219NgTSUXBSnNPe6RyDmdMSOePkeH3OQW7b75kZ
+OpHngph52sbe9IW1eUf4DVABGuQcMaj0JgLuT+ZHAJsqAyun69hs5KrSVUMdGsJN
+PIVPhl+nIn7ChhEvXlW6Y9Bm0gPy+DSgkzPezSlUgS389ZRA4ifFM/ULUwPGQn+j
+mLcvTZ4tAYZnrGpNhAgxvC6t/OWo3C20bPSWbvQH5fx5R5SZucthfd04sEuHFx2H
+WQjS7CUNXy6bFzrtQ1pbXQHv5rpYp5gxiuDuZXnxgPSyrITXOFtFlKG4NzmbRHdS
+BRmaGkJFTH30poyGOgQKJiaR0wPlvyCURhSIjbz39MGIEz0iI9Vo//iprvlFpiMb
+zTBKhPJqRhs=
+=13zc
+-----END PGP SIGNATURE-----
+
+--=-RBHWISSjvS/6IlMUpcFP--
+
