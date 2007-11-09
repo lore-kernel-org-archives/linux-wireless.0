@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:62089 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751073AbXKXEn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 23:43:27 -0500
-Subject: Re: Belin FD7010 v7
-From: Pavel Roskin <proski@gnu.org>
-To: Vadim Peretokin <vperetokin@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-	 <1195781993.11966.27.camel@dv>
-	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
-	 <1195784707.11966.38.camel@dv>
-	 <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 23 Nov 2007 23:43:25 -0500
-Message-Id: <1195879405.7449.62.camel@dv> (sfid-20071124_044336_845375_78AEACDA)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54032 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbXKIUTD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 15:19:03 -0500
+Subject: Re: [PATCH 10/14] iwlwifi: 802.11n handling probe request HT IE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, flamingice@sourmilk.net
+In-Reply-To: <1194595332620-git-send-email-ron.rindjunsky@intel.com>
+References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953311871-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312850-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312367-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595331658-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953312456-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953313491-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953313626-git-send-email-ron.rindjunsky@intel.com>
+	 <11945953311042-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595331715-git-send-email-ron.rindjunsky@intel.com>
+	 <1194595332620-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3NC8kQqk4u9lDuQHdIFJ"
+Date: Fri, 09 Nov 2007 17:52:28 +0100
+Message-Id: <1194627148.4793.150.camel@johannes.berg> (sfid-20071109_201906_289420_39FE691D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-11-23 at 10:36 -0500, Vadim Peretokin wrote:
-> That didn't quite work. iwconfig and ifconfig couldn't see the card,
-> but lswh -C network showed my card.
 
-You probably mean lshw.  I've never heard of it, but it looks like a
-useful program.
+--=-3NC8kQqk4u9lDuQHdIFJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->  It said "* - network UNCLAIMED",
-> but it didn't say any logical adresses.
 
-It means there is no driver using the card.  It you load either rtl8180
-or ndiswrapper, it won't be unclaimed.
+On Fri, 2007-11-09 at 10:02 +0200, Ron Rindjunsky wrote:
+> This patch conforms the probe request's HT IE with the
+> new structures used in iwlwifi HT.
 
->  I tried a host of adresses
-> with "sudo ifconfig <adress> up", but nothing would work.
+Maybe the mac80211 hardware scan API should be changed to pass in the
+probe request frame? That way, the driver wouldn't need to do all the
+"directed vs. undirected scan", HT IE stuff etc.
 
-You need to have a network interface first.  If the driver doesn't
-create the interface, then it's not working with your card.  Use dmesg
-to see kernel message for possible explanations.
+johannes
 
-Once you have the interface (let's say it's wlan0), use "ifconfig wlan0
-up" to bring it up, "iwlist wlan0 scan" to see access points around you,
-iwconfig to configure the wireless parameters, possible wpa_supplicant
-for WPA authentication.  Once the driver report association, use
-ifconfig or dhclient to configure it.  I'm sure there is more detailed
-documentation somewhere.
+--=-3NC8kQqk4u9lDuQHdIFJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> I had a friend help me do some hacks involving telling the driver the
-> adress of my card, and then iwconfig saw it - but for some reason Wicd
-> couldn't see it (I'll try again when I get back home and install
-> Network Manager again.). I have a log of what we did to get it
-> "working", if it's any help.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-wicd is another interesting program I've never heard before.  Perhaps
-you should ask in a list for wicd users, just make sure to provide with
-sufficient details.
+iQIVAwUARzSQTKVg1VMiehFYAQKtghAAibqeZ8+S4JlZudt6i/F5yJIHLpuSoTxI
+e7LEkh5WvE8MF56M1H/zezmEjMtQFdcgZDOu9opcQzORLwgz6nVLOaooX8zCirav
+Qr2RlNpJFCj3ET8EGRSu45TTzU5p7mH7gvpH4KsjW3CRIQDVSvFzjxR5UJUsoHwn
+jZOTopV5JtKyh/Cf4ID9esgeDxZYTMl/fI8C7Z79cGnIMXvZuyGq/KEgU7OirMWe
+Qgj5xOI25mCkHLES9FWhw7gZASW/vxPxh2kDTt2dcP2SOLOo+gEbj8rFDTUQfezs
+9XPy1GyA6Mf9C1PPcKzi0K0oVn69xX4ly1H+DadXdcjEmm0j14PyEnxxD80fIUsg
+KM8YJf+WDnSxJj2h8MZtSCMBCGraowvWWcp+Ct4q4Fe2iw1pUaVv9JkIi7/xLP0h
+JoFdVl+y5LVyPS03RquzlOOb4C6t2vayYNwkC1jYLKLrqV1muL3tBuEHN9BWvoLj
+EfKCw4oJPPuny8pa/AlcSu20rgeF8NZj9+my1eZOZcCI9DMw6zQHfTdMb3HGrcOS
++UHsj5lamAQ7cQCq1nB1/9xSQXfmKMdQFQrvCxiizdeX3EQNpNN/J4kAVeZzekPh
+PUx+OMPHf9M4XQawxW+xRhCeWNplc9sJdgo3g8pnEqtoF6UCFN2DLHvICTl2dCAb
+bRzvYHIKJfU=
+=5TwU
+-----END PGP SIGNATURE-----
 
-Anyway, wicd should not be required to connect to an AP.
+--=-3NC8kQqk4u9lDuQHdIFJ--
 
-> And yes, the card does work if you install the net8185.inf driver in
-> ndiswrapper and then use the -a command to link the card to the
-> driver. I was just hoping that the card would work out of the box :)
-
-Well, not everything is working out of box, but we are getting there.
-
--- 
-Regards,
-Pavel Roskin
