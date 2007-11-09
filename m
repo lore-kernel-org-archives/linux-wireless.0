@@ -1,324 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5333 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759370AbXKNPaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:30:10 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 15/15] iwlwifi: 802.11n add support to 8K A-MSDU Rx frames
-Date: Wed, 14 Nov 2007 17:29:51 +0200
-Message-Id: <1195054202710-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153036_610691_AA3E9458)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:64375 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756254AbXKIW5U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 17:57:20 -0500
+Date: Fri, 09 Nov 2007 16:57:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] b43: Convert to use of the new SPROM structure
+Message-ID: <4734e5ce.d7a1RTXjEeuuQ7XG%Larry.Finger@lwfinger.net> (sfid-20071109_225722_586460_B8D1E797)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch give the iwlwifi the ability to support A-MSDU up to 8K
+Patch 4 of 6.
 
-Please notice - in order to work in 8K A-MSDU ucode support is needed,
-version 4.44.1.19 (soon to be published). 4K A-MSDU works in current ucode
-version as well.
+The b43 driver is modified to use the new SPROM structure.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   14 +++++++++-----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   20 +++++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    5 +++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   21 ++++++++++++++-------
- 7 files changed, 48 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index 0a5a08d..fb362ff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -691,7 +691,6 @@ struct iwl_eeprom {
- #define RX_LOW_WATERMARK 8
+Index: wireless-2.6/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.c
++++ wireless-2.6/drivers/net/wireless/b43/leds.c
+@@ -187,10 +187,10 @@ void b43_leds_init(struct b43_wldev *dev
+ 	enum b43_led_behaviour behaviour;
+ 	bool activelow;
  
+-	sprom[0] = bus->sprom.r1.gpio0;
+-	sprom[1] = bus->sprom.r1.gpio1;
+-	sprom[2] = bus->sprom.r1.gpio2;
+-	sprom[3] = bus->sprom.r1.gpio3;
++	sprom[0] = bus->sprom.gpio0;
++	sprom[1] = bus->sprom.gpio1;
++	sprom[2] = bus->sprom.gpio2;
++	sprom[3] = bus->sprom.gpio3;
  
--#define IWL_RX_BUF_SIZE 3000
- /* card static random access memory (SRAM) for processor data and instructs */
- #define ALM_RTC_INST_UPPER_BOUND		(0x014000)
- #define ALM_RTC_DATA_UPPER_BOUND		(0x808000)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index e9cb40e..4cd0ed8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2197,7 +2197,8 @@ int iwl_hw_set_hw_setting(struct iwl_priv *priv)
+ 	for (i = 0; i < 4; i++) {
+ 		if (sprom[i] == 0xFF) {
+Index: wireless-2.6/drivers/net/wireless/b43/lo.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/lo.c
++++ wireless-2.6/drivers/net/wireless/b43/lo.c
+@@ -264,8 +264,8 @@ static u16 lo_measure_feedthrough(struct
+ 		rfover |= pga;
+ 		rfover |= lna;
+ 		rfover |= trsw_rx;
+-		if ((dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_EXTLNA) &&
+-		    phy->rev > 6)
++		if ((dev->dev->bus->sprom.boardflags_lo & B43_BFL_EXTLNA)
++		    && phy->rev > 6)
+ 			rfover |= B43_PHY_RFOVERVAL_EXTLNA;
+ 
+ 		b43_phy_write(dev, B43_PHY_PGACTL, 0xE300);
+@@ -634,7 +634,7 @@ static void lo_measure_setup(struct b43_
+ 			      & 0xFFFC);
+ 		if (phy->type == B43_PHYTYPE_G) {
+ 			if ((phy->rev >= 7) &&
+-			    (sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++			    (sprom->boardflags_lo & B43_BFL_EXTLNA)) {
+ 				b43_phy_write(dev, B43_PHY_RFOVER, 0x933);
+ 			} else {
+ 				b43_phy_write(dev, B43_PHY_RFOVER, 0x133);
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -1924,7 +1924,7 @@ static int b43_gpio_init(struct b43_wlde
+ 		mask |= 0x0180;
+ 		set |= 0x0180;
  	}
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL) {
++	if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_PACTRL) {
+ 		b43_write16(dev, B43_MMIO_GPIO_MASK,
+ 			    b43_read16(dev, B43_MMIO_GPIO_MASK)
+ 			    | 0x0200);
+@@ -2289,7 +2289,7 @@ static void b43_periodic_every60sec(stru
  
- 	priv->hw_setting.ac_queue_count = AC_NUM;
--	priv->hw_setting.rx_buffer_size = IWL_RX_BUF_SIZE;
-+	priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE;
-+	priv->hw_setting.max_pkt_size = 2342;
- 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl_tx_cmd);
- 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index d1616bf..a5332ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -72,6 +72,7 @@ enum iwl_antenna {
-  * else RTS for data/management frames where MPDU is larger
-  *   than RTS value.
-  */
-+#define IWL_RX_BUF_SIZE           3000U
- #define DEFAULT_RTS_THRESHOLD     2347U
- #define MIN_RTS_THRESHOLD         0U
- #define MAX_RTS_THRESHOLD         2347U
-@@ -447,7 +448,6 @@ union iwl_ht_rate_supp {
+ 	if (!b43_has_hardware_pctl(phy))
+ 		b43_lo_g_ctl_mark_all_unused(dev);
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++	if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI) {
+ 		b43_mac_suspend(dev);
+ 		b43_calc_nrssi_slope(dev);
+ 		if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 8)) {
+@@ -3208,13 +3208,13 @@ static void b43_bluetooth_coext_enable(s
+ 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
+ 	u32 hf;
  
- #ifdef CONFIG_IWL3945_HT
- #define CFG_HT_RX_AMPDU_FACTOR_DEF  (0x3)
--#define HT_IE_MAX_AMSDU_SIZE_4K     (0)
- #define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
- #define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
- 
-@@ -552,7 +552,8 @@ struct iwl_driver_hw_info {
- 	u16 ac_queue_count;
- 	u16 tx_cmd_len;
- 	u16 max_rxq_size;
--	u32 rx_buffer_size;
-+	u32 rx_buf_size;
-+	u32 max_pkt_size;
- 	u16 max_rxq_log;
- 	u8  max_stations;
- 	u8  bcast_sta_id;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 21c7577..61b57ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -740,8 +740,8 @@ struct iwl_eeprom {
- #define RX_FREE_BUFFERS 64
- #define RX_LOW_WATERMARK 8
- 
--
--#define IWL_RX_BUF_SIZE (4 * 1024)
-+#define IWL_RX_BUF_SIZE_4K (4 * 1024)
-+#define IWL_RX_BUF_SIZE_8K (8 * 1024)
- #define IWL_MAX_BSM_SIZE BSM_SRAM_SIZE
- #define KDR_RTC_INST_UPPER_BOUND		(0x018000)
- #define KDR_RTC_DATA_UPPER_BOUND		(0x80A000)
-@@ -1055,15 +1055,19 @@ union iwl_tx_power_dual_stream {
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_MASK     (0x00001000) /* bit 12 */
- #define FH_RCSR_CHNL0_RX_CONFIG_RB_TIMEOUT_MASK   (0x00000FF0) /* bit 4-11 */
- 
--#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT       (20)
--#define FH_RCSR_RX_CONFIG_RB_SIZE_BITSHIFT			(16)
-+#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT	(20)
-+#define FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_BITSHIFT	(4)
-+#define RX_RB_TIMEOUT	(0x10)
- 
- /* RCSR: rx_config register values */
- #define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_VAL         (0x00000000)
- #define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_EOF_VAL     (0x40000000)
- #define FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL        (0x80000000)
- 
--#define IWL_FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K    (0x00000000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K    (0x00000000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K    (0x00010000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_12K   (0x00020000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_16K   (0x00030000)
- 
- /* RCSR channel 0 config register values */
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL       (0x00000000)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 85b84db..2d8d14f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -226,6 +226,7 @@ static int iwl4965_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- {
- 	int rc;
- 	unsigned long flags;
-+	unsigned int rb_size;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 	rc = iwl_grab_nic_access(priv);
-@@ -234,6 +235,11 @@ static int iwl4965_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 		return rc;
- 	}
- 
-+	if (iwl_param_amsdu_size_8K)
-+		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K;
-+	else
-+		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K;
-+
- 	/* stop HW */
- 	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
- 
-@@ -248,7 +254,7 @@ static int iwl4965_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG,
- 			     FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
- 			     FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
--			     IWL_FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K |
-+			     rb_size |
- 			     /*0x10 << 4 | */
- 			     (RX_QUEUE_SIZE_LOG <<
- 			      FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT));
-@@ -1721,7 +1727,11 @@ int iwl_hw_set_hw_setting(struct iwl_priv *priv)
- 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl_tx_cmd);
- 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
--
-+	if (iwl_param_amsdu_size_8K)
-+		priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE_8K;
-+	else
-+		priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE_4K;
-+	priv->hw_setting.max_pkt_size = priv->hw_setting.rx_buf_size - 256;
- 	priv->hw_setting.max_stations = IWL4965_STATION_COUNT;
- 	priv->hw_setting.bcast_sta_id = IWL4965_BROADCAST_ID;
- 	return 0;
-@@ -3519,7 +3529,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
- 		rx_start->byte_count = amsdu->byte_count;
- 		rx_end = (__le32 *) (((u8 *) hdr) + len);
- 	}
--	if (len > IWL_RX_BUF_SIZE || len < 16) {
-+	if (len > priv->hw_setting.max_pkt_size || len < 16) {
- 		IWL_WARNING("byte count out of range [16,4K]"
-
- 			       " : %d\n", len);
+-	if (!(sprom->r1.boardflags_lo & B43_BFL_BTCOEXIST))
++	if (!(sprom->boardflags_lo & B43_BFL_BTCOEXIST))
  		return;
-@@ -3685,6 +3695,10 @@ void iwl4965_init_ht_hw_capab(struct ieee80211_ht_info *ht_info, int mode)
- 	ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_20;
- 	ht_info->cap |= (u16)(IEEE80211_HT_CAP_MIMO_PS &
- 			     (IWL_MIMO_PS_NONE << 2));
-+	if (iwl_param_amsdu_size_8K) {
-+		printk(KERN_DEBUG "iwl4965 in A-MSDU 8K support mode\n");
-+		ht_info->cap |= (u16)IEEE80211_HT_CAP_MAX_AMSDU;
-+	}
+ 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
+ 		return;
  
- 	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
- 	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 3494fc5..2ac9173 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -56,6 +56,7 @@ extern struct pci_device_id iwl_hw_card_ids[];
- /* Module parameters accessible from iwl-*.c */
- extern int iwl_param_hwcrypto;
- extern int iwl_param_queues_num;
-+extern int iwl_param_amsdu_size_8K;
+ 	hf = b43_hf_read(dev);
+-	if (sprom->r1.boardflags_lo & B43_BFL_BTCMOD)
++	if (sprom->boardflags_lo & B43_BFL_BTCMOD)
+ 		hf |= B43_HF_BTCOEXALT;
+ 	else
+ 		hf |= B43_HF_BTCOEX;
+@@ -3348,7 +3348,7 @@ static int b43_wireless_core_init(struct
+ 		hf |= B43_HF_SYMW;
+ 		if (phy->rev == 1)
+ 			hf |= B43_HF_GDCW;
+-		if (sprom->r1.boardflags_lo & B43_BFL_PACTRL)
++		if (sprom->boardflags_lo & B43_BFL_PACTRL)
+ 			hf |= B43_HF_OFDMPABOOST;
+ 	} else if (phy->type == B43_PHYTYPE_B) {
+ 		hf |= B43_HF_SYMW;
+@@ -3859,20 +3859,20 @@ static void b43_sprom_fixup(struct ssb_b
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
+-		bus->sprom.r1.boardflags_lo |= B43_BFL_BTCOEXIST;
++		bus->sprom.boardflags_lo |= B43_BFL_BTCOEXIST;
+ 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
+ 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
+-		bus->sprom.r1.boardflags_lo |= B43_BFL_PACTRL;
++		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
  
- enum iwl_antenna {
- 	IWL_ANTENNA_DIVERSITY,
-@@ -473,7 +474,6 @@ union iwl_ht_rate_supp {
+ 	/* Handle case when gain is not set in sprom */
+-	if (bus->sprom.r1.antenna_gain_a == 0xFF)
+-		bus->sprom.r1.antenna_gain_a = 2;
+-	if (bus->sprom.r1.antenna_gain_bg == 0xFF)
+-		bus->sprom.r1.antenna_gain_bg = 2;
++	if (bus->sprom.antenna_gain_a == 0xFF)
++		bus->sprom.antenna_gain_a = 2;
++	if (bus->sprom.antenna_gain_bg == 0xFF)
++		bus->sprom.antenna_gain_bg = 2;
  
- #ifdef CONFIG_IWL4965_HT
- #define CFG_HT_RX_AMPDU_FACTOR_DEF  (0x3)
--#define HT_IE_MAX_AMSDU_SIZE_4K     (0)
- #define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
- #define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
+ 	/* Convert Antennagain values to Q5.2 */
+-	bus->sprom.r1.antenna_gain_a <<= 2;
+-	bus->sprom.r1.antenna_gain_bg <<= 2;
++	bus->sprom.antenna_gain_a <<= 2;
++	bus->sprom.antenna_gain_bg <<= 2;
+ }
  
-@@ -572,7 +572,8 @@ struct iwl_driver_hw_info {
- 	u16 ac_queue_count;
- 	u16 tx_cmd_len;
- 	u16 max_rxq_size;
--	u32 rx_buffer_size;
-+	u32 rx_buf_size;
-+	u32 max_pkt_size;
- 	u16 max_rxq_log;
- 	u8  max_stations;
- 	u8  bcast_sta_id;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 0283172..8d47739 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -81,6 +81,7 @@ static int iwl_param_antenna;      /* def: 0 = both antennas (use diversity) */
- int iwl_param_hwcrypto;     /* def: using software encryption */
- static int iwl_param_qos_enable = 1;
- int iwl_param_queues_num = IWL_MAX_NUM_QUEUES;
-+int iwl_param_amsdu_size_8K; /* def: enable 8K amsdu size */
+ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
+@@ -3905,10 +3905,10 @@ static int b43_wireless_init(struct ssb_
+ 	hw->max_noise = -110;
+ 	hw->queues = 1;		/* FIXME: hardware has more queues */
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+-	if (is_valid_ether_addr(sprom->r1.et1mac))
+-		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.et1mac);
++	if (is_valid_ether_addr(sprom->et1mac))
++		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
+ 	else
+-		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.il0mac);
++		SET_IEEE80211_PERM_ADDR(hw, sprom->il0mac);
  
- /*
-  * module name, copyright, version, etc.
-@@ -3164,7 +3165,7 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
- 	__le16 phy_flags_hw = cpu_to_le16(phy_flags);
- 
- 	/* We received data from the HW, so stop the watchdog */
--	if (len > IWL_RX_BUF_SIZE - sizeof(*iwl_rt)) {
-+	if (len > priv->hw_setting.rx_buf_size - sizeof(*iwl_rt)) {
- 		IWL_DEBUG_DROP("Dropping too large packet in monitor\n");
+ 	/* Get and initialize struct b43_wl */
+ 	wl = hw_to_b43_wl(hw);
+Index: wireless-2.6/drivers/net/wireless/b43/phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/phy.c
++++ wireless-2.6/drivers/net/wireless/b43/phy.c
+@@ -1139,7 +1139,7 @@ static void b43_phy_inita(struct b43_wld
+ 	} else {
+ 		b43_phy_setupg(dev);
+ 		if (phy->gmode &&
+-		    (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL))
++		    (dev->dev->bus->sprom.boardflags_lo & B43_BFL_PACTRL))
+ 			b43_phy_write(dev, 0x046E, 0x03CF);
  		return;
  	}
-@@ -4393,7 +4394,8 @@ void iwl_rx_replenish(void *data)
- 		element = rxq->rx_used.next;
- 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
- 		rxb->skb =
--		    alloc_skb(IWL_RX_BUF_SIZE, __GFP_NOWARN | GFP_ATOMIC);
-+		    alloc_skb(priv->hw_setting.rx_buf_size,
-+				__GFP_NOWARN | GFP_ATOMIC);
- 		if (!rxb->skb) {
- 			if (net_ratelimit())
- 				printk(KERN_CRIT DRV_NAME
-@@ -4407,7 +4409,7 @@ void iwl_rx_replenish(void *data)
- 		list_del(element);
- 		rxb->dma_addr =
- 		    pci_map_single(priv->pci_dev, rxb->skb->data,
--				   IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+			   priv->hw_setting.rx_buf_size, PCI_DMA_FROMDEVICE);
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
+@@ -1286,7 +1286,7 @@ static void b43_phy_initb4(struct b43_wl
+ 	if (phy->radio_ver == 0x2050)
+ 		b43_phy_write(dev, 0x002A, 0x88C2);
+ 	b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt, phy->tx_control);
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++	if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI) {
+ 		b43_calc_nrssi_slope(dev);
+ 		b43_calc_nrssi_threshold(dev);
  	}
-@@ -4430,7 +4432,8 @@ static void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 		if (rxq->pool[i].skb != NULL) {
- 			pci_unmap_single(priv->pci_dev,
- 					 rxq->pool[i].dma_addr,
--					 IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+					 priv->hw_setting.rx_buf_size,
-+					 PCI_DMA_FROMDEVICE);
- 			dev_kfree_skb(rxq->pool[i].skb);
+@@ -1433,7 +1433,7 @@ static void b43_phy_initb6(struct b43_wl
+ 		b43_radio_write16(dev, 0x5A, 0x88);
+ 		b43_radio_write16(dev, 0x5B, 0x6B);
+ 		b43_radio_write16(dev, 0x5C, 0x0F);
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_ALTIQ) {
++		if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_ALTIQ) {
+ 			b43_radio_write16(dev, 0x5D, 0xFA);
+ 			b43_radio_write16(dev, 0x5E, 0xD8);
+ 		} else {
+@@ -1525,7 +1525,7 @@ static void b43_phy_initb6(struct b43_wl
+ 		b43_phy_write(dev, 0x0062, 0x0007);
+ 		b43_radio_init2050(dev);
+ 		b43_lo_g_measure(dev);
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI) {
++		if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI) {
+ 			b43_calc_nrssi_slope(dev);
+ 			b43_calc_nrssi_threshold(dev);
  		}
+@@ -1645,7 +1645,7 @@ static void b43_calc_loopback_gain(struc
+ 	b43_phy_write(dev, B43_PHY_RFOVERVAL,
+ 		      b43_phy_read(dev, B43_PHY_RFOVERVAL) & 0xCFFF);
+ 
+-	if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_EXTLNA) {
++	if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_EXTLNA) {
+ 		if (phy->rev >= 7) {
+ 			b43_phy_write(dev, B43_PHY_RFOVER,
+ 				      b43_phy_read(dev, B43_PHY_RFOVER)
+@@ -1812,7 +1812,7 @@ static void b43_phy_initg(struct b43_wld
+ 				       & 0x0FFF) | (phy->lo_control->
+ 						    tx_bias << 12));
+ 		}
+-		if (dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_PACTRL)
++		if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_PACTRL)
+ 			b43_phy_write(dev, B43_PHY_BASE(0x2E), 0x8075);
+ 		else
+ 			b43_phy_write(dev, B43_PHY_BASE(0x2E), 0x807F);
+@@ -1826,7 +1826,7 @@ static void b43_phy_initg(struct b43_wld
+ 		b43_phy_write(dev, B43_PHY_LO_MASK, 0x8078);
  	}
-@@ -4477,7 +4480,8 @@ void iwl_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 		if (rxq->pool[i].skb != NULL) {
- 			pci_unmap_single(priv->pci_dev,
- 					 rxq->pool[i].dma_addr,
--					 IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+					 priv->hw_setting.rx_buf_size,
-+					 PCI_DMA_FROMDEVICE);
- 			priv->alloc_rxb_skb--;
- 			dev_kfree_skb(rxq->pool[i].skb);
- 			rxq->pool[i].skb = NULL;
-@@ -4604,7 +4608,7 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 		rxq->queue[i] = NULL;
  
- 		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->dma_addr,
--					    IWL_RX_BUF_SIZE,
-+					    priv->hw_setting.rx_buf_size,
- 					    PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
+-	if (!(dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI)) {
++	if (!(dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI)) {
+ 		/* The specs state to update the NRSSI LT with
+ 		 * the value 0x7FFFFFFF here. I think that is some weird
+ 		 * compiler optimization in the original driver.
+@@ -2036,16 +2036,15 @@ void b43_phy_xmitpower(struct b43_wldev 
+ 			estimated_pwr =
+ 			    b43_phy_estimate_power_out(dev, average);
  
-@@ -4657,7 +4661,8 @@ static void iwl_rx_handle(struct iwl_priv *priv)
+-			max_pwr = dev->dev->bus->sprom.r1.maxpwr_bg;
+-			if ((dev->dev->bus->sprom.r1.
+-			     boardflags_lo & B43_BFL_PACTRL)
+-			    && (phy->type == B43_PHYTYPE_G))
++			max_pwr = dev->dev->bus->sprom.maxpwr_bg;
++			if ((dev->dev->bus->sprom.boardflags_lo
++			    & B43_BFL_PACTRL) && (phy->type == B43_PHYTYPE_G))
+ 				max_pwr -= 0x3;
+ 			if (unlikely(max_pwr <= 0)) {
+ 				b43warn(dev->wl,
+ 					"Invalid max-TX-power value in SPROM.\n");
+ 				max_pwr = 60;	/* fake it */
+-				dev->dev->bus->sprom.r1.maxpwr_bg = max_pwr;
++				dev->dev->bus->sprom.maxpwr_bg = max_pwr;
+ 			}
+ 
+ 			/*TODO:
+@@ -2103,7 +2102,7 @@ void b43_phy_xmitpower(struct b43_wldev 
+ 						    B43_TXCTL_TXMIX;
+ 						rfatt += 2;
+ 						bbatt += 2;
+-					} else if (dev->dev->bus->sprom.r1.
++					} else if (dev->dev->bus->sprom.
+ 						   boardflags_lo &
+ 						   B43_BFL_PACTRL) {
+ 						bbatt += 4 * (rfatt - 2);
+@@ -2179,13 +2178,13 @@ int b43_phy_init_tssi2dbm_table(struct b
+ 	s8 *dyn_tssi2dbm;
+ 
+ 	if (phy->type == B43_PHYTYPE_A) {
+-		pab0 = (s16) (dev->dev->bus->sprom.r1.pa1b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.r1.pa1b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.r1.pa1b2);
++		pab0 = (s16) (dev->dev->bus->sprom.pa1b0);
++		pab1 = (s16) (dev->dev->bus->sprom.pa1b1);
++		pab2 = (s16) (dev->dev->bus->sprom.pa1b2);
+ 	} else {
+-		pab0 = (s16) (dev->dev->bus->sprom.r1.pa0b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.r1.pa0b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.r1.pa0b2);
++		pab0 = (s16) (dev->dev->bus->sprom.pa0b0);
++		pab1 = (s16) (dev->dev->bus->sprom.pa0b1);
++		pab2 = (s16) (dev->dev->bus->sprom.pa0b2);
+ 	}
+ 
+ 	if ((dev->dev->bus->chip_id == 0x4301) && (phy->radio_ver != 0x2050)) {
+@@ -2198,17 +2197,17 @@ int b43_phy_init_tssi2dbm_table(struct b
+ 	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
+ 		/* The pabX values are set in SPROM. Use them. */
+ 		if (phy->type == B43_PHYTYPE_A) {
+-			if ((s8) dev->dev->bus->sprom.r1.itssi_a != 0 &&
+-			    (s8) dev->dev->bus->sprom.r1.itssi_a != -1)
++			if ((s8) dev->dev->bus->sprom.itssi_a != 0 &&
++			    (s8) dev->dev->bus->sprom.itssi_a != -1)
+ 				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.r1.itssi_a);
++				    (s8) (dev->dev->bus->sprom.itssi_a);
+ 			else
+ 				phy->tgt_idle_tssi = 62;
+ 		} else {
+-			if ((s8) dev->dev->bus->sprom.r1.itssi_bg != 0 &&
+-			    (s8) dev->dev->bus->sprom.r1.itssi_bg != -1)
++			if ((s8) dev->dev->bus->sprom.itssi_bg != 0 &&
++			    (s8) dev->dev->bus->sprom.itssi_bg != -1)
+ 				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.r1.itssi_bg);
++				    (s8) (dev->dev->bus->sprom.itssi_bg);
+ 			else
+ 				phy->tgt_idle_tssi = 62;
+ 		}
+@@ -3114,7 +3113,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 			if (phy->radio_ver != 0x2050)
+ 				return;
+ 			if (!
+-			    (dev->dev->bus->sprom.r1.
++			    (dev->dev->bus->sprom.
+ 			     boardflags_lo & B43_BFL_RSSI))
+ 				return;
+ 
+@@ -3145,7 +3144,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 		}
+ 	case B43_PHYTYPE_G:
+ 		if (!phy->gmode ||
+-		    !(dev->dev->bus->sprom.r1.boardflags_lo & B43_BFL_RSSI)) {
++		    !(dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI)) {
+ 			tmp16 = b43_nrssi_hw_read(dev, 0x20);
+ 			if (tmp16 >= 0x20)
+ 				tmp16 -= 0x40;
+@@ -3667,7 +3666,7 @@ static u16 radio2050_rfover_val(struct b
  		}
  
- 		pci_unmap_single(priv->pci_dev, rxb->dma_addr,
--				 IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+				 priv->hw_setting.rx_buf_size,
-+				 PCI_DMA_FROMDEVICE);
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
- 		spin_unlock_irqrestore(&rxq->lock, flags);
-@@ -9300,6 +9305,8 @@ MODULE_PARM_DESC(queues_num, "number of hw queues.");
- /* QoS */
- module_param_named(qos_enable, iwl_param_qos_enable, int, 0444);
- MODULE_PARM_DESC(qos_enable, "enable all QoS functionality");
-+module_param_named(amsdu_size_8K, iwl_param_amsdu_size_8K, int, 0444);
-+MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
+ 		if ((phy->rev < 7) ||
+-		    !(sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
+ 			if (phy_register == B43_PHY_RFOVER) {
+ 				return 0x1B3;
+ 			} else if (phy_register == B43_PHY_RFOVERVAL) {
+@@ -3707,7 +3706,7 @@ static u16 radio2050_rfover_val(struct b
+ 		}
+ 	} else {
+ 		if ((phy->rev < 7) ||
+-		    !(sprom->r1.boardflags_lo & B43_BFL_EXTLNA)) {
++		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
+ 			if (phy_register == B43_PHY_RFOVER) {
+ 				return 0x1B3;
+ 			} else if (phy_register == B43_PHY_RFOVERVAL) {
+@@ -4186,7 +4185,7 @@ int b43_radio_selectchannel(struct b43_w
+ 		b43_write16(dev, B43_MMIO_CHANNEL, channel2freq_bg(channel));
  
- module_exit(iwl_exit);
- module_init(iwl_init);
--- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+ 		if (channel == 14) {
+-			if (dev->dev->bus->sprom.r1.country_code ==
++			if (dev->dev->bus->sprom.country_code ==
+ 			    SSB_SPROM1CCODE_JAPAN)
+ 				b43_hf_write(dev,
+ 					     b43_hf_read(dev) & ~B43_HF_ACPR);
+Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c
++++ wireless-2.6/drivers/net/wireless/b43/xmit.c
+@@ -385,7 +385,7 @@ static s8 b43_rssi_postprocess(struct b4
+ 			else
+ 				tmp -= 3;
+ 		} else {
+-			if (dev->dev->bus->sprom.r1.
++			if (dev->dev->bus->sprom.
+ 			    boardflags_lo & B43_BFL_RSSI) {
+ 				if (in_rssi > 63)
+ 					in_rssi = 63;
