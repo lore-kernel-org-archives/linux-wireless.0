@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4558 "EHLO ra.tuxdriver.com"
+Received: from mx1.mandriva.com ([212.85.150.183]:38728 "EHLO mx1.mandriva.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753174AbXKNVOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 16:14:25 -0500
-Date: Wed, 14 Nov 2007 16:13:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Will Dyson <will.dyson@gmail.com>
-Cc: Florian Lohoff <flo@rfc822.org>, Marcus Better <marcus@better.se>,
+	id S1751679AbXKILNl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 06:13:41 -0500
+From: Claudio Matsuoka <claudio@mandriva.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: RTL8187 rate control problems
+Date: Fri, 9 Nov 2007 09:13:11 -0200
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
-Message-ID: <20071114211354.GD6226@tuxdriver.com> (sfid-20071114_211431_722624_BACF86F2)
-References: <20071111102315.GC10486@paradigm.rfc822.org> <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> <20071113192330.GA19601@paradigm.rfc822.org> <fhedc4$5l9$1@ger.gmane.org> <20071114153347.GA3512@paradigm.rfc822.org> <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com>
+References: <200711061323.16302.claudio@mandriva.com> <200711061947.21927.flamingice@sourmilk.net> <1194445243.4470.25.camel@johannes.berg>
+In-Reply-To: <1194445243.4470.25.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711090913.12656.claudio@mandriva.com> (sfid-20071109_111346_888039_3E015D08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 14, 2007 at 01:57:52PM -0500, Will Dyson wrote:
-> On Nov 14, 2007 10:33 AM, Florian Lohoff <flo@rfc822.org> wrote:
-> 
-> > Did you actually try setting the rate manually? I just tried
-> > when i came home from work. I set it to 36MBit/s and it actually
-> > works ... I am now transferring with 2.5MByte/s instead of 30Kbyte/s
-> >
-> > So i guess the auto rate selection is broken ... Or 1 MBit/s is default
-> > or something ...
-> 
-> Ah, that is probably this isssue:
-> 
-> http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=d37cabfb5f60a3bb56585a74fd3f140ba2960fe0
-> 
-> The patch is in the wireless-2.6/everything tree, but not Linus's tree.
+On Wednesday 07 November 2007 12:20:43 Johannes Berg wrote:
 
-Most of the patch seems like a no-op, except this bit:
+> > There's no easy way to do tx ack reporting on the rtl8187.
+>
+> This also means it doesn't show you outgoing frames on a monitor. We
+> really need to find a solution here that takes into account our current
+> use of tx status reports for outgoing frame monitor as well as rate
+> control.
 
- 	if (is_rts_frame(frame_control) || is_cts_frame(frame_control)) {
- 		__set_bit(ENTRY_TXD_BURST, &desc.flags);
--		if (is_rts_frame(frame_control))
-+		if (is_rts_frame(frame_control)) {
- 			__set_bit(ENTRY_TXD_RTS_FRAME, &desc.flags);
-+			__set_bit(ENTRY_TXD_ACK, &desc.flags);
-+		} else
-+			__clear_bit(ENTRY_TXD_ACK, &desc.flags);
- 		if (control->rts_cts_rate)
- 			tx_rate = control->rts_cts_rate;
- 	}
+That would be important since the current situation for users of rtl8187 and 
+possibly other chips with similar problems is to be limited by default to a 
+very short range, or manually set bitrates (or resort to some ugly hack to do 
+that). By the way, setting the bitrate back to "auto" isn't working as well 
+in the rtl8187 once you switch to fixed, but given the current situation it's 
+more a feature than a bug :)
 
-Is this correct?  I'm not sure about the actual meaning of TXD_W0_ACK
-(which keys off ENTRY_TXD_ACK)...
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
