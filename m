@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:43443 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490AbXKWKYW (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37615 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbXKJKRc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 05:24:22 -0500
-Received: by an-out-0708.google.com with SMTP id d31so639048and
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 02:24:21 -0800 (PST)
-Message-ID: <40f31dec0711230224h2301d52fl75db75fff4a88818@mail.gmail.com> (sfid-20071123_102431_256391_125B2985)
-Date: Fri, 23 Nov 2007 12:24:20 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Michael Renzmann" <mrenzmann@madwifi.org>
-Subject: Re: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
-Cc: Majo <virec@inmail.sk>, linux-wireless@vger.kernel.org
-In-Reply-To: <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200711222310.01165.virec@inmail.sk>
-	 <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com>
-	 <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org>
+	Sat, 10 Nov 2007 05:17:32 -0500
+Subject: Re: [PATCH 4/4] o80211s: (zd1211rw-mac80211) support for mesh
+	interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <473516f2.15528c0a.7196.3372@mx.google.com> (sfid-20071110_022703_924708_89D9D43C)
+References: <473516f2.15528c0a.7196.3372@mx.google.com>
+	 (sfid-20071110_022703_924708_89D9D43C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nLJ8TLer8y1r5QWnLfHE"
+Date: Sat, 10 Nov 2007 11:18:54 +0100
+Message-Id: <1194689934.7258.66.camel@johannes.berg> (sfid-20071110_101735_349961_AA100628)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm you might be right about this, ath_info would really help. Problem
-is we din't have such reports about nic_wakeup before, not even on
-2425 (AR5007EG). In all cases (except 5416/5418) at least attach
-worked ! In this case attach doesn't work at all ;-(
 
-This might be the new 2417 chip (AR5007G), if they had faulty pci id
-for 5007EG they might have done the same for 5007G (but 2417 is not
-pci-express !).
-
-Majo can you plz do what Mike said and give us a dump of ath_info tool ?
-
-Thanx in advance...
-
-2007/11/23, Michael Renzmann <mrenzmann@madwifi.org>:
-> Hi.
->
-> >> 14:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG
-> >> 802.11 b/g Wireless PCI Express Adapter (rev 01)
-> > This is a 2424 pci-express card, we don't support this chip yet ;-(
->
-> Don't be fooled by the PCI ID - we already know that these are not
-> reliable to identify the chipset used on a Atheros-based card. See also
-> http://madwifi.org/ticket/1192.
->
-> I'd suggest Majo to use ath_info from MadWifi trunk, hopefully it allows
-> to recognize the chipset more reliably in his case, too. The ticket
-> mentioned above also has some instructions on how to use this tool.
->
-> > (the testbed stuff would really help)
->
-> Working on it, but it's still a long road. Getting non-profit status is
-> just the first step for that, and that's work in progress.
->
-> Bye, Mike
->
+--=-nLJ8TLer8y1r5QWnLfHE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> +		{ CR_CAM_MODE,			MODE_AP_WDS},
+
+Shouldn't that depend on the interface type? I.e. set it for WDS/MESH
+but clear it for station so that the station won't ack WDS frames? OTOH,
+it may just as well ack WDS frames for itself...
+=20
+
+> +		associated =3D true ;
+
+too much whitespace
+
+> +			zd_mac_config_beacon(hw, conf->beacon);
+> +			kfree_skb(conf->beacon);
+> +			zd_set_beacon_interval(&mac->chip, BCN_MODE_IBSS | 100);
+
+Does that mean you're hardcoding the beacon interval here while before
+you confused me how we should handle that setting in userspace? :)
+
+johannes
+
+--=-nLJ8TLer8y1r5QWnLfHE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzWFjaVg1VMiehFYAQIOMw//aw56GLqoCF5Dz5CFpf0B4CuVU9TP/MfI
+d826noOjTYsoMJjHfBIKbQtj+YjpDcQ0qJlSYbVQHPcMsVhJA8Lk7apYR82nYEtr
+oFYeADVQ9lZ1YM0UvJpckcsQnMWNkQyWtxvQnjkeZy52WJ27y/f/KOITrA+v8Nze
+sQtjv0h15jPqYgjpUGBas+VmRuCNDpWkf/vCAPmmV5qF1jjjEw25ZrjBBUPMYsub
+TR8M3zSrzxRo3ORsJBuoVZ9GAdmBkC4vzsypVbjB8kSPQ/4NP6IrxAwn+0GcZG4m
+J48py/EZJOBZ7CyT21vdl/c3tXNabIcn21IYSTKkx+0vXFVyxm1y0yBRQpaBffna
+bKior5hZbQnPoXRB0WcldGcGBtl3+XxCPumSovkcab8OdiOUt4v2uZcuXcy8qan3
+llgc/KKjUI7UlEF05X/obWScSpJT04oDPkUw66OYS+SVyrti7YwB+6hvf/nO6bg/
+iGJPSgg0HubHpzl5DNkLyEXOd1TPsoL85OvucI0yLP5T0v3DgRK298XNx8UvQ9St
+dM+vDHXeqlLBj73VZXpxfkKEtKWRRjjAOVGlndWIWPAY229ZApQGSawRoKA3V/Bn
+Rafqy4kN4ttzTSaUyNXrRTXxJtimVfLscjdXFVwM+gpWy+AdAL/BsyRzDH6U1EoF
+3mQDcHHMWP8=
+=uLbQ
+-----END PGP SIGNATURE-----
+
+--=-nLJ8TLer8y1r5QWnLfHE--
+
