@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33492
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1760025AbXKTMeX (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:37833 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbXKJAN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 07:34:23 -0500
-Date: Tue, 20 Nov 2007 04:34:23 -0800 (PST)
-Message-Id: <20071120.043423.42170421.davem@davemloft.net> (sfid-20071120_123450_985935_82C552CF)
-To: shaddy_baddah@hotmail.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071119.002755.77617097.davem@davemloft.net>
-References: <4740DF47.4040206@hotmail.com>
-	<20071119.002755.77617097.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 9 Nov 2007 19:13:27 -0500
+Message-ID: <4734F7B6.7060505@trash.net> (sfid-20071110_001331_336507_3E136CB9)
+Date: Sat, 10 Nov 2007 01:13:42 +0100
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
+References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo>	 <1194635236.19522.3.camel@localhost> <20071109192033.GB22714@pogo>	 <4734E962.3010603@trash.net> <1194653320.19522.28.camel@localhost>
+In-Reply-To: <1194653320.19522.28.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Mon, 19 Nov 2007 00:27:55 -0800 (PST)
+Joe Perches wrote:
+> On Sat, 2007-11-10 at 00:12 +0100, Patrick McHardy wrote:
+>   
+>> This may cause a use-after-free since __dev_addr_delete frees the address
+>> when all references are gone.
+>>     
+>
+> How about a comment then?  Perhaps:
+>
+> diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
+> index ae35405..63576aa 100644
+> --- a/net/core/dev_mcast.c
+> +++ b/net/core/dev_mcast.c
+> @@ -165,16 +165,23 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+>  	netif_tx_lock_bh(from);
+>  	netif_tx_lock_bh(to);
+>  
+> +	/*
+> +	  This while loop can't be written as
+> +		for (da = from->mc_list; da; da = da->next)
+> +	  da = from->mc_list and __dev_addr_delete can kfree(from->mc_list)
+> +	  which could cause a use-after-free of da->next
+> +	*/
+>   
 
-> From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-> Date: Mon, 19 Nov 2007 11:56:39 +1100
-> 
-> > If I try to scan for APs using iwlist, I get one AP listed, before a bus 
-> > error occurs. This of course, does not suggest that the problem is with 
-> > the driver, but I mention it for the record.
-> 
-> This is an unaligned data access in the userland tools.
-> Try to catch it with GDB and give us ths backtrace.
+Seems unnecessary to me, we also don't comment each list_for_each_entry_safe
+iteration. I consider the use of a seperate next variable self-explanatory.
 
-I think I've figured out what's happening here.
 
-The kernel makes no effort whatsoever to translate iwe streams in
-compat environments.  And userspace then tries to "correct" this and
-does so miserably.  Likely this is what causes the bus error.
-
-The fix is that we need to add some handling code
-fs/compat_ioctl.c:do_wireless_ioctl() for the case where we are
-returning an iwe stream (SIOCGIWSCAN).
-
-It should not be very difficult to do this, since the compat format
-will be the same size or smaller, it should be easy to recode the
-thing in-place in the user buffer.
-
-So you make a pass over the user buffer fixing things up and then you
-adjust the iw_data length for the new size.
-
-Alternatively, you can allocate a kernel buffer for this, use a 'fs =
-get_fs(); set_fs(KERNEL_DS); ioctl(); set_fs(fs);' sequence, fixup the
-iwe stream, then copy the everything back out to userspace.
-
-Then we can delete all of this incredibly stupid code in the wireless
-tools that attempts to fix this up in userspace.
-
-Can someone implement this and test it or send Shaddy a patch to test?
-
-Thanks.
