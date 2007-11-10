@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp002.mail.ukl.yahoo.com ([217.12.11.33]:47747 "HELO
-	smtp002.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758311AbXKGO7v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 09:59:51 -0500
-From: Matteo Croce <rootkit85@yahoo.it>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: airo WPA
-Date: Wed, 7 Nov 2007 15:59:47 +0100
-Cc: Michal Schmidt <xschmi00@stud.feec.vutbr.cz>,
-	Matthieu Castet <castet.matthieu@free.fr>,
-	Fabrice Bellet <fabrice@bellet.info>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	PReDaCoN <alessandroferrari@gmail.com>,
-	Benjamin Reed <breed@users.sourceforge.net>,
-	Javier Achirica <achirica@users.sourceforge.net>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless@vger.kernel.org, linux-net@vger.kernel.org
-References: <200711070307.09832.rootkit85@yahoo.it> <200711071515.16623.rootkit85@yahoo.it> <1194446460.23444.6.camel@localhost.localdomain>
-In-Reply-To: <1194446460.23444.6.camel@localhost.localdomain>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2233 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751547AbXKJPZy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Nov 2007 10:25:54 -0500
+Date: Sat, 10 Nov 2007 10:25:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Frank Lichtenheld <frank@lichtenheld.de>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: silence a bogus gcc warning
+Message-ID: <20071110152533.GC32472@tuxdriver.com> (sfid-20071110_152558_005532_0FFD450B)
+References: <200711101614.03776.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711071559.47916.rootkit85@yahoo.it> (sfid-20071107_145955_488043_51AAB8AE)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <200711101614.03776.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il Wednesday 07 November 2007 15:41:00 hai scritto:
-> On Wed, 2007-11-07 at 15:15 +0100, Matteo Croce wrote:
-> > New patch against current git
-> 
-> NAK at the moment; we've got too many patches for this floating around.
-> I'm currently working out some issues with WPA with a pull from
-> Matthieu's svn repo plus a set from Fabrice.  There's an issue with that
-> set (that your patch also has) that causes WPA associations to fail
-> because frames are driver-MIC-ed at the wrong times.  The patches also
-> have some style issues that I'd like to clean up.
-> 
-> So here's what I'd like to do with the airo WPA patches.  They need to
-> go through _one_ place.  Either I'll volunteer the time to handle them
-> and people can feed them through me, or we need some other place where
-> people can coordinate the work.  I'm happy to push this stuff through
-> since it seems like most of the dual-mode issues have been solved.
-> 
-> The immediate bug is that the driver mis-MICs the first few EAPOL frames
-> that come back during the 4-way handshake, failing the WPA association
-> for PCMCIA cards at least.  I haven't tested with my mini-PCI part yet
-> and won't until this can be fixed.  Once that appears to work, I'd like
-> to run through a bunch of setups and make sure the driver behaves as
-> expected for both WPA-capable and non-WPA-capable firmware versions, and
-> with a number of different RADIUS setups and encryption modes including
-> Dynamic WEP.
-> 
-> Dan
-> 
+On Sat, Nov 10, 2007 at 04:14:03PM +0100, Michael Buesch wrote:
+> From: Frank Lichtenheld <frank@lichtenheld.de>
+>=20
+> inititalise ret to 0 to avoid the following bogus warning:
+>   CC [M]  drivers/net/wireless/b43/debugfs.o
+> drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debugfs_=
+read=E2=80=99:
+> drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=99=
+ may be used uninitialized in this function
+>=20
+> Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-So where to put the developing sources? Made the _one_ place
-and me (i hope also others) could help.
+Isn't this what uninitialized_var() is for?
 
-Cheers,
-Matteo
-Chiacchiera con i tuoi amici in tempo reale! 
- http://it.yahoo.com/mail_it/foot/*http://it.messenger.yahoo.com 
-
+--=20
+John W. Linville
+linville@tuxdriver.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
