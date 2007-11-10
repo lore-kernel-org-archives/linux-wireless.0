@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59514 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbXKSQag (ORCPT
+Received: from agave.telenet-ops.be ([195.130.137.77]:39500 "EHLO
+	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220AbXKJCSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 11:30:36 -0500
-Subject: Re: [PATCH] Remove ieee80211softmac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4741B853.6080708@lwfinger.net> (sfid-20071119_162247_094333_2D1C58ED)
-References: <20071119160626.ED6F19D4B5A@zog.reactivated.net>
-	 <4741B853.6080708@lwfinger.net> (sfid-20071119_162247_094333_2D1C58ED)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iBL5leHF3uge2vm6Bbg8"
-Date: Mon, 19 Nov 2007 17:31:55 +0100
-Message-Id: <1195489915.8642.36.camel@johannes.berg> (sfid-20071119_163038_521220_F339F37F)
-Mime-Version: 1.0
+	Fri, 9 Nov 2007 21:18:25 -0500
+Message-ID: <473514F3.50500@telenet.be> (sfid-20071110_021830_458307_FC97EF62)
+Date: Sat, 10 Nov 2007 03:18:27 +0100
+From: Ian Schram <ischram@telenet.be>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	=?ISO-8859-1?Q?Ismail_D=F6?= =?ISO-8859-1?Q?nmez?=
+	<ismail@pardus.org.tr>, Dan Williams <dcbw@redhat.com>,
+	Stephen.Clark@seclark.us, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [ipw3945-devel] iwl3945 doesn't work
+References: <20071017135452.GJ5043@kernel.dk> <20071017141111.GM5043@kernel.dk>	<1192630733.10567.37.camel@localhost.localdomain>	<20071017142246.GQ5043@kernel.dk>	<1192634183.11584.0.camel@localhost.localdomain>	<20071017163519.GC15552@kernel.dk> <47166B5F.1010804@seclark.us>	<20071018065746.GB5063@kernel.dk> <47175033.1090709@seclark.us>	<1192710788.15285.4.camel@johannes.berg> <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com>
+In-Reply-To: <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I wonder if anybody knows something more about this issue by now,
+as it appears to occur to a few people.
 
---=-iBL5leHF3uge2vm6Bbg8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I reread the thread (rather quickly) but I do not see many specifications
+of driver/mac80211/kernel. The few cases that do contain specs all appear
+to be using fedora (don't want to jump to conclusions). But just wondering if
+anybody experienced this on any other kernel?
 
+The log that I saw from a person with these symptoms, showed a perfectly normal
+booting driver, doing all the initialization identical to my functional card,
+except that apparently iwl_mac_open() (which is currently known as iwl3945_mac_start iirc)
+is never called.
 
-> > With the port of zd1211rw and the removal of bcm43xx, there are no
-> > remaining softmac users. Remove it.
-> >=20
-> > Signed-off-by: Daniel Drake <dsd@gentoo.org>
-> ACK. Larry Finger <Larry.Finger@lwfinger.net>
->=20
-> Hoooooooooooooray!!!!!!!!
+this callback is conditionally called from mac80211, in on it's turn a callback from
+even higher up the kernel stack. Hence my best (uneducated) guess would be that
+for some reason mac80211 doesn't call the ops->start(), but the scan (completion)
+somehow manages to rectify this
 
-Seconded! :)
-bcm43xx removal should be on the list now too.
+I believe this bug is similar though with older versions of the code
+http://bughost.org/bugzilla/show_bug.cgi?id=1452
+although back then the scan didn't magically fix it.
 
-johannes
+Seeing as the driver appears to be functioning normally (it's receiving! and dropping
+packages because not open). and my knowledge of mac80211 is very limited i'm hoping
+someone here knows:
 
---=-iBL5leHF3uge2vm6Bbg8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+What could sensibly be causing ops->start() not to be called?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0G6eqVg1VMiehFYAQJkqw//SKf6NzqJ86/L8MtGJ+b5oMbtL6eOwKdL
-xLEHnjEdvAjb3uZB7b6K1uy+EpGAqhlY6X7L8hY5h7Eb0iLSdxj5I5ouGTdaN48f
-M7e5/VHlO0XPXAP87gTH+9GGdfZ3CLYU62KtIv08jf0IbulPWmPGSMh1PyZidMqg
-1KHkX/XJEA2/ziddrSaehinlBxjDB9hR3AKFoch2qz7WZxOnS5o2ydUW4lSWGkbE
-YEMlzvlvTusqWp0jFUS5qKs6jvnxgO48tNalkSmbPTg2qKq3UNScwiOM0mG051Es
-Fx7tH7Q9382uEsEBRtD+ma+RDjpAZsoG7Ab2QQ6i4aWjjvpwRNY+kAHgWrTHRXFp
-nISSyTof3/nQzqEnEhmeY9d7hRZ2hVL+iEbC9E92HYg/+o5w60uZHATT7oTAA7tR
-k/VnJ7xLXGU/Y3c/e9T/nF+NsXVL6uut4bX1Jx0Oah3E2nWqbVVRvaPL3xbAC74/
-YZz5GTcJLOA/OYyCFLgr+HT//mBvI9Ca5DJtbOwD+xK6J27tBPHMa+sCFqiU62+U
-hVDHI6bOY4G0GPkO8KUyaVSpi2QY6k1I1Tx7+EluJ37DfmS6iFAZTTWCCJdMBaO0
-iQ19yQKVFACCy3M1z/JVl6WuR/4qmxBPTBn+BkQ+BtYecAG0Z12VdtH++5OmazIM
-x4JX5HQJtIQ=
-=YYYP
------END PGP SIGNATURE-----
-
---=-iBL5leHF3uge2vm6Bbg8--
+Tomas Winkler wrote:
+> On 10/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Thu, 2007-10-18 at 08:23 -0400, Stephen Clark wrote:
+>>
+>>>>> iwlist eth1 scan would report no scan results, I then switched to loading
+>>>>> the kernel module with
+>>>>> the option that tells  iwl3945 to do software scanning and it works
+>>>>> everytime now.
+>>> In my modprobe.conf file:
+>>> options iwl3945 disable_hw_scan=1
+>> Hah. Told you it wasn't mac80211's problem. Can somebody remind me again
+>> exactly why we have hardware scan offload when we parse each received
+>> packet anyway and the hardware doesn't even batch them so the CPU could
+>> wake up less?
+>>
+> 1. Tuning to each channel is done internally by fw so you don't spend
+> cycles and it's is faster to switch channels so overall scanning take
+> less time. Sending probe responses is also offloaded.  Returning to
+> operational channel is more precisely matched to DTIM period as it is
+> handled by RT code.
+> 2. There are also more advanced modes of scanning such as during voice
+> traffic etc.
+> 3. Yes beacon batching will be nice, but there is a memory tradeoff.
+> Tomas
+> 
+>> johannes
+>>
+>>
+> 
 
