@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:62397 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760165AbXKMXKk (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:38264 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047AbXKJTti convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2007 18:10:40 -0500
-Received: by py-out-1112.google.com with SMTP id u77so2343066pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 15:10:37 -0800 (PST)
-Message-ID: <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com> (sfid-20071113_231042_934134_116AD2A9)
-Date: Tue, 13 Nov 2007 18:10:36 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Linux wireless compatibility package for kernels >= 2.6.22
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <1194841658.2276.8.camel@dv>
+	Sat, 10 Nov 2007 14:49:38 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so954814fkz
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2007 11:49:36 -0800 (PST)
+From: Miguel =?iso-8859-1?q?Bot=F3n?= <mboton.lkml@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] iwlwifi: Remove unnecessary code in iwl3945 and iwl4965 drivers
+Date: Sat, 10 Nov 2007 20:49:32 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890711101953w6e046b82j6b9087d30c8195b2@mail.gmail.com>
-	 <1194841658.2276.8.camel@dv>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200711102049.32921.mboton.lkml@gmail.com> (sfid-20071110_194944_024961_6E64A1A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 11, 2007 11:27 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Hello!
->
-> On Sat, 2007-11-10 at 22:53 -0500, Luis R. Rodriguez wrote:
-> > I've started a compatibility package for the Linux wireless subsystem
-> > for kernels >= 2.6.22. You can download it here:
-> >
-> > http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
->
-> I would prefer that you use exactly the same path for all drivers, so
-> that the patches are compatible.  Wireless drivers should be in
-> drivers/net/wireless.
+Remove unnecesary code in iwl3945 and iwl4965 drivers.
 
-Thanks for reviewing this. I've changed the directories to match the
-kernel's. As a consequence the updates/ directory also have a similar
-structure now. Upon install we'll be sure to remove the old
-directories if present for now.
+"final_mode" variable is already initialized with the value of the "mod=
+e" variable.
 
-> Also, I cannot compile it against current wireless-2.6/everything
-> compiled outside the source tree:
->
-> /home/proski/src/compat-wireless-2.6/drivers/iwlwifi/iwl-3945-rs.c:40:40: error: ../mac80211/ieee80211_rate.h: No such file or directory
+Signed-off-by: Miguel Boton <mboton@gmail.com>
 
-I ran into to this but I had fixed it in compat.diff. Anyway, this
-won't be necessary anymore as the directories match the kernel's now.
+Index: linux-2.6.24-rc2/drivers/net/wireless/iwlwifi/iwl3945-base.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6.24-rc2.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ linux-2.6.24-rc2/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2377,9 +2377,6 @@
+ 	case IWL_POWER_AC:
+ 		final_mode =3D IWL_POWER_MODE_CAM;
+ 		break;
+-	default:
+-		final_mode =3D mode;
+-		break;
+ 	}
+=20
+ 	iwl_update_power_cmd(priv, &cmd, final_mode);
+Index: linux-2.6.24-rc2/drivers/net/wireless/iwlwifi/iwl4965-base.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6.24-rc2.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ linux-2.6.24-rc2/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2233,9 +2233,6 @@
+ 	case IWL_POWER_AC:
+ 		final_mode =3D IWL_POWER_MODE_CAM;
+ 		break;
+-	default:
+-		final_mode =3D mode;
+-		break;
+ 	}
+=20
+ 	cmd.keep_alive_beacons =3D 0;
 
-> After some hack to make it compile, I still get:
->
->   CC [M]  /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.o
-> /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:6: warning:
-> "LINUX_VERSION_CODE" is not defined
-> /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:28:
-> warning: "KERNEL_VERSION" is not defined
-> /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:42: error:
-> missing binary operator before token "("
-
-I'm not sure what happened here as <linux/version.h> should have been
-included in mac80211.h. Anyway, to be sure we won't run into these
-I've added <net/compat.h> to <net/cfg80211.h> which much of the
-wireless subsystem uses.
-
-Please give this new release a try:
-
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
-
-I've also started documenting this online:
-
-http://linuxwireless.org/en/users/download
-
-Note: This link will be gone soon and replaced with:
-
-http://linuxwireless.org/en/users/Download
-
-I need 2.6.23 testers (hint Fedora people).
-
-  Luis
+--=20
+	Miguel Bot=F3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
