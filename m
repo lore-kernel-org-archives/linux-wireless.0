@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:58471 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753499AbXKWVlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 16:41:12 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: timeout problems with certain APs and b43
-Date: Fri, 23 Nov 2007 22:58:24 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John H." <mistamaila@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> <1195812310.4149.73.camel@johannes.berg>
-In-Reply-To: <1195812310.4149.73.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711232258.25965.rjw@sisk.pl> (sfid-20071123_214119_262269_EBE2D091)
+Received: from mfe1.polimi.it ([131.175.12.23]:41611 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751845AbXKJEMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 23:12:38 -0500
+Date: Sat, 10 Nov 2007 05:08:29 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 doesn't reassociate after failed ProbeResp
+Message-ID: <20071110050829.233bae6e@morte> (sfid-20071110_041244_286325_F154CA0B)
+In-Reply-To: <20071107102158.61b4ca3d@morte>
+References: <20071107102158.61b4ca3d@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, 23 of November 2007, Johannes Berg wrote:
-> 
-> > on certain APs, the internet works for a long time then stops, and I
-> > get authentication time outs, why?  It usually works again if I reset
-> > the AP itself, which i should not have to do and don't have to if in
-> > XP....
-> 
-> > wlan0: Initial auth_alg=0
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
-> 
-> Does it help to reload the b43 module? I think I have seen this problem
-> before but always associated it with suspend/resume rather than a long
-> time elapsing, I also thought it was due to bad power recalibration.
+I tried another test. I switched my radio off for less than five seconds,
+then on again. I then had to force reassociation manually. I think I hit
+the following if-clause:
 
-It seems that I can reproduce something similar on demand with an SMC wireless
-router by moving my box sufficiently far away from it. :-)
+	if (time_after(jiffies,
+		       sta->last_rx + IEEE80211_MONITORING_INTERVAL)) {
 
-Greetings,
-Rafael
+in ieee80211_sta.c, with IEEE80211_MONITORING_INTERVAL being 2 * HZ.
+
+I would argue that this is far away from the acceptable behaviour for a
+wireless stack. I'm sorry I can't provide a patch, but I really can't read
+the code. Using an higher value for IEEE80211_MONITORING_INTERVAL could
+result in decreased risks of peptic ulcer, but I don't think this is the
+right fix. Any clues? Thanks.
+
+
+-- 
+Ciao
+Stefano
