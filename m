@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:27575 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751181AbXKIWVj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56156 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754163AbXKJVdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 17:21:39 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Deauthentication cycles
-Date: Fri, 9 Nov 2007 17:21:17 -0500
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <473490A0.2050403@lwfinger.net>
-In-Reply-To: <473490A0.2050403@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1292831.54zCvD2aFU";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711091721.22517.flamingice@sourmilk.net> (sfid-20071109_222143_123710_F21B314F)
+	Sat, 10 Nov 2007 16:33:15 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <1194659639.7258.20.camel@johannes.berg> (sfid-20071110_015245_812007_C5FEDBB5)
+References: <1194572631.4793.64.camel@johannes.berg>
+	 (sfid-20071109_120958_259609_BC4A521E)  <1194659639.7258.20.camel@johannes.berg>
+	 (sfid-20071110_015245_812007_C5FEDBB5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O9Mgho0+c2UKwWi+WRlo"
+Date: Sat, 10 Nov 2007 22:34:34 +0100
+Message-Id: <1194730474.27854.6.camel@johannes.berg> (sfid-20071110_213321_606373_A05F7250)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1292831.54zCvD2aFU
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-O9Mgho0+c2UKwWi+WRlo
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Friday 09 November 2007 11:53:52 Larry Finger wrote:
-> WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
->
-> Is this the correct code? If so, any ideas on why this deauthentication is
-> happening? As can be seen, it isn't fatal and the system always recovers.
->
-I think some APs automatically disconnect clients after a period of=20
-inactivity. After all, clients aren't guaranteed to deauthenticate when=20
-they're done. Though.. some APs seem to deauthenticate really fast.
-
-=2DMichael Wu
 
 
---nextPart1292831.54zCvD2aFU
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> http://git.sipsolutions.net/bcom-ucode.git
+>=20
+> Requires patched bcm43xx-asm and bcm43xx-dasm so you won't be happy
+> until Michael does similar changes, I've sent them to him in private
+> mail.
+
+And he has committed them. Grab my script above,
+http://git.bu3sch.de/git/bcm43xx-asm.git and let me know the test
+results ;)
+
+johannes
+
+--=-O9Mgho0+c2UKwWi+WRlo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBHNN1iT3Oqt9AH4aERAsVuAJ9uQvYy9q45sF1tal18t2xVkYlCgQCg1eGJ
-nDDrxwaQBrk/B1gzbowZVYM=
-=7PDF
+iQIVAwUARzYj6KVg1VMiehFYAQJK4w/+O9xXpoZu0toNjknuOQjBno8wfeDjSlU2
+DINkuJELi7idyTVycRWy2HqvfoACx+xg0v01DhpG7ttM0DbKlX8f3bfSIDpd0gw0
+Tyao4hvI6U7V6+7A6TieZsyTGKZzb/adLZvyV1RYsWk+y7sFYwOorQrOnPj17zyl
+Hcqa+wqtDf/HAChWjFJe0bAKKChcPviiLOYhhu4aNWHtWz/SFm+hFWiMpY09Vgvu
+GRnpKaJmE/FLsYxsedJ8aGxGbfEBjYylfa8+EU4QdYgArg1fKXhbrNCZLwv2Cdzq
+xq8uHXRvw8V3qsiGnO/4n37fkDFj8gmiMcgpIunXD6ZrXQQIIvmffeyXa7VvIUJ9
+E+mLMiKZQlOgqRlPz510iHnrwadRrfHYESTvNS3LEDTm5g1p19b2XpOoz1j2JOmi
+rC1/yQhb9W5w5Ys83JMPmobPxyyDf3V/Lvhm/s5djpLMezmeO2UnTt0fzS3rptym
+3uLTyc7/FLxZBE6mR7cuPTVJKdoKEctlmB7cAQpEBGeQgpaBv2pNMDu74sOOYAEa
+AEFZYu2rFT/XoZ7fbxj0/g3HgVKR4Vi61s9FVoVQ4aat8d3ZLHPgVGHUacTervhm
+bJBuMZWg0lLZjoRyEI579AhdgKvbGmUS1aeiGe56/WX3F4ACaZEY0ef4sBS/LVQv
+awzDNDDDmSI=
+=7mmK
 -----END PGP SIGNATURE-----
 
---nextPart1292831.54zCvD2aFU--
+--=-O9Mgho0+c2UKwWi+WRlo--
+
