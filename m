@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:60220 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbXKWCZL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 21:25:11 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1IvOEA-0008MT-1V
-	for linux-wireless@vger.kernel.org; Thu, 22 Nov 2007 21:25:10 -0500
-Subject: Re: Belin FD7010 v7
-From: Pavel Roskin <proski@gnu.org>
-To: Vadim Peretokin <vperetokin@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-	 <1195781993.11966.27.camel@dv>
-	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
+Received: from DSL022.labridge.com ([206.117.136.22]:2001 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754218AbXKJAIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2007 19:08:45 -0500
+Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
+From: Joe Perches <joe@perches.com>
+To: Patrick McHardy <kaber@trash.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>,
+	David Miller <davem@davemloft.net>
+In-Reply-To: <4734E962.3010603@trash.net>
+References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo>
+	 <1194635236.19522.3.camel@localhost> <20071109192033.GB22714@pogo>
+	 <4734E962.3010603@trash.net>
 Content-Type: text/plain
-Date: Thu, 22 Nov 2007 21:25:07 -0500
-Message-Id: <1195784707.11966.38.camel@dv> (sfid-20071123_022522_077280_82533E7A)
+Date: Fri, 09 Nov 2007 16:08:40 -0800
+Message-Id: <1194653320.19522.28.camel@localhost> (sfid-20071110_000849_969861_2BB26BB1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2007-11-10 at 00:12 +0100, Patrick McHardy wrote:
+> This may cause a use-after-free since __dev_addr_delete frees the address
+> when all references are gone.
 
-On Thu, 2007-11-22 at 21:04 -0500, Vadim Peretokin wrote:
-> Ahh I'm afraid no, I'm not quite there yet and need my laptop
-> functional. But I'll let you know then when the next version of Ubuntu
-> comes about, thank you!
+How about a comment then?  Perhaps:
 
-Actually, there is a compatibility package with the latest wireless
-drivers:
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
+index ae35405..63576aa 100644
+--- a/net/core/dev_mcast.c
++++ b/net/core/dev_mcast.c
+@@ -165,16 +165,23 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
+ 	netif_tx_lock_bh(from);
+ 	netif_tx_lock_bh(to);
+ 
++	/*
++	  This while loop can't be written as
++		for (da = from->mc_list; da; da = da->next)
++	  da = from->mc_list and __dev_addr_delete can kfree(from->mc_list)
++	  which could cause a use-after-free of da->next
++	*/
++
+ 	da = from->mc_list;
+ 	while (da != NULL) {
+ 		next = da->next;
+-		if (!da->da_synced)
+-			continue;
+-		__dev_addr_delete(&to->mc_list, &to->mc_count,
+-				  da->da_addr, da->da_addrlen, 0);
+-		da->da_synced = 0;
+-		__dev_addr_delete(&from->mc_list, &from->mc_count,
+-				  da->da_addr, da->da_addrlen, 0);
++		if (da->da_synced) {
++			__dev_addr_delete(&to->mc_list, &to->mc_count,
++					  da->da_addr, da->da_addrlen, 0);
++			da->da_synced = 0;
++			__dev_addr_delete(&from->mc_list, &from->mc_count,
++					  da->da_addr, da->da_addrlen, 0);
++		}
+ 		da = next;
+ 	}
+ 	__dev_set_rx_mode(to);
 
-It's much easier to compile.  No configuration is required.  Just run
-"make" and then "make install" (as root).  Then use "modprobe rtl8180"
-to load the driver.  Ubuntu will probably load it automatically after
-reboot.  Linux 2.6.22 and newer is supported.  No kernel patching is
-needed.  Just make sure to recompile the package when upgrading to the
-next kernel.
-
-Even if that doesn't work, it's possible to use ndiswrapper with the
-Windows driver, so that you don't have to choose your OS because of
-issues with just one driver.
-
--- 
-Regards,
-Pavel Roskin
 
