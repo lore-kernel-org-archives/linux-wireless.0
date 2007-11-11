@@ -1,59 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.queued.net ([207.210.101.209]:1117 "EHLO mail.queued.net"
+Received: from mga03.intel.com ([143.182.124.21]:12400 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932433AbXKPSfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 13:35:16 -0500
-Date: Fri, 16 Nov 2007 13:12:17 -0500
-From: Andres Salomon <dilinger@queued.net>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marcelo Tosatti <marcelo@kvack.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	akpm@linux-foundation.org
-Subject: [PATCH 4/4] libertas: nuke useless variable usbdriver_name and
- useless comments
-Message-ID: <20071116131217.4f9efe72@ephemeral> (sfid-20071116_183542_843047_7C5535E9)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751170AbXKKUXI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Nov 2007 15:23:08 -0500
+MIME-Version: 1.0
+Subject: RE: [PATCH 06/14] mac80211: adding 802.11n essential A-MSDU Rxcapability
+Date: Sun, 11 Nov 2007 22:20:44 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB04008798@hasmsx411.ger.corp.intel.com> (sfid-20071111_202311_789459_72C6B005)
+In-Reply-To: <1194626462.4793.135.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	<flamingice@sourmilk.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>> This patch adds the ability to receive and handle A-MSDU frames.
 
-I think it was pretty obvious what fields in if_usb_driver are...
+>> +			u16 amsdu_frame;
 
-Signed-off-by: Andres Salomon <dilinger@debian.org>
----
- drivers/net/wireless/libertas/if_usb.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+> Why a u16 of all the available types? Maybe just 'bool'?
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index e9aad16..f7bafc3 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -18,8 +18,6 @@
- 
- #define MESSAGE_HEADER_LEN	4
- 
--static const char usbdriver_name[] = "usb8xxx";
--
- static char *libertas_fw_name = "usb8388.bin";
- module_param_named(fw_name, libertas_fw_name, charp, 0644);
- 
-@@ -1099,13 +1097,9 @@ static int if_usb_resume(struct usb_interface *intf)
- #endif
- 
- static struct usb_driver if_usb_driver = {
--	/* driver name */
--	.name = usbdriver_name,
--	/* probe function name */
-+	.name = DRV_NAME,
- 	.probe = if_usb_probe,
--	/* disconnect function  name */
- 	.disconnect = if_usb_disconnect,
--	/* device signature table */
- 	.id_table = if_usb_table,
- 	.suspend = if_usb_suspend,
- 	.resume = if_usb_resume,
--- 
-1.5.3.4
+32 bit alignment of this struct, but it may confuse someone else in the
+future, I agree. I'll change it to u8.
 
+>> +	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+>> +	case IEEE80211_FCTL_TODS:
+>> +		/* BSSID SA DA */
+>> +		if (unlikely(sdata->type != IEEE80211_IF_TYPE_AP &&
+>> +		    sdata->type != IEEE80211_IF_TYPE_VLAN)) {
+>> +			printk(KERN_DEBUG "%s: dropped ToDS frame
+(BSSID=%s"
+>> +			       " SA=%s DA=%s)\n",
+>> +			       dev->name, print_mac(mac, hdr->addr1),
+>> +			       print_mac(mac, hdr->addr2),
+>> +			       print_mac(mac, hdr->addr3));
+
+> net_ratelimit()
+
+Will do
+
+>> +			printk(KERN_DEBUG "%s: dropped FromDS&ToDS
+frame"
+>> +			       " (RA=%s TA=%s DA=%s SA=%s)\n",
+>> +			       rx->dev->name, print_mac(mac,
+hdr->addr1),
+>> +			       print_mac(mac, hdr->addr2),
+>> +			       print_mac(mac, hdr->addr3),
+>> +			       print_mac(mac, hdr->addr4));
+
+> ditto.
+
+Will do
+
+>> +			if (net_ratelimit())
+>> +				printk(KERN_DEBUG "%s: dropped IBSS
+frame"
+>> +				       " (DA=%s SA=%s BSSID=%s)\n",
+>> +				       dev->name, print_mac(mac,
+hdr->addr1),
+>> +				       print_mac(mac, hdr->addr2),
+>> +				       print_mac(mac, hdr->addr3));
+
+> Heh :)
+
+>> +			skb_reserve(frame, local->hw.extra_tx_headroom +
+>> +				    sizeof(struct ethhdr));
+
+> Hah. I knew there was an skb_reserve missing in the original code :)
+
+> The one thing I'm not sure about here is the EAPOL frame handling. In
+> theory, such frames could be part of an aggregation and thus we'll not
+> get them to the right place. Then again, we haven't decided yet what
+the
+> right place is. Also, what happens with 802.1X port control?
+
+I agree. Good point and thanks for the catch.
+Would appreciate your opinion for next possible solution:
+I'll Move ieee80211_rx_h_data_agg before ieee80211_rx_h_802_1x_pae, and
+assuming I identify A-MSDU, I'll loop for each internal MSDU on:
+  ieee80211_rx_h_802_1x_pae 
+  ieee80211_rx_h_drop_unencrypted
+  ieee80211_rx_h_data
+return value of ieee80211_rx_h_data_agg to
+__ieee80211_invoke_rx_handlers will be this small loop's return value 
+
+> johannes
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
