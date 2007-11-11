@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:53260 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758728AbXKPOVp (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:63247 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755499AbXKKADn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 09:21:45 -0500
-Message-ID: <473DA777.2090203@lwfinger.net> (sfid-20071116_142149_188873_2A0BE9BE)
-Date: Fri, 16 Nov 2007 08:21:43 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sat, 10 Nov 2007 19:03:43 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so821161rvb
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2007 16:03:43 -0800 (PST)
+Message-ID: <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com> (sfid-20071111_000348_874704_6D2CAF09)
+Date: Sat, 10 Nov 2007 16:03:42 -0800
+From: "Javier Cardona" <javier@cozybit.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
+Cc: "Luis Carlos Cobo" <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1194689500.7258.61.camel@johannes.berg>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Fix compilation errors in ssb
-References: <473d3d37.IWXGkSribrkSiHBl%Larry.Finger@lwfinger.net> <200711161130.46770.mb@bu3sch.de>
-In-Reply-To: <200711161130.46770.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
+	 <1194689500.7258.61.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Friday 16 November 2007 07:48:23 Larry Finger wrote:
->> Recent changes in ssb sprom handling break compilation. These two patches
->> fix the problem.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John,
->>
->> These two changes should be applied to the everything branch of wireless-2.6
->> ASAP. Sorry about the mixup - I have no idea what happened.
-> 
-> are your sprom r4 changes already applied? I didn't test that in the b44, yet.
+Johannes,
 
-I did a git pull yesterday and the sprom r3 and r4 changes were in wireless-2.6/everything.
+On 11/10/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -474,6 +474,7 @@ enum ieee80211_if_types {
+> >       IEEE80211_IF_TYPE_AP,
+> >       IEEE80211_IF_TYPE_STA,
+> >       IEEE80211_IF_TYPE_IBSS,
+> > +     IEEE80211_IF_TYPE_MESH,
+>
+> What happened to Dan's suggestion of calling this MESH_STA? And maybe in
+> nl80211 as well? I might've missed something, was there a conclusion?
 
-Larry
+A mesh AP would have two interfaces, each with a different MAC
+address.  One IF_TYPE_MESH, the other IF_TYPE_AP.  Support for MAP, as
+you suggested, would be implemented in hostapd.
+
+Javier
