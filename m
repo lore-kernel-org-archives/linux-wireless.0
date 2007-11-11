@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756046AbXKPMBf (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:9065 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbXKKQQX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 07:01:35 -0500
-Subject: Re: [PATCH] ath5k: consistent info and error logging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <bruno@thinktube.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <1195200656-25847-1-git-send-email-bruno@thinktube.com> (sfid-20071116_081058_378650_986691A3)
-References: <1195200656-25847-1-git-send-email-bruno@thinktube.com>
-	 (sfid-20071116_081058_378650_986691A3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-01qnNshhBvB8u3EVj4D6"
-Date: Fri, 16 Nov 2007 13:02:43 +0100
-Message-Id: <1195214563.8147.118.camel@johannes.berg> (sfid-20071116_120139_497019_0541780D)
-Mime-Version: 1.0
+	Sun, 11 Nov 2007 11:16:23 -0500
+Received: by py-out-1112.google.com with SMTP id u77so711594pyb
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2007 08:16:22 -0800 (PST)
+Message-ID: <f6ca9fed0711110816r19bd4d50p78aad02464a32099@mail.gmail.com> (sfid-20071111_161628_099825_18139BD4)
+Date: Sun, 11 Nov 2007 17:16:22 +0100
+From: dragoran <drago01@gmail.com>
+To: "=?ISO-8859-1?Q?Alexander_G=F6rtz?=" <AlexanderGoertz@gmx.de>
+Subject: Re: [ipw3945-devel] iwl3945 cannot connect to 802.11b access point
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>, "Pavel Roskin" <proski@gnu.org>
+In-Reply-To: <47372943.1040204@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200711011306.29377.gkiagiad@csd.uoc.gr>
+	 <472BB480.1020002@gmail.com> <473314EF.40505@gmx.de>
+	 <f6ca9fed0711081243u1984e126i87657ed8d182915d@mail.gmail.com>
+	 <47372943.1040204@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-01qnNshhBvB8u3EVj4D6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-
-
-> +#define AR5K_INFO(_sc, _fmt, ...)	\
-> +	printk(KERN_INFO "ath5k %s: " _fmt, wiphy_name((_sc)->hw->wiphy), ##__V=
-A_ARGS__)
-
-Eww. Can't you make them static inlines?
-
-johannes
-
---=-01qnNshhBvB8u3EVj4D6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARz2G4qVg1VMiehFYAQKCGw//SgW9ajk1K5k0d6lym9k6qPcywgwnDXgJ
-xU1DgHqfncbsp3o5thFRmhAuyFhYPNJ6SIidhCJUOa+zb38asS+3ubsK3wwHpYDT
-rE43cw13zy+b9KqbZVwSSz15yYyT1OntZGYHym811RtA1LmHKBvBqoAv+srG8Cvf
-QupTV4YJQWov3YvjnK7XHXdZHuiuCg/d3Nlg66px6oES/FbP6H850R15VX+oIuME
-z5xxTWeZh7xQsy8Xf4ICFzhs6g5aPfNO/mftIhBVhqt+AVe+hWvyVumD8Qalxjk0
-sdgotfJXLhfrCaP8M2tQnHADyu27Y5Xn9PIfTnWDlra07eFhVOPobzykdYT7UQ14
-97gdbkyZOtX6N7hekc7djC3T7Lmdn+Gt6c5LRNfB65KDVYujA5SyhcGh2T6FWYLb
-E6OIrRD2iHTJtBBt8T5GjDWqIQKkSdQFjCouvcJKY/HJ9VooXfWsAOXbWsnHNKik
-62Wi1ToHycVA9QPfXTNg461CuRkGMeZtDRuVv/RQhQbNBgzKZT3WQPCt9oJGE4rf
-5zl8Bs0AWVYNv/7Na04oVttwNxWF1gG3FkPoPrrcOMcHE5KtmAUxDldliIvn6iqN
-noOlsewtB5oj5oxd09bd8WVxtWlgWJn5pZ3yHiLY2cy/St8jpjMSEne3zfKgBmQF
-LYmQevDngVw=
-=uZAh
------END PGP SIGNATURE-----
-
---=-01qnNshhBvB8u3EVj4D6--
-
+On Nov 11, 2007 5:09 PM, Alexander G=F6rtz <AlexanderGoertz@gmx.de> wro=
+te:
+> dragoran schrieb:
+>
+> >> Hi, this patch doesn't work for me it generates 100% CPU traffic s=
+o that
+> >> I was unable to boot and had to unload the iwl3945 module during s=
+tartup
+> >> to be able to work with my machine again. So I'm open for any new =
+solutions.
+> >>
+> >
+> > try this one:
+> >
+> > http://intellinuxwireless.org/repos/?p=3Diwlwifi.git;a=3Dcommitdiff=
+_plain;h=3De03b2aaa1ecf22ab203cc8fc40c0eb1e31b5c842;hp=3D9578f421b2c64f=
+837e2df02fd6eff97ce03f1b36
+> >
+> > seems that there was a small bug in the previous one.
+> >
+> >
+> This Patch works fine for me now I can connect to 802.11b Networks. I
+> hope this patch will be included in the next version of iwlwifi.
+>
+John is it possible to get this one into .24 too ?
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
