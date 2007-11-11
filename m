@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47811
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753274AbXKTOLC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 09:11:02 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v3] remove bcm43xx
-Date: Tue, 20 Nov 2007 15:09:55 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <20071119202121.6ad3fa70@morte> <20071119231935.535674ba@morte> <200711192357.44407.rjw@sisk.pl>
-In-Reply-To: <200711192357.44407.rjw@sisk.pl>
+Received: from planck.djpig.de ([85.10.192.180]:2508 "EHLO planck.djpig.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754112AbXKKJqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Nov 2007 04:46:39 -0500
+Date: Sun, 11 Nov 2007 10:27:03 +0100
+From: Frank Lichtenheld <frank@lichtenheld.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: silence a bogus gcc warning
+Message-ID: <20071111092703.GQ2961@planck.djpig.de> (sfid-20071111_094643_075185_BC6AF16C)
+References: <200711101614.03776.mb@bu3sch.de> <20071110152533.GC32472@tuxdriver.com> <200711101727.43736.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711201509.55763.mb@bu3sch.de> (sfid-20071120_141111_004336_C0D0A050)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <200711101727.43736.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 November 2007 23:57:43 Rafael J. Wysocki wrote:
-> > Having both drivers in 2.6.24 should help find out if 
-> > there's anything which should be ironed out with b43/b43legacy, but right
-> > now they are already working a lot better than bcm43xx, and they are more
-> > stable. So I couldn't find a reason why we shouldn't remove bcm43xx in
-> > 2.6.25.
-> 
-> Many people use the old driver and you are forcing them to switch in a rather
-> unfriendly fashion.
-> 
-> Moreover, the switch generally involves a configuration change (on my system
-> eth1 became wlan0) and is not _that_ seamless.
-> 
-> IMvHO, the schedule of the removal of this driver should be discussed on LKML.
+On Sat, Nov 10, 2007 at 05:27:43PM +0100, Michael Buesch wrote:
+> On Saturday 10 November 2007 16:25:33 John W. Linville wrote:
+> > On Sat, Nov 10, 2007 at 04:14:03PM +0100, Michael Buesch wrote:
+> > > From: Frank Lichtenheld <frank@lichtenheld.de>
+> > >=20
+> > > inititalise ret to 0 to avoid the following bogus warning:
+> > >   CC [M]  drivers/net/wireless/b43/debugfs.o
+> > > drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debu=
+gfs_read=E2=80=99:
+> > > drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=
+=99 may be used uninitialized in this function
+> > >=20
+> > > Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
+> > > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> >=20
+> > Isn't this what uninitialized_var() is for?
 
-Ok, so we are going to add Rafael J. Wysocki as the bcm43xx maintainer
-and remove everyone else. I'm OK with that.
+Erh, I didn't actually knew that existed, sorry.
+OTOH in this case it is actually longer to write.
 
-It is known for over a year now that b43 (aka bcm43xx-mac80211) is going to
-replace bcm43xx. And we already do a parrallel release cycle with both drivers
-included so people can switch. What else do you want?
+> I'd be OK with that, too.
 
--- 
-Greetings Michael.
+Should I send a changed patch?
+
+Gruesse,
+--=20
+=46rank Lichtenheld <frank@lichtenheld.de>
+www: http://www.djpig.de/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
