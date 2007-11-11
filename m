@@ -1,144 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63715 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830AbXKIWyq (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:12263 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757290AbXKKUWJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 17:54:46 -0500
-Date: Fri, 09 Nov 2007 16:54:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/ 6] ssb: Add new SPROM structure while keeping the old
-Message-ID: <4734e535.rVgJmrUgOzACE+vZ%Larry.Finger@lwfinger.net> (sfid-20071109_225448_706201_03FFB87C)
+	Sun, 11 Nov 2007 15:22:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: RE: [PATCH 07/14] mac80211: adding 802.11n configuration flows
+Date: Sun, 11 Nov 2007 22:20:55 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB04008799@hasmsx411.ger.corp.intel.com> (sfid-20071111_202213_639312_18624654)
+In-Reply-To: <1194626925.4793.144.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	<flamingice@sourmilk.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is patch 1 of 6.
+I will fix all code remarks, thanks.
 
-The SPROM's for various devices utilizing the Sonics Silicon Backplane come
-with various revisions. The Revision 2 SPROM inherited the data layout of 1, and
-Revision 3 inherited the layout of 2. The first instance of Revision 4 has
-now been found in a BCM4328 wireless LAN card. This device does not inherit any
-layout from previous versions. Although it was possible to create a data
-structure that kept all the old layouts, we decided to start fresh, keep only
-those SPROM variables that are used by the drivers that utilize ssb, and to
-do the conversion in such a manner that neither compilation or execution will
-be affected if a bisection lands in the middle of these changes, while keeping
-the patches as small as possible.
+I would skip answering for each conf_ht callback remark and just relate
+to the situation in general, and why I chose to do things currently this
+way.
 
-In this patch, the sprom structures are changed while maintaining the old ones.
+I think you are right, and current situation of all "config" callbacks
+is a bit havocked.
+On one hand we have the (*config)(struct ieee80211_hw *hw, struct
+ieee80211_conf *conf) which I took as a reference to config_ht, and on
+the other hand we have callbacks erp_ie_changed (erp) and conf_tx (WMM).
+All of them are unique in use, though in general mean one thing to low
+level driver - please change HW settings as configuration has been
+changed, yet non gives indication on associated/unassociated states
+change...
+Currently I took an approach similar to that of erp and wmm, for clarity
+to low level driver, but I was truly glad to see your remark in the
+bottom
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> Yeah this is what I was talking about. mac80211 really sucks with all
+> this "has changed stuff". Hrmm. Michael, any time-frame on rewriting
+the
+> interface config stuff?   
 
-Index: wireless-2.6/include/linux/ssb/ssb.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb.h
-+++ wireless-2.6/include/linux/ssb/ssb.h
-@@ -78,13 +78,34 @@ struct ssb_sprom_r3 {
- 	u32 ofdmgpo;		/* G-PHY OFDM Power Offset */
- };
+Now, I began to work on a solution for this problem (please refer to my
+RFC "mac80211: [RFC] adding bss_config to low level driver ops"), in
+which I wanted to unite all IE changes into one callback. If Michael is
+already working on a more general solution for all "config" callbacks I
+would be happy to contribute to his effort, or even continue my RFC to a
+more solid patch, but until this will occur I just used similar approach
+to already existing callbacks.
+
+(and sorry for this long explanation...)
+
+>> + *
+>> + * @conf_ht: Configures low level driver with 802.11n HT data. Must
+be >> atomic.
+
+> Why is this a special callback when you pass struct ieee80211_conf?
+
+>> +#ifdef CONFIG_MAC80211_HT
+>> +	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf
+*conf);
+>> +#endif /* CONFIG_MAC80211_HT */
+
+> Shouldn't you use the if_conf callback then? I know that callback
+needs
+> to be rewritten to indicate what parameters changed, I think Michael
+> wanted to do something in that direction? Similar to my filter flags
+> change in how it'd work I guess.
+
+>> +#ifdef CONFIG_MAC80211_HT
+>> +
+>> +/**
+>> + * ieee80211_hw_config_ht should be used only after legacy
+configuration
+>> + * has been determined, as ht configuration depends upon the
+hardware's
+>> + * HT abilities for a _specific_ band.
+>> + */
+
+> This is part of ieee80211_hw_mode right? I have patches to remove
+that,
+> just to be clear on it, it's band specific not in any other way "mode"
+> specific. So without digging through all the details I assume you're
+> registering an 802.11 G mode with HT capabilities? That's pretty
+warped,
+> but yeah, mac80211 works that way right now. Crap. I should hurry up
+and
+> get that mode -> band change ready.
+
+>> +		conf->flags &= ~(IEEE80211_CONF_SUPPORT_HT_MODE);
+
+>> +		conf->flags &= ~(IEEE80211_CONF_SUPPORT_HT_MODE);
+
+> No parentheses please.
+
+Will fix
+
+>> +		conf->ht_conf.cap &= ~(IEEE80211_HT_CAP_MIMO_PS);
+
+> Same here. If any of the defines need parentheses they should have
+them
+> built-in.
+
+>> +		for (i = 0; i < 16; i++)
+>> +			conf->ht_conf.supp_mcs_set[i] =
+>> +				mode->ht_info.supp_mcs_set[i] &
+>> +				  req_ht_cap->supp_mcs_set[i];
+
+> Hmm. No define for that 16?
+
+Will fix
  
--struct ssb_sprom_r4 {
--	/* TODO */
--};
--
- struct ssb_sprom {
- 	u8 revision;
--	u8 crc;
-+	u8 temp_fill[2 * sizeof(struct ssb_sprom_r1)];
-+	u8 il0mac[6];		/* MAC address for 802.11b/g */
-+	u8 et0mac[6];		/* MAC address for Ethernet */
-+	u8 et1mac[6];		/* MAC address for 802.11a */
-+	u8 et0phyaddr;		/* MII address for enet0 */
-+	u8 et1phyaddr;		/* MII address for enet1 */
-+	u8 country_code;	/* Country Code */
-+	u16 pa0b0;
-+	u16 pa0b1;
-+	u16 pa0b2;
-+	u16 pa1b0;
-+	u16 pa1b1;
-+	u16 pa1b2;
-+	u8 gpio0;		/* GPIO pin 0 */
-+	u8 gpio1;		/* GPIO pin 1 */
-+	u8 gpio2;		/* GPIO pin 2 */
-+	u8 gpio3;		/* GPIO pin 3 */
-+	u16 maxpwr_a;		/* A-PHY Amplifier Max Power (in dBm Q5.2) */
-+	u16 maxpwr_bg;		/* B/G-PHY Amplifier Max Power (in dBm Q5.2) */
-+	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
-+	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
-+	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
-+	u8 antenna_gain_a;	/* A-PHY Antenna gain (in dBm Q5.2) */
-+	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
-+
-+	/* TODO - add any parameters needed from rev 2, 3, or 4 SPROMs */
- 	/* The valid r# fields are selected by the "revision".
- 	 * Revision 3 and lower inherit from lower revisions.
- 	 */
-@@ -94,7 +115,6 @@ struct ssb_sprom {
- 			struct ssb_sprom_r2 r2;
- 			struct ssb_sprom_r3 r3;
- 		};
--		struct ssb_sprom_r4 r4;
- 	};
- };
+>> +#ifdef CONFIG_MAC80211_HT
+>> +	if (elems.ht_cap_elem && elems.ht_info_elem && elems.wmm_param
+&&
+>> +	    local->ops->conf_ht) {
+>> +		struct ieee80211_ht_bss_info bss_info;
+>> +
+>> +		ieee80211_ht_cap_ie_to_ht_info(
+>> +				(struct ieee80211_ht_cap *)
+>> +				elems.ht_cap_elem, &sta->ht_info);
+>> +		ieee80211_ht_addt_info_ie_to_ht_bss_info(
+>> +				(struct ieee80211_ht_addt_info *)
+>> +				elems.ht_info_elem, &bss_info);
+>> +		ieee80211_hw_config_ht(local, 1, &sta->ht_info,
+&bss_info);
+>> +	}
+>> +#endif /* CONFIG_MAC80211_HT */
+
+> Since it's part of if_conf, isn't it passed to the driver as part of
+> such a call anyway later in this function? I don't see the need for
+the
+> special ht conf callback.
  
-Index: wireless-2.6/include/linux/ssb/ssb_regs.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb_regs.h
-+++ wireless-2.6/include/linux/ssb/ssb_regs.h
-@@ -250,6 +250,38 @@
- #define  SSB_SPROM3_CCKPO_11M		0xF000	/* 11M Rate PO */
- #define  SSB_SPROM3_CCKPO_11M_SHIFT	12
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
-+/* SPROM Revision 4 */
-+#define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for b/g */
-+#define SSB_SPROM4_ETHPHY		0x105A	/* Ethernet PHY settings */
-+#define  SSB_SPROM4_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
-+#define  SSB_SPROM4_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
-+#define  SSB_SPROM4_ETHPHY_ET1A_SHIFT	5
-+#define  SSB_SPROM4_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
-+#define  SSB_SPROM4_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
-+#define SSB_SPROM4_CCODE		0x1052	/* Country Code (2 bytes) */
-+#define SSB_SPROM4_ANT_A		0x105D  /* A Antennas */
-+#define SSB_SPROM4_ANT_BG		0x105C  /* B/G Antennas */
-+#define SSB_SPROM4_BFLLO		0x1044	/* Boardflags (low 16 bits) */
-+#define SSB_SPROM4_AGAIN		0x105E	/* Antenna Gain (in dBm Q5.2) */
-+#define SSB_SPROM4_BFLHI		0x1046  /* Board Flags Hi */
-+#define SSB_SPROM4_MAXP_A		0x1000  /* Max Power A */
-+#define SSB_SPROM4_MAXP_A_HI		0x00FF  /* Mask for Hi */
-+#define SSB_SPROM4_MAXP_A_LO		0xFF00  /* Mask for Lo */
-+#define SSB_SPROM4_MAXP_A_LO_SHIFT	16	/* Shift for Lo */
-+#define SSB_SPROM4_PA1LOB0		0x1000
-+#define SSB_SPROM4_PA1LOB1		0x1000
-+#define SSB_SPROM4_PA1LOB2		0x1000
-+#define SSB_SPROM4_PA1HIB0		0x1000
-+#define SSB_SPROM4_PA1HIB1		0x1000
-+#define SSB_SPROM4_PA1HIB2		0x1000
-+#define SSB_SPROM4_OPO			0x1000
-+#define SSB_SPROM4_OPO_VALUE		0x0000
-+#define SSB_SPROM4_GPIOLDC		0x105A	/* LED Powersave Duty Cycle */
-+#define  SSB_SPROM4_GPIOLDC_OFF		0x0000FF00	/* Off Count */
-+#define  SSB_SPROM4_GPIOLDC_OFF_SHIFT	8
-+#define  SSB_SPROM4_GPIOLDC_ON		0x00FF0000	/* On Count */
-+#define  SSB_SPROM4_GPIOLDC_ON_SHIFT	16
-+
- 
- /* Values for SSB_SPROM1_BINF_CCODE */
- enum {
-Index: wireless-2.6/drivers/ssb/pci.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/pci.c
-+++ wireless-2.6/drivers/ssb/pci.c
-@@ -423,8 +423,6 @@ static int sprom_extract(struct ssb_bus 
- 	memset(out, 0, sizeof(*out));
- 
- 	SPEX(revision, SSB_SPROM_REVISION, SSB_SPROM_REVISION_REV, 0);
--	SPEX(crc, SSB_SPROM_REVISION, SSB_SPROM_REVISION_CRC,
--	     SSB_SPROM_REVISION_CRC_SHIFT);
- 
- 	if ((bus->chip_id & 0xFF00) == 0x4400) {
- 		/* Workaround: The BCM44XX chip has a stupid revision
+IMHO no, it doesn't as far as I can see in this flow.
+
+>> +		/* check if AP changed bss inforamation */
+>> +		if ((conf->ht_bss_conf.primary_channel !=
+>> +		     bss_info.primary_channel) ||
+>> +		    (conf->ht_bss_conf.bss_cap != bss_info.bss_cap) ||
+>> +		    (conf->ht_bss_conf.bss_op_mode !=
+bss_info.bss_op_mode))
+>> +			ieee80211_hw_config_ht(local, 1, &conf->ht_conf,
+>> +						&bss_info);
+
+> Yeah this is what I was talking about. mac80211 really sucks with all
+> this "has changed stuff". Hrmm. Michael, any time-frame on rewriting
+the
+> interface config stuff?
+
+> johannes
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
