@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:61230 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758515AbXKOKdt (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44251 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170AbXKLQgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 05:33:49 -0500
-Received: by wr-out-0506.google.com with SMTP id 36so493555wra
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2007 02:33:48 -0800 (PST)
-Message-ID: <247d6d340711150233h7988220fifb0d34170d16a979@mail.gmail.com> (sfid-20071115_103413_751727_22D7972C)
-Date: Thu, 15 Nov 2007 12:33:48 +0200
-From: "Guy Cohen" <guy.cohen@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
+	Mon, 12 Nov 2007 11:36:23 -0500
+Subject: RE: [PATCH 07/14] mac80211: adding 802.11n configuration flows
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <1195056662.4091.29.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-	 <1195056662.4091.29.camel@johannes.berg>
+	"Winkler, Tomas" <tomas.winkler@intel.com>, flamingice@sourmilk.net
+In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB04008799@hasmsx411.ger.corp.intel.com>
+References: <1879838866982C46A9CB3D56BA49ADEB04008799@hasmsx411.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I9g9mFv/Lpu6f7rlsBQr"
+Date: Mon, 12 Nov 2007 17:37:40 +0100
+Message-Id: <1194885460.5229.53.camel@johannes.berg> (sfid-20071112_163628_201204_E1738D70)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
 
-We understand that these two issues need to be taken care of, and they
-will be. My concern is that if current patches won't be merged soon,
-we will have to pay the effort to rebase the patches again. We are
-very limited with resources dedicated to supporting the merge of
-802.11n to wireless-dev. This mailing list taught us in the "hard way"
-in the recent months: submit often submit early... So for making Ron's
-work efficient I suggest to merge his patches and let him do the fixes
-on top of them, specially since the two fixes are not 802.11n core
-critical issues and don't break any existing working flows. Do you
-feel comfortable with this approach?
+--=-I9g9mFv/Lpu6f7rlsBQr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Guy.
 
-On 11/14/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Overall, looks pretty good. I personally prefer things like (!xyz)
-> rather than (xyz == NULL) but that's totally minor. I'll take a more
-> detailed look later and check out the frame flow etc.
->
-> >  - Changes to Rx handlers PAE and drop unencrypted (for EAPOL frames in amsdu)
-> >  - Examine config flows in mac80211 (RFC is prepered)
->
-> I'd prefer to have this patch series depend on these two items instead
-> because as it stands, we have a weird behaviour here and quite a lot of
-> duplicated code in the data/agg_data RX handlers. I thought your RFC was
-> pretty good except that you didn't want to convert existing stuff to it,
-> so...
->
-> johannes
->
->
+
+> Now, I began to work on a solution for this problem (please refer to my
+> RFC "mac80211: [RFC] adding bss_config to low level driver ops"), in
+> which I wanted to unite all IE changes into one callback.=20
+
+Oh right, I completely forgot about that, sorry. I should take another
+look, or would you like to repost that?
+
+> If Michael is
+> already working on a more general solution for all "config" callbacks I
+> would be happy to contribute to his effort, or even continue my RFC to a
+> more solid patch, but until this will occur I just used similar approach
+> to already existing callbacks.
+
+I don't really know if he's working on it and I guess that if he is he'd
+take your work as a base.
+
+johannes
+
+--=-I9g9mFv/Lpu6f7rlsBQr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARziBU6Vg1VMiehFYAQKx/BAAnAHmgNtCnNrk7DMd83/l4uSoMZNl5R42
+XyL1cnEk77qlbojXFutYxCbfvB9JjEpfFiS+AqkfPWbCp8m1TuGPw6Q1zBIaBWDL
+ORO6szHxJjMVbNqKDODjmLM8GNpQSITNWGlgIQpDeagJJlpBto4xe4vC4m0NNbXQ
+G675RKR+6sVH+yx3ZAdjEoHoycrJYQ2PDjBryUuAWOsxLRjMWu/zLAZRuaf6bzJM
+AXblo6lXtKV90lC2IcLOOKgM6luHXo5Zb12OW5Z+VQPWKW0mL8eUSz1cyHI40bfJ
+W5zWlyrJcOdndVle0LfSTOTuFirqp6Xmh5ZJqxDgnXqSjliVDv36xDNg2aQ0hHHm
+fQ0zhzVHpXlUkcM61zd1jxkpYi+tzcN2rsSS+N6BwqO4YmAc/zDRrBhMhR5Cpkgz
+ZeNBk5YU5pbT0/sgPSJ72sD5r2IXbyL6GL81Y3guIELpjrG6moMqQV1SHHCT1Dvd
+yJS8nAHaf+khSNC3H3CW+GA6ZV+NH3GCvYPfW6x0G4fG/6A6dJGUqDfEmX3HgJCQ
+m3vdCF++1/WoJLck6h2MeHaOy48BMAjJpDxEYcN327t96XRfWekjnTXrDoipLteW
+nbMiCVr3I8Ep1O1M9hfXVTRLZ0X+I+hWk+StaFDYpELTL4VyuSv07zfDGDaCEm3h
+hMzQQ0vRn2w=
+=0UFN
+-----END PGP SIGNATURE-----
+
+--=-I9g9mFv/Lpu6f7rlsBQr--
+
