@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755012AbXK0NHQ (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:36604 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759258AbXKLW72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 08:07:16 -0500
-Message-Id: <20071126225420.760175000@sipsolutions.net> (sfid-20071127_130724_199152_2FE5EAB1)
-References: <20071126225416.467939000@sipsolutions.net>
-Date: Mon, 26 Nov 2007 23:54:17 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH (2.6.24) 1/3]  iwlwifi: fix add_interface
-Mime-Version: 1.0
+	Mon, 12 Nov 2007 17:59:28 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1560694pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 14:59:26 -0800 (PST)
+Message-ID: <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> (sfid-20071112_225931_921489_FF368EC0)
+Date: Mon, 12 Nov 2007 17:59:25 -0500
+From: "Will Dyson" <will.dyson@gmail.com>
+To: "Florian Lohoff" <flo@rfc822.org>
+Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071111102315.GC10486@paradigm.rfc822.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071111102315.GC10486@paradigm.rfc822.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iwlwifi drivers both make mac80211 accept an arbitrary number of
-virtual interfaces while in reality they can only support one. Fix that.
+On Nov 11, 2007 5:23 AM, Florian Lohoff <flo@rfc822.org> wrote:
+>
+> Hi,
+> i today tried the in tree rt2x00 driver the first time and it immediatly
+> felt a little sluggish. It sometimes feels a little as the driver is
+> actually not using interrupts but rather polls at HZ rate or something.
+> I can actually see the device generating interrupts in /proc/interrupts
+> but still.
+>
+> Machine is a 2Ghz P4 with an PCI Ralink RT2500:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org> 
----
-Please apply this to 2.6.24 as that has userspace interface (nl80211) to
-add/remove virtual interfaces. There's *LOTS* to be done for proper
-support, e.g. monitor mode is completely messed up, but this at least
-doesn't let the user create multiple interfaces that won't work.
+> While running an "find /" via ssh the output comes in and a second terminal shows this:
 
-Please push to Jeff for .24.
+That is some pretty nasty latency. You didn't describe the setup for
+your test, so I don't really have any insight into this problem. You
+might want to check the wireless bitrate using the "iwconfig" command.
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+If the bitrate is really low, then the network latency problem is
+explained. When the bitrate is low, it is much easier for a single
+stream to saturate the connection (making for bad latency).
 
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-11-26 23:23:59.689045194 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-11-26 23:24:06.049043241 +0100
-@@ -6942,7 +6942,7 @@ static int iwl_mac_add_interface(struct 
- 
- 	if (priv->interface_id) {
- 		IWL_DEBUG_MAC80211("leave - interface_id != 0\n");
--		return 0;
-+		return -EOPNOTSUPP;
- 	}
- 
- 	spin_lock_irqsave(&priv->lock, flags);
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-11-26 23:23:36.929050673 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-11-26 23:23:45.039044868 +0100
-@@ -7332,7 +7332,7 @@ static int iwl_mac_add_interface(struct 
- 
- 	if (priv->interface_id) {
- 		IWL_DEBUG_MAC80211("leave - interface_id != 0\n");
--		return 0;
-+		return -EOPNOTSUPP;
- 	}
- 
- 	spin_lock_irqsave(&priv->lock, flags);
+The output of "iwconfig" and "dmesg | grep rt2x00" would really help
+in debugging this issue.
 
 -- 
-
+Will Dyson
