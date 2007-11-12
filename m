@@ -1,141 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:44731 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753697AbXKFWND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 17:13:03 -0500
-Date: Tue, 6 Nov 2007 22:48:45 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: John Linville <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: [PATCH 4/7] b43legacy: rewrite and fix rfkill initialization
-Message-ID: <20071106224845.7735a4f1@morte> (sfid-20071106_221309_099653_A3AA17B7)
-In-Reply-To: <20071106222313.31e9bcd9@morte>
-References: <20071106222313.31e9bcd9@morte>
+Received: from ik-out-1112.google.com ([66.249.90.177]:31618 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbXKLTsG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2007 14:48:06 -0500
+Received: by ik-out-1112.google.com with SMTP id c28so7588ika
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 11:48:04 -0800 (PST)
+Subject: Re: [PATCH 2/4] o80211s: (nl80211) support for mesh interfaces and
+	set_mesh_cfg command
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1194687275.7258.36.camel@johannes.berg>
+References: <473516df.18bb720a.41e8.5fdc@mx.google.com>
+	 (sfid-20071110_022645_005653_498DB7A6)  <1194687275.7258.36.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 12 Nov 2007 11:47:41 -0800
+Message-Id: <1194896861.6980.28.camel@localhost> (sfid-20071112_194812_149912_85E33456)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rfkill subsystem doesn't like code like that
-rfkill_allocate();
-rfkill_register();
-rfkill_unregister();
-rfkill_register(); /* <- This will crash */
+On Sat, 2007-11-10 at 10:34 +0100, Johannes Berg wrote:
+> So if I bring up a mesh interface and don't use SET_MESH_CFG, it won't
+> operate at all?
 
-This sequence happens with
-modprobe b43
-ifconfig wlanX up
-ifconfig wlanX down
-ifconfig wlanX up
+Yes it would, it would use the wild card, zero-length mesh ID.
 
-Fix this by always re-allocating the rfkill stuff before register.
+> I think I'd prefer if the MESH_ID attribute would be given as part of
+> SET_INTERFACE/NEW_INTERFACE instead of a new command. I'm attempting to
+> keep nl80211 as object oriented as possible and this single command
+> doesn't really fit the picture.
 
-The patch to b43 by Michael Buesch <mb@bu3sch.de> has been ported to
-b43legacy.
-
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
-----
-
-Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/rfkill.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
-@@ -48,18 +48,21 @@ static void b43legacy_rfkill_poll(struct
- 	struct b43legacy_wldev *dev = poll_dev->private;
- 	struct b43legacy_wl *wl = dev->wl;
- 	bool enabled;
-+	bool report_change = 0;
- 
- 	mutex_lock(&wl->mutex);
- 	B43legacy_WARN_ON(b43legacy_status(dev) < B43legacy_STAT_INITIALIZED);
- 	enabled = b43legacy_is_hw_radio_enabled(dev);
- 	if (unlikely(enabled != dev->radio_hw_enable)) {
- 		dev->radio_hw_enable = enabled;
-+		report_change = 1;
- 		b43legacyinfo(wl, "Radio hardware status changed to %s\n",
- 			enabled ? "ENABLED" : "DISABLED");
--		mutex_unlock(&wl->mutex);
-+	}
-+	mutex_unlock(&wl->mutex);
-+
-+	if (unlikely(report_change))
- 		input_report_key(poll_dev->input, KEY_WLAN, enabled);
--	} else
--		mutex_unlock(&wl->mutex);
- }
- 
- /* Called when the RFKILL toggled in software. */
-@@ -69,18 +72,11 @@ static int b43legacy_rfkill_soft_toggle(
- 	struct b43legacy_wl *wl = dev->wl;
- 	int err = 0;
- 
--	/* When RFKILL is registered, it will call back into this callback.
--	 * wl->mutex will already be locked when this happens.
--	 * So first trylock. On contention check if we are in initialization.
--	 * Silently return if that happens to avoid a deadlock. */
--	if (mutex_trylock(&wl->mutex) == 0) {
--		if (b43legacy_status(dev) < B43_STAT_INITIALIZED)
--			return 0;
--		mutex_lock(&wl->mutex);
--	}
--	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED)
--		goto out_unlock;
-+	if (!wl->rfkill.registered)
-+		return 0;
- 
-+	mutex_lock(&wl->mutex);
-+	B43legacy_WARN_ON(b43legacy_status(dev) < B43legacy_STAT_INITIALIZED);
- 	switch (state) {
- 	case RFKILL_STATE_ON:
- 		if (!dev->radio_hw_enable) {
-Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/rfkill.h
-+++ wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
-@@ -16,14 +16,14 @@ struct b43legacy_rfkill {
- 	struct rfkill *rfkill;
- 	/* The poll device for the RFKILL input button */
- 	struct input_polled_dev *poll_dev;
-+	/* Did initialization succeed? Used for freeing. */
-+	bool registered;
- 	/* The unique name of this rfkill switch */
--	char name[32];
-+	char name[sizeof("b43legacy-phy4294967295")];
- };
- 
--/* All the init functions return void, because we are not interested
-+/* The init function returns void, because we are not interested
-  * in failing the b43 init process when rfkill init failed. */
--void b43legacy_rfkill_alloc(struct b43legacy_wldev *dev);
--void b43legacy_rfkill_free(struct b43legacy_wldev *dev);
- void b43legacy_rfkill_init(struct b43legacy_wldev *dev);
- void b43legacy_rfkill_exit(struct b43legacy_wldev *dev);
-
-Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -3360,7 +3381,6 @@ static int b43legacy_setup_modes(struct b43legacy_wldev *dev,
- 
- static void b43legacy_wireless_core_detach(struct b43legacy_wldev *dev)
- {
--	b43legacy_rfkill_free(dev);
- 	/* We release firmware that late to not be required to re-request
- 	 * is all the time when we reinit the core. */
- 	b43legacy_release_firmware(dev);
-@@ -3442,7 +3462,6 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
- 	if (!wl->current_dev)
- 		wl->current_dev = dev;
- 	INIT_WORK(&dev->restart_work, b43legacy_chip_reset);
--	b43legacy_rfkill_alloc(dev);
- 
- 	b43legacy_radio_turn_off(dev, 1);
- 	b43legacy_switch_analog(dev, 0);
-
-
+Will that be the way to specify the SSID for the STA interfaces? If so,
+I agree it would be better to use that command instead of an additional
+mesh specific command. As by now it's just used to set the interface
+type I was not sure it was appropriate to add the mesh configuration
+there.
 
 -- 
-Ciao
-Stefano
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
