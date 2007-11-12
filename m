@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13900 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249AbXKVQTN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484AbXKLQIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 11:19:13 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 regression: doesn't associate automatically
-Date: Thu, 22 Nov 2007 17:19:40 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <200711220912.10452.hs4233@mail.mn-solutions.de> <200711221605.55506.hs4233@mail.mn-solutions.de> <1195746110.4149.23.camel@johannes.berg>
-In-Reply-To: <1195746110.4149.23.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711221719.40412.hs4233@mail.mn-solutions.de> (sfid-20071122_161918_677250_CA22AD96)
+	Mon, 12 Nov 2007 11:08:42 -0500
+Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com> (sfid-20071111_000348_884788_D104D28E)
+References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
+	 <1194689500.7258.61.camel@johannes.berg>
+	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>
+	 (sfid-20071111_000348_884788_D104D28E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nCxiRAid7HjEH+MNjiot"
+Date: Mon, 12 Nov 2007 12:14:32 +0100
+Message-Id: <1194866072.5229.8.camel@johannes.berg> (sfid-20071112_160846_372927_2F5E07DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Face it or not, not everything in life is defined. Nowhere
-> > is defined how bees behave, and yet they behave in uniform,
-> > somewhat predicatable ways. So please stop this discussion
-> > about defined or not defined. mac80211 behaves
-> > out-of-the-order compared to older drivers. No matter if
-> > this behavior was formally defined or not.
->
-> It *does* matter because the only thing tools and people using
-> the tools can rely on is what is defined rather than "happens
-> to work with driver XY so it must be right"
 
-So, things brings me to a weird conclusion:
+--=-nCxiRAid7HjEH+MNjiot
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-a) earlier you said that in WEXT, the only command that is 
-defined to get you an association is the "iwconfig XXX ap YYY" 
-command.
 
-b) you also say that tools should only rely on things that are 
-defined
+> A mesh AP would have two interfaces, each with a different MAC
+> address.  One IF_TYPE_MESH, the other IF_TYPE_AP.  Support for MAP, as
+> you suggested, would be implemented in hostapd.
 
-If I accept both sentences as valid, I must conclude that 
-mac80211 is faulty. It happens that mac80211 triggers an 
-association to an access-point also by the "iwconfig XXX essid 
-YYYY" command. This is not defined. Hey, wait a minute. mac80211 
-is not allowed to do ANYTHING that is undefined, because tools 
-can only rely on defined things. So mac80211 is faulty. Crap, 
-ditch it.
+As far as I understand the specification, this is not required. Since we
+currently have no drivers supporting multi-MAC operation, this is quite
+a severe limitation and the draft seems to allow MAP operation with a
+single address, cf. the description of the SSID element in 7.2.3.1
+(Beacon frame format). ("Note: the SSID is a required IE in beacon
+frames. To avoid having non-mesh STAs [...]")
 
-I hope you get that somehow this is not only weird, it's 
-unhelpful. Maybe now you can understand why I see thinking in 
-the lines of "only what has defined is right and everything else 
-is wrong" isn't helpful at all.
+Therefore, I think that having a separate MAP type device would be
+beneficial because that allows hostapd to generate a beacon including an
+SSID, respond to probe requests and still be a mesh point on the same
+interface. The only way hostapd would have to be aware of this is that
+it needs to create a different type of interface and include the mesh
+information in the beacon.
+
+Do you see anything precluding such operation? Some more logic would
+have to be provided to achieve the appropriate mesh broad/multicast vs.
+AP broad/multicast behaviour, of course, as described elsewhere wrt.
+mesh broad/multicast frames being broad/multicast to associated STAs.
+
+johannes
+
+--=-nCxiRAid7HjEH+MNjiot
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzg1l6Vg1VMiehFYAQJmlRAAo7EnmxrOXA+r5WvSYZD1PsyGZlLUeUw0
+Ylf8bnDrxpEWT0LUtV+i5TEJK/HlnahB8tiTVcLNw22pVavQEgtMGEe8wUcUWE3E
+gfTBu335fA4ymjBMSCV+K+iOrPXGGg6IM64BNVc3FGOJg/JdetpZTul87bbc5YYo
+BNjyd35yCSe5cm9pnRvNU5Hn1oSH/o8osw+yVeded4R/vmwOVHTMqyjHOC8YG+xt
+khoKbDUcJbU5AUJ9INu1z6fYLBQAoWIQ6/QUELy06/zXiuhZ1GpThjbwaY8JmYbp
++V3DYqi0vZAPdmPqEN0HjFbsvA2R41BJFvt76zK6KX3wplpMF6B/6qp/SJ9n1RNy
+GFJEXKOAHha6AMyQ8TtNDcyiPdWlpaFCCKzYGId/1skZpCeGTCCF/uip8ydX+7hq
+8FNez0zs0/7SvyiSR8n/1QD5ECf7FSkYfhlRKWpFQj+guA+z70eJY/uRHhqhh/Pk
+2b5zkv1rua6+XRqyTq+OStTAOZPWwa1naHHb8eumYG2QP7BLQvrrZC2z9gHIgk+c
+LtNliM0b9gRYukcGfdCTROR8jy303J6Qk6XchiSjUF7EFBYrmw4Uaed87rmeW8S1
+deTGLVW2aC9/f3UlMNtqY22qbeEcqN92ltTkNQopOyvJlgsrCKPfcgDFit5BcLmH
+R/2GhRf6MEA=
+=e9m1
+-----END PGP SIGNATURE-----
+
+--=-nCxiRAid7HjEH+MNjiot--
+
