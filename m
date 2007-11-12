@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.172]:23365 "EHLO
-	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756495AbXKOJpT (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.191]:47462 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758531AbXKLNtE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 04:45:19 -0500
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [RFC] b43: multiple MAC addresses support
-References: <1194572631.4793.64.camel@johannes.berg>
-	<1194605550.4793.93.camel@johannes.berg>
-	<20071111025808.GK4031@jm.kir.nu> <87pryfd8cc.fsf@nokia.com>
-	<1194953217.9116.38.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Thu, 15 Nov 2007 11:35:29 +0200
-In-Reply-To: <1194953217.9116.38.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 13 Nov 2007 12\:26\:57 +0100")
-Message-ID: <877ikjsvfi.fsf@nokia.com> (sfid-20071115_094523_580662_AEE9CE83)
+	Mon, 12 Nov 2007 08:49:04 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so1450273mue
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 05:49:00 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] rt2x00: Allow rt61 to catch up after a missing tx report
+Date: Mon, 12 Nov 2007 15:03:12 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711121502.01953.IvDoorn@gmail.com>
+In-Reply-To: <200711121502.01953.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711121503.12709.IvDoorn@gmail.com> (sfid-20071112_134912_073495_A02319C1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Mattias Nissler <mattias.nissler@gmx.de>
 
-> On Mon, 2007-11-12 at 13:14 +0200, Kalle Valo wrote:
->
->> Exactly, it is important for small mobile devices that beacons are
->> sent at the correct time. For example, I have seen broken APs which
->> Target Beacon Transmission Time fluctuates and Nokia N800 has high
->> power consumption because of that.
->
-> The N800 and similar devices only wake up at DTIM beacons, right?
+Sometimes it happens in the tx path that an entry given to the hardware isn't
+reported in the txdone handler. This ultimately led to the dreaded "non-free
+entry in the non-full queue" message and the stopping of the tx queue. Work
+around this issue by allowing the driver to also clear out previos entries in
+the txdone handler.
 
-At least N800 and N810 do, we don't want to miss any of broadcast and
-multicast traffic. But I don't know how other mobile devices wakeup
-for beacons.
+Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-> So another idea would be to burst beacons but make sure the DTIM
-> beacon time doesn't fluctuate away from the DTIM TBTT. This would be
-> possible by changing the order of the beacons and adjusting the DTIM
-> count so that the beacon with DTIM count zero is always the first.
-
-At least from my point of view that could possible. Of course it feels
-like a bit of a hack, but I guess there's no clean way to implement
-this.
-
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index a6d4e10..c2b4509 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1708,6 +1708,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_ring *ring;
+ 	struct data_entry *entry;
++	struct data_entry *entry_done;
+ 	__le32 *txd;
+ 	u32 word;
+ 	u32 reg;
+@@ -1761,6 +1762,18 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 		    !rt2x00_get_field32(word, TXD_W0_VALID))
+ 			return;
+ 
++		entry_done = rt2x00_get_data_entry_done(ring);
++		while (entry != entry_done) {
++			/* Catch up. Just report any entries we missed as
++			 * failed. */
++			WARNING(rt2x00dev,
++				"TX status report missed for entry %p\n",
++				entry_done);
++			rt2x00pci_txdone(rt2x00dev, entry_done, TX_FAIL_OTHER,
++					 0);
++			entry_done = rt2x00_get_data_entry_done(ring);
++		}
++
+ 		/*
+ 		 * Obtain the status about this packet.
+ 		 */
 -- 
-Kalle Valo
+1.5.3.4
+
