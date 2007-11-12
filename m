@@ -1,64 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55276 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754771AbXKNPVv (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:24010 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758439AbXKLNs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:21:51 -0500
-Subject: Re: Virtual wireless network card for mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <rogge@fgan.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200711141316.50393.rogge@fgan.de> (sfid-20071114_130227_204342_2DDA04DF)
-References: <200711141316.50393.rogge@fgan.de>
-	 (sfid-20071114_130227_204342_2DDA04DF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4vV/DjBl21ox8S0DSosW"
-Date: Wed, 14 Nov 2007 16:22:43 +0100
-Message-Id: <1195053763.4091.17.camel@johannes.berg> (sfid-20071114_152203_693495_FDAB321F)
-Mime-Version: 1.0
+	Mon, 12 Nov 2007 08:48:57 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1476773fkz
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 05:48:56 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] rt2x00: Fix chipset revision validation
+Date: Mon, 12 Nov 2007 15:02:22 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711121502.01953.IvDoorn@gmail.com>
+In-Reply-To: <200711121502.01953.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711121502.22409.IvDoorn@gmail.com> (sfid-20071112_134901_543202_DC5AB107)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The validation of the chipset revision was broken
+since for rt2500usb and rt73usb different registers
+should be read. When rt2500usb was loaded for a rt73
+device it would false think the chipset was correct
+because the wrong register was read and validated.
 
---=-4vV/DjBl21ox8S0DSosW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This has been fixed by expanding the check to also
+see if the first 4 bits of the revision is not-0
+(When reading the wrong register offset the returned
+value is usually 0 which can be interpreted as invalid)
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2500pci.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2500usb.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00.h    |    8 +++++---
+ drivers/net/wireless/rt2x00/rt73usb.c   |    2 +-
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
-> I'm looking for a way to simulate a ieee802.11 card on a linux system. Is=
-=20
-> there an equivalent for tun/tap for the mac80211 layer, so I can just sen=
-d=20
-> the communication with a wireless device back to userspace (and data from=
-=20
-> userspace into the wireless stack) ?
-
-No. I've described this task on
-http://kernelnewbies.org/KernelProjects/Mac80211TestDriver and somebody
-was interested in writing one, but I never heard back from him.
-
-johannes
-
---=-4vV/DjBl21ox8S0DSosW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzsSwqVg1VMiehFYAQI/Ng/9FmDspbsXifOaSEa79qDFabiV+wGiOyZF
-0bvJJ1RLRLqLqy0t1jDp+Ien8iIAvk0GTLChRZbQ7BA3Le6ck1FbDfcdQwGoe75t
-fzC6YF9WC1uqFryNGVJ1FZhERbNQgCOupGv0Iuq2/2VFuGkrO0PTMS6P35AI86mZ
-HkqrX/NMSDr70Fo+gbiohN9vBh8Ct/WJmCMYVwLSxCJ7Nl1l1stiB493QXxcapi2
-l/+Zh+v6VPpu7ArK8v1grdmgLj57uzYGmhgpEa6dwsjKLUmh5b7U/QC5LhD2MCXu
-BDGMKsxnnm6UaAxlujlZeiYonIpY5p7OqaEn3d4NXwA9ZYGDeH/Ip/E+yZ9p3tjW
-DpPoeASQRgIPF2O0r7zT0OwDxaNv5KhFD68d55yIU0RqSxfRz+Won+HC5sgSWWjs
-13VxnuVCJDQULF/ACBD46a/bB9maZy2jDoEgGU375bj+pszousUhRD4+eN0FqdcK
-XpzxGqj9YGNK0nD1ekjjvW7n4dTCY29po0bB+RWutWIqG4FoRvg8LDDwYY2K/lGt
-3dTAr7i49avFvCsLfLxhCIVoLVW8IRj1PaH/LRx2cNijAxDVdHOWsTv74aoEoGvz
-WGr7fiW76pz+a1Fxg3YMV84G15ZPzX6tsloW2Y+ikyD/q+idsKhF6qgaRb/dnduG
-c/mRMbtHTdc=
-=cUbs
------END PGP SIGNATURE-----
-
---=-4vV/DjBl21ox8S0DSosW--
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index c5a5c43..e6a0c37 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -617,7 +617,7 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * up to version C the link tuning should halt after 20
+ 	 * seconds.
+ 	 */
+-	if (rt2x00_get_rev(&rt2x00dev->chip) < RT2560_VERSION_D &&
++	if (rt2x00_rev(&rt2x00dev->chip) < RT2560_VERSION_D &&
+ 	    rt2x00dev->link.count > 20)
+ 		return;
+ 
+@@ -627,7 +627,7 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Chipset versions C and lower should directly continue
+ 	 * to the dynamic CCA tuning.
+ 	 */
+-	if (rt2x00_get_rev(&rt2x00dev->chip) < RT2560_VERSION_D)
++	if (rt2x00_rev(&rt2x00dev->chip) < RT2560_VERSION_D)
+ 		goto dynamic_cca_tune;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 43f1e0f..b5a8f82 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -791,7 +791,7 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field16(&reg, MAC_CSR1_HOST_READY, 1);
+ 	rt2500usb_register_write(rt2x00dev, MAC_CSR1, reg);
+ 
+-	if (rt2x00_get_rev(&rt2x00dev->chip) >= RT2570_VERSION_C) {
++	if (rt2x00_rev(&rt2x00dev->chip) >= RT2570_VERSION_C) {
+ 		rt2500usb_register_read(rt2x00dev, PHY_CSR2, &reg);
+ 		rt2x00_set_field16(&reg, PHY_CSR2_LNA, 0);
+ 	} else {
+@@ -1299,7 +1299,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+ 	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
+ 
+-	if (rt2x00_rev(&rt2x00dev->chip, 0xffff0)) {
++	if (!rt2x00_check_rev(&rt2x00dev->chip, 0)) {
+ 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 82014d8..12382c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -849,14 +849,16 @@ static inline char rt2x00_rf(const struct rt2x00_chip *chipset, const u16 chip)
+ 	return (chipset->rf == chip);
+ }
+ 
+-static inline u16 rt2x00_get_rev(const struct rt2x00_chip *chipset)
++static inline u16 rt2x00_rev(const struct rt2x00_chip *chipset)
+ {
+ 	return chipset->rev;
+ }
+ 
+-static inline u16 rt2x00_rev(const struct rt2x00_chip *chipset, const u32 mask)
++static inline u16 rt2x00_check_rev(const struct rt2x00_chip *chipset,
++				   const u32 rev)
+ {
+-	return chipset->rev & mask;
++	return (((chipset->rev & 0xffff0) == rev) &&
++		!!(chipset->rev & 0x0000f));
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 532e75d..9bd0b4f 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1530,7 +1530,7 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt73usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+ 	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
+ 
+-	if (!rt2x00_rev(&rt2x00dev->chip, 0x25730)) {
++	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x25730)) {
+ 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+-- 
+1.5.3.4
 
