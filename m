@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:29994 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196AbXKIPLk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbXKLQsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 10:11:40 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so496305nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2007 07:11:35 -0800 (PST)
-Date: Fri, 9 Nov 2007 10:11:35 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] Fix infinite loop on dev_mc_unsync()
-Message-ID: <20071109151135.GA12982@pogo> (sfid-20071109_151146_735380_27047ED2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 12 Nov 2007 11:48:14 -0500
+Subject: RE: [PATCH 02/14] mac80211: adding 802.11n definitions
+	inieee80211.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Winkler, Tomas" <tomas.winkler@intel.com>, flamingice@sourmilk.net
+In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB04008795@hasmsx411.ger.corp.intel.com>
+References: <1879838866982C46A9CB3D56BA49ADEB04008795@hasmsx411.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QNZE2hl86pFBgsuSHYzr"
+Date: Mon, 12 Nov 2007 17:49:35 +0100
+Message-Id: <1194886175.5229.67.camel@johannes.berg> (sfid-20071112_164817_152598_4D0EB1D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While reviewing net/core/dev_mcast.c I found what I think is an 
-infinite loop on dev_mc_unsync(). This fixes it. We make use of
-this guy on mac80211 in ieee80211_stop(). This is untested.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+--=-QNZE2hl86pFBgsuSHYzr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
-index 15241cf..5373c03 100644
---- a/net/core/dev_mcast.c
-+++ b/net/core/dev_mcast.c
-@@ -168,8 +168,10 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
- 	da = from->mc_list;
- 	while (da != NULL) {
- 		next = da->next;
--		if (!da->da_synced)
-+		if (!da->da_synced) {
-+			da = next;
- 			continue;
-+		}
- 		__dev_addr_delete(&to->mc_list, &to->mc_count,
- 				  da->da_addr, da->da_addrlen, 0);
- 		da->da_synced = 0;
+
+> >> +struct ieee80211_ht_addt_info {
+>=20
+> That's shortening for "HT additional info" which refers to 802.11n draft
+> section 7.3.2.53 "HT Information element".
+>=20
+> The problem with this name results from terms confusion (IMHO) in the
+> draft.
+> Section 7.3.2.52 defines both "HT capabilities element" and "HT
+> Information element", but both are sent during association/beaconing, so
+> one may regard both as "information elements" (in classic IE way of
+> looking at them).
+>=20
+> So currently ieee80211_ht_cap relates to "HT capabilities element" and
+> ieee80211_ht_addt_info relates to "HT Information element"
+> If anyone can think of a better naming convention to avoid confusion -
+> will be most appreciated.
+
+Not right now, and I don't have access to a recent draft anyway. But
+thanks for the explanation.
+
+johannes
+
+--=-QNZE2hl86pFBgsuSHYzr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARziEHqVg1VMiehFYAQIU8A/+MJUUsSlEsI/OaHaDZzSAjipIQgFvU0xJ
+f2jIovBdk4bVt4fgEzfsVRR8nth5bMxen6dPcTKeX0r4GDAugPK4lRg+IzBHnUTZ
+s7Ip+uUXKhxMkV/oylp0bbqVEI4xGHfENa5aflWunB8uN7+Jcx4QWhOxYMgwTUrp
+xTA/0KpmKO9mmRJD94HVsPXmHRuz1YSQ929YzniWK2IlDpHkCOCsRUrX2GgVF85s
+8XD6p/ggS/foz3KmG0TWjhL1V3ChVrW87q8FFpTBut16RH8bAc2/iYorhfx3hUQF
+stTPtdX38QvA6epUEGwlzDjZaneUC3+suwoTWW7AZNQWaJr04IB5TJmLnWmUyDcE
+1nHyeM/bIcwjVkdaWqxX2YfS7WUpSQKpeEmqSv1FTXeY+TO4vBD7m03eqNGj+OVY
+OyFpIk5igDVHeSL/QS2SEiS8wvwYKU47S5rm2FhDpp87RxbKbR5F0fSgAm/Aj+IP
+ax1y5wM07C6oUCGArPistAEw0+xlNFZOQkrghqC6MJazUJk9pg39v1kJiHqzq756
+fMrQ0M2sEJTpYfp/nBNcz4NUxbBpx21lfIzdDQ9KLWdXRpv5MIZcXqe0Lb3emzT/
+hO0NOQFAP6t84i0kdCwgx78eQIyiG2lmomlUi3YklBpGIK3tjBSftTadA36j7reQ
++r2Bwtlw230=
+=SB0F
+-----END PGP SIGNATURE-----
+
+--=-QNZE2hl86pFBgsuSHYzr--
+
