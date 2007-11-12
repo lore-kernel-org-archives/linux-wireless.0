@@ -1,95 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45810 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757353AbXK0Rnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 12:43:41 -0500
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	drago01 <drago01@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <20071127034934.GD5698@jm.kir.nu>
-References: <47494851.4070504@gmail.com>
-	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
-	 <1196079245.4149.255.camel@johannes.berg>
-	 <1196093064.4202.46.camel@localhost.localdomain>
-	 <20071127034934.GD5698@jm.kir.nu>
+Received: from py-out-1112.google.com ([64.233.166.183]:26288 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751929AbXKLXxX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2007 18:53:23 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1587213pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 15:53:22 -0800 (PST)
+Subject: Re: [PATCH 4/4] o80211s: (zd1211rw-mac80211) support for mesh
+	interface
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1194689934.7258.66.camel@johannes.berg>
+References: <473516f2.15528c0a.7196.3372@mx.google.com>
+	 (sfid-20071110_022703_924708_89D9D43C)  <1194689934.7258.66.camel@johannes.berg>
 Content-Type: text/plain
-Date: Tue, 27 Nov 2007 12:38:46 -0500
-Message-Id: <1196185126.10199.9.camel@localhost.localdomain> (sfid-20071127_174344_400976_86C857D9)
+Date: Mon, 12 Nov 2007 15:53:19 -0800
+Message-Id: <1194911599.6980.107.camel@localhost> (sfid-20071112_235326_949904_6A36DB6E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-11-26 at 19:49 -0800, Jouni Malinen wrote:
-> On Mon, Nov 26, 2007 at 11:04:24AM -0500, Dan Williams wrote:
+On Sat, 2007-11-10 at 11:18 +0100, Johannes Berg wrote:
+> > +		{ CR_CAM_MODE,			MODE_AP_WDS},
 > 
-> > Because in the case of hidden SSIDs, wpa_supplicant pretty much says to
-> > use ap_scan=2.
+> Shouldn't that depend on the interface type? I.e. set it for WDS/MESH
+> but clear it for station so that the station won't ack WDS frames? OTOH,
+> it may just as well ack WDS frames for itself...
+
+Yes, it doesn't look like it does any harm.
+
 > 
-> Or ap_scan=1 with scan_ssid if and only if the driver supports it..
-
-Right; but ap_scan=1 + scan_ssid is simply a _better_ way to achieve the
-same end.  All drivers should be able to handle ap_scan=2 and just
-blowing the settings to the card with WEXT.  Perhaps we should introduce
-a WEXT capability bit that advertises the ability to scan specific SSIDs
-(at least, cfg80211 should have something like this in its capability
-bits) so that some intelligence can be used here.
-
-But the point is, select the alternate, better-working code path where
-you _explicitly_ know it works, rather than trying something that might
-likely fail and trying to fall back after the failure to the catch-all.
-That produces a better user experience, I believe, and is more robust in
-the face of crappy drivers.
-
-> > 2) scan_ssid=1 hasn't worked consistently on all drivers because it's
-> > pretty new and many drivers don't support it yet.  This is supposed to
-> > make the driver/firmware send out probe request for the SSID in
-> > question.
+> > +			zd_mac_config_beacon(hw, conf->beacon);
+> > +			kfree_skb(conf->beacon);
+> > +			zd_set_beacon_interval(&mac->chip, BCN_MODE_IBSS | 100);
 > 
-> This is not only a driver issue, though. I believe there are full MAC
-> cards that do not support scan request with a specific SSID and the only
-> way to make them work with hidden SSIDs is to try to associate with the
-> SSID (i.e., use ap_scan=2).
-> 
-> In theory, wpa_supplicant could try to figure out whether the scan with
-> a specific SSID works or not (though, this is not that easy to do since
-> old drivers are likely to just ignore the provided SSID and do a
+> Does that mean you're hardcoding the beacon interval here while before
+> you confused me how we should handle that setting in userspace? :)
 
-Yeah, this seems like something you don't really want to do.  It's too
-complicated, raises latency of a successful connection, and is ugly.
-Don't do it :)
+I am not sure what are you referring to... anyway, by now I think it's
+fine to hard code the beacon interval, but in mac80211 instead of the
+driver adding a beacon_int field to ieee80211_if_conf.
 
-> wildcard scan) and if that is the case, start probing the network with
-> ap_scan=2 like behavior. This would mean that it would go through the
-> configured networks and try to associate with each that is enabled and
-> marked with scan_ssid=1. If association is completed successfully, the
-> network could be added to scan results (at this point, the driver would
-> also be more likely to actually include it in the scan results, so
-> proper data could now be available).
-> 
-> The main problem with this is that it can take quite long time to do
-> this kind of association probing just to be able to get scan results.
-> Furthermore, at least some cards may require a full match in security
-> parameters, i.e., each SSID could potentially require multiple
-> association attempts (assuming the network block was not configured with
-> explicit security parameters).
-> 
-> Taken into account how much I like hidden SSIDs, I would likely just
-> prefer to ignore the issue and try to make people use proper security
-> with visible SSIDs if they want to limit access to their network. Use of
-> hidden SSIDs is just plain horrible way of making clients suffer without
-> any level of increased security.
-
-Yep.  We want to encourage less breakage.  But we do run into the case
-where one SSID is hidden with different security settings coming from
-the same BSSID as a broadcasted SSID, which is out there in quite a few
-places.  Somebody (Cisco?) must have recommended that at one point when
-APs were more expensive.
-
-Dan
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
 
