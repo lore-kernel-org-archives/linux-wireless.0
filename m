@@ -1,118 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47408 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630AbXKABmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 21:42:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: iwl3945 in 2.6.24-rc1 dies under load
-Date: Thu, 1 Nov 2007 02:59:04 +0100
-Cc: linux-wireless@vger.kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
-References: <20071031005202.GA1534@elf.ucw.cz>
-In-Reply-To: <20071031005202.GA1534@elf.ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711010259.05315.rjw@sisk.pl> (sfid-20071101_014238_376822_9C42A19B)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53565 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbXKMNJn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2007 08:09:43 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: Jouni Malinen <j@w1.fi>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <87pryfd8cc.fsf@nokia.com>
+References: <1194572631.4793.64.camel@johannes.berg>
+	 <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu>
+	 <87pryfd8cc.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sYPlQZREJmfQdN1s06Qc"
+Date: Tue, 13 Nov 2007 12:26:57 +0100
+Message-Id: <1194953217.9116.38.camel@johannes.berg> (sfid-20071113_130951_170678_EA73A8AB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, 31 October 2007 01:52, Pavel Machek wrote:
-> 
-> Hi!
-> 
-> ...does not seem to work too well :-(. It connects with the AP
-> (good!), and survives some "normal" use, but it died at first big
-> tcpspray (baaaad!).
 
-Is this a regression from 2.6.23?
+--=-sYPlQZREJmfQdN1s06Qc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Oct 31 01:03:57 amd log1n[1411]: ROOT LOGIN on `tty6'
-> Oct 31 01:05:06 amd kernel: iwl3945: Intel(R) PRO/Wireless 3945ABG/BG
-> Network Connection driver for Linux, 1.1.17kds
-> Oct 31 01:05:06 amd kernel: iwl3945: Copyright(c) 2003-2007 Intel
-> Corporation
-> Oct 31 01:05:06 amd kernel: PCI: Setting latency timer of device
-> 0000:03:00.0 to 64
-> Oct 31 01:05:06 amd kernel: iwl3945: Detected Intel PRO/Wireless
-> 3945ABG Network Connection
-> Oct 31 01:05:07 amd kernel: iwl3945: Tunable channels: 11 802.11bg, 13
-> 802.11a channels
-> Oct 31 01:05:07 amd kernel: phy4: Selected rate control algorithm
-> 'simple'
-> Oct 31 01:06:05 amd kernel: wlan0: Initial auth_alg=0
-> Oct 31 01:06:05 amd kernel: wlan0: authenticate with AP
-> 00:11:2f:0e:95:a0
-> Oct 31 01:06:05 amd kernel: wlan0: RX authentication from
-> 00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
-> Oct 31 01:06:05 amd kernel: wlan0: authenticated
-> Oct 31 01:06:05 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-> Oct 31 01:06:05 amd kernel: wlan0: RX AssocResp from 00:11:2f:0e:95:a0
-> (capab=0x401 status=0 aid=1)
-> Oct 31 01:06:05 amd kernel: wlan0: associated
-> Oct 31 01:06:05 amd kernel: wlan0: switched to short barker preamble
-> (BSSID=00:11:2f:0e:95:a0)
-> Oct 31 01:06:05 amd kernel: iwl3945: iwl-3945-rs not selected as rate
-> control algo!
-> Oct 31 01:23:52 amd kernel: wlan0: RX deauthentication from
-> 00:11:2f:0e:95:a0 (reason=4)
-> Oct 31 01:23:52 amd kernel: wlan0: deauthenticated
-> Oct 31 01:23:53 amd kernel: wlan0: authenticate with AP
-> 00:11:2f:0e:95:a0
-> Oct 31 01:23:53 amd kernel: wlan0: RX authentication from
-> 00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
-> Oct 31 01:23:53 amd kernel: wlan0: authenticated
-> Oct 31 01:23:53 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-> Oct 31 01:23:53 amd kernel: wlan0: RX ReassocResp from
-> 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
-> Oct 31 01:23:53 amd kernel: wlan0: associated
-> Oct 31 01:23:53 amd kernel: wlan0: switched to short barker preamble
-> (BSSID=00:11:2f:0e:95:a0)
-> Oct 31 01:23:53 amd kernel: iwl3945: iwl-3945-rs not selected as rate
-> control algo!
-> Oct 31 01:23:53 amd kernel: wlan0: CTS protection enabled
-> (BSSID=00:11:2f:0e:95:a0)
-> Oct 31 01:23:53 amd kernel: wlan0: switched to long barker preamble
-> (BSSID=00:11:2f:0e:95:a0)
-> Oct 31 01:35:44 amd -- MARK --
-> Oct 31 01:38:16 amd kernel: iwl3945: Microcode SW error detected.
-> Restarting 0x82000008.
-> Oct 31 01:38:16 amd kernel: iwl3945: Error Reply type 0x00000005 cmd
-> REPLY_TX (0x1C) seq 0x0267 ser 0x0000004B
-> Oct 31 01:38:18 amd kernel: iwl3945: Can't stop Rx DMA.
-> 
-> ...unfortunately, microcode sources are not available so Intel should
-> fix this, right?
-> 
-> (Actually, it recovered after 3 minutes):
-> 
-> Oct 31 01:41:15 amd kernel: wlan0: RX deauthentication from
-> 00:11:2f:0e:95:a0 (reason=4)
-> Oct 31 01:41:15 amd kernel: wlan0: deauthenticated
-> Oct 31 01:41:16 amd kernel: wlan0: authenticate with AP
-> 00:11:2f:0e:95:a0
-> Oct 31 01:41:16 amd kernel: wlan0: RX authentication from
-> 00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
-> Oct 31 01:41:16 amd kernel: wlan0: authenticated
-> Oct 31 01:41:16 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-> Oct 31 01:41:16 amd kernel: wlan0: RX ReassocResp from
-> 00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=1)
-> Oct 31 01:41:16 amd kernel: wlan0: associated
-> Oct 31 01:41:16 amd kernel: wlan0: CTS protection enabled
-> (BSSID=00:11:2f:0e:95:a0)
-> Oct 31 01:41:16 amd kernel: iwl3945: iwl-3945-rs not selected as rate
-> control algo!
-> Oct 31 01:41:16 amd kernel: wlan0: switched to short barker preamble
-> (BSSID=00:11:2f:0e:95:a0)
-> 
-> Hmm, and it is pretty reproducible, with:
-> 
-> tcpspray -n 1 -b 10000000 10.0.0.2
-> 
-> Oct 31 01:42:56 amd kernel: iwl3945: Microcode SW error detected.
-> Restarting 0x82000008.
-> Oct 31 01:42:56 amd kernel: iwl3945: Error Reply type 0x00000005 cmd
-> REPLY_TX (0x1C) seq 0x02C7 ser 0x0000004B
-> Oct 31 01:42:58 amd kernel: iwl3945: Can't stop Rx DMA.
+
+On Mon, 2007-11-12 at 13:14 +0200, Kalle Valo wrote:
+
+> Exactly, it is important for small mobile devices that beacons are
+> sent at the correct time. For example, I have seen broken APs which
+> Target Beacon Transmission Time fluctuates and Nokia N800 has high
+> power consumption because of that.
+
+The N800 and similar devices only wake up at DTIM beacons, right? So
+another idea would be to burst beacons but make sure the DTIM beacon
+time doesn't fluctuate away from the DTIM TBTT. This would be possible
+by changing the order of the beacons and adjusting the DTIM count so
+that the beacon with DTIM count zero is always the first.
+
+Noting beacon(BSS,DTIM count) you'd send:
+
+ - at TBTT 123: beacon(A,1), beacon(B,2), beacon(C,3)
+ - at TBTT 124: beacon(A,0), beacon(B,1), beacon(C,2)
+ - at TBTT 125: beacon(B,0), beacon(C,1), beacon(A,3)
+ - at TBTT 126: beacon(C,0), beacon(A,2), beacon(B,3)
+
+etc.
+
+The actual restrictions this imposes are very complicated to describe,
+easier to describe and implement are the restrictions
+
+ (a) identical beacon periods
+ (b) identical DTIM periods
+ (c) DTIM period > number of BSSes
+
+that result in a subset of the possible values being allowed. Slight
+relaxations could be allowed, identical DTIM periods are not really
+required when it is possible to schedule them in a non-conflicting way,
+i.e. (I think) when the sum over all 1/(DTIM period) is less or equal to
+one (all fit) and the gcd of all is not one (possible to schedule in a
+non-conflicting way).
+
+[An example: You could have four BSSes A-D, with DTIM periods 2, 4, 8
+and 16 respectively. The DTIM beacon scheduling would be
+ A, B, A, C, A, B, A, D, A, B, A, C, A, B, A, - (repeat)
+with all the other beacons at each period sent after the DTIM beacon.
+
+In the empty slot ("-") you could insert another BSS with DTIM period 16
+or a multiple of 16.]
+
+[The actual restrictions don't even require using identical beacon
+periods as long as there's a not too small value that divides all beacon
+periods. This is very hard to describe formally.]
+
+johannes
+
+--=-sYPlQZREJmfQdN1s06Qc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzmKAKVg1VMiehFYAQKowBAAnPUo0OtNE2eiCfAPhen2EQWyuTlbn6Ma
+kfkPBy8Na8v2bD6MuvbrLhMEoGhJM2iqf8YfDYzZAXfGvNla81kgzPTaBlKNXadf
+lT2yn6W93yET7IddJIi+LW4TCNeRyHJxyqs+QGzLlwWT87bM0VIvfrNahOdQJhXE
+g+V3ukUpmES5zDTziCbV0i40/2Nb0/ZxEAoGNi26TXDvTSXNiuA+ooaUGXvNW/mC
+4h52Et5uJc+/8f1UmYRkjI2An0dp6Fm9pz82QKxmDXi71M/4VqFfKnYBiWbw3wat
+3oR1kQ4fhrZZ9TYRsNcCmjk50LZb7VKWsuLJSZCBVdX2KhegS8cNF+ZH+MWYFqzj
+EE+As8WrPz2SVrZBaVxmyJAWGKDUkrpyuNRfIJSGV2EYs070GtJgdXdLEgqSIbsT
+jdvt+UD15UCAFOpMYqsOjD8x3iA6jkfoLUnOgr2kykP90p9mHQPHmQmGNh7GHsU/
+ngqCJQja5APxA8PK93mH3a8a3QFefC33pxjtPzB7JV9TZniT8FG1oiKOiFN3gIgL
+tc0yYL6A96pfsBd5c4WxDCgtv4Ju073cXpyMlbHLuImv0n16A/zrydQtoc2QeQ4K
+4YWQKhxsoQdN1mY8vdANC9WdJ5mOUE9u+7u8OztH+mndHzj/Fl47o1v2nkf71/Ge
+iHmHyiDH99Q=
+=jRUw
+-----END PGP SIGNATURE-----
+
+--=-sYPlQZREJmfQdN1s06Qc--
+
