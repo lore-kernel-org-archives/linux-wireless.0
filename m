@@ -1,64 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:4686 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752447AbXKYLXF (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:18244 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752565AbXKMQDS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 06:23:05 -0500
-Date: Sun, 25 Nov 2007 19:22:51 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-Message-ID: <20071125112251.GA10039@gondor.apana.org.au> (sfid-20071125_112313_443474_8DFEE9C7)
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <1195938799.4149.197.camel@johannes.berg> <20071125014446.GA32104@gondor.apana.org.au> <1195988428.4149.225.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195988428.4149.225.camel@johannes.berg>
+	Tue, 13 Nov 2007 11:03:18 -0500
+MIME-Version: 1.0
+Subject: RE: [PATCH 05/14] mac80211: adding 802.11n essential A-MPDUaddBAcapability
+Date: Tue, 13 Nov 2007 17:58:38 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB0403BC29@hasmsx411.ger.corp.intel.com> (sfid-20071113_160343_880662_388B9C8D)
+In-Reply-To: <1194886091.5229.66.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	<flamingice@sourmilk.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 25, 2007 at 12:00:28PM +0100, Johannes Berg wrote:
->
-> Not sure. On the one hand, yeah, that's something we should probably do,
-> on the other hand this will suck because for most drivers either nothing
-> needs to be done or the fixup is trivial. I suppose we should do this
-> but stick in a WARN_ON_ONCE() or something, at least with mac80211 debug
-> enabled.
+>> Well, aggregation handling is the next step if these patches are
+>> acceptable... :)
 
-I don't see how you can get a WARN_ON to work when you're expecting
-there to be unaligned packets from time to time as the hardware
-header changes.
+> :)
 
-> Also, we do plan to run these things on rather smallish embedded devices
-> like APs that receive a lot of frames from many stations, and with 11n
-> we're pushing speeds up by quite a bit. I'm wary of putting more code
-> into the generic receive path.
+>> You are right, A-MPDU is really in the bottom of the data plane
+>> architecture, so in most cases _creating_ it will be an HW feature,
+>> while A-MSDU should be implemented in a much higher level place in
+the
+>> flow.
+>> Two reasons why I placed A-MPDU handling in the mac80211:
+>> - A-MPDU demands a "session" level management (add BACK, del BACK,
+BAR),
+>> which looks to me more mac80211 oriented
+>> - A-MPDU extends the "Access Category" of 11e into "Traffic
+Identifier"
+>> (TID) to give finer granularity of frames priority. As mac80211
+already
+>> handles prioritization in wme.c, it looked like a good starting
+point.
 
-Well you don't have a choice if the hardware header is really
-unpredictable.  It's either that or we go and modify the entire
-IP stack which penalises all the high-speed Ethernet NICs that
-already get the alignment correctly.
+> Ok, thanks for the clarification. That means that when you implement
+> a-mpdu aggregation handling you'll have some way to tell the hardware
+to
+> aggregate the next N frames?
 
-> Well, you can receive non-QoS frames even in QoS or WPS frames in any
-> other mode etc. so you can't really make any promises as which will be
-> more common. Bu in practice all (sane) hardware makes sure things are
-> aligned properly.
+Absolutely. Furthermore, as the mac80211 will be the A-MPDU _session_
+manager, it will receive requests to start/stop aggregations, and will
+decide, upon HT information it has from association, low-driver
+capabilities and A-MPDU starting session "handshake", if aggregation is
+really desired and needed. This decision will be passed to HW and
+aggregation will start/stop.
 
-Here's an idea.  Even if you can't predict the header length of
-all packets, can you at least predict the header length of the
-majority of data (ones carrying IP etc.) packets?
+>> >> +	/* TODO - add here aggregation support */
+>> 
+>> > I think that comment is misleading. We don't add aggregation
+support
+>> > here but rather when adding it we must change this code, but
+anyway.
+>> > Don't bother.
+>> 
+>> I can remove that, just a reference for development convenience. 
 
-If so then you can do the skb_reserve based on that and the fix-up
-in the wireless core would be minimised.
+Yes, I will rephrase it for clarity.
 
-Since I know next to nothing about the wireless transport layer,
-one of you experts will need to tell me whether such a prediction
-could work :)
+> Nah, it's fine. Or maybe rephrase it a bit if you care.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
