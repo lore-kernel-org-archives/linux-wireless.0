@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53871
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757359AbXKTPT2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 10:19:28 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH v3] remove bcm43xx
-Date: Tue, 20 Nov 2007 16:18:21 +0100
-Cc: Andreas Schwab <schwab@suse.de>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-References: <20071119202121.6ad3fa70@morte> <jeir3xdyqu.fsf@sykes.suse.de> <4742F8A7.6070903@lwfinger.net>
-In-Reply-To: <4742F8A7.6070903@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711201618.21372.mb@bu3sch.de> (sfid-20071120_151932_624287_576814D5)
+Received: from mx1.redhat.com ([66.187.233.31]:42256 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756196AbXKMP0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2007 10:26:45 -0500
+Subject: Re: [PATCH] b43: Output message at startup if hardware switch for
+	radio is off
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200711121336.42389.hs4233@mail.mn-solutions.de>
+References: <4734e389.AF3t4zZIQw1IryOf%Larry.Finger@lwfinger.net>
+	 <200711101624.50808.mb@bu3sch.de>
+	 <200711121336.42389.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 13 Nov 2007 10:22:29 -0500
+Message-Id: <1194967349.2955.25.camel@localhost.localdomain> (sfid-20071113_152650_900702_D011DEEA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 20 November 2007 16:09:27 Larry Finger wrote:
-> Andreas Schwab wrote:
-> > Stefano Brivio <stefano.brivio@polimi.it> writes:
-> > 
-> >> --- drivers/net/wireless/b43/main.c.orig        2007-11-20 01:12:12.186524483 +0100
-> >> +++ drivers/net/wireless/b43/main.c     2007-11-20 01:12:34.922702865 +0100
-> >> @@ -947,7 +947,7 @@
-> >>
-> >>         while (1) {
-> >>                 v0 = b43_read32(dev, B43_MMIO_XMITSTAT_0);
-> >> -               if (!(v0 & 0x00000001))
-> >> +               if (!v0)
-> >>                         break;
-> >>                 v1 = b43_read32(dev, B43_MMIO_XMITSTAT_1);
-> >>
-> >> (probably it's not the solution, I just want to see what happens then).
-> > 
-> > That didn't change anything.
-> > 
-> >> BTW, what firmware are you using?
-> > 
-> > It's 410.2160 from wl_ap.o.
-> 
-> Please try version 351.126 from http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2,
-> which is the officially supported version.
+On Mon, 2007-11-12 at 13:36 +0100, Holger Schurig wrote:
+> > Well... Pressing the rfkill button is the _FIRST_ thing that I
+> > would do, if the device does not work. I'm wondering why
+> > people have a problem with that. On other operating systems
+> > it's the very same. On Windows there is no dmesg.
+>=20
+> On Windows, the "Wireless Network Connection" wizard displays
+>=20
+> -----------------------------------------------------
+> No wireless networks were found in range
+>=20
+> Make sure the wireless switch on your computer is on.
+> To see an updated list, click "Refresh network list".
+> -----------------------------------------------------
+>=20
+> The Linux =C3=A4quivalent would be NetworkManager or the KDE tools fo=
+r=20
+> this job.
+>=20
+>=20
+> That's at least displayed on the WinXP Embedded device that I=20
+> just created :-)
 
-There was some minor API change for newer firmware.
-I think the TX and RX header layout slightly changed. I'll address that
-later, as it's not too important now. (Or if someone else does want
-to fix it, please send some patches...)
+Good thought; NM should probably replace the "You're disconnected"
+notification dialog at startup with text that reads similar to remind
+the user that the killswitch is on.
 
--- 
-Greetings Michael.
+Dan
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
