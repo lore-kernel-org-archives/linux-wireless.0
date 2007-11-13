@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:47790 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755021AbXKODOH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 22:14:07 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so387057nze
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 19:14:06 -0800 (PST)
-Message-ID: <1197ff4c0711141914v6e68d29et32171ee298e9b9d6@mail.gmail.com> (sfid-20071115_031411_321667_298113CE)
-Date: Thu, 15 Nov 2007 11:14:05 +0800
-From: "Li YanBo" <dreamfly281@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Linux wireless 802.11n progress
-Cc: "Jeff Williams" <angelbane@ou.edu>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0711141354590.25443@dulcinea>
+Received: from post.fh-kl.de ([143.93.17.200]:34731 "EHLO post.fh-kl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751134AbXKMMMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2007 07:12:53 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by post.fh-kl.de (Postfix) with ESMTP id 32F4C240FE9F
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 12:52:00 +0100 (CET)
+Received: from post.fh-kl.de ([127.0.0.1])
+	by localhost (post.fh-kl.de [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id VsB6tiJhrUNk for <linux-wireless@vger.kernel.org>;
+	Tue, 13 Nov 2007 12:51:54 +0100 (CET)
+Received: from [10.0.60.129] (sub21.rz-zw.fh-kl.de [143.93.17.21])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by post.fh-kl.de (Postfix) with ESMTP id 733082401E88
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 12:51:54 +0100 (CET)
+Message-ID: <47398FD8.6030409@fh-kl.de> (sfid-20071113_121257_510832_155EFB03)
+Date: Tue, 13 Nov 2007 12:51:52 +0100
+From: Patrick Ziegler <patrick.ziegler@fh-kl.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890711141058l722015d0x6a214f2754ad2e4a@mail.gmail.com>
-	 <Pine.LNX.4.64.0711141323470.22645@dulcinea>
-	 <43e72e890711141141j55135ebch49aa358307b33b4@mail.gmail.com>
-	 <Pine.LNX.4.64.0711141354590.25443@dulcinea>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Wimax
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 15, 2007 4:00 AM, Jeff Williams <angelbane@ou.edu> wrote:
->
->
-> On Wed, 14 Nov 2007, Luis R. Rodriguez wrote:
->
-> > On Nov 14, 2007 2:33 PM, Jeff Williams <angelbane@ou.edu> wrote:
-> >
+Hi,
 
-> Also the linksys wap54gx, wrt54gx2, and wrt54gx4, the netgear wpnt834,
-> asus wl566gm, belkin f5d8230-4, buffalo wzr-g108 all have either AGN100s
-> or AGN300s
->
+is there any support for Wimax network cards in the kernel yet ?
 
-And Linksys WPC511GX , Buffalo WLI-CB-G108, AeroGuard AGN1023PC
-Planex CQW-NS108AG, Planex CQW-NS108G, Samsung X20 Laptop
-GemTek WPCO-131G, Corega CG-WLCB108GM  (CMIIW)
+is this the right mailing list for this topic ?
 
-> >> There are currently no Airgo wifi cards that support 802.11n that I am
-> >> aware of. Certainly none that are vendor supported at this time. I know
-> >> that Airgo is one of the Draft members, but I don't think they've
-> >> released any cards for the draft 802.11n.
-> >
-> > I'm confused, I thought the above are 802.11n cards?
->
-> Technically, Belkin and Netgear branded the AGN100 as Pre-N, but they were
-> designed and released prior to the Draft 1.0 Spec. In fact, Airgo has
-> declaimed the two released Drafts.
->
-
-As Jeff said, they are Pre-N card and don't make sure compatible with 802.11n.
-There is no any 802.11n support in the currently driver so far.
-
-> As far as no chipsets for Draft N 2.0, I stand corrected. It appears as
-> though Qualcomm (who bought Airgo in 2006) has released the AGN400
-> http://www.qualcomm.com/press/releases/2006/061203_availability_worlds_first.html
-> though I can't find any products that use it. If anyone does, I would be
-> greatly interested in buying one!
->
-
-It seemed there is no AGN400 based card in market. If anyone knows, I
-also be very interesting. :)
+is someone working on a Wimax integration ?
 
 
-Li YanBo
+regards
+
+Patrick
