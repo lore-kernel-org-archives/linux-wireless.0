@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:20288 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbXKWCEY (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52223
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750893AbXKNFKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 21:04:24 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so2393031nze
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 18:04:23 -0800 (PST)
-Message-ID: <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com> (sfid-20071123_020430_521558_587D061E)
-Date: Thu, 22 Nov 2007 21:04:22 -0500
-From: "Vadim Peretokin" <vperetokin@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Belin FD7010 v7
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1195781993.11966.27.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-	 <1195781993.11966.27.camel@dv>
+	Wed, 14 Nov 2007 00:10:55 -0500
+Date: Tue, 13 Nov 2007 21:10:54 -0800 (PST)
+Message-Id: <20071113.211054.45565962.davem@davemloft.net> (sfid-20071114_051110_986982_7ADB5A49)
+To: yi.zhu@intel.com
+Cc: oneukum@suse.de, linville@tuxdriver.com, netdev@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net, dcbw@redhat.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH]iwlwifi not correctly dealing with hotunplug
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1195003854.3250.120.camel@debian.sh.intel.com>
+References: <200711131926.53732.oneukum@suse.de>
+	<1195003854.3250.120.camel@debian.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ahh I'm afraid no, I'm not quite there yet and need my laptop
-functional. But I'll let you know then when the next version of Ubuntu
-comes about, thank you!
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Wed, 14 Nov 2007 09:30:54 +0800
 
-On Nov 22, 2007 8:39 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Thu, 2007-11-22 at 15:39 -0500, Vadim Peretokin wrote:
->
-> > But that is very ambiguous. Does that mean if anything is being done
-> > to make this card work, do you know?
->
-> The mac80211 driver for rtl8180/rtl8185 appeared in the "everything"
-> branch of the wireless-2.6 repository just weeks ago.  If you are ready
-> to recompile the kernel, use this to get the repository:
->
-> git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-> cd wireless-2.6
-> git-checkout --track -b everything remotes/origin/everything
->
-> Make sure CONFIG_RTL8180 is enabled in .config file.
->
-> --
-> Regards,
-> Pavel Roskin
->
->
+> 
+> On Tue, 2007-11-13 at 19:26 +0100, Oliver Neukum wrote:
+> > It makes no sense to enable interrupts if a device has been unplugged.
+> > In addition if in doubt IRQ_HANDLED should be returned.
+> > 
+> > Signed-off-by: Oliver Neukum <oneukum@suse.de>
+> 
+> ACK.
+
+I've applied Olver's patch, thanks.
+
