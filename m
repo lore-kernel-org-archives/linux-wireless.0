@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21016 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbXKVPml (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44759 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386AbXKNMyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 10:42:41 -0500
-Received: from lin01.mn-solutions.de (pD95F8740.dip0.t-ipconnect.de [217.95.135.64])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id DD5725E4007
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:42:39 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 35D841E00FD
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:39:45 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 regression: doesn't associate automatically
-Date: Thu, 22 Nov 2007 16:43:08 +0100
-References: <200711220912.10452.hs4233@mail.mn-solutions.de> <200711221605.55506.hs4233@mail.mn-solutions.de> <1195744414.4149.14.camel@johannes.berg>
-In-Reply-To: <1195744414.4149.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711221643.08290.hs4233@mail.mn-solutions.de> (sfid-20071122_154243_462130_9C146902)
+	Wed, 14 Nov 2007 07:54:53 -0500
+Subject: Re: [PATCH 4/4] o80211s: (zd1211rw-mac80211) support for mesh
+	interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1194974513.6057.17.camel@localhost> (sfid-20071113_172230_107842_7950721E)
+References: <473516f2.15528c0a.7196.3372@mx.google.com>
+	 (sfid-20071110_022703_924708_89D9D43C)  <1194689934.7258.66.camel@johannes.berg>
+	 <1194911599.6980.107.camel@localhost>
+	 (sfid-20071112_235326_369001_A52ADA69)  <1194959673.9116.46.camel@johannes.berg>
+	 <1194974513.6057.17.camel@localhost> (sfid-20071113_172230_107842_7950721E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Bn40wOO+1NlxjYJHGGQ/"
+Date: Wed, 14 Nov 2007 13:49:05 +0100
+Message-Id: <1195044545.4091.10.camel@johannes.berg> (sfid-20071114_125457_704934_4A93146D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Bottom line is, I don't care.
 
-So much I figured out by myself.
-
-
-Maybe you can show me a non-mac80211 driver that behaves in the 
-same way as mac80211?  In other words, a driver where you can do
-
-ifconfig eth1 up
-iwconfig eth1 essid SOMESSID
-iwconfig eth1 key s:11111
-
-and where, as in mac80211, you don't get an association (assuming 
-that the AP is set up accordingly). If you can show me 5 
-drivers, than I'm willing to assume that there is no regression.
+--=-Bn40wOO+1NlxjYJHGGQ/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-So far I haven't seen one non-mac80211 driver that did not 
-associate with this sequence.
+> > > > Does that mean you're hardcoding the beacon interval here while bef=
+ore
+> > > > you confused me how we should handle that setting in userspace? :)
+> > >=20
+> > > I am not sure what are you referring to... anyway, by now I think it'=
+s
+> > > fine to hard code the beacon interval, but in mac80211 instead of the
+> > > driver adding a beacon_int field to ieee80211_if_conf.
+> >=20
+> > Well that | 100 looks like it'd be a beacon interval in the lower N bit=
+s
+> > of the value that's set there.
+>=20
+> Yes, it is, and I agree it should be moved up to mac80211. What I meant
+> is that I do not remember saying anything about how to handle that
+> setting in user space (and thus I don't know when I confused you).
+
+Ah, from userspace, yeah, that's a whole different issue.
+
+johannes
+
+--=-Bn40wOO+1NlxjYJHGGQ/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzruwKVg1VMiehFYAQIgjg//SpV5h5g2dOq1gCbyZSNe61OQ6L5pGXzY
+/7va/OJZYaLKHAwnT7jsN/RcpwKrCVVS+H2vsqeyGO9CheSze7lP5iVu74NIb8Wb
+vZlNouJCvXxmPUfUzYQkvs1ggv1s0z8tIhUTVaRIGY/9W0tycUFD9iPKz6Lnovk6
+YqJPnfKj6sfUT8CetUkxL12KZwNV9j9PS7pt5jE/arcsGbWJQfOIJBNOisudiIfS
+F0yFK5/6NiRPnNMkAgUeZS6BvT3xLpTAnpZPdQH2zkQ9IkEgugjrwrebX/nG1Fzg
+LXTtXqeKUsBD7IKdrALNQ2g0c3uezee9L/gTAFy9oNEpaSDtH3GbRTQ4asu//hPh
+/D+Zx12VH3uvFeqqewc2qxF72T6gu6IfGc8R8W4fGX/wAem8HY3wcHUzGLLDJjNJ
+rTALgvicVTIwQd1yYO58NsNGYes+iSsGawxORU2A09kJQ6mBEbfdmt4iZwsf54St
++PU3lRAt1luO9oCapImeb7frO1lyNGVMQBD7fhMGvaQCzJxUUsj78L9QE2cgq885
+UHVFbeOxJMK0xMiAAaELi6ixMyBug4RZ5rThLEDDFysMudX9ouz8eW9gXLA0gN4x
+mlDdGlyShTZb1MFcmokgoR3feIElpebB3eY+EzywGVxHAFp4QXenj1DSwjiI+2vl
+NqGmJLZVgQc=
+=DS0P
+-----END PGP SIGNATURE-----
+
+--=-Bn40wOO+1NlxjYJHGGQ/--
+
