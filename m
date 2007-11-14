@@ -1,239 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbXKZQcG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 11:32:06 -0500
-Subject: Re: [PATCH 05/15] mac80211: adding 802.11n essential A-MPDU addBA
-	capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <1196086491335-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-	 <1196086491335-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XBC7qi33g1DWC/RUtTJW"
-Date: Mon, 26 Nov 2007 17:31:58 +0100
-Message-Id: <1196094718.4149.299.camel@johannes.berg> (sfid-20071126_163209_138763_2C0280AD)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:34035 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756692AbXKNR5r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 12:57:47 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 02/15] mac80211: adding 802.11n definitions in ieee80211.h
+Date: Wed, 14 Nov 2007 19:57:38 +0200
+Message-Id: <11950630581850-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_175751_147268_D756DE23)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds several structs and definitions to ieee80211.h
+to support 802.11n draft specifications.
+As 802.11n depends on and extends the 802.11e standard in several issues,
+there are also several definitions that belong to 802.11e.
 
---=-XBC7qi33g1DWC/RUtTJW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ include/linux/ieee80211.h |  117 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 117 insertions(+), 0 deletions(-)
 
+Index: wl2_6_24_HT/include/linux/ieee80211.h
+===================================================================
+--- wl2_6_24_HT.orig/include/linux/ieee80211.h
++++ wl2_6_24_HT/include/linux/ieee80211.h
+@@ -54,6 +54,8 @@
+ #define IEEE80211_STYPE_ACTION		0x00D0
+ 
+ /* control */
++#define IEEE80211_STYPE_BACK_REQ	0x0080
++#define IEEE80211_STYPE_BACK		0x0090
+ #define IEEE80211_STYPE_PSPOLL		0x00A0
+ #define IEEE80211_STYPE_RTS		0x00B0
+ #define IEEE80211_STYPE_CTS		0x00C0
+@@ -185,6 +187,25 @@ struct ieee80211_mgmt {
+ 					u8 new_chan;
+ 					u8 switch_count;
+ 				} __attribute__((packed)) chan_switch;
++				struct{
++					u8 action_code;
++					u8 dialog_token;
++					__le16 capab;
++					__le16 timeout;
++					__le16 start_seq_num;
++				} __attribute__((packed)) addba_req;
++				struct{
++					u8 action_code;
++					u8 dialog_token;
++					__le16 status;
++					__le16 capab;
++					__le16 timeout;
++				} __attribute__((packed)) addba_resp;
++				struct{
++					u8 action_code;
++					__le16 params;
++					__le16 reason_code;
++				} __attribute__((packed)) delba;
+ 			} u;
+ 		} __attribute__ ((packed)) action;
+ 	} u;
+@@ -205,6 +226,66 @@ struct ieee80211_cts {
+ 	u8 ra[6];
+ } __attribute__ ((packed));
+ 
++/**
++ * struct ieee80211_bar - HT Block Ack Request
++ *
++ * This structure refers to "HT BlockAckReq" as 
++ * described in 802.11n draft section 7.2.1.7.1
++ */
++struct ieee80211_bar {
++	__le16 frame_control;
++	__le16 duration;
++	__u8 ra[6];
++	__u8 ta[6];
++	__u16 control;
++	__u16 start_seq_num;
++} __attribute__((packed));
++
++/**
++ * struct ieee80211_ht_cap - HT capabilities
++ *
++ * This structure refers to "HT capabilities element" as 
++ * described in 802.11n draft section 7.3.2.52
++ */
++struct ieee80211_ht_cap {
++	__le16 cap_info;
++	u8 ampdu_params_info;
++	u8 supp_mcs_set[16];
++	__le16 extended_ht_cap_info;
++	__le32 tx_BF_cap_info;
++	u8 antenna_selection_info;
++} __attribute__ ((packed));
++
++/**
++ * struct ieee80211_ht_cap - HT additional information
++ *
++ * This structure refers to "HT information element" as 
++ * described in 802.11n draft section 7.3.2.53
++ */
++struct ieee80211_ht_addt_info {
++	u8 control_chan;
++	u8 ht_param;
++	__le16 operation_mode;
++	__le16 stbc_param;
++	u8 basic_set[16];
++} __attribute__ ((packed));
++
++/* 802.11n HT capabilities masks */
++#define IEEE80211_HT_CAP_SUP_WIDTH		0x0002
++#define IEEE80211_HT_CAP_MIMO_PS		0x000C
++#define IEEE80211_HT_CAP_GRN_FLD		0x0010
++#define IEEE80211_HT_CAP_SGI_20			0x0020
++#define IEEE80211_HT_CAP_SGI_40			0x0040
++#define IEEE80211_HT_CAP_DELAY_BA		0x0400
++#define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
++#define IEEE80211_HT_CAP_AMPDU_FACTOR		0x03
++#define IEEE80211_HT_CAP_AMPDU_DENSITY		0x1C
++/* 802.11n HT IE masks */
++#define IEEE80211_HT_IE_CHA_SEC_OFFSET		0x03
++#define IEEE80211_HT_IE_CHA_WIDTH		0x04
++#define IEEE80211_HT_IE_HT_PROTECTION		0x0003
++#define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
++#define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
+ 
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+@@ -271,6 +352,18 @@ enum ieee80211_statuscode {
+ 	WLAN_STATUS_UNSUPP_RSN_VERSION = 44,
+ 	WLAN_STATUS_INVALID_RSN_IE_CAP = 45,
+ 	WLAN_STATUS_CIPHER_SUITE_REJECTED = 46,
++	/* 802.11e */
++	WLAN_STATUS_UNSPECIFIED_QOS = 32,
++	WLAN_STATUS_ASSOC_DENIED_NOBANDWIDTH = 33,
++	WLAN_STATUS_ASSOC_DENIED_LOWACK = 34,
++	WLAN_STATUS_ASSOC_DENIED_UNSUPP_QOS = 35,
++	WLAN_STATUS_REQUEST_DECLINED = 37,
++	WLAN_STATUS_INVALID_QOS_PARAM = 38,
++	WLAN_STATUS_CHANGE_TSPEC = 39,
++	WLAN_STATUS_WAIT_TS_DELAY = 47,
++	WLAN_STATUS_NO_DIRECT_LINK = 48,
++	WLAN_STATUS_STA_NOT_PRESENT = 49,
++	WLAN_STATUS_STA_NOT_QSTA = 50,
+ };
+ 
+ 
+@@ -301,6 +394,16 @@ enum ieee80211_reasoncode {
+ 	WLAN_REASON_INVALID_RSN_IE_CAP = 22,
+ 	WLAN_REASON_IEEE8021X_FAILED = 23,
+ 	WLAN_REASON_CIPHER_SUITE_REJECTED = 24,
++	/* 802.11e */
++	WLAN_REASON_DISASSOC_UNSPECIFIED_QOS = 32,
++	WLAN_REASON_DISASSOC_QAP_NO_BANDWIDTH = 33,
++	WLAN_REASON_DISASSOC_LOW_ACK = 34,
++	WLAN_REASON_DISASSOC_QAP_EXCEED_TXOP = 35,
++	WLAN_REASON_QSTA_LEAVE_QBSS = 36,
++	WLAN_REASON_QSTA_NOT_USE = 37,
++	WLAN_REASON_QSTA_REQUIRE_SETUP = 38,
++	WLAN_REASON_QSTA_TIMEOUT = 39,
++	WLAN_REASON_QSTA_CIPHER_NOT_SUPP = 45,
+ };
+ 
+ 
+@@ -319,6 +422,15 @@ enum ieee80211_eid {
+ 	WLAN_EID_HP_PARAMS = 8,
+ 	WLAN_EID_HP_TABLE = 9,
+ 	WLAN_EID_REQUEST = 10,
++	/* 802.11e */
++	WLAN_EID_QBSS_LOAD = 11,
++	WLAN_EID_EDCA_PARAM_SET = 12,
++	WLAN_EID_TSPEC = 13,
++	WLAN_EID_TCLAS = 14,
++	WLAN_EID_SCHEDULE = 15,
++	WLAN_EID_TS_DELAY = 43,
++	WLAN_EID_TCLAS_PROCESSING = 44,
++	WLAN_EID_QOS_CAPA = 46,
+ 	/* 802.11h */
+ 	WLAN_EID_PWR_CONSTRAINT = 32,
+ 	WLAN_EID_PWR_CAPABILITY = 33,
+@@ -333,6 +445,9 @@ enum ieee80211_eid {
+ 	/* 802.11g */
+ 	WLAN_EID_ERP_INFO = 42,
+ 	WLAN_EID_EXT_SUPP_RATES = 50,
++	/* 802.11n */
++	WLAN_EID_HT_CAPABILITY = 45,
++	WLAN_EID_HT_EXTRA_INFO = 61,
+ 	/* 802.11i */
+ 	WLAN_EID_RSN = 48,
+ 	WLAN_EID_WPA = 221,
+@@ -341,6 +456,25 @@ enum ieee80211_eid {
+ 	WLAN_EID_QOS_PARAMETER = 222
+ };
+ 
++/* Action category code */
++enum ieee80211_category {
++	WLAN_CATEGORY_SPECTRUM_MGMT = 0,
++	WLAN_CATEGORY_QOS = 1,
++	WLAN_CATEGORY_DLS = 2,
++	WLAN_CATEGORY_BACK = 3,
++	WLAN_CATEGORY_WMM = 17,
++};
++
++/* BACK action code */
++enum ieee80211_back_actioncode {
++	WLAN_ACTION_ADDBA_REQ = 0,
++	WLAN_ACTION_ADDBA_RESP = 1,
++	WLAN_ACTION_DELBA = 2,
++};
++
++/* A-MSDU 802.11n */
++#define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
++
+ /* cipher suite selectors */
+ #define WLAN_CIPHER_SUITE_USE_GROUP	0x000FAC00
+ #define WLAN_CIPHER_SUITE_WEP40		0x000FAC01
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
-> This patch adds the capability to identify and answer an add block ACK
-> request.
-> As this series of patches only adds HT handling with no aggregations,
-> (A-MPDU aggregations acceptance is not obligatory according to 802.11n
-> draft) we are currently sending back a refusal upon this request.
->=20
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-Do you have a plan already on how to fill in that TODO? Just curious.
-
-> ---
->  net/mac80211/ieee80211_sta.c |  124 ++++++++++++++++++++++++++++++++++++=
-++++++
->  1 files changed, 124 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index 2e23137..0f133e3 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -57,6 +57,13 @@
-> =20
->  #define ERP_INFO_USE_PROTECTION BIT(1)
-> =20
-> +/* mgmt header + 1 byte action code */
-> +#define IEEE80211_MIN_ACTION_SIZE (24 + 1)
-> +
-> +#define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
-> +#define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
-> +#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
-> +
->  static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
->  				     u8 *ssid, size_t ssid_len);
->  static struct ieee80211_sta_bss *
-> @@ -991,6 +998,91 @@ static void ieee80211_auth_challenge(struct net_devi=
-ce *dev,
->  			    elems.challenge_len + 2, 1);
->  }
-> =20
-> +static void ieee80211_send_addba_resp(struct net_device *dev, u8 *da, u1=
-6 tid,
-> +					u8 dialog_token, u16 status, u16 policy,
-> +					u16 buf_size, u16 timeout)
-> +{
-> +	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +	struct sk_buff *skb;
-> +	struct ieee80211_mgmt *mgmt;
-> +	u16 capab;
-> +
-> +	skb =3D dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
-> +	if (!skb) {
-> +		printk(KERN_DEBUG "%s: failed to allocate buffer "
-> +		       "for addba resp frame\n", dev->name);
-> +		return;
-> +	}
-> +
-> +	skb_reserve(skb, local->hw.extra_tx_headroom);
-> +	mgmt =3D (struct ieee80211_mgmt *) skb_put(skb, 24);
-> +	memset(mgmt, 0, 24);
-> +	memcpy(mgmt->da, da, ETH_ALEN);
-> +	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
-> +	if (sdata->type =3D=3D IEEE80211_IF_TYPE_AP)
-> +		memcpy(mgmt->bssid, dev->dev_addr, ETH_ALEN);
-> +	else
-> +		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
-> +	mgmt->frame_control =3D IEEE80211_FC(IEEE80211_FTYPE_MGMT,
-> +					   IEEE80211_STYPE_ACTION);
-> +
-> +	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_resp));
-> +	mgmt->u.action.category =3D WLAN_CATEGORY_BACK;
-> +	mgmt->u.action.u.addba_resp.action_code =3D WLAN_ACTION_ADDBA_RESP;
-> +	mgmt->u.action.u.addba_resp.dialog_token =3D dialog_token;
-> +
-> +	capab =3D (u16)(policy << 1);	/* bit 1 aggregation policy */
-> +	capab |=3D (u16)(tid << 2); 	/* bit 5:2 TID number */
-> +	capab |=3D (u16)(buf_size << 6);	/* bit 15:6 max size of aggregation */
-> +
-> +	mgmt->u.action.u.addba_resp.capab =3D cpu_to_le16(capab);
-> +	mgmt->u.action.u.addba_resp.timeout =3D cpu_to_le16(timeout);
-> +	mgmt->u.action.u.addba_resp.status =3D cpu_to_le16(status);
-> +
-> +	ieee80211_sta_tx(dev, skb, 0);
-> +
-> +	return;
-> +}
-> +
-> +static void ieee80211_sta_process_addba_request(struct net_device *dev,
-> +						struct ieee80211_mgmt *mgmt,
-> +						size_t len)
-> +{
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +	struct sta_info *sta;
-> +	u16 capab, tid, timeout, ba_policy, buf_size, status;
-> +	u8 dialog_token;
-> +
-> +	sta =3D sta_info_get(local, mgmt->sa);
-> +	if (!sta)
-> +		return;
-> +
-> +	/* extract session parameters from addba request frame */
-> +	dialog_token =3D mgmt->u.action.u.addba_req.dialog_token;
-> +	timeout =3D le16_to_cpu(mgmt->u.action.u.addba_req.timeout);
-> +
-> +	capab =3D le16_to_cpu(mgmt->u.action.u.addba_req.capab);
-> +	ba_policy =3D (capab & IEEE80211_ADDBA_PARAM_POLICY_MASK) >> 1;
-> +	tid =3D (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-> +	buf_size =3D (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
-> +
-> +	/* TODO - currently aggregation is declined (A-MPDU add BA request
-> +	* acceptance is not obligatory by 802.11n draft), but here is
-> +	* the entry point for dealing with it */
-> +#ifdef MAC80211_HT_DEBUG
-> +	if (net_ratelimit())
-> +		printk(KERN_DEBUG "Add Block Ack request arrived,"
-> +				   " currently denying it\n");
-> +#endif /* MAC80211_HT_DEBUG */
-> +
-> +	status =3D WLAN_STATUS_REQUEST_DECLINED;
-> +
-> +	ieee80211_send_addba_resp(sta->dev, sta->addr, tid, dialog_token,
-> +				status, 1, buf_size, timeout);
-> +	sta_info_put(sta);
-> +}
-> =20
->  static void ieee80211_rx_mgmt_auth(struct net_device *dev,
->  				   struct ieee80211_if_sta *ifsta,
-> @@ -1864,6 +1956,34 @@ static void ieee80211_rx_mgmt_probe_req(struct net=
-_device *dev,
->  	ieee80211_sta_tx(dev, skb, 0);
->  }
-> =20
-> +void ieee80211_rx_mgmt_action(struct net_device *dev,
-> +			     struct ieee80211_if_sta *ifsta,
-> +			     struct ieee80211_mgmt *mgmt,
-> +			     size_t len)
-> +{
-> +	if (len < IEEE80211_MIN_ACTION_SIZE)
-> +		return;
-> +
-> +	switch (mgmt->u.action.category) {
-> +	case WLAN_CATEGORY_BACK:
-> +		switch (mgmt->u.action.u.addba_req.action_code) {
-> +		case WLAN_ACTION_ADDBA_REQ:
-> +			if (len < (IEEE80211_MIN_ACTION_SIZE +
-> +				   sizeof(mgmt->u.action.u.addba_req)))
-> +				break;
-> +			ieee80211_sta_process_addba_request(dev, mgmt, len);
-> +			break;
-> +		default:
-> +			if (net_ratelimit())
-> +			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
-> +					dev->name);
-> +			break;
-> +		}
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +}
-> =20
->  void ieee80211_sta_rx_mgmt(struct net_device *dev, struct sk_buff *skb,
->  			   struct ieee80211_rx_status *rx_status)
-> @@ -1893,6 +2013,7 @@ void ieee80211_sta_rx_mgmt(struct net_device *dev, =
-struct sk_buff *skb,
->  	case IEEE80211_STYPE_REASSOC_RESP:
->  	case IEEE80211_STYPE_DEAUTH:
->  	case IEEE80211_STYPE_DISASSOC:
-> +	case IEEE80211_STYPE_ACTION:
->  		skb_queue_tail(&ifsta->skb_queue, skb);
->  		queue_work(local->hw.workqueue, &ifsta->work);
->  		return;
-> @@ -1950,6 +2071,9 @@ static void ieee80211_sta_rx_queued_mgmt(struct net=
-_device *dev,
->  	case IEEE80211_STYPE_DISASSOC:
->  		ieee80211_rx_mgmt_disassoc(dev, ifsta, mgmt, skb->len);
->  		break;
-> +	case IEEE80211_STYPE_ACTION:
-> +		ieee80211_rx_mgmt_action(dev, ifsta, mgmt, skb->len);
-> +		break;
->  	}
-> =20
->  	kfree_skb(skb);
-
---=-XBC7qi33g1DWC/RUtTJW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0r0/aVg1VMiehFYAQKwtBAAk/5qddyLQex6Z66hDoDsEOoRdfHoYHYQ
-Oj/zrjCu4Xt8Ctl/jyX5Zy7XQUXGF8QM5iAWcyZ8wNCSJEBknb6/Qg/5I8fxG7Dd
-mB1E1z3T9TGhI5RJMhOl/4QJJ6EtKxYGUZgoqiEVKzaagMQ81ePADiN7SafgHUOg
-fb2/ZCJIFyWcXEfMRfHnznDEJlkA2BIxNhy2xHbRsFR00YBQfkFJsw07eT48N8nu
-GPRpvjEkJJDttkJKwk1T+mr00t+y60/SRQc7P6pDpQD28D4/i7mDPbn5gHlESj7P
-Kk+xbu4NCisEooRoSLKiaijqtQ05ZDsDN81+ahOYPXi/taI+nqbGoymoAm/IetD/
-FYAcHZ1BJkGhsBjOF9tXJ5f3wQDKQcTu5sXpGZHUcmzYBvLdgu3oxm3wpnJsBWdF
-DHujfigCmQTCaqQaVbdnJfNryp63LHCmtzii7IuR8vTXkFI9waqfNNTnuuQar5+A
-4Wm29ky37mRxejUlRAXmThzpz/xwJdCTNg/9KU1GjgA5CXEQb9W8iAXWlLvqD/+b
-4STciPrSkTfxNb7CJEvAr39XC7Kf5IawI9fAEbfDp2doPfzdM2E/3CZAdnnrTXO+
-WEtcGxcSqgtWSpr6uvIi3QlRdhkEDSW4ti+Et2/TxsvqvY31dtKHBPGq43myi4h8
-FPyuqwYtc2o=
-=SDUG
------END PGP SIGNATURE-----
-
---=-XBC7qi33g1DWC/RUtTJW--
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
