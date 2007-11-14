@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47802 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbXKNQDI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 11:03:08 -0500
-Subject: Re: [PATCH 02/15] mac80211: adding 802.11n definitions in
-	ieee80211.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <11950542003481-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-	 <11950542003481-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GhXqrNcPI9/G5BJWBwVc"
-Date: Wed, 14 Nov 2007 17:04:28 +0100
-Message-Id: <1195056268.4091.24.camel@johannes.berg> (sfid-20071114_160312_145910_349D7C73)
-Mime-Version: 1.0
+Received: from hydra.gt.owl.de ([195.71.99.218]:33545 "EHLO hydra.gt.owl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754257AbXKNPdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:33:49 -0500
+Date: Wed, 14 Nov 2007 16:33:47 +0100
+From: Florian Lohoff <flo@rfc822.org>
+To: Marcus Better <marcus@better.se>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
+Message-ID: <20071114153347.GA3512@paradigm.rfc822.org> (sfid-20071114_153352_380199_1D25043B)
+References: <20071111102315.GC10486@paradigm.rfc822.org> <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> <20071113192330.GA19601@paradigm.rfc822.org> <fhedc4$5l9$1@ger.gmane.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2fHTh5uZTiUOsy+g"
+In-Reply-To: <fhedc4$5l9$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GhXqrNcPI9/G5BJWBwVc
-Content-Type: text/plain
+--2fHTh5uZTiUOsy+g
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, Nov 14, 2007 at 09:58:44AM +0100, Marcus Better wrote:
+> Florian Lohoff wrote:
+> > You are right - its caused by a VERY low bitrate:
+>=20
+> Looks similar to the problem I have:
+>=20
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/6830
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D9273
 
-> This patch adds several structs and definitions to ieee80211.h
-> to support 802.11n draft specifications.
-> As 802.11n depends on and extends the 802.11e standard in several issues,
-> there are also several definitions that belong to 802.11e.
+Did you actually try setting the rate manually? I just tried
+when i came home from work. I set it to 36MBit/s and it actually
+works ... I am now transferring with 2.5MByte/s instead of 30Kbyte/s
 
-Do I remember wrongly or didn't you want to add comments here to explain
-the structure names?
+So i guess the auto rate selection is broken ... Or 1 MBit/s is default
+or something ...
 
-Thanks,
-Johannes
+Flo
+--=20
+Florian Lohoff                  flo@rfc822.org             +49-171-2280134
+	Those who would give up a little freedom to get a little=20
+          security shall soon have neither - Benjamin Franklin
 
---=-GhXqrNcPI9/G5BJWBwVc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--2fHTh5uZTiUOsy+g
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iQIVAwUARzsci6Vg1VMiehFYAQJFdhAAiD9js1eoMKg2AZBQi+LixtPmdIRj7CIS
-FviNbujMh8ZdzB9u3PMaY/fxsTqDJI+JpYLFNorS9FYmc+jYMU9RXKODPxtPTJsN
-WqwX/bwo78Z6RO2hR39DR89RfKbbD272Qqfa4hqbF73Vo8qoL5RniDQ6JLVsOCnc
-W36NzxJco9w2vFPFDGmoIRQFyyyoRZ7rzdnLa3htcqvtUJ+lgklna/4KHX0voN0L
-BBBGIaspMlpE1H6Yw6Si6LPJaI8scSMi8brC7f8NupWG4XzII+fUbCPkK5zod/xu
-4jUsp7ylzV9UJuOZncCzUJDbnxN4RyhGXgSycKER4GARQYEyRY0jSqRFUKFi5N0z
-nwOyxGijqZfYSI/LexSYcG6azOL6y8UsHcQlBAg4wxAO26Zte5kRM4CmNWOZsO1l
-XLrk8C6HXWwu61OJ9ZygVgT6vXbGgYIWfmZXqevD2xnaSYe43fJbLi21L95aihjI
-DYTnYyAOgU9MBP/nazFBdDeDdzDQ6HXBJYrVhbXF5q/oLkl74iRm8emHnB6ASbfT
-1LN3AtzthQ49lX8qu8jZkY3vpKNGyeGEWlP+2ciroupBIlENXNfCDvZkC9a6QAED
-g8Ed8hAUL9tBUADQCNjJq/O+EIjgkou7p1Wjuq5KaHrShFq68dwdkFLREZ8Si/Uh
-VaWhr8e/zXM=
-=aK0T
+iD8DBQFHOxVbUaz2rXW+gJcRAnyFAJ95jZxXKBmW2pq9HoIm+nikljVltgCffTWX
+neH0gftGwylL/dXdhbkWn38=
+=TBcU
 -----END PGP SIGNATURE-----
 
---=-GhXqrNcPI9/G5BJWBwVc--
-
+--2fHTh5uZTiUOsy+g--
