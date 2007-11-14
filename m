@@ -1,73 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail10.tpgi.com.au ([203.12.160.147]:33841 "EHLO
-	mail10.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325AbXK3FeP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 00:34:15 -0500
-Message-ID: <474FA03E.9090805@hotmail.com> (sfid-20071130_053422_148785_576E8AE3)
-Date: Fri, 30 Nov 2007 16:31:42 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-MIME-Version: 1.0
-To: Daniel Drake <dsd@gentoo.org>
-CC: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com> <47443F78.60701@gentoo.org>
-In-Reply-To: <47443F78.60701@gentoo.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:42747 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755095AbXKNPgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:36:07 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 09/15] iwlwifi: 802.11n new framework structures preperation
+Date: Wed, 14 Nov 2007 17:29:45 +0200
+Message-Id: <11950542013080-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153626_461368_2D4BBAE9)
+In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+This patch removes unnecessary or duplicate 802.11n data from structures
+in the code, and prepares them for new mac80211's 802.11n framework
 
-Daniel Drake wrote:
->> Interestingly, after performing the above actions, I am now getting 
->> additional log messages:
->>
->> SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
->> Kernel unaligned access at TPC[100df410] 
->> ieee80211softmac_handle_assoc_response]
->> Kernel unaligned access at TPC[100df548] 
->> ieee80211softmac_handle_assoc_response]
-> 
-> This one doesn't include any offsets, did the line get cut off?
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |   27 +++++++++++----------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
+ 3 files changed, 12 insertions(+), 19 deletions(-)
 
-Yes, it did. Sorry about that. Please find it extracted from syslog:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 5189788..9d7b029 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1824,7 +1824,7 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
+ 	if (local->hw.conf.phymode == MODE_IEEE80211A)
+ 		sta->last_txrate += IWL_FIRST_OFDM_RATE;
+ 
+-	crl->is_dup = priv->is_dup;
++	crl->is_dup = 0;
+ 	crl->valid_antenna = priv->valid_antenna;
+ 	crl->antenna = priv->antenna;
+ 	crl->is_green = rs_use_green(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index d61cf0e..71cd2b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -477,22 +477,23 @@ union iwl_ht_rate_supp {
+ #define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
+ #define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
+ 
+-struct sta_ht_info {
++struct iwl_ht_info {
++	/* self configuration data */
+ 	u8 is_ht;
+-	u16 rx_mimo_ps_mode;
++	u8 supported_chan_width;
+ 	u16 tx_mimo_ps_mode;
+-	u16 control_channel;
++	u8 is_green_field;
++	u8 sgf;
+ 	u8 max_amsdu_size;
+ 	u8 ampdu_factor;
+ 	u8 mpdu_density;
+-	u8 operating_mode;
+-	u8 supported_chan_width;
++	u8 supp_mcs_set[16];
++	/* BSS related data */
++	u8 control_channel;
+ 	u8 extension_chan_offset;
+-	u8 is_green_field;
+-	u8 sgf;
+-	u8 supp_rates[16];
+ 	u8 tx_chan_width;
+-	u8 chan_width_cap;
++	u8 ht_protection;
++	u8 non_GF_STA_present;
+ };
+ #endif				/*CONFIG_IWL4965_HT */
+ 
+@@ -1151,11 +1152,6 @@ struct iwl_priv {
+ 	u8 call_post_assoc_from_beacon;
+ 	u8 assoc_station_added;
+ 	u8 use_ant_b_for_management_frame;	/* Tx antenna selection */
+-	/* HT variables */
+-	u8 is_dup;
+-	u8 is_ht_enabled;
+-	u8 channel_width;	/* 0=20MHZ, 1=40MHZ */
+-	u8 current_channel_width;
+ 	u8 valid_antenna;	/* Bit mask of antennas actually connected */
+ #ifdef CONFIG_IWL4965_SENSITIVITY
+ 	struct iwl_sensitivity_data sensitivity_data;
+@@ -1165,9 +1161,8 @@ struct iwl_priv {
+ #endif /*CONFIG_IWL4965_SENSITIVITY*/
+ 
+ #ifdef CONFIG_IWL4965_HT
+-	struct sta_ht_info current_assoc_ht;
++	struct iwl_ht_info current_ht_config;
+ #endif
+-	u8 active_rate_ht[2];
+ 	u8 last_phy_res[100];
+ 
+ 	/* Rate scaling data */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index f089b06..d9f918b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -9070,8 +9070,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	priv->ps_mode = 0;
+ 	priv->use_ant_b_for_management_frame = 1; /* start with ant B */
+-	priv->is_ht_enabled = 1;
+-	priv->channel_width = IWL_CHANNEL_WIDTH_40MHZ;
+ 	priv->valid_antenna = 0x7;	/* assume all 3 connected */
+ 	priv->ps_mode = IWL_MIMO_PS_NONE;
+ 
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Kernel unaligned access at TPC[100df410] 
-ieee80211softmac_handle_assoc_response+0x18/0x1fc [ieee80211softmac]
-Kernel unaligned access at TPC[100df548] 
-ieee80211softmac_handle_assoc_response+0x150/0x1fc [ieee80211softmac]
-
->> ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
->> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
->> [ieee802]
->> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
->> [ieee802]
->> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
->> [ieee802]
->> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
->> [ieee802]
->> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
->> [ieee802]
-> 
-> This one should be fixed by the attached patch. Sorry for not sending it 
-> sooner, the contributor has not yet solved all problems and I was 
-> waiting to see if more patches would come.
-> 
->> Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw]
->> Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw]
->> Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw]
->> Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw]
->> Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw]
-> 
-> These might be solved by the patch David sent to the list a few days ago 
-> (thanks!). Have you applied it? If you can confirm it helps I will send 
-> it up through John.
-
-I am catching up with patches at the moment, and will report back on 
-this shortly.
-
-Thanks for your help,
-Shaddy
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
