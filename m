@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:54666 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbXKTFYW (ORCPT
+Received: from smtp.comnets.rwth-aachen.de ([137.226.4.160]:33333 "EHLO
+	gin.comnets.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754483AbXKNAjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 00:24:22 -0500
-Received: by py-out-1112.google.com with SMTP id u77so6254272pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2007 21:24:21 -0800 (PST)
-Message-ID: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com> (sfid-20071120_052424_127510_6F4978A2)
-Date: Tue, 20 Nov 2007 00:24:20 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: devel@linuxdriverproject.org
-Subject: Linux Drivers needed for 802.11
-Cc: wireless <linux-wireless@vger.kernel.org>
+	Tue, 13 Nov 2007 19:39:16 -0500
+Message-ID: <473A43AF.6050207@ieee.org> (sfid-20071114_003919_157739_C32ADA99)
+Date: Wed, 14 Nov 2007 01:39:11 +0100
+From: "Guido R. Hiertz" <hiertz@ieee.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Dan Williams <dcbw@redhat.com>
+CC: Javier Cardona <javier@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
+References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>	 <1194689500.7258.61.camel@johannes.berg>	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>	 <1194866072.5229.8.camel@johannes.berg>	 <445f43ac0711131231s5bfd173v1c9105e9f23d83b2@mail.gmail.com> <1194986213.28937.10.camel@localhost.localdomain>
+In-Reply-To: <1194986213.28937.10.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg,
+Hi Dan,
 
-http://linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded#802_11_Wireless_Network_cards
+>> Anyway, I see no problem in renaming this IEEE80211_IF_TYPE_MESH_POINT
+>> (even though I just heard of a proposal to rename Mesh Points as Mesh
+>> Stations... )
+> 
+> How concrete is that?
 
-This has a list of "needed" 802.11 drivers. It needs some updating as
-we have quite a few new drivers and some are already in the works. I
-was about to update this list to reflect our current driver list and
-also add all 802.11n info I have but considered fist moving it to
-linuxwireless.org so we can arrange this a bit better. Reason for
-doing so is to let us arrange it as we can keep better track of it. I
-still think we should use LinuxDriverProject to inform developers of
-new driver efforts needed and to try to help spawn such projects and
-keep track of them. Any comments on this suggested arrangement?
+Well ... I have plans to propose to change some terminology.
 
-  Luis
+> It could obviously be changed later but best to keep the code
+> terminology consistent with the standards terminology unless the
+> standards terminology is completely wack.
+
+Please consider that 802.11s had tremendous changes since 2003. While 
+the original PAR discussed meshing of APs only, the revised PAR is much 
+broader and considers meshing of 802.11 devices in general.
+
+Therefore, some of our old terminology doesn't really fit any longer. 
+Furthermore, the adoption of 802.11 terms for single-hop case often 
+confuses people when being used in the context of a mesh network. It's 
+always painful when the 802.11s task group wastes time because people 
+have different understanding of the words the use ...
+
+Best regards,
+
+Guido
+
+-- 
+Dipl.-Ing. Guido R. Hiertz      | mailto:grh@comnets.rwth-aachen.de
+Chair of Communication Networks | http://www.comnets.rwth-aachen.de/~grh
+RWTH Aachen University          | Phone: +49 241 802 5829
