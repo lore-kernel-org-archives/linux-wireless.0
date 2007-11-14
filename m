@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.tpgi.com.au ([203.12.160.101]:56344 "EHLO
-	mail5.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbXKUNJI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 08:09:08 -0500
-Message-ID: <47442DE2.2070207@hotmail.com> (sfid-20071121_130925_337264_29372944)
-Date: Thu, 22 Nov 2007 00:08:50 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: David Miller <davem@davemloft.net>,
-	  Shaddy Baddah <shaddy_baddah@hotmail.com>,
-	  linux-wireless@vger.kernel.org
+Received: from ra.tuxdriver.com ([70.61.120.52]:4558 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753174AbXKNVOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 16:14:25 -0500
+Date: Wed, 14 Nov 2007 16:13:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Will Dyson <will.dyson@gmail.com>
+Cc: Florian Lohoff <flo@rfc822.org>, Marcus Better <marcus@better.se>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
+Message-ID: <20071114211354.GD6226@tuxdriver.com> (sfid-20071114_211431_722624_BACF86F2)
+References: <20071111102315.GC10486@paradigm.rfc822.org> <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> <20071113192330.GA19601@paradigm.rfc822.org> <fhedc4$5l9$1@ger.gmane.org> <20071114153347.GA3512@paradigm.rfc822.org> <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <47417D7F.3060704@hotmail.com>
-In-Reply-To: <47417D7F.3060704@hotmail.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
-
-Shaddy Baddah wrote:
->> This is an unaligned data access in the userland tools.
->> Try to catch it with GDB and give us ths backtrace.
+On Wed, Nov 14, 2007 at 01:57:52PM -0500, Will Dyson wrote:
+> On Nov 14, 2007 10:33 AM, Florian Lohoff <flo@rfc822.org> wrote:
 > 
-> I will try and do this at some point. Unfortunately, the system isn't 
-> readily at hand, and it might take a couple of days before I am able to 
-> attend to it.
+> > Did you actually try setting the rate manually? I just tried
+> > when i came home from work. I set it to 36MBit/s and it actually
+> > works ... I am now transferring with 2.5MByte/s instead of 30Kbyte/s
+> >
+> > So i guess the auto rate selection is broken ... Or 1 MBit/s is default
+> > or something ...
+> 
+> Ah, that is probably this isssue:
+> 
+> http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=d37cabfb5f60a3bb56585a74fd3f140ba2960fe0
+> 
+> The patch is in the wireless-2.6/everything tree, but not Linus's tree.
 
-I've tried to do this as best as I can (I've munged the ethernet address 
-for privacy), and have included the output in-line:
+Most of the patch seems like a no-op, except this bit:
 
-# gdb --args iwlist eth2 scanning
-GNU gdb 6.4.90-debian
-Copyright (C) 2006 Free Software Foundation, Inc.
-GDB is free software, covered by the GNU General Public License, and you are
-welcome to change it and/or distribute copies of it under certain 
-conditions.
-Type "show copying" to see the conditions.
-There is absolutely no warranty for GDB.  Type "show warranty" for details.
-This GDB was configured as "sparc-linux-gnu"...(no debugging symbols found)
-Using host libthread_db library "/lib/libthread_db.so.1".
+ 	if (is_rts_frame(frame_control) || is_cts_frame(frame_control)) {
+ 		__set_bit(ENTRY_TXD_BURST, &desc.flags);
+-		if (is_rts_frame(frame_control))
++		if (is_rts_frame(frame_control)) {
+ 			__set_bit(ENTRY_TXD_RTS_FRAME, &desc.flags);
++			__set_bit(ENTRY_TXD_ACK, &desc.flags);
++		} else
++			__clear_bit(ENTRY_TXD_ACK, &desc.flags);
+ 		if (control->rts_cts_rate)
+ 			tx_rate = control->rts_cts_rate;
+ 	}
 
-(gdb) run
-Starting program: /sbin/iwlist eth2 scanning
-(no debugging symbols found)
-(no debugging symbols found)
-(no debugging symbols found)
-(no debugging symbols found)
-eth2      Scan completed :
-           Cell 01 - Address: GG:GG:GG:GG:GG:GG
-                     ESSID:"dixieland"
-                     Protocol:IEEE 802.11bg
-                     Mode:Master
-                     Channel:11
-                     Frequency:2.462 GHz (Channel 11)
+Is this correct?  I'm not sure about the actual meaning of TXD_W0_ACK
+(which keys off ENTRY_TXD_ACK)...
 
-Program received signal SIGBUS, Bus error.
-0xf7fa9eb8 in iw_extract_event_stream () from /lib/libiw.so.29
-(gdb) bt
-#0  0xf7fa9eb8 in iw_extract_event_stream () from /lib/libiw.so.29
-#1  0x00011db0 in ?? ()
-#2  0x00011db0 in ?? ()
-Previous frame identical to this frame (corrupt stack?)
-(gdb)
-
-
-Hope that helps.
-
-Regards,
-Shaddy
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
