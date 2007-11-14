@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:59574 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752855AbXK0Eio (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 23:38:44 -0500
-Date: Mon, 26 Nov 2007 20:37:16 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Tony Breeds <tony@bakeyournoodle.com>,
-	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail -
- net/wireless driver
-Message-Id: <20071126203716.ebe62999.akpm@linux-foundation.org> (sfid-20071127_043847_463069_7BD0A3CC)
-In-Reply-To: <200711262331.21176.flamingice@sourmilk.net>
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org>
-	<20071127023430.GA24243@bakeyournoodle.com>
-	<20071126185423.9280b263.akpm@linux-foundation.org>
-	<200711262331.21176.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from post.fh-kl.de ([143.93.17.200]:57508 "EHLO post.fh-kl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752329AbXKNJZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 04:25:04 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by post.fh-kl.de (Postfix) with ESMTP id A5A2F24005C1
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 10:25:01 +0100 (CET)
+Received: from post.fh-kl.de ([127.0.0.1])
+	by localhost (post.fh-kl.de [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id qnTCMXj32eTu for <linux-wireless@vger.kernel.org>;
+	Wed, 14 Nov 2007 10:24:56 +0100 (CET)
+Received: from [10.0.23.230] (aoip1.informatik.fh-kl.de [143.93.17.33])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by post.fh-kl.de (Postfix) with ESMTP id BE1982417BB9
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 10:24:51 +0100 (CET)
+Message-ID: <473ABEE3.1000104@fh-kl.de> (sfid-20071114_092510_061986_1D54B31C)
+Date: Wed, 14 Nov 2007 10:24:51 +0100
+From: Patrick Ziegler <patrick.ziegler@fh-kl.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: Wimax
+References: <47398FD8.6030409@fh-kl.de> <1194967777.2955.31.camel@localhost.localdomain>
+In-Reply-To: <1194967777.2955.31.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Nov 2007 23:31:20 -0500 Michael Wu <flamingice@sourmilk.net> wrote:
+Dan Williams schrieb:
+> On Tue, 2007-11-13 at 12:51 +0100, Patrick Ziegler wrote:
+>   
+>> Hi,
+>>
+>> is there any support for Wimax network cards in the kernel yet ?
+>>     
+>
+> No, unless those cards work like broadband cellular cards and just
+> present a USB serial interface to the kernel.  I haven't been able to
+> get a hold of WiMAX parts yet (preferably 802.16e-2005 mobile wimax
+> parts like the Airspan MiMAX USB) not that I've tried extremely hard.
+>   
+I don't believe that the cards act like a broadband cellular cards. I 
+had a Wimax PCMCIA card for a short time in my Hand and it didn't act as 
+a serial device. In the near future I will get a Wimax ExpressCard 
+(Zyxel MAX-706) with which I can make more and intensive tests.
+>   
+>> is this the right mailing list for this topic ?
+>>     
+>
+> Probably for now, yes.
+>
+>   
+>> is someone working on a Wimax integration ?
+>>     
+>
+> I've been thinking about WiMAX for quite a while, but only recently have
+> real cards started to appear.  My fear is that with WiMAX, Linux will be
+> where it was with 802.11 3 years ago.  No hardware support, no vendor
+> support, nothing.
+>
+> The problem with WiMAX is that many operators have _licensed_ spectrum
+> for WiMAX.  The software stack is more complicated, and vendors may put
+> more and more software on the host rather than in firmware.  However,
+> since software stack will deal with things like QoS in licensed spectrum
+> and whatnot, vendors may close the stack and do things like binary blobs
+> linked to the kernel module, or things like the old IPW regulatory
+> daemon.  Not sure how to avoid that.
+>   
+Oh this vision sounds not good.
 
-> On Monday 26 November 2007 21:54:23 Andrew Morton wrote:
-> > <head spins>
-> >
-> > Why not just rename one of them?
-> >
-> Fine for your tree as a stopgap measure. Please don't merge in wireless-2.6.
-> 
-
-Why not?
-
-Having very long and specific identifiers duplicated in two drivers is a
-daft situation.  Unless they both drive the same hardware, which afaict
-they do not?
+Patrick
 
