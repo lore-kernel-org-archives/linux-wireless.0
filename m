@@ -1,116 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48524 "EHLO mga01.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4340 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753710AbXKTRTL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 12:19:11 -0500
+	id S1755537AbXKNPJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:09:05 -0500
+Date: Wed, 14 Nov 2007 10:08:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Henning Rogge <rogge@fgan.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Virtual wireless network card for mac80211
+Message-ID: <20071114150839.GA6226@tuxdriver.com> (sfid-20071114_150909_422701_3EF1A531)
+References: <200711141316.50393.rogge@fgan.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] mac80211: hardware scan rework (V2)
-Date: Tue, 20 Nov 2007 09:17:47 -0800
-Message-ID: <33E1C72C74DBE747B7B59C1740F74437027F30D4@orsmsx417.amr.corp.intel.com> (sfid-20071120_171917_007376_E50B0EFE)
-In-Reply-To: <1195566632.10920.39.camel@johannes.berg>
-References: <119553601948-git-send-email-yi.zhu@intel.com> <1195566632.10920.39.camel@johannes.berg>
-From: "Abbas, Mohamed" <mohamed.abbas@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200711141316.50393.rogge@fgan.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes
-The firmware will go back to the old setting, the ones before scan, once
-done scanning by it self. The calls by mac80211 after scan complete to
-set channel will be ignored by the iwl driver if we still tuned to the
-same channel, iwl wont call firmware on the same setting, it has to be a
-change to call down to firmware. I need to check what happen if user
-change channel during scan, this call might be necessary in this case.
-Mohamed
+On Wed, Nov 14, 2007 at 01:16:50PM +0100, Henning Rogge wrote:
 
------Original Message-----
-From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-Sent: Tuesday, November 20, 2007 5:51 AM
-To: Zhu, Yi
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; Abbas,
-Mohamed; Cahill, Ben M
-Subject: Re: [PATCH] mac80211: hardware scan rework (V2)
+> I'm looking for a way to simulate a ieee802.11 card on a linux system. Is 
+> there an equivalent for tun/tap for the mac80211 layer, so I can just send 
+> the communication with a wireless device back to userspace (and data from 
+> userspace into the wireless stack) ?
 
-Hi,
+No, but I have been thinking about this as well.  It might be a nice
+capability to have, so long as the regulatory spectre continues to
+discourage some vendors from disclosing information about their
+hardware.  At least such a scenario seems less grey w.r.t. GPL
+compliance.
 
-Thanks!
+Still, I would not want to put much effort into a project that
+distracts from development of fully open source drivers.  But I think
+the performance of such a solution would be sub-optimal enough to
+discourage full reliance upon it.  And the plus of having a userland
+binary driver versus no driver at all might make it worthwhile.
 
-> 1. fix a hw scan bug in ieee80211_rx_bss_info() for setting beacon
->    supported rates
-> 2. let control frames pass in ieee80211_sta_rx_scan() during hw scan
-> 3. set local->sta_{hw|sw}_scanning type to bool
-> 4. avoid channel setting during hw scan
+What is the situation that makes this interesting to you?
 
-Why this? I was confused at first and I'm sorry if I confused you, but
-since we're now fully unaware of hardware scan thanks to your item 5, I
-think we need to allow setting channel during hardware scan so the
-firmware will change to the right channel once it finished scanning.
+Thanks,
 
-> 5. rework ieee80211_scan_completed() to make it symmetric for hw scan
-
-
-> diff --git a/net/mac80211/ieee80211_sta.c
-b/net/mac80211/ieee80211_sta.c
-> index 015b3f8..26f404a 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -1487,8 +1487,18 @@ static void ieee80211_rx_bss_info(struct
-net_device *dev,
->  		u32 supp_rates, prev_rates;
->  		int i, j;
->  
-> -		mode = local->sta_scanning ?
-> +		mode = local->sta_sw_scanning ?
->  		       local->scan_hw_mode : local->oper_hw_mode;
-> +
-> +		if (local->sta_hw_scanning) {
-> +			/* search for the correct mode matches the
-beacon */
-> +			list_for_each_entry(mode, &local->modes_list,
-list)
-> +				if (mode->mode == rx_status->phymode)
-> +					break;
-> +
-> +			if (mode == NULL)
-> +				mode = local->oper_hw_mode;
-> +		}
-
-Good catch.
-
-> @@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct
-*work)
->  	if (!netif_running(dev))
->  		return;
->  
-> -	if (local->sta_scanning)
-> +	if (local->sta_sw_scanning || local->sta_hw_scanning)
->  		return;
-
-Shouldn't the sta work be able to run normally while hw scan is in
-progress?
- 
-> -	if (unlikely(local->sta_scanning != 0)) {
-> -		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
-> +	if (unlikely(local->sta_hw_scanning))
-> +		return ieee80211_sta_rx_scan(rx->dev, skb,
-rx->u.rx.status);
-> +
-> +	if (unlikely(local->sta_sw_scanning)) {
-> +		/* drop all the other packets during a software scan
-anyway */
-> +		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
-> +		    != TXRX_QUEUED)
-> +			dev_kfree_skb(skb);
-
-Not entirely sure why we do this, but nothing we should change with this
-patch.
-
-Other than the ioctl thing it looks good to me.
-
-johannes
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
