@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbXKLQIm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 11:08:42 -0500
-Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com> (sfid-20071111_000348_884788_D104D28E)
-References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
-	 <1194689500.7258.61.camel@johannes.berg>
-	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>
-	 (sfid-20071111_000348_884788_D104D28E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nCxiRAid7HjEH+MNjiot"
-Date: Mon, 12 Nov 2007 12:14:32 +0100
-Message-Id: <1194866072.5229.8.camel@johannes.berg> (sfid-20071112_160846_372927_2F5E07DE)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:22366 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760199AbXKNPbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:31:08 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com
+Subject: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
+Date: Wed, 14 Nov 2007 17:29:36 +0200
+Message-Id: <11950541913679-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153152_860541_22653183)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series of patches contains all 802.11n code + fixes of comments to
+the first cycle of 802.11n patches.
 
---=-nCxiRAid7HjEH+MNjiot
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Fixed list:
+===========
+ - removing MAC80211_HT from config and all *.[ch] files
+ - removing IWL4965 config dependency on MAC80211_HT
+ - adding MAC80211_HT_DEBUG to config file and to relevant places
+ - refine TODO remark in ieee80211_sta_process_addba_request
+ - net_ratelimit() added to relevant prints
+ - renaming ieee80211_rx_h_data_agg to ieee80211_rx_h_amsdu
+ - removing parentheses from IEEE80211_CONF_SUPPORT_HT_MODE use
+ - changing amsdu_frame type from u16 to u8
+ - adding define SUPP_MCS_SET_LEN 16 to indicate MCS set length
+ - fixes to some typos
 
+If this series is accepted then next series will contain the follow:
 
-> A mesh AP would have two interfaces, each with a different MAC
-> address.  One IF_TYPE_MESH, the other IF_TYPE_AP.  Support for MAP, as
-> you suggested, would be implemented in hostapd.
+TODO list (planned for next series of patches)
+==============================================
+ - Full A-MPDU aggregation capability.
+ - AP flows
+ - Changes to Rx handlers PAE and drop unencrypted (for EAPOL frames in amsdu)
+ - Examine config flows in mac80211 (RFC is prepered)
 
-As far as I understand the specification, this is not required. Since we
-currently have no drivers supporting multi-MAC operation, this is quite
-a severe limitation and the draft seems to allow MAP operation with a
-single address, cf. the description of the SSID element in 7.2.3.1
-(Beacon frame format). ("Note: the SSID is a required IE in beacon
-frames. To avoid having non-mesh STAs [...]")
+Notes to this series:
+======================
+This series of patches splits into two parts:
+ - patches 1-7 add 802.11n support to mac80211.
+ - patches 8-15 demonstrates the use of the above mac80211's 802.11n framework through iwl4965 low level driver
 
-Therefore, I think that having a separate MAP type device would be
-beneficial because that allows hostapd to generate a beacon including an
-SSID, respond to probe requests and still be a mesh point on the same
-interface. The only way hostapd would have to be aware of this is that
-it needs to create a different type of interface and include the mesh
-information in the beacon.
+In order to be compatible with the 802.11n requirements for an HT station,
+patches 1-7 should not be treated as stand alone patches, but as a complete framework,
+although separation to patches by subjects was made for ease of handling.
+This applies to patches 8-15 as well.
 
-Do you see anything precluding such operation? Some more logic would
-have to be provided to achieve the appropriate mesh broad/multicast vs.
-AP broad/multicast behaviour, of course, as described elsewhere wrt.
-mesh broad/multicast frames being broad/multicast to associated STAs.
+The patches do _not_ break any existing driver.
 
-johannes
+patches were made (and tested to work) with wireless branch 2.6.24-rc1 (#everything)
 
---=-nCxiRAid7HjEH+MNjiot
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+The framework includes the following:
+- HT probing.
+- HT association.
+- Support in Rx A-MSDU.
+- Support in A-MPDU addBA request.
+- HT information and configuration delivery to both low-level driver and rate scaling.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzg1l6Vg1VMiehFYAQJmlRAAo7EnmxrOXA+r5WvSYZD1PsyGZlLUeUw0
-Ylf8bnDrxpEWT0LUtV+i5TEJK/HlnahB8tiTVcLNw22pVavQEgtMGEe8wUcUWE3E
-gfTBu335fA4ymjBMSCV+K+iOrPXGGg6IM64BNVc3FGOJg/JdetpZTul87bbc5YYo
-BNjyd35yCSe5cm9pnRvNU5Hn1oSH/o8osw+yVeded4R/vmwOVHTMqyjHOC8YG+xt
-khoKbDUcJbU5AUJ9INu1z6fYLBQAoWIQ6/QUELy06/zXiuhZ1GpThjbwaY8JmYbp
-+V3DYqi0vZAPdmPqEN0HjFbsvA2R41BJFvt76zK6KX3wplpMF6B/6qp/SJ9n1RNy
-GFJEXKOAHha6AMyQ8TtNDcyiPdWlpaFCCKzYGId/1skZpCeGTCCF/uip8ydX+7hq
-8FNez0zs0/7SvyiSR8n/1QD5ECf7FSkYfhlRKWpFQj+guA+z70eJY/uRHhqhh/Pk
-2b5zkv1rua6+XRqyTq+OStTAOZPWwa1naHHb8eumYG2QP7BLQvrrZC2z9gHIgk+c
-LtNliM0b9gRYukcGfdCTROR8jy303J6Qk6XchiSjUF7EFBYrmw4Uaed87rmeW8S1
-deTGLVW2aC9/f3UlMNtqY22qbeEcqN92ltTkNQopOyvJlgsrCKPfcgDFit5BcLmH
-R/2GhRf6MEA=
-=e9m1
------END PGP SIGNATURE-----
-
---=-nCxiRAid7HjEH+MNjiot--
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
