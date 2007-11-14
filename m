@@ -1,355 +1,399 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37797 "EHLO mga02.intel.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:43514 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753011AbXKTFVG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 00:21:06 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH] mac80211: hardware scan rework (V2)
-Date: Tue, 20 Nov 2007 13:20:19 +0800
-Message-Id: <119553601948-git-send-email-yi.zhu@intel.com> (sfid-20071120_052110_149350_888F4AF2)
+	id S1753766AbXKNQRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 11:17:25 -0500
+Date: Wed, 14 Nov 2007 18:17:37 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 3/4] ath5k: Add RF5413/5414 support
+Message-ID: <20071114161737.GC6365@localhost.domain.invalid> (sfid-20071114_161734_490509_9D57CD58)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+*Add support for RF5413/5414 single-chip solutions
 
-This is the second version of the hardware scan patch. Comparing with
-the first version, it does the following:
+This needs testing (also on 5424/2424) before we declare that's fully supported.
+It works for me and the RF5413 i got ;-)
 
-1. fix a hw scan bug in ieee80211_rx_bss_info() for setting beacon
-   supported rates
-2. let control frames pass in ieee80211_sta_rx_scan() during hw scan
-3. set local->sta_{hw|sw}_scanning type to bool
-4. avoid channel setting during hw scan
-5. rework ieee80211_scan_completed() to make it symmetric for hw scan
+Changes-licensed-under: ISC
+Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-The scan code in mac80211 makes the software scan assumption in various
-places. For example, we stop the Tx queue during a software scan so that
-all the Tx packets will be queued by the stack. We also drop frames not
-related to scan in the software scan process. But these are not true for
-hardware scan.
-
-Some wireless hardwares (for example iwl3945/4965) has the ability to
-perform the whole scan process by hardware and/or firmware. The hardware
-scan is relative powerful in that it tries to maintain normal network
-traffic while doing a scan in the background. Some drivers (i.e iwlwifi)
-do provide a way to tune the hardware scan parameters (for example if the
-STA is associated, what's the max time could the STA leave from the
-associated channel, how long the scans get suspended after returning to
-the service channel, etc). But basically this is transparent to the
-stack. mac80211 should not stop Tx queues or drop Rx packets during a
-hardware scan.
-
-This patch resolves the above problem by spliting the current scan
-indicator local->sta_scanning into local->sta_sw_scanning and
-local->sta_hw_scanning. It then changes the scan related code to be aware
-of hardware scan or software scan in various places. With this patch,
-iwlwifi performs much better in the scan-while-associated condition and
-disable_hw_scan=1 should never be required.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohamed Abbas <mohamed.abbas@intel.com>
-Cc: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e0ee65a..d230419 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -328,11 +328,14 @@ static int ieee80211_stop(struct net_device *dev)
- 		synchronize_rcu();
- 		skb_queue_purge(&sdata->u.sta.skb_queue);
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 7058b0a..c5e37d2 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -131,6 +131,7 @@ enum ath5k_radio {
+ 	AR5K_RF5110	= 0,
+ 	AR5K_RF5111	= 1,
+ 	AR5K_RF5112	= 2,
++	AR5K_RF5413	= 3,
+ };
  
--		if (!local->ops->hw_scan &&
--		    local->scan_dev == sdata->dev) {
--			local->sta_scanning = 0;
--			cancel_delayed_work(&local->scan_work);
-+		if (local->scan_dev == sdata->dev) {
-+			if (!local->ops->hw_scan) {
-+				local->sta_sw_scanning = 0;
-+				cancel_delayed_work(&local->scan_work);
-+			} else
-+				local->sta_hw_scanning = 0;
+ /*
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index ead2d75..e7fecbb 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -226,11 +226,15 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		ah->ah_radio_2ghz_revision = 0;
+ 
+ 	/* Identify the radio chip*/
+-	if (ah->ah_version == AR5K_AR5210)
++	if (ah->ah_version == AR5K_AR5210) {
+ 		ah->ah_radio = AR5K_RF5110;
+-	else
+-		ah->ah_radio = ah->ah_radio_5ghz_revision <
+-			AR5K_SREV_RAD_5112 ? AR5K_RF5111 : AR5K_RF5112;
++	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112) {
++		ah->ah_radio = AR5K_RF5111;
++	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC1) {
++		ah->ah_radio = AR5K_RF5112;
++	} else {
++		ah->ah_radio = AR5K_RF5413;
++	}
+ 
+ 	ah->ah_phy = AR5K_PHY(0);
+ 
+@@ -453,9 +457,9 @@ void ath5k_hw_detach(struct ath5k_hw *ah)
+ 	kfree(ah);
+ }
+ 
+-/*
+- * Reset function and helpers
+- */
++/****************************\
++  Reset function and helpers 
++\****************************/
+ 
+ /**
+  * ath5k_hw_write_ofdm_timings - set OFDM timings on AR5212
+@@ -637,7 +641,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	 */
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		if (ah->ah_radio != AR5K_RF5111 &&
+-				ah->ah_radio != AR5K_RF5112) {
++			ah->ah_radio != AR5K_RF5112 &&
++			ah->ah_radio != AR5K_RF5413) {
+ 			AR5K_PRINTF("invalid phy radio: %u\n", ah->ah_radio);
+ 			return -EINVAL;
  		}
+diff --git a/drivers/net/wireless/ath5k/initvals.c b/drivers/net/wireless/ath5k/initvals.c
+index ca12964..44c05f0 100644
+--- a/drivers/net/wireless/ath5k/initvals.c
++++ b/drivers/net/wireless/ath5k/initvals.c
+@@ -1054,7 +1054,7 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel)
+ 			ath5k_hw_ini_mode_registers(ah,
+ 					ARRAY_SIZE(ar5212_rf5111_ini_mode),
+ 					ar5212_rf5111_ini_mode, mode);
+-		else if (ah->ah_radio == AR5K_RF5112)
++		else if (ah->ah_radio >= AR5K_RF5112)
+ 			ath5k_hw_ini_mode_registers(ah,
+ 					ARRAY_SIZE(ar5212_rf5112_ini_mode),
+ 					ar5212_rf5112_ini_mode, mode);
+@@ -1072,7 +1072,7 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel)
+ 	if (ah->ah_version == AR5K_AR5212) {
+ 		ath5k_hw_ini_registers(ah, ARRAY_SIZE(ar5212_ini),
+ 				ar5212_ini, change_channel);
+-		if (ah->ah_radio == AR5K_RF5112) {
++		if (ah->ah_radio >= AR5K_RF5112) {
+ 			ath5k_hw_reg_write(ah, AR5K_PHY_PAPD_PROBE_INI_5112,
+ 					AR5K_PHY_PAPD_PROBE);
+ 			ath5k_hw_ini_registers(ah,
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 14520cd..79015ab 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -457,6 +457,97 @@ static const struct ath5k_ini_rf rfregs_5112a[] = {
+ 	    { 0x00000003, 0x00000003, 0x00000003, 0x00000003, 0x00000003 } },
+ };
+ 
++/* RF5413/5414 mode-specific init registers */
++static const struct ath5k_ini_rf rfregs_5413[] = {
++	{ 1, 0x98d4,
++	/*    mode a/XR   mode aTurbo mode b      mode g      mode gTurbo */
++	    { 0x00000020, 0x00000020, 0x00000020, 0x00000020, 0x00000020 } },
++	{ 2, 0x98d0,
++	    { 0x00000008, 0x00000008, 0x00000008, 0x00000008, 0x00000008 } },
++	{ 3, 0x98dc,
++	    { 0x00a000c0, 0x00a000c0, 0x00e000c0, 0x00e000c0, 0x00e000c0 } },
++	{ 6, 0x989c,
++	    { 0x33000000, 0x33000000, 0x33000000, 0x33000000, 0x33000000 } },
++	{ 6, 0x989c,
++	    { 0x01000000, 0x01000000, 0x01000000, 0x01000000, 0x01000000 } },
++	{ 6, 0x989c,
++	    { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x1f000000, 0x1f000000, 0x1f000000, 0x1f000000, 0x1f000000 } },
++	{ 6, 0x989c,
++	    { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x00b80000, 0x00b80000, 0x00b80000, 0x00b80000, 0x00b80000 } },
++	{ 6, 0x989c,
++	    { 0x00b70000, 0x00b70000, 0x00b70000, 0x00b70000, 0x00b70000 } },
++	{ 6, 0x989c,
++	    { 0x00840000, 0x00840000, 0x00840000, 0x00840000, 0x00840000 } },
++	{ 6, 0x989c,
++	    { 0x00980000, 0x00980000, 0x00980000, 0x00980000, 0x00980000 } },
++	{ 6, 0x989c,
++	    { 0x00c00000, 0x00c00000, 0x00c00000, 0x00c00000, 0x00c00000 } },
++	{ 6, 0x989c,
++	    { 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000 } },
++	{ 6, 0x989c,
++	    { 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000 } },
++	{ 6, 0x989c,
++	    { 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000 } },
++	{ 6, 0x989c,
++	    { 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000, 0x00ff0000 } },
++	{ 6, 0x989c,
++	    { 0x00d70000, 0x00d70000, 0x00d70000, 0x00d70000, 0x00d70000 } },
++	{ 6, 0x989c,
++	    { 0x00610000, 0x00610000, 0x00610000, 0x00610000, 0x00610000 } },
++	{ 6, 0x989c,
++	    { 0x00fe0000, 0x00fe0000, 0x00fe0000, 0x00fe0000, 0x00fe0000 } },
++	{ 6, 0x989c,
++	    { 0x00de0000, 0x00de0000, 0x00de0000, 0x00de0000, 0x00de0000 } },
++	{ 6, 0x989c,
++	    { 0x007f0000, 0x007f0000, 0x007f0000, 0x007f0000, 0x007f0000 } },
++	{ 6, 0x989c,
++	    { 0x043d0000, 0x043d0000, 0x043d0000, 0x043d0000, 0x043d0000 } },
++	{ 6, 0x989c,
++	    { 0x00770000, 0x00770000, 0x00770000, 0x00770000, 0x00770000 } },
++	{ 6, 0x989c,
++	    { 0x00440000, 0x00440000, 0x00440000, 0x00440000, 0x00440000 } },
++	{ 6, 0x989c,
++	    { 0x00980000, 0x00980000, 0x00980000, 0x00980000, 0x00980000 } },
++	{ 6, 0x989c,
++	    { 0x00100080, 0x00100080, 0x00100080, 0x00100080, 0x00100080 } },
++	{ 6, 0x989c,
++	    { 0x0005c034, 0x0005c034, 0x0005c034, 0x0005c034, 0x0005c034 } },
++	{ 6, 0x989c,
++	    { 0x003100f0, 0x003100f0, 0x003100f0, 0x003100f0, 0x003100f0 } },
++	{ 6, 0x989c,
++	    { 0x000c011f, 0x000c011f, 0x000c011f, 0x000c011f, 0x000c011f } },
++	{ 6, 0x989c,
++	    { 0x00510040, 0x00510040, 0x005100a0, 0x005100a0, 0x005100a0 } },
++	{ 6, 0x989c,
++	    { 0x0050006a, 0x0050006a, 0x005000dd, 0x005000dd, 0x005000dd } },
++	{ 6, 0x989c,
++	    { 0x00000001, 0x00000001, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x00004044, 0x00004044, 0x00004044, 0x00004044, 0x00004044 } },
++	{ 6, 0x989c,
++	    { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 } },
++	{ 6, 0x989c,
++	    { 0x000060c0, 0x000060c0, 0x000060c0, 0x000060c0, 0x000060c0 } },
++	{ 6, 0x989c,
++	    { 0x00002c00, 0x00002c00, 0x00003600, 0x00003600, 0x00003600 } },
++	{ 6, 0x98c8,
++	    { 0x00000403, 0x00000403, 0x00040403, 0x00040403, 0x00040403 } },
++	{ 7, 0x989c,
++	    { 0x00006400, 0x00006400, 0x00006400, 0x00006400, 0x00006400 } },
++	{ 7, 0x989c,
++	    { 0x00000800, 0x00000800, 0x00000800, 0x00000800, 0x00000800 } },
++	{ 7, 0x98cc,
++	    { 0x0000000e, 0x0000000e, 0x0000000e, 0x0000000e, 0x0000000e } },
++};
 +
- 		flush_workqueue(local->hw.workqueue);
- 		/* fall through */
+ 
+ /* Initial RF Gain settings for RF5112 */
+ static const struct ath5k_ini_rfgain rfgain_5112[] = {
+@@ -527,6 +618,75 @@ static const struct ath5k_ini_rfgain rfgain_5112[] = {
+ 	{ AR5K_RF_GAIN(63),	{ 0x000000fc, 0x000000fc } },
+ };
+ 
++/* Initial RF Gain settings for RF5413 */
++static const struct ath5k_ini_rfgain rfgain_5413[] = {
++	/*			      5Ghz	2Ghz	*/
++	{ AR5K_RF_GAIN(0),	{ 0x00000000, 0x00000000 } },
++	{ AR5K_RF_GAIN(1),	{ 0x00000040, 0x00000040 } },
++	{ AR5K_RF_GAIN(2),	{ 0x00000080, 0x00000080 } },
++	{ AR5K_RF_GAIN(3),	{ 0x000001a1, 0x00000161 } },
++	{ AR5K_RF_GAIN(4),	{ 0x000001e1, 0x000001a1 } },
++	{ AR5K_RF_GAIN(5),	{ 0x00000021, 0x000001e1 } },
++	{ AR5K_RF_GAIN(6),	{ 0x00000061, 0x00000021 } },
++	{ AR5K_RF_GAIN(7),	{ 0x00000188, 0x00000061 } },
++	{ AR5K_RF_GAIN(8),	{ 0x000001c8, 0x00000188 } },
++	{ AR5K_RF_GAIN(9),	{ 0x00000008, 0x000001c8 } },
++	{ AR5K_RF_GAIN(10),	{ 0x00000048, 0x00000008 } },
++	{ AR5K_RF_GAIN(11),	{ 0x00000088, 0x00000048 } },
++	{ AR5K_RF_GAIN(12),	{ 0x000001a9, 0x00000088 } },
++	{ AR5K_RF_GAIN(13),	{ 0x000001e9, 0x00000169 } },
++	{ AR5K_RF_GAIN(14),	{ 0x00000029, 0x000001a9 } },
++	{ AR5K_RF_GAIN(15),	{ 0x00000069, 0x000001e9 } },
++	{ AR5K_RF_GAIN(16),	{ 0x000001d0, 0x00000029 } },
++	{ AR5K_RF_GAIN(17),	{ 0x00000010, 0x00000069 } },
++	{ AR5K_RF_GAIN(18),	{ 0x00000050, 0x00000190 } },
++	{ AR5K_RF_GAIN(19),	{ 0x00000090, 0x000001d0 } },
++	{ AR5K_RF_GAIN(20),	{ 0x000001b1, 0x00000010 } },
++	{ AR5K_RF_GAIN(21),	{ 0x000001f1, 0x00000050 } },
++	{ AR5K_RF_GAIN(22),	{ 0x00000031, 0x00000090 } },
++	{ AR5K_RF_GAIN(23),	{ 0x00000071, 0x00000171 } },
++	{ AR5K_RF_GAIN(24),	{ 0x000001b8, 0x000001b1 } },
++	{ AR5K_RF_GAIN(25),	{ 0x000001f8, 0x000001f1 } },
++	{ AR5K_RF_GAIN(26),	{ 0x00000038, 0x00000031 } },
++	{ AR5K_RF_GAIN(27),	{ 0x00000078, 0x00000071 } },
++	{ AR5K_RF_GAIN(28),	{ 0x00000199, 0x00000198 } },
++	{ AR5K_RF_GAIN(29),	{ 0x000001d9, 0x000001d8 } },
++	{ AR5K_RF_GAIN(30),	{ 0x00000019, 0x00000018 } },
++	{ AR5K_RF_GAIN(31),	{ 0x00000059, 0x00000058 } },
++	{ AR5K_RF_GAIN(32),	{ 0x00000099, 0x00000098 } },
++	{ AR5K_RF_GAIN(33),	{ 0x000000d9, 0x00000179 } },
++	{ AR5K_RF_GAIN(34),	{ 0x000000f9, 0x000001b9 } },
++	{ AR5K_RF_GAIN(35),	{ 0x000000f9, 0x000001f9 } },
++	{ AR5K_RF_GAIN(36),	{ 0x000000f9, 0x00000039 } },
++	{ AR5K_RF_GAIN(37),	{ 0x000000f9, 0x00000079 } },
++	{ AR5K_RF_GAIN(38),	{ 0x000000f9, 0x000000b9 } },
++	{ AR5K_RF_GAIN(39),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(40),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(41),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(42),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(43),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(44),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(45),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(46),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(47),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(48),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(49),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(50),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(51),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(52),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(53),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(54),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(55),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(56),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(57),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(58),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(59),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(60),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(61),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(62),	{ 0x000000f9, 0x000000f9 } },
++	{ AR5K_RF_GAIN(63),	{ 0x000000f9, 0x000000f9 } },
++};
++
+ static const struct ath5k_gain_opt rfgain_opt_5112 = {
+ 	1,
+ 	8,
+@@ -677,6 +837,7 @@ static s32 ath5k_hw_rfregs_gain_adjust(struct ath5k_hw *ah)
+ 		go = &rfgain_opt_5111;
+ 		break;
+ 	case AR5K_RF5112:
++	case AR5K_RF5413: /* ??? */
+ 		go = &rfgain_opt_5112;
+ 		break;
  	default:
-@@ -500,7 +503,7 @@ int ieee80211_hw_config(struct ieee80211_local *local)
- 	struct ieee80211_channel *chan;
- 	int ret = 0;
+@@ -924,6 +1085,56 @@ static int ath5k_hw_rf5112_rfregs(struct ath5k_hw *ah,
+ }
  
--	if (local->sta_scanning) {
-+	if (local->sta_sw_scanning) {
- 		chan = local->scan_channel;
- 		mode = local->scan_hw_mode;
- 	} else {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 72e1c93..35829b1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -470,7 +470,8 @@ struct ieee80211_local {
- 
- 	struct list_head interfaces;
- 
--	int sta_scanning;
-+	bool sta_sw_scanning;
-+	bool sta_hw_scanning;
- 	int scan_channel_idx;
- 	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
- 	unsigned long last_scan_completed;
-@@ -749,7 +750,8 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len);
- void ieee80211_sta_req_auth(struct net_device *dev,
- 			    struct ieee80211_if_sta *ifsta);
- int ieee80211_sta_scan_results(struct net_device *dev, char *buf, size_t len);
--void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
-+ieee80211_txrx_result ieee80211_sta_rx_scan(struct net_device *dev,
-+					    struct sk_buff *skb,
- 			   struct ieee80211_rx_status *rx_status);
- void ieee80211_rx_bss_list_init(struct net_device *dev);
- void ieee80211_rx_bss_list_deinit(struct net_device *dev);
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 942b9cc..741515a 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -315,7 +315,7 @@ int ieee80211_set_channel(struct ieee80211_local *local, int channel, int freq)
- 	}
- 
- 	if (set) {
--		if (local->sta_scanning)
-+		if (local->sta_sw_scanning || local->sta_hw_scanning)
- 			ret = 0;
- 		else
- 			ret = ieee80211_hw_config(local);
-@@ -558,8 +558,10 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
- {
- 	int res;
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	if (local->sta_scanning)
+ /*
++ * Initialize RF5413/5414
++ */
++static int ath5k_hw_rf5413_rfregs(struct ath5k_hw *ah,
++		struct ieee80211_channel *channel, unsigned int mode)
++{
++	const struct ath5k_ini_rf *rf_ini;
++	u32 *rf;
++	unsigned int rf_size, i;
++	int bank = -1;
 +
-+	if (local->sta_sw_scanning || local->sta_hw_scanning)
- 		return -EAGAIN;
++	AR5K_ASSERT_ENTRY(mode, AR5K_INI_VAL_MAX);
 +
- 	res = ieee80211_sta_scan_results(dev, extra, data->length);
- 	if (res >= 0) {
- 		data->length = res;
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 015b3f8..26f404a 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1487,8 +1487,18 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 		u32 supp_rates, prev_rates;
- 		int i, j;
- 
--		mode = local->sta_scanning ?
-+		mode = local->sta_sw_scanning ?
- 		       local->scan_hw_mode : local->oper_hw_mode;
++	rf = ah->ah_rf_banks;
 +
-+		if (local->sta_hw_scanning) {
-+			/* search for the correct mode matches the beacon */
-+			list_for_each_entry(mode, &local->modes_list, list)
-+				if (mode->mode == rx_status->phymode)
-+					break;
++	rf_ini = rfregs_5413;
++	rf_size = ARRAY_SIZE(rfregs_5413);
 +
-+			if (mode == NULL)
-+				mode = local->oper_hw_mode;
++	/* Copy values to modify them */
++	for (i = 0; i < rf_size; i++) {
++		if (rf_ini[i].rf_bank >= AR5K_RF5112_INI_RF_MAX_BANKS) {
++			AR5K_PRINT("invalid bank\n");
++			return -EINVAL;
 +		}
- 		rates = mode->rates;
- 		num_rates = mode->num_rates;
- 
-@@ -1871,31 +1881,39 @@ static void ieee80211_sta_rx_queued_mgmt(struct net_device *dev,
- }
- 
- 
--void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
--			   struct ieee80211_rx_status *rx_status)
-+ieee80211_txrx_result
-+ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
-+		      struct ieee80211_rx_status *rx_status)
- {
- 	struct ieee80211_mgmt *mgmt;
- 	u16 fc;
- 
--	if (skb->len < 24) {
--		dev_kfree_skb(skb);
--		return;
--	}
-+	if (skb->len < 2)
-+		return TXRX_DROP;
- 
- 	mgmt = (struct ieee80211_mgmt *) skb->data;
- 	fc = le16_to_cpu(mgmt->frame_control);
- 
-+	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL)
-+		return TXRX_CONTINUE;
 +
-+	if (skb->len < 24)
-+		return TXRX_DROP;
++		if (bank != rf_ini[i].rf_bank) {
++			bank = rf_ini[i].rf_bank;
++			ah->ah_offset[bank] = i;
++		}
 +
- 	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) {
- 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_RESP) {
- 			ieee80211_rx_mgmt_probe_resp(dev, mgmt,
- 						     skb->len, rx_status);
-+			dev_kfree_skb(skb);
-+			return TXRX_QUEUED;
- 		} else if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON) {
- 			ieee80211_rx_mgmt_beacon(dev, mgmt, skb->len,
- 						 rx_status);
-+			dev_kfree_skb(skb);
-+			return TXRX_QUEUED;
- 		}
- 	}
--
--	dev_kfree_skb(skb);
-+	return TXRX_CONTINUE;
- }
- 
- 
-@@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct *work)
- 	if (!netif_running(dev))
- 		return;
- 
--	if (local->sta_scanning)
-+	if (local->sta_sw_scanning || local->sta_hw_scanning)
- 		return;
- 
- 	if (sdata->type != IEEE80211_IF_TYPE_STA &&
-@@ -2643,9 +2661,15 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	union iwreq_data wrqu;
- 
- 	local->last_scan_completed = jiffies;
--	wmb();
--	local->sta_scanning = 0;
-+	memset(&wrqu, 0, sizeof(wrqu));
-+	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
- 
-+	if (local->sta_hw_scanning) {
-+		local->sta_hw_scanning = 0;
-+		goto done;
++		rf[i] = rf_ini[i].rf_value[mode];
 +	}
 +
-+	local->sta_sw_scanning = 0;
- 	if (ieee80211_hw_config(local))
- 		printk(KERN_DEBUG "%s: failed to restore operational"
- 		       "channel after scan\n", dev->name);
-@@ -2661,9 +2685,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 
- 	netif_tx_unlock_bh(local->mdev);
- 
--	memset(&wrqu, 0, sizeof(wrqu));
--	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
--
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 
-@@ -2681,6 +2702,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	}
- 	rcu_read_unlock();
- 
-+done:
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->type == IEEE80211_IF_TYPE_IBSS) {
- 		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-@@ -2703,7 +2725,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
- 	int skip;
- 	unsigned long next_delay = 0;
- 
--	if (!local->sta_scanning)
-+	if (!local->sta_sw_scanning)
- 		return;
- 
- 	switch (local->scan_state) {
-@@ -2766,7 +2788,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
- 		break;
- 	}
- 
--	if (local->sta_scanning)
-+	if (local->sta_sw_scanning)
- 		queue_delayed_work(local->hw.workqueue, &local->scan_work,
- 				   next_delay);
- }
-@@ -2798,7 +2820,7 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
- 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
- 	 */
- 
--	if (local->sta_scanning) {
-+	if (local->sta_sw_scanning || local->sta_hw_scanning) {
- 		if (local->scan_dev == dev)
- 			return 0;
- 		return -EBUSY;
-@@ -2806,15 +2828,15 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
- 
- 	if (local->ops->hw_scan) {
- 		int rc = local->ops->hw_scan(local_to_hw(local),
--					    ssid, ssid_len);
-+					     ssid, ssid_len);
- 		if (!rc) {
--			local->sta_scanning = 1;
-+			local->sta_hw_scanning = 1;
- 			local->scan_dev = dev;
- 		}
- 		return rc;
- 	}
- 
--	local->sta_scanning = 1;
-+	local->sta_sw_scanning = 1;
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-@@ -2869,7 +2891,7 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len)
- 	if (sdata->type != IEEE80211_IF_TYPE_STA)
- 		return ieee80211_sta_start_scan(dev, ssid, ssid_len);
- 
--	if (local->sta_scanning) {
-+	if (local->sta_sw_scanning || local->sta_hw_scanning) {
- 		if (local->scan_dev == dev)
- 			return 0;
- 		return -EBUSY;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 428a9fc..596ff71 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -338,8 +338,14 @@ ieee80211_rx_h_passive_scan(struct ieee80211_txrx_data *rx)
- 	struct ieee80211_local *local = rx->local;
- 	struct sk_buff *skb = rx->skb;
- 
--	if (unlikely(local->sta_scanning != 0)) {
--		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
-+	if (unlikely(local->sta_hw_scanning))
-+		return ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
++	/* 
++	 * After compairing dumps from different cards
++	 * we get the same RF_BUFFER settings (diff returns
++	 * 0 lines). It seems that RF_BUFFER settings are static
++	 * and are written unmodified (no EEPROM stuff
++	 * is used because calibration data would be
++	 * different between different cards and would result
++	 * different RF_BUFFER settings)
++	 */
 +
-+	if (unlikely(local->sta_sw_scanning)) {
-+		/* drop all the other packets during a software scan anyway */
-+		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
-+		    != TXRX_QUEUED)
-+			dev_kfree_skb(skb);
- 		return TXRX_QUEUED;
++	/* Write RF values */
++	for (i = 0; i < rf_size; i++)
++		ath5k_hw_reg_write(ah, rf[i], rf_ini[i].rf_register);
++
++	return 0;
++}
++
++/*
+  * Initialize RF
+  */
+ int ath5k_hw_rfregs(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+@@ -944,6 +1155,10 @@ int ath5k_hw_rfregs(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 			ah->ah_rf_banks_size = sizeof(rfregs_5112);
+ 		func = ath5k_hw_rf5112_rfregs;
+ 		break;
++	case AR5K_RF5413:
++		ah->ah_rf_banks_size = sizeof(rfregs_5413);
++		func = ath5k_hw_rf5413_rfregs;
++		break;
+ 	default:
+ 		return -EINVAL;
  	}
- 
-@@ -1486,7 +1492,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto end;
+@@ -978,6 +1193,10 @@ int ath5k_hw_rfgain(struct ath5k_hw *ah, unsigned int freq)
+ 		ath5k_rfg = rfgain_5112;
+ 		size = ARRAY_SIZE(rfgain_5112);
+ 		break;
++	case AR5K_RF5413:
++		ath5k_rfg = rfgain_5413;
++		size = ARRAY_SIZE(rfgain_5413);
++		break;
+ 	default:
+ 		return -EINVAL;
  	}
+@@ -1021,7 +1240,7 @@ enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah)
+ 		if (type == AR5K_PHY_PAPD_PROBE_TYPE_CCK)
+ 			ah->ah_gain.g_current += AR5K_GAIN_CCK_PROBE_CORR;
  
--	if (unlikely(local->sta_scanning))
-+	if (unlikely(local->sta_sw_scanning || local->sta_hw_scanning))
- 		rx.flags |= IEEE80211_TXRXD_RXIN_SCAN;
+-		if (ah->ah_radio == AR5K_RF5112) {
++		if (ah->ah_radio >= AR5K_RF5112) {
+ 			ath5k_hw_rfregs_gainf_corr(ah);
+ 			ah->ah_gain.g_current =
+ 				ah->ah_gain.g_current>=ah->ah_gain.g_f_corr ?
+@@ -1052,6 +1271,7 @@ int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
+ 		ah->ah_gain.g_active = 1;
+ 		break;
+ 	case AR5K_RF5112:
++	case AR5K_RF5413: /* ??? */
+ 		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
+ 		ah->ah_gain.g_step =
+ 		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
+@@ -1202,7 +1422,7 @@ static int ath5k_hw_rf5111_channel(struct ath5k_hw *ah,
+ }
  
- 	if (__ieee80211_invoke_rx_handlers(local, local->rx_pre_handlers, &rx,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1a53154..a6a657f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -225,7 +225,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
- 	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
- 		return TXRX_CONTINUE;
- 
--	if (unlikely(tx->local->sta_scanning != 0) &&
-+	if (unlikely(tx->local->sta_sw_scanning) &&
- 	    ((tx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
- 	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
- 		return TXRX_DROP;
+ /*
+- * Set channel on 5112
++ * Set channel on 5112 and newer
+  */
+ static int ath5k_hw_rf5112_channel(struct ath5k_hw *ah,
+ 		struct ieee80211_channel *channel)
+
+
