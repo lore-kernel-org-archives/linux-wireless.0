@@ -1,118 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga03.intel.com ([143.182.124.21]:42747 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755095AbXKNPgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:36:07 -0500
+	id S1756125AbXKNPgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:36:06 -0500
 From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
 Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
 	flamingice@sourmilk.net, tomas.winkler@intel.com,
 	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 09/15] iwlwifi: 802.11n new framework structures preperation
-Date: Wed, 14 Nov 2007 17:29:45 +0200
-Message-Id: <11950542013080-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153626_461368_2D4BBAE9)
+Subject: [PATCH 07/15] mac80211: adding 802.11n configuration flows
+Date: Wed, 14 Nov 2007 17:29:43 +0200
+Message-Id: <11950542011413-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153620_840496_E99105DD)
 In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
 References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary or duplicate 802.11n data from structures
-in the code, and prepares them for new mac80211's 802.11n framework
+This patch configures the 802.11n mode of operation
+internally in ieee80211_conf structure and in the low-level
+driver as well (through op conf_ht).
+It does not include AP configuration flows.
 
 Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965.h     |   27 +++++++++++----------------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
- 3 files changed, 12 insertions(+), 19 deletions(-)
+ include/net/mac80211.h       |    3 ++
+ net/mac80211/ieee80211.c     |   51 ++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h   |    3 ++
+ net/mac80211/ieee80211_sta.c |   32 ++++++++++++++++++++++++++
+ 4 files changed, 89 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 5189788..9d7b029 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1824,7 +1824,7 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
- 	if (local->hw.conf.phymode == MODE_IEEE80211A)
- 		sta->last_txrate += IWL_FIRST_OFDM_RATE;
- 
--	crl->is_dup = priv->is_dup;
-+	crl->is_dup = 0;
- 	crl->valid_antenna = priv->valid_antenna;
- 	crl->antenna = priv->antenna;
- 	crl->is_green = rs_use_green(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index d61cf0e..71cd2b7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -477,22 +477,23 @@ union iwl_ht_rate_supp {
- #define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
- #define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
- 
--struct sta_ht_info {
-+struct iwl_ht_info {
-+	/* self configuration data */
- 	u8 is_ht;
--	u16 rx_mimo_ps_mode;
-+	u8 supported_chan_width;
- 	u16 tx_mimo_ps_mode;
--	u16 control_channel;
-+	u8 is_green_field;
-+	u8 sgf;
- 	u8 max_amsdu_size;
- 	u8 ampdu_factor;
- 	u8 mpdu_density;
--	u8 operating_mode;
--	u8 supported_chan_width;
-+	u8 supp_mcs_set[16];
-+	/* BSS related data */
-+	u8 control_channel;
- 	u8 extension_chan_offset;
--	u8 is_green_field;
--	u8 sgf;
--	u8 supp_rates[16];
- 	u8 tx_chan_width;
--	u8 chan_width_cap;
-+	u8 ht_protection;
-+	u8 non_GF_STA_present;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 862431a..2fcf9f3 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1040,6 +1040,8 @@ enum ieee80211_erp_change_flags {
+  * @tx_last_beacon: Determine whether the last IBSS beacon was sent by us.
+  *	This is needed only for IBSS mode and the result of this function is
+  *	used to determine whether to reply to Probe Requests.
++ *
++ * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
+@@ -1085,6 +1087,7 @@ struct ieee80211_ops {
+ 			     struct sk_buff *skb,
+ 			     struct ieee80211_tx_control *control);
+ 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
++	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
  };
- #endif				/*CONFIG_IWL4965_HT */
  
-@@ -1151,11 +1152,6 @@ struct iwl_priv {
- 	u8 call_post_assoc_from_beacon;
- 	u8 assoc_station_added;
- 	u8 use_ant_b_for_management_frame;	/* Tx antenna selection */
--	/* HT variables */
--	u8 is_dup;
--	u8 is_ht_enabled;
--	u8 channel_width;	/* 0=20MHZ, 1=40MHZ */
--	u8 current_channel_width;
- 	u8 valid_antenna;	/* Bit mask of antennas actually connected */
- #ifdef CONFIG_IWL4965_SENSITIVITY
- 	struct iwl_sensitivity_data sensitivity_data;
-@@ -1165,9 +1161,8 @@ struct iwl_priv {
- #endif /*CONFIG_IWL4965_SENSITIVITY*/
+ /**
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e0ee65a..bcfc771 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -34,6 +34,8 @@
+ #include "debugfs.h"
+ #include "debugfs_netdev.h"
  
- #ifdef CONFIG_IWL4965_HT
--	struct sta_ht_info current_assoc_ht;
-+	struct iwl_ht_info current_ht_config;
- #endif
--	u8 active_rate_ht[2];
- 	u8 last_phy_res[100];
++#define SUPP_MCS_SET_LEN 16
++
+ /*
+  * For seeing transmitted packets on monitor interfaces
+  * we have a radiotap header too.
+@@ -534,6 +536,55 @@ int ieee80211_hw_config(struct ieee80211_local *local)
+ 	return ret;
+ }
  
- 	/* Rate scaling data */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index f089b06..d9f918b 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -9070,8 +9070,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
++/**
++ * ieee80211_hw_config_ht should be used only after legacy configuration
++ * has been determined, as ht configuration depends upon the hardware's
++ * HT abilities for a _specific_ band.
++ */
++int ieee80211_hw_config_ht(struct ieee80211_local *local, int enable_ht,
++			   struct ieee80211_ht_info *req_ht_cap,
++			   struct ieee80211_ht_bss_info *req_bss_cap)
++{
++	struct ieee80211_conf *conf = &local->hw.conf;
++	struct ieee80211_hw_mode *mode = conf->mode;
++	int i;
++
++	/* HT is not supported */
++	if (!mode->ht_info.ht_supported) {
++		conf->flags &= ~IEEE80211_CONF_SUPPORT_HT_MODE;
++		return -EOPNOTSUPP;
++	}
++
++	/* disable HT */
++	if (!enable_ht) {
++		conf->flags &= ~IEEE80211_CONF_SUPPORT_HT_MODE;
++	} else {
++		conf->flags |= IEEE80211_CONF_SUPPORT_HT_MODE;
++		conf->ht_conf.cap = req_ht_cap->cap & mode->ht_info.cap;
++		conf->ht_conf.cap &= ~(IEEE80211_HT_CAP_MIMO_PS);
++		conf->ht_conf.cap |=
++			mode->ht_info.cap & IEEE80211_HT_CAP_MIMO_PS;
++		conf->ht_bss_conf.primary_channel =
++			req_bss_cap->primary_channel;
++		conf->ht_bss_conf.bss_cap = req_bss_cap->bss_cap;
++		conf->ht_bss_conf.bss_op_mode = req_bss_cap->bss_op_mode;
++		for (i = 0; i < SUPP_MCS_SET_LEN; i++)
++			conf->ht_conf.supp_mcs_set[i] =
++				mode->ht_info.supp_mcs_set[i] &
++				  req_ht_cap->supp_mcs_set[i];
++
++		/* In STA mode, this gives us indication
++		 * to the AP's mode of operation */
++		conf->ht_conf.ht_supported = 1;
++		conf->ht_conf.ampdu_factor = req_ht_cap->ampdu_factor;
++		conf->ht_conf.ampdu_density = req_ht_cap->ampdu_density;
++	}
++
++	local->ops->conf_ht(local_to_hw(local), &local->hw.conf);
++
++	return 0;
++}
++
+ void ieee80211_erp_info_change_notify(struct net_device *dev, u8 changes)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5175054..b5cd899 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -709,6 +709,9 @@ int ieee80211_if_update_wds(struct net_device *dev, u8 *remote_addr);
+ void ieee80211_if_setup(struct net_device *dev);
+ struct ieee80211_rate *ieee80211_get_rate(struct ieee80211_local *local,
+ 					  int phymode, int hwrate);
++int ieee80211_hw_config_ht(struct ieee80211_local *local, int enable_ht,
++			   struct ieee80211_ht_info *req_ht_cap,
++			   struct ieee80211_ht_bss_info *req_bss_cap);
  
- 	priv->ps_mode = 0;
- 	priv->use_ant_b_for_management_frame = 1; /* start with ant B */
--	priv->is_ht_enabled = 1;
--	priv->channel_width = IWL_CHANNEL_WIDTH_40MHZ;
- 	priv->valid_antenna = 0x7;	/* assume all 3 connected */
- 	priv->ps_mode = IWL_MIMO_PS_NONE;
+ /* ieee80211_ioctl.c */
+ extern const struct iw_handler_def ieee80211_iw_handler_def;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index e02a908..863957c 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1441,6 +1441,19 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	}
+ 	sta->supp_rates = rates;
  
++	if (elems.ht_cap_elem && elems.ht_info_elem && elems.wmm_param &&
++	    local->ops->conf_ht) {
++		struct ieee80211_ht_bss_info bss_info;
++
++		ieee80211_ht_cap_ie_to_ht_info(
++				(struct ieee80211_ht_cap *)
++				elems.ht_cap_elem, &sta->ht_info);
++		ieee80211_ht_addt_info_ie_to_ht_bss_info(
++				(struct ieee80211_ht_addt_info *)
++				elems.ht_info_elem, &bss_info);
++		ieee80211_hw_config_ht(local, 1, &sta->ht_info, &bss_info);
++	}
++
+ 	rate_control_rate_init(sta, local);
+ 
+ 	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+@@ -1853,6 +1866,8 @@ static void ieee80211_rx_mgmt_beacon(struct net_device *dev,
+ 	struct ieee80211_if_sta *ifsta;
+ 	size_t baselen;
+ 	struct ieee802_11_elems elems;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf = &local->hw.conf;
+ 
+ 	ieee80211_rx_bss_info(dev, mgmt, len, rx_status, 1);
+ 
+@@ -1875,6 +1890,23 @@ static void ieee80211_rx_mgmt_beacon(struct net_device *dev,
+ 	if (elems.erp_info && elems.erp_info_len >= 1)
+ 		ieee80211_handle_erp_ie(dev, elems.erp_info[0]);
+ 
++	if (elems.ht_cap_elem && elems.ht_info_elem &&
++	    elems.wmm_param && local->ops->conf_ht &&
++	    conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
++		struct ieee80211_ht_bss_info bss_info;
++
++		ieee80211_ht_addt_info_ie_to_ht_bss_info(
++				(struct ieee80211_ht_addt_info *)
++				elems.ht_info_elem, &bss_info);
++		/* check if AP changed bss inforamation */
++		if ((conf->ht_bss_conf.primary_channel !=
++		     bss_info.primary_channel) ||
++		    (conf->ht_bss_conf.bss_cap != bss_info.bss_cap) ||
++		    (conf->ht_bss_conf.bss_op_mode != bss_info.bss_op_mode))
++			ieee80211_hw_config_ht(local, 1, &conf->ht_conf,
++						&bss_info);
++	}
++
+ 	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+ 		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
+ 					 elems.wmm_param_len);
 -- 
 1.5.3.3
 ---------------------------------------------------------------------
