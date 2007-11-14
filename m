@@ -1,88 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37026 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754323AbXKSPBo (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:49878 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbXKNSCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 10:01:44 -0500
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
-	Jean Tourrilhes <jt@hpl.hp.com>, Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <20071119.002755.77617097.davem@davemloft.net> (sfid-20071119_082758_146579_574C7820)
-References: <4740DF47.4040206@hotmail.com>
-	 <20071119.002755.77617097.davem@davemloft.net>
-	 (sfid-20071119_082758_146579_574C7820)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CuuI2MlFiw1moD3Tdbof"
-Date: Mon, 19 Nov 2007 16:03:02 +0100
-Message-Id: <1195484582.8642.18.camel@johannes.berg> (sfid-20071119_150207_845854_7CB31649)
+	Wed, 14 Nov 2007 13:02:07 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IsMYw-0005hI-TX
+	for linux-wireless@vger.kernel.org; Wed, 14 Nov 2007 13:02:07 -0500
+Subject: Re: Linux wireless compatibility package for kernels >= 2.6.22
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com>
+References: <43e72e890711101953w6e046b82j6b9087d30c8195b2@mail.gmail.com>
+	 <1194841658.2276.8.camel@dv>
+	 <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 14 Nov 2007 13:02:04 -0500
+Message-Id: <1195063324.1739.9.camel@dv> (sfid-20071114_180214_053293_6FBE220C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, Luis!
 
---=-CuuI2MlFiw1moD3Tdbof
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2007-11-13 at 18:10 -0500, Luis R. Rodriguez wrote:
+
+> I ran into to this but I had fixed it in compat.diff. Anyway, this
+> won't be necessary anymore as the directories match the kernel's now.
+
+OK, that's much better now.
+
+> > After some hack to make it compile, I still get:
+> >
+> >   CC [M]  /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.o
+> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:6: warning:
+> > "LINUX_VERSION_CODE" is not defined
+> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:28:
+> > warning: "KERNEL_VERSION" is not defined
+> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:42: error:
+> > missing binary operator before token "("
+> 
+> I'm not sure what happened here as <linux/version.h> should have been
+> included in mac80211.h. Anyway, to be sure we won't run into these
+> I've added <net/compat.h> to <net/cfg80211.h> which much of the
+> wireless subsystem uses.
+
+This problem is still there.  I think the best approach would be to
+"force-feed" compat.h to the compiler.  It already includes
+linux/version.h, but since it's the first header, it needs
+linux/autoconf.h.
+
+The following patch works for me.  The compat.diff patch can be cleaned
+up, but it's a separate issue.
 
 
-> > The first noticeable problem is when using iwconfig on the device. I=20
-> > cannot set a key for the device, and a query of the configuration alway=
-s=20
-> > claims that the "<encryption key is too long>".
->=20
-> Likely some wireless ioctl compat layer bug in the kernel.
+Force inclusion of compat.h first.
 
-Is this 32/64 interop? The kernel has never been fixed and never will
-be. New wireless tools should "support" this, but imnsho you're *much*
-better off compiling 64-bit wireless tools.
+Include linux/autoconf.h before other headers.
 
-> > If I try to scan for APs using iwlist, I get one AP listed, before a bu=
-s=20
-> > error occurs. This of course, does not suggest that the problem is with=
-=20
-> > the driver, but I mention it for the record.
->=20
-> This is an unaligned data access in the userland tools.
-> Try to catch it with GDB and give us ths backtrace.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-For Jean.
+ Makefile        |    2 +-
+ compat/compat.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-> > Whilst the device is up, I continually get console messages like those =
-I=20
-> > have inlined below:
-> >=20
-> > Kernel unaligned access at TPC[100ee4d4] do_rx+0x244/0x614 [zd1211rw]
-> > Kernel unaligned access at TPC[100ee4e8] do_rx+0x258/0x614 [zd1211rw]
-> > Kernel unaligned access at TPC[100ee4cc] do_rx+0x23c/0x614 [zd1211rw]
->=20
-> These are unaligned data accesses in the kernel driver.
 
-For Daniel.
+diff --git a/Makefile b/Makefile
+index af1e02f..f1c39a9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,7 +13,7 @@ ifneq ($(KERNELRELEASE),)
+ -include $(src)/config.mk
+ 
+ # This is a hack! But hey.. it works, got any better ideas, send a patch ;)
+-NOSTDINC_FLAGS := -I$(PWD)/include/ $(CFLAGS)
++NOSTDINC_FLAGS := -I$(PWD)/include/ -include $(M)/compat/compat.h $(CFLAGS)
+ 
+ obj-y := net/wireless/ net/mac80211/  \
+ 	drivers/net/wireless/ath5k/ \
+diff --git a/compat/compat.h b/compat/compat.h
+index 6ae32ef..05995f2 100644
+--- a/compat/compat.h
++++ b/compat/compat.h
+@@ -1,6 +1,7 @@
+ #ifndef LINUX_26_COMPAT_H
+ #define LINUX_26_COMPAT_H
+ 
++#include <linux/autoconf.h>
+ #include <linux/kernel.h>
+ #include <linux/netdevice.h>
+ #include <linux/genetlink.h>
 
-johannes
 
---=-CuuI2MlFiw1moD3Tdbof
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0GlpaVg1VMiehFYAQIsIQ//Rjf81+MSCgRxKRTXqoe7XAkFH9H6wXOQ
-lGfZF+qgVGiiu7HvUXBjildV3eXGO6OSfMqPQ7P7jIRnYofLXUy+GVcHaGRZvJrM
-BUWlxUEge+qIX9mcFF8Jtk3m0Ru75At7V7rDsnnfPtHSG+sk2PKCFGq15heNEtt/
-z5833BP4K3E9TEJRWN+RvpxdyvfsMDs1y3QUN/vi33N9McJq9scqs10yRLv5CiRI
-k5anrAvYsv0l/7iNrjYSiTrGlHu6PM9Afrs+dYaX92buOgdeFHmPuxphAw6I5dZ7
-p/fuYRINXvccCU3YGep7WoSmBBcpTTybNQ/xnaqPFPfdtH0VY2IccjPnnUAFUonh
-Wn0ypTGXzVVxHRa6FQpHQ9CdUmehC7l+BE8L6MUroablCz4ClcVmLGkpaLuA2ONs
-YuEN0KoDPlNDR261pP7XruidxXJwqW2u0OfQWC5rjrH5F8n8UFHdE8W2Pwj8qwY3
-MLH4Yovf04qHwjketBTygnXPr1Re1htEDMpnEW0NTupx+6kDkIuJsDE3M6ZfmJrw
-BN4287p3FleBdExMO/QdgfFgkkezLbdeE+oUBt+1p8aI/0ftbudAkgMuzfcEDF75
-oDtagzYPtJs9F508mfqTula4iHXmY8nxkOg2i0b9UbnskuAW+9rCD+L7uPGVA8Jj
-fz3scj9oe0g=
-=kP45
------END PGP SIGNATURE-----
-
---=-CuuI2MlFiw1moD3Tdbof--
+-- 
+Regards,
+Pavel Roskin
 
