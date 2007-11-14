@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:43673 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755016AbXK0Akl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 19:40:41 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1810497pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 16:40:40 -0800 (PST)
-Message-ID: <43e72e890711261640o7edb5654u27a1c0fd455c3fb8@mail.gmail.com> (sfid-20071127_004045_473243_F6F1E111)
-Date: Mon, 26 Nov 2007 19:40:40 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [PATCH 3/3] ath5k: export signal quality values
-Cc: "Bruno Randolf" <bruno@thinktube.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com
-In-Reply-To: <40f31dec0711230327w6e929b1ay7769af8553e713b0@mail.gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:34676 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755613AbXKNQL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 11:11:27 -0500
+Date: Wed, 14 Nov 2007 18:11:40 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 1/4] ath5k: Fix another faulty channel flag check
+Message-ID: <20071114161139.GA6365@localhost.domain.invalid> (sfid-20071114_161130_174427_571CCE7B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-3-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-4-git-send-email-bruno@thinktube.com>
-	 <40f31dec0711230327w6e929b1ay7769af8553e713b0@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 23, 2007 6:27 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/11/23, Bruno Randolf <bruno@thinktube.com>:
->
-> > store the last noise floor in ath5k_hw and report signal, noise and link
-> > quality values to mac80211, which in turn makes them show up in iwconfig.
-> >
-> > ath5k.h, phy.c:
-> > Changes-licensed-under: ISC
-> >
-> > base.c:
-> > Changes-licensed-under: 3-clause-BSD
-> >
-> > Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+*Fix another faulty channel flags check
+    
+Don't check channel->val against CHANNEL_A/B/G flags because they have common flags set
+eg. doing AND between CHANNEL_A and CHANNEL_G always returns true because they have
+CHANNEL_OFDM, same goes for CHANNEL_B and CHANNEL_G that have CHANNEL_2GHZ in common.
+    
+Instead check against CHANNEL_CCK/OFDM/2GHZ/5GHZ...
 
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-This patch series depends on your previous debug.[ch] patches. If
-that's ACK'ed (I'll review next) then:
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index f78ca6e..ead2d75 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -719,7 +719,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 				AR5K_SREV_RAD_5112A) {
+ 			ath5k_hw_reg_write(ah, AR5K_PHY_CCKTXCTL_WORLD,
+ 					AR5K_PHY_CCKTXCTL);
+-			if (channel->val & CHANNEL_A)
++			if (channel->val & CHANNEL_5GHZ)
+ 				data = 0xffb81020;
+ 			else
+ 				data = 0xffb80d20;
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-  Luis
