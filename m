@@ -1,54 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33315 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751403AbXKXNi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 08:38:57 -0500
-Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: bruno randolf <bruno@thinktube.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200711241836.05159.bruno@thinktube.com>
-References: <1195814754.4149.86.camel@johannes.berg>
-	 <1195893283.4149.188.camel@johannes.berg>
-	 <1195896461.8231.3.camel@localhost>
-	 <200711241836.05159.bruno@thinktube.com>
-Content-Type: text/plain
-Date: Sat, 24 Nov 2007 14:38:51 +0100
-Message-Id: <1195911531.8231.5.camel@localhost> (sfid-20071124_133905_353963_8BC84B93)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:22366 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758469AbXKNPbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:31:09 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 03/15] mac80211: adding 802.11n HT framework definitions
+Date: Wed, 14 Nov 2007 17:29:39 +0200
+Message-Id: <11950542002764-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153156_449673_03C95BB9)
+In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+New structures:
+ - ieee80211_ht_info: describing STA's HT capabilities
+ - ieee80211_ht_bss_info: describing BSS's HT characteristics
+Changed structures:
+ - ieee80211_hw_mode: now also holds PHY HT capabilities for each HW mode
+ - ieee80211_conf: ht_conf holds current self HT configuration
+                   ht_bss_conf holds current BSS HT configuration
+ - flag IEEE80211_CONF_SUPPORT_HT_MODE added to indicate if HT use is
+   desired
+ - sta_info: now also holds Peer's HT capabilities
 
-On Sat, 2007-11-24 at 18:36 +0900, bruno randolf wrote:
-> On Saturday 24 November 2007 18:27:41 Mattias Nissler wrote:
-> > On Sat, 2007-11-24 at 09:34 +0100, Johannes Berg wrote:
-> > > On Sat, 2007-11-24 at 00:21 -0500, Michael Wu wrote:
-> > > > On Friday 23 November 2007 05:45:54 Johannes Berg wrote:
-> > > > > This makes mac80211 include the low-level MAC timestamp
-> > > > > in the radiotap header.
-> > > >
-> > > > No thanks. Not every driver supports reporting the timestamp and
-> > > > supporting timestamp/no timestamp in the default radiotap rx code makes
-> > > > it not so simple anymore.
-> > >
-> > > Uh, so how am I supposed to get the timestamp? Copy all the code into
-> > > b43 and make it generate the exact same radiotap header? That's pretty
-> > > crappy too.
-> >
-> > On rt2x00, we've just added a facility that dumps information about all
-> > frames received and transmitted at a very low level. We dump general
-> > information about the frame, the tx/rx descriptors and the packet. Maybe
-> > something similar would also be useful for b43?
-> 
-> that's not a solution if you want them per packet in the radiotap header.
-> kismet & wireshark use them as well as other applications.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ include/net/mac80211.h  |   55 +++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/sta_info.h |    3 ++
+ 2 files changed, 52 insertions(+), 6 deletions(-)
 
-We actually dump per packet data that is read via debugfs and then fed
-into wireshark. Helps debugging a lot :-)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 17b6039..862431a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -139,17 +139,54 @@ enum ieee80211_phymode {
+ };
+ 
+ /**
++ * struct ieee80211_ht_info - describing STA's HT capabilities
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11n HT capabilities for an STA.
++ *
++ * @ht_supported: is HT supported by STA, 0: no, 1: yes
++ * @cap: HT capabilities map as described in 802.11n spec
++ * @ampdu_factor: Maximum A-MPDU length factor
++ * @ampdu_density: Minimum A-MPDU spacing
++ * @supp_mcs_set: Supported MCS set as described in 802.11n spec
++ */
++struct ieee80211_ht_info {
++	u8 ht_supported;
++	u16 cap; /* use IEEE80211_HT_CAP_ */
++	u8 ampdu_factor;
++	u8 ampdu_density;
++	u8 supp_mcs_set[16];
++};
++
++/**
++ * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11n HT characteristics in a BSS
++ *
++ * @primary_channel: channel number of primery channel
++ * @bss_cap: 802.11n's general BSS capabilities (e.g. channel width)
++ * @bss_op_mode: 802.11n's BSS operation modes (e.g. HT protection)
++ */
++struct ieee80211_ht_bss_info {
++	u8 primary_channel;
++	u8 bss_cap;  /* use IEEE80211_HT_IE_CHA_ */
++	u8 bss_op_mode; /* use IEEE80211_HT_IE_ */
++};
++
++/**
+  * struct ieee80211_hw_mode - PHY mode definition
+  *
+  * This structure describes the capabilities supported by the device
+  * in a single PHY mode.
+  *
++ * @list: internal
++ * @channels: pointer to array of supported channels
++ * @rates: pointer to array of supported bitrates
+  * @mode: the PHY mode for this definition
+  * @num_channels: number of supported channels
+- * @channels: pointer to array of supported channels
+  * @num_rates: number of supported bitrates
+- * @rates: pointer to array of supported bitrates
+- * @list: internal
++ * @ht_info: PHY's 802.11n HT abilities for this mode
+  */
+ struct ieee80211_hw_mode {
+ 	struct list_head list;
+@@ -158,6 +195,7 @@ struct ieee80211_hw_mode {
+ 	enum ieee80211_phymode mode;
+ 	int num_channels;
+ 	int num_rates;
++	struct ieee80211_ht_info ht_info;
+ };
+ 
+ /**
+@@ -406,11 +444,12 @@ struct ieee80211_tx_status {
+  *
+  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
+  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
+- *
++ * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
+  */
+ enum ieee80211_conf_flags {
+-	IEEE80211_CONF_SHORT_SLOT_TIME	= 1<<0,
+-	IEEE80211_CONF_RADIOTAP		= 1<<1,
++	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
++	IEEE80211_CONF_RADIOTAP		= (1<<1),
++	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
+ };
+ 
+ /**
+@@ -434,6 +473,8 @@ enum ieee80211_conf_flags {
+  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
+  *	1/2: antenna 0/1
+  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
++ * @ht_conf: describes current self configuration of 802.11n HT capabilies
++ * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
+  */
+ struct ieee80211_conf {
+ 	int channel;			/* IEEE 802.11 channel number */
+@@ -452,6 +493,8 @@ struct ieee80211_conf {
+ 	u8 antenna_max;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
++	struct ieee80211_ht_info ht_conf;
++	struct ieee80211_ht_bss_info ht_bss_conf;
+ };
+ 
+ /**
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 8f7ebe4..e1a4ac1 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -99,6 +99,9 @@ struct sta_info {
+ 
+ 	u16 listen_interval;
+ 
++	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
++					     of this STA */
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
+ 		struct dentry *dir;
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Mattias
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
