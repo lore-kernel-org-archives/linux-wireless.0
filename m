@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailguard.fgan.de ([128.7.3.5]:41994 "EHLO mailguard.fgan.de"
+Received: from venema.h4ckr.net ([217.24.1.135]:58387 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754156AbXKNPUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:20:17 -0500
-Received: from rufsun5.fkie.fgan.de ([128.7.2.5] helo=mailhost.fgan.de)
-	by mailguard.fgan.de with esmtp (Exim 4.63)
-	(envelope-from <Rogge@fgan.de>)
-	id 1IsK2K-0002lJ-GX
-	for linux-wireless@vger.kernel.org; Wed, 14 Nov 2007 16:20:16 +0100
-Received: from mailserv.lorien.fkie.fgan.de ([128.7.90.101])
-	by mailhost.fgan.de with esmtp (Exim 4.67 #7 (Solaris MB))
-	id 1IsK2K-00079M-Bm
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 16:20:16 +0100
-From: Henning Rogge <rogge@fgan.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Virtual wireless network card for mac80211
-Date: Wed, 14 Nov 2007 16:20:15 +0100
-References: <200711141316.50393.rogge@fgan.de> <20071114150839.GA6226@tuxdriver.com>
-In-Reply-To: <20071114150839.GA6226@tuxdriver.com>
+	id S1761500AbXKNRti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 12:49:38 -0500
+Date: Wed, 14 Nov 2007 19:49:49 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH] Add myself to MAINTAINERS and rewrite module description
+	on Kconfig
+Message-ID: <20071114174949.GA7479@localhost.domain.invalid> (sfid-20071114_174950_007098_E56D817E)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711141620.15821.rogge@fgan.de> (sfid-20071114_152034_284604_E26978DC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 14 November 2007 16:08:39 schrieben Sie:
-> On Wed, Nov 14, 2007 at 01:16:50PM +0100, Henning Rogge wrote:
-> No, but I have been thinking about this as well.  It might be a nice
-> capability to have, so long as the regulatory spectre continues to
-> discourage some vendors from disclosing information about their
-> hardware.  At least such a scenario seems less grey w.r.t. GPL
-> compliance.
->
-> Still, I would not want to put much effort into a project that
-> distracts from development of fully open source drivers.  But I think
-> the performance of such a solution would be sub-optimal enough to
-> discourage full reliance upon it.  And the plus of having a userland
-> binary driver versus no driver at all might make it worthwhile.
->
-> What is the situation that makes this interesting to you?
-I'm not interested in having a binary driver but in simulation of mobile 
-networks with virtual machines. By placing a virtual driver into the mac80211 
-layer the sollution would be totally transparent for the clients, even for 
-applications with Radiotap headers and Libpcap.
-A central server would be connected to the userspace parts of the virtual 
-driver and simulate connections between the VMs.
+*Add better description in Kconfig
+*Add myself to MAINTAINERS
 
-Henning Rogge
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 751cd42..38b3956 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -652,9 +652,12 @@ S:	Supported
+ ATHEROS ATH5K WIRELESS DRIVER
+ P:	Jiri Slaby
+ M:	jirislaby@gmail.com
++P:	Nick Kossifidis
++M:	mickflemm@gmail.com
+ P:	Luis R. Rodriguez
+ M:	mcgrof@gmail.com
+ L:	linux-wireless@vger.kernel.org
++L:	ath5k-devel@lists.ath5k.org
+ S:	Maintained
+ 
+ ATL1 ETHERNET DRIVER
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f29d24d..393301e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -609,8 +609,13 @@ config ATH5K
+ 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	default m
+ 	---help---
+-	  This module adds support for atheros 5xxx (e.g. 5212) wireless
+-	  cards. If you have this card in your PC, select this to be build.
++	  This module adds support for wireless adapters based on
++	  Atheros 5xxx chipset. 
++
++	  Currently the following chip versions are supported:
++
++	  MAC: AR5211 AR5212
++	  PHY: RF5111/2111 RF5112/2112 RF5413/2413
+ 
+ 	  This driver uses the kernel's mac80211 subsystem.
+ 
+
 
