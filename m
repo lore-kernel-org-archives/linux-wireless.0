@@ -1,86 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:50609 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027AbXKPBMs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 20:12:48 -0500
-Received: by py-out-1112.google.com with SMTP id u77so3891993pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2007 17:12:47 -0800 (PST)
-Message-ID: <43e72e890711151712l78c52e95lcc97881ff15f7f82@mail.gmail.com> (sfid-20071116_011256_806574_9C9A5393)
-Date: Thu, 15 Nov 2007 20:12:46 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 2/4] ath5k: Fix device info reporting
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <40f31dec0711151559g2822f644s462d7ac8ffb0bbb2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071114161440.GB6365@localhost.domain.invalid>
-	 <43e72e890711151038k68d102f9m7f421ea301433cf@mail.gmail.com>
-	 <40f31dec0711151559g2822f644s462d7ac8ffb0bbb2@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:42747 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755613AbXKNPgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:36:06 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 11/15] iwlwifi: 802.11n handling probe request HT IE
+Date: Wed, 14 Nov 2007 17:29:47 +0200
+Message-Id: <11950542013714-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153617_480822_0AF51C05)
+In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 15, 2007 6:59 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/11/15, Luis R. Rodriguez <mcgrof@gmail.com>:
->
-> > On Nov 14, 2007 11:14 AM, Nick Kossifidis <mick@madwifi.org> wrote:
-> > > *Fix device info code
-> > >
-> > > Changes-licensed-under: 3-clause-BSD
-> > > Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
-> > >
-> > > ---
-> > > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> > > index 4c4837f..0d0e060 100644
-> > > --- a/drivers/net/wireless/ath5k/base.c
-> > > +++ b/drivers/net/wireless/ath5k/base.c
-> > > @@ -570,22 +570,40 @@ ath5k_pci_probe(struct pci_dev *pdev,
-> > >         if (ret)
-> > >                 goto err_ah;
-> > >
-> > > -       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
-> > > +       dev_info(&pdev->dev, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
-> > >                         ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
-> > >                                         sc->ah->ah_mac_srev,
-> > >                                         sc->ah->ah_phy_revision);
-> > >
-> > > -       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
-> > > -               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
-> > > -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > -                                       sc->ah->ah_radio_5ghz_revision);
-> > > -       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
-> > > -               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
-> > > -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
-> > > -                                       sc->ah->ah_radio_5ghz_revision);
-> > > -               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
-> > > -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
-> > > -                                       sc->ah->ah_radio_2ghz_revision);
-> > > +       if(!sc->ah->ah_single_chip){
-> >
-> > I'm a bit confused here you check for not single chip
-> >
-> Single chip solution (ah_single_chip) means PHY chip integrated with
-> MAC, we don't need to print radio info for them because there are no
-> separate radio chips.
+This patch conforms the probe request's HT IE with the
+new structures used in iwlwifi HT.
 
-Ah, thanks for clarifying this. Hm, we should rename ah_single_chip
-then being that we use "single chip" very differently below. That can
-wait though.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   64 ++++++++++++---------------
+ 1 files changed, 29 insertions(+), 35 deletions(-)
 
-> > > +               /* Single chip radio (!RF5111) */
-> > > +               if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision) {
-> >
-> > And here you say it is. Can you elaborate a bit on this?
-> >
-> This is single chip radio, a PHY that both 5HGz/2GHz radios are in one
-> chip (only 5111 is a dual chip radio with 5111 for 5GHz and 2111 for
-> 2GHz).
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 1d0946f..c0852ae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1821,9 +1821,9 @@ static u16 iwl_supported_rate_to_ie(u8 *ie, u16 supported_rate,
+ 
+ #ifdef CONFIG_IWL4965_HT
+ void static iwl_set_ht_capab(struct ieee80211_hw *hw,
+-			     struct ieee80211_ht_capability *ht_cap,
+-			     u8 use_wide_chan);
+-#endif
++			     struct ieee80211_ht_cap *ht_cap,
++			     u8 use_current_config);
++#endif /* CONFIG_IWL4965_HT */
+ 
+ /**
+  * iwl_fill_probe_req - fill in all required fields and IE for probe request
+@@ -1835,6 +1835,9 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
+ 	int len = 0;
+ 	u8 *pos = NULL;
+ 	u16 active_rates, ret_rates, cck_rates, active_rate_basic;
++#ifdef CONFIG_IWL4965_HT
++	struct ieee80211_hw_mode *mode;
++#endif /* CONFIG_IWL4965_HT */
+ 
+ 	/* Make sure there is enough space for the probe request,
+ 	 * two mandatory IEs and the data */
+@@ -1918,17 +1921,14 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
+ 		len += 2 + *pos;
+ 
+ #ifdef CONFIG_IWL4965_HT
+-	if (is_direct && priv->is_ht_enabled) {
+-		u8 use_wide_chan = 1;
+-
+-		if (priv->channel_width != IWL_CHANNEL_WIDTH_40MHZ)
+-			use_wide_chan = 0;
++	mode = priv->hw->conf.mode;
++	if (mode->ht_info.ht_supported) {
+ 		pos += (*pos) + 1;
+ 		*pos++ = WLAN_EID_HT_CAPABILITY;
+-		*pos++ = sizeof(struct ieee80211_ht_capability);
+-		iwl_set_ht_capab(NULL, (struct ieee80211_ht_capability *)pos,
+-				 use_wide_chan);
+-		len += 2 + sizeof(struct ieee80211_ht_capability);
++		*pos++ = sizeof(struct ieee80211_ht_cap);
++		iwl_set_ht_capab(priv->hw,
++				(struct ieee80211_ht_cap *)pos, 0);
++		len += 2 + sizeof(struct ieee80211_ht_cap);
+ 	}
+ #endif  /*CONFIG_IWL4965_HT */
+ 
+@@ -8160,31 +8160,25 @@ static int iwl_mac_conf_ht(struct ieee80211_hw *hw,
+ }
+ 
+ static void iwl_set_ht_capab(struct ieee80211_hw *hw,
+-			     struct ieee80211_ht_capability *ht_cap,
+-			     u8 use_wide_chan)
++		struct ieee80211_ht_cap *ht_cap,
++		u8 use_current_config)
+ {
+-	union ht_cap_info cap;
+-	union ht_param_info param_info;
++	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_hw_mode *mode = conf->mode;
+ 
+-	memset(&cap, 0, sizeof(union ht_cap_info));
+-	memset(&param_info, 0, sizeof(union ht_param_info));
+-
+-	cap.maximal_amsdu_size = HT_IE_MAX_AMSDU_SIZE_4K;
+-	cap.green_field = 1;
+-	cap.short_GI20 = 1;
+-	cap.short_GI40 = 1;
+-	cap.supported_chan_width_set = use_wide_chan;
+-	cap.mimo_power_save_mode = 0x3;
+-
+-	param_info.max_rx_ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
+-	param_info.mpdu_density = CFG_HT_MPDU_DENSITY_DEF;
+-	ht_cap->capabilities_info = (__le16) cpu_to_le16(cap.val);
+-	ht_cap->mac_ht_params_info = (u8) param_info.val;
+-
+-	ht_cap->supported_mcs_set[0] = 0xff;
+-	ht_cap->supported_mcs_set[1] = 0xff;
+-	ht_cap->supported_mcs_set[4] =
+-	    (cap.supported_chan_width_set) ? 0x1: 0x0;
++	if (use_current_config) {
++		ht_cap->cap_info = cpu_to_le16(conf->ht_conf.cap);
++		memcpy(ht_cap->supp_mcs_set,
++				conf->ht_conf.supp_mcs_set, 16);
++	} else {
++		ht_cap->cap_info = cpu_to_le16(mode->ht_info.cap);
++		memcpy(ht_cap->supp_mcs_set,
++				mode->ht_info.supp_mcs_set, 16);
++	}
++	ht_cap->ampdu_params_info =
++		(mode->ht_info.ampdu_factor & IEEE80211_HT_CAP_AMPDU_FACTOR) |
++		((mode->ht_info.ampdu_density << 2) &
++					IEEE80211_HT_CAP_AMPDU_DENSITY);
+ }
+ 
+ static void iwl_mac_get_ht_capab(struct ieee80211_hw *hw,
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Thanks for clarifying this.
-
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-
-  Luis
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
