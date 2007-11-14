@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757789AbXKPU43 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 15:56:29 -0500
-Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate
-	IEEE802.11n support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindzonski <rindjon@googlemail.com>
-Cc: Guy Cohen <guy.cohen@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com
-In-Reply-To: <c85cb4470711151036j11fc855fnfde4366c11df97b@mail.gmail.com> (sfid-20071115_183732_667665_6820BE15)
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-	 <1195056662.4091.29.camel@johannes.berg>
-	 <247d6d340711150233h7988220fifb0d34170d16a979@mail.gmail.com>
-	 <1195142683.13846.62.camel@johannes.berg>
-	 <c85cb4470711151006j765831f9w2fb941317153712c@mail.gmail.com>
-	 <1195150317.8147.7.camel@johannes.berg>
-	 <c85cb4470711151036j11fc855fnfde4366c11df97b@mail.gmail.com>
-	 (sfid-20071115_183732_667665_6820BE15)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cPbCRAmhWRMGK/5CZpWQ"
-Date: Fri, 16 Nov 2007 16:59:53 +0100
-Message-Id: <1195228793.8147.153.camel@johannes.berg> (sfid-20071116_205643_996346_5986C91C)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4791 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760196AbXKNPbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:31:13 -0500
+Date: Wed, 14 Nov 2007 10:30:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Henning Rogge <rogge@fgan.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Virtual wireless network card for mac80211
+Message-ID: <20071114153041.GB6226@tuxdriver.com> (sfid-20071114_153159_820820_5667C5FA)
+References: <200711141316.50393.rogge@fgan.de> <20071114150839.GA6226@tuxdriver.com> <200711141620.15821.rogge@fgan.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200711141620.15821.rogge@fgan.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 14, 2007 at 04:20:15PM +0100, Henning Rogge wrote:
+> Am Mittwoch 14 November 2007 16:08:39 schrieben Sie:
 
---=-cPbCRAmhWRMGK/5CZpWQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > What is the situation that makes this interesting to you?
 
+> I'm not interested in having a binary driver but in simulation of mobile 
+> networks with virtual machines. By placing a virtual driver into the mac80211 
+> layer the sollution would be totally transparent for the clients, even for 
+> applications with Radiotap headers and Libpcap.
+> A central server would be connected to the userspace parts of the virtual 
+> driver and simulate connections between the VMs.
 
-> Yes, getting the code into the development tree will be excellent.
-> I am already working on the rx_h_data fix we talked about, and will sent =
-it
-> over early next week to wrap things up.
+Even better -- a completely legitimate use for such a feature. :-)
 
-Sounds good to me. I don't expect anything much to happen until then so
-it probably doesn't matter if it's merged until then or not, but hey.
-I'm certainly willing to rebase any patches I do, in fact I'm sort of
-waiting for this before doing another attempt to do proper band rather
-than mode stuff
+Such a driver might also serve as a development tool for the mac80211
+stack developers, and as a model for how drivers should behave when
+interacting with mac80211.
 
-johannes
+In fact, I think Johannes Berg submitted this to the Kernel Newbies
+project suggestions already:
 
---=-cPbCRAmhWRMGK/5CZpWQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	http://kernelnewbies.org/KernelProjects/Mac80211TestDriver
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+So, any aspiring wireless/kernel hackers out there?
 
-iQIVAwUARz2+eKVg1VMiehFYAQJELhAAkDXhjZqcOeFgSbHdHonMtTP/diPsCpVF
-drXtAkaAoxV9Fnd3mgu9pOv9qGyhFLwUA+wEvQNERG/uXbWDZH/sz0+JOnZH4rsf
-/nes6cvsdC0e5bIrh8u2dYrYm+j4E360jV4WlVUC+drTZZ63aTJxT5xUl+S9uMcU
-DcIlWKxaNz7wkmnaLS3/zbUBRiTpi6LUoAnaAYmXSao6fzDoW45A4gEo0SIVEa9Q
-I+JFoielMAzIKtmp5MyiaR8M0bpPql3iYnS/+LATZmUKAFSuKdUt2eId3WnjKuec
-icbD/HxbIEPQHB+vELwYlVpyi2ywD7wLWvwmD2cmR+B/3a0vJh2wEnVOQs0P+c8X
-U6ZQCCBGfQC+uH5AP7rzh0DDv7wf/XC0HTsggSc8Iuwv1V4iGcqEn9oMg0xnPMC5
-/LQCrZUYjsDXElm8I0H51P0BwjqVcINcaDHdUYOcnqc32ClzEcO+2zU1SM42K1MW
-davrWQAVMI6zZ438crqDM6jjcnQjXR6FCDEZpYp9pbpJE+J2SSreAKfkpdEGCVVI
-QbbfY/KkEZGPeBzVWXe7Vz65B1NpV2bm9s7p/NnOiqAPddJYPOtpWzTTUyZaFf/G
-65nezxxm6sqO01bO2DLRBy3NXeXVfXoVxu+TmdTUZ/Ha4X6W8lLor3W3JFDfF/5j
-lBaCvpv2PXA=
-=9n6s
------END PGP SIGNATURE-----
-
---=-cPbCRAmhWRMGK/5CZpWQ--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
