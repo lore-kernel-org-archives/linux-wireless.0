@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:20463 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759046AbXKTXxU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 18:53:20 -0500
-Received: by py-out-1112.google.com with SMTP id u77so6839388pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2007 15:53:19 -0800 (PST)
-Message-ID: <43e72e890711201553l5b0079d0mac90362890d982af@mail.gmail.com> (sfid-20071120_235324_489649_569B8DE6)
-Date: Tue, 20 Nov 2007 18:53:18 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Kyle McMartin" <kyle@mcmartin.ca>
-Subject: Re: [PATCH] ath5k: avoid oops when ah_capabilities.cap_mode not set
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890711201547y4639017bl989ace61bd0318d8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1192647780430-git-send-email-linville@tuxdriver.com>
-	 <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com>
-	 <20071120232558.GA8093@fattire.cabal.ca>
-	 <43e72e890711201547y4639017bl989ace61bd0318d8@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:55252 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760196AbXKNPbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 10:31:08 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 01/15] mac80211: adding MAC80211_HT config variable
+Date: Wed, 14 Nov 2007 17:29:37 +0200
+Message-Id: <11950542003748-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153149_921487_1BD42BB4)
+In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 20, 2007 6:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->
-> On Nov 20, 2007 6:25 PM, Kyle McMartin <kyle@mcmartin.ca> wrote:
-> >
-> > On Wed, Oct 17, 2007 at 05:36:33PM -0400, Luis R. Rodriguez wrote:
-> > > On 10/17/07, John W. Linville <linville@tuxdriver.com> wrote:
-> > > > ah_capabilities.cap_mode doesn't get set for some cards, causing the
-> > > > kernel to oops when these unknown/unsupported cards are inserted.
-> > > > Add some NULL checks to avoid this.
-> > > >
-> > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > >
-> > > Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> > >
-> >
-> > has this been dropped on the floor? I spotted it while going through
-> > Fedora 7 kernel patches...
->
-> Nope, just the first hunk:
->
-> mcgrof@shelby:~/devel/wireless-2.6$ git-show
-> 7364ee74beb763bbf3c450e5b5e189d3128a3164
->
->
-> commit 7364ee74beb763bbf3c450e5b5e189d3128a3164
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Tue Oct 23 13:41:37 2007 -0400
->
->     [PATCH] ath5k: undo overzealous hunk of "ath5k: avoid oops when..."
->
->     The first hunk of "ath5k: avoid oops when ah_capabilities.cap_mode not
->     set" was ill-advised.  It can cause its loop to abort prematurely.
->
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> diff --git a/drivers/net/wireless/ath5k/base.c
-> b/drivers/net/wireless/ath5k/base.c
-> index c38adab..e764fd3 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1991,9 +1991,6 @@ static int ath5k_getchannels(struct ieee80211_hw *hw)
->                 }
->
->                 hw_rates = ath5k_hw_get_rate_table(ah, mode->mode);
-> -               if (!hw_rates)
-> -                       return -EINVAL;
-> -
->                 mode->num_rates    = ath5k_copy_rates(mode->rates, hw_rates,
->                         max_r);
->                 mode->num_channels = ath5k_copy_channels(ah, mode->channels,
->
+This patch adds MAC80211_HT and MAC80211_HT_DEBUG config variables
+to separate HT features
 
-Also the
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/Kconfig |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-if (!rt)
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 32c8c08..3c3c8bf 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -51,6 +51,16 @@ config MAC80211_DEBUG
+ 	  If you are not trying to debug or develop the ieee80211
+ 	  subsystem, you most likely want to say N here.
+ 
++config MAC80211_HT_DEBUG
++       bool "Enable HT debugging output"
++       depends on MAC80211_DEBUG
++       ---help---
++       This option enables 802.11n High Throughput features
++       debug tracing output.
++
++       If you are not trying to debug of develop the ieee80211
++       subsystem, you most likely want to say N here.
++
+ config MAC80211_VERBOSE_DEBUG
+ 	bool "Verbose debugging output"
+ 	depends on MAC80211_DEBUG
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-are no longer necessary and not used as we are passing driver_mode on
-ath5k_hw_reset() now and that has a switch statement which catches any
-invalid mode. The whole rate duration stuff was moved out to
-ath5k_hw_write_rate_duration().
-
-  Luis
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
