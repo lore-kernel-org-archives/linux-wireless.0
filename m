@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48326 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753396AbXKLHeS convert rfc822-to-8bit (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:14858 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbXKNS5y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 02:34:18 -0500
+	Wed, 14 Nov 2007 13:57:54 -0500
+Received: by py-out-1112.google.com with SMTP id u77so2943060pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 10:57:52 -0800 (PST)
+Message-ID: <8e6f94720711141057w463d55c4r2be74d0aa8d78918@mail.gmail.com> (sfid-20071114_185759_193799_3BD1F401)
+Date: Wed, 14 Nov 2007 13:57:52 -0500
+From: "Will Dyson" <will.dyson@gmail.com>
+To: "Florian Lohoff" <flo@rfc822.org>
+Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
+Cc: "Marcus Better" <marcus@better.se>, linux-wireless@vger.kernel.org
+In-Reply-To: <20071114153347.GA3512@paradigm.rfc822.org>
 MIME-Version: 1.0
-Subject: RE: [PATCH 01/14] mac80211: adding MAC80211_HT config variable
-Date: Mon, 12 Nov 2007 09:33:35 +0200
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB0400893A@hasmsx411.ger.corp.intel.com> (sfid-20071112_073424_142478_9884012A)
-In-Reply-To: <200711112224.08807.flamingice@sourmilk.net>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Michael Wu" <flamingice@sourmilk.net>
-Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071111102315.GC10486@paradigm.rfc822.org>
+	 <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com>
+	 <20071113192330.GA19601@paradigm.rfc822.org>
+	 <fhedc4$5l9$1@ger.gmane.org>
+	 <20071114153347.GA3512@paradigm.rfc822.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Nov 14, 2007 10:33 AM, Florian Lohoff <flo@rfc822.org> wrote:
 
+> Did you actually try setting the rate manually? I just tried
+> when i came home from work. I set it to 36MBit/s and it actually
+> works ... I am now transferring with 2.5MByte/s instead of 30Kbyte/s
+>
+> So i guess the auto rate selection is broken ... Or 1 MBit/s is default
+> or something ...
 
->> This patch adds MAC80211_HT and MAC80211_HT_DEBUG config variables
->> to separate HT features
->>
+Ah, that is probably this isssue:
 
-> Nah. We don't need more ifdefs. Just leave the code on all the time.
-The 
-> overhead when it's not being used should be minimal and if it's not..
-that 
-> needs to be fixed anyway.
+http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=d37cabfb5f60a3bb56585a74fd3f140ba2960fe0
 
-I was thinking of doing it, as patches do not break current drivers, but
-wanted to give the option if desired. I do believe that overhead of the
-patches when unused is minor, so unless someone will object I can remove
-the #ifdefs.
+The patch is in the wireless-2.6/everything tree, but not Linus's tree.
 
-Ron
-
-> Also there doesn't appear to be MAC80211_HT_DEBUG in this patch,
-though 
-> I'd be 
-> okay with that.
-
-> -Michael Wu
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+-- 
+Will Dyson
