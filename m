@@ -1,132 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34288
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbXKFT2A (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:46111 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763641AbXKOGWq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 14:28:00 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC 6 of 6] ssb: Remove the old, now unused, data structure
-Date: Tue, 6 Nov 2007 20:26:58 +0100
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4730bdac.Oup0h41hJ0GHVCxr%Larry.Finger@lwfinger.net>
-In-Reply-To: <4730bdac.Oup0h41hJ0GHVCxr%Larry.Finger@lwfinger.net>
+	Thu, 15 Nov 2007 01:22:46 -0500
+Date: Wed, 14 Nov 2007 22:21:17 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: [patch 23/23] mac80211: make ieee802_11_parse_elems return void
+Message-ID: <20071115062117.GX8282@kroah.com> (sfid-20071115_062315_611747_06472EAB)
+References: <20071115055238.692814352@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711062026.58650.mb@bu3sch.de> (sfid-20071106_192804_933248_CEF2B634)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115061806.GA8282@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 November 2007 20:17:00 Larry Finger wrote:
-> Patch 6 of 6.
-> 
-> The old, now unused, data structures and SPROM extraction routines
-> are removed.
-> 
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-2.6/include/linux/ssb/ssb.h
-> ===================================================================
-> --- wireless-2.6.orig/include/linux/ssb/ssb.h
-> +++ wireless-2.6/include/linux/ssb/ssb.h
-> @@ -15,69 +15,6 @@ struct pcmcia_device;
->  struct ssb_bus;
->  struct ssb_driver;
->  
-> -
-> -struct ssb_sprom_r1 {
-> -	u16 pci_spid;		/* Subsystem Product ID for PCI */
-> -	u16 pci_svid;		/* Subsystem Vendor ID for PCI */
-> -	u16 pci_pid;		/* Product ID for PCI */
-> -	u8 il0mac[6];		/* MAC address for 802.11b/g */
-> -	u8 et0mac[6];		/* MAC address for Ethernet */
-> -	u8 et1mac[6];		/* MAC address for 802.11a */
-> -	u8 et0phyaddr:5;	/* MII address for enet0 */
-> -	u8 et1phyaddr:5;	/* MII address for enet1 */
-> -	u8 et0mdcport:1;	/* MDIO for enet0 */
-> -	u8 et1mdcport:1;	/* MDIO for enet1 */
-> -	u8 board_rev;		/* Board revision */
-> -	u8 country_code:4;	/* Country Code */
-> -	u8 antenna_a:2;		/* Antenna 0/1 available for A-PHY */
-> -	u8 antenna_bg:2;	/* Antenna 0/1 available for B-PHY and G-PHY */
-> -	u16 pa0b0;
-> -	u16 pa0b1;
-> -	u16 pa0b2;
-> -	u16 pa1b0;
-> -	u16 pa1b1;
-> -	u16 pa1b2;
-> -	u8 gpio0;		/* GPIO pin 0 */
-> -	u8 gpio1;		/* GPIO pin 1 */
-> -	u8 gpio2;		/* GPIO pin 2 */
-> -	u8 gpio3;		/* GPIO pin 3 */
-> -	u16 maxpwr_a;		/* A-PHY Power Amplifier Max Power (in dBm Q5.2) */
-> -	u16 maxpwr_bg;		/* B/G-PHY Power Amplifier Max Power (in dBm Q5.2) */
-> -	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
-> -	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
-> -	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
-> -	u8 antenna_gain_a;	/* A-PHY Antenna gain (in dBm Q5.2) */
-> -	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
-> -	u8 oem[8];		/* OEM string (rev 1 only) */
-> -};
-> -
-> -struct ssb_sprom_r2 {
-> -	u16 boardflags_hi;	/* Boardflags (high 16 bits) */
-> -	u8 maxpwr_a_lo;		/* A-PHY Max Power Low */
-> -	u8 maxpwr_a_hi;		/* A-PHY Max Power High */
-> -	u16 pa1lob0;		/* A-PHY PA Low Settings */
-> -	u16 pa1lob1;		/* A-PHY PA Low Settings */
-> -	u16 pa1lob2;		/* A-PHY PA Low Settings */
-> -	u16 pa1hib0;		/* A-PHY PA High Settings */
-> -	u16 pa1hib1;		/* A-PHY PA High Settings */
-> -	u16 pa1hib2;		/* A-PHY PA High Settings */
-> -	u8 ofdm_pwr_off;	/* OFDM Power Offset from CCK Level */
-> -	u8 country_str[2];	/* Two char Country Code */
-> -};
-> -
-> -struct ssb_sprom_r3 {
-> -	u32 ofdmapo;		/* A-PHY OFDM Mid Power Offset */
-> -	u32 ofdmalpo;		/* A-PHY OFDM Low Power Offset */
-> -	u32 ofdmahpo;		/* A-PHY OFDM High Power Offset */
-> -	u8 gpioldc_on_cnt;	/* GPIO LED Powersave Duty Cycle ON count */
-> -	u8 gpioldc_off_cnt;	/* GPIO LED Powersave Duty Cycle OFF count */
-> -	u8 cckpo_1M:4;		/* CCK Power Offset for Rate 1M */
-> -	u8 cckpo_2M:4;		/* CCK Power Offset for Rate 2M */
-> -	u8 cckpo_55M:4;		/* CCK Power Offset for Rate 5.5M */
-> -	u8 cckpo_11M:4;		/* CCK Power Offset for Rate 11M */
-> -	u32 ofdmgpo;		/* G-PHY OFDM Power Offset */
-> -};
-> -
->  struct ssb_sprom_data {
->  	u8 il0mac[6];		/* MAC address for 802.11b/g */
->  	u8 et0mac[6];		/* MAC address for Ethernet */
-> @@ -109,16 +46,6 @@ struct ssb_sprom_data {
->  struct ssb_sprom {
->  	u8 revision;
->  	u8 crc;
-> -	/* The valid r# fields are selected by the "revision".
-> -	 * Revision 3 and lower inherit from lower revisions.
-> -	 */
-> -	union {
-> -		struct {
-> -			struct ssb_sprom_r1 r1;
-> -			struct ssb_sprom_r2 r2;
-> -			struct ssb_sprom_r3 r3;
-> -		};
-> -	};
->  	struct ssb_sprom_data data;
->  };
+-stable review patch.  If anyone has any objections, please let us know.
+
+------------------
 
 
-I'd also like to get rid of the "revision" and "crc" fields, as they
-are of no use to drivers. So you can rename struct ssb_sprom_data
-to struct ssb_sprom and remove the old struct ssb_sprom.
+From: John W. Linville <linville@tuxdriver.com>
 
-If that creates problems with merging (bisect), just create one big patch.
-I like big patches more than hundreds of small ones that change this
-and that and in the end revert everything, just for the sake of
-having multiple patches. :)
+patch 67a4cce4a89718d252b61aaf58882c69c0e2f6e3 in mainline.
+
+Some APs send management frames with junk padding after the last IE.
+We already account for a similar problem with some Apple Airport
+devices, but at least one device is known to send more than a single
+extra byte.  The device in question is the Draytek Vigor2900:
+
+	http://www.draytek.com.au/products/Vigor2900.php
+
+The junk in question looks like an IE that runs off the end of the
+frame.  This cause us to return ParseFailed.  Since the frame in
+question is an association response, this causes us to fail to associate
+with this AP.
+
+The return code from ieee802_11_parse_elems is superfluous.
+All callers still check for the presence of the specific IEs that
+interest them anyway.  So, remove the return code so the parse never
+"fails".
+
+Acked-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/mac80211/ieee80211_sta.c |   56 ++++++-------------------------------------
+ 1 file changed, 9 insertions(+), 47 deletions(-)
+
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -108,15 +108,11 @@ struct ieee802_11_elems {
+ 	u8 wmm_param_len;
+ };
+ 
+-typedef enum { ParseOK = 0, ParseUnknown = 1, ParseFailed = -1 } ParseRes;
+-
+-
+-static ParseRes ieee802_11_parse_elems(u8 *start, size_t len,
+-				       struct ieee802_11_elems *elems)
++static void ieee802_11_parse_elems(u8 *start, size_t len,
++				   struct ieee802_11_elems *elems)
+ {
+ 	size_t left = len;
+ 	u8 *pos = start;
+-	int unknown = 0;
+ 
+ 	memset(elems, 0, sizeof(*elems));
+ 
+@@ -127,15 +123,8 @@ static ParseRes ieee802_11_parse_elems(u
+ 		elen = *pos++;
+ 		left -= 2;
+ 
+-		if (elen > left) {
+-#if 0
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "IEEE 802.11 element parse "
+-				       "failed (id=%d elen=%d left=%d)\n",
+-				       id, elen, left);
+-#endif
+-			return ParseFailed;
+-		}
++		if (elen > left)
++			return;
+ 
+ 		switch (id) {
+ 		case WLAN_EID_SSID:
+@@ -202,28 +191,15 @@ static ParseRes ieee802_11_parse_elems(u
+ 			elems->ext_supp_rates_len = elen;
+ 			break;
+ 		default:
+-#if 0
+-			printk(KERN_DEBUG "IEEE 802.11 element parse ignored "
+-				      "unknown element (id=%d elen=%d)\n",
+-				      id, elen);
+-#endif
+-			unknown++;
+ 			break;
+ 		}
+ 
+ 		left -= elen;
+ 		pos += elen;
+ 	}
+-
+-	/* Do not trigger error if left == 1 as Apple Airport base stations
+-	 * send AssocResps that are one spurious byte too long. */
+-
+-	return unknown ? ParseUnknown : ParseOK;
+ }
+ 
+ 
+-
+-
+ static int ecw2cw(int ecw)
+ {
+ 	int cw = 1;
+@@ -907,12 +883,7 @@ static void ieee80211_auth_challenge(str
+ 
+ 	printk(KERN_DEBUG "%s: replying to auth challenge\n", dev->name);
+ 	pos = mgmt->u.auth.variable;
+-	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
+-	    == ParseFailed) {
+-		printk(KERN_DEBUG "%s: failed to parse Auth(challenge)\n",
+-		       dev->name);
+-		return;
+-	}
++	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
+ 	if (!elems.challenge) {
+ 		printk(KERN_DEBUG "%s: no challenge IE in shared key auth "
+ 		       "frame\n", dev->name);
+@@ -1200,12 +1171,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	aid &= ~(BIT(15) | BIT(14));
+ 
+ 	pos = mgmt->u.assoc_resp.variable;
+-	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
+-	    == ParseFailed) {
+-		printk(KERN_DEBUG "%s: failed to parse AssocResp\n",
+-		       dev->name);
+-		return;
+-	}
++	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
+ 
+ 	if (!elems.supp_rates) {
+ 		printk(KERN_DEBUG "%s: no SuppRates element in AssocResp\n",
+@@ -1434,7 +1400,7 @@ static void ieee80211_rx_bss_info(struct
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee802_11_elems elems;
+ 	size_t baselen;
+-	int channel, invalid = 0, clen;
++	int channel, clen;
+ 	struct ieee80211_sta_bss *bss;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1478,9 +1444,7 @@ static void ieee80211_rx_bss_info(struct
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 	}
+ 
+-	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
+-				   &elems) == ParseFailed)
+-		invalid = 1;
++	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+ 
+ 	if (sdata->type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
+ 	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
+@@ -1699,9 +1663,7 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	if (baselen > len)
+ 		return;
+ 
+-	if (ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
+-				   &elems) == ParseFailed)
+-		return;
++	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+ 
+ 	if (elems.erp_info && elems.erp_info_len >= 1)
+ 		ieee80211_handle_erp_ie(dev, elems.erp_info[0]);
 
 -- 
-Greetings Michael.
