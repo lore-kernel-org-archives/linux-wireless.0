@@ -1,108 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:55709 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758614AbXKIPX0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 10:23:26 -0500
-From: Helmut Schaa <hschaa@suse.de>
-To: linville@tuxdriver.com
-Subject: [PATCH 2/2] mac80211: Remove local->scan_flags
-Date: Fri, 9 Nov 2007 16:26:09 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200711091622.16671.hschaa@suse.de> <200711091625.08261.hschaa@suse.de>
-In-Reply-To: <200711091625.08261.hschaa@suse.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:57682 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762652AbXKOGnJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2007 01:43:09 -0500
+Date: Wed, 14 Nov 2007 22:41:16 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 14/16] ipw2100: send WEXT scan events
+Message-ID: <20071115064116.GO18951@kroah.com> (sfid-20071115_064317_638799_DB5A4491)
+References: <20071115060353.071060513@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711091626.09611.hschaa@suse.de> (sfid-20071109_152328_711152_1078D313)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115063921.GA18827@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes all references to local->scan_flags as these are not 
-used anymore since the removal of prism2 ioctls.
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+
+-stable review patch.  If anyone has any objections, please let us know.
+
+------------------
+
+From: Dan Williams <dcbw@redhat.com>
+
+patch d20c678a450a25c1c12925f60c1b4cc040acc17d in mainline
+
+ipw2100 wasn't sending WEXT scan events at all on scan completion.  And
+like ipw2200, the driver aggressively auto-scans, requiring
+non-user-requested scan events to be batched together and sent at
+specific intervals instead of many times per seconds.
+
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4b4ed2a..31b634c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -481,10 +483,6 @@ struct ieee80211_local {
- 	struct list_head sta_bss_list;
- 	struct ieee80211_sta_bss *sta_bss_hash[STA_HASH_SIZE];
- 	spinlock_t sta_bss_lock;
--#define IEEE80211_SCAN_MATCH_SSID BIT(0)
--#define IEEE80211_SCAN_WPA_ONLY BIT(1)
--#define IEEE80211_SCAN_EXTRA_INFO BIT(2)
--	int scan_flags;
+ drivers/net/wireless/ipw2100.c |   39 +++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ipw2100.h |    4 ++++
+ 2 files changed, 43 insertions(+)
+
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -2102,12 +2102,46 @@ static void isr_indicate_rf_kill(struct 
+ 	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
+ }
  
- 	/* SNMP counters */
- 	/* dot11CountersTable */
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 6caa3ec..bd4804e 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -513,7 +513,6 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   union iwreq_data *wrqu, char *extra)
++static void send_scan_event(void *data)
++{
++	struct ipw2100_priv *priv = data;
++	union iwreq_data wrqu;
++
++	wrqu.data.length = 0;
++	wrqu.data.flags = 0;
++	wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
++}
++
++static void ipw2100_scan_event_later(struct work_struct *work)
++{
++	send_scan_event(container_of(work, struct ipw2100_priv,
++					scan_event_later.work));
++}
++
++static void ipw2100_scan_event_now(struct work_struct *work)
++{
++	send_scan_event(container_of(work, struct ipw2100_priv,
++					scan_event_now));
++}
++
+ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
  {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct iw_scan_req *req = NULL;
- 	u8 *ssid = NULL;
-@@ -522,21 +521,9 @@ static int ieee80211_ioctl_siwscan(struct net_device 
-*dev,
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
+ 	IPW_DEBUG_SCAN("scan complete\n");
+ 	/* Age the scan results... */
+ 	priv->ieee->scans++;
+ 	priv->status &= ~STATUS_SCANNING;
++
++	/* Only userspace-requested scan completion events go out immediately */
++	if (!priv->user_requested_scan) {
++		if (!delayed_work_pending(&priv->scan_event_later))
++			queue_delayed_work(priv->workqueue,
++					&priv->scan_event_later,
++					round_jiffies(msecs_to_jiffies(4000)));
++	} else {
++		priv->user_requested_scan = 0;
++		cancel_delayed_work(&priv->scan_event_later);
++		queue_work(priv->workqueue, &priv->scan_event_now);
++	}
+ }
  
--	switch (sdata->type) {
--	case IEEE80211_IF_TYPE_STA:
--	case IEEE80211_IF_TYPE_IBSS:
--		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
--			ssid = sdata->u.sta.ssid;
--			ssid_len = sdata->u.sta.ssid_len;
--		}
--		break;
--	case IEEE80211_IF_TYPE_AP:
--		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
--			ssid = sdata->u.ap.ssid;
--			ssid_len = sdata->u.ap.ssid_len;
--		}
--		break;
--	default:
-+	if (sdata->type != IEEE80211_IF_TYPE_STA &&
-+	    sdata->type != IEEE80211_IF_TYPE_IBSS &&
-+	    sdata->type != IEEE80211_IF_TYPE_AP) {
- 		return -EOPNOTSUPP;
+ #ifdef CONFIG_IPW2100_DEBUG
+@@ -4376,6 +4410,7 @@ static void ipw2100_kill_workqueue(struc
+ 		cancel_delayed_work(&priv->wx_event_work);
+ 		cancel_delayed_work(&priv->hang_check);
+ 		cancel_delayed_work(&priv->rf_kill);
++		cancel_delayed_work(&priv->scan_event_later);
+ 		destroy_workqueue(priv->workqueue);
+ 		priv->workqueue = NULL;
+ 	}
+@@ -6118,6 +6153,8 @@ static struct net_device *ipw2100_alloc_
+ 	INIT_DELAYED_WORK(&priv->wx_event_work, ipw2100_wx_event_work);
+ 	INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
+ 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
++	INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
++	INIT_DELAYED_WORK(&priv->scan_event_later, ipw2100_scan_event_later);
+ 
+ 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
+ 		     ipw2100_irq_tasklet, (unsigned long)priv);
+@@ -7427,6 +7464,8 @@ static int ipw2100_wx_set_scan(struct ne
  	}
  
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index f7ffeec..f4c76ea 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2887,15 +2893,6 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 	if (!(local->enabled_modes & (1 << bss->hw_mode)))
- 		return current_ev;
+ 	IPW_DEBUG_WX("Initiating scan...\n");
++
++	priv->user_requested_scan = 1;
+ 	if (ipw2100_set_scan_options(priv) || ipw2100_start_scan(priv)) {
+ 		IPW_DEBUG_WX("Start scan failed.\n");
  
--	if (local->scan_flags & IEEE80211_SCAN_WPA_ONLY &&
--	    !bss->wpa_ie && !bss->rsn_ie)
--		return current_ev;
--
--	if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID &&
--	    (local->scan_ssid_len != bss->ssid_len ||
--	     memcmp(local->scan_ssid, bss->ssid, bss->ssid_len) != 0))
--		return current_ev;
--
- 	memset(&iwe, 0, sizeof(iwe));
- 	iwe.cmd = SIOCGIWAP;
- 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
-@@ -3002,9 +2999,6 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 	do {
- 		char *buf;
+--- a/drivers/net/wireless/ipw2100.h
++++ b/drivers/net/wireless/ipw2100.h
+@@ -588,6 +588,10 @@ struct ipw2100_priv {
+ 	struct delayed_work wx_event_work;
+ 	struct delayed_work hang_check;
+ 	struct delayed_work rf_kill;
++	struct work_struct scan_event_now;
++	struct delayed_work scan_event_later;
++
++	int user_requested_scan;
  
--		if (!(local->scan_flags & IEEE80211_SCAN_EXTRA_INFO))
--			break;
--
- 		buf = kmalloc(100, GFP_ATOMIC);
- 		if (!buf)
- 			break;
+ 	u32 interrupts;
+ 	int tx_interrupts;
+
+-- 
