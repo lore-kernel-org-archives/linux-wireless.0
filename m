@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37797 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751705AbXKXJ1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 04:27:48 -0500
-Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1195893283.4149.188.camel@johannes.berg>
-References: <1195814754.4149.86.camel@johannes.berg>
-	 <200711240021.12394.flamingice@sourmilk.net>
-	 <1195893283.4149.188.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 24 Nov 2007 10:27:41 +0100
-Message-Id: <1195896461.8231.3.camel@localhost> (sfid-20071124_092758_216800_B8C9FB05)
-Mime-Version: 1.0
+Received: from nz-out-0506.google.com ([64.233.162.236]:59779 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755101AbXKODhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 22:37:20 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so391727nze
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 19:37:19 -0800 (PST)
+Message-ID: <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com> (sfid-20071115_033727_558011_30954D13)
+Date: Thu, 15 Nov 2007 11:37:18 +0800
+From: "Li YanBo" <dreamfly281@gmail.com>
+To: "Ben Gamari" <ben@mw0.ath.cx>
+Subject: Re: Suspend/Resume support
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1195087905.3814.11.camel@mercury>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1195087905.3814.11.camel@mercury>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Nov 15, 2007 8:51 AM, Ben Gamari <ben@mw0.ath.cx> wrote:
+> Hi all,
+>
+> Some time ago there was discussion on this list regarding suspend/resume
+> support in mac80211 (See 05 Aug 2007, "suspend/resume support in
+> mac80211"). The conclusion of this thread was that mac80211 had no
+> suspend/resume support and that functionality to stop the stack needed
+> to be added to fully support suspend. Has anyone started working on
+> implementing this functionality?
+>
+> If not, precisely what needs to be done to add robust suspend/resume
+> support to mac80211? Might this be a project that someone not presently
+> familiar with the mac80211 codebase could tackle with some guidance?
+> Thanks a ton,
+>
 
-On Sat, 2007-11-24 at 09:34 +0100, Johannes Berg wrote:
-> On Sat, 2007-11-24 at 00:21 -0500, Michael Wu wrote:
-> > On Friday 23 November 2007 05:45:54 Johannes Berg wrote:
-> > > This makes mac80211 include the low-level MAC timestamp
-> > > in the radiotap header.
-> > >
-> > No thanks. Not every driver supports reporting the timestamp and supporting 
-> > timestamp/no timestamp in the default radiotap rx code makes it not so simple 
-> > anymore.
-> 
-> Uh, so how am I supposed to get the timestamp? Copy all the code into
-> b43 and make it generate the exact same radiotap header? That's pretty
-> crappy too.
+Hope below link is helpful:
+http://kernelnewbies.org/KernelProjects/Mac80211Suspend
 
-On rt2x00, we've just added a facility that dumps information about all
-frames received and transmitted at a very low level. We dump general
-information about the frame, the tx/rx descriptors and the packet. Maybe
-something similar would also be useful for b43?
-
-Mattias
-
+Li YanBo
