@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shosting-26.42.nethub.hu ([87.229.26.42]:49201 "EHLO
-	shosting-26.42.nethub.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277AbXK2TIN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 14:08:13 -0500
-Received: from [80.98.239.159] (helo=[192.168.0.5])
-	by shosting-26.42.nethub.hu with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <imi@szollosi.net>)
-	id 1Ixok5-0000BF-RK
-	for linux-wireless@vger.kernel.org; Thu, 29 Nov 2007 20:08:10 +0100
-Message-ID: <474F0E0F.50504@szollosi.net> (sfid-20071129_190818_094745_422EF72E)
-Date: Thu, 29 Nov 2007 20:07:59 +0100
-From: =?ISO-8859-2?Q?Sz=F6ll=F5si_Imre?= <imi@szollosi.net>
-Reply-To: imi@szollosi.net
+Received: from mailguard.fgan.de ([128.7.3.5]:50352 "EHLO mailguard.fgan.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932553AbXKOGrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2007 01:47:02 -0500
+From: Henning Rogge <rogge@fgan.de>
+To: Mike Kershaw <dragorn@kismetwireless.net>
+Subject: Re: Virtual wireless network card for mac80211
+Date: Thu, 15 Nov 2007 07:46:53 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200711141316.50393.rogge@fgan.de> <20071114155957.GB25925@drd1813.lan>
+In-Reply-To: <20071114155957.GB25925@drd1813.lan>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: recieve broken wifi packedge
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711150746.53999.rogge@fgan.de> (sfid-20071115_064709_469186_05126E07)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Am Mittwoch 14 November 2007 16:59:58 schrieb Mike Kershaw:
+> Depending what you're trying to do, I did patches for tuntap that went
+> in a year or two ago that allow you to set the link type and write
+> radiotap/80211 frames.  Kismet-newcore (it's in branches in svn if you
+> care) uses this to replicate mangled frames back out to other userspace
+> programs.
 
-I write an email at afternoon, but i don't get back, may it go to 
-/dev/null. So I copy the letter to this and send again. Maybee.... .
+> http://svn.kismetwireless.net/code/branch/kismet-newcore/dumpfile_tuntap.cc
+Okay, that seems to be what I was looking for. It's not as flexible as a full 
+virtual network card, but it has all features I need, thank you.
 
-I'm a student from hungary and I have a trouble.
-My challange is, the get and use the broked wifi packadge.
+(it seems that none of the online documentation I found for tuntap contains 
+this capability)
 
-I sawed, the mac80211 is able to monitor mode with an virtual interface, 
-but it's only get good  packedges of wireless traffic. We want to use it 
-to completion a wireless stream traffic.
-
-My question is, can you give me some instuction, how can i modify the 
-stack, or can you give me a patch? I'm not a programmer, only learn 
-infocommunication.
-
-Can you help me?
-
-Imre Szollosi
+Henning
