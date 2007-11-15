@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:42546 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751010AbXK1QS4 (ORCPT
+Received: from smtp.nokia.com ([131.228.20.170]:52266 "EHLO
+	mgw-ext11.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756333AbXKOJru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 11:18:56 -0500
-Message-ID: <474D94ED.6050403@lwfinger.net> (sfid-20071128_161859_610853_42E1C7F0)
-Date: Wed, 28 Nov 2007 10:18:53 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 15 Nov 2007 04:47:50 -0500
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Linux wireless 802.11n progress
+References: <43e72e890711141058l722015d0x6a214f2754ad2e4a@mail.gmail.com>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Thu, 15 Nov 2007 11:47:39 +0200
+In-Reply-To: <43e72e890711141058l722015d0x6a214f2754ad2e4a@mail.gmail.com> (ext Luis R. Rodriguez's message of "Wed\, 14 Nov 2007 13\:58\:30 -0500")
+Message-ID: <873av7suv8.fsf@nokia.com> (sfid-20071115_094753_741514_8392F923)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Simple 'fix' for radio switch LED regression
-References: <474d8b73.cCPCkkSQe1GIVt4H%Larry.Finger@lwfinger.net> <200711281652.05627.mb@bu3sch.de>
-In-Reply-To: <200711281652.05627.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 28 November 2007 16:38:27 Larry Finger wrote:
->> Since addition of the rfkill callback, the LED associated with the off/on
->> switch on the radio has not worked because essential data in the rfkill
->> structure is missing. When that problem was fixed, difficulties in circular
->> locking surfaced. This patch fixes part of the regression in that the LED
->> is turned on if the radio switch is on at startup. Adding the code to toggle
->> the LED with the switch will be more involved and would likely miss the 2.6.24
->> window.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John and Michael,
->>
->> I was able to get the full functionality working, but with two significant
->> problems: (1) the LED toggled only with a switch off-on sequence, not with
->> each switch change and (2) the module would no longer unload cleanly due to
->> circular locking. I will be essentually off-line after today, and I hope that
->> this hack, which will make the LED appear to work correctly, can be pushed
->> into 2.6.24 as it is a fix, but has minimal code impact. Nearly all of the
->> changes are needed just to make the LED on routine available to startup.
->> Furthermore, I'm certain these changes will be needed when the complete fix
->> is available.
-> 
-> That completely shortcuts the "behaviour" logic.
-> This patch trades one bug for another.
-> It will get other people upset, because their LEDs don't work as expected anymore.
-> 
-> This is not a showstopper bug and there is no need to introduce dirty
-> fixes that trade one bug for another.
-> I'm pretty sure that this patch will break LEDs on my asus card. I didn't
-> try that, though.
+Luis R. Rodriguez <mcgrof@gmail.com> writes:
 
-Please try the patch at least enough to see if it breaks the LEDs on your card. I don't think it
-will. The reason that part was needed in the more complete code is that there is no key event to
-turn the rfkill LED on otherwise.
+> Intel:
+>
+> iwl4965 - Kudos to Intel for their support!!! Work is on the way to
+> integrate proper 802.11n work with mac80211. This is perhaps our best
+> supported device. I am only aware of PCI-express cards and PCI Express
+> Half Mini Card form factor. I don't think there are any miniPCI cards
+> out there.
 
-I agree that this is not a showstopper, but it is annoying. It is, however, your call.
+Are there any PC Cards available with iwl3945 or iwl4965 chipsets? My
+IBM test laptop only has ipw2100 and most probably the BIOS refuse to
+start if I switch the miniPCI card on the laptop :/
 
-Larry
+> * Conexant:
+>
+> The best I can find is that they are "developing 802.11n solutions for
+> high-performance, embedded applications":
+>
+> http://www.conexant.com/products/entry.jsp?id=30
+>
+> and "Conexant tells Light Reading it integrated Atheros's 802.11n
+> technology into its own VDSL2-gateway chips four months ago. It's just
+> that Conexant never formally announced this."
+>
+> http://www.lightreading.com/document.asp?doc_id=130123
+
+Are you aware of this:
+
+"Still trying to slim down, chip firm Conexant Systems Inc. (Nasdaq:
+CNXT) is halting new development of wireless LAN chips and laying off
+140."
+
+http://www.lightreading.com/document.asp?doc_id=138036&f_src=lightreading_gnews
+
+-- 
+Kalle Valo
