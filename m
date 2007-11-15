@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:51189 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753618AbXKWBj5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 20:39:57 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1IvNWN-0006Ot-SB
-	for linux-wireless@vger.kernel.org; Thu, 22 Nov 2007 20:39:55 -0500
-Subject: Re: Belin FD7010 v7
-From: Pavel Roskin <proski@gnu.org>
-To: Vadim Peretokin <vperetokin@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 22 Nov 2007 20:39:53 -0500
-Message-Id: <1195781993.11966.27.camel@dv> (sfid-20071123_014001_156927_D23D0C84)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4269 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754375AbXKOVbm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2007 16:31:42 -0500
+Date: Thu, 15 Nov 2007 16:31:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: Remove unnecessary code in iwl3945 and
+	iwl4965 drivers
+Message-ID: <20071115213118.GE12902@tuxdriver.com> (sfid-20071115_213147_863391_99C66FFB)
+References: <200711102049.32921.mboton.lkml@gmail.com> <1194829690.31574.70.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1194829690.31574.70.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-11-22 at 15:39 -0500, Vadim Peretokin wrote:
+On Mon, Nov 12, 2007 at 09:08:10AM +0800, Zhu Yi wrote:
+>=20
+> On Sat, 2007-11-10 at 20:49 +0100, Miguel Bot=F3n wrote:
+> > Remove unnecesary code in iwl3945 and iwl4965 drivers.
+> >=20
+> > "final_mode" variable is already initialized with the value of the
+> > "mode" variable.
+> >=20
+> > Signed-off-by: Miguel Boton <mboton@gmail.com>
+>=20
+> ACK. Or you can do "u32 uninitialized_var(final_mode);". Both are OK
+> with me.
 
-> But that is very ambiguous. Does that mean if anything is being done
-> to make this card work, do you know?
+I think I like this alternative better...
 
-The mac80211 driver for rtl8180/rtl8185 appeared in the "everything"
-branch of the wireless-2.6 repository just weeks ago.  If you are ready
-to recompile the kernel, use this to get the repository:
-
-git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-cd wireless-2.6
-git-checkout --track -b everything remotes/origin/everything
-
-Make sure CONFIG_RTL8180 is enabled in .config file.
-
--- 
-Regards,
-Pavel Roskin
-
+--=20
+John W. Linville
+linville@tuxdriver.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
