@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:11602 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754579AbXKSQGa (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42382 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755258AbXKOQus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 11:06:30 -0500
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] Remove ieee80211softmac
-Message-Id: <20071119160626.ED6F19D4B5A@zog.reactivated.net> (sfid-20071119_160648_711962_71ECD4D0)
-Date: Mon, 19 Nov 2007 16:06:26 +0000 (GMT)
+	Thu, 15 Nov 2007 11:50:48 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: Jouni Malinen <j@w1.fi>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <877ikjsvfi.fsf@nokia.com>
+References: <1194572631.4793.64.camel@johannes.berg>
+	 <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu>
+	 <87pryfd8cc.fsf@nokia.com> <1194953217.9116.38.camel@johannes.berg>
+	 <877ikjsvfi.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KtG7QcHxRe/uG7olOYeT"
+Date: Thu, 15 Nov 2007 17:40:24 +0100
+Message-Id: <1195144824.13846.65.camel@johannes.berg> (sfid-20071115_165104_729115_EA041CF4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the port of zd1211rw and the removal of bcm43xx, there are no
-remaining softmac users. Remove it.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
+--=-KtG7QcHxRe/uG7olOYeT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In addition to applying this patch, please also run:
-  git rm -r net/ieee80211/softmac
-  git rm include/net/ieee80211softmac*
 
- MAINTAINERS            |    6 ------
- net/ieee80211/Kconfig  |    1 -
- net/ieee80211/Makefile |    1 -
- 3 files changed, 0 insertions(+), 8 deletions(-)
+> > The N800 and similar devices only wake up at DTIM beacons, right?
+>=20
+> At least N800 and N810 do, we don't want to miss any of broadcast and
+> multicast traffic. But I don't know how other mobile devices wakeup
+> for beacons.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18b7c8e..e8f02ea 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3479,12 +3479,6 @@ M:	mhoffman@lightlink.com
- L:	lm-sensors@lm-sensors.org
- S:	Maintained
- 
--SOFTMAC LAYER (IEEE 802.11)
--P:	Daniel Drake
--M:	dsd@gentoo.org
--L:	linux-wireless@vger.kernel.org
--S:	Obsolete
--
- SOFTWARE RAID (Multiple Disks) SUPPORT
- P:	Ingo Molnar
- M:	mingo@redhat.com
-diff --git a/net/ieee80211/Kconfig b/net/ieee80211/Kconfig
-index 1438ade..3db9b33 100644
---- a/net/ieee80211/Kconfig
-+++ b/net/ieee80211/Kconfig
-@@ -70,4 +70,3 @@ config IEEE80211_CRYPT_TKIP
- 	This can be compiled as a module and it will be called
- 	"ieee80211_crypt_tkip".
- 
--source "net/ieee80211/softmac/Kconfig"
-diff --git a/net/ieee80211/Makefile b/net/ieee80211/Makefile
-index 796a7c7..f988417 100644
---- a/net/ieee80211/Makefile
-+++ b/net/ieee80211/Makefile
-@@ -10,4 +10,3 @@ ieee80211-objs := \
- 	ieee80211_wx.o \
- 	ieee80211_geo.o
- 
--obj-$(CONFIG_IEEE80211_SOFTMAC) += softmac/
--- 
-1.5.3.4
+Well, if they wake up for all beacons they're using too much power
+anyway so I'm not concerned.
+
+> At least from my point of view that could possible. Of course it feels
+> like a bit of a hack, but I guess there's no clean way to implement
+> this.
+
+Well the scheme with distributing the beacons would make it seem a lot
+more like it was implemented in different MACs, but that's quite a bit
+harder to implement.
+
+johannes
+
+--=-KtG7QcHxRe/uG7olOYeT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzx2d6Vg1VMiehFYAQIGyQ/8Cq2iMz4vx02GL4iegAjuALSWbHxB9QXp
+f9VP/Pipz4p54F4H9VMmbFS96ZpU/DjYoOxsewEXTEd6tEBs2AQYa/iBFcj3Eehf
+R+YIyL2Soy88OVPbpbIq+iwlmzOVb7Yrw8zOZZ1RC8LADnfuwMJTBHaCZQL/VRE4
+cZuMPISQaFAzYNeFwrs91Spaw9/li9n4F0MRy6S2Gp5lNzcZaIVTZLdeIKdZJAt+
+Lr1koWoO2fuPVY9NqOfxcH2/9LPBSz40kQZ5MmF7ESr3WVssI54cKBt3sYjFH9rV
+V8srdbcbvVeWLexhIm2b137VjqYtYoygISf4OAJbFWTPw4ctxzvkQ2dDbGpMZTML
+9BttPEgRnPtjMlT06vA2WPeAhodprD88BaTsWpRmuFFnqyx1EY5nBkHOrFk8PkoB
+vjU8g1i5ZTEe9xQ2dYcpBy7J5W2KUR0bYnLl4s+sdiw92Sbq/HYed3mt0TtTs7ZH
+1yvBsqaziYglQaS0R0kQ6RwuhGdCy/tbU3gkskOswNhEeVi5j9hmwsk4TuQ357g9
+jPn9q+5j9S7HBNPJEY0vIWR6cPOfuIS2hcFHvhdqvgFuoQdwJ8Ry0UrlEKhdeHz0
+n+dvBoWprFmj/7/PY+ZkliDmOoeSPMvqAGv+h2/HYISI+9fgIncN3X/wp1Z1beth
+W1htzdHkSFs=
+=fJaM
+-----END PGP SIGNATURE-----
+
+--=-KtG7QcHxRe/uG7olOYeT--
 
