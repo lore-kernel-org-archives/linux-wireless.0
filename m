@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serenity.mcc.ac.uk ([130.88.200.93]:58909 "EHLO
-	serenity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754733AbXKUOdo (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757577AbXKOSKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 09:33:44 -0500
-Message-ID: <4744419C.6000709@gentoo.org> (sfid-20071121_143347_176989_BB6B1354)
-Date: Wed, 21 Nov 2007 14:33:00 +0000
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Drake <dsd@gentoo.org>, jt@hpl.hp.com
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com>
-In-Reply-To: <474432E8.90304@hotmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 15 Nov 2007 13:10:37 -0500
+Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate
+	IEEE802.11n support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindzonski <ron.rindjunsky@intel.com>
+Cc: Guy Cohen <guy.cohen@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	tomas.winkler@intel.com
+In-Reply-To: <c85cb4470711151006j765831f9w2fb941317153712c@mail.gmail.com> (sfid-20071115_180606_230180_C23E38C1)
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+	 <1195056662.4091.29.camel@johannes.berg>
+	 <247d6d340711150233h7988220fifb0d34170d16a979@mail.gmail.com>
+	 <1195142683.13846.62.camel@johannes.berg>
+	 <c85cb4470711151006j765831f9w2fb941317153712c@mail.gmail.com>
+	 (sfid-20071115_180606_230180_C23E38C1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dpVn9OLCnVyidDvg/X5O"
+Date: Thu, 15 Nov 2007 19:11:57 +0100
+Message-Id: <1195150317.8147.7.camel@johannes.berg> (sfid-20071115_181040_689193_5B556D86)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shaddy Baddah wrote:
-> Interestingly, after performing the above actions, I am now getting 
-> additional log messages:
-> 
-> SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
-> Kernel unaligned access at TPC[100df410] 
-> ieee80211softmac_handle_assoc_response]
-> Kernel unaligned access at TPC[100df548] 
-> ieee80211softmac_handle_assoc_response]
-> ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
-> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-> [ieee802]
-> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-> [ieee802]
-> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-> [ieee802]
-> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-> [ieee802]
-> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-> [ieee802]
-> Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw]
-> Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw]
-> Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw]
-> Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw]
-> Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw]
 
-One thing I forgot to mention: in 2.6.25 zd1211rw is moving away from 
-ieee80211/softmac and changing to mac80211. I'm not sure if mac80211 has 
-been tested on architectures with alignment constraints, so we may be 
-greeted with new problems.
+--=-dpVn9OLCnVyidDvg/X5O
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Or some might go away. Speaking only from memory, I think the code with 
-compare_ether_addr problem that David found is not present in the 
-mac80211 port.
 
-Daniel
+> I would have to mention at this point that A-MSDU deaggregation is
+> obligatory according to the 802.11n, so excluding it would be a spec
+> violation.
+
+Right. But does that really matter for purposes of getting the code into
+a development tree? What we're aiming for here is getting the code out
+of your hands so that it won't conflict with other stuff that's work in
+progress, rather than aiming for spec compliance (which is something I'd
+aim for when merging this stuff up into Linus's tree)
+
+> What I will do is to put some out-of-band effort here, fixing the
+> rx_h_data infrastructure, so it will be able to support rx_h_amsdu as
+> well, thus eliminating the EAPOL bug.
+> I hope that this fix will be ready soon in order to enable the merge,
+> and then i will move on to next steps.
+
+Thanks much!
+
+johannes
+
+--=-dpVn9OLCnVyidDvg/X5O
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzyL7KVg1VMiehFYAQIPIQ//XnVzrWF87ZEEhL8UNT+QjVsJoSVuBgWy
+y1AVu+jU+L/MqSa7omVU9JX7UgwRHVk3YN1R2Xc8NFnhB3jJhItiZTbgpELm7oKD
+XB7WLZWcy77ppyXA/QObXNZrSumC0nv1g6X5E3z7HABW3g4B88+2fCBJM+1FOt69
+xa+pHjCnOABHlcPffzLpVTXYAS2w+H7LZvLsl2UGxcskvwJ2oeyBt81nBCTX2cHb
+oAg7IMou64lrg+A2JRSMG8817o38VaiycxvBRIVxK+f7IosmUaOZe3sFrUZ9We8c
++jw8BdQp3+S66UuC/F3jB9R0s0f8jq0G2+v83/AaqtYX6GDrOFRyezKiFEdirDKZ
+i/kJtxjZxSDK/JTjR8b9vrLsiQrTrSfaum/H3XgOjc2eORk5IYjNF/rZkJoVsQUH
+ZP7UhCHnl2KH4V5IzXDul2/5A1VLgOU+H5PlhyUvO/aiuHEMI9Gi6F//kEFs9z4A
+Wx6BIvxgNbBep1qzBpL5ItRCP+sEES7LfcueiARLM7SN1dMVlB1OnmBWIC3DoOFf
+AjzYR/iCpY3hIGTeav+h1wByv2Z2UpSWNN366fYmBm/7fzSnAYDyv6OpGZpSZTzY
+QYqKAXjp5+yD+DP1UH3Asms0+7Bhade25Cl5qg//0lxCzoUhCoooSmgwKRWlbwpQ
+cjhzKzCd9Xs=
+=a+nw
+-----END PGP SIGNATURE-----
+
+--=-dpVn9OLCnVyidDvg/X5O--
+
