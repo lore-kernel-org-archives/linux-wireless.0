@@ -1,69 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37465 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970AbXKTNtj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 08:49:39 -0500
-Subject: Re: [PATCH v3] remove bcm43xx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200711192357.44407.rjw@sisk.pl> (sfid-20071119_224049_686469_3D7B65CA)
-References: <20071119202121.6ad3fa70@morte> <200711192300.12183.rjw@sisk.pl>
-	 <20071119231935.535674ba@morte>  <200711192357.44407.rjw@sisk.pl>
-	 (sfid-20071119_224049_686469_3D7B65CA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ly/pmAzNlvwOcS3regz4"
-Date: Tue, 20 Nov 2007 14:18:42 +0100
-Message-Id: <1195564722.10920.17.camel@johannes.berg> (sfid-20071120_134941_277582_FF7DAEC0)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4625 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757082AbXKOBVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2007 20:21:00 -0500
+Date: Wed, 14 Nov 2007 20:20:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcus Better <marcus@better.se>
+Cc: Florian Lohoff <flo@rfc822.org>, linux-wireless@vger.kernel.org
+Subject: Re: rt2x00/rt2500 PCI unresponsive / sluggish response
+Message-ID: <20071115012035.GA15039@tuxdriver.com> (sfid-20071115_012108_352421_DC2A583E)
+References: <20071111102315.GC10486@paradigm.rfc822.org> <8e6f94720711121459j56f640abid03cb2a1eca319c2@mail.gmail.com> <20071113192330.GA19601@paradigm.rfc822.org> <fhedc4$5l9$1@ger.gmane.org> <20071114121753.GB30575@paradigm.rfc822.org> <473AE7C4.40701@better.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <473AE7C4.40701@better.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 14, 2007 at 01:19:16PM +0100, Marcus Better wrote:
+> Florian Lohoff skrev:
+> >As you mention a quite young tree (2.6.23-rc3) - did you try bisecting
+> >it on the wireless-dev tree?
+> 
+> I don't think that's possible since the tree was rebased.
 
---=-ly/pmAzNlvwOcS3regz4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You can try using the wireless-legacy tree, specifically the
+wireless-dev-2007-09-24 branch.
 
-
-> Many people use the old driver and you are forcing them to switch in a ra=
-ther
-> unfriendly fashion.
-
-> IMvHO, the schedule of the removal of this driver should be discussed on =
-LKML.
-
-We can post a patch to orphan it and then ignore it. We actually prefer
-to remove it so people use b43 and we can fix any issues they had.
-
-Face it, nobody is willing to maintain this old thing any more.
-
-johannes
-
---=-ly/pmAzNlvwOcS3regz4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0LesaVg1VMiehFYAQKIMhAAmDRtFKKp9+bLY7GVYalhvHHiGGKhifvB
-7EE0+BK04MUyCOysyolPJPXwTDHx9A5YRz2G1nuEnG56FpPqF5oThHqhewuQNEed
-BSCKtnaj+IHo1fCsUmbYX+9bviIWyVtg8pm7CUjoVs33cDw9L68CQhzVmkruGtaA
-zaycZnECSlEEIogIQOG4KYnL4Gh6KJ7FdGaEQFXSVUkv2w1x1oPkhBHJCh+gzkce
-AGjiODmIyygOuv0BZHxtmscQ8eVxdzJOI0jXTC2gTfjiZLIxrBzfFE0SHa28UUeb
-rAQv8FBk9iTGtmZOQr+DjMqeBMPGpyFkL0YJ5S0mlV1raTv/9wiI7PWY/K0WB794
-QCFllSg7zioDpg25eGR/0UF/B4JQlKOtHlsrNyxe5wT5FWoYYD+isAq6+BTedS+T
-xvbOsxCDGZHXEPxn6swnB+dJlQT8mlHOibMPS/Fhnytri8hg3M5U9SnwqtoHt8XU
-Y5ang54w8q3RLSLCne58bQD3XJuQs+2DXg2LhERIOmfYCn+CYa91ALy2381IMQAM
-vsO4zsM5atD5jIq5hXFKNpDj0mOGqxC/r4t/7gO2/nIbm7DvM3HVcA9uhAGyDjwU
-SGLs776tRSrD52nM+/zsRSe1aiJdb7m1fS6rsh5sjNarbP8TjoorgThEKoy87/5B
-Hc9e99JKOfI=
-=vCo3
------END PGP SIGNATURE-----
-
---=-ly/pmAzNlvwOcS3regz4--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
