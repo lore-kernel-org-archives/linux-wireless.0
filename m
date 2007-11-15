@@ -1,88 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:17416 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbXKVILq (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:42761 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760791AbXKOSiX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 03:11:46 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: mac80211 regression: doesn't associate automatically
-Date: Thu, 22 Nov 2007 09:12:10 +0100
-Cc: bcm43xx-dev@lists.berlios.de
+	Thu, 15 Nov 2007 13:38:23 -0500
+Received: by py-out-1112.google.com with SMTP id u77so3664559pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2007 10:38:22 -0800 (PST)
+Message-ID: <43e72e890711151038k68d102f9m7f421ea301433cf@mail.gmail.com> (sfid-20071115_183848_841461_9D57A90F)
+Date: Thu, 15 Nov 2007 13:38:20 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: Re: [PATCH 2/4] ath5k: Fix device info reporting
+In-Reply-To: <20071114161440.GB6365@localhost.domain.invalid>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711220912.10452.hs4233@mail.mn-solutions.de> (sfid-20071122_081201_818890_5F650412)
+Content-Type: text/plain; charset=UTF-8
+References: <20071114161440.GB6365@localhost.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm on wireless-2.6, branch everything, git commit
-7446b6c0e3b18fd2c5f9c406bb20841e6193d058
+On Nov 14, 2007 11:14 AM, Nick Kossifidis <mick@madwifi.org> wrote:
+> *Fix device info code
+>
+> Changes-licensed-under: 3-clause-BSD
+> Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> ---
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 4c4837f..0d0e060 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -570,22 +570,40 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>         if (ret)
+>                 goto err_ah;
+>
+> -       dev_info(&pdev->dev, "Atheros AR%s chip found: MAC 0x%x, PHY: 0x%x\n",
+> +       dev_info(&pdev->dev, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
+>                         ath5k_chip_name(AR5K_VERSION_VER,sc->ah->ah_mac_srev),
+>                                         sc->ah->ah_mac_srev,
+>                                         sc->ah->ah_phy_revision);
+>
+> -       if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision){
+> -               dev_info(&pdev->dev, "RF%s radio found (0x%x)\n",
+> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> -                                       sc->ah->ah_radio_5ghz_revision);
+> -       } else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
+> -               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
+> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> -                                       sc->ah->ah_radio_5ghz_revision);
+> -               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
+> -                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
+> -                                       sc->ah->ah_radio_2ghz_revision);
+> +       if(!sc->ah->ah_single_chip){
 
-When I insert a b43 based card, I don't get associated
-automatically. This happens:
+I'm a bit confused here you check for not single chip
 
+> +               /* Single chip radio (!RF5111) */
+> +               if(sc->ah->ah_radio_5ghz_revision && !sc->ah->ah_radio_2ghz_revision) {
 
-$ # Insert the card
-pccard: CardBus card inserted into slot 0
-PCI: Enabling device 0000:03:00.0 (0000 -> 0002)
-ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKC] -> GSI 11 (level, low) -> IRQ 11
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-ssb: SPROM revision 1 detected.
-ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
-b43-phy0: Broadcom 4306 WLAN found
-b43-phy0 debug: Found PHY: Analog 2, Type 2, Revision 2
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-phy0: Selected rate control algorithm 'simple'
+And here you say it is. Can you elaborate a bit on this?
 
-$ ifconfig eth1 up
-b43-phy0 debug: Loading firmware version 351.126 (2006-07-29 05:54:02)
-b43-phy0 debug: Chip initialized
-b43-phy0 debug: 30-bit DMA initialized
-b43-phy0 debug: Wireless interface started
-b43-phy0 debug: Adding Interface type 2
+> +                       /* No 5GHz support -> report 2GHz radio */
+> +                       if(!test_bit(MODE_IEEE80211A, sc->ah->ah_capabilities.cap_mode)){
+> +                               dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
+> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                                       sc->ah->ah_radio_5ghz_revision);
+> +                       /* No 2GHz support (5110 and some 5Ghz only cards) -> report 5Ghz radio */
+> +                       } else if(!test_bit(MODE_IEEE80211B, sc->ah->ah_capabilities.cap_mode)){
+> +                               dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
+> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                                       sc->ah->ah_radio_5ghz_revision);
+> +                       /* Multiband radio */
+> +                       } else {
+> +                               dev_info(&pdev->dev, "RF%s multiband radio found (0x%x)\n",
+> +                                       ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                                       sc->ah->ah_radio_5ghz_revision);
+> +                       }
+> +               }
+> +               /* Multi chip radio (RF5111 - RF2111) -> report both 2GHz/5GHz radios */
+> +               else if(sc->ah->ah_radio_5ghz_revision && sc->ah->ah_radio_2ghz_revision){
+> +                       dev_info(&pdev->dev, "RF%s 5GHz radio found (0x%x)\n",
+> +                               ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_5ghz_revision),
+> +                                               sc->ah->ah_radio_5ghz_revision);
+> +                       dev_info(&pdev->dev, "RF%s 2GHz radio found (0x%x)\n",
+> +                               ath5k_chip_name(AR5K_VERSION_RAD,sc->ah->ah_radio_2ghz_revision),
+> +                                               sc->ah->ah_radio_2ghz_revision);
+> +               }
+>         }
+>
 
-$ iwconfig eth1 essid BLAHMUMPF
-HW CONFIG: channel=1 freq=2412 phymode=2
-HW CONFIG: channel=2 freq=2417 phymode=2
-HW CONFIG: channel=3 freq=2422 phymode=2
-HW CONFIG: channel=4 freq=2427 phymode=2
-HW CONFIG: channel=5 freq=2432 phymode=2
-HW CONFIG: channel=6 freq=2437 phymode=2
-HW CONFIG: channel=7 freq=2442 phymode=2
-HW CONFIG: channel=8 freq=2447 phymode=2
-HW CONFIG: channel=9 freq=2452 phymode=2
-HW CONFIG: channel=10 freq=2457 phymode=2
-HW CONFIG: channel=11 freq=2462 phymode=2
-HW CONFIG: channel=1 freq=2412 phymode=2
+Thanks,
 
-$ iwconfig eth1 key s:11111
-b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: ff:ff:ff:ff:ff:ff
-
-$ iwconfig eth1
-eth1      IEEE 802.11g  ESSID:"BLAHMUMPF"
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
-          Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:3131-3131-31
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-As you can see, I'm not associated. However, this sequence used
-to work with non-mac80211 based WLAN drivers. However, I can actually
-associate if I reverse the essid/key, e.g. first set the key, then
-the ssid.
-
-
-Note that the same happens if I let Debian manage the card. An excerpt
-from my /etc/network/interfaces shows:
-
-allow-hotplug eth1
-iface eth1 inet static
-        address 10.2.1.3
-        netmask 255.255.255.0
-        wireless-essid BLAHMUMPF
-        wireless-key1 s:11111
-
-(the test above has been made completely manually, without this entry)
+  Luis
