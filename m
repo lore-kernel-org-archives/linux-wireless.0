@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flpi195.sbcis.sbc.com ([207.115.20.197]:44335 "EHLO
-	flpi195.prodigy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbXKUA0e (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41979
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765416AbXKOVuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 19:26:34 -0500
-Date: Tue, 20 Nov 2007 16:25:04 -0800 (PST)
-From: Asheesh Laroia <asheesh@asheesh.org>
-To: Andreas Schwab <schwab@suse.de>
-cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH v3] remove bcm43xx
-In-Reply-To: <jeve7xc6sm.fsf@sykes.suse.de>
-Message-ID: <alpine.DEB.0.9999.0711201621120.9468@dell.linuxdev.us.dell.com> (sfid-20071121_002636_945137_A6B0A170)
-References: <20071119202121.6ad3fa70@morte> <200711201507.46998.mb@bu3sch.de> <je4pfhdn2c.fsf@sykes.suse.de> <200711201520.05718.mb@bu3sch.de> <jeve7xc6sm.fsf@sykes.suse.de>
+	Thu, 15 Nov 2007 16:50:06 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [RFC/T] b43: Implement the BCM94311MCG rev 02 card with a rev 13 802.11 core
+Date: Thu, 15 Nov 2007 22:49:12 +0100
+Cc: seandarcy2@gmail.com, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+References: <473bdf5e.LS8yn+6u1JmDiT9C%Larry.Finger@lwfinger.net> <200711151138.17468.mb@bu3sch.de> <473C5F98.1050007@lwfinger.net>
+In-Reply-To: <473C5F98.1050007@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711152249.12824.mb@bu3sch.de> (sfid-20071115_215011_554735_1C0A44E7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Nov 2007, Andreas Schwab wrote:
+On Thursday 15 November 2007 16:02:48 Larry Finger wrote:
+> >> @@ -695,11 +687,12 @@ static int dmacontroller_setup(struct b4
+> >>  			b43_dma_write(ring, B43_DMA32_RXRING,
+> >>  				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+> >>  				      | trans);
+> >> -			b43_dma_write(ring, B43_DMA32_RXINDEX, 200);
+> >> +			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
+> >> +				      sizeof(struct b43_dmadesc32));
+> > 
+> > I'm not sure why you do this change.
+> 
+> It took me a while to figure out where the magic number of 200 came from, and what I needed for the
+> 64-bit case. In fact I think the 200 is a bug and should be 0x200. To me, this change makes it clearer.
 
-> Michael Buesch <mb@bu3sch.de> writes:
->
->> On Tuesday 20 November 2007 15:11:07 Andreas Schwab wrote:
->>> Michael Buesch <mb@bu3sch.de> writes:
->>>
->>>> On Monday 19 November 2007 23:36:44 Andreas Schwab wrote:
->>>>> b43 still does not work at all on ppc.
->>>>
->>>> This is absolutely _wrong_.
->>>
->>> Of course it is wrong, but apparently the only way to get attention to a
->>> blocker bug.
->>
->> I didn't hear about your bug before.
->>
->> Are you using latest driver from wireless-2.6 and the officially
->> supported firmware version from
->> http://www.linuxwireless.org/en/users/Drivers/b43
->
-> I have now downgraded the firmware (I was foolishly assuming that all
-> firmware versions recognized by b43-fwcutter are equally supported), and
-> the error does not occur any more.  Thanks for your help.
+The 200 is just a random number.
+I think we don't really care what the value is. (Except zero, which doesn't
+work on some devices).
 
-It sounds like b43-fwcutter will extract firmware that is not maximally 
-compatible with the b43 driver.  If that's right, then it would be way 
-nice to print a notice to the user that he's extracting a 
-less-than-perfectly-supported firmware.
-
-Yes, I'm willing to write this patch if people will point me to a table of 
-which firmware is maximally-supported.  (If someone else writes it 
-instead, I'd prefer that, but if no one will then I can.)
-
-I haven't actually been using a bcm43xx chip for wireless for about a 
-year, but I've been enjoying the list mail so I stayed on and read mails 
-casually.  It sounds like there's one specific firmware that's 
-recommended; if so, then printing "Congratulations, you're using the 
-best-supported firmware as of ${RELEASE_DATE_OF_THIS_FWCUTTER}" in that 
-case would be easy, as well as "Warning! You're not using the 
-best-supported firmware as of ${RELEASE_DATE_OF_THIS_FWCUTTER}".
-
-If it already does that now, then sorry for the noise!
-
--- Asheesh.
-
---
-Positive, adj.:
- 	Mistaken at the top of one's voice.
- 		-- Ambrose Bierce, "The Devil's Dictionary"
+-- 
+Greetings Michael.
