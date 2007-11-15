@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:3607 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754134AbXK2NNS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56240 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759445AbXKOSZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 08:13:18 -0500
-Date: Fri, 30 Nov 2007 00:11:08 +1100
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-Message-ID: <20071129131107.GC8487@gondor.apana.org.au> (sfid-20071129_131322_064986_90F5A911)
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <474C50D7.5010901@zytor.com>
+	Thu, 15 Nov 2007 13:25:32 -0500
+Subject: Re: 2.6.24-rc1 freezes on powerbook at first boot stage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Elimar Riesebieter <riesebie@lxtec.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071115182144.GA3199@samweis.home.lxtec.de>
+References: <20071024120739.GA4897@aragorn.home.lxtec.de>
+	 <20071024124109.GA9442@frodo.home.lxtec.de>
+	 <20071104032006.GG9695@localdomain>
+	 <20071113220235.GB9008@frodo.home.lxtec.de>
+	 <1195053964.4091.20.camel@johannes.berg>
+	 <20071114193340.GA14921@frodo.home.lxtec.de>
+	 <1195145325.13846.70.camel@johannes.berg>
+	 <20071115182144.GA3199@samweis.home.lxtec.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CNbITKW4r6O8huT+Hpxi"
+Date: Thu, 15 Nov 2007 19:26:52 +0100
+Message-Id: <1195151212.8147.10.camel@johannes.berg> (sfid-20071115_182537_040211_473706F5)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <474C50D7.5010901@zytor.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 27, 2007 at 09:16:07AM -0800, H. Peter Anvin wrote:
-> 
-> I wrote a patch for the IP stack to realign packets if necessary at one 
-> point.  I should dredge it up again and submit it for collective flamage.
 
-As long as it doesn't penalise Ethernet (e.g., the 10Gb crowd :) it would
-be good to have.
+--=-CNbITKW4r6O8huT+Hpxi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+
+
+> Nov 15 18:51:31 samweis kernel: NIP [c02b3060] rfkill_register+0x6c/0x12c
+> Nov 15 18:51:31 samweis kernel: LR [c02b302c] rfkill_register+0x38/0x12c
+> Nov 15 18:51:31 samweis kernel: Call Trace:
+> Nov 15 18:51:31 samweis kernel: [c7517d50] [c02b302c] rfkill_register+0x3=
+8/0x12c (unreliable)
+
+That was fixed post -rc2.
+
+johannes
+
+--=-CNbITKW4r6O8huT+Hpxi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARzyPa6Vg1VMiehFYAQIMVxAApT+YLLWFyRmbHHGK6b/fQ3SVaWmolXlO
+Z6R8GsxTsfBrXAogQ39NdiWbnNyCt0bwJxPA0IBUQwN8aze45Zvt40NUOPp+6R/e
+uZ/m8QpLfAZmTOjRz8+hFBCtkrB1NTJufVYP1WhKjPgYXFuF57nzuBzRetAr6io7
+xxA78uM6+Pr09U+Hdeb7NKIW28C3C0D8epNeOHMWXdl4y42LCUnVK0x83w1A4Ozg
+0qxhMVI5JB6DEftSLzLGluCfSuk/cDcgQBx9qLcUqtXY73c1JRdrcHCWbfJk/Tk4
+DvhqVTgBKwXlZag5BveJzeBVmSwHrLlyLBjvEQ2zlF0GtkasVt0IK3rcI4+laahL
+rZkSQekvPunPjFXlS6D10vh3C9JbTA6cHn0TtZNO2KPHPHS9++V3IlsGu3KaqOJo
+uuwJtcorkHxCoMZjn3/q6uBTnkMvUS/JRS5Tva3ocKI6RCMV/hlDR8h3RCNDWT1L
+1MiRAxFHD/+6E+eUk+BCyTJOl2IWlct+vHhfilltxhjqnoez5g42E7fOFXpI1Fsr
+3mYwgn7J0AridWJVGMXn1lOKL+RizHVlouey0F7eZDvy6hliPIrUE6HPJiMyshcF
+cuz72vvrk5g6SHpKNRExuC1YDLt7bxMWpTMGlUXyfrcdW0D7mwceJ6rUmGDuF8mA
+/07uR5lM4AQ=
+=x5kY
+-----END PGP SIGNATURE-----
+
+--=-CNbITKW4r6O8huT+Hpxi--
+
