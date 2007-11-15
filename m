@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:32133 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752122AbXKXJft (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:57671 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762246AbXKOGnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 04:35:49 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
-Date: Sat, 24 Nov 2007 18:36:04 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1195814754.4149.86.camel@johannes.berg> <1195893283.4149.188.camel@johannes.berg> <1195896461.8231.3.camel@localhost>
-In-Reply-To: <1195896461.8231.3.camel@localhost>
+	Thu, 15 Nov 2007 01:43:05 -0500
+Date: Wed, 14 Nov 2007 22:41:06 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 13/16] zd1201: avoid null ptr access of skb->dev
+Message-ID: <20071115064106.GM18951@kroah.com> (sfid-20071115_064317_212313_915E023A)
+References: <20071115060353.071060513@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711241836.05159.bruno@thinktube.com> (sfid-20071124_093553_843309_C17FF799)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115063921.GA18827@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 24 November 2007 18:27:41 Mattias Nissler wrote:
-> On Sat, 2007-11-24 at 09:34 +0100, Johannes Berg wrote:
-> > On Sat, 2007-11-24 at 00:21 -0500, Michael Wu wrote:
-> > > On Friday 23 November 2007 05:45:54 Johannes Berg wrote:
-> > > > This makes mac80211 include the low-level MAC timestamp
-> > > > in the radiotap header.
-> > >
-> > > No thanks. Not every driver supports reporting the timestamp and
-> > > supporting timestamp/no timestamp in the default radiotap rx code makes
-> > > it not so simple anymore.
-> >
-> > Uh, so how am I supposed to get the timestamp? Copy all the code into
-> > b43 and make it generate the exact same radiotap header? That's pretty
-> > crappy too.
->
-> On rt2x00, we've just added a facility that dumps information about all
-> frames received and transmitted at a very low level. We dump general
-> information about the frame, the tx/rx descriptors and the packet. Maybe
-> something similar would also be useful for b43?
 
-that's not a solution if you want them per packet in the radiotap header.
-kismet & wireshark use them as well as other applications.
 
-bruno
+-stable review patch.  If anyone has any objections, please let us know.
+
+------------------
+
+From: John W. Linville <linville@tuxdriver.com>
+
+patch 3ba72b25211217de195e3f528dd36132b38a205b in mainline.
+
+skb->dev is not set until eth_type_trans is called...
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/zd1201.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/zd1201.c
++++ b/drivers/net/wireless/zd1201.c
+@@ -327,8 +327,8 @@ static void zd1201_usbrx(struct urb *urb
+ 			memcpy(skb_put(skb, 6), &data[datalen-8], 6);
+ 			memcpy(skb_put(skb, 2), &data[datalen-24], 2);
+ 			memcpy(skb_put(skb, len), data, len);
+-			skb->dev->last_rx = jiffies;
+ 			skb->protocol = eth_type_trans(skb, zd->dev);
++			skb->dev->last_rx = jiffies;
+ 			zd->stats.rx_packets++;
+ 			zd->stats.rx_bytes += skb->len;
+ 			netif_rx(skb);
+@@ -384,8 +384,8 @@ static void zd1201_usbrx(struct urb *urb
+ 			memcpy(skb_put(skb, 2), &data[6], 2);
+ 			memcpy(skb_put(skb, len), data+8, len);
+ 		}
+-		skb->dev->last_rx = jiffies;
+ 		skb->protocol = eth_type_trans(skb, zd->dev);
++		skb->dev->last_rx = jiffies;
+ 		zd->stats.rx_packets++;
+ 		zd->stats.rx_bytes += skb->len;
+ 		netif_rx(skb);
+
+-- 
