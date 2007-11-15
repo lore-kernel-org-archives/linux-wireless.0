@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:36566 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbXKIXMU (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:57706 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758458AbXKOGnO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 18:12:20 -0500
-Message-ID: <4734E962.3010603@trash.net> (sfid-20071109_231224_524209_95730E73)
-Date: Sat, 10 Nov 2007 00:12:34 +0100
-From: Patrick McHardy <kaber@trash.net>
+	Thu, 15 Nov 2007 01:43:14 -0500
+Date: Wed, 14 Nov 2007 22:41:23 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marc Pignat <marc.pignat@hevs.ch>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: [patch 16/16] zd1211rw, fix oops when ejecting install media
+Message-ID: <20071115064123.GQ18951@kroah.com> (sfid-20071115_064320_889031_06D85411)
+References: <20071115060353.071060513@mini.kroah.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Joe Perches <joe@perches.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
-References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo> <1194635236.19522.3.camel@localhost> <20071109192033.GB22714@pogo>
-In-Reply-To: <20071109192033.GB22714@pogo>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115063921.GA18827@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
-> index 15241cf..2aea8e1 100644
-> --- a/net/core/dev_mcast.c
-> +++ b/net/core/dev_mcast.c
-> @@ -160,14 +160,12 @@ EXPORT_SYMBOL(dev_mc_sync);
->   */
->  void dev_mc_unsync(struct net_device *to, struct net_device *from)
->  {
-> -	struct dev_addr_list *da, *next;
-> +	struct dev_addr_list *da;
->  
->  	netif_tx_lock_bh(from);
->  	netif_tx_lock_bh(to);
->  
-> -	da = from->mc_list;
-> -	while (da != NULL) {
-> -		next = da->next;
-> +	for (da = from->mc_list; da; da = da->next) {
->   
-
-This may cause a use-after-free since __dev_addr_delete frees the address
-when all references are gone.
-
->  		if (!da->da_synced)
->  			continue;
->  		__dev_addr_delete(&to->mc_list, &to->mc_count,
-> @@ -175,7 +173,6 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
->  		da->da_synced = 0;
->  		__dev_addr_delete(&from->mc_list, &from->mc_count,
->  				  da->da_addr, da->da_addrlen, 0);
-> -		da = next;
->  	}
->   
 
 
+-stable review patch.  If anyone has any objections, please let us know.
+
+------------------
+
+From: Marc Pignat <marc.pignat@hevs.ch>
+
+patch e0579d576cb894a4cf3c5af04fbf38e8c1281738 in mainline.
+
+The disconnect function can dereference the net_device structure when it
+is never allocated. This is the case when ejecting the device installer.
+
+Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+Acked-by: Daniel Drake <dsd@gentoo.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/zd1211rw/zd_usb.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1041,14 +1041,17 @@ error:
+ static void disconnect(struct usb_interface *intf)
+ {
+ 	struct net_device *netdev = zd_intf_to_netdev(intf);
+-	struct zd_mac *mac = zd_netdev_mac(netdev);
+-	struct zd_usb *usb = &mac->chip.usb;
++	struct zd_mac *mac;
++	struct zd_usb *usb;
+ 
+ 	/* Either something really bad happened, or we're just dealing with
+ 	 * a DEVICE_INSTALLER. */
+ 	if (netdev == NULL)
+ 		return;
+ 
++	mac = zd_netdev_mac(netdev);
++	usb = &mac->chip.usb;
++
+ 	dev_dbg_f(zd_usb_dev(usb), "\n");
+ 
+ 	zd_netdev_disconnect(netdev);
+
+-- 
