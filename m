@@ -1,84 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60572
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759332AbXK1QaV (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:46074 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763395AbXKOGWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 11:30:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Simple 'fix' for radio switch LED regression
-Date: Wed, 28 Nov 2007 17:29:04 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <474d8b73.cCPCkkSQe1GIVt4H%Larry.Finger@lwfinger.net> <200711281652.05627.mb@bu3sch.de> <474D94ED.6050403@lwfinger.net>
-In-Reply-To: <474D94ED.6050403@lwfinger.net>
+	Thu, 15 Nov 2007 01:22:36 -0500
+Date: Wed, 14 Nov 2007 22:21:07 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 20/23] mac80211: store SSID in sta_bss_list
+Message-ID: <20071115062107.GU8282@kroah.com> (sfid-20071115_062241_811794_887137A1)
+References: <20071115055238.692814352@mini.kroah.org>
 MIME-Version: 1.0
-Message-Id: <200711281729.04505.mb@bu3sch.de> (sfid-20071128_163024_002049_E47D29D5)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115061806.GA8282@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 November 2007 17:18:53 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Wednesday 28 November 2007 16:38:27 Larry Finger wrote:
-> >> Since addition of the rfkill callback, the LED associated with the off/on
-> >> switch on the radio has not worked because essential data in the rfkill
-> >> structure is missing. When that problem was fixed, difficulties in circular
-> >> locking surfaced. This patch fixes part of the regression in that the LED
-> >> is turned on if the radio switch is on at startup. Adding the code to toggle
-> >> the LED with the switch will be more involved and would likely miss the 2.6.24
-> >> window.
-> >>
-> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >> ---
-> >>
-> >> John and Michael,
-> >>
-> >> I was able to get the full functionality working, but with two significant
-> >> problems: (1) the LED toggled only with a switch off-on sequence, not with
-> >> each switch change and (2) the module would no longer unload cleanly due to
-> >> circular locking. I will be essentually off-line after today, and I hope that
-> >> this hack, which will make the LED appear to work correctly, can be pushed
-> >> into 2.6.24 as it is a fix, but has minimal code impact. Nearly all of the
-> >> changes are needed just to make the LED on routine available to startup.
-> >> Furthermore, I'm certain these changes will be needed when the complete fix
-> >> is available.
-> > 
-> > That completely shortcuts the "behaviour" logic.
-> > This patch trades one bug for another.
-> > It will get other people upset, because their LEDs don't work as expected anymore.
-> > 
-> > This is not a showstopper bug and there is no need to introduce dirty
-> > fixes that trade one bug for another.
-> > I'm pretty sure that this patch will break LEDs on my asus card. I didn't
-> > try that, though.
-> 
-> Please try the patch at least enough to see if it breaks the LEDs on your card. I don't think it
-> will.
+-stable review patch.  If anyone has any objections, please let us know.
 
-There's no need to try this.
-Let's summerize what we have and what your patch does:
+------------------
 
-We have a _nonconstant_ mapping of LEDs to LED behaviours. This mapping
-is done in the SPROM or in a special function which takes card types
-and revisions and assigns the behaviour to the LED.
-So the rfkill LED could be _any_ LED in the LED iospace.
 
-What your patch does now is to hardcode the LED to LED index 1 with
-an activelow capability. Why LED 1? Why activelow? Because this is the
-case in your particular type of b43 card.
+From: John W. Linville <linville@tuxdriver.com>
 
-My asus card has two LEDs. One has a "link is up, aka associated" and a
-"transmitting data" LED. I don't know from the top of my head which
-indices those LEDs are, but let's simply assume they are index 0 and 1.
-(Remember this mapping is random and specific to the hardware).
+patch cffdd30d20d163343b1c6de25bcb0cc978a1ebf9 in mainline.
 
-So what we do is poke with some random LED.
-Also, I'm pretty sure that these LEDs on my card are activehigh. So
-if your patch is applied to such a card it will and up with a "nonworking"
-LED. That's what we wanted to fix in the first place, right? ;)
+Some AP equipment "in the wild" services multiple SSIDs using the
+same BSSID.  This patch changes the key of sta_bss_list to include
+the SSID as well as the BSSID and the channel so as to prevent one
+SSID from eclipsing another SSID with the same BSSID.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/mac80211/ieee80211_sta.c |   54 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 21 deletions(-)
+
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -12,7 +12,6 @@
+  */
+ 
+ /* TODO:
+- * BSS table: use <BSSID,SSID> as the key to support multi-SSID APs
+  * order BSS list by RSSI(?) ("quality of AP")
+  * scan result table filtering (by capability (privacy, IBSS/BSS, WPA/RSN IE,
+  *    SSID)
+@@ -61,7 +60,8 @@
+ static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
+ 				     u8 *ssid, size_t ssid_len);
+ static struct ieee80211_sta_bss *
+-ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel);
++ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel,
++		     u8 *ssid, u8 ssid_len);
+ static void ieee80211_rx_bss_put(struct net_device *dev,
+ 				 struct ieee80211_sta_bss *bss);
+ static int ieee80211_sta_find_ibss(struct net_device *dev,
+@@ -403,7 +403,8 @@ static void ieee80211_set_associated(str
+ 			return;
+ 
+ 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
+-					   local->hw.conf.channel);
++					   local->hw.conf.channel,
++					   ifsta->ssid, ifsta->ssid_len);
+ 		if (bss) {
+ 			if (bss->has_erp_value)
+ 				ieee80211_handle_erp_ie(dev, bss->erp_value);
+@@ -545,7 +546,8 @@ static void ieee80211_send_assoc(struct 
+ 		capab |= WLAN_CAPABILITY_SHORT_SLOT_TIME |
+ 			WLAN_CAPABILITY_SHORT_PREAMBLE;
+ 	}
+-	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
++	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel,
++				   ifsta->ssid, ifsta->ssid_len);
+ 	if (bss) {
+ 		if (bss->capability & WLAN_CAPABILITY_PRIVACY)
+ 			capab |= WLAN_CAPABILITY_PRIVACY;
+@@ -705,7 +707,8 @@ static int ieee80211_privacy_mismatch(st
+ 	    ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
+ 		return 0;
+ 
+-	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
++	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel,
++				   ifsta->ssid, ifsta->ssid_len);
+ 	if (!bss)
+ 		return 0;
+ 
+@@ -1215,7 +1218,8 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	if (elems.erp_info && elems.erp_info_len >= 1) {
+ 		struct ieee80211_sta_bss *bss
+ 			= ieee80211_rx_bss_get(dev, ifsta->bssid,
+-					       local->hw.conf.channel);
++					       local->hw.conf.channel,
++					       ifsta->ssid, ifsta->ssid_len);
+ 		if (bss) {
+ 			bss->erp_value = elems.erp_info[0];
+ 			bss->has_erp_value = 1;
+@@ -1246,7 +1250,8 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 			return;
+ 		}
+ 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
+-					   local->hw.conf.channel);
++					   local->hw.conf.channel,
++					   ifsta->ssid, ifsta->ssid_len);
+ 		if (bss) {
+ 			sta->last_rssi = bss->rssi;
+ 			sta->last_signal = bss->signal;
+@@ -1327,7 +1332,8 @@ static void __ieee80211_rx_bss_hash_del(
+ 
+ 
+ static struct ieee80211_sta_bss *
+-ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid, int channel)
++ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid, int channel,
++		     u8 *ssid, u8 ssid_len)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sta_bss *bss;
+@@ -1339,6 +1345,10 @@ ieee80211_rx_bss_add(struct net_device *
+ 	atomic_inc(&bss->users);
+ 	memcpy(bss->bssid, bssid, ETH_ALEN);
+ 	bss->channel = channel;
++	if (ssid && ssid_len <= IEEE80211_MAX_SSID_LEN) {
++		memcpy(bss->ssid, ssid, ssid_len);
++		bss->ssid_len = ssid_len;
++	}
+ 
+ 	spin_lock_bh(&local->sta_bss_lock);
+ 	/* TODO: order by RSSI? */
+@@ -1350,7 +1360,8 @@ ieee80211_rx_bss_add(struct net_device *
+ 
+ 
+ static struct ieee80211_sta_bss *
+-ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel)
++ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel,
++		     u8 *ssid, u8 ssid_len)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sta_bss *bss;
+@@ -1358,8 +1369,10 @@ ieee80211_rx_bss_get(struct net_device *
+ 	spin_lock_bh(&local->sta_bss_lock);
+ 	bss = local->sta_bss_hash[STA_HASH(bssid)];
+ 	while (bss) {
+-		if (memcmp(bss->bssid, bssid, ETH_ALEN) == 0 &&
+-		    bss->channel == channel) {
++		if (!memcmp(bss->bssid, bssid, ETH_ALEN) &&
++		    bss->channel == channel &&
++		    bss->ssid_len == ssid_len &&
++		    (ssid_len == 0 || !memcmp(bss->ssid, ssid, ssid_len))) {
+ 			atomic_inc(&bss->users);
+ 			break;
+ 		}
+@@ -1527,9 +1540,11 @@ static void ieee80211_rx_bss_info(struct
+ 	else
+ 		channel = rx_status->channel;
+ 
+-	bss = ieee80211_rx_bss_get(dev, mgmt->bssid, channel);
++	bss = ieee80211_rx_bss_get(dev, mgmt->bssid, channel,
++				   elems.ssid, elems.ssid_len);
+ 	if (!bss) {
+-		bss = ieee80211_rx_bss_add(dev, mgmt->bssid, channel);
++		bss = ieee80211_rx_bss_add(dev, mgmt->bssid, channel,
++					   elems.ssid, elems.ssid_len);
+ 		if (!bss)
+ 			return;
+ 	} else {
+@@ -1555,10 +1570,6 @@ static void ieee80211_rx_bss_info(struct
+ 
+ 	bss->beacon_int = le16_to_cpu(mgmt->u.beacon.beacon_int);
+ 	bss->capability = le16_to_cpu(mgmt->u.beacon.capab_info);
+-	if (elems.ssid && elems.ssid_len <= IEEE80211_MAX_SSID_LEN) {
+-		memcpy(bss->ssid, elems.ssid, elems.ssid_len);
+-		bss->ssid_len = elems.ssid_len;
+-	}
+ 
+ 	bss->supp_rates_len = 0;
+ 	if (elems.supp_rates) {
+@@ -2339,7 +2350,7 @@ static int ieee80211_sta_create_ibss(str
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sta_bss *bss;
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_hw_mode *mode;
+ 	u8 bssid[ETH_ALEN], *pos;
+ 	int i;
+@@ -2361,11 +2372,11 @@ static int ieee80211_sta_create_ibss(str
+ 	printk(KERN_DEBUG "%s: Creating new IBSS network, BSSID " MAC_FMT "\n",
+ 	       dev->name, MAC_ARG(bssid));
+ 
+-	bss = ieee80211_rx_bss_add(dev, bssid, local->hw.conf.channel);
++	bss = ieee80211_rx_bss_add(dev, bssid, local->hw.conf.channel,
++				   sdata->u.sta.ssid, sdata->u.sta.ssid_len);
+ 	if (!bss)
+ 		return -ENOMEM;
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	mode = local->oper_hw_mode;
+ 
+ 	if (local->hw.conf.beacon_int == 0)
+@@ -2431,7 +2442,8 @@ static int ieee80211_sta_find_ibss(struc
+ 	       MAC_FMT "\n", MAC_ARG(bssid), MAC_ARG(ifsta->bssid));
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
+-	    (bss = ieee80211_rx_bss_get(dev, bssid, local->hw.conf.channel))) {
++	    (bss = ieee80211_rx_bss_get(dev, bssid, local->hw.conf.channel,
++					ifsta->ssid, ifsta->ssid_len))) {
+ 		printk(KERN_DEBUG "%s: Selected IBSS BSSID " MAC_FMT
+ 		       " based on configured SSID\n",
+ 		       dev->name, MAC_ARG(bssid));
 
 -- 
-Greetings Michael.
