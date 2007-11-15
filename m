@@ -1,67 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:8817 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756680AbXK0Sk3 (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:46045 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764737AbXKOGWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 13:40:29 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1064014nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 10:40:25 -0800 (PST)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] [RFC/T] rt2x00: Remove redundant code in rfkill setup
-Date: Tue, 27 Nov 2007 20:43:48 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <474c4e19.tFKoUyFEw/5q8HAB%Larry.Finger@lwfinger.net>
-In-Reply-To: <474c4e19.tFKoUyFEw/5q8HAB%Larry.Finger@lwfinger.net>
+	Thu, 15 Nov 2007 01:22:30 -0500
+Date: Wed, 14 Nov 2007 22:21:01 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: [patch 18/23] mac80211: reorder association debug output
+Message-ID: <20071115062100.GS8282@kroah.com> (sfid-20071115_062238_751642_12C75B1B)
+References: <20071115055238.692814352@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711272043.49429.IvDoorn@gmail.com> (sfid-20071127_184037_271962_2A05FAA7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071115061806.GA8282@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 November 2007, Larry Finger wrote:
-> In rt2x00rfkill.c, routine input_allocate_device() is called even though
-> input_allocate_polled_device(), which was just called, includes a call to
-> that routine. This patch, which has not been tested, removes the redundant code.
+-stable review patch.  If anyone has any objections, please let us know.
 
-Either I was blind for not noticing that before, or the behavior has changed recently. ;)
-Applied to rt2x00.git, I will push it to John in a few minutes along with some other patches.
-
-Thanks.
-
-Ivo
-
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-2.6/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> +++ wireless-2.6/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> @@ -141,12 +141,6 @@ int rt2x00rfkill_allocate(struct rt2x00_
->  	rt2x00dev->poll_dev->poll = rt2x00rfkill_poll;
->  	rt2x00dev->poll_dev->poll_interval = RFKILL_POLL_INTERVAL;
->  
-> -	rt2x00dev->poll_dev->input = input_allocate_device();
-> -	if (!rt2x00dev->poll_dev->input) {
-> -		ERROR(rt2x00dev, "Failed to allocate input device.\n");
-> -		goto exit_free_polldev;
-> -	}
-> -
->  	rt2x00dev->poll_dev->input->name = rt2x00dev->ops->name;
->  	rt2x00dev->poll_dev->input->phys = wiphy_name(rt2x00dev->hw->wiphy);
->  	rt2x00dev->poll_dev->input->id.bustype = BUS_HOST;
-> 
-> -------------------------------------------------------------------------
-> This SF.net email is sponsored by: Microsoft
-> Defy all challenges. Microsoft(R) Visual Studio 2005.
-> http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-> _______________________________________________
-> Rt2400-devel mailing list
-> Rt2400-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
-> 
+------------------
 
 
+From: Johannes Berg <johannes@sipsolutions.net>
+
+patch 1dd84aa213d0f98a91a1ec9be2f750f5f48e75a0 in mainline.
+
+There's no reason to warn about an invalid AID field when the
+association was denied.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/mac80211/ieee80211_sta.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1174,15 +1174,11 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
+ 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
+ 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
+-	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
+-		printk(KERN_DEBUG "%s: invalid aid value %d; bits 15:14 not "
+-		       "set\n", dev->name, aid);
+-	aid &= ~(BIT(15) | BIT(14));
+ 
+ 	printk(KERN_DEBUG "%s: RX %sssocResp from " MAC_FMT " (capab=0x%x "
+ 	       "status=%d aid=%d)\n",
+ 	       dev->name, reassoc ? "Rea" : "A", MAC_ARG(mgmt->sa),
+-	       capab_info, status_code, aid);
++	       capab_info, status_code, aid & ~(BIT(15) | BIT(14)));
+ 
+ 	if (status_code != WLAN_STATUS_SUCCESS) {
+ 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+@@ -1192,6 +1188,11 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 		return;
+ 	}
+ 
++	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
++		printk(KERN_DEBUG "%s: invalid aid value %d; bits 15:14 not "
++		       "set\n", dev->name, aid);
++	aid &= ~(BIT(15) | BIT(14));
++
+ 	pos = mgmt->u.assoc_resp.variable;
+ 	if (ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems)
+ 	    == ParseFailed) {
+
+-- 
