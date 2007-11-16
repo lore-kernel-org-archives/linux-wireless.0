@@ -1,81 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail11.tpgi.com.au ([203.12.160.161]:43734 "EHLO
-	mail11.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762399AbXK3DpM (ORCPT
+Received: from mail.queued.net ([207.210.101.209]:1114 "EHLO mail.queued.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932375AbXKPSfO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 22:45:12 -0500
-Message-ID: <474F86AD.4040403@hotmail.com> (sfid-20071130_034518_140115_A2842F88)
-Date: Fri, 30 Nov 2007 14:42:37 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: jt@hpl.hp.com, Daniel Drake <dsd@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <20071121184459.GA17199@bougret.hpl.hp.com>
-In-Reply-To: <20071121184459.GA17199@bougret.hpl.hp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 16 Nov 2007 13:35:14 -0500
+Date: Fri, 16 Nov 2007 13:12:11 -0500
+From: Andres Salomon <dilinger@queued.net>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	akpm@linux-foundation.org
+Subject: [PATCH 3/4] libertas: reset devices upon disconnect rather than
+ module unloading
+Message-ID: <20071116131211.7442f21e@ephemeral> (sfid-20071116_183536_592922_684012D8)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+>From c211b9b3a13b9eccbd4d51020fff8eba04ba55a5 Mon Sep 17 00:00:00 2001
+From: Andres Salomon <dilinger@debian.org>
+Date: Fri, 16 Nov 2007 12:48:07 -0500
+Subject: [PATCH] libertas: reset devices upon disconnect rather than module unloading
 
-First off, sorry for the delay in responding. I am now trying to catch 
-up with my backlog on this issue.
+1) Do not reset libertas devices upon module unload.  We're unloading
+the module, we're not killing off devices.
+2) Instead, reset libertas devices inside if_usb_disconnect, as we're
+killing off interfaces and so on.
+3) Resetting via disconnect callback means we no longer need to keep
+track of probed libertas devices; kill off that list (and its wonderful
+lack of locking..), as well.
 
-Jean Tourrilhes wrote:
-> 	The patch from Masakazu Mokuno I was talking about is not in
-> your kernel. It defintely would explain why you would get the
-> "Encryption key:<too big>". Basically the length of any variable field
-> is not properly return to user space. This patch would fix that
-> problem.
-> 	The patch from Masakazu Mokuno is not in 2.6.22, and it not
-> either in 2.6.14. The patch is only included in 2.6.23 and later. I
-> would suggest upgrading to 2.6.23 to get that patch. Alternatively,
-> I've included the patch as attachement, and you can use it with
-> 2.6.22.
-> 	I would like you to try that patch and report.
+Drop a useless comment as well.
 
-Yes, this solved that problem. Thank you,
+Signed-off-by: Andres Salomon <dilinger@debian.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |   26 ++++----------------------
+ drivers/net/wireless/libertas/if_usb.h |    3 ---
+ 2 files changed, 4 insertions(+), 25 deletions(-)
 
->>> 	Can you give me the exact error text as reported by iwconfig ?
->>> I'll probably have to send you a test version to see what's happening
->>> under the cover.
->> Please find this in-lined below (with key protected):
->>
->> # iwconfig eth2
->> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
->>           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
->>           Bit Rate=1 Mb/s
->>           Encryption key:<too big>
-> 
-> 	Note that under Wireless Tools 30, you will notice that it
-> won't return too bug but will print an absurdly long encryption
-> key. Two symptoms of the same bug.
-> 
->>> 		o version of Wireless Tools (iwconfig --version).
->>> 	Most likely, you need to upgrade your Wireless Tools to
->>> version 29 which fixes this 32/64 interop problem.
->>> 	With the latest kernel and the latest wireless tools, the only
->>> known bugs are the two ESSID bugs.
->> I think I'm right for version:
->> # iwconfig --version
->> iwconfig  Wireless-Tools version 29
->>           Compatible with Wireless Extension v11 to v22.
->>
->> Kernel    Currently compiled with Wireless Extension v22.
->>
->> eth2      Recommend Wireless Extension v20 or later,
->>           Currently compiled with Wireless Extension v22.
-> 
-> 	Yep, that's the correct version. I was afraid you were running
-> Debian stable. I'll need to dig up a little bit more in this.
-> 	Note that the patch above *may* help with this issue as well.
-
-No, it does not seem to have. An iwlist eth2 scanning command still 
-lists a single access point, then fails with a bus error.
-
-Thanks for your help,
-Shaddy
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index fab0d0c..f5cf964 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -5,7 +5,6 @@
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+ #include <linux/netdevice.h>
+-#include <linux/list.h>
+ #include <linux/usb.h>
+ 
+ #define DRV_NAME "usb8xxx"
+@@ -23,15 +22,6 @@ static const char usbdriver_name[] = "usb8xxx";
+ static char *libertas_fw_name = "usb8388.bin";
+ module_param_named(fw_name, libertas_fw_name, charp, 0644);
+ 
+-/*
+- * We need to send a RESET command to all USB devices before
+- * we tear down the USB connection. Otherwise we would not
+- * be able to re-init device the device if the module gets
+- * loaded again. This is a list of all initialized USB devices,
+- * for the reset code see if_usb_reset_device()
+-*/
+-static LIST_HEAD(usb_devices);
+-
+ static struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001) },
+@@ -244,8 +234,6 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (libertas_start_card(priv))
+ 		goto err_start_card;
+ 
+-	list_add_tail(&cardp->list, &usb_devices);
+-
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+@@ -279,8 +267,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 	/* Update Surprise removed to TRUE */
+ 	cardp->surprise_removed = 1;
+ 
+-	list_del(&cardp->list);
+-
+ 	if (priv) {
+ 		wlan_adapter *adapter = priv->adapter;
+ 
+@@ -290,6 +276,10 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 		libertas_remove_card(priv);
+ 	}
+ 
++	/* this is (apparently?) necessary for future usage of the device */
++	libertas_prepare_and_send_command(priv, CMD_802_11_RESET, CMD_ACT_HALT,
++			0, 0, NULL);
++
+ 	/* Unlink and free urb */
+ 	if_usb_free(cardp);
+ 
+@@ -1034,16 +1024,8 @@ static int __init if_usb_init_module(void)
+ 
+ static void __exit if_usb_exit_module(void)
+ {
+-	struct usb_card_rec *cardp, *cardp_temp;
+-
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+-	list_for_each_entry_safe(cardp, cardp_temp, &usb_devices, list) {
+-		libertas_prepare_and_send_command(cardp->priv, CMD_802_11_RESET,
+-		                                  CMD_ACT_HALT, 0, 0, NULL);
+-	}
+-
+-	/* API unregisters the driver from USB subsystem */
+ 	usb_deregister(&if_usb_driver);
+ 
+ 	lbs_deb_leave(LBS_DEB_MAIN);
+diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
+index e07a10e..55bbb52 100644
+--- a/drivers/net/wireless/libertas/if_usb.h
++++ b/drivers/net/wireless/libertas/if_usb.h
+@@ -1,8 +1,6 @@
+ #ifndef _LIBERTAS_IF_USB_H
+ #define _LIBERTAS_IF_USB_H
+ 
+-#include <linux/list.h>
+-
+ /**
+   * This file contains definition for USB interface.
+   */
+@@ -44,7 +42,6 @@ struct read_cb_info {
+ 
+ /** USB card description structure*/
+ struct usb_card_rec {
+-	struct list_head list;
+ 	struct net_device *eth_dev;
+ 	struct usb_device *udev;
+ 	struct urb *rx_urb, *tx_urb;
+-- 
+1.5.3.4
 
