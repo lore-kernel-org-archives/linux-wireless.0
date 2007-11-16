@@ -1,187 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:8719 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbXKKDxq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 22:53:46 -0500
-Received: by py-out-1112.google.com with SMTP id u77so518393pyb
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2007 19:53:45 -0800 (PST)
-Message-ID: <43e72e890711101953w6e046b82j6b9087d30c8195b2@mail.gmail.com> (sfid-20071111_035351_615216_A5CA373F)
-Date: Sat, 10 Nov 2007 22:53:45 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Linux wireless compatibility package for kernels >= 2.6.22
-Cc: ath5k-devel@lists.ath5k.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.gmx.net ([213.165.64.20]:55689 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752082AbXKPWUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 17:20:06 -0500
+Date: Fri, 16 Nov 2007 23:20:01 +0100
+From: Edgar Toernig <froese@gmx.de>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>
+Subject: [rtl8185] driver working but some probs
+Message-Id: <20071116232001.70a4ae77.froese@gmx.de> (sfid-20071116_222012_649808_AD677084)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've started a compatibility package for the Linux wireless subsystem
-for kernels >= 2.6.22. You can download it here:
+Hi,
 
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+[I'm new to wlan stuff - be kind to me if I did something
+stupid ;-)]
 
-If you'd like to send patches to add new drivers (as you test them
-from wireless-2.6.git), please send against
+I tried the rtl8180 driver Michael posted on 2007-10-14
+( http://marc.info/?m=119238789630565 ).  As he didn't
+mentioned what kernel the patch was for I took a 2.6.24
+snapshot from about two days ago (v2.6.24-rc2-409-g9418d5d).
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
+There were two compile time problems: the MAC_ARG macro
+was missing and the symbols from rtl8180_rtl8225.c clash
+with those from rtl8187_rtl8225.c.  One has to choose
+either the rtl8187 driver or the rtl8180 driver.
 
-I'll just paste the README here now as most info is already there.
+After that, the driver works - mostly.
 
---
+First thing I noticed: the reported "Link Signal Level"
+from iwconfig was way off.  It showed values around
+-170 dBm when it was sitting directly beside the AP.
+It was easy to fix:
 
-Linux Wireless comptatibility package
-=====================================
+-     rx_status.ssi = (flags2 >> 8) & 0x7F;
++     rx_status.ssi = (flags2 >> 8) & 0xFF;
 
-This is a Linux wireless comptatibility package which provides the latest
-Linux wireless subsystem enhancements for kernels 2.6.22 and above. We provide
-comptatibility support since 2.6.22 as that is when mac80211 was introduced
-onto the stock kernel. This adds mac80211 and mac80211 drivers as we
-go on testing
-them.
+According to the 8180 datasheet, this field is 8 bit.
 
-Where to get the latest
------------------------
+While I was there, I also added a check for the rate
+field as the later indexed array isn't big enough for
+a full 4 bit index:
 
-This package lets you build your own 'latest', all you need is a local
-git repository
-checkout of wireless-2.6.git. However since not many users are expected to keep
-the git repository updated we provide hourly snapshots against the latest at:
+       rate = (flags >> 20) & 0xF;
++      if (rate > 11)
++              rate = 11;
 
-http://linuxwireless.org/download/compat-wireless-2.6/
 
-Building, and installing
-------------------------
+Still, some problems remain:
 
-Build: build the latest linux wireless subsystem
+First, bit rate almost immediately drops to 1 Mb/s
+even if the card sits right beside the AP.  Only
+if I force both, card and AP, to a fixed bitrate do
+I get reasonable performance (up to about 22 Mb/s,
+giving ~1MByte/s payload rate - it seems the laptop
+isn't faster; even on wired 100Mb/s ethernet I get
+max 2 MByte/s throughput.).
 
-        make
+Then, suspend doesn't work.  The driver seems to
+work but it won't see its AP any more.  It *can*
+see other APs, but not the one he is associated
+with.  rmmod/insmod is necessary.
 
-Install:
+With the last problem I'm not sure whether it's a
+driver or a wpa_supplicant problem.  I can't connect
+to the AP if the ssid is hidden.  wpa_supplicant stays
+in SCANNING mode even though he already has the AP in
+his scan list.  Playing around with ap_scan=2 etc
+doesn't seem to help.  Any idea?
 
-We use the updates/ directory so your distribution's drivers are left intact.
+Anyway, many thanks for a basically working driver.
+I hope it gets into mainline.
 
-        sudo make install
-
-Uninstall:
-
-This nukes our changes to updates/ so you can go back to using your
-distribution's supported drivers.
-
-        sudo make uninstall
-
-Load:
-
-This unloads your old mac80211 and wireless drivers and loads the new
-shiny ones. For example if ipw3945 and its proprietary daemon are found
-it'll be stopped and the module unloaded and then iwl3945 will be loaded.
-
-        sudo make load
-
-Drivers
--------
-
-We'll add more as we go...
-
-Driver                  2.6.22  2.6.23
-ath5k                   OK      ?
-b43 + ssb               ?       ?
-iwl3945                 OK      ?
-iwl4965                 ?       ?
-zd1211rw-mac80211       OK      ?
-
-Known issues
-------------
-
-* Strange wireless device names:
-
-On Ubuntu and Fedora you may end up with strange network device names,
-for example, wlan0_rename. This is a known issue and will be worked on.
-
-* nl80211:
-
-More compatibility work is needed to add nl80211
-
-* b43:
-
-We still need to iron out some compat stuff for b43
-
-* MadWifi:
-
-If MadWifi is present the build system will detect this and only recommend
-what to do. At the present time ath_pci is being picked up over ath5k if both
-are present. What the build system currently suggests is to just rename
-ath_pci.ko to ath_pci.ko.ignore and then running depmod -ae. This is not
-required with ipw3945 and iwl3945.
-
-Why?
-----
-
-For users or developers stuck on older kernels that want to help test or
-patch wireless work. Additionally if you're on a recent kernel this lets
-you get the latest and greatest wireless-2.6 git work without much effort.
-This may mean new drivers for some users. Last but not least we hope this
-will encourage vendors and developers to post patches upstream first
-rather than forking or maintaining their own mac80211 releases with
-their own patches for their own drivers.
-
-Bugs
------
-
-If you've found a bug please report it to our linux-wireless mailing list:
-
-linux-wireless@vger.kernel.org
-
-Report the bug because you are working with the latest and greatest.
-If your bug is compatibility-related then we should still try to fix
-it within the compat.[ch] work.
-
-License
--------
-
-This work is a subset of the Linux kernel as such we keep the kernel's
-Copyright practice. Some files have their own copyright and in those
-cases the license is mentioned in the file. All additional work made
-to building this package is licensed under the GPLv2.
-
-Developers
-----------
-
-Please try adding new drivers, test them and if they work enable them. You
-can then send patches. Compatibility work goes into compat/compat.[ch]. If
-using those files do not suffice additional actual code changes can go into
-compat/compat.diff.
-
-scripts/admin-clean.sh          - Cleans the compat-wireless-2.6 tree
-scripts/admin-update.sh         - Updates compat-wireless-2.6 with your git tree
-scripts/admin-refresh.sh        - Does the above two
-
-To add new drivers:
-
-1. Add directory to scripts/admin-update.sh $DRIVERS variable
-2. Add new compat-wireless-2.6/ dir to obj-y on the local Makefile
-3. Update compat patch:
-
-        cp drivers/foo/Makefile drivers/Makefile.old
-        # edit drivers/foo/Makefile and make necessary changes to enable module
-        diff -u drivers/foo/Makefile.old drivers/foo/Makefile >> \
-                compat/compat.diff
-        # Append to compat/compat.[ch] any new changes needed
-        # to support the driver, please be specific about the reasons
-        # for your additions
-
-4. Refresh and test:
-        ./scripts/admin-refresh.sh
-5. Send patches of the work
-
-Patches
--------
-
-Please send patches against:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
-
-To: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] compat-2.6: add driver foo
+Ciao, ET.
