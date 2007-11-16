@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49061 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754827AbXK0VW2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934343AbXKPU4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 16:22:28 -0500
-Message-ID: <474C8A8E.6070404@lwfinger.net> (sfid-20071127_212232_659807_35AC6DEF)
-Date: Tue, 27 Nov 2007 15:22:22 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
-References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711271713.02698.mb@bu3sch.de> <474C77E7.9030202@lwfinger.net> <200711272120.44575.mb@bu3sch.de>
-In-Reply-To: <200711272120.44575.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Nov 2007 15:56:18 -0500
+Subject: Re: [PATCH] ath5k: consistent info and error logging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: Bruno Randolf <bruno@thinktube.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <87mytez5vs.fsf@nokia.com>
+References: <1195200656-25847-1-git-send-email-bruno@thinktube.com>
+	 <1195214563.8147.118.camel@johannes.berg>  <87mytez5vs.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JUXai8cJmA+QhwI/PaPG"
+Date: Fri, 16 Nov 2007 16:53:58 +0100
+Message-Id: <1195228438.8147.146.camel@johannes.berg> (sfid-20071116_205643_026239_FDC04CB4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Tuesday 27 November 2007 21:02:47 Larry Finger wrote:
-> Is the switch properly polled and is the status change properly reported upstream?
-> If yes, you might want to check (add printk to rfkill code) if the LED
-> is properly triggered.
 
-I know that b43_rfkill_poll() is being called as I can see the ENABLED/DISABLED messages in the log.
-I'll have to work my way through the things it calls.
+--=-JUXai8cJmA+QhwI/PaPG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I'm wondering who causes this deadlock. "registered" should be false if
-> we are called back from rfkill_initialize, so it should return early before
-> the lock.
 
-The following code has the competing lock:
+On Fri, 2007-11-16 at 15:17 +0200, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> >> +#define AR5K_INFO(_sc, _fmt, ...)	\
+> >> +	printk(KERN_INFO "ath5k %s: " _fmt, wiphy_name((_sc)->hw->wiphy), ##=
+__VA_ARGS__)
+> >
+> > Eww. Can't you make them static inlines?
+>=20
+> Wasn't it so that a inline function with va_args is not possible?=20
 
-static int rfkill_toggle_radio(struct rfkill *rfkill,
-                                enum rfkill_state state)
-{
-        int retval;
+Hmm. That might be true. How about just using dev_dbg? Not that I really
+ever need to look into ath5k (hopefully!), but the code just struck me
+as not very nice.
 
-        retval = mutex_lock_interruptible(&rfkill->mutex);
-        if (retval)
-                return retval;
+johannes
 
-        if (state != rfkill->state) {
-                retval = rfkill->toggle_radio(rfkill->data, state);
-                if (!retval) {
-                        rfkill->state = state;
-                        rfkill_led_trigger(rfkill, state);
-                }
-        }
+--=-JUXai8cJmA+QhwI/PaPG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-        mutex_unlock(&rfkill->mutex);
-        return retval;
-}
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Larry
+iQIVAwUARz29FaVg1VMiehFYAQI3Gw/8CBpjYG+qu1ypyQBkN4wUINCum+en8DZv
+qDnRXR+lsQH70iAnx7HLwd07TDhASrxQeFQDv60zwNtv2DtwPjdMTTuESYn1NpbR
+TWnGkuqnBryo1CVlqdw3gktLfR+UVhWxmsbTNMtJIjEDcU1C2OAGpEKquW7pnd64
+Fk7NLlDKWvTnrqJifsq2I+oFfeZR7uAfwDOK9dpMs45aRcAPGnpNva7aAUdpSyIU
+lFLIJvnxwaYemrvCzAKjqKeRxifGnf34J9uFiiz/kGs95WBnlB5LYHBcjHl5O0ZF
+Sk/2t9IFoPyDETUc6tYYu4VmMCY16bEXknAkkDjrEEwww/Ct6tENy9WEuh8WsKn4
+CwQwSkGJrtrlNo/aab22yA5YVQZiztUdL8TN3EUBjraOLnqWi03MGOdWRjGlQumq
+mqwSsdqWH+WPmR7Oi7hQhhULrQGZYez5JjZZiI+Lgdi8/NvePZccswApFG0Jz02p
+d7w2j3Xu/Qll4+rhWpcw5JZ4tG6VfZ/W0mm0LzEzeK8HszPTFOJvSkCFcMBt1ebQ
+C0vtRx0e3FDeK1HNaeqRQMotF1tyTlMCNnpYkxPpArB06jMKfiSw/7vwjha43Omp
+esDQrCx7EP2uN+G4g4ELe/Dl7i0bp/Huppk2dO4EQqT/CbFHUeAjCMudpTyZ4OVo
+OfwdiGyGeGY=
+=qikt
+-----END PGP SIGNATURE-----
+
+--=-JUXai8cJmA+QhwI/PaPG--
+
