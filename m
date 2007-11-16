@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56455 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46051 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164AbXK1SvK (ORCPT
+	with ESMTP id S1757789AbXKPU43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 13:51:10 -0500
-Subject: Re: coding style lesson: iwlwifi vs. endianness
+	Fri, 16 Nov 2007 15:56:29 -0500
+Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate
+	IEEE802.11n support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1ba2fa240711281020n6052980cl610f6c790788d2da@mail.gmail.com> (sfid-20071128_182023_907673_8448EB0E)
-References: <1196189059.6058.95.camel@johannes.berg>
-	 <1ba2fa240711281020n6052980cl610f6c790788d2da@mail.gmail.com>
-	 (sfid-20071128_182023_907673_8448EB0E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9urJY6YNtc03oCAMsglA"
-Date: Wed, 28 Nov 2007 19:50:57 +0100
-Message-Id: <1196275857.6058.163.camel@johannes.berg> (sfid-20071128_185114_840113_E0E567C2)
+To: Ron Rindzonski <rindjon@googlemail.com>
+Cc: Guy Cohen <guy.cohen@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	tomas.winkler@intel.com
+In-Reply-To: <c85cb4470711151036j11fc855fnfde4366c11df97b@mail.gmail.com> (sfid-20071115_183732_667665_6820BE15)
+References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+	 <1195056662.4091.29.camel@johannes.berg>
+	 <247d6d340711150233h7988220fifb0d34170d16a979@mail.gmail.com>
+	 <1195142683.13846.62.camel@johannes.berg>
+	 <c85cb4470711151006j765831f9w2fb941317153712c@mail.gmail.com>
+	 <1195150317.8147.7.camel@johannes.berg>
+	 <c85cb4470711151036j11fc855fnfde4366c11df97b@mail.gmail.com>
+	 (sfid-20071115_183732_667665_6820BE15)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cPbCRAmhWRMGK/5CZpWQ"
+Date: Fri, 16 Nov 2007 16:59:53 +0100
+Message-Id: <1195228793.8147.153.camel@johannes.berg> (sfid-20071116_205643_996346_5986C91C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9urJY6YNtc03oCAMsglA
+--=-cPbCRAmhWRMGK/5CZpWQ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Apologies. It wasn't my intention to piss anyone off. I did write it in
-a rather pissed-off mood though because I was reading iwlwifi code and
-it keeps telling me how mac80211 sucks (we work around this here, we
-work around this there, ...). It'd be nice if the people writing the
-driver could post their comments on the mailing list rather than writing
-crappy workarounds for the sake of pushing code out to us.
 
-Thanks,
-Johannes
+> Yes, getting the code into the development tree will be excellent.
+> I am already working on the rx_h_data fix we talked about, and will sent =
+it
+> over early next week to wrap things up.
 
---=-9urJY6YNtc03oCAMsglA
+Sounds good to me. I don't expect anything much to happen until then so
+it probably doesn't matter if it's merged until then or not, but hey.
+I'm certainly willing to rebase any patches I do, in fact I'm sort of
+waiting for this before doing another attempt to do proper band rather
+than mode stuff
+
+johannes
+
+--=-cPbCRAmhWRMGK/5CZpWQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR024kKVg1VMiehFYAQJ5XQ//QxtTOPpApHMfqDfqmzAZbKbXKy4dKR08
-WGV9nIFr8aaNZyoR1KUGiWZsqcv3NeRu0hZwZKrMIGS9S+Qj0O+pJ69WYPz9e5Pb
-gdpSE+Yvlkx5iVMxQi3SpaUYBWH+1aGQaMYY9mIoeRBqkMPYv6lQvWTIv6CORLD7
-E41AzaKB2fb6HpFRJIS+fAQ6Lkh5xfB0mJmLnkdL0Lpvf4C7qcJYkiKW+ucuLjpQ
-H3uzxWYoyhVnMiAiGrz9JAZFqlkMq1ovnhAcDprvJarYmYcpyW0NVu5g459H+aJF
-pkapjh+BKlop4khtiflx1sdIzL7riUTVwTjFbMuN8kiU8Z3Nj9uoXIuZo6y9rRPl
-38JfDrHylXvwaC7xUuk3iC4L/7ONsGGeGe/zbRwNoFKt98LoTDjidLIrZ/4uynSq
-TJgfejkK9VYC+Zfi8jwtC9NPYnl70FG4Tcb/h2ROfY/OKRo10WRDcrIZ/glQ+Zph
-EfS+mxXEGmqTt2TDFS48cOBbMn/wWnIh4WzEOKUxji1ggRi8bUWfQNOxNxHZIJIX
-q84n+IzitMykWA83lBSADEIKnE4kzkKrvGLbGJizhPzinuEzWWg2LQmj0b5K1HrC
-ANCCvaH/CuU68U5sSyzUL/yQnZDZ8PomyiV6xgkq1Btok161PuVIeURvKGZO8Iar
-vVOXsfTH93A=
-=/49l
+iQIVAwUARz2+eKVg1VMiehFYAQJELhAAkDXhjZqcOeFgSbHdHonMtTP/diPsCpVF
+drXtAkaAoxV9Fnd3mgu9pOv9qGyhFLwUA+wEvQNERG/uXbWDZH/sz0+JOnZH4rsf
+/nes6cvsdC0e5bIrh8u2dYrYm+j4E360jV4WlVUC+drTZZ63aTJxT5xUl+S9uMcU
+DcIlWKxaNz7wkmnaLS3/zbUBRiTpi6LUoAnaAYmXSao6fzDoW45A4gEo0SIVEa9Q
+I+JFoielMAzIKtmp5MyiaR8M0bpPql3iYnS/+LATZmUKAFSuKdUt2eId3WnjKuec
+icbD/HxbIEPQHB+vELwYlVpyi2ywD7wLWvwmD2cmR+B/3a0vJh2wEnVOQs0P+c8X
+U6ZQCCBGfQC+uH5AP7rzh0DDv7wf/XC0HTsggSc8Iuwv1V4iGcqEn9oMg0xnPMC5
+/LQCrZUYjsDXElm8I0H51P0BwjqVcINcaDHdUYOcnqc32ClzEcO+2zU1SM42K1MW
+davrWQAVMI6zZ438crqDM6jjcnQjXR6FCDEZpYp9pbpJE+J2SSreAKfkpdEGCVVI
+QbbfY/KkEZGPeBzVWXe7Vz65B1NpV2bm9s7p/NnOiqAPddJYPOtpWzTTUyZaFf/G
+65nezxxm6sqO01bO2DLRBy3NXeXVfXoVxu+TmdTUZ/Ha4X6W8lLor3W3JFDfF/5j
+lBaCvpv2PXA=
+=9n6s
 -----END PGP SIGNATURE-----
 
---=-9urJY6YNtc03oCAMsglA--
+--=-cPbCRAmhWRMGK/5CZpWQ--
 
