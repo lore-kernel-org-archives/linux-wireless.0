@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55689 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752082AbXKPWUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 17:20:06 -0500
-Date: Fri, 16 Nov 2007 23:20:01 +0100
-From: Edgar Toernig <froese@gmx.de>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>
-Subject: [rtl8185] driver working but some probs
-Message-Id: <20071116232001.70a4ae77.froese@gmx.de> (sfid-20071116_222012_649808_AD677084)
+Received: from mfe1.polimi.it ([131.175.12.23]:47589 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750982AbXKPOw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 09:52:29 -0500
+Date: Fri, 16 Nov 2007 15:49:02 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
+	linux-wireless@vger.kernel.org,
+	Jose Ignacio Naranjo Hernandez
+	<joseignacio.naranjo@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>
+Subject: Re: Suspend/Resume support
+Message-ID: <20071116154902.16b7866c@morte> (sfid-20071116_145231_953493_447BD3C9)
+In-Reply-To: <87ir42z5kq.fsf@nokia.com>
+References: <1195087905.3814.11.camel@mercury>
+	<1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com>
+	<1195171869.8147.79.camel@johannes.berg>
+	<87ir42z5kq.fsf@nokia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 16 Nov 2007 15:24:21 +0200
+Kalle Valo <Kalle.Valo@nokia.com> wrote:
 
-[I'm new to wlan stuff - be kind to me if I did something
-stupid ;-)]
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > If it is, we need to determine whether we were suspended long enough
+> > for it to kick us off. It might be possible to do this by sending a
+> > null function frame to the AP and see if it replies with a deauth
+> > notification, I think it should if we're not associated [3].
+> 
+> I think that at least most (if not all) of the APs do send a deauth
+> frame in that case. I have seen this happening when debugging some
+> bugs. But I don't know if the standard specifies that.
 
-I tried the rtl8180 driver Michael posted on 2007-10-14
-( http://marc.info/?m=119238789630565 ).  As he didn't
-mentioned what kernel the patch was for I took a 2.6.24
-snapshot from about two days ago (v2.6.24-rc2-409-g9418d5d).
-
-There were two compile time problems: the MAC_ARG macro
-was missing and the symbols from rtl8180_rtl8225.c clash
-with those from rtl8187_rtl8225.c.  One has to choose
-either the rtl8187 driver or the rtl8180 driver.
-
-After that, the driver works - mostly.
-
-First thing I noticed: the reported "Link Signal Level"
-from iwconfig was way off.  It showed values around
--170 dBm when it was sitting directly beside the AP.
-It was easy to fix:
-
--     rx_status.ssi = (flags2 >> 8) & 0x7F;
-+     rx_status.ssi = (flags2 >> 8) & 0xFF;
-
-According to the 8180 datasheet, this field is 8 bit.
-
-While I was there, I also added a check for the rate
-field as the later indexed array isn't big enough for
-a full 4 bit index:
-
-       rate = (flags >> 20) & 0xF;
-+      if (rate > 11)
-+              rate = 11;
+Yes, it does - implicitly. Please see 802.11, 7.3.1.7, Table 18, reason
+codes of deauthentication frames are 6 for "Class 2 [1] frame received from
+nonauthenticated station" and 7 for "Class 3 [1] frame received from
+nonassociated station". But IIRC hostapd doesn't do that, some APs in my
+neighborhood and mine don't either - I'd say this isn't strongly required
+by the standard. I'd suggest that, in case we don't get a reply for some
+time, we should retry association. The problem here is that some userspace
+tools like wpa_supplicant retry association by themselves, and there could
+be issues with roaming. On the other side, if we don't want to break
+wireless extensions compatibility, we should ensure that, once we set an
+ESSID with - say - iwconfig, we stay associated and - in case - reassociate.
 
 
-Still, some problems remain:
+[1] 802.11, 5.5
 
-First, bit rate almost immediately drops to 1 Mb/s
-even if the card sits right beside the AP.  Only
-if I force both, card and AP, to a fixed bitrate do
-I get reasonable performance (up to about 22 Mb/s,
-giving ~1MByte/s payload rate - it seems the laptop
-isn't faster; even on wired 100Mb/s ethernet I get
-max 2 MByte/s throughput.).
 
-Then, suspend doesn't work.  The driver seems to
-work but it won't see its AP any more.  It *can*
-see other APs, but not the one he is associated
-with.  rmmod/insmod is necessary.
-
-With the last problem I'm not sure whether it's a
-driver or a wpa_supplicant problem.  I can't connect
-to the AP if the ssid is hidden.  wpa_supplicant stays
-in SCANNING mode even though he already has the AP in
-his scan list.  Playing around with ap_scan=2 etc
-doesn't seem to help.  Any idea?
-
-Anyway, many thanks for a basically working driver.
-I hope it gets into mainline.
-
-Ciao, ET.
+-- 
+Ciao
+Stefano
