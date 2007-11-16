@@ -1,148 +1,291 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39509
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299AbXKEMxr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2007 07:53:47 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFC] ssb: Add code for SPROM Rev 4
-Date: Mon, 5 Nov 2007 13:51:37 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <472c9192.8nd7AOTgl+jWptik%Larry.Finger@lwfinger.net>
-In-Reply-To: <472c9192.8nd7AOTgl+jWptik%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711051351.37252.mb@bu3sch.de> (sfid-20071105_125352_206472_AB8C7A5E)
+Received: from mga03.intel.com ([143.182.124.21]:19248 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753267AbXKPJPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 04:15:11 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	flamingice@sourmilk.net
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Ben Cahill <ben.m.cahill@intel.com>
+Subject: [PATCH] mac80211: hardware scan rework
+Date: Fri, 16 Nov 2007 17:14:54 +0800
+Message-Id: <1195204494710-git-send-email-yi.zhu@intel.com> (sfid-20071116_091518_350833_139AA89C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 03 November 2007 16:19:46 Larry Finger wrote:
-> The BCM4328 has a revision 4 SPROM. The necessary changes to handle the
-> layout and different size of this revision are implemented. The size of
-> the SPROM is now stored in the ssb_bus struct and used from that location
-> whenever possible. For those routines that need the size, but do not have
-> access to that struct, a size argument is added.
-> 
-> Recognition of the PCI_ID of the BCM4328 is also implemented. Note that
-> the PCI_ID is 0x4328, but the chipid is 0x4321.
-> 
-> This code has been tested by Michael Gerdau <mgerdau@tiscali.de>.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
+The scan code in mac80211 makes the software scan assumption in various
+places. For example, we stop the Tx queue during a software scan so that
+all the Tx packets will be queued by the stack. We also drop frames not
+related to scan in the software scan process. But these are not true for
+hardware scan.
 
+Some wireless hardwares (for example iwl3945/4965) has the ability to
+perform the whole scan process by hardware and/or firmware. The hardware
+scan is relative powerful in that it tries to maintain normal network
+traffic while doing a scan in the background. Some drivers (i.e iwlwifi)
+do provide a way to tune the hardware scan parameters (for example if the
+STA is associated, what's the max time could the STA leave from the
+associated channel, how long the scans get suspended after returning to
+the service channel, etc). But basically this is transparent to the
+stack. mac80211 should not stop Tx queues or drop Rx packets during a
+hardware scan.
 
-> Index: wireless-2.6/include/linux/ssb/ssb.h
-> ===================================================================
-> --- wireless-2.6.orig/include/linux/ssb/ssb.h
-> +++ wireless-2.6/include/linux/ssb/ssb.h
-> @@ -79,7 +79,39 @@ struct ssb_sprom_r3 {
->  };
->  
->  struct ssb_sprom_r4 {
-> -	/* TODO */
-> +	u16 pci_spid;		/* Subsystem Product ID for PCI */
-> +	u16 pci_svid;		/* Subsystem Vendor ID for PCI */
-> +	u16 pci_pid;		/* Product ID for PCI */
-> +	u8 il0mac[6];		/* MAC address for 802.11b/g */
-> +	u8 et0mac[6];		/* MAC address for Ethernet */
-> +	u8 et1mac[6];		/* MAC address for 802.11a */
-> +	u8 et0phyaddr:5;	/* MII address for enet0 */
-> +	u8 et1phyaddr:5;	/* MII address for enet1 */
-> +	u8 et0mdcport:1;	/* MDIO for enet0 */
-> +	u8 et1mdcport:1;	/* MDIO for enet1 */
-> +	u8 board_rev;		/* Board revision */
-> +	u8 country_code:4;	/* Country Code */
-> +	u8 antenna_a:2;		/* Antenna 0/1 available for A-PHY */
-> +	u8 antenna_bg:2;	/* Antenna 0/1 available for B-PHY and G-PHY */
-> +	u16 pa0b0;
-> +	u16 pa0b1;
-> +	u16 pa0b2;
-> +	u16 pa1b0;
-> +	u16 pa1b1;
-> +	u16 pa1b2;
-> +	u8 gpio0;		/* GPIO pin 0 */
-> +	u8 gpio1;		/* GPIO pin 1 */
-> +	u8 gpio2;		/* GPIO pin 2 */
-> +	u8 gpio3;		/* GPIO pin 3 */
-> +	u16 maxpwr_a;		/* A-PHY Amplifier Max Power (in dBm Q5.2) */
-> +	u16 maxpwr_bg;		/* B/G-PHY Amplifier Max Power (in dBm Q5.2) */
-> +	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
-> +	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
-> +	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
-> +	u8 antenna_gain_a;	/* A-PHY Antenna gain (in dBm Q5.2) */
-> +	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
-> +	/* The variables above this point must match those of ssb_sprom_r1 */
-> +	/* TODO - add any special ssb_sprom_r4 variables below this point. */
->  };
->  
->  struct ssb_sprom {
-> @@ -288,6 +320,7 @@ struct ssb_bus {
->  	/* ID information about the Chip. */
->  	u16 chip_id;
->  	u16 chip_rev;
-> +	u16 sprom_size;		/* number of words in sprom */
->  	u8 chip_package;
->  
->  	/* List of devices (cores) on the backplane. */
+This patch resolves the above problem by spliting the current scan
+indicator local->sta_scanning into local->sta_sw_scanning and
+local->sta_hw_scanning. It then changes the scan related code to be aware
+of hardware scan or software scan in various places. With this patch,
+iwlwifi performs much better in the scan-while-associated condition and
+disable_hw_scan=1 should never be required.
 
-Larry, I did not forget your patch.
-But I need to think a little bit more about this.
+Cc: Mohamed Abbas <mohamed.abbas@intel.com>
+Cc: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/ieee80211.c       |    4 ++--
+ net/mac80211/ieee80211_i.h     |    6 ++++--
+ net/mac80211/ieee80211_ioctl.c |    4 ++--
+ net/mac80211/ieee80211_sta.c   |   37 ++++++++++++++++++++-----------------
+ net/mac80211/rx.c              |   12 +++++++++---
+ net/mac80211/tx.c              |    2 +-
+ 6 files changed, 38 insertions(+), 27 deletions(-)
 
-The union above is not really what I'd like to have here. In fact,
-I think to get the v4 sprom implemented the sprom struct has to be
-redesigned.
-
-I think we must leave the path of partitioning the sprom struct into
-versions, because that obviously doesn't work anymore.
-Instead, I think we must develop _one_ common struct that is capable
-of holding the information from any sprom. (Note that the struct layout
-does not need to reflect the real hardware layout).
-
-And I think we should also remove the fields that are not needed at all,
-like the PCI ID stuff.
-
-something like this:
-
-
-struct ssb_sprom_pathvar {
-	bool this_pathvar_is_available;
-
-	...foobar data
-};
-
-struct ssb_sprom {
-	u8 wl_mac_addr[ETH_ALEN];
-	u8 eth0_mac_addr[ETH_ALEN];
-	u8 eth1_mac_addr[ETH_ALEN];
-
-	...
-
-	u8 gpio0;
-	u8 gpio1;
-	...
-
-	antennagain...
-
-	struct ssb_sprom_pathvar pv0;
-	struct ssb_sprom_pathvar pv1;
-	...
-};
-
-Note that I did _not_ look closely at the pathvar stuff, so this
-might be a bad idea to design it this way.
-But the point I was going to make with that was; we probably need
-some "this data is valid" bits for different parts of the sprom
-struct, as for example v1-3 don't have these pathvars (So the drivers
-must be told it's invalid data).
-The reason for all this "valid-bit" stuff is that I think we should
-remove any sprom-versioning knowledge from the drivers. That
-should be abstracted.
-
-Any idea on how to improve that?
-
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e0ee65a..1c2a1b6 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -330,7 +330,7 @@ static int ieee80211_stop(struct net_device *dev)
+ 
+ 		if (!local->ops->hw_scan &&
+ 		    local->scan_dev == sdata->dev) {
+-			local->sta_scanning = 0;
++			local->sta_sw_scanning = 0;
+ 			cancel_delayed_work(&local->scan_work);
+ 		}
+ 		flush_workqueue(local->hw.workqueue);
+@@ -500,7 +500,7 @@ int ieee80211_hw_config(struct ieee80211_local *local)
+ 	struct ieee80211_channel *chan;
+ 	int ret = 0;
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning) {
+ 		chan = local->scan_channel;
+ 		mode = local->scan_hw_mode;
+ 	} else {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 72e1c93..2f946b8 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -470,7 +470,8 @@ struct ieee80211_local {
+ 
+ 	struct list_head interfaces;
+ 
+-	int sta_scanning;
++	int sta_sw_scanning;
++	int sta_hw_scanning;
+ 	int scan_channel_idx;
+ 	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
+ 	unsigned long last_scan_completed;
+@@ -749,7 +750,8 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len);
+ void ieee80211_sta_req_auth(struct net_device *dev,
+ 			    struct ieee80211_if_sta *ifsta);
+ int ieee80211_sta_scan_results(struct net_device *dev, char *buf, size_t len);
+-void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
++ieee80211_txrx_result ieee80211_sta_rx_scan(struct net_device *dev,
++					    struct sk_buff *skb,
+ 			   struct ieee80211_rx_status *rx_status);
+ void ieee80211_rx_bss_list_init(struct net_device *dev);
+ void ieee80211_rx_bss_list_deinit(struct net_device *dev);
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 942b9cc..bf7e523 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -315,7 +315,7 @@ int ieee80211_set_channel(struct ieee80211_local *local, int channel, int freq)
+ 	}
+ 
+ 	if (set) {
+-		if (local->sta_scanning)
++		if (local->sta_sw_scanning)
+ 			ret = 0;
+ 		else
+ 			ret = ieee80211_hw_config(local);
+@@ -558,7 +558,7 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
+ {
+ 	int res;
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	if (local->sta_scanning)
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 		return -EAGAIN;
+ 	res = ieee80211_sta_scan_results(dev, extra, data->length);
+ 	if (res >= 0) {
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 015b3f8..0ae14e9 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1487,7 +1487,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 		u32 supp_rates, prev_rates;
+ 		int i, j;
+ 
+-		mode = local->sta_scanning ?
++		mode = local->sta_sw_scanning ?
+ 		       local->scan_hw_mode : local->oper_hw_mode;
+ 		rates = mode->rates;
+ 		num_rates = mode->num_rates;
+@@ -1871,16 +1871,15 @@ static void ieee80211_sta_rx_queued_mgmt(struct net_device *dev,
+ }
+ 
+ 
+-void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
+-			   struct ieee80211_rx_status *rx_status)
++ieee80211_txrx_result
++ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
++		      struct ieee80211_rx_status *rx_status)
+ {
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 fc;
+ 
+-	if (skb->len < 24) {
+-		dev_kfree_skb(skb);
+-		return;
+-	}
++	if (skb->len < 24)
++		return TXRX_DROP;
+ 
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+ 	fc = le16_to_cpu(mgmt->frame_control);
+@@ -1889,13 +1888,16 @@ void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
+ 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_RESP) {
+ 			ieee80211_rx_mgmt_probe_resp(dev, mgmt,
+ 						     skb->len, rx_status);
++			dev_kfree_skb(skb);
++			return TXRX_QUEUED;
+ 		} else if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON) {
+ 			ieee80211_rx_mgmt_beacon(dev, mgmt, skb->len,
+ 						 rx_status);
++			dev_kfree_skb(skb);
++			return TXRX_QUEUED;
+ 		}
+ 	}
+-
+-	dev_kfree_skb(skb);
++	return TXRX_CONTINUE;
+ }
+ 
+ 
+@@ -1985,7 +1987,7 @@ void ieee80211_sta_work(struct work_struct *work)
+ 	if (!netif_running(dev))
+ 		return;
+ 
+-	if (local->sta_scanning)
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 		return;
+ 
+ 	if (sdata->type != IEEE80211_IF_TYPE_STA &&
+@@ -2644,7 +2646,8 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 
+ 	local->last_scan_completed = jiffies;
+ 	wmb();
+-	local->sta_scanning = 0;
++	local->sta_hw_scanning = 0;
++	local->sta_sw_scanning = 0;
+ 
+ 	if (ieee80211_hw_config(local))
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+@@ -2703,7 +2706,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
+ 	int skip;
+ 	unsigned long next_delay = 0;
+ 
+-	if (!local->sta_scanning)
++	if (!local->sta_sw_scanning)
+ 		return;
+ 
+ 	switch (local->scan_state) {
+@@ -2766,7 +2769,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
+ 		break;
+ 	}
+ 
+-	if (local->sta_scanning)
++	if (local->sta_sw_scanning)
+ 		queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 				   next_delay);
+ }
+@@ -2798,7 +2801,7 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
+ 	 */
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning || local->sta_hw_scanning) {
+ 		if (local->scan_dev == dev)
+ 			return 0;
+ 		return -EBUSY;
+@@ -2808,13 +2811,13 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 		int rc = local->ops->hw_scan(local_to_hw(local),
+ 					    ssid, ssid_len);
+ 		if (!rc) {
+-			local->sta_scanning = 1;
++			local->sta_hw_scanning = 1;
+ 			local->scan_dev = dev;
+ 		}
+ 		return rc;
+ 	}
+ 
+-	local->sta_scanning = 1;
++	local->sta_sw_scanning = 1;
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+@@ -2869,7 +2872,7 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len)
+ 	if (sdata->type != IEEE80211_IF_TYPE_STA)
+ 		return ieee80211_sta_start_scan(dev, ssid, ssid_len);
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning || local->sta_hw_scanning) {
+ 		if (local->scan_dev == dev)
+ 			return 0;
+ 		return -EBUSY;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 428a9fc..5c50eba 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -338,8 +338,14 @@ ieee80211_rx_h_passive_scan(struct ieee80211_txrx_data *rx)
+ 	struct ieee80211_local *local = rx->local;
+ 	struct sk_buff *skb = rx->skb;
+ 
+-	if (unlikely(local->sta_scanning != 0)) {
+-		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
++	if (unlikely(local->sta_hw_scanning != 0))
++		return ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
++
++	if (unlikely(local->sta_sw_scanning != 0)) {
++		/* drop all the other packets during a software scan anyway */
++		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
++		    != TXRX_QUEUED)
++			dev_kfree_skb(skb);
+ 		return TXRX_QUEUED;
+ 	}
+ 
+@@ -1486,7 +1492,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto end;
+ 	}
+ 
+-	if (unlikely(local->sta_scanning))
++	if (unlikely(local->sta_sw_scanning || local->sta_hw_scanning))
+ 		rx.flags |= IEEE80211_TXRXD_RXIN_SCAN;
+ 
+ 	if (__ieee80211_invoke_rx_handlers(local, local->rx_pre_handlers, &rx,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1a53154..07b2d9e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -225,7 +225,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
+ 	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
+ 		return TXRX_CONTINUE;
+ 
+-	if (unlikely(tx->local->sta_scanning != 0) &&
++	if (unlikely(tx->local->sta_sw_scanning != 0) &&
+ 	    ((tx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+ 	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
+ 		return TXRX_DROP;
 -- 
-Greetings Michael.
+1.5.2
