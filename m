@@ -1,86 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59241 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752403AbXKXVgW (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:47668 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbXKPSx2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 16:36:22 -0500
-Subject: Re: mac80211 regression: doesn't associate automatically
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200711231423.23910.hs4233@mail.mn-solutions.de>
-References: <200711220912.10452.hs4233@mail.mn-solutions.de>
-	 <200711221719.40412.hs4233@mail.mn-solutions.de>
-	 <1195821998.4149.113.camel@johannes.berg>
-	 <200711231423.23910.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VF1Y1qju6N4WJSdtYSgP"
-Date: Sat, 24 Nov 2007 22:36:17 +0100
-Message-Id: <1195940177.4149.203.camel@johannes.berg> (sfid-20071124_213626_820122_9C643063)
-Mime-Version: 1.0
+	Fri, 16 Nov 2007 13:53:28 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so907152nfb
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 10:53:26 -0800 (PST)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: add power management support
+Date: Fri, 16 Nov 2007 19:53:26 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	yi.zhu@intel.com
+References: <200711161929.36283.mboton.lkml@gmail.com>
+In-Reply-To: <200711161929.36283.mboton.lkml@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200711161953.26801.mboton.lkml@gmail.com> (sfid-20071116_185332_417015_F01844E2)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ok, the previous patch had a little error.
 
---=-VF1Y1qju6N4WJSdtYSgP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--
 
+This patch adds power management support in mac80211.
 
-> Is my second sequence "which I dug out" also not a problem?
+This allows us to enable power management through the "iwconfig <device=
+> power=20
+<off/on>" command.
+The code is based on "mac80211-10.0.0" but it is a little bit modified.
 
-I have to admit I missed that.
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5fcc4c1..c82b6fa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -452,6 +452,8 @@ struct ieee80211_conf {
+ 	u8 antenna_max;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
++
++	u8 power_management_enable;     /* flag to enable/disable power manag=
+ement=20
+*/
+ };
+=20
+ /**
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
+ctl.c
+index 6caa3ec..f5eebec 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
+evice=20
+*dev,
+ 	return 0;
+ }
+=20
++static int ieee80211_ioctl_siwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	if (wrqu->power.disabled) {
++		conf->power_management_enable =3D 0;
++		if (ieee80211_hw_config(local))
++			return -EINVAL;
++		return 0;
++	}
++
++	switch (wrqu->power.flags & IW_POWER_MODE) {
++	case IW_POWER_ON:       /* If not specified */
++	case IW_POWER_MODE:     /* If set all mask */
++	case IW_POWER_ALL_R:    /* If explicitely state all */
++		break;
++	default:                /* Otherwise we don't support it */
++		return -EINVAL;
++	}
++
++	conf->power_management_enable =3D 1;
++
++	if (ieee80211_hw_config(local))
++		return -EINVAL;
++
++	return 0;
++}
++
++static int ieee80211_ioctl_giwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	wrqu->power.disabled =3D !conf->power_management_enable;
++
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwrts(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rts, char *extra)
+@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
+ 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+ 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
+-	(iw_handler) NULL,				/* SIOCSIWPOWER */
+-	(iw_handler) NULL,				/* SIOCGIWPOWER */
++	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
++	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
 
-> I hope that is a bug that is more difficult to talk away. :-)
-
-Heh. I'll give my best ;)
-
-> $ pccardctl insert
-> $ iwconfig eth1 key s:11111
-> $ iwconfig eth1 essid MUMBLEFUTZ
-> $ ifconfig eth1 up
->=20
-> This sequence is basically what Debian executes at "ifup eth1"=20
-> time when no wpa_supplicant is used. And it doesn't lead to an=20
-> association, not even to a scanning (according to iwevent) when=20
-> used with mac80211/b43.
-
-Yeah, I've been bitten by that too. It's pretty tough actually but
-*should* be doable though I would much prefer to set it only after the
-interface is up I can see... Thing is that before the iface is up the
-interface mode isn't set in stone. So things like
-
-iwconfig eth1 blabla
-iwconfig eth1 mode monitor
-iwconfig eth1 mode managed
-ip link set eth1 up
-
-can probably never work properly. In any case, we ought to fix this
-though right now I don't know what the best way would be.
-
-johannes
-
---=-VF1Y1qju6N4WJSdtYSgP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0iZUKVg1VMiehFYAQLPURAAkeDWqSwqnWwlrQVQqO5goZ3TDEtF/yQz
-1m/26CCbnGLGgFpvlLHOe8Wv0hkJ1QAD58rta65R8ZZo0heBnFW6dWKJTZ5o+nDC
-9Uf9yE50h8VnO6Yx4gqNJH4frXhv+pS6xGjnk6bpIdfuNkrDZrwLMrQNW3Qw3kz9
-DDuUUq5eF/zwb0WF7PFpaXQAgkzQgPdGZFj7vrvitfxtzgk1tHyfflOvHP0PLrhB
-XxZzDN3crPOLnLLfA3g8dH6ezqRttg0Q7jqQqxji8SUqKFn+Qou6XJFPB8RZsEod
-C2j3aFbGU3mvTwTZDO+dwNgl7oRXprpPGNqA8ZD3J98pmQoX7QPy14hpPv0iHili
-a1t9KDPz4fjlkwKQGJKyvVinr6vt1jnRZRBxdKnxx+pD+SHlxN9bgrS/SgPGm3Cy
-euD8LldsPsWV+MUv/fIflSzw9SAHPgwdQiPKgK7DuRNexxCPBKFEB36FJMpCRowf
-BIt53aOx4eFv6vgLeziANomUcEoaTOUijbsx066Pj5qU8BHsJ/z8+9ZjivKfiw8u
-+vYY7iGSWTCuHWSLXuOD4qeHWwhn0VjRcqUjx1tybmbMW7tsniR0GoGMyRTF0ctj
-2hdDU6FKBOqS9ZurBaY+EpJQjV/xxxZAP9CVW/fIW040gt6SEmPmNozJaY+syGXL
-7bfzfssF8Uc=
-=KfDf
------END PGP SIGNATURE-----
-
---=-VF1Y1qju6N4WJSdtYSgP--
-
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
