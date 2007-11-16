@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5515 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760017AbXKTGzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 01:55:54 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
-Date: Tue, 20 Nov 2007 14:55:36 +0800
-Message-Id: <11955417361539-git-send-email-yi.zhu@intel.com> (sfid-20071120_065605_683601_F072F737)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbXKPVLo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 16:11:44 -0500
+Subject: Re: [PATCH 1/2] mac80211: add power management support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miguel =?ISO-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	yi.zhu@intel.com
+In-Reply-To: <200711162002.01972.mboton.lkml@gmail.com> (sfid-20071116_190212_726540_E9A85A6C)
+References: <200711161929.36283.mboton.lkml@gmail.com>
+	 <200711161953.26801.mboton.lkml@gmail.com>
+	 <200711162002.01972.mboton.lkml@gmail.com>
+	 (sfid-20071116_190212_726540_E9A85A6C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BS27lmm0qgQr/81lsx8g"
+Date: Fri, 16 Nov 2007 22:13:01 +0100
+Message-Id: <1195247581.26571.5.camel@johannes.berg> (sfid-20071116_211148_867187_E78BFED4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure if this is best choice, someone might have better
-solutions. But this patch fixed the connection problem when switching
-from a WPA enabled AP (using wpa_supplicant) to an open AP (using
-iwconfig). The root cause is when we connect to a WPA enabled AP,
-wpa_supplicant sets the ifsta->extra_ie thru SIOCSIWGENIE. But if we
-stop wpa_supplicant and connect to an open AP with iwconfig, there is
-no way to clear the extra_ie so that mac80211 keeps connecting with that.
 
-Someone could argue wpa_supplicant should clear the extra_ie during
-its shutdown. But mac80211 should also handle the unexpected shutdown
-case (ie. killall -9 wpa_supplicant).
+--=-BS27lmm0qgQr/81lsx8g
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/ieee80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e0ee65a..7cf2f14 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -334,6 +334,10 @@ static int ieee80211_stop(struct net_device *dev)
- 			cancel_delayed_work(&local->scan_work);
- 		}
- 		flush_workqueue(local->hw.workqueue);
-+
-+		kfree(sdata->u.sta.extra_ie);
-+		sdata->u.sta.extra_ie = NULL;
-+		sdata->u.sta.extra_ie_len = 0;
- 		/* fall through */
- 	default:
- 		conf.if_id = dev->ifindex;
--- 
-1.5.2
+
+> +	if (ieee80211_hw_config(local))
+> +		return -EINVAL;
+
+-EINVAL seems not right. Doesn't that already return an error code?
+
+johannes
+
+--=-BS27lmm0qgQr/81lsx8g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARz4H3KVg1VMiehFYAQLRCA/+IipQQpYM7dTjwnmJY0Ahcw0s7Z1vrf17
+LgQpndp7NBF8txCOXZ77cqAQ7/g/5/HxUZEGFE9DgN5a4ok3d9ZtIGsnAJYvrzBM
+cONV7vEcxOZXQiLvUQUMdclL6S2dGeWf2yxDQ0G7enr5TJsZ1Mu+aAzjmre5YNkb
+2f6SjHjQbxnEyhSpEeGHl7nRHWyeeZO83o1FeQI64o4pPJ5K1KweJZqujzntoTwW
+QS4pgW0y5VEA06p6W5gpYU2Pr5A9+ReHJXLK4ha42Vd2R2PmjSyawKOSPQVCZzAn
+ai69y5zu1oXPqoK1dCCS6UovsX++exxCBMt06VWwCtVgM0Gl2a1m/0RQjOp0aEZC
+CTNmMPT0rJR2puL7FmjS6S8kGkCfwWBHeUDF/YMVynX4YMtMPjHmQix7V8Vqmy38
+ITFOi7wM8lPOcLsZpCnkIKN45FU8a5OMnz9tzONzobBhHHbvYceFJu5jdUvJbxOR
+LD4je1L9fdhI5IsNhm70auy83STaj5jCqWuvo+B1pBEE8pO1d95Lc73hxDHtlkbl
+uuZ/fU0OeDHsMYRXwTx9DloJFwah/xCFJ17IcPWmbYhybSjP8tfmDLrgUi/QY+/M
+CT6y9wsYjhHHJEWIepZqIZ9V159lqL8p8AjbT4Gg7KF0JL/JHXuV34F0pBne8fhq
+xiLzljMgTfk=
+=2S64
+-----END PGP SIGNATURE-----
+
+--=-BS27lmm0qgQr/81lsx8g--
+
