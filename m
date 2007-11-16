@@ -1,136 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42747 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755613AbXKNPgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:36:06 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 11/15] iwlwifi: 802.11n handling probe request HT IE
-Date: Wed, 14 Nov 2007 17:29:47 +0200
-Message-Id: <11950542013714-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153617_480822_0AF51C05)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbXKPOjx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 09:39:53 -0500
+Subject: Re: Suspend/Resume support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
+	linux-wireless@vger.kernel.org,
+	Jose Ignacio Naranjo Hernandez
+	<joseignacio.naranjo@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <87ir42z5kq.fsf@nokia.com>
+References: <1195087905.3814.11.camel@mercury>
+	 <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com>
+	 <1195171869.8147.79.camel@johannes.berg>  <87ir42z5kq.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ubtYh+m5WIZhBu/uUgAW"
+Date: Fri, 16 Nov 2007 15:41:07 +0100
+Message-Id: <1195224067.8147.122.camel@johannes.berg> (sfid-20071116_144002_576293_95DB90B8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch conforms the probe request's HT IE with the
-new structures used in iwlwifi HT.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   64 ++++++++++++---------------
- 1 files changed, 29 insertions(+), 35 deletions(-)
+--=-ubtYh+m5WIZhBu/uUgAW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 1d0946f..c0852ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1821,9 +1821,9 @@ static u16 iwl_supported_rate_to_ie(u8 *ie, u16 supported_rate,
- 
- #ifdef CONFIG_IWL4965_HT
- void static iwl_set_ht_capab(struct ieee80211_hw *hw,
--			     struct ieee80211_ht_capability *ht_cap,
--			     u8 use_wide_chan);
--#endif
-+			     struct ieee80211_ht_cap *ht_cap,
-+			     u8 use_current_config);
-+#endif /* CONFIG_IWL4965_HT */
- 
- /**
-  * iwl_fill_probe_req - fill in all required fields and IE for probe request
-@@ -1835,6 +1835,9 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 	int len = 0;
- 	u8 *pos = NULL;
- 	u16 active_rates, ret_rates, cck_rates, active_rate_basic;
-+#ifdef CONFIG_IWL4965_HT
-+	struct ieee80211_hw_mode *mode;
-+#endif /* CONFIG_IWL4965_HT */
- 
- 	/* Make sure there is enough space for the probe request,
- 	 * two mandatory IEs and the data */
-@@ -1918,17 +1921,14 @@ static u16 iwl_fill_probe_req(struct iwl_priv *priv,
- 		len += 2 + *pos;
- 
- #ifdef CONFIG_IWL4965_HT
--	if (is_direct && priv->is_ht_enabled) {
--		u8 use_wide_chan = 1;
--
--		if (priv->channel_width != IWL_CHANNEL_WIDTH_40MHZ)
--			use_wide_chan = 0;
-+	mode = priv->hw->conf.mode;
-+	if (mode->ht_info.ht_supported) {
- 		pos += (*pos) + 1;
- 		*pos++ = WLAN_EID_HT_CAPABILITY;
--		*pos++ = sizeof(struct ieee80211_ht_capability);
--		iwl_set_ht_capab(NULL, (struct ieee80211_ht_capability *)pos,
--				 use_wide_chan);
--		len += 2 + sizeof(struct ieee80211_ht_capability);
-+		*pos++ = sizeof(struct ieee80211_ht_cap);
-+		iwl_set_ht_capab(priv->hw,
-+				(struct ieee80211_ht_cap *)pos, 0);
-+		len += 2 + sizeof(struct ieee80211_ht_cap);
- 	}
- #endif  /*CONFIG_IWL4965_HT */
- 
-@@ -8160,31 +8160,25 @@ static int iwl_mac_conf_ht(struct ieee80211_hw *hw,
- }
- 
- static void iwl_set_ht_capab(struct ieee80211_hw *hw,
--			     struct ieee80211_ht_capability *ht_cap,
--			     u8 use_wide_chan)
-+		struct ieee80211_ht_cap *ht_cap,
-+		u8 use_current_config)
- {
--	union ht_cap_info cap;
--	union ht_param_info param_info;
-+	struct ieee80211_conf *conf = &hw->conf;
-+	struct ieee80211_hw_mode *mode = conf->mode;
- 
--	memset(&cap, 0, sizeof(union ht_cap_info));
--	memset(&param_info, 0, sizeof(union ht_param_info));
--
--	cap.maximal_amsdu_size = HT_IE_MAX_AMSDU_SIZE_4K;
--	cap.green_field = 1;
--	cap.short_GI20 = 1;
--	cap.short_GI40 = 1;
--	cap.supported_chan_width_set = use_wide_chan;
--	cap.mimo_power_save_mode = 0x3;
--
--	param_info.max_rx_ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
--	param_info.mpdu_density = CFG_HT_MPDU_DENSITY_DEF;
--	ht_cap->capabilities_info = (__le16) cpu_to_le16(cap.val);
--	ht_cap->mac_ht_params_info = (u8) param_info.val;
--
--	ht_cap->supported_mcs_set[0] = 0xff;
--	ht_cap->supported_mcs_set[1] = 0xff;
--	ht_cap->supported_mcs_set[4] =
--	    (cap.supported_chan_width_set) ? 0x1: 0x0;
-+	if (use_current_config) {
-+		ht_cap->cap_info = cpu_to_le16(conf->ht_conf.cap);
-+		memcpy(ht_cap->supp_mcs_set,
-+				conf->ht_conf.supp_mcs_set, 16);
-+	} else {
-+		ht_cap->cap_info = cpu_to_le16(mode->ht_info.cap);
-+		memcpy(ht_cap->supp_mcs_set,
-+				mode->ht_info.supp_mcs_set, 16);
-+	}
-+	ht_cap->ampdu_params_info =
-+		(mode->ht_info.ampdu_factor & IEEE80211_HT_CAP_AMPDU_FACTOR) |
-+		((mode->ht_info.ampdu_density << 2) &
-+					IEEE80211_HT_CAP_AMPDU_DENSITY);
- }
- 
- static void iwl_mac_get_ht_capab(struct ieee80211_hw *hw,
--- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
+On Fri, 2007-11-16 at 15:24 +0200, Kalle Valo wrote:
+> I think that at least most (if not all) of the APs do send a deauth
+> frame in that case. I have seen this happening when debugging some
+> bugs. But I don't know if the standard specifies that.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+mac80211 has a comment that NULL frames are just for PS control
+operation and otherwise ignored. So no idea.
+
+johannes
+
+--=-ubtYh+m5WIZhBu/uUgAW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARz2sAqVg1VMiehFYAQKvwBAAvigxa4ZWJNv+UZpgqmm/gvmUdAVDbJv6
+pMdwh+PcBnQNAUHjQu7kLWoHVJ0r7wX0ZJoA+uOVy1fi6+DiJM7jwxUqXTVDetey
+2w02Wqi3cCAbsL8KuyL95TeZCLIXhRiY3NUVYvQpY/Z6oV6Kv3sfvftjlv9KayeF
+I65ju8tEW3+8mC0GPeMpSyD+Mg+2gRZoluYckr+HJvxUH9Jm/ZUneH1It0HO12BU
+TsHLrrFjnMa0f8ie4pMx2zbn2GUkmu1PuWoc9E+uHUIquQ8IRXa08643fSGzL5mh
+spTGOb3Wk5WeCeJN4r2rAkF9A6xpNuRhahe5mFpSaF2f05ucum2B0Gq7Em1nY+iq
+BK6tKrWjBd7Ejvi8q15EaRBk5vWC6ydMSM+z8qwckRE0iHANQOvySrSLVgpBWt5V
+EW/Q2vLaqlL2igjqH3270BzALThDI4KjMb8f8TEvJvHhrazs/ZLCRrTx5gbJus+1
+sUJpp3CHfVtDHZqPa+r7P27TNyGbMN4mq1mzDQVDAz9og7QFLElwhIiIX3bI8Wnp
+0hx+H5deAHxaceJ1rOdv+2MT4KNp6pY5bRVeAYh80JtTzTf7T6OFd4LuIPdYMTqh
+LnBFFC6GOt9VCaploen+XNUgumBoIiAKUUmwcxfJ9gId6y0EOK3un2HiQe5fDHgZ
+2ElPBO9KNu8=
+=dmp0
+-----END PGP SIGNATURE-----
+
+--=-ubtYh+m5WIZhBu/uUgAW--
+
