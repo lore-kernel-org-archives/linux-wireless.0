@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbXKWUXS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 15:23:18 -0500
-Subject: Re: mac80211 regression: doesn't associate automatically
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Dyson <will.dyson@gmail.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <8e6f94720711231134t66bc0bcbt9651297221cca56b@mail.gmail.com> (sfid-20071123_193420_868158_0ADA9C2F)
-References: <200711220912.10452.hs4233@mail.mn-solutions.de>
-	 <200711221605.55506.hs4233@mail.mn-solutions.de>
-	 <1195746110.4149.23.camel@johannes.berg>
-	 <200711221719.40412.hs4233@mail.mn-solutions.de>
-	 <8e6f94720711221232p16b90daaya5fe3550729b49c8@mail.gmail.com>
-	 <1195822116.4149.116.camel@johannes.berg>
-	 <8e6f94720711231134t66bc0bcbt9651297221cca56b@mail.gmail.com>
-	 (sfid-20071123_193420_868158_0ADA9C2F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mOy7JscLip075XDHz1vy"
-Date: Fri, 23 Nov 2007 21:22:19 +0100
-Message-Id: <1195849339.4149.153.camel@johannes.berg> (sfid-20071123_202321_881432_2EE50758)
+Received: from mail.queued.net ([207.210.101.209]:1117 "EHLO mail.queued.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932433AbXKPSfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 13:35:16 -0500
+Date: Fri, 16 Nov 2007 13:12:17 -0500
+From: Andres Salomon <dilinger@queued.net>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	akpm@linux-foundation.org
+Subject: [PATCH 4/4] libertas: nuke useless variable usbdriver_name and
+ useless comments
+Message-ID: <20071116131217.4f9efe72@ephemeral> (sfid-20071116_183542_843047_7C5535E9)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mOy7JscLip075XDHz1vy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think it was pretty obvious what fields in if_usb_driver are...
 
+Signed-off-by: Andres Salomon <dilinger@debian.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-On Fri, 2007-11-23 at 14:34 -0500, Will Dyson wrote:
-> On Nov 23, 2007 7:48 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->=20
-> > I don't think this can work because when say wpa_supplicant changes the
-> > key the last thing we want is to have that cause a reconsideration of
-> > which AP we're associated with. Or even a disassoc/reassoc cycle.
->=20
-> Ah, yes dynamic WEP (or does wpa also go through those ioctls?). Thanks.
-
-Yup, WPA does too.
-
-johannes
-
---=-mOy7JscLip075XDHz1vy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0c2eqVg1VMiehFYAQIQVxAAloWvqWFBBeKYSFKg1aMajCZmkPzxM+Qj
-AO51ZdIu1ONL6dBdt043+YxF2KmTkAKbEz+Zcx1JFvLiPNLfrTiK/T6n5pnA3JfE
-Pme2sFKzYZyeDqB0EL4fb9HOzupO3zK6JFDoZi/NipfPUDLI+qtPeGZPPCoxLikI
-0f8IyYSs//AFrV7t2FA1BCGUvacyZsMIVrqrIrT+ny9oDZLw4Iz/fXMDRFgRQn7Z
-/P4xqr/+IdE30BaKKpoWsbnwGFbZvfbpf/3j9pNyfc1U6V0Ja9/1vpiuoagqwqAg
-uI9uoTwepk3sJrJcECxboesmHRjoF9ZtKsGkPmZHda65qr71htL2A33i2G9qWH0Z
-CayUjrQzBF8uW9gImBanbh/V0EDdg01dcz0qDzjiqbTefWcDhbyKpY+QNcUrZWSo
-eLoyr6IIdhTKgXBvk0lOC+nUGPcYpbTNTgadVjQQOc/lmCKvds9eDimf11vYD2cO
-GYgG1FBioCfEh+4UCPWu++H14gYES5KQIO02oA4SbjRii5H2rlaxPHY652g0O+QF
-OJ4ORorHAd8hHWp7973hp9T9UG6ujTcp7/ZbiCp8YHx7HOA+XoxKBMMEbYykYA13
-BKxXGn+xWcd2sDUGvForK3MXUlnAj93WBZyguPZQZvGZQlZYW29YWJldms2GMPAL
-bz1Nnt753pI=
-=ctsK
------END PGP SIGNATURE-----
-
---=-mOy7JscLip075XDHz1vy--
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index e9aad16..f7bafc3 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -18,8 +18,6 @@
+ 
+ #define MESSAGE_HEADER_LEN	4
+ 
+-static const char usbdriver_name[] = "usb8xxx";
+-
+ static char *libertas_fw_name = "usb8388.bin";
+ module_param_named(fw_name, libertas_fw_name, charp, 0644);
+ 
+@@ -1099,13 +1097,9 @@ static int if_usb_resume(struct usb_interface *intf)
+ #endif
+ 
+ static struct usb_driver if_usb_driver = {
+-	/* driver name */
+-	.name = usbdriver_name,
+-	/* probe function name */
++	.name = DRV_NAME,
+ 	.probe = if_usb_probe,
+-	/* disconnect function  name */
+ 	.disconnect = if_usb_disconnect,
+-	/* device signature table */
+ 	.id_table = if_usb_table,
+ 	.suspend = if_usb_suspend,
+ 	.resume = if_usb_resume,
+-- 
+1.5.3.4
 
