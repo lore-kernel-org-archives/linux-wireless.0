@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51874
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbXKJPOy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 10:14:54 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: silence a bogus gcc warning
-Date: Sat, 10 Nov 2007 16:14:03 +0100
-Cc: Frank Lichtenheld <frank@lichtenheld.de>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Message-Id: <200711101614.03776.mb@bu3sch.de> (sfid-20071110_151500_362296_FD42EDFD)
+Received: from mail.queued.net ([207.210.101.209]:1115 "EHLO mail.queued.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932424AbXKPSfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 13:35:16 -0500
+Date: Fri, 16 Nov 2007 13:12:07 -0500
+From: Andres Salomon <dilinger@queued.net>
+To: libertas-dev@lists.infradead.org,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	akpm@linux-foundation.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] libertas: mark module_init/exit functions as
+ __init/__exit
+Message-ID: <20071116131207.08f37ddc@ephemeral> (sfid-20071116_183537_952881_22EEE6DE)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46rom: Frank Lichtenheld <frank@lichtenheld.de>
-
-inititalise ret to 0 to avoid the following bogus warning:
-  CC [M]  drivers/net/wireless/b43/debugfs.o
-drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debugfs_re=
-ad=E2=80=99:
-drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=99 =
-may be used uninitialized in this function
-
-Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Andres Salomon <dilinger@debian.org>
 ---
- drivers/net/wireless/b43/debugfs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/if_usb.c |    4 ++--
+ drivers/net/wireless/libertas/main.c   |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/=
-b43/debugfs.c
-index 734e70e..d8ac058 100644
---- a/drivers/net/wireless/b43/debugfs.c
-+++ b/drivers/net/wireless/b43/debugfs.c
-@@ -352,7 +352,7 @@ static ssize_t b43_debugfs_read(struct file *file, =
-char __user *userbuf,
- 	struct b43_wldev *dev;
- 	struct b43_debugfs_fops *dfops;
- 	struct b43_dfs_file *dfile;
--	ssize_t ret;
-+	ssize_t ret =3D 0;
- 	char *buf;
- 	const size_t bufsize =3D 1024 * 128;
- 	const size_t buforder =3D get_order(bufsize);
---=20
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 3cf9379..d376155 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -1122,7 +1122,7 @@ static struct usb_driver if_usb_driver = {
+ 	.resume = if_usb_resume,
+ };
+ 
+-static int if_usb_init_module(void)
++static int __init if_usb_init_module(void)
+ {
+ 	int ret = 0;
+ 
+@@ -1134,7 +1134,7 @@ static int if_usb_init_module(void)
+ 	return ret;
+ }
+ 
+-static void if_usb_exit_module(void)
++static void __exit if_usb_exit_module(void)
+ {
+ 	struct usb_card_rec *cardp, *cardp_temp;
+ 	int i = 0;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 071778d..5871f55 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1638,7 +1638,7 @@ int libertas_reset_device(wlan_private *priv)
+ }
+ EXPORT_SYMBOL_GPL(libertas_reset_device);
+ 
+-static int libertas_init_module(void)
++static int __init libertas_init_module(void)
+ {
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 	libertas_debugfs_init();
+@@ -1646,7 +1646,7 @@ static int libertas_init_module(void)
+ 	return 0;
+ }
+ 
+-static void libertas_exit_module(void)
++static void __exit libertas_exit_module(void)
+ {
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+-- 
 1.5.3.4
 
-
-
--------------------------------------------------------
-
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
