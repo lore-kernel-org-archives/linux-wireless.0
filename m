@@ -1,51 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:2667 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751414AbXK3Jus (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757544AbXKPLya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 04:50:48 -0500
-Date: Fri, 30 Nov 2007 20:50:39 +1100
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	David Miller <davem@davemloft.net>, dsd@gentoo.org,
-	kune@deine-taler.de
-Subject: Re: ZD1211RW unaligned accesses...
-Message-ID: <20071130095039.GA17911@gondor.apana.org.au> (sfid-20071130_095056_788847_EAD273B9)
-References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com> <20071124150216.GA28153@gondor.apana.org.au> <20071129214533.GD32730@tuxdriver.com> <20071129234327.GA23769@gondor.apana.org.au> <474FBD20.10202@hotmail.com>
+	Fri, 16 Nov 2007 06:54:30 -0500
+Subject: [PATCH] mac80211: remove more forgotten code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 16 Nov 2007 02:17:07 +0100
+Message-Id: <1195175827.8147.89.camel@johannes.berg> (sfid-20071116_115438_337234_8CA3CB30)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <474FBD20.10202@hotmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 30, 2007 at 06:34:56PM +1100, Shaddy Baddah wrote:
-> 
-> OK... so I've applied patches left right and centre. As there have been 
-> a few, I'll in-line them all at the bottom of this email.
-> 
-> The result is that there are no more unaligned access messages at all. 
+Hopefully that's the rest. Seems I didn't do a very thorough job
+removing the management interface.
 
-Good stuff! I was sort of worried that you might end up getting unaligned
-traps in the IP stack but it's good to see that you didn't.  Of course
-it's still something that we need to fix up at some point for other
-configurations.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   58 ------------------------------------------------------
+ 1 file changed, 58 deletions(-)
 
-John, you can apply my patch now.
+--- everything.orig/net/mac80211/tx.c	2007-11-16 02:13:58.771947319 +0100
++++ everything/net/mac80211/tx.c	2007-11-16 02:14:05.211960123 +0100
+@@ -1527,64 +1527,6 @@ int ieee80211_subif_start_xmit(struct sk
+ 	return ret;
+ }
+ 
+-/*
+- * This is the transmit routine for the 802.11 type interfaces
+- * called by upper layers of the linux networking
+- * stack when it has a frame to transmit
+- */
+-int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_tx_packet_data *pkt_data;
+-	struct ieee80211_hdr *hdr;
+-	u16 fc;
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-
+-	if (skb->len < 10) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
+-
+-	if (skb_headroom(skb) < sdata->local->tx_headroom) {
+-		if (pskb_expand_head(skb, sdata->local->tx_headroom,
+-				     0, GFP_ATOMIC)) {
+-			dev_kfree_skb(skb);
+-			return 0;
+-		}
+-	}
+-
+-	hdr = (struct ieee80211_hdr *) skb->data;
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+-	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+-	pkt_data->ifindex = sdata->dev->ifindex;
+-
+-	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
+-	skb->dev = sdata->local->mdev;
+-
+-	/*
+-	 * We're using the protocol field of the the frame control header
+-	 * to request TX callback for hostapd. BIT(1) is checked.
+-	 */
+-	if ((fc & BIT(1)) == BIT(1)) {
+-		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
+-		fc &= ~BIT(1);
+-		hdr->frame_control = cpu_to_le16(fc);
+-	}
+-
+-	if (!(fc & IEEE80211_FCTL_PROTECTED))
+-		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+-
+-	dev->stats.tx_packets++;
+-	dev->stats.tx_bytes += skb->len;
+-
+-	dev_queue_xmit(skb);
+-
+-	return 0;
+-}
+-
+ /* helper functions for pending packets for when queues are stopped */
+ 
+ void ieee80211_clear_tx_pending(struct ieee80211_local *local)
 
-> However, I still can only scan one (occasionally two) AP, using iwlist 
-> eth2 scanning command before a bus error. Jean, I missed your emails 
-> regarding compiling the wireless-tools, I will try these and see if they 
-> help.
 
-That's kind of expected because we haven't completely fixed up the
-user-kernel wireless interface for the 32-in-64 case.  But rest assured
-we will be working on that.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
