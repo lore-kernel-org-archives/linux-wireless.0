@@ -1,82 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42581 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751780AbXKVNFz (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:52740 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbXKPTCE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 08:05:55 -0500
-Subject: Re: mac80211 regression: doesn't associate automatically
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200711220912.10452.hs4233@mail.mn-solutions.de> (sfid-20071122_081201_818890_5F650412)
-References: <200711220912.10452.hs4233@mail.mn-solutions.de>
-	 (sfid-20071122_081201_818890_5F650412)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1X0sTqpWvdYp2X43pjlC"
-Date: Thu, 22 Nov 2007 14:05:52 +0100
-Message-Id: <1195736752.6323.97.camel@johannes.berg> (sfid-20071122_130603_064761_F5A24ECD)
-Mime-Version: 1.0
+	Fri, 16 Nov 2007 14:02:04 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so687718ugc
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 11:02:02 -0800 (PST)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: add power management support
+Date: Fri, 16 Nov 2007 20:02:01 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	yi.zhu@intel.com
+References: <200711161929.36283.mboton.lkml@gmail.com> <200711161953.26801.mboton.lkml@gmail.com>
+In-Reply-To: <200711161953.26801.mboton.lkml@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200711162002.01972.mboton.lkml@gmail.com> (sfid-20071116_190212_726540_E9A85A6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Today is not a good day for me... I sent the previous patch with wordwr=
+ap enabled.
+This one is the correct.
 
---=-1X0sTqpWvdYp2X43pjlC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--
 
-First off, let me state that I don't think this is a regression.
+This patch adds power management support in mac80211.
 
-> $ iwconfig eth1 essid BLAHMUMPF
-> HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[...]
+This allows us to enable power management through the "iwconfig <device=
+> power <off/on>" command.
+The code is based on "mac80211-10.0.0" but it is a little bit modified.
 
-As you can see, it doesn't find anything that matches the current
-configuration.
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
 
-> $ iwconfig eth1 key s:11111
-> b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: ff:ff=
-:ff:ff:ff:ff
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5fcc4c1..c82b6fa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -452,6 +452,8 @@ struct ieee80211_conf {
+ 	u8 antenna_max;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
++
++	u8 power_management_enable;     /* flag to enable/disable power manag=
+ement */
+ };
+=20
+ /**
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
+ctl.c
+index 6caa3ec..f5eebec 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
+evice *dev,
+ 	return 0;
+ }
+=20
++static int ieee80211_ioctl_siwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	if (wrqu->power.disabled) {
++		conf->power_management_enable =3D 0;
++		if (ieee80211_hw_config(local))
++			return -EINVAL;
++		return 0;
++	}
++
++	switch (wrqu->power.flags & IW_POWER_MODE) {
++	case IW_POWER_ON:       /* If not specified */
++	case IW_POWER_MODE:     /* If set all mask */
++	case IW_POWER_ALL_R:    /* If explicitely state all */
++		break;
++	default:                /* Otherwise we don't support it */
++		return -EINVAL;
++	}
++
++	conf->power_management_enable =3D 1;
++
++	if (ieee80211_hw_config(local))
++		return -EINVAL;
++
++	return 0;
++}
++
++static int ieee80211_ioctl_giwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	wrqu->power.disabled =3D !conf->power_management_enable;
++
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwrts(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rts, char *extra)
+@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
+ 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+ 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
+-	(iw_handler) NULL,				/* SIOCSIWPOWER */
+-	(iw_handler) NULL,				/* SIOCGIWPOWER */
++	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
++	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
 
-You've now enabled a key, but not told it to associate using that key.
 
-> As you can see, I'm not associated. However, this sequence used
-> to work with non-mac80211 based WLAN drivers. However, I can actually
-> associate if I reverse the essid/key, e.g. first set the key, then
-> the ssid.
-
-Can't say that matters since wext is actually sufficiently undefined to
-allow both behaviours. :) I'm strongly against changing the behaviour in
-mac80211 because wext is sufficiently undefined that once we accept one
-of these things we'll have a HUGE mess of code because all sorts of wext
-ioctls affect possible association etc.
-
-> Note that the same happens if I let Debian manage the card. An excerpt
-> from my /etc/network/interfaces shows:
-
-That sucks, I guess debian's scripts need to be fixed.
-
-johannes
-
---=-1X0sTqpWvdYp2X43pjlC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0V+r6Vg1VMiehFYAQIJZRAAvYP7ymPpmmEkQl2bmPdCy/MgaJ83wbpx
-zrFNy3RfYfBaGik6fRnsZnG/Y0sqLoGlj0MVB16eGt35L+1bAmcWWxWc8/Rjuslm
-SdL2Hjm0Vm8tabdM3FzwSPxGLg4wX/Xi6swYxIwokAKyrNy8VMypHtREkOCQGfX6
-KPlHBYRoJXm+YxUBVqxPyrpPHbJacZXxQfavNvoIJEp/QGkfTurQkCZg/AjVKRbF
-rIoxUTexofnvfxuWE2ilhxpMBRhumg0tOa8LsInEvfcMJumCrgdM7/2z7fE93tib
-aJsM1fjU8rdT8xbA2g1sdKdLW3IDJ2WSq2NjIOxBJwyXVChZY+PBZCxtou2mcMnt
-PhS6nHWOCv8w1hkdCl+TE3w6/VjHibtyrdYdX2EwYI4pxb3u8m5i7+ladNalGChT
-Xi/Rq1XWFw3vFdJYAdg7mSLntah7bBrnTgy6zMKem2+5H8VPJbcOMNfaEW2R+BRu
-HqBgAXV+T4kaIZ8bxYz/ltymKzBg5axs7JcFBc0dGrjHs5jqc6OpWWJeKmbkbeVc
-G3EP3oFsXroC876AxYrM0otuhOxTnEryPRyoRdyfMqR2xUgTkbpqpr1pSRj29MxI
-sEGe/WHJwnIuntxuQqSXjBE6ksJq7V18do7e4KojSt7xbf9eErVmG7J1Qs8Gqyfj
-kAu3WOpIIto=
-=7nV1
------END PGP SIGNATURE-----
-
---=-1X0sTqpWvdYp2X43pjlC--
-
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
