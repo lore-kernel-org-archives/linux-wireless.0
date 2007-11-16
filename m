@@ -1,540 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42565 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756904AbXKIWz2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43793 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029AbXKPL4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 17:55:28 -0500
-Date: Fri, 09 Nov 2007 16:55:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/ 6] ssb: Convert to use of the new SPROM structure
-Message-ID: <4734e559.iN+PqOZ8cjP4xpyq%Larry.Finger@lwfinger.net> (sfid-20071109_225533_086360_4814BC90)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 16 Nov 2007 06:56:17 -0500
+Subject: Re: [PATCH] mac80211: fix allmulti/promisc behaviour
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1195178093.8147.91.camel@johannes.berg>
+References: <1195178093.8147.91.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-65wGSfTfNv1W3NJknJrc"
+Date: Fri, 16 Nov 2007 11:46:05 +0100
+Message-Id: <1195209965.8147.97.camel@johannes.berg> (sfid-20071116_115619_876662_BB751B58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch 2 of 6:
 
-In disagreement with the SPROM specs, revision 3 devices appear to have
-moved the MAC address.
+--=-65wGSfTfNv1W3NJknJrc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Change ssb to handle the revision 4 SPROM, which is a different size.
-This change in size is handled by adding a new variable to the ssb_sprom
-struct and using it whenever possible. For those routines that do not
-have access to this structure, a 'u16 size' argument is added.
 
-The new PCI_ID for the BCM4328 is also added.
+On Fri, 2007-11-16 at 02:54 +0100, Johannes Berg wrote:
+> When an interface with promisc/allmulti bit is taken down,
+> the mac80211 state can become confused. This fixes it by
+> making mac80211 keep track of all *active* interfaces that
+> have the promisc/allmulti bit set in the sdata, we sync
+> the interface bit into sdata at set_multicast_list() time
+> so this works.
+>=20
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> I'm 99.9% sure this is the correct fix but I need to test it.
 
-Testing of the Revision 4 SPROM, which is used on the BCM4328, was done
-by Michael Gerdau <mgerdau@tiscali.de>.
+Done. This patch makes it work correctly, please push for 2.6.24.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+johannes
 
-Index: wireless-2.6/drivers/ssb/pci.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/pci.c
-+++ wireless-2.6/drivers/ssb/pci.c
-@@ -212,29 +212,29 @@ static inline u8 ssb_crc8(u8 crc, u8 dat
- 	return t[crc ^ data];
- }
- 
--static u8 ssb_sprom_crc(const u16 *sprom)
-+static u8 ssb_sprom_crc(const u16 *sprom, u16 size)
- {
- 	int word;
- 	u8 crc = 0xFF;
- 
--	for (word = 0; word < SSB_SPROMSIZE_WORDS - 1; word++) {
-+	for (word = 0; word < size - 1; word++) {
- 		crc = ssb_crc8(crc, sprom[word] & 0x00FF);
- 		crc = ssb_crc8(crc, (sprom[word] & 0xFF00) >> 8);
- 	}
--	crc = ssb_crc8(crc, sprom[SPOFF(SSB_SPROM_REVISION)] & 0x00FF);
-+	crc = ssb_crc8(crc, sprom[size - 1] & 0x00FF);
- 	crc ^= 0xFF;
- 
- 	return crc;
- }
- 
--static int sprom_check_crc(const u16 *sprom)
-+static int sprom_check_crc(const u16 *sprom, u16 size)
- {
- 	u8 crc;
- 	u8 expected_crc;
- 	u16 tmp;
- 
--	crc = ssb_sprom_crc(sprom);
--	tmp = sprom[SPOFF(SSB_SPROM_REVISION)] & SSB_SPROM_REVISION_CRC;
-+	crc = ssb_sprom_crc(sprom, size);
-+	tmp = sprom[size - 1] & SSB_SPROM_REVISION_CRC;
- 	expected_crc = tmp >> SSB_SPROM_REVISION_CRC_SHIFT;
- 	if (crc != expected_crc)
- 		return -EPROTO;
-@@ -246,7 +246,7 @@ static void sprom_do_read(struct ssb_bus
- {
- 	int i;
- 
--	for (i = 0; i < SSB_SPROMSIZE_WORDS; i++)
-+	for (i = 0; i < bus->sprom_size; i++)
- 		sprom[i] = readw(bus->mmio + SSB_SPROM_BASE + (i * 2));
- }
- 
-@@ -255,6 +255,7 @@ static int sprom_do_write(struct ssb_bus
- 	struct pci_dev *pdev = bus->host_pci;
- 	int i, err;
- 	u32 spromctl;
-+	u16 size = bus->sprom_size;
- 
- 	ssb_printk(KERN_NOTICE PFX "Writing SPROM. Do NOT turn off the power! Please stand by...\n");
- 	err = pci_read_config_dword(pdev, SSB_SPROMCTL, &spromctl);
-@@ -266,12 +267,12 @@ static int sprom_do_write(struct ssb_bus
- 		goto err_ctlreg;
- 	ssb_printk(KERN_NOTICE PFX "[ 0%%");
- 	msleep(500);
--	for (i = 0; i < SSB_SPROMSIZE_WORDS; i++) {
--		if (i == SSB_SPROMSIZE_WORDS / 4)
-+	for (i = 0; i < size; i++) {
-+		if (i == size / 4)
- 			ssb_printk("25%%");
--		else if (i == SSB_SPROMSIZE_WORDS / 2)
-+		else if (i == size / 2)
- 			ssb_printk("50%%");
--		else if (i == (SSB_SPROMSIZE_WORDS / 4) * 3)
-+		else if (i == (size * 3) / 4)
- 			ssb_printk("75%%");
- 		else if (i % 2)
- 			ssb_printk(".");
-@@ -350,95 +351,120 @@ static void sprom_extract_r1(struct ssb_
- 	SPEX(antenna_gain_a, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_A, 0);
- 	SPEX(antenna_gain_bg, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_BG,
- 	     SSB_SPROM1_AGAIN_BG_SHIFT);
--	for (i = 0; i < 4; i++) {
--		v = in[SPOFF(SSB_SPROM1_OEM) + i];
--		*(((__le16 *)out->oem) + i) = cpu_to_le16(v);
--	}
- }
- 
--static void sprom_extract_r2(struct ssb_sprom_r2 *out, const u16 *in)
-+static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- {
- 	int i;
- 	u16 v;
-+	u16 loc[3];
- 
--	SPEX(boardflags_hi, SSB_SPROM2_BFLHI,  0xFFFF, 0);
--	SPEX(maxpwr_a_hi, SSB_SPROM2_MAXP_A, SSB_SPROM2_MAXP_A_HI, 0);
--	SPEX(maxpwr_a_lo, SSB_SPROM2_MAXP_A, SSB_SPROM2_MAXP_A_LO,
--	     SSB_SPROM2_MAXP_A_LO_SHIFT);
--	SPEX(pa1lob0, SSB_SPROM2_PA1LOB0, 0xFFFF, 0);
--	SPEX(pa1lob1, SSB_SPROM2_PA1LOB1, 0xFFFF, 0);
--	SPEX(pa1lob2, SSB_SPROM2_PA1LOB2, 0xFFFF, 0);
--	SPEX(pa1hib0, SSB_SPROM2_PA1HIB0, 0xFFFF, 0);
--	SPEX(pa1hib1, SSB_SPROM2_PA1HIB1, 0xFFFF, 0);
--	SPEX(pa1hib2, SSB_SPROM2_PA1HIB2, 0xFFFF, 0);
--	SPEX(ofdm_pwr_off, SSB_SPROM2_OPO, SSB_SPROM2_OPO_VALUE, 0);
--	for (i = 0; i < 4; i++) {
--		v = in[SPOFF(SSB_SPROM2_CCODE) + i];
--		*(((__le16 *)out->country_str) + i) = cpu_to_le16(v);
-+	if (out->revision == 3) {			/* rev 3 moved MAC */
-+		loc[0] = SSB_SPROM3_IL0MAC;
-+		loc[1] = SSB_SPROM3_ET0MAC;
-+		loc[2] = SSB_SPROM3_ET1MAC;
-+	} else {
-+		loc[0] = SSB_SPROM1_IL0MAC;
-+		loc[1] = SSB_SPROM1_ET0MAC;
-+		loc[2] = SSB_SPROM1_ET1MAC;
-+	}
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(loc[0]) + i];
-+		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
-+	}
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(loc[1]) + i];
-+		*(((__be16 *)out->et0mac) + i) = cpu_to_be16(v);
-+	}
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(loc[2]) + i];
-+		*(((__be16 *)out->et1mac) + i) = cpu_to_be16(v);
- 	}
-+	SPEX(et0phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0A, 0);
-+	SPEX(et1phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1A,
-+	     SSB_SPROM1_ETHPHY_ET1A_SHIFT);
-+	SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
-+	     SSB_SPROM1_BINF_CCODE_SHIFT);
-+	SPEX(pa0b0, SSB_SPROM1_PA0B0, 0xFFFF, 0);
-+	SPEX(pa0b1, SSB_SPROM1_PA0B1, 0xFFFF, 0);
-+	SPEX(pa0b2, SSB_SPROM1_PA0B2, 0xFFFF, 0);
-+	SPEX(pa1b0, SSB_SPROM1_PA1B0, 0xFFFF, 0);
-+	SPEX(pa1b1, SSB_SPROM1_PA1B1, 0xFFFF, 0);
-+	SPEX(pa1b2, SSB_SPROM1_PA1B2, 0xFFFF, 0);
-+	SPEX(gpio0, SSB_SPROM1_GPIOA, SSB_SPROM1_GPIOA_P0, 0);
-+	SPEX(gpio1, SSB_SPROM1_GPIOA, SSB_SPROM1_GPIOA_P1,
-+	     SSB_SPROM1_GPIOA_P1_SHIFT);
-+	SPEX(gpio2, SSB_SPROM1_GPIOB, SSB_SPROM1_GPIOB_P2, 0);
-+	SPEX(gpio3, SSB_SPROM1_GPIOB, SSB_SPROM1_GPIOB_P3,
-+	     SSB_SPROM1_GPIOB_P3_SHIFT);
-+	SPEX(maxpwr_a, SSB_SPROM1_MAXPWR, SSB_SPROM1_MAXPWR_A,
-+	     SSB_SPROM1_MAXPWR_A_SHIFT);
-+	SPEX(maxpwr_bg, SSB_SPROM1_MAXPWR, SSB_SPROM1_MAXPWR_BG, 0);
-+	SPEX(itssi_a, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_A,
-+	     SSB_SPROM1_ITSSI_A_SHIFT);
-+	SPEX(itssi_bg, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_BG, 0);
-+	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
-+	SPEX(antenna_gain_a, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_A, 0);
-+	SPEX(antenna_gain_bg, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_BG,
-+	     SSB_SPROM1_AGAIN_BG_SHIFT);
- }
- 
--static void sprom_extract_r3(struct ssb_sprom_r3 *out, const u16 *in)
--{
--	out->ofdmapo  = (in[SPOFF(SSB_SPROM3_OFDMAPO) + 0] & 0xFF00) >> 8;
--	out->ofdmapo |= (in[SPOFF(SSB_SPROM3_OFDMAPO) + 0] & 0x00FF) << 8;
--	out->ofdmapo <<= 16;
--	out->ofdmapo |= (in[SPOFF(SSB_SPROM3_OFDMAPO) + 1] & 0xFF00) >> 8;
--	out->ofdmapo |= (in[SPOFF(SSB_SPROM3_OFDMAPO) + 1] & 0x00FF) << 8;
--
--	out->ofdmalpo  = (in[SPOFF(SSB_SPROM3_OFDMALPO) + 0] & 0xFF00) >> 8;
--	out->ofdmalpo |= (in[SPOFF(SSB_SPROM3_OFDMALPO) + 0] & 0x00FF) << 8;
--	out->ofdmalpo <<= 16;
--	out->ofdmalpo |= (in[SPOFF(SSB_SPROM3_OFDMALPO) + 1] & 0xFF00) >> 8;
--	out->ofdmalpo |= (in[SPOFF(SSB_SPROM3_OFDMALPO) + 1] & 0x00FF) << 8;
--
--	out->ofdmahpo  = (in[SPOFF(SSB_SPROM3_OFDMAHPO) + 0] & 0xFF00) >> 8;
--	out->ofdmahpo |= (in[SPOFF(SSB_SPROM3_OFDMAHPO) + 0] & 0x00FF) << 8;
--	out->ofdmahpo <<= 16;
--	out->ofdmahpo |= (in[SPOFF(SSB_SPROM3_OFDMAHPO) + 1] & 0xFF00) >> 8;
--	out->ofdmahpo |= (in[SPOFF(SSB_SPROM3_OFDMAHPO) + 1] & 0x00FF) << 8;
--
--	SPEX(gpioldc_on_cnt, SSB_SPROM3_GPIOLDC, SSB_SPROM3_GPIOLDC_ON,
--	     SSB_SPROM3_GPIOLDC_ON_SHIFT);
--	SPEX(gpioldc_off_cnt, SSB_SPROM3_GPIOLDC, SSB_SPROM3_GPIOLDC_OFF,
--	     SSB_SPROM3_GPIOLDC_OFF_SHIFT);
--	SPEX(cckpo_1M, SSB_SPROM3_CCKPO, SSB_SPROM3_CCKPO_1M, 0);
--	SPEX(cckpo_2M, SSB_SPROM3_CCKPO, SSB_SPROM3_CCKPO_2M,
--	     SSB_SPROM3_CCKPO_2M_SHIFT);
--	SPEX(cckpo_55M, SSB_SPROM3_CCKPO, SSB_SPROM3_CCKPO_55M,
--	     SSB_SPROM3_CCKPO_55M_SHIFT);
--	SPEX(cckpo_11M, SSB_SPROM3_CCKPO, SSB_SPROM3_CCKPO_11M,
--	     SSB_SPROM3_CCKPO_11M_SHIFT);
--
--	out->ofdmgpo  = (in[SPOFF(SSB_SPROM3_OFDMGPO) + 0] & 0xFF00) >> 8;
--	out->ofdmgpo |= (in[SPOFF(SSB_SPROM3_OFDMGPO) + 0] & 0x00FF) << 8;
--	out->ofdmgpo <<= 16;
--	out->ofdmgpo |= (in[SPOFF(SSB_SPROM3_OFDMGPO) + 1] & 0xFF00) >> 8;
--	out->ofdmgpo |= (in[SPOFF(SSB_SPROM3_OFDMGPO) + 1] & 0x00FF) << 8;
-+static void sprom_extract_r4(struct ssb_sprom *out, const u16 *in)
-+{
-+	int i;
-+	u16 v;
-+
-+	/* extract the r1 variables */
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(SSB_SPROM4_IL0MAC) + i];
-+		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
-+	}
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(SSB_SPROM4_ET0MAC) + i];
-+		*(((__be16 *)out->et0mac) + i) = cpu_to_be16(v);
-+	}
-+	for (i = 0; i < 3; i++) {
-+		v = in[SPOFF(SSB_SPROM4_ET1MAC) + i];
-+		*(((__be16 *)out->et1mac) + i) = cpu_to_be16(v);
-+	}
-+	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
-+	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
-+	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
-+	SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
-+	SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
-+	SPEX(antenna_gain_a, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_0, 0);
-+	SPEX(antenna_gain_bg, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_1,
-+	     SSB_SPROM4_AGAIN_1_SHIFT);
-+	/* TODO - get remaining rev 4 stuff needed */
- }
- 
--static int sprom_extract(struct ssb_bus *bus,
--			 struct ssb_sprom *out, const u16 *in)
-+static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
-+			 const u16 *in, u16 size)
- {
- 	memset(out, 0, sizeof(*out));
- 
--	SPEX(revision, SSB_SPROM_REVISION, SSB_SPROM_REVISION_REV, 0);
--
-+	out->revision = in[size - 1] & 0x00FF;
- 	if ((bus->chip_id & 0xFF00) == 0x4400) {
- 		/* Workaround: The BCM44XX chip has a stupid revision
- 		 * number stored in the SPROM.
- 		 * Always extract r1. */
-+		out->revision = 1;
-+		sprom_extract_r123(out, in);
- 		sprom_extract_r1(&out->r1, in);
-+	} else if (bus->chip_id == 0x4321) {
-+		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
-+		out->revision = 4;
-+		sprom_extract_r4(out, in);
- 	} else {
- 		if (out->revision == 0)
- 			goto unsupported;
--		if (out->revision >= 1 && out->revision <= 3)
-+		if (out->revision >= 1 && out->revision <= 3) {
-+			sprom_extract_r123(out, in, out->revision);
- 			sprom_extract_r1(&out->r1, in);
--		if (out->revision >= 2 && out->revision <= 3)
--			sprom_extract_r2(&out->r2, in);
--		if (out->revision == 3)
--			sprom_extract_r3(&out->r3, in);
--		if (out->revision >= 4)
-+		}
-+		if (out->revision == 4)
-+			sprom_extract_r4(out, in);
-+		if (out->revision >= 5)
- 			goto unsupported;
- 	}
- 
-@@ -456,16 +482,31 @@ static int ssb_pci_sprom_get(struct ssb_
- 	int err = -ENOMEM;
- 	u16 *buf;
- 
--	buf = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
-+	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
- 		goto out;
-+	bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
- 	sprom_do_read(bus, buf);
--	err = sprom_check_crc(buf);
-+	err = sprom_check_crc(buf, bus->sprom_size);
- 	if (err) {
--		ssb_printk(KERN_WARNING PFX
--			   "WARNING: Invalid SPROM CRC (corrupt SPROM)\n");
-+		/* check for rev 4 sprom - has special signature */
-+		if (buf [32] == 0x5372) {
-+			ssb_printk(KERN_WARNING PFX "Extracting a rev 4"
-+				   " SPROM\n");
-+			kfree(buf);
-+			buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
-+				      GFP_KERNEL);
-+			if (!buf)
-+				goto out;
-+			bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
-+			sprom_do_read(bus, buf);
-+			err = sprom_check_crc(buf, bus->sprom_size);
-+		}
-+		if (err)
-+			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
-+				   " SPROM CRC (corrupt SPROM)\n");
- 	}
--	err = sprom_extract(bus, sprom, buf);
-+	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
- 
- 	kfree(buf);
- out:
-@@ -579,29 +620,28 @@ const struct ssb_bus_ops ssb_pci_ops = {
- 	.write32	= ssb_pci_write32,
- };
- 
--static int sprom2hex(const u16 *sprom, char *buf, size_t buf_len)
-+static int sprom2hex(const u16 *sprom, char *buf, size_t buf_len, u16 size)
- {
- 	int i, pos = 0;
- 
--	for (i = 0; i < SSB_SPROMSIZE_WORDS; i++) {
-+	for (i = 0; i < size; i++)
- 		pos += snprintf(buf + pos, buf_len - pos - 1,
- 				"%04X", swab16(sprom[i]) & 0xFFFF);
--	}
- 	pos += snprintf(buf + pos, buf_len - pos - 1, "\n");
- 
- 	return pos + 1;
- }
- 
--static int hex2sprom(u16 *sprom, const char *dump, size_t len)
-+static int hex2sprom(u16 *sprom, const char *dump, size_t len, u16 size)
- {
- 	char tmp[5] = { 0 };
- 	int cnt = 0;
- 	unsigned long parsed;
- 
--	if (len < SSB_SPROMSIZE_BYTES * 2)
-+	if (len < size * 2)
- 		return -EINVAL;
- 
--	while (cnt < SSB_SPROMSIZE_WORDS) {
-+	while (cnt < size) {
- 		memcpy(tmp, dump, 4);
- 		dump += 4;
- 		parsed = simple_strtoul(tmp, NULL, 16);
-@@ -625,7 +665,7 @@ static ssize_t ssb_pci_attr_sprom_show(s
- 	if (!bus)
- 		goto out;
- 	err = -ENOMEM;
--	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
-+	sprom = kcalloc(bus->sprom_size, sizeof(u16), GFP_KERNEL);
- 	if (!sprom)
- 		goto out;
- 
-@@ -638,7 +678,7 @@ static ssize_t ssb_pci_attr_sprom_show(s
- 	sprom_do_read(bus, sprom);
- 	mutex_unlock(&bus->pci_sprom_mutex);
- 
--	count = sprom2hex(sprom, buf, PAGE_SIZE);
-+	count = sprom2hex(sprom, buf, PAGE_SIZE, bus->sprom_size);
- 	err = 0;
- 
- out_kfree:
-@@ -660,15 +700,15 @@ static ssize_t ssb_pci_attr_sprom_store(
- 	if (!bus)
- 		goto out;
- 	err = -ENOMEM;
--	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
-+	sprom = kcalloc(bus->sprom_size, sizeof(u16), GFP_KERNEL);
- 	if (!sprom)
- 		goto out;
--	err = hex2sprom(sprom, buf, count);
-+	err = hex2sprom(sprom, buf, count, bus->sprom_size);
- 	if (err) {
- 		err = -EINVAL;
- 		goto out_kfree;
- 	}
--	err = sprom_check_crc(sprom);
-+	err = sprom_check_crc(sprom, bus->sprom_size);
- 	if (err) {
- 		err = -EINVAL;
- 		goto out_kfree;
-Index: wireless-2.6/drivers/ssb/main.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/main.c
-+++ wireless-2.6/drivers/ssb/main.c
-@@ -872,14 +872,22 @@ EXPORT_SYMBOL(ssb_clockspeed);
- 
- static u32 ssb_tmslow_reject_bitmask(struct ssb_device *dev)
- {
-+	u32 rev = ssb_read32(dev, SSB_IDLOW) & SSB_IDLOW_SSBREV;
-+
- 	/* The REJECT bit changed position in TMSLOW between
- 	 * Backplane revisions. */
--	switch (ssb_read32(dev, SSB_IDLOW) & SSB_IDLOW_SSBREV) {
-+	switch (rev) {
- 	case SSB_IDLOW_SSBREV_22:
- 		return SSB_TMSLOW_REJECT_22;
- 	case SSB_IDLOW_SSBREV_23:
- 		return SSB_TMSLOW_REJECT_23;
-+	case SSB_IDLOW_SSBREV_24:     /* TODO - find the proper REJECT bits */
-+	case SSB_IDLOW_SSBREV_25:     /* same here */
-+	case SSB_IDLOW_SSBREV_26:     /* same here */
-+	case SSB_IDLOW_SSBREV_27:     /* same here */
-+		return SSB_TMSLOW_REJECT_23;	/* this is a guess */
- 	default:
-+		printk(KERN_INFO "ssb: Backplane Revision 0x%.8X\n", rev);
- 		WARN_ON(1);
- 	}
- 	return (SSB_TMSLOW_REJECT_22 | SSB_TMSLOW_REJECT_23);
-Index: wireless-2.6/include/linux/ssb/ssb.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb.h
-+++ wireless-2.6/include/linux/ssb/ssb.h
-@@ -308,6 +308,7 @@ struct ssb_bus {
- 	/* ID information about the Chip. */
- 	u16 chip_id;
- 	u16 chip_rev;
-+	u16 sprom_size;		/* number of words in sprom */
- 	u8 chip_package;
- 
- 	/* List of devices (cores) on the backplane. */
-Index: wireless-2.6/include/linux/ssb/ssb_regs.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb_regs.h
-+++ wireless-2.6/include/linux/ssb/ssb_regs.h
-@@ -147,6 +147,10 @@
- #define  SSB_IDLOW_SSBREV	0xF0000000 /* Sonics Backplane Revision code */
- #define  SSB_IDLOW_SSBREV_22	0x00000000 /* <= 2.2 */
- #define  SSB_IDLOW_SSBREV_23	0x10000000 /* 2.3 */
-+#define  SSB_IDLOW_SSBREV_24	0x40000000 /* ?? Found in BCM4328 */
-+#define  SSB_IDLOW_SSBREV_25	0x50000000 /* ?? Not Found yet */
-+#define  SSB_IDLOW_SSBREV_26	0x60000000 /* ?? Found in some BCM4311/2 */
-+#define  SSB_IDLOW_SSBREV_27	0x70000000 /* ?? Found in some BCM4311/2 */
- #define SSB_IDHIGH		0x0FFC     /* SB Identification High */
- #define  SSB_IDHIGH_RCLO	0x0000000F /* Revision Code (low part) */
- #define  SSB_IDHIGH_CC		0x00008FF0 /* Core Code */
-@@ -162,6 +166,10 @@
-  */
- #define SSB_SPROMSIZE_WORDS		64
- #define SSB_SPROMSIZE_BYTES		(SSB_SPROMSIZE_WORDS * sizeof(u16))
-+#define SSB_SPROMSIZE_WORDS_R123	64
-+#define SSB_SPROMSIZE_WORDS_R4		220
-+#define SSB_SPROMSIZE_BYTES_R123	(SSB_SPROMSIZE_WORDS_R123 * sizeof(u16))
-+#define SSB_SPROMSIZE_BYTES_R4		(SSB_SPROMSIZE_WORDS_R4 * sizeof(u16))
- #define SSB_SPROM_BASE			0x1000
- #define SSB_SPROM_REVISION		0x107E
- #define  SSB_SPROM_REVISION_REV		0x00FF	/* SPROM Revision number */
-@@ -232,7 +240,10 @@
- #define  SSB_SPROM2_OPO_VALUE		0x00FF
- #define  SSB_SPROM2_OPO_UNUSED		0xFF00
- #define SSB_SPROM2_CCODE		0x107C	/* Two char Country Code */
--/* SPROM Revision 3 (inherits from rev 2) */
-+/* SPROM Revision 3 (inherits most data from rev 2) */
-+#define SSB_SPROM3_IL0MAC		0x104A	/* 6 bytes MAC address for 802.11b/g */
-+#define SSB_SPROM3_ET0MAC		0x1050	/* 6 bytes MAC address for Ethernet ?? */
-+#define SSB_SPROM3_ET1MAC		0x1050	/* 6 bytes MAC address for 802.11a ?? */
- #define SSB_SPROM3_OFDMAPO		0x102C	/* A-PHY OFDM Mid Power Offset (4 bytes, BigEndian) */
- #define SSB_SPROM3_OFDMALPO		0x1030	/* A-PHY OFDM Low Power Offset (4 bytes, BigEndian) */
- #define SSB_SPROM3_OFDMAHPO		0x1034	/* A-PHY OFDM High Power Offset (4 bytes, BigEndian) */
-@@ -250,8 +261,10 @@
- #define  SSB_SPROM3_CCKPO_11M		0xF000	/* 11M Rate PO */
- #define  SSB_SPROM3_CCKPO_11M_SHIFT	12
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
--/* SPROM Revision 4 */
-+/* SPROM Revision 4 		entries with ?? in comment are unknown */
- #define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for b/g */
-+#define SSB_SPROM4_ET0MAC		0x1018	/* 6 bytes MAC address for Ethernet ?? */
-+#define SSB_SPROM4_ET1MAC		0x1018	/* 6 bytes MAC address for 802.11a ?? */
- #define SSB_SPROM4_ETHPHY		0x105A	/* Ethernet PHY settings */
- #define  SSB_SPROM4_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
- #define  SSB_SPROM4_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
-@@ -263,19 +276,22 @@
- #define SSB_SPROM4_ANT_BG		0x105C  /* B/G Antennas */
- #define SSB_SPROM4_BFLLO		0x1044	/* Boardflags (low 16 bits) */
- #define SSB_SPROM4_AGAIN		0x105E	/* Antenna Gain (in dBm Q5.2) */
-+#define  SSB_SPROM4_AGAIN_0		0x00FF	/* Antenna 0 */
-+#define  SSB_SPROM4_AGAIN_1		0xFF00	/* Antenna 1 */
-+#define  SSB_SPROM4_AGAIN_1_SHIFT	8
- #define SSB_SPROM4_BFLHI		0x1046  /* Board Flags Hi */
--#define SSB_SPROM4_MAXP_A		0x1000  /* Max Power A */
-+#define SSB_SPROM4_MAXP_A		0x1000  /* Max Power A ?? */
- #define SSB_SPROM4_MAXP_A_HI		0x00FF  /* Mask for Hi */
- #define SSB_SPROM4_MAXP_A_LO		0xFF00  /* Mask for Lo */
- #define SSB_SPROM4_MAXP_A_LO_SHIFT	16	/* Shift for Lo */
--#define SSB_SPROM4_PA1LOB0		0x1000
--#define SSB_SPROM4_PA1LOB1		0x1000
--#define SSB_SPROM4_PA1LOB2		0x1000
--#define SSB_SPROM4_PA1HIB0		0x1000
--#define SSB_SPROM4_PA1HIB1		0x1000
--#define SSB_SPROM4_PA1HIB2		0x1000
--#define SSB_SPROM4_OPO			0x1000
--#define SSB_SPROM4_OPO_VALUE		0x0000
-+#define SSB_SPROM4_PA1LOB0		0x1000  /* ?? */
-+#define SSB_SPROM4_PA1LOB1		0x1000  /* ?? */
-+#define SSB_SPROM4_PA1LOB2		0x1000  /* ?? */
-+#define SSB_SPROM4_PA1HIB0		0x1000	/* ?? */
-+#define SSB_SPROM4_PA1HIB1		0x1000	/* ?? */
-+#define SSB_SPROM4_PA1HIB2		0x1000	/* ?? */
-+#define SSB_SPROM4_OPO			0x1000	/* ?? */
-+#define SSB_SPROM4_OPO_VALUE		0x0000	/* ?? */
- #define SSB_SPROM4_GPIOLDC		0x105A	/* LED Powersave Duty Cycle */
- #define  SSB_SPROM4_GPIOLDC_OFF		0x0000FF00	/* Off Count */
- #define  SSB_SPROM4_GPIOLDC_OFF_SHIFT	8
-Index: wireless-2.6/drivers/ssb/b43_pci_bridge.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/b43_pci_bridge.c
-+++ wireless-2.6/drivers/ssb/b43_pci_bridge.c
-@@ -27,6 +27,7 @@ static const struct pci_device_id b43_pc
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4321) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4324) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4325) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4328) },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, b43_pci_bridge_tbl);
+--=-65wGSfTfNv1W3NJknJrc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUARz107KVg1VMiehFYAQKjDRAAkjhK/1cGyF4DmavGZdY89bM8Z5pgxUwi
+iFk0roCWXASh0e1maQDUOYHSGk4oqODeNK2ixJ4EoFZvsEoWb1sw3SPAt8ejPxi0
+SwPosctvRTkmdPssQCtATJqDehO45yzS1ahi15IZzNWbtgQrTMSc1VCo237JW+Ch
+1cqnvTo3US2htTXdW9b/e8EAFxFveoGAOn8WmNHFp6pv7pTvUUwXVATPiOlsVZDm
+6yA3HktgKZW/u+b4TaR2yjT64L035nPd8HyzZlfkl3nc2DsxtaC74f7ypc4Fd2Ci
+rU8CP3Vr6gTrjTmwtF88prI623ZdXGsIyY0flY8KoYw14KuuUVWLJqSb3Dmq6hVY
+5Q5NbouX40tEqjCkzDgn/UZrojMPy9nGB+xoaEGuJRDtGJGYVLstSGyKlgXTNnL/
+mNFSULhnQ7FLyVcof6DPZzXacKRynkPK3P1lY3vCKxtyfj4YW/UqXtIrLhNqB9Vu
+uDePQYA2zhgkKQ3grQxZsReinf0/P6B5+kSsrhx4xhV7OUWmiFRcskr59r7JH5Yt
+JM2PCaYvH/0ggw6caQCSxnxSWxyOfVWFXsVp9lqpHKoBX40ZRQ+cUIkPV89gAX61
+/iFPiA9F52+maUyzvzcXnvUw4Pqb6bM9gbt+TI2aKQcS2ymQTapAPutnUSjtjKT3
+7QboAHs6Rr8=
+=C4m5
+-----END PGP SIGNATURE-----
+
+--=-65wGSfTfNv1W3NJknJrc--
+
