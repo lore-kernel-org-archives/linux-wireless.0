@@ -1,304 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56161 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756661AbXK2DLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 22:11:12 -0500
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33958
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751675AbXKPDB5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2007 22:01:57 -0500
+Date: Thu, 15 Nov 2007 19:01:56 -0800 (PST)
+Message-Id: <20071115.190156.19874943.davem@davemloft.net> (sfid-20071116_030203_094337_0B1BD573)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 29/36] iwlwifi: add comments to RXON command and txpower formats
-Date: Thu, 29 Nov 2007 11:10:09 +0800
-Message-Id: <1196305816-23023-30-git-send-email-yi.zhu@intel.com> (sfid-20071129_033538_443459_2F774A70)
-In-Reply-To: <1196305816-23023-29-git-send-email-yi.zhu@intel.com>
-References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-17-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-18-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-19-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-21-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-22-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-23-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-24-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-25-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-26-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-27-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-28-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-29-git-send-email-yi.zhu@intel.com>
+Cc: jeff@garzik.org, shemminger@linux-foundation.org,
+	romieu@fr.zoreil.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'more-fixes-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071116014917.GG12902@tuxdriver.com>
+References: <20071115025150.GA738@tuxdriver.com>
+	<20071114.194053.165159394.davem@davemloft.net>
+	<20071116014917.GG12902@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 15 Nov 2007 20:49:17 -0500
 
-Add comments to RXON command and txpower formats
+> Dave,
+> 
+> Here is one more fix for 2.6.24.  This is additive to the pull request
+> from yesterday (2007-11-15), so if you haven't already pulled then
+> you can just pull this one to get all the fix patches.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h |   62 ++++++++++---
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |  104 ++++++++++++++++------
- 2 files changed, 124 insertions(+), 42 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-index 3d3c7e3..4a8fc68 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-@@ -124,7 +124,7 @@ enum {
- 	/* Bluetooth device coexistance config command */
- 	REPLY_BT_CONFIG = 0x9b,
- 
--	/* 4965 Statistics */
-+	/* Statistics */
- 	REPLY_STATISTICS_CMD = 0x9c,
- 	STATISTICS_NOTIFICATION = 0x9d,
- 
-@@ -140,7 +140,8 @@ enum {
- 
- /******************************************************************************
-  * (0)
-- * Header
-+ * Commonly used structures and definitions:
-+ * Command header, txpower
-  *
-  *****************************************************************************/
- 
-@@ -183,6 +184,36 @@ struct iwl3945_cmd_header {
- 	u8 data[0];
- } __attribute__ ((packed));
- 
-+/**
-+ * struct iwl3945_tx_power
-+ *
-+ * Used in REPLY_TX_PWR_TABLE_CMD, REPLY_SCAN_CMD, REPLY_CHANNEL_SWITCH
-+ *
-+ * Each entry contains two values:
-+ * 1)  DSP gain (or sometimes called DSP attenuation).  This is a fine-grained
-+ *     linear value that multiplies the output of the digital signal processor,
-+ *     before being sent to the analog radio.
-+ * 2)  Radio gain.  This sets the analog gain of the radio Tx path.
-+ *     It is a coarser setting, and behaves in a logarithmic (dB) fashion.
-+ *
-+ * Driver obtains values from struct iwl3945_tx_power power_gain_table[][].
-+ */
-+struct iwl3945_tx_power {
-+	u8 tx_gain;		/* gain for analog radio */
-+	u8 dsp_atten;		/* gain for DSP */
-+} __attribute__ ((packed));
-+
-+/**
-+ * struct iwl3945_power_per_rate
-+ *
-+ * Used in REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
-+ */
-+struct iwl3945_power_per_rate {
-+	u8 rate;		/* plcp */
-+	struct iwl3945_tx_power tpc;
-+	u8 reserved;
-+} __attribute__ ((packed));
-+
- /******************************************************************************
-  * (0a)
-  * Alive and Error Commands & Responses:
-@@ -328,8 +359,22 @@ enum {
- /* transfer to host non bssid beacons in associated state */
- #define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
- 
--/*
-+/**
-  * REPLY_RXON = 0x10 (command, has simple generic response)
-+ *
-+ * RXON tunes the radio tuner to a service channel, and sets up a number
-+ * of parameters that are used primarily for Rx, but also for Tx operations.
-+ *
-+ * NOTE:  When tuning to a new channel, driver must set the
-+ *        RXON_FILTER_ASSOC_MSK to 0.  This will clear station-dependent
-+ *        info within the device, including the station tables, tx retry
-+ *        rate tables, and txpower tables.  Driver must build a new station
-+ *        table and txpower table before transmitting anything on the RXON
-+ *        channel.
-+ *
-+ * NOTE:  All RXONs wipe clean the internal txpower table.  Driver must
-+ *        issue a new REPLY_TX_PWR_TABLE_CMD after each REPLY_RXON (0x10),
-+ *        regardless of whether RXON_FILTER_ASSOC_MSK is set.
-  */
- struct iwl3945_rxon_cmd {
- 	u8 node_addr[6];
-@@ -373,17 +418,6 @@ struct iwl3945_rxon_time_cmd {
- 	__le16 reserved;
- } __attribute__ ((packed));
- 
--struct iwl3945_tx_power {
--	u8 tx_gain;		/* gain for analog radio */
--	u8 dsp_atten;		/* gain for DSP */
--} __attribute__ ((packed));
--
--struct iwl3945_power_per_rate {
--	u8 rate;		/* plcp */
--	struct iwl3945_tx_power tpc;
--	u8 reserved;
--} __attribute__ ((packed));
--
- /*
-  * REPLY_CHANNEL_SWITCH = 0x72 (command, has simple generic response)
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index bde3aa0..0813e3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -123,7 +123,7 @@ enum {
- 	/* Bluetooth device coexistance config command */
- 	REPLY_BT_CONFIG = 0x9b,
- 
--	/* 4965 Statistics */
-+	/* Statistics */
- 	REPLY_STATISTICS_CMD = 0x9c,
- 	STATISTICS_NOTIFICATION = 0x9d,
- 
-@@ -147,7 +147,7 @@ enum {
- /******************************************************************************
-  * (0)
-  * Commonly used structures and definitions:
-- * Command header, rate_n_flags
-+ * Command header, rate_n_flags, txpower
-  *
-  *****************************************************************************/
- 
-@@ -273,6 +273,65 @@ struct iwl4965_cmd_header {
- #define RATE_MCS_ANT_AB_MSK	0xc000
- 
- 
-+/**
-+ * struct iwl4965_tx_power - txpower format used in REPLY_SCAN_CMD
-+ *
-+ * Scan uses only one transmitter, so only one analog/dsp gain pair is needed.
-+ */
-+struct iwl4965_tx_power {
-+	u8 tx_gain;		/* gain for analog radio */
-+	u8 dsp_atten;		/* gain for DSP */
-+} __attribute__ ((packed));
-+
-+#define POWER_TABLE_NUM_ENTRIES			33
-+#define POWER_TABLE_NUM_HT_OFDM_ENTRIES		32
-+#define POWER_TABLE_CCK_ENTRY			32
-+
-+/**
-+ * union iwl4965_tx_power_dual_stream
-+ *
-+ * Host format used for REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
-+ * Use __le32 version (struct tx_power_dual_stream) when building command.
-+ *
-+ * Driver provides radio gain and DSP attenuation settings to device in pairs,
-+ * one value for each transmitter chain.  The first value is for transmitter A,
-+ * second for transmitter B.
-+ *
-+ * For SISO bit rates, both values in a pair should be identical.
-+ * For MIMO rates, one value may be different from the other,
-+ * in order to balance the Tx output between the two transmitters.
-+ *
-+ * See more details in doc for TXPOWER in iwl-4965-hw.h.
-+ */
-+union iwl4965_tx_power_dual_stream {
-+	struct {
-+		u8 radio_tx_gain[2];
-+		u8 dsp_predis_atten[2];
-+	} s;
-+	u32 dw;
-+};
-+
-+/**
-+ * struct tx_power_dual_stream
-+ *
-+ * Table entries in REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
-+ *
-+ * Same format as iwl_tx_power_dual_stream, but __le32
-+ */
-+struct tx_power_dual_stream {
-+	__le32 dw;
-+} __attribute__ ((packed));
-+
-+/**
-+ * struct iwl4965_tx_power_db
-+ *
-+ * Entire table within REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
-+ */
-+struct iwl4965_tx_power_db {
-+	struct tx_power_dual_stream power_tbl[POWER_TABLE_NUM_ENTRIES];
-+} __attribute__ ((packed));
-+
-+
- /******************************************************************************
-  * (0a)
-  * Alive and Error Commands & Responses:
-@@ -501,8 +560,22 @@ enum {
- /* transfer to host non bssid beacons in associated state */
- #define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
- 
--/*
-+/**
-  * REPLY_RXON = 0x10 (command, has simple generic response)
-+ *
-+ * RXON tunes the radio tuner to a service channel, and sets up a number
-+ * of parameters that are used primarily for Rx, but also for Tx operations.
-+ *
-+ * NOTE:  When tuning to a new channel, driver must set the
-+ *        RXON_FILTER_ASSOC_MSK to 0.  This will clear station-dependent
-+ *        info within the device, including the station tables, tx retry
-+ *        rate tables, and txpower tables.  Driver must build a new station
-+ *        table and txpower table before transmitting anything on the RXON
-+ *        channel.
-+ *
-+ * NOTE:  All RXONs wipe clean the internal txpower table.  Driver must
-+ *        issue a new REPLY_TX_PWR_TABLE_CMD after each REPLY_RXON (0x10),
-+ *        regardless of whether RXON_FILTER_ASSOC_MSK is set.
-  */
- struct iwl4965_rxon_cmd {
- 	u8 node_addr[6];
-@@ -550,31 +623,6 @@ struct iwl4965_rxon_time_cmd {
- 	__le16 reserved;
- } __attribute__ ((packed));
- 
--struct iwl4965_tx_power {
--	u8 tx_gain;		/* gain for analog radio */
--	u8 dsp_atten;		/* gain for DSP */
--} __attribute__ ((packed));
--
--#define POWER_TABLE_NUM_ENTRIES			33
--#define POWER_TABLE_NUM_HT_OFDM_ENTRIES		32
--#define POWER_TABLE_CCK_ENTRY			32
--
--union iwl4965_tx_power_dual_stream {
--	struct {
--		u8 radio_tx_gain[2];
--		u8 dsp_predis_atten[2];
--	} s;
--	u32 dw;
--};
--
--struct tx_power_dual_stream {
--	__le32 dw;
--} __attribute__ ((packed));
--
--struct iwl4965_tx_power_db {
--	struct tx_power_dual_stream power_tbl[POWER_TABLE_NUM_ENTRIES];
--} __attribute__ ((packed));
--
- /*
-  * REPLY_CHANNEL_SWITCH = 0x72 (command, has simple generic response)
-  */
--- 
-1.5.3.6
+Pulled, thanks a lot John.
