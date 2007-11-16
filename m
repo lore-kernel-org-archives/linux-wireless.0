@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16063 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760811AbXK2BMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 20:12:46 -0500
-Subject: Re: [PATCH 1/2] [net/wireless/iwlwifi] : iwlwifi 3945 Fix race
-	conditional panic.
-From: Zhu Yi <yi.zhu@intel.com>
-To: Joonwoo Park <joonwpark81@gmail.com>
-Cc: ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <00e501c831ab$2e78daa0$9c94fea9@jason>
-References: <00e501c831ab$2e78daa0$9c94fea9@jason>
-Content-Type: text/plain
-Date: Thu, 29 Nov 2007 09:10:56 +0800
-Message-Id: <1196298656.7614.77.camel@debian.sh.intel.com> (sfid-20071129_011251_863804_436F53FC)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.177]:58285 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068AbXKPXyl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 18:54:41 -0500
+Received: by py-out-1112.google.com with SMTP id u77so4505613pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 15:54:40 -0800 (PST)
+Message-ID: <43e72e890711161554k8dd641esb5731bf2f5ae410a@mail.gmail.com> (sfid-20071116_235445_616965_D08FF54A)
+Date: Fri, 16 Nov 2007 18:54:38 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Linux wireless compatibility package for kernels >= 2.6.22
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <1195063324.1739.9.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890711101953w6e046b82j6b9087d30c8195b2@mail.gmail.com>
+	 <1194841658.2276.8.camel@dv>
+	 <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com>
+	 <1195063324.1739.9.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Nov 14, 2007 1:02 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Hello, Luis!
+>
+> On Tue, 2007-11-13 at 18:10 -0500, Luis R. Rodriguez wrote:
+>
+> > I ran into to this but I had fixed it in compat.diff. Anyway, this
+> > won't be necessary anymore as the directories match the kernel's now.
+>
+> OK, that's much better now.
+>
+> > > After some hack to make it compile, I still get:
+> > >
+> > >   CC [M]  /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.o
+> > > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:6: warning:
+> > > "LINUX_VERSION_CODE" is not defined
+> > > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:28:
+> > > warning: "KERNEL_VERSION" is not defined
+> > > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:42: error:
+> > > missing binary operator before token "("
+> >
+> > I'm not sure what happened here as <linux/version.h> should have been
+> > included in mac80211.h. Anyway, to be sure we won't run into these
+> > I've added <net/compat.h> to <net/cfg80211.h> which much of the
+> > wireless subsystem uses.
+>
+> This problem is still there.  I think the best approach would be to
+> "force-feed" compat.h to the compiler.  It already includes
+> linux/version.h, but since it's the first header, it needs
+> linux/autoconf.h.
+>
+> The following patch works for me.  The compat.diff patch can be cleaned
+> up, but it's a separate issue.
+>
+>
+> Force inclusion of compat.h first.
+>
+> Include linux/autoconf.h before other headers.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-On Wed, 2007-11-28 at 19:41 +0900, Joonwoo Park wrote:
-> [net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
-> 
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 465da4f..ac6c4a9 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -8570,6 +8570,7 @@ static void iwl_pci_remove(struct pci_dev *pdev)
->         IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
->  
->         mutex_lock(&priv->mutex);
-> +       cancel_delayed_work_sync(&priv->init_alive_start);
->         set_bit(STATUS_EXIT_PENDING, &priv->status);
->         __iwl_down(priv);
->         mutex_unlock(&priv->mutex);
+Thanks, applied. More in the next e-mail.
 
-Good catch. But it will be better if you add it into
-iwl_cancel_deferred_work().
-
-Thanks,
--yi
+  Luis
