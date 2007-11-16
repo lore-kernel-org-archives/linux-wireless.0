@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41607 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43767 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbXKZPtY (ORCPT
+	with ESMTP id S1752500AbXKPLzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 10:49:24 -0500
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
+	Fri, 16 Nov 2007 06:55:31 -0500
+Subject: [PATCH] mac80211: fix allmulti/promisc behaviour
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: drago01 <drago01@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1196090387.4202.12.camel@localhost.localdomain>
-References: <47494851.4070504@gmail.com>
-	 (sfid-20071125_100303_057404_A213DFC8) <1195987773.4149.214.camel@johannes.berg>
-	 <474955E1.30603@gmail.com> <1196090387.4202.12.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Dy0nT0PTHvQuXlJ/WSHG"
-Date: Mon, 26 Nov 2007 16:47:31 +0100
-Message-Id: <1196092051.4149.272.camel@johannes.berg> (sfid-20071126_154930_175579_5B0634EC)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 16 Nov 2007 02:54:53 +0100
+Message-Id: <1195178093.8147.91.camel@johannes.berg> (sfid-20071116_115534_836427_807A6FFF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When an interface with promisc/allmulti bit is taken down,
+the mac80211 state can become confused. This fixes it by
+making mac80211 keep track of all *active* interfaces that
+have the promisc/allmulti bit set in the sdata, we sync
+the interface bit into sdata at set_multicast_list() time
+so this works.
 
---=-Dy0nT0PTHvQuXlJ/WSHG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I'm 99.9% sure this is the correct fix but I need to test it.
 
+ net/mac80211/ieee80211.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-> Let me rant that ap_scan is the single thing that has given me the most
-> headaches with NetworkManager.  It's simply impossible use correctly on
-> Linux.  There's _got_ to be a better way to deal with hidden SSIDs.
+--- everything.orig/net/mac80211/ieee80211.c	2007-11-16 02:43:01.668421822 +0100
++++ everything/net/mac80211/ieee80211.c	2007-11-16 02:49:56.508419055 +0100
+@@ -267,6 +267,17 @@ static int ieee80211_open(struct net_dev
+ 		tasklet_enable(&local->tasklet);
+ 	}
+ 
++	/*
++	 * set_multicast_list will be invoked by the networking core
++	 * which will check whether any increments here were done in
++	 * error and sync them down to the hardware as filter flags.
++	 */
++	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
++		atomic_inc(&local->iff_allmultis);
++
++	if (sdata->flags & IEEE80211_SDATA_PROMISC)
++		atomic_inc(&local->iff_promiscs);
++
+ 	local->open_count++;
+ 
+ 	netif_start_queue(dev);
+@@ -284,6 +295,18 @@ static int ieee80211_stop(struct net_dev
+ 
+ 	netif_stop_queue(dev);
+ 
++	/*
++	 * Don't count this interface for promisc/allmulti while it
++	 * is down. dev_mc_unsync() will invoke set_multicast_list
++	 * on the master interface which will sync these down to the
++	 * hardware as filter flags.
++	 */
++	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
++		atomic_dec(&local->iff_allmultis);
++
++	if (sdata->flags & IEEE80211_SDATA_PROMISC)
++		atomic_dec(&local->iff_promiscs);
++
+ 	dev_mc_unsync(local->mdev, dev);
+ 
+ 	/* down all dependent devices, that is VLANs */
 
-What I'd expect you to do is do a directed scan like "iwlist wlan0 scan
-essid XYZ" (and be sure that nl80211 will name that "ssid" rather than
-the Jean-thought-it-was-better "essid") and then interpret the scan
-results.
-
-johannes
-
---=-Dy0nT0PTHvQuXlJ/WSHG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0rqkqVg1VMiehFYAQJXYxAAvZUJBb31hRCV77Ws5rYBaZgOFF+Gv7TQ
-stu6DnAcpiw4SUAI9UBmrgf2YcFN0A1ygf4jM0ECn84FQsRH4seo1GAe5WdtQ0bj
-SOs4AYJS+zqlHe831y0wZfgu7BzfcBYG6NfQD0odwFqWYbdMrcOuDi5K23n8sa4O
-1wKNNLI10e50uvXDBXzDH5Qn4mXOZ5cxCU6VVQWCkqpRPQ6FGiwWGIHWuFzCdOek
-E7/3quD6x+/oeNnOFxp+KmtI9GW5NoY7jr4imVtuZmbs5z95jLVh/VTDGRudb6X3
-60+27sBYFBk+HhqBNaUhlcfyfenPuhBPCMIr2wBPEzjL/kqwcttZsm5hnfJLYkb+
-enf79xMzYjKBllG4vOhqS2cAa7YFm1Y/Y0vXSRtgFRa4fyduohzOaQVtC3o+HXTu
-SBFZjx5KeqWz4/p8s8qsHxlqohBhG0zo/HEeEuObcjp9TCBGqvZysAm6U1ImkZRl
-+MJ9hdpua3uxbD12D2O2xDRLL9PirejwSoiPixL0qRCcFtJiH0GWoAV4ZP3YfZhZ
-bkWJyK/N7eX1820q2zIZzvA00YW0agncZR6r8FX1JmgqN81so0IoLyv4kn1BhFeU
-Na1c2J9Ws0QEp96WvOqnj37Doba5aM6SzRLSsq6Acani2fXjeeYpzVpb6eGKKJQy
-70Z350+43NU=
-=ySeJ
------END PGP SIGNATURE-----
-
---=-Dy0nT0PTHvQuXlJ/WSHG--
 
