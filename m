@@ -1,75 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39994 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755116AbXK1Tr3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 14:47:29 -0500
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: dragoran <drago01@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <f6ca9fed0711281145y26fa2dc1w5d57e9dc0e45c16b@mail.gmail.com> (sfid-20071128_194557_851836_BC05120D)
-References: <47494851.4070504@gmail.com>
-	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
-	 <f6ca9fed0711260650j749de7a3x3edc084ae820d2eb@mail.gmail.com>
-	 <20071127033408.GB5698@jm.kir.nu> <474D75D9.7070908@gmail.com>
-	 <1196268612.6058.157.camel@johannes.berg>
-	 <f6ca9fed0711281145y26fa2dc1w5d57e9dc0e45c16b@mail.gmail.com>
-	 (sfid-20071128_194557_851836_BC05120D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-16drSAtqayBj+vzfFtgA"
-Date: Wed, 28 Nov 2007 20:47:16 +0100
-Message-Id: <1196279236.6058.165.camel@johannes.berg> (sfid-20071128_194732_603313_A5D5AFC6)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2083 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754351AbXKPBuA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2007 20:50:00 -0500
+Date: Thu, 15 Nov 2007 20:49:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: jeff@garzik.org, shemminger@linux-foundation.org,
+	romieu@fr.zoreil.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Please pull 'more-fixes-davem' branch of wireless-2.6
+Message-ID: <20071116014917.GG12902@tuxdriver.com> (sfid-20071116_015017_897433_51C7155B)
+References: <20071115025150.GA738@tuxdriver.com> <20071114.194053.165159394.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071114.194053.165159394.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-16drSAtqayBj+vzfFtgA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here is one more fix for 2.6.24.  This is additive to the pull request
+from yesterday (2007-11-15), so if you haven't already pulled then
+you can just pull this one to get all the fix patches.
 
+Thanks!
 
+John
 
-> > Just grap iw (from git.sipsolutions.net) and create a new monitor
-> > interface: ./iw dev wmaster0 interface add moni0 type monitor
-> > and then run tcpdump/wireshark on that.
->=20
-> iw does not build here :
-> cc -I/lib/modules/`uname -r`/build//include -Wall
-> -I/lib/modules/`uname -r`/build/include -g   -c -o iw.o iw.c
-> iw.c:11:31: error: netlink/genl/genl.h: No such file or directory
-> iw.c:12:33: error: netlink/genl/family.h: No such file or directory
-> iw.c:13:33: error: netlink/genl/ctrl.h: No such file or directory
+---
 
-Yeah, you need libnl-pre8.
+Individual patch available here:
 
-johannes
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.git more-fixes-davem
 
---=-16drSAtqayBj+vzfFtgA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+The following changes since commit 66fbb541a5d2d58fdae21c1e7b558a75bfbd483f:
+  Oliver Neukum (1):
+        iwl4965: fix not correctly dealing with hotunplug
 
-iQIVAwUAR03Fw6Vg1VMiehFYAQJF5g//R21uuB2N7QRvLn3lFzjb1/935b/WnMlU
-HfHOL4dwPaXeVY1Y0U8cBG387S+TTlOFk/wMEGk83LHCWLR23qWmPUJ3wmiWfZZ/
-VY9Mo9pHuMIh4xkU9QHFTcFcAaXAecyLK1B2lCiMUwVRUfWGBLyulmvaqX6Nqxhm
-zvXVUa/5NneoUXc8Xp14MD/3d44P4+V9bsj1+CFrglFvCel42p2gzCOMjpcNfVLp
-ksQyBnqWeKRSt/i2k777Qz978YBcPklCWA3sSEmUi4Lg7mhnPIvBRLNCkELu3DOl
-JBcNjZOWJmowCPaA8OGquWoGhhxQo8buMWVD0aiZl/SBVJgill52sxoXU9aqPz2k
-SFySAGLJJYnaHrksvVuCRtSoEEUw2ZS8t/IRHfQpY8iGV4WsP3bFIFf6nVinMG/+
-1VfIbKP1tIwCGdUXOT+sfkuegFQJoeq47ADdY7B6PnxiIltptRHV2K33Td5QrVaz
-/othk4UcVlXN6Q2mhbAOwATXdCXluwMaYk3xBTxOrbCePiRF8LpOrBLlN//TJ7j2
-Cfn3oVXw8uE1iPqGPIUw+bs1BDzrlfGxs2voefeaZUjvwXorFwWDv7R/1DgsyBq7
-mWhwNu9nU3ILp5/0Wb1ZfLPRqM5ouE3obsFjb3/3u5Ri9N5r2qa11l51I7IBUY16
-5RKguzA97m4=
-=1Hv1
------END PGP SIGNATURE-----
+are available in the git repository at:
 
---=-16drSAtqayBj+vzfFtgA--
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git more-fixes-davem
 
+Ivo van Doorn (1):
+      rt2x00: Request usb_maxpacket() once
+
+ drivers/net/wireless/rt2x00/rt2500usb.c |    7 +++----
+ drivers/net/wireless/rt2x00/rt2x00.h    |    7 ++++++-
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    9 ++++++---
+ drivers/net/wireless/rt2x00/rt73usb.c   |    4 ++--
+ 4 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 277a020..50775f9 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1032,7 +1032,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static int rt2500usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
+-				     int maxpacket, struct sk_buff *skb)
++				     struct sk_buff *skb)
+ {
+ 	int length;
+ 
+@@ -1041,7 +1041,7 @@ static int rt2500usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
+ 	 * but it must _not_ be a multiple of the USB packet size.
+ 	 */
+ 	length = roundup(skb->len, 2);
+-	length += (2 * !(length % maxpacket));
++	length += (2 * !(length % rt2x00dev->usb_maxpacket));
+ 
+ 	return length;
+ }
+@@ -1643,7 +1643,6 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 	struct data_entry *beacon;
+ 	struct data_entry *guardian;
+ 	int pipe = usb_sndbulkpipe(usb_dev, 1);
+-	int max_packet = usb_maxpacket(usb_dev, pipe, 1);
+ 	int length;
+ 
+ 	/*
+@@ -1672,7 +1671,7 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
+ 							 ring->desc_size),
+ 				skb->len - ring->desc_size, control);
+ 
+-	length = rt2500usb_get_tx_data_len(rt2x00dev, max_packet, skb);
++	length = rt2500usb_get_tx_data_len(rt2x00dev, skb);
+ 
+ 	usb_fill_bulk_urb(beacon->priv, usb_dev, pipe,
+ 			  skb->data, length, rt2500usb_beacondone, beacon);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index d1ad525..c8f16f1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -418,7 +418,7 @@ struct rt2x00lib_ops {
+ 	int (*write_tx_data) (struct rt2x00_dev *rt2x00dev,
+ 			      struct data_ring *ring, struct sk_buff *skb,
+ 			      struct ieee80211_tx_control *control);
+-	int (*get_tx_data_len) (struct rt2x00_dev *rt2x00dev, int maxpacket,
++	int (*get_tx_data_len) (struct rt2x00_dev *rt2x00dev,
+ 				struct sk_buff *skb);
+ 	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev,
+ 			       unsigned int queue);
+@@ -599,6 +599,11 @@ struct rt2x00_dev {
+ 	u32 *rf;
+ 
+ 	/*
++	 * USB Max frame size (for rt2500usb & rt73usb).
++	 */
++	u16 usb_maxpacket;
++
++	/*
+ 	 * Current TX power value.
+ 	 */
+ 	u16 tx_power;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 73cc726..1f5675d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -159,7 +159,6 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	    interface_to_usbdev(rt2x00dev_usb(rt2x00dev));
+ 	struct data_entry *entry = rt2x00_get_data_entry(ring);
+ 	int pipe = usb_sndbulkpipe(usb_dev, 1);
+-	int max_packet = usb_maxpacket(usb_dev, pipe, 1);
+ 	u32 length;
+ 
+ 	if (rt2x00_ring_full(ring)) {
+@@ -194,8 +193,7 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	 * length of the data to usb_fill_bulk_urb. Pass the skb
+ 	 * to the driver to determine what the length should be.
+ 	 */
+-	length = rt2x00dev->ops->lib->get_tx_data_len(rt2x00dev,
+-						      max_packet, skb);
++	length = rt2x00dev->ops->lib->get_tx_data_len(rt2x00dev, skb);
+ 
+ 	/*
+ 	 * Initialize URB and send the frame to the device.
+@@ -490,6 +488,11 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+ 	rt2x00dev->ops = ops;
+ 	rt2x00dev->hw = hw;
+ 
++	rt2x00dev->usb_maxpacket =
++	    usb_maxpacket(usb_dev, usb_sndbulkpipe(usb_dev, 1), 1);
++	if (!rt2x00dev->usb_maxpacket)
++		rt2x00dev->usb_maxpacket = 1;
++
+ 	retval = rt2x00usb_alloc_reg(rt2x00dev);
+ 	if (retval)
+ 		goto exit_free_device;
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index dc640bf..c0671c2 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1251,7 +1251,7 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static int rt73usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
+-				   int maxpacket, struct sk_buff *skb)
++				   struct sk_buff *skb)
+ {
+ 	int length;
+ 
+@@ -1260,7 +1260,7 @@ static int rt73usb_get_tx_data_len(struct rt2x00_dev *rt2x00dev,
+ 	 * but it must _not_ be a multiple of the USB packet size.
+ 	 */
+ 	length = roundup(skb->len, 4);
+-	length += (4 * !(length % maxpacket));
++	length += (4 * !(length % rt2x00dev->usb_maxpacket));
+ 
+ 	return length;
+ }
+-- 
+John W. Linville
+linville@tuxdriver.com
