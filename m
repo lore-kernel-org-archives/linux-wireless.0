@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56042 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752971AbXKZBLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 20:11:17 -0500
-Subject: Re: [PATCH] iwlwifi: remove redundant declaration of
-	'iwl3945_priv' and 'iwl4965_priv' structs
-From: Zhu Yi <yi.zhu@intel.com>
-To: Miguel =?ISO-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <200711251558.07511.mboton@gmail.com>
-References: <200711251558.07511.mboton@gmail.com>
-Content-Type: text/plain; charset=GB2312
-Date: Mon, 26 Nov 2007 09:10:23 +0800
-Message-Id: <1196039423.3250.570.camel@debian.sh.intel.com> (sfid-20071126_011122_712550_EC7A9D6B)
+Received: from mfe1.polimi.it ([131.175.12.23]:42651 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753686AbXKQBbV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2007 20:31:21 -0500
+Date: Sat, 17 Nov 2007 02:30:20 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] libertas: list as orphan in MAINTAINERS
+Message-ID: <20071117023020.0a164e90@morte> (sfid-20071117_013124_317278_7DE6A23B)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+List the Marvell Libertas wireless driver as orphan in the MAINTAINERS
+file.
 
-On Sun, 2007-11-25 at 15:58 +0100, Miguel Bot=A8=AEn wrote:
-> This patch removes a redundant declaration of 'iwl3945_priv' and
-> 'iwl4965_priv' structs.
->=20
-> Signed-off-by: Miguel Boton <mboton@gmail.com>
 
-ACK.
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-Thanks,
--yi
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 18b7c8e..76bfb9a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2513,6 +2513,9 @@ M:	mtk.manpages@gmail.com
+ W:	ftp://ftp.kernel.org/pub/linux/docs/manpages
+ S:	Maintained
+ 
++MARVELL LIBERTAS WIRELESS DRIVER
++S:	Orphan
++
+ MARVELL MV643XX ETHERNET DRIVER
+ P:	Dale Farnsworth
+ M:	dale@farnsworth.org
+
+
+-- 
+Ciao
+Stefano
