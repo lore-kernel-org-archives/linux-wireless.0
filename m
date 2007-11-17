@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:40618 "EHLO
-	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbXK0DlO (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.242]:11781 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755727AbXKQSEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 22:41:14 -0500
-Date: Mon, 26 Nov 2007 19:40:39 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: drago01 <drago01@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-Message-ID: <20071127034039.GC5698@jm.kir.nu> (sfid-20071127_034117_031655_FBA1BAF8)
-References: <47494851.4070504@gmail.com> <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com> <1196079245.4149.255.camel@johannes.berg>
+	Sat, 17 Nov 2007 13:04:12 -0500
+Received: by an-out-0708.google.com with SMTP id d31so312520and
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Nov 2007 10:04:12 -0800 (PST)
+Message-ID: <40f31dec0711171004g328f1e6ai47d6a02aeb1d6c5c@mail.gmail.com> (sfid-20071117_180418_908422_52F55A29)
+Date: Sat, 17 Nov 2007 20:04:11 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org,
+	madwifi-devel <madwifi-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath5k: Per queue interrupt handling
+In-Reply-To: <40f31dec0711170906u53a4dd09p251a54a1ed53c16e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1196079245.4149.255.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <40f31dec0711170906u53a4dd09p251a54a1ed53c16e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 26, 2007 at 01:14:04PM +0100, Johannes Berg wrote:
+> c) Enabling tx interrupts on primary interrupt mask register overrides
+> secondary mask registers. I set 0 on secondary mask register for all
+> queues (flags = 0) and i got tx interrupts if i set INT_TX on primary
+> imr.
+>
 
-> That's weird. But why does it use ap_scan=2 to start with? With
-> mac80211, ap_scan=1 is *much* much better because it lets wpa_supplicant
-> control much of roaming, mac80211 really is designed that way.
-> 
-> I don't see why ap_scan=2 doesn't work though, can you enable some
-> wpa_supplicant debugging and send me the logs?
+Wrong, i did the test again, setting all simrs to 0, pimr does not
+override simrs (i don't get any tx interrupts on pisr if i set simrs
+to 0).
 
-Well, like you said, it was designed to work with ap_scan=1 and
-actually, there was not even code for selecting the BSS in the original
-version. Unless someone has added that functionality, it does not
-work with ap_scan=2 which is only configuring the SSID, not BSSID, to
-the driver.
+Also i noticed that we handle TXURN interupt but we don't enable it...
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
