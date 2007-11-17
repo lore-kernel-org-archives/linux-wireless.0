@@ -1,77 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755066AbXKUPS1 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:15905 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760271AbXKQAOA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 10:18:27 -0500
-Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1195615039.3250.453.camel@debian.sh.intel.com>
-References: <11955417361539-git-send-email-yi.zhu@intel.com>
-	 <1195565876.10920.29.camel@johannes.berg>
-	 <1195615039.3250.453.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q1gO8duD8IMi3gLQ4qx9"
-Date: Wed, 21 Nov 2007 16:19:48 +0100
-Message-Id: <1195658389.12000.26.camel@johannes.berg> (sfid-20071121_151829_151055_5F3A6E56)
-Mime-Version: 1.0
+	Fri, 16 Nov 2007 19:14:00 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1054816fkz
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 16:13:58 -0800 (PST)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: add power management support -v2
+Date: Sat, 17 Nov 2007 01:13:58 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	yi.zhu@intel.com
+References: <200711170007.01676.mboton.lkml@gmail.com>
+In-Reply-To: <200711170007.01676.mboton.lkml@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200711170113.58396.mboton.lkml@gmail.com> (sfid-20071117_001406_559173_F461DAA4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Well, the previous patch wasn't correct. This one is valid.
 
---=-Q1gO8duD8IMi3gLQ4qx9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--
 
-Hi,
+This patch adds power management support in mac80211.
 
-> Indeed. But at least user has a way to let mac80211 forget the previous
-> setting (ifconfig wlan0 down and up). Otherwise, user has to reload the
-> modules to achieve this.
+This allows us to enable power management through the "iwconfig <device=
+> power <off/on>" command.
+The code is based on "mac80211-10.0.0" but it is a little bit modified.
 
-Yeah. Can you amend the patch to also clear the
-IEEE80211_STA_PRIVACY_INVOKED flag?
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
 
-> > Maybe this should also be done when removing keys?
->=20
-> I agree there are more places we need to clear the setting. Putting it
-> to ieee80211_stop() is a good start. Should we have a "reset" like
-> ioctl? So the second config tool can call it to let mac80211 forget all
-> the previous setting.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5fcc4c1..c82b6fa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -452,6 +452,8 @@ struct ieee80211_conf {
+ 	u8 antenna_max;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
++
++	u8 power_management_enable;     /* flag to enable/disable power manag=
+ement */
+ };
+=20
+ /**
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
+ctl.c
+index 6caa3ec..f5eebec 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
+evice *dev,
+ 	return 0;
+ }
+=20
++static int ieee80211_ioctl_siwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	if (wrqu->power.disabled) {
++		conf->power_management_enable =3D 0;
++		if (ieee80211_hw_config(local))
++			return -EINVAL;
++		return 0;
++	}
++
++	switch (wrqu->power.flags & IW_POWER_MODE) {
++	case IW_POWER_ON:       /* If not specified */
++	case IW_POWER_MODE:     /* If set all mask */
++	case IW_POWER_ALL_R:    /* If explicitely state all */
++		break;
++	default:                /* Otherwise we don't support it */
++		return -EINVAL;
++	}
++
++	conf->power_management_enable =3D 1;
++
++	if (ieee80211_hw_config(local))
++		return -EINVAL;
++
++	return 0;
++}
++
++static int ieee80211_ioctl_giwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf =3D &local->hw.conf;
++
++	wrqu->power.disabled =3D !conf->power_management_enable;
++
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwrts(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rts, char *extra)
+@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
+ 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+ 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
+-	(iw_handler) NULL,				/* SIOCSIWPOWER */
+-	(iw_handler) NULL,				/* SIOCGIWPOWER */
++	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
++	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
 
-No. We're not adding any ioctls, we now have to live with the wext crap.
 
-What I'm going to do in nl80211 is put *all* the required setting into
-an "association" object. Then all settings can be deleted together when
-the association object is removed which will probably be done by
-userland tools automatigally when tell them to associate to something
-else, i.e. add a new association (needs to remove the old because there
-can be only one).
-
-johannes
-
---=-Q1gO8duD8IMi3gLQ4qx9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0RMlKVg1VMiehFYAQJVzg//c2YTaeliqF1A/6kxChfOffIXxa5DGvJe
-gKlu7BGQ2In2CUe/jGlaNCz+wMYBKMxeRVxHUGr50YH1dk0ScjomReXPpdSs7afH
-zqyBtzZ173QJdmmPYA4XSrBm5TE4Hs0zRIz7qVJP+F2dIaFP/mM6RovroqcHbgPc
-8WtTpf/Zueydk+aZj4pp9f4ieFc8C1d2A5HHctRjlfbXZirpXLVJCY49PRZMoNbu
-fJtjPaLsPD2qEqTenQWAT0Qm3eoDhYZlM5ZheNiy7WQckw7YMCM0+wyKsVxqkGmF
-HWDaTZ9+WNxxlRXj3Ws7FG6+La/J7d6njgWs5cBuUzcj9/CmR6mYVSPMz/iDqWBC
-H+gi3oTm2xhc8UmMa+BYC2YbbZGyglKBO2JygUh6SOztER1MlORuoRO1hAcmIzwg
-9pqfsodNbRNSrafj2HAfZq6wsCYwlVvMEkuE39x0mcS+I92H4Ll/z4pZKMZJLA+I
-UE3dPbUKgPf63gK1h5DrBNUQJclwZxj+yFEtB9pknUMj6tlrD68wR9QYOObwF1q5
-NLQnFXyI9tFbXS/Zq44C+kr0hOhwlv8zXXHhRQzf7/uQmo9xUNi7ve+9hssSvBcJ
-wf5OnJIAs7h6Zp/UuA9YuMkyVuVm2AvEYaSwkt5DueDaQqqwMmlGaZ5sjyL64cel
-dPpsnyzyauI=
-=mOly
------END PGP SIGNATURE-----
-
---=-Q1gO8duD8IMi3gLQ4qx9--
-
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
