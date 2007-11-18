@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:52774 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752665AbXKTAQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 19:16:28 -0500
-Date: Tue, 20 Nov 2007 01:15:49 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Andreas Schwab <schwab@suse.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	mb@bu3sch.de
-Subject: Re: [PATCH v3] remove bcm43xx
-Message-ID: <20071120011549.6b04bb4d@morte> (sfid-20071120_001632_631701_4BDAB7F6)
-In-Reply-To: <jed4u5esbo.fsf@sykes.suse.de>
-References: <20071119202121.6ad3fa70@morte>
-	<200711192300.12183.rjw@sisk.pl>
-	<20071119231935.535674ba@morte>
-	<jehcjheubn.fsf@sykes.suse.de>
-	<20071120001329.3524494a@morte>
-	<jed4u5esbo.fsf@sykes.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:42299 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752512AbXKRXCx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Nov 2007 18:02:53 -0500
+Date: Sun, 18 Nov 2007 15:02:38 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <Kalle.Valo@nokia.com>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: Re: [RFC] b43: multiple MAC addresses support
+Message-ID: <20071118230237.GB8672@jm.kir.nu> (sfid-20071118_230301_964695_FBCE358A)
+References: <1194572631.4793.64.camel@johannes.berg> <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu> <87pryfd8cc.fsf@nokia.com> <1194953217.9116.38.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1194953217.9116.38.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Nov 2007 00:19:55 +0100
-Andreas Schwab <schwab@suse.de> wrote:
+On Tue, Nov 13, 2007 at 12:26:57PM +0100, Johannes Berg wrote:
 
-> Stefano Brivio <stefano.brivio@polimi.it> writes:
-> 
-> > This is strange. Because it has been developed mainly on PPC. Plus, if
-> > you could better define "does not work"
-> 
-> See <http://marc.info/?l=linux-wireless&m=119356497407301&w=2>.
+> The N800 and similar devices only wake up at DTIM beacons, right? So
+> another idea would be to burst beacons but make sure the DTIM beacon
+> time doesn't fluctuate away from the DTIM TBTT. This would be possible
+> by changing the order of the beacons and adjusting the DTIM count so
+> that the beacon with DTIM count zero is always the first.
 
-It looks like we don't get a valid txstatus even if the txstatus indicator
-register told us we could read it. The only difference I can see between
-bcm43xx and b43 here is that in bcm43xx we allowed the whole register to be
-non-zero, while in b43 we check a bit only (as per v4 specs). Would you
-mind to try this:
-
---- drivers/net/wireless/b43/main.c.orig        2007-11-20 01:12:12.186524483 +0100
-+++ drivers/net/wireless/b43/main.c     2007-11-20 01:12:34.922702865 +0100
-@@ -947,7 +947,7 @@
-
-        while (1) {
-                v0 = b43_read32(dev, B43_MMIO_XMITSTAT_0);
--               if (!(v0 & 0x00000001))
-+               if (!v0)
-                        break;
-                v1 = b43_read32(dev, B43_MMIO_XMITSTAT_1);
-
-(probably it's not the solution, I just want to see what happens then).
-BTW, what firmware are you using? Michael, any clue?
-
+This could be an improvement for small number of BSSes, but if the DTIM
+period starts going up, the delay in sending out multicast/broadcast
+frames may not be acceptable anymore depending on application.
 
 -- 
-Ciao
-Stefano
+Jouni Malinen                                            PGP id EFC895FA
