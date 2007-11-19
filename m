@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout5.parasun.com ([204.174.16.215]:58606 "EHLO
-	mailout5.parasun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753370AbXKNTuV (ORCPT
+Received: from c-71-202-97-155.hsd1.ca.comcast.net ([71.202.97.155]:54964 "EHLO
+	mail.compnerd.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751846AbXKSIGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 14:50:21 -0500
-Date: Wed, 14 Nov 2007 13:33:52 -0600 (CST)
-From: Jeff Williams <angelbane@ou.edu>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux wireless 802.11n progress
-In-Reply-To: <43e72e890711141058l722015d0x6a214f2754ad2e4a@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0711141323470.22645@dulcinea> (sfid-20071114_195025_858319_0336416B)
-References: <43e72e890711141058l722015d0x6a214f2754ad2e4a@mail.gmail.com>
+	Mon, 19 Nov 2007 03:06:42 -0500
+Date: Sun, 18 Nov 2007 23:59:08 -0800
+From: Saleem Abdulrasool <compnerd@compnerd.org>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org, greg@kroah.com,
+	chrisw@sous-sol.org, stable@kernel.org
+Subject: [PATCH] iwlwifi: fix possible NULL dereference in iwl_set_rate()
+Message-ID: <20071119075908.GA958@compnerd.org> (sfid-20071119_080656_531198_31462892)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As per Zhu Yi's request, Im forwarding along a patch for CVE-2007-5938, a NULL
+dereference vulnerability in the iwlwifi driver.  All current versions are
+effected by this.
 
+Thanks.
 
-On Wed, 14 Nov 2007, Luis R. Rodriguez wrote:
+-- 
+Saleem Abdulrasool
+compnerd (at) compnerd (dot) org
 
-> * Airgo
->
-> Driver: http://git.sipsolutions.net/agnx.git
-> Specs: http://airgo.wdwconsulting.net/mymoin
-> Devices: Beklin F5d8010, Netgear wgm511, wgm124, linksys wrt54gx,
-> Netgear Wpnt511
+>From 25db44d4cdfe31d59223d74cb577f4a71aff1a40 Mon Sep 17 00:00:00 2001
+From: Saleem Abdulrasool <compnerd@compnerd.org>
+Date: Mon, 19 Nov 2007 15:28:58 +0800
+Subject: [PATCH] iwlwifi: fix possible NULL dereference in iwl_set_rate()
 
-Also the linksys wap54gx, wrt54gx2, and wrt54gx4, the netgear wpnt834, 
-asus wl566gm, belkin f5d8230-4, buffalo wzr-g108 all have either AGN100s 
-or AGN300s
+Signed-off-by: Saleem Abdulrasool <compnerd@compnerd.org>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ origin/iwl3945-base.c |    4 ++++
+ origin/iwl4965-base.c |    4 ++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
->
-> agnx driver can TX/RX for AGN100 devices for PCI devices. Cardbus card
-> not working for some reason. We'll try to help with this driver.
->
-Any help from anyone will be much appreciated!
+diff --git a/origin/iwl3945-base.c b/origin/iwl3945-base.c
+index 5d3e5fe..0885b56 100644
+--- a/origin/iwl3945-base.c
++++ b/origin/iwl3945-base.c
+@@ -2984,6 +2984,10 @@ static void iwl3945_set_rate(struct iwl3945_priv *priv)
+ 	int i;
+ 
+ 	hw = iwl3945_get_hw_mode(priv, priv->phymode);
++	if (!hw) {
++		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
++		return;
++	}
+ 
+ 	priv->active_rate = 0;
+ 	priv->active_rate_basic = 0;
+diff --git a/origin/iwl4965-base.c b/origin/iwl4965-base.c
+index abb8016..c57ec27 100644
+--- a/origin/iwl4965-base.c
++++ b/origin/iwl4965-base.c
+@@ -3093,6 +3093,10 @@ static void iwl4965_set_rate(struct iwl4965_priv *priv)
+ 	int i;
+ 
+ 	hw = iwl4965_get_hw_mode(priv, priv->phymode);
++	if (!hw) {
++		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
++		return;
++	}
+ 
+ 	priv->active_rate = 0;
+ 	priv->active_rate_basic = 0;
+-- 
+1.5.3.5
 
-> Cardbus card:
->
-> http://www.zipzoomfly.com/jsp/ProductDetail.jsp?ProductCode=251852
->
-> You can pull out AGN100 MiniPCI cards from these APs:
->
-> http://www.google.com/products?q=linksys+WRT54GX&btnG=Search+Products
-> http://www.google.com/products?q=BELKIN+F5d8230&btnG=Search+Products
->
-> If you want to try to add AGN300 support you can try getting this AP
-> and pulling its card out:
->
-> http://www.google.com/products?q=WPNT511&btnG=Search&show=dd
->
-
-There are currently no Airgo wifi cards that support 802.11n that I am 
-aware of. Certainly none that are vendor supported at this time. I know 
-that Airgo is one of the Draft members, but I don't think they've 
-released any cards for the draft 802.11n.
-
-Jeff
