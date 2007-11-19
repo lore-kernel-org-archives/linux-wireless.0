@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48667 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:59089 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760556AbXKTWra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:47:30 -0500
-Subject: [PATCH 2/6] libertas: mark module_init/exit functions as
-	__init/__exit
+	id S1753885AbXKSRi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 12:38:28 -0500
+Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
 From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andres Salomon <dilinger@debian.org>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071117023548.79a7a33c@morte>
+References: <20071117023548.79a7a33c@morte>
 Content-Type: text/plain
-Date: Tue, 20 Nov 2007 17:43:45 -0500
-Message-Id: <1195598625.32309.27.camel@localhost.localdomain> (sfid-20071120_224733_747192_C29988E9)
+Date: Mon, 19 Nov 2007 12:35:07 -0500
+Message-Id: <1195493707.3248.14.camel@localhost.localdomain> (sfid-20071119_173833_886997_EC7D3E94)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Salomon <dilinger@debian.org>
+On Sat, 2007-11-17 at 02:35 +0100, Stefano Brivio wrote:
+> Marvell USB8388, running on wireless-2.6. Firmware is:
+> 421964206b0699014a11256ac48dd0a8  /lib/firmware/usb8388.bin
 
-Signed-off-by: Andres Salomon <dilinger@debian.org>
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Try a later firmware from:
+
+http://dev.laptop.org/pub/firmware/libertas/
+
+Is this a usb8388 dev board you got from OLPC?
+
+Dan
 
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index d89f673..13b3a91 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -1048,7 +1048,7 @@ static struct sdio_driver if_sdio_driver = {
- /* Module functions                                                */
- /*******************************************************************/
- 
--static int if_sdio_init_module(void)
-+static int __init if_sdio_init_module(void)
- {
- 	int ret = 0;
- 
-@@ -1064,7 +1064,7 @@ static int if_sdio_init_module(void)
- 	return ret;
- }
- 
--static void if_sdio_exit_module(void)
-+static void __exit if_sdio_exit_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 6d19d26..f7d2b46 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -1020,7 +1020,7 @@ static struct usb_driver if_usb_driver = {
- 	.resume = if_usb_resume,
- };
- 
--static int if_usb_init_module(void)
-+static int __init if_usb_init_module(void)
- {
- 	int ret = 0;
- 
-@@ -1032,7 +1032,7 @@ static int if_usb_init_module(void)
- 	return ret;
- }
- 
--static void if_usb_exit_module(void)
-+static void __exit if_usb_exit_module(void)
- {
- 	struct usb_card_rec *cardp, *cardp_temp;
- 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 0a4f202..959e898 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1514,7 +1514,7 @@ int lbs_reset_device(lbs_private *priv)
- }
- EXPORT_SYMBOL_GPL(lbs_reset_device);
- 
--static int lbs_init_module(void)
-+static int __init lbs_init_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 	lbs_debugfs_init();
-@@ -1522,7 +1522,7 @@ static int lbs_init_module(void)
- 	return 0;
- }
- 
--static void lbs_exit_module(void)
-+static void __exit lbs_exit_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
+> Loading the usb8xxx module, I get:
+> [203681.684283] usb8xxx: URB in failure status: -71
+> [203681.814072] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203683.193744] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203684.563428] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203685.933099] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203687.303025] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203688.672443] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203690.042118] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203691.411789] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203692.781455] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203694.151134] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203695.520804] usb 1-4: reset high speed USB device using ehci_hcd and address 6
+> [203695.672729] usb8xxx: probe of 1-4:1.0 failed with error -12
+> [203695.672915] usbcore: registered new interface driver usb8xxx
+> 
+> Any clues?
+> 
+> 
 
