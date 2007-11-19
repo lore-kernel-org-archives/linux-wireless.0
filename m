@@ -1,210 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46060 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764850AbXKOGWd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 01:22:33 -0500
-Date: Wed, 14 Nov 2007 22:21:04 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 19/23] mac80211: store channel info in sta_bss_list
-Message-ID: <20071115062104.GT8282@kroah.com> (sfid-20071115_062240_521749_B4E889B6)
-References: <20071115055238.692814352@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071115061806.GA8282@kroah.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:48788 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752271AbXKSJW0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 04:22:26 -0500
+Date: Mon, 19 Nov 2007 10:21:17 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
+Message-ID: <20071119102117.74932cc1@morte> (sfid-20071119_092229_627143_1951DE32)
+In-Reply-To: <200711191008.26174.hs4233@mail.mn-solutions.de>
+References: <20071117023548.79a7a33c@morte>
+	<200711191008.26174.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--stable review patch.  If anyone has any objections, please let us know.
+On Mon, 19 Nov 2007 10:08:26 +0100
+Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
 
-------------------
+> > Marvell USB8388, running on wireless-2.6. Firmware is:
+> > 421964206b0699014a11256ac48dd0a8  /lib/firmware/usb8388.bin
+> 
+> lsusb says "Bus 001 Device 003: ID 1286:2001".
 
-From: John W. Linville <linville@tuxdriver.com>
+Same here:
+P:  Vendor=1286 ProdID=2001 Rev=30.06
 
-patch 65c107ab3befc37b21d1c970a6159525bc0121b8 in mainline.
+> I use this firmware:
+> 
+> $ md5sum /lib/firmware/usb8388.bin
+> f1dfa0042efd61dc138b01fdf8c0cdab  /lib/firmware/usb8388.bin
+> 
+> As I got this firmware some months ago (and I hardly use this 
+> device), I cannot say which download link I've used.
 
-Some AP equipment "in the wild" uses the same BSSID on multiple channels
-(particularly "a" vs. "b/g").  This patch changes the key of sta_bss_list
-to include both the BSSID and the channel so as to prevent a BSSID on
-one channel from eclipsing the same BSSID on another channel.
+As long as probing fails, I doubt that my issue is firmware related...
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Any clues about how to debug this further?
 
----
- net/mac80211/ieee80211_sta.c |   35 ++++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
-
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -61,7 +61,7 @@
- static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
- 				     u8 *ssid, size_t ssid_len);
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid);
-+ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel);
- static void ieee80211_rx_bss_put(struct net_device *dev,
- 				 struct ieee80211_sta_bss *bss);
- static int ieee80211_sta_find_ibss(struct net_device *dev,
-@@ -387,6 +387,7 @@ static void ieee80211_set_associated(str
- 				     struct ieee80211_if_sta *ifsta, int assoc)
- {
- 	union iwreq_data wrqu;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	if (ifsta->associated == assoc)
-@@ -401,7 +402,8 @@ static void ieee80211_set_associated(str
- 		if (sdata->type != IEEE80211_IF_TYPE_STA)
- 			return;
- 
--		bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
-+		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
-+					   local->hw.conf.channel);
- 		if (bss) {
- 			if (bss->has_erp_value)
- 				ieee80211_handle_erp_ie(dev, bss->erp_value);
-@@ -543,7 +545,7 @@ static void ieee80211_send_assoc(struct 
- 		capab |= WLAN_CAPABILITY_SHORT_SLOT_TIME |
- 			WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	}
--	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
-+	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
- 	if (bss) {
- 		if (bss->capability & WLAN_CAPABILITY_PRIVACY)
- 			capab |= WLAN_CAPABILITY_PRIVACY;
-@@ -695,6 +697,7 @@ static void ieee80211_send_disassoc(stru
- static int ieee80211_privacy_mismatch(struct net_device *dev,
- 				      struct ieee80211_if_sta *ifsta)
- {
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
- 	int res = 0;
- 
-@@ -702,7 +705,7 @@ static int ieee80211_privacy_mismatch(st
- 	    ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
- 		return 0;
- 
--	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
-+	bss = ieee80211_rx_bss_get(dev, ifsta->bssid, local->hw.conf.channel);
- 	if (!bss)
- 		return 0;
- 
-@@ -1211,7 +1214,8 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	 * update our stored copy */
- 	if (elems.erp_info && elems.erp_info_len >= 1) {
- 		struct ieee80211_sta_bss *bss
--			= ieee80211_rx_bss_get(dev, ifsta->bssid);
-+			= ieee80211_rx_bss_get(dev, ifsta->bssid,
-+					       local->hw.conf.channel);
- 		if (bss) {
- 			bss->erp_value = elems.erp_info[0];
- 			bss->has_erp_value = 1;
-@@ -1241,7 +1245,8 @@ static void ieee80211_rx_mgmt_assoc_resp
- 			       " AP\n", dev->name);
- 			return;
- 		}
--		bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
-+		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
-+					   local->hw.conf.channel);
- 		if (bss) {
- 			sta->last_rssi = bss->rssi;
- 			sta->last_signal = bss->signal;
-@@ -1322,7 +1327,7 @@ static void __ieee80211_rx_bss_hash_del(
- 
- 
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid)
-+ieee80211_rx_bss_add(struct net_device *dev, u8 *bssid, int channel)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
-@@ -1333,6 +1338,7 @@ ieee80211_rx_bss_add(struct net_device *
- 	atomic_inc(&bss->users);
- 	atomic_inc(&bss->users);
- 	memcpy(bss->bssid, bssid, ETH_ALEN);
-+	bss->channel = channel;
- 
- 	spin_lock_bh(&local->sta_bss_lock);
- 	/* TODO: order by RSSI? */
-@@ -1344,7 +1350,7 @@ ieee80211_rx_bss_add(struct net_device *
- 
- 
- static struct ieee80211_sta_bss *
--ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid)
-+ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int channel)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
-@@ -1352,7 +1358,8 @@ ieee80211_rx_bss_get(struct net_device *
- 	spin_lock_bh(&local->sta_bss_lock);
- 	bss = local->sta_bss_hash[STA_HASH(bssid)];
- 	while (bss) {
--		if (memcmp(bss->bssid, bssid, ETH_ALEN) == 0) {
-+		if (memcmp(bss->bssid, bssid, ETH_ALEN) == 0 &&
-+		    bss->channel == channel) {
- 			atomic_inc(&bss->users);
- 			break;
- 		}
-@@ -1520,9 +1527,9 @@ static void ieee80211_rx_bss_info(struct
- 	else
- 		channel = rx_status->channel;
- 
--	bss = ieee80211_rx_bss_get(dev, mgmt->bssid);
-+	bss = ieee80211_rx_bss_get(dev, mgmt->bssid, channel);
- 	if (!bss) {
--		bss = ieee80211_rx_bss_add(dev, mgmt->bssid);
-+		bss = ieee80211_rx_bss_add(dev, mgmt->bssid, channel);
- 		if (!bss)
- 			return;
- 	} else {
-@@ -1622,7 +1629,6 @@ static void ieee80211_rx_bss_info(struct
- 
- 
- 	bss->hw_mode = rx_status->phymode;
--	bss->channel = channel;
- 	bss->freq = rx_status->freq;
- 	if (channel != rx_status->channel &&
- 	    (bss->hw_mode == MODE_IEEE80211G ||
-@@ -2355,7 +2361,7 @@ static int ieee80211_sta_create_ibss(str
- 	printk(KERN_DEBUG "%s: Creating new IBSS network, BSSID " MAC_FMT "\n",
- 	       dev->name, MAC_ARG(bssid));
- 
--	bss = ieee80211_rx_bss_add(dev, bssid);
-+	bss = ieee80211_rx_bss_add(dev, bssid, local->hw.conf.channel);
- 	if (!bss)
- 		return -ENOMEM;
- 
-@@ -2366,7 +2372,6 @@ static int ieee80211_sta_create_ibss(str
- 		local->hw.conf.beacon_int = 100;
- 	bss->beacon_int = local->hw.conf.beacon_int;
- 	bss->hw_mode = local->hw.conf.phymode;
--	bss->channel = local->hw.conf.channel;
- 	bss->freq = local->hw.conf.freq;
- 	bss->last_update = jiffies;
- 	bss->capability = WLAN_CAPABILITY_IBSS;
-@@ -2426,7 +2431,7 @@ static int ieee80211_sta_find_ibss(struc
- 	       MAC_FMT "\n", MAC_ARG(bssid), MAC_ARG(ifsta->bssid));
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
--	    (bss = ieee80211_rx_bss_get(dev, bssid))) {
-+	    (bss = ieee80211_rx_bss_get(dev, bssid, local->hw.conf.channel))) {
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID " MAC_FMT
- 		       " based on configured SSID\n",
- 		       dev->name, MAC_ARG(bssid));
 
 -- 
+Ciao
+Stefano
