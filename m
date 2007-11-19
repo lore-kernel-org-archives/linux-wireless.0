@@ -1,92 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:43840 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbXKSN3k (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:26007 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247AbXKSIi5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 08:29:40 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1828391fkz
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2007 05:29:37 -0800 (PST)
-Message-ID: <c85cb4470711190529u463a600dtbffdb2ac2c749be0@mail.gmail.com> (sfid-20071119_132944_525694_A7248E78)
-Date: Mon, 19 Nov 2007 15:29:37 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH 06/14] mac80211: adding 802.11n essential A-MSDU Rxcapability
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Winkler, Tomas" <tomas.winkler@intel.com>, flamingice@sourmilk.net
-In-Reply-To: <20071119001933.GD8672@jm.kir.nu>
+	Mon, 19 Nov 2007 03:38:57 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: list as orphan in MAINTAINERS
+Date: Mon, 19 Nov 2007 09:39:10 +0100
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <20071117023020.0a164e90@morte>
+In-Reply-To: <20071117023020.0a164e90@morte>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1879838866982C46A9CB3D56BA49ADEB04008798@hasmsx411.ger.corp.intel.com>
-	 <1194885942.5229.62.camel@johannes.berg>
-	 <20071119001933.GD8672@jm.kir.nu>
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200711190939.10280.hs4233@mail.mn-solutions.de> (sfid-20071119_083901_136690_9082DA96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-first patch (altering the handlers with no 11n code yet) has been
-released. if it is ok i will change the amsdu handler accordingly
-ron
+> List the Marvell Libertas wireless driver as orphan in the
+> MAINTAINERS file.
 
-> > > Would appreciate your opinion for next possible solution:
-> > > I'll Move ieee80211_rx_h_data_agg before ieee80211_rx_h_802_1x_pae, and
-> > > assuming I identify A-MSDU, I'll loop for each internal MSDU on:
-> > >   ieee80211_rx_h_802_1x_pae
-> > >   ieee80211_rx_h_drop_unencrypted
-> > >   ieee80211_rx_h_data
-> > > return value of ieee80211_rx_h_data_agg to
-> > > __ieee80211_invoke_rx_handlers will be this small loop's return value
-> >
-> > I'm not sure I'd like to see such a thing. One thing I'm generally
-> > unhappy with here is how the handlers are in a list but there isn't a
-> > point in adding/removing any. Also, I'm not convinced that what you're
-> > saying will actually work because the handlers expect 802.11 frames so
-> > you'd have to make 802.11 frames out of the 802.3 frames you get...
->
-> When working with a proprietary (pre-802.11n) frame aggregation, we
-> ended up doing more or less this, i.e., converting the frames to a list
-> of skb's that had generated 802.11 headers and then passing them one by
-> one to ieee80211_rx_h_data. I don't know whether I would say that I
-> likeed the end result, but at least it seemed to work without major
-> problems.
->
-> This was assuming that there were never frames that would need special
-> handling in the aggregate (i.e., need for special PAE or
-> unencrypted/encrypted processing). Since the aggregate was encrypted as
-> a single unit, the drop_unencrypted was not an issue. Same was, in
-> practice, true for most of PAE processing. I don't think the initial
-> EAPOL handshake is an issue, but at least in theory, there could be an
-> EAPOL re-authentication happening at some point and if EAPOL frames
-> require special processing, this would need to be taken into account.
->
-> > What I originally wanted to do for this was to add a new
-> > "handle_data_frame" function that operates on 802.3 frames but has all
-> > the info available, is called from the rx_h_data handler and
-> > incorporates all the three callbacks you list above.That'd be similar to
-> > what I did with the crypto code (where we now only have a single handler
-> > doing it all rather than a bunch doing different pieces of the
-> > functionality)
->
-> Please note that data frame handling requires support for four addresses
-> and plain 802.3 header would not be sufficient without some additional
-> meta data. I would assume this to be doable, but some of the
-> functionality will need to moved around to handle the 802.11 specific
-> things first (like WDS interface selection) and then pass some meta data
-> in addition to the frame. This would get relatively close to the
-> MA-UNITDATA service primitives from the MAC (which do indeed only pass
-> two addresses; 802.3 header would just be one example of how this
-> information can be passed).
->
-> > You should be able to do this in the code right now because I removed
-> > the management interface and hence EAPOL frames aren't handled
-> > specially. Hostapd wants to have eapol frames on the management
-> > interface and 802.11 framed, but I don't understand that and would
-> > rather have it be done differently.
->
-> As long as the issues with encrypted vs. unencrypted frames can be
-> resolved for both TX and RX in a way that handles the 802.1X and WPA
-> cases, it should be fine passing EAPOL frames as normal data frames. In
-> addition, bridging code should be told not to bridge this ethertype if
-> that has not been done yet.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
+>From my point of view Dan Williams is the Libertas maintainer.
