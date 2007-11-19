@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:31618 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbXKLTsG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 14:48:06 -0500
-Received: by ik-out-1112.google.com with SMTP id c28so7588ika
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 11:48:04 -0800 (PST)
-Subject: Re: [PATCH 2/4] o80211s: (nl80211) support for mesh interfaces and
-	set_mesh_cfg command
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1194687275.7258.36.camel@johannes.berg>
-References: <473516df.18bb720a.41e8.5fdc@mx.google.com>
-	 (sfid-20071110_022645_005653_498DB7A6)  <1194687275.7258.36.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 12 Nov 2007 11:47:41 -0800
-Message-Id: <1194896861.6980.28.camel@localhost> (sfid-20071112_194812_149912_85E33456)
+Received: from mfe1.polimi.it ([131.175.12.23]:54288 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751750AbXKSWUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 17:20:39 -0500
+Date: Mon, 19 Nov 2007 23:19:35 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: bcm43xx-dev@lists.berlios.de,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] remove bcm43xx
+Message-ID: <20071119231935.535674ba@morte> (sfid-20071119_222044_191152_6C69D0AB)
+In-Reply-To: <200711192300.12183.rjw@sisk.pl>
+References: <20071119202121.6ad3fa70@morte>
+	<200711192300.12183.rjw@sisk.pl>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-11-10 at 10:34 +0100, Johannes Berg wrote:
-> So if I bring up a mesh interface and don't use SET_MESH_CFG, it won't
-> operate at all?
+On Mon, 19 Nov 2007 23:00:11 +0100
+"Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
-Yes it would, it would use the wild card, zero-length mesh ID.
+> Well, are you 100% sure that everyone interested knows that this drivers
+> is going out in 2.6.25 and no one will object?
 
-> I think I'd prefer if the MESH_ID attribute would be given as part of
-> SET_INTERFACE/NEW_INTERFACE instead of a new command. I'm attempting to
-> keep nl80211 as object oriented as possible and this single command
-> doesn't really fit the picture.
+The maintainers know. Having both drivers in 2.6.24 should help find out if
+there's anything which should be ironed out with b43/b43legacy, but right
+now they are already working a lot better than bcm43xx, and they are more
+stable. So I couldn't find a reason why we shouldn't remove bcm43xx in
+2.6.25.
 
-Will that be the way to specify the SSID for the STA interfaces? If so,
-I agree it would be better to use that command instead of an additional
-mesh specific command. As by now it's just used to set the interface
-type I was not sure it was appropriate to add the mesh configuration
-there.
 
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+Ciao
+Stefano
