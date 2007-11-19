@@ -1,331 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2678 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934823AbXK3D3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 22:29:42 -0500
-Date: Thu, 29 Nov 2007 22:29:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
-Message-ID: <20071130032917.GA29165@tuxdriver.com> (sfid-20071130_033010_522626_A7F9CC87)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mfe1.polimi.it ([131.175.12.23]:45144 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750921AbXKSTWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 14:22:15 -0500
+Date: Mon, 19 Nov 2007 20:21:21 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH v3] remove bcm43xx
+Message-ID: <20071119202121.6ad3fa70@morte> (sfid-20071119_192218_891566_DFA4C32B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff,
+Remove bcm43xx.
 
-A few fixes intended for 2.6.24...
 
-Let me know if there are any problems!
-
-Thanks,
-
-John
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
 ---
 
-Individual patches are available here:
+John,
+I hope this is the last try, v2 was line wrapped. :) This is for 2.6.25.
+Please also run:
+	git rm -r drivers/net/wireless/bcm43xx
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.git fixes-jgarzik
 
 ---
 
-The following changes since commit d9f8bcbf67a0ee67c8cb0734f003dfe916bb5248:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc3
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-
-David Woodhouse (1):
-      libertas: Don't set NETIF_F_IPV6_CSUM in dev->features
-
-Holger Schurig (1):
-      libertas: let more than one MAC event through
-
-Joe Perches (1):
-      drivers/net/wireless: Add missing "space"
-
-Joonwoo Park (2):
-      iwlwifi 3945 Fix race conditional panic.
-      iwlwifi 4965 Fix race conditional panic.
-
-Saleem Abdulrasool (1):
-      iwlwifi: fix possible NULL dereference in iwl_set_rate()
-
-Stefano Brivio (1):
-      b43/b43legacy: fix left-over URLs and ifdefs
-
-Tomas Winkler (1):
-      iwlwifi: fix iwl_mac_add_interface handler
-
- drivers/net/wireless/b43/main.c             |    2 +-
- drivers/net/wireless/b43/phy.c              |    2 +-
- drivers/net/wireless/b43legacy/dma.c        |    2 +-
- drivers/net/wireless/b43legacy/main.c       |    2 +-
- drivers/net/wireless/b43legacy/phy.c        |    2 +-
- drivers/net/wireless/bcm43xx/bcm43xx_phy.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++++++++++----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   13 ++++++++++---
- drivers/net/wireless/libertas/if_cs.c       |    3 ++-
- drivers/net/wireless/libertas/main.c        |    4 ----
- drivers/net/wireless/libertas/wext.c        |    2 +-
- drivers/net/wireless/netwave_cs.c           |    2 +-
- drivers/net/wireless/p54usb.c               |    2 +-
- 13 files changed, 33 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2b17c1d..b45eecc 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1566,7 +1566,7 @@ static void b43_release_firmware(struct b43_wldev *dev)
- static void b43_print_fw_helptext(struct b43_wl *wl)
- {
- 	b43err(wl, "You must go to "
--	       "http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
-+	       "http://linuxwireless.org/en/users/Drivers/b43#devicefirmware "
- 	       "and download the correct firmware (version 4).\n");
- }
- 
-diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-index 3d4ed64..7ff091e 100644
---- a/drivers/net/wireless/b43/phy.c
-+++ b/drivers/net/wireless/b43/phy.c
-@@ -2214,7 +2214,7 @@ int b43_phy_init_tssi2dbm_table(struct b43_wldev *dev)
- 		}
- 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
- 		if (dyn_tssi2dbm == NULL) {
--			b43err(dev->wl, "Could not allocate memory"
-+			b43err(dev->wl, "Could not allocate memory "
- 			       "for tssi2dbm table\n");
- 			return -ENOMEM;
- 		}
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index 8cb3dc4..83161d9 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -996,7 +996,7 @@ int b43legacy_dma_init(struct b43legacy_wldev *dev)
- 
- 	err = ssb_dma_set_mask(dev->dev, dmamask);
- 	if (err) {
--#ifdef BCM43XX_PIO
-+#ifdef CONFIG_B43LEGACY_PIO
- 		b43legacywarn(dev->wl, "DMA for this device not supported. "
- 			"Falling back to PIO\n");
- 		dev->__using_pio = 1;
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 3bde1e9..32d5e17 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -1419,7 +1419,7 @@ static void b43legacy_release_firmware(struct b43legacy_wldev *dev)
- static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
- {
- 	b43legacyerr(wl, "You must go to http://linuxwireless.org/en/users/"
--		     "Drivers/bcm43xx#devicefirmware "
-+		     "Drivers/b43#devicefirmware "
- 		     "and download the correct firmware (version 3).\n");
- }
- 
-diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
-index 22a4b3d..491e518 100644
---- a/drivers/net/wireless/b43legacy/phy.c
-+++ b/drivers/net/wireless/b43legacy/phy.c
-@@ -2020,7 +2020,7 @@ int b43legacy_phy_init_tssi2dbm_table(struct b43legacy_wldev *dev)
- 			phy->idle_tssi = 62;
- 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
- 		if (dyn_tssi2dbm == NULL) {
--			b43legacyerr(dev->wl, "Could not allocate memory"
-+			b43legacyerr(dev->wl, "Could not allocate memory "
- 			       "for tssi2dbm table\n");
- 			return -ENOMEM;
- 		}
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-index b37f1e3..af3de33 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -2149,7 +2149,7 @@ int bcm43xx_phy_init_tssi2dbm_table(struct bcm43xx_private *bcm)
- 		}
- 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
- 		if (dyn_tssi2dbm == NULL) {
--			printk(KERN_ERR PFX "Could not allocate memory"
-+			printk(KERN_ERR PFX "Could not allocate memory "
- 					    "for tssi2dbm table\n");
- 			return -ENOMEM;
- 		}
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 465da4f..4bdf237 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2915,6 +2915,10 @@ static void iwl_set_rate(struct iwl_priv *priv)
- 	int i;
- 
- 	hw = iwl_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
- 
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
-@@ -6936,13 +6940,10 @@ static int iwl_mac_add_interface(struct ieee80211_hw *hw,
- 	DECLARE_MAC_BUF(mac);
- 
- 	IWL_DEBUG_MAC80211("enter: id %d, type %d\n", conf->if_id, conf->type);
--	if (conf->mac_addr)
--		IWL_DEBUG_MAC80211("enter: MAC %s\n",
--				   print_mac(mac, conf->mac_addr));
- 
- 	if (priv->interface_id) {
- 		IWL_DEBUG_MAC80211("leave - interface_id != 0\n");
--		return 0;
-+		return -EOPNOTSUPP;
- 	}
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -6951,6 +6952,12 @@ static int iwl_mac_add_interface(struct ieee80211_hw *hw,
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	mutex_lock(&priv->mutex);
-+
-+	if (conf->mac_addr) {
-+		IWL_DEBUG_MAC80211("Set: %s\n", print_mac(mac, conf->mac_addr));
-+		memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
-+	}
-+
- 	iwl_set_mode(priv, conf->type);
- 
- 	IWL_DEBUG_MAC80211("leave\n");
-@@ -8270,6 +8277,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
- {
- 	iwl_hw_cancel_deferred_work(priv);
- 
-+	cancel_delayed_work_sync(&priv->init_alive_start);
- 	cancel_delayed_work(&priv->scan_check);
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_delayed_work(&priv->post_associate);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9918780..8f85564 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3003,6 +3003,10 @@ static void iwl_set_rate(struct iwl_priv *priv)
- 	int i;
- 
- 	hw = iwl_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
- 
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
-@@ -7326,9 +7330,6 @@ static int iwl_mac_add_interface(struct ieee80211_hw *hw,
- 	DECLARE_MAC_BUF(mac);
- 
- 	IWL_DEBUG_MAC80211("enter: id %d, type %d\n", conf->if_id, conf->type);
--	if (conf->mac_addr)
--		IWL_DEBUG_MAC80211("enter: MAC %s\n",
--				   print_mac(mac, conf->mac_addr));
- 
- 	if (priv->interface_id) {
- 		IWL_DEBUG_MAC80211("leave - interface_id != 0\n");
-@@ -7341,6 +7342,11 @@ static int iwl_mac_add_interface(struct ieee80211_hw *hw,
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	mutex_lock(&priv->mutex);
-+
-+	if (conf->mac_addr) {
-+		IWL_DEBUG_MAC80211("Set %s\n", print_mac(mac, conf->mac_addr));
-+		memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
-+	}
- 	iwl_set_mode(priv, conf->type);
- 
- 	IWL_DEBUG_MAC80211("leave\n");
-@@ -8864,6 +8870,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
- {
- 	iwl_hw_cancel_deferred_work(priv);
- 
-+	cancel_delayed_work_sync(&priv->init_alive_start);
- 	cancel_delayed_work(&priv->scan_check);
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_delayed_work(&priv->post_associate);
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index ec89dab..ba4fc2b 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -170,7 +170,8 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
- #define IF_CS_H_IC_TX_OVER		0x0001
- #define IF_CS_H_IC_RX_OVER		0x0002
- #define IF_CS_H_IC_DNLD_OVER		0x0004
--#define IF_CS_H_IC_HOST_EVENT		0x0008
-+#define IF_CS_H_IC_POWER_DOWN		0x0008
-+#define IF_CS_H_IC_HOST_EVENT		0x0010
- #define IF_CS_H_IC_MASK			0x001f
- 
- #define IF_CS_H_INT_MASK		0x00000004
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 5ead083..1823b48 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1165,8 +1165,6 @@ wlan_private *libertas_add_card(void *card, struct device *dmdev)
- #ifdef	WIRELESS_EXT
- 	dev->wireless_handlers = (struct iw_handler_def *)&libertas_handler_def;
- #endif
--#define NETIF_F_DYNALLOC 16
--	dev->features |= NETIF_F_DYNALLOC;
- 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
- 	dev->set_multicast_list = libertas_set_multicast_list;
- 
-@@ -1348,8 +1346,6 @@ int libertas_add_mesh(wlan_private *priv, struct device *dev)
- #ifdef	WIRELESS_EXT
- 	mesh_dev->wireless_handlers = (struct iw_handler_def *)&mesh_handler_def;
- #endif
--#define NETIF_F_DYNALLOC 16
+Index: wireless-2.6/Documentation/networking/bcm43xx.txt
+===================================================================
+--- wireless-2.6.orig/Documentation/networking/bcm43xx.txt
++++ /dev/null
+@@ -1,89 +0,0 @@
 -
- 	/* Register virtual mesh interface */
- 	ret = register_netdev(mesh_dev);
- 	if (ret) {
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index c6f5aa3..395b788 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1528,7 +1528,7 @@ static int wlan_set_encodeext(struct net_device *dev,
- 			&& (ext->key_len != KEY_LEN_WPA_TKIP))
- 		    || ((alg == IW_ENCODE_ALG_CCMP)
- 		        && (ext->key_len != KEY_LEN_WPA_AES))) {
--				lbs_deb_wext("invalid size %d for key of alg"
-+				lbs_deb_wext("invalid size %d for key of alg "
- 				       "type %d\n",
- 				       ext->key_len,
- 				       alg);
-diff --git a/drivers/net/wireless/netwave_cs.c b/drivers/net/wireless/netwave_cs.c
-index 2402cb8..d2fa079 100644
---- a/drivers/net/wireless/netwave_cs.c
-+++ b/drivers/net/wireless/netwave_cs.c
-@@ -806,7 +806,7 @@ static int netwave_pcmcia_config(struct pcmcia_device *link) {
-     for (i = 0; i < 6; i++) 
- 	dev->dev_addr[i] = readb(ramBase + NETWAVE_EREG_PA + i);
+-			BCM43xx Linux Driver Project
+-			============================
+-
+-Introduction
+-------------
+-
+-Many of the wireless devices found in modern notebook computers are
+-based on the wireless chips produced by Broadcom. These devices have
+-been a problem for Linux users as there is no open-source driver
+-available. In addition, Broadcom has not released specifications
+-for the device, and driver availability has been limited to the
+-binary-only form used in the GPL versions of AP hardware such as the
+-Linksys WRT54G, and the Windows and OS X drivers.  Before this project
+-began, the only way to use these devices were to use the Windows or
+-OS X drivers with either the Linuxant or ndiswrapper modules. There
+-is a strong penalty if this method is used as loading the binary-only
+-module "taints" the kernel, and no kernel developer will help diagnose
+-any kernel problems.
+-
+-Development
+------------
+-
+-This driver has been developed using
+-a clean-room technique that is described at
+-http://bcm-specs.sipsolutions.net/ReverseEngineeringProcess. For legal
+-reasons, none of the clean-room crew works on the on the Linux driver,
+-and none of the Linux developers sees anything but the specifications,
+-which are the ultimate product of the reverse-engineering group.
+-
+-Software
+---------
+-
+-Since the release of the 2.6.17 kernel, the bcm43xx driver has been
+-distributed with the kernel source, and is prebuilt in most, if not
+-all, distributions.  There is, however, additional software that is
+-required. The firmware used by the chip is the intellectual property
+-of Broadcom and they have not given the bcm43xx team redistribution
+-rights to this firmware.  Since we cannot legally redistribute
+-the firmware we cannot include it with the driver. Furthermore, it
+-cannot be placed in the downloadable archives of any distributing
+-organization; therefore, the user is responsible for obtaining the
+-firmware and placing it in the appropriate location so that the driver
+-can find it when initializing.
+-
+-To help with this process, the bcm43xx developers provide a separate
+-program named bcm43xx-fwcutter to "cut" the firmware out of a
+-Windows or OS X driver and write the extracted files to the proper
+-location. This program is usually provided with the distribution;
+-however, it may be downloaded from
+-
+-http://developer.berlios.de/project/showfiles.php?group_id=4547
+-
+-The firmware is available in two versions. V3 firmware is used with
+-the in-kernel bcm43xx driver that uses a software MAC layer called
+-SoftMAC, and will have a microcode revision of 0x127 or smaller. The
+-V4 firmware is used by an out-of-kernel driver employing a variation of
+-the Devicescape MAC layer known as d80211. Once bcm43xx-d80211 reaches
+-a satisfactory level of development, it will replace bcm43xx-softmac
+-in the kernel as it is much more flexible and powerful.
+-
+-A source for the latest V3 firmware is
+-
+-http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
+-
+-Once this file is downloaded, the command
+-'bcm43xx-fwcutter -w <dir> <filename>'
+-will extract the microcode and write it to directory
+-<dir>. The correct directory will depend on your distribution;
+-however, most use '/lib/firmware'. Once this step is completed,
+-the bcm3xx driver should load when the system is booted. To see
+-any messages relating to the driver, issue the command 'dmesg |
+-grep bcm43xx' from a terminal window. If there are any problems,
+-please send that output to Bcm43xx-dev@lists.berlios.de.
+-
+-Although the driver has been in-kernel since 2.6.17, the earliest
+-version is quite limited in its capability. Patches that include
+-all features of later versions are available for the stable kernel
+-versions from 2.6.18. These will be needed if you use a BCM4318,
+-or a PCI Express version (BCM4311 and BCM4312). In addition, if you
+-have an early BCM4306 and more than 1 GB RAM, your kernel will need
+-to be patched.	These patches, which are being updated regularly,
+-are available at ftp://lwfinger.dynalias.org/patches. Look for
+-combined_2.6.YY.patch. Of course you will need kernel source downloaded
+-from kernel.org, or the source from your distribution.
+-
+-If you build your own kernel, please enable CONFIG_BCM43XX_DEBUG
+-and CONFIG_IEEE80211_SOFTMAC_DEBUG. The log information provided is
+-essential for solving any problems.
+Index: wireless-2.6/MAINTAINERS
+===================================================================
+--- wireless-2.6.orig/MAINTAINERS
++++ wireless-2.6/MAINTAINERS
+@@ -821,15 +821,6 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/en/users/Drivers/b43
+ S:	Maintained
  
--    printk(KERN_INFO "%s: Netwave: port %#3lx, irq %d, mem %lx"
-+    printk(KERN_INFO "%s: Netwave: port %#3lx, irq %d, mem %lx, "
- 	   "id %c%c, hw_addr %s\n",
- 	   dev->name, dev->base_addr, dev->irq,
- 	   (u_long) ramBase,
-diff --git a/drivers/net/wireless/p54usb.c b/drivers/net/wireless/p54usb.c
-index 755482a..60d286e 100644
---- a/drivers/net/wireless/p54usb.c
-+++ b/drivers/net/wireless/p54usb.c
-@@ -308,7 +308,7 @@ static int p54u_read_eeprom(struct ieee80211_hw *dev)
+-BCM43XX WIRELESS DRIVER (SOFTMAC BASED VERSION)
+-P:	Larry Finger
+-M:	Larry.Finger@lwfinger.net
+-P:	Stefano Brivio
+-M:	stefano.brivio@polimi.it
+-L:	linux-wireless@vger.kernel.org
+-W:	http://bcm43xx.berlios.de/
+-S:	Maintained
+-
+ BEFS FILE SYSTEM
+ P:	Sergey S. Kostyliov
+ M:	rathamahata@php4.ru
+Index: wireless-2.6/drivers/net/wireless/Kconfig
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/Kconfig
++++ wireless-2.6/drivers/net/wireless/Kconfig
+@@ -629,7 +629,6 @@ config ATH5K
  
- 	buf = kmalloc(0x2020, GFP_KERNEL);
- 	if (!buf) {
--		printk(KERN_ERR "prism54usb: cannot allocate memory for"
-+		printk(KERN_ERR "prism54usb: cannot allocate memory for "
- 		       "eeprom readback!\n");
- 		return -ENOMEM;
- 	}
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+-source "drivers/net/wireless/bcm43xx/Kconfig"
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+Index: wireless-2.6/drivers/net/wireless/Makefile
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/Makefile
++++ wireless-2.6/drivers/net/wireless/Makefile
+@@ -37,7 +37,6 @@ obj-$(CONFIG_USB_ATMEL)	        += at76_
+ obj-$(CONFIG_PRISM54)		+= prism54/
+ 
+ obj-$(CONFIG_HOSTAP)		+= hostap/
+-obj-$(CONFIG_BCM43XX)		+= bcm43xx/
+ obj-$(CONFIG_B43)		+= b43/
+ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
+ obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
+
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Ciao
+Stefano
