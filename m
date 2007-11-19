@@ -1,311 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:39967 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754136AbXKNQXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 11:23:48 -0500
-Date: Wed, 14 Nov 2007 18:23:59 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 4/4] ath5k: Fix calinterval and add more RF5413/5414 inivals
-Message-ID: <20071114162359.GD6365@localhost.domain.invalid> (sfid-20071114_164218_319257_7FFBDAEA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mfe1.polimi.it ([131.175.12.23]:48501 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751186AbXKSTWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 14:22:20 -0500
+Date: Mon, 19 Nov 2007 20:21:31 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH v3] b43/b43legacy: fix left-over URLs and ifdefs
+Message-ID: <20071119202131.63c09285@morte> (sfid-20071119_192224_681157_39E9B0F5)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*Fix calinterval to be 10secs for now.
-*Add some more initial settings i got for RF5413/5414
+Fix some left-over URLs and ifdefs in b43 and b43legacy drivers.
 
-Still no fix for poor 802.11a performance (probably tx power related) ;-(
-Leave it as "partialy supported" until this issue is resolved...
 
-for base.c
-Changes-licensed-under: 3-clause-BSD
-
-for all others...
-Changes-licensed-under: ISC
-
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
 ---
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 0d0e060..01b238a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -95,7 +95,7 @@ enum {
- 	ATH_LED_RX,
- };
- 
--static int ath5k_calinterval = 1; /* Calibrate PHY every 1 sec (TODO: Fixme) */
-+static int ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
- 
- #if AR_DEBUG
- static unsigned int ath5k_debug;
-diff --git a/drivers/net/wireless/ath5k/initvals.c b/drivers/net/wireless/ath5k/initvals.c
-index 44c05f0..e27a567 100644
---- a/drivers/net/wireless/ath5k/initvals.c
-+++ b/drivers/net/wireless/ath5k/initvals.c
-@@ -855,6 +855,230 @@ static const struct ath5k_ini_mode ar5212_rf5112_ini_mode[] = {
- 		{ 0x642c0140, 0x642c0140, 0x6442c160, 0x6442c160, 0x6442c160 } },
- };
- 
-+/* Initial mode-specific settings for RF5413/5414 */
-+static const struct ath5k_ini_mode rf5413_ini_mode[] = {
-+	{ AR5K_TXCFG,
-+		{ 0x00000015, 0x00000015, 0x00000015, 0x00000015, 0x00000015, } },
-+	{ AR5K_USEC_5211,
-+		{ 0x128d93a7, 0x128d93a7, 0x04e01395, 0x12e013ab, 0x12e013ab, } },
-+	{ AR5K_PHY_TURBO,
-+		{ 0x00000000, 0x00000003, 0x00000000, 0x00000000, 0x00000003, } },
-+	{ 0x9820,
-+		{ 0x02020200, 0x02020200, 0x02010200, 0x02020200, 0x02020200, } },
-+	{ 0x9824,
-+		{ 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, } },
-+	{ 0x9828,
-+		{ 0x0a020001, 0x0a020001, 0x05020100, 0x0a020001, 0x0a020001, } },
-+	{ 0x9834,	
-+		{ 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, } },
-+	{ 0x9838,	
-+		{ 0x00000007, 0x00000007, 0x0000000b, 0x0000000b, 0x0000000b, } },
-+	{ 0x9844,
-+		{ 0x1372161c, 0x13721c25, 0x13721728, 0x137216a2, 0x13721c25, } },
-+	{ 0x9848,	
-+		{ 0x0018fa61, 0x0018fa61, 0x001a1a63, 0x001a1a63, 0x001a1a63, } },
-+	{ 0x9850,	
-+		{ 0x0c98b4e0, 0x0c98b4e0, 0x0c98b0da, 0x0c98b0da, 0x0c98b0da, } },
-+	{ AR5K_PHY_SIG,
-+		{ 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, } },
-+	{ AR5K_PHY_AGCCOARSE,
-+		{ 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e, } },
-+	{ AR5K_PHY_AGCCTL,
-+		{ 0x00009d10, 0x00009d10, 0x00009d18, 0x00009d10, 0x00009d10, } },
-+	{ AR5K_PHY_NF,
-+		{ 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, } },
-+	{ AR5K_PHY_ADCSAT,
-+		{ 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190, } },
-+	{ 0x986c,	
-+		{ 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081, } },
-+	{ AR5K_PHY_RX_DELAY,	
-+		{ 0x000007d0, 0x000007d0, 0x0000044c, 0x00000898, 0x00000898, } },
-+	{ 0x9918,
-+		{ 0x000001b8, 0x000001b8, 0x00000084, 0x00000108, 0x000001b8, } },
-+	{ 0x9924,
-+		{ 0x10058a05, 0x10058a05, 0x10058a05, 0x10058a05, 0x10058a05, } },
-+	{ AR5K_PHY_FRAME_CTL_5211,
-+		{ 0xf7b81000, 0xf7b81000, 0xf7b80d00, 0xf7b81000, 0xf7b81000, } },
-+	{ 0xa230,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000108, 0x00000000, } },
-+	{ AR5K_PHY_CCKTXCTL,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa208,
-+		{ 0xd6be6788, 0xd6be6788, 0xd03e6788, 0xd03e6788, 0xd03e6788, } },
-+	{ AR5K_PHY_GAIN_2GHZ,
-+		{ 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120, } },
-+	{ 0xa21c,
-+		{ 0x1883800a, 0x1883800a, 0x1863800a, 0x1883800a, 0x1883800a, } },
-+	{ 0xa300,
-+		{ 0x18010000, 0x18010000, 0x18010000, 0x18010000, 0x18010000, } },
-+	{ 0xa304,
-+		{ 0x30032602, 0x30032602, 0x30032602, 0x30032602, 0x30032602, } },
-+	{ 0xa308,
-+		{ 0x48073e06, 0x48073e06, 0x48073e06, 0x48073e06, 0x48073e06, } },
-+	{ 0xa30c,
-+		{ 0x560b4c0a, 0x560b4c0a, 0x560b4c0a, 0x560b4c0a, 0x560b4c0a, } },
-+	{ 0xa310,
-+		{ 0x641a600f, 0x641a600f, 0x641a600f, 0x641a600f, 0x641a600f, } },
-+	{ 0xa314,
-+		{ 0x784f6e1b, 0x784f6e1b, 0x784f6e1b, 0x784f6e1b, 0x784f6e1b, } },
-+	{ 0xa318,
-+		{ 0x868f7c5a, 0x868f7c5a, 0x868f7c5a, 0x868f7c5a, 0x868f7c5a, } },
-+	{ 0xa31c,
-+		{ 0x90cf865b, 0x90cf865b, 0x8ecf865b, 0x8ecf865b, 0x8ecf865b, } },
-+	{ 0xa320,	
-+		{ 0x9d4f970f, 0x9d4f970f, 0x9b4f970f, 0x9b4f970f, 0x9b4f970f, } },
-+	{ 0xa324,
-+		{ 0xa7cfa38f, 0xa7cfa38f, 0xa3cf9f8f, 0xa3cf9f8f, 0xa3cf9f8f, } },
-+	{ 0xa328,
-+		{ 0xb55faf1f, 0xb55faf1f, 0xb35faf1f, 0xb35faf1f, 0xb35faf1f, } },
-+	{ 0xa32c,
-+		{ 0xbddfb99f, 0xbddfb99f, 0xbbdfb99f, 0xbbdfb99f, 0xbbdfb99f, } },
-+	{ 0xa330,
-+		{ 0xcb7fc53f, 0xcb7fc53f, 0xcb7fc73f, 0xcb7fc73f, 0xcb7fc73f, } },
-+	{ 0xa334,
-+		{ 0xd5ffd1bf, 0xd5ffd1bf, 0xd3ffd1bf, 0xd3ffd1bf, 0xd3ffd1bf, } },
-+	{ AR5K_DCU_FP,
-+		{ 0x000003e0, 0x000003e0, 0x000003e0, 0x000003e0, 0x000003e0, } },
-+	{ 0x4068,
-+		{ 0x00000010, 0x00000010, 0x00000010, 0x00000010, 0x00000010, } },
-+	{ 0x8060,
-+		{ 0x0000000f, 0x0000000f, 0x0000000f, 0x0000000f, 0x0000000f, } },
-+	{ 0x809c,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x80a0,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8118,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x811c,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8120,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8124,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8128,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x812c,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8130,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8134,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8138,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x813c,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x8140,
-+		{ 0x800003f9, 0x800003f9, 0x800003f9, 0x800003f9, 0x800003f9, } },
-+	{ 0x8144,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ AR5K_PHY_AGC,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x982c,
-+		{ 0x0000a000, 0x0000a000, 0x0000a000, 0x0000a000, 0x0000a000, } },
-+	{ 0x983c,
-+		{ 0x00200400, 0x00200400, 0x00200400, 0x00200400, 0x00200400, } },
-+	{ 0x984c,
-+		{ 0x1284233c, 0x1284233c, 0x1284233c, 0x1284233c, 0x1284233c, } },
-+	{ AR5K_PHY_SCR,
-+		{ 0x0000001f, 0x0000001f, 0x0000001f, 0x0000001f, 0x0000001f, } },
-+	{ AR5K_PHY_SLMT,
-+		{ 0x00000080, 0x00000080, 0x00000080, 0x00000080, 0x00000080, } },
-+	{ AR5K_PHY_SCAL,
-+		{ 0x0000000e, 0x0000000e, 0x0000000e, 0x0000000e, 0x0000000e, } },
-+	{ 0x9958,	
-+		{ 0x00081fff, 0x00081fff, 0x00081fff, 0x00081fff, 0x00081fff, } },
-+	{ 0x9980,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x9984,
-+		{ 0x02800000, 0x02800000, 0x02800000, 0x02800000, 0x02800000, } },
-+	{ 0x99a0,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x99e0,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0x99e4,
-+		{ 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, } },
-+	{ 0x99e8,
-+		{ 0x3c466478, 0x3c466478, 0x3c466478, 0x3c466478, 0x3c466478, } },
-+	{ 0x99ec,
-+		{ 0x000000aa, 0x000000aa, 0x000000aa, 0x000000aa, 0x000000aa, } },
-+	{ AR5K_PHY_SCLOCK,
-+		{ 0x0000000c, 0x0000000c, 0x0000000c, 0x0000000c, 0x0000000c, } },
-+	{ AR5K_PHY_SDELAY,
-+		{ 0x000000ff, 0x000000ff, 0x000000ff, 0x000000ff, 0x000000ff, } },
-+	{ AR5K_PHY_SPENDING,
-+		{ 0x00000014, 0x00000014, 0x00000014, 0x00000014, 0x00000014, } },
-+	{ 0xa228,
-+		{ 0x000009b5, 0x000009b5, 0x000009b5, 0x000009b5, 0x000009b5, } },
-+	{ 0xa23c,
-+		{ 0x93c889af, 0x93c889af, 0x93c889af, 0x93c889af, 0x93c889af, } },
-+	{ 0xa24c,
-+		{ 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, } },
-+	{ 0xa250,
-+		{ 0x0000a000, 0x0000a000, 0x0000a000, 0x0000a000, 0x0000a000, } },
-+	{ 0xa254,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa258,
-+		{ 0x0cc75380, 0x0cc75380, 0x0cc75380, 0x0cc75380, 0x0cc75380, } },
-+	{ 0xa25c,
-+		{ 0x0f0f0f01, 0x0f0f0f01, 0x0f0f0f01, 0x0f0f0f01, 0x0f0f0f01, } },
-+	{ 0xa260,
-+		{ 0x5f690f01, 0x5f690f01, 0x5f690f01, 0x5f690f01, 0x5f690f01, } },
-+	{ 0xa264,
-+		{ 0x00418a11, 0x00418a11, 0x00418a11, 0x00418a11, 0x00418a11, } },
-+	{ 0xa268,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa26c,
-+		{ 0x0c30c16a, 0x0c30c16a, 0x0c30c16a, 0x0c30c16a, 0x0c30c16a, } },
-+	{ 0xa270,
-+		{ 0x00820820, 0x00820820, 0x00820820, 0x00820820, 0x00820820, } },
-+	{ 0xa274,
-+		{ 0x081b7caa, 0x081b7caa, 0x081b7caa, 0x081b7caa, 0x081b7caa, } },
-+	{ 0xa278,
-+		{ 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, } },
-+	{ 0xa27c,
-+		{ 0x051701ce, 0x051701ce, 0x051701ce, 0x051701ce, 0x051701ce, } },
-+	{ 0xa338,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa33c,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa340,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa344,
-+		{ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, } },
-+	{ 0xa348,
-+		{ 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, } },
-+	{ 0xa34c,
-+		{ 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, } },
-+	{ 0xa350,
-+		{ 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, } },
-+	{ 0xa354,
-+		{ 0x0003ffff, 0x0003ffff, 0x0003ffff, 0x0003ffff, 0x0003ffff, } },
-+	{ 0xa358,
-+		{ 0x79a8aa1f, 0x79a8aa1f, 0x79a8aa1f, 0x79a8aa1f, 0x79a8aa1f, } },
-+	{ 0xa35c,
-+		{ 0x066c420f, 0x066c420f, 0x066c420f, 0x066c420f, 0x066c420f, } },
-+	{ 0xa360,
-+		{ 0x0f282207, 0x0f282207, 0x0f282207, 0x0f282207, 0x0f282207, } },
-+	{ 0xa364,
-+		{ 0x17601685, 0x17601685, 0x17601685, 0x17601685, 0x17601685, } },
-+	{ 0xa368,
-+		{ 0x1f801104, 0x1f801104, 0x1f801104, 0x1f801104, 0x1f801104, } },
-+	{ 0xa36c,
-+		{ 0x37a00c03, 0x37a00c03, 0x37a00c03, 0x37a00c03, 0x37a00c03, } },
-+	{ 0xa370,
-+		{ 0x3fc40883, 0x3fc40883, 0x3fc40883, 0x3fc40883, 0x3fc40883, } },
-+	{ 0xa374,
-+		{ 0x57c00803, 0x57c00803, 0x57c00803, 0x57c00803, 0x57c00803, } },
-+	{ 0xa378,
-+		{ 0x5fd80682, 0x5fd80682, 0x5fd80682, 0x5fd80682, 0x5fd80682, } },
-+	{ 0xa37c,
-+		{ 0x7fe00482, 0x7fe00482, 0x7fe00482, 0x7fe00482, 0x7fe00482, } },
-+	{ 0xa380,
-+		{ 0x7f3c7bba, 0x7f3c7bba, 0x7f3c7bba, 0x7f3c7bba, 0x7f3c7bba, } },
-+	{ 0xa384,
-+		{ 0xf3307ff0, 0xf3307ff0, 0xf3307ff0, 0xf3307ff0, 0xf3307ff0, } },
-+};
-+
- /*
-  * Initial BaseBand Gain settings for RF5111/5112 (only AR5210 comes with
-  * RF5110 so initial BB Gain settings are included in AR5K_AR5210_INI)
-@@ -1050,14 +1274,19 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel)
- 	if (ah->ah_version == AR5K_AR5212) {
- 		ath5k_hw_ini_mode_registers(ah, ARRAY_SIZE(ar5212_ini_mode),
- 				ar5212_ini_mode, mode);
--		if (ah->ah_radio == AR5K_RF5111)
-+		if (ah->ah_radio == AR5K_RF5111){
- 			ath5k_hw_ini_mode_registers(ah,
- 					ARRAY_SIZE(ar5212_rf5111_ini_mode),
- 					ar5212_rf5111_ini_mode, mode);
--		else if (ah->ah_radio >= AR5K_RF5112)
-+		} else if (ah->ah_radio == AR5K_RF5112){
- 			ath5k_hw_ini_mode_registers(ah,
- 					ARRAY_SIZE(ar5212_rf5112_ini_mode),
- 					ar5212_rf5112_ini_mode, mode);
-+		} else if (ah->ah_radio == AR5K_RF5413){
-+			ath5k_hw_ini_mode_registers(ah,
-+					ARRAY_SIZE(rf5413_ini_mode),
-+					rf5413_ini_mode, mode);
-+		}
- 	}
- 	/*For 5211*/
- 	if (ah->ah_version == AR5K_AR5211)
-@@ -1075,6 +1304,7 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel)
- 		if (ah->ah_radio >= AR5K_RF5112) {
- 			ath5k_hw_reg_write(ah, AR5K_PHY_PAPD_PROBE_INI_5112,
- 					AR5K_PHY_PAPD_PROBE);
-+			/* Same for RF5413/5414 */
- 			ath5k_hw_ini_registers(ah,
- 					ARRAY_SIZE(rf5112_ini_bbgain),
- 					rf5112_ini_bbgain, change_channel);
 
+John,
+I hope this is the last try, v2 was line wrapped. :) This is for 2.6.24.
 
+---
+
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -1558,7 +1558,7 @@ static void b43_release_firmware(struct 
+ static void b43_print_fw_helptext(struct b43_wl *wl)
+ {
+ 	b43err(wl, "You must go to "
+-	       "http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
++	       "http://linuxwireless.org/en/users/Drivers/b43#devicefirmware "
+ 	       "and download the correct firmware (version 4).\n");
+ }
+ 
+Index: wireless-2.6/drivers/net/wireless/b43legacy/dma.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/dma.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/dma.c
+@@ -996,7 +996,7 @@ int b43legacy_dma_init(struct b43legacy_
+ 
+ 	err = ssb_dma_set_mask(dev->dev, dmamask);
+ 	if (err) {
+-#ifdef BCM43XX_PIO
++#ifdef CONFIG_B43LEGACY_PIO
+ 		b43legacywarn(dev->wl, "DMA for this device not supported. "
+ 			"Falling back to PIO\n");
+ 		dev->__using_pio = 1;
+Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -1398,7 +1398,7 @@ static void b43legacy_release_firmware(s
+ static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
+ {
+ 	b43legacyerr(wl, "You must go to http://linuxwireless.org/en/users/"
+-		     "Drivers/bcm43xx#devicefirmware "
++		     "Drivers/b43#devicefirmware "
+ 		     "and download the correct firmware (version 3).\n");
+ }
+ 
+ 
+-- 
+Ciao
+Stefano
