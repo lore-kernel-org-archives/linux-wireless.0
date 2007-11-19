@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:50473 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760160AbXKHRxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2007 12:53:30 -0500
-Date: Thu, 8 Nov 2007 12:53:28 -0500
-From: Jeff Garzik <jeff@garzik.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6 (3rd time
-	is the charm?)
-Message-ID: <20071108175328.GA3491@havoc.gtf.org> (sfid-20071108_175741_677636_78B993B2)
-References: <20071108142626.GH11957@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071108142626.GH11957@tuxdriver.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37443
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752295AbXKSI14 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 03:27:56 -0500
+Date: Mon, 19 Nov 2007 00:27:55 -0800 (PST)
+Message-Id: <20071119.002755.77617097.davem@davemloft.net> (sfid-20071119_082758_146579_574C7820)
+To: shaddy_baddah@hotmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4740DF47.4040206@hotmail.com>
+References: <4740DF47.4040206@hotmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 08, 2007 at 09:26:26AM -0500, John W. Linville wrote:
-> Jeff,
-> 
-> OK, I think things are settled now.  I apologize for the confusion.
-> 
-> These are fixes intended for 2.6.24.  Please note that three of the
-> patches from Michael Buesch in the list below were already sent to
-> you directed for 2.6.25.  Upon further review, I think they belong in
-> 2.6.24 instead.  I cherry-picked them, so I'm fairly certain git will
-> be smart enough to drop them from your 2.6.25 branch when you rebase.
-> 
-> Please let me know if there are any problems.
-> 
-> Thanks!
-> 
-> John
-> 
-> ---
-> 
-> Individual patches are available here:
-> 
-> 	http://www.kernel.org/pub//linux/kernel/people/linville/wireless-2.6/fixes-jgarzik/
-> 
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Date: Mon, 19 Nov 2007 11:56:39 +1100
 
-pulled into #upstream-fixes; please check the merge in #upstream
+> The first noticeable problem is when using iwconfig on the device. I 
+> cannot set a key for the device, and a query of the configuration always 
+> claims that the "<encryption key is too long>".
 
+Likely some wireless ioctl compat layer bug in the kernel.
 
+> If I try to scan for APs using iwlist, I get one AP listed, before a bus 
+> error occurs. This of course, does not suggest that the problem is with 
+> the driver, but I mention it for the record.
+
+This is an unaligned data access in the userland tools.
+Try to catch it with GDB and give us ths backtrace.
+
+> Whilst the device is up, I continually get console messages like those I 
+> have inlined below:
+> 
+> Kernel unaligned access at TPC[100ee4d4] do_rx+0x244/0x614 [zd1211rw]
+> Kernel unaligned access at TPC[100ee4e8] do_rx+0x258/0x614 [zd1211rw]
+> Kernel unaligned access at TPC[100ee4cc] do_rx+0x23c/0x614 [zd1211rw]
+
+These are unaligned data accesses in the kernel driver.
