@@ -1,78 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43946 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59032 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755834AbXKWMQF (ORCPT
+	with ESMTP id S1754562AbXKSOrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 07:16:05 -0500
-Subject: [PATCH] b43: include full 64-bit timestamp in monitor mode
+	Mon, 19 Nov 2007 09:47:53 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 23 Nov 2007 11:46:08 +0100
-Message-Id: <1195814768.4149.88.camel@johannes.berg> (sfid-20071123_121610_694009_AD68CCB3)
+To: Jouni Malinen <j@w1.fi>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20071118234700.GC8672@jm.kir.nu> (sfid-20071118_234837_503212_D6C4E1FE)
+References: <1194572631.4793.64.camel@johannes.berg>
+	 <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu>
+	 <1194868951.5229.36.camel@johannes.berg>  <20071118234700.GC8672@jm.kir.nu>
+	 (sfid-20071118_234837_503212_D6C4E1FE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VtFWlw+eVt3FkTGVEO34"
+Date: Mon, 19 Nov 2007 15:49:09 +0100
+Message-Id: <1195483749.8642.12.camel@johannes.berg> (sfid-20071119_144817_216119_E49A82D6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When monitor mode is enabled, this will make b43 read out the
-full 64-bit MAC time from the chip for each received packet.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43/b43.h  |    2 ++
- drivers/net/wireless/b43/main.c |    2 ++
- drivers/net/wireless/b43/xmit.c |   18 +++++++++++++++++-
- 3 files changed, 21 insertions(+), 1 deletion(-)
+--=-VtFWlw+eVt3FkTGVEO34
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/drivers/net/wireless/b43/b43.h	2007-11-22 22:56:20.648678709 +0100
-+++ everything/drivers/net/wireless/b43/b43.h	2007-11-22 23:03:27.268675020 +0100
-@@ -635,6 +635,8 @@ struct b43_wl {
- 	/* List of all wireless devices on this chip */
- 	struct list_head devlist;
- 	u8 nr_devs;
-+
-+	bool radiotap_enabled;
- };
- 
- /* Pointers to the firmware data and meta information about it. */
---- everything.orig/drivers/net/wireless/b43/main.c	2007-11-22 22:55:49.608678981 +0100
-+++ everything/drivers/net/wireless/b43/main.c	2007-11-22 23:03:53.678676051 +0100
-@@ -2853,6 +2853,8 @@ static int b43_op_config(struct ieee8021
- 			b43_short_slot_timing_disable(dev);
- 	}
- 
-+	dev->wl->radiotap_enabled = !!(conf->flags & IEEE80211_CONF_RADIOTAP);
-+
- 	/* Adjust the desired TX power level. */
- 	if (conf->power_level != 0) {
- 		if (conf->power_level != phy->power_level) {
---- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-22 22:54:33.498725965 +0100
-+++ everything/drivers/net/wireless/b43/xmit.c	2007-11-22 23:15:44.808681966 +0100
-@@ -526,7 +526,23 @@ void b43_rx(struct b43_wldev *dev, struc
- 	else
- 		status.rate = b43_plcp_get_bitrate_cck(plcp);
- 	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
--	status.mactime = mactime;
-+
-+	/*
-+	 * If monitors are present get full 64-bit timestamp. This
-+	 * code assumes we get to process the packet within 16 bits
-+	 * of timestamp, i.e. about 65 milliseconds after the PHY
-+	 * received the first symbol.
-+	 */
-+	if (dev->wl->radiotap_enabled) {
-+		u16 low_mactime_now;
-+
-+		b43_tsf_read(dev, &status.mactime);
-+		low_mactime_now = status.mactime;
-+		status.mactime = status.mactime & ~0xFFFFULL;
-+		status.mactime += mactime;
-+		if (low_mactime_now <= mactime)
-+			status.mactime -= 0x10000;
-+	}
- 
- 	chanid = (chanstat & B43_RX_CHAN_ID) >> B43_RX_CHAN_ID_SHIFT;
- 	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
 
+> Well, the multicast/broadcast frames would be sent after DTIM beacon
+> using normal frame transmission rules, so this would be possible order.
+> Though, this might not be that likely if one were to consider a case
+> where these APs are on separate radios (i.e., multiple STAs contenting
+> for the medium) should there be large number of buffered frames.
+
+Right.
+
+> While this may end up being the easiest and cleanest way of implementing
+> multi-BSS support, this has somewhat unfortunate drawbacks for power
+> save stations (e.g., STAs associated with the AP1 would need to remain
+> awake for the extra time needed to send beacon2 and beacon3; and STAs
+> associated with the AP3 would need to remain awake while mc1..mc2 frames
+> are sent).
+
+Yep. Hence my idea of doing DTIM 0 beacons independently.
+
+> TBTT could (and well, should) be separate for each BSS. In other words,
+> if there are four virtual BSSes using one radio (BSS1 .. BSS4), TBTT
+> should be different for each. If the beacon frames are send out as a
+> burst, TBTT2 should be TBTT1 + <time needed to send beacon1> and so on..
+> Similarly, there should be independent TSF for each BSS. However,
+> implementing this for virtual BSS (single radio) designs is going to be
+> quite difficult since the hardware/firmware is unlikely to support
+> something like this..
+
+Well, I'm fairly sure Broadcom hardware would allow this because
+apparently it allows subtracting/adding (?) an arbitrary (?) value to
+the TSF timestamp as it is written. This could be made host-controlled
+so the host keeps track of the offsets. The only requirement would be
+that the beacon periods are spread out in equal intervals to allow the
+microcode to schedule properly.
+
+> > Another thing that I just realised is that I'm not sure whether we
+> > update the TSF in probe responses correctly or at all because as far as
+> > I can tell it's only done for the probe response microcode offload.
+> > We'll have to look into this.
+>=20
+> This should be done in the same way as for Beacons, i.e., by whatever
+> low-level functionality is available in the transmitting path.
+
+Yes. Except as far as I can tell Broadcom hardware/firmware only does it
+when the *firmware* responds to probe responses, and we disabled that.
+
+> > Actually, what we can do is adjust the offset for each of the beacons
+> > differently. So when we're sending a beacon at TSF "interval * (N+.25)"
+> > we can round that up to "interval * (N+1)" by adjusting the TSF write
+> > offset. This means that stations will adopt a TSF that is larger than
+> > ours by a bit. If we'd do the same for probe responses (which should be
+> > fairly easy), would the timing work out? I'm not entirely clear about
+> > CFP operation etc.
+>=20
+> Where would the TSF be adjusted? Some of these tricks could be doable in
+> the low-level firmware/microcode (if one is used), but this may be
+> difficult to do without access to such low-level location.
+
+There is such access as I described above.
+
+I need do tests but right now I have no second wireless card at all.
+
+johannes
+
+--=-VtFWlw+eVt3FkTGVEO34
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0GiY6Vg1VMiehFYAQJGoA//f0uiTKr5c/6pLiQZSzMymWN19MVJ/vrR
+X8j7cjUGSbErt5qvVQhGD1E07ZjTqRpEh0vloBUSnoy+fMXqemtLfe83SuMQHhZi
+GIOQsoSjIVbynWnqKIy+jv+Jt/fi6XkWvNp5gWBAIYR60/erRR8VY2TJkyQeIdTB
+mtg9lQJiD13+Nfn6L10HzDxvicMqqUlT+AbCiqgpM0eoHgX9i7yvlxv6hPjeImj+
+1f2eM6wAmG5hckV+s2yNqjzPYeCzm9XJp4D2Gc5H+KXU7G9ZpdNdDimQRM3s5ZU3
+gHAsjTZ1FoI38gGBJtKQztQHWkVnBjw5Rl8VYAzMl2qql5oDpxRFH/qmGl4kX/6G
+pZEiLqCO6z/yS8rBf9CdactU1LcnD9amqBG0KWYKSqSJJoWmVZeXmCgEFhqatjZG
+D0opRMrnNKs9Tb0KKerg4fNAdOoBEnz9iMdgE+mcKlGpl/1YS9Pa49l+qchB2UFh
+Mnf8Jz4jp6sUQ3J/9cBR2q9KNa59Cr7kAKoACPsIuNEkux4u15/4fTHyeuj8LE06
+VMkjbaFLBEgxHPVuVQjUAA1Um6QT/puysX813RvupzmkWZ96PnZdlphHowcjb0lC
+hUJ1ak/1Hcn0VGo7eRKXHyb6ZVsrgvPnAED1S3vO6XFG6ECWOILKTcsbXYt4rdH/
+07V13DTOZmE=
+=PPAP
+-----END PGP SIGNATURE-----
+
+--=-VtFWlw+eVt3FkTGVEO34--
 
