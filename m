@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:50253 "EHLO madara.hpl.hp.com"
+Received: from mx1.redhat.com ([66.187.233.31]:59084 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753221AbXK3UWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 15:22:40 -0500
-Date: Fri, 30 Nov 2007 12:21:15 -0800
-To: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071130202115.GA32444@bougret.hpl.hp.com> (sfid-20071130_202245_793247_CACCF8E8)
-Reply-To: jt@hpl.hp.com
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <20071121184459.GA17199@bougret.hpl.hp.com> <474F86AD.4040403@hotmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <474F86AD.4040403@hotmail.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	id S1753039AbXKSUJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 15:09:58 -0500
+Subject: Re: [PATCH v2] libertas: add Dan Williams as maintainer
+From: Dan Williams <dcbw@redhat.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071119202746.475f0469@morte>
+References: <20071117023020.0a164e90@morte>
+	 <20071117165551.GA5817@tuxdriver.com> <20071117181153.480d75d8@morte>
+	 <1195493292.3248.6.camel@localhost.localdomain>
+	 <20071119202746.475f0469@morte>
+Content-Type: text/plain
+Date: Mon, 19 Nov 2007 15:06:21 -0500
+Message-Id: <1195502781.6479.13.camel@localhost.localdomain> (sfid-20071119_201021_367075_2E3F463F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 30, 2007 at 02:42:37PM +1100, Shaddy Baddah wrote:
-> Hi,
+On Mon, 2007-11-19 at 20:27 +0100, Stefano Brivio wrote:
+> Add Dan Williams as maintainer for libertas driver.
 > 
-> First off, sorry for the delay in responding. I am now trying to catch 
-> up with my backlog on this issue.
-
-	That's ok, I'm not in a hurry.
-
-> >	The patch from Masakazu Mokuno is not in 2.6.22, and it not
-> >either in 2.6.14. The patch is only included in 2.6.23 and later. I
-> >would suggest upgrading to 2.6.23 to get that patch. Alternatively,
-> >I've included the patch as attachement, and you can use it with
-> >2.6.22.
-> >	I would like you to try that patch and report.
 > 
-> Yes, this solved that problem. Thank you,
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> Cc: Dan Williams <dcbw@redhat.com>
 
-	Ok, one down, one to go. That's progress.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-> >	Note that the patch above *may* help with this issue as well.
+> ---
 > 
-> No, it does not seem to have. An iwlist eth2 scanning command still 
-> lists a single access point, then fails with a bus error.
-
-	Hmm... That's strange as I was seeing my code behaving as
-expected.
-	I will ask you to compile a version of wireless tools with
-debugging enabled and run it with gdb. See my other e-mail.
-
-> Thanks for your help,
-> Shaddy
-
-	No, no. Thanks for your help tracking those issues down. You
-have been great.
-
-	Jean
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 18b7c8e..d416260 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -2513,6 +2504,12 @@ M:	mtk.manpages@gmail.com
+>  W:	ftp://ftp.kernel.org/pub/linux/docs/manpages
+>  S:	Maintained
+>  
+> +MARVELL LIBERTAS WIRELESS DRIVER
+> +P:	Dan Williams
+> +M:	dcbw@redhat.com
+> +L:	libertas-dev@lists.infradead.org
+> +S:	Maintained
+> +
+>  MARVELL MV643XX ETHERNET DRIVER
+>  P:	Dale Farnsworth
+>  M:	dale@farnsworth.org
+> 
+> 
 
