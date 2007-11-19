@@ -1,128 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:52740 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbXKPTCE convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59514 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbXKSQag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 14:02:04 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so687718ugc
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 11:02:02 -0800 (PST)
-From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: add power management support
-Date: Fri, 16 Nov 2007 20:02:01 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	yi.zhu@intel.com
-References: <200711161929.36283.mboton.lkml@gmail.com> <200711161953.26801.mboton.lkml@gmail.com>
-In-Reply-To: <200711161953.26801.mboton.lkml@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200711162002.01972.mboton.lkml@gmail.com> (sfid-20071116_190212_726540_E9A85A6C)
+	Mon, 19 Nov 2007 11:30:36 -0500
+Subject: Re: [PATCH] Remove ieee80211softmac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4741B853.6080708@lwfinger.net> (sfid-20071119_162247_094333_2D1C58ED)
+References: <20071119160626.ED6F19D4B5A@zog.reactivated.net>
+	 <4741B853.6080708@lwfinger.net> (sfid-20071119_162247_094333_2D1C58ED)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iBL5leHF3uge2vm6Bbg8"
+Date: Mon, 19 Nov 2007 17:31:55 +0100
+Message-Id: <1195489915.8642.36.camel@johannes.berg> (sfid-20071119_163038_521220_F339F37F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Today is not a good day for me... I sent the previous patch with wordwr=
-ap enabled.
-This one is the correct.
 
---
-
-This patch adds power management support in mac80211.
-
-This allows us to enable power management through the "iwconfig <device=
-> power <off/on>" command.
-The code is based on "mac80211-10.0.0" but it is a little bit modified.
-
-Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5fcc4c1..c82b6fa 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -452,6 +452,8 @@ struct ieee80211_conf {
- 	u8 antenna_max;
- 	u8 antenna_sel_tx;
- 	u8 antenna_sel_rx;
-+
-+	u8 power_management_enable;     /* flag to enable/disable power manag=
-ement */
- };
-=20
- /**
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
-ctl.c
-index 6caa3ec..f5eebec 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
-evice *dev,
- 	return 0;
- }
-=20
-+static int ieee80211_ioctl_siwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	if (wrqu->power.disabled) {
-+		conf->power_management_enable =3D 0;
-+		if (ieee80211_hw_config(local))
-+			return -EINVAL;
-+		return 0;
-+	}
-+
-+	switch (wrqu->power.flags & IW_POWER_MODE) {
-+	case IW_POWER_ON:       /* If not specified */
-+	case IW_POWER_MODE:     /* If set all mask */
-+	case IW_POWER_ALL_R:    /* If explicitely state all */
-+		break;
-+	default:                /* Otherwise we don't support it */
-+		return -EINVAL;
-+	}
-+
-+	conf->power_management_enable =3D 1;
-+
-+	if (ieee80211_hw_config(local))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int ieee80211_ioctl_giwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	wrqu->power.disabled =3D !conf->power_management_enable;
-+
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
- 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) NULL,				/* SIOCSIWPOWER */
--	(iw_handler) NULL,				/* SIOCGIWPOWER */
-+	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
+--=-iBL5leHF3uge2vm6Bbg8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
---=20
-	Miguel Bot=C3=B3n
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > With the port of zd1211rw and the removal of bcm43xx, there are no
+> > remaining softmac users. Remove it.
+> >=20
+> > Signed-off-by: Daniel Drake <dsd@gentoo.org>
+> ACK. Larry Finger <Larry.Finger@lwfinger.net>
+>=20
+> Hoooooooooooooray!!!!!!!!
+
+Seconded! :)
+bcm43xx removal should be on the list now too.
+
+johannes
+
+--=-iBL5leHF3uge2vm6Bbg8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0G6eqVg1VMiehFYAQJkqw//SKf6NzqJ86/L8MtGJ+b5oMbtL6eOwKdL
+xLEHnjEdvAjb3uZB7b6K1uy+EpGAqhlY6X7L8hY5h7Eb0iLSdxj5I5ouGTdaN48f
+M7e5/VHlO0XPXAP87gTH+9GGdfZ3CLYU62KtIv08jf0IbulPWmPGSMh1PyZidMqg
+1KHkX/XJEA2/ziddrSaehinlBxjDB9hR3AKFoch2qz7WZxOnS5o2ydUW4lSWGkbE
+YEMlzvlvTusqWp0jFUS5qKs6jvnxgO48tNalkSmbPTg2qKq3UNScwiOM0mG051Es
+Fx7tH7Q9382uEsEBRtD+ma+RDjpAZsoG7Ab2QQ6i4aWjjvpwRNY+kAHgWrTHRXFp
+nISSyTof3/nQzqEnEhmeY9d7hRZ2hVL+iEbC9E92HYg/+o5w60uZHATT7oTAA7tR
+k/VnJ7xLXGU/Y3c/e9T/nF+NsXVL6uut4bX1Jx0Oah3E2nWqbVVRvaPL3xbAC74/
+YZz5GTcJLOA/OYyCFLgr+HT//mBvI9Ca5DJtbOwD+xK6J27tBPHMa+sCFqiU62+U
+hVDHI6bOY4G0GPkO8KUyaVSpi2QY6k1I1Tx7+EluJ37DfmS6iFAZTTWCCJdMBaO0
+iQ19yQKVFACCy3M1z/JVl6WuR/4qmxBPTBn+BkQ+BtYecAG0Z12VdtH++5OmazIM
+x4JX5HQJtIQ=
+=YYYP
+-----END PGP SIGNATURE-----
+
+--=-iBL5leHF3uge2vm6Bbg8--
+
