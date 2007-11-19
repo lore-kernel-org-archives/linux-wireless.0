@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:32518 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757832AbXK2ViI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34654 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbXKSOnv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 16:38:08 -0500
-Received: by py-out-1112.google.com with SMTP id u77so3878725pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 13:38:07 -0800 (PST)
-Message-ID: <43e72e890711291338j3fb7876fp49b7489764fe2d1a@mail.gmail.com> (sfid-20071129_213812_726126_256423CF)
-Date: Thu, 29 Nov 2007 16:38:06 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Francesco Gringoli" <francesco.gringoli@ing.unibs.it>
-Subject: Re: ath5k: filter patch
-Cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Thomas Graf" <tgraf@suug.ch>, "Jiri Slaby" <jirislaby@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <0D869D0B-A5CF-4AE4-B986-DB168917296B@ing.unibs.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <0D869D0B-A5CF-4AE4-B986-DB168917296B@ing.unibs.it>
+	Mon, 19 Nov 2007 09:43:51 -0500
+Subject: Re: Suspend/Resume support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Kalle Valo <Kalle.Valo@nokia.com>,
+	Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
+	linux-wireless@vger.kernel.org,
+	Jose Ignacio Naranjo Hernandez
+	<joseignacio.naranjo@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <20071119035943.GJ8672@jm.kir.nu>
+References: <1195087905.3814.11.camel@mercury>
+	 <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com>
+	 <1195171869.8147.79.camel@johannes.berg> <87ir42z5kq.fsf@nokia.com>
+	 <1195224067.8147.122.camel@johannes.berg> <20071119035943.GJ8672@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DlbRJQcFAbpeOrt9KaeL"
+Date: Mon, 19 Nov 2007 15:44:33 +0100
+Message-Id: <1195483473.8642.7.camel@johannes.berg> (sfid-20071119_144408_986442_D1392B03)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 29, 2007 10:53 AM, Francesco Gringoli
-<francesco.gringoli@ing.unibs.it> wrote:
-> Hello everybody,
->
-> I discovered that playing with iface promiscuity to capture traffic
-> (including control, promisc and all other stuff) is not working on
-> ath5k as rx_filters are never refreshed. To make things going I added
-> a single ath5k_hw_set_rx_filters(ah,rfilt) at the end of
-> ath5k_configure_filter(). I attach the simple patch. Now tcpdump
-> captures everything in monitor mode when iface is set to promisc.
 
-Are you using monitor or promisc? Promiscous is just supposed to sniff
-what you would sniff as if you were on Ethernet -- stuff destined to
-your BSSID if STA. Monitor is 'catch it all'. Under this definition,
-is it still "misbehaving"? For now you can get a real "monitor"
-interface by using iw:
+--=-DlbRJQcFAbpeOrt9KaeL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://git.sipsolutions.net/iw.git
 
-However this requires you to have libnl-1.0 pre8. The libnl URL is
-down, in fact Thomas's home dir is not even working right now.. hmm,
-CC'ing him. You can find pre8 here:
+> > mac80211 has a comment that NULL frames are just for PS control
+> > operation and otherwise ignored. So no idea.
+>=20
+> Please note that this comment in ieee80211_rx_h_sta_process() is only
+> after having went through association state validation in
+> ieee80211_rx_h_check().
 
-git://git.kernel.org/pub/scm/libs/netlink/libnl.git
+Oh good point.
 
-  Luis
+> However, it looks like the sending of
+> deauth/disassoc based on Class 2/3 frames being received in wrong state
+> (IEEE 802.11, Clause 5.5) has been broken at some point..
+>=20
+> mac80211 is supposed to notify userspace (hostapd) of this and hostapd
+> would then reply with disassoc/deauth depending on the current state of
+> the STA. The current mac80211 implementation is just silently dropping
+> the frames. The way this used to work was by sending the
+> ieee80211_msg_sta_not_assoc message with ieee80211_rx_mgmt() in
+> ieee80211_rx_h_check().
+
+Yes. This was removed along with the mgmt iface, it needs to be added
+back.
+
+johannes
+
+--=-DlbRJQcFAbpeOrt9KaeL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0GhUKVg1VMiehFYAQKqsQ/+LBqDGvv2t6/C1cVWdPv4SZHdc5NdChta
+0PAqUKTVmH3FCypkElp+a7XCCfwLojP6AJJQKkU/9nad023ats2oAN1WcwBig6to
+tmtemjz190okoOSpozuWsoO++Fj8P0audYfluYvrE7vUk5jg95DUeOBtF7dUDVZr
+BgV1Fevg1LCMQrJsoxC1doXaJQZqWpf6EGCOBMVCzu7jtCsN+c+Gi5+z+tPs1vwR
+JytwzQICUSUm57tSGWCM2e4ERiUGK9MnEaPzzdgHQWgXTNRRPI3uZbJvAWN6DvJR
+TbVdweMiIuzQDYOXHcnxMEAF7g09Zbe5GZgBDA7rJhYUz2qZKmNUngVoX8EO2/12
+K8AVP/pNHjLyicGwUR01k+RhDdtZpJhi6HKHauWpz5dfZPMhx7opNzFxxY83bXEE
+A+h4Ne4NfndGHrOcDufOrtO3dzJanXjs3LbvNfqegATztFsGcvb72J0vfnHFg4nQ
+zys6YnbvonIxd4N6fqQJAcLmv3k2DY4fQiC0kIfvzf7UMIVl+w29fDxmxIhRTbH6
+kntKdFZvy9dOvuATiNuBIUAy3lqXJgvf12hIOfIOr8Z+HgY79b0QiuCg/vzYEA3y
+GuImH+H2pPRVu0XUymCz1E5qakLEHtJVOz+i7Plw71REyb55C6b76m06igIW8wGn
+NgZxgmJQOaQ=
+=haIt
+-----END PGP SIGNATURE-----
+
+--=-DlbRJQcFAbpeOrt9KaeL--
+
