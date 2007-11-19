@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:56570 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbXKKDAI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59067 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100AbXKSOsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 22:00:08 -0500
-Date: Sat, 10 Nov 2007 18:58:08 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
+	Mon, 19 Nov 2007 09:48:50 -0500
+Subject: Re: [RFC] b43: multiple MAC addresses support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Kalle Valo <Kalle.Valo@nokia.com>, Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
 	Ben Greear <greearb@candelatech.com>,
 	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [RFC] b43: multiple MAC addresses support
-Message-ID: <20071111025808.GK4031@jm.kir.nu> (sfid-20071111_030019_018886_E3367C3F)
-References: <1194572631.4793.64.camel@johannes.berg> <1194605550.4793.93.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1194605550.4793.93.camel@johannes.berg>
+In-Reply-To: <20071118230237.GB8672@jm.kir.nu>
+References: <1194572631.4793.64.camel@johannes.berg>
+	 <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu>
+	 <87pryfd8cc.fsf@nokia.com> <1194953217.9116.38.camel@johannes.berg>
+	 <20071118230237.GB8672@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nNsroS6cvwX33XaaJRJI"
+Date: Mon, 19 Nov 2007 15:50:07 +0100
+Message-Id: <1195483807.8642.14.camel@johannes.berg> (sfid-20071119_144853_939270_CC7E815D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 09, 2007 at 11:52:30AM +0100, Johannes Berg wrote:
 
-> Something I'm not clear on right now is the timing of it all. If there
-> are say two BSSes, the driver can simply program the hardware to half
-> the beacon period and then the beacons will alternate. But if there are
-> seven BSSes, the beacon period might not be divisible by seven so timing
-> errors will happen and, worse yet, accumulate. Does hostapd somehow
-> account for this? Or should the beaconing work completely differently,
-> for example with all N beacons sent in a burst?
+--=-nNsroS6cvwX33XaaJRJI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You could always modify the beacon period to a suitable number that
-would be divisible by whatever number of BSSes there are and/or add
-empty slot to move from, say, 7 to 8, and just not send a beacon at some
-of the slots. Sending a burst of all beacons at the same time is also a
-valid option up to a certain limit on how long a time would be allocated
-for this. However, this may have some timing issues when there are
-multiple power save buffered broadcast/multicast frames waiting to be
-sent out. In general, it would be good to try to send the beacon frames
-as close to their correct time as possible to allow power saving
-stations to remain asleep most of the time. Some low-level operation
-would also need to make sure the beacon timestamp is correct if the
-frame gets delayed due to other frames.
 
-I think it would be perfectly fine to try to simply the configuration
-and implementation by requiring all BSSes to use the same beacon
-interval and allow small changes in the interval, if needed. hostapd
-does not have code for this type of modifications. I've done some
-experiments with configuring the hardware to use beacon interval divided
-by number of BSSes, but ended up using burst of beacon frames instead
-(and all BSSes were forced to use the same beacon interval).
+On Sun, 2007-11-18 at 15:02 -0800, Jouni Malinen wrote:
+> On Tue, Nov 13, 2007 at 12:26:57PM +0100, Johannes Berg wrote:
+>=20
+> > The N800 and similar devices only wake up at DTIM beacons, right? So
+> > another idea would be to burst beacons but make sure the DTIM beacon
+> > time doesn't fluctuate away from the DTIM TBTT. This would be possible
+> > by changing the order of the beacons and adjusting the DTIM count so
+> > that the beacon with DTIM count zero is always the first.
+>=20
+> This could be an improvement for small number of BSSes, but if the DTIM
+> period starts going up, the delay in sending out multicast/broadcast
+> frames may not be acceptable anymore depending on application.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Well even if you have a larger number of BSSes you can spread the DTIm 0
+beacons across the periods so that you have a few but not all DTIM 0
+beacons at one time. And that's still an improvement over currently used
+schemes.
+
+johannes
+
+--=-nNsroS6cvwX33XaaJRJI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0GinaVg1VMiehFYAQKBSw//QHKdpyAQSwNy6oOgi6pHySsRgFezUI5t
+Bg6MsfeLF34bUrpRoeNwWB5n2bVft4nyycYVY9ABocoLMd044WHVompWLXQ6OLx2
+Av+XKUn3o1zs0WtWn+kkY+U8xtcoLtSPbvcqWftdKQDkdYpIXT4UN/evmeExUISS
+oelqaAcOR/Gq90YNVm165vXLwOlWxFEcYh8eoa3dmcpP5pBqFrQAYmnn0VFKVxWX
+MnP/Ve13NosNDTXEzPccUA+dP/AXzS/NlEf4Tph7s/DIM2nBww2wbhDmXiPCcusI
+1S/vcXLbdqlyhDG/xKY0NPHv1KisF1HheDwi+Dnk1vhnPgUahLUzS+CZ+2eWWEeS
+oPQ+42U3F72szpXChJzWNgWfmHpVmAgwUKEXLAcLWElBac8gTCqp8YAagQL3K5r/
+nP/rmVixoH2AwUZvb+Wgjre4TPiNgjItc7OIctfsqXIfIQIqU6bLq/b+UHPSmR94
+JzKBEOH0EvOv1CVTJ5qRGXv1xGquvzYZDlIwWLn1vWxJwK4iRjrg/Ilh17xQouwD
+UgblswCyXCtuzoBrXKIiK/8wQ1acy/7xjGNjmsRghnM8rJS1yYuSv4CfOFLq1UZa
+xsxe/NoU4IwdYOuC0ykc/mbmjcsL1IriLOOCHneU1G4Wco3xFqs9PqglUdzfDc+L
+0sfmgmuX9Vw=
+=XYq8
+-----END PGP SIGNATURE-----
+
+--=-nNsroS6cvwX33XaaJRJI--
+
