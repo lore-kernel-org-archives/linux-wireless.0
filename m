@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:32487 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753884AbXKSEPi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2007 23:15:38 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] ath5k: consistent info and error logging
-Date: Mon, 19 Nov 2007 13:01:06 +0900
-Cc: Kalle Valo <Kalle.Valo@nokia.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-References: <1195200656-25847-1-git-send-email-bruno@thinktube.com> <87mytez5vs.fsf@nokia.com> <1195228438.8147.146.camel@johannes.berg>
-In-Reply-To: <1195228438.8147.146.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200711191301.06366.bruno@thinktube.com> (sfid-20071119_041544_098215_93E6AE17)
+Received: from mfe1.polimi.it ([131.175.12.23]:40209 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750890AbXKSSpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 13:45:24 -0500
+Date: Mon, 19 Nov 2007 19:44:33 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH v2] b43/b43legacy: fix left-over URLs and ifdefs
+Message-ID: <20071119194433.15f19da4@morte> (sfid-20071119_184527_027252_D2A9615D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 November 2007 00:53:58 Johannes Berg wrote:
-> On Fri, 2007-11-16 at 15:17 +0200, Kalle Valo wrote:
-> > Johannes Berg <johannes@sipsolutions.net> writes:
-> > >> +#define AR5K_INFO(_sc, _fmt, ...)	\
-> > >> +	printk(KERN_INFO "ath5k %s: " _fmt, wiphy_name((_sc)->hw->wiph=
-y),
-> > >> ##__VA_ARGS__)
-> > >
-> > > Eww. Can't you make them static inlines?
-> >
-> > Wasn't it so that a inline function with va_args is not possible?
->
-> Hmm. That might be true.=20
+Fix some left-over URLs and ifdefs in b43 and b43legacy drivers.
 
-yes, gcc tells me
-"sorry, unimplemented: function =E2=80=98AR5K_INFO=E2=80=99 can never b=
-e inlined because it=20
-uses variable argument lists".
 
-> How about just using dev_dbg?=20
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-i thought about that, and it would be possible to change the macros to =
-use=20
-dev_dbg, dev_info, etc, but i think the phyX names make the output much=
-=20
-clearer and easier to match with the output from mac80211, than the PCI=
- bus=20
-ids.
+---
 
-> Not that I really =20
-> ever need to look into ath5k (hopefully!), but the code just struck m=
-e
-> as not very nice.
+John,
+this is for 2.6.24. Sorry for the noise, please just discard the previous
+patch.
 
-well, it's not *that* bad, and defines like this are used in many place=
-s in=20
-the kernel. for example rt2x00/rt2x00.h has basically the same define.
+---
 
-bruno
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -1558,7 +1558,7 @@ static void b43_release_firmware(struct 
+ static void b43_print_fw_helptext(struct b43_wl *wl)
+ {
+ 	b43err(wl, "You must go to "
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
++
+"http://linuxwireless.org/en/users/Drivers/b43#devicefirmware " "and
+download the correct firmware (version 4).\n"); }
+ 
+Index: wireless-2.6/drivers/net/wireless/b43legacy/dma.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/dma.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/dma.c
+@@ -996,7 +996,7 @@ int b43legacy_dma_init(struct b43legacy_
+ 
+ 	err = ssb_dma_set_mask(dev->dev, dmamask);
+ 	if (err) {
+-#ifdef BCM43XX_PIO
++#ifdef CONFIG_B43LEGACY_PIO
+ 		b43legacywarn(dev->wl, "DMA for this device not supported.
+" "Falling back to PIO\n");
+ 		dev->__using_pio = 1;
+Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -1398,7 +1398,7 @@ static void b43legacy_release_firmware(s
+ static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
+ {
+ 	b43legacyerr(wl, "You must go to
+http://linuxwireless.org/en/users/"
+-		     "Drivers/bcm43xx#devicefirmware "
++		     "Drivers/b43#devicefirmware "
+ 		     "and download the correct firmware (version 3).\n");
+ }
+ 
+
+
+-- 
+Ciao
+Stefano
