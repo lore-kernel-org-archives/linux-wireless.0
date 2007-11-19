@@ -1,104 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:19638 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755183AbXKPSew convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 13:34:52 -0500
-Received: by an-out-0708.google.com with SMTP id d31so270656and
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 10:34:51 -0800 (PST)
-From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/2] mac80211: add power management support
-Date: Fri, 16 Nov 2007 19:29:36 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	yi.zhu@intel.com
+Received: from mx2.suse.de ([195.135.220.15]:42580 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750914AbXKSWgq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 17:36:46 -0500
+From: Andreas Schwab <schwab@suse.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	mb@bu3sch.de
+Subject: Re: [PATCH v3] remove bcm43xx
+References: <20071119202121.6ad3fa70@morte> <200711192300.12183.rjw@sisk.pl>
+	<20071119231935.535674ba@morte>
+Date: Mon, 19 Nov 2007 23:36:44 +0100
+In-Reply-To: <20071119231935.535674ba@morte> (Stefano Brivio's message of
+	"Mon\, 19 Nov 2007 23\:19\:35 +0100")
+Message-ID: <jehcjheubn.fsf@sykes.suse.de> (sfid-20071119_223649_028329_2561B167)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200711161929.36283.mboton.lkml@gmail.com> (sfid-20071116_183501_325678_9D59FAC9)
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds power management support in mac80211.
+Stefano Brivio <stefano.brivio@polimi.it> writes:
 
-This allows us to enable power management through the "iwconfig <device=
-> power <off/on>" command.
-The code is based on "mac80211-10.0.0" but it is a little bit modified.
+> On Mon, 19 Nov 2007 23:00:11 +0100
+> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+>
+>> Well, are you 100% sure that everyone interested knows that this dri=
+vers
+>> is going out in 2.6.25 and no one will object?
+>
+> The maintainers know. Having both drivers in 2.6.24 should help find =
+out if
+> there's anything which should be ironed out with b43/b43legacy, but r=
+ight
+> now they are already working a lot better than bcm43xx, and they are =
+more
+> stable. So I couldn't find a reason why we shouldn't remove bcm43xx i=
+n
+> 2.6.25.
 
-Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
+b43 still does not work at all on ppc.
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_io=
-ctl.c
-index 6caa3ec..f5eebec 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -674,6 +687,51 @@ static int ieee80211_ioctl_giwtxpower(struct net_d=
-evice *dev,
- 	return 0;
- }
-=20
-+static int ieee80211_ioctl_siwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	if (wrqu->power.disabled) {
-+		conf->power_management_enable =3D 0;
-+		if (ieee80211_hw_config(local))
-+			return -EINVAL;
-+		return 0;
-+	}
-+
-+	switch (wrqu->power.flags & IW_POWER_MODE) {
-+	case IW_POWER_ON:       /* If not specified */
-+	case IW_POWER_MODE:     /* If set all mask */
-+	case IW_POWER_ALL_R:    /* If explicitely state all */
-+		break;
-+	default:                /* Otherwise we don't support it */
-+		return -EINVAL;
-+	}
-+
-+	conf->power_management_enable =3D 1;
-+
-+	if (ieee80211_hw_config(local))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int ieee80211_ioctl_giwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf =3D &local->hw.conf;
-+
-+	wrqu->power.disabled =3D !conf->power_management_enable;
-+
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -1111,8 +1166,8 @@ static const iw_handler ieee80211_handler[] =3D
- 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) NULL,				/* SIOCSIWPOWER */
--	(iw_handler) NULL,				/* SIOCGIWPOWER */
-+	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
-
+Andreas.
 
 --=20
-	Miguel Bot=C3=B3n
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
 -
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
