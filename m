@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59535 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:59001 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758684AbXK2T2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 14:28:48 -0500
-Subject: Re: [PATCH] libertas: remove user-specified channel list
+	id S1753702AbXKSRgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 12:36:08 -0500
+Subject: Re: 88w8335 [Libertas] 802.11b/g
 From: Dan Williams <dcbw@redhat.com>
 To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Albert Cahalan <acahalan@gmail.com>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200711290844.10501.hs4233@mail.mn-solutions.de>
-References: <200711281730.21327.hs4233@mail.mn-solutions.de>
-	 <787b0d920711282012k38d6d2c8g2d9ae79c89b04059@mail.gmail.com>
-	 <200711290844.10501.hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200711190934.59367.hs4233@mail.mn-solutions.de>
+References: <43e72e890711161733o72b557ccs63fa1c0104bc656a@mail.gmail.com>
+	 <200711190934.59367.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Thu, 29 Nov 2007 14:20:36 -0500
-Message-Id: <1196364036.11556.21.camel@localhost.localdomain> (sfid-20071129_192852_725486_3A94F587)
+Date: Mon, 19 Nov 2007 12:32:38 -0500
+Message-Id: <1195493558.3248.11.camel@localhost.localdomain> (sfid-20071119_173630_533582_BFA83AFD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-11-29 at 08:44 +0100, Holger Schurig wrote:
-> On Thursday 29 November 2007 05:12:06 Albert Cahalan wrote:
-> > On Nov 28, 2007 11:30 AM, Holger Schurig 
-> <hs4233@mail.mn-solutions.de> wrote:
-> > > Remove the ability to specify channels to scan via debugfs
+On Mon, 2007-11-19 at 09:34 +0100, Holger Schurig wrote:
+> > vendor:device -- 11ab:1faa
 > >
-> > Why are you ripping out functionality? At the very least,
-> > that ought to be justified in the changelog comment.
+> > libertas_cs isn't picking up though.
 > 
-> This was discussed in libertas-dev.
+> libertas wasn't written for 8335 chips. The whole of libertas, 
+> including "if_cs.c", is currently only for 8385 chips.
 > 
-> 
-> Basically, I posted there a RFC (request-for-comment) patch about 
-> a newer implementation of how scanning could be implemented. The 
-> current version of scan.c is a bit complicated and not easy to 
-> follow. I was rewriting that up to a point where it worked. But 
-> my RFC patch had a bunch of TODO items, and I asked in 
-> libertas-dev how to deal with them.
-> 
-> Two TODOs were about the implementation the syntax 
-> of "probes=XXX" and "channel=XXX" that you can use via 
-> debugfs/extgetscan.
-> 
-> Dan thought that we could easily rip this out, because no one is 
-> known to use this feature. And I'm seconding Dan here. Both 
-> debugfs-features actually just exhibits a possibility of how to 
-> interact with the firmware. They don't have a real value.
-> 
-> Simply because you cannot set number of probes or channel-list 
-> from "normal" user-space application. E.g. when libertas needs 
-> to scan because of a new ESSID set via "iwlist eth1 essid BLAH" 
-> it would anyway scan all channels set by the country (11, 13 or 
-> 14 for b/g). It wouldn't honor your manually crafted last scan 
-> from your last access to debugfs.
-> 
-> So extgetscan is merely a tool to play with, but nothing more.
-> 
-> madwifi for example also has the ability to specify "please scan 
-> only on channels 1, 7, 11", but this has been implemented via 
-> private ioctl's and set's this "sticky". So when you scan from 
-> iwlist, implicitly from iwconfig XXX essid, from wpa_supplicant 
-> etc, it would be honored. For such a feature you have a 
-> real-life usage scenario, it would be much more useful than the 
-> current way.
+> I saw a driver for 8335 chips at 
+> http://david.woodhou.se/mrv.tar.gz. Do you refer to the same 
+> one?
 
-Note that WEXT supports specifying the channels you'd like to scan on in
-the extscan struct of the SIOCSIWSCAN call.  Libertas should support
-this.  However, I don't think iwlist supports it, but that shouldn't
-stop the drivers from supporting that option.
+There's also mrv8k which apparently Ubuntu is shipping (although it
+doesn't work).  Google around for it.  OpenSolaris and OpenBSD have the
+'malo(4)' driver for this part, including the 8310 and 8335 chips.
+
+I also picked up a cardbus card with an 8300 or 8335 in it this past
+week.  (TrendNET branded).  I cleaned it up for There are problems with
+the mrv8k driver where it appears to panic in the interrupt handler.
+
+The 8335 is a _softmac_ part and therefore won't work (ever) with the
+current libertas driver, which is a fullmac part.  The best solution is
+to write a new mac80211 driver for the 8335 parts.
+
+The firmware situation is a lot like the broadcom parts where you need a
+firmware cutter to pull firmware out of the Windows .sys driver file.
+Two firmware are required, the boot firmware and the main firmware.
 
 Dan
 
+> As this driver was originally written for mac80211, I'd prefer it 
+> over a driver/net/wireless/libertas based driver, e.g. via an 
+> hyptothetical "if_pci.c". Maybe you need to dust of a bit of 
+> bitrot. Maybe it's even worth pushing this driver into shape and 
+> submitting it to Linville for kernel adoption.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
