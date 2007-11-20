@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:34563 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753635AbXKSD77 (ORCPT
+Received: from there.is.no.cabal.ca ([134.117.69.58]:45665 "EHLO
+	fattire.cabal.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761661AbXKTXzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2007 22:59:59 -0500
-Date: Sun, 18 Nov 2007 19:59:43 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <Kalle.Valo@nokia.com>,
-	Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
-	linux-wireless@vger.kernel.org,
-	Jose Ignacio Naranjo Hernandez
-	<joseignacio.naranjo@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: Suspend/Resume support
-Message-ID: <20071119035943.GJ8672@jm.kir.nu> (sfid-20071119_040005_733971_066DBCED)
-References: <1195087905.3814.11.camel@mercury> <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com> <1195171869.8147.79.camel@johannes.berg> <87ir42z5kq.fsf@nokia.com> <1195224067.8147.122.camel@johannes.berg>
+	Tue, 20 Nov 2007 18:55:01 -0500
+Date: Tue, 20 Nov 2007 18:25:58 -0500
+From: Kyle McMartin <kyle@mcmartin.ca>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: avoid oops when ah_capabilities.cap_mode not set
+Message-ID: <20071120232558.GA8093@fattire.cabal.ca> (sfid-20071120_235512_659978_39A4975C)
+References: <1192647780430-git-send-email-linville@tuxdriver.com> <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195224067.8147.122.camel@johannes.berg>
+In-Reply-To: <43e72e890710171436s2e18a19ene70d3b058c835a96@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 16, 2007 at 03:41:07PM +0100, Johannes Berg wrote:
+On Wed, Oct 17, 2007 at 05:36:33PM -0400, Luis R. Rodriguez wrote:
+> On 10/17/07, John W. Linville <linville@tuxdriver.com> wrote:
+> > ah_capabilities.cap_mode doesn't get set for some cards, causing the
+> > kernel to oops when these unknown/unsupported cards are inserted.
+> > Add some NULL checks to avoid this.
+> >
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> 
 
-> mac80211 has a comment that NULL frames are just for PS control
-> operation and otherwise ignored. So no idea.
+has this been dropped on the floor? I spotted it while going through
+Fedora 7 kernel patches...
 
-Please note that this comment in ieee80211_rx_h_sta_process() is only
-after having went through association state validation in
-ieee80211_rx_h_check(). However, it looks like the sending of
-deauth/disassoc based on Class 2/3 frames being received in wrong state
-(IEEE 802.11, Clause 5.5) has been broken at some point..
-
-mac80211 is supposed to notify userspace (hostapd) of this and hostapd
-would then reply with disassoc/deauth depending on the current state of
-the STA. The current mac80211 implementation is just silently dropping
-the frames. The way this used to work was by sending the
-ieee80211_msg_sta_not_assoc message with ieee80211_rx_mgmt() in
-ieee80211_rx_h_check().
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+cheers,
+	Kyle
