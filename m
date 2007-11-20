@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:8197 "EHLO annwn13.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753062AbXKFSmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 13:42:07 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: RTL8187 rate control problems
-Date: Tue, 6 Nov 2007 13:37:34 -0500
-Cc: Claudio Matsuoka <claudio@mandriva.com>,
-	linux-wireless@vger.kernel.org, flamingice@souremilk.net,
-	dsd@gentoo.org, kune@deine-taler.de
-References: <200711061323.16302.claudio@mandriva.com> <20071106164148.GB4440@tuxdriver.com>
-In-Reply-To: <20071106164148.GB4440@tuxdriver.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53871
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757359AbXKTPT2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 10:19:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH v3] remove bcm43xx
+Date: Tue, 20 Nov 2007 16:18:21 +0100
+Cc: Andreas Schwab <schwab@suse.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+References: <20071119202121.6ad3fa70@morte> <jeir3xdyqu.fsf@sykes.suse.de> <4742F8A7.6070903@lwfinger.net>
+In-Reply-To: <4742F8A7.6070903@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3080987.PN1UA2Uv2O";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711061337.39334.flamingice@sourmilk.net> (sfid-20071106_184221_671436_111004AC)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711201618.21372.mb@bu3sch.de> (sfid-20071120_151932_624287_576814D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3080987.PN1UA2Uv2O
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Tuesday 20 November 2007 16:09:27 Larry Finger wrote:
+> Andreas Schwab wrote:
+> > Stefano Brivio <stefano.brivio@polimi.it> writes:
+> > 
+> >> --- drivers/net/wireless/b43/main.c.orig        2007-11-20 01:12:12.186524483 +0100
+> >> +++ drivers/net/wireless/b43/main.c     2007-11-20 01:12:34.922702865 +0100
+> >> @@ -947,7 +947,7 @@
+> >>
+> >>         while (1) {
+> >>                 v0 = b43_read32(dev, B43_MMIO_XMITSTAT_0);
+> >> -               if (!(v0 & 0x00000001))
+> >> +               if (!v0)
+> >>                         break;
+> >>                 v1 = b43_read32(dev, B43_MMIO_XMITSTAT_1);
+> >>
+> >> (probably it's not the solution, I just want to see what happens then).
+> > 
+> > That didn't change anything.
+> > 
+> >> BTW, what firmware are you using?
+> > 
+> > It's 410.2160 from wl_ap.o.
+> 
+> Please try version 351.126 from http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2,
+> which is the officially supported version.
 
-On Tuesday 06 November 2007 11:41:48 John W. Linville wrote:
-> The zd1211rw(-mac80211) driver(s) have a mechanism for matching-up
-> received ACKs with transmitted frames so that they can synthesize the
-> required excessive_retries data.  Probably rtl8186 needs something
-> similar.  Maybe this would even be worth generalizing?
->
-Nope, not that easy. zd1211 has an interrupt for failed TX which is why tha=
-t=20
-works.
+There was some minor API change for newer firmware.
+I think the TX and RX header layout slightly changed. I'll address that
+later, as it's not too important now. (Or if someone else does want
+to fix it, please send some patches...)
 
-rtl8186 is a SoC. I think you mean rtl8185 or rtl8180, but they do tx=20
-reporting fine. It's just the usb variant which has issues.
-
-=2DMichael Wu
-
---nextPart3080987.PN1UA2Uv2O
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHMLRzT3Oqt9AH4aERAp0/AJwKVuYnFZiQrCadUwgfqnjXD3E2XQCeMhFY
-wpJ1qY9R3XmaTvsacq9dAVs=
-=sF0G
------END PGP SIGNATURE-----
-
---nextPart3080987.PN1UA2Uv2O--
+-- 
+Greetings Michael.
