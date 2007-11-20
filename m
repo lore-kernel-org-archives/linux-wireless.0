@@ -1,72 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34410
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758714AbXK1Qu5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 11:50:57 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rfkill: fix double-mutex-locking
-Date: Wed, 28 Nov 2007 17:49:34 +0100
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200711281749.34572.mb@bu3sch.de> (sfid-20071128_165103_199442_B31804DD)
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Received: from DSL022.labridge.com ([206.117.136.22]:2124 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756181AbXKTBtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2007 20:49:24 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>, Jeff Garzik <jgarzik@pobox.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 35/59] drivers/net/wireless: Add missing "space"
+Date: Mon, 19 Nov 2007 17:48:27 -0800
+Message-Id: <1195523331-15303-36-git-send-email-joe@perches.com> (sfid-20071120_014948_175481_A43B0B27)
+In-Reply-To: <1195523331-15303-35-git-send-email-joe@perches.com>
+References: 1234567
+ <1195523331-15303-1-git-send-email-joe@perches.com>
+ <1195523331-15303-2-git-send-email-joe@perches.com>
+ <1195523331-15303-3-git-send-email-joe@perches.com>
+ <1195523331-15303-4-git-send-email-joe@perches.com>
+ <1195523331-15303-5-git-send-email-joe@perches.com>
+ <1195523331-15303-6-git-send-email-joe@perches.com>
+ <1195523331-15303-7-git-send-email-joe@perches.com>
+ <1195523331-15303-8-git-send-email-joe@perches.com>
+ <1195523331-15303-9-git-send-email-joe@perches.com>
+ <1195523331-15303-10-git-send-email-joe@perches.com>
+ <1195523331-15303-11-git-send-email-joe@perches.com>
+ <1195523331-15303-12-git-send-email-joe@perches.com>
+ <1195523331-15303-13-git-send-email-joe@perches.com>
+ <1195523331-15303-14-git-send-email-joe@perches.com>
+ <1195523331-15303-15-git-send-email-joe@perches.com>
+ <1195523331-15303-16-git-send-email-joe@perches.com>
+ <1195523331-15303-17-git-send-email-joe@perches.com>
+ <1195523331-15303-18-git-send-email-joe@perches.com>
+ <1195523331-15303-19-git-send-email-joe@perches.com>
+ <1195523331-15303-20-git-send-email-joe@perches.com>
+ <1195523331-15303-21-git-send-email-joe@perches.com>
+ <1195523331-15303-22-git-send-email-joe@perches.com>
+ <1195523331-15303-23-git-send-email-joe@perches.com>
+ <1195523331-15303-24-git-send-email-joe@perches.com>
+ <1195523331-15303-25-git-send-email-joe@perches.com>
+ <1195523331-15303-26-git-send-email-joe@perches.com>
+ <1195523331-15303-27-git-send-email-joe@perches.com>
+ <1195523331-15303-28-git-send-email-joe@perches.com>
+ <1195523331-15303-29-git-send-email-joe@perches.com>
+ <1195523331-15303-30-git-send-email-joe@perches.com>
+ <1195523331-15303-31-git-send-email-joe@perches.com>
+ <1195523331-15303-32-git-send-email-joe@perches.com>
+ <1195523331-15303-33-git-send-email-joe@perches.com>
+ <1195523331-15303-34-git-send-email-joe@perches.com>
+ <1195523331-15303-35-git-send-email-joe@perches.com>
+Message-Id: <5908c0bbfc91b572502351586cdf98fe9ca9aeec.1195454435.git.joe@perches.com>
+In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
+References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_toggle_radio is called from functions where
-rfkill->mutex is already aquired.
 
-Remove the lock from rfkill_toggle_radio() and add it to
-the only calling function that calls it without the lock held.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/b43/phy.c             |    2 +-
+ drivers/net/wireless/b43legacy/phy.c       |    2 +-
+ drivers/net/wireless/bcm43xx/bcm43xx_phy.c |    2 +-
+ drivers/net/wireless/libertas/wext.c       |    2 +-
+ drivers/net/wireless/netwave_cs.c          |    2 +-
+ drivers/net/wireless/p54usb.c              |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-Index: wireless-2.6/net/rfkill/rfkill.c
-===================================================================
---- wireless-2.6.orig/net/rfkill/rfkill.c	2007-11-20 19:09:35.000000000 +0100
-+++ wireless-2.6/net/rfkill/rfkill.c	2007-11-28 17:09:55.000000000 +0100
-@@ -60,11 +60,7 @@ static void rfkill_led_trigger(struct rf
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state)
- {
--	int retval;
--
--	retval = mutex_lock_interruptible(&rfkill->mutex);
--	if (retval)
--		return retval;
-+	int retval = 0;
- 
- 	if (state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
-@@ -74,7 +70,6 @@ static int rfkill_toggle_radio(struct rf
+diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
+index 3d4ed64..7ff091e 100644
+--- a/drivers/net/wireless/b43/phy.c
++++ b/drivers/net/wireless/b43/phy.c
+@@ -2214,7 +2214,7 @@ int b43_phy_init_tssi2dbm_table(struct b43_wldev *dev)
  		}
+ 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
+ 		if (dyn_tssi2dbm == NULL) {
+-			b43err(dev->wl, "Could not allocate memory"
++			b43err(dev->wl, "Could not allocate memory "
+ 			       "for tssi2dbm table\n");
+ 			return -ENOMEM;
+ 		}
+diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
+index 22a4b3d..491e518 100644
+--- a/drivers/net/wireless/b43legacy/phy.c
++++ b/drivers/net/wireless/b43legacy/phy.c
+@@ -2020,7 +2020,7 @@ int b43legacy_phy_init_tssi2dbm_table(struct b43legacy_wldev *dev)
+ 			phy->idle_tssi = 62;
+ 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
+ 		if (dyn_tssi2dbm == NULL) {
+-			b43legacyerr(dev->wl, "Could not allocate memory"
++			b43legacyerr(dev->wl, "Could not allocate memory "
+ 			       "for tssi2dbm table\n");
+ 			return -ENOMEM;
+ 		}
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+index b37f1e3..af3de33 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -2149,7 +2149,7 @@ int bcm43xx_phy_init_tssi2dbm_table(struct bcm43xx_private *bcm)
+ 		}
+ 		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
+ 		if (dyn_tssi2dbm == NULL) {
+-			printk(KERN_ERR PFX "Could not allocate memory"
++			printk(KERN_ERR PFX "Could not allocate memory "
+ 					    "for tssi2dbm table\n");
+ 			return -ENOMEM;
+ 		}
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index c6f5aa3..395b788 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1528,7 +1528,7 @@ static int wlan_set_encodeext(struct net_device *dev,
+ 			&& (ext->key_len != KEY_LEN_WPA_TKIP))
+ 		    || ((alg == IW_ENCODE_ALG_CCMP)
+ 		        && (ext->key_len != KEY_LEN_WPA_AES))) {
+-				lbs_deb_wext("invalid size %d for key of alg"
++				lbs_deb_wext("invalid size %d for key of alg "
+ 				       "type %d\n",
+ 				       ext->key_len,
+ 				       alg);
+diff --git a/drivers/net/wireless/netwave_cs.c b/drivers/net/wireless/netwave_cs.c
+index 2402cb8..d2fa079 100644
+--- a/drivers/net/wireless/netwave_cs.c
++++ b/drivers/net/wireless/netwave_cs.c
+@@ -806,7 +806,7 @@ static int netwave_pcmcia_config(struct pcmcia_device *link) {
+     for (i = 0; i < 6; i++) 
+ 	dev->dev_addr[i] = readb(ramBase + NETWAVE_EREG_PA + i);
+ 
+-    printk(KERN_INFO "%s: Netwave: port %#3lx, irq %d, mem %lx"
++    printk(KERN_INFO "%s: Netwave: port %#3lx, irq %d, mem %lx, "
+ 	   "id %c%c, hw_addr %s\n",
+ 	   dev->name, dev->base_addr, dev->irq,
+ 	   (u_long) ramBase,
+diff --git a/drivers/net/wireless/p54usb.c b/drivers/net/wireless/p54usb.c
+index 755482a..60d286e 100644
+--- a/drivers/net/wireless/p54usb.c
++++ b/drivers/net/wireless/p54usb.c
+@@ -308,7 +308,7 @@ static int p54u_read_eeprom(struct ieee80211_hw *dev)
+ 
+ 	buf = kmalloc(0x2020, GFP_KERNEL);
+ 	if (!buf) {
+-		printk(KERN_ERR "prism54usb: cannot allocate memory for"
++		printk(KERN_ERR "prism54usb: cannot allocate memory for "
+ 		       "eeprom readback!\n");
+ 		return -ENOMEM;
  	}
- 
--	mutex_unlock(&rfkill->mutex);
- 	return retval;
- }
- 
-@@ -158,12 +153,13 @@ static ssize_t rfkill_state_store(struct
- 	if (!capable(CAP_NET_ADMIN))
- 		return -EPERM;
- 
-+	if (mutex_lock_interruptible(&rfkill->mutex))
-+		return -ERESTARTSYS;
- 	error = rfkill_toggle_radio(rfkill,
- 			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF);
--	if (error)
--		return error;
-+	mutex_unlock(&rfkill->mutex);
- 
--	return count;
-+	return error ? error : count;
- }
- 
- static ssize_t rfkill_claim_show(struct device *dev,
-
 -- 
-Greetings Michael.
+1.5.3.5.652.gf192c
+
