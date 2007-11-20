@@ -1,99 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:53852 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756177AbXK3HS2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325AbXKTQ2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 02:18:28 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by hiems2.ing.unibs.it (Postfix) with ESMTP id 785DC182672A
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2007 08:18:26 +0100 (CET)
-Received: from hiems2.ing.unibs.it ([127.0.0.1])
-	by localhost (hiems1.ing.unibs.it [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 7ky94W8Q0oJk for <linux-wireless@vger.kernel.org>;
-	Fri, 30 Nov 2007 08:18:26 +0100 (CET)
-Mime-Version: 1.0 (Apple Message framework v752.3)
-In-Reply-To: <43e72e890711291338j3fb7876fp49b7489764fe2d1a@mail.gmail.com>
-References: <0D869D0B-A5CF-4AE4-B986-DB168917296B@ing.unibs.it> <43e72e890711291338j3fb7876fp49b7489764fe2d1a@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <4FE7E8BF-13D5-450C-A629-60689066B2DD@ing.unibs.it> (sfid-20071130_071832_026019_22E829C9)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: ath5k: filter patch
-Date: Fri, 30 Nov 2007 08:18:31 +0100
-To: linux-wireless@vger.kernel.org
+	Tue, 20 Nov 2007 11:28:22 -0500
+Subject: RE: [PATCH] mac80211: hardware scan rework (V2)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF001746499@orsmsx413.amr.corp.intel.com>
+References: <119553601948-git-send-email-yi.zhu@intel.com>
+	 <1195566632.10920.39.camel@johannes.berg>
+	 <4220499A1B034C4FA93B547BA01E1FF001746499@orsmsx413.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xw+nlWfuBKRKGmHnh+Ty"
+Date: Tue, 20 Nov 2007 17:29:42 +0100
+Message-Id: <1195576182.10920.54.camel@johannes.berg> (sfid-20071120_162826_525168_DE81EE68)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-yes, the problem was there also with iface configured in monitor mode  
-to capture its own traffic and set to promisc to catch also ucast  
-traffic to other STAs (and their related control traffic). That  
-happened because rx filters were never set up (or changed) during  
-ioctls due to
+--=-xw+nlWfuBKRKGmHnh+Ty
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-ifconfig wlan0 promisc
 
-or
+> The firmware-driven scan on 4965 (3945 also) returns to the original
+> channel by itself. [...]
 
-iwconfig wlan0 mode monitor
+Right. Thanks for the description.
 
-Only mcast filters were set up by ath5k_configure_filters. Probably  
-sometime in the past the line to set up rx_filters in this function  
-disappeared from the code, I debugged all the base.c and hw.c to see  
-if there were other parts in the code to set up rx filters during  
-ioctls but there are not.
+> Once done with the list, the scan engine returns to the service channel
+> automatically.  While it *might* work okay to change or reset that
+> channel, it is not necessary, and might be asking for trouble.
 
-I repeat, this depends on the fact the there are no lines of code  
-supposed to change rx_filters during ioctls.
+Well, in the patch right now the channel the user sets will be
+completely ignored because the scan_finished thing doesn't reconfigure
+the hardware as it should.
 
-By the way, again, has someone noticed that ath5k driver is not  
-properly setting up rts procedure when asked?
+Since the user has an expectation that the working channel is changed
+after setting it with the ioctl, the code should make sure. Since hw
+scanning is mostly transparent to mac80211, the ioctl should imho be
+passed to the driver right away. If there's a problem with setting it to
+the hardware directly, the driver can cache it for until the firmware
+scan finished, but I don't think we should do that in mac80211. It has
+to be done somewhere though and just ignoring the setting is wrong.
 
-Best regards,
-FG
+johannes
 
-On Nov 29, 2007, at 22:38, Luis R. Rodriguez wrote:
+--=-xw+nlWfuBKRKGmHnh+Ty
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> On Nov 29, 2007 10:53 AM, Francesco Gringoli
-> <francesco.gringoli@ing.unibs.it> wrote:
->> Hello everybody,
->>
->> I discovered that playing with iface promiscuity to capture traffic
->> (including control, promisc and all other stuff) is not working on
->> ath5k as rx_filters are never refreshed. To make things going I added
->> a single ath5k_hw_set_rx_filters(ah,rfilt) at the end of
->> ath5k_configure_filter(). I attach the simple patch. Now tcpdump
->> captures everything in monitor mode when iface is set to promisc.
->
-> Are you using monitor or promisc? Promiscous is just supposed to sniff
-> what you would sniff as if you were on Ethernet -- stuff destined to
-> your BSSID if STA. Monitor is 'catch it all'. Under this definition,
-> is it still "misbehaving"? For now you can get a real "monitor"
-> interface by using iw:
->
-> http://git.sipsolutions.net/iw.git
->
-> However this requires you to have libnl-1.0 pre8. The libnl URL is
-> down, in fact Thomas's home dir is not even working right now.. hmm,
-> CC'ing him. You can find pre8 here:
->
-> git://git.kernel.org/pub/scm/libs/netlink/libnl.git
->
->   Luis
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-%%%%%%%%%%%%%%%%%%%%%
+iQIVAwUAR0MLdaVg1VMiehFYAQKAYw/+N3OCgND3F8vL8Hta1SJjaXWcqMqe2898
+EDFhqWZAcZHv3KBMr08SL7Y3TR123/+t94VmqL0cRa6b+YnliAQnI8bDUXa50h4k
+Fhi7J9HX3l+Ra4RCwPM01n3pLoyst751Skmc9bdX9RgVMLYbfWbztf7m/FQksKRa
+dXtotDQGKJyd0CEmR0ZV3DCI7CYEfsp7gbOcPr7ABRaTw2VN0y/EVqBEDrxd+9uL
+oApZijH/zjtPUSVGK3EiVa9GUhCpWSiGY5q0HlUQm5pC14l+4pmh6B/a213Izhf0
+E4jtSwd48n9wM7GegeUD92n4l10LdFV4+wWkM0CXDrsO5IJ5mtnY97PLjNgYaUlU
+zQRNkLOBa1kZjYkQP/Mw4oZAEvQWt4q8mP4Ui/ctpYUtQvxEJYtCbCoxqDHH8CSr
+TjGfBTHaou38hnnDfF+WuVnDN1wrjfeQrCGxIRhHqDJV9d7rDRnV8wNUjNr3C8GA
+FP1mIXlG+5TR3DcxALbFU6aIWyUNk9vxEPax2hEL/8p5USmgvVlxDV6yqYjn0FCB
+CouagL/OgLdtjqvhElgXzwMqLMLOht/ABWQukbX7M6KPo7FuKVa/6zfL6hEaLoAi
+Ujvt69iFuuXTxDXf4evvzTXL2UfgjrGFjsEzjkNOP+aXPCZ607+YXg2Aun+FVPeU
+l3k0n3KcKcc=
+=Lsdd
+-----END PGP SIGNATURE-----
 
-Francesco Gringoli, PhD - Assistant Professor
-Dept. of Electrical Engineering for Automation
-University of Brescia
-via Branze, 38
-25123 Brescia
-ITALY
-
-Ph:  ++39.030.3715843
-FAX: ++39.030.380014
-WWW: http://www.ing.unibs.it/~gringoli
-
-%%%%%%%%%%%%%%%%%%%%%
-
+--=-xw+nlWfuBKRKGmHnh+Ty--
 
