@@ -1,203 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:47546 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758487AbXKLNtB (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbXKTNuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 08:49:01 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1450268mue
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 05:48:59 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] rt2x00: Move duplicate code into rt2x00pci_txdone()
-Date: Mon, 12 Nov 2007 15:02:40 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711121502.01953.IvDoorn@gmail.com>
-In-Reply-To: <200711121502.01953.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711121502.41050.IvDoorn@gmail.com> (sfid-20071112_134908_944521_BBF8C6C7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 20 Nov 2007 08:50:23 -0500
+Subject: Re: [PATCH] mac80211: hardware scan rework (V2)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Ben Cahill <ben.m.cahill@intel.com>
+In-Reply-To: <119553601948-git-send-email-yi.zhu@intel.com>
+References: <119553601948-git-send-email-yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lDRcAI+ITq3OYD3k1uB4"
+Date: Tue, 20 Nov 2007 14:50:32 +0100
+Message-Id: <1195566632.10920.39.camel@johannes.berg> (sfid-20071120_135154_607877_A67CED0C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2400pci, rt2500pci and rt61 require different
-txdone handling, but the code that pushes the frame
-upstream and cleans up the entry is identical to
-all of them.
-This will create the function rt2x00pci_txdone()
-to remove the duplicate code.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   20 +-----------------
- drivers/net/wireless/rt2x00/rt2500pci.c |   20 +-----------------
- drivers/net/wireless/rt2x00/rt2x00pci.c |   33 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00pci.h |    4 ++-
- drivers/net/wireless/rt2x00/rt61pci.c   |   19 +----------------
- 5 files changed, 38 insertions(+), 58 deletions(-)
+--=-lDRcAI+ITq3OYD3k1uB4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index d48b6ca..bdf3edc 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1167,26 +1167,8 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev, const int queue)
- 		tx_status = rt2x00_get_field32(word, TXD_W0_RESULT);
- 		retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
- 
--		rt2x00lib_txdone(entry, tx_status, retry);
--
--		/*
--		 * Make this entry available for reuse.
--		 */
--		entry->flags = 0;
--		rt2x00_set_field32(&word, TXD_W0_VALID, 0);
--		rt2x00_desc_write(txd, 0, word);
--		rt2x00_ring_index_done_inc(ring);
-+		rt2x00pci_txdone(rt2x00dev, entry, tx_status, retry);
- 	}
--
--	/*
--	 * If the data ring was full before the txdone handler
--	 * we must make sure the packet queue in the mac80211 stack
--	 * is reenabled when the txdone handler has finished.
--	 */
--	entry = ring->entry;
--	if (!rt2x00_ring_full(ring))
--		ieee80211_wake_queue(rt2x00dev->hw,
--				     entry->tx_status.control.queue);
- }
- 
- static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index e6a0c37..b6bb964 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1298,26 +1298,8 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev, const int queue)
- 		tx_status = rt2x00_get_field32(word, TXD_W0_RESULT);
- 		retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
- 
--		rt2x00lib_txdone(entry, tx_status, retry);
--
--		/*
--		 * Make this entry available for reuse.
--		 */
--		entry->flags = 0;
--		rt2x00_set_field32(&word, TXD_W0_VALID, 0);
--		rt2x00_desc_write(txd, 0, word);
--		rt2x00_ring_index_done_inc(ring);
-+		rt2x00pci_txdone(rt2x00dev, entry, tx_status, retry);
- 	}
--
--	/*
--	 * If the data ring was full before the txdone handler
--	 * we must make sure the packet queue in the mac80211 stack
--	 * is reenabled when the txdone handler has finished.
--	 */
--	entry = ring->entry;
--	if (!rt2x00_ring_full(ring))
--		ieee80211_wake_queue(rt2x00dev->hw,
--				     entry->tx_status.control.queue);
- }
- 
- static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 045b954..30ef4f9 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -116,7 +116,7 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
- EXPORT_SYMBOL_GPL(rt2x00pci_write_tx_data);
- 
- /*
-- * RX data handlers.
-+ * TX/RX data handlers.
-  */
- void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
- {
-@@ -165,6 +165,37 @@ void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2x00pci_rxdone);
- 
-+void rt2x00pci_txdone(struct rt2x00_dev *rt2x00dev, struct data_entry *entry,
-+		      const int tx_status, const int retry)
-+{
-+	u32 word;
-+
-+	rt2x00lib_txdone(entry, tx_status, retry);
-+
-+	/*
-+	 * Make this entry available for reuse.
-+	 */
-+	entry->flags = 0;
-+
-+	rt2x00_desc_read(entry->priv, 0, &word);
-+	rt2x00_set_field32(&word, TXD_ENTRY_OWNER_NIC, 0);
-+	rt2x00_set_field32(&word, TXD_ENTRY_VALID, 0);
-+	rt2x00_desc_write(entry->priv, 0, word);
-+
-+	rt2x00_ring_index_done_inc(entry->ring);
-+
-+	/*
-+	 * If the data ring was full before the txdone handler
-+	 * we must make sure the packet queue in the mac80211 stack
-+	 * is reenabled when the txdone handler has finished.
-+	 */
-+	if (!rt2x00_ring_full(entry->ring))
-+		ieee80211_wake_queue(rt2x00dev->hw,
-+				     entry->tx_status.control.queue);
-+
-+}
-+EXPORT_SYMBOL_GPL(rt2x00pci_txdone);
-+
- /*
-  * Device initialization handlers.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
-index 0357205..2d1eb81 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
-@@ -101,9 +101,11 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 			    struct ieee80211_tx_control *control);
- 
- /*
-- * RX data handlers.
-+ * RX/TX data handlers.
-  */
- void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev);
-+void rt2x00pci_txdone(struct rt2x00_dev *rt2x00dev, struct data_entry *entry,
-+		      const int tx_status, const int retry);
- 
- /*
-  * Device initialization handlers.
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 105dc86..a6d4e10 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1767,24 +1767,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 		tx_status = rt2x00_get_field32(reg, STA_CSR4_TX_RESULT);
- 		retry = rt2x00_get_field32(reg, STA_CSR4_RETRY_COUNT);
- 
--		rt2x00lib_txdone(entry, tx_status, retry);
--
--		/*
--		 * Make this entry available for reuse.
--		 */
--		entry->flags = 0;
--		rt2x00_set_field32(&word, TXD_W0_VALID, 0);
--		rt2x00_desc_write(txd, 0, word);
--		rt2x00_ring_index_done_inc(entry->ring);
--
--		/*
--		 * If the data ring was full before the txdone handler
--		 * we must make sure the packet queue in the mac80211 stack
--		 * is reenabled when the txdone handler has finished.
--		 */
--		if (!rt2x00_ring_full(ring))
--			ieee80211_wake_queue(rt2x00dev->hw,
--					     entry->tx_status.control.queue);
-+		rt2x00pci_txdone(rt2x00dev, entry, tx_status, retry);
- 	}
- }
- 
--- 
-1.5.3.4
+Hi,
+
+Thanks!
+
+> 1. fix a hw scan bug in ieee80211_rx_bss_info() for setting beacon
+>    supported rates
+> 2. let control frames pass in ieee80211_sta_rx_scan() during hw scan
+> 3. set local->sta_{hw|sw}_scanning type to bool
+> 4. avoid channel setting during hw scan
+
+Why this? I was confused at first and I'm sorry if I confused you, but
+since we're now fully unaware of hardware scan thanks to your item 5, I
+think we need to allow setting channel during hardware scan so the
+firmware will change to the right channel once it finished scanning.
+
+> 5. rework ieee80211_scan_completed() to make it symmetric for hw scan
+
+
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> index 015b3f8..26f404a 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -1487,8 +1487,18 @@ static void ieee80211_rx_bss_info(struct net_devic=
+e *dev,
+>  		u32 supp_rates, prev_rates;
+>  		int i, j;
+> =20
+> -		mode =3D local->sta_scanning ?
+> +		mode =3D local->sta_sw_scanning ?
+>  		       local->scan_hw_mode : local->oper_hw_mode;
+> +
+> +		if (local->sta_hw_scanning) {
+> +			/* search for the correct mode matches the beacon */
+> +			list_for_each_entry(mode, &local->modes_list, list)
+> +				if (mode->mode =3D=3D rx_status->phymode)
+> +					break;
+> +
+> +			if (mode =3D=3D NULL)
+> +				mode =3D local->oper_hw_mode;
+> +		}
+
+Good catch.
+
+> @@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct *work)
+>  	if (!netif_running(dev))
+>  		return;
+> =20
+> -	if (local->sta_scanning)
+> +	if (local->sta_sw_scanning || local->sta_hw_scanning)
+>  		return;
+
+Shouldn't the sta work be able to run normally while hw scan is in
+progress?
+=20
+> -	if (unlikely(local->sta_scanning !=3D 0)) {
+> -		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
+> +	if (unlikely(local->sta_hw_scanning))
+> +		return ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
+> +
+> +	if (unlikely(local->sta_sw_scanning)) {
+> +		/* drop all the other packets during a software scan anyway */
+> +		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
+> +		    !=3D TXRX_QUEUED)
+> +			dev_kfree_skb(skb);
+
+Not entirely sure why we do this, but nothing we should change with this
+patch.
+
+Other than the ioctl thing it looks good to me.
+
+johannes
+
+--=-lDRcAI+ITq3OYD3k1uB4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0LmJ6Vg1VMiehFYAQL1nhAAujaYMK9IWHsub5FHZsEh55DAFwJIpm0B
+46w5yTVjAvU7ebTdX3myc2kmHkdhmK0SYkVmoXe7pzvi3Hu5I8Y7+itThawDldRE
+3+W1PqUerrjFUqYVZrmRGBrtUjpCkWoUlMkV47jsWmgv4XiM9Q2+Nhl1In8RmdHE
+p2mhMS/jCW5Vi058hrarFQLGqUKOcfeoboW/9Opc2Z7sQsDStOyeslYi29/1ZLPR
+EdG3PRVynhcHX2+GAmbIPDtTCUd2ljZ8SpwVjqzNnias1LAGyaDuiggjesamXMjC
+7+3ciZLwiC1V0Q8K72ZdXopAWDNKBrRYNN4sxL1agp20741S0Fm490tDUfZ+HJ5j
+E9VyS2UBrTU9BiVmfMN4Z3JBaKa8y8nVrIkhlL0HjagvTlpbZZ0wSBXwFgUqhjJN
+Vt5qh/IeTXnpscDmWAkMFYT22pLYije5Ko+HTTQqvOf35f1K1yA3QUB/b3LANb0d
+Bm89F5XzEpleGY3I9v60zxpTBb0go1YjL/WhZoMw2T9Gzj/7sGdCfTtJsazwPpm1
+0BXxL6tZ8uxcAuqTHegPI5tVwZpLobgql9k7dYkuWOSixGwCBcH7MLwiCO6a0E6y
+9Rdqle295BtOVJAU7gkDq3oSjfqmX8BCRwVp1oWjsZ/6vQ8cvtwYp0UsjaJVkgZc
+891+QD56l58=
+=HEZw
+-----END PGP SIGNATURE-----
+
+--=-lDRcAI+ITq3OYD3k1uB4--
 
