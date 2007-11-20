@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:17097 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751615AbXKNWVj (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:60737 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756683AbXKTQwL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 17:21:39 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] rtl8180: fix compilation with print_mac changes
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 14 Nov 2007 17:19:52 -0500
-Message-ID: <20071114221951.10490.9118.stgit@tetra.sourmilk.net> (sfid-20071114_222143_688727_78C3C052)
+	Tue, 20 Nov 2007 11:52:11 -0500
+Date: Tue, 20 Nov 2007 08:44:13 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: devel@linuxdriverproject.org,
+	wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux Drivers needed for 802.11
+Message-ID: <20071120164413.GB15511@kroah.com> (sfid-20071120_165214_240306_3FADCED7)
+References: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com> <20071120054122.GA16693@kroah.com> <43e72e890711200052l37e0877dl8845f58d45d0c666@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890711200052l37e0877dl8845f58d45d0c666@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes compilation of rtl8180 after the print_mac changes.
+On Tue, Nov 20, 2007 at 03:52:06AM -0500, Luis R. Rodriguez wrote:
+> On Nov 20, 2007 12:41 AM, Greg KH <greg@kroah.com> wrote:
+> > On Tue, Nov 20, 2007 at 12:24:20AM -0500, Luis R. Rodriguez wrote:
+> > > Greg,
+> > >
+> > > http://linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded#802_11_Wireless_Network_cards
+> > >
+> > > This has a list of "needed" 802.11 drivers. It needs some updating as
+> > > we have quite a few new drivers and some are already in the works. I
+> > > was about to update this list to reflect our current driver list and
+> > > also add all 802.11n info I have but considered fist moving it to
+> > > linuxwireless.org so we can arrange this a bit better. Reason for
+> > > doing so is to let us arrange it as we can keep better track of it.
+> >
+> > If you want to pull from the wiki, please do so, and feel free to point
+> > that section at your page.  But unless you have a spot that users can
+> > edit on their own, it might be good to leave something on the
+> > linuxdriverproject wiki for people to do so.
+> 
+> Well anyone can edit the wiki, so yes, we do have plenty of pages
+> users can use to edit and elaborate on. To be more specific what we
+> can do is have a scratch page where users can add drivers they *think*
+> are not yet written. A few of us can then monitor that page by
+> subscribing and then we can incorporate that info into our wiki. Sure
+> users who are sure of things can just go ahead and expand our pages
+> (we have no restrictions). From the looks on the LiuxDriverProject
+> page on what drivers are needed it seems *a lot* of users don't know
+> of a lot of current work being done or that has been done already.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+I agree, part of the work is to clean up those entries.  And your group
+knows this area the best, so please, feel free to do so and point people
+back at your wiki, I have no problem with that at all.
 
- drivers/net/wireless/rtl8180_dev.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
-index 517927d..620ebb1 100644
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -727,6 +727,7 @@ static int __devinit rtl8180_probe(struct pci_dev *pdev,
- 	const char *chip_name, *rf_name;
- 	u32 reg;
- 	u16 eeprom_val;
-+	DECLARE_MAC_BUF(mac);
- 
- 	err = pci_enable_device(pdev);
- 	if (err) {
-@@ -939,8 +940,8 @@ static int __devinit rtl8180_probe(struct pci_dev *pdev,
- 		goto err_iounmap;
- 	}
- 
--	printk(KERN_INFO "%s: hwaddr " MAC_FMT ", %s + %s\n",
--	       wiphy_name(dev->wiphy), MAC_ARG(dev->wiphy->perm_addr),
-+	printk(KERN_INFO "%s: hwaddr %s, %s + %s\n",
-+	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
- 	       chip_name, rf_name);
- 
- 	return 0;
-
-
+greg k-h
