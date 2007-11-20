@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:42040 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750793AbXK0FCz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 00:02:55 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Date: Tue, 27 Nov 2007 00:06:16 -0500
-Cc: Tony Breeds <tony@bakeyournoodle.com>,
-	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <200711262337.49178.flamingice@sourmilk.net> <20071126205559.dfaf1a56.akpm@linux-foundation.org>
-In-Reply-To: <20071126205559.dfaf1a56.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1290261.VKdncilzpt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711270006.20431.flamingice@sourmilk.net> (sfid-20071127_050258_181019_299650C4)
+Received: from mx1.redhat.com ([66.187.233.31]:58485 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759666AbXKTW1D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 17:27:03 -0500
+Subject: Re: [PATCH 1/4] libertas: drop useless default_fw_name variable
+From: Dan Williams <dcbw@redhat.com>
+To: Andres Salomon <dilinger@queued.net>
+Cc: libertas-dev@lists.infradead.org,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	akpm@linux-foundation.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071116131157.29c7227a@ephemeral>
+References: <20071116131157.29c7227a@ephemeral>
+Content-Type: text/plain
+Date: Tue, 20 Nov 2007 17:23:14 -0500
+Message-Id: <1195597394.32309.3.camel@localhost.localdomain> (sfid-20071120_222708_495441_A588CA4D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1290261.VKdncilzpt
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, 2007-11-16 at 13:11 -0500, Andres Salomon wrote:
+> Signed-off-by: Andres Salomon <dilinger@debian.org>
 
-On Monday 26 November 2007 23:55:59 Andrew Morton wrote:
-> On Mon, 26 Nov 2007 23:37:48 -0500 Michael Wu <flamingice@sourmilk.net>=20
-wrote:
-> > On Monday 26 November 2007 21:54:23 Andrew Morton wrote:
-> > > Why not just rename one of them?
-> >
-> > Wait, why does renaming just one of them work?
->
-> umm, well I assume that the failure is because we're trying to link two
-> identically-named symbols together?
-But there's more than one pair..
+As discussed on IRC, I'll clean this series of 4 patches up for 2.6.25
+and the unified libertas namespace and resubmit.  Thanks!
 
-rtl8180_rtl8225.h:
-void rtl8225_rf_init(struct ieee80211_hw *);
-void rtl8225z2_rf_init(struct ieee80211_hw *);
-void rtl8225_rf_stop(struct ieee80211_hw *);
+Dan
 
-rtl8187_rtl8225.h:
-void rtl8225_rf_init(struct ieee80211_hw *);
-void rtl8225z2_rf_init(struct ieee80211_hw *);
-void rtl8225_rf_stop(struct ieee80211_hw *);
+> ---
+>  drivers/net/wireless/libertas/if_usb.c |    7 +------
+>  1 files changed, 1 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index 063572f..3cf9379 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -20,9 +20,8 @@
+>  #define MESSAGE_HEADER_LEN	4
+>  
+>  static const char usbdriver_name[] = "usb8xxx";
+> -static u8 *default_fw_name = "usb8388.bin";
+>  
+> -static char *libertas_fw_name = NULL;
+> +static char *libertas_fw_name = "usb8388.bin";
+>  module_param_named(fw_name, libertas_fw_name, charp, 0644);
+>  
+>  /*
+> @@ -1129,10 +1128,6 @@ static int if_usb_init_module(void)
+>  
+>  	lbs_deb_enter(LBS_DEB_MAIN);
+>  
+> -	if (libertas_fw_name == NULL) {
+> -		libertas_fw_name = default_fw_name;
+> -	}
+> -
+>  	ret = usb_register(&if_usb_driver);
+>  
+>  	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
 
-=2DMichael Wu
-
---nextPart1290261.VKdncilzpt
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHS6XMT3Oqt9AH4aERAnskAJ98cmIi+/XhbTW51QQFDOF3f06d5gCgucIe
-8KeKxLD1nSK5n+lXy/Gc2mU=
-=Q/Bq
------END PGP SIGNATURE-----
-
---nextPart1290261.VKdncilzpt--
