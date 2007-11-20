@@ -1,77 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pythia.bakeyournoodle.com ([203.82.209.197]:36816 "EHLO
-	pythia.bakeyournoodle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbXK0Cec (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 21:34:32 -0500
-Date: Tue, 27 Nov 2007 13:34:30 +1100
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	akpm@linux-foundation.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Message-ID: <20071127023430.GA24243@bakeyournoodle.com> (sfid-20071127_023436_013467_35FF96F8)
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <4742DFC3.80305@linux.vnet.ibm.com> <20071127005950.GZ24243@bakeyournoodle.com> <200711262120.13218.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200711262120.13218.flamingice@sourmilk.net>
-From: tony@bakeyournoodle.com (Tony Breeds)
+Received: from mx1.redhat.com ([66.187.233.31]:60980 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756456AbXKTRZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 12:25:45 -0500
+Subject: RE: [PATCH] mac80211: hardware scan rework (V2)
+From: Dan Williams <dcbw@redhat.com>
+To: "Abbas, Mohamed" <mohamed.abbas@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Zhu, Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>
+In-Reply-To: <33E1C72C74DBE747B7B59C1740F74437027F30D4@orsmsx417.amr.corp.intel.com>
+References: <119553601948-git-send-email-yi.zhu@intel.com>
+	 <1195566632.10920.39.camel@johannes.berg>
+	 <33E1C72C74DBE747B7B59C1740F74437027F30D4@orsmsx417.amr.corp.intel.com>
+Content-Type: text/plain
+Date: Tue, 20 Nov 2007 12:21:47 -0500
+Message-Id: <1195579307.3389.52.camel@localhost.localdomain> (sfid-20071120_172548_789107_8E4B3F13)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 26, 2007 at 09:20:08PM -0500, Michael Wu wrote:
+On Tue, 2007-11-20 at 09:17 -0800, Abbas, Mohamed wrote:
+> Johannes
+> The firmware will go back to the old setting, the ones before scan, once
+> done scanning by it self. The calls by mac80211 after scan complete to
+> set channel will be ignored by the iwl driver if we still tuned to the
+> same channel, iwl wont call firmware on the same setting, it has to be a
+> change to call down to firmware. I need to check what happen if user
+> change channel during scan, this call might be necessary in this case.
 
-> I would rather have a patch to temporarily not allow them to be built into the 
-> kernel. (or only allow one at a time to be built as a module) There's no 
-> issues when these drivers are compiled as modules.
+I'd expect that either (a) the scan gets canceled and then the channel
+change happens, or (b) the channel change gets queued and happens
+immediately after the scan completes.  (b) is probably the easier thing
+to do here unless the ucode has a cancel-scan command, but then you have
+to wait until the scan is actually canceled anyway, which sort of
+implies (b) too.  So maybe just do (b) and be done with it :)
 
-Perhaps as below?
- 
-> It's mostly the rtl8225 radio tuning code that's similar. They're not exactly 
-> the same though, so it'll be a bit messy to merge the usb rtl8225 radio 
-> tuning and pci rtl8225 radio tuning code. However, I do think it'll be better 
-> overall so the merger of that code is planned.
+Dan
 
-okay, the diff between the 2 drivers doesn't look too bad really, but as
-you say it won't be trivial to merge them.
- 
-From: Tony Breeds <tony@bakeyournoodle.com>
-
-Temporarily ensure that Realtek 8185 and 8187 can only be built as modules.
-
-These two drivers share a number of common (global) functions.  While a better
-long term solution is developed lets ensure that they are never built into
-the kernel, to avoid symbol conflicts.
-
-Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
-
----
-
- drivers/net/wireless/Kconfig |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 82e5de7..023dd9d 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -555,11 +555,13 @@ config USB_ZD1201
- config RTL8180
- 	tristate "Realtek 8185 PCI support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	depends on m
- 	select EEPROM_93CX6
- 
- config RTL8187
- 	tristate "Realtek 8187 USB support"
- 	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
-+	depends on m
- 	select EEPROM_93CX6
- 	---help---
- 	  This is a driver for RTL8187 based cards.
-
-Yours Tony
-
-  linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
-  Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
+> Mohamed
+> 
+> -----Original Message-----
+> From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+> Sent: Tuesday, November 20, 2007 5:51 AM
+> To: Zhu, Yi
+> Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; Abbas,
+> Mohamed; Cahill, Ben M
+> Subject: Re: [PATCH] mac80211: hardware scan rework (V2)
+> 
+> Hi,
+> 
+> Thanks!
+> 
+> > 1. fix a hw scan bug in ieee80211_rx_bss_info() for setting beacon
+> >    supported rates
+> > 2. let control frames pass in ieee80211_sta_rx_scan() during hw scan
+> > 3. set local->sta_{hw|sw}_scanning type to bool
+> > 4. avoid channel setting during hw scan
+> 
+> Why this? I was confused at first and I'm sorry if I confused you, but
+> since we're now fully unaware of hardware scan thanks to your item 5, I
+> think we need to allow setting channel during hardware scan so the
+> firmware will change to the right channel once it finished scanning.
+> 
+> > 5. rework ieee80211_scan_completed() to make it symmetric for hw scan
+> 
+> 
+> > diff --git a/net/mac80211/ieee80211_sta.c
+> b/net/mac80211/ieee80211_sta.c
+> > index 015b3f8..26f404a 100644
+> > --- a/net/mac80211/ieee80211_sta.c
+> > +++ b/net/mac80211/ieee80211_sta.c
+> > @@ -1487,8 +1487,18 @@ static void ieee80211_rx_bss_info(struct
+> net_device *dev,
+> >  		u32 supp_rates, prev_rates;
+> >  		int i, j;
+> >  
+> > -		mode = local->sta_scanning ?
+> > +		mode = local->sta_sw_scanning ?
+> >  		       local->scan_hw_mode : local->oper_hw_mode;
+> > +
+> > +		if (local->sta_hw_scanning) {
+> > +			/* search for the correct mode matches the
+> beacon */
+> > +			list_for_each_entry(mode, &local->modes_list,
+> list)
+> > +				if (mode->mode == rx_status->phymode)
+> > +					break;
+> > +
+> > +			if (mode == NULL)
+> > +				mode = local->oper_hw_mode;
+> > +		}
+> 
+> Good catch.
+> 
+> > @@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct
+> *work)
+> >  	if (!netif_running(dev))
+> >  		return;
+> >  
+> > -	if (local->sta_scanning)
+> > +	if (local->sta_sw_scanning || local->sta_hw_scanning)
+> >  		return;
+> 
+> Shouldn't the sta work be able to run normally while hw scan is in
+> progress?
+>  
+> > -	if (unlikely(local->sta_scanning != 0)) {
+> > -		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
+> > +	if (unlikely(local->sta_hw_scanning))
+> > +		return ieee80211_sta_rx_scan(rx->dev, skb,
+> rx->u.rx.status);
+> > +
+> > +	if (unlikely(local->sta_sw_scanning)) {
+> > +		/* drop all the other packets during a software scan
+> anyway */
+> > +		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
+> > +		    != TXRX_QUEUED)
+> > +			dev_kfree_skb(skb);
+> 
+> Not entirely sure why we do this, but nothing we should change with this
+> patch.
+> 
+> Other than the ioctl thing it looks good to me.
+> 
+> johannes
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
