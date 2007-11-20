@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:18453 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753609AbXK0EeX (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:51846 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128AbXKTGp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 23:34:23 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Date: Mon, 26 Nov 2007 23:37:48 -0500
-Cc: Tony Breeds <tony@bakeyournoodle.com>,
-	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <20071127023430.GA24243@bakeyournoodle.com> <20071126185423.9280b263.akpm@linux-foundation.org>
-In-Reply-To: <20071126185423.9280b263.akpm@linux-foundation.org>
+	Tue, 20 Nov 2007 01:45:29 -0500
+Date: Mon, 19 Nov 2007 21:41:22 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: devel@linuxdriverproject.org,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Linux Drivers needed for 802.11
+Message-ID: <20071120054122.GA16693@kroah.com> (sfid-20071120_064531_596695_E6E1399D)
+References: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1796015.7xiy1ZIjGQ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711262337.49178.flamingice@sourmilk.net> (sfid-20071127_043426_662968_D7954CED)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890711192124j418667b1w94e11737a7f1aea3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1796015.7xiy1ZIjGQ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Tue, Nov 20, 2007 at 12:24:20AM -0500, Luis R. Rodriguez wrote:
+> Greg,
+> 
+> http://linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded#802_11_Wireless_Network_cards
+> 
+> This has a list of "needed" 802.11 drivers. It needs some updating as
+> we have quite a few new drivers and some are already in the works. I
+> was about to update this list to reflect our current driver list and
+> also add all 802.11n info I have but considered fist moving it to
+> linuxwireless.org so we can arrange this a bit better. Reason for
+> doing so is to let us arrange it as we can keep better track of it.
 
-On Monday 26 November 2007 21:54:23 Andrew Morton wrote:
-> Why not just rename one of them?
->
-Wait, why does renaming just one of them work?
+If you want to pull from the wiki, please do so, and feel free to point
+that section at your page.  But unless you have a spot that users can
+edit on their own, it might be good to leave something on the
+linuxdriverproject wiki for people to do so.
 
--Michael Wu
+And along the 802.11n front, I'm _this_ close to getting a major
+chipset's specs, so hopefully we might have some more work for you to do
+soon :)
 
---nextPart1796015.7xiy1ZIjGQ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Now of only the lawyers would hurry up...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+thanks,
 
-iD8DBQBHS58dT3Oqt9AH4aERAtagAJ4tmOpqG4w88tWC/bXHBsBcQJ34ugCcCBKb
-cq7vp9NoU4sed+azmb1vZ/I=
-=h0d2
------END PGP SIGNATURE-----
-
---nextPart1796015.7xiy1ZIjGQ--
+greg k-h
