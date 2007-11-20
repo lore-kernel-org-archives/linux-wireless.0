@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34075
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757281AbXK1QsM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 11:48:12 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
-Date: Wed, 28 Nov 2007 17:46:55 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711281713.02919.mb@bu3sch.de> <474D9A46.1020300@lwfinger.net>
-In-Reply-To: <474D9A46.1020300@lwfinger.net>
+Received: from madara.hpl.hp.com ([192.6.19.124]:50129 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761298AbXKTWQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 17:16:48 -0500
+Date: Tue, 20 Nov 2007 14:16:36 -0800
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Message-ID: <20071120221636.GA4711@bougret.hpl.hp.com> (sfid-20071120_221715_454157_BAAC2927)
+Reply-To: jt@hpl.hp.com
+References: <1195562454.10920.6.camel@johannes.berg> <20071120.044600.47940350.davem@davemloft.net> <20071120180016.GC1480@bougret.hpl.hp.com> <20071120.135842.122514400.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711281746.56069.mb@bu3sch.de> (sfid-20071128_164816_339209_AE7E50CB)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071120.135842.122514400.davem@davemloft.net>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 November 2007 17:41:42 Larry Finger wrote:
-> Michael Buesch wrote:
-> > 
-> > I think it's a different bug. The backtrace seems corrupted.
-> > 
-> > Can you try this patch? There is some circular locking in rfkill.
+On Tue, Nov 20, 2007 at 01:58:42PM -0800, David Miller wrote:
+> From: Jean Tourrilhes <jt@hpl.hp.com>
+> Date: Tue, 20 Nov 2007 10:00:16 -0800
 > 
-> I still get circular locking. The dump is
+> > 	This is a special version of Wireless Tools with some debug
+> > code. It will help me understand what's happening with the bus error
+> > while scanning and see what fix I can come up with.
+> > 	What you need to do is :
+> > 		o untar, make
+> > 		o ./iwlist scan > scan.log
+> > 	And send me the result.
+> 
+> I already know what's happening.  Your "fixup" code is deferencing
+> the wrong part of the iw_point pointer, it only works on little
+> endian.
 
-Ok.
+	I personally want to see the hard data, to make sure I fully
+understand it. I'm sorry, but I'm not as experienced as you guys
+dealing with endianess and alignement.
+	I'll try to look at it when I can find cycles for it.
 
-b43 init:
-	mutex_lock(wl->mutex)
-	rfkill_init()
-		mutex_lock(rfkill->mutex)
+> The fix is to remove the userland fixup code entirely and fixup
+> the stream in the kernel.
 
-in operation:
-	rfkill poll (no locks held)
-	calls into rfkill
-	mutex_lock(rfkill->mutex)
-	b43_rfkill_soft_toggle()
-		mutex_lock(wl->mutex)
+	If you look at the overall picture, that would introduce a lot
+of complex and tricky code in the kernel, you would need pretty much
+the full parser (the metadata, you can get from the wext code). I'm
+not sure it's practical where the userspace fix is way simpler.
+	Also, it was my long term goal to fix the event code in the
+kernel to always make it 32 bit aligned. That would be the simpler
+solutions, but we can't get there immediately.
 
-As you can see the lock ordering of the two mutexes
-is different. The problem is that we cannot easily drop
-the wl->mutex on b43 init, as that would introduce some
-race conditions. This is specific to b43 and rt2x00 most
-likely doesn't have this requirement.
-I'm not sure how to properly fix this.
+	Regards,
 
--- 
-Greetings Michael.
+	Jean
+
