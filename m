@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:15347 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753381AbXKVBDD (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57491
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755818AbXKTLds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 20:03:03 -0500
-Received: by py-out-1112.google.com with SMTP id u77so7575384pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2007 17:03:02 -0800 (PST)
-Message-ID: <43e72e890711211703p799a18f0qc8636f27cf17bb91@mail.gmail.com> (sfid-20071122_010310_819939_757016F4)
-Date: Wed, 21 Nov 2007 20:03:01 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jan Willies" <jan@willies.info>
-Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
-Cc: jean-baptiste.note@m4x.org, developers@islsm.org,
-	linux-wireless@vger.kernel.org, "Kyle McMartin" <kyle@mcmartin.ca>
-In-Reply-To: <466341AF.7050505@willies.info>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <46631BD2.20704@willies.info>
-	 <3871229b0706031323w5c8e3589r973b8735ed3e1f85@mail.gmail.com>
-	 <466341AF.7050505@willies.info>
+	Tue, 20 Nov 2007 06:33:48 -0500
+Date: Tue, 20 Nov 2007 03:33:47 -0800 (PST)
+Message-Id: <20071120.033347.197068845.davem@davemloft.net> (sfid-20071120_113353_618630_708F8EB6)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org, shaddy_baddah@hotmail.com
+Subject: [PATCH]: Fix WEXT userland corruption on 64-bit
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jun 3, 2007 5:33 PM, Jan Willies <jan@willies.info> wrote:
-> Jean-Baptiste Note schrieb:
-> > Hi,
-> >
-> > Any chance you could decode the oops ? If you're recompiling the
-> > kernel yourself, include symbols (can't remember the option name), or
-> > run ksymoops...
->
-> I recompiled the kernel with KALLSYMS and got this:
->
-> root@OpenWrt:/# iwconfig
-> lo        no wireless extensions.
->
-> ethData bus error, epc == c007e16c, ra == c007d6c0
-> Oops[#1]:
-> Cpu 0
-> $ 0   : 00000000 1000b800 abad0000 00000032
-> $ 4   : 00000001 c0068000 00000013 00000001
-> $ 8   : 00000004 800feb8c 00000000 00000000
-> $12   : 00000000 00000000 8124ca40 00000000
-> $16   : 812a7800 000000fa 81361320 81361000
-> $20   : 00000010 00000000 a1cc0000 00000019
-> $24   : 00000000 2abd45f0
-> $28   : 813d6000 813d7ce8 ff02000d c007d6c0
-> Hi    : 000002fc
-> Lo    : 00035866
-> epc   : c007e16c isl38xx_trigger_device+0xc/0x60 [prism54]     Not tainted
-> ra    : c007d6c0 islpci_mgt_transaction+0x380/0x614 [prism54]
-> Status: 1000b803    KERNEL EXL IE
-> Cause : 0000001c
-> PrId  : 00029007
-> Modules linked in: prism54 switch_robo switch_core diag
-> Process iwconfig (pid: 1411, threadinfo=813d6000, task=8106f3f8)
-> Stack : 81108800 8001e418 00000060 00000000 00000000 8106f3f8 8003bf54
-> 813616b0
->          813616b0 80029ab0 00000004 00000000 00000000 80200ddc 0000008a
-> ff02000d
->          81361320 813d7d98 81361000 c0086cd0 1000b800 00000000 1000b800
-> 8002964c
->          00000004 813d7d50 00000000 81271d04 813d7e70 813d7e70 813d7e60
-> 80200ddc
->          7fcad438 7fcad478 813d7e60 00008b01 c0081628 00000101 00000001
-> 00000000
->          ...
-> Call Trace:
-> [<c007e16c>] isl38xx_trigger_device+0xc/0x60 [prism54]
-> [<c007d6c0>] islpci_mgt_transaction+0x380/0x614 [prism54]
-> [<c0086cd0>] mgt_get_request+0x100/0x2ec [prism54]
-> [<c0081628>] prism54_set_mac_address+0x1a0/0xfd8 [prism54]
 
-Sorry for the late reply ;) but anyway, I tried looking into this
-finally (with new found knowledge on this subject, thanks to Kyle) and
-I cannot see a place where isl38xx_trigger_device() would trigger
-unaligned access.
+This bug affects WEXT usage on all 64-bit platforms, compat mode or
+not.  It overwrites 8 bytes past the end of the userland iwreq.
 
-Is this issue still present? If so I'd like to get to the bottom of
-it. FYI p54 is there as a replacement but as you may know certain
-features (ad-hoc, ap support, encryption) are still not present in
-that driver.
+I've checked the following patch into my net-2.6 tree and will queue
+it up for -stable too.
 
-  Luis
+Shaddy, this should fix the "encryption key is too long" iwconfig
+issue.
+
+I'll try to figure out why iwlist gets a bus error and
+the zd1211rw driver generates all of those unaligned
+access errors next.
+
+commit 0a06ea87185531705e4417e3a051f81b64f210c1
+Author: David S. Miller <davem@sunset.davemloft.net>
+Date:   Tue Nov 20 03:29:53 2007 -0800
+
+    [WIRELESS] WEXT: Fix userspace corruption on 64-bit.
+    
+    On 64-bit systems sizeof(struct ifreq) is 8 bytes larger than
+    sizeof(struct iwreq).
+    
+    For GET calls, the wireless extension code copies back into userspace
+    using sizeof(struct ifreq) but userspace and elsewhere only allocates
+    a "struct iwreq".  Thus, this copy writes past the end of the iwreq
+    object and corrupts whatever sits after it in memory.
+    
+    Fix the copy_to_user() length.
+    
+    This particularly hurts the compat case because the wireless compat
+    code uses compat_alloc_userspace() and right after this allocated
+    buffer is the current bottom of the user stack, and that's what gets
+    overwritten by the copy_to_user() call.
+    
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 85e5f9d..47e80cc 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1094,7 +1094,7 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 	rtnl_lock();
+ 	ret = wireless_process_ioctl(net, ifr, cmd);
+ 	rtnl_unlock();
+-	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct ifreq)))
++	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
+ 		return -EFAULT;
+ 	return ret;
+ }
+
