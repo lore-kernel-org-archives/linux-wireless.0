@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:58072 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755584AbXKWLZk (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58842
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755479AbXKTHmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 06:25:40 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1538376wxd
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 03:25:39 -0800 (PST)
-Message-ID: <40f31dec0711230325tf751decr1b3a0ce8af95d68d@mail.gmail.com> (sfid-20071123_112542_692564_B024887C)
-Date: Fri, 23 Nov 2007 13:25:39 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 2/3] ath5k: noise calibration also for rf511x
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
-In-Reply-To: <1195815123-22375-3-git-send-email-bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-3-git-send-email-bruno@thinktube.com>
+	Tue, 20 Nov 2007 02:42:03 -0500
+Date: Mon, 19 Nov 2007 23:42:01 -0800 (PST)
+Message-Id: <20071119.234201.19874188.davem@davemloft.net> (sfid-20071120_074209_978638_C785A8FC)
+To: jt@hpl.hp.com
+Cc: johannes@sipsolutions.net, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071119223554.GA21844@bougret.hpl.hp.com>
+References: <1195484582.8642.18.camel@johannes.berg>
+	<20071119.142046.188284555.davem@davemloft.net>
+	<20071119223554.GA21844@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/11/23, Bruno Randolf <bruno@thinktube.com>:
-> also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
-> just writing the bit.
->
-> Changes-licensed-under: ISC
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-> ---
->  drivers/net/wireless/ath5k/phy.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-> index 9b91121..f250c2e 100644
-> --- a/drivers/net/wireless/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath5k/phy.c
-> @@ -1702,8 +1702,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
->                 ((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
->
->  done:
-> -       /* Start noise floor calibration */
-> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
-> +       ath5k_hw_noise_floor_calibration(ah, channel->freq);
->
->         /* Request RF gain */
->         if (channel->val & CHANNEL_5GHZ) {
-> --
-> 1.5.3.4
->
->
+From: Jean Tourrilhes <jt@hpl.hp.com>
+Date: Mon, 19 Nov 2007 14:35:54 -0800
 
-Actually just writing the bit enables nf calibration, what this patch
-does is that it also reads the value and check if it's ok.
+> I don't have a 64 bit box.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Let me know when you have joined us in the 21st century.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> Bug reports are *very* difficult to get because
+
+I guess writing a dummy wireless driver with just some printk()'s and
+some test userland programs to make sure the data goes to and
+from the handlers with the proper layout is thinking way too far
+outside the box for you.
+
+Since you're not interested proactively doing things and everyone else
+is also pushing the problem away from themselves I'll fix all of this.
+
+Nothing using iw_point in these request objects can possibly work in
+compat situations, for example.  I think it works by accident on
+little-endian.
