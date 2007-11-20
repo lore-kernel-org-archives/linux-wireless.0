@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33526 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753188AbXKZOVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 09:21:43 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-Subject: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
-Date: Mon, 26 Nov 2007 16:14:27 +0200
-Message-Id: <11960864823402-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142158_390463_44DD25EF)
-Content-Type: text/plain; charset="us-ascii"
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33492
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1760025AbXKTMeX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 07:34:23 -0500
+Date: Tue, 20 Nov 2007 04:34:23 -0800 (PST)
+Message-Id: <20071120.043423.42170421.davem@davemloft.net> (sfid-20071120_123450_985935_82C552CF)
+To: shaddy_baddah@hotmail.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071119.002755.77617097.davem@davemloft.net>
+References: <4740DF47.4040206@hotmail.com>
+	<20071119.002755.77617097.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches contains all 802.11n code + fixes of comments to
-the first two cycles of 802.11n patches.
+From: David Miller <davem@davemloft.net>
+Date: Mon, 19 Nov 2007 00:27:55 -0800 (PST)
 
-Fixed list:
-===========
- - removing MAC80211_HT from config and all *.[ch] files
- - removing IWL4965 config dependency on MAC80211_HT
- - adding MAC80211_HT_DEBUG to config file and to relevant places
- - refine TODO remark in ieee80211_sta_process_addba_request
- - net_ratelimit() added to relevant prints
- - renaming ieee80211_rx_h_data_agg to ieee80211_rx_h_amsdu
- - removing parentheses from IEEE80211_CONF_SUPPORT_HT_MODE use
- - changing amsdu_frame type from u16 to u8
- - adding define SUPP_MCS_SET_LEN 16 to indicate MCS set length
- - fixes to some typos
- - Changes to Rx handlers PAE and drop unencrypted (for EAPOL frames in amsdu)
+> From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+> Date: Mon, 19 Nov 2007 11:56:39 +1100
+> 
+> > If I try to scan for APs using iwlist, I get one AP listed, before a bus 
+> > error occurs. This of course, does not suggest that the problem is with 
+> > the driver, but I mention it for the record.
+> 
+> This is an unaligned data access in the userland tools.
+> Try to catch it with GDB and give us ths backtrace.
 
-If this series is accepted then next series will contain the follow:
+I think I've figured out what's happening here.
 
-TODO list (planned for next series of patches)
-==============================================
- - Full A-MPDU aggregation capability.
- - AP flows
- - Examine config flows in mac80211 (RFC is prepered)
+The kernel makes no effort whatsoever to translate iwe streams in
+compat environments.  And userspace then tries to "correct" this and
+does so miserably.  Likely this is what causes the bus error.
 
-Notes to this series:
-======================
-This series of patches splits into two parts:
- - patches 1-7 add 802.11n support to mac80211.
- - patches 8-15 demonstrates the use of the above mac80211's 802.11n framework through iwl4965 low level driver
+The fix is that we need to add some handling code
+fs/compat_ioctl.c:do_wireless_ioctl() for the case where we are
+returning an iwe stream (SIOCGIWSCAN).
 
-In order to be compatible with the 802.11n requirements for an HT station,
-patches 1-7 should not be treated as stand alone patches, but as a complete framework,
-although separation to patches by subjects was made for ease of handling.
-This applies to patches 8-15 as well.
+It should not be very difficult to do this, since the compat format
+will be the same size or smaller, it should be easy to recode the
+thing in-place in the user buffer.
 
-The patches do _not_ break any existing driver.
+So you make a pass over the user buffer fixing things up and then you
+adjust the iw_data length for the new size.
 
-patches were made (and tested to work) with wireless branch 2.6.24-rc3 (#everything)
+Alternatively, you can allocate a kernel buffer for this, use a 'fs =
+get_fs(); set_fs(KERNEL_DS); ioctl(); set_fs(fs);' sequence, fixup the
+iwe stream, then copy the everything back out to userspace.
 
-The framework includes the following:
-- HT probing.
-- HT association.
-- Support in Rx A-MSDU.
-- Support in A-MPDU addBA request.
-- HT information and configuration delivery to both low-level driver and rate scaling.
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Then we can delete all of this incredibly stupid code in the wireless
+tools that attempts to fix this up in userspace.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Can someone implement this and test it or send Shaddy a patch to test?
+
+Thanks.
