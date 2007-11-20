@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:26165 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbXK0H6Y (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57489
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1760654AbXKTWlS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 02:58:24 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: Add debugfs hooks for configuring LED behavior.
-Date: Tue, 27 Nov 2007 08:59:09 +0100
-Cc: Andrey Yurovsky <andrey@cozybit.com>, olpc-devel@laptop.org,
-	linville@tuxdriver.com
-References: <474b4f06.0e578c0a.0e12.fffff5df@mx.google.com>
-In-Reply-To: <474b4f06.0e578c0a.0e12.fffff5df@mx.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711270859.09651.hs4233@mail.mn-solutions.de> (sfid-20071127_075828_906435_DFC79A41)
+	Tue, 20 Nov 2007 17:41:18 -0500
+Date: Tue, 20 Nov 2007 14:41:18 -0800 (PST)
+Message-Id: <20071120.144118.193941085.davem@davemloft.net> (sfid-20071120_224131_393113_124F338F)
+To: jt@hpl.hp.com
+Cc: johannes@sipsolutions.net, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071120221636.GA4711@bougret.hpl.hp.com>
+References: <20071120180016.GC1480@bougret.hpl.hp.com>
+	<20071120.135842.122514400.davem@davemloft.net>
+	<20071120221636.GA4711@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 26 November 2007 23:56:06 Andrey Yurovsky wrote:
-> +	The LED field specifies the LED number (1 or 2).  The Behavior field
-> +	specifies what the LED should do: 0 for steady on, 1 for stead off, and
+From: Jean Tourrilhes <jt@hpl.hp.com>
+Date: Tue, 20 Nov 2007 14:16:36 -0800
 
-s/stead/steady/
+> > The fix is to remove the userland fixup code entirely and fixup
+> > the stream in the kernel.
+> 
+> 	If you look at the overall picture, that would introduce a lot
+> of complex and tricky code in the kernel, you would need pretty much
+> the full parser (the metadata, you can get from the wext code). I'm
+> not sure it's practical where the userspace fix is way simpler.
 
+Please, just drop this, I'm going to fix it up since you seem
+persistent on just passing the buck around and not realizing what the
+core issue is.
 
-> +	ctrl.numled = cpu_to_le16(0);
+You can't fix these problems in userspace, it's not elegant, and
+it buys nothing but pain for users.
 
-0 endian-converted stays 0.
-
-
-> +	priv->leds_dir = debugfs_create_dir("leds",
-> priv->debugfs_dir); +	if (!priv->leds_dir)
-
-Where do you call debugfs_remove(priv->leds_dir) and
-debugfs_remove(priv->leds_files[]) ?
+Everyone who writes some user code that uses wext ioctls has to do
+this conversion crap, that's totally bogus and absolutely beyond
+unreasonable.
