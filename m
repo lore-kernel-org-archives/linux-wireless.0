@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:42299 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512AbXKRXCx (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:52446 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752113AbXKTPJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2007 18:02:53 -0500
-Date: Sun, 18 Nov 2007 15:02:38 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <Kalle.Valo@nokia.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [RFC] b43: multiple MAC addresses support
-Message-ID: <20071118230237.GB8672@jm.kir.nu> (sfid-20071118_230301_964695_FBCE358A)
-References: <1194572631.4793.64.camel@johannes.berg> <1194605550.4793.93.camel@johannes.berg> <20071111025808.GK4031@jm.kir.nu> <87pryfd8cc.fsf@nokia.com> <1194953217.9116.38.camel@johannes.berg>
+	Tue, 20 Nov 2007 10:09:30 -0500
+Message-ID: <4742F8A7.6070903@lwfinger.net> (sfid-20071120_150931_984337_6300E402)
+Date: Tue, 20 Nov 2007 09:09:27 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1194953217.9116.38.camel@johannes.berg>
+To: Andreas Schwab <schwab@suse.de>
+CC: Stefano Brivio <stefano.brivio@polimi.it>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, mb@bu3sch.de
+Subject: Re: [PATCH v3] remove bcm43xx
+References: <20071119202121.6ad3fa70@morte> <200711192300.12183.rjw@sisk.pl>	<20071119231935.535674ba@morte> <jehcjheubn.fsf@sykes.suse.de>	<20071120001329.3524494a@morte> <jed4u5esbo.fsf@sykes.suse.de>	<20071120011549.6b04bb4d@morte> <jeir3xdyqu.fsf@sykes.suse.de>
+In-Reply-To: <jeir3xdyqu.fsf@sykes.suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 13, 2007 at 12:26:57PM +0100, Johannes Berg wrote:
+Andreas Schwab wrote:
+> Stefano Brivio <stefano.brivio@polimi.it> writes:
+> 
+>> --- drivers/net/wireless/b43/main.c.orig        2007-11-20 01:12:12.186524483 +0100
+>> +++ drivers/net/wireless/b43/main.c     2007-11-20 01:12:34.922702865 +0100
+>> @@ -947,7 +947,7 @@
+>>
+>>         while (1) {
+>>                 v0 = b43_read32(dev, B43_MMIO_XMITSTAT_0);
+>> -               if (!(v0 & 0x00000001))
+>> +               if (!v0)
+>>                         break;
+>>                 v1 = b43_read32(dev, B43_MMIO_XMITSTAT_1);
+>>
+>> (probably it's not the solution, I just want to see what happens then).
+> 
+> That didn't change anything.
+> 
+>> BTW, what firmware are you using?
+> 
+> It's 410.2160 from wl_ap.o.
 
-> The N800 and similar devices only wake up at DTIM beacons, right? So
-> another idea would be to burst beacons but make sure the DTIM beacon
-> time doesn't fluctuate away from the DTIM TBTT. This would be possible
-> by changing the order of the beacons and adjusting the DTIM count so
-> that the beacon with DTIM count zero is always the first.
+Please try version 351.126 from http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2,
+which is the officially supported version.
 
-This could be an improvement for small number of BSSes, but if the DTIM
-period starts going up, the delay in sending out multicast/broadcast
-frames may not be acceptable anymore depending on application.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Larry
