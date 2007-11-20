@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:52265 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753842AbXKGQpi (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34337
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750884AbXKTV6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 11:45:38 -0500
-Message-ID: <4731EBAC.8040502@lwfinger.net> (sfid-20071107_164557_624336_168385A9)
-Date: Wed, 07 Nov 2007 10:45:32 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix MAC80211_RCSIMPLE Kconfig
-References: <4731D9CC.3090809@lwfinger.net> <1194450073.4470.46.camel@johannes.berg>
-In-Reply-To: <1194450073.4470.46.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 20 Nov 2007 16:58:42 -0500
+Date: Tue, 20 Nov 2007 13:58:42 -0800 (PST)
+Message-Id: <20071120.135842.122514400.davem@davemloft.net> (sfid-20071120_215845_627995_3153CA5C)
+To: jt@hpl.hp.com
+Cc: johannes@sipsolutions.net, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071120180016.GC1480@bougret.hpl.hp.com>
+References: <1195562454.10920.6.camel@johannes.berg>
+	<20071120.044600.47940350.davem@davemloft.net>
+	<20071120180016.GC1480@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> I meant for this to be selectable only with EMBEDDED, not enabled only
-> with EMBEDDED. This does it that way. Sorry.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/Kconfig |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- everything.orig/net/mac80211/Kconfig	2007-11-07 16:38:57.779051161 +0100
-> +++ everything/net/mac80211/Kconfig	2007-11-07 16:39:06.949024631 +0100
-> @@ -14,9 +14,9 @@ config MAC80211
->  	networking stack.
->  
->  config MAC80211_RCSIMPLE
-> -	bool "'simple' rate control algorithm"
-> +	bool "'simple' rate control algorithm" if EMBEDDED
->  	default y
-> -	depends on MAC80211 && EMBEDDED
-> +	depends on MAC80211
->  	help
->  	  This option allows you to turn off the 'simple' rate
->  	  control algorithm in mac80211. If you do turn it off,
+From: Jean Tourrilhes <jt@hpl.hp.com>
+Date: Tue, 20 Nov 2007 10:00:16 -0800
 
-This one works here. ACK for non-embedded system.
+> 	This is a special version of Wireless Tools with some debug
+> code. It will help me understand what's happening with the bus error
+> while scanning and see what fix I can come up with.
+> 	What you need to do is :
+> 		o untar, make
+> 		o ./iwlist scan > scan.log
+> 	And send me the result.
 
-Larry
+I already know what's happening.  Your "fixup" code is deferencing
+the wrong part of the iw_point pointer, it only works on little
+endian.
+
+The fix is to remove the userland fixup code entirely and fixup
+the stream in the kernel.
