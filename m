@@ -1,65 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:2001 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754218AbXKJAIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 19:08:45 -0500
-Subject: Re: [PATCH] Fix infinite loop on dev_mc_unsync()
-From: Joe Perches <joe@perches.com>
-To: Patrick McHardy <kaber@trash.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Jeff Garzik <jeff@garzik.org>,
-	David Miller <davem@davemloft.net>
-In-Reply-To: <4734E962.3010603@trash.net>
-References: <20071109151135.GA12982@pogo> <20071109183733.GA22714@pogo>
-	 <1194635236.19522.3.camel@localhost> <20071109192033.GB22714@pogo>
-	 <4734E962.3010603@trash.net>
-Content-Type: text/plain
-Date: Fri, 09 Nov 2007 16:08:40 -0800
-Message-Id: <1194653320.19522.28.camel@localhost> (sfid-20071110_000849_969861_2BB26BB1)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015AbXKTNuJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2007 08:50:09 -0500
+Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <11955417361539-git-send-email-yi.zhu@intel.com>
+References: <11955417361539-git-send-email-yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x5R/PZWP76VUVLJIFc7Q"
+Date: Tue, 20 Nov 2007 14:37:56 +0100
+Message-Id: <1195565876.10920.29.camel@johannes.berg> (sfid-20071120_135040_987968_98B17B7B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-11-10 at 00:12 +0100, Patrick McHardy wrote:
-> This may cause a use-after-free since __dev_addr_delete frees the address
-> when all references are gone.
 
-How about a comment then?  Perhaps:
+--=-x5R/PZWP76VUVLJIFc7Q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/core/dev_mcast.c b/net/core/dev_mcast.c
-index ae35405..63576aa 100644
---- a/net/core/dev_mcast.c
-+++ b/net/core/dev_mcast.c
-@@ -165,16 +165,23 @@ void dev_mc_unsync(struct net_device *to, struct net_device *from)
- 	netif_tx_lock_bh(from);
- 	netif_tx_lock_bh(to);
- 
-+	/*
-+	  This while loop can't be written as
-+		for (da = from->mc_list; da; da = da->next)
-+	  da = from->mc_list and __dev_addr_delete can kfree(from->mc_list)
-+	  which could cause a use-after-free of da->next
-+	*/
-+
- 	da = from->mc_list;
- 	while (da != NULL) {
- 		next = da->next;
--		if (!da->da_synced)
--			continue;
--		__dev_addr_delete(&to->mc_list, &to->mc_count,
--				  da->da_addr, da->da_addrlen, 0);
--		da->da_synced = 0;
--		__dev_addr_delete(&from->mc_list, &from->mc_count,
--				  da->da_addr, da->da_addrlen, 0);
-+		if (da->da_synced) {
-+			__dev_addr_delete(&to->mc_list, &to->mc_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+			da->da_synced = 0;
-+			__dev_addr_delete(&from->mc_list, &from->mc_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+		}
- 		da = next;
- 	}
- 	__dev_set_rx_mode(to);
 
+On Tue, 2007-11-20 at 14:55 +0800, Zhu Yi wrote:
+> I'm not sure if this is best choice, someone might have better
+> solutions. But this patch fixed the connection problem when switching
+> from a WPA enabled AP (using wpa_supplicant) to an open AP (using
+> iwconfig). The root cause is when we connect to a WPA enabled AP,
+> wpa_supplicant sets the ifsta->extra_ie thru SIOCSIWGENIE. But if we
+> stop wpa_supplicant and connect to an open AP with iwconfig, there is
+> no way to clear the extra_ie so that mac80211 keeps connecting with that.
+
+Fun.
+
+> Someone could argue wpa_supplicant should clear the extra_ie during
+> its shutdown. But mac80211 should also handle the unexpected shutdown
+> case (ie. killall -9 wpa_supplicant).
+
+Yes. But if you do that, the interface won't be down either. Maybe this
+should also be done when removing keys?
+
+johannes
+
+--=-x5R/PZWP76VUVLJIFc7Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0LjMqVg1VMiehFYAQIyEA//dMYSNIICQfmXcoTExX2XJSp3MlcIY+ue
+RuHdWXZJhpFMiRkuPKDt/SDjisdtcmRkJf3+uVVV1OpweEr8qh+X3bk/aecc0uT2
+izKoVOnYzdcSyDaLUZ4vy5Zga3prqUWO66G1vs44XBeJyQC3M3VZ9ncYS2/aSFm8
+I3I0cr7/tqQVhRhfR1gjzAMMe/9OwwPQen6DU8BYAjv0Ff6CiPyq5DgD/hDg9g59
+WZVmUc5mw2VoNdFrCr90InF6nSBm7GG5SbPvxoNj9UiJVugqac+xwlBPVWKDg7Z/
+ixP8mjrbJnR/pY8CuZF5jpFFTtIYlQhM8XLomxVtRkNpyRyZd2TLkflXWzxlYH4l
+N2r0iRouxJk21afbGEckdrSHZRgGI5+s/rX+6/CVFzWUraW3UEnyWLZeCzjz8MRH
+ppvjDNdMcdS+xqer9u5ifR32ZhKKHgAdNJUCorI5gbTUxh1toUZqLF0ln5DZChvL
+wWvHq70Npst6S6awyW/bxVrT9NBA0Lprhi6eOhCIhPbpEvY21uKZqEs2+IVNtD4K
+3WM6BEDASDd7YaKfiYkQ1rahO/QRiVGt0SdUVz6PrdsE2lhS9uRz9Zugk1O43rbs
+fZW1KfR9w2sDRPmLcKa2mv+AGj64wuwS+H5a87XDE2ZhanHSci9hDKEINbzaAEXO
+WuK2dmZVGL0=
+=mcR9
+-----END PGP SIGNATURE-----
+
+--=-x5R/PZWP76VUVLJIFc7Q--
 
