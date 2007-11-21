@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52052 "EHLO c60.cesmail.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4933 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753061AbXKYBf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 20:35:27 -0500
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 01F0F618FE1
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2007 20:35:25 -0500 (EST)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] rtl8180: add ID for Belkin F5D7010 v7
+	id S1755403AbXKUP1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 10:27:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Date: Sat, 24 Nov 2007 20:35:25 -0500
-Message-ID: <20071125013525.22549.71479.stgit@dv.roinet.com> (sfid-20071125_013530_239129_25822E13)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: rjw@sisk.pl, larry.finger@lwfinger.net, stefano.brivio@polimi.it,
+	mb@bu3sch.de, bcm43xx-dev@lists.berlios.de,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] bcm43xx: mark as obsolete and schedule for removal
+Date: Wed, 21 Nov 2007 10:26:18 -0500
+Message-Id: <1195658778-13118-1-git-send-email-linville@tuxdriver.com> (sfid-20071121_152719_154103_78A7A278)
+In-Reply-To: <1195654571-10506-1-git-send-email-linville@tuxdriver.com>
+References: <1195654571-10506-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
+Amended based on suggestions from Stefano...
 
- drivers/net/wireless/rtl8180_dev.c |    1 +
- include/linux/pci_ids.h            |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+ Documentation/feature-removal-schedule.txt |    9 +++++++++
+ MAINTAINERS                                |    2 +-
+ drivers/net/wireless/bcm43xx/Kconfig       |    9 ++++++---
+ 3 files changed, 16 insertions(+), 4 deletions(-)
 
-
-diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
-index a2a6791..808bae4 100644
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -32,6 +32,7 @@ MODULE_LICENSE("GPL");
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index 20c4c8b..c057e36 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -333,3 +333,12 @@ Why:	This driver has been marked obsolete for many years.
+ Who:	Stephen Hemminger <shemminger@linux-foundation.org>
  
- static struct pci_device_id rtl8180_table[] __devinitdata = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8185) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x701f) },
- 	{ }
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1ee009e..e420d39 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2074,6 +2074,9 @@
- #define PCI_DEVICE_ID_ALTIMA_AC9100	0x03ea
- #define PCI_DEVICE_ID_ALTIMA_AC1003	0x03eb
- 
-+#define PCI_VENDOR_ID_BELKIN		0x1799
-+#define PCI_DEVICE_ID_BELKIN_F5D7010V7	0x701f
+ ---------------------------
 +
- #define PCI_VENDOR_ID_LENOVO		0x17aa
++What:	bcm43xx wireless network driver
++When:	2.6.26
++Files:	drivers/net/wireless/bcm43xx
++Why:	This driver's functionality has been replaced by the
++	mac80211-based b43 and b43legacy drivers.
++Who:	John W. Linville <linville@tuxdriver.com>
++
++---------------------------
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 18b7c8e..2bfc23f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -828,7 +828,7 @@ P:	Stefano Brivio
+ M:	stefano.brivio@polimi.it
+ L:	linux-wireless@vger.kernel.org
+ W:	http://bcm43xx.berlios.de/
+-S:	Maintained
++S:	Obsolete
  
- #define PCI_VENDOR_ID_ARECA		0x17d3
+ BEFS FILE SYSTEM
+ P:	Sergey S. Kostyliov
+diff --git a/drivers/net/wireless/bcm43xx/Kconfig b/drivers/net/wireless/bcm43xx/Kconfig
+index ce397e4..0159701 100644
+--- a/drivers/net/wireless/bcm43xx/Kconfig
++++ b/drivers/net/wireless/bcm43xx/Kconfig
+@@ -1,12 +1,15 @@
+ config BCM43XX
+-	tristate "Broadcom BCM43xx wireless support"
++	tristate "Broadcom BCM43xx wireless support (DEPRECATED)"
+ 	depends on PCI && IEEE80211 && IEEE80211_SOFTMAC && WLAN_80211 && EXPERIMENTAL
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
+ 	select HW_RANDOM
+ 	---help---
+-	  This is an experimental driver for the Broadcom 43xx wireless chip,
+-	  found in the Apple Airport Extreme and various other devices.
++	  This is an experimental driver for the Broadcom 43xx wireless
++	  chip, found in the Apple Airport Extreme and various other
++	  devices.  This driver is deprecated and will be removed
++	  from the kernel in the near future.  It has been replaced
++	  by the b43 and b43legacy drivers.
+ 
+ config BCM43XX_DEBUG
+ 	bool "Broadcom BCM43xx debugging (RECOMMENDED)"
+-- 
+1.5.3.3
+
