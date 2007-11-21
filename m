@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61761 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:32980 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752051AbXKUDUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 22:20:07 -0500
-Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1195565876.10920.29.camel@johannes.berg>
-References: <11955417361539-git-send-email-yi.zhu@intel.com>
-	 <1195565876.10920.29.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 21 Nov 2007 11:17:19 +0800
-Message-Id: <1195615039.3250.453.camel@debian.sh.intel.com> (sfid-20071121_032014_546431_38745C38)
-Mime-Version: 1.0
+	id S1751745AbXKUVeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 16:34:36 -0500
+Message-ID: <4744A443.6070808@redhat.com> (sfid-20071121_213439_329404_00D247D5)
+Date: Wed, 21 Nov 2007 16:33:55 -0500
+From: Chuck Ebbert <cebbert@redhat.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Changes to enable BCM4311 rev 02 with wireless core
+ revision 13
+References: <474487a9.9c54/m97tX72L4+l%Larry.Finger@lwfinger.net>
+In-Reply-To: <474487a9.9c54/m97tX72L4+l%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/21/2007 02:31 PM, Larry Finger wrote:
+> The BCM94311MCG rev 02 chip has an 802.11 core with revision 13 and
+> has not been supported until now. The changes include the following:
+> 
 
-On Tue, 2007-11-20 at 14:37 +0100, Johannes Berg wrote:
-> Yes. But if you do that, the interface won't be down either. 
+I put this in a private build of the Fedora 8 kernel in place of the
+the one that was added a few days ago.
 
-Indeed. But at least user has a way to let mac80211 forget the previous
-setting (ifconfig wlan0 down and up). Otherwise, user has to reload the
-modules to achieve this.
+This one works, but I get "PHY transmission error", probably because
+the rfkill switch has disabled it. I see two LED devices and an input
+device were registered but pushing the rfkill switch has no effect.
+Googling doesn't yield any directions for enabling the switch...
 
-> Maybe this should also be done when removing keys?
-
-I agree there are more places we need to clear the setting. Putting it
-to ieee80211_stop() is a good start. Should we have a "reset" like
-ioctl? So the second config tool can call it to let mac80211 forget all
-the previous setting.
-
-Thanks,
--yi
