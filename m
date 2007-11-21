@@ -1,73 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4085 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753582AbXKOVez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 16:34:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?q?Miguel=20Bot=C3=B3n?= <mboton.lkml@gmail.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: remove redundant initialization of final_mode
-Date: Thu, 15 Nov 2007 16:31:25 -0500
-Message-Id: <1195162285-26439-1-git-send-email-linville@tuxdriver.com> (sfid-20071115_213505_634915_95B05490)
-In-Reply-To: <200711102049.32921.mboton.lkml@gmail.com>
-References: <200711102049.32921.mboton.lkml@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50076 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbXKVM4F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 07:56:05 -0500
+Subject: mac80211: unencrypted packet vulnerability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 22 Nov 2007 00:01:37 +0100
+Message-Id: <1195686097.6323.22.camel@johannes.berg> (sfid-20071122_125612_223632_8A5F6CEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Problem identified by Miguel Bot=C3=B3n <mboton.lkml@gmail.com>, altern=
-ate
-solution suggested by Zhu Yi <yi.zhu@intel.com>, patch by me. :-)
+Hi,
 
-Cc: Miguel Bot=C3=B3n <mboton.lkml@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+As I just found, mac80211 is susceptible to an attack where the attacker
+simply sends frames it wants us to see unencrypted instead of bothering
+with replay attacks or such. This could possibly cause us to reply to
+these frames or worse yet, a mac80211 based AP could encrypt the frames
+and broadcast them if the attacker uses a MAC address of another station
+that is properly associated!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/=
-wireless/iwlwifi/iwl3945-base.c
-index e2cbd9e..15937c0 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2139,7 +2139,7 @@ static int iwl3945_update_power_cmd(struct iwl394=
-5_priv *priv,
-=20
- static int iwl3945_send_power_mode(struct iwl3945_priv *priv, u32 mode=
-)
- {
--	u32 final_mode =3D mode;
-+	u32 uninitialized_var(final_mode);
- 	int rc;
- 	struct iwl3945_powertable_cmd cmd;
-=20
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/=
-wireless/iwlwifi/iwl4965-base.c
-index ef17a98..30acd13 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2218,7 +2218,7 @@ static int iwl4965_update_power_cmd(struct iwl496=
-5_priv *priv,
-=20
- static int iwl4965_send_power_mode(struct iwl4965_priv *priv, u32 mode=
-)
- {
--	u32 final_mode =3D mode;
-+	u32 uninitialized_var(final_mode);
- 	int rc;
- 	struct iwl4965_powertable_cmd cmd;
-=20
---=20
-1.5.3.3
+The reason is that ieee80211_rx_h_drop_unencrypted() drops unencrypted
+frames, but only if "sdata->drop_unencrypted" is set which never
+happens!
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'd offer the patch below but that's hardly complete. And then what
+about wext's encode and IW_ENCODE_RESTRICTED? Isn't that exactly the
+same thing? ieee80211 treats it that way and I can't find docs other
+than this paragraph from iwconfig's man page
+
+  The  security  mode  may  be open or restricted, and its meaning
+  depends on the card used. With  most  cards,  in  open  mode  no
+  authentication  is  used  and  the  card  may  also  accept non-
+  encrypted sessions, whereas in restricted  mode  only  encrypted
+  sessions  are  accepted  and the card will use authentication if
+  available.
+
+And you can hardly claim that this defines the semantics of the flag
+well enough to be able to implement it. Especially since it uses
+keywords defined by 802.11 with a totally different meaning! I love you
+Jean, thanks for creating the most undefined API I ever saw.
+
+Even with this patch, however, we still don't have drop_unencrypted set
+with plain WEP networks. For IBSS it defaults to the PRIVACY bit in the
+BSS information, but for managed networks this is not done. I find this
+rather disconcerting.
+
+Should we set this to the value of the privacy bit after we join a BSS
+like we do for the IBSS case?
+
+The patch below is necessary for wpa_supplicant to be able to set the
+drop_unencrypted setting, but I'm not convinced it actually needs to be
+able to set it. Can't the kernel just do a sane default?
+
+Considering the AP case, on the other hand, hostapd will need to be able
+to set the setting since we don't actually look into the beacon it tells
+us to transmit. But hostapd on the other hand doesn't even invoke the
+iwauth ioctl! I have to admit to being rather confused.
+
+johannes
+
+--- everything.orig/net/mac80211/ieee80211_ioctl.c	2007-11-21 23:34:10.895859212 +0100
++++ everything/net/mac80211/ieee80211_ioctl.c	2007-11-21 23:34:37.295855632 +0100
+@@ -928,6 +928,9 @@ static int ieee80211_ioctl_siwauth(struc
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+ 	case IW_AUTH_KEY_MGMT:
+ 		break;
++	case IW_AUTH_DROP_UNENCRYPTED:
++		sdata->drop_unencrypted = !!data->value;
++		break;
+ 	case IW_AUTH_PRIVACY_INVOKED:
+ 		if (sdata->type != IEEE80211_IF_TYPE_STA)
+ 			ret = -EINVAL;
+
+
