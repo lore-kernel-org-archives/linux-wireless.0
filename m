@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:34606 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756974AbXK2PxN (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:3172 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbXKUTfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 10:53:13 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by hiems2.ing.unibs.it (Postfix) with ESMTP id 0863C182553A
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 16:53:11 +0100 (CET)
-Received: from hiems2.ing.unibs.it ([127.0.0.1])
-	by localhost (hiems1.ing.unibs.it [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id utcBeklIQFko for <linux-wireless@vger.kernel.org>;
-	Thu, 29 Nov 2007 16:53:10 +0100 (CET)
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Message-Id: <0D869D0B-A5CF-4AE4-B986-DB168917296B@ing.unibs.it> (sfid-20071129_155316_945884_5BB2073C)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-To: linux-wireless@vger.kernel.org
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: ath5k: filter patch
-Date: Thu, 29 Nov 2007 16:53:13 +0100
+	Wed, 21 Nov 2007 14:35:47 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2895445wah
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2007 11:35:46 -0800 (PST)
+Message-ID: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> (sfid-20071121_193550_720363_FAED080D)
+Date: Wed, 21 Nov 2007 13:35:46 -0600
+From: "John H." <mistamaila@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: timeout problems with certain APs and b43
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everybody,
+ uname -a
+Linux laptop 2.6.23.1-49.fc8 #1 SMP Thu Nov 8 21:41:26 EST 2007 i686
+i686 i386 GNU/Linux
+fedora 8
 
-I discovered that playing with iface promiscuity to capture traffic  
-(including control, promisc and all other stuff) is not working on  
-ath5k as rx_filters are never refreshed. To make things going I added  
-a single ath5k_hw_set_rx_filters(ah,rfilt) at the end of  
-ath5k_configure_filter(). I attach the simple patch. Now tcpdump  
-captures everything in monitor mode when iface is set to promisc.
-
-By the way, has someone tried to put ath5k into using RTS/CTS procedure?
-
-Regards,
-FG
+on certain APs, the internet works for a long time then stops, and I
+get authentication time outs, why?  It usually works again if I reset
+the AP itself, which i should not have to do and don't have to if in
+XP....
 
 
-
---- wireless-2.6.old/drivers/net/wireless/ath5k/base.c        
-2007-11-29 16:20:27.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/ath5k/base.c       2007-11-29  
-16:21:24.000000000 +0100
-@@ -2813,6 +2813,9 @@
-                 rfilt |= AR5K_RX_FILTER_BEACON;
-         }
-+        /* Set filters */
-+        ath5k_hw_set_rx_filter(ah,rfilt);
-+
-         /* Set multicast bits */
-         ath5k_hw_set_mcast_filter(ah, mfilt[0], mfilt[1]);
-         /* Set the cached hw filter flags, this will alter actually
+wlan0: switched to long barker preamble (BSSID=00:0f:66:53:3e:24)
+wlan0: switched to short barker preamble (BSSID=00:0f:66:53:3e:24)
 
 
+
+wlan0: Initial auth_alg=0
+wlan0: authenticate with AP 00:0f:66:53:3e:24
+wlan0: authenticate with AP 00:0f:66:53:3e:24
+wlan0: authenticate with AP 00:0f:66:53:3e:24
+wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
