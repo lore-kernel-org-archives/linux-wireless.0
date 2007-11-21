@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:34831 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753271AbXK0Es7 (ORCPT
+Received: from serenity.mcc.ac.uk ([130.88.200.93]:58909 "EHLO
+	serenity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733AbXKUOdo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 23:48:59 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Date: Mon, 26 Nov 2007 23:52:09 -0500
-Cc: Tony Breeds <tony@bakeyournoodle.com>,
-	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <200711262331.21176.flamingice@sourmilk.net> <20071126203716.ebe62999.akpm@linux-foundation.org>
-In-Reply-To: <20071126203716.ebe62999.akpm@linux-foundation.org>
+	Wed, 21 Nov 2007 09:33:44 -0500
+Message-ID: <4744419C.6000709@gentoo.org> (sfid-20071121_143347_176989_BB6B1354)
+Date: Wed, 21 Nov 2007 14:33:00 +0000
+From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1877531.dyGU4aXVF4";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711262352.24722.flamingice@sourmilk.net> (sfid-20071127_044907_944147_C8164C4F)
+To: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Drake <dsd@gentoo.org>, jt@hpl.hp.com
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com>
+In-Reply-To: <474432E8.90304@hotmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1877531.dyGU4aXVF4
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Shaddy Baddah wrote:
+> Interestingly, after performing the above actions, I am now getting 
+> additional log messages:
+> 
+> SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
+> Kernel unaligned access at TPC[100df410] 
+> ieee80211softmac_handle_assoc_response]
+> Kernel unaligned access at TPC[100df548] 
+> ieee80211softmac_handle_assoc_response]
+> ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
+> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+> [ieee802]
+> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+> [ieee802]
+> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+> [ieee802]
+> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+> [ieee802]
+> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+> [ieee802]
+> Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw]
+> Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw]
+> Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw]
+> Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw]
+> Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw]
 
-On Monday 26 November 2007 23:37:16 Andrew Morton wrote:
-> Why not?
->
-> Having very long and specific identifiers duplicated in two drivers is a
-> daft situation.  Unless they both drive the same hardware, which afaict
-> they do not?
-The radios and macs are very similar (radios could actually be the same, no=
-t=20
-sure), with modifications to run on whatever bus they're on. That's why I'm=
-=20
-going to be merging the rtl8180_rtl8225.c and rtl8187_rtl8225.c into a sing=
-le=20
-piece of code. Besides that, rtl8187 !=3D rtl8225 since rtl8187 is a mac an=
-d=20
-rtl8225 is a radio. Replacing rtl8225z2 with rtl8187 makes no sense but is=
-=20
-okay temporarily to fix build issues in -mm.
+One thing I forgot to mention: in 2.6.25 zd1211rw is moving away from 
+ieee80211/softmac and changing to mac80211. I'm not sure if mac80211 has 
+been tested on architectures with alignment constraints, so we may be 
+greeted with new problems.
 
-=2DMichael Wu
+Or some might go away. Speaking only from memory, I think the code with 
+compare_ether_addr problem that David found is not present in the 
+mac80211 port.
 
---nextPart1877531.dyGU4aXVF4
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHS6KIT3Oqt9AH4aERAjf3AJwP6qmAQ6SGeAqxySQkz6Em/kRZcACfQkmn
-d0EkupvWTaRpF1mEf9w46M8=
-=1Du+
------END PGP SIGNATURE-----
-
---nextPart1877531.dyGU4aXVF4--
+Daniel
