@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:56726 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbXKWEbm (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.234]:15304 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbXKUGTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 23:31:42 -0500
-Received: by py-out-1112.google.com with SMTP id u77so8277143pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 20:31:41 -0800 (PST)
-Message-ID: <5b9417770711222031r28011e75v3a6eb4a7acdf2183@mail.gmail.com> (sfid-20071123_043148_190008_344DE5B7)
-Date: Thu, 22 Nov 2007 22:31:40 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Larry Finger" <larry.finger@lwfinger.net>
-Subject: Re: timeout problems with certain APs and b43
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <4744AEA1.9020705@lwfinger.net>
+	Wed, 21 Nov 2007 01:19:44 -0500
+Received: by qb-out-0506.google.com with SMTP id e12so416429qba
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2007 22:19:44 -0800 (PST)
+Message-ID: <b3153e950711202219m4953e48g3ab2e4b510404f18@mail.gmail.com> (sfid-20071121_061949_005029_180AD173)
+Date: Tue, 20 Nov 2007 22:19:42 -0800
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] mac80211: hardware scan rework (V2)
+Cc: "Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu, Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>
+In-Reply-To: <1195579307.3389.52.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
-	 <4744AEA1.9020705@lwfinger.net>
+References: <119553601948-git-send-email-yi.zhu@intel.com>
+	 <1195566632.10920.39.camel@johannes.berg>
+	 <33E1C72C74DBE747B7B59C1740F74437027F30D4@orsmsx417.amr.corp.intel.com>
+	 <1195579307.3389.52.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wrt54gs with latest firmware.
-
-it seems exclusive to linux:O
-
-On Nov 21, 2007 4:18 PM, Larry Finger <larry.finger@lwfinger.net> wrote:
-> John H. wrote:
-> >  uname -a
-> > Linux laptop 2.6.23.1-49.fc8 #1 SMP Thu Nov 8 21:41:26 EST 2007 i686
-> > i686 i386 GNU/Linux
-> > fedora 8
+Acually it is better to bock any managemnt frame task while scanning,
+in this function we might end up calling the driver to tune to a
+channel, which will cause to stop scan. I think it is better to keep
+the check and return if we are doing any scan. I guess this condition
+is added to stabilize the mac80211 and it will do the same for iwl
+driver with HW scan.
 > >
-> > on certain APs, the internet works for a long time then stops, and I
-> > get authentication time outs, why?  It usually works again if I reset
-> > the AP itself, which i should not have to do and don't have to if in
-> > XP....
+> > > @@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct
+> > *work)
+> > >     if (!netif_running(dev))
+> > >             return;
+> > >
+> > > -   if (local->sta_scanning)
+> > > +   if (local->sta_sw_scanning || local->sta_hw_scanning)
+> > >             return;
 > >
+> > Shouldn't the sta work be able to run normally while hw scan is in
+> > progress?
 > >
-> > wlan0: switched to long barker preamble (BSSID=00:0f:66:53:3e:24)
-> > wlan0: switched to short barker preamble (BSSID=00:0f:66:53:3e:24)
-> >
-> >
-> >
-> > wlan0: Initial auth_alg=0
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
->
-> Do you have the opportunity to capture the wireless traffic with a second computer using Kismet or
-> Wireshark when this condition occurs? Without that info, it would be hard to know what might be
-> wrong. Of course, I don't have the problem with either of my AP's.
->
-> Could you identify the make/model and firmware revisions of any AP's that show this behavior?
->
-> Larry
->
