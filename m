@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:52446 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752113AbXKTPJa (ORCPT
+Received: from flpi195.sbcis.sbc.com ([207.115.20.197]:44335 "EHLO
+	flpi195.prodigy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbXKUA0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 10:09:30 -0500
-Message-ID: <4742F8A7.6070903@lwfinger.net> (sfid-20071120_150931_984337_6300E402)
-Date: Tue, 20 Nov 2007 09:09:27 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
+	Tue, 20 Nov 2007 19:26:34 -0500
+Date: Tue, 20 Nov 2007 16:25:04 -0800 (PST)
+From: Asheesh Laroia <asheesh@asheesh.org>
 To: Andreas Schwab <schwab@suse.de>
-CC: Stefano Brivio <stefano.brivio@polimi.it>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, mb@bu3sch.de
+cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Larry Finger <larry.finger@lwfinger.net>
 Subject: Re: [PATCH v3] remove bcm43xx
-References: <20071119202121.6ad3fa70@morte> <200711192300.12183.rjw@sisk.pl>	<20071119231935.535674ba@morte> <jehcjheubn.fsf@sykes.suse.de>	<20071120001329.3524494a@morte> <jed4u5esbo.fsf@sykes.suse.de>	<20071120011549.6b04bb4d@morte> <jeir3xdyqu.fsf@sykes.suse.de>
-In-Reply-To: <jeir3xdyqu.fsf@sykes.suse.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <jeve7xc6sm.fsf@sykes.suse.de>
+Message-ID: <alpine.DEB.0.9999.0711201621120.9468@dell.linuxdev.us.dell.com> (sfid-20071121_002636_945137_A6B0A170)
+References: <20071119202121.6ad3fa70@morte> <200711201507.46998.mb@bu3sch.de> <je4pfhdn2c.fsf@sykes.suse.de> <200711201520.05718.mb@bu3sch.de> <jeve7xc6sm.fsf@sykes.suse.de>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andreas Schwab wrote:
-> Stefano Brivio <stefano.brivio@polimi.it> writes:
-> 
->> --- drivers/net/wireless/b43/main.c.orig        2007-11-20 01:12:12.186524483 +0100
->> +++ drivers/net/wireless/b43/main.c     2007-11-20 01:12:34.922702865 +0100
->> @@ -947,7 +947,7 @@
->>
->>         while (1) {
->>                 v0 = b43_read32(dev, B43_MMIO_XMITSTAT_0);
->> -               if (!(v0 & 0x00000001))
->> +               if (!v0)
->>                         break;
->>                 v1 = b43_read32(dev, B43_MMIO_XMITSTAT_1);
->>
->> (probably it's not the solution, I just want to see what happens then).
-> 
-> That didn't change anything.
-> 
->> BTW, what firmware are you using?
-> 
-> It's 410.2160 from wl_ap.o.
+On Tue, 20 Nov 2007, Andreas Schwab wrote:
 
-Please try version 351.126 from http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2,
-which is the officially supported version.
+> Michael Buesch <mb@bu3sch.de> writes:
+>
+>> On Tuesday 20 November 2007 15:11:07 Andreas Schwab wrote:
+>>> Michael Buesch <mb@bu3sch.de> writes:
+>>>
+>>>> On Monday 19 November 2007 23:36:44 Andreas Schwab wrote:
+>>>>> b43 still does not work at all on ppc.
+>>>>
+>>>> This is absolutely _wrong_.
+>>>
+>>> Of course it is wrong, but apparently the only way to get attention to a
+>>> blocker bug.
+>>
+>> I didn't hear about your bug before.
+>>
+>> Are you using latest driver from wireless-2.6 and the officially
+>> supported firmware version from
+>> http://www.linuxwireless.org/en/users/Drivers/b43
+>
+> I have now downgraded the firmware (I was foolishly assuming that all
+> firmware versions recognized by b43-fwcutter are equally supported), and
+> the error does not occur any more.  Thanks for your help.
 
-Larry
+It sounds like b43-fwcutter will extract firmware that is not maximally 
+compatible with the b43 driver.  If that's right, then it would be way 
+nice to print a notice to the user that he's extracting a 
+less-than-perfectly-supported firmware.
+
+Yes, I'm willing to write this patch if people will point me to a table of 
+which firmware is maximally-supported.  (If someone else writes it 
+instead, I'd prefer that, but if no one will then I can.)
+
+I haven't actually been using a bcm43xx chip for wireless for about a 
+year, but I've been enjoying the list mail so I stayed on and read mails 
+casually.  It sounds like there's one specific firmware that's 
+recommended; if so, then printing "Congratulations, you're using the 
+best-supported firmware as of ${RELEASE_DATE_OF_THIS_FWCUTTER}" in that 
+case would be easy, as well as "Warning! You're not using the 
+best-supported firmware as of ${RELEASE_DATE_OF_THIS_FWCUTTER}".
+
+If it already does that now, then sorry for the noise!
+
+-- Asheesh.
+
+--
+Positive, adj.:
+ 	Mistaken at the top of one's voice.
+ 		-- Ambrose Bierce, "The Devil's Dictionary"
