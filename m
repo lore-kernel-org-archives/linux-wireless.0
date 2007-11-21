@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:50345 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754229AbXKSSRi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 13:17:38 -0500
-Date: Mon, 19 Nov 2007 19:16:52 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH] libertas: add Dan Williams as maintainer
-Message-ID: <20071119191652.05023a27@morte> (sfid-20071119_181741_763640_2EECD5A7)
-In-Reply-To: <1195493292.3248.6.camel@localhost.localdomain>
-References: <20071117023020.0a164e90@morte>
-	<20071117165551.GA5817@tuxdriver.com>
-	<20071117181153.480d75d8@morte>
-	<1195493292.3248.6.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga10.intel.com ([192.55.52.92]:42106 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753936AbXKUIBk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 03:01:40 -0500
+Message-ID: <4743E5DF.9040603@linux.intel.com> (sfid-20071121_080142_347926_B0DC0328)
+Date: Wed, 21 Nov 2007 00:01:35 -0800
+From: mabbas <mabbas@linux.intel.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: security question
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Dan Williams as maintainer for libertas USB8388 driver.
+Hi
 
+When I connect to an AP with wpa, then I receive deauth frame, 
+ieee80211_rx_mgmt_deauth will be called, which will call 
+ieee80211_set_associated(dev, ifsta, 0); to disconnect. In function 
+ieee80211_set_associated, it calls wireless_send_event with SIOCGIWAP 
+event and memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN). wpa_supplicant will 
+receives this event then call mac80211 to remove any old security key, 
+the problem it will pass 00:00:00:00:00:00 as station address. 
+ieee80211_set_encryption will fail since there are no station with 
+00:00:00:00:00:00. This will leave the old key which causes the problems 
+in the next reconnection.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Dan Williams <dcbw@redhat.com>
+Below is the work around to this problem, I am not very familiar with 
+security in mac80211 so I appreciate any comment on how to fix this 
+problem the right way.
 
----
+Mohamed
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18b7c8e..d416260 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2513,6 +2504,12 @@ M:	mtk.manpages@gmail.com
- W:	ftp://ftp.kernel.org/pub/linux/docs/manpages
- S:	Maintained
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index c84a26e..e08df5e 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -97,7 +97,10 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+ 			return -EINVAL;
+ 		}
  
-+MARVELL LIBERTAS USB8388 WIRELESS DRIVER
-+P:	Dan Williams
-+M:	dcbw@redhat.com
-+L:	libertas-dev@lists.infradead.org
-+S:	Maintained
-+
- MARVELL MV643XX ETHERNET DRIVER
- P:	Dale Farnsworth
- M:	dale@farnsworth.org
-
-
--- 
-Ciao
-Stefano
+-		sta = sta_info_get(local, sta_addr);
++		if (is_zero_ether_addr(sta_addr))
++			sta = sta_info_get(local, sdata->u.sta.bssid);
++		else
++			sta = sta_info_get(local, sta_addr);
+ 		if (!sta) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 			printk(KERN_DEBUG "%s: set_encrypt - unknown addr "
