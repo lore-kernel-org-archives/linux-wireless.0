@@ -1,57 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57106
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754330AbXKGUZA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 15:25:00 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix kconfig dependencies for rfkill and leds
-Date: Wed, 7 Nov 2007 21:24:07 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711072124.07308.mb@bu3sch.de> (sfid-20071107_202522_854700_FDD32B15)
+Received: from mga03.intel.com ([143.182.124.21]:48237 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275AbXKUIw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 03:52:58 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
+Date: Wed, 21 Nov 2007 10:47:32 +0200
+Message-Id: <11956348523711-git-send-email-ron.rindjunsky@intel.com> (sfid-20071121_085301_947572_3EB1EA7C)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix dependencies for built-in b43.
+This patch adds the ability to receive and handle A-MSDU frames.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/rx.c          |  216 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 217 insertions(+), 0 deletions(-)
 
-I thought that I already submitted this patch, but it's not in wireless-2.6.
-Maybe it was lost somewhere inbetween us or I simply forgot to send it.
-
-Stefano, can you check if this patch is already applied to b43legacy?
-
-Index: wireless-2.6/drivers/net/wireless/b43/Kconfig
+Index: wl2_6_24_HT/net/mac80211/ieee80211_i.h
 ===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/Kconfig	2007-10-27 13:28:16.000000000 +0200
-+++ wireless-2.6/drivers/net/wireless/b43/Kconfig	2007-10-27 14:29:28.000000000 +0200
-@@ -61,16 +61,18 @@ config B43_PCMCIA
+--- wl2_6_24_HT.orig/net/mac80211/ieee80211_i.h
++++ wl2_6_24_HT/net/mac80211/ieee80211_i.h
+@@ -155,6 +155,7 @@ struct ieee80211_txrx_data {
+ 			int load;
+ 			u32 tkip_iv32;
+ 			u16 tkip_iv16;
++			u8  amsdu_frame;
+ 		} rx;
+ 	} u;
+ };
+Index: wl2_6_24_HT/net/mac80211/rx.c
+===================================================================
+--- wl2_6_24_HT.orig/net/mac80211/rx.c
++++ wl2_6_24_HT/net/mac80211/rx.c
+@@ -243,6 +243,10 @@ ieee80211_rx_h_parse_qos(struct ieee8021
+ 		u8 *qc = data + ieee80211_get_hdrlen(rx->fc) - QOS_CONTROL_LEN;
+ 		/* frame has qos control */
+ 		tid = qc[0] & QOS_CONTROL_TID_MASK;
++		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
++			rx->u.rx.amsdu_frame = 1;
++		else
++			rx->u.rx.amsdu_frame = 0;
+ 	} else {
+ 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
+ 			/* Separate TID for management frames */
+@@ -1134,6 +1138,165 @@ ieee80211_data_to_8023(struct ieee80211_
+ }
  
- 	  If unsure, say N.
- 
--# LED support
-+# This config option automatically enables b43 LEDS support,
-+# if it's possible.
- config B43_LEDS
- 	bool
--	depends on B43 && MAC80211_LEDS
-+	depends on B43 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = B43)
- 	default y
- 
--# RFKILL support
-+# This config option automatically enables b43 RFKILL support,
-+# if it's possible.
- config B43_RFKILL
- 	bool
--	depends on B43 && RFKILL && RFKILL_INPUT && INPUT_POLLDEV
-+	depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
- 	default y
- 
- config B43_DEBUG
+ static ieee80211_txrx_result
++ieee80211_rx_h_amsdu(struct ieee80211_txrx_data *rx)
++{
++	struct net_device *dev = rx->dev;
++	struct ieee80211_local *local = rx->local;
++	u16 fc, ethertype;
++	u8 *payload;
++	struct sk_buff *skb = rx->skb, *skb2, *frame = NULL;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	const struct ethhdr *eth;
++	int remaining, err;
++	u8 dst[ETH_ALEN];
++	u8 src[ETH_ALEN];
++	DECLARE_MAC_BUF(mac);
++
++	fc = rx->fc;
++	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
++		return TXRX_CONTINUE;
++
++	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
++		return TXRX_DROP;
++
++	if (!rx->u.rx.amsdu_frame)
++		return TXRX_CONTINUE;
++
++	err = ieee80211_data_to_8023(rx);
++	if (unlikely(err))
++		return TXRX_DROP;
++
++	/* skip the wrapping header */
++	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
++	if (!eth)
++		return TXRX_DROP;
++
++	while (skb != frame) {
++		u8 padding;
++		__be16 len = eth->h_proto;
++		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
++
++		remaining = skb->len;
++		memcpy(dst, eth->h_dest, ETH_ALEN);
++		memcpy(src, eth->h_source, ETH_ALEN);
++
++		padding = ((4 - subframe_len) & 0x3);
++		/* the last MSDU has no padding */
++		if (subframe_len > remaining) {
++			printk(KERN_DEBUG "%s: wrong buffer size", dev->name);
++			return TXRX_DROP;
++		}
++
++		skb_pull(skb, sizeof(struct ethhdr));
++		/* if last subframe reuse skb */
++		if (remaining <= subframe_len + padding)
++			frame = skb;
++		else {
++			frame = dev_alloc_skb(local->hw.extra_tx_headroom +
++					      subframe_len);
++
++			if (frame == NULL)
++				return TXRX_DROP;
++
++			skb_reserve(frame, local->hw.extra_tx_headroom +
++				    sizeof(struct ethhdr));
++			memcpy(skb_put(frame, ntohs(len)), skb->data,
++				ntohs(len));
++
++			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
++							padding);
++			if (!eth) {
++				printk(KERN_DEBUG "%s: wrong buffer size ",
++				       dev->name);
++				dev_kfree_skb(frame);
++				return TXRX_DROP;
++			}
++		}
++		skb2 = NULL;
++
++		payload = frame->data;
++		ethertype = (payload[6] << 8) | payload[7];
++
++		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
++			ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
++			compare_ether_addr(payload,
++					   bridge_tunnel_header) == 0)) {
++			/* remove RFC1042 or Bridge-Tunnel
++			 * encapsulation and replace EtherType */
++			skb_pull(frame, 6);
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		} else {
++			memcpy(skb_push(frame, sizeof(__be16)), &len,
++				sizeof(__be16));
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		}
++
++		rx->skb = frame;
++		if ((ieee80211_drop_802_1x_pae(rx, sizeof(struct ethhdr))) ||
++		    (ieee80211_drop_unencrypted(rx, sizeof(struct ethhdr)))) {
++			if (skb == frame) /* last frame */
++				return TXRX_DROP;
++			dev_kfree_skb(frame);
++			continue;
++		}
++
++		if (local->bridge_packets &&
++		    (sdata->type == IEEE80211_IF_TYPE_AP ||
++		     sdata->type == IEEE80211_IF_TYPE_VLAN) &&
++		     (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
++			if (is_multicast_ether_addr(frame->data)) {
++				/* send multicast frames both to higher layers
++				 * in local net stack and back to the wireless
++				 * media */
++				skb2 = skb_copy(frame, GFP_ATOMIC);
++				if (!skb2)
++					printk(KERN_DEBUG "%s: failed to clone"
++					       " multicast frame\n", dev->name);
++			} else {
++				struct sta_info *dsta;
++
++				dsta = sta_info_get(local, frame->data);
++				if (dsta && !dsta->dev)
++					printk(KERN_DEBUG "Station with null "
++					       "dev structure!\n");
++				else if (dsta && dsta->dev == dev) {
++					/* Destination station is associated
++					 *to this AP, so send the frame
++					 * directly to it and do not pass
++					 * the frame to local net stack.
++					 */
++					skb2 = frame;
++					frame = NULL;
++				}
++				if (dsta)
++					sta_info_put(dsta);
++			}
++		}
++		if (frame) {
++			/* deliver to local stack */
++			skb_set_network_header(frame, 0);
++			frame->protocol = eth_type_trans(frame, dev);
++			frame->priority = skb->priority;
++			netif_rx(frame);
++		}
++
++		if (skb2) {
++			/* send to wireless media */
++			skb2->protocol = __constant_htons(ETH_P_802_3);
++			skb_set_network_header(skb2, 0);
++			skb_set_mac_header(skb2, 0);
++			skb2->priority = skb->priority;
++			skb2->dev = dev;
++			dev_queue_xmit(skb2);
++		}
++	}
++
++	return TXRX_QUEUED;
++}
++
++static ieee80211_txrx_result
+ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1359,6 +1522,7 @@ ieee80211_rx_handler ieee80211_rx_handle
+ 	 * are not passed to user space by these functions
+ 	 */
+ 	ieee80211_rx_h_remove_qos_control,
++	ieee80211_rx_h_amsdu,
+ 	ieee80211_rx_h_data,
+ 	ieee80211_rx_h_mgmt,
+ 	NULL
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
