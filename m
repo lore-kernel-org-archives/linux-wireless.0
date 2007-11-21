@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49809
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760198AbXK3QUo (ORCPT
+Received: from mail4.tpgi.com.au ([203.12.160.61]:39124 "EHLO
+	mail4.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758076AbXKUNcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 11:20:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFT] [PATCH v4] b43: fix calc_nrssi_slope
-Date: Fri, 30 Nov 2007 17:19:12 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20071129043957.739b4d3f@morte> <20071129215139.60ae663a@morte> <20071129220654.6c0c0d35@morte>
-In-Reply-To: <20071129220654.6c0c0d35@morte>
+	Wed, 21 Nov 2007 08:32:52 -0500
+Message-ID: <474432E8.90304@hotmail.com> (sfid-20071121_133336_650901_28ABC18D)
+Date: Thu, 22 Nov 2007 00:30:16 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Reply-To: linux-wireless@vger.kernel.org,
+	   David Miller <davem@davemloft.net>,
+	   Johannes Berg <johannes@sipsolutions.net>,
+	   Daniel Drake <dsd@gentoo.org>, jt@hpl.hp.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711301719.13245.mb@bu3sch.de> (sfid-20071130_162055_173998_1C7918CD)
+To: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	jt@hpl.hp.com, Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com>
+In-Reply-To: <47443035.1070702@hotmail.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 29 November 2007 22:06:54 Stefano Brivio wrote:
-> Fix calc_nrssi_slope() which caused PHY TX errors on devices containing a
-> 802.11a PHY. The code is synced to v4 specs and relevant registers are
-> renamed accordingly.
+Hi,
+
+Shaddy Baddah wrote:
+=> Please find this in-lined below (with key protected):
 > 
+> # iwconfig eth2
+> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
+>           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
+>           Bit Rate=1 Mb/s
+>           Encryption key:<too big>
 > 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> # iwconfig eth2 essid dixieland key "GGGGGGGGGG"
+> # iwconfig eth2
+> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
+>           Mode:Managed  Frequency:2.462 GHz  Access Point: 
+> GG:GG:GG:GG:GG:GG
+>           Bit Rate=24 Mb/s
+>           Encryption key:<too big>
 > 
-> ---
+> #
+> 
 
-That patch looks good, though I did not test it, yet.
 
-John, please don't apply this, yet. It needs a lot more testing on
-several different devices. In the past we had this kind of rewrite patches
-already improve one device and completely break another.
+Interestingly, after performing the above actions, I am now getting 
+additional log messages:
 
-So, people, please try this and check if it causes any regressions.
+SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
+Kernel unaligned access at TPC[100df410] 
+ieee80211softmac_handle_assoc_response]
+Kernel unaligned access at TPC[100df548] 
+ieee80211softmac_handle_assoc_response]
+ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
+Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+[ieee802]
+Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+[ieee802]
+Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+[ieee802]
+Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+[ieee802]
+Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+[ieee802]
+Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw] 
 
-Thanks.
+Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw] 
 
--- 
-Greetings Michael.
+Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw] 
+
+Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw] 
+
+Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw] 
+
+
+
+Hope this helps,
+Shaddy
