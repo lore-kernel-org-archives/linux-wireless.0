@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49313 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753852AbXKTOLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 09:11:10 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH v3] remove bcm43xx
-References: <20071119202121.6ad3fa70@morte> <20071119231935.535674ba@morte>
-	<jehcjheubn.fsf@sykes.suse.de> <200711201507.46998.mb@bu3sch.de>
-Date: Tue, 20 Nov 2007 15:11:07 +0100
-In-Reply-To: <200711201507.46998.mb@bu3sch.de> (Michael Buesch's message of
-	"Tue\, 20 Nov 2007 15\:07\:46 +0100")
-Message-ID: <je4pfhdn2c.fsf@sykes.suse.de> (sfid-20071120_141113_804370_FA66A853)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42864 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755066AbXKUPS1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 10:18:27 -0500
+Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1195615039.3250.453.camel@debian.sh.intel.com>
+References: <11955417361539-git-send-email-yi.zhu@intel.com>
+	 <1195565876.10920.29.camel@johannes.berg>
+	 <1195615039.3250.453.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q1gO8duD8IMi3gLQ4qx9"
+Date: Wed, 21 Nov 2007 16:19:48 +0100
+Message-Id: <1195658389.12000.26.camel@johannes.berg> (sfid-20071121_151829_151055_5F3A6E56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
 
-> On Monday 19 November 2007 23:36:44 Andreas Schwab wrote:
->> b43 still does not work at all on ppc.
->
-> This is absolutely _wrong_.
+--=-Q1gO8duD8IMi3gLQ4qx9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Of course it is wrong, but apparently the only way to get attention to =
-a
-blocker bug.
+Hi,
 
-Andreas.
+> Indeed. But at least user has a way to let mac80211 forget the previous
+> setting (ifconfig wlan0 down and up). Otherwise, user has to reload the
+> modules to achieve this.
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah. Can you amend the patch to also clear the
+IEEE80211_STA_PRIVACY_INVOKED flag?
+
+> > Maybe this should also be done when removing keys?
+>=20
+> I agree there are more places we need to clear the setting. Putting it
+> to ieee80211_stop() is a good start. Should we have a "reset" like
+> ioctl? So the second config tool can call it to let mac80211 forget all
+> the previous setting.
+
+No. We're not adding any ioctls, we now have to live with the wext crap.
+
+What I'm going to do in nl80211 is put *all* the required setting into
+an "association" object. Then all settings can be deleted together when
+the association object is removed which will probably be done by
+userland tools automatigally when tell them to associate to something
+else, i.e. add a new association (needs to remove the old because there
+can be only one).
+
+johannes
+
+--=-Q1gO8duD8IMi3gLQ4qx9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0RMlKVg1VMiehFYAQJVzg//c2YTaeliqF1A/6kxChfOffIXxa5DGvJe
+gKlu7BGQ2In2CUe/jGlaNCz+wMYBKMxeRVxHUGr50YH1dk0ScjomReXPpdSs7afH
+zqyBtzZ173QJdmmPYA4XSrBm5TE4Hs0zRIz7qVJP+F2dIaFP/mM6RovroqcHbgPc
+8WtTpf/Zueydk+aZj4pp9f4ieFc8C1d2A5HHctRjlfbXZirpXLVJCY49PRZMoNbu
+fJtjPaLsPD2qEqTenQWAT0Qm3eoDhYZlM5ZheNiy7WQckw7YMCM0+wyKsVxqkGmF
+HWDaTZ9+WNxxlRXj3Ws7FG6+La/J7d6njgWs5cBuUzcj9/CmR6mYVSPMz/iDqWBC
+H+gi3oTm2xhc8UmMa+BYC2YbbZGyglKBO2JygUh6SOztER1MlORuoRO1hAcmIzwg
+9pqfsodNbRNSrafj2HAfZq6wsCYwlVvMEkuE39x0mcS+I92H4Ll/z4pZKMZJLA+I
+UE3dPbUKgPf63gK1h5DrBNUQJclwZxj+yFEtB9pknUMj6tlrD68wR9QYOObwF1q5
+NLQnFXyI9tFbXS/Zq44C+kr0hOhwlv8zXXHhRQzf7/uQmo9xUNi7ve+9hssSvBcJ
+wf5OnJIAs7h6Zp/UuA9YuMkyVuVm2AvEYaSwkt5DueDaQqqwMmlGaZ5sjyL64cel
+dPpsnyzyauI=
+=mOly
+-----END PGP SIGNATURE-----
+
+--=-Q1gO8duD8IMi3gLQ4qx9--
+
