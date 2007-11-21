@@ -1,154 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:50161 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753749AbXKANGo (ORCPT
+Received: from mail12.tpgi.com.au ([203.12.160.162]:42872 "EHLO
+	mail12.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597AbXKUNWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 09:06:44 -0400
-Received: by py-out-1112.google.com with SMTP id u77so918502pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 06:06:43 -0700 (PDT)
-Message-ID: <40f31dec0711010606m5869f826mdccac69baf72bb8d@mail.gmail.com> (sfid-20071101_130648_357422_FDC7426B)
-Date: Thu, 1 Nov 2007 15:06:43 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 2/7] ath5k: Remove opaque pointers from ath5k_hw_attach()
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <20071101043520.GC21987@pogo>
+	Wed, 21 Nov 2007 08:22:08 -0500
+Message-ID: <47443035.1070702@hotmail.com> (sfid-20071121_132215_066386_363BDDC5)
+Date: Thu, 22 Nov 2007 00:18:45 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Reply-To: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	   jt@hpl.hp.com, Johannes Berg <johannes@sipsolutions.net>,
+	   David Miller <davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071101043520.GC21987@pogo>
+To: jt@hpl.hp.com
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com>
+In-Reply-To: <20071119180423.GA19250@bougret.hpl.hp.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/11/1, Luis R. Rodriguez <mcgrof@gmail.com>:
-> Since we don't have a HAL anymore there is no point to use opaque pointers
-> in ath5k_hw_attach(). This will also give hw.c access to ath5k_softc
-> structure now when needed. While we're at it, lets also give some ah_sh
-> a reasonable name, ah_sh --> ah_iobase.
->
-> Changes to base.c
-> Changes-licensed-under: 3-clause-BSD
->
-> Changes to ath5k.h, hw.c
-> Changes-licensed-under: ISC
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> ---
->  drivers/net/wireless/ath5k/ath5k.h |   10 +++++-----
->  drivers/net/wireless/ath5k/base.c  |    2 +-
->  drivers/net/wireless/ath5k/hw.c    |   11 +++++------
->  3 files changed, 11 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-> index 4122466..20567b1 100644
-> --- a/drivers/net/wireless/ath5k/ath5k.h
-> +++ b/drivers/net/wireless/ath5k/ath5k.h
-> @@ -943,8 +943,8 @@ struct ath5k_capabilities {
->  struct ath5k_hw {
->         u32                     ah_magic;
->
-> -       void                    *ah_sc;
-> -       void __iomem            *ah_sh;
-> +       struct ath5k_softc      *ah_sc;
-> +       void __iomem            *ah_iobase;
->
->         enum ath5k_int          ah_imr;
->
-> @@ -1042,7 +1042,7 @@ struct ath5k_hw {
->  /* General Functions */
->  extern int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val, bool is_set);
->  /* Attach/Detach Functions */
-> -extern struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc, void __iomem *sh);
-> +extern struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version);
->  extern const struct ath5k_rate_table *ath5k_hw_get_rate_table(struct ath5k_hw *ah, unsigned int mode);
->  extern void ath5k_hw_detach(struct ath5k_hw *ah);
->  /* Reset Functions */
-> @@ -1151,12 +1151,12 @@ extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, unsigned int power);
->
->  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
->  {
-> -       return ioread32(ah->ah_sh + reg);
-> +       return ioread32(ah->ah_iobase + reg);
->  }
->
->  static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
->  {
-> -       iowrite32(val, ah->ah_sh + reg);
-> +       iowrite32(val, ah->ah_iobase + reg);
->  }
->
->  #endif
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 4b4ddf4..15ae868 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -559,7 +559,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
->         }
->
->         /* Initialize device */
-> -       sc->ah = ath5k_hw_attach(pdev->device, id->driver_data, sc, sc->iobase);
-> +       sc->ah = ath5k_hw_attach(sc, id->driver_data);
->         if (IS_ERR(sc->ah)) {
->                 ret = PTR_ERR(sc->ah);
->                 goto err_irq;
-> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> index 8ac88e7..320e32e 100644
-> --- a/drivers/net/wireless/ath5k/hw.c
-> +++ b/drivers/net/wireless/ath5k/hw.c
-> @@ -27,8 +27,8 @@
->  #include <linux/pci.h>
->  #include <linux/delay.h>
->
-> -#include "ath5k.h"
->  #include "reg.h"
-> +#include "base.h"
->
->  /*Rate tables*/
->  static const struct ath5k_rate_table ath5k_rt_11a = AR5K_RATES_11A;
-> @@ -187,8 +187,7 @@ int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
->  /*
->   * Check if the device is supported and initialize the needed structs
->   */
-> -struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
-> -               void __iomem *sh)
-> +struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->  {
->         struct ath5k_hw *ah;
->         u8 mac[ETH_ALEN];
-> @@ -204,7 +203,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
->         }
->
->         ah->ah_sc = sc;
-> -       ah->ah_sh = sh;
-> +       ah->ah_iobase = sc->iobase;
->
->         /*
->          * HW information
-> @@ -323,7 +322,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
->         ret = ath5k_hw_get_capabilities(ah);
->         if (ret) {
->                 AR5K_PRINTF("unable to get device capabilities: 0x%04x\n",
-> -                       device);
-> +                       sc->pdev->device);
->                 goto err_free;
->         }
->
-> @@ -331,7 +330,7 @@ struct ath5k_hw *ath5k_hw_attach(u16 device, u8 mac_version, void *sc,
->         ret = ath5k_eeprom_read_mac(ah, mac);
->         if (ret) {
->                 AR5K_PRINTF("unable to read address from EEPROM: 0x%04x\n",
-> -                       device);
-> +                       sc->pdev->device);
->                 goto err_free;
->         }
->
-> --
-> 1.5.2.5
->
+Hi Jean
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Jean Tourrilhes wrote:
+> On Mon, Nov 19, 2007 at 04:03:02PM +0100, Johannes Berg wrote:
+>>>> The first noticeable problem is when using iwconfig on the device. I 
+>>>> cannot set a key for the device, and a query of the configuration always 
+>>>> claims that the "<encryption key is too long>".
+>>> Likely some wireless ioctl compat layer bug in the kernel.
+>> Is this 32/64 interop? The kernel has never been fixed and never will
+>> be. New wireless tools should "support" this, but imnsho you're *much*
+>> better off compiling 64-bit wireless tools.
+> 
+> 	There was a patch for this kind of issue from Masakazu Mokuno
+> that went in 2.6.22 or 2.6.23 that was touching that part. I don't
+> think he went in the stable series, but probably should have. There
+> are other potential cause of problem here, and I suspect he might get
+> the same error with 64 bits userspace.
+> 	Can you give me the exact error text as reported by iwconfig ?
+> I'll probably have to send you a test version to see what's happening
+> under the cover.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Please find this in-lined below (with key protected):
+
+# iwconfig eth2
+eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
+           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
+           Bit Rate=1 Mb/s
+           Encryption key:<too big>
+
+# iwconfig eth2 essid dixieland key "GGGGGGGGGG"
+# iwconfig eth2
+eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
+           Mode:Managed  Frequency:2.462 GHz  Access Point: 
+GG:GG:GG:GG:GG:GG
+           Bit Rate=24 Mb/s
+           Encryption key:<too big>
+
+#
+
+>>>> If I try to scan for APs using iwlist, I get one AP listed, before a bus 
+>>>> error occurs. This of course, does not suggest that the problem is with 
+>>>> the driver, but I mention it for the record.
+>>> This is an unaligned data access in the userland tools.
+>>> Try to catch it with GDB and give us ths backtrace.
+>> For Jean.
+> 
+> 	Definitely, it sounds familiar.
+> 	This is that I need :
+> 		o version of the kernel
+
+Debian sparc64 2.6.22 (built myself, using make-kpg, to include the driver)
+
+> 		o version of the driver if not stock driver
+As stock with the kernel described above
+
+> 		o version of Wireless Tools (iwconfig --version).
+> 	Most likely, you need to upgrade your Wireless Tools to
+> version 29 which fixes this 32/64 interop problem.
+> 	With the latest kernel and the latest wireless tools, the only
+> known bugs are the two ESSID bugs.
+
+I think I'm right for version:
+# iwconfig --version
+iwconfig  Wireless-Tools version 29
+           Compatible with Wireless Extension v11 to v22.
+
+Kernel    Currently compiled with Wireless Extension v22.
+
+eth2      Recommend Wireless Extension v20 or later,
+           Currently compiled with Wireless Extension v22.
+
+
+Hope that helps.
+
+Regards,
+Shaddy
+
+
