@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:4288 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752971AbXKZBin (ORCPT
+Received: from there.is.no.cabal.ca ([134.117.69.58]:33438 "EHLO
+	fattire.cabal.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbXKUSFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 20:38:43 -0500
-Date: Mon, 26 Nov 2007 09:38:28 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-Message-ID: <20071126013828.GB22528@gondor.apana.org.au> (sfid-20071126_013846_747652_5A33C72D)
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <20071125010814.GD31668@gondor.apana.org.au> <4749E768.9040002@linux-foundation.org>
-Mime-Version: 1.0
+	Wed, 21 Nov 2007 13:05:22 -0500
+Date: Wed, 21 Nov 2007 13:05:20 -0500
+From: Kyle McMartin <kyle@mcmartin.ca>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Message-ID: <20071121180520.GC13298@fattire.cabal.ca> (sfid-20071121_180525_723453_CBD33CD1)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com> <47443F78.60701@gentoo.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4749E768.9040002@linux-foundation.org>
+In-Reply-To: <47443F78.60701@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 25, 2007 at 01:21:44PM -0800, Stephen Hemminger wrote:
->
-> No too wasteful. I'm working a patch to eth_type_trans to realign if 
-> needed for any device.
+On Wed, Nov 21, 2007 at 02:23:52PM +0000, Daniel Drake wrote:
+> 	network = ieee80211softmac_get_network_by_bssid_locked(mac, 
+> resp->header.addr3);
+> 
+> addr3 is offset 20 bytes in the struct and is 6 bytes long. Because 20 
+> is not evenly divisible by 6 does that make it an unaligned access?
+> 
 
-If you're going to do that you can probably compute the checksum
-at the same time.
+Sort of. An "unaligned" access is one where the referenced address is
+not aligned to the size of the data type being accessed. For example,
+a 4-byte load must be accessed on 4-byte aligned boundaries:
+	0xffff0000 0xffff0004 0xffff0008, and so forth.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Obviously a single byte load is always aligned.
+
+Unaligned accesses are universally bad. On some architectures (x86, ppc)
+they will be emulated in hardware at a performance cost. On others
+(sparc, parisc, ia64) they will trap, giving you the option of software
+emulation (very slow) or sending a SIGBUS. On still others (arm, I
+think[1]) they'll "align" in hardware, resulting in loads or stores to
+the wrong address.
+
+The Linux networking code is a pretty good example of when to use the
+support macros (get|put)_unaligned to do the right thing. For something
+like a packed structure accessed in a data stream, you're invariably going
+to have to use these.
+
+> Is there any documentation I can read on this topic? In my current 
+> uneducated state I'm likely to write further code with these problems...
+> 
+
+cheers,
+	Kyle
+
+1. Just a guess based on <asm-arm/unaligned.h> providing macros that
+actually do something, and the lack of an obvious unaligned trap
+handler.
