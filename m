@@ -1,289 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42705 "EHLO mga03.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2478 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756132AbXKNPgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:36:07 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
-Date: Wed, 14 Nov 2007 17:29:42 +0200
-Message-Id: <11950542014191-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153628_289622_92240981)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753028AbXKUOAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 09:00:25 -0500
+Date: Wed, 21 Nov 2007 08:59:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: schedule bcm43xx removal for 2.6.26 -- Re: [PATCH v3] remove
+	bcm43xx
+Message-ID: <20071121135927.GC8792@tuxdriver.com> (sfid-20071121_140031_161880_FF92F482)
+References: <20071119202121.6ad3fa70@morte> <200711192357.44407.rjw@sisk.pl> <200711201509.55763.mb@bu3sch.de> <200711210026.49732.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200711210026.49732.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to receive and handle A-MSDU frames.
+On Wed, Nov 21, 2007 at 12:26:48AM +0100, Rafael J. Wysocki wrote:
+> On Tuesday, 20 of November 2007, Michael Buesch wrote:
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/rx.c          |  216 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 217 insertions(+), 0 deletions(-)
+> > It is known for over a year now that b43 (aka bcm43xx-mac80211) is going to
+> > replace bcm43xx. And we already do a parrallel release cycle with both drivers
+> > included so people can switch. What else do you want?
+> 
+> _First_, mark bcm43xx as unmaintained.  Then, it's not your problem any more.
+> Perhaps there's someone who'd be willing to maintain it.  Otherwise, it will be
+> dropped anyway after some time - when no one uses it any more.  Still, it need
+> not be (and IMHO it shouldn't be) your decision to drop it.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 915d7b1..5175054 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -155,6 +155,7 @@ struct ieee80211_txrx_data {
- 			int load;
- 			u32 tkip_iv32;
- 			u16 tkip_iv16;
-+			u8  amsdu_frame;
- 		} rx;
- 	} u;
- };
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 428a9fc..3c4d13e 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -243,6 +243,10 @@ ieee80211_rx_h_parse_qos(struct ieee80211_txrx_data *rx)
- 		u8 *qc = data + ieee80211_get_hdrlen(rx->fc) - QOS_CONTROL_LEN;
- 		/* frame has qos control */
- 		tid = qc[0] & QOS_CONTROL_TID_MASK;
-+		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
-+			rx->u.rx.amsdu_frame = 1;
-+		else
-+			rx->u.rx.amsdu_frame = 0;
- 	} else {
- 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
- 			/* Separate TID for management frames */
-@@ -1008,6 +1012,217 @@ ieee80211_rx_h_drop_unencrypted(struct ieee80211_txrx_data *rx)
- }
- 
- static ieee80211_txrx_result
-+ieee80211_rx_h_amsdu(struct ieee80211_txrx_data *rx)
-+{
-+	struct net_device *dev = rx->dev;
-+	struct ieee80211_local *local = rx->local;
-+	u16 fc, hdrlen, ethertype;
-+	u8 *payload;
-+	struct sk_buff *skb = rx->skb, *skb2, *frame = NULL;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	const struct ethhdr *eth;
-+	int remaining;
-+	u8 dst[ETH_ALEN];
-+	u8 src[ETH_ALEN];
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
-+	DECLARE_MAC_BUF(mac);
-+
-+	fc = rx->fc;
-+	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
-+		return TXRX_CONTINUE;
-+
-+	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
-+		return TXRX_DROP;
-+
-+	if (!rx->u.rx.amsdu_frame)
-+		return TXRX_CONTINUE;
-+
-+	hdrlen = ieee80211_get_hdrlen(fc);
-+
-+	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
-+	case IEEE80211_FCTL_TODS:
-+		/* BSSID SA DA */
-+		if (unlikely(sdata->type != IEEE80211_IF_TYPE_AP &&
-+		    sdata->type != IEEE80211_IF_TYPE_VLAN)) {
-+			if (net_ratelimit())
-+			   printk(KERN_DEBUG "%s: dropped ToDS frame (BSSID=%s"
-+			       " SA=%s DA=%s)\n",
-+			       dev->name, print_mac(mac, hdr->addr1),
-+			       print_mac(mac, hdr->addr2),
-+			       print_mac(mac, hdr->addr3));
-+			return TXRX_DROP;
-+		}
-+		break;
-+	case (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS):
-+		/* RA TA DA SA */
-+		if (unlikely(sdata->type != IEEE80211_IF_TYPE_WDS)) {
-+			if (net_ratelimit())
-+			   printk(KERN_DEBUG "%s: dropped FromDS&ToDS frame"
-+			       " (RA=%s TA=%s DA=%s SA=%s)\n",
-+			       rx->dev->name, print_mac(mac, hdr->addr1),
-+			       print_mac(mac, hdr->addr2),
-+			       print_mac(mac, hdr->addr3),
-+			       print_mac(mac, hdr->addr4));
-+			return TXRX_DROP;
-+		}
-+		break;
-+	case IEEE80211_FCTL_FROMDS:
-+		/* DA BSSID SA */
-+		if (sdata->type != IEEE80211_IF_TYPE_STA)
-+			return TXRX_DROP;
-+		break;
-+	case 0:
-+		/* DA SA BSSID */
-+		if (sdata->type != IEEE80211_IF_TYPE_IBSS) {
-+			if (net_ratelimit())
-+				printk(KERN_DEBUG "%s: dropped IBSS frame"
-+				       " (DA=%s SA=%s BSSID=%s)\n",
-+				       dev->name, print_mac(mac, hdr->addr1),
-+				       print_mac(mac, hdr->addr2),
-+				       print_mac(mac, hdr->addr3));
-+			return TXRX_DROP;
-+		}
-+		break;
-+	}
-+
-+	if (unlikely((skb->len - hdrlen) < 8)) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "%s: RX too short data frame "
-+			       "payload\n", dev->name);
-+		return TXRX_DROP;
-+	}
-+
-+	eth = (struct ethhdr *) skb_pull(skb, hdrlen);
-+
-+	payload = skb->data;
-+	ethertype = (payload[6] << 8) | payload[7];
-+
-+	if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
-+	    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
-+	    compare_ether_addr(payload,
-+	    bridge_tunnel_header) == 0))
-+		eth = (struct ethhdr *) skb_pull(skb, 8);
-+
-+	if (!eth)
-+		return TXRX_DROP;
-+
-+	while (skb != frame) {
-+		u8 padding;
-+		__be16 len = eth->h_proto;
-+		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
-+
-+		remaining = skb->len;
-+		memcpy(dst, eth->h_dest, ETH_ALEN);
-+		memcpy(src, eth->h_source, ETH_ALEN);
-+
-+		padding = ((4 - subframe_len) & 0x3);
-+		/* the last MSDU has no padding */
-+		if (subframe_len > remaining) {
-+			printk(KERN_DEBUG "%s: wrong buffer size", dev->name);
-+			return TXRX_DROP;
-+		}
-+
-+		skb_pull(skb, sizeof(struct ethhdr));
-+		/* if last subframe reuse skb */
-+		if (remaining  <= subframe_len + padding)
-+			frame = skb;
-+		else {
-+			frame = dev_alloc_skb(local->hw.extra_tx_headroom +
-+					      subframe_len);
-+
-+			if (frame == NULL)
-+				return TXRX_DROP;
-+
-+			skb_reserve(frame, local->hw.extra_tx_headroom +
-+				    sizeof(struct ethhdr));
-+			memcpy(skb_put(frame, ntohs(len)), skb->data,
-+				ntohs(len));
-+
-+			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
-+							padding);
-+			if (!eth) {
-+				printk(KERN_DEBUG "%s: wrong buffer size ",
-+				       dev->name);
-+				dev_kfree_skb(frame);
-+				return TXRX_DROP;
-+			}
-+		}
-+		skb2 = NULL;
-+
-+		payload = frame->data;
-+		ethertype = (payload[6] << 8) | payload[7];
-+
-+		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
-+			ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
-+			compare_ether_addr(payload,
-+					   bridge_tunnel_header) == 0)) {
-+			/* remove RFC1042 or Bridge-Tunnel
-+			 * encapsulation and replace EtherType */
-+			skb_pull(frame, 6);
-+			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
-+			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+		} else {
-+			memcpy(skb_push(frame, sizeof(__be16)), &len,
-+				sizeof(__be16));
-+			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
-+			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+		}
-+
-+		if (local->bridge_packets &&
-+		    (sdata->type == IEEE80211_IF_TYPE_AP ||
-+		     sdata->type == IEEE80211_IF_TYPE_VLAN) &&
-+		     (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
-+			if (is_multicast_ether_addr(frame->data)) {
-+				/* send multicast frames both to higher layers
-+				 * in local net stack and back to the wireless
-+				 * media */
-+				skb2 = skb_copy(frame, GFP_ATOMIC);
-+				if (!skb2)
-+					printk(KERN_DEBUG "%s: failed to clone"
-+					       " multicast frame\n", dev->name);
-+			} else {
-+				struct sta_info *dsta;
-+
-+				dsta = sta_info_get(local, frame->data);
-+				if (dsta && !dsta->dev)
-+					printk(KERN_DEBUG "Station with null "
-+					       "dev structure!\n");
-+				else if (dsta && dsta->dev == dev) {
-+					/* Destination station is associated
-+					 *to this AP, so send the frame
-+					 * directly to it and do not pass
-+					 * the frame to local net stack.
-+					 */
-+					skb2 = frame;
-+					frame = NULL;
-+				}
-+				if (dsta)
-+					sta_info_put(dsta);
-+			}
-+		}
-+		if (frame) {
-+			/* deliver to local stack */
-+			skb_set_network_header(frame, 0);
-+			frame->protocol = eth_type_trans(frame, dev);
-+			frame->priority = skb->priority;
-+			netif_rx(frame);
-+		}
-+
-+		if (skb2) {
-+			/* send to wireless media */
-+			skb2->protocol = __constant_htons(ETH_P_802_3);
-+			skb_set_network_header(skb2, 0);
-+			skb_set_mac_header(skb2, 0);
-+			skb2->priority = skb->priority;
-+			skb2->dev = dev;
-+			dev_queue_xmit(skb2);
-+		}
-+	}
-+
-+	return TXRX_QUEUED;
-+}
-+
-+static ieee80211_txrx_result
- ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
- {
- 	struct net_device *dev = rx->dev;
-@@ -1343,6 +1558,7 @@ ieee80211_rx_handler ieee80211_rx_handlers[] =
- 	ieee80211_rx_h_remove_qos_control,
- 	ieee80211_rx_h_802_1x_pae,
- 	ieee80211_rx_h_drop_unencrypted,
-+	ieee80211_rx_h_amsdu,
- 	ieee80211_rx_h_data,
- 	ieee80211_rx_h_mgmt,
- 	NULL
+It is probably true that we haven't communicated this very well
+outside the wireless team.  We probably should have added bcm43xx to
+the feature removal schedule before the 2.6.24 merge window closed.
+
+How about if we mark bcm43xx as "Obsolete" in MAINTAINERS and add
+an entry to Documentation/feature-removal-schedule.txt with a "When"
+of 2.6.26?  I think that should give everyone sufficient notice...?
+
+John
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+John W. Linville
+linville@tuxdriver.com
