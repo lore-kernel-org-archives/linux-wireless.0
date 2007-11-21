@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:4767 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbXKSKns (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 05:43:48 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
-Date: Mon, 19 Nov 2007 11:44:02 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
-References: <20071117023548.79a7a33c@morte> <200711191008.26174.hs4233@mail.mn-solutions.de> <20071119102117.74932cc1@morte>
-In-Reply-To: <20071119102117.74932cc1@morte>
+Received: from ogre.sisk.pl ([217.79.144.158]:50401 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752085AbXKUTSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 14:18:08 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: schedule bcm43xx removal for 2.6.26 -- Re: [PATCH v3] remove bcm43xx
+Date: Wed, 21 Nov 2007 20:35:42 +0100
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <20071119202121.6ad3fa70@morte> <200711210026.49732.rjw@sisk.pl> <20071121135927.GC8792@tuxdriver.com>
+In-Reply-To: <20071121135927.GC8792@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200711191144.02169.hs4233@mail.mn-solutions.de> (sfid-20071119_104353_961585_1B910A33)
+Message-Id: <200711212035.42857.rjw@sisk.pl> (sfid-20071121_191820_283304_95B7826A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> As long as probing fails, I doubt that my issue is firmware
-> related...
+On Wednesday, 21 of November 2007, John W. Linville wrote:
+> On Wed, Nov 21, 2007 at 12:26:48AM +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, 20 of November 2007, Michael Buesch wrote:
+> 
+> > > It is known for over a year now that b43 (aka bcm43xx-mac80211) is going to
+> > > replace bcm43xx. And we already do a parrallel release cycle with both drivers
+> > > included so people can switch. What else do you want?
+> > 
+> > _First_, mark bcm43xx as unmaintained.  Then, it's not your problem any more.
+> > Perhaps there's someone who'd be willing to maintain it.  Otherwise, it will be
+> > dropped anyway after some time - when no one uses it any more.  Still, it need
+> > not be (and IMHO it shouldn't be) your decision to drop it.
+> 
+> It is probably true that we haven't communicated this very well
+> outside the wireless team.  We probably should have added bcm43xx to
+> the feature removal schedule before the 2.6.24 merge window closed.
+> 
+> How about if we mark bcm43xx as "Obsolete" in MAINTAINERS and add
+> an entry to Documentation/feature-removal-schedule.txt with a "When"
+> of 2.6.26?
 
-I was not sure that probing failed for you. I saw an URB submit 
-error.
+This is a very good idea IMO.
 
-If usb8xxx.ko and libertas.ko get loaded, then it might be a 
-wrong firmware. When the USB driver loads, it first uses URBs to 
-send a helper firmware to the card. Then this helper firmware 
-get's started. And then it sends again URBs to the card, e.g. 
-for setup stuff. Now if the helper firmware is bogus and doesn't 
-accept the URBs to download the real firmware ...
+> I think that should give everyone sufficient notice...? 
 
+Please also state very clearly in the changelog that you'd like to drop the
+driver entirely before 2.6.26.
 
-If probing fails and udev doesn't even load usb8xxx.ko, then you 
-have an USB problem and the wireless mailing list might not be 
-of much help to you.
+Thanks,
+Rafael
