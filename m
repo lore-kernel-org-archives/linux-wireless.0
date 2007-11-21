@@ -1,127 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4634 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754812AbXKGDJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 22:09:07 -0500
-Date: Tue, 6 Nov 2007 22:08:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'upstream-davem' branch of wireless-2.6
-Message-ID: <20071107030853.GB30169@tuxdriver.com> (sfid-20071107_030911_140480_6754D7F5)
+Received: from py-out-1112.google.com ([64.233.166.176]:30465 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbXKUWpD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 17:45:03 -0500
+Received: by py-out-1112.google.com with SMTP id u77so7520952pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2007 14:45:02 -0800 (PST)
+Message-ID: <43e72e890711211445r385ecf3bkd6176924d597a79a@mail.gmail.com> (sfid-20071121_224510_493975_AE454DD8)
+Date: Wed, 21 Nov 2007 17:45:02 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/2] ath5k: more consistent info and error logging
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com
+In-Reply-To: <1195636079-10357-1-git-send-email-bruno@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <1195636079-10357-1-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Nov 21, 2007 4:07 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+> added new macros ATH5K_INFO, ATH5K_WARN and ATH5K_ERR for more consistent
+> logging inside ath5k. they prepend "ath5k phyX:" to all lines so we can
+> distinguish between different cards in multi-card setups. ATH5K_WARN and
+> ATH5K_ERR use net_ratelimit(), so they can be used anywhere without having to
+> check net_ratelimit() seperately.
+>
+> the macros get a reference to sc, so we can automatically add additional
+> information: right now it is used to get the phy name, but having this in one
+> central place gived us the flexibility to switch to dev_info/warn/... or others
+> instead too. i think using "phyX" makes the output most readable and easier to
+> match with the output from mac80211. in cases where we don't have sc available
+> we still use ATH5K_PRINTF.
+>
+> changed all printk, most dev_info and most AR5K_PRINTF lines to use these
+> macros instead. deleted AR5K_PRINT because it's easy to use ATH5K_PRINTF
+> instead.
+>
+> for base.c
+> Changes-licensed-under: 3-clause-BSD
+>
+> for all others...
+> Changes-licensed-under: ISC
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 
-Here are a few for when you decide to open net-2.6.25... :-)
+Thanks for splitting this. I believe you missed some notes I made in
+the previous e-mail. The boring legal notes are specially important.
 
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
-
----
-
-The following changes since commit 2655e2cee2d77459fcb7e10228259e4ee0328697:
-  Alan Cox (1):
-        ata_piix: Add additional PCI identifier for 40 wire short cable
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
-
-Mattias Nissler (1):
-      mac80211: Accept auto txpower setting
-
-Michael Wu (1):
-      ieee80211: Add IEEE80211_MAX_FRAME_LEN to linux/ieee80211.h
-
- include/linux/ieee80211.h      |   14 +++++++-------
- net/mac80211/ieee80211_ioctl.c |   21 +++++++++++++++++----
- 2 files changed, 24 insertions(+), 11 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 30621c2..214821a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -81,18 +81,18 @@
- 
- 
- /* miscellaneous IEEE 802.11 constants */
--#define IEEE80211_MAX_FRAG_THRESHOLD	2346
--#define IEEE80211_MAX_RTS_THRESHOLD	2347
-+#define IEEE80211_MAX_FRAG_THRESHOLD	2352
-+#define IEEE80211_MAX_RTS_THRESHOLD	2353
- #define IEEE80211_MAX_AID		2007
- #define IEEE80211_MAX_TIM_LEN		251
--#define IEEE80211_MAX_DATA_LEN		2304
- /* Maximum size for the MA-UNITDATA primitive, 802.11 standard section
-    6.2.1.1.2.
- 
--   The figure in section 7.1.2 suggests a body size of up to 2312
--   bytes is allowed, which is a bit confusing, I suspect this
--   represents the 2304 bytes of real data, plus a possible 8 bytes of
--   WEP IV and ICV. (this interpretation suggested by Ramiro Barreiro) */
-+   802.11e clarifies the figure in section 7.1.2. The frame body is
-+   up to 2304 octets long (maximum MSDU size) plus any crypt overhead. */
-+#define IEEE80211_MAX_DATA_LEN		2304
-+/* 30 byte 4 addr hdr, 2 byte QoS, 2304 byte MSDU, 12 byte crypt, 4 byte FCS */
-+#define IEEE80211_MAX_FRAME_LEN		2352
- 
- #define IEEE80211_MAX_SSID_LEN		32
- 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 6caa3ec..6d67217 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -634,22 +634,35 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	bool need_reconfig = 0;
-+	u8 new_power_level;
- 
- 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
- 		return -EINVAL;
- 	if (data->txpower.flags & IW_TXPOW_RANGE)
- 		return -EINVAL;
--	if (!data->txpower.fixed)
--		return -EINVAL;
- 
--	if (local->hw.conf.power_level != data->txpower.value) {
--		local->hw.conf.power_level = data->txpower.value;
-+	if (data->txpower.fixed) {
-+		new_power_level = data->txpower.value;
-+	} else {
-+		/* Automatic power level. Get the px power from the current
-+		 * channel. */
-+		struct ieee80211_channel* chan = local->oper_channel;
-+		if (!chan)
-+			return -EINVAL;
-+
-+		new_power_level = chan->power_level;
-+	}
-+
-+	if (local->hw.conf.power_level != new_power_level) {
-+		local->hw.conf.power_level = new_power_level;
- 		need_reconfig = 1;
- 	}
-+
- 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
- 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
- 		need_reconfig = 1;
- 	}
-+
- 	if (need_reconfig) {
- 		ieee80211_hw_config(local);
- 		/* The return value of hw_config is not of big interest here,
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
