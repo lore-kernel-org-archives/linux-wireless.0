@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54056 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbXKIUTb (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49510 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751634AbXKUWSV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 15:19:31 -0500
-Subject: Re: Deauthentication cycles
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <473490A0.2050403@lwfinger.net> (sfid-20071109_165359_386695_518B888E)
-References: <473490A0.2050403@lwfinger.net>
-	 (sfid-20071109_165359_386695_518B888E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ahcdemkVvIh7HWbR2RI/"
-Date: Fri, 09 Nov 2007 21:19:29 +0100
-Message-Id: <1194639569.4068.1.camel@johannes.berg> (sfid-20071109_201936_787243_FD9CBB84)
-Mime-Version: 1.0
+	Wed, 21 Nov 2007 17:18:21 -0500
+Message-ID: <4744AEA1.9020705@lwfinger.net> (sfid-20071121_221825_073936_778A2077)
+Date: Wed, 21 Nov 2007 16:18:09 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John H." <mistamaila@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: timeout problems with certain APs and b43
+References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
+In-Reply-To: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John H. wrote:
+>  uname -a
+> Linux laptop 2.6.23.1-49.fc8 #1 SMP Thu Nov 8 21:41:26 EST 2007 i686
+> i686 i386 GNU/Linux
+> fedora 8
+> 
+> on certain APs, the internet works for a long time then stops, and I
+> get authentication time outs, why?  It usually works again if I reset
+> the AP itself, which i should not have to do and don't have to if in
+> XP....
+> 
+> 
+> wlan0: switched to long barker preamble (BSSID=00:0f:66:53:3e:24)
+> wlan0: switched to short barker preamble (BSSID=00:0f:66:53:3e:24)
+> 
+> 
+> 
+> wlan0: Initial auth_alg=0
+> wlan0: authenticate with AP 00:0f:66:53:3e:24
+> wlan0: authenticate with AP 00:0f:66:53:3e:24
+> wlan0: authenticate with AP 00:0f:66:53:3e:24
+> wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
 
---=-ahcdemkVvIh7HWbR2RI/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Do you have the opportunity to capture the wireless traffic with a second computer using Kismet or
+Wireshark when this condition occurs? Without that info, it would be hard to know what might be
+wrong. Of course, I don't have the problem with either of my AP's.
 
+Could you identify the make/model and firmware revisions of any AP's that show this behavior?
 
-> WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
->=20
-> Is this the correct code? If so, any ideas on why this deauthentication i=
-s happening? As can be
-> seen, it isn't fatal and the system always recovers.
-
-I think that's correct. I'd guess what happens is that the AP sends you
-a disassoc frame but you for some reason miss it, then the AP has you
-disassociated. The next time you send a data (class three) frame it
-tells you that you're not associated by sending you a deauth and
-mac80211 recovers by associating again.
-
-johannes
-
---=-ahcdemkVvIh7HWbR2RI/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzTA0KVg1VMiehFYAQJ2pw//WfDR5eUE8Vh0JkKWMPSwpCqihp/x9IN+
-ieRSpCos9pZzb6r9cpMPoiFvEaBhkcPWm4QUUqUkRjvKEAE+1UCHU8k+vbXXcgPh
-Bx5OxOHpoaKrI57VOzVMlxxh9BUqDM7W79B7hFF+k1OgEgy4rd2nYH0V+dDvFNCW
-UWRCihI5poHnwWkUsauRE892UrSdbDEPxgNHpEZkY2E9XOe+9P8wo+tT2c+veMuW
-Y++xS1wbX3T27bzgaCxCT+B/QcKhzRkRD1mCMFFCUCLs1UKQgCY4UbbinsdHn80H
-5GlQJnY4b60loIOPtVt8zkMm1N5lHU+Aggwcl0SAnft9d66056oeME7QGV983MmZ
-SPCb8mpPGJ/O0W7Q7dqWEg+KxW55XC1ZqvmrNtHkDWWHxabAliSoFnqLI22JUtEg
-QrXbcK3la/wClbtlAkARJ+n6KdyrpuzELp/L3jxIwfP72R2ODMg4J3RMovZGEa7V
-KLGKTiLME66aSQkVKlreIiseBhwCY/HEVzkw8nxdNIUziEvXyfRTwakK0R8Wrhaw
-BkgOL0HZlMO6rLe+l12Rzrys9lEZwwFShBLCtIe2kDs4nprNzs/bzUNwO29O+Rfm
-c23RJ1RxouGCz91N+ELhY+/7Ga0SthqW3MB669Yu84+S8aOErxTx7hZI7F+J25xQ
-ic3+d0Te4hU=
-=Xi4c
------END PGP SIGNATURE-----
-
---=-ahcdemkVvIh7HWbR2RI/--
-
+Larry
