@@ -1,52 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:19061 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754722AbXKAT1A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 15:27:00 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: use IW_AUTH_PRIVACY_INVOKED rather than IW_AUTH_KEY_MGMT
-Date: Thu, 1 Nov 2007 15:22:58 -0400
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Dan Williams <dcbw@redhat.com>, dragoran <drago01@gmail.com>
-References: <1193671155.5197.71.camel@johannes.berg>
-In-Reply-To: <1193671155.5197.71.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5798557.EWhWmnDVed";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200711011523.03063.flamingice@sourmilk.net> (sfid-20071101_192705_918024_D36D65EE)
+Received: from mga11.intel.com ([192.55.52.93]:25761 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751639AbXKVCzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 21:55:42 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Ben Cahill <ben.m.cahill@intel.com>
+Subject: [PATCH 1/2] mac80211: hardware scan rework (V3)
+Date: Thu, 22 Nov 2007 10:53:21 +0800
+Message-Id: <11957000022000-git-send-email-yi.zhu@intel.com> (sfid-20071122_025546_193726_74FCF3B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5798557.EWhWmnDVed
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi,
 
-On Monday 29 October 2007 11:19:15 Johannes Berg wrote:
-> -	if (ieee80211_sta_wep_configured(dev) !=
-> -	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
-> +	privacy = !!(bss->capability & WLAN_CAPABILITY_PRIVACY);
-> +	if ((ieee80211_sta_wep_configured(dev) != privacy) &&
-> +	    !!((ifsta->flags & IEEE80211_STA_PRIVACY_INVOKED) != privacy))
-!! for the wrong set of parenthesis, AFAICT.
+This is the third version of the hardware scan rework patch. Comparing
+with the second version, it allows mac80211 to set channel during the
+hardware scan case. If the low level driver doesn't support setting
+channels in the hardware scan process, the driver should cache this
+setting and replay it after the scan is finished.
 
--Michael Wu
+See Patch 2/2 for such modification for the iwlwifi drivers.
 
---nextPart5798557.EWhWmnDVed
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+The scan code in mac80211 makes the software scan assumption in various
+places. For example, we stop the Tx queue during a software scan so that
+all the Tx packets will be queued by the stack. We also drop frames not
+related to scan in the software scan process. But these are not true for
+hardware scan.
 
-iD8DBQBHKieXT3Oqt9AH4aERAg5LAKCViYoJO+9YxOZlCmHNcgil4mFYXgCdENr4
-fUpwmTy+9lTh6r/1BI8Y4QM=
-=wvJA
------END PGP SIGNATURE-----
+Some wireless hardwares (for example iwl3945/4965) has the ability to
+perform the whole scan process by hardware and/or firmware. The hardware
+scan is relative powerful in that it tries to maintain normal network
+traffic while doing a scan in the background. Some drivers (i.e iwlwifi)
+do provide a way to tune the hardware scan parameters (for example if the
+STA is associated, what's the max time could the STA leave from the
+associated channel, how long the scans get suspended after returning to
+the service channel, etc). But basically this is transparent to the
+stack. mac80211 should not stop Tx queues or drop Rx packets during a
+hardware scan.
 
---nextPart5798557.EWhWmnDVed--
+This patch resolves the above problem by spliting the current scan
+indicator local->sta_scanning into local->sta_sw_scanning and
+local->sta_hw_scanning. It then changes the scan related code to be aware
+of hardware scan or software scan in various places. With this patch,
+iwlwifi performs much better in the scan-while-associated condition and
+disable_hw_scan=1 should never be required.
+
+Cc: Mohamed Abbas <mohamed.abbas@intel.com>
+Cc: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 59350b8..acbe717 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -351,11 +351,14 @@ static int ieee80211_stop(struct net_device *dev)
+ 		synchronize_rcu();
+ 		skb_queue_purge(&sdata->u.sta.skb_queue);
+ 
+-		if (!local->ops->hw_scan &&
+-		    local->scan_dev == sdata->dev) {
+-			local->sta_scanning = 0;
+-			cancel_delayed_work(&local->scan_work);
++		if (local->scan_dev == sdata->dev) {
++			if (!local->ops->hw_scan) {
++				local->sta_sw_scanning = 0;
++				cancel_delayed_work(&local->scan_work);
++			} else
++				local->sta_hw_scanning = 0;
+ 		}
++
+ 		flush_workqueue(local->hw.workqueue);
+ 		/* fall through */
+ 	default:
+@@ -523,7 +526,7 @@ int ieee80211_hw_config(struct ieee80211_local *local)
+ 	struct ieee80211_channel *chan;
+ 	int ret = 0;
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning) {
+ 		chan = local->scan_channel;
+ 		mode = local->scan_hw_mode;
+ 	} else {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 72e1c93..35829b1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -470,7 +470,8 @@ struct ieee80211_local {
+ 
+ 	struct list_head interfaces;
+ 
+-	int sta_scanning;
++	bool sta_sw_scanning;
++	bool sta_hw_scanning;
+ 	int scan_channel_idx;
+ 	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
+ 	unsigned long last_scan_completed;
+@@ -749,7 +750,8 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len);
+ void ieee80211_sta_req_auth(struct net_device *dev,
+ 			    struct ieee80211_if_sta *ifsta);
+ int ieee80211_sta_scan_results(struct net_device *dev, char *buf, size_t len);
+-void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
++ieee80211_txrx_result ieee80211_sta_rx_scan(struct net_device *dev,
++					    struct sk_buff *skb,
+ 			   struct ieee80211_rx_status *rx_status);
+ void ieee80211_rx_bss_list_init(struct net_device *dev);
+ void ieee80211_rx_bss_list_deinit(struct net_device *dev);
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 942b9cc..f2d84f3 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -315,7 +315,7 @@ int ieee80211_set_channel(struct ieee80211_local *local, int channel, int freq)
+ 	}
+ 
+ 	if (set) {
+-		if (local->sta_scanning)
++		if (local->sta_sw_scanning)
+ 			ret = 0;
+ 		else
+ 			ret = ieee80211_hw_config(local);
+@@ -558,8 +558,10 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
+ {
+ 	int res;
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	if (local->sta_scanning)
++
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 		return -EAGAIN;
++
+ 	res = ieee80211_sta_scan_results(dev, extra, data->length);
+ 	if (res >= 0) {
+ 		data->length = res;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 015b3f8..26f404a 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1487,8 +1487,18 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 		u32 supp_rates, prev_rates;
+ 		int i, j;
+ 
+-		mode = local->sta_scanning ?
++		mode = local->sta_sw_scanning ?
+ 		       local->scan_hw_mode : local->oper_hw_mode;
++
++		if (local->sta_hw_scanning) {
++			/* search for the correct mode matches the beacon */
++			list_for_each_entry(mode, &local->modes_list, list)
++				if (mode->mode == rx_status->phymode)
++					break;
++
++			if (mode == NULL)
++				mode = local->oper_hw_mode;
++		}
+ 		rates = mode->rates;
+ 		num_rates = mode->num_rates;
+ 
+@@ -1871,31 +1881,39 @@ static void ieee80211_sta_rx_queued_mgmt(struct net_device *dev,
+ }
+ 
+ 
+-void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
+-			   struct ieee80211_rx_status *rx_status)
++ieee80211_txrx_result
++ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
++		      struct ieee80211_rx_status *rx_status)
+ {
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 fc;
+ 
+-	if (skb->len < 24) {
+-		dev_kfree_skb(skb);
+-		return;
+-	}
++	if (skb->len < 2)
++		return TXRX_DROP;
+ 
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+ 	fc = le16_to_cpu(mgmt->frame_control);
+ 
++	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL)
++		return TXRX_CONTINUE;
++
++	if (skb->len < 24)
++		return TXRX_DROP;
++
+ 	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) {
+ 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_RESP) {
+ 			ieee80211_rx_mgmt_probe_resp(dev, mgmt,
+ 						     skb->len, rx_status);
++			dev_kfree_skb(skb);
++			return TXRX_QUEUED;
+ 		} else if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON) {
+ 			ieee80211_rx_mgmt_beacon(dev, mgmt, skb->len,
+ 						 rx_status);
++			dev_kfree_skb(skb);
++			return TXRX_QUEUED;
+ 		}
+ 	}
+-
+-	dev_kfree_skb(skb);
++	return TXRX_CONTINUE;
+ }
+ 
+ 
+@@ -1985,7 +2003,7 @@ void ieee80211_sta_work(struct work_struct *work)
+ 	if (!netif_running(dev))
+ 		return;
+ 
+-	if (local->sta_scanning)
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 		return;
+ 
+ 	if (sdata->type != IEEE80211_IF_TYPE_STA &&
+@@ -2643,9 +2661,15 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 	union iwreq_data wrqu;
+ 
+ 	local->last_scan_completed = jiffies;
+-	wmb();
+-	local->sta_scanning = 0;
++	memset(&wrqu, 0, sizeof(wrqu));
++	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+ 
++	if (local->sta_hw_scanning) {
++		local->sta_hw_scanning = 0;
++		goto done;
++	}
++
++	local->sta_sw_scanning = 0;
+ 	if (ieee80211_hw_config(local))
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+ 		       "channel after scan\n", dev->name);
+@@ -2661,9 +2685,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 
+ 	netif_tx_unlock_bh(local->mdev);
+ 
+-	memset(&wrqu, 0, sizeof(wrqu));
+-	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+-
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 
+@@ -2681,6 +2702,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 	}
+ 	rcu_read_unlock();
+ 
++done:
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type == IEEE80211_IF_TYPE_IBSS) {
+ 		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+@@ -2703,7 +2725,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
+ 	int skip;
+ 	unsigned long next_delay = 0;
+ 
+-	if (!local->sta_scanning)
++	if (!local->sta_sw_scanning)
+ 		return;
+ 
+ 	switch (local->scan_state) {
+@@ -2766,7 +2788,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
+ 		break;
+ 	}
+ 
+-	if (local->sta_scanning)
++	if (local->sta_sw_scanning)
+ 		queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 				   next_delay);
+ }
+@@ -2798,7 +2820,7 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
+ 	 */
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning || local->sta_hw_scanning) {
+ 		if (local->scan_dev == dev)
+ 			return 0;
+ 		return -EBUSY;
+@@ -2806,15 +2828,15 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 
+ 	if (local->ops->hw_scan) {
+ 		int rc = local->ops->hw_scan(local_to_hw(local),
+-					    ssid, ssid_len);
++					     ssid, ssid_len);
+ 		if (!rc) {
+-			local->sta_scanning = 1;
++			local->sta_hw_scanning = 1;
+ 			local->scan_dev = dev;
+ 		}
+ 		return rc;
+ 	}
+ 
+-	local->sta_scanning = 1;
++	local->sta_sw_scanning = 1;
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+@@ -2869,7 +2891,7 @@ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_len)
+ 	if (sdata->type != IEEE80211_IF_TYPE_STA)
+ 		return ieee80211_sta_start_scan(dev, ssid, ssid_len);
+ 
+-	if (local->sta_scanning) {
++	if (local->sta_sw_scanning || local->sta_hw_scanning) {
+ 		if (local->scan_dev == dev)
+ 			return 0;
+ 		return -EBUSY;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 428a9fc..596ff71 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -338,8 +338,14 @@ ieee80211_rx_h_passive_scan(struct ieee80211_txrx_data *rx)
+ 	struct ieee80211_local *local = rx->local;
+ 	struct sk_buff *skb = rx->skb;
+ 
+-	if (unlikely(local->sta_scanning != 0)) {
+-		ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
++	if (unlikely(local->sta_hw_scanning))
++		return ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status);
++
++	if (unlikely(local->sta_sw_scanning)) {
++		/* drop all the other packets during a software scan anyway */
++		if (ieee80211_sta_rx_scan(rx->dev, skb, rx->u.rx.status)
++		    != TXRX_QUEUED)
++			dev_kfree_skb(skb);
+ 		return TXRX_QUEUED;
+ 	}
+ 
+@@ -1486,7 +1492,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto end;
+ 	}
+ 
+-	if (unlikely(local->sta_scanning))
++	if (unlikely(local->sta_sw_scanning || local->sta_hw_scanning))
+ 		rx.flags |= IEEE80211_TXRXD_RXIN_SCAN;
+ 
+ 	if (__ieee80211_invoke_rx_handlers(local, local->rx_pre_handlers, &rx,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1a53154..a6a657f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -225,7 +225,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
+ 	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
+ 		return TXRX_CONTINUE;
+ 
+-	if (unlikely(tx->local->sta_scanning != 0) &&
++	if (unlikely(tx->local->sta_sw_scanning) &&
+ 	    ((tx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+ 	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
+ 		return TXRX_DROP;
