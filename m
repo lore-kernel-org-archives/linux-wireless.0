@@ -1,109 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:54683 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbXK0Tj5 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751780AbXKVNFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:39:57 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1085881nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:54 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Only update rssi average approximation on receiving beacon frames.
-Date: Tue, 27 Nov 2007 21:50:26 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711272146.53518.IvDoorn@gmail.com>
-In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272150.26860.IvDoorn@gmail.com> (sfid-20071127_194249_296091_6B038CAF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 22 Nov 2007 08:05:55 -0500
+Subject: Re: mac80211 regression: doesn't associate automatically
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200711220912.10452.hs4233@mail.mn-solutions.de> (sfid-20071122_081201_818890_5F650412)
+References: <200711220912.10452.hs4233@mail.mn-solutions.de>
+	 (sfid-20071122_081201_818890_5F650412)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1X0sTqpWvdYp2X43pjlC"
+Date: Thu, 22 Nov 2007 14:05:52 +0100
+Message-Id: <1195736752.6323.97.camel@johannes.berg> (sfid-20071122_130603_064761_F5A24ECD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
 
-Restrict rssi average updating to beacon frames of the bssid the
-interface is
-associated with. Without this restriction, strong signals belonging to other
-BSS, e.g. beacon frames coming from a nearby AP, would cause incorrectly high
-rssi approximation values. This would then cause the link tuner to reduce
-sensitivity, resulting in transmissions from the BSS associated to to be
-missed.
+--=-1X0sTqpWvdYp2X43pjlC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++++++
- drivers/net/wireless/rt2x00/rt2x00dev.c |   19 ++++++++++++++++++-
- 2 files changed, 25 insertions(+), 1 deletions(-)
+First off, let me state that I don't think this is a regression.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 103a122..218068b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -32,6 +32,7 @@
- #include <linux/workqueue.h>
- #include <linux/firmware.h>
- #include <linux/mutex.h>
-+#include <linux/etherdevice.h>
- 
- #include <net/mac80211.h>
- 
-@@ -149,6 +150,12 @@ static inline int is_probe_resp(u16 fc)
- 		((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_RESP));
- }
- 
-+static inline int is_beacon(u16 fc)
-+{
-+	return (((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
-+		((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON));
-+}
-+
- /*
-  * Chipset identification
-  * The chipset on the device is composed of a RT and RF chip.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index bd7b738..a771a09 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -526,11 +526,14 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
- 		      struct rxdata_entry_desc *desc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->ring->rt2x00dev;
-+	struct interface *intf = &rt2x00dev->interface;
- 	struct ieee80211_rx_status *rx_status = &rt2x00dev->rx_status;
- 	struct ieee80211_hw_mode *mode;
- 	struct ieee80211_rate *rate;
-+	struct ieee80211_hdr *hdr;
- 	unsigned int i;
- 	int val = 0;
-+	u16 fc;
- 
- 	/*
- 	 * Update RX statistics.
-@@ -555,7 +558,21 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
- 		}
- 	}
- 
--	rt2x00lib_update_link_stats(&rt2x00dev->link, desc->rssi);
-+	/*
-+	 * Only update link status if this is a beacon frame carrying our
-+	 * bssid.
-+	 */
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	if (skb->len >= sizeof(struct ieee80211_hdr *)) {
-+		fc = le16_to_cpu(hdr->frame_control);
-+		if ((intf->type == IEEE80211_IF_TYPE_STA
-+		     || intf->type == IEEE80211_IF_TYPE_IBSS)
-+		    && is_beacon(fc)
-+		    && compare_ether_addr(hdr->addr3, intf->bssid) == 0)
-+			rt2x00lib_update_link_stats(&rt2x00dev->link,
-+						    desc->rssi);
-+	}
-+
- 	rt2x00dev->link.qual.rx_success++;
- 
- 	rx_status->rate = val;
--- 
-1.5.3.6
+> $ iwconfig eth1 essid BLAHMUMPF
+> HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
+[...]
+
+As you can see, it doesn't find anything that matches the current
+configuration.
+
+> $ iwconfig eth1 key s:11111
+> b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: ff:ff=
+:ff:ff:ff:ff
+
+You've now enabled a key, but not told it to associate using that key.
+
+> As you can see, I'm not associated. However, this sequence used
+> to work with non-mac80211 based WLAN drivers. However, I can actually
+> associate if I reverse the essid/key, e.g. first set the key, then
+> the ssid.
+
+Can't say that matters since wext is actually sufficiently undefined to
+allow both behaviours. :) I'm strongly against changing the behaviour in
+mac80211 because wext is sufficiently undefined that once we accept one
+of these things we'll have a HUGE mess of code because all sorts of wext
+ioctls affect possible association etc.
+
+> Note that the same happens if I let Debian manage the card. An excerpt
+> from my /etc/network/interfaces shows:
+
+That sucks, I guess debian's scripts need to be fixed.
+
+johannes
+
+--=-1X0sTqpWvdYp2X43pjlC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0V+r6Vg1VMiehFYAQIJZRAAvYP7ymPpmmEkQl2bmPdCy/MgaJ83wbpx
+zrFNy3RfYfBaGik6fRnsZnG/Y0sqLoGlj0MVB16eGt35L+1bAmcWWxWc8/Rjuslm
+SdL2Hjm0Vm8tabdM3FzwSPxGLg4wX/Xi6swYxIwokAKyrNy8VMypHtREkOCQGfX6
+KPlHBYRoJXm+YxUBVqxPyrpPHbJacZXxQfavNvoIJEp/QGkfTurQkCZg/AjVKRbF
+rIoxUTexofnvfxuWE2ilhxpMBRhumg0tOa8LsInEvfcMJumCrgdM7/2z7fE93tib
+aJsM1fjU8rdT8xbA2g1sdKdLW3IDJ2WSq2NjIOxBJwyXVChZY+PBZCxtou2mcMnt
+PhS6nHWOCv8w1hkdCl+TE3w6/VjHibtyrdYdX2EwYI4pxb3u8m5i7+ladNalGChT
+Xi/Rq1XWFw3vFdJYAdg7mSLntah7bBrnTgy6zMKem2+5H8VPJbcOMNfaEW2R+BRu
+HqBgAXV+T4kaIZ8bxYz/ltymKzBg5axs7JcFBc0dGrjHs5jqc6OpWWJeKmbkbeVc
+G3EP3oFsXroC876AxYrM0otuhOxTnEryPRyoRdyfMqR2xUgTkbpqpr1pSRj29MxI
+sEGe/WHJwnIuntxuQqSXjBE6ksJq7V18do7e4KojSt7xbf9eErVmG7J1Qs8Gqyfj
+kAu3WOpIIto=
+=7nV1
+-----END PGP SIGNATURE-----
+
+--=-1X0sTqpWvdYp2X43pjlC--
 
