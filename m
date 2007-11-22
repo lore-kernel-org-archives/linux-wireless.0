@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agave.telenet-ops.be ([195.130.137.77]:39500 "EHLO
-	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220AbXKJCSZ (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:44215 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbXKVXiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 21:18:25 -0500
-Message-ID: <473514F3.50500@telenet.be> (sfid-20071110_021830_458307_FC97EF62)
-Date: Sat, 10 Nov 2007 03:18:27 +0100
-From: Ian Schram <ischram@telenet.be>
+	Thu, 22 Nov 2007 18:38:55 -0500
+Received: by an-out-0708.google.com with SMTP id d31so622340and
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 15:38:54 -0800 (PST)
+Message-ID: <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com> (sfid-20071122_233858_921384_6F283C3F)
+Date: Fri, 23 Nov 2007 01:38:54 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: Majo <virec@inmail.sk>
+Subject: Re: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200711222310.01165.virec@inmail.sk>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	=?ISO-8859-1?Q?Ismail_D=F6?= =?ISO-8859-1?Q?nmez?=
-	<ismail@pardus.org.tr>, Dan Williams <dcbw@redhat.com>,
-	Stephen.Clark@seclark.us, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [ipw3945-devel] iwl3945 doesn't work
-References: <20071017135452.GJ5043@kernel.dk> <20071017141111.GM5043@kernel.dk>	<1192630733.10567.37.camel@localhost.localdomain>	<20071017142246.GQ5043@kernel.dk>	<1192634183.11584.0.camel@localhost.localdomain>	<20071017163519.GC15552@kernel.dk> <47166B5F.1010804@seclark.us>	<20071018065746.GB5063@kernel.dk> <47175033.1090709@seclark.us>	<1192710788.15285.4.camel@johannes.berg> <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com>
-In-Reply-To: <1ba2fa240710180602m61ae9478k84791690095e76d@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <200711222310.01165.virec@inmail.sk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I wonder if anybody knows something more about this issue by now,
-as it appears to occur to a few people.
+2007/11/23, Majo <virec@inmail.sk>:
+> Hi,
+>
+> ath5sudo k don't work with my Notebook Wifi Card
+>
+> sudo lspci -v
+>
+> 14:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG 802.11 b/g
+> Wireless PCI Express Adapter (rev 01)
 
-I reread the thread (rather quickly) but I do not see many specifications
-of driver/mac80211/kernel. The few cases that do contain specs all appear
-to be using fedora (don't want to jump to conclusions). But just wondering if
-anybody experienced this on any other kernel?
+This is a 2424 pci-express card, we don't support this chip yet ;-(
 
-The log that I saw from a person with these symptoms, showed a perfectly normal
-booting driver, doing all the initialization identical to my functional card,
-except that apparently iwl_mac_open() (which is currently known as iwl3945_mac_start iirc)
-is never called.
+(damn i thought that was only the pci express version of 5414 that we
+just fixed, seems there's more to do)
 
-this callback is conditionally called from mac80211, in on it's turn a callback from
-even higher up the kernel stack. Hence my best (uneducated) guess would be that
-for some reason mac80211 doesn't call the ops->start(), but the scan (completion)
-somehow manages to rectify this
+>   Subsystem: Atheros Communications, Inc. Unknown device 3067
+>   Flags: fast devsel, IRQ 19
+>   Memory at fe200000 (64-bit, non-prefetchable) [size=64K]
+>   Capabilities: [40] Power Management version 2
+>   Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
+> Queue=0/0
+> Enable-
+>   Capabilities: [60] Express Legacy Endpoint IRQ 0
+>   Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+>
+> - in Windows XP is detected as AR5006X
+>
+> dmesg
+>
+> [ 1276.969782] ACPI: PCI Interrupt 0000:14:00.0[A] -> GSI 19 (level, low) ->
+> IRQ
+> 19
+> [ 1276.969811] PCI: Setting latency timer of device 0000:14:00.0 to 64
+> [ 1277.982089] ath5k_hw_nic_wakeup: failed to resume the MAC Chip
 
-I believe this bug is similar though with older versions of the code
-http://bughost.org/bugzilla/show_bug.cgi?id=1452
-although back then the scan didn't magically fix it.
+Hmm it seems that 5424/2424 and later chips have a different reset
+sequence we are not aware of. We 'll need traces to make it work, if
+you have some time plz take a look here ->
+http://madwifi.org/wiki/DevDocs/MadwifiTrace (the testbed stuff would
+really help)
 
-Seeing as the driver appears to be functioning normally (it's receiving! and dropping
-packages because not open). and my knowledge of mac80211 is very limited i'm hoping
-someone here knows:
 
-What could sensibly be causing ops->start() not to be called?
+Thanx for the feedback ;-)
 
-Tomas Winkler wrote:
-> On 10/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Thu, 2007-10-18 at 08:23 -0400, Stephen Clark wrote:
->>
->>>>> iwlist eth1 scan would report no scan results, I then switched to loading
->>>>> the kernel module with
->>>>> the option that tells  iwl3945 to do software scanning and it works
->>>>> everytime now.
->>> In my modprobe.conf file:
->>> options iwl3945 disable_hw_scan=1
->> Hah. Told you it wasn't mac80211's problem. Can somebody remind me again
->> exactly why we have hardware scan offload when we parse each received
->> packet anyway and the hardware doesn't even batch them so the CPU could
->> wake up less?
->>
-> 1. Tuning to each channel is done internally by fw so you don't spend
-> cycles and it's is faster to switch channels so overall scanning take
-> less time. Sending probe responses is also offloaded.  Returning to
-> operational channel is more precisely matched to DTIM period as it is
-> handled by RT code.
-> 2. There are also more advanced modes of scanning such as during voice
-> traffic etc.
-> 3. Yes beacon batching will be nice, but there is a memory tradeoff.
-> Tomas
-> 
->> johannes
->>
->>
-> 
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
