@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out0.tiscali.nl ([195.241.79.175]:59799 "EHLO
-	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752936AbXKEAnQ (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.187]:37701 "EHLO
+	rn-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751955AbXKVUj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Nov 2007 19:43:16 -0500
-Received: from [82.171.216.234] (helo=[192.168.1.2])
-	by smtp-out0.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
-	id 1Ioq3e-0000cY-W6
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2007 01:43:15 +0100
-Message-ID: <472E671F.80907@tiscali.nl> (sfid-20071105_004320_951770_BD1F6965)
-Date: Mon, 05 Nov 2007 01:43:11 +0100
-From: Roel Kluin <12o3l@tiscali.nl>
-MIME-Version: 1.0
+	Thu, 22 Nov 2007 15:39:57 -0500
+Received: by rn-out-0102.google.com with SMTP id s46so4147245rnb
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 12:39:56 -0800 (PST)
+Message-ID: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com> (sfid-20071122_204006_138946_7726FA26)
+Date: Thu, 22 Nov 2007 15:39:55 -0500
+From: "Vadim Peretokin" <vperetokin@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] postfix decrement error in ipw2100_start_adapter(); drivers/net/wireless/ipw2100.c
+Subject: Belin FD7010 v7
+MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If i reaches zero, the loop ends, but the postfix decrement subtracts it to -1.
-Testing for 'i == 0', later in the function, will not fulfill its purpose.
+Hello,
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
-index a6c7904..84870f4 100644
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -1267,7 +1267,7 @@ static int ipw2100_start_adapter(struct ipw2100_priv *priv)
- 				       IPW2100_INTA_FATAL_ERROR |
- 				       IPW2100_INTA_PARITY_ERROR);
- 		}
--	} while (i--);
-+	} while (--i);
- 
- 	/* Clear out any pending INTAs since we aren't supposed to have
- 	 * interrupts enabled at this point... */
+I own a Belkin FD7010 version 7000 wireless card, and am unsure about
+it's state with linux compatibility. It's based on the Realtek 8185
+chipset, which I thought was linux-friendly, but alas, it apparently
+wasn't - my Ubuntu 7.10 didn't recognize it at all. I looked at the
+entry for it in the website:
+
+"RTL8185 based cards. There is an official Realtek driver, which
+offers limited functionality and is known to cause serious problems
+(including random system crashes). There also is the rtl8180
+opensource driver which is supposed to also work with 8185 (and for
+some people it does), but there is no solution that works with
+majority of (numerous) RTL8185-based cards. Some cards are not
+supported by any of them. For more info about driver problems try
+searching any major Linux forums."
+
+But that is very ambiguous. Does that mean if anything is being done
+to make this card work, do you know?
