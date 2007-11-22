@@ -1,360 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.181]:34681 "EHLO
-	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755155AbXKZW4I (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:48884 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbXKVViE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 17:56:08 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so1301208roc
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 14:56:07 -0800 (PST)
-To: olpc-devel@laptop.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-From: Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] libertas: Add debugfs hooks for configuring LED behavior.
-Date: Mon, 26 Nov 2007 14:56:06 -0800 (PST)
-Message-ID: <474b4f06.0e578c0a.0e12.fffff5df@mx.google.com> (sfid-20071126_225612_682504_65CFE36C)
+	Thu, 22 Nov 2007 16:38:04 -0500
+From: Chr <chunkeey@web.de>
+To: developers@islsm.org
+Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
+Date: Thu, 22 Nov 2007 22:35:43 +0100
+Cc: Jan Willies <jan@willies.info>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, kyle@mcmartin.ca,
+	linux-wireless@vger.kernel.org
+References: <46631BD2.20704@willies.info> <43e72e890711211713y1678bc9blf75e45dae4d74b8@mail.gmail.com> <4745EE3E.8090601@willies.info>
+In-Reply-To: <4745EE3E.8090601@willies.info>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711222235.44079.chunkeey@web.de> (sfid-20071122_213812_269375_704961E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a rewrite of
-http://lists.laptop.org/pipermail/devel/2007-October/007144.html to use debugfs
-instead of private ioctls.  This will help manufacturing test the proper
-functioning of the LEDs without having to associate.
+>
+> Hmmz, I wasn't aware that p54 doesn't support encryption or AP mode yet.
+> Is there any website/blog or something apart from linvilles commit log
+> where I can read about its progress?
+>
+> Funny thing is, I had a chat with Michael Wu because p54 was segfaulting
+> for me. Turned out that I was missing some crypto modules, which are
+> only needed for encryption I guess. Therefore I assumed encryption is
+> working.
+>
+"hardware encryption" does not work, since no one has implemented it.
+but the software encryption is always available...
 
-See the changes to README for documentation.
+The AP Mode is a pain... Beause the firmware of the device changes the beacon
+frames and does some accouting for the powersaving features...
+There're workarounds, but they'll probably break something else.
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/libertas/README    |   23 +++
- drivers/net/wireless/libertas/debugfs.c |  252 +++++++++++++++++++++++++++++++
- drivers/net/wireless/libertas/dev.h     |    3 +
- 3 files changed, 278 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
-index 9f2b029..b62a624 100644
---- a/drivers/net/wireless/libertas/README
-+++ b/drivers/net/wireless/libertas/README
-@@ -655,4 +655,27 @@ setuserscan
-     All entries in the scan table (not just the new scan data when keep=1)
-     will be displayed upon completion by use of the getscantable ioctl.
- 
-+leds
-+
-+	The leds directory contains the interface for configuring LED
-+	functions based on firmware state.
-+
-+	Path: /debugfs/libertas_wireless/ethX/leds/
-+
-+	Each state is represented by a filename.  Each LED configuration is
-+	represented by the following three fields:
-+	LED Behavior Argument
-+
-+	To read the current configuration for a given state, do:
-+		cat state
-+	To set the current configuration, do:
-+		echo "1 2 4" > state
-+
-+	The LED field specifies the LED number (1 or 2).  The Behavior field
-+	specifies what the LED should do: 0 for steady on, 1 for stead off, and
-+	2 for blinking.  The Argument field is used for behavior 2 and sets the
-+	duty and cycle.  It is defined as (duty<<4|cycle) where duty may be
-+	0 to 4 and cycle may be 0 to 5.  For behaviors other than 2, the 
-+	Argument may be left as 0.
-+
- ==============================================================================
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 5bb42da..38fdfd7 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -1612,6 +1612,224 @@ out_unlock:
- 	return res;
- }
- 
-+static ssize_t libertas_leds_read(struct file *file,
-+				  char __user *userbuf,
-+				  size_t count, loff_t *ppos,
-+				  int firmwarestate)
-+{
-+	wlan_private *priv = file->private_data;
-+	ssize_t pos = 0;
-+	int res, i = 0;
-+	unsigned long addr = get_zeroed_page(GFP_KERNEL);
-+	char *buf = (char *)addr;
-+	struct cmd_ds_802_11_led_ctrl ctrl;
-+	struct mrvlietypes_ledbhv *bhv = (struct mrvlietypes_ledbhv *)ctrl.data;
-+
-+	memset(&ctrl, 0, sizeof(ctrl));
-+	ctrl.action = cpu_to_le16(CMD_ACT_GET);
-+
-+	res = libertas_prepare_and_send_command(priv, CMD_802_11_LED_GPIO_CTRL,
-+			0, CMD_OPTION_WAITFORRSP, 0, (void *)&ctrl);
-+	if (res) {
-+		res = -EFAULT;
-+		goto out_unlock;
-+	}
-+
-+	bhv = (struct mrvlietypes_ledbhv *)
-+		((unsigned char *)bhv->ledbhv + bhv->header.len);
-+	while (i < ((MAX_LEDS)*4) &&
-+			(bhv->header.type != MRVL_TERMINATE_TLV_ID) ) {
-+		if (bhv->ledbhv[0].firmwarestate == firmwarestate) {
-+			pos += snprintf(buf+pos, len-pos, "LED%d: %d %d\n",
-+					bhv->ledbhv[0].led,
-+					bhv->ledbhv[0].ledstate,
-+					bhv->ledbhv[0].ledarg);
-+		}
-+		bhv++;
-+	}
-+
-+	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+
-+out_unlock:
-+	free_page(addr);
-+	return res;
-+}
-+
-+static ssize_t libertas_leds_write(struct file *file,
-+				   const char __user *userbuf,
-+				   size_t count, loff_t *ppos,
-+				   int firmwarestate)
-+{
-+	wlan_private *priv = file->private_data;
-+	ssize_t buf_size, res;
-+	int led, ledstate, ledarg;
-+	unsigned long addr = get_zeroed_page(GFP_KERNEL);
-+	char *buf = (char *)addr;
-+	struct cmd_ds_802_11_led_ctrl ctrl;
-+	struct mrvlietypes_ledbhv *bhv = (struct mrvlietypes_ledbhv *)ctrl.data;
-+
-+	buf_size = min(count, len - 1);
-+	if (copy_from_user(buf, userbuf, count)) {
-+		res = -EFAULT;
-+		goto out_unlock;
-+	}
-+	res = sscanf(buf, "%d %d %d", &led, &ledstate, &ledarg);
-+	if (res != 3) {
-+		res = -EFAULT;
-+		goto out_unlock;
-+	}
-+
-+	bhv->header.type = cpu_to_le16(TLV_TYPE_LEDBEHAVIOR);
-+	bhv->header.len = 4;
-+
-+	ctrl.action = cpu_to_le16(CMD_ACT_SET);
-+	ctrl.numled = cpu_to_le16(0);
-+
-+	bhv->ledbhv[0].firmwarestate = firmwarestate;
-+	bhv->ledbhv[0].led = led;
-+	bhv->ledbhv[0].ledstate = ledstate;
-+	bhv->ledbhv[0].ledarg = ledarg;
-+
-+	res = libertas_prepare_and_send_command(priv, CMD_802_11_LED_GPIO_CTRL,
-+			0, CMD_OPTION_WAITFORRSP, 0, (void *)&ctrl);
-+	if (res) {
-+		res = -EFAULT;
-+		goto out_unlock;
-+	}
-+
-+	return count;
-+
-+out_unlock:
-+	free_page(addr);
-+	return res;
-+}
-+
-+static ssize_t libertas_disconnected_read(struct file *file,
-+					  char __user *userbuf,
-+					  size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 0);
-+}
-+
-+static ssize_t libertas_disconnected_write(struct file *file,
-+					   const char __user *userbuf,
-+					   size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 0);
-+}
-+
-+static ssize_t libertas_scanning_read(struct file *file,
-+				      char __user *userbuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 1);
-+}
-+
-+static ssize_t libertas_scanning_write(struct file *file,
-+				       const char __user *userbuf,
-+				       size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 1);
-+}
-+
-+static ssize_t libertas_connected_read(struct file *file,
-+				       char __user *userbuf,
-+				       size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 2);
-+}
-+
-+static ssize_t libertas_connected_write(struct file *file,
-+					const char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 2);
-+}
-+
-+static ssize_t libertas_sleeping_read(struct file *file,
-+					char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 3);
-+}
-+
-+static ssize_t libertas_sleeping_write(struct file *file,
-+					const char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 3);
-+}
-+
-+static ssize_t libertas_deepsleep_read(struct file *file,
-+					char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 4);
-+}
-+
-+static ssize_t libertas_deepsleep_write(struct file *file,
-+					const char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 4);
-+}
-+
-+static ssize_t libertas_linklost_read(struct file *file,
-+				      char __user *userbuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 6);
-+}
-+
-+static ssize_t libertas_linklost_write(struct file *file,
-+				       const char __user *userbuf,
-+				       size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 6);
-+}
-+
-+static ssize_t libertas_disassociated_read(struct file *file,
-+					   char __user *userbuf,
-+					   size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 7);
-+}
-+
-+static ssize_t libertas_disassociated_write(struct file *file,
-+					    const char __user *userbuf,
-+					    size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 7);
-+}
-+
-+static ssize_t libertas_transfer_read(struct file *file,
-+				      char __user *userbuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 9);
-+}
-+
-+static ssize_t libertas_transfer_write(struct file *file,
-+				       const char __user *userbuf,
-+				       size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 9);
-+}
-+
-+static ssize_t libertas_idle_read(struct file *file,
-+				  char __user *userbuf,
-+				  size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_read(file, userbuf, count, ppos, 10);
-+}
-+
-+static ssize_t libertas_idle_write(struct file *file,
-+				   const char __user *userbuf,
-+				   size_t count, loff_t *ppos)
-+{
-+	return libertas_leds_write(file, userbuf, count, ppos, 10);
-+}
-+
- #define FOPS(fread, fwrite) { \
- 	.owner = THIS_MODULE, \
- 	.open = open_file_generic, \
-@@ -1659,6 +1877,27 @@ static struct libertas_debugfs_files debugfs_regs_files[] = {
- 	{"wrrf", 0600, FOPS(NULL, libertas_wrrf_write), },
- };
- 
-+static struct libertas_debugfs_files debugfs_leds_files[] = {
-+	{"disconnected", 0644, FOPS(libertas_disconnected_read,
-+				    libertas_disconnected_write), },
-+	{"scanning", 0644, FOPS(libertas_scanning_read,
-+				libertas_scanning_write), },
-+	{"connected", 0644, FOPS(libertas_connected_read,
-+				 libertas_connected_write), },
-+	{"sleeping", 0644, FOPS(libertas_sleeping_read,
-+				libertas_sleeping_write), },
-+	{"deep_sleep", 0644, FOPS(libertas_deepsleep_read,
-+				  libertas_deepsleep_write), },
-+	{"link_lost", 0644, FOPS(libertas_linklost_read,
-+				 libertas_linklost_write), },
-+	{"disassociated", 0644, FOPS(libertas_disassociated_read,
-+				     libertas_disassociated_write), },
-+	{"transfer", 0644, FOPS(libertas_transfer_read,
-+				libertas_transfer_write), },
-+	{"idle", 0644, FOPS(libertas_idle_read,
-+			    libertas_idle_write), },
-+};
-+
- void libertas_debugfs_init(void)
- {
- 	if (!libertas_dir)
-@@ -1720,6 +1959,19 @@ void libertas_debugfs_init_one(wlan_private *priv, struct net_device *dev)
- 							     &files->fops);
- 	}
- 
-+	priv->leds_dir = debugfs_create_dir("leds", priv->debugfs_dir);
-+	if (!priv->leds_dir)
-+		goto exit;
-+
-+	for (i = 0; i < ARRAY_SIZE(debugfs_leds_files); i++) {
-+		files = &debugfs_leds_files[i];
-+		priv->debugfs_leds_files[i] = debugfs_create_file(files->name,
-+				files->perm,
-+				priv->leds_dir,
-+				priv,
-+				&files->fops);
-+	}
-+
- #ifdef PROC_DEBUG
- 	libertas_debug_init(priv, dev);
- #endif
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 404ca50..c0168de 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -129,6 +129,9 @@ struct _wlan_private {
- 	struct dentry *regs_dir;
- 	struct dentry *debugfs_regs_files[6];
- 
-+	struct dentry *leds_dir;
-+	struct dentry *debugfs_leds_files[9];
-+
- 	u32 mac_offset;
- 	u32 bbp_offset;
- 	u32 rf_offset;
--- 
-1.5.2.5
-
-
-
+Regards,
+	Chr
