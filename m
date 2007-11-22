@@ -1,205 +1,333 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52348 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753188AbXKZOVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 09:21:51 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbXKVM4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 07:56:35 -0500
+Subject: [RFC] mac80211: clean up 802.1X PAE receive handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
 	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 04/15] mac80211: adding 802.11n IEs handling
-Date: Mon, 26 Nov 2007 16:14:31 +0200
-Message-Id: <1196086490284-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_143533_667244_7EA07477)
-In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
+Date: Thu, 22 Nov 2007 11:37:27 +0100
+Message-Id: <1195727847.6323.73.camel@johannes.berg> (sfid-20071122_125657_847333_28C4C526)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch presents the ability to parse and compose HT IEs, and to put
-the IE relevant data inside the mac80211's internal HT structures
+[Stephen, bridging is involved here, please help]
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+This cleans up the 802.1X PAE and EAPOL handling. After this patch
+ * EAPOL frames addressed to us or the EAPOL group address are
+   always accepted regardless of whether they are encrypted or not
+ * other frames from a station are dropped if PAE is enabled and
+   the station is not authorized
+ * unencrypted frames (except the EAPOL frames above) are dropped if
+   drop_unencrypted is enabled
+
+This applies on top of Ron's "mac80211: restructuring data Rx handlers"
+patch from Wed, 21 Nov 2007 10:46:59 +0200. I'll respin when he does.
+
+I read some of 802.1X-2004 and 802.11-2007 to make sure I got the
+semantics right. I finally understood the difference between the "eapol"
+and "ieee802_1x" settings and got rid of the "eapol" setting :)
+
+The "crosstalk" restriction of not bridging ethertype EAPOL frames
+(incorrectly quoted in 802.11-2007 as being 802.1X-2004 C.1.1, it really
+is C.3.3, could this be fixed?) is not addressed by this patch. It will
+have to be added to the bridging code. The first point, however, limits
+crosstalk to stations that have established an authorized port. Since we
+abuse the same network interface to provide both the authorized and
+unauthorized port I think this restriction makes sense.
+
+Currently, an 802.1X implementation for wired networks would probably be
+implemented by adding/removing ports to the (vlan) bridge as necessary.
+I have not figured out how hostapd with the wired driver works yet
+though. In any case, that would have the same crosstalk problem from
+authorized ports until the bridging code implements the suggested
+dropping of EAPOL ethertype frames.
+
+I'll look into the bridging code to see what I can do about this, if I
+can implement it there the checks here are no longer necessary.
+
+This is the most consistent implementation I can come up with. It allows
+to control the virtual port properly. Mind you, the problem I mentioned
+in the other mail wrt. never setting drop_unencrypted sort of defeats
+the whole thing.
+
+Not-signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/ieee80211_i.h   |    8 +++-
- net/mac80211/ieee80211_sta.c |   89 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 94 insertions(+), 3 deletions(-)
+ net/mac80211/debugfs_netdev.c  |   27 ++++++++----------------
+ net/mac80211/ieee80211_i.h     |   22 ++++++++------------
+ net/mac80211/ieee80211_iface.c |    1 
+ net/mac80211/rx.c              |   45 +++++++++++++++++++++++++----------------
+ net/mac80211/tx.c              |    5 +---
+ 5 files changed, 48 insertions(+), 52 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9e5b3a9..9caf124 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -89,6 +89,8 @@ struct ieee80211_sta_bss {
- 	size_t rsn_ie_len;
- 	u8 *wmm_ie;
- 	size_t wmm_ie_len;
-+	u8 *ht_ie;
-+	size_t ht_ie_len;
- #define IEEE80211_MAX_SUPP_RATES 32
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 	size_t supp_rates_len;
-@@ -761,7 +763,11 @@ int ieee80211_sta_deauthenticate(struct net_device *dev, u16 reason);
- int ieee80211_sta_disassociate(struct net_device *dev, u16 reason);
- void ieee80211_erp_info_change_notify(struct net_device *dev, u8 changes);
- void ieee80211_reset_erp_info(struct net_device *dev);
--
-+int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
-+				   struct ieee80211_ht_info *ht_info);
-+int ieee80211_ht_addt_info_ie_to_ht_bss_info(
-+			struct ieee80211_ht_addt_info *ht_add_info_ie,
-+			struct ieee80211_ht_bss_info *bss_info);
- /* ieee80211_iface.c */
- int ieee80211_if_add(struct net_device *dev, const char *name,
- 		     struct net_device **new_dev, int type);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 015b3f8..2e23137 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -90,7 +90,8 @@ struct ieee802_11_elems {
- 	u8 *ext_supp_rates;
- 	u8 *wmm_info;
- 	u8 *wmm_param;
--
-+	u8 *ht_cap_elem;
-+	u8 *ht_info_elem;
- 	/* length of them, respectively */
- 	u8 ssid_len;
- 	u8 supp_rates_len;
-@@ -106,6 +107,8 @@ struct ieee802_11_elems {
- 	u8 ext_supp_rates_len;
- 	u8 wmm_info_len;
- 	u8 wmm_param_len;
-+	u8 ht_cap_elem_len;
-+	u8 ht_info_elem_len;
- };
+--- everything.orig/net/mac80211/ieee80211_i.h	2007-11-22 00:03:21.265882650 +0100
++++ everything/net/mac80211/ieee80211_i.h	2007-11-22 11:32:06.748682617 +0100
+@@ -303,11 +303,11 @@ struct ieee80211_sub_if_data {
+ 	unsigned int flags;
  
- static void ieee802_11_parse_elems(u8 *start, size_t len,
-@@ -190,6 +193,14 @@ static void ieee802_11_parse_elems(u8 *start, size_t len,
- 			elems->ext_supp_rates = pos;
- 			elems->ext_supp_rates_len = elen;
- 			break;
-+		case WLAN_EID_HT_CAPABILITY:
-+			elems->ht_cap_elem = pos;
-+			elems->ht_cap_elem_len = elen;
-+			break;
-+		case WLAN_EID_HT_EXTRA_INFO:
-+			elems->ht_info_elem = pos;
-+			elems->ht_info_elem_len = elen;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -332,6 +343,51 @@ static void ieee80211_handle_erp_ie(struct net_device *dev, u8 erp_value)
- 		ieee80211_erp_info_change_notify(dev, changes);
+ 	int drop_unencrypted;
+-	int eapol; /* 0 = process EAPOL frames as normal data frames,
+-		    * 1 = send EAPOL frames through wlan#ap to hostapd
+-		    *     (default) */
+-	int ieee802_1x; /* IEEE 802.1X PAE - drop packet to/from unauthorized
+-			 * port */
++	/*
++	 * IEEE 802.1X Port access control in effect,
++	 * drop packets to/from unauthorized port
++	 */
++	int ieee802_1x_pac;
+ 
+ 	u16 sequence;
+ 
+@@ -336,8 +336,7 @@ struct ieee80211_sub_if_data {
+ 		struct {
+ 			struct dentry *channel_use;
+ 			struct dentry *drop_unencrypted;
+-			struct dentry *eapol;
+-			struct dentry *ieee8021_x;
++			struct dentry *ieee802_1x_pac;
+ 			struct dentry *state;
+ 			struct dentry *bssid;
+ 			struct dentry *prev_bssid;
+@@ -356,8 +355,7 @@ struct ieee80211_sub_if_data {
+ 		struct {
+ 			struct dentry *channel_use;
+ 			struct dentry *drop_unencrypted;
+-			struct dentry *eapol;
+-			struct dentry *ieee8021_x;
++			struct dentry *ieee802_1x_pac;
+ 			struct dentry *num_sta_ps;
+ 			struct dentry *dtim_period;
+ 			struct dentry *dtim_count;
+@@ -371,15 +369,13 @@ struct ieee80211_sub_if_data {
+ 		struct {
+ 			struct dentry *channel_use;
+ 			struct dentry *drop_unencrypted;
+-			struct dentry *eapol;
+-			struct dentry *ieee8021_x;
++			struct dentry *ieee802_1x_pac;
+ 			struct dentry *peer;
+ 		} wds;
+ 		struct {
+ 			struct dentry *channel_use;
+ 			struct dentry *drop_unencrypted;
+-			struct dentry *eapol;
+-			struct dentry *ieee8021_x;
++			struct dentry *ieee802_1x_pac;
+ 		} vlan;
+ 		struct {
+ 			struct dentry *mode;
+--- everything.orig/net/mac80211/rx.c	2007-11-22 00:03:21.265882650 +0100
++++ everything/net/mac80211/rx.c	2007-11-22 11:34:59.788680881 +0100
+@@ -957,18 +957,10 @@ ieee80211_rx_h_remove_qos_control(struct
  }
  
-+int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
-+				   struct ieee80211_ht_info *ht_info)
-+{
-+
-+	if (ht_info == NULL)
-+		return -EINVAL;
-+
-+	memset(ht_info, 0, sizeof(*ht_info));
-+
-+	if (ht_cap_ie) {
-+		u8 ampdu_info = ht_cap_ie->ampdu_params_info;
-+
-+		ht_info->ht_supported = 1;
-+		ht_info->cap = le16_to_cpu(ht_cap_ie->cap_info);
-+		ht_info->ampdu_factor =
-+			ampdu_info & IEEE80211_HT_CAP_AMPDU_FACTOR;
-+		ht_info->ampdu_density =
-+			(ampdu_info & IEEE80211_HT_CAP_AMPDU_DENSITY) >> 2;
-+		memcpy(ht_info->supp_mcs_set, ht_cap_ie->supp_mcs_set, 16);
-+	} else
-+		ht_info->ht_supported = 0;
-+
-+	return 0;
-+}
-+
-+int ieee80211_ht_addt_info_ie_to_ht_bss_info(
-+			struct ieee80211_ht_addt_info *ht_add_info_ie,
-+			struct ieee80211_ht_bss_info *bss_info)
-+{
-+	if (bss_info == NULL)
-+		return -EINVAL;
-+
-+	memset(bss_info, 0, sizeof(*bss_info));
-+
-+	if (ht_add_info_ie) {
-+		u16 op_mode;
-+		op_mode = le16_to_cpu(ht_add_info_ie->operation_mode);
-+
-+		bss_info->primary_channel = ht_add_info_ie->control_chan;
-+		bss_info->bss_cap = ht_add_info_ie->ht_param;
-+		bss_info->bss_op_mode = (u8)(op_mode & 0xff);
-+	}
-+
-+	return 0;
-+}
- 
- static void ieee80211_sta_send_associnfo(struct net_device *dev,
- 					 struct ieee80211_if_sta *ifsta)
-@@ -630,6 +686,19 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		*pos++ = 1; /* WME ver */
- 		*pos++ = 0;
- 	}
-+	/* wmm support is a must to HT */
-+	if (wmm && mode->ht_info.ht_supported) {
-+		__le16 tmp = cpu_to_le16(mode->ht_info.cap);
-+		pos = skb_put(skb, sizeof(struct ieee80211_ht_cap)+2);
-+		*pos++ = WLAN_EID_HT_CAPABILITY;
-+		*pos++ = sizeof(struct ieee80211_ht_cap);
-+		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+		memcpy(pos, &tmp, sizeof(u16));
-+		pos += sizeof(u16);
-+		*pos++ = (mode->ht_info.ampdu_factor |
-+				(mode->ht_info.ampdu_density << 2));
-+		memcpy(pos, mode->ht_info.supp_mcs_set, 16);
-+	}
- 
- 	kfree(ifsta->assocreq_ies);
- 	ifsta->assocreq_ies_len = (skb->data + skb->len) - ies;
-@@ -1384,6 +1453,7 @@ static void ieee80211_rx_bss_free(struct ieee80211_sta_bss *bss)
- 	kfree(bss->wpa_ie);
- 	kfree(bss->rsn_ie);
- 	kfree(bss->wmm_ie);
-+	kfree(bss->ht_ie);
- 	kfree(bss);
+ static int
+-ieee80211_drop_802_1x_pae(struct ieee80211_txrx_data *rx, int hdrlen)
++ieee80211_802_1x_port_control(struct ieee80211_txrx_data *rx)
+ {
+-	if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb, hdrlen) &&
+-	    rx->sdata->type != IEEE80211_IF_TYPE_STA &&
+-	    (rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
+-		return 0;
+-
+-	if (unlikely(rx->sdata->ieee802_1x &&
+-		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+-		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
+-		     (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED)) &&
+-		     !ieee80211_is_eapol(rx->skb, hdrlen))) {
++	if (unlikely(rx->sdata->ieee802_1x_pac &&
++		     (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED)))) {
+ #ifdef CONFIG_MAC80211_DEBUG
+ 		printk(KERN_DEBUG "%s: dropped frame "
+ 		       "(unauthorized port)\n", rx->dev->name);
+@@ -980,7 +972,7 @@ ieee80211_drop_802_1x_pae(struct ieee802
  }
  
-@@ -1631,7 +1701,22 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 		bss->wmm_ie = NULL;
- 		bss->wmm_ie_len = 0;
- 	}
--
-+	if (elems.ht_cap_elem &&
-+	    (!bss->ht_ie || bss->ht_ie_len != elems.ht_cap_elem_len ||
-+	     memcmp(bss->ht_ie, elems.ht_cap_elem, elems.ht_cap_elem_len))) {
-+		kfree(bss->ht_ie);
-+		bss->ht_ie = kmalloc(elems.ht_cap_elem_len + 2, GFP_ATOMIC);
-+		if (bss->ht_ie) {
-+			memcpy(bss->ht_ie, elems.ht_cap_elem - 2,
-+			       elems.ht_cap_elem_len + 2);
-+			bss->ht_ie_len = elems.ht_cap_elem_len + 2;
-+		} else
-+			bss->ht_ie_len = 0;
-+	} else if (!elems.ht_cap_elem && bss->ht_ie) {
-+		kfree(bss->ht_ie);
-+		bss->ht_ie = NULL;
-+		bss->ht_ie_len = 0;
-+	}
+ static int
+-ieee80211_drop_unencrypted(struct ieee80211_txrx_data *rx, int hdrlen)
++ieee80211_drop_unencrypted(struct ieee80211_txrx_data *rx)
+ {
+ 	/*
+ 	 * Pass through unencrypted frames if the hardware has
+@@ -993,9 +985,7 @@ ieee80211_drop_unencrypted(struct ieee80
+ 	if (unlikely(!(rx->fc & IEEE80211_FCTL_PROTECTED) &&
+ 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+ 		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
+-		     rx->sdata->drop_unencrypted &&
+-		     (!rx->sdata->eapol ||
+-		      !ieee80211_is_eapol(rx->skb, hdrlen)))) {
++		     rx->sdata->drop_unencrypted)) {
+ 		if (net_ratelimit())
+ 			printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
+ 			       "encryption\n", rx->dev->name);
+@@ -1133,6 +1123,28 @@ ieee80211_data_to_8023(struct ieee80211_
+ 	return 0;
+ }
  
- 	bss->hw_mode = rx_status->phymode;
- 	bss->freq = rx_status->freq;
--- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
++static bool ieee80211_frame_allowed(struct ieee80211_txrx_data *rx)
++{
++	static const u8 pae_group_addr[ETH_ALEN]
++		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
++	struct ethhdr *ehdr = (struct ethhdr *)rx->skb->data;
++
++	/*
++	 * We always allow EAPOL frames that are addressed to us or the
++	 * PAE group address. Such frames will not be bridged.
++	 */
++	if (ieee80211_is_eapol(rx->skb, sizeof(struct ethhdr)) &&
++	    (compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0 ||
++	     compare_ether_addr(ehdr->h_dest, rx->dev->dev_addr) == 0))
++		return true;
++
++	if (ieee80211_802_1x_port_control(rx) ||
++	    ieee80211_drop_unencrypted(rx))
++		return false;
++
++	return true;
++}
++
+ static ieee80211_txrx_result
+ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+ {
+@@ -1151,8 +1163,7 @@ ieee80211_rx_h_data(struct ieee80211_txr
+ 	if (unlikely(err))
+ 		return TXRX_DROP;
+ 
+-	if ((ieee80211_drop_802_1x_pae(rx, sizeof(struct ethhdr))) ||
+-	    (ieee80211_drop_unencrypted(rx, sizeof(struct ethhdr))))
++	if (!ieee80211_frame_allowed(rx))
+ 		return TXRX_DROP;
+ 
+ 	skb = rx->skb;
+--- everything.orig/net/mac80211/debugfs_netdev.c	2007-11-21 23:29:58.585858560 +0100
++++ everything/net/mac80211/debugfs_netdev.c	2007-11-22 11:32:06.618682455 +0100
+@@ -91,8 +91,7 @@ static const struct file_operations name
+ /* common attributes */
+ IEEE80211_IF_FILE(channel_use, channel_use, DEC);
+ IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
+-IEEE80211_IF_FILE(eapol, eapol, DEC);
+-IEEE80211_IF_FILE(ieee8021_x, ieee802_1x, DEC);
++IEEE80211_IF_FILE(ieee802_1x_pac, ieee802_1x_pac, DEC);
+ 
+ /* STA/IBSS attributes */
+ IEEE80211_IF_FILE(state, u.sta.state, DEC);
+@@ -170,8 +169,7 @@ static void add_sta_files(struct ieee802
+ {
+ 	DEBUGFS_ADD(channel_use, sta);
+ 	DEBUGFS_ADD(drop_unencrypted, sta);
+-	DEBUGFS_ADD(eapol, sta);
+-	DEBUGFS_ADD(ieee8021_x, sta);
++	DEBUGFS_ADD(ieee802_1x_pac, sta);
+ 	DEBUGFS_ADD(state, sta);
+ 	DEBUGFS_ADD(bssid, sta);
+ 	DEBUGFS_ADD(prev_bssid, sta);
+@@ -192,8 +190,7 @@ static void add_ap_files(struct ieee8021
+ {
+ 	DEBUGFS_ADD(channel_use, ap);
+ 	DEBUGFS_ADD(drop_unencrypted, ap);
+-	DEBUGFS_ADD(eapol, ap);
+-	DEBUGFS_ADD(ieee8021_x, ap);
++	DEBUGFS_ADD(ieee802_1x_pac, ap);
+ 	DEBUGFS_ADD(num_sta_ps, ap);
+ 	DEBUGFS_ADD(dtim_period, ap);
+ 	DEBUGFS_ADD(dtim_count, ap);
+@@ -209,8 +206,7 @@ static void add_wds_files(struct ieee802
+ {
+ 	DEBUGFS_ADD(channel_use, wds);
+ 	DEBUGFS_ADD(drop_unencrypted, wds);
+-	DEBUGFS_ADD(eapol, wds);
+-	DEBUGFS_ADD(ieee8021_x, wds);
++	DEBUGFS_ADD(ieee802_1x_pac, wds);
+ 	DEBUGFS_ADD(peer, wds);
+ }
+ 
+@@ -218,8 +214,7 @@ static void add_vlan_files(struct ieee80
+ {
+ 	DEBUGFS_ADD(channel_use, vlan);
+ 	DEBUGFS_ADD(drop_unencrypted, vlan);
+-	DEBUGFS_ADD(eapol, vlan);
+-	DEBUGFS_ADD(ieee8021_x, vlan);
++	DEBUGFS_ADD(ieee802_1x_pac, vlan);
+ }
+ 
+ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+@@ -263,8 +258,7 @@ static void del_sta_files(struct ieee802
+ {
+ 	DEBUGFS_DEL(channel_use, sta);
+ 	DEBUGFS_DEL(drop_unencrypted, sta);
+-	DEBUGFS_DEL(eapol, sta);
+-	DEBUGFS_DEL(ieee8021_x, sta);
++	DEBUGFS_DEL(ieee802_1x_pac, sta);
+ 	DEBUGFS_DEL(state, sta);
+ 	DEBUGFS_DEL(bssid, sta);
+ 	DEBUGFS_DEL(prev_bssid, sta);
+@@ -285,8 +279,7 @@ static void del_ap_files(struct ieee8021
+ {
+ 	DEBUGFS_DEL(channel_use, ap);
+ 	DEBUGFS_DEL(drop_unencrypted, ap);
+-	DEBUGFS_DEL(eapol, ap);
+-	DEBUGFS_DEL(ieee8021_x, ap);
++	DEBUGFS_DEL(ieee802_1x_pac, ap);
+ 	DEBUGFS_DEL(num_sta_ps, ap);
+ 	DEBUGFS_DEL(dtim_period, ap);
+ 	DEBUGFS_DEL(dtim_count, ap);
+@@ -302,8 +295,7 @@ static void del_wds_files(struct ieee802
+ {
+ 	DEBUGFS_DEL(channel_use, wds);
+ 	DEBUGFS_DEL(drop_unencrypted, wds);
+-	DEBUGFS_DEL(eapol, wds);
+-	DEBUGFS_DEL(ieee8021_x, wds);
++	DEBUGFS_DEL(ieee802_1x_pac, wds);
+ 	DEBUGFS_DEL(peer, wds);
+ }
+ 
+@@ -311,8 +303,7 @@ static void del_vlan_files(struct ieee80
+ {
+ 	DEBUGFS_DEL(channel_use, vlan);
+ 	DEBUGFS_DEL(drop_unencrypted, vlan);
+-	DEBUGFS_DEL(eapol, vlan);
+-	DEBUGFS_DEL(ieee8021_x, vlan);
++	DEBUGFS_DEL(ieee802_1x_pac, vlan);
+ }
+ 
+ static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
+--- everything.orig/net/mac80211/ieee80211_iface.c	2007-11-21 23:29:58.715859428 +0100
++++ everything/net/mac80211/ieee80211_iface.c	2007-11-22 11:31:02.288685709 +0100
+@@ -22,7 +22,6 @@ void ieee80211_if_sdata_init(struct ieee
+ 
+ 	/* Default values for sub-interface parameters */
+ 	sdata->drop_unencrypted = 0;
+-	sdata->eapol = 1;
+ 	for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++)
+ 		skb_queue_head_init(&sdata->fragments[i].skb_list);
+ 
+--- everything.orig/net/mac80211/tx.c	2007-11-22 00:03:21.275867025 +0100
++++ everything/net/mac80211/tx.c	2007-11-22 11:32:07.188682128 +0100
+@@ -261,7 +261,7 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 		return TXRX_CONTINUE;
+ 	}
+ 
+-	if (unlikely(/* !injected && */ tx->sdata->ieee802_1x &&
++	if (unlikely(/* !injected && */ tx->sdata->ieee802_1x_pac &&
+ 		     !(sta_flags & WLAN_STA_AUTHORIZED))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		DECLARE_MAC_BUF(mac);
+@@ -449,8 +449,7 @@ ieee80211_tx_h_select_key(struct ieee802
+ 	else if ((key = rcu_dereference(tx->sdata->default_key)))
+ 		tx->key = key;
+ 	else if (tx->sdata->drop_unencrypted &&
+-		 !(tx->sdata->eapol &&
+-		   ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc)))) {
++		 !ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc))) {
+ 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
+ 		return TXRX_DROP;
+ 	} else {
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+
