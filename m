@@ -1,121 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754627AbXKWUeJ (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:3848 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbXKVPFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 15:34:09 -0500
-Subject: Re: [PATCH 2.6.24] zd1211rw: fix unaligned memory accesses
-	comparing MAC addresses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, shaddy_baddah@hotmail.com, kune@deine-taler.de
-In-Reply-To: <20071123001428.03A199D4A1F@zog.reactivated.net> (sfid-20071123_001438_811073_6683A41B)
-References: <20071123001428.03A199D4A1F@zog.reactivated.net>
-	 (sfid-20071123_001438_811073_6683A41B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AQQCfAB7KxGqNqwXfi0u"
-Date: Fri, 23 Nov 2007 21:34:01 +0100
-Message-Id: <1195850041.4149.167.camel@johannes.berg> (sfid-20071123_203414_590150_A4D41F84)
-Mime-Version: 1.0
+	Thu, 22 Nov 2007 10:05:32 -0500
+Received: from lin01.mn-solutions.de (pD95F8740.dip0.t-ipconnect.de [217.95.135.64])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id EEDF25E40F5
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:05:28 +0100 (CET)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 766F01E00FD
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:02:32 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 regression: doesn't associate automatically
+Date: Thu, 22 Nov 2007 16:05:55 +0100
+References: <200711220912.10452.hs4233@mail.mn-solutions.de> <200711221514.37906.hs4233@mail.mn-solutions.de> <1195742483.4149.6.camel@johannes.berg>
+In-Reply-To: <1195742483.4149.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711221605.55506.hs4233@mail.mn-solutions.de> (sfid-20071122_150536_458314_211D8F87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > And this bit of info might be ESSID, wep key, wpa key, on
+> > some drivers even rate or b/g limitations.
+>
+> Which is crap.
 
---=-AQQCfAB7KxGqNqwXfi0u
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Crap or not, this is the way it used to work.
 
+If mac80211 would have ditched wext and would be using nl80211, I 
+wouldn't object. But it claims to be wext-compatible, but it 
+isn't.
 
-On Fri, 2007-11-23 at 00:14 +0000, Daniel Drake wrote:
-> Shaddy Baddah reported some unaligned accesses with the zd1211rw driver.
-> David Miller found an issue with comparison of ethernet addresses, and I
-> found a few others on top of that. This patch should remove most/all of t=
-he
-> unaligned accesses.
+> Actually, all of these drivers misbehave because they allow
+> you to associate to a network that has encryption enabled even
+> if you haven't set a key!
 
-Why are these unaligned to start with?
+Wrong.
 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
->=20
-> ---
->=20
-> A different patch will follow for 2.6.25 soon, probably using
-> compare_ether_addr_unaligned() if David accepts that patch.
->=20
-> Index: linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.24-rc3-git1.orig/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -974,14 +974,14 @@ static int is_data_packet_for_us(struct=20
->  	switch (ieee->iw_mode) {
->  	case IW_MODE_ADHOC:
->  		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) !=3D 0 ||
-> -		    compare_ether_addr(hdr->addr3, ieee->bssid) !=3D 0)
-> +		    memcmp(hdr->addr3, ieee->bssid, ETH_ALEN) !=3D 0)
->  			return 0;
->  		break;
->  	case IW_MODE_AUTO:
->  	case IW_MODE_INFRA:
->  		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) !=3D
->  		    IEEE80211_FCTL_FROMDS ||
-> -		    compare_ether_addr(hdr->addr2, ieee->bssid) !=3D 0)
-> +		    memcmp(hdr->addr2, ieee->bssid, ETH_ALEN) !=3D 0)
->  			return 0;
->  		break;
->  	default:
-> @@ -989,9 +989,9 @@ static int is_data_packet_for_us(struct=20
->  		return 0;
->  	}
-> =20
-> -	return compare_ether_addr(hdr->addr1, netdev->dev_addr) =3D=3D 0 ||
-> +	return memcmp(hdr->addr1, netdev->dev_addr, ETH_ALEN) =3D=3D 0 ||
->  	       (is_multicast_ether_addr(hdr->addr1) &&
-> -		compare_ether_addr(hdr->addr3, netdev->dev_addr) !=3D 0) ||
-> +		memcmp(hdr->addr3, netdev->dev_addr, ETH_ALEN) !=3D 0) ||
->  	       (netdev->flags & IFF_PROMISC);
->  }
-> =20
-> @@ -1047,7 +1047,7 @@ static void update_qual_rssi(struct zd_m
->  	hdr =3D (struct ieee80211_hdr_3addr *)buffer;
->  	if (length < offsetof(struct ieee80211_hdr_3addr, addr3))
->  		return;
-> -	if (compare_ether_addr(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid) !=
-=3D 0)
-> +	if (memcmp(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid, ETH_ALEN) !=3D =
-0)
->  		return;
-> =20
->  	spin_lock_irqsave(&mac->lock, flags);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+I'm not aware (from those 6) that behaves that way. When I just 
+enter "iwconfig eth1 essid MUMBLEFUTZ", no key, and then look 
+at "iwconfig eth1", then I don't see a MAC address of the AP.
 
---=-AQQCfAB7KxGqNqwXfi0u
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+For me this is clearly a sign that they don't behave as you 
+claimed.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> > It's the behavior of mac80211 with wext-compatibilty layer
+> > that behaves unusually or out-of-the-order.
+>
+> Again, you're operating on the premise that what some drivers
+> do defines wext. That's thankfully untrue and since wext
+> doesn't define behaviour, the mac80211 behaviour is well in
+> line.
 
-iQIVAwUAR0c5N6Vg1VMiehFYAQJ/gQ//WlYhDOoRNHQqje5H7U79fsW3fdmYQOXr
-UebDnpTmAfLHK5yasjEXRj59/Eju/kQKXfvpta3gahIO3F6UF3os9TfJtPBViVIc
-QVhWNueTGcY/7rWKokjWMAaZb3X/Crhg916odYWfANdceYkgfPeM6lrtNb8/dYtF
-G25QQl6YSYP3secs48yFgUV4HmXATMLxGITD1DMmdLQq2pn/ljO7EBgpg+EiGCUR
-e6v2v37C29V2ngBFI83bZGZw0BwRJo3Z1XeW7rlLqdCy5phR+9V0P78NG/1cKYj4
-1TknOILizbNETMPZArAy/cSaPrlhqbZ3+56YX8FUP0yxvNK8/J1TEQiKUMAQZFMX
-wWosX8NYsskyYRBaedbNHZIqakaUHFWMi9BToFL1GuaciOwRlLEWCQmpE52VAPNQ
-q9znddhYWRKuKL9f42nyESDlmyA3GwpzbiPza24UPVw5lf4jMHX+4Jtttku3wUwI
-Sad/Z4PrnBzYq9tf4vDu1xxjCYm5NMImX5B8hNtDH0BZ23hu3jYrGUsqs7AYA73z
-UXPSB89L2KRbWSohARM0dNWOi9WeLpcXHgeJC3aLoe5o8RVTqH4Im00dISCkrKyR
-kX1RlblNG/QOOxMwoV73KQyXAje/KbmxlidFPoG5ecYHFmzQCtjvBUF4EEyuaxf1
-b33djMt/E54=
-=uT5i
------END PGP SIGNATURE-----
+Wrong.
 
---=-AQQCfAB7KxGqNqwXfi0u--
+Not "some", but "many" drivers did this, not some. I think 
+orinoco_cs were used a lot in older days. And madwifi still 
+get's used a lot.
 
+Also I have never said that anything is defined here, or please 
+show me the sentence where I wrote this. I just wrote that 
+implicitly a number of drivers behave the way.
+
+Face it or not, not everything in life is defined. Nowhere is 
+defined how bees behave, and yet they behave in uniform, 
+somewhat predicatable ways. So please stop this discussion about 
+defined or not defined. mac80211 behaves out-of-the-order 
+compared to older drivers. No matter if this behavior was 
+formally defined or not.
