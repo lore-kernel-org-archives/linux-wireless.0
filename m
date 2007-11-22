@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9062 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:57464 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288AbXKLBPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2007 20:15:09 -0500
-Subject: Re: [PATCH] iwlwifi: Remove unnecessary code in iwl3945 and
-	iwl4965 drivers
+	id S1751741AbXKVDLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 22:11:49 -0500
+Subject: Re: [PATCH] mac80211: free ifsta->extra_ie in ieee80211_stop
 From: Zhu Yi <yi.zhu@intel.com>
-To: Miguel =?ISO-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>,
-	"John W.Linville" <linville@tuxdriver.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200711102049.32921.mboton.lkml@gmail.com>
-References: <200711102049.32921.mboton.lkml@gmail.com>
-Content-Type: text/plain; charset=GB2312
-Date: Mon, 12 Nov 2007 09:08:10 +0800
-Message-Id: <1194829690.31574.70.camel@debian.sh.intel.com> (sfid-20071112_011518_781873_0ACCB2C2)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1195658389.12000.26.camel@johannes.berg>
+References: <11955417361539-git-send-email-yi.zhu@intel.com>
+	 <1195565876.10920.29.camel@johannes.berg>
+	 <1195615039.3250.453.camel@debian.sh.intel.com>
+	 <1195658389.12000.26.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 22 Nov 2007 11:10:22 +0800
+Message-Id: <1195701022.3250.496.camel@debian.sh.intel.com> (sfid-20071122_031152_140039_0A114350)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Sat, 2007-11-10 at 20:49 +0100, Miguel Bot=A8=AEn wrote:
-> Remove unnecesary code in iwl3945 and iwl4965 drivers.
->=20
-> "final_mode" variable is already initialized with the value of the
-> "mode" variable.
->=20
-> Signed-off-by: Miguel Boton <mboton@gmail.com>
+On Wed, 2007-11-21 at 16:19 +0100, Johannes Berg wrote:
+> Yeah. Can you amend the patch to also clear the
+> IEEE80211_STA_PRIVACY_INVOKED flag?
 
-ACK. Or you can do "u32 uninitialized_var(final_mode);". Both are OK
-with me.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
 
-Thanks,
--yi
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 59350b8..69daf0a 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -357,6 +357,11 @@ static int ieee80211_stop(struct net_device *dev)
+ 			cancel_delayed_work(&local->scan_work);
+ 		}
+ 		flush_workqueue(local->hw.workqueue);
++
++		sdata->u.sta.flags &= ~IEEE80211_STA_PRIVACY_INVOKED;
++		kfree(sdata->u.sta.extra_ie);
++		sdata->u.sta.extra_ie = NULL;
++		sdata->u.sta.extra_ie_len = 0;
+ 		/* fall through */
+ 	default:
+ 		conf.if_id = dev->ifindex;
