@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:47091 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752387AbXKXUND (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:21016 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbXKVPml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 15:13:03 -0500
-Message-ID: <4748855C.5090103@linux-foundation.org> (sfid-20071124_201316_570733_C456DE58)
-Date: Sat, 24 Nov 2007 12:11:08 -0800
-From: Stephen Hemminger <shemminger@linux-foundation.org>
+	Thu, 22 Nov 2007 10:42:41 -0500
+Received: from lin01.mn-solutions.de (pD95F8740.dip0.t-ipconnect.de [217.95.135.64])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id DD5725E4007
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:42:39 +0100 (CET)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 35D841E00FD
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 16:39:45 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 regression: doesn't associate automatically
+Date: Thu, 22 Nov 2007 16:43:08 +0100
+References: <200711220912.10452.hs4233@mail.mn-solutions.de> <200711221605.55506.hs4233@mail.mn-solutions.de> <1195744414.4149.14.camel@johannes.berg>
+In-Reply-To: <1195744414.4149.14.camel@johannes.berg>
 MIME-Version: 1.0
-To: Herbert Xu <herbert@gondor.apana.org.au>
-CC: Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au>
-In-Reply-To: <20071124141319.GA27819@gondor.apana.org.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711221643.08290.hs4233@mail.mn-solutions.de> (sfid-20071122_154243_462130_9C146902)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herbert Xu wrote:
-> On Sat, Nov 24, 2007 at 02:49:36PM +0100, Johannes Berg wrote:
->   
->> Right. I just didn't think that would be a valid value for an
->> architecture to set.
->>     
->
-> OK.  Let me clarify this a bit more.  We require at least one
-> of the following rules to be met:
->
-> * the IPv4/IPv6 header is aligned by 8 bytes on reception;
-> * or the platform provides unaligned exception handlers.
->
-> So if your platform violates both rules then it won't work with
-> the IP stack, simple as that.  Fortunately I don't think such a
-> platform exists currently on Linux.
->
-> Cheers,
->   
+> Bottom line is, I don't care.
 
-Then what about hardware that can't dma ethernet to non-aligned address.
-Sky2 hardware breaks if DMA is not 8 byte aligned.  IMHO the IP stack should
-handle any alignment, and do the appropriate memove if the CPU requires 
-alignment.
+So much I figured out by myself.
+
+
+Maybe you can show me a non-mac80211 driver that behaves in the 
+same way as mac80211?  In other words, a driver where you can do
+
+ifconfig eth1 up
+iwconfig eth1 essid SOMESSID
+iwconfig eth1 key s:11111
+
+and where, as in mac80211, you don't get an association (assuming 
+that the AP is set up accordingly). If you can show me 5 
+drivers, than I'm willing to assume that there is no regression.
+
+
+So far I haven't seen one non-mac80211 driver that did not 
+associate with this sequence.
