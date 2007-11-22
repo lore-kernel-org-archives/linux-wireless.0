@@ -1,102 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:49878 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbXKNSCH (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:17416 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbXKVILq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 13:02:07 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1IsMYw-0005hI-TX
-	for linux-wireless@vger.kernel.org; Wed, 14 Nov 2007 13:02:07 -0500
-Subject: Re: Linux wireless compatibility package for kernels >= 2.6.22
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com>
-References: <43e72e890711101953w6e046b82j6b9087d30c8195b2@mail.gmail.com>
-	 <1194841658.2276.8.camel@dv>
-	 <43e72e890711131510v2189669di962214c46a2e96de@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 14 Nov 2007 13:02:04 -0500
-Message-Id: <1195063324.1739.9.camel@dv> (sfid-20071114_180214_053293_6FBE220C)
-Mime-Version: 1.0
+	Thu, 22 Nov 2007 03:11:46 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 regression: doesn't associate automatically
+Date: Thu, 22 Nov 2007 09:12:10 +0100
+Cc: bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711220912.10452.hs4233@mail.mn-solutions.de> (sfid-20071122_081201_818890_5F650412)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Luis!
+I'm on wireless-2.6, branch everything, git commit
+7446b6c0e3b18fd2c5f9c406bb20841e6193d058
 
-On Tue, 2007-11-13 at 18:10 -0500, Luis R. Rodriguez wrote:
-
-> I ran into to this but I had fixed it in compat.diff. Anyway, this
-> won't be necessary anymore as the directories match the kernel's now.
-
-OK, that's much better now.
-
-> > After some hack to make it compile, I still get:
-> >
-> >   CC [M]  /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.o
-> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:6: warning:
-> > "LINUX_VERSION_CODE" is not defined
-> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:28:
-> > warning: "KERNEL_VERSION" is not defined
-> > /home/proski/src/compat-wireless-2.6/mac80211/ieee80211.c:24:42: error:
-> > missing binary operator before token "("
-> 
-> I'm not sure what happened here as <linux/version.h> should have been
-> included in mac80211.h. Anyway, to be sure we won't run into these
-> I've added <net/compat.h> to <net/cfg80211.h> which much of the
-> wireless subsystem uses.
-
-This problem is still there.  I think the best approach would be to
-"force-feed" compat.h to the compiler.  It already includes
-linux/version.h, but since it's the first header, it needs
-linux/autoconf.h.
-
-The following patch works for me.  The compat.diff patch can be cleaned
-up, but it's a separate issue.
+When I insert a b43 based card, I don't get associated
+automatically. This happens:
 
 
-Force inclusion of compat.h first.
+$ # Insert the card
+pccard: CardBus card inserted into slot 0
+PCI: Enabling device 0000:03:00.0 (0000 -> 0002)
+ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKC] -> GSI 11 (level, low) -> IRQ 11
+PCI: Setting latency timer of device 0000:03:00.0 to 64
+ssb: SPROM revision 1 detected.
+ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
+b43-phy0: Broadcom 4306 WLAN found
+b43-phy0 debug: Found PHY: Analog 2, Type 2, Revision 2
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+phy0: Selected rate control algorithm 'simple'
 
-Include linux/autoconf.h before other headers.
+$ ifconfig eth1 up
+b43-phy0 debug: Loading firmware version 351.126 (2006-07-29 05:54:02)
+b43-phy0 debug: Chip initialized
+b43-phy0 debug: 30-bit DMA initialized
+b43-phy0 debug: Wireless interface started
+b43-phy0 debug: Adding Interface type 2
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+$ iwconfig eth1 essid BLAHMUMPF
+HW CONFIG: channel=1 freq=2412 phymode=2
+HW CONFIG: channel=2 freq=2417 phymode=2
+HW CONFIG: channel=3 freq=2422 phymode=2
+HW CONFIG: channel=4 freq=2427 phymode=2
+HW CONFIG: channel=5 freq=2432 phymode=2
+HW CONFIG: channel=6 freq=2437 phymode=2
+HW CONFIG: channel=7 freq=2442 phymode=2
+HW CONFIG: channel=8 freq=2447 phymode=2
+HW CONFIG: channel=9 freq=2452 phymode=2
+HW CONFIG: channel=10 freq=2457 phymode=2
+HW CONFIG: channel=11 freq=2462 phymode=2
+HW CONFIG: channel=1 freq=2412 phymode=2
 
- Makefile        |    2 +-
- compat/compat.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+$ iwconfig eth1 key s:11111
+b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: ff:ff:ff:ff:ff:ff
 
+$ iwconfig eth1
+eth1      IEEE 802.11g  ESSID:"BLAHMUMPF"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+          Tx-Power=27 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+          Encryption key:3131-3131-31
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-diff --git a/Makefile b/Makefile
-index af1e02f..f1c39a9 100644
---- a/Makefile
-+++ b/Makefile
-@@ -13,7 +13,7 @@ ifneq ($(KERNELRELEASE),)
- -include $(src)/config.mk
- 
- # This is a hack! But hey.. it works, got any better ideas, send a patch ;)
--NOSTDINC_FLAGS := -I$(PWD)/include/ $(CFLAGS)
-+NOSTDINC_FLAGS := -I$(PWD)/include/ -include $(M)/compat/compat.h $(CFLAGS)
- 
- obj-y := net/wireless/ net/mac80211/  \
- 	drivers/net/wireless/ath5k/ \
-diff --git a/compat/compat.h b/compat/compat.h
-index 6ae32ef..05995f2 100644
---- a/compat/compat.h
-+++ b/compat/compat.h
-@@ -1,6 +1,7 @@
- #ifndef LINUX_26_COMPAT_H
- #define LINUX_26_COMPAT_H
- 
-+#include <linux/autoconf.h>
- #include <linux/kernel.h>
- #include <linux/netdevice.h>
- #include <linux/genetlink.h>
+As you can see, I'm not associated. However, this sequence used
+to work with non-mac80211 based WLAN drivers. However, I can actually
+associate if I reverse the essid/key, e.g. first set the key, then
+the ssid.
 
 
--- 
-Regards,
-Pavel Roskin
+Note that the same happens if I let Debian manage the card. An excerpt
+from my /etc/network/interfaces shows:
 
+allow-hotplug eth1
+iface eth1 inet static
+        address 10.2.1.3
+        netmask 255.255.255.0
+        wireless-essid BLAHMUMPF
+        wireless-key1 s:11111
+
+(the test above has been made completely manually, without this entry)
