@@ -1,215 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:48280 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750890AbXKSSpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 13:45:21 -0500
-Date: Mon, 19 Nov 2007 19:44:14 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [PATCH v2] remove bcm43xx
-Message-ID: <20071119194414.1f2f13e2@morte> (sfid-20071119_184525_807288_B3A78C05)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from py-out-1112.google.com ([64.233.166.183]:15347 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753381AbXKVBDD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 20:03:03 -0500
+Received: by py-out-1112.google.com with SMTP id u77so7575384pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2007 17:03:02 -0800 (PST)
+Message-ID: <43e72e890711211703p799a18f0qc8636f27cf17bb91@mail.gmail.com> (sfid-20071122_010310_819939_757016F4)
+Date: Wed, 21 Nov 2007 20:03:01 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jan Willies" <jan@willies.info>
+Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
+Cc: jean-baptiste.note@m4x.org, developers@islsm.org,
+	linux-wireless@vger.kernel.org, "Kyle McMartin" <kyle@mcmartin.ca>
+In-Reply-To: <466341AF.7050505@willies.info>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <46631BD2.20704@willies.info>
+	 <3871229b0706031323w5c8e3589r973b8735ed3e1f85@mail.gmail.com>
+	 <466341AF.7050505@willies.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove bcm43xx.
+On Jun 3, 2007 5:33 PM, Jan Willies <jan@willies.info> wrote:
+> Jean-Baptiste Note schrieb:
+> > Hi,
+> >
+> > Any chance you could decode the oops ? If you're recompiling the
+> > kernel yourself, include symbols (can't remember the option name), or
+> > run ksymoops...
+>
+> I recompiled the kernel with KALLSYMS and got this:
+>
+> root@OpenWrt:/# iwconfig
+> lo        no wireless extensions.
+>
+> ethData bus error, epc == c007e16c, ra == c007d6c0
+> Oops[#1]:
+> Cpu 0
+> $ 0   : 00000000 1000b800 abad0000 00000032
+> $ 4   : 00000001 c0068000 00000013 00000001
+> $ 8   : 00000004 800feb8c 00000000 00000000
+> $12   : 00000000 00000000 8124ca40 00000000
+> $16   : 812a7800 000000fa 81361320 81361000
+> $20   : 00000010 00000000 a1cc0000 00000019
+> $24   : 00000000 2abd45f0
+> $28   : 813d6000 813d7ce8 ff02000d c007d6c0
+> Hi    : 000002fc
+> Lo    : 00035866
+> epc   : c007e16c isl38xx_trigger_device+0xc/0x60 [prism54]     Not tainted
+> ra    : c007d6c0 islpci_mgt_transaction+0x380/0x614 [prism54]
+> Status: 1000b803    KERNEL EXL IE
+> Cause : 0000001c
+> PrId  : 00029007
+> Modules linked in: prism54 switch_robo switch_core diag
+> Process iwconfig (pid: 1411, threadinfo=813d6000, task=8106f3f8)
+> Stack : 81108800 8001e418 00000060 00000000 00000000 8106f3f8 8003bf54
+> 813616b0
+>          813616b0 80029ab0 00000004 00000000 00000000 80200ddc 0000008a
+> ff02000d
+>          81361320 813d7d98 81361000 c0086cd0 1000b800 00000000 1000b800
+> 8002964c
+>          00000004 813d7d50 00000000 81271d04 813d7e70 813d7e70 813d7e60
+> 80200ddc
+>          7fcad438 7fcad478 813d7e60 00008b01 c0081628 00000101 00000001
+> 00000000
+>          ...
+> Call Trace:
+> [<c007e16c>] isl38xx_trigger_device+0xc/0x60 [prism54]
+> [<c007d6c0>] islpci_mgt_transaction+0x380/0x614 [prism54]
+> [<c0086cd0>] mgt_get_request+0x100/0x2ec [prism54]
+> [<c0081628>] prism54_set_mac_address+0x1a0/0xfd8 [prism54]
 
+Sorry for the late reply ;) but anyway, I tried looking into this
+finally (with new found knowledge on this subject, thanks to Kyle) and
+I cannot see a place where isl38xx_trigger_device() would trigger
+unaligned access.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Is this issue still present? If so I'd like to get to the bottom of
+it. FYI p54 is there as a replacement but as you may know certain
+features (ad-hoc, ap support, encryption) are still not present in
+that driver.
 
----
-
-John,
-this is for 2.6.25. Please also run:
-	git rm -r drivers/wireless/bcm43xx
-
-
----
-
-Index: wireless-2.6/Documentation/networking/bcm43xx.txt
-===================================================================
---- wireless-2.6.orig/Documentation/networking/bcm43xx.txt
-+++ /dev/null
-@@ -1,89 +0,0 @@
--
--			BCM43xx Linux Driver Project
--			============================
--
--Introduction
--------------
--
--Many of the wireless devices found in modern notebook computers are
--based on the wireless chips produced by Broadcom. These devices have
--been a problem for Linux users as there is no open-source driver
--available. In addition, Broadcom has not released specifications
--for the device, and driver availability has been limited to the
--binary-only form used in the GPL versions of AP hardware such as the
--Linksys WRT54G, and the Windows and OS X drivers.  Before this project
--began, the only way to use these devices were to use the Windows or
--OS X drivers with either the Linuxant or ndiswrapper modules. There
--is a strong penalty if this method is used as loading the binary-only
--module "taints" the kernel, and no kernel developer will help diagnose
--any kernel problems.
--
--Development
-------------
--
--This driver has been developed using
--a clean-room technique that is described at
--http://bcm-specs.sipsolutions.net/ReverseEngineeringProcess. For legal
--reasons, none of the clean-room crew works on the on the Linux driver,
--and none of the Linux developers sees anything but the specifications,
--which are the ultimate product of the reverse-engineering group.
--
--Software
----------
--
--Since the release of the 2.6.17 kernel, the bcm43xx driver has been
--distributed with the kernel source, and is prebuilt in most, if not
--all, distributions.  There is, however, additional software that is
--required. The firmware used by the chip is the intellectual property
--of Broadcom and they have not given the bcm43xx team redistribution
--rights to this firmware.  Since we cannot legally redistribute
--the firmware we cannot include it with the driver. Furthermore, it
--cannot be placed in the downloadable archives of any distributing
--organization; therefore, the user is responsible for obtaining the
--firmware and placing it in the appropriate location so that the driver
--can find it when initializing.
--
--To help with this process, the bcm43xx developers provide a separate
--program named bcm43xx-fwcutter to "cut" the firmware out of a
--Windows or OS X driver and write the extracted files to the proper
--location. This program is usually provided with the distribution;
--however, it may be downloaded from
--
--http://developer.berlios.de/project/showfiles.php?group_id=4547
--
--The firmware is available in two versions. V3 firmware is used with
--the in-kernel bcm43xx driver that uses a software MAC layer called
--SoftMAC, and will have a microcode revision of 0x127 or smaller. The
--V4 firmware is used by an out-of-kernel driver employing a variation of
--the Devicescape MAC layer known as d80211. Once bcm43xx-d80211 reaches
--a satisfactory level of development, it will replace bcm43xx-softmac
--in the kernel as it is much more flexible and powerful.
--
--A source for the latest V3 firmware is
--
--http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
--
--Once this file is downloaded, the command
--'bcm43xx-fwcutter -w <dir> <filename>'
--will extract the microcode and write it to directory
--<dir>. The correct directory will depend on your distribution;
--however, most use '/lib/firmware'. Once this step is completed,
--the bcm3xx driver should load when the system is booted. To see
--any messages relating to the driver, issue the command 'dmesg |
--grep bcm43xx' from a terminal window. If there are any problems,
--please send that output to Bcm43xx-dev@lists.berlios.de.
--
--Although the driver has been in-kernel since 2.6.17, the earliest
--version is quite limited in its capability. Patches that include
--all features of later versions are available for the stable kernel
--versions from 2.6.18. These will be needed if you use a BCM4318,
--or a PCI Express version (BCM4311 and BCM4312). In addition, if you
--have an early BCM4306 and more than 1 GB RAM, your kernel will need
--to be patched.	These patches, which are being updated regularly,
--are available at ftp://lwfinger.dynalias.org/patches. Look for
--combined_2.6.YY.patch. Of course you will need kernel source downloaded
--from kernel.org, or the source from your distribution.
--
--If you build your own kernel, please enable CONFIG_BCM43XX_DEBUG
--and CONFIG_IEEE80211_SOFTMAC_DEBUG. The log information provided is
--essential for solving any problems.
-Index: wireless-2.6/MAINTAINERS
-===================================================================
---- wireless-2.6.orig/MAINTAINERS
-+++ wireless-2.6/MAINTAINERS
-@@ -821,15 +821,6 @@ L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/en/users/Drivers/b43
- S:	Maintained
- 
--BCM43XX WIRELESS DRIVER (SOFTMAC BASED VERSION)
--P:	Larry Finger
--M:	Larry.Finger@lwfinger.net
--P:	Stefano Brivio
--M:	stefano.brivio@polimi.it
--L:	linux-wireless@vger.kernel.org
--W:	http://bcm43xx.berlios.de/
--S:	Maintained
--
- BEFS FILE SYSTEM
- P:	Sergey S. Kostyliov
- M:	rathamahata@php4.ru
-Index: wireless-2.6/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/Kconfig
-+++ wireless-2.6/drivers/net/wireless/Kconfig
-@@ -629,7 +629,6 @@ config ATH5K
- 
- source "drivers/net/wireless/iwlwifi/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
--source "drivers/net/wireless/bcm43xx/Kconfig"
- source "drivers/net/wireless/b43/Kconfig"
- source "drivers/net/wireless/b43legacy/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
-Index: wireless-2.6/drivers/net/wireless/Makefile
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/Makefile
-+++ wireless-2.6/drivers/net/wireless/Makefile
-@@ -37,7 +37,6 @@ obj-$(CONFIG_USB_ATMEL)	        += at76_
- obj-$(CONFIG_PRISM54)		+= prism54/
- 
- obj-$(CONFIG_HOSTAP)		+= hostap/
--obj-$(CONFIG_BCM43XX)		+= bcm43xx/
- obj-$(CONFIG_B43)		+= b43/
- obj-$(CONFIG_B43LEGACY)		+= b43legacy/
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c
-+++ wireless-2.6/drivers/net/wireless/b43/main.c
-@@ -1558,7 +1558,7 @@ static void b43_release_firmware(struct 
- static void b43_print_fw_helptext(struct b43_wl *wl)
- {
- 	b43err(wl, "You must go to "
--
-"http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
-+
-"http://linuxwireless.org/en/users/Drivers/b43#devicefirmware " "and
-download the correct firmware (version 4).\n"); }
- 
-Index: wireless-2.6/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/dma.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/dma.c
-@@ -996,7 +996,7 @@ int b43legacy_dma_init(struct b43legacy_
- 
- 	err = ssb_dma_set_mask(dev->dev, dmamask);
- 	if (err) {
--#ifdef BCM43XX_PIO
-+#ifdef CONFIG_B43LEGACY_PIO
- 		b43legacywarn(dev->wl, "DMA for this device not supported.
-" "Falling back to PIO\n");
- 		dev->__using_pio = 1;
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -1398,7 +1398,7 @@ static void b43legacy_release_firmware(s
- static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
- {
- 	b43legacyerr(wl, "You must go to
-http://linuxwireless.org/en/users/"
--		     "Drivers/bcm43xx#devicefirmware "
-+		     "Drivers/b43#devicefirmware "
- 		     "and download the correct firmware (version 3).\n");
- }
- 
-
-
--- 
-Ciao
-Stefano
+  Luis
