@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37311 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751555AbXKZQJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 11:09:09 -0500
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: drago01 <drago01@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1196079245.4149.255.camel@johannes.berg>
-References: <47494851.4070504@gmail.com>
-	 (sfid-20071125_100303_057404_A213DFC8) <1195987773.4149.214.camel@johannes.berg>
-	 <474955E1.30603@gmail.com>
-	 (sfid-20071125_110054_527140_84EF41E2)  <1196079245.4149.255.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 26 Nov 2007 11:04:24 -0500
-Message-Id: <1196093064.4202.46.camel@localhost.localdomain> (sfid-20071126_160915_051768_66BBB620)
-Mime-Version: 1.0
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:38390 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751153AbXKVEpc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2007 23:45:32 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] ath5k: more consistent debug, info and error logging
+Date: Thu, 22 Nov 2007 13:45:30 +0900
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Jiri Slaby <jirislaby@gmail.com>
+References: <1195549767-21983-1-git-send-email-bruno@thinktube.com> <43e72e890711201757m159a5147j3984c3f1555e5444@mail.gmail.com> <200711221311.42072.bruno@thinktube.com>
+In-Reply-To: <200711221311.42072.bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711221345.31261.bruno@thinktube.com> (sfid-20071122_044541_202451_21B2EAAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-11-26 at 13:14 +0100, Johannes Berg wrote:
-> > what works:
-> > connect to a hidden ssid with ap_scan=1 in wpa_supplicant.conf
-> > what does not work:
-> > connect to a hidden ssid with ap_scan=2 in wpa_supplicant.conf
-> > ---
-> > for non mac80211 drivers its the opposite ie.  ap_scan=2 can connect to 
-> > hidden ssid while ap_scan=1 works
-> > (thats also whats documented in the wpa_supplicant docs and what nm uses).
-> > 
-> > so NM can't support mac80211 and non mac80211 drivers at the same time 
-> > without ugly hacks due to this issue.
-> 
-> That's weird. But why does it use ap_scan=2 to start with? With
-> mac80211, ap_scan=1 is *much* much better because it lets wpa_supplicant
-> control much of roaming, mac80211 really is designed that way.
+> > > > +     ATH_DEBUG_RESET         = 0x00000001,   /* reset processing */
+> > > > +     ATH_DEBUG_INTR          = 0x00000002,   /* ISR */
+> > > > +     ATH_DEBUG_MODE          = 0x00000004,   /* mode init/setup */
+> > > > +     ATH_DEBUG_XMIT          = 0x00000008,   /* basic xmit operation
+> > > > */ +     ATH_DEBUG_BEACON        = 0x00000010,   /* beacon handling
+> > > > */ +     ATH_DEBUG_BEACON_PROC   = 0x00000020,   /* beacon ISR proc
+> > > > */ + ATH_DEBUG_CALIBRATE     = 0x00000100,   /* periodic calibration
+> > > > */ + ATH_DEBUG_TXPOWER       = 0x00000200,   /* transmit power */ +
+> > > > ATH_DEBUG_LED           = 0x00000400,   /* led management */ +
+> > > > ATH_DEBUG_DUMP_RX       = 0x00001000,   /* print received skb content
+> > > > */ +     ATH_DEBUG_DUMP_TX       = 0x00002000,   /* print transmit
+> > > > skb content */ +     ATH_DEBUG_DUMPSTATE     = 0x00004000,   /* dump
+> > > > register state */ +     ATH_DEBUG_DUMPMODES     = 0x00008000,   /*
+> > > > dump modes */ +     ATH_DEBUG_TRACE         = 0x00010000,   /* trace
+> > > > function calls */ +     ATH_DEBUG_FATAL         = 0x80000000,   /*
+> > > > fatal errors */ +     ATH_DEBUG_ANY           = 0xffffffff
+> > > > +};
+> >
+> > While you're at it can you move these to use kernel-doc? You'll have
+> > to name the enum, perhaps ath5k_debug ?
+>
+> o.k.
 
-Because in the case of hidden SSIDs, wpa_supplicant pretty much says to
-use ap_scan=2.
+while doing that i question myself, what is ATH5K_DEBUG_FATAL /* fatal errors 
+*/ supposed to mean? shouldn't fatal errors be reported as errors, and not 
+only in debugging mode?
 
-There are a few problems here:
+the only place where ATH5K_DEBUG_FATAL is used is in the code i moved from 
+ath5k_rx_stop() to:
 
-1) Historically, some drivers worked better with ap_scan=1 (madwifi),
-others worked better with ap_scan=2 (many fullmac drivers)
+void
+ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+{
+	struct ath5k_desc *ds;
+	struct ath5k_buf *bf;
+	int status;
 
-2) scan_ssid=1 hasn't worked consistently on all drivers because it's
-pretty new and many drivers don't support it yet.  This is supposed to
-make the driver/firmware send out probe request for the SSID in
-question.
+	if (likely(!(sc->debug.level &
+	    (ATH5K_DEBUG_RESET | ATH5K_DEBUG_FATAL))))
+		return;
 
-So basically, we're up shit creek without a paddle.  You have to use
-ap_scan=2 on some cards because they don't support specific-ssid
-scanning (with scan_ssid=1) to find the BSS you want to connect to, but
-some cards can handle ap_scan=1+scan_ssid=1 OK.
+	printk(KERN_DEBUG "rx queue %x, link %p\n",
+		ath5k_hw_get_rx_buf(ah), sc->rxlink);
 
-NM has logic to cache the BSSIDs of APs you've connected to before, and
-to match those up with an SSID when it sees them in the scan list if the
-AP isn't broadcasting the SSID.  Unfortunately, that information isn't
-available to wpa_supplicant because wpa_supplicant doesn't have an
-interface to handle that sort of thing.  Therefore, when faced with an a
-request to connect to a hidden network, wpa_supplicant must rely
-_entirely_ on the driver Doing The Right Thing with scan_ssid=1 or
-ap_scan=2, and that almost never works due to inconsistency in driver
-implementation.
+	spin_lock_bh(&sc->rxbuflock);
+	list_for_each_entry(bf, &sc->rxbuf, list) {
+		ds = bf->desc;
+		status = ah->ah_proc_rx_desc(ah, ds);
+		if (!status || (sc->debug.level & ATH5K_DEBUG_FATAL))
+			ath5k_debug_printrxbuf(bf, status == 0);
+	}
+	spin_unlock_bh(&sc->rxbuflock);
+}
 
-Dan
+so would it be ok to remove ATH5K_DEBUG_FATAL alltogether?
+i might make that as a seperate patch once the first two are thru.
 
-> I don't see why ap_scan=2 doesn't work though, can you enable some
-> wpa_supplicant debugging and send me the logs? Or can you turn off
-> encryption and see if you can connect to a hidden SSID? I'd think it
-> should work because we do a directed scan so the probe response should
-> tell us the SSID.
-> 
-> johannes
-
+bruno
