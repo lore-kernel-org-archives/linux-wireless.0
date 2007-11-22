@@ -1,83 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pythia.bakeyournoodle.com ([203.82.209.197]:36657 "EHLO
-	pythia.bakeyournoodle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbXK0Bec (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:54424 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751182AbXKVFcD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 20:34:32 -0500
-Date: Tue, 27 Nov 2007 11:59:50 +1100
-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mick@madwifi.org,
-	netdev@vger.kernel.org, Andy Whitcroft <apw@shadowen.org>,
-	Balbir Singh <balbir@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
-Message-ID: <20071127005950.GZ24243@bakeyournoodle.com> (sfid-20071127_013434_944481_15DF46D4)
-References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <4742DFC3.80305@linux.vnet.ibm.com>
+	Thu, 22 Nov 2007 00:32:03 -0500
+Message-ID: <474513E7.3000104@linux.intel.com> (sfid-20071122_053224_241357_93347617)
+Date: Wed, 21 Nov 2007 21:30:15 -0800
+From: mabbas <mabbas@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4742DFC3.80305@linux.vnet.ibm.com>
-From: tony@bakeyournoodle.com (Tony Breeds)
+To: Jouni Malinen <j@w1.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	linville@tuxdriver.com
+Subject: Re: wpa_supplicant/key deletion with all-zeroes mac
+References: <4743E5DF.9040603@linux.intel.com> <1195658254.12000.23.camel@johannes.berg> <20071122043722.GC8672@jm.kir.nu>
+In-Reply-To: <20071122043722.GC8672@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 20, 2007 at 06:53:15PM +0530, Kamalesh Babulal wrote:
-> Hi Andrew,
-> 
-> The kernel build fails, with following message
-> 
->   LD      drivers/net/wireless/built-in.o
-> drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
-> (.opd+0x180): multiple definition of `rtl8225z2_rf_init'
-> drivers/net/wireless/rtl8180.o:(.opd+0x1b0): first defined here
-> drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
-> /root/linux-2.6.24-rc3/drivers/net/wireless/rtl8187_rtl8225.c:571: multiple definition of `.rtl8225z2_rf_init'
-> drivers/net/wireless/rtl8180.o:/root/linux-2.6.24-rc3/drivers/net/wireless/rtl8180_rtl8225.c:561: first defined here
-> ld: Warning: size of symbol `.rtl8225z2_rf_init' changed from 3836 in drivers/net/wireless/rtl8180.o to 3544 in drivers/net/wireless/rtl8187.o
-
-<snip>
-
-The patch below is a little ugly but will allow allyesconfig to work.  I
-don't know enough about the Realtek devices to make intellegent
-suggestions on how to fix this particular problem.  Clearly the 2
-drivers share a lot of common code so perhaps they can be merged?
-
-I assumed that the RTL8180, is still somewhat WiP based on the commit
-message for a2645795713c4374ff2efda960251cdc30b63430 (wireless-2.6.git).
-
-Appologies for the uber long CC line, wasn't sure who can be pruned.
-
-From: Tony Breeds <tony@bakeyournoodle.com>
-
-Temporarily ensure that Realtek 8185 and 8187 aren't compiled together.
-
-These two drivers share a number of common (global) functions.  While RTL8180
-is still being worked on ensure that it's not built together with the RTL8187
-(ie allyseconfig).
-
-Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
-
----
-
- drivers/net/wireless/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 82e5de7..ab2eac0 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -555,6 +555,7 @@ config USB_ZD1201
- config RTL8180
- 	tristate "Realtek 8185 PCI support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	depends on !RTL8187
- 	select EEPROM_93CX6
- 
- config RTL8187
-
-Yours Tony
-
-  linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
-  Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
-
+Jouni Malinen wrote:
+> On Wed, Nov 21, 2007 at 04:17:34PM +0100, Johannes Berg wrote:
+>
+>   
+>>> When I connect to an AP with wpa, then I receive deauth frame, 
+>>> ieee80211_rx_mgmt_deauth will be called, which will call 
+>>> ieee80211_set_associated(dev, ifsta, 0); to disconnect. In function 
+>>> ieee80211_set_associated, it calls wireless_send_event with SIOCGIWAP 
+>>> event and memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN).
+>>>       
+>
+> This sounds correct.
+>
+>   
+>>> wpa_supplicant will 
+>>> receives this event then call mac80211 to remove any old security key, 
+>>> the problem it will pass 00:00:00:00:00:00 as station address. 
+>>>       
+>
+> This sounds broken. wpa_supplicant should remove the key for the
+> previous BSSID.
+>
+>   
+>>> ieee80211_set_encryption will fail since there are no station with 
+>>> 00:00:00:00:00:00. This will leave the old key which causes the problems 
+>>> in the next reconnection.
+>>>       
+>
+> This sounds correct behavior.
+>
+>   
+>> Interesting. I'd think this is a wpa_supplicant bug, Jouni, how is the
+>> security wext stuff supposed to work here?
+>>     
+>
+> Agreed, this sounds like a bug in wpa_supplicant. Unicast keys should be
+> removed with their correct address. I think this used to work, but maybe
+> some of the changes in BSSID processing in disassociation cases caused
+> the old BSSID to be forgotten.
+>
+>   
+>>> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+>>> @@ -97,7 +97,10 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+>>> -		sta = sta_info_get(local, sta_addr);
+>>> +		if (is_zero_ether_addr(sta_addr))
+>>> +			sta = sta_info_get(local, sdata->u.sta.bssid);
+>>> +		else
+>>> +			sta = sta_info_get(local, sta_addr);
+>>>       
+>
+> NAK. I don't think this is the correct fix here.
+>
+>   
+I agree I just included this workaround to illustrated what I did to 
+make it work. 
