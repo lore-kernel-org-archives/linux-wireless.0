@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:46263 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783AbXKSEIf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56424 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162AbXKVO43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2007 23:08:35 -0500
-Date: Sun, 18 Nov 2007 20:08:20 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
-	linux-wireless@vger.kernel.org,
-	Jose Ignacio Naranjo Hernandez
-	<joseignacio.naranjo@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: Suspend/Resume support
-Message-ID: <20071119040820.GK8672@jm.kir.nu> (sfid-20071119_040845_239386_E29A7119)
-References: <1195087905.3814.11.camel@mercury> <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com> <1195171869.8147.79.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195171869.8147.79.camel@johannes.berg>
+	Thu, 22 Nov 2007 09:56:29 -0500
+Subject: Re: [PATCH 1/1] mac80211: restructuring data Rx handlers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <rindjon@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com
+In-Reply-To: <1195743268.4149.11.camel@johannes.berg> (sfid-20071122_145444_120393_E4B13536)
+References: <11956348193070-git-send-email-ron.rindjunsky@intel.com>
+	 <1195732107.6323.84.camel@johannes.berg>
+	 <c85cb4470711220649vd83b72lf0e6ae537b359c93@mail.gmail.com>
+	 (sfid-20071122_144914_479017_8BEBD1D8)  <1195743268.4149.11.camel@johannes.berg>
+	 (sfid-20071122_145444_120393_E4B13536)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TKu9pKfcdKzqCx3A5Mga"
+Date: Thu, 22 Nov 2007 15:56:24 +0100
+Message-Id: <1195743384.4149.12.camel@johannes.berg> (sfid-20071122_145632_064288_F2A111EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 16, 2007 at 01:11:09AM +0100, Johannes Berg wrote:
 
-> On the other hand, if you've suspended for a longer period of time, your
-> AP will have kicked you off for not responding. This means you need to
-> associate again (not even reassociate [1]) if the AP you were associated
-> to is even still around.
+--=-TKu9pKfcdKzqCx3A5Mga
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> [1] the IEEE 802.11 specs define "reassociation" but that requires the
-> AP keeping state about you which typically they won't do long
 
-I would use reassociation whenever trying to get back to the same ESS
-(when SSID does not change) and the previous BSSID is known. There
-cannot be any requirement on the non-AP STA to somehow magically figure
-out whether the APs have or have not state from the previous
-association.
+> Yes, that would work too. I'm not entirely sure about the effect on
+> eapol handling but I'll sort that out with that patch then. At worst I
+> get to restructure the code instead of you :)
 
-> I guess the way to handle it would be to send a probe request to the AP
-> we're associated with first to see if it's still in range. If it is, we
-> need to determine whether we were suspended long enough for it to kick
-> us off. It might be possible to do this by sending a null function frame
-> to the AP and see if it replies with a deauth notification, I think it
-> should if we're not associated [3]. But then again I'm not sure whether
-> we should rely on this.
+Actually, what I did in that patch is move the eapol decision out of the
+port control function which is probably better. Anyway, if you can do
+the restructuring and make it work as it is now, I'll do the rest.
 
-This is perfectly valid way of validating whether the STA is still
-associated (see rules on Class 2 and 3 frames in auth/assoc state in
-Clause 5.5). In addition, there is no need for the probe request before
-sending nullfunc data frame. If the nullfunc data frame is acknowledged,
-the AP is still in range. If deauth or disassoc frame is received from
-the AP, the association was not valid anymore. This should trigger
-re-association.
+johannes
 
-> Another option would be to send it a reassociate
-> request, it should simply respond with an OK, otherwise it sends a
-> disassociate so we automatically restart the state machine and send
-> appropriate notifications to userspace.
+--=-TKu9pKfcdKzqCx3A5Mga
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Reassociation will fail unless the STA in in authenticated state, i.e.,
-this will need to start with 802.11 authentication. Though, if the
-nullfunc data test is used, there is no need for this and it should be
-possible to avoid the full cost of running whatever authentication
-methods are required in the network (e.g., EAP).
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+iQIVAwUAR0WYlqVg1VMiehFYAQJNVg//eUcwXUd0e2ya46ol5N5k9rt/bRIJxbOa
+VMaQmPkH/rOqYiBUE1XmrCFiHJfW4HCYBEwJgM5qQep1I9Nnphrisx4bxOf1jhTA
+P65UXgE6i9R/sSQDGej1vOcJB0vnOZjJB72GSsiht6BUGhxtCvKCfXka65HUExMV
+fKWW2AoN5draX2Lu4Rg0HSQpQO6CXDAMhJizRSmESnVizLVHale7ptl/f7dbP2my
+fH3Siptj/X4JypyX08wMAxm2NHm+kLHl8UI/8hmp9In0sLCW/3QQpPyP4o2IOe8A
+eoxi4jiYPh6BsvqY4LhJorzEhiCO3bufB1zbr11FAGpvfnPV0t2WOUAW4CbYgD3z
+LR2WsOOOig/N7eKRBi0C9OKVvWBO5+/nTH6w15CQOTQxwOGFebQirOrh+Ey0tfGM
+vf4qJM9GEclGg3Fyc1fBewDJN5h/jYz3Bv9xhcDJ8Z2uiRXkjFHKqGiQV+fw4UB0
+bRSYpueexDKPD4ltMmPZaEF/PaflFO9eLSgHClyGiSBTxQsq0dgeNUr8D8lcm4Oh
+9mMt2uRj1Y8Hgtasi5Sn/gUBvznxGZVk0CwjD6kyQ9LsoySXEeQMJy08K1u+TxZX
+gATmA/bmmskD3JGkWz2XNBpX2ggPrc64gUvtDtPuFViXCB1xvu/4tLQ4Qvsum/hj
+WHfAXm6ob1o=
+=iH/D
+-----END PGP SIGNATURE-----
+
+--=-TKu9pKfcdKzqCx3A5Mga--
+
