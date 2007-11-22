@@ -1,58 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v32413.1blu.de ([88.84.155.73]:47980 "EHLO mail.lenk.info"
+Received: from mga02.intel.com ([134.134.136.20]:56063 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756285AbXKLKNA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 05:13:00 -0500
-From: Frank Lichtenheld <frank@lichtenheld.de>
+	id S1751403AbXKVRt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 12:49:56 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Frank Lichtenheld <frank@lichtenheld.de>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] b43: silence a bogus gcc warning
-Date: Mon, 12 Nov 2007 11:12:52 +0100
-Message-Id: <1194862372-21289-1-git-send-email-frank@lichtenheld.de> (sfid-20071112_101309_075957_E1384070)
-In-Reply-To: <20071110152533.GC32472@tuxdriver.com>
-References: <20071110152533.GC32472@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
+Date: Thu, 22 Nov 2007 19:49:50 +0200
+Message-Id: <11957537901302-git-send-email-ron.rindjunsky@intel.com> (sfid-20071122_174959_958999_1C3C998B)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use uninitialized_var() to avoid the following bogus warning:
-  CC [M]  drivers/net/wireless/b43/debugfs.o
-drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debugfs_re=
-ad=E2=80=99:
-drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=99 =
-may be used uninitialized in this function
+This patch adds the ability to receive and handle A-MSDU frames.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/b43/debugfs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/rx.c          |  216 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 217 insertions(+), 0 deletions(-)
 
- Changed to use uninitialized_var()
+Index: wl2_6_24_HT/net/mac80211/ieee80211_i.h
+===================================================================
+--- wl2_6_24_HT.orig/net/mac80211/ieee80211_i.h
++++ wl2_6_24_HT/net/mac80211/ieee80211_i.h
+@@ -155,6 +155,7 @@ struct ieee80211_txrx_data {
+ 			int load;
+ 			u32 tkip_iv32;
+ 			u16 tkip_iv16;
++			u8  amsdu_frame;
+ 		} rx;
+ 	} u;
+ };
+Index: wl2_6_24_HT/net/mac80211/rx.c
+===================================================================
+--- wl2_6_24_HT.orig/net/mac80211/rx.c
++++ wl2_6_24_HT/net/mac80211/rx.c
+@@ -243,6 +243,10 @@ ieee80211_rx_h_parse_qos(struct ieee8021
+ 		u8 *qc = data + ieee80211_get_hdrlen(rx->fc) - QOS_CONTROL_LEN;
+ 		/* frame has qos control */
+ 		tid = qc[0] & QOS_CONTROL_TID_MASK;
++		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
++			rx->u.rx.amsdu_frame = 1;
++		else
++			rx->u.rx.amsdu_frame = 0;
+ 	} else {
+ 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
+ 			/* Separate TID for management frames */
+@@ -1191,6 +1195,125 @@ ieee80211_deliver_skb(struct ieee80211_t
+ }
+ 
+ static ieee80211_txrx_result
++ieee80211_rx_h_amsdu(struct ieee80211_txrx_data *rx)
++{
++	struct net_device *dev = rx->dev;
++	struct ieee80211_local *local = rx->local;
++	u16 fc, ethertype;
++	u8 *payload;
++	struct sk_buff *skb = rx->skb, *frame = NULL;
++	const struct ethhdr *eth;
++	int remaining, err;
++	u8 dst[ETH_ALEN];
++	u8 src[ETH_ALEN];
++	DECLARE_MAC_BUF(mac);
++
++	fc = rx->fc;
++	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
++		return TXRX_CONTINUE;
++
++	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
++		return TXRX_DROP;
++
++	if (!rx->u.rx.amsdu_frame)
++		return TXRX_CONTINUE;
++
++	err = ieee80211_data_to_8023(rx);
++	if (unlikely(err))
++		return TXRX_DROP;
++
++	skb->dev = dev;
++
++	dev->stats.rx_packets++;
++	dev->stats.rx_bytes += skb->len;
++
++	/* skip the wrapping header */
++	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
++	if (!eth)
++		return TXRX_DROP;
++
++	while (skb != frame) {
++		u8 padding;
++		__be16 len = eth->h_proto;
++		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
++
++		remaining = skb->len;
++		memcpy(dst, eth->h_dest, ETH_ALEN);
++		memcpy(src, eth->h_source, ETH_ALEN);
++
++		padding = ((4 - subframe_len) & 0x3);
++		/* the last MSDU has no padding */
++		if (subframe_len > remaining) {
++			printk(KERN_DEBUG "%s: wrong buffer size", dev->name);
++			return TXRX_DROP;
++		}
++
++		skb_pull(skb, sizeof(struct ethhdr));
++		/* if last subframe reuse skb */
++		if (remaining <= subframe_len + padding)
++			frame = skb;
++		else {
++			frame = dev_alloc_skb(local->hw.extra_tx_headroom +
++					      subframe_len);
++
++			if (frame == NULL)
++				return TXRX_DROP;
++
++			skb_reserve(frame, local->hw.extra_tx_headroom +
++				    sizeof(struct ethhdr));
++			memcpy(skb_put(frame, ntohs(len)), skb->data,
++				ntohs(len));
++
++			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
++							padding);
++			if (!eth) {
++				printk(KERN_DEBUG "%s: wrong buffer size ",
++				       dev->name);
++				dev_kfree_skb(frame);
++				return TXRX_DROP;
++			}
++		}
++
++		skb_set_network_header(frame, 0);
++		frame->dev = dev;
++		frame->priority = skb->priority;
++		rx->skb = frame;
++
++		if ((ieee80211_drop_802_1x_pae(rx, 0)) ||
++		    (ieee80211_drop_unencrypted(rx, 0))) {
++			if (skb == frame) /* last frame */
++				return TXRX_DROP;
++			dev_kfree_skb(frame);
++			continue;
++		}
++
++		payload = frame->data;
++		ethertype = (payload[6] << 8) | payload[7];
++
++		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
++			ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
++			compare_ether_addr(payload,
++					   bridge_tunnel_header) == 0)) {
++			/* remove RFC1042 or Bridge-Tunnel
++			 * encapsulation and replace EtherType */
++			skb_pull(frame, 6);
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		} else {
++			memcpy(skb_push(frame, sizeof(__be16)), &len,
++				sizeof(__be16));
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		}
++
++
++		ieee80211_deliver_skb(rx);
++	}
++
++	return TXRX_QUEUED;
++}
++
++static ieee80211_txrx_result
+ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1368,6 +1491,7 @@ ieee80211_rx_handler ieee80211_rx_handle
+ 	 * are not passed to user space by these functions
+ 	 */
+ 	ieee80211_rx_h_remove_qos_control,
++	ieee80211_rx_h_amsdu,
+ 	ieee80211_rx_h_data,
+ 	ieee80211_rx_h_mgmt,
+ 	NULL
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/=
-b43/debugfs.c
-index ef0075d..f84d063 100644
---- a/drivers/net/wireless/b43/debugfs.c
-+++ b/drivers/net/wireless/b43/debugfs.c
-@@ -352,7 +352,7 @@ static ssize_t b43_debugfs_read(struct file *file, =
-char __user *userbuf,
- 	struct b43_wldev *dev;
- 	struct b43_debugfs_fops *dfops;
- 	struct b43_dfs_file *dfile;
--	ssize_t ret;
-+	ssize_t uninitialized_var(ret);
- 	char *buf;
- 	const size_t bufsize =3D 1024 * 128;
- 	const size_t buforder =3D get_order(bufsize);
---=20
-1.5.3.4
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
