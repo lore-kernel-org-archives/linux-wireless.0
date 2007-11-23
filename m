@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34068
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753356AbXKTWic (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:63178 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752353AbXKWLfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:38:32 -0500
-Date: Tue, 20 Nov 2007 14:38:31 -0800 (PST)
-Message-Id: <20071120.143831.134792608.davem@davemloft.net> (sfid-20071120_223834_893032_96C59ECA)
-To: linville@tuxdriver.com
-Cc: jt@hpl.hp.com, johannes@sipsolutions.net,
-	shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
-	dsd@gentoo.org
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071120220850.GG16090@tuxdriver.com>
-References: <20071120180016.GC1480@bougret.hpl.hp.com>
-	<20071120.135842.122514400.davem@davemloft.net>
-	<20071120220850.GG16090@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 23 Nov 2007 06:35:06 -0500
+Received: by an-out-0708.google.com with SMTP id d31so641920and
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 03:35:05 -0800 (PST)
+Message-ID: <40f31dec0711230335k6ef0f45erbb1285d8c572cf38@mail.gmail.com> (sfid-20071123_113514_230073_80C679E2)
+Date: Fri, 23 Nov 2007 13:35:05 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: ath5k signal/noise fixes
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
+In-Reply-To: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 20 Nov 2007 17:08:50 -0500
+2007/11/23, Bruno Randolf <bruno@thinktube.com>:
+>
+> hello!
+>
+> the next 3 patches contain fixes for the signal/noise level calibration and
+> reporting of ath5k.  i split them up because i'm not 100% sure of the second
+> two.
+>
 
-> On Tue, Nov 20, 2007 at 01:58:42PM -0800, David Miller wrote:
-> > From: Jean Tourrilhes <jt@hpl.hp.com>
-> > Date: Tue, 20 Nov 2007 10:00:16 -0800
-> > 
-> > > 	This is a special version of Wireless Tools with some debug
-> > > code. It will help me understand what's happening with the bus error
-> > > while scanning and see what fix I can come up with.
-> > > 	What you need to do is :
-> > > 		o untar, make
-> > > 		o ./iwlist scan > scan.log
-> > > 	And send me the result.
-> > 
-> > I already know what's happening.  Your "fixup" code is deferencing
-> > the wrong part of the iw_point pointer, it only works on little
-> > endian.
-> > 
-> > The fix is to remove the userland fixup code entirely and fixup
-> > the stream in the kernel.
-> 
-> What a mess...are there going to be userland ABI implications of this?
-> Hopefully the fact that 64-bit kernels were just broken is enough
-> justifcation to fix this?
+Good job ;-)
 
-I think we'll be OK, to my knowledge only the wireless tools
-tried to "correct" this in userspace and it only triggers
-when a specific length check fails.
+> i'm also not sure if what we call noise calibration in this case really is an
+> calibration or just a reading of the values?
+>
 
-So if we fix the kernel, the length check won't trigger any more
-and things will just work.
+To enable noise floor calibration on hw we set AGCTL_NF, if we want to
+read the value and make checks/update stats etc we read PHY_NF. I
+agree with your approach of noise floor calibration + update value in
+all cases. This patch aso makes code cleaner because noise floor
+calibration belongs inside phy.c
+
+
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
