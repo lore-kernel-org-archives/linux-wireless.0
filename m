@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36405 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbXKNMwc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 07:52:32 -0500
-Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guido R. Hiertz" <hiertz@ieee.org>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <473A3D1F.7090703@ieee.org>
-References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
-	 <1194689500.7258.61.camel@johannes.berg>
-	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>
-	 <1194866072.5229.8.camel@johannes.berg>
-	 <445f43ac0711131231s5bfd173v1c9105e9f23d83b2@mail.gmail.com>
-	 <473A3D1F.7090703@ieee.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tsZxDqwWh26BuQL4Acli"
-Date: Wed, 14 Nov 2007 13:42:41 +0100
-Message-Id: <1195044161.4091.2.camel@johannes.berg> (sfid-20071114_125236_184428_E39C49A3)
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:58471 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753499AbXKWVlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 16:41:12 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: timeout problems with certain APs and b43
+Date: Fri, 23 Nov 2007 22:58:24 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John H." <mistamaila@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> <1195812310.4149.73.camel@johannes.berg>
+In-Reply-To: <1195812310.4149.73.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711232258.25965.rjw@sisk.pl> (sfid-20071123_214119_262269_EBE2D091)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday, 23 of November 2007, Johannes Berg wrote:
+> 
+> > on certain APs, the internet works for a long time then stops, and I
+> > get authentication time outs, why?  It usually works again if I reset
+> > the AP itself, which i should not have to do and don't have to if in
+> > XP....
+> 
+> > wlan0: Initial auth_alg=0
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
+> 
+> Does it help to reload the b43 module? I think I have seen this problem
+> before but always associated it with suspend/resume rather than a long
+> time elapsing, I also thought it was due to bad power recalibration.
 
---=-tsZxDqwWh26BuQL4Acli
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It seems that I can reproduce something similar on demand with an SMC wireless
+router by moving my box sufficiently far away from it. :-)
 
-Javier, Guido,
-
-Thanks for the explanation. In that case, the current proposal makes
-sense and will simply require bridging between the AP and MP interfaces.
-
-johannes
-
---=-tsZxDqwWh26BuQL4Acli
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzrtQKVg1VMiehFYAQJMSg/+PgAmHzJuGpL7H6yd+J6nvqh3jWL6b3Te
-TWvx4COAuHIOo2lhUy0PlkAHGeCtPa1yrM4vYLmUaoWjB+9Y05zZhl80xZm6ktDe
-EQR1PGHp+XFNNJ8zensKH3lXQ0RPDrrlsRjbvkUAECgfdqxWRRANTza3tJawrvtr
-GN82LrxqZ3J04YSsYC1egB6GnJtSblH/j8ci/RepOZsfKas1j64+jpjVs1mwgPeF
-6BMjeXceDURNx6w5ucZRf23unvWN2aZX2HHSn8CKwIZmGtFEB4fDKUrNSTq0nxOS
-24VZ0CvR1oe2ndU5Ih81OhYvXV5DK/8iAt8D8tUFHrC4kwxyu02B9XJQH8mcsIp2
-RD+kZIpDfA3ygf0XLTdLzpzIDJDlha3gNcnzO3gxMqf60SvYuDhg08jRnqpjkl+A
-76+/5xOdZN7jGrW3KCWfXQNkry6NUwsQlIA0w/GLbURbryXnfcauKAVyztQcbm+d
-WDhXksoLVgK0Xh6cfkOaQVe8p/2TKlbHV4Cqxecnfs5WktOgHwtyUw4G9V7MwQO6
-e9kMg//R2cUgDOY1AouQVcaCpVlqFyXlSUWppIC6ALy0J9f3fGxpAz5asowSfszy
-v9m9AqE1eEe/WXUAtiaHjdqc/QoazXrR6tIZmFwL0qcSHVpU85SJRsNikfFXrG7b
-kWad2fg0Rvk=
-=y/9s
------END PGP SIGNATURE-----
-
---=-tsZxDqwWh26BuQL4Acli--
-
+Greetings,
+Rafael
