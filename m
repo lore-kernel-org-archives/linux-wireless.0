@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52348 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752654AbXKZOVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 09:21:50 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 08/15] iwlwifi: 802.11n remove unnecessary config dependency
-Date: Mon, 26 Nov 2007 16:14:35 +0200
-Message-Id: <11960864912323-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142159_540169_9719CB41)
-In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fencepost.gnu.org ([140.186.70.10]:38902 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbXKWAX3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 19:23:29 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IvMKP-0001gc-0w
+	for linux-wireless@vger.kernel.org; Thu, 22 Nov 2007 19:23:29 -0500
+Subject: Re: mac80211 regression: doesn't associate automatically
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <20071122132635.GA3372@tuxdriver.com>
+References: <200711220912.10452.hs4233@mail.mn-solutions.de>
+	 <1195736752.6323.97.camel@johannes.berg>
+	 <20071122132635.GA3372@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 22 Nov 2007 19:23:25 -0500
+Message-Id: <1195777405.11966.12.camel@dv> (sfid-20071123_002332_888132_DC71CF75)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes MAC80211_HT config dependency as it has been
-eliminated in mac80211, and adds a needed QoS dependency
+On Thu, 2007-11-22 at 08:26 -0500, John W. Linville wrote:
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+> As it stands, setting the SSID is the closest thing we have to an
+> "associate now" trigger.  I would have to advise distros and users to
+> always set it last in the wireless init, just before running dhclient
+> or whatever.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index abd0ce0..d87e34b 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -33,6 +33,14 @@ config IWL4965_QOS
- 	  This option will enable wireless quality of service (QoS) for the
- 	  iw4965 driver.
- 
-+config IWL4965_HT
-+	bool "Enable 802.11n HT features in iwl4965 driver"
-+	depends on EXPERIMENTAL
-+	depends on IWL4965 && IWL4965_QOS
-+	---help---
-+	  This option enables IEEE 802.11n High Throughput features
-+	  for the iwl4965 driver.
-+
- config IWL4965_SPECTRUM_MEASUREMENT
- 	bool "Enable Spectrum Measurement in iw4965 driver"
- 	depends on IWL4965
-@@ -46,14 +54,6 @@ config IWL4965_SENSITIVITY
- 	  This option will enable sensitivity calibration for the iwl4965
- 	  driver.
- 
--config IWL4965_HT
--	bool "Enable 802.11n HT features in iwl4965 driver"
--	depends on EXPERIMENTAL
--	depends on IWL4965 && MAC80211_HT
--	---help---
--	  This option enables IEEE 802.11n High Throughput features
--	  for the iwl4965 driver.
--
- config IWL4965_DEBUG
- 	bool "Enable full debugging output in iwl4965 driver"
- 	depends on IWL4965
+Maybe mac80211 should have a "grace period" of 0.5 seconds or so to
+allow other settings to be set before the scanning starts?  The same
+applies to other events causing scanning, such as bringing up the
+interface.  It's too short to be noticeable, yet long enough for the
+next command to run even on slow systems.
+
+I think setting the key should not cause reassociation if there is an
+association.  It can break some schemes where the WEP key changes
+periodically on both sides.
+
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Regards,
+Pavel Roskin
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
