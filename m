@@ -1,94 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37940 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38364 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbXKSPZ7 (ORCPT
+	with ESMTP id S1752495AbXKWUXS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 10:25:59 -0500
-Subject: Re: [PATCH 06/14] mac80211: adding 802.11n essential A-MSDU
-	Rxcapability
+	Fri, 23 Nov 2007 15:23:18 -0500
+Subject: Re: mac80211 regression: doesn't associate automatically
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Winkler, Tomas" <tomas.winkler@intel.com>, flamingice@sourmilk.net
-In-Reply-To: <20071119001933.GD8672@jm.kir.nu>
-References: <1879838866982C46A9CB3D56BA49ADEB04008798@hasmsx411.ger.corp.intel.com>
-	 <1194885942.5229.62.camel@johannes.berg>  <20071119001933.GD8672@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jEGCTI1Nc3robbtEJ9fG"
-Date: Mon, 19 Nov 2007 16:27:16 +0100
-Message-Id: <1195486036.8642.34.camel@johannes.berg> (sfid-20071119_152601_922655_FCFA5A3D)
+To: Will Dyson <will.dyson@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <8e6f94720711231134t66bc0bcbt9651297221cca56b@mail.gmail.com> (sfid-20071123_193420_868158_0ADA9C2F)
+References: <200711220912.10452.hs4233@mail.mn-solutions.de>
+	 <200711221605.55506.hs4233@mail.mn-solutions.de>
+	 <1195746110.4149.23.camel@johannes.berg>
+	 <200711221719.40412.hs4233@mail.mn-solutions.de>
+	 <8e6f94720711221232p16b90daaya5fe3550729b49c8@mail.gmail.com>
+	 <1195822116.4149.116.camel@johannes.berg>
+	 <8e6f94720711231134t66bc0bcbt9651297221cca56b@mail.gmail.com>
+	 (sfid-20071123_193420_868158_0ADA9C2F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mOy7JscLip075XDHz1vy"
+Date: Fri, 23 Nov 2007 21:22:19 +0100
+Message-Id: <1195849339.4149.153.camel@johannes.berg> (sfid-20071123_202321_881432_2EE50758)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jEGCTI1Nc3robbtEJ9fG
+--=-mOy7JscLip075XDHz1vy
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> This was assuming that there were never frames that would need special
-> handling in the aggregate (i.e., need for special PAE or
-> unencrypted/encrypted processing). Since the aggregate was encrypted as
-> a single unit, the drop_unencrypted was not an issue. Same was, in
-> practice, true for most of PAE processing. I don't think the initial
-> EAPOL handshake is an issue, but at least in theory, there could be an
-> EAPOL re-authentication happening at some point and if EAPOL frames
-> require special processing, this would need to be taken into account.
+On Fri, 2007-11-23 at 14:34 -0500, Will Dyson wrote:
+> On Nov 23, 2007 7:48 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>=20
+> > I don't think this can work because when say wpa_supplicant changes the
+> > key the last thing we want is to have that cause a reconsideration of
+> > which AP we're associated with. Or even a disassoc/reassoc cycle.
+>=20
+> Ah, yes dynamic WEP (or does wpa also go through those ioctls?). Thanks.
 
-Hmm. Management frames cannot be aggregated and EAPOL shouldn't need
-special processing, but getting all this code into one block so the
-compiler can optimise it is better nonetheless imho.
-
-> Please note that data frame handling requires support for four addresses
-> and plain 802.3 header would not be sufficient without some additional
-> meta data. I would assume this to be doable, but some of the
-> functionality will need to moved around to handle the 802.11 specific
-> things first (like WDS interface selection) and then pass some meta data
-> in addition to the frame.=20
-
-Not sure about this. We do interface selection before the RX handlers
-(well, we currently loop, but that can and ought to be improved). Hence,
-at the point where we reframe the frame to 802.3 we no longer need any
-extra data, do we?
-
-> As long as the issues with encrypted vs. unencrypted frames can be
-> resolved for both TX and RX in a way that handles the 802.1X and WPA
-> cases, it should be fine passing EAPOL frames as normal data frames.=20
-
-Well for TX we've already solved this with the monitor mode injection.
-For RX, I'm not exactly sure about how things need to work. Can you
-explain the 802.1X/WPA/dynamic WEP cases?
-
-> In
-> addition, bridging code should be told not to bridge this ethertype if
-> that has not been done yet.
-
-That should be easy enough to check/do.
+Yup, WPA does too.
 
 johannes
 
---=-jEGCTI1Nc3robbtEJ9fG
+--=-mOy7JscLip075XDHz1vy
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR0GrU6Vg1VMiehFYAQJWBQ//cPGITbEYKpy9AKWbQmkAfjDRztbKuAaY
-lBAHYzc06tjI5OWv+u1W80OlMjXeHPBb2SYL4aAFEFXHd2g6PPn3hkxbJUbNvS05
-eG4AwHiYWNJFbmgkKlFk33o6ky6JiSdCLuZakquVMRwdi2eW4IhILwMbUdZKdJKi
-YyZOS8eNB1dy8723n+ICN7Jhm0YUdXycWSQjLKYRj4MTdc7Lu9yxkMYmHLSbczq4
-qpKvZAqLd6vyO2SnDtQ99NQfFuIBFtcEvI62nfGAqk6oj0QNxhxDgx1HgtQS9XgL
-eOALRs2IJb+XZc25gYcUBSnVRitHQBGh1jkRMw7bjV5se/Ma4UxPuLOonlDqEI4Q
-kJL/on1t+7b17+5NfCOB+OBhvSueqz86rbagGuNC1tufFnSzsKSHIfEQi4B35LeR
-/GVQSL0m+mE4x5I0TyWftssYcmR0iEpf+IjQEXVpwRFYVRgy6dyt9XOPGr8JNYPT
-YxWUeDORHLIVryLQ97lGTISpVUPoGRxJriQEDqjiRPrdx4DzmW+kJXm3mV6JvSac
-ABSLqV0k6OBtdzEqZYcVaj2L7ht6vpXtVJdOffM81I/U2mT3ifTy43KqN06+bWjI
-0wDDQX9ZNoQOemOgzsgqZSdBevc1rj6AekJXIFf3vv4/nopPT7+pYjo0bLFoi/Yy
-TIwQmHvVzp0=
-=b9gO
+iQIVAwUAR0c2eqVg1VMiehFYAQIQVxAAloWvqWFBBeKYSFKg1aMajCZmkPzxM+Qj
+AO51ZdIu1ONL6dBdt043+YxF2KmTkAKbEz+Zcx1JFvLiPNLfrTiK/T6n5pnA3JfE
+Pme2sFKzYZyeDqB0EL4fb9HOzupO3zK6JFDoZi/NipfPUDLI+qtPeGZPPCoxLikI
+0f8IyYSs//AFrV7t2FA1BCGUvacyZsMIVrqrIrT+ny9oDZLw4Iz/fXMDRFgRQn7Z
+/P4xqr/+IdE30BaKKpoWsbnwGFbZvfbpf/3j9pNyfc1U6V0Ja9/1vpiuoagqwqAg
+uI9uoTwepk3sJrJcECxboesmHRjoF9ZtKsGkPmZHda65qr71htL2A33i2G9qWH0Z
+CayUjrQzBF8uW9gImBanbh/V0EDdg01dcz0qDzjiqbTefWcDhbyKpY+QNcUrZWSo
+eLoyr6IIdhTKgXBvk0lOC+nUGPcYpbTNTgadVjQQOc/lmCKvds9eDimf11vYD2cO
+GYgG1FBioCfEh+4UCPWu++H14gYES5KQIO02oA4SbjRii5H2rlaxPHY652g0O+QF
+OJ4ORorHAd8hHWp7973hp9T9UG6ujTcp7/ZbiCp8YHx7HOA+XoxKBMMEbYykYA13
+BKxXGn+xWcd2sDUGvForK3MXUlnAj93WBZyguPZQZvGZQlZYW29YWJldms2GMPAL
+bz1Nnt753pI=
+=ctsK
 -----END PGP SIGNATURE-----
 
---=-jEGCTI1Nc3robbtEJ9fG--
+--=-mOy7JscLip075XDHz1vy--
 
