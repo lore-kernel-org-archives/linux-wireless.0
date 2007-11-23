@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3581 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753946AbXKATNB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 15:13:01 -0400
-Date: Thu, 1 Nov 2007 15:12:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20071101191250.GE14943@tuxdriver.com> (sfid-20071101_191314_294356_0164F15B)
-References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com> <20071101190711.GB17825@storm.local.network>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:3519 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753559AbXKWKya (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 05:54:30 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
+Date: Fri, 23 Nov 2007 11:54:56 +0100
+Cc: "Michael Renzmann" <mrenzmann@madwifi.org>,
+	"Nick Kossifidis" <mickflemm@gmail.com>, "Majo" <virec@inmail.sk>
+References: <200711222310.01165.virec@inmail.sk> <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com> <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org>
+In-Reply-To: <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071101190711.GB17825@storm.local.network>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711231154.56712.hs4233@mail.mn-solutions.de> (sfid-20071123_105432_685652_7354DE98)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 01, 2007 at 03:07:11PM -0400, Forest Bond wrote:
-> On Thu, Nov 01, 2007 at 02:59:00PM -0400, John W. Linville wrote:
-> > On Wed, Sep 19, 2007 at 03:37:43PM -0400, Forest Bond wrote:
+> Don't be fooled by the PCI ID - we already know that these are
+> not reliable to identify the chipset used on a Atheros-based
+> card. See also http://madwifi.org/ticket/1192.
 
-> > > A few months ago, VIA quietly released the source for their VT6656 USB WiFi
-> > > chip.  The original VIA archive can be downloaded here:
+While I was working with Windows XP Embedded (after a long 
+absence from Windows), I noticed that they don't just work with 
+PCI IDs, but also with PCI-Subsystem IDs.
 
-> > Any luck getting license clarification from VIA?
+$ lspci -vn
+03:00.0 0200: 168c:0013 (rev 01)
+        Subsystem: 1186:3a12
+        ...
 
-> I did send a few e-mails (one to the driver developer, and one to a personal
-> contact at VIA), but neither has yielded anything useful.  I think the only
-> remaining effective option is to bring it up on viaarena.com.  Consumer angst
-> runs thick in those parts, and VIA has occasionally been known to respond
-> semi-positively.  In this case, that just might be enough, since their
-> intentions were clearly to open-source the driver, despite their apparent
-> inability to document this properly.
-> 
-> Does that seem like a good path to you?
-
-Thas sounds great to me.  I look forward to hearing the results!
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+If vendors would make the subsystem ID wrong, then even Windows 
+XP wouldn't be able to detect the card correctly. That's quite a 
+big incentive to get that number right :-)
