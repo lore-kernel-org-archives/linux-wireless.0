@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:57755 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756552AbXKISfn (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5301 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbXKWIFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 13:35:43 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so559128nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2007 10:35:41 -0800 (PST)
-Message-ID: <2b74932e0711091035v323364e6n1e458e82a590dd3e@mail.gmail.com> (sfid-20071109_183616_006841_DFE72980)
-Date: Fri, 9 Nov 2007 19:35:40 +0100
-From: "David Dallet" <ddmdllt@gmail.com>
+	Fri, 23 Nov 2007 03:05:41 -0500
+Received: from lin01.mn-solutions.de (pD95F8443.dip0.t-ipconnect.de [217.95.132.67])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id A21815E5822
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 09:05:39 +0100 (CET)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id C94701E00FD
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 09:02:44 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 To: linux-wireless@vger.kernel.org
-Subject: unrecognized usb card D-LINK DWA-110
+Subject: Re: mac80211 regression: doesn't associate automatically
+Date: Fri, 23 Nov 2007 09:06:10 +0100
+References: <200711220912.10452.hs4233@mail.mn-solutions.de> <20071122132635.GA3372@tuxdriver.com> <1195777405.11966.12.camel@dv>
+In-Reply-To: <1195777405.11966.12.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711230906.10441.hs4233@mail.mn-solutions.de> (sfid-20071123_080548_253543_461FC266)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I bought a D-Link DWA-110 usb stick and according to iwconfig, it
-seems that the card is not recognized.
-I searched on google but I was not able to find something relevant
-about the problem.
-I sent the result of some commands and the end of the message.
-Is there anything I did wrong or is there something I could do to help
-to identify the problem? (as long as I still have the card, maybe I'll
-try a refund)
-Thanks for your attention,
+> I think setting the key should not cause reassociation if
+> there is an association.
 
-David Dallet
+That seems sensible.
 
-PS: I'm using Ubuntu 6.06 LTS
 
-Here are lines from the result of "sudo lsusb -v":
+I actually think that while it's not associated, it should 
+periodically try to associcate with what's currently defined 
+(e.g. ESSID, fixed AP mac, key settings etc).
 
-Bus 004 Device 008: ID 07d1:3c07 D-Link System
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  idVendor           0x07d1 D-Link System
-  idProduct          0x3c07
-  bcdDevice            0.01
-  iManufacturer           1 Ralink
-  iProduct                2 802.11 bg WLAN
-  iSerial                 0
-  bNumConfigurations      1
-  (I don't paste all the lines here, but they are in http://pastebin.ca/767375)
+Currently, if I do the following with mac80211/b43:
 
-Here are some lines from "sudo lshw":
-              *-usb:1 UNCLAIMED
-                   description: Generic USB device
-                   product: 802.11 bg WLAN
-                   vendor: Ralink
-                   physical id: 3
-                   bus info: usb@4:3
-                   version: 0.01
-                   capabilities: usb-2.00
-                   configuration: maxpower=300mA speed=480.0MB/s
+$ # turn AP off or move into an area where you can't
+  receive the AP
+$ pccardctl insert
+$ ifconfig eth1 up
+$ iwconfig eth1 key s:11111
+$ iwconfig eth1 essid MUMBLFUTZ
+$ # turn AP on or move with the laptop/device into the
+  vincinity of an AP
+
+... then I won't get an association at all.
+
+Other drivers that I used in production during the last 5 years 
+didn't show that behavior (orinoco_cs, wlags_h1_cs, wlags_h2_cs, 
+madwifi). They associated on their own.
+
+However, as mac80211 is currently implemented, it assumes 
+a "stationary" WLAN setup and doesn't cope well with scenarios 
+where devices move. If it would cope better with such 
+situations, then it would also cope with the first problem I 
+reported. Because if it would periodically re-scan and try to 
+associate, a later submitted or changed WEP key would be taken 
+into account and association would have succeeded.
