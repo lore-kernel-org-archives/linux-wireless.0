@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59276 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755102AbXK0NHY (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52553
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756921AbXKWNxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 08:07:24 -0500
-Message-Id: <20071126225421.729141000@sipsolutions.net> (sfid-20071127_130734_848117_32B96FED)
-References: <20071126225416.467939000@sipsolutions.net>
-Date: Mon, 26 Nov 2007 23:54:19 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH (2.6.24) 3/3]  iwlwifi: do not allow MAC address change
-Mime-Version: 1.0
+	Fri, 23 Nov 2007 08:53:02 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: include FCS in frames handed to mac80211
+Date: Fri, 23 Nov 2007 14:51:58 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1195814776.4149.90.camel@johannes.berg>
+In-Reply-To: <1195814776.4149.90.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711231451.58564.mb@bu3sch.de> (sfid-20071123_135328_675358_39285591)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iwlwifi drivers do not allow changing the MAC address (because the 
-drivers ignore the MAC address mac80211 gives them). So far I haven't
-been successful in making them not ignore it, so this makes them tell
-mac80211 that they cannot change the MAC address which will disable
-MAC changing completely.
+On Friday 23 November 2007 11:46:16 Johannes Berg wrote:
+> Sometimes it can be useful to see the FCS, especially when
+> bad-FCS frames are shown. Pass the FCS to mac80211 and let
+> it worry about snipping it off when required.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/b43/main.c |    3 ++-
+>  drivers/net/wireless/b43/xmit.c |    1 -
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- everything.orig/drivers/net/wireless/b43/main.c	2007-11-22 23:35:41.208716199 +0100
+> +++ everything/drivers/net/wireless/b43/main.c	2007-11-22 23:36:03.138677951 +0100
+> @@ -4158,7 +4158,8 @@ static int b43_wireless_init(struct ssb_
+>  	}
+>  
+>  	/* fill hw info */
+> -	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
+> +	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
+> +		    IEEE80211_HW_RX_INCLUDES_FCS;
+>  	hw->max_signal = 100;
+>  	hw->max_rssi = -110;
+>  	hw->max_noise = -110;
+> --- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:05.668676810 +0100
+> +++ everything/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:22.668677190 +0100
+> @@ -489,7 +489,6 @@ void b43_rx(struct b43_wldev *dev, struc
+>  	}
+>  	wlhdr = (struct ieee80211_hdr *)(skb->data);
+>  	fctl = le16_to_cpu(wlhdr->frame_control);
+> -	skb_trim(skb, skb->len - FCS_LEN);
+>  
+>  	if (macstat & B43_RX_MAC_DEC) {
+>  		unsigned int keyidx;
+> 
+> 
+> 
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org> 
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-11-26 23:35:47.519044815 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2007-11-26 23:35:54.929043078 +0100
-@@ -8381,7 +8381,8 @@ static int iwl_pci_probe(struct pci_dev 
- 	hw->max_signal = 100;	/* link quality indication (%) */
- 
- 	/* Tell mac80211 our Tx characteristics */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
-+		    IEEE80211_HW_NO_MAC_CHANGE_SUPPORT;
- 
- 	hw->queues = 4;
- 
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-11-26 23:35:17.379044217 +0100
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-11-26 23:35:43.209044760 +0100
-@@ -8983,7 +8983,8 @@ static int iwl_pci_probe(struct pci_dev 
- 	hw->max_signal = 100;	/* link quality indication (%) */
- 
- 	/* Tell mac80211 our Tx characteristics */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
-+		    IEEE80211_HW_NO_MAC_CHANGE_SUPPORT;
- 
- 	hw->queues = 4;
- #ifdef CONFIG_IWLWIFI_HT
+Does this work with all encryption and non-encryption modes?
+There was a crypto related reason why we snipped off the FCS.
+Maybe that's gone, though.
 
 -- 
-
+Greetings Michael.
