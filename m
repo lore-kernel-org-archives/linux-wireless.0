@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.239]:45828 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbXKAEjj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43946 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755834AbXKWMQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 00:39:39 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so407113wxd
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2007 21:39:38 -0700 (PDT)
-Date: Thu, 1 Nov 2007 00:39:33 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 6/7] ath5k: Clear up settings of AR5K_RSSI_THR register
-	settings
-Message-ID: <20071101043933.GG21987@pogo> (sfid-20071101_043941_807483_89A8F254)
-References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo> <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071101043855.GF21987@pogo>
+	Fri, 23 Nov 2007 07:16:05 -0500
+Subject: [PATCH] b43: include full 64-bit timestamp in monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 23 Nov 2007 11:46:08 +0100
+Message-Id: <1195814768.4149.88.camel@johannes.berg> (sfid-20071123_121610_694009_AD68CCB3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clear up settings of AR5K_RSSI_THR register settings. These are split between
-AR5K_TUNE_BMISS_THRES and AR5K_TUNE_RSSI_THRES.
+When monitor mode is enabled, this will make b43 read out the
+full 64-bit MAC time from the chip for each received packet.
 
-Changes to ath5k.h, hw.c
-Changes-licensed-under: ISC
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath5k/ath5k.h |   10 +++++++++-
- drivers/net/wireless/ath5k/hw.c    |   11 ++++-------
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/net/wireless/b43/b43.h  |    2 ++
+ drivers/net/wireless/b43/main.c |    2 ++
+ drivers/net/wireless/b43/xmit.c |   18 +++++++++++++++++-
+ 3 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index 3354b37..c8ab09a 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -86,8 +86,16 @@
- #define AR5K_TUNE_RADAR_ALERT			false
- #define AR5K_TUNE_MIN_TX_FIFO_THRES		1
- #define AR5K_TUNE_MAX_TX_FIFO_THRES		((IEEE80211_MAX_LEN / 64) + 1)
--#define AR5K_TUNE_RSSI_THRES			1792
- #define AR5K_TUNE_REGISTER_TIMEOUT		20000
-+/* Register for RSSI threshold has a mask of 0xff, so 255 seems to 
-+ * be the max value. */
-+#define AR5K_TUNE_RSSI_THRES                   129
-+/* This must be set when setting the RSSI threshold otherwise it can 
-+ * prevent a reset. If AR5K_RSSI_THR is read after writing to it
-+ * the BMISS_THRES will be seen as 0, seems harware doesn't keep 
-+ * track of it. Max value depends on harware. For AR5210 this is just 7.
-+ * For AR5211+ this seems to be up to 255. */
-+#define AR5K_TUNE_BMISS_THRES                  7
- #define AR5K_TUNE_REGISTER_DWELL_TIME		20000
- #define AR5K_TUNE_BEACON_INTERVAL		100
- #define AR5K_TUNE_AIFS				2
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 1b9c4f0..f1ba863 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -849,13 +849,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	/*PISR/SISR Not available on 5210*/
- 	if (ah->ah_version != AR5K_AR5210) {
- 		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_PISR);
--		/* XXX: AR5K_RSSI_THR has masks and shifts defined for it, so
--		 * direct write using ath5k_hw_reg_write seems wrong. Test with:
--		 * AR5K_REG_WRITE_BITS(ah, AR5K_RSSI_THR,
--		 *   AR5K_RSSI_THR_BMISS, AR5K_TUNE_RSSI_THRES);
--		 * with different variables and check results compared
--		 * to ath5k_hw_reg_write(ah, )  */
--		ath5k_hw_reg_write(ah, AR5K_TUNE_RSSI_THRES, AR5K_RSSI_THR);
-+		/* If we later allow tuning for this, store into sc structure */
-+		data = AR5K_TUNE_RSSI_THRES |
-+			AR5K_TUNE_BMISS_THRES << AR5K_RSSI_THR_BMISS_S;
-+		ath5k_hw_reg_write(ah, data, AR5K_RSSI_THR);
+--- everything.orig/drivers/net/wireless/b43/b43.h	2007-11-22 22:56:20.648678709 +0100
++++ everything/drivers/net/wireless/b43/b43.h	2007-11-22 23:03:27.268675020 +0100
+@@ -635,6 +635,8 @@ struct b43_wl {
+ 	/* List of all wireless devices on this chip */
+ 	struct list_head devlist;
+ 	u8 nr_devs;
++
++	bool radiotap_enabled;
+ };
+ 
+ /* Pointers to the firmware data and meta information about it. */
+--- everything.orig/drivers/net/wireless/b43/main.c	2007-11-22 22:55:49.608678981 +0100
++++ everything/drivers/net/wireless/b43/main.c	2007-11-22 23:03:53.678676051 +0100
+@@ -2853,6 +2853,8 @@ static int b43_op_config(struct ieee8021
+ 			b43_short_slot_timing_disable(dev);
  	}
  
- 	/*
--- 
-1.5.2.5
++	dev->wl->radiotap_enabled = !!(conf->flags & IEEE80211_CONF_RADIOTAP);
++
+ 	/* Adjust the desired TX power level. */
+ 	if (conf->power_level != 0) {
+ 		if (conf->power_level != phy->power_level) {
+--- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-22 22:54:33.498725965 +0100
++++ everything/drivers/net/wireless/b43/xmit.c	2007-11-22 23:15:44.808681966 +0100
+@@ -526,7 +526,23 @@ void b43_rx(struct b43_wldev *dev, struc
+ 	else
+ 		status.rate = b43_plcp_get_bitrate_cck(plcp);
+ 	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
+-	status.mactime = mactime;
++
++	/*
++	 * If monitors are present get full 64-bit timestamp. This
++	 * code assumes we get to process the packet within 16 bits
++	 * of timestamp, i.e. about 65 milliseconds after the PHY
++	 * received the first symbol.
++	 */
++	if (dev->wl->radiotap_enabled) {
++		u16 low_mactime_now;
++
++		b43_tsf_read(dev, &status.mactime);
++		low_mactime_now = status.mactime;
++		status.mactime = status.mactime & ~0xFFFFULL;
++		status.mactime += mactime;
++		if (low_mactime_now <= mactime)
++			status.mactime -= 0x10000;
++	}
+ 
+ 	chanid = (chanstat & B43_RX_CHAN_ID) >> B43_RX_CHAN_ID_SHIFT;
+ 	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
+
 
