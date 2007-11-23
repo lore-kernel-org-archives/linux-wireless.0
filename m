@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:3293 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751140AbXKXGP1 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:56726 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753120AbXKWEbm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 01:15:27 -0500
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: johannes@sipsolutions.net (Johannes Berg)
-Subject: Re: wireless vs. alignment requirements
-Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1195850001.4149.165.camel@johannes.berg>
-Message-Id: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> (sfid-20071124_061542_639365_63E58562)
-Date: Sat, 24 Nov 2007 14:15:05 +0800
+	Thu, 22 Nov 2007 23:31:42 -0500
+Received: by py-out-1112.google.com with SMTP id u77so8277143pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 20:31:41 -0800 (PST)
+Message-ID: <5b9417770711222031r28011e75v3a6eb4a7acdf2183@mail.gmail.com> (sfid-20071123_043148_190008_344DE5B7)
+Date: Thu, 22 Nov 2007 22:31:40 -0600
+From: "John H." <mistamaila@gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: timeout problems with certain APs and b43
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <4744AEA1.9020705@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
+	 <4744AEA1.9020705@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
+wrt54gs with latest firmware.
+
+it seems exclusive to linux:O
+
+On Nov 21, 2007 4:18 PM, Larry Finger <larry.finger@lwfinger.net> wrote:
+> John H. wrote:
+> >  uname -a
+> > Linux laptop 2.6.23.1-49.fc8 #1 SMP Thu Nov 8 21:41:26 EST 2007 i686
+> > i686 i386 GNU/Linux
+> > fedora 8
+> >
+> > on certain APs, the internet works for a long time then stops, and I
+> > get authentication time outs, why?  It usually works again if I reset
+> > the AP itself, which i should not have to do and don't have to if in
+> > XP....
+> >
+> >
+> > wlan0: switched to long barker preamble (BSSID=00:0f:66:53:3e:24)
+> > wlan0: switched to short barker preamble (BSSID=00:0f:66:53:3e:24)
+> >
+> >
+> >
+> > wlan0: Initial auth_alg=0
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authenticate with AP 00:0f:66:53:3e:24
+> > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
 >
-> Now, the IP stack actually assumes that its header is four-byte aligned
-> (see comment at NET_IP_ALIGN, although it is not said explicitly that
-> the alignment requirement for an IP header is four) so that is actually
-> something for the hardware/firmware (!) to do, for example Broadcom
-
-Good point.  In fact IIRC we've always had the policy that drivers
-should do their best to generate aligned packets but it is not a
-requirement since on some platforms it's more important for the DMA
-to be aligned.
-
-So it's up the platform code to fix up any exceptions should they
-show up.
-
-Daniel, what's the specific case that you had in mind with this
-patch?
-
-Thanks,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> Do you have the opportunity to capture the wireless traffic with a second computer using Kismet or
+> Wireshark when this condition occurs? Without that info, it would be hard to know what might be
+> wrong. Of course, I don't have the problem with either of my AP's.
+>
+> Could you identify the make/model and firmware revisions of any AP's that show this behavior?
+>
+> Larry
+>
