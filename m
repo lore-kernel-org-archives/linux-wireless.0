@@ -1,68 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33230 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756862AbXK0Sk5 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52034
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752775AbXKWNtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 13:40:57 -0500
-Date: Tue, 27 Nov 2007 10:39:40 -0800
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-Message-ID: <20071127103940.314c7844@freepuppy.rosehill> (sfid-20071127_184103_402085_0CB0A184)
-In-Reply-To: <474C50D7.5010901@zytor.com>
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au>
-	<1195893216.4149.186.camel@johannes.berg>
-	<20071124133200.GA27531@gondor.apana.org.au>
-	<1195912176.4149.194.camel@johannes.berg>
-	<20071124141319.GA27819@gondor.apana.org.au>
-	<4748855C.5090103@linux-foundation.org>
-	<474C50D7.5010901@zytor.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 23 Nov 2007 08:49:18 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH V2] b43: Changes to enable BCM4311 rev 02 with wireless core revision 13
+Date: Fri, 23 Nov 2007 14:47:18 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4744a544.OLz3JRLe85L+V2nd%Larry.Finger@lwfinger.net> <200711221834.32026.mb@bu3sch.de> <474666F7.6090405@lwfinger.net>
+In-Reply-To: <474666F7.6090405@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711231447.19262.mb@bu3sch.de> (sfid-20071123_134920_545237_A6356941)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Nov 2007 09:16:07 -0800
-"H. Peter Anvin" <hpa@zytor.com> wrote:
-
-> Stephen Hemminger wrote:
-> > Herbert Xu wrote:
-> >> On Sat, Nov 24, 2007 at 02:49:36PM +0100, Johannes Berg wrote:
-> >>  
-> >>> Right. I just didn't think that would be a valid value for an
-> >>> architecture to set.
-> >>>     
-> >>
-> >> OK.  Let me clarify this a bit more.  We require at least one
-> >> of the following rules to be met:
-> >>
-> >> * the IPv4/IPv6 header is aligned by 8 bytes on reception;
-> >> * or the platform provides unaligned exception handlers.
-> >>
-> >> So if your platform violates both rules then it won't work with
-> >> the IP stack, simple as that.  Fortunately I don't think such a
-> >> platform exists currently on Linux.
-> >>
-> >> Cheers,
-> >>   
+On Friday 23 November 2007 06:36:55 Larry Finger wrote:
+> Michael Buesch wrote:
 > > 
-> > Then what about hardware that can't dma ethernet to non-aligned address.
-> > Sky2 hardware breaks if DMA is not 8 byte aligned.  IMHO the IP stack 
-> > should handle any alignment, and do the appropriate memove if the CPU requires 
-> > alignment.
+> > partially acked.
+> > Though, I'm not quite sure yet why you remove that
+> > address extension bits. The specs clearly say that they _are_ there.
+> > And it makes sense to use them, as two bytes of the address are used
+> > for the routing stuff. So the highest 2 bits of the address have to be put
+> > somewhere else. That's the "Transmit Channel Control Word" and
+> > "Receive Channel Control Word" where 0x00030000 are the extension bits.
+> > 
 > 
-> I wrote a patch for the IP stack to realign packets if necessary at one 
-> point.  I should dredge it up again and submit it for collective flamage.
+> The appropriate section of dmacontroller_setup() in my patched source is as follows:
 > 
-> 	-hpa
+>         if (ring->tx) {
+>                 if (ring->dma64) {
+>                         u64 ringbase = (u64) (ring->dmabase);
 > 
+>                         b43_dma_write(ring, B43_DMA64_TXCTL,
+>                                       B43_DMA64_TXENABLE);
+>                         b43_dma_write(ring, B43_DMA64_TXRINGLO,
+>                                       (ringbase & 0xFFFFFFFF));
+>                         b43_dma_write(ring, B43_DMA64_TXRINGHI,
+>                                       (ringbase >> 32));
+>                 } else {
+> 			...... untouched 32-bit stuff ....
+> 		}
+>         } else {
+>                 err = alloc_initial_descbuffers(ring);
+>                 if (err)
+>                         goto out;
+>                 if (ring->dma64) {
+>                         u64 ringbase = (u64) (ring->dmabase);
+> 
+>                         value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT)
+>                                 | B43_DMA64_RXENABLE;
+>                         b43_dma_write(ring, B43_DMA64_RXCTL, value);
+>                         b43_dma_write(ring, B43_DMA64_RXRINGLO,
+>                                       (ringbase & 0xFFFFFFFF));
+>                         b43_dma_write(ring, B43_DMA64_RXRINGHI,
+>                                       (ringbase >> 32));
+>                         b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+>                                       sizeof(struct b43_dmadesc64));
+>                 } else {
+> 			........... 32-bit stuff ........
+> 	}
+> 
+> No address extensions are used here because the specs clearly state that a flat 64-bit address is
+> used to specify the Descriptor Ring address. My code matches the specs.
 
-Is there any standard kernel config define for "this platform can't do
-unaligned accesses"?
+I'm not sure which specifications you use, but here it clearly describes the
+extension bits:
+http://bcm-v4.sipsolutions.net/802.11/DMA#TransmitChannelControlWord-1
+
+> > However I do think that this might be related to the bug you are explaining
+> > in the comment:
+> >> +	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
+> >> +	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
+> >> +	 * which accounts for the GFP_DMA flag below.
+
+> the error, and that part does not use any extension bits. Secondly, the address extension stuff
+> would only apply if my computer had more than 2^(62) bytes of RAM, which is something like 10
+> billion GB - an amount that probably exceeds the total RAM in the world.
+
+This is not true. We live in a world with IO-MMUs.
 
 -- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+Greetings Michael.
