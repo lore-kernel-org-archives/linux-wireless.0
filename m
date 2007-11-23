@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:46418 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954AbXKZSAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 13:00:23 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com
-Subject: Re: [PATCH 04/15] mac80211: adding 802.11n IEs handling
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-	<1196086490284-git-send-email-ron.rindjunsky@intel.com>
-	<1196094586.4149.297.camel@johannes.berg>
-	<jefxyteygc.fsf@sykes.suse.de>
-	<1196096412.4149.311.camel@johannes.berg>
-Date: Mon, 26 Nov 2007 19:00:21 +0100
-In-Reply-To: <1196096412.4149.311.camel@johannes.berg> (Johannes Berg's
-	message of "Mon\, 26 Nov 2007 18\:00\:12 +0100")
-Message-ID: <jeabp028ga.fsf@sykes.suse.de> (sfid-20071126_180028_720490_90CA1017)
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:12453 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537AbXKWJCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 04:02:34 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 regression: doesn't associate automatically
+Date: Fri, 23 Nov 2007 10:03:03 +0100
+Cc: Pavel Roskin <proski@gnu.org>
+References: <200711220912.10452.hs4233@mail.mn-solutions.de> <200711230906.10441.hs4233@mail.mn-solutions.de> <1195806137.12961.9.camel@dv>
+In-Reply-To: <1195806137.12961.9.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711231003.03982.hs4233@mail.mn-solutions.de> (sfid-20071123_090240_993902_438F6DDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+> Orinoco relies on roaming in the firmware
 
->> > On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
->> >> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_=
-i.h
->> >> index 9e5b3a9..9caf124 100644
->> >> --- a/net/mac80211/ieee80211_i.h
->> >> +++ b/net/mac80211/ieee80211_i.h
->> >> @@ -89,6 +89,8 @@ struct ieee80211_sta_bss {
->> >>  	size_t rsn_ie_len;
->> >>  	u8 *wmm_ie;
->> >>  	size_t wmm_ie_len;
->> >> +	u8 *ht_ie;
->> >> +	size_t ht_ie_len;
->> >
->> > At some point we probably should reorder the fields here to avoid =
-all
->> > the padding... Not in this patch though, of course.
->>=20
->> There should not be any padding, size_t has the same size as a point=
-er.
->
-> Even on 64-bit? In any case, the _len vars can all be u8 too.
+And wlags_h1_cs/wlags_h2_cs as well.
 
-I think you are missing a couple of '*'s here.
+libertas_cs has half-baked roaming in firmware and in 
+kernel-space, doesn't work very well so far.
 
-Andreas.
+Madwifi has code coarse code roaming in the BSD borrowed 
+ieee80211 code. It roams only when it lost the association to 
+the current AP. But before doing that, it went with it's rate 
+down to 1 MBit/s, even when there's a better AP nearby that it 
+could use with 11 MBit/s or higher.
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There is code in it which is disabled via "if (0 || ...)" that 
+allows for a much smoother roaming, e.g. to scan when the RSSI 
+drops below a certain level. Once enabled and after tuning of 
+some timeout variables, that roaming code works extremely well. 
+Both in a WEP-mode without wpa_supplicant and in WPA/WPA2 mode 
+with wpa_supplicant.
+
+
+> wpa_supplicant gives you roaming in the userspace.
+
+Yeah, I thought in this lines as well. I have no problem putting 
+wpa_supplicant on my embedded targets. In fact, it's already 
+there, it's currently just used for WPA, not for WEP. However, 
+if suddenly NetworkManager would be needed for roaming, then 
+from an embedded-usage point of view I wouldn't like that.
+
+I just don't know how good it's roaming code is, e.g. can it 
+start to scan for something better if the RSSI drops below some 
+threshold?  Does it have a good picture of the ever changing 
+situation of AP's signal strength?  This I need to find out :-)
