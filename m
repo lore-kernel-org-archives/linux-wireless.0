@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48681 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760977AbXKTWrq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:47:46 -0500
-Subject: [PATCH 4/6] libertas: nuke useless variable usbdriver_name and
-	useless comments
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andres Salomon <dilinger@debian.org>
-Content-Type: text/plain
-Date: Tue, 20 Nov 2007 17:44:04 -0500
-Message-Id: <1195598644.32309.29.camel@localhost.localdomain> (sfid-20071120_224749_052954_8A0340BC)
-Mime-Version: 1.0
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:39634 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753655AbXKWKvz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 05:51:55 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com
+Subject: ath5k signal/noise fixes
+Date: Fri, 23 Nov 2007 19:52:00 +0900
+Message-Id: <1195815123-22375-1-git-send-email-bruno@thinktube.com> (sfid-20071123_105200_317854_FDC43811)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Salomon <dilinger@debian.org>
 
-I think it was pretty obvious what fields in if_usb_driver are...
+hello!
 
-Signed-off-by: Andres Salomon <dilinger@debian.org>
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+the next 3 patches contain fixes for the signal/noise level calibration and
+reporting of ath5k.  i split them up because i'm not 100% sure of the second
+two.
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 4d4f757..043a33d 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -17,8 +17,6 @@
- 
- #define MESSAGE_HEADER_LEN	4
- 
--static const char usbdriver_name[] = "usb8xxx";
--
- static char *lbs_fw_name = "usb8388.bin";
- module_param_named(fw_name, lbs_fw_name, charp, 0644);
- 
-@@ -998,13 +996,9 @@ static int if_usb_resume(struct usb_interface *intf)
- #endif
- 
- static struct usb_driver if_usb_driver = {
--	/* driver name */
--	.name = usbdriver_name,
--	/* probe function name */
-+	.name = DRV_NAME,
- 	.probe = if_usb_probe,
--	/* disconnect function  name */
- 	.disconnect = if_usb_disconnect,
--	/* device signature table */
- 	.id_table = if_usb_table,
- 	.suspend = if_usb_suspend,
- 	.resume = if_usb_resume,
+  1) fixes the reading of the noise floor register and puts it into one function.
 
+  2) also enables noise floor calibration for rf511x.
+
+  3) saves the read noise floor and exports signal/noise and "quality" to
+  mac80211/wext.
+
+i'm also not sure if what we call noise calibration in this case really is an
+calibration or just a reading of the values?
+
+is ath5k_hw the right place to store the noise_floor?
+
+the values reported, especially the noise seems a bit high, it's around -77 in
+the A bands and around -92 in G bands (thats with an AR5215/RF5111/2111), so we
+might have some more tweaking to do. since i add the RSSI to get the signal
+quality in dBm it seems a bit too high too.
+
+this comment from madwifi leads me to believe this is the correct thing to do:
+
+ * rx_rssi is in units of dbm above the noise floor.  This value
+ * is measured during the preamble and PLCP; i.e. with the initial
+ * 4us of detection.  The noise floor is typically a consistent
+ * -96dBm absolute power in a 20MHz channel
+
+at least we have some values to play with now :)
+
+ah, and they are based on my last debugging and logging, patches (although
+there are not huge dependencies).
+
+bruno
