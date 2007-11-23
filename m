@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43949 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755845AbXKWMQI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 07:16:08 -0500
-Subject: [PATCH] b43: include FCS in frames handed to mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 23 Nov 2007 11:46:16 +0100
-Message-Id: <1195814776.4149.90.camel@johannes.berg> (sfid-20071123_121611_904155_16D1D5F2)
-Mime-Version: 1.0
+Received: from venema.h4ckr.net ([217.24.1.135]:45767 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750786AbXKWFDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 00:03:16 -0500
+Message-ID: <58948.84.58.144.191.1195794193.squirrel@webmail.madwifi.org> (sfid-20071123_050323_075064_4C82813A)
+In-Reply-To: <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com>
+References: <200711222310.01165.virec@inmail.sk>
+    <40f31dec0711221538i503119b7hdeffbbde50629a6c@mail.gmail.com>
+Date: Fri, 23 Nov 2007 06:03:13 +0100 (CET)
+Subject: Re: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: "Majo" <virec@inmail.sk>, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes it can be useful to see the FCS, especially when
-bad-FCS frames are shown. Pass the FCS to mac80211 and let
-it worry about snipping it off when required.
+Hi.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43/main.c |    3 ++-
- drivers/net/wireless/b43/xmit.c |    1 -
- 2 files changed, 2 insertions(+), 2 deletions(-)
+>> 14:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG
+>> 802.11 b/g Wireless PCI Express Adapter (rev 01)
+> This is a 2424 pci-express card, we don't support this chip yet ;-(
 
---- everything.orig/drivers/net/wireless/b43/main.c	2007-11-22 23:35:41.208716199 +0100
-+++ everything/drivers/net/wireless/b43/main.c	2007-11-22 23:36:03.138677951 +0100
-@@ -4158,7 +4158,8 @@ static int b43_wireless_init(struct ssb_
- 	}
- 
- 	/* fill hw info */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
-+		    IEEE80211_HW_RX_INCLUDES_FCS;
- 	hw->max_signal = 100;
- 	hw->max_rssi = -110;
- 	hw->max_noise = -110;
---- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:05.668676810 +0100
-+++ everything/drivers/net/wireless/b43/xmit.c	2007-11-22 23:36:22.668677190 +0100
-@@ -489,7 +489,6 @@ void b43_rx(struct b43_wldev *dev, struc
- 	}
- 	wlhdr = (struct ieee80211_hdr *)(skb->data);
- 	fctl = le16_to_cpu(wlhdr->frame_control);
--	skb_trim(skb, skb->len - FCS_LEN);
- 
- 	if (macstat & B43_RX_MAC_DEC) {
- 		unsigned int keyidx;
+Don't be fooled by the PCI ID - we already know that these are not
+reliable to identify the chipset used on a Atheros-based card. See also
+http://madwifi.org/ticket/1192.
 
+I'd suggest Majo to use ath_info from MadWifi trunk, hopefully it allows
+to recognize the chipset more reliably in his case, too. The ticket
+mentioned above also has some instructions on how to use this tool.
 
+> (the testbed stuff would really help)
+
+Working on it, but it's still a long road. Getting non-profit status is
+just the first step for that, and that's work in progress.
+
+Bye, Mike
