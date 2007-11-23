@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:43122 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757988AbXK0RRb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43942 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755819AbXKWMQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 12:17:31 -0500
-Message-ID: <474C50F7.8@zytor.com> (sfid-20071127_171735_297421_AF43D270)
-Date: Tue, 27 Nov 2007 09:16:39 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
-To: Herbert Xu <herbert@gondor.apana.org.au>
-CC: Stephen Hemminger <shemminger@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <20071125010814.GD31668@gondor.apana.org.au>
-In-Reply-To: <20071125010814.GD31668@gondor.apana.org.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 23 Nov 2007 07:16:03 -0500
+Subject: [PATCH] mac80211: include MAC timestamp in radiotap header
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 23 Nov 2007 11:45:54 +0100
+Message-Id: <1195814754.4149.86.camel@johannes.berg> (sfid-20071123_121608_153874_56B09512)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herbert Xu wrote:
-> 
-> Luckily all sky2 users have been on x86 so far :)
-> 
+This makes mac80211 include the low-level MAC timestamp
+in the radiotap header.
 
-Hardly so.  My previous employer was MIPS and we used it there (with my 
-patch.)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/rx.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-	-hpa
+--- everything.orig/net/mac80211/rx.c	2007-11-22 23:33:46.058691568 +0100
++++ everything/net/mac80211/rx.c	2007-11-23 11:45:10.422091198 +0100
+@@ -82,6 +82,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 	int needed_headroom = 0;
+ 	struct ieee80211_rtap_hdr {
+ 		struct ieee80211_radiotap_header hdr;
++		__le64 tsft;
+ 		u8 flags;
+ 		u8 rate;
+ 		__le16 chan_freq;
+@@ -157,7 +158,8 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 		memset(rthdr, 0, sizeof(*rthdr));
+ 		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
+ 		rthdr->hdr.it_present =
+-			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
++				    (1 << IEEE80211_RADIOTAP_FLAGS) |
+ 				    (1 << IEEE80211_RADIOTAP_RATE) |
+ 				    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+ 				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
+@@ -165,6 +167,8 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
+ 			       IEEE80211_RADIOTAP_F_FCS : 0;
+ 
++		rthdr->tsft = cpu_to_le64(status->mactime);
++
+ 		/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
+ 		rthdr->rx_flags = 0;
+ 		if (status->flag &
+
+
