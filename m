@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:43923 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750886AbXKGRfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 12:35:03 -0500
-Date: Wed, 7 Nov 2007 18:33:37 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [PATCH] b43legacy: fix shared IRQ race condition
-Message-ID: <20071107183337.4a77dbd4@morte> (sfid-20071107_173508_247738_9B313847)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from rn-out-0910.google.com ([64.233.170.191]:4216 "EHLO
+	rn-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755914AbXKWPgb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 10:36:31 -0500
+Received: by rn-out-0102.google.com with SMTP id s46so4290697rnb
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 07:36:30 -0800 (PST)
+Message-ID: <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com> (sfid-20071123_153635_036678_CB6CB695)
+Date: Fri, 23 Nov 2007 10:36:28 -0500
+From: "Vadim Peretokin" <vperetokin@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Belin FD7010 v7
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1195784707.11966.38.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+	 <1195781993.11966.27.camel@dv>
+	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
+	 <1195784707.11966.38.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix an IRQ race condition in b43legacy. If we call
-b43legacy_wireless_core_stop(), it will set the status of the device to
-INITIALIZED and the IRQ handler won't care any longer about IRQs, thus the
-kernel will disable the IRQ if it's shared (unless we boot it with the
-'irqpoll' option). So we must disable IRQs before changing the device
-status.
+That didn't quite work. iwconfig and ifconfig couldn't see the card,
+but lswh -C network showed my card. It said "* - network UNCLAIMED",
+but it didn't say any logical adresses. I tried a host of adresses
+with "sudo ifconfig <adress> up", but nothing would work.
 
+I had a friend help me do some hacks involving telling the driver the
+adress of my card, and then iwconfig saw it - but for some reason Wicd
+couldn't see it (I'll try again when I get back home and install
+Network Manager again.). I have a log of what we did to get it
+"working", if it's any help.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+And yes, the card does work if you install the net8185.inf driver in
+ndiswrapper and then use the -a command to link the card to the
+driver. I was just hoping that the card would work out of the box :)
 
----
-
---- wireless-2.6/drivers/net/wireless/b43legacy/main.c.orig	2007-11-07 18:27:54.710703615 +0100
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c	2007-11-07 18:29:37.731201996 +0100
-@@ -2682,6 +2682,17 @@
- 
- 	if (b43legacy_status(dev) < B43legacy_STAT_STARTED)
- 		return;
-+
-+	/* Disable and sync interrupts. We must do this before than
-+	 * setting the status to INITIALIZED, as the interrupt handler
-+	 * won't care about IRQs then. */
-+	spin_lock_irqsave(&wl->irq_lock, flags);
-+	dev->irq_savedstate = b43legacy_interrupt_disable(dev,
-+							  B43legacy_IRQ_ALL);
-+	b43legacy_read32(dev, B43legacy_MMIO_GEN_IRQ_MASK); /* flush */
-+	spin_unlock_irqrestore(&wl->irq_lock, flags);
-+	b43legacy_synchronize_irq(dev);
-+
- 	b43legacy_set_status(dev, B43legacy_STAT_INITIALIZED);
- 
- 	mutex_unlock(&wl->mutex);
-@@ -2692,14 +2703,6 @@
- 
- 	ieee80211_stop_queues(wl->hw); /* FIXME this could cause a deadlock */
- 
--	/* Disable and sync interrupts. */
--	spin_lock_irqsave(&wl->irq_lock, flags);
--	dev->irq_savedstate = b43legacy_interrupt_disable(dev,
--							  B43legacy_IRQ_ALL);
--	b43legacy_read32(dev, B43legacy_MMIO_GEN_IRQ_MASK); /* flush */
--	spin_unlock_irqrestore(&wl->irq_lock, flags);
--	b43legacy_synchronize_irq(dev);
--
- 	b43legacy_mac_suspend(dev);
- 	free_irq(dev->dev->irq, dev);
- 	b43legacydbg(wl, "Wireless interface stopped\n");
-
-
--- 
-Ciao
-Stefano
+On Nov 22, 2007 9:25 PM, Pavel Roskin <proski@gnu.org> wrote:
+>
+> On Thu, 2007-11-22 at 21:04 -0500, Vadim Peretokin wrote:
+> > Ahh I'm afraid no, I'm not quite there yet and need my laptop
+> > functional. But I'll let you know then when the next version of Ubuntu
+> > comes about, thank you!
+>
+> Actually, there is a compatibility package with the latest wireless
+> drivers:
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+>
+> It's much easier to compile.  No configuration is required.  Just run
+> "make" and then "make install" (as root).  Then use "modprobe rtl8180"
+> to load the driver.  Ubuntu will probably load it automatically after
+> reboot.  Linux 2.6.22 and newer is supported.  No kernel patching is
+> needed.  Just make sure to recompile the package when upgrading to the
+> next kernel.
+>
+> Even if that doesn't work, it's possible to use ndiswrapper with the
+> Windows driver, so that you don't have to choose your OS because of
+> issues with just one driver.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
+>
