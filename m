@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4015 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625AbXKGCdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 21:33:18 -0500
-Date: Tue, 6 Nov 2007 21:32:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mb@bu3sch.de
-Subject: Re: [PATCH 1/2] ssb: Add "ssb_pci_set_power_state" function
-Message-ID: <20071107023253.GA30169@tuxdriver.com> (sfid-20071107_023325_064103_2596C138)
-References: <200710242131.21959.mboton.lkml@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.237]:20288 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563AbXKWCEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 21:04:24 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so2393031nze
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 18:04:23 -0800 (PST)
+Message-ID: <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com> (sfid-20071123_020430_521558_587D061E)
+Date: Thu, 22 Nov 2007 21:04:22 -0500
+From: "Vadim Peretokin" <vperetokin@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Belin FD7010 v7
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1195781993.11966.27.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200710242131.21959.mboton.lkml@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+	 <1195781993.11966.27.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Miguel,
+Ahh I'm afraid no, I'm not quite there yet and need my laptop
+functional. But I'll let you know then when the next version of Ubuntu
+comes about, thank you!
 
-Along with the style point Michael suggested, I'll need you to repost
-both this one and the b44 patch with at least a Signed-off-by line.
-
-	http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt
-
-Also, please include the patches as plain text using a mailer that
-does not damage whitespace.
-
-Thanks,
-
-John
-
-On Wed, Oct 24, 2007 at 09:31:21PM +0200, Miguel Bot=F3n wrote:
-> Add "ssb_pci_set_power_state" function. This allows set the power sta=
-te of a=20
-> PCI device (for example b44 ethernet device).
->=20
-> diff -ruN linux-2.6.23/include/linux/ssb/ssb.h=20
-> linux-2.6.23.orig/include/linux/ssb/ssb.h
-> --- linux-2.6.23.orig/include/linux/ssb/ssb.h	2007-10-24 19:02:33.000=
-000000=20
-> +0200
-> +++ linux-2.6.23/include/linux/ssb/ssb.h	2007-10-24 19:49:37.00000000=
-0 +0200
-> @@ -402,6 +402,14 @@
->  {
->  	pci_unregister_driver(driver);
->  }
-> +
-> +/* Set PCI device power state */
-> +static inline
-> +void ssb_pci_set_power_state(struct ssb_device *dev, pci_power_t sta=
-te)
-> +{
-> +	if(dev->bus->bustype =3D=3D SSB_BUSTYPE_PCI)
-> +		pci_set_power_state(dev->bus->host_pci, state);
-> +}
->  #endif /* CONFIG_SSB_PCIHOST */
-> =20
-> =20
->=20
-> --=20
-> 	Miguel Bot=F3n
-
---=20
-John W. Linville
-linville@tuxdriver.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Nov 22, 2007 8:39 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2007-11-22 at 15:39 -0500, Vadim Peretokin wrote:
+>
+> > But that is very ambiguous. Does that mean if anything is being done
+> > to make this card work, do you know?
+>
+> The mac80211 driver for rtl8180/rtl8185 appeared in the "everything"
+> branch of the wireless-2.6 repository just weeks ago.  If you are ready
+> to recompile the kernel, use this to get the repository:
+>
+> git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+> cd wireless-2.6
+> git-checkout --track -b everything remotes/origin/everything
+>
+> Make sure CONFIG_RTL8180 is enabled in .config file.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
+>
