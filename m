@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2942 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753399AbXKATur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 15:50:47 -0400
-Date: Thu, 1 Nov 2007 15:49:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
-Message-ID: <20071101194909.GF14943@tuxdriver.com> (sfid-20071101_195051_292028_CB68C155)
-References: <20071101191716.GA3201@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071101191716.GA3201@pogo>
+Received: from fencepost.gnu.org ([140.186.70.10]:51189 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618AbXKWBj5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2007 20:39:57 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IvNWN-0006Ot-SB
+	for linux-wireless@vger.kernel.org; Thu, 22 Nov 2007 20:39:55 -0500
+Subject: Re: Belin FD7010 v7
+From: Pavel Roskin <proski@gnu.org>
+To: Vadim Peretokin <vperetokin@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 22 Nov 2007 20:39:53 -0500
+Message-Id: <1195781993.11966.27.camel@dv> (sfid-20071123_014001_156927_D23D0C84)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 01, 2007 at 03:17:16PM -0400, Luis R. Rodriguez wrote:
+On Thu, 2007-11-22 at 15:39 -0500, Vadim Peretokin wrote:
 
-> So I started reviewing the probes on each driver and came up with this
-> patch because Documenation/pci.txt has:
-> 
-> "The device driver needs to call pci_request_region() to verify
-> no other device is already using the same address resource.
-> Conversely, drivers should call pci_release_region() AFTER
-> calling pci_disable_device(). The idea is to prevent two devices 
-> colliding on the same address range"
+> But that is very ambiguous. Does that mean if anything is being done
+> to make this card work, do you know?
 
-No idea off the top of my head if this relates to the problem or not...
+The mac80211 driver for rtl8180/rtl8185 appeared in the "everything"
+branch of the wireless-2.6 repository just weeks ago.  If you are ready
+to recompile the kernel, use this to get the repository:
 
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -602,10 +602,10 @@ err_free:
->  	ieee80211_free_hw(hw);
->  err_map:
->  	pci_iounmap(pdev, mem);
-> -err_reg:
-> -	pci_release_region(pdev, 0);
->  err_dis:
->  	pci_disable_device(pdev);
-> +err_reg:
-> +	pci_release_region(pdev, 0);
->  err:
->  	return ret;
->  }
+git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+cd wireless-2.6
+git-checkout --track -b everything remotes/origin/everything
 
-If you do this, don't you need to change any "goto err_reg" to "goto
-err_dis" as well?
+Make sure CONFIG_RTL8180 is enabled in .config file.
 
-> --- a/drivers/net/wireless/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2200.c
-> @@ -11756,10 +11756,10 @@ static int ipw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	priv->workqueue = NULL;
->        out_iounmap:
->  	iounmap(priv->hw_base);
-> -      out_pci_release_regions:
-> -	pci_release_regions(pdev);
->        out_pci_disable_device:
->  	pci_disable_device(pdev);
-> +      out_pci_release_regions:
-> +	pci_release_regions(pdev);
->  	pci_set_drvdata(pdev, NULL);
->        out_free_ieee80211:
->  	free_ieee80211(priv->net_dev);
-
-Same as last comment, but for out_pci_release_regions and
-out_pci_disable_device.
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+Pavel Roskin
+
