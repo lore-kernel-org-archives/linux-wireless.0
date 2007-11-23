@@ -1,187 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47406 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179AbXKIICS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 03:02:18 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	tomas.winkler@intel.com, flamingice@sourmilk.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 09/14] iwlwifi: 802.11n configuring hw_mode parameters to support HT in A/G
-Date: Fri,  9 Nov 2007 10:02:01 +0200
-Message-Id: <1194595331715-git-send-email-ron.rindjunsky@intel.com> (sfid-20071109_080229_079393_7360E081)
-In-Reply-To: <11945953311042-git-send-email-ron.rindjunsky@intel.com>
-References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
- <11945953311871-git-send-email-ron.rindjunsky@intel.com>
- <11945953312850-git-send-email-ron.rindjunsky@intel.com>
- <11945953312367-git-send-email-ron.rindjunsky@intel.com>
- <1194595331658-git-send-email-ron.rindjunsky@intel.com>
- <11945953312456-git-send-email-ron.rindjunsky@intel.com>
- <11945953313491-git-send-email-ron.rindjunsky@intel.com>
- <11945953313626-git-send-email-ron.rindjunsky@intel.com>
- <11945953311042-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from an-out-0708.google.com ([209.85.132.240]:54942 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753770AbXKWL14 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 06:27:56 -0500
+Received: by an-out-0708.google.com with SMTP id d31so641618and
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 03:27:55 -0800 (PST)
+Message-ID: <40f31dec0711230327w6e929b1ay7769af8553e713b0@mail.gmail.com> (sfid-20071123_112758_230260_0295C47B)
+Date: Fri, 23 Nov 2007 13:27:55 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 3/3] ath5k: export signal quality values
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
+In-Reply-To: <1195815123-22375-4-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-3-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-4-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fills the mac80211's ieee80211_hw_mode structures with the
-needed 802.11n data needed for the new framework
+2007/11/23, Bruno Randolf <bruno@thinktube.com>:
+> store the last noise floor in ath5k_hw and report signal, noise and link
+> quality values to mac80211, which in turn makes them show up in iwconfig.
+>
+> ath5k.h, phy.c:
+> Changes-licensed-under: ISC
+>
+> base.c:
+> Changes-licensed-under: 3-clause-BSD
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h |    3 +++
+>  drivers/net/wireless/ath5k/base.c  |   22 ++++++++++++++++++++--
+>  drivers/net/wireless/ath5k/phy.c   |    2 ++
+>  3 files changed, 25 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> index 5bcbbf9..2e13d79 100644
+> --- a/drivers/net/wireless/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath5k/ath5k.h
+> @@ -1003,6 +1003,9 @@ struct ath5k_hw {
+>                 struct ieee80211_channel r_last_channel;
+>         } ah_radar;
+>
+> +       /* noise floor from last periodic calibration */
+> +       s32                     ah_noise_floor;
+> +
+>         /*
+>          * Function pointers
+>          */
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 444e4a7..f288858 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -435,7 +435,10 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>         hw->flags = IEEE80211_HW_RX_INCLUDES_FCS;
+>         hw->extra_tx_headroom = 2;
+>         hw->channel_change_time = 5000;
+> -       hw->max_rssi = 127; /* FIXME: get a real value for this. */
+> +       /* these names are misleading */
+> +       hw->max_rssi = -110; /* signal in dBm */
+> +       hw->max_noise = -110; /* noise in dBm */
+> +       hw->max_signal = 100; /* we will provide a percentage based on rssi */
+>         sc = hw->priv;
+>         sc->hw = hw;
+>         sc->pdev = pdev;
+> @@ -1721,7 +1724,22 @@ accept:
+>                 rxs.freq = sc->curchan->freq;
+>                 rxs.channel = sc->curchan->chan;
+>                 rxs.phymode = sc->curmode;
+> -               rxs.ssi = ds->ds_rxstat.rs_rssi;
+> +
+> +               /*
+> +                * signal quality:
+> +                * the names here are misleading and the usage of these
+> +                * values by iwconfig makes it even worse
+> +                */
+> +               /* noise floor in dBm, from the last noise calibration */
+> +               rxs.noise = sc->ah->ah_noise_floor;
+> +               /* signal level in dBm */
+> +               rxs.ssi = rxs.noise + ds->ds_rxstat.rs_rssi;
+> +               /*
+> +                * "signal" is actually displayed as Link Quality by iwconfig
+> +                * we provide a percentage based on rssi (assuming max rssi 64)
+> +                */
+> +               rxs.signal = ds->ds_rxstat.rs_rssi * 100 / 64;
+> +
+>                 rxs.antenna = ds->ds_rxstat.rs_antenna;
+>                 rxs.rate = ds->ds_rxstat.rs_rate;
+>                 rxs.flag |= ath5k_rx_decrypted(sc, ds, skb);
+> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+> index f250c2e..52caf8e 100644
+> --- a/drivers/net/wireless/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath5k/phy.c
+> @@ -1562,6 +1562,8 @@ ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
+>                 return -EIO;
+>         }
+>
+> +       ah->ah_noise_floor = noise_floor;
+> +
+>         return 0;
+>  }
+>
+> --
+> 1.5.3.4
+>
+>
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   32 ++++++++++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   26 ++++++----------------
- 3 files changed, 33 insertions(+), 29 deletions(-)
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index fed2357..0a6f6ec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3668,6 +3668,30 @@ static int parse_elems(u8 *start, size_t len, struct ieee802_11_elems *elems)
- 
- 	return 0;
- }
-+
-+void iwl4965_init_ht_hw_capab(struct ieee80211_ht_info *ht_info, int mode)
-+{
-+	ht_info->cap = 0;
-+	memset(ht_info->supp_mcs_set, 0, 16);
-+
-+	ht_info->ht_supported = 1;
-+
-+	if (mode == MODE_IEEE80211A) {
-+		ht_info->cap |= (u16)IEEE80211_HT_CAP_SUP_WIDTH;
-+		ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_40;
-+		ht_info->supp_mcs_set[4] = 0x01;
-+	}
-+	ht_info->cap |= (u16)IEEE80211_HT_CAP_GRN_FLD;
-+	ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_20;
-+	ht_info->cap |= (u16)(IEEE80211_HT_CAP_MIMO_PS &
-+			     (IWL_MIMO_PS_NONE << 2));
-+
-+	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
-+	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
-+
-+	ht_info->supp_mcs_set[0] = 0xFF;
-+	ht_info->supp_mcs_set[1] = 0xFF;
-+}
- #endif /* CONFIG_IWL4965_HT */
- 
- static void iwl4965_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
-@@ -4269,14 +4293,6 @@ static int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
- 
- #endif/* CONFIG_IWL4965_HT_AGG */
- #endif /* CONFIG_IWL4965_HT */
--/*
-- * RATE SCALE CODE
-- */
--int iwl4965_init_hw_rates(struct iwl_priv *priv, struct ieee80211_rate *rates)
--{
--	return 0;
--}
--
- 
- /**
-  * iwl4965_add_station - Initialize a station's hardware rate table
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 71cd2b7..4a54aad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -750,8 +750,6 @@ extern int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
- 			  u8 sta_id, dma_addr_t txcmd_phys,
- 			  struct ieee80211_hdr *hdr, u8 hdr_len,
- 			  struct ieee80211_tx_control *ctrl, void *sta_in);
--extern int iwl4965_init_hw_rates(struct iwl_priv *priv,
--				 struct ieee80211_rate *rates);
- extern int iwl4965_alive_notify(struct iwl_priv *priv);
- extern void iwl4965_update_rate_scaling(struct iwl_priv *priv, u8 mode);
- extern void iwl4965_set_ht_add_station(struct iwl_priv *priv, u8 index);
-@@ -766,6 +764,8 @@ extern int iwl4965_set_fat_chan_info(struct iwl_priv *priv, int phymode,
- extern void iwl4965_rf_kill_ct_config(struct iwl_priv *priv);
- 
- #ifdef CONFIG_IWL4965_HT
-+extern void iwl4965_init_ht_hw_capab(struct ieee80211_ht_info *ht_info,
-+					int mode);
- #ifdef CONFIG_IWL4965_HT_AGG
- extern int iwl_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da,
- 				   u16 tid, u16 *start_seq_num);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index d9f918b..1d0946f 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5626,8 +5626,6 @@ static void iwl_init_hw_rates(struct iwl_priv *priv,
- 		if (IWL_BASIC_RATES_MASK & (1 << i))
- 			rates[i].flags |= IEEE80211_RATE_BASIC;
- 	}
--
--	iwl4965_init_hw_rates(priv, rates);
- }
- 
- /**
-@@ -5645,10 +5643,8 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 		A = 0,
- 		B = 1,
- 		G = 2,
--		A_11N = 3,
--		G_11N = 4,
- 	};
--	int mode_count = 5;
-+	int mode_count = 3;
- 
- 	if (priv->modes) {
- 		IWL_DEBUG_INFO("Geography modes already initialized.\n");
-@@ -5688,6 +5684,9 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 	modes[A].num_rates = 8;	/* just OFDM */
- 	modes[A].rates = &rates[4];
- 	modes[A].num_channels = 0;
-+#ifdef CONFIG_IWL4965_HT
-+	iwl4965_init_ht_hw_capab(&modes[A].ht_info, MODE_IEEE80211A);
-+#endif
- 
- 	modes[B].mode = MODE_IEEE80211B;
- 	modes[B].channels = channels;
-@@ -5700,18 +5699,9 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 	modes[G].rates = rates;
- 	modes[G].num_rates = 12;	/* OFDM & CCK */
- 	modes[G].num_channels = 0;
--
--	modes[G_11N].mode = MODE_IEEE80211G;
--	modes[G_11N].channels = channels;
--	modes[G_11N].num_rates = 13;        /* OFDM & CCK */
--	modes[G_11N].rates = rates;
--	modes[G_11N].num_channels = 0;
--
--	modes[A_11N].mode = MODE_IEEE80211A;
--	modes[A_11N].channels = &channels[ARRAY_SIZE(iwl_eeprom_band_1)];
--	modes[A_11N].rates = &rates[4];
--	modes[A_11N].num_rates = 9; /* just OFDM */
--	modes[A_11N].num_channels = 0;
-+#ifdef CONFIG_IWL4965_HT
-+	iwl4965_init_ht_hw_capab(&modes[G].ht_info, MODE_IEEE80211G);
-+#endif
- 
- 	priv->ieee_channels = channels;
- 	priv->ieee_rates = rates;
-@@ -5731,11 +5721,9 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 
- 		if (is_channel_a_band(ch)) {
- 			geo_ch = &modes[A].channels[modes[A].num_channels++];
--			modes[A_11N].num_channels++;
- 		} else {
- 			geo_ch = &modes[B].channels[modes[B].num_channels++];
- 			modes[G].num_channels++;
--			modes[G_11N].num_channels++;
- 		}
- 
- 		geo_ch->freq = ieee80211chan2mhz(ch->channel);
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
