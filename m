@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:45419 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751241AbXKWAOe (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:8127 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753631AbXKWKvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 19:14:34 -0500
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net
-Cc: shaddy_baddah@hotmail.com
-Cc: kune@deine-taler.de
-Subject: [PATCH 2.6.24] zd1211rw: fix unaligned memory accesses comparing MAC addresses
-Message-Id: <20071123001428.03A199D4A1F@zog.reactivated.net> (sfid-20071123_001438_811073_6683A41B)
-Date: Fri, 23 Nov 2007 00:14:27 +0000 (GMT)
+	Fri, 23 Nov 2007 05:51:54 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 2/3] ath5k: noise calibration also for rf511x
+Date: Fri, 23 Nov 2007 19:52:02 +0900
+Message-Id: <1195815123-22375-3-git-send-email-bruno@thinktube.com> (sfid-20071123_105159_068332_6942C6DD)
+In-Reply-To: <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+ <1195815123-22375-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shaddy Baddah reported some unaligned accesses with the zd1211rw driver.
-David Miller found an issue with comparison of ethernet addresses, and I
-found a few others on top of that. This patch should remove most/all of the
-unaligned accesses.
+also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
+just writing the bit.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-
+Changes-licensed-under: ISC
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 ---
+ drivers/net/wireless/ath5k/phy.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-A different patch will follow for 2.6.25 soon, probably using
-compare_ether_addr_unaligned() if David accepts that patch.
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 9b91121..f250c2e 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1702,8 +1702,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
+ 
+ done:
+-	/* Start noise floor calibration */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
++	ath5k_hw_noise_floor_calibration(ah, channel->freq);
+ 
+ 	/* Request RF gain */
+ 	if (channel->val & CHANNEL_5GHZ) {
+-- 
+1.5.3.4
 
-Index: linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
-===================================================================
---- linux-2.6.24-rc3-git1.orig/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -974,14 +974,14 @@ static int is_data_packet_for_us(struct 
- 	switch (ieee->iw_mode) {
- 	case IW_MODE_ADHOC:
- 		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) != 0 ||
--		    compare_ether_addr(hdr->addr3, ieee->bssid) != 0)
-+		    memcmp(hdr->addr3, ieee->bssid, ETH_ALEN) != 0)
- 			return 0;
- 		break;
- 	case IW_MODE_AUTO:
- 	case IW_MODE_INFRA:
- 		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) !=
- 		    IEEE80211_FCTL_FROMDS ||
--		    compare_ether_addr(hdr->addr2, ieee->bssid) != 0)
-+		    memcmp(hdr->addr2, ieee->bssid, ETH_ALEN) != 0)
- 			return 0;
- 		break;
- 	default:
-@@ -989,9 +989,9 @@ static int is_data_packet_for_us(struct 
- 		return 0;
- 	}
- 
--	return compare_ether_addr(hdr->addr1, netdev->dev_addr) == 0 ||
-+	return memcmp(hdr->addr1, netdev->dev_addr, ETH_ALEN) == 0 ||
- 	       (is_multicast_ether_addr(hdr->addr1) &&
--		compare_ether_addr(hdr->addr3, netdev->dev_addr) != 0) ||
-+		memcmp(hdr->addr3, netdev->dev_addr, ETH_ALEN) != 0) ||
- 	       (netdev->flags & IFF_PROMISC);
- }
- 
-@@ -1047,7 +1047,7 @@ static void update_qual_rssi(struct zd_m
- 	hdr = (struct ieee80211_hdr_3addr *)buffer;
- 	if (length < offsetof(struct ieee80211_hdr_3addr, addr3))
- 		return;
--	if (compare_ether_addr(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid) != 0)
-+	if (memcmp(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid, ETH_ALEN) != 0)
- 		return;
- 
- 	spin_lock_irqsave(&mac->lock, flags);
