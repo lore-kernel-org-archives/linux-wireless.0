@@ -1,59 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:43184 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759233AbXKMUcB (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50122 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755601AbXKWMs6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2007 15:32:01 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1390080nze
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 12:31:54 -0800 (PST)
-Message-ID: <445f43ac0711131231s5bfd173v1c9105e9f23d83b2@mail.gmail.com> (sfid-20071113_203207_721513_D1860FEE)
-Date: Tue, 13 Nov 2007 15:31:53 -0500
-From: "Javier Cardona" <javier@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/4] o80211s: (mac80211s) basic mesh interface support
-Cc: "Luis Carlos Cobo" <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org, hiertz@ieee.org
-In-Reply-To: <1194866072.5229.8.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <473516ee.26d7720a.3f57.ffff8233@mx.google.com>
-	 <1194689500.7258.61.camel@johannes.berg>
-	 <445f43ac0711101603s18cd70a7lb70dedea8cc5c3c0@mail.gmail.com>
-	 <1194866072.5229.8.camel@johannes.berg>
+	Fri, 23 Nov 2007 07:48:58 -0500
+Subject: Re: mac80211 regression: doesn't associate automatically
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Dyson <will.dyson@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <8e6f94720711221232p16b90daaya5fe3550729b49c8@mail.gmail.com> (sfid-20071122_203227_131129_9DDF5C70)
+References: <200711220912.10452.hs4233@mail.mn-solutions.de>
+	 <200711221605.55506.hs4233@mail.mn-solutions.de>
+	 <1195746110.4149.23.camel@johannes.berg>
+	 <200711221719.40412.hs4233@mail.mn-solutions.de>
+	 <8e6f94720711221232p16b90daaya5fe3550729b49c8@mail.gmail.com>
+	 (sfid-20071122_203227_131129_9DDF5C70)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rr6CD2ZVUgdiI9ZO72uV"
+Date: Fri, 23 Nov 2007 13:48:36 +0100
+Message-Id: <1195822116.4149.116.camel@johannes.berg> (sfid-20071123_124902_057102_760A24F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> As far as I understand the specification, this
-> [different MAC address for the mesh interface] is not required. Since we
-> currently have no drivers supporting multi-MAC operation, this is quite
-> a severe limitation and the draft seems to allow MAP operation with a
-> single address, cf. the description of the SSID element in 7.2.3.1
-> (Beacon frame format). ("Note: the SSID is a required IE in beacon
-> frames. To avoid having non-mesh STAs [...]")
->
-> Therefore, I think that having a separate MAP type device would be
-> beneficial because that allows hostapd to generate a beacon including an
-> SSID, respond to probe requests and still be a mesh point on the same
-> interface. The only way hostapd would have to be aware of this is that
-> it needs to create a different type of interface and include the mesh
-> information in the beacon.
->
-> Do you see anything precluding such operation? Some more logic would
-> have to be provided to achieve the appropriate mesh broad/multicast vs.
-> AP broad/multicast behaviour, of course, as described elsewhere wrt.
-> mesh broad/multicast frames being broad/multicast to associated STAs.
 
-The issue of mesh beacons is an open discussion at TGs right now (and
-by now I mean this week, in the IEEE 802.11 plenary in Atlanta).  It
-looks like a different mac address will be needed for the mesh
-interface if collocated with an AP.  That will be necessary for
-security and to avoid conflicts with legacy equipment.  In that case,
-the stack should generate the mesh beacons and hostapd generate the
-infrastructure beacons.
+--=-rr6CD2ZVUgdiI9ZO72uV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Anyway, I see no problem in renaming this IEEE80211_IF_TYPE_MESH_POINT
-(even though I just heard of a proposal to rename Mesh Points as Mesh
-Stations... )
 
-Javier
+> It doesn't look like it should be so hard to make setting the key
+> trigger association. And I don't think that if we allow setting the
+> key to trigger association, that it obligates us to reassociate on
+> every other event that could effect it. As you said, wext spec is
+> silent on this matter.
+>=20
+> It does seem silly to set the key after the essid, but unless it
+> really hurts elsewhere, we can be liberal in what we accept.
+>=20
+> My (probably wrong, compile-tested only, for review only) patch to
+> implement this:
+
+I don't think this can work because when say wpa_supplicant changes the
+key the last thing we want is to have that cause a reconsideration of
+which AP we're associated with. Or even a disassoc/reassoc cycle.
+
+> I know it is word-wrapped by Gmail. Sorry, I'm late to a family event as-=
+is.
+>=20
+> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioct=
+l.c
+> index 503b64a..6ce79e4 100644
+> --- a/net/mac80211/ieee80211_ioctl.c
+> +++ b/net/mac80211/ieee80211_ioctl.c
+> @@ -839,6 +839,7 @@ static int ieee80211_ioctl_siwencode(struct net_devic=
+e *dev,
+>  	int idx, i, alg =3D ALG_WEP;
+>  	u8 bcaddr[ETH_ALEN] =3D { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+>  	int remove =3D 0;
+> +	int ret;
+>=20
+>  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+>=20
+> @@ -864,11 +865,16 @@ static int ieee80211_ioctl_siwencode(struct
+> net_device *dev,
+>  		return 0;
+>  	}
+>=20
+> -	return ieee80211_set_encryption(
+> +	ret =3D ieee80211_set_encryption(
+>  		dev, bcaddr,
+>  		idx, alg, remove,
+>  		!sdata->default_key,
+>  		keybuf, erq->length);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ieee80211_sta_req_auth(dev, &sdata->u.sta);
+> +	return 0;
+>  }
+>=20
+>=20
+> @@ -1015,6 +1021,7 @@ static int ieee80211_ioctl_siwencodeext(struct
+> net_device *dev,
+>  	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+>  	struct iw_encode_ext *ext =3D (struct iw_encode_ext *) extra;
+>  	int uninitialized_var(alg), idx, i, remove =3D 0;
+> +	int ret;
+>=20
+>  	switch (ext->alg) {
+>  	case IW_ENCODE_ALG_NONE:
+> @@ -1052,11 +1059,16 @@ static int ieee80211_ioctl_siwencodeext(struct
+> net_device *dev,
+>  	} else
+>  		idx--;
+>=20
+> -	return ieee80211_set_encryption(dev, ext->addr.sa_data, idx, alg,
+> +	ret =3D ieee80211_set_encryption(dev, ext->addr.sa_data, idx, alg,
+>  					remove,
+>  					ext->ext_flags &
+>  					IW_ENCODE_EXT_SET_TX_KEY,
+>  					ext->key, ext->key_len);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ieee80211_sta_req_auth(dev, &sdata->u.sta);
+> +	return 0;
+>  }
+>=20
+
+--=-rr6CD2ZVUgdiI9ZO72uV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0bMI6Vg1VMiehFYAQJC+hAAwU3UttDCat0qVMnh4E7OGu4tEox6BusY
+DMUAueUlA+/Sz/9com0/VZJRj+uTvUvHMKojcpPGubnnPwgRbXHhJNcVY9atTSEo
+yr6qdaoS0Om40dDZIMTMHtqZji7YJPWjCIeLpQzhiRKL3KuXrncPTB3pv6PORnGE
+32Dbskrdsry+pU8bd5fBfOxwAGO+mTWsrmzi8jU+2W7jLiHC4YDb4npO0RyhA1Wh
+UiaJK7N8ToIhXbkww3UzGYNJQrDsjBw2EZISnnguMxsSLTfPA3RUDNeQfAPxILLJ
+/8FbdZbMWTDrHPof7pCwa9sGlWCzoBELuYtwwGxDVQrtWLv7YYpSQ3rYaHyTrCKn
+4/U4CwY7JnqsKkNNRVvkQpvwOVxt8rATS6vgKrsg4BmKgKC6LYwrvhFkhCeiuMUG
+vx02G2G41qILVZELrG0/WGAltr/2jaEvhMq9hnFPnnRGZ1mrX1Wtx9J0XNxGLWm4
+KjzJ0am8qRFShuzsWOfSMP6+tsb2Hq0100cEt8PwiXHNg6TMmOMHYJzsTyohsoSW
+jkWOmGS+ll44c4Sx0/Vs1J2anZOsGsdQzuqdkdq95PLn5F9187bXG3QldiTdpNwp
+G+ieuLAAzzNTNUQaxaL20/moizZtSobR0Ed6g6k0BuGlt+se5c/jbFZBL4TPyRJp
+y2o5oy3nT/M=
+=OHUv
+-----END PGP SIGNATURE-----
+
+--=-rr6CD2ZVUgdiI9ZO72uV--
+
