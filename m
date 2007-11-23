@@ -1,233 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:48237 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275AbXKUIw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 03:52:58 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
-Date: Wed, 21 Nov 2007 10:47:32 +0200
-Message-Id: <11956348523711-git-send-email-ron.rindjunsky@intel.com> (sfid-20071121_085301_947572_3EB1EA7C)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:19235 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754842AbXKWKvy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 05:51:54 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 1/3] ath5k: fix noise floor calibration
+Date: Fri, 23 Nov 2007 19:52:01 +0900
+Message-Id: <1195815123-22375-2-git-send-email-bruno@thinktube.com> (sfid-20071123_105159_678019_FCF237C0)
+In-Reply-To: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to receive and handle A-MSDU frames.
+fix noise floor calibration by applying AR5K_PHY_NF_AVAL after
+AR5K_PHY_NF_RVAL. that way the XORed mask and value have the same length and we
+get a reasonable noise value in -dBm.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+move duplicate noise floor calibration code from two different places into one
+function ath5k_hw_noise_floor_calibration().
+
+the check for accepted noise_floor values (<= AR5K_TUNE_NOISE_FLOOR) should
+only happen when we have an active reading and a converted value, so move it up
+into the first if.
+
+Changes-licensed-under: ISC
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/rx.c          |  216 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 217 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath5k/ath5k.h |    1 +
+ drivers/net/wireless/ath5k/hw.c    |   36 +---------------
+ drivers/net/wireless/ath5k/phy.c   |   79 +++++++++++++++++++++--------------
+ 3 files changed, 51 insertions(+), 65 deletions(-)
 
-Index: wl2_6_24_HT/net/mac80211/ieee80211_i.h
-===================================================================
---- wl2_6_24_HT.orig/net/mac80211/ieee80211_i.h
-+++ wl2_6_24_HT/net/mac80211/ieee80211_i.h
-@@ -155,6 +155,7 @@ struct ieee80211_txrx_data {
- 			int load;
- 			u32 tkip_iv32;
- 			u16 tkip_iv16;
-+			u8  amsdu_frame;
- 		} rx;
- 	} u;
- };
-Index: wl2_6_24_HT/net/mac80211/rx.c
-===================================================================
---- wl2_6_24_HT.orig/net/mac80211/rx.c
-+++ wl2_6_24_HT/net/mac80211/rx.c
-@@ -243,6 +243,10 @@ ieee80211_rx_h_parse_qos(struct ieee8021
- 		u8 *qc = data + ieee80211_get_hdrlen(rx->fc) - QOS_CONTROL_LEN;
- 		/* frame has qos control */
- 		tid = qc[0] & QOS_CONTROL_TID_MASK;
-+		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
-+			rx->u.rx.amsdu_frame = 1;
-+		else
-+			rx->u.rx.amsdu_frame = 0;
- 	} else {
- 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
- 			/* Separate TID for management frames */
-@@ -1134,6 +1138,165 @@ ieee80211_data_to_8023(struct ieee80211_
- }
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 1b8ddd9..5bcbbf9 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -1127,6 +1127,7 @@ extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+ extern u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
+ extern void ath5k_hw_set_def_antenna(struct ath5k_hw *ah, unsigned int ant);
+ extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
++extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
+ /* TX power setup */
+ extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, unsigned int txpower);
+ extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, unsigned int power);
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 2a826a7..b42fc8f 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -593,7 +593,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ {
+ 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+ 	u32 data, s_seq, s_ant, s_led[3];
+-	s32 noise_floor;
+ 	unsigned int i, mode, freq, ee_mode, ant[2], driver_mode = -1;
+ 	int ret;
  
- static ieee80211_txrx_result
-+ieee80211_rx_h_amsdu(struct ieee80211_txrx_data *rx)
+@@ -916,38 +915,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 		return -EAGAIN;
+ 	}
+ 
+-	/*
+-	 * Enable noise floor calibration and wait until completion
+-	 */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+-				AR5K_PHY_AGCCTL_NF);
+-
+-	if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+-			AR5K_PHY_AGCCTL_NF, 0, false)) {
+-		ATH5K_ERR(ah->ah_sc,
+-			"noise floor calibration timeout (%uMHz)\n",
+-			channel->freq);
+-		return -EAGAIN;
+-	}
+-
+-	/* Wait until the noise floor is calibrated and read the value */
+-	for (i = 20; i > 0; i--) {
+-		mdelay(1);
+-		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+-
+-		if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
+-			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+-
+-		if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+-			break;
+-	}
+-
+-	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+-		ATH5K_ERR(ah->ah_sc,
+-			"noise floor calibration failed (%uMHz)\n",
+-			channel->freq);
+-		return -EIO;
+-	}
++	ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
++	if (ret)
++		return ret;
+ 
+ 	ah->ah_calibration = false;
+ 
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 3c2a67c..9b91121 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1519,6 +1519,51 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+ /*****************\
+   PHY calibration
+ \*****************/
++int
++ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
 +{
-+	struct net_device *dev = rx->dev;
-+	struct ieee80211_local *local = rx->local;
-+	u16 fc, ethertype;
-+	u8 *payload;
-+	struct sk_buff *skb = rx->skb, *skb2, *frame = NULL;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	const struct ethhdr *eth;
-+	int remaining, err;
-+	u8 dst[ETH_ALEN];
-+	u8 src[ETH_ALEN];
-+	DECLARE_MAC_BUF(mac);
++	int ret;
++	unsigned int i;
++	s32 noise_floor;
 +
-+	fc = rx->fc;
-+	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
-+		return TXRX_CONTINUE;
++	/*
++	 * Enable noise floor calibration and wait until completion
++	 */
++	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
++				AR5K_PHY_AGCCTL_NF);
 +
-+	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
-+		return TXRX_DROP;
++	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
++			AR5K_PHY_AGCCTL_NF, 0, false);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc,
++			"noise floor calibration timeout (%uMHz)\n", freq);
++		return ret;
++	}
 +
-+	if (!rx->u.rx.amsdu_frame)
-+		return TXRX_CONTINUE;
++	/* Wait until the noise floor is calibrated and read the value */
++	for (i = 20; i > 0; i--) {
++		mdelay(1);
++		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
++		noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
++		if (noise_floor & AR5K_PHY_NF_ACTIVE) {
++			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
 +
-+	err = ieee80211_data_to_8023(rx);
-+	if (unlikely(err))
-+		return TXRX_DROP;
-+
-+	/* skip the wrapping header */
-+	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
-+	if (!eth)
-+		return TXRX_DROP;
-+
-+	while (skb != frame) {
-+		u8 padding;
-+		__be16 len = eth->h_proto;
-+		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
-+
-+		remaining = skb->len;
-+		memcpy(dst, eth->h_dest, ETH_ALEN);
-+		memcpy(src, eth->h_source, ETH_ALEN);
-+
-+		padding = ((4 - subframe_len) & 0x3);
-+		/* the last MSDU has no padding */
-+		if (subframe_len > remaining) {
-+			printk(KERN_DEBUG "%s: wrong buffer size", dev->name);
-+			return TXRX_DROP;
-+		}
-+
-+		skb_pull(skb, sizeof(struct ethhdr));
-+		/* if last subframe reuse skb */
-+		if (remaining <= subframe_len + padding)
-+			frame = skb;
-+		else {
-+			frame = dev_alloc_skb(local->hw.extra_tx_headroom +
-+					      subframe_len);
-+
-+			if (frame == NULL)
-+				return TXRX_DROP;
-+
-+			skb_reserve(frame, local->hw.extra_tx_headroom +
-+				    sizeof(struct ethhdr));
-+			memcpy(skb_put(frame, ntohs(len)), skb->data,
-+				ntohs(len));
-+
-+			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
-+							padding);
-+			if (!eth) {
-+				printk(KERN_DEBUG "%s: wrong buffer size ",
-+				       dev->name);
-+				dev_kfree_skb(frame);
-+				return TXRX_DROP;
-+			}
-+		}
-+		skb2 = NULL;
-+
-+		payload = frame->data;
-+		ethertype = (payload[6] << 8) | payload[7];
-+
-+		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
-+			ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
-+			compare_ether_addr(payload,
-+					   bridge_tunnel_header) == 0)) {
-+			/* remove RFC1042 or Bridge-Tunnel
-+			 * encapsulation and replace EtherType */
-+			skb_pull(frame, 6);
-+			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
-+			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+		} else {
-+			memcpy(skb_push(frame, sizeof(__be16)), &len,
-+				sizeof(__be16));
-+			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
-+			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+		}
-+
-+		rx->skb = frame;
-+		if ((ieee80211_drop_802_1x_pae(rx, sizeof(struct ethhdr))) ||
-+		    (ieee80211_drop_unencrypted(rx, sizeof(struct ethhdr)))) {
-+			if (skb == frame) /* last frame */
-+				return TXRX_DROP;
-+			dev_kfree_skb(frame);
-+			continue;
-+		}
-+
-+		if (local->bridge_packets &&
-+		    (sdata->type == IEEE80211_IF_TYPE_AP ||
-+		     sdata->type == IEEE80211_IF_TYPE_VLAN) &&
-+		     (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
-+			if (is_multicast_ether_addr(frame->data)) {
-+				/* send multicast frames both to higher layers
-+				 * in local net stack and back to the wireless
-+				 * media */
-+				skb2 = skb_copy(frame, GFP_ATOMIC);
-+				if (!skb2)
-+					printk(KERN_DEBUG "%s: failed to clone"
-+					       " multicast frame\n", dev->name);
-+			} else {
-+				struct sta_info *dsta;
-+
-+				dsta = sta_info_get(local, frame->data);
-+				if (dsta && !dsta->dev)
-+					printk(KERN_DEBUG "Station with null "
-+					       "dev structure!\n");
-+				else if (dsta && dsta->dev == dev) {
-+					/* Destination station is associated
-+					 *to this AP, so send the frame
-+					 * directly to it and do not pass
-+					 * the frame to local net stack.
-+					 */
-+					skb2 = frame;
-+					frame = NULL;
-+				}
-+				if (dsta)
-+					sta_info_put(dsta);
-+			}
-+		}
-+		if (frame) {
-+			/* deliver to local stack */
-+			skb_set_network_header(frame, 0);
-+			frame->protocol = eth_type_trans(frame, dev);
-+			frame->priority = skb->priority;
-+			netif_rx(frame);
-+		}
-+
-+		if (skb2) {
-+			/* send to wireless media */
-+			skb2->protocol = __constant_htons(ETH_P_802_3);
-+			skb_set_network_header(skb2, 0);
-+			skb_set_mac_header(skb2, 0);
-+			skb2->priority = skb->priority;
-+			skb2->dev = dev;
-+			dev_queue_xmit(skb2);
++			if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
++				break;
 +		}
 +	}
 +
-+	return TXRX_QUEUED;
-+}
++	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++		"noise floor %d, %d\n", noise_floor, AR5K_TUNE_NOISE_FLOOR);
 +
-+static ieee80211_txrx_result
- ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
++	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
++		ATH5K_ERR(ah->ah_sc,
++			"noise floor calibration failed (%uMHz)\n", freq);
++		return -EIO;
++	}
++
++	return 0;
++}
+ 
+ /*
+  * Perform a PHY calibration on RF5110
+@@ -1529,8 +1574,6 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+ 		struct ieee80211_channel *channel)
  {
- 	struct net_device *dev = rx->dev;
-@@ -1359,6 +1522,7 @@ ieee80211_rx_handler ieee80211_rx_handle
- 	 * are not passed to user space by these functions
- 	 */
- 	ieee80211_rx_h_remove_qos_control,
-+	ieee80211_rx_h_amsdu,
- 	ieee80211_rx_h_data,
- 	ieee80211_rx_h_mgmt,
- 	NULL
----------------------------------------------------------------------
-Intel Israel (74) Limited
+ 	u32 phy_sig, phy_agc, phy_sat, beacon;
+-	s32 noise_floor;
+-	unsigned int i;
+ 	int ret;
+ 
+ 	/*
+@@ -1612,37 +1655,9 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+ 		return ret;
+ 	}
+ 
+-	/*
+-	 * Enable noise floor calibration and wait until completion
+-	 */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
+-
+-	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+-			AR5K_PHY_AGCCTL_NF, 0, false);
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc,
+-			"noise floor calibration timeout (%uMHz)\n",
+-			channel->freq);
++	ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
++	if (ret)
+ 		return ret;
+-	}
+-
+-	/* Wait until the noise floor is calibrated */
+-	for (i = 20; i > 0; i--) {
+-		mdelay(1);
+-		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+-
+-		if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
+-			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+-
+-		if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+-			break;
+-	}
+-
+-	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+-		ATH5K_ERR(ah->ah_sc, "noise floor calibration failed (%uMHz)\n",
+-			channel->freq);
+-		return -EIO;
+-	}
+ 
+ 	/*
+ 	 * Re-enable RX/TX and beacons
+-- 
+1.5.3.4
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
