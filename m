@@ -1,163 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22366 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758469AbXKNPbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:31:09 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 03/15] mac80211: adding 802.11n HT framework definitions
-Date: Wed, 14 Nov 2007 17:29:39 +0200
-Message-Id: <11950542002764-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153156_449673_03C95BB9)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from an-out-0708.google.com ([209.85.132.246]:49898 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755040AbXKWLXu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 06:23:50 -0500
+Received: by an-out-0708.google.com with SMTP id d31so641410and
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 03:23:49 -0800 (PST)
+Message-ID: <40f31dec0711230323t14e50032n891ad44153008345@mail.gmail.com> (sfid-20071123_112354_742952_29EB9FCE)
+Date: Fri, 23 Nov 2007 13:23:49 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/3] ath5k: fix noise floor calibration
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
+In-Reply-To: <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New structures:
- - ieee80211_ht_info: describing STA's HT capabilities
- - ieee80211_ht_bss_info: describing BSS's HT characteristics
-Changed structures:
- - ieee80211_hw_mode: now also holds PHY HT capabilities for each HW mode
- - ieee80211_conf: ht_conf holds current self HT configuration
-                   ht_bss_conf holds current BSS HT configuration
- - flag IEEE80211_CONF_SUPPORT_HT_MODE added to indicate if HT use is
-   desired
- - sta_info: now also holds Peer's HT capabilities
+2007/11/23, Bruno Randolf <bruno@thinktube.com>:
+> fix noise floor calibration by applying AR5K_PHY_NF_AVAL after
+> AR5K_PHY_NF_RVAL. that way the XORed mask and value have the same length and we
+> get a reasonable noise value in -dBm.
+>
+> move duplicate noise floor calibration code from two different places into one
+> function ath5k_hw_noise_floor_calibration().
+>
+> the check for accepted noise_floor values (<= AR5K_TUNE_NOISE_FLOOR) should
+> only happen when we have an active reading and a converted value, so move it up
+> into the first if.
+>
+> Changes-licensed-under: ISC
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h |    1 +
+>  drivers/net/wireless/ath5k/hw.c    |   36 +---------------
+>  drivers/net/wireless/ath5k/phy.c   |   79 +++++++++++++++++++++--------------
+>  3 files changed, 51 insertions(+), 65 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+> index 1b8ddd9..5bcbbf9 100644
+> --- a/drivers/net/wireless/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath5k/ath5k.h
+> @@ -1127,6 +1127,7 @@ extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+>  extern u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
+>  extern void ath5k_hw_set_def_antenna(struct ath5k_hw *ah, unsigned int ant);
+>  extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
+> +extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
+>  /* TX power setup */
+>  extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, unsigned int txpower);
+>  extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, unsigned int power);
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index 2a826a7..b42fc8f 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -593,7 +593,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>  {
+>         struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>         u32 data, s_seq, s_ant, s_led[3];
+> -       s32 noise_floor;
+>         unsigned int i, mode, freq, ee_mode, ant[2], driver_mode = -1;
+>         int ret;
+>
+> @@ -916,38 +915,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                 return -EAGAIN;
+>         }
+>
+> -       /*
+> -        * Enable noise floor calibration and wait until completion
+> -        */
+> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+> -                               AR5K_PHY_AGCCTL_NF);
+> -
+> -       if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+> -                       AR5K_PHY_AGCCTL_NF, 0, false)) {
+> -               ATH5K_ERR(ah->ah_sc,
+> -                       "noise floor calibration timeout (%uMHz)\n",
+> -                       channel->freq);
+> -               return -EAGAIN;
+> -       }
+> -
+> -       /* Wait until the noise floor is calibrated and read the value */
+> -       for (i = 20; i > 0; i--) {
+> -               mdelay(1);
+> -               noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+> -
+> -               if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
+> -                       noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+> -
+> -               if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+> -                       break;
+> -       }
+> -
+> -       if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+> -               ATH5K_ERR(ah->ah_sc,
+> -                       "noise floor calibration failed (%uMHz)\n",
+> -                       channel->freq);
+> -               return -EIO;
+> -       }
+> +       ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
+> +       if (ret)
+> +               return ret;
+>
+>         ah->ah_calibration = false;
+>
+> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+> index 3c2a67c..9b91121 100644
+> --- a/drivers/net/wireless/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath5k/phy.c
+> @@ -1519,6 +1519,51 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+>  /*****************\
+>    PHY calibration
+>  \*****************/
+> +int
+> +ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
+> +{
+> +       int ret;
+> +       unsigned int i;
+> +       s32 noise_floor;
+> +
+> +       /*
+> +        * Enable noise floor calibration and wait until completion
+> +        */
+> +       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+> +                               AR5K_PHY_AGCCTL_NF);
+> +
+> +       ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+> +                       AR5K_PHY_AGCCTL_NF, 0, false);
+> +       if (ret) {
+> +               ATH5K_ERR(ah->ah_sc,
+> +                       "noise floor calibration timeout (%uMHz)\n", freq);
+> +               return ret;
+> +       }
+> +
+> +       /* Wait until the noise floor is calibrated and read the value */
+> +       for (i = 20; i > 0; i--) {
+> +               mdelay(1);
+> +               noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+> +               noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
+> +               if (noise_floor & AR5K_PHY_NF_ACTIVE) {
+> +                       noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+> +
+> +                       if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+> +                               break;
+> +               }
+> +       }
+> +
+> +       ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
+> +               "noise floor %d, %d\n", noise_floor, AR5K_TUNE_NOISE_FLOOR);
+> +
+> +       if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+> +               ATH5K_ERR(ah->ah_sc,
+> +                       "noise floor calibration failed (%uMHz)\n", freq);
+> +               return -EIO;
+> +       }
+> +
+> +       return 0;
+> +}
+>
+>  /*
+>   * Perform a PHY calibration on RF5110
+> @@ -1529,8 +1574,6 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+>                 struct ieee80211_channel *channel)
+>  {
+>         u32 phy_sig, phy_agc, phy_sat, beacon;
+> -       s32 noise_floor;
+> -       unsigned int i;
+>         int ret;
+>
+>         /*
+> @@ -1612,37 +1655,9 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+>                 return ret;
+>         }
+>
+> -       /*
+> -        * Enable noise floor calibration and wait until completion
+> -        */
+> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
+> -
+> -       ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+> -                       AR5K_PHY_AGCCTL_NF, 0, false);
+> -       if (ret) {
+> -               ATH5K_ERR(ah->ah_sc,
+> -                       "noise floor calibration timeout (%uMHz)\n",
+> -                       channel->freq);
+> +       ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
+> +       if (ret)
+>                 return ret;
+> -       }
+> -
+> -       /* Wait until the noise floor is calibrated */
+> -       for (i = 20; i > 0; i--) {
+> -               mdelay(1);
+> -               noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+> -
+> -               if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
+> -                       noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+> -
+> -               if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+> -                       break;
+> -       }
+> -
+> -       if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+> -               ATH5K_ERR(ah->ah_sc, "noise floor calibration failed (%uMHz)\n",
+> -                       channel->freq);
+> -               return -EIO;
+> -       }
+>
+>         /*
+>          * Re-enable RX/TX and beacons
+> --
+> 1.5.3.4
+>
+>
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h  |   55 +++++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/sta_info.h |    3 ++
- 2 files changed, 52 insertions(+), 6 deletions(-)
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 17b6039..862431a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -139,17 +139,54 @@ enum ieee80211_phymode {
- };
- 
- /**
-+ * struct ieee80211_ht_info - describing STA's HT capabilities
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11n HT capabilities for an STA.
-+ *
-+ * @ht_supported: is HT supported by STA, 0: no, 1: yes
-+ * @cap: HT capabilities map as described in 802.11n spec
-+ * @ampdu_factor: Maximum A-MPDU length factor
-+ * @ampdu_density: Minimum A-MPDU spacing
-+ * @supp_mcs_set: Supported MCS set as described in 802.11n spec
-+ */
-+struct ieee80211_ht_info {
-+	u8 ht_supported;
-+	u16 cap; /* use IEEE80211_HT_CAP_ */
-+	u8 ampdu_factor;
-+	u8 ampdu_density;
-+	u8 supp_mcs_set[16];
-+};
-+
-+/**
-+ * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11n HT characteristics in a BSS
-+ *
-+ * @primary_channel: channel number of primery channel
-+ * @bss_cap: 802.11n's general BSS capabilities (e.g. channel width)
-+ * @bss_op_mode: 802.11n's BSS operation modes (e.g. HT protection)
-+ */
-+struct ieee80211_ht_bss_info {
-+	u8 primary_channel;
-+	u8 bss_cap;  /* use IEEE80211_HT_IE_CHA_ */
-+	u8 bss_op_mode; /* use IEEE80211_HT_IE_ */
-+};
-+
-+/**
-  * struct ieee80211_hw_mode - PHY mode definition
-  *
-  * This structure describes the capabilities supported by the device
-  * in a single PHY mode.
-  *
-+ * @list: internal
-+ * @channels: pointer to array of supported channels
-+ * @rates: pointer to array of supported bitrates
-  * @mode: the PHY mode for this definition
-  * @num_channels: number of supported channels
-- * @channels: pointer to array of supported channels
-  * @num_rates: number of supported bitrates
-- * @rates: pointer to array of supported bitrates
-- * @list: internal
-+ * @ht_info: PHY's 802.11n HT abilities for this mode
-  */
- struct ieee80211_hw_mode {
- 	struct list_head list;
-@@ -158,6 +195,7 @@ struct ieee80211_hw_mode {
- 	enum ieee80211_phymode mode;
- 	int num_channels;
- 	int num_rates;
-+	struct ieee80211_ht_info ht_info;
- };
- 
- /**
-@@ -406,11 +444,12 @@ struct ieee80211_tx_status {
-  *
-  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
-  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
-- *
-+ * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
-  */
- enum ieee80211_conf_flags {
--	IEEE80211_CONF_SHORT_SLOT_TIME	= 1<<0,
--	IEEE80211_CONF_RADIOTAP		= 1<<1,
-+	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
-+	IEEE80211_CONF_RADIOTAP		= (1<<1),
-+	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
- };
- 
- /**
-@@ -434,6 +473,8 @@ enum ieee80211_conf_flags {
-  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
-  *	1/2: antenna 0/1
-  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
-+ * @ht_conf: describes current self configuration of 802.11n HT capabilies
-+ * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
-  */
- struct ieee80211_conf {
- 	int channel;			/* IEEE 802.11 channel number */
-@@ -452,6 +493,8 @@ struct ieee80211_conf {
- 	u8 antenna_max;
- 	u8 antenna_sel_tx;
- 	u8 antenna_sel_rx;
-+	struct ieee80211_ht_info ht_conf;
-+	struct ieee80211_ht_bss_info ht_bss_conf;
- };
- 
- /**
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 8f7ebe4..e1a4ac1 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -99,6 +99,9 @@ struct sta_info {
- 
- 	u16 listen_interval;
- 
-+	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
-+					     of this STA */
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
- 		struct dentry *dir;
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
