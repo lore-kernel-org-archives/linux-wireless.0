@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:3051 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbXKSIes (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbXKXNtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 03:34:48 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: 88w8335 [Libertas] 802.11b/g
-Date: Mon, 19 Nov 2007 09:34:59 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <43e72e890711161733o72b557ccs63fa1c0104bc656a@mail.gmail.com>
-In-Reply-To: <43e72e890711161733o72b557ccs63fa1c0104bc656a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711190934.59367.hs4233@mail.mn-solutions.de> (sfid-20071119_083450_766754_5869BFA3)
+	Sat, 24 Nov 2007 08:49:47 -0500
+Subject: Re: wireless vs. alignment requirements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071124133200.GA27531@gondor.apana.org.au>
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au>
+	 <1195893216.4149.186.camel@johannes.berg>
+	 <20071124133200.GA27531@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z6mzj2kzrRRV8Bepqh0v"
+Date: Sat, 24 Nov 2007 14:49:36 +0100
+Message-Id: <1195912176.4149.194.camel@johannes.berg> (sfid-20071124_134952_599518_7AA125E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> vendor:device -- 11ab:1faa
->
-> libertas_cs isn't picking up though.
 
-libertas wasn't written for 8335 chips. The whole of libertas, 
-including "if_cs.c", is currently only for 8385 chips.
+--=-z6mzj2kzrRRV8Bepqh0v
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I saw a driver for 8335 chips at 
-http://david.woodhou.se/mrv.tar.gz. Do you refer to the same 
-one?
 
-As this driver was originally written for mac80211, I'd prefer it 
-over a driver/net/wireless/libertas based driver, e.g. via an 
-hyptothetical "if_pci.c". Maybe you need to dust of a bit of 
-bitrot. Maybe it's even worth pushing this driver into shape and 
-submitting it to Linville for kernel adoption.
+On Sat, 2007-11-24 at 21:32 +0800, Herbert Xu wrote:
+> On Sat, Nov 24, 2007 at 09:33:36AM +0100, Johannes Berg wrote:
+> >
+> > We still require four-byte alignment, no?
+>=20
+> Not at all.  If NET_IP_ALIGN is zero then it won't be four-byte
+> aligned (since the Ethernet header is 14 bytes long).
+
+Right. I just didn't think that would be a valid value for an
+architecture to set.
+
+johannes
+
+--=-z6mzj2kzrRRV8Bepqh0v
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0gr76Vg1VMiehFYAQKFbQ/8CuwA8tBGbjSffTdl/xRaIUB+7eyoVdtn
+wYgbij9M1986+2YTD7BLLyyAbsJUyBuIAPBrTUHnfD8/HKNqFG1pU51xOiSD1vV8
+LqR8ZFfoMAE4tD+s8ZcbPao9YA3uZi47kPJcPCggxIgLbN4tQShiURBm0OBs0HOf
+ki1HGAMKUAbtxMOy06mhr8jK71QHVMK/7z9AvG4ysNYGNrNc7o8NecxBurXbLM8r
+lDd4TdwQoYTxHUHY0syylO0i7t1BT32uTOXUekBx1Nq0uLAzI/fedN8W97C1/4+U
+v3hIvz8fNZE2+KsOF6ZtAmePlNeMfJiT1x3TkCKDO0PiPWe9aVBN+fOcmwmKXrsU
+AYqyU8OOc7nicnJPnA60h/G/Gxr4Ecc9WzP9/N4nVZXISINM5rknQjqgEXhsHE7K
+QizTgTtLcAjcCbz1IxQwtiS87Yrbycj3q7V7mYQhXWCtfo5yeQZmD4mYh7nFVjSg
+Av60PzoYmaTbj80iGqOozF9aYbfQEJa2aeJWTC1zCIZ8dwWlmMhrn/cZyQvB016H
+lVtwT1YdiP4YlNVtfhUQjqMOqltckhN8PguTTNeymZkc1oggUnx13eSxwFr04h9k
+PD+Wf8VUbgrFYmN0xaO4wXlhvEGG0xsyEU+6vXEFxxuhv5dIQBKJLuDGDb5P4NJR
+QwIXANxwg4s=
+=BJAW
+-----END PGP SIGNATURE-----
+
+--=-z6mzj2kzrRRV8Bepqh0v--
+
