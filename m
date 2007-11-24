@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:45384 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751896AbXKST2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 14:28:32 -0500
-Date: Mon, 19 Nov 2007 20:27:46 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH v2] libertas: add Dan Williams as maintainer
-Message-ID: <20071119202746.475f0469@morte> (sfid-20071119_192836_691462_84F4A154)
-In-Reply-To: <1195493292.3248.6.camel@localhost.localdomain>
-References: <20071117023020.0a164e90@morte>
- <20071117165551.GA5817@tuxdriver.com>
- <20071117181153.480d75d8@morte>
- <1195493292.3248.6.camel@localhost.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbXKXVNh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 16:13:37 -0500
+Subject: Re: wireless vs. alignment requirements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071124141319.GA27819@gondor.apana.org.au>
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au>
+	 <1195893216.4149.186.camel@johannes.berg>
+	 <20071124133200.GA27531@gondor.apana.org.au>
+	 <1195912176.4149.194.camel@johannes.berg>
+	 <20071124141319.GA27819@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q4B7dJ9BlOd9NBz6pqyr"
+Date: Sat, 24 Nov 2007 22:13:19 +0100
+Message-Id: <1195938799.4149.197.camel@johannes.berg> (sfid-20071124_211346_455375_86C4AE7E)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Dan Williams as maintainer for libertas driver.
+
+--=-q4B7dJ9BlOd9NBz6pqyr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Dan Williams <dcbw@redhat.com>
+> OK.  Let me clarify this a bit more.  We require at least one
+> of the following rules to be met:
+>=20
+> * the IPv4/IPv6 header is aligned by 8 bytes on reception;
+> * or the platform provides unaligned exception handlers.
+>=20
+> So if your platform violates both rules then it won't work with
+> the IP stack, simple as that.  Fortunately I don't think such a
+> platform exists currently on Linux.
 
----
+Ok, thanks for the clarification.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18b7c8e..d416260 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2513,6 +2504,12 @@ M:	mtk.manpages@gmail.com
- W:	ftp://ftp.kernel.org/pub/linux/docs/manpages
- S:	Maintained
- 
-+MARVELL LIBERTAS WIRELESS DRIVER
-+P:	Dan Williams
-+M:	dcbw@redhat.com
-+L:	libertas-dev@lists.infradead.org
-+S:	Maintained
-+
- MARVELL MV643XX ETHERNET DRIVER
- P:	Dale Farnsworth
- M:	dale@farnsworth.org
+Eight bytes really sucks for wireless, many things are multiples of four
+and QoS vs. non-QoS frames have a multiple of four and common hardware
+only adds two padding bytes to get it aligned on four bytes so there's
+no easy way to get hardware to align it properly. Hmm.
 
+johannes
 
--- 
-Ciao
-Stefano
+--=-q4B7dJ9BlOd9NBz6pqyr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0iT7aVg1VMiehFYAQL+Hg//XJQMQl9RlxBzXj2N7u8dg7Ito9gPHyPQ
+uQvZonyhu4Cm/mEwJD6us7JaiqDl0njH8xjaE4d7j3aHL/Nn4h5WICdUkD9PiLm4
+/9IrtA6H+y1V0SCZ2RksifzCBA68crXdFp9sE+CNYxOPNOXQOg1TIFqILhiLqeZY
+k/RYKy4iKKXCB2FQaOFX7KLpn2suRfShFDE1LbaORQ10ravS3VwKh8dSFfBZkbA+
+hUbhuoTPaM4RUkb0aJNvJJhi9paLHdMjeZ1bNIRnFIOEat9CxZ/cDAWj1/uL1sgb
+BNd0Tubu0Pm0uHQhGBEz6sdBOYocXx76TzXw8ZmC8l80yX/Xqnrd6+x2wmyR6rWv
+QEHCUWqq4v+zJgbBLMhgmc6ghPSLkUWf8W/ARLTyGTWG0RaPji2q7cGte7pBndT+
+iD4jWM4Udc0CPaqBwsZjHao3cc5DVHP++WkZ/yICMpgAYfZIIswWLhbbSbVQWZRt
+BPSrBhmQq1wSacEJaw7Yy6x3jdxBfMjGlXTTuF/xZihkuZQ9SJ7tciL37e6ow16+
+0qJO7HCgtY8a0gJ7GMxQZDoguBf7HYJuIsY1NmocQbImjGFGdAur6VWEyIUd0MVH
+r5AlZMjk40Hmd5Cfk2fLO+9hLPqE28nS7keClhB2BUXu2iHOzm3jD7niSEEbMxZf
+ZkP17w7DMJI=
+=+nL9
+-----END PGP SIGNATURE-----
+
+--=-q4B7dJ9BlOd9NBz6pqyr--
+
