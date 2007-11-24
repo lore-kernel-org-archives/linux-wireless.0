@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:53812 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757071AbXK0JME (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:47091 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752387AbXKXUND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 04:12:04 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1168163mue
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 01:12:02 -0800 (PST)
-Message-ID: <c85cb4470711270112l15d408ebx8c3f64bec68b42c7@mail.gmail.com> (sfid-20071127_091209_753046_C51530B6)
-Date: Tue, 27 Nov 2007 11:12:01 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 0/15] mac80211/iwlwifi (#everything): integrate IEEE802.11n support
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com
-In-Reply-To: <43e72e890711261734s17621900yc9ee5946bc30482e@mail.gmail.com>
+	Sat, 24 Nov 2007 15:13:03 -0500
+Message-ID: <4748855C.5090103@linux-foundation.org> (sfid-20071124_201316_570733_C456DE58)
+Date: Sat, 24 Nov 2007 12:11:08 -0800
+From: Stephen Hemminger <shemminger@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-	 <43e72e890711261734s17621900yc9ee5946bc30482e@mail.gmail.com>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+CC: Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au>
+In-Reply-To: <20071124141319.GA27819@gondor.apana.org.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Ron I haven't been able to review your 802.11n patches yet due to time
-> but I do remember seeing some "channel" variable in a struct somewhere
-> at a quick glance on your 802.11n patch series. It was determined a
-> little while ago that we'd move from static channels to frequency
-> instead. One reason for this is to stick to 'one' thing later for
-> regulatory purposes. Another reason that came up later is that
-> frequency be relied upon even on 5GHz reliably contrary to channel
-> number -- in 5GHz the channel numbers can be mapped arbitrarily
-> depending on the regulatory agency your country falls under. Would it
-> be too much if you used frequency instead of channel or does the the
-> 802.11n draft specs say you have to use channel somewhere?
+Herbert Xu wrote:
+> On Sat, Nov 24, 2007 at 02:49:36PM +0100, Johannes Berg wrote:
+>   
+>> Right. I just didn't think that would be a valid value for an
+>> architecture to set.
+>>     
 >
-> Sorry I couldn't pin point the specific patch yet.
-
-it will be helpful to know the specific place where you spotted it,
-but i will assume you are relating to the channel width and offset?.
-in that case i took the 802.11n spec name from 2 reasons:
-1 - to be clearer to code readers as to right place in the spec
-2 - the spec strongly relates to 20/40 Mhz capabilities of the
-channel, not to the channel itself, (e.g. extention channel), so i saw
-no reason to break it and to go to frequencies.
-
-ron
-
+> OK.  Let me clarify this a bit more.  We require at least one
+> of the following rules to be met:
 >
->  Luis
+> * the IPv4/IPv6 header is aligned by 8 bytes on reception;
+> * or the platform provides unaligned exception handlers.
+>
+> So if your platform violates both rules then it won't work with
+> the IP stack, simple as that.  Fortunately I don't think such a
+> platform exists currently on Linux.
+>
+> Cheers,
+>   
+
+Then what about hardware that can't dma ethernet to non-aligned address.
+Sky2 hardware breaks if DMA is not 8 byte aligned.  IMHO the IP stack should
+handle any alignment, and do the appropriate memove if the CPU requires 
+alignment.
