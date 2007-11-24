@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44367 "EHLO mail.dvmed.net"
+Received: from ogre.sisk.pl ([217.79.144.158]:60012 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753608AbXKAT2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 15:28:06 -0400
-Message-ID: <472A28C0.6060106@garzik.org> (sfid-20071101_192809_127900_7FB47564)
-Date: Thu, 01 Nov 2007 15:28:00 -0400
-From: Jeff Garzik <jeff@garzik.org>
+	id S1752317AbXKXK7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 05:59:42 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: timeout problems with certain APs and b43
+Date: Sat, 24 Nov 2007 12:17:37 +0100
+Cc: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com> <200711232321.58516.rjw@sisk.pl> <1195893331.4149.190.camel@johannes.berg>
+In-Reply-To: <1195893331.4149.190.camel@johannes.berg>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH] RFC: move ath5k to use pci_request_selected_regions()
-References: <20071101192251.GB3201@pogo>
-In-Reply-To: <20071101192251.GB3201@pogo>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711241217.38559.rjw@sisk.pl> (sfid-20071124_105946_352438_DCC44EA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> Documentation/pci.txt states:
+On Saturday, 24 of November 2007, Johannes Berg wrote:
 > 
-> "If your PCI device driver doesn't need I/O port resources assigned to
-> I/O Port BARs, you should use pci_enable_device_bars() instead of
-> pci_enable_device() in order not to enable I/O port regions for the
-> corresponding devices. In addition, you should use
-> pci_request_selected_regions() and pci_release_selected_regions()
-> instead of pci_request_regions()/pci_release_regions() in order not to
-> request/release I/O port regions for the corresponding devices."
+> > > > It seems that I can reproduce something similar on demand with an SMC wireless
+> > > > router by moving my box sufficiently far away from it. :-)
+> > > 
+> > > Well, yeah, that's expected though, you lose signal at some point. Not
+> > > expected is that it happens without moving anything. Unless the
+> > > calibration code is wrong which wouldn't really surprise me either.
+> > 
+> > In my case, everything works just fine when the box is 6 meters away from the
+> > AP (including a thick wall in between), but when I move it another 5-6 meters
+> > away from the AP, things break down ...
+> > 
+> > I'd expect it to work at longer distances, but well. :-)
 > 
-> So shall we? This also re-arranges the pci_release_selected_regions()
-> as per the documenation.
-> 
-> Changes to base.c
-> Changes-licensed-under: 3-clause-BSD
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> Yeah, but keep in mind we reverse engineered all the calibration code.
 
-IMO the documentation is a bit bogus:
+Sure. :-)
 
-pci_request_regions() ensures that nobody else will touch -any- of your 
-resources.
+For me it's not a problem (everywhere I use the wireless, there are APs close
+enough ;-)), but it seems related to what's been reported in this thread.
 
-I see no logical reason to enable sharing of I/O regions with another 
-driver, which would be the net effect of avoiding their request/release 
-by using pci_request_selected_regions()
-
-pci_enable_device() and pci_request_regions() are just fine; the strange 
-and lesser-used APIs should be avoided unless you _need_ to use them.
-
-	Jeff
-
-
-
+Greetings,
+Rafael
