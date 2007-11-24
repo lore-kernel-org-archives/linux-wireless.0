@@ -1,71 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37615 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbXKJKRc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 05:17:32 -0500
-Subject: Re: [PATCH 4/4] o80211s: (zd1211rw-mac80211) support for mesh
-	interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <473516f2.15528c0a.7196.3372@mx.google.com> (sfid-20071110_022703_924708_89D9D43C)
-References: <473516f2.15528c0a.7196.3372@mx.google.com>
-	 (sfid-20071110_022703_924708_89D9D43C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nLJ8TLer8y1r5QWnLfHE"
-Date: Sat, 10 Nov 2007 11:18:54 +0100
-Message-Id: <1194689934.7258.66.camel@johannes.berg> (sfid-20071110_101735_349961_AA100628)
-Mime-Version: 1.0
+Received: from deine-taler.de ([217.160.107.63]:59561 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751327AbXKXNlW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 08:41:22 -0500
+Date: Sat, 24 Nov 2007 14:13:46 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, shaddy_baddah@hotmail.com
+Subject: Re: [PATCH 2.6.24] zd1211rw: fix unaligned memory accesses comparing MAC addresses
+Message-ID: <20071124131346.GB28785@deine-taler.de> (sfid-20071124_134128_043077_395063F1)
+References: <20071123001428.03A199D4A1F@zog.reactivated.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071123001428.03A199D4A1F@zog.reactivated.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Daniel Drake wrote:
 
---=-nLJ8TLer8y1r5QWnLfHE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Shaddy Baddah reported some unaligned accesses with the zd1211rw driver.
+> David Miller found an issue with comparison of ethernet addresses, and I
+> found a few others on top of that. This patch should remove most/all of the
+> unaligned accesses.
+> 
+> Signed-off-by: Daniel Drake <dsd@gentoo.org>
 
+This patch will probably not solve all the issues, because the IP
+header will not be aligned. This is caused by the ZD1211 specific
+five-byte PLCP header. See my other mail from today, which
+includes a patch, which should solve the issue.
 
-> +		{ CR_CAM_MODE,			MODE_AP_WDS},
+Uli
 
-Shouldn't that depend on the interface type? I.e. set it for WDS/MESH
-but clear it for station so that the station won't ack WDS frames? OTOH,
-it may just as well ack WDS frames for itself...
-=20
+> 
+> ---
+> 
+> A different patch will follow for 2.6.25 soon, probably using
+> compare_ether_addr_unaligned() if David accepts that patch.
+> 
+> Index: linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
+> ===================================================================
+> --- linux-2.6.24-rc3-git1.orig/drivers/net/wireless/zd1211rw/zd_mac.c
+> +++ linux-2.6.24-rc3-git1/drivers/net/wireless/zd1211rw/zd_mac.c
+> @@ -974,14 +974,14 @@ static int is_data_packet_for_us(struct 
+>  	switch (ieee->iw_mode) {
+>  	case IW_MODE_ADHOC:
+>  		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) != 0 ||
+> -		    compare_ether_addr(hdr->addr3, ieee->bssid) != 0)
+> +		    memcmp(hdr->addr3, ieee->bssid, ETH_ALEN) != 0)
+>  			return 0;
+>  		break;
+>  	case IW_MODE_AUTO:
+>  	case IW_MODE_INFRA:
+>  		if ((fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) !=
+>  		    IEEE80211_FCTL_FROMDS ||
+> -		    compare_ether_addr(hdr->addr2, ieee->bssid) != 0)
+> +		    memcmp(hdr->addr2, ieee->bssid, ETH_ALEN) != 0)
+>  			return 0;
+>  		break;
+>  	default:
+> @@ -989,9 +989,9 @@ static int is_data_packet_for_us(struct 
+>  		return 0;
+>  	}
+>  
+> -	return compare_ether_addr(hdr->addr1, netdev->dev_addr) == 0 ||
+> +	return memcmp(hdr->addr1, netdev->dev_addr, ETH_ALEN) == 0 ||
+>  	       (is_multicast_ether_addr(hdr->addr1) &&
+> -		compare_ether_addr(hdr->addr3, netdev->dev_addr) != 0) ||
+> +		memcmp(hdr->addr3, netdev->dev_addr, ETH_ALEN) != 0) ||
+>  	       (netdev->flags & IFF_PROMISC);
+>  }
+>  
+> @@ -1047,7 +1047,7 @@ static void update_qual_rssi(struct zd_m
+>  	hdr = (struct ieee80211_hdr_3addr *)buffer;
+>  	if (length < offsetof(struct ieee80211_hdr_3addr, addr3))
+>  		return;
+> -	if (compare_ether_addr(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid) != 0)
+> +	if (memcmp(hdr->addr2, zd_mac_to_ieee80211(mac)->bssid, ETH_ALEN) != 0)
+>  		return;
+>  
+>  	spin_lock_irqsave(&mac->lock, flags);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> +		associated =3D true ;
-
-too much whitespace
-
-> +			zd_mac_config_beacon(hw, conf->beacon);
-> +			kfree_skb(conf->beacon);
-> +			zd_set_beacon_interval(&mac->chip, BCN_MODE_IBSS | 100);
-
-Does that mean you're hardcoding the beacon interval here while before
-you confused me how we should handle that setting in userspace? :)
-
-johannes
-
---=-nLJ8TLer8y1r5QWnLfHE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzWFjaVg1VMiehFYAQIOMw//aw56GLqoCF5Dz5CFpf0B4CuVU9TP/MfI
-d826noOjTYsoMJjHfBIKbQtj+YjpDcQ0qJlSYbVQHPcMsVhJA8Lk7apYR82nYEtr
-oFYeADVQ9lZ1YM0UvJpckcsQnMWNkQyWtxvQnjkeZy52WJ27y/f/KOITrA+v8Nze
-sQtjv0h15jPqYgjpUGBas+VmRuCNDpWkf/vCAPmmV5qF1jjjEw25ZrjBBUPMYsub
-TR8M3zSrzxRo3ORsJBuoVZ9GAdmBkC4vzsypVbjB8kSPQ/4NP6IrxAwn+0GcZG4m
-J48py/EZJOBZ7CyT21vdl/c3tXNabIcn21IYSTKkx+0vXFVyxm1y0yBRQpaBffna
-bKior5hZbQnPoXRB0WcldGcGBtl3+XxCPumSovkcab8OdiOUt4v2uZcuXcy8qan3
-llgc/KKjUI7UlEF05X/obWScSpJT04oDPkUw66OYS+SVyrti7YwB+6hvf/nO6bg/
-iGJPSgg0HubHpzl5DNkLyEXOd1TPsoL85OvucI0yLP5T0v3DgRK298XNx8UvQ9St
-dM+vDHXeqlLBj73VZXpxfkKEtKWRRjjAOVGlndWIWPAY229ZApQGSawRoKA3V/Bn
-Rafqy4kN4ttzTSaUyNXrRTXxJtimVfLscjdXFVwM+gpWy+AdAL/BsyRzDH6U1EoF
-3mQDcHHMWP8=
-=uLbQ
------END PGP SIGNATURE-----
-
---=-nLJ8TLer8y1r5QWnLfHE--
-
+-- 
+Uli Kunitz
