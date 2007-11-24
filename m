@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5301 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbXKWIFl (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:4718 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751020AbXKXPCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 03:05:41 -0500
-Received: from lin01.mn-solutions.de (pD95F8443.dip0.t-ipconnect.de [217.95.132.67])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id A21815E5822
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 09:05:39 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id C94701E00FD
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2007 09:02:44 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 regression: doesn't associate automatically
-Date: Fri, 23 Nov 2007 09:06:10 +0100
-References: <200711220912.10452.hs4233@mail.mn-solutions.de> <20071122132635.GA3372@tuxdriver.com> <1195777405.11966.12.camel@dv>
-In-Reply-To: <1195777405.11966.12.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200711230906.10441.hs4233@mail.mn-solutions.de> (sfid-20071123_080548_253543_461FC266)
+	Sat, 24 Nov 2007 10:02:23 -0500
+Date: Sat, 24 Nov 2007 23:02:16 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>,
+	David Miller <davem@davemloft.net>
+Subject: Re: ZD1211RW unaligned accesses...
+Message-ID: <20071124150216.GA28153@gondor.apana.org.au> (sfid-20071124_150232_566838_9632FC4F)
+References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47442BFC.8090008@hotmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think setting the key should not cause reassociation if
-> there is an association.
+On Wed, Nov 21, 2007 at 01:00:44PM +0000, Shaddy Baddah wrote:
+>
+> It hasn't seemed to. I patched the source (confirming the patched lines 
+> are in), compiled, installed and rebooted to effect the changes. My 
+> zd1211rw modules timestamp indicates that I have an updated module:
 
-That seems sensible.
+Thanks for your quick response and sorry for my late answer :)
 
+I think Dave's patch is definietly on the right track but there
+are subsequent unaligned accesses of a similar kind which is
+why it still appears to be broken if you look at the kernel
+messages.
 
-I actually think that while it's not associated, it should 
-periodically try to associcate with what's currently defined 
-(e.g. ESSID, fixed AP mac, key settings etc).
+But there is definitely progress because those addresses are now
+bigger (0x394/0x39c/0x3a8 vs. 0x2** earlier).
 
-Currently, if I do the following with mac80211/b43:
+So please try the following patch (instead of the original one)
+which should fix all the unailgned accesses in do_rx.
 
-$ # turn AP off or move into an area where you can't
-  receive the AP
-$ pccardctl insert
-$ ifconfig eth1 up
-$ iwconfig eth1 key s:11111
-$ iwconfig eth1 essid MUMBLFUTZ
-$ # turn AP on or move with the laptop/device into the
-  vincinity of an AP
-
-... then I won't get an association at all.
-
-Other drivers that I used in production during the last 5 years 
-didn't show that behavior (orinoco_cs, wlags_h1_cs, wlags_h2_cs, 
-madwifi). They associated on their own.
-
-However, as mac80211 is currently implemented, it assumes 
-a "stationary" WLAN setup and doesn't cope well with scenarios 
-where devices move. If it would cope better with such 
-situations, then it would also cope with the first problem I 
-reported. Because if it would periodically re-scan and try to 
-associate, a later submitted or changed WEP key would be taken 
-into account and association would have succeeded.
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+--
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index a903645..d06b05b 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -1166,15 +1166,16 @@ static void do_rx(unsigned long mac_ptr)
+ int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
+ {
+ 	struct sk_buff *skb;
++	unsigned int hlen = ALIGN(sizeof(struct zd_rt_hdr), 16);
+ 
+-	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
++	skb = dev_alloc_skb(hlen + length);
+ 	if (!skb) {
+ 		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
+ 		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
+ 		ieee->stats.rx_dropped++;
+ 		return -ENOMEM;
+ 	}
+-	skb_reserve(skb, sizeof(struct zd_rt_hdr));
++	skb_reserve(skb, hlen - ZD_PLCP_HEADER_SIZE);
+ 	memcpy(__skb_put(skb, length), buffer, length);
+ 	skb_queue_tail(&mac->rx_queue, skb);
+ 	tasklet_schedule(&mac->rx_tasklet);
