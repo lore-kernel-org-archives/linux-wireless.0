@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755797AbXKTMg1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 07:36:27 -0500
-Subject: [RFC] mac80211: always have a valid master device mac address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:33315 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751403AbXKXNi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 08:38:57 -0500
+Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: bruno randolf <bruno@thinktube.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200711241836.05159.bruno@thinktube.com>
+References: <1195814754.4149.86.camel@johannes.berg>
+	 <1195893283.4149.188.camel@johannes.berg>
+	 <1195896461.8231.3.camel@localhost>
+	 <200711241836.05159.bruno@thinktube.com>
 Content-Type: text/plain
-Date: Tue, 20 Nov 2007 01:17:31 +0100
-Message-Id: <1195517851.19479.24.camel@johannes.berg> (sfid-20071120_123645_893727_38226573)
+Date: Sat, 24 Nov 2007 14:38:51 +0100
+Message-Id: <1195911531.8231.5.camel@localhost> (sfid-20071124_133905_353963_8BC84B93)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once a while a driver will give us a bogus MAC address. This can be
-remedied by the user by setting the MAC address on the wlanX interface,
-but unfortunately one cannot change the address of the wmasterX
-interface which results in wlanX going up but wmasterX refusing to. This
-is pretty bad. This patch forces wmasterX to have a valid MAC address.
-The actual address doesn't matter at all.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Or should we hardcode one and always use that instead of the device
-address?
+On Sat, 2007-11-24 at 18:36 +0900, bruno randolf wrote:
+> On Saturday 24 November 2007 18:27:41 Mattias Nissler wrote:
+> > On Sat, 2007-11-24 at 09:34 +0100, Johannes Berg wrote:
+> > > On Sat, 2007-11-24 at 00:21 -0500, Michael Wu wrote:
+> > > > On Friday 23 November 2007 05:45:54 Johannes Berg wrote:
+> > > > > This makes mac80211 include the low-level MAC timestamp
+> > > > > in the radiotap header.
+> > > >
+> > > > No thanks. Not every driver supports reporting the timestamp and
+> > > > supporting timestamp/no timestamp in the default radiotap rx code makes
+> > > > it not so simple anymore.
+> > >
+> > > Uh, so how am I supposed to get the timestamp? Copy all the code into
+> > > b43 and make it generate the exact same radiotap header? That's pretty
+> > > crappy too.
+> >
+> > On rt2x00, we've just added a facility that dumps information about all
+> > frames received and transmitted at a very low level. We dump general
+> > information about the frame, the tx/rx descriptors and the packet. Maybe
+> > something similar would also be useful for b43?
+> 
+> that's not a solution if you want them per packet in the radiotap header.
+> kismet & wireshark use them as well as other applications.
 
---- everything.orig/net/mac80211/ieee80211.c	2007-11-20 00:25:03.008708602 +0100
-+++ everything/net/mac80211/ieee80211.c	2007-11-20 00:27:09.278700356 +0100
-@@ -1286,6 +1286,8 @@ int ieee80211_register_hw(struct ieee802
- 		goto fail_dev;
- 
- 	memcpy(local->mdev->dev_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
-+	if (!is_valid_ether_addr(local->mdev->dev_addr))
-+		random_ether_addr(local->mdev->dev_addr);
- 	SET_NETDEV_DEV(local->mdev, wiphy_dev(local->hw.wiphy));
- 
- 	result = register_netdevice(local->mdev);
+We actually dump per packet data that is read via debugfs and then fed
+into wireshark. Helps debugging a lot :-)
 
+Mattias
 
