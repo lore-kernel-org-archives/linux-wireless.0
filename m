@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:40209 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750890AbXKSSpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 13:45:24 -0500
-Date: Mon, 19 Nov 2007 19:44:33 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [PATCH v2] b43/b43legacy: fix left-over URLs and ifdefs
-Message-ID: <20071119194433.15f19da4@morte> (sfid-20071119_184527_027252_D2A9615D)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from deine-taler.de ([217.160.107.63]:64500 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751830AbXKXQwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 11:52:04 -0500
+Date: Sat, 24 Nov 2007 17:52:01 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>,
+	David Miller <davem@davemloft.net>
+Subject: Re: ZD1211RW unaligned accesses...
+Message-ID: <20071124165201.GA31677@deine-taler.de> (sfid-20071124_165214_888211_D82137D6)
+References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com> <20071124150216.GA28153@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071124150216.GA28153@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some left-over URLs and ifdefs in b43 and b43legacy drivers.
+Herbert Xu wrote:
 
+> So please try the following patch (instead of the original one)
+> which should fix all the unailgned accesses in do_rx.
+> 
+> Cheers,
+> -- 
+> Visit Openswan at http://www.openswan.org/
+> Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+> Home Page: http://gondor.apana.org.au/~herbert/
+> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> --
+> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+> index a903645..d06b05b 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+> @@ -1166,15 +1166,16 @@ static void do_rx(unsigned long mac_ptr)
+>  int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
+>  {
+>  	struct sk_buff *skb;
+> +	unsigned int hlen = ALIGN(sizeof(struct zd_rt_hdr), 16);
+>  
+> -	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
+> +	skb = dev_alloc_skb(hlen + length);
+>  	if (!skb) {
+>  		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
+>  		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
+>  		ieee->stats.rx_dropped++;
+>  		return -ENOMEM;
+>  	}
+> -	skb_reserve(skb, sizeof(struct zd_rt_hdr));
+> +	skb_reserve(skb, hlen - ZD_PLCP_HEADER_SIZE);
+>  	memcpy(__skb_put(skb, length), buffer, length);
+>  	skb_queue_tail(&mac->rx_queue, skb);
+>  	tasklet_schedule(&mac->rx_tasklet);
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
----
-
-John,
-this is for 2.6.24. Sorry for the noise, please just discard the previous
-patch.
-
----
-
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c
-+++ wireless-2.6/drivers/net/wireless/b43/main.c
-@@ -1558,7 +1558,7 @@ static void b43_release_firmware(struct 
- static void b43_print_fw_helptext(struct b43_wl *wl)
- {
- 	b43err(wl, "You must go to "
--
-"http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
-+
-"http://linuxwireless.org/en/users/Drivers/b43#devicefirmware " "and
-download the correct firmware (version 4).\n"); }
- 
-Index: wireless-2.6/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/dma.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/dma.c
-@@ -996,7 +996,7 @@ int b43legacy_dma_init(struct b43legacy_
- 
- 	err = ssb_dma_set_mask(dev->dev, dmamask);
- 	if (err) {
--#ifdef BCM43XX_PIO
-+#ifdef CONFIG_B43LEGACY_PIO
- 		b43legacywarn(dev->wl, "DMA for this device not supported.
-" "Falling back to PIO\n");
- 		dev->__using_pio = 1;
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -1398,7 +1398,7 @@ static void b43legacy_release_firmware(s
- static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
- {
- 	b43legacyerr(wl, "You must go to
-http://linuxwireless.org/en/users/"
--		     "Drivers/bcm43xx#devicefirmware "
-+		     "Drivers/b43#devicefirmware "
- 		     "and download the correct firmware (version 3).\n");
- }
- 
-
+ACK. This patch should solve it and is better than my patch.
 
 -- 
-Ciao
-Stefano
+Uli Kunitz
