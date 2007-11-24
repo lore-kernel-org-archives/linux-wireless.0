@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4096 "EHLO ra.tuxdriver.com"
+Received: from c60.cesmail.net ([216.154.195.49]:62089 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505AbXKUORB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 09:17:01 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: rjw@sisk.pl, larry.finger@lwfinger.net, stefano.brivio@polimi.it,
-	mb@bu3sch.de, bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] bcm43xx: mark as obsolete and schedule for removal
-Date: Wed, 21 Nov 2007 09:16:11 -0500
-Message-Id: <1195654571-10506-1-git-send-email-linville@tuxdriver.com> (sfid-20071121_141706_705498_1004077B)
-In-Reply-To: <20071121135927.GC8792@tuxdriver.com>
-References: <20071121135927.GC8792@tuxdriver.com>
+	id S1751073AbXKXEn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2007 23:43:27 -0500
+Subject: Re: Belin FD7010 v7
+From: Pavel Roskin <proski@gnu.org>
+To: Vadim Peretokin <vperetokin@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
+References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+	 <1195781993.11966.27.camel@dv>
+	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
+	 <1195784707.11966.38.camel@dv>
+	 <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 23 Nov 2007 23:43:25 -0500
+Message-Id: <1195879405.7449.62.camel@dv> (sfid-20071124_044336_845375_78AEACDA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- Documentation/feature-removal-schedule.txt |    9 +++++++++
- MAINTAINERS                                |    2 +-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+On Fri, 2007-11-23 at 10:36 -0500, Vadim Peretokin wrote:
+> That didn't quite work. iwconfig and ifconfig couldn't see the card,
+> but lswh -C network showed my card.
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index 20c4c8b..c057e36 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -333,3 +333,12 @@ Why:	This driver has been marked obsolete for many years.
- Who:	Stephen Hemminger <shemminger@linux-foundation.org>
- 
- ---------------------------
-+
-+What:	bcm43xx wireless network driver
-+When:	2.6.26
-+Files:	drivers/net/wireless/bcm43xx
-+Why:	This driver's functionality has been replaced by the
-+	mac80211-based b43 and b43legacy drivers.
-+Who:	John W. Linville <linville@tuxdriver.com>
-+
-+---------------------------
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18b7c8e..2bfc23f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -828,7 +828,7 @@ P:	Stefano Brivio
- M:	stefano.brivio@polimi.it
- L:	linux-wireless@vger.kernel.org
- W:	http://bcm43xx.berlios.de/
--S:	Maintained
-+S:	Obsolete
- 
- BEFS FILE SYSTEM
- P:	Sergey S. Kostyliov
+You probably mean lshw.  I've never heard of it, but it looks like a
+useful program.
+
+>  It said "* - network UNCLAIMED",
+> but it didn't say any logical adresses.
+
+It means there is no driver using the card.  It you load either rtl8180
+or ndiswrapper, it won't be unclaimed.
+
+>  I tried a host of adresses
+> with "sudo ifconfig <adress> up", but nothing would work.
+
+You need to have a network interface first.  If the driver doesn't
+create the interface, then it's not working with your card.  Use dmesg
+to see kernel message for possible explanations.
+
+Once you have the interface (let's say it's wlan0), use "ifconfig wlan0
+up" to bring it up, "iwlist wlan0 scan" to see access points around you,
+iwconfig to configure the wireless parameters, possible wpa_supplicant
+for WPA authentication.  Once the driver report association, use
+ifconfig or dhclient to configure it.  I'm sure there is more detailed
+documentation somewhere.
+
+> I had a friend help me do some hacks involving telling the driver the
+> adress of my card, and then iwconfig saw it - but for some reason Wicd
+> couldn't see it (I'll try again when I get back home and install
+> Network Manager again.). I have a log of what we did to get it
+> "working", if it's any help.
+
+wicd is another interesting program I've never heard before.  Perhaps
+you should ask in a list for wicd users, just make sure to provide with
+sufficient details.
+
+Anyway, wicd should not be required to connect to an AP.
+
+> And yes, the card does work if you install the net8185.inf driver in
+> ndiswrapper and then use the -a command to link the card to the
+> driver. I was just hoping that the card would work out of the box :)
+
+Well, not everything is working out of box, but we are getting there.
+
 -- 
-1.5.3.3
-
+Regards,
+Pavel Roskin
