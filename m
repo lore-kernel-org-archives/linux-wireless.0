@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailguard.fgan.de ([128.7.3.5]:60013 "EHLO mailguard.fgan.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751839AbXKNNCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 08:02:24 -0500
-Received: from rufsun5.fkie.fgan.de ([128.7.2.5] helo=mailhost.fgan.de)
-	by mailguard.fgan.de with esmtp (Exim 4.63)
-	(envelope-from <Rogge@fgan.de>)
-	id 1IsHAp-000409-B4
-	for linux-wireless@vger.kernel.org; Wed, 14 Nov 2007 13:16:51 +0100
-Received: from mailserv.lorien.fkie.fgan.de ([128.7.90.101])
-	by mailhost.fgan.de with esmtp (Exim 4.67 #7 (Solaris MB))
-	id 1IsHAp-00064c-4P
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2007 13:16:51 +0100
-From: Henning Rogge <rogge@fgan.de>
-To: linux-wireless@vger.kernel.org
-Subject: Virtual wireless network card for mac80211
-Date: Wed, 14 Nov 2007 13:16:50 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711141316.50393.rogge@fgan.de> (sfid-20071114_130227_204342_2DDA04DF)
+Received: from mail.gmx.net ([213.165.64.20]:37797 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751705AbXKXJ1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 04:27:48 -0500
+Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1195893283.4149.188.camel@johannes.berg>
+References: <1195814754.4149.86.camel@johannes.berg>
+	 <200711240021.12394.flamingice@sourmilk.net>
+	 <1195893283.4149.188.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 24 Nov 2007 10:27:41 +0100
+Message-Id: <1195896461.8231.3.camel@localhost> (sfid-20071124_092758_216800_B8C9FB05)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-I'm looking for a way to simulate a ieee802.11 card on a linux system. Is 
-there an equivalent for tun/tap for the mac80211 layer, so I can just send 
-the communication with a wireless device back to userspace (and data from 
-userspace into the wireless stack) ?
+On Sat, 2007-11-24 at 09:34 +0100, Johannes Berg wrote:
+> On Sat, 2007-11-24 at 00:21 -0500, Michael Wu wrote:
+> > On Friday 23 November 2007 05:45:54 Johannes Berg wrote:
+> > > This makes mac80211 include the low-level MAC timestamp
+> > > in the radiotap header.
+> > >
+> > No thanks. Not every driver supports reporting the timestamp and supporting 
+> > timestamp/no timestamp in the default radiotap rx code makes it not so simple 
+> > anymore.
+> 
+> Uh, so how am I supposed to get the timestamp? Copy all the code into
+> b43 and make it generate the exact same radiotap header? That's pretty
+> crappy too.
 
-Henning Rogge
+On rt2x00, we've just added a facility that dumps information about all
+frames received and transmitted at a very low level. We dump general
+information about the frame, the tx/rx descriptors and the packet. Maybe
+something similar would also be useful for b43?
+
+Mattias
+
