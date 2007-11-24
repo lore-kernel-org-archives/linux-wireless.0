@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59516 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870AbXKZPXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 10:23:55 -0500
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-From: Dan Williams <dcbw@redhat.com>
-To: drago01 <drago01@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <474955E1.30603@gmail.com>
-References: <47494851.4070504@gmail.com>
-	 (sfid-20071125_100303_057404_A213DFC8) <1195987773.4149.214.camel@johannes.berg>
-	 <474955E1.30603@gmail.com>
-Content-Type: text/plain
-Date: Mon, 26 Nov 2007 10:19:47 -0500
-Message-Id: <1196090387.4202.12.camel@localhost.localdomain> (sfid-20071126_152357_472034_6CC5A291)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55989 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbXKXIfl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2007 03:35:41 -0500
+Subject: Re: timeout problems with certain APs and b43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200711232321.58516.rjw@sisk.pl>
+References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
+	 <200711232258.25965.rjw@sisk.pl> <1195855050.4149.179.camel@johannes.berg>
+	 <200711232321.58516.rjw@sisk.pl>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q8dRgYyVV5+6jEzfIAX+"
+Date: Sat, 24 Nov 2007 09:35:31 +0100
+Message-Id: <1195893331.4149.190.camel@johannes.berg> (sfid-20071124_083543_373642_0AA2F0F5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-11-25 at 12:00 +0100, drago01 wrote:
-> Johannes Berg wrote:
-> > Hi,
-> >
-> >   
-> >> First  sorry for the late report, the patches from the old thread fixed 
-> >> the privacy mismatch issue and now I can connect to a dynamic wep 
-> >> network. But the connection is not very stable because I get tons of wep 
-> >> decrypt errors in dmesg (while the connection is working but slow).
-> >> The same network works fine with ipw3945. Also iwl3945 works fine with 
-> >> static wep. I tryed the hwcrypt engine (hwcrypt=1) but it did not change 
-> >> anything.
-> >> While connectiong with wpa_supplicant I saw that mac80211 does not 
-> >> support the IW_AUTH_DROP_UNENCRYPTED ioctl while ipw3945 (ieee80211 
-> >> based) does.
-> >> Could this be related? ie. mac80211 tryes to decrypt unencrypted frames 
-> >> instead of dropping them?
-> >>     
-> >
-> > Odd. I'll have to take a look. I recently noticed that mac80211 would
-> > always *accept* unencrypted frames but it shouldn't try to decrypt them.
-> >
-> >   
-> ok thx, let me now if you need more info / tests.
-> >> Second problem is that ssid is hidden. I was able to connect to it using 
-> >> iwl3945 (even with hw_scan) but only with ap_scan=1 (while ap_scan=2 
-> >> should be used for hidden ssid and thats what nm uses). Non mac80211 
-> >> based drivers do not work with ap_scan=1 but with ap_scan=2. So this 
-> >> needs to be fixed somehow so that nm can support both wireless stacks.
-> >>     
-> >
-> > Uh so say that again what works where and what doesn't?
-> >
-> >   
-> sorry for being confusing.
-> what works:
-> connect to a hidden ssid with ap_scan=1 in wpa_supplicant.conf
-> what does not work:
-> connect to a hidden ssid with ap_scan=2 in wpa_supplicant.conf
-> ---
-> for non mac80211 drivers its the opposite ie.  ap_scan=2 can connect to 
-> hidden ssid while ap_scan=1 works
-> (thats also whats documented in the wpa_supplicant docs and what nm uses).
-> 
-> so NM can't support mac80211 and non mac80211 drivers at the same time 
-> without ugly hacks due to this issue.
 
-Let me rant that ap_scan is the single thing that has given me the most
-headaches with NetworkManager.  It's simply impossible use correctly on
-Linux.  There's _got_ to be a better way to deal with hidden SSIDs.
+--=-q8dRgYyVV5+6jEzfIAX+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
 
+> > > It seems that I can reproduce something similar on demand with an SMC=
+ wireless
+> > > router by moving my box sufficiently far away from it. :-)
+> >=20
+> > Well, yeah, that's expected though, you lose signal at some point. Not
+> > expected is that it happens without moving anything. Unless the
+> > calibration code is wrong which wouldn't really surprise me either.
+>=20
+> In my case, everything works just fine when the box is 6 meters away from=
+ the
+> AP (including a thick wall in between), but when I move it another 5-6 me=
+ters
+> away from the AP, things break down ...
+>=20
+> I'd expect it to work at longer distances, but well. :-)
+
+Yeah, but keep in mind we reverse engineered all the calibration code.
+
+johannes
+
+--=-q8dRgYyVV5+6jEzfIAX+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0fiUaVg1VMiehFYAQKhkg//TEbLoZdHfrrrofLitzM9MuTIPoTygZBA
+6eb/7Fn3YtroO2i4tDB6zwuuaBPQkas23D+b5wAtzglscwqNe1DqnTBblfMIit8M
+hapL1msLK6cirAGYqnIG+2djCjcNYRtt3OvYsPbVJKf5y/WsIsPPDYY7xVsTs8Jy
+HTK+UrLKK0iresPmhXvjKTUPFdm3EcieYjiiBVyY7amhxz/I7NtAj+brXiabwwnm
+rgl9M/GMtWYGnYgsHcMVAsNON8P9QFxD5Ok2fv4bHf2pG5cxM3sK2OdbEsFD77Zt
+KctigeTV0ONm7P6LtQuZDCgKOfum/1+wJOLtWnGQWZNObA8DKtoaaU56vjv+ueY1
+4Y3J/CS2pCotwUYSh1jPBWgzBrXWaJmtrDWgIvUY2K5jsDZYS0ZSB9dEza2UgTf+
++HUFZB4nkCxBsRVuxJZHf2RPMI6cGkiQvxbwjCJEMyylJIAG+uoRt9ifazcg6VxS
+AyLGtE/7KOuQ/sVB5SaKvQ/CocuA/4Nki2YSUgkfoEN7biUMAS7RGtodOIkEb6Ql
+8clg3olDDp8IUhG0rakUMO17+ZXm2fK+g29Oweu3d9ALyWpTjT+g3MyvsN4pcT1G
+vHobF+/3j4lJchLIi13iyy8CGokddOLWLukhMNo4pY5jaOyYsm6pD5Vcmod0DCib
+5tiAVR/b9Fg=
+=avz1
+-----END PGP SIGNATURE-----
+
+--=-q8dRgYyVV5+6jEzfIAX+--
 
