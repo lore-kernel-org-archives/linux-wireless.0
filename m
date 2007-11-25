@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:39392 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750847AbXKJFQz (ORCPT
+Received: from web33009.mail.mud.yahoo.com ([209.191.69.124]:22195 "HELO
+	web33009.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754630AbXKYGlF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 00:16:55 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] mac80211: Drop out of associated state if link is lost
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Date: Sat, 10 Nov 2007 00:15:25 -0500
-Message-ID: <20071110051525.5451.82213.stgit@tetra.sourmilk.net> (sfid-20071110_051659_883004_3581E5E7)
+	Sun, 25 Nov 2007 01:41:05 -0500
+Date: Sat, 24 Nov 2007 22:34:22 -0800 (PST)
+From: Max <maxw_gcc@yahoo.com>
+Subject: Error compiling intel mac80211-10.0.2
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <797498.12305.qm@web33009.mail.mud.yahoo.com> (sfid-20071125_064120_491456_156FD2FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no point in staying in IEEE80211_ASSOCIATED if there is no
-sta_info entry to receive frames with.
+Hi all,
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+I am trying to setup a Intel Corporation PRO/Wireless 3945ABG network adapter using the software provided in http://www.intellinuxwireless.org/. But I am getting the following error:
 
- net/mac80211/ieee80211_sta.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+...
+Checking kernel compatibility in:
+        /lib/modules/2.6.18/source//
+  ! CONFIG_NET_WIRELESS_NETLINK can not be set in .config!
+...
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 2079e98..271a56a 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -808,12 +808,8 @@ static void ieee80211_associated(struct net_device *dev,
- 		sta_info_put(sta);
- 	}
- 	if (disassoc) {
--		union iwreq_data wrqu;
--		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
--		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
--		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
--		mod_timer(&ifsta->timer, jiffies +
--				      IEEE80211_MONITORING_INTERVAL + 30 * HZ);
-+		ifsta->state = IEEE80211_DISABLED;
-+		ieee80211_set_associated(dev, ifsta, 0);
- 	} else {
- 		mod_timer(&ifsta->timer, jiffies +
- 				      IEEE80211_MONITORING_INTERVAL);
+Which apparently gets triggered by the following lines in the "../mac80211-10.0.2/scripts/determine_compat" script
+.....
+        grep -q "nlmsg_trim" \
+                ${KSRC}include/net/netlink.h && {
+                export has_nlmsg_trim=1
+        } || {
+                grep -q "^CONFIG_NET_WIRELESS_RTNETLINK=[ym]" \
+                        ${KSRC}.config && {
+                        echo "  ! CONFIG_NET_WIRELESS_NETLINK can not be set in .config!"
+                        exit 1
+                }
+        }
+......
+
+As you can see I am running kernel version 2.6.18.
+
+Any help would be greatly appreciated.
 
 
+Thanks and regards,
+
+Max
+
+
+
+      ____________________________________________________________________________________
+Be a better sports nut!  Let your teams follow you 
+with Yahoo Mobile. Try it now.  http://mobile.yahoo.com/sports;_ylt=At9_qDKvtAbMuh1G1SQtBI7ntAcJ
