@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59874
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752154AbXKSMTv (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:2008 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752031AbXKYOBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 07:19:51 -0500
-Date: Mon, 19 Nov 2007 04:19:50 -0800 (PST)
-Message-Id: <20071119.041950.26533240.davem@davemloft.net> (sfid-20071119_121957_723589_15EE56B2)
-To: linux-wireless@vger.kernel.org, shaddy_baddah@hotmail.com
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <47417D7F.3060704@hotmail.com>
-References: <4740DF47.4040206@hotmail.com>
-	<20071119.002755.77617097.davem@davemloft.net>
-	<47417D7F.3060704@hotmail.com>
+	Sun, 25 Nov 2007 09:01:33 -0500
+Date: Sun, 25 Nov 2007 22:01:21 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+Message-ID: <20071125140121.GA12665@gondor.apana.org.au> (sfid-20071125_140201_786018_A39A71FC)
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <1195938799.4149.197.camel@johannes.berg> <20071125014446.GA32104@gondor.apana.org.au> <1195988428.4149.225.camel@johannes.berg> <20071125112251.GA10039@gondor.apana.org.au> <1195998864.4149.229.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1195998864.4149.229.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Date: Mon, 19 Nov 2007 23:11:43 +1100
+On Sun, Nov 25, 2007 at 02:54:24PM +0100, Johannes Berg wrote:
+>
+> But I do have a choice where to fix it up and I'd prefer the drivers to
+> do it where necessary. For that, the warning would work because it'd
+> show driver authors that they need to fix something.
 
-> David Miller wrote:
-> >> Whilst the device is up, I continually get console messages like those I 
-> >> have inlined below:
-> >>
-> >> Kernel unaligned access at TPC[100ee4d4] do_rx+0x244/0x614 [zd1211rw]
-> >> Kernel unaligned access at TPC[100ee4e8] do_rx+0x258/0x614 [zd1211rw]
-> >> Kernel unaligned access at TPC[100ee4cc] do_rx+0x23c/0x614 [zd1211rw]
-> > 
-> > These are unaligned data accesses in the kernel driver.
-> 
-> Sure. Just to make sure I understand, does TPC stand for something like 
-> Trap Program Code?
+Fair enough.
 
-It's simply the program counter of the CPU at the time of the trap.
-It maps to the symbol and offset printed right afterwards, which
-would be somewhere in do_rx() in the zd1211rw driver.
+> Hmm. I don't think so. Take an AP for example. It gets a lot of packets
+> from stations. Now, if you're not QoS capable then all is well. But i
+> you are and some stations are as well then all those stations send QoS
+> packets (+2 bytes). Or take an AP connected via wireless (WPS), WPS has
+> +6 bytes so I get all incoming upstream traffic with such unaligned
+> headers.
 
-Probably it's parsing some data structure in the incoming packet
-buffer which is misaligned.
+The question is does this actually change all the time.  Let's
+say you took a random sample of a second worth of IP packets
+over wireless, what proportion of them are going to have the
+same hardware header length modulo 4?
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
