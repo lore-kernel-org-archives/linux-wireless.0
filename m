@@ -1,205 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55252 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756757AbXKNPbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:31:07 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 04/15] mac80211: adding 802.11n IEs handling
-Date: Wed, 14 Nov 2007 17:29:40 +0200
-Message-Id: <11950542003344-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153146_671326_C89CF9CF)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from rhun.apana.org.au ([64.62.148.172]:4686 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752447AbXKYLXF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Nov 2007 06:23:05 -0500
+Date: Sun, 25 Nov 2007 19:22:51 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+Message-ID: <20071125112251.GA10039@gondor.apana.org.au> (sfid-20071125_112313_443474_8DFEE9C7)
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <1195938799.4149.197.camel@johannes.berg> <20071125014446.GA32104@gondor.apana.org.au> <1195988428.4149.225.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1195988428.4149.225.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch presents the ability to parse and compose HT IEs, and to put
-the IE relevant data inside the mac80211's internal HT structures
+On Sun, Nov 25, 2007 at 12:00:28PM +0100, Johannes Berg wrote:
+>
+> Not sure. On the one hand, yeah, that's something we should probably do,
+> on the other hand this will suck because for most drivers either nothing
+> needs to be done or the fixup is trivial. I suppose we should do this
+> but stick in a WARN_ON_ONCE() or something, at least with mac80211 debug
+> enabled.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_i.h   |    8 +++-
- net/mac80211/ieee80211_sta.c |   89 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 94 insertions(+), 3 deletions(-)
+I don't see how you can get a WARN_ON to work when you're expecting
+there to be unaligned packets from time to time as the hardware
+header changes.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b4e32ab..915d7b1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -89,6 +89,8 @@ struct ieee80211_sta_bss {
- 	size_t rsn_ie_len;
- 	u8 *wmm_ie;
- 	size_t wmm_ie_len;
-+	u8 *ht_ie;
-+	size_t ht_ie_len;
- #define IEEE80211_MAX_SUPP_RATES 32
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 	size_t supp_rates_len;
-@@ -759,7 +761,11 @@ int ieee80211_sta_deauthenticate(struct net_device *dev, u16 reason);
- int ieee80211_sta_disassociate(struct net_device *dev, u16 reason);
- void ieee80211_erp_info_change_notify(struct net_device *dev, u8 changes);
- void ieee80211_reset_erp_info(struct net_device *dev);
--
-+int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
-+				   struct ieee80211_ht_info *ht_info);
-+int ieee80211_ht_addt_info_ie_to_ht_bss_info(
-+			struct ieee80211_ht_addt_info *ht_add_info_ie,
-+			struct ieee80211_ht_bss_info *bss_info);
- /* ieee80211_iface.c */
- int ieee80211_if_add(struct net_device *dev, const char *name,
- 		     struct net_device **new_dev, int type);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 2079e98..7b1773c 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -90,7 +90,8 @@ struct ieee802_11_elems {
- 	u8 *ext_supp_rates;
- 	u8 *wmm_info;
- 	u8 *wmm_param;
--
-+	u8 *ht_cap_elem;
-+	u8 *ht_info_elem;
- 	/* length of them, respectively */
- 	u8 ssid_len;
- 	u8 supp_rates_len;
-@@ -106,6 +107,8 @@ struct ieee802_11_elems {
- 	u8 ext_supp_rates_len;
- 	u8 wmm_info_len;
- 	u8 wmm_param_len;
-+	u8 ht_cap_elem_len;
-+	u8 ht_info_elem_len;
- };
- 
- static void ieee802_11_parse_elems(u8 *start, size_t len,
-@@ -190,6 +193,14 @@ static void ieee802_11_parse_elems(u8 *start, size_t len,
- 			elems->ext_supp_rates = pos;
- 			elems->ext_supp_rates_len = elen;
- 			break;
-+		case WLAN_EID_HT_CAPABILITY:
-+			elems->ht_cap_elem = pos;
-+			elems->ht_cap_elem_len = elen;
-+			break;
-+		case WLAN_EID_HT_EXTRA_INFO:
-+			elems->ht_info_elem = pos;
-+			elems->ht_info_elem_len = elen;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -332,6 +343,51 @@ static void ieee80211_handle_erp_ie(struct net_device *dev, u8 erp_value)
- 		ieee80211_erp_info_change_notify(dev, changes);
- }
- 
-+int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
-+				   struct ieee80211_ht_info *ht_info)
-+{
-+
-+	if (ht_info == NULL)
-+		return -EINVAL;
-+
-+	memset(ht_info, 0, sizeof(*ht_info));
-+
-+	if (ht_cap_ie) {
-+		u8 ampdu_info = ht_cap_ie->ampdu_params_info;
-+
-+		ht_info->ht_supported = 1;
-+		ht_info->cap = le16_to_cpu(ht_cap_ie->cap_info);
-+		ht_info->ampdu_factor =
-+			ampdu_info & IEEE80211_HT_CAP_AMPDU_FACTOR;
-+		ht_info->ampdu_density =
-+			(ampdu_info & IEEE80211_HT_CAP_AMPDU_DENSITY) >> 2;
-+		memcpy(ht_info->supp_mcs_set, ht_cap_ie->supp_mcs_set, 16);
-+	} else
-+		ht_info->ht_supported = 0;
-+
-+	return 0;
-+}
-+
-+int ieee80211_ht_addt_info_ie_to_ht_bss_info(
-+			struct ieee80211_ht_addt_info *ht_add_info_ie,
-+			struct ieee80211_ht_bss_info *bss_info)
-+{
-+	if (bss_info == NULL)
-+		return -EINVAL;
-+
-+	memset(bss_info, 0, sizeof(*bss_info));
-+
-+	if (ht_add_info_ie) {
-+		u16 op_mode;
-+		op_mode = le16_to_cpu(ht_add_info_ie->operation_mode);
-+
-+		bss_info->primary_channel = ht_add_info_ie->control_chan;
-+		bss_info->bss_cap = ht_add_info_ie->ht_param;
-+		bss_info->bss_op_mode = (u8)(op_mode & 0xff);
-+	}
-+
-+	return 0;
-+}
- 
- static void ieee80211_sta_send_associnfo(struct net_device *dev,
- 					 struct ieee80211_if_sta *ifsta)
-@@ -630,6 +686,19 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		*pos++ = 1; /* WME ver */
- 		*pos++ = 0;
- 	}
-+	/* wmm support is a must to HT */
-+	if (wmm && mode->ht_info.ht_supported) {
-+		__le16 tmp = cpu_to_le16(mode->ht_info.cap);
-+		pos = skb_put(skb, sizeof(struct ieee80211_ht_cap)+2);
-+		*pos++ = WLAN_EID_HT_CAPABILITY;
-+		*pos++ = sizeof(struct ieee80211_ht_cap);
-+		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+		memcpy(pos, &tmp, sizeof(u16));
-+		pos += sizeof(u16);
-+		*pos++ = (mode->ht_info.ampdu_factor |
-+				(mode->ht_info.ampdu_density << 2));
-+		memcpy(pos, mode->ht_info.supp_mcs_set, 16);
-+	}
- 
- 	kfree(ifsta->assocreq_ies);
- 	ifsta->assocreq_ies_len = (skb->data + skb->len) - ies;
-@@ -1384,6 +1453,7 @@ static void ieee80211_rx_bss_free(struct ieee80211_sta_bss *bss)
- 	kfree(bss->wpa_ie);
- 	kfree(bss->rsn_ie);
- 	kfree(bss->wmm_ie);
-+	kfree(bss->ht_ie);
- 	kfree(bss);
- }
- 
-@@ -1631,7 +1701,22 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 		bss->wmm_ie = NULL;
- 		bss->wmm_ie_len = 0;
- 	}
--
-+	if (elems.ht_cap_elem &&
-+	    (!bss->ht_ie || bss->ht_ie_len != elems.ht_cap_elem_len ||
-+	     memcmp(bss->ht_ie, elems.ht_cap_elem, elems.ht_cap_elem_len))) {
-+		kfree(bss->ht_ie);
-+		bss->ht_ie = kmalloc(elems.ht_cap_elem_len + 2, GFP_ATOMIC);
-+		if (bss->ht_ie) {
-+			memcpy(bss->ht_ie, elems.ht_cap_elem - 2,
-+			       elems.ht_cap_elem_len + 2);
-+			bss->ht_ie_len = elems.ht_cap_elem_len + 2;
-+		} else
-+			bss->ht_ie_len = 0;
-+	} else if (!elems.ht_cap_elem && bss->ht_ie) {
-+		kfree(bss->ht_ie);
-+		bss->ht_ie = NULL;
-+		bss->ht_ie_len = 0;
-+	}
- 
- 	bss->hw_mode = rx_status->phymode;
- 	bss->freq = rx_status->freq;
+> Also, we do plan to run these things on rather smallish embedded devices
+> like APs that receive a lot of frames from many stations, and with 11n
+> we're pushing speeds up by quite a bit. I'm wary of putting more code
+> into the generic receive path.
+
+Well you don't have a choice if the hardware header is really
+unpredictable.  It's either that or we go and modify the entire
+IP stack which penalises all the high-speed Ethernet NICs that
+already get the alignment correctly.
+
+> Well, you can receive non-QoS frames even in QoS or WPS frames in any
+> other mode etc. so you can't really make any promises as which will be
+> more common. Bu in practice all (sane) hardware makes sure things are
+> aligned properly.
+
+Here's an idea.  Even if you can't predict the header length of
+all packets, can you at least predict the header length of the
+majority of data (ones carrying IP etc.) packets?
+
+If so then you can do the skb_reserve based on that and the fix-up
+in the wireless core would be minimised.
+
+Since I know next to nothing about the wireless transport layer,
+one of you experts will need to tell me whether such a prediction
+could work :)
+
+Cheers,
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
