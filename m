@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from post.fh-kl.de ([143.93.17.200]:34731 "EHLO post.fh-kl.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751134AbXKMMMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2007 07:12:53 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by post.fh-kl.de (Postfix) with ESMTP id 32F4C240FE9F
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 12:52:00 +0100 (CET)
-Received: from post.fh-kl.de ([127.0.0.1])
-	by localhost (post.fh-kl.de [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id VsB6tiJhrUNk for <linux-wireless@vger.kernel.org>;
-	Tue, 13 Nov 2007 12:51:54 +0100 (CET)
-Received: from [10.0.60.129] (sub21.rz-zw.fh-kl.de [143.93.17.21])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by post.fh-kl.de (Postfix) with ESMTP id 733082401E88
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2007 12:51:54 +0100 (CET)
-Message-ID: <47398FD8.6030409@fh-kl.de> (sfid-20071113_121257_510832_155EFB03)
-Date: Tue, 13 Nov 2007 12:51:52 +0100
-From: Patrick Ziegler <patrick.ziegler@fh-kl.de>
+Received: from nz-out-0506.google.com ([64.233.162.226]:60960 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbXKYRau (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Nov 2007 12:30:50 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so126210nze
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Nov 2007 09:30:49 -0800 (PST)
+Message-ID: <6995ca080711250930x14a2975ub9b11d9da97639f2@mail.gmail.com> (sfid-20071125_173054_744210_0E5E42FF)
+Date: Sun, 25 Nov 2007 12:30:48 -0500
+From: "Vadim Peretokin" <vperetokin@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Belin FD7010 v7
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1195954954.10279.4.camel@dv>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Wimax
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
+	 <1195781993.11966.27.camel@dv>
+	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
+	 <1195784707.11966.38.camel@dv>
+	 <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
+	 <1195879405.7449.62.camel@dv>
+	 <6995ca080711241054s4aeca1f9r2496a36f93a9db43@mail.gmail.com>
+	 <20071124143310.a7pta1f4lc0k4ok0@webmail.spamcop.net>
+	 <6995ca080711241246kbb09472k777c2082a41b692a@mail.gmail.com>
+	 <1195954954.10279.4.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I noticed, that was horrid typing. My keyboard is okay though hehe.
 
-is there any support for Wimax network cards in the kernel yet ?
+And thank you, when will I be able to test the driver again then?
 
-is this the right mailing list for this topic ?
-
-is someone working on a Wimax integration ?
-
-
-regards
-
-Patrick
+On Nov 24, 2007 8:42 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Sat, 2007-11-24 at 15:46 -0500, Vadim Peretokin wrote:
+> > Yes! Yes there was a new_id thing that we used echo on.
+> >
+> > Here is the output of that command:
+> >
+> > vadi@vadi-laptop:~$ lspci -n
+> [skip]
+> > 03:00.0 0200: 1799:701f (rev 20)
+>
+> I've submitted a patch to add that ID to the driver.  Just for the
+> record, it's actually Belkin F5D7010 v7.  You lost "k" and "5" in the
+> subject, check your keyboard :)
+>
+> --
+> Regards,
+> Pavel Roskin
+>
