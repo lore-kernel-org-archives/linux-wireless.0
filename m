@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:58221 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754112AbXK0TmD (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:33007 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814AbXKYG3Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:42:03 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1086541nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:42:01 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/11] rt2x00: Cleanup rfkill
-Date: Tue, 27 Nov 2007 21:51:57 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711272146.53518.IvDoorn@gmail.com>
-In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+	Sun, 25 Nov 2007 01:29:24 -0500
+To: "ext Michael Wu" <flamingice@sourmilk.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: include MAC timestamp in radiotap header
+References: <1195814754.4149.86.camel@johannes.berg>
+	<200711240021.12394.flamingice@sourmilk.net>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Sun, 25 Nov 2007 08:21:50 +0200
+In-Reply-To: <200711240021.12394.flamingice@sourmilk.net> (ext Michael Wu's message of "Sat\, 24 Nov 2007 00\:21\:12 -0500")
+Message-ID: <87fxyulu9t.fsf@nokia.com> (sfid-20071125_062940_520902_CDA87249)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272151.57802.IvDoorn@gmail.com> (sfid-20071127_194250_980434_CBD5936F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The label exit_free_polldev is no longer used and can be removed.
-input_free_polled_device() also calls input_free_device(), so
-don't call it seperatly.
+"ext Michael Wu" <flamingice@sourmilk.net> writes:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00rfkill.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+>> This makes mac80211 include the low-level MAC timestamp
+>> in the radiotap header.
+>>
+> No thanks. Not every driver supports reporting the timestamp and supporting 
+> timestamp/no timestamp in the default radiotap rx code makes it not so simple 
+> anymore.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-index 7439637..34a96d4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-@@ -148,9 +148,6 @@ int rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- 
- 	return 0;
- 
--exit_free_polldev:
--	input_free_polled_device(rt2x00dev->poll_dev);
--
- exit_free_rfkill:
- 	rfkill_free(rt2x00dev->rfkill);
- 
-@@ -163,7 +160,6 @@ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- 	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
- 		return;
- 
--	input_free_device(rt2x00dev->poll_dev->input);
- 	input_free_polled_device(rt2x00dev->poll_dev);
- 	rfkill_free(rt2x00dev->rfkill);
- }
+Having MAC timestamps is very useful when one is debugging low level
+problems. I'm currently using madwifi for this but would prefer b43.
+How many drivers do not support MAC timestamps? It would be really
+shame to loose this functionality.
+
 -- 
-1.5.3.6
-
+Kalle Valo
