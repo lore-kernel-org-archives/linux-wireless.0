@@ -1,81 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:15465 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822AbXKQRGe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752031AbXKYLAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2007 12:06:34 -0500
-Received: by an-out-0708.google.com with SMTP id d31so309341and
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Nov 2007 09:06:30 -0800 (PST)
-Message-ID: <40f31dec0711170906u53a4dd09p251a54a1ed53c16e@mail.gmail.com> (sfid-20071117_170642_160614_D6084442)
-Date: Sat, 17 Nov 2007 19:06:30 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org,
-	madwifi-devel <madwifi-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC] ath5k: Per queue interrupt handling
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 25 Nov 2007 06:00:42 -0500
+Subject: Re: wireless vs. alignment requirements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: dsd@gentoo.org, davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071125014446.GA32104@gondor.apana.org.au>
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au>
+	 <1195893216.4149.186.camel@johannes.berg>
+	 <20071124133200.GA27531@gondor.apana.org.au>
+	 <1195912176.4149.194.camel@johannes.berg>
+	 <20071124141319.GA27819@gondor.apana.org.au>
+	 <1195938799.4149.197.camel@johannes.berg>
+	 <20071125014446.GA32104@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lmnqcjJjsO/mKSlP0rNb"
+Date: Sun, 25 Nov 2007 12:00:28 +0100
+Message-Id: <1195988428.4149.225.camel@johannes.berg> (sfid-20071125_110047_457250_3636FC24)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello ppl ;-)
 
-I'm working on implementing per queue interrupt setting (well i've
-done it already and i'm currently testing it) on secondary interrupt
-mask registers. Interrupts may be enabled on each queue by using txq
-flags (checkout ath5k.h -ah.h on madwifi- and base.c -if_ath.c in
-madwifi-) instead of setting global imr.
+--=-lmnqcjJjsO/mKSlP0rNb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This is what i've found so far (tests on a 5414 chip):
 
-a) I disabled all tx interrupts on sc->sc_imask (primary interrupt
-mask register) and verified that tx wasn't working (i only got rxok
-and bmiss interrupts).
+> Sorry I was wrong about the 8 bytes requirement.  Although the
+> IPv6 protocol does try to maintain an 8-byte alignment the Linux
+> stack never does anything that requires that.
+>=20
+> So 4 bytes is enough.
 
-b) Then I enabled them per queue (TXOK/TXERR for start). It wasn't
-supposed to work (since primary interrupt mask register masks primary
-interrupt status register on hw -at least that's what i thought it
-did) but it did (i had to remove status &= sc->sc_imask from
-ath(5k)_intr) since i got txok interrupts and tx worked fine.
+Whew. Good to hear.
 
-c) Enabling tx interrupts on primary interrupt mask register overrides
-secondary mask registers. I set 0 on secondary mask register for all
-queues (flags = 0) and i got tx interrupts if i set INT_TX on primary
-imr.
+> However, the wireless core is definitely not out of the woods.
+> It needs to support variable hardware header lengths that are
+> not always a multiple of 4.
+>=20
+> So here's my suggestion.  Modify the wireless core to fix up any
+> packets which aren't aligned correctly.  That should make it
+> work albeit in a way that's less than optimal.
 
-d) BMISS interrupts are non-fatal on 5414 (eg. no reset needed, after
-a few interrupts, isr gets auto-cleaned and keeps working). Actually i
-figured out we don't handle BMISS interrupts on ath5k, i didn't got
-any problems so far with any of the cards i tested. Maybe we need to
-review BMISS interrupt handling in moth ath5k/madwifi.
+Not sure. On the one hand, yeah, that's something we should probably do,
+on the other hand this will suck because for most drivers either nothing
+needs to be done or the fixup is trivial. I suppose we should do this
+but stick in a WARN_ON_ONCE() or something, at least with mac80211 debug
+enabled.
 
-So it seems that what we get on primary interrupt status (via get_isr)
-takes into account both primary interrupt mask register and secondary
-mask registers (we need to see if that's the case for all mac chips
-and not just 5414).
+Also, we do plan to run these things on rather smallish embedded devices
+like APs that receive a lot of frames from many stations, and with 11n
+we're pushing speeds up by quite a bit. I'm wary of putting more code
+into the generic receive path.
 
-A Q for linux-wireless: I don't know what is the right thing to do
-about per queue interrupts, what about making a function that reads
-secondary interrupt status register so we can also get for which tx
-queue is this interrupt ? Could that help more in wme ? Does mac80211
-make use of this info (eg. schedule each q differently) ?
+> Then for each driver where you care about this performance
+> (seriously I wouldn't for the speeds these things run at :),
+> pick the most common wireless hardware header length and have
+> the IP (or any other upper-level protocol) header aligned to
+> at least 4 bytes.  Or better if you know what hardware header
+> length that you're going to get (e.g., based on what mode you're
+> in) then do the skb_reserve accordingly.
 
-One last thing: We currently enable TXDESC and TXEOL interrupts for
-data queues and TXDESC interrupt for beacon q but we don't handle
-these interrupts on interrupt handler, so what's the point of setting
-them up ? Also have you ever got such interrupts and under what
-circumstances ? Because i did a few tests and i got weird results (eg.
-i got txdesc and txeol interrupt at the same time -isr reads TXDESC |
-TXEOL = 0x480). Also have in mind that TXEOL interrupt is not even
-included in ath5k.h/ah.h ! I checked out ath5k/madwifi/ath (freebsd)
-code and it's the same everywhere, why do we set these interrupts ?
-TXDESC is supposed to declare that we need to set up a txdescriptor
-and TXEOL is supposed to declare that txdescriptor is empty (we don't
-know for what q because we only read primary isr so that's pointless !
-eg. when i got txdesc + txeol from pisr it might be that txdesc was
-for beacon q and txeol for the data q)
+Well, you can receive non-QoS frames even in QoS or WPS frames in any
+other mode etc. so you can't really make any promises as which will be
+more common. Bu in practice all (sane) hardware makes sure things are
+aligned properly.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> It's a good thing these things aren't running at 10Gb :)
+
+For sure!
+
+johannes
+
+--=-lmnqcjJjsO/mKSlP0rNb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0lVy6Vg1VMiehFYAQJWahAAg43ceUdfYChR+OLN8pTbP0HNEp4cVuJo
+lanGFW2p2XSgXlreleZHYYNUQ3DEoJdiM1reaYK5pjrY+PTj1xM51PqGlljk3A9D
+ktuHTmytOIA9Q2cgkVHzT7sPy3RZZ2l4BX7TBTJQYMIukxTYPrukFHK6N19lROC8
+1WV8S1/WOAYRRwHVHdN311YIgsUDbiK7pHe2d5vSYKrQM39BQ+HVO3qdah9XHlBc
+m6YtJzjLRnCNqgnaOunobqh+s770NwWvo5UZ+r5GJFBsXOEOgoJ7ccOxfRJSUjxT
+8wPlBYd2ZUy+L1YNgmHeKUWnmn7LYlH+ekrXfIq+LwWjn0FW2Y8gcUR/m2JXWyut
+uxyfmNJSknrgoormRpdD1nr/9uOAwp/LAjfOyZmNb17fbF31H82dWWvfeWP4HuYG
+wVIWYfP67Xt70qEzb3Qp6onErxuJmP4KZMCIllInLjzgC12OymySSSzKIlEIZfwM
+1kWx+qCZFZDBvlP/lbhi4HkBkicU8TQpTZAmvhO3hkYJZZlgg0L/jS1fz2HfWKBR
+kXI3ujKX9c17BvsG+i+Svjrp29zLK0QJKt8+vpCvcXwTx0Cf54q5OUEPaP+MoNz+
+GX5l5RIPdHSQZ2Hn/fJfKK66yr7MwdIRyQP1LuXxU/ppw2bpzUK9G4FQMQzEFX4L
+uPAnOBeN37g=
+=yRE7
+-----END PGP SIGNATURE-----
+
+--=-lmnqcjJjsO/mKSlP0rNb--
+
