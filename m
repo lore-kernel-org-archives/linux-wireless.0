@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:38390 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751153AbXKVEpc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 23:45:32 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] ath5k: more consistent debug, info and error logging
-Date: Thu, 22 Nov 2007 13:45:30 +0900
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Jiri Slaby <jirislaby@gmail.com>
-References: <1195549767-21983-1-git-send-email-bruno@thinktube.com> <43e72e890711201757m159a5147j3984c3f1555e5444@mail.gmail.com> <200711221311.42072.bruno@thinktube.com>
-In-Reply-To: <200711221311.42072.bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711221345.31261.bruno@thinktube.com> (sfid-20071122_044541_202451_21B2EAAD)
+Received: from mail.gmx.net ([213.165.64.20]:59248 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754427AbXKYSZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Nov 2007 13:25:28 -0500
+Subject: Re: [PATCH] mac80211: Exponential moving average estimate for
+	rc80211_simple
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1196014318.8365.1.camel@localhost>
+References: <1196014318.8365.1.camel@localhost>
+Content-Type: text/plain
+Date: Sun, 25 Nov 2007 19:25:26 +0100
+Message-Id: <1196015126.8365.14.camel@localhost> (sfid-20071125_182530_900804_4D070DAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > +     ATH_DEBUG_RESET         = 0x00000001,   /* reset processing */
-> > > > +     ATH_DEBUG_INTR          = 0x00000002,   /* ISR */
-> > > > +     ATH_DEBUG_MODE          = 0x00000004,   /* mode init/setup */
-> > > > +     ATH_DEBUG_XMIT          = 0x00000008,   /* basic xmit operation
-> > > > */ +     ATH_DEBUG_BEACON        = 0x00000010,   /* beacon handling
-> > > > */ +     ATH_DEBUG_BEACON_PROC   = 0x00000020,   /* beacon ISR proc
-> > > > */ + ATH_DEBUG_CALIBRATE     = 0x00000100,   /* periodic calibration
-> > > > */ + ATH_DEBUG_TXPOWER       = 0x00000200,   /* transmit power */ +
-> > > > ATH_DEBUG_LED           = 0x00000400,   /* led management */ +
-> > > > ATH_DEBUG_DUMP_RX       = 0x00001000,   /* print received skb content
-> > > > */ +     ATH_DEBUG_DUMP_TX       = 0x00002000,   /* print transmit
-> > > > skb content */ +     ATH_DEBUG_DUMPSTATE     = 0x00004000,   /* dump
-> > > > register state */ +     ATH_DEBUG_DUMPMODES     = 0x00008000,   /*
-> > > > dump modes */ +     ATH_DEBUG_TRACE         = 0x00010000,   /* trace
-> > > > function calls */ +     ATH_DEBUG_FATAL         = 0x80000000,   /*
-> > > > fatal errors */ +     ATH_DEBUG_ANY           = 0xffffffff
-> > > > +};
-> >
-> > While you're at it can you move these to use kernel-doc? You'll have
-> > to name the enum, perhaps ath5k_debug ?
->
-> o.k.
+Hi,
 
-while doing that i question myself, what is ATH5K_DEBUG_FATAL /* fatal errors 
-*/ supposed to mean? shouldn't fatal errors be reported as errors, and not 
-only in debugging mode?
+I guess this patch will spawn a discussion, so let me comment a little
+more.
 
-the only place where ATH5K_DEBUG_FATAL is used is in the code i moved from 
-ath5k_rx_stop() to:
+I have a rt61pci card sitting in the box under my desk. Seems reception
+isn't really good below my desk :-) With the current rc80211_simple I
+have the following behaviour: Failed frames accumulate until
+rc80211_simple decides to lower the rate. Unfortunately, the rate
+control algorithm is quite unresponsive, so my rate goes down to 1Mb/s
+immediately. Then I have to wait for some minutes until the statistics
+have recovered enough for the rate control to raise the rate. Of course
+it goes straight through the roof to 54Mb/s. Errors accumulate, and soon
+I'm back at 1Mb/s. And so on.
 
-void
-ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
-{
-	struct ath5k_desc *ds;
-	struct ath5k_buf *bf;
-	int status;
+My patch changes the way the average of failed frames is computed. By
+using a moving average approach, old values don't influence the estimate
+after some time (note the current approach always uses the plain
+counters, thus using all information accumulated since the interface has
+been brought up!). This makes the estimate more responsive and thus the
+rate control algorithm works a lot better.
 
-	if (likely(!(sc->debug.level &
-	    (ATH5K_DEBUG_RESET | ATH5K_DEBUG_FATAL))))
-		return;
+I've tested my approach by listening to web radio for some time and it
+successfully keeps me between around 24Mb/s and 54Mb/s. From what I see
+here, that's a big improvement over the roller coaster rate control
+behaviour I had before.
 
-	printk(KERN_DEBUG "rx queue %x, link %p\n",
-		ath5k_hw_get_rx_buf(ah), sc->rxlink);
+Mattias
 
-	spin_lock_bh(&sc->rxbuflock);
-	list_for_each_entry(bf, &sc->rxbuf, list) {
-		ds = bf->desc;
-		status = ah->ah_proc_rx_desc(ah, ds);
-		if (!status || (sc->debug.level & ATH5K_DEBUG_FATAL))
-			ath5k_debug_printrxbuf(bf, status == 0);
-	}
-	spin_unlock_bh(&sc->rxbuflock);
-}
-
-so would it be ok to remove ATH5K_DEBUG_FATAL alltogether?
-i might make that as a seperate patch once the first two are thru.
-
-bruno
