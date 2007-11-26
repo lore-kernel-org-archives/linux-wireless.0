@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59371
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754803AbXKEO1b (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:62223 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbXKZRZ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2007 09:27:31 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Pekka Enberg" <penberg@cs.helsinki.fi>
-Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
-Date: Mon, 5 Nov 2007 15:26:40 +0100
-Cc: "Peter Zijlstra" <peterz@infradead.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Ingo Molnar" <mingo@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, "Michael Chan" <mchan@broadcom.com>,
-	netdev@vger.kernel.org, "Christoph Lameter" <clameter@sgi.com>
-References: <20071101191716.GA3201@pogo> <200711051403.39479.mb@bu3sch.de> <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com>
-In-Reply-To: <84144f020711050556m6675ea90g1b6c8054a3940ec0@mail.gmail.com>
+	Mon, 26 Nov 2007 12:25:28 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so837162wah
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 09:25:28 -0800 (PST)
+Message-ID: <1ba2fa240711260925y3e8ab0efg9731af02402c94d9@mail.gmail.com> (sfid-20071126_172533_226981_7B3A747D)
+Date: Mon, 26 Nov 2007 19:25:27 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net
+In-Reply-To: <1196094919.4149.303.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711051526.41273.mb@bu3sch.de> (sfid-20071105_142735_612024_8139E53E)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+	 <119608649124-git-send-email-ron.rindjunsky@intel.com>
+	 <1196094919.4149.303.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 November 2007 14:56:22 Pekka Enberg wrote:
-> Hi Michael,
-> 
-> On Monday 05 November 2007 13:23:50 Pekka Enberg wrote:
-> > > Is CONFIG_DEBUG_SLAB enabled? Usually these kind of random corruptions
-> > > are caused by someone passing a bad pointer to kfree() or
-> > > kmem_cache_free().
-> 
-> On 11/5/07, Michael Buesch <mb@bu3sch.de> wrote:
-> > Yeah.
+On Nov 26, 2007 6:35 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
+> > This patch adds the ability to receive and handle A-MSDU frames.
 > >
-> > What I also saw was random "one-bit-errors" once and then on rmmod of modules.
-> > I have absolutely no idea how they were caused, though (I read the freeing
-> > codes of the stuff hundreds of times). I don't have any of the oops messages
-> > anymore.
-> > But I do _not_ see this behaviour with slub anymore.
-> 
-> It is possible that the corruption is still there but SLUB doesn't
-> show it. Have you tried with slub_debug enabled?
-
-Hm, I don't really remember. Though, I usually have all almost kernel-hacking
-options enabled.
-I'll check and enable some more.
-
-> > BUG: unable to handle kernel paging request at virtual address f88a4a05
-> > printing eip: f88a4a05 *pde = 02000067 *pte = 00000000
-> >
-> > EIP: 0060:[<f88a4a05>] EFLAGS: 00010086 CPU: 0
-> > EIP is at 0xf88a4a05
-> > EAX: c20b75c8 EBX: c2f86f38 ECX: f88a4a05 EDX: c2f86f38
-> > ESI: c20b75c8 EDI: c2f89c00 EBP: c3897bfc ESP: c3897be0
-> >  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-> > Process modprobe (pid: 2908, ti=c3896000 task=c3935150 task.ti=c3896000)
-> > Stack: c01b2afc c2f82d98 c3897bf4 c01ba8b6 c2f86f38 c20b75c8 c2f82c00 c3897c24
-> >       c02186dd c2f86f38 c3897c24 c01b54c0 c20b75c8 00000001 c20b75c8 c2f86f38
-> >       c20b75c8 c3897c30 c01b54ed 00000001 c3897c54 c01b556c 00000001 c3897cd4
-> > Call Trace:
-> >  [<c0104cec>] show_trace_log_lvl+0x1a/0x2f
-> >  [<c0104d9e>] show_stack_log_lvl+0x9d/0xa5
-> >  [<c0104e53>] show_registers+0xad/0x17c
-> >  [<c0105017>] die+0xf5/0x1c6
-> >  [<c0112715>] do_page_fault+0x450/0x537
-> >  [<c02a835a>] error_code+0x6a/0x70
-> >  [<c02186dd>] scsi_request_fn+0x5f/0x2ec
-> >  [<c01b54ed>] __generic_unplug_device+0x20/0x23
-> 
-> We jump to a bogus address 0xf88a4a05 via a function pointer from
-> scsi_request_fn(). Can you work out the exact file and line for
-> scsi_request_fn+0x5f (look for "gdb vmlinux" in
-> Documentation/BUG-HUNTING) please?
-
-That'd be Luis' task then :)
-
-
--- 
-Greetings Michael.
+> > Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> Thanks for your patience on this. I have another question that is
+> identical in the other code and that we should, if necessary, fix in a
+> separate patch to fix both instances of this:
+>
+>
+> > +             payload = frame->data;
+> > +             ethertype = (payload[6] << 8) | payload[7];
+> > +
+> > +             if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
+> [...]
+> > +             } else {
+> > +                     memcpy(skb_push(frame, sizeof(__be16)), &len,
+> > +                             sizeof(__be16));
+> > +                     memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
+> > +                     memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
+>
+> Here, as well as in the regular data frame handler, we push the length
+> of the frame into the ethernet header. Later then, eth_type_trans() will
+> load up the skb->protocol field. The thing I'm not entirely sure about
+> is this: We can have frames longer than 1536 bytes, but only if the
+> length is smaller than 1536 does eth_type_trans() assume that it's a
+> length, if we have a frame longer won't it go wrong? I haven't quite
+> managed to wrap my head around the rules for wrapping data into an
+> 802.11 frame nor in an 802.3 setting so this may be totally incorrect.
+>
+Just grabbed this from wikipedia
+'
+values of that field between 0 and 1500 indicated the use of the
+original 802.3 Ethernet format with a length field, while values of
+1536 decimal (0600 hexadecimal) and greater indicated the use of the
+DIX frame format with an EtherType sub-protocol identifier
+'
+> johannes
+>
