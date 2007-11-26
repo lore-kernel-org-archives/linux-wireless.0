@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13292 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118AbXK2HnQ (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.233]:22251 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753058AbXKZRPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 02:43:16 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Albert Cahalan" <acahalan@gmail.com>,
-	"Albert Cahalan" <acahalan@gmail.com>
-Subject: Re: [PATCH] libertas: remove user-specified channel list
-Date: Thu, 29 Nov 2007 08:44:10 +0100
-Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200711281730.21327.hs4233@mail.mn-solutions.de> <787b0d920711282012k38d6d2c8g2d9ae79c89b04059@mail.gmail.com>
-In-Reply-To: <787b0d920711282012k38d6d2c8g2d9ae79c89b04059@mail.gmail.com>
+	Mon, 26 Nov 2007 12:15:49 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so402932nze
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 09:15:48 -0800 (PST)
+Message-ID: <1ba2fa240711260915i7f5142f1r300559503db96003@mail.gmail.com> (sfid-20071126_171615_489544_00593A67)
+Date: Mon, 26 Nov 2007 19:15:47 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 15/15] iwlwifi: 802.11n add support to 8K A-MSDU Rx frames
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net
+In-Reply-To: <1196094375.4149.289.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711290844.10501.hs4233@mail.mn-solutions.de> (sfid-20071129_074323_629411_F63E168B)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+	 <11960864922274-git-send-email-ron.rindjunsky@intel.com>
+	 <1196094375.4149.289.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 29 November 2007 05:12:06 Albert Cahalan wrote:
-> On Nov 28, 2007 11:30 AM, Holger Schurig 
-<hs4233@mail.mn-solutions.de> wrote:
-> > Remove the ability to specify channels to scan via debugfs
+On Nov 26, 2007 6:26 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> Why are you ripping out functionality? At the very least,
-> that ought to be justified in the changelog comment.
+> > Please notice - in order to work in 8K A-MSDU ucode support is needed,
+> > version 4.44.1.19 (soon to be published). 4K A-MSDU works in current ucode
+> > version as well.
+>
+> > +module_param_named(amsdu_size_8K, iwl4965_param_amsdu_size_8K, int, 0444);
+> > +MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
+>
+> Can't you read the ucode version instead?
+>
 
-This was discussed in libertas-dev.
+8K uCode supports both 4K and 8K A-MSDU. Using 8K is very memory
+demanding and we want to leave it configurable for using on embedded
+platforms
+Tomas
 
-
-Basically, I posted there a RFC (request-for-comment) patch about 
-a newer implementation of how scanning could be implemented. The 
-current version of scan.c is a bit complicated and not easy to 
-follow. I was rewriting that up to a point where it worked. But 
-my RFC patch had a bunch of TODO items, and I asked in 
-libertas-dev how to deal with them.
-
-Two TODOs were about the implementation the syntax 
-of "probes=XXX" and "channel=XXX" that you can use via 
-debugfs/extgetscan.
-
-Dan thought that we could easily rip this out, because no one is 
-known to use this feature. And I'm seconding Dan here. Both 
-debugfs-features actually just exhibits a possibility of how to 
-interact with the firmware. They don't have a real value.
-
-Simply because you cannot set number of probes or channel-list 
-from "normal" user-space application. E.g. when libertas needs 
-to scan because of a new ESSID set via "iwlist eth1 essid BLAH" 
-it would anyway scan all channels set by the country (11, 13 or 
-14 for b/g). It wouldn't honor your manually crafted last scan 
-from your last access to debugfs.
-
-So extgetscan is merely a tool to play with, but nothing more.
-
-madwifi for example also has the ability to specify "please scan 
-only on channels 1, 7, 11", but this has been implemented via 
-private ioctl's and set's this "sticky". So when you scan from 
-iwlist, implicitly from iwconfig XXX essid, from wpa_supplicant 
-etc, it would be honored. For such a feature you have a 
-real-life usage scenario, it would be much more useful than the 
-current way.
-
-
-However, if people come with a "this makes sense" usage scenario, 
-I'd add the needed implementation of it also to the newer 
-scanning code.
+> johannes
+>
