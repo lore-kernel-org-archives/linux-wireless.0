@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755852AbXKWMQS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 07:16:18 -0500
-Subject: Re: [PATCH] mac80211: remove "bcn_int" and "capab" scan results
-	info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1195736257.6323.89.camel@johannes.berg> (sfid-20071122_125756_937663_F323979F)
-References: <1195664138-21789-1-git-send-email-linville@tuxdriver.com>
-	 <1195664475.12000.54.camel@johannes.berg> <20071122043156.GB8672@jm.kir.nu>
-	 <1195736257.6323.89.camel@johannes.berg>
-	 (sfid-20071122_125756_937663_F323979F)
-Content-Type: text/plain
-Date: Fri, 23 Nov 2007 11:46:28 +0100
-Message-Id: <1195814788.4149.92.camel@johannes.berg> (sfid-20071123_121621_123647_0258A82D)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:21214 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbXKZGH4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 01:07:56 -0500
+Message-ID: <20071126010755.uudf679us0wwwkcw@webmail.spamcop.net> (sfid-20071126_060800_217625_25D49E05)
+Date: Mon, 26 Nov 2007 01:07:55 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Matt Herzog <msh@blisses.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: git guide page
+References: <20071126053943.GD6034@chicago.blisses.org>
+In-Reply-To: <20071126053943.GD6034@chicago.blisses.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > If I understood correctly, the proposed change was removing 'capab'
-> > information from scan results(?). If that is the case, that would break
-> > wpa_supplicant network selection since there would be no information on
-> > whether the network is using encryption or not (privacy flag) and
-> > whether it is a BSS or an IBSS. Consequently, I obviously continue to
-> > object this type of change as long as WE is used for getting scan
-> > results.
-> 
-> Well, wpa_supplicant currently works, right? And this code is never
-> triggered before the change to remove scan_flags because scan_flags
-> cannot be set. Hence, I don't see how wpa_supplicant can possibly need
-> this information.
+Quoting Matt Herzog <msh@blisses.org>:
 
-In fact, wpa_supplicant isn't even using the capab= information from the
-possibly present custom structure in the scan result, it uses
-SIOCGIWMODE to figure out whether it's a BSS or an IBSS, and probably
-IWEVGENIE to figure out encryption.
+> http://linuxwireless.org/en/developers/git-guide#Getthelatestupdates
+>
+> So. This page is not helpful at all :(
+>
+> Specifically, the below syntax fails utterly.
+>
+> cd /usr/src/wireless-2.6
+> git-checkout --track -b everything origin/everything
+> Usage: /usr/bin/git-checkout [-f] [-b <new_branch>] [-m] [<branch>]   
+> [<paths>...]
 
-The only thing it can possibly read from the custom scan result is
-wpa_ie= and rsn_ie= which are IWEVGENIE and tsf= which we never pass.
+When reporting about software errors, please specify the version of  
+the software that produces the error.
 
-Therefore, we should merge this patch.
+I guess your version of git is too old and doesn't support --track.
 
-johannes
-
+-- 
+Regards,
+Pavel Roskin
