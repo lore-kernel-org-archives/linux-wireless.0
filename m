@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:41474 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755058AbXK0QGz (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:54627 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752408AbXKZQSt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 11:06:55 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so773151nze
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 08:06:54 -0800 (PST)
-Message-ID: <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com> (sfid-20071127_160700_628617_8B48A612)
-Date: Tue, 27 Nov 2007 18:06:52 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Reinette Chatre" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Ian Schram" <ischram@telenet.be>
-In-Reply-To: <1196179471.6058.41.camel@johannes.berg>
+	Mon, 26 Nov 2007 11:18:49 -0500
+Message-ID: <474AF1E2.4050405@lwfinger.net> (sfid-20071126_161856_338247_A984AC9D)
+Date: Mon, 26 Nov 2007 10:18:42 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
+To: =?ISO-8859-1?Q?C=E9dric_Caumont?= <icare40@hotmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH V3] b43: Changes to enable BCM4311 rev 02 with wireless
+ core	revision 13
+References: <474ADA53.808@lwfinger.net> <BAY134-W383251EC52D7A2B85197DEB7750@phx.gbl>
+In-Reply-To: <BAY134-W383251EC52D7A2B85197DEB7750@phx.gbl>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20071126225416.467939000@sipsolutions.net>
-	 <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com>
-	 <1196175476.6058.25.camel@johannes.berg>
-	 <1ba2fa240711270800p3312246as51b0a23f77e81f3@mail.gmail.com>
-	 <1196179471.6058.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sorry for stupid question but what is the git for 24.?
+C=E9dric Caumont wrote:
+> Hello everyone
+>=20
+> I have just one question!
+>=20
+> I downloaded linux-2.6.24-rc3
+>=20
+> cd /usr/src/
+> ln -sfn linux-2.6.24-rc3 linux
+> cd linux
+> patch -p1 < patch_v3.patch
+>=20
+> *********************************************************************=
+************************
+> can't find file to patch at input line 112
+> Perhaps you used the wrong -p or --strip option?
+> The text leading up to this was:
+> --------------------------
+> |Index: wireless-2.6/drivers/net/wireless/b43/wa.c
 
-On Nov 27, 2007 6:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Tue, 2007-11-27 at 18:00 +0200, Tomas Winkler wrote:
->
-> > I found it, there was a patch by Ian Schram <ischram@telenet.be>
-> > '[PATCH] allow changing mac_addr by userspace'
-> > It should work I nacked it just because I wanted to remove a filed he
-> > was using, it never happened so I think we can apply it
-> > for 24 and then I get back to rework it.
-> > I'll resend it rebased to current everything.
->
-> Great, thanks. Actually, John will probably prefer if you send him a
-> version against .24 as well. John, please drop 2 and 3 of this series
-> then in favour of that patch.
->
-> johannes
->
+The patch is for the wireless-2.6 git tree. To use 2.6.24-rc3 from main=
+line, there are some
+additional patches needed. I will generate that patch and send it to yo=
+u privately.
+
+Larry
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
