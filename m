@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46039 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50004 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934343AbXKPU4S (ORCPT
+	with ESMTP id S1753169AbXKZQ1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 15:56:18 -0500
-Subject: Re: [PATCH] ath5k: consistent info and error logging
+	Mon, 26 Nov 2007 11:27:45 -0500
+Subject: Re: [PATCH 02/15] mac80211: adding 802.11n definitions in
+	ieee80211.h
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: Bruno Randolf <bruno@thinktube.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <87mytez5vs.fsf@nokia.com>
-References: <1195200656-25847-1-git-send-email-bruno@thinktube.com>
-	 <1195214563.8147.118.camel@johannes.berg>  <87mytez5vs.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JUXai8cJmA+QhwI/PaPG"
-Date: Fri, 16 Nov 2007 16:53:58 +0100
-Message-Id: <1195228438.8147.146.camel@johannes.berg> (sfid-20071116_205643_026239_FDC04CB4)
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com
+In-Reply-To: <11960864902404-git-send-email-ron.rindjunsky@intel.com>
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+	 <11960864902404-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ql83qxN3p2ojD5iZkBbb"
+Date: Mon, 26 Nov 2007 17:27:35 +0100
+Message-Id: <1196094455.4149.293.camel@johannes.berg> (sfid-20071126_162750_187040_7DF40983)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-JUXai8cJmA+QhwI/PaPG
+--=-Ql83qxN3p2ojD5iZkBbb
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Fri, 2007-11-16 at 15:17 +0200, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
+> This patch adds several structs and definitions to ieee80211.h
+> to support 802.11n draft specifications.
+> As 802.11n depends on and extends the 802.11e standard in several issues,
+> there are also several definitions that belong to 802.11e.
 >=20
-> >> +#define AR5K_INFO(_sc, _fmt, ...)	\
-> >> +	printk(KERN_INFO "ath5k %s: " _fmt, wiphy_name((_sc)->hw->wiphy), ##=
-__VA_ARGS__)
-> >
-> > Eww. Can't you make them static inlines?
->=20
-> Wasn't it so that a inline function with va_args is not possible?=20
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Hmm. That might be true. How about just using dev_dbg? Not that I really
-ever need to look into ath5k (hopefully!), but the code just struck me
-as not very nice.
+This already went in :)
 
-johannes
 
---=-JUXai8cJmA+QhwI/PaPG
+
+--=-Ql83qxN3p2ojD5iZkBbb
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUARz29FaVg1VMiehFYAQI3Gw/8CBpjYG+qu1ypyQBkN4wUINCum+en8DZv
-qDnRXR+lsQH70iAnx7HLwd07TDhASrxQeFQDv60zwNtv2DtwPjdMTTuESYn1NpbR
-TWnGkuqnBryo1CVlqdw3gktLfR+UVhWxmsbTNMtJIjEDcU1C2OAGpEKquW7pnd64
-Fk7NLlDKWvTnrqJifsq2I+oFfeZR7uAfwDOK9dpMs45aRcAPGnpNva7aAUdpSyIU
-lFLIJvnxwaYemrvCzAKjqKeRxifGnf34J9uFiiz/kGs95WBnlB5LYHBcjHl5O0ZF
-Sk/2t9IFoPyDETUc6tYYu4VmMCY16bEXknAkkDjrEEwww/Ct6tENy9WEuh8WsKn4
-CwQwSkGJrtrlNo/aab22yA5YVQZiztUdL8TN3EUBjraOLnqWi03MGOdWRjGlQumq
-mqwSsdqWH+WPmR7Oi7hQhhULrQGZYez5JjZZiI+Lgdi8/NvePZccswApFG0Jz02p
-d7w2j3Xu/Qll4+rhWpcw5JZ4tG6VfZ/W0mm0LzEzeK8HszPTFOJvSkCFcMBt1ebQ
-C0vtRx0e3FDeK1HNaeqRQMotF1tyTlMCNnpYkxPpArB06jMKfiSw/7vwjha43Omp
-esDQrCx7EP2uN+G4g4ELe/Dl7i0bp/Huppk2dO4EQqT/CbFHUeAjCMudpTyZ4OVo
-OfwdiGyGeGY=
-=qikt
+iQIVAwUAR0rz9qVg1VMiehFYAQLPRA/8DiGOIobq9eZox4vWkzr7kwRdXMHPzo87
+cFVSLCbL/CvJhjpUk6feNhtn0zpTeO3KGUH3jJ2yxo/wANc2xvwqlbXgNUePsBvo
+yZ5TmFLcalwF220Wobo5S0W+1V1TInEBmW24PquCsOfiKqRZ7CrsJRdjq3l4Bxbt
+saXnif3DYh1qtLdJX1LwacK7aTtYHkRZ2BOXwpXUAGBvH4WkCh3bOiq7MKV3WLAP
+Ivsrz9r+eGeLUTt4o0aj+cSIf7W7pklvXwO+Cj81OVHTctK5uwiLG20yfagSq7xk
+S4gwrCj+CAyqUCO2WVnrE3dx7lB6zb7/8JQ9PdLM4u5ElF+gIPtpAQBr0IEbYbGd
+YeCfmwDZ7Z47CCa0So4CAIuaru39jiv6fxCFY9KkF9VNjjJNHGqPRgGqyOeT6NOu
+V90yqBEsgtnuXtCBC1lpxrYLpFYW2H05q06QAhyQPuqlD2PKQr8Dv1x518di4BBu
+1zX6eukNtcG92ryLnhm+YcRQaD0kfWgo7d9u6D2yK8X1gxXwXYZJ3wcDx3I4Sxg8
+I7cEe3b5q2tg5yXEQs/M6deZZBPLuYlPKqcuywzFol6hVTCaT4XKb14G59l1HjPs
+Z4UQzFr6xmVuz+gBYmd0rOzR3qkO5AwGr1rF324fYIinlxY74nLvQgq7tfNnORad
+RZTVwuPp+Zw=
+=pI+H
 -----END PGP SIGNATURE-----
 
---=-JUXai8cJmA+QhwI/PaPG--
+--=-Ql83qxN3p2ojD5iZkBbb--
 
