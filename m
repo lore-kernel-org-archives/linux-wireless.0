@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55280 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbXKBJs2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2007 05:48:28 -0400
-Subject: Re: [RFC] mac80211: use IW_AUTH_PRIVACY_INVOKED rather than
-	IW_AUTH_KEY_MGMT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Dan Williams <dcbw@redhat.com>, dragoran <drago01@gmail.com>
-In-Reply-To: <200711011523.03063.flamingice@sourmilk.net>
-References: <1193671155.5197.71.camel@johannes.berg>
-	 <200711011523.03063.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CZ/dfuQDSaCekgi+M6cY"
-Date: Fri, 02 Nov 2007 10:49:46 +0100
-Message-Id: <1193996986.12078.32.camel@johannes.berg> (sfid-20071102_094840_102694_6460C3FA)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:52348 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752654AbXKZOVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 09:21:50 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 08/15] iwlwifi: 802.11n remove unnecessary config dependency
+Date: Mon, 26 Nov 2007 16:14:35 +0200
+Message-Id: <11960864912323-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142159_540169_9719CB41)
+In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes MAC80211_HT config dependency as it has been
+eliminated in mac80211, and adds a needed QoS dependency
 
---=-CZ/dfuQDSaCekgi+M6cY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index abd0ce0..d87e34b 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -33,6 +33,14 @@ config IWL4965_QOS
+ 	  This option will enable wireless quality of service (QoS) for the
+ 	  iw4965 driver.
+ 
++config IWL4965_HT
++	bool "Enable 802.11n HT features in iwl4965 driver"
++	depends on EXPERIMENTAL
++	depends on IWL4965 && IWL4965_QOS
++	---help---
++	  This option enables IEEE 802.11n High Throughput features
++	  for the iwl4965 driver.
++
+ config IWL4965_SPECTRUM_MEASUREMENT
+ 	bool "Enable Spectrum Measurement in iw4965 driver"
+ 	depends on IWL4965
+@@ -46,14 +54,6 @@ config IWL4965_SENSITIVITY
+ 	  This option will enable sensitivity calibration for the iwl4965
+ 	  driver.
+ 
+-config IWL4965_HT
+-	bool "Enable 802.11n HT features in iwl4965 driver"
+-	depends on EXPERIMENTAL
+-	depends on IWL4965 && MAC80211_HT
+-	---help---
+-	  This option enables IEEE 802.11n High Throughput features
+-	  for the iwl4965 driver.
+-
+ config IWL4965_DEBUG
+ 	bool "Enable full debugging output in iwl4965 driver"
+ 	depends on IWL4965
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-> > -	if (ieee80211_sta_wep_configured(dev) !=3D
-> > -	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
-> > +	privacy =3D !!(bss->capability & WLAN_CAPABILITY_PRIVACY);
-> > +	if ((ieee80211_sta_wep_configured(dev) !=3D privacy) &&
-> > +	    !!((ifsta->flags & IEEE80211_STA_PRIVACY_INVOKED) !=3D privacy))
-> !! for the wrong set of parenthesis, AFAICT.
-
-Oops, you're right, will resend.
-
-johannes
-
---=-CZ/dfuQDSaCekgi+M6cY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARyryuaVg1VMiehFYAQJyjg//QDNnVSGQNiTB1bu4+Kn5v9uNIDMkBDfp
-F+OgNYDdo2vTg9SYmKhkj5lUiuaBY4e2d1VXE4Bm5PvKQ9ph+xOO5O0sQG41kxs1
-V6tW0K4m/1IiStKfwAc3NgWRxGSkkYgj4oLf8zRpk2UOLe4CztnfSPJyfcLTkW5U
-7IV7hiDBOzW/enrIoE7J6jsVAmz4A7seUWCs6Pxfmc8pfGTrZ28wBUwF9Dr3e3KA
-w1O4JEj0ITcFTpS5BgReA1uRsPtH7lquczQEa0wnlBy8ioaa+L+zLY7PmsIVzgxn
-/byvkdBsE3BnFpmYnedwb/nZ3Pj3pT2FSI+bk93tgOaslliDf5WH8uS032ZT6GzJ
-Yr58bdhucKwCgWYBsldiFVMUSVCcdZLFIHOLWUUPSw3Hhxmh3pzY56YIQ0SeGBPG
-MQz9dvw9Xerq5A8ePgOnc4p1jvWFYKl0RZMxazrgdKOo7CF2rjStq3DPhfojT/rz
-hpHG6pZhzvXgvlyT+xPpKC/MzAmmXe6kr4Q1rss3o6lMAFSNWLL06dUK3foT1eMw
-vF0IK7o+xlhv8j+qojHtillJ6s1vDpg+G8FQb3zKhBWqa/XEH45bOYZ79+Aazubx
-X3Ca4fGP8ElydF8wCCeWf+Qz3Uy61ssWj+HZ9LY2oC3nOzsrKzrA+AyhSziQ+OTw
-DK+2c2ePSjc=
-=BtAm
------END PGP SIGNATURE-----
-
---=-CZ/dfuQDSaCekgi+M6cY--
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
