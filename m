@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21406 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbXKZIfD (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.187]:33601 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbXKZRdV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 03:35:03 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: let more than one MAC event through
-Date: Mon, 26 Nov 2007 09:35:44 +0100
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+	Mon, 26 Nov 2007 12:33:21 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so599278rvb
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 09:33:20 -0800 (PST)
+Message-ID: <1ba2fa240711260933x5ed85123vc33d7d3a5e1bd866@mail.gmail.com> (sfid-20071126_173325_546919_C6981A4E)
+Date: Mon, 26 Nov 2007 19:33:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH 2/2] iwlwifi: add power management support -v2
+Cc: "=?ISO-8859-1?Q?Miguel_Bot=F3n?=" <mboton.lkml@gmail.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	yi.zhu@intel.com
+In-Reply-To: <1196097270.23210.0.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711260935.44469.hs4233@mail.mn-solutions.de> (sfid-20071126_083513_988659_9D542DA3)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200711170006.49654.mboton.lkml@gmail.com>
+	 <1ba2fa240711162215p30b8bc7fj9f36020378ff596a@mail.gmail.com>
+	 <200711261718.14711.mboton@gmail.com>
+	 <1ba2fa240711260911i705350f3hefeddc7a09f76d1a@mail.gmail.com>
+	 <1196097270.23210.0.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-lbs_mac_event_disconnected() was called once and then never again
-upon a hardware MAC event.
+>
+> At some point everyone needs to standardize on power levels so that
+> userland has a hope of mapping the right state to the right power lev=
+el
+> in the driver.  Otherwise, we get into a situation where broadcom pow=
+er
+> levels don't map the same way iwl powerlevels do, and then we can't e=
+ver
+> do the right thing.
+>
+Agree, these are just misleading  names IMHO.
 
-The reason was that the driver didn't clean the correct bit in the interrupt
-cause register of the chip.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-11-26 10:18:05.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2007-11-26 10:18:32.000000000 +0100
-@@ -170,7 +170,8 @@ static int if_cs_poll_while_fw_download(
- #define IF_CS_H_IC_TX_OVER		0x0001
- #define IF_CS_H_IC_RX_OVER		0x0002
- #define IF_CS_H_IC_DNLD_OVER		0x0004
--#define IF_CS_H_IC_HOST_EVENT		0x0008
-+#define IF_CS_H_IC_POWER_DOWN		0x0008
-+#define IF_CS_H_IC_HOST_EVENT		0x0010
- #define IF_CS_H_IC_MASK			0x001f
- 
- #define IF_CS_H_INT_MASK		0x00000004
+> dan
+>
+> > Tomas
+>
+> >
+> > > --
+> > >        Miguel Bot=F3n
+> > >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-wir=
+eless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
