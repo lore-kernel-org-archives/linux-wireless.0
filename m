@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45135 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754041AbXKFTM5 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:36295 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751261AbXKZShb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 14:12:57 -0500
-Message-ID: <4730BCB8.900@lwfinger.net> (sfid-20071106_191302_744902_07A72509)
-Date: Tue, 06 Nov 2007 13:12:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 26 Nov 2007 13:37:31 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx capability
+Date: Mon, 26 Nov 2007 13:40:50 -0500
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com> <119608649124-git-send-email-ron.rindjunsky@intel.com>
+In-Reply-To: <119608649124-git-send-email-ron.rindjunsky@intel.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-Subject: [RFC 0/6] ssb and friends: Change layout and naming of SPROM data
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart3226708.Hl9iMq48ie";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200711261340.54406.flamingice@sourmilk.net> (sfid-20071126_183738_474726_3DFE263B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the various Broadcom devices that are supported, several revisions of the SPROM have been
-encountered. Current code takes advantage of the fact that Revision 2 inherits all the data of
-1, and that Revision 3 inherits from 2. This scheme breaks down with revision 4, which does not
-inherit from the earlier models. In deciding how best to implement the new design, a fresh approach
-is warranted. Furthermore, we decided not to include any SPROM variables not used in b44, b43 or
-b43legacy, the supported drivers. To keep the patches small while preserving compilation and correct
-execution during bisection, the change has been split into the following pieces:
+--nextPart3226708.Hl9iMq48ie
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-1. Introduce new structure while maintaining the old.
-2. Convert the ssb module to the new structure.
-3. Convert the b44 driver.
-4. Convert b43.
-5. convert b43legacy.
-6. Remove the old structures from ssb.
+On Monday 26 November 2007 09:14:33 Ron Rindjunsky wrote:
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 9caf124..247af42 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -155,6 +155,7 @@ struct ieee80211_txrx_data {
+>  			int load;
+>  			u32 tkip_iv32;
+>  			u16 tkip_iv16;
+> +			u8  amsdu_frame;
+A flag would be preferable.
 
-Larry
+-Michael Wu
 
+--nextPart3226708.Hl9iMq48ie
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHSxM2T3Oqt9AH4aERAkQBAJ90uFa2vwACsU3zaDSAes9FwMOCUQCgvbEW
+TJEOTpbALjOqA9BCoownSRE=
+=Anl2
+-----END PGP SIGNATURE-----
+
+--nextPart3226708.Hl9iMq48ie--
