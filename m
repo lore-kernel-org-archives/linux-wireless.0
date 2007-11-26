@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2552 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754911AbXKNRGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 12:06:45 -0500
-Date: Wed, 14 Nov 2007 12:06:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20071114170634.GC6226@tuxdriver.com> (sfid-20071114_170649_632500_6E4D4FD7)
-References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com> <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com> <20071105020730.GA4414@storm.local.network> <20071114170051.GD23778@storm.local.network>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:15818 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806AbXKZH0u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 02:26:50 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 regression: doesn't associate automatically
+Date: Mon, 26 Nov 2007 08:27:31 +0100
+Cc: Will Dyson <will.dyson@gmail.com>, linux-wireless@vger.kernel.org
+References: <200711220912.10452.hs4233@mail.mn-solutions.de> <8e6f94720711241439x27c1a48dxe3f3698043fb05a8@mail.gmail.com> <1195988035.4149.218.camel@johannes.berg>
+In-Reply-To: <1195988035.4149.218.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071114170051.GD23778@storm.local.network>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711260827.31368.hs4233@mail.mn-solutions.de> (sfid-20071126_072654_896351_F534446D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
-> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
+> Simply triggering a scan won't trigger association either
+> though, will it? So we'd have to manipulate the mlme state
+> machine too. I don't like it much but I guess we don't have
+> too much choice.
 
-> > The post is here:
-> > 
-> > http://forums.viaarena.com/messageview.aspx?catid=28&threadid=78745
-> > 
-> > Any noise that can be contributed is welcome and appreciated.  You'll need to
-> > create an account to post, though.
+In my case, an "iwlist eth1 scan" triggers a scan, and also 
+always an association. Well, always = three times :-)
 
-> I also added these.  Perhaps having plenty of content/links regarding this issue
-> will help to increase visibility:
-> 
-> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-linux-driver/
-> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
 
-Excellent...I appreciate your efforts as an agitator! :-)
+Also, there might be some race here. When I turned on my laptop 
+and inserted the b43 card freshly, I *DID* get an association 
+with my standard Debian script. After
 
--- 
-John W. Linville
-linville@tuxdriver.com
+$ pccarcctl eject
+$ rmmod b43
+$ rmmod ssb
+$ pccardctl insert
+
+I needed to trigger a scan.
+
+
+It might also be the case that in this case the card was by 
+change on the frequency of the AP (2.437 MHz).
