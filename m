@@ -1,209 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55252 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:33526 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760209AbXKNPbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:31:08 -0500
+	id S1752853AbXKZOVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 09:21:42 -0500
 From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
 Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
 	flamingice@sourmilk.net, tomas.winkler@intel.com,
 	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 02/15] mac80211: adding 802.11n definitions in ieee80211.h
-Date: Wed, 14 Nov 2007 17:29:38 +0200
-Message-Id: <11950542003481-git-send-email-ron.rindjunsky@intel.com> (sfid-20071114_153157_941281_52EBF41D)
-In-Reply-To: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
-References: <11950541913679-git-send-email-ron.rindjunsky@intel.com>
+Subject: [PATCH 03/15] mac80211: adding 802.11n HT framework definitions
+Date: Mon, 26 Nov 2007 16:14:30 +0200
+Message-Id: <11960864902461-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142154_890220_253832A0)
+In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds several structs and definitions to ieee80211.h
-to support 802.11n draft specifications.
-As 802.11n depends on and extends the 802.11e standard in several issues,
-there are also several definitions that belong to 802.11e.
+New structures:
+ - ieee80211_ht_info: describing STA's HT capabilities
+ - ieee80211_ht_bss_info: describing BSS's HT characteristics
+Changed structures:
+ - ieee80211_hw_mode: now also holds PHY HT capabilities for each HW mode
+ - ieee80211_conf: ht_conf holds current self HT configuration
+                   ht_bss_conf holds current BSS HT configuration
+ - flag IEEE80211_CONF_SUPPORT_HT_MODE added to indicate if HT use is
+   desired
+ - sta_info: now also holds Peer's HT capabilities
 
 Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- include/linux/ieee80211.h |  117 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 117 insertions(+), 0 deletions(-)
+ include/net/mac80211.h  |   55 +++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/sta_info.h |    3 ++
+ 2 files changed, 52 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 214821a..42a550d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -54,6 +54,8 @@
- #define IEEE80211_STYPE_ACTION		0x00D0
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 17b6039..862431a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -139,17 +139,54 @@ enum ieee80211_phymode {
+ };
  
- /* control */
-+#define IEEE80211_STYPE_BACK_REQ	0x0080
-+#define IEEE80211_STYPE_BACK		0x0090
- #define IEEE80211_STYPE_PSPOLL		0x00A0
- #define IEEE80211_STYPE_RTS		0x00B0
- #define IEEE80211_STYPE_CTS		0x00C0
-@@ -185,6 +187,25 @@ struct ieee80211_mgmt {
- 					u8 new_chan;
- 					u8 switch_count;
- 				} __attribute__((packed)) chan_switch;
-+				struct{
-+					u8 action_code;
-+					u8 dialog_token;
-+					__le16 capab;
-+					__le16 timeout;
-+					__le16 start_seq_num;
-+				} __attribute__((packed)) addba_req;
-+				struct{
-+					u8 action_code;
-+					u8 dialog_token;
-+					__le16 status;
-+					__le16 capab;
-+					__le16 timeout;
-+				} __attribute__((packed)) addba_resp;
-+				struct{
-+					u8 action_code;
-+					__le16 params;
-+					__le16 reason_code;
-+				} __attribute__((packed)) delba;
- 			} u;
- 		} __attribute__ ((packed)) action;
- 	} u;
-@@ -205,6 +226,49 @@ struct ieee80211_cts {
- 	u8 ra[6];
- } __attribute__ ((packed));
- 
-+struct ieee80211_bar {
-+	__le16 frame_control;
-+	__le16 duration;
-+	__u8 ra[6];
-+	__u8 ta[6];
-+	__u16 control;
-+	__u16 start_seq_num;
-+} __attribute__((packed));
-+
-+/* IEEE 802.11n elements */
-+struct ieee80211_ht_cap {
-+	__le16 cap_info;
-+	u8 ampdu_params_info;
+ /**
++ * struct ieee80211_ht_info - describing STA's HT capabilities
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11n HT capabilities for an STA.
++ *
++ * @ht_supported: is HT supported by STA, 0: no, 1: yes
++ * @cap: HT capabilities map as described in 802.11n spec
++ * @ampdu_factor: Maximum A-MPDU length factor
++ * @ampdu_density: Minimum A-MPDU spacing
++ * @supp_mcs_set: Supported MCS set as described in 802.11n spec
++ */
++struct ieee80211_ht_info {
++	u8 ht_supported;
++	u16 cap; /* use IEEE80211_HT_CAP_ */
++	u8 ampdu_factor;
++	u8 ampdu_density;
 +	u8 supp_mcs_set[16];
-+	__le16 extended_ht_cap_info;
-+	__le32 tx_BF_cap_info;
-+	u8 antenna_selection_info;
-+} __attribute__ ((packed));
-+
-+struct ieee80211_ht_addt_info {
-+	u8 control_chan;
-+	u8 ht_param;
-+	__le16 operation_mode;
-+	__le16 stbc_param;
-+	u8 basic_set[16];
-+} __attribute__ ((packed));
-+
-+/* 802.11n HT capabilities masks */
-+#define IEEE80211_HT_CAP_SUP_WIDTH		0x0002
-+#define IEEE80211_HT_CAP_MIMO_PS		0x000C
-+#define IEEE80211_HT_CAP_GRN_FLD		0x0010
-+#define IEEE80211_HT_CAP_SGI_20			0x0020
-+#define IEEE80211_HT_CAP_SGI_40			0x0040
-+#define IEEE80211_HT_CAP_DELAY_BA		0x0400
-+#define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
-+#define IEEE80211_HT_CAP_AMPDU_FACTOR		0x03
-+#define IEEE80211_HT_CAP_AMPDU_DENSITY		0x1C
-+/* 802.11n HT IE masks */
-+#define IEEE80211_HT_IE_CHA_SEC_OFFSET		0x03
-+#define IEEE80211_HT_IE_CHA_WIDTH		0x04
-+#define IEEE80211_HT_IE_HT_PROTECTION		0x0003
-+#define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
-+#define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
- 
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
-@@ -271,6 +335,18 @@ enum ieee80211_statuscode {
- 	WLAN_STATUS_UNSUPP_RSN_VERSION = 44,
- 	WLAN_STATUS_INVALID_RSN_IE_CAP = 45,
- 	WLAN_STATUS_CIPHER_SUITE_REJECTED = 46,
-+	/* 802.11e */
-+	WLAN_STATUS_UNSPECIFIED_QOS = 32,
-+	WLAN_STATUS_ASSOC_DENIED_NOBANDWIDTH = 33,
-+	WLAN_STATUS_ASSOC_DENIED_LOWACK = 34,
-+	WLAN_STATUS_ASSOC_DENIED_UNSUPP_QOS = 35,
-+	WLAN_STATUS_REQUEST_DECLINED = 37,
-+	WLAN_STATUS_INVALID_QOS_PARAM = 38,
-+	WLAN_STATUS_CHANGE_TSPEC = 39,
-+	WLAN_STATUS_WAIT_TS_DELAY = 47,
-+	WLAN_STATUS_NO_DIRECT_LINK = 48,
-+	WLAN_STATUS_STA_NOT_PRESENT = 49,
-+	WLAN_STATUS_STA_NOT_QSTA = 50,
- };
- 
- 
-@@ -301,6 +377,16 @@ enum ieee80211_reasoncode {
- 	WLAN_REASON_INVALID_RSN_IE_CAP = 22,
- 	WLAN_REASON_IEEE8021X_FAILED = 23,
- 	WLAN_REASON_CIPHER_SUITE_REJECTED = 24,
-+	/* 802.11e */
-+	WLAN_REASON_DISASSOC_UNSPECIFIED_QOS = 32,
-+	WLAN_REASON_DISASSOC_QAP_NO_BANDWIDTH = 33,
-+	WLAN_REASON_DISASSOC_LOW_ACK = 34,
-+	WLAN_REASON_DISASSOC_QAP_EXCEED_TXOP = 35,
-+	WLAN_REASON_QSTA_LEAVE_QBSS = 36,
-+	WLAN_REASON_QSTA_NOT_USE = 37,
-+	WLAN_REASON_QSTA_REQUIRE_SETUP = 38,
-+	WLAN_REASON_QSTA_TIMEOUT = 39,
-+	WLAN_REASON_QSTA_CIPHER_NOT_SUPP = 45,
- };
- 
- 
-@@ -319,6 +405,15 @@ enum ieee80211_eid {
- 	WLAN_EID_HP_PARAMS = 8,
- 	WLAN_EID_HP_TABLE = 9,
- 	WLAN_EID_REQUEST = 10,
-+	/* 802.11e */
-+	WLAN_EID_QBSS_LOAD = 11,
-+	WLAN_EID_EDCA_PARAM_SET = 12,
-+	WLAN_EID_TSPEC = 13,
-+	WLAN_EID_TCLAS = 14,
-+	WLAN_EID_SCHEDULE = 15,
-+	WLAN_EID_TS_DELAY = 43,
-+	WLAN_EID_TCLAS_PROCESSING = 44,
-+	WLAN_EID_QOS_CAPA = 46,
- 	/* 802.11h */
- 	WLAN_EID_PWR_CONSTRAINT = 32,
- 	WLAN_EID_PWR_CAPABILITY = 33,
-@@ -333,6 +428,9 @@ enum ieee80211_eid {
- 	/* 802.11g */
- 	WLAN_EID_ERP_INFO = 42,
- 	WLAN_EID_EXT_SUPP_RATES = 50,
-+	/* 802.11n */
-+	WLAN_EID_HT_CAPABILITY = 45,
-+	WLAN_EID_HT_EXTRA_INFO = 61,
- 	/* 802.11i */
- 	WLAN_EID_RSN = 48,
- 	WLAN_EID_WPA = 221,
-@@ -341,6 +439,25 @@ enum ieee80211_eid {
- 	WLAN_EID_QOS_PARAMETER = 222
- };
- 
-+/* Action category code */
-+enum ieee80211_category {
-+	WLAN_CATEGORY_SPECTRUM_MGMT = 0,
-+	WLAN_CATEGORY_QOS = 1,
-+	WLAN_CATEGORY_DLS = 2,
-+	WLAN_CATEGORY_BACK = 3,
-+	WLAN_CATEGORY_WMM = 17,
 +};
 +
-+/* BACK action code */
-+enum ieee80211_back_actioncode {
-+	WLAN_ACTION_ADDBA_REQ = 0,
-+	WLAN_ACTION_ADDBA_RESP = 1,
-+	WLAN_ACTION_DELBA = 2,
++/**
++ * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11n HT characteristics in a BSS
++ *
++ * @primary_channel: channel number of primery channel
++ * @bss_cap: 802.11n's general BSS capabilities (e.g. channel width)
++ * @bss_op_mode: 802.11n's BSS operation modes (e.g. HT protection)
++ */
++struct ieee80211_ht_bss_info {
++	u8 primary_channel;
++	u8 bss_cap;  /* use IEEE80211_HT_IE_CHA_ */
++	u8 bss_op_mode; /* use IEEE80211_HT_IE_ */
 +};
 +
-+/* A-MSDU 802.11n */
-+#define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
++/**
+  * struct ieee80211_hw_mode - PHY mode definition
+  *
+  * This structure describes the capabilities supported by the device
+  * in a single PHY mode.
+  *
++ * @list: internal
++ * @channels: pointer to array of supported channels
++ * @rates: pointer to array of supported bitrates
+  * @mode: the PHY mode for this definition
+  * @num_channels: number of supported channels
+- * @channels: pointer to array of supported channels
+  * @num_rates: number of supported bitrates
+- * @rates: pointer to array of supported bitrates
+- * @list: internal
++ * @ht_info: PHY's 802.11n HT abilities for this mode
+  */
+ struct ieee80211_hw_mode {
+ 	struct list_head list;
+@@ -158,6 +195,7 @@ struct ieee80211_hw_mode {
+ 	enum ieee80211_phymode mode;
+ 	int num_channels;
+ 	int num_rates;
++	struct ieee80211_ht_info ht_info;
+ };
+ 
+ /**
+@@ -406,11 +444,12 @@ struct ieee80211_tx_status {
+  *
+  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
+  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
+- *
++ * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
+  */
+ enum ieee80211_conf_flags {
+-	IEEE80211_CONF_SHORT_SLOT_TIME	= 1<<0,
+-	IEEE80211_CONF_RADIOTAP		= 1<<1,
++	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
++	IEEE80211_CONF_RADIOTAP		= (1<<1),
++	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
+ };
+ 
+ /**
+@@ -434,6 +473,8 @@ enum ieee80211_conf_flags {
+  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
+  *	1/2: antenna 0/1
+  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
++ * @ht_conf: describes current self configuration of 802.11n HT capabilies
++ * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
+  */
+ struct ieee80211_conf {
+ 	int channel;			/* IEEE 802.11 channel number */
+@@ -452,6 +493,8 @@ struct ieee80211_conf {
+ 	u8 antenna_max;
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
++	struct ieee80211_ht_info ht_conf;
++	struct ieee80211_ht_bss_info ht_bss_conf;
+ };
+ 
+ /**
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 8f7ebe4..e1a4ac1 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -99,6 +99,9 @@ struct sta_info {
+ 
+ 	u16 listen_interval;
+ 
++	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
++					     of this STA */
 +
- /* cipher suite selectors */
- #define WLAN_CIPHER_SUITE_USE_GROUP	0x000FAC00
- #define WLAN_CIPHER_SUITE_WEP40		0x000FAC01
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
+ 		struct dentry *dir;
 -- 
 1.5.3.3
 ---------------------------------------------------------------------
