@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32980 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbXKUVeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 16:34:36 -0500
-Message-ID: <4744A443.6070808@redhat.com> (sfid-20071121_213439_329404_00D247D5)
-Date: Wed, 21 Nov 2007 16:33:55 -0500
-From: Chuck Ebbert <cebbert@redhat.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7940 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578AbXKZJ3N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 04:29:13 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH, take 2] libertas: rework event subscription
+Date: Mon, 26 Nov 2007 10:29:56 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200711261007.14828.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200711261007.14828.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Changes to enable BCM4311 rev 02 with wireless core
- revision 13
-References: <474487a9.9c54/m97tX72L4+l%Larry.Finger@lwfinger.net>
-In-Reply-To: <474487a9.9c54/m97tX72L4+l%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711261029.56616.hs4233@mail.mn-solutions.de> (sfid-20071126_092920_874113_2D0CC4EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2007 02:31 PM, Larry Finger wrote:
-> The BCM94311MCG rev 02 chip has an 802.11 core with revision 13 and
-> has not been supported until now. The changes include the following:
-> 
+> * fix a bug where it was not possible to disable an event
 
-I put this in a private build of the Fedora 8 kernel in place of the
-the one that was added a few days ago.
+> The old code also contained this bug:
+>
+> $ cd /sys/kernel/debug/lbs_wireless/eth1
+> $ cat failure_count
+> 0 0 0
+> $ echo 60 1 1 >failure_count
+> $ cat failure_count
+> 60 1 1
+> $ echo 0 0 0 >failure_count
+> $ cat failure_count
+> 0 0 1
+>
+> The new code turns off the proper event bitmask as well, so
+> the last "cat" returns "0 0 0".
 
-This one works, but I get "PHY transmission error", probably because
-the rfkill switch has disabled it. I see two LED devices and an input
-device were registered but pushing the rfkill switch has no effect.
-Googling doesn't yield any directions for enabling the switch...
-
+With "old code" I didn't mean my take 1, I mean the code that is 
+right now in drivers/net/wireless/libertas/debugfs.c
