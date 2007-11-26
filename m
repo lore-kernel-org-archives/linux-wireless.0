@@ -1,69 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flatline.sindominio.net ([82.144.4.26]:44362 "EHLO
-	flatline.sindominio.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbXKDXNV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Nov 2007 18:13:21 -0500
-Date: Thu, 1 Nov 2007 08:19:02 +0100
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] Prism54: Convert mgmt_sem to the mutex API
-Message-ID: <20071101071902.GH6092@traven> (sfid-20071104_231327_033578_32B05A04)
+Received: from mail.blisses.org ([208.82.98.17]:39277 "EHLO mail.blisses.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752498AbXKZF6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 00:58:50 -0500
+Date: Sun, 25 Nov 2007 23:39:43 -0600
+From: Matt Herzog <msh@blisses.org>
+To: linux-wireless@vger.kernel.org
+Subject: git guide page
+Message-ID: <20071126053943.GD6034@chicago.blisses.org> (sfid-20071126_055858_160561_A8ADB283)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prism54: Convert mgmt_sem to the mutex API
+http://linuxwireless.org/en/developers/git-guide#Getthelatestupdates
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+So. This page is not helpful at all :(
 
---
+Specifically, the below syntax fails utterly.
 
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index 219dd65..dbb538c 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -861,7 +861,7 @@ islpci_setup(struct pci_dev *pdev)
- 	init_waitqueue_head(&priv->reset_done);
- 
- 	/* init the queue read locks, process wait counter */
--	sema_init(&priv->mgmt_sem, 1);
-+	mutex_init(&priv->mgmt_lock);
- 	priv->mgmt_received = NULL;
- 	init_waitqueue_head(&priv->mgmt_wqueue);
- 	sema_init(&priv->stats_sem, 1);
-diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/prism54/islpci_dev.h
-index 736666d..4e0182c 100644
---- a/drivers/net/wireless/prism54/islpci_dev.h
-+++ b/drivers/net/wireless/prism54/islpci_dev.h
-@@ -26,6 +26,7 @@
- #include <linux/wireless.h>
- #include <net/iw_handler.h>
- #include <linux/list.h>
-+#include <linux/mutex.h>
- 
- #include "isl_38xx.h"
- #include "isl_oid.h"
-@@ -164,7 +165,7 @@ typedef struct {
- 	wait_queue_head_t reset_done;
- 
- 	/* used by islpci_mgt_transaction */
--	struct semaphore mgmt_sem; /* serialize access to mailbox and wqueue */
-+	struct mutex mgmt_lock; /* serialize access to mailbox and wqueue */
- 	struct islpci_mgmtframe *mgmt_received;	  /* mbox for incoming frame */
- 	wait_queue_head_t mgmt_wqueue;            /* waitqueue for mbox */
- 
+cd /usr/src/wireless-2.6
+git-checkout --track -b everything origin/everything
+Usage: /usr/bin/git-checkout [-f] [-b <new_branch>] [-m] [<branch>] [<paths>...]
+
+The syntax fails so badly I'm left wondering if it ever was tested.
+
+What's up with that?
+
 -- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
+Monkeys are superior to men in this:
+when a monkey looks into a mirror, he sees a monkey.
 
-       The yellow ships hung in the air just like bricks dont do
-                 (The Hitch-Hiker's Guide to the Galaxy)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+-- Malcolm De Chazal
