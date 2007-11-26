@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40208 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755425AbXKWV5o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 16:57:44 -0500
-Subject: Re: timeout problems with certain APs and b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200711232258.25965.rjw@sisk.pl> (sfid-20071123_214335_768868_45E88660)
-References: <5b9417770711211135p65eab873leef65cd0e71452aa@mail.gmail.com>
-	 <1195812310.4149.73.camel@johannes.berg>  <200711232258.25965.rjw@sisk.pl>
-	 (sfid-20071123_214335_768868_45E88660)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vuEuRFOTa9NZ0wSkGdGE"
-Date: Fri, 23 Nov 2007 22:57:30 +0100
-Message-Id: <1195855050.4149.179.camel@johannes.berg> (sfid-20071123_215747_659643_3E6A6471)
+Received: from mx1.redhat.com ([66.187.233.31]:54926 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751484AbXKZPim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 10:38:42 -0500
+Subject: Re: mac80211 regression: doesn't associate automatically
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
+In-Reply-To: <200711231003.03982.hs4233@mail.mn-solutions.de>
+References: <200711220912.10452.hs4233@mail.mn-solutions.de>
+	 <200711230906.10441.hs4233@mail.mn-solutions.de>
+	 <1195806137.12961.9.camel@dv>
+	 <200711231003.03982.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 26 Nov 2007 10:34:40 -0500
+Message-Id: <1196091280.4202.19.camel@localhost.localdomain> (sfid-20071126_153844_888740_201FAFEB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-11-23 at 10:03 +0100, Holger Schurig wrote:
+> > Orinoco relies on roaming in the firmware
+> 
+> And wlags_h1_cs/wlags_h2_cs as well.
+> 
+> libertas_cs has half-baked roaming in firmware and in 
+> kernel-space, doesn't work very well so far.
+> 
+> Madwifi has code coarse code roaming in the BSD borrowed 
+> ieee80211 code. It roams only when it lost the association to 
+> the current AP. But before doing that, it went with it's rate 
+> down to 1 MBit/s, even when there's a better AP nearby that it 
+> could use with 11 MBit/s or higher.
+> 
+> There is code in it which is disabled via "if (0 || ...)" that 
+> allows for a much smoother roaming, e.g. to scan when the RSSI 
+> drops below a certain level. Once enabled and after tuning of 
+> some timeout variables, that roaming code works extremely well. 
+> Both in a WEP-mode without wpa_supplicant and in WPA/WPA2 mode 
+> with wpa_supplicant.
+> 
+> 
+> > wpa_supplicant gives you roaming in the userspace.
+> 
+> Yeah, I thought in this lines as well. I have no problem putting 
+> wpa_supplicant on my embedded targets. In fact, it's already 
+> there, it's currently just used for WPA, not for WEP. However, 
+> if suddenly NetworkManager would be needed for roaming, then 
+> from an embedded-usage point of view I wouldn't like that.
 
---=-vuEuRFOTa9NZ0wSkGdGE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The problem is, roaming and choosing which AP/BSSID to connect to is
+pretty complicated.  It depends on user preferences, scan results, RSSI,
+and other stuff like that.  It depends on having the necessary security
+information (keys, PIN, EAP certs, etc) available.  wpa_supplicant must
+run as root to be able to drive the wifi device, and many of these
+settings are user-specific; so there has to be some mechanism to push
+those settings down to wpa_supplicant.
 
+You could potentially use wpa_supplicant to do what you want, based on
+network block priorities and turning network blocks on/off dynamically
+through the control interface.  Right now, NetworkManager just pushes
+_one_ network to wpa_supplicant, the network NM wants to association
+with.  I can imagine further down the line pushing more of the decisions
+onto wpa_supplicant.  But wpa_supplicant seems (to me) to still have
+quite a few assumptions about static configuration, which is
+traditionally how it's been used.  In any case, the trend with NM is
+pushing more and more of the Wifi stuff down to wpa_supplicant and to
+make NetworkManager be more of a policy engine that handles many
+different device types, from wired to wireless to GSM/CDMA broadband
+cards to Bluetooth DUN.
 
-> > > on certain APs, the internet works for a long time then stops, and I
-> > > get authentication time outs, why?  It usually works again if I reset
-> > > the AP itself, which i should not have to do and don't have to if in
-> > > XP....
-> >=20
-> > > wlan0: Initial auth_alg=3D0
-> > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > wlan0: authenticate with AP 00:0f:66:53:3e:24
-> > > wlan0: authentication with AP 00:0f:66:53:3e:24 timed out
-> >=20
-> > Does it help to reload the b43 module? I think I have seen this problem
-> > before but always associated it with suspend/resume rather than a long
-> > time elapsing, I also thought it was due to bad power recalibration.
->=20
-> It seems that I can reproduce something similar on demand with an SMC wir=
-eless
-> router by moving my box sufficiently far away from it. :-)
-
-Well, yeah, that's expected though, you lose signal at some point. Not
-expected is that it happens without moving anything. Unless the
-calibration code is wrong which wouldn't really surprise me either.
-
-johannes
-
---=-vuEuRFOTa9NZ0wSkGdGE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0dMyaVg1VMiehFYAQLDxw//X1h9gWn9NNBzwoPdqJeFOsiVbFTG0yPv
-6jbA1bGLGT61iPVHff2VdUiSYd4RzbElTwJjfd9zo8k1xg7UDPZVfpdmMVrmpkKB
-yFYEQoCDVZJC6ot0gGoHBeN50v1OItLqDnFsvvLU0kYEAsJVFeKCtJw8sgB0atmn
-hBoZtN/aiOrAyFhuz0/JJC/7O8w8Xr/u6bHNIetVfKmnqqQImQpMUN+VzN3z7dk6
-vf1titjVyLQbQCcN835NcrWiHpgaj/gnUyNMtTlMeetb2KRplq8o0XMePP/0MqGz
-d1ffql/yTsECxYkF5l0rnQ31CgA973Dsk/yp+kvX5uB4k2bsuxt7zGJJh/85bHI5
-v/pgbYTVNwni+cMXHAns9XMzSw/24S4st6odCPLtCFqcYVCU37wjhOMMBRq1aLrr
-P26Hyh9n/DuDQ9KDO+BSkEixL+grz1MeVh736ZaAzdtzjd50vC/uF9e5M3YNpUnx
-erS5mrmNDbdvOJwE/NNTGGp5KtnsqTRxxAxJI/yeL4WjQ0pSqdUo5nseLi0yq+aJ
-ftUq/3WOZNiqwD+BUxDey+rVK8agro5uaDpwDkoXyqg+e0PqDM1W6t/P1otpFuCI
-1VDaLzlthcmW8Uiyr//Wk6nFeW3DVrC0Y/pmdjfhbt2Q0XI5pBgsl3aOpv76Oy9b
-mqKk9DRo2zE=
-=q/qk
------END PGP SIGNATURE-----
-
---=-vuEuRFOTa9NZ0wSkGdGE--
+Dan
 
