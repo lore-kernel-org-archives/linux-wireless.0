@@ -1,32 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:58850 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752273AbXKYPys (ORCPT
+Received: from web33009.mail.mud.yahoo.com ([209.191.69.124]:46089 "HELO
+	web33009.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755507AbXKZEAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 10:54:48 -0500
-Message-ID: <47499AC9.9060703@lwfinger.net> (sfid-20071125_155454_168934_AD1F6785)
-Date: Sun, 25 Nov 2007 09:54:49 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 25 Nov 2007 23:00:07 -0500
+Date: Sun, 25 Nov 2007 20:00:05 -0800 (PST)
+From: Max <maxw_gcc@yahoo.com>
+Subject: Re: Error compiling intel mac80211-10.0.2
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: stefano.brivio@polimi.it, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: reinit on too many PHY TX errors
-References: <200711251110.33613.mb@bu3sch.de>
-In-Reply-To: <200711251110.33613.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <442384.57879.qm@web33009.mail.mud.yahoo.com> (sfid-20071126_040012_890866_67C290C7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> From: Stefano Brivio <stefano.brivio@polimi.it>
-> 
-> Restart the hardware on too many PHY TX errors. A thousand PHY TX errors
-> per 15 seconds means we won't be able to recover for sure
 
-Do we know what causes the PHY TX errors? On the BCM4311/2, I always get one that I have not been 
-able to fix.
+On Sat, 2007-11-24 at 22:34 -0800, Max wrote:
+>> Hi all,
+>> 
+>> I am trying to setup a Intel Corporation PRO/Wireless 3945ABG network
+ adapter using the software provided in
+ http://www.intellinuxwireless.org/. But I am getting the following
+ error:
 
-Larry
+On Sun, November 25, 2007 8:35:07 PM Zhu wrote:
+>Since this question doesn't relate to upstream mac80211, I'd suggest
+ you
+>only post it to ipw3945-devel@lists.sourceforge.net.
+
+Thanks for the suggestion. I will do that.
+
+>> ...
+>> Checking kernel compatibility in:
+>>         /lib/modules/2.6.18/source//
+>>   ! CONFIG_NET_WIRELESS_NETLINK can not be set in .config!
+>> ...
+>> 
+>> Which apparently gets triggered by the following lines in the
+ "../mac80211-10.0.2/scripts/determine_compat" script
+>> .....
+>>         grep -q "nlmsg_trim" \
+>>                 ${KSRC}include/net/netlink.h && {
+>>                 export has_nlmsg_trim=1
+>>         } || {
+>>                 grep -q "^CONFIG_NET_WIRELESS_RTNETLINK=[ym]" \
+>>                         ${KSRC}.config && {
+>>                         echo "  ! CONFIG_NET_WIRELESS_NETLINK can not
+ be set in .config!"
+>>                         exit 1
+>>                 }
+>>         }
+>> ......
+>> 
+>> As you can see I am running kernel version 2.6.18.
+
+>The code mac80211-10.0.2 integrated doesn't work with
+>CONFIG_NET_WIRELESS_RTNETLINK enabled. You should deselect it from your
+>kernel config file.
+>Thanks,
+>-yi
+
+I was afraid of any ill side effects and I was looking for confirmation, which you gave me. Thanks for your help.
+
+Max
 
 
+
+
+      ____________________________________________________________________________________
+Be a better pen pal. 
+Text or chat with friends inside Yahoo! Mail. See how.  http://overview.mail.yahoo.com/
