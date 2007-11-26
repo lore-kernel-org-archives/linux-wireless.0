@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:24010 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758439AbXKLNsz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2007 08:48:55 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1476773fkz
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2007 05:48:54 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/3] rt2x00
-Date: Mon, 12 Nov 2007 15:02:01 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Received: from deine-taler.de ([217.160.107.63]:55137 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751409AbXKZVKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 16:10:23 -0500
+Date: Mon, 26 Nov 2007 22:10:22 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Kiran Shastri <kshastri@mainex1.asu.edu>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ZyDAS adhoc mode in 802.11a for usb adapters(Zyxel AG-220 etc)
+Message-ID: <20071126211022.GA14184@deine-taler.de> (sfid-20071126_211028_412051_1B65911E)
+References: <70259E5A1BDC824CAA6F4909DB4A5F7F041CFC93@EX03.asurite.ad.asu.edu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711121502.01953.IvDoorn@gmail.com> (sfid-20071112_134900_332719_D38D27BD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <70259E5A1BDC824CAA6F4909DB4A5F7F041CFC93@EX03.asurite.ad.asu.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Kiran Shastri wrote:
 
-Here is a minor update for rt2x00, no version bump this time since
-the number of patches is so limited. If possible queue these for 2.6.24.
+> I am trying to set up an wireless ad hoc network operating on 802.11a channels. I am looking for an USB wireless adapter that can operate in IBSS (ad hoc) mode in 802.11a. I came across three wireless adapters from Zyxel, namely, AG-220, AG-225H, AG-225Hv2. I was wondering if any of these adapters or adapters from any other manufacturer supports IBSS operation with 802.11a in Linux.
+> 
+> Thank you,
+>  
+> Kiran.
+>  
+> Kiran Shastri,
+> Graduate Student,
+> CSE Dept.,
+> ASU
 
-The first one fixes a bug in the chipset revision detection, where devices
-were being accepted by the rt2500usb driver while they should be dropped
-(in favour of rt73usb).
+Kisan,
 
-The second patch is code cleaning, but the third patch depends on this one.
-Finally the first patch fixes the dreadfull "non-free entry in the non-full queue"
-queue messages which effectively resulted in the TX shutting down comlpletely
-with rt61pci.
+I believe those devices are using the ZD1211 and ZD1211B chip.
+However the current available Linux drivers don't support Adhoc
+as 802.11a. However there is no general issue, which should
+prevent the support of this functionality.
 
-Ivo
+-- 
+Uli Kunitz
