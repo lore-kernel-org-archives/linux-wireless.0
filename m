@@ -1,754 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:57899 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754725AbXK2Dnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 22:43:47 -0500
-Date: Thu, 29 Nov 2007 04:39:57 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [RFT] [PATCH] b43: fix calc_nrssi_slope
-Message-ID: <20071129043957.739b4d3f@morte> (sfid-20071129_034352_573719_C1AF5078)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga03.intel.com ([143.182.124.21]:52348 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753033AbXKZOVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 09:21:50 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 11/15] iwlwifi: 802.11n handling probe request HT IE
+Date: Mon, 26 Nov 2007 16:14:38 +0200
+Message-Id: <11960864912631-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142200_830043_E7018283)
+In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix calc_nrssi_slope() which caused PHY TX errors on devices containing a
-802.11a PHY. The code is synced to v4 specs and relevant registers are
-renamed accordingly.
+This patch conforms the probe request's HT IE with the
+new structures used in iwlwifi HT.
 
-
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   62 ++++++++++++---------------
+ 1 files changed, 28 insertions(+), 34 deletions(-)
 
-Michael, John,
-this fixes a not-so-fatal error with bcm4309 and possibly other devices
-such as bcm4312 and bcm4319. I actually don't care that much about this
-getting to 2.6.24, it's up to you. This still needs testing on other
-devices, thanks.
-
----
-
-Index: wireless-2.6/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/b43.h
-+++ wireless-2.6/drivers/net/wireless/b43/b43.h
-@@ -72,11 +72,11 @@
- #define B43_MMIO_PIO4_BASE		0x330
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index d45a7da..6488703 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1820,8 +1820,8 @@ static u16 iwl4965_supported_rate_to_ie(u8 *ie, u16 supported_rate,
  
- #define B43_MMIO_PHY_VER		0x3E0
--#define B43_MMIO_PHY_RADIO		0x3E2
-+#define B43_MMIO_PHY_BBANDCFG		0x3E2
- #define B43_MMIO_PHY0			0x3E6
- #define B43_MMIO_ANTENNA		0x3E8
- #define B43_MMIO_CHANNEL		0x3F0
--#define B43_MMIO_CHANNEL_EXT		0x3F4
-+#define B43_MMIO_PHY_TEST		0x3F4
- #define B43_MMIO_RADIO_CONTROL		0x3F6
- #define B43_MMIO_RADIO_DATA_HIGH	0x3F8
- #define B43_MMIO_RADIO_DATA_LOW		0x3FA
-@@ -278,20 +278,21 @@ enum {
- #define B43_PHY_ILT_A_CTRL		0x0072
- #define B43_PHY_ILT_A_DATA1		0x0073
- #define B43_PHY_ILT_A_DATA2		0x0074
--#define B43_PHY_G_LO_CONTROL		0x0810
- #define B43_PHY_ILT_G_CTRL		0x0472
- #define B43_PHY_ILT_G_DATA1		0x0473
- #define B43_PHY_ILT_G_DATA2		0x0474
- #define B43_PHY_A_PCTL			0x007B
- #define B43_PHY_G_PCTL			0x0029
--#define B43_PHY_A_CRS			0x0029
- #define B43_PHY_RADIO_BITFIELD		0x0401
--#define B43_PHY_G_CRS			0x0429
- #define B43_PHY_NRSSILT_CTRL		0x0803
- #define B43_PHY_NRSSILT_DATA		0x0804
+ #ifdef CONFIG_IWL4965_HT
+ void static iwl4965_set_ht_capab(struct ieee80211_hw *hw,
+-			     struct ieee80211_ht_capability *ht_cap,
+-			     u8 use_wide_chan);
++			     struct ieee80211_ht_cap *ht_cap,
++			     u8 use_current_config);
+ #endif
  
- /* RadioRegisters */
- #define B43_RADIOCTL_ID			0x01
-+#define B43_RADIO_2050_RXCTL0		0x007A
-+#define B43_RADIO_2050_TXCTL1		0x0052
-+#define B43_RADIO_2050_PCTL		0x0043
-+
+ /**
+@@ -1834,6 +1834,9 @@ static u16 iwl4965_fill_probe_req(struct iwl4965_priv *priv,
+ 	int len = 0;
+ 	u8 *pos = NULL;
+ 	u16 active_rates, ret_rates, cck_rates, active_rate_basic;
++#ifdef CONFIG_IWL4965_HT
++	struct ieee80211_hw_mode *mode;
++#endif /* CONFIG_IWL4965_HT */
  
- /* MAC Control bitfield */
- #define B43_MACCTL_ENABLED		0x00000001	/* MAC Enabled */
-@@ -551,6 +552,9 @@ struct b43_phy {
+ 	/* Make sure there is enough space for the probe request,
+ 	 * two mandatory IEs and the data */
+@@ -1917,17 +1920,14 @@ static u16 iwl4965_fill_probe_req(struct iwl4965_priv *priv,
+ 		len += 2 + *pos;
  
- 	/* PHY TX errors counter. */
- 	atomic_t txerr_cnt;
-+
-+	/* Hardware power control enabled? */
-+	bool pctl_en;
- };
- 
- /* Data structures for DMA transmission, per 80211 core. */
-Index: wireless-2.6/drivers/net/wireless/b43/lo.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/lo.c
-+++ wireless-2.6/drivers/net/wireless/b43/lo.c
-@@ -563,7 +563,7 @@ struct lo_g_saved_values {
- 	u16 phy_rfoverval;
- 	u16 phy_classctl;
- 	u16 phy_base_3E;
--	u16 phy_crs0;
-+	u16 phy_crs;
- 	u16 phy_pgactl;
- 	u16 phy_base_2A;
- 	u16 phy_syncctl;
-@@ -619,13 +619,13 @@ static void lo_measure_setup(struct b43_
- 		sav->phy_rfoverval = b43_phy_read(dev, B43_PHY_RFOVERVAL);
- 		sav->phy_classctl = b43_phy_read(dev, B43_PHY_CLASSCTL);
- 		sav->phy_base_3E = b43_phy_read(dev, B43_PHY_BASE(0x3E));
--		sav->phy_crs0 = b43_phy_read(dev, B43_PHY_CRS0);
-+		sav->phy_crs = b43_phy_read(dev, B43_PHY_CRS);
- 
- 		b43_phy_write(dev, B43_PHY_CLASSCTL,
- 			      b43_phy_read(dev, B43_PHY_CLASSCTL)
- 			      & 0xFFFC);
--		b43_phy_write(dev, B43_PHY_CRS0, b43_phy_read(dev, B43_PHY_CRS0)
--			      & 0x7FFF);
-+		b43_phy_write(dev, B43_PHY_CRS, b43_phy_read(dev, B43_PHY_CRS)
-+			      & ~B43_PHY_CRS_EN_ALL);
- 		b43_phy_write(dev, B43_PHY_ANALOGOVER,
- 			      b43_phy_read(dev, B43_PHY_ANALOGOVER)
- 			      | 0x0003);
-@@ -766,7 +766,7 @@ static void lo_measure_restore(struct b4
- 		b43_phy_write(dev, B43_PHY_RFOVER, sav->phy_rfover);
- 		b43_phy_write(dev, B43_PHY_RFOVERVAL, sav->phy_rfoverval);
- 		b43_phy_write(dev, B43_PHY_BASE(0x3E), sav->phy_base_3E);
--		b43_phy_write(dev, B43_PHY_CRS0, sav->phy_crs0);
-+		b43_phy_write(dev, B43_PHY_CRS, sav->phy_crs);
+ #ifdef CONFIG_IWL4965_HT
+-	if (is_direct && priv->is_ht_enabled) {
+-		u8 use_wide_chan = 1;
+-
+-		if (priv->channel_width != IWL_CHANNEL_WIDTH_40MHZ)
+-			use_wide_chan = 0;
++	mode = priv->hw->conf.mode;
++	if (mode->ht_info.ht_supported) {
+ 		pos += (*pos) + 1;
+ 		*pos++ = WLAN_EID_HT_CAPABILITY;
+-		*pos++ = sizeof(struct ieee80211_ht_capability);
+-		iwl4965_set_ht_capab(NULL, (struct ieee80211_ht_capability *)pos,
+-				 use_wide_chan);
+-		len += 2 + sizeof(struct ieee80211_ht_capability);
++		*pos++ = sizeof(struct ieee80211_ht_cap);
++		iwl4965_set_ht_capab(priv->hw,
++				(struct ieee80211_ht_cap *)pos, 0);
++		len += 2 + sizeof(struct ieee80211_ht_cap);
  	}
- 	if (b43_has_hardware_pctl(phy)) {
- 		tmp = (sav->phy_lo_mask & 0xBFFF);
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c
-+++ wireless-2.6/drivers/net/wireless/b43/main.c
-@@ -2271,6 +2271,9 @@ static int b43_chip_init(struct b43_wlde
- 	/* PHY TX errors counter. */
- 	atomic_set(&phy->txerr_cnt, B43_PHY_TX_BADNESS_LIMIT);
+ #endif  /*CONFIG_IWL4965_HT */
  
-+	/* Hardware power control status flag. */
-+	phy->pctl_en = 0;
-+
- 	err = 0;
- 	b43dbg(dev->wl, "Chip initialized\n");
- out:
-Index: wireless-2.6/drivers/net/wireless/b43/phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/phy.c
-+++ wireless-2.6/drivers/net/wireless/b43/phy.c
-@@ -648,6 +648,7 @@ static void b43_hardware_pctl_init(struc
- 	}
- 	/* Enable hardware pctl in firmware. */
- 	b43_hf_write(dev, b43_hf_read(dev) | B43_HF_HWPCTL);
-+	phy->pctl_en = 1;
+@@ -8160,31 +8160,25 @@ static int iwl4965_mac_conf_ht(struct ieee80211_hw *hw,
  }
  
- static void b43_hardware_pctl_early_init(struct b43_wldev *dev)
-@@ -799,8 +800,8 @@ static void b43_phy_ww(struct b43_wldev 
- 	u16 b, curr_s, best_s = 0xFFFF;
- 	int i;
- 
--	b43_phy_write(dev, B43_PHY_CRS0,
--		b43_phy_read(dev, B43_PHY_CRS0) & ~B43_PHY_CRS0_EN);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+		b43_phy_read(dev, B43_PHY_CRS) & ~B43_PHY_CRS_EN_ALL);
- 	b43_phy_write(dev, B43_PHY_OFDM(0x1B),
- 		b43_phy_read(dev, B43_PHY_OFDM(0x1B)) | 0x1000);
- 	b43_phy_write(dev, B43_PHY_OFDM(0x82),
-@@ -851,8 +852,8 @@ static void b43_phy_ww(struct b43_wldev 
- 	b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 0x0E, 0x0011);
- 	b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 0x0F, 0x0013);
- 	b43_phy_write(dev, B43_PHY_OFDM(0x33), 0x5030);
--	b43_phy_write(dev, B43_PHY_CRS0,
--		b43_phy_read(dev, B43_PHY_CRS0) | B43_PHY_CRS0_EN);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+		b43_phy_read(dev, B43_PHY_CRS) | B43_PHY_CRS_EN_ALL);
- }
- 
- /* Initialize APHY. This is also called for the GPHY in some cases. */
-@@ -883,8 +884,8 @@ static void b43_phy_inita(struct b43_wld
- 				b43_phy_read(dev, 0x0034) | 0x0001);
- 		b43_phy_rssiagc(dev, 0);
- 
--		b43_phy_write(dev, B43_PHY_CRS0,
--			b43_phy_read(dev, B43_PHY_CRS0) | B43_PHY_CRS0_EN);
-+		b43_phy_write(dev, B43_PHY_CRS,
-+			b43_phy_read(dev, B43_PHY_CRS) | B43_PHY_CRS_EN_ALL);
- 
- 		b43_radio_init2060(dev);
- 
-@@ -950,7 +951,7 @@ static void b43_phy_initb2(struct b43_wl
- 	b43_phy_write(dev, 0x0026, 0xCC00);
- 	if (phy->radio_ver != 0x2050)
- 		b43_phy_write(dev, 0x0026, 0xCE00);
--	b43_write16(dev, B43_MMIO_CHANNEL_EXT, 0x1000);
-+	b43_write16(dev, B43_MMIO_PHY_TEST, 0x1000);
- 	b43_phy_write(dev, 0x002A, 0x88A3);
- 	if (phy->radio_ver != 0x2050)
- 		b43_phy_write(dev, 0x002A, 0x88C2);
-@@ -1001,7 +1002,7 @@ static void b43_phy_initb4(struct b43_wl
- 	b43_phy_write(dev, 0x0026, 0xCC00);
- 	if (phy->radio_ver == 0x2050)
- 		b43_phy_write(dev, 0x0026, 0xCE00);
--	b43_write16(dev, B43_MMIO_CHANNEL_EXT, 0x1100);
-+	b43_write16(dev, B43_MMIO_PHY_TEST, 0x1100);
- 	b43_phy_write(dev, 0x002A, 0x88A3);
- 	if (phy->radio_ver == 0x2050)
- 		b43_phy_write(dev, 0x002A, 0x88C2);
-@@ -1046,7 +1047,7 @@ static void b43_phy_initb5(struct b43_wl
- 					  b43_radio_read16(dev, 0x0051)
- 					  | 0x0004);
- 		}
--		b43_write16(dev, B43_MMIO_PHY_RADIO, 0x0000);
-+		b43_write16(dev, B43_MMIO_PHY_BBANDCFG, 0x0000);
- 
- 		b43_phy_write(dev, 0x0802, b43_phy_read(dev, 0x0802) | 0x0100);
- 		b43_phy_write(dev, 0x042B, b43_phy_read(dev, 0x042B) | 0x2000);
-@@ -1264,7 +1265,7 @@ static void b43_calc_loopback_gain(struc
- 	u16 trsw_rx;
- 	u16 loop1_outer_done, loop1_inner_done;
- 
--	backup_phy[0] = b43_phy_read(dev, B43_PHY_CRS0);
-+	backup_phy[0] = b43_phy_read(dev, B43_PHY_CRS);
- 	backup_phy[1] = b43_phy_read(dev, B43_PHY_CCKBBANDCFG);
- 	backup_phy[2] = b43_phy_read(dev, B43_PHY_RFOVER);
- 	backup_phy[3] = b43_phy_read(dev, B43_PHY_RFOVERVAL);
-@@ -1287,8 +1288,8 @@ static void b43_calc_loopback_gain(struc
- 	backup_radio[1] = b43_radio_read16(dev, 0x43);
- 	backup_radio[2] = b43_radio_read16(dev, 0x7A);
- 
--	b43_phy_write(dev, B43_PHY_CRS0,
--		      b43_phy_read(dev, B43_PHY_CRS0) & 0x3FFF);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+		      b43_phy_read(dev, B43_PHY_CRS) & ~B43_PHY_CRS_EN_ALL);
- 	b43_phy_write(dev, B43_PHY_CCKBBANDCFG,
- 		      b43_phy_read(dev, B43_PHY_CCKBBANDCFG) | 0x8000);
- 	b43_phy_write(dev, B43_PHY_RFOVER,
-@@ -1448,7 +1449,7 @@ static void b43_calc_loopback_gain(struc
- 	udelay(10);
- 	b43_phy_write(dev, B43_PHY_RFOVER, backup_phy[2]);
- 	b43_phy_write(dev, B43_PHY_RFOVERVAL, backup_phy[3]);
--	b43_phy_write(dev, B43_PHY_CRS0, backup_phy[0]);
-+	b43_phy_write(dev, B43_PHY_CRS, backup_phy[0]);
- 	b43_phy_write(dev, B43_PHY_CCKBBANDCFG, backup_phy[1]);
- 
- 	phy->max_lb_gain =
-@@ -1570,8 +1571,8 @@ static void b43_phy_initg(struct b43_wld
- 	   but OFDM is legal everywhere */
- 	if ((dev->dev->bus->chip_id == 0x4306
- 	     && dev->dev->bus->chip_package == 2) || 0) {
--		b43_phy_write(dev, B43_PHY_CRS0, b43_phy_read(dev, B43_PHY_CRS0)
--			      & 0xBFFF);
-+		b43_phy_write(dev, B43_PHY_CRS, b43_phy_read(dev, B43_PHY_CRS)
-+			      & ~B43_PHY_CRS_EN_0);
- 		b43_phy_write(dev, B43_PHY_OFDM(0xC3),
- 			      b43_phy_read(dev, B43_PHY_OFDM(0xC3))
- 			      & 0x7FFF);
-@@ -2332,8 +2333,8 @@ u8 b43_radio_aci_scan(struct b43_wldev *
- 	b43_phy_lock(dev, phylock_flags);
- 	b43_radio_lock(dev);
- 	b43_phy_write(dev, 0x0802, b43_phy_read(dev, 0x0802) & 0xFFFC);
--	b43_phy_write(dev, B43_PHY_G_CRS,
--		      b43_phy_read(dev, B43_PHY_G_CRS) & 0x7FFF);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+		      b43_phy_read(dev, B43_PHY_CRS) & ~B43_PHY_CRS_EN_ALL);
- 	b43_set_all_gains(dev, 3, 8, 1);
- 
- 	start = (channel - 5 > 0) ? channel - 5 : 1;
-@@ -2347,8 +2348,8 @@ u8 b43_radio_aci_scan(struct b43_wldev *
- 	b43_phy_write(dev, 0x0802,
- 		      (b43_phy_read(dev, 0x0802) & 0xFFFC) | 0x0003);
- 	b43_phy_write(dev, 0x0403, b43_phy_read(dev, 0x0403) & 0xFFF8);
--	b43_phy_write(dev, B43_PHY_G_CRS,
--		      b43_phy_read(dev, B43_PHY_G_CRS) | 0x8000);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+		      b43_phy_read(dev, B43_PHY_CRS) | B43_PHY_CRS_EN_ALL);
- 	b43_set_original_gains(dev);
- 	for (i = 0; i < 13; i++) {
- 		if (!ret[i])
-@@ -2593,7 +2594,7 @@ void b43_calc_nrssi_slope(struct b43_wld
- 		backup[10] = b43_phy_read(dev, 0x0058);
- 		backup[11] = b43_read16(dev, 0x03E2);
- 		backup[12] = b43_read16(dev, 0x03E6);
--		backup[13] = b43_read16(dev, B43_MMIO_CHANNEL_EXT);
-+		backup[13] = b43_read16(dev, B43_MMIO_PHY_TEST);
- 
- 		tmp = b43_radio_read16(dev, 0x007A);
- 		tmp &= (phy->rev >= 5) ? 0x007F : 0x000F;
-@@ -2614,9 +2615,9 @@ void b43_calc_nrssi_slope(struct b43_wld
- 		} else if (phy->rev == 0) {
- 			b43_write16(dev, 0x03E6, 0x0122);
- 		} else {
--			b43_write16(dev, B43_MMIO_CHANNEL_EXT,
-+			b43_write16(dev, B43_MMIO_PHY_TEST,
- 				    b43_read16(dev,
--					       B43_MMIO_CHANNEL_EXT) & 0x2000);
-+					       B43_MMIO_PHY_TEST) & 0x2000);
- 		}
- 		b43_phy_write(dev, 0x0020, 0x3F3F);
- 		b43_phy_write(dev, 0x0015, 0xF330);
-@@ -2662,111 +2663,104 @@ void b43_calc_nrssi_slope(struct b43_wld
- 		if (phy->radio_rev == 8)
- 			b43_calc_nrssi_offset(dev);
- 
--		b43_phy_write(dev, B43_PHY_G_CRS,
--			      b43_phy_read(dev, B43_PHY_G_CRS) & 0x7FFF);
--		b43_phy_write(dev, 0x0802, b43_phy_read(dev, 0x0802) & 0xFFFC);
--		backup[7] = b43_read16(dev, 0x03E2);
--		b43_write16(dev, 0x03E2, b43_read16(dev, 0x03E2) | 0x8000);
--		backup[0] = b43_radio_read16(dev, 0x007A);
--		backup[1] = b43_radio_read16(dev, 0x0052);
--		backup[2] = b43_radio_read16(dev, 0x0043);
--		backup[3] = b43_phy_read(dev, 0x0015);
-+		b43_phy_write(dev, B43_PHY_CRS,
-+			      b43_phy_read(dev, B43_PHY_CRS)
-+			       & ~B43_PHY_CRS_EN_ALL);
-+		b43_phy_write(dev, B43_PHY_CLASSCTL,
-+			      b43_phy_read(dev, B43_PHY_CLASSCTL) &
-+			       ~(B43_PHY_CLASSCTL_CCK | B43_PHY_CLASSCTL_OFDM));
-+		backup[7] = b43_read16(dev, B43_MMIO_PHY_BBANDCFG);
-+		b43_write16(dev, B43_MMIO_PHY_BBANDCFG, backup[7] | 0x8000);
-+		backup[0] = b43_radio_read16(dev, B43_RADIO_2050_RXCTL0);
-+		backup[1] = b43_radio_read16(dev, B43_RADIO_2050_TXCTL1);
-+		backup[2] = b43_radio_read16(dev, B43_RADIO_2050_PCTL);
-+		backup[3] = b43_phy_read(dev, B43_PHY_PGACTL);
- 		backup[4] = b43_phy_read(dev, 0x005A);
- 		backup[5] = b43_phy_read(dev, 0x0059);
- 		backup[6] = b43_phy_read(dev, 0x0058);
--		backup[8] = b43_read16(dev, 0x03E6);
--		backup[9] = b43_read16(dev, B43_MMIO_CHANNEL_EXT);
--		if (phy->rev >= 3) {
--			backup[10] = b43_phy_read(dev, 0x002E);
--			backup[11] = b43_phy_read(dev, 0x002F);
--			backup[12] = b43_phy_read(dev, 0x080F);
--			backup[13] = b43_phy_read(dev, B43_PHY_G_LO_CONTROL);
--			backup[14] = b43_phy_read(dev, 0x0801);
--			backup[15] = b43_phy_read(dev, 0x0060);
--			backup[16] = b43_phy_read(dev, 0x0014);
--			backup[17] = b43_phy_read(dev, 0x0478);
--			b43_phy_write(dev, 0x002E, 0);
--			b43_phy_write(dev, B43_PHY_G_LO_CONTROL, 0);
--			switch (phy->rev) {
--			case 4:
--			case 6:
--			case 7:
--				b43_phy_write(dev, 0x0478,
--					      b43_phy_read(dev, 0x0478)
--					      | 0x0100);
--				b43_phy_write(dev, 0x0801,
--					      b43_phy_read(dev, 0x0801)
--					      | 0x0040);
--				break;
--			case 3:
--			case 5:
--				b43_phy_write(dev, 0x0801,
--					      b43_phy_read(dev, 0x0801)
--					      & 0xFFBF);
--				break;
--			}
--			b43_phy_write(dev, 0x0060, b43_phy_read(dev, 0x0060)
--				      | 0x0040);
--			b43_phy_write(dev, 0x0014, b43_phy_read(dev, 0x0014)
--				      | 0x0200);
--		}
--		b43_radio_write16(dev, 0x007A,
--				  b43_radio_read16(dev, 0x007A) | 0x0070);
-+		backup[8] = b43_read16(dev, B43_MMIO_PHY0);
-+		backup[9] = b43_read16(dev, B43_MMIO_PHY_TEST);
-+		if (phy->pctl_en) {
-+			backup[10] = b43_phy_read(dev, B43_PHY_TXDC_OFFSET1);
-+			backup[11] = b43_phy_read(dev, B43_PHY_TXDC_OFFSET2);
-+			backup[12] = b43_phy_read(dev, B43_PHY_LO_MASK);
-+			backup[13] = b43_phy_read(dev, B43_PHY_LO_CTL);
-+			backup[14] = b43_phy_read(dev, B43_PHY_G_CTL);
-+			backup[15] = b43_phy_read(dev, B43_PHY_DACCTL);
-+			backup[16] = b43_phy_read(dev, B43_PHY_TR_LT2);
-+			backup[17] = b43_phy_read(dev, B43_PHY_HPWR_TSSICTL);
-+			b43_phy_write(dev, B43_PHY_TXDC_OFFSET1, 0);
-+			b43_phy_write(dev, B43_PHY_TXDC_OFFSET2, 0);
-+			b43_phy_write(dev, B43_PHY_LO_MASK, 0);
-+			b43_phy_write(dev, B43_PHY_LO_CTL, 0);
-+			b43_phy_write(dev, B43_PHY_HPWR_TSSICTL, 0);
-+			b43_phy_write(dev, B43_PHY_G_CTL, 0);
-+			b43_phy_write(dev, B43_PHY_DACCTL, 0);
-+			b43_phy_write(dev, B43_PHY_TR_LT2, 0);
-+		}
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0,
-+				  b43_radio_read16(dev, B43_RADIO_2050_RXCTL0)
-+				   | 0x0070);
- 		b43_set_all_gains(dev, 0, 8, 0);
--		b43_radio_write16(dev, 0x007A,
--				  b43_radio_read16(dev, 0x007A) & 0x00F7);
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0,
-+				  b43_radio_read16(dev, B43_RADIO_2050_RXCTL0)
-+				   & 0x00F7);
- 		if (phy->rev >= 2) {
--			b43_phy_write(dev, 0x0811,
--				      (b43_phy_read(dev, 0x0811) & 0xFFCF) |
--				      0x0030);
--			b43_phy_write(dev, 0x0812,
--				      (b43_phy_read(dev, 0x0812) & 0xFFCF) |
--				      0x0010);
-+			b43_phy_write(dev, B43_PHY_RFOVER,
-+				      b43_phy_read(dev, B43_PHY_RFOVER)
-+				       | 0x0030);
-+			b43_phy_write(dev, B43_PHY_RFOVERVAL,
-+				      (b43_phy_read(dev, B43_PHY_RFOVERVAL)
-+				       & 0xFFCF) | 0x0010);
- 		}
--		b43_radio_write16(dev, 0x007A,
--				  b43_radio_read16(dev, 0x007A) | 0x0080);
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0,
-+				  b43_radio_read16(dev, B43_RADIO_2050_RXCTL0)
-+				   | 0x0080);
- 		udelay(20);
- 
--		nrssi0 = (s16) ((b43_phy_read(dev, 0x047F) >> 8) & 0x003F);
-+		nrssi0 = (s16)((b43_phy_read(dev, 0x047F) >> 8) & 0x003F);
- 		if (nrssi0 >= 0x0020)
- 			nrssi0 -= 0x0040;
- 
--		b43_radio_write16(dev, 0x007A,
--				  b43_radio_read16(dev, 0x007A) & 0x007F);
--		if (phy->rev >= 2) {
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0,
-+				  b43_radio_read16(dev, B43_RADIO_2050_RXCTL0)
-+				   & 0x0080);
-+		if (phy->analog >= 2) {
- 			b43_phy_write(dev, 0x0003, (b43_phy_read(dev, 0x0003)
- 						    & 0xFF9F) | 0x0040);
- 		}
- 
--		b43_write16(dev, B43_MMIO_CHANNEL_EXT,
--			    b43_read16(dev, B43_MMIO_CHANNEL_EXT)
-+		b43_write16(dev, B43_MMIO_PHY_TEST,
-+			    b43_read16(dev, B43_MMIO_PHY_TEST)
- 			    | 0x2000);
--		b43_radio_write16(dev, 0x007A,
--				  b43_radio_read16(dev, 0x007A) | 0x000F);
--		b43_phy_write(dev, 0x0015, 0xF330);
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0,
-+				  b43_radio_read16(dev, B43_RADIO_2050_RXCTL0)
-+				   | 0x000F);
-+		b43_phy_write(dev, B43_PHY_PGACTL, 0xF330);
- 		if (phy->rev >= 2) {
--			b43_phy_write(dev, 0x0812,
--				      (b43_phy_read(dev, 0x0812) & 0xFFCF) |
--				      0x0020);
--			b43_phy_write(dev, 0x0811,
--				      (b43_phy_read(dev, 0x0811) & 0xFFCF) |
--				      0x0020);
-+			b43_phy_write(dev, B43_PHY_RFOVERVAL,
-+				      (b43_phy_read(dev, B43_PHY_RFOVERVAL)
-+				       & 0xFFCF) | 0x0020);
-+			b43_phy_write(dev, B43_PHY_RFOVER,
-+				      (b43_phy_read(dev, B43_PHY_RFOVER)
-+				       & 0xFFCF) | 0x0020);
- 		}
--
- 		b43_set_all_gains(dev, 3, 0, 1);
--		if (phy->radio_rev == 8) {
--			b43_radio_write16(dev, 0x0043, 0x001F);
--		} else {
--			tmp = b43_radio_read16(dev, 0x0052) & 0xFF0F;
--			b43_radio_write16(dev, 0x0052, tmp | 0x0060);
--			tmp = b43_radio_read16(dev, 0x0043) & 0xFFF0;
--			b43_radio_write16(dev, 0x0043, tmp | 0x0009);
-+		if (phy->radio_rev == 8)
-+			b43_radio_write16(dev, B43_RADIO_2050_PCTL, 0x001F);
-+		else {
-+			b43_radio_write16(dev, B43_RADIO_2050_TXCTL1,
-+					  (b43_radio_read16(dev, B43_RADIO_2050_TXCTL1)
-+					   & 0xFF0F) | 0x0060);
-+			b43_radio_write16(dev, B43_RADIO_2050_PCTL,
-+					  (b43_radio_read16(dev, B43_RADIO_2050_PCTL)
-+					   & 0xFFF0) | 0x0009);
- 		}
- 		b43_phy_write(dev, 0x005A, 0x0480);
- 		b43_phy_write(dev, 0x0059, 0x0810);
- 		b43_phy_write(dev, 0x0058, 0x000D);
- 		udelay(20);
--		nrssi1 = (s16) ((b43_phy_read(dev, 0x047F) >> 8) & 0x003F);
-+		nrssi1 = (s16)((b43_phy_read(dev, 0x047F) >> 8) & 0x003F);
- 		if (nrssi1 >= 0x0020)
- 			nrssi1 -= 0x0040;
- 		if (nrssi0 == nrssi1)
-@@ -2777,40 +2771,43 @@ void b43_calc_nrssi_slope(struct b43_wld
- 			phy->nrssi[0] = nrssi1;
- 			phy->nrssi[1] = nrssi0;
- 		}
--		if (phy->rev >= 3) {
--			b43_phy_write(dev, 0x002E, backup[10]);
--			b43_phy_write(dev, 0x002F, backup[11]);
--			b43_phy_write(dev, 0x080F, backup[12]);
--			b43_phy_write(dev, B43_PHY_G_LO_CONTROL, backup[13]);
--		}
-+		if (phy->pctl_en) {
-+			b43_phy_write(dev, B43_PHY_TXDC_OFFSET1, backup[10]);
-+			b43_phy_write(dev, B43_PHY_TXDC_OFFSET2, backup[11]);
-+			b43_phy_write(dev, B43_PHY_LO_MASK, backup[12]);
-+			b43_phy_write(dev, B43_PHY_LO_CTL, backup[13]);
-+		}
-+		b43_radio_write16(dev, B43_RADIO_2050_RXCTL0, backup[0]);
-+		b43_write16(dev, B43_MMIO_PHY_BBANDCFG, backup[7]);
-+		b43_phy_write(dev, B43_PHY_PGACTL, backup[3]);
- 		if (phy->rev >= 2) {
--			b43_phy_write(dev, 0x0812,
--				      b43_phy_read(dev, 0x0812) & 0xFFCF);
--			b43_phy_write(dev, 0x0811,
--				      b43_phy_read(dev, 0x0811) & 0xFFCF);
-+			b43_phy_write(dev, B43_PHY_RFOVERVAL,
-+				      b43_phy_read(dev, B43_PHY_RFOVERVAL)
-+				       & 0xFFCF);
-+			b43_phy_write(dev, B43_PHY_RFOVERVAL,
-+				      b43_phy_read(dev, B43_PHY_RFOVER)
-+				       & 0xFFCF);
- 		}
--
--		b43_radio_write16(dev, 0x007A, backup[0]);
--		b43_radio_write16(dev, 0x0052, backup[1]);
--		b43_radio_write16(dev, 0x0043, backup[2]);
--		b43_write16(dev, 0x03E2, backup[7]);
--		b43_write16(dev, 0x03E6, backup[8]);
--		b43_write16(dev, B43_MMIO_CHANNEL_EXT, backup[9]);
--		b43_phy_write(dev, 0x0015, backup[3]);
-+		b43_write16(dev, B43_MMIO_PHY0, backup[8]);
-+		b43_write16(dev, B43_MMIO_PHY_TEST, backup[9]);
-+		b43_radio_write16(dev, B43_RADIO_2050_TXCTL1, backup[1]);
-+		b43_radio_write16(dev, B43_RADIO_2050_PCTL, backup[2]);
- 		b43_phy_write(dev, 0x005A, backup[4]);
- 		b43_phy_write(dev, 0x0059, backup[5]);
- 		b43_phy_write(dev, 0x0058, backup[6]);
- 		b43_synth_pu_workaround(dev, phy->channel);
--		b43_phy_write(dev, 0x0802,
--			      b43_phy_read(dev, 0x0802) | (0x0001 | 0x0002));
-+		b43_phy_write(dev, B43_PHY_CLASSCTL,
-+			      b43_phy_read(dev, B43_PHY_CLASSCTL)
-+			       | (B43_PHY_CLASSCTL_CCK | B43_PHY_CLASSCTL_OFDM));
- 		b43_set_original_gains(dev);
--		b43_phy_write(dev, B43_PHY_G_CRS,
--			      b43_phy_read(dev, B43_PHY_G_CRS) | 0x8000);
--		if (phy->rev >= 3) {
--			b43_phy_write(dev, 0x0801, backup[14]);
--			b43_phy_write(dev, 0x0060, backup[15]);
--			b43_phy_write(dev, 0x0014, backup[16]);
--			b43_phy_write(dev, 0x0478, backup[17]);
-+		b43_phy_write(dev, B43_PHY_CRS,
-+			      b43_phy_read(dev, B43_PHY_CRS)
-+			       | B43_PHY_CRS_EN_ALL);
-+		if (phy->pctl_en) {
-+			b43_phy_write(dev, B43_PHY_G_CTL, backup[14]);
-+			b43_phy_write(dev, B43_PHY_DACCTL, backup[15]);
-+			b43_phy_write(dev, B43_PHY_TR_LT2, backup[16]);
-+			b43_phy_write(dev, B43_PHY_HPWR_TSSICTL, backup[17]);
- 		}
- 		b43_nrssi_mem_update(dev);
- 		b43_calc_nrssi_threshold(dev);
-@@ -3001,9 +2998,9 @@ b43_radio_interference_mitigation_enable
- 		if (phy->rev != 1) {
- 			b43_phy_write(dev, 0x042B,
- 				      b43_phy_read(dev, 0x042B) | 0x0800);
--			b43_phy_write(dev, B43_PHY_G_CRS,
-+			b43_phy_write(dev, B43_PHY_CRS,
- 				      b43_phy_read(dev,
--						   B43_PHY_G_CRS) & ~0x4000);
-+						   B43_PHY_CRS) & ~B43_PHY_CRS_EN_0);
- 			break;
- 		}
- 		radio_stacksave(0x0078);
-@@ -3063,7 +3060,7 @@ b43_radio_interference_mitigation_enable
- 		phy->aci_enable = 1;
- 
- 		phy_stacksave(B43_PHY_RADIO_BITFIELD);
--		phy_stacksave(B43_PHY_G_CRS);
-+		phy_stacksave(B43_PHY_CRS);
- 		if (phy->rev < 2) {
- 			phy_stacksave(0x0406);
- 		} else {
-@@ -3100,8 +3097,8 @@ b43_radio_interference_mitigation_enable
- 		b43_phy_write(dev, B43_PHY_RADIO_BITFIELD,
- 			      b43_phy_read(dev, B43_PHY_RADIO_BITFIELD)
- 			      & ~0x1000);
--		b43_phy_write(dev, B43_PHY_G_CRS,
--			      (b43_phy_read(dev, B43_PHY_G_CRS)
-+		b43_phy_write(dev, B43_PHY_CRS,
-+			      (b43_phy_read(dev, B43_PHY_CRS)
- 			       & 0xFFFC) | 0x0002);
- 
- 		b43_phy_write(dev, 0x0033, 0x0800);
-@@ -3203,9 +3200,9 @@ b43_radio_interference_mitigation_disabl
- 		if (phy->rev != 1) {
- 			b43_phy_write(dev, 0x042B,
- 				      b43_phy_read(dev, 0x042B) & ~0x0800);
--			b43_phy_write(dev, B43_PHY_G_CRS,
-+			b43_phy_write(dev, B43_PHY_CRS,
- 				      b43_phy_read(dev,
--						   B43_PHY_G_CRS) | 0x4000);
-+						   B43_PHY_CRS) | B43_PHY_CRS_EN_0);
- 			break;
- 		}
- 		radio_stackrestore(0x0078);
-@@ -3217,8 +3214,8 @@ b43_radio_interference_mitigation_disabl
- 				      b43_phy_read(dev, B43_PHY_RADIO_BITFIELD)
- 				      & ~(1 << 11));
- 		}
--		b43_phy_write(dev, B43_PHY_G_CRS,
--			      b43_phy_read(dev, B43_PHY_G_CRS) | 0x4000);
-+		b43_phy_write(dev, B43_PHY_CRS,
-+			      b43_phy_read(dev, B43_PHY_CRS) | B43_PHY_CRS_EN_0);
- 		phy_stackrestore(0x04A0);
- 		phy_stackrestore(0x04A1);
- 		phy_stackrestore(0x04A2);
-@@ -3238,7 +3235,7 @@ b43_radio_interference_mitigation_disabl
- 		phy->aci_enable = 0;
- 
- 		phy_stackrestore(B43_PHY_RADIO_BITFIELD);
--		phy_stackrestore(B43_PHY_G_CRS);
-+		phy_stackrestore(B43_PHY_CRS);
- 		phy_stackrestore(0x0033);
- 		phy_stackrestore(0x04A3);
- 		phy_stackrestore(0x04A9);
-@@ -3484,7 +3481,7 @@ struct init2050_saved_values {
- 	u16 phy_rfoverval;
- 	u16 phy_analogover;
- 	u16 phy_analogoverval;
--	u16 phy_crs0;
-+	u16 phy_crs;
- 	u16 phy_classctl;
- 	u16 phy_lo_mask;
- 	u16 phy_lo_ctl;
-@@ -3523,7 +3520,7 @@ u16 b43_radio_init2050(struct b43_wldev 
- 		sav.phy_analogover = b43_phy_read(dev, B43_PHY_ANALOGOVER);
- 		sav.phy_analogoverval =
- 		    b43_phy_read(dev, B43_PHY_ANALOGOVERVAL);
--		sav.phy_crs0 = b43_phy_read(dev, B43_PHY_CRS0);
-+		sav.phy_crs = b43_phy_read(dev, B43_PHY_CRS);
- 		sav.phy_classctl = b43_phy_read(dev, B43_PHY_CLASSCTL);
- 
- 		b43_phy_write(dev, B43_PHY_ANALOGOVER,
-@@ -3532,8 +3529,8 @@ u16 b43_radio_init2050(struct b43_wldev 
- 		b43_phy_write(dev, B43_PHY_ANALOGOVERVAL,
- 			      b43_phy_read(dev, B43_PHY_ANALOGOVERVAL)
- 			      & 0xFFFC);
--		b43_phy_write(dev, B43_PHY_CRS0, b43_phy_read(dev, B43_PHY_CRS0)
--			      & 0x7FFF);
-+		b43_phy_write(dev, B43_PHY_CRS, b43_phy_read(dev, B43_PHY_CRS)
-+			      & ~B43_PHY_CRS_EN_ALL);
- 		b43_phy_write(dev, B43_PHY_CLASSCTL,
- 			      b43_phy_read(dev, B43_PHY_CLASSCTL)
- 			      & 0xFFFC);
-@@ -3570,8 +3567,8 @@ u16 b43_radio_init2050(struct b43_wldev 
- 				      (b43_phy_read(dev, B43_PHY_BASE(0x03))
- 				       & 0xFFBF) | 0x40);
- 		}
--		b43_write16(dev, B43_MMIO_CHANNEL_EXT,
--			    (b43_read16(dev, B43_MMIO_CHANNEL_EXT) | 0x2000));
-+		b43_write16(dev, B43_MMIO_PHY_TEST,
-+			    (b43_read16(dev, B43_MMIO_PHY_TEST) | 0x2000));
- 	}
- 
- 	rcc = b43_radio_core_calibration_value(dev);
-@@ -3715,15 +3712,15 @@ u16 b43_radio_init2050(struct b43_wldev 
- 		b43_phy_write(dev, B43_PHY_BASE(0x30), sav.phy_base_30);
- 		b43_write16(dev, 0x3EC, sav.reg_3EC);
- 	} else if (phy->gmode) {
--		b43_write16(dev, B43_MMIO_PHY_RADIO,
--			    b43_read16(dev, B43_MMIO_PHY_RADIO)
-+		b43_write16(dev, B43_MMIO_PHY_BBANDCFG,
-+			    b43_read16(dev, B43_MMIO_PHY_BBANDCFG)
- 			    & 0x7FFF);
- 		b43_phy_write(dev, B43_PHY_RFOVER, sav.phy_rfover);
- 		b43_phy_write(dev, B43_PHY_RFOVERVAL, sav.phy_rfoverval);
- 		b43_phy_write(dev, B43_PHY_ANALOGOVER, sav.phy_analogover);
- 		b43_phy_write(dev, B43_PHY_ANALOGOVERVAL,
- 			      sav.phy_analogoverval);
--		b43_phy_write(dev, B43_PHY_CRS0, sav.phy_crs0);
-+		b43_phy_write(dev, B43_PHY_CRS, sav.phy_crs);
- 		b43_phy_write(dev, B43_PHY_CLASSCTL, sav.phy_classctl);
- 		if (has_loopback_gain(phy)) {
- 			b43_phy_write(dev, B43_PHY_LO_MASK, sav.phy_lo_mask);
-@@ -3912,12 +3909,12 @@ int b43_radio_selectchannel(struct b43_w
- 			else
- 				b43_hf_write(dev,
- 					     b43_hf_read(dev) | B43_HF_ACPR);
--			b43_write16(dev, B43_MMIO_CHANNEL_EXT,
--				    b43_read16(dev, B43_MMIO_CHANNEL_EXT)
-+			b43_write16(dev, B43_MMIO_PHY_TEST,
-+				    b43_read16(dev, B43_MMIO_PHY_TEST)
- 				    | (1 << 11));
- 		} else {
--			b43_write16(dev, B43_MMIO_CHANNEL_EXT,
--				    b43_read16(dev, B43_MMIO_CHANNEL_EXT)
-+			b43_write16(dev, B43_MMIO_PHY_TEST,
-+				    b43_read16(dev, B43_MMIO_PHY_TEST)
- 				    & 0xF7BF);
- 		}
- 	}
-Index: wireless-2.6/drivers/net/wireless/b43/phy.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/phy.h
-+++ wireless-2.6/drivers/net/wireless/b43/phy.h
-@@ -29,8 +29,9 @@ struct b43_phy;
- #define B43_PHY_LNAHPFCTL		B43_PHY_OFDM(0x1C)	/* LNA/HPF control */
- #define B43_PHY_LPFGAINCTL		B43_PHY_OFDM(0x20)	/* LPF Gain control */
- #define B43_PHY_ADIVRELATED		B43_PHY_OFDM(0x27)	/* FIXME rename */
--#define B43_PHY_CRS0			B43_PHY_OFDM(0x29)	/* Collision resolution signaling */
--#define  B43_PHY_CRS0_EN		0x8000	/* CRS enable */
-+#define B43_PHY_CRS			B43_PHY_OFDM(0x29)	/* Collision resolution signaling */
-+#define  B43_PHY_CRS_EN_ALL		0x8000			/* CRS enable */
-+#define  B43_PHY_CRS_EN_0		0x4000			/* CRS 0 enable */
- #define B43_PHY_PEAK_COUNT		B43_PHY_OFDM(0x30)
- #define B43_PHY_ANTDWELL		B43_PHY_OFDM(0x2B)	/* Antenna dwell */
- #define  B43_PHY_ANTDWELL_AUTODIV1	0x0100	/* Automatic RX diversity start antenna */
-@@ -78,11 +79,14 @@ struct b43_phy;
- /* CCK (B) PHY Registers */
- #define B43_PHY_VERSION_CCK		B43_PHY_BASE(0x00)	/* Versioning register for B-PHY */
- #define B43_PHY_CCKBBANDCFG		B43_PHY_BASE(0x01)	/* Contains antenna 0/1 control bit */
-+#define B43_PHY_TR_LT2			B43_PHY_BASE(0x14)	/* TR lookup table 2 */
- #define B43_PHY_PGACTL			B43_PHY_BASE(0x15)	/* PGA control */
- #define  B43_PHY_PGACTL_LPF		0x1000	/* Low pass filter (?) */
- #define  B43_PHY_PGACTL_LOWBANDW	0x0040	/* Low bandwidth flag */
- #define  B43_PHY_PGACTL_UNKNOWN		0xEFA0
- #define B43_PHY_FBCTL1			B43_PHY_BASE(0x18)	/* Frequency bandwidth control 1 */
-+#define B43_PHY_TXDC_OFFSET1		B43_PHY_BASE(0x2E)
-+#define B43_PHY_TXDC_OFFSET2		B43_PHY_BASE(0x2F)
- #define B43_PHY_ITSSI			B43_PHY_BASE(0x29)	/* Idle TSSI */
- #define B43_PHY_LO_LEAKAGE		B43_PHY_BASE(0x2D)	/* Measured LO leakage */
- #define B43_PHY_ENERGY			B43_PHY_BASE(0x33)	/* Energy */
-@@ -92,7 +96,10 @@ struct b43_phy;
- #define B43_PHY_RCCALOVER		B43_PHY_BASE(0x78)	/* RC calibration override */
- 
- /* Extended G-PHY Registers */
-+#define B43_PHY_G_CTL			B43_PHY_EXTG(0x01)	/* G PHY control */
- #define B43_PHY_CLASSCTL		B43_PHY_EXTG(0x02)	/* Classify control */
-+#define  B43_PHY_CLASSCTL_CCK		0x0001
-+#define  B43_PHY_CLASSCTL_OFDM		0x0002
- #define B43_PHY_GTABCTL			B43_PHY_EXTG(0x03)	/* G-PHY table control (see below) */
- #define  B43_PHY_GTABOFF		0x03FF	/* G-PHY table offset (see below) */
- #define  B43_PHY_GTABNR			0xFC00	/* G-PHY table number (see below) */
-Index: wireless-2.6/drivers/net/wireless/b43/wa.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/wa.c
-+++ wireless-2.6/drivers/net/wireless/b43/wa.c
-@@ -325,8 +325,8 @@ static void b43_wa_crs_ed(struct b43_wld
- 
- static void b43_wa_crs_thr(struct b43_wldev *dev)
+ static void iwl4965_set_ht_capab(struct ieee80211_hw *hw,
+-			     struct ieee80211_ht_capability *ht_cap,
+-			     u8 use_wide_chan)
++			struct ieee80211_ht_cap *ht_cap,
++			u8 use_current_config)
  {
--	b43_phy_write(dev, B43_PHY_CRS0,
--			(b43_phy_read(dev, B43_PHY_CRS0) & ~0x03C0) | 0xD000);
-+	b43_phy_write(dev, B43_PHY_CRS,
-+			(b43_phy_read(dev, B43_PHY_CRS) & ~0x03C0) | 0xD000);
+-	union ht_cap_info cap;
+-	union ht_param_info param_info;
++	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_hw_mode *mode = conf->mode;
+ 
+-	memset(&cap, 0, sizeof(union ht_cap_info));
+-	memset(&param_info, 0, sizeof(union ht_param_info));
+-
+-	cap.maximal_amsdu_size = HT_IE_MAX_AMSDU_SIZE_4K;
+-	cap.green_field = 1;
+-	cap.short_GI20 = 1;
+-	cap.short_GI40 = 1;
+-	cap.supported_chan_width_set = use_wide_chan;
+-	cap.mimo_power_save_mode = 0x3;
+-
+-	param_info.max_rx_ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
+-	param_info.mpdu_density = CFG_HT_MPDU_DENSITY_DEF;
+-	ht_cap->capabilities_info = (__le16) cpu_to_le16(cap.val);
+-	ht_cap->mac_ht_params_info = (u8) param_info.val;
+-
+-	ht_cap->supported_mcs_set[0] = 0xff;
+-	ht_cap->supported_mcs_set[1] = 0xff;
+-	ht_cap->supported_mcs_set[4] =
+-	    (cap.supported_chan_width_set) ? 0x1: 0x0;
++	if (use_current_config) {
++		ht_cap->cap_info = cpu_to_le16(conf->ht_conf.cap);
++		memcpy(ht_cap->supp_mcs_set,
++				conf->ht_conf.supp_mcs_set, 16);
++	} else {
++		ht_cap->cap_info = cpu_to_le16(mode->ht_info.cap);
++		memcpy(ht_cap->supp_mcs_set,
++				mode->ht_info.supp_mcs_set, 16);
++	}
++	ht_cap->ampdu_params_info =
++		(mode->ht_info.ampdu_factor & IEEE80211_HT_CAP_AMPDU_FACTOR) |
++		((mode->ht_info.ampdu_density << 2) &
++					IEEE80211_HT_CAP_AMPDU_DENSITY);
  }
  
- static void b43_wa_crs_blank(struct b43_wldev *dev)
-
-
+ static void iwl4965_mac_get_ht_capab(struct ieee80211_hw *hw,
 -- 
-Ciao
-Stefano
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
