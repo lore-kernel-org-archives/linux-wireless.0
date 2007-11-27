@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46662
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930AbXK1OMq (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:26165 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbXK0H6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 09:12:46 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
-Date: Wed, 28 Nov 2007 15:11:21 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711272120.44575.mb@bu3sch.de> <474C8A8E.6070404@lwfinger.net>
-In-Reply-To: <474C8A8E.6070404@lwfinger.net>
+	Tue, 27 Nov 2007 02:58:24 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: Add debugfs hooks for configuring LED behavior.
+Date: Tue, 27 Nov 2007 08:59:09 +0100
+Cc: Andrey Yurovsky <andrey@cozybit.com>, olpc-devel@laptop.org,
+	linville@tuxdriver.com
+References: <474b4f06.0e578c0a.0e12.fffff5df@mx.google.com>
+In-Reply-To: <474b4f06.0e578c0a.0e12.fffff5df@mx.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711281511.22788.mb@bu3sch.de> (sfid-20071128_141249_869681_E589767E)
+  charset="iso-8859-15"
+Message-Id: <200711270859.09651.hs4233@mail.mn-solutions.de> (sfid-20071127_075828_906435_DFC79A41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 November 2007 22:22:22 Larry Finger wrote:
-> > I'm wondering who causes this deadlock. "registered" should be false if
-> > we are called back from rfkill_initialize, so it should return early before
-> > the lock.
-> 
-> The following code has the competing lock:
-> 
-> static int rfkill_toggle_radio(struct rfkill *rfkill,
->                                 enum rfkill_state state)
-> {
->         int retval;
-> 
->         retval = mutex_lock_interruptible(&rfkill->mutex);
->         if (retval)
->                 return retval;
-> 
->         if (state != rfkill->state) {
->                 retval = rfkill->toggle_radio(rfkill->data, state);
->                 if (!retval) {
->                         rfkill->state = state;
->                         rfkill_led_trigger(rfkill, state);
->                 }
->         }
-> 
->         mutex_unlock(&rfkill->mutex);
->         return retval;
-> }
+On Monday 26 November 2007 23:56:06 Andrey Yurovsky wrote:
+> +	The LED field specifies the LED number (1 or 2).  The Behavior field
+> +	specifies what the LED should do: 0 for steady on, 1 for stead off, and
 
-So it's a lock dependency between rfkill->mutex and wl->mutex?
-So, now comes the question that really matters. Who is the caller
-of rfkill_toggle_radio, in the case where it crashes?
+s/stead/steady/
 
--- 
-Greetings Michael.
+
+> +	ctrl.numled = cpu_to_le16(0);
+
+0 endian-converted stays 0.
+
+
+> +	priv->leds_dir = debugfs_create_dir("leds",
+> priv->debugfs_dir); +	if (!priv->leds_dir)
+
+Where do you call debugfs_remove(priv->leds_dir) and
+debugfs_remove(priv->leds_files[]) ?
