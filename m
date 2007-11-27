@@ -1,96 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.post.naumen.ru ([77.222.34.75]:47363 "EHLO
-	relay.post.naumen.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758198AbXKHUNt (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59340 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755040AbXK0NJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2007 15:13:49 -0500
-Message-ID: <47336DEC.2040007@naumen.ru> (sfid-20071108_201355_432963_16070322)
-Date: Fri, 09 Nov 2007 01:13:32 +0500
-From: =?UTF-8?B?0JLQtdGC0L7RiNC60LjQvSDQndC40LrQuNGC0LA=?=
-	<nvetoshkin@naumen.ru>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and SIOCSIWAUTH
-References: <47335980.4070103@naumen.ru> <1194552053.31657.0.camel@localhost.localdomain>
-In-Reply-To: <1194552053.31657.0.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+	Tue, 27 Nov 2007 08:09:10 -0500
+Subject: Re: [PATCH 04/15] mac80211: adding 802.11n IEs handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Schwab <schwab@suse.de>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	tomas.winkler@intel.com
+In-Reply-To: <jeabp028ga.fsf@sykes.suse.de>
+References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
+	 <1196086490284-git-send-email-ron.rindjunsky@intel.com>
+	 <1196094586.4149.297.camel@johannes.berg> <jefxyteygc.fsf@sykes.suse.de>
+	 <1196096412.4149.311.camel@johannes.berg>  <jeabp028ga.fsf@sykes.suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W7SYLJNv4vDjhLgd+QjJ"
+Date: Tue, 27 Nov 2007 14:08:05 +0100
+Message-Id: <1196168885.6058.4.camel@johannes.berg> (sfid-20071127_130928_878828_F5BC2305)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is anybody interested in this case?
-If so, what information should I provide you which be enough to=20
-investigate the problem?
-- kernel 2.6.23-gentoo
-- iwl3945 1.1.21
-- ucode 2.14.1
-- wpa_supplicant 0.6.0
 
-What else(logs,output)?
-
-Vetoshkin Nikita
+--=-W7SYLJNv4vDjhLgd+QjJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Dan Williams =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
-> On Thu, 2007-11-08 at 23:46 +0500, =D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=
-=D0=B8=D0=BD =D0=9D=D0=B8=D0=BA=D0=B8=D1=82=D0=B0 wrote:
->> Hi, I'm a user of Lenovo R61 laptop with Intel 3945 wireless card. I=
-=20
->> have Gentoo and would like to use the iwlwifi + wpa_supplicant drive=
-r,=20
->> but I can't because Wi-Fi installed in our office needs WPA2=20
->> authentication and I can't connect to it. There no problems using ip=
-w3945d.
->> #wpa_supplicant config
->> ap_scan=3D2
->> network=3D{
->>          ssid=3D"point1"
->>          key_mgmt=3DWPA-EAP
->>          scan_ssid=3D1
->>          identity=3D"nvetoshkin"
->>          proto=3DWPA2
->>          eap=3DTLS
->>          ca_cert=3D"/home/nekto/certificate.pem"
->>          private_key=3D"/home/nekto/nvetoshkin.p12"
->>          private_key_passwd=3D"nvetoshkin"
->> }
->> ioctl[SIOCSIWAUTH]: Operation not supported - this error always appe=
-ars=20
->> in wpa_supplicant output. I digged a bit in source code and found ou=
-t=20
->> that it is mac80211 subsystem who returns ENOTSUP.
->> Is it really the cause of my problems or am I just confused?
+> >> >> @@ -89,6 +89,8 @@ struct ieee80211_sta_bss {
+> >> >>  	size_t rsn_ie_len;
+> >> >>  	u8 *wmm_ie;
+> >> >>  	size_t wmm_ie_len;
+> >> >> +	u8 *ht_ie;
+> >> >> +	size_t ht_ie_len;
+> >> >
+> >> > At some point we probably should reorder the fields here to avoid al=
+l
+> >> > the padding... Not in this patch though, of course.
+> >>=20
+> >> There should not be any padding, size_t has the same size as a pointer=
+.
+> >
+> > Even on 64-bit? In any case, the _len vars can all be u8 too.
 >=20
-> There's a number of SIOCSIWAUTH sub-options, and not all are necessar=
-y,
-> and not all are supported by every driver.  That's normal.  Ignore th=
-e
-> wpa_supplicant message.
->=20
-> Dan
->=20
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+> I think you are missing a couple of '*'s here.
 
---=20
-=D0=A1 =D1=83=D0=B2=D0=B0=D0=B6=D0=B5=D0=BD=D0=B8=D0=B5=D0=BC,
-=D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=D0=B8=D0=BD =D0=9D=D0=B8=D0=BA=D0=B8=
-=D1=82=D0=B0
+No. I just thought size_t would be 32 bits, and all the size_t can be
+replaced by u8 since IEs cannot be longer than that.
 
-=D0=98=D0=BD=D0=B6=D0=B5=D0=BD=D0=B5=D1=80 =D0=BF=D0=BE=D0=B4=D0=B4=D0=B5=
-=D1=80=D0=B6=D0=BA=D0=B8 =D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC IP-=D1=82=
-=D0=B5=D0=BB=D0=B5=D1=84=D0=BE=D0=BD=D0=B8=D0=B8
-=D0=A1=D0=B5=D1=80=D0=B2=D0=B8=D1=81=D0=BD=D1=8B=D0=B9 =D1=86=D0=B5=D0=BD=
-=D1=82=D1=80
-=D0=9A=D0=BE=D0=BC=D0=BF=D0=B0=D0=BD=D0=B8=D1=8F Naumen
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-W7SYLJNv4vDjhLgd+QjJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0wWs6Vg1VMiehFYAQKy8RAAq0f6uCnmwKzuWKzBdxVRRVYK+c18rlYE
+3d5WymqEFGxPKyOdGtTgZJboo18zQ9pLRODWfLSSl4COkjcFjffL7fIQXcFJ1k8b
+/Jy+GMgBetuDJxLJmySBVUkPeyMJpci+GOpDyMReAkLXQHW425xIOk3TYF4J6A0H
+vKeyaSG/Anw9VG+BoRe6QcXFpdN5FH4EyryAunV9l2i3yNKF+54D3iwluIFd4viK
+9ZxNXGhhsKyuv80UUPJDPs7gmYQhUb5quOEMOJ56ZSqYsrXSF0xMnZH8bmK+hr8W
+Dws8A1oVyTo4N5lj7Q2eLVCc+g3XLGQzJbus+iWh26HiJbp90cuYQMfULVu+YWpK
+AzEl7tdp4shSorwHnoDVk4TXHQFA7Yu9xOUc/kgCu+yR9COxxHoaID91Dje2ZdeE
+INleQsZxGy7qqxKSLcknOqvPfdW6TnDkKwyxOovILcy7wd6dZcgBAKPeYagNmVbz
+0u+pgr6vG/kWukzH4COUnXpEgvDiaRap7ej0BdZmKdNFLojN7Np+/ua1wvJYed4v
+6E9EUfTjcNHcEspjL+VB5EsHRMDNflT6qOvH8JQ3+jABqjQq+w3t2YaGgvBcUqv0
+519vNuugwHRDuv8ayTUIsuAoawIkpqWcul5ENTOSQBvbUbBayoEv+HWCxKm4kiCb
+pNLc4LYJIww=
+=ruGv
+-----END PGP SIGNATURE-----
+
+--=-W7SYLJNv4vDjhLgd+QjJ--
+
