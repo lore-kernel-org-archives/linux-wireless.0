@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:28542 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900AbXKZRLz convert rfc822-to-8bit (ORCPT
+Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:49826 "EHLO
+	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753233AbXK0DuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 12:11:55 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so830945wah
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 09:11:51 -0800 (PST)
-Message-ID: <1ba2fa240711260911i705350f3hefeddc7a09f76d1a@mail.gmail.com> (sfid-20071126_171203_879568_DB8DC027)
-Date: Mon, 26 Nov 2007 19:11:51 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "=?ISO-8859-1?Q?Miguel_Bot=F3n?=" <mboton.lkml@gmail.com>
-Subject: Re: [PATCH 2/2] iwlwifi: add power management support -v2
-Cc: "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	yi.zhu@intel.com
-In-Reply-To: <200711261718.14711.mboton@gmail.com>
+	Mon, 26 Nov 2007 22:50:09 -0500
+Date: Mon, 26 Nov 2007 19:49:34 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	drago01 <drago01@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
+Message-ID: <20071127034934.GD5698@jm.kir.nu> (sfid-20071127_035016_352047_C8523E5B)
+References: <47494851.4070504@gmail.com> <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com> <1196079245.4149.255.camel@johannes.berg> <1196093064.4202.46.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200711170006.49654.mboton.lkml@gmail.com>
-	 <1ba2fa240711162215p30b8bc7fj9f36020378ff596a@mail.gmail.com>
-	 <200711261718.14711.mboton@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1196093064.4202.46.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 26, 2007 6:18 PM, Miguel Bot=F3n <mboton.lkml@gmail.com> wrote:
->
-> On Saturday 17 November 2007 07:15:05 Tomas Winkler wrote:
-> > Why power management shouldn't be enabled while in AC? The semantic=
- of this
-> > ioctls is quite unclear.
->
-I
-> IWL_POWER_AC and IWL_POWER_BATTERY are just two power modes. IWL_POWE=
-R_AC
-> would be the default power mode when we're in AC (no power saving) an=
-d
-> IWL_POWER_BATTERY would be the default power mode when we're in batte=
-ry
-> (power saving mode). That's why we set IWL_POWER_ENABLED flag with
-> IWL_POWER_BATTERY, because it is the only power mode that saves power=
-=2E
->
-> We can change to IWL_POWER_BATTERY or IWL_POWER_AC in any moment.
->
-> This patch, depending if power management is enabled or not, sets whi=
-ch power
-> mode we should use, Then, it checks if we're already using this mode =
-or not.
->
-I'm not sure who introduced this names (lazy to look to history) but
-that's very misleading. Nothing says that while in
-AC we cannot do power saving and vice versa. This naming is scattered
-all over the code, there should be only one place where AC and BATTERY
-are  translated into appropriate (maybe configurable) power levels. We
-have 5 power levels defined for iwlwifi.
+On Mon, Nov 26, 2007 at 11:04:24AM -0500, Dan Williams wrote:
 
-Tomas
+> Because in the case of hidden SSIDs, wpa_supplicant pretty much says to
+> use ap_scan=2.
 
-> --
->        Miguel Bot=F3n
->
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Or ap_scan=1 with scan_ssid if and only if the driver supports it..
+
+> 2) scan_ssid=1 hasn't worked consistently on all drivers because it's
+> pretty new and many drivers don't support it yet.  This is supposed to
+> make the driver/firmware send out probe request for the SSID in
+> question.
+
+This is not only a driver issue, though. I believe there are full MAC
+cards that do not support scan request with a specific SSID and the only
+way to make them work with hidden SSIDs is to try to associate with the
+SSID (i.e., use ap_scan=2).
+
+In theory, wpa_supplicant could try to figure out whether the scan with
+a specific SSID works or not (though, this is not that easy to do since
+old drivers are likely to just ignore the provided SSID and do a
+wildcard scan) and if that is the case, start probing the network with
+ap_scan=2 like behavior. This would mean that it would go through the
+configured networks and try to associate with each that is enabled and
+marked with scan_ssid=1. If association is completed successfully, the
+network could be added to scan results (at this point, the driver would
+also be more likely to actually include it in the scan results, so
+proper data could now be available).
+
+The main problem with this is that it can take quite long time to do
+this kind of association probing just to be able to get scan results.
+Furthermore, at least some cards may require a full match in security
+parameters, i.e., each SSID could potentially require multiple
+association attempts (assuming the network block was not configured with
+explicit security parameters).
+
+Taken into account how much I like hidden SSIDs, I would likely just
+prefer to ignore the issue and try to make people use proper security
+with visible SSIDs if they want to limit access to their network. Use of
+hidden SSIDs is just plain horrible way of making clients suffer without
+any level of increased security.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
