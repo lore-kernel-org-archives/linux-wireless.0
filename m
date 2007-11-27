@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:28453 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755163AbXK0A2E (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:42040 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750793AbXK0FCz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 19:28:04 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1802856pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 16:28:02 -0800 (PST)
-Message-ID: <43e72e890711261628j3aa9325ch8ea4284de18beb30@mail.gmail.com> (sfid-20071127_002809_176683_2F5E8ECB)
-Date: Mon, 26 Nov 2007 19:28:02 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 1/3] ath5k: fix noise floor calibration
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com
-In-Reply-To: <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+	Tue, 27 Nov 2007 00:02:55 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
+Date: Tue, 27 Nov 2007 00:06:16 -0500
+Cc: Tony Breeds <tony@bakeyournoodle.com>,
+	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <200711262337.49178.flamingice@sourmilk.net> <20071126205559.dfaf1a56.akpm@linux-foundation.org>
+In-Reply-To: <20071126205559.dfaf1a56.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
-	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1290261.VKdncilzpt";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200711270006.20431.flamingice@sourmilk.net> (sfid-20071127_050258_181019_299650C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 23, 2007 5:52 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+--nextPart1290261.VKdncilzpt
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-> index 3c2a67c..9b91121 100644
-> --- a/drivers/net/wireless/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath5k/phy.c
-> @@ -1519,6 +1519,51 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
->  /*****************\
->    PHY calibration
->  \*****************/
-> +int
-> +ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
-> +{
+On Monday 26 November 2007 23:55:59 Andrew Morton wrote:
+> On Mon, 26 Nov 2007 23:37:48 -0500 Michael Wu <flamingice@sourmilk.net>=20
+wrote:
+> > On Monday 26 November 2007 21:54:23 Andrew Morton wrote:
+> > > Why not just rename one of them?
+> >
+> > Wait, why does renaming just one of them work?
+>
+> umm, well I assume that the failure is because we're trying to link two
+> identically-named symbols together?
+But there's more than one pair..
 
-Good idea :) Mind adding kdoc for this? I hope we can add kdoc for
-more hw stuff to eventually export this automatically as developer
-documentation.
+rtl8180_rtl8225.h:
+void rtl8225_rf_init(struct ieee80211_hw *);
+void rtl8225z2_rf_init(struct ieee80211_hw *);
+void rtl8225_rf_stop(struct ieee80211_hw *);
 
-> +       int ret;
-> +       unsigned int i;
-> +       s32 noise_floor;
-> +
-> +       /*
-> +        * Enable noise floor calibration and wait until completion
-> +        */
-> +       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
-> +                               AR5K_PHY_AGCCTL_NF);
+rtl8187_rtl8225.h:
+void rtl8225_rf_init(struct ieee80211_hw *);
+void rtl8225z2_rf_init(struct ieee80211_hw *);
+void rtl8225_rf_stop(struct ieee80211_hw *);
 
-This is minor but you probably noticed ath5k_hw_rf511x_calibrate()
-only enables noise floor calibration but does not actually wait and
-check for the value. I am not sure why. Anyone? Anyway, until we do
-how about wrapping the AR5K_REG_ENABLE_BITS for noise floor into a
-small static inline ath5k_hw_enable_noise_floor(). Then your new
-routine can call it and so can ath5k_hw_rf511x_calibrate().
+=2DMichael Wu
 
-> +       ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-> +               "noise floor %d, %d\n", noise_floor, AR5K_TUNE_NOISE_FLOOR);
+--nextPart1290261.VKdncilzpt
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-This relies on your previous debug.[ch] patches which are pending.
-Just a note, next time you may want to mention this, just so that if
-someone wants to test this they'll know how to get to test it without
-compilation problems. It'll also help John know if he can apply this
-or if he has to wait for pending patches.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-  Luis
+iD8DBQBHS6XMT3Oqt9AH4aERAnskAJ98cmIi+/XhbTW51QQFDOF3f06d5gCgucIe
+8KeKxLD1nSK5n+lXy/Gc2mU=
+=Q/Bq
+-----END PGP SIGNATURE-----
+
+--nextPart1290261.VKdncilzpt--
