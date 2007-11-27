@@ -1,69 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:4718 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751020AbXKXPCX (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36141 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753356AbXK0Czp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 10:02:23 -0500
-Date: Sat, 24 Nov 2007 23:02:16 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>,
-	David Miller <davem@davemloft.net>
-Subject: Re: ZD1211RW unaligned accesses...
-Message-ID: <20071124150216.GA28153@gondor.apana.org.au> (sfid-20071124_150232_566838_9632FC4F)
-References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com>
+	Mon, 26 Nov 2007 21:55:45 -0500
+Date: Mon, 26 Nov 2007 18:54:23 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: tony@bakeyournoodle.com (Tony Breeds)
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail -
+ net/wireless driver
+Message-Id: <20071126185423.9280b263.akpm@linux-foundation.org> (sfid-20071127_025549_190917_3067B617)
+In-Reply-To: <20071127023430.GA24243@bakeyournoodle.com>
+References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org>
+	<4742DFC3.80305@linux.vnet.ibm.com>
+	<20071127005950.GZ24243@bakeyournoodle.com>
+	<200711262120.13218.flamingice@sourmilk.net>
+	<20071127023430.GA24243@bakeyournoodle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47442BFC.8090008@hotmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 21, 2007 at 01:00:44PM +0000, Shaddy Baddah wrote:
->
-> It hasn't seemed to. I patched the source (confirming the patched lines 
-> are in), compiled, installed and rebooted to effect the changes. My 
-> zd1211rw modules timestamp indicates that I have an updated module:
+On Tue, 27 Nov 2007 13:34:30 +1100 tony@bakeyournoodle.com (Tony Breeds) wrote:
 
-Thanks for your quick response and sorry for my late answer :)
+> On Mon, Nov 26, 2007 at 09:20:08PM -0500, Michael Wu wrote:
+> 
+> > I would rather have a patch to temporarily not allow them to be built into the 
+> > kernel. (or only allow one at a time to be built as a module) There's no 
+> > issues when these drivers are compiled as modules.
+> 
+> Perhaps as below?
+>  
+> > It's mostly the rtl8225 radio tuning code that's similar. They're not exactly 
+> > the same though, so it'll be a bit messy to merge the usb rtl8225 radio 
+> > tuning and pci rtl8225 radio tuning code. However, I do think it'll be better 
+> > overall so the merger of that code is planned.
+> 
+> okay, the diff between the 2 drivers doesn't look too bad really, but as
+> you say it won't be trivial to merge them.
+>  
+> From: Tony Breeds <tony@bakeyournoodle.com>
+> 
+> Temporarily ensure that Realtek 8185 and 8187 can only be built as modules.
+> 
+> These two drivers share a number of common (global) functions.  While a better
+> long term solution is developed lets ensure that they are never built into
+> the kernel, to avoid symbol conflicts.
+> 
+> Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
+> 
+> ---
+> 
+>  drivers/net/wireless/Kconfig |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index 82e5de7..023dd9d 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -555,11 +555,13 @@ config USB_ZD1201
+>  config RTL8180
+>  	tristate "Realtek 8185 PCI support"
+>  	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+> +	depends on m
+>  	select EEPROM_93CX6
+>  
+>  config RTL8187
+>  	tristate "Realtek 8187 USB support"
+>  	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
+> +	depends on m
+>  	select EEPROM_93CX6
+>  	---help---
+>  	  This is a driver for RTL8187 based cards.
+> 
 
-I think Dave's patch is definietly on the right track but there
-are subsequent unaligned accesses of a similar kind which is
-why it still appears to be broken if you look at the kernel
-messages.
+<head spins>
 
-But there is definitely progress because those addresses are now
-bigger (0x394/0x39c/0x3a8 vs. 0x2** earlier).
+Why not just rename one of them?
 
-So please try the following patch (instead of the original one)
-which should fix all the unailgned accesses in do_rx.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
---
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index a903645..d06b05b 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -1166,15 +1166,16 @@ static void do_rx(unsigned long mac_ptr)
- int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
- {
- 	struct sk_buff *skb;
-+	unsigned int hlen = ALIGN(sizeof(struct zd_rt_hdr), 16);
+diff -puN drivers/net/wireless/rtl8187_dev.c~a drivers/net/wireless/rtl8187_dev.c
+--- a/drivers/net/wireless/rtl8187_dev.c~a
++++ a/drivers/net/wireless/rtl8187_dev.c
+@@ -764,7 +764,7 @@ static int __devinit rtl8187_probe(struc
+ 	if (rtl8225_read(dev, 8) != 0x588 || rtl8225_read(dev, 9) != 0x700)
+ 		priv->rf_init = rtl8225_rf_init;
+ 	else
+-		priv->rf_init = rtl8225z2_rf_init;
++		priv->rf_init = rtl8187_rf_init;
  
--	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
-+	skb = dev_alloc_skb(hlen + length);
- 	if (!skb) {
- 		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
- 		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
- 		ieee->stats.rx_dropped++;
- 		return -ENOMEM;
- 	}
--	skb_reserve(skb, sizeof(struct zd_rt_hdr));
-+	skb_reserve(skb, hlen - ZD_PLCP_HEADER_SIZE);
- 	memcpy(__skb_put(skb, length), buffer, length);
- 	skb_queue_tail(&mac->rx_queue, skb);
- 	tasklet_schedule(&mac->rx_tasklet);
+ 	rtl8225_write(dev, 0, 0x0B7);
+ 
+diff -puN drivers/net/wireless/rtl8187_rtl8225.c~a drivers/net/wireless/rtl8187_rtl8225.c
+--- a/drivers/net/wireless/rtl8187_rtl8225.c~a
++++ a/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -567,7 +567,7 @@ static const u8 rtl8225z2_gain_bg[] = {
+ 	0x63, 0x15, 0xc5  /* -66dBm */
+ };
+ 
+-void rtl8225z2_rf_init(struct ieee80211_hw *dev)
++void rtl8187_rf_init(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	int i;
+diff -puN drivers/net/wireless/rtl8187_rtl8225.h~a drivers/net/wireless/rtl8187_rtl8225.h
+--- a/drivers/net/wireless/rtl8187_rtl8225.h~a
++++ a/drivers/net/wireless/rtl8187_rtl8225.h
+@@ -24,7 +24,7 @@ void rtl8225_write(struct ieee80211_hw *
+ u16  rtl8225_read(struct ieee80211_hw *, u8 addr);
+ 
+ void rtl8225_rf_init(struct ieee80211_hw *);
+-void rtl8225z2_rf_init(struct ieee80211_hw *);
++void rtl8187_rf_init(struct ieee80211_hw *);
+ void rtl8225_rf_stop(struct ieee80211_hw *);
+ void rtl8225_rf_set_channel(struct ieee80211_hw *, int);
+ 
+_
+
