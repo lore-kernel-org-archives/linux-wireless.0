@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52034
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752775AbXKWNtS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899AbXK0ONo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 08:49:18 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH V2] b43: Changes to enable BCM4311 rev 02 with wireless core revision 13
-Date: Fri, 23 Nov 2007 14:47:18 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4744a544.OLz3JRLe85L+V2nd%Larry.Finger@lwfinger.net> <200711221834.32026.mb@bu3sch.de> <474666F7.6090405@lwfinger.net>
-In-Reply-To: <474666F7.6090405@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711231447.19262.mb@bu3sch.de> (sfid-20071123_134920_545237_A6356941)
+	Tue, 27 Nov 2007 09:13:44 -0500
+Subject: Re: [RFC/T][PATCH][V3] mac80211: Exponential moving average
+	estimate for rc80211_simple
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <1196112605.8318.6.camel@localhost> (sfid-20071126_213044_416915_EDBE20FD)
+References: <1196112605.8318.6.camel@localhost>
+	 (sfid-20071126_213044_416915_EDBE20FD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f/uOGEA3qX8FsjBCGQqP"
+Date: Tue, 27 Nov 2007 15:13:34 +0100
+Message-Id: <1196172814.6058.23.camel@johannes.berg> (sfid-20071127_141348_000748_0A331296)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 November 2007 06:36:55 Larry Finger wrote:
-> Michael Buesch wrote:
-> > 
-> > partially acked.
-> > Though, I'm not quite sure yet why you remove that
-> > address extension bits. The specs clearly say that they _are_ there.
-> > And it makes sense to use them, as two bytes of the address are used
-> > for the routing stuff. So the highest 2 bits of the address have to be put
-> > somewhere else. That's the "Transmit Channel Control Word" and
-> > "Receive Channel Control Word" where 0x00030000 are the extension bits.
-> > 
-> 
-> The appropriate section of dmacontroller_setup() in my patched source is as follows:
-> 
->         if (ring->tx) {
->                 if (ring->dma64) {
->                         u64 ringbase = (u64) (ring->dmabase);
-> 
->                         b43_dma_write(ring, B43_DMA64_TXCTL,
->                                       B43_DMA64_TXENABLE);
->                         b43_dma_write(ring, B43_DMA64_TXRINGLO,
->                                       (ringbase & 0xFFFFFFFF));
->                         b43_dma_write(ring, B43_DMA64_TXRINGHI,
->                                       (ringbase >> 32));
->                 } else {
-> 			...... untouched 32-bit stuff ....
-> 		}
->         } else {
->                 err = alloc_initial_descbuffers(ring);
->                 if (err)
->                         goto out;
->                 if (ring->dma64) {
->                         u64 ringbase = (u64) (ring->dmabase);
-> 
->                         value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT)
->                                 | B43_DMA64_RXENABLE;
->                         b43_dma_write(ring, B43_DMA64_RXCTL, value);
->                         b43_dma_write(ring, B43_DMA64_RXRINGLO,
->                                       (ringbase & 0xFFFFFFFF));
->                         b43_dma_write(ring, B43_DMA64_RXRINGHI,
->                                       (ringbase >> 32));
->                         b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
->                                       sizeof(struct b43_dmadesc64));
->                 } else {
-> 			........... 32-bit stuff ........
-> 	}
-> 
-> No address extensions are used here because the specs clearly state that a flat 64-bit address is
-> used to specify the Descriptor Ring address. My code matches the specs.
 
-I'm not sure which specifications you use, but here it clearly describes the
-extension bits:
-http://bcm-v4.sipsolutions.net/802.11/DMA#TransmitChannelControlWord-1
+--=-f/uOGEA3qX8FsjBCGQqP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > However I do think that this might be related to the bug you are explaining
-> > in the comment:
-> >> +	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
-> >> +	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
-> >> +	 * which accounts for the GFP_DMA flag below.
 
-> the error, and that part does not use any extension bits. Secondly, the address extension stuff
-> would only apply if my computer had more than 2^(62) bytes of RAM, which is something like 10
-> billion GB - an amount that probably exceeds the total RAM in the world.
+On Mon, 2007-11-26 at 22:30 +0100, Mattias Nissler wrote:
+> This changes rc80211_simple failed frame percentage estimation to use an
+> exponential moving average method. Failed frames percentage is sampled ov=
+er
+> time and a smoothed average is computed. This average is examined periodi=
+cally
+> and the rate adjusted eventually.
+>=20
+> Compared to the old method this new approach is much more responsive. The=
+ old
+> method used plain tx success/failure counters. This made rate control ver=
+y
+> unresponsive after a short time of using the interface, since old data wo=
+uldn't
+> age properly.
 
-This is not true. We live in a world with IO-MMUs.
+Sounds sane and better than before. If it works we can apply this I
+guess.
 
--- 
-Greetings Michael.
+johannes
+
+--=-f/uOGEA3qX8FsjBCGQqP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0wmDaVg1VMiehFYAQIIzQ//cESKDahfMvLKfreuxxij2Lafl7+nBEus
+4W/9Pk+UxJbITG+NO4E66hMU5h7r8vTS1ZV+DdR97IVeCEy6jJxnCS2ZA7s1iGnv
+5UUj2/3cRlQafbkKGSaGWcUJj6NILgzgTwC6sVAy18XEG42r41dAE1X9lqLXKGVD
+k2a3JF+fonljbbi3qARtn/lTJbOvfHEYEDGwVHX8cVa+6VkFRBl5Hj2/YtD2q4ub
+uENjXm1B8qbzan5UddgSpinlG7YvsbY6LriBEnydk3Zr0ivlYoSqgKEnD4FjOiJF
+TSIc7vlJIxmakQgkPY/ppaxBAPrnv+i+DAS1RsxE8sL42K0sORWMBvOrw+NTGjFO
+EIsfeD0fpYD5RmaGluw9COp82esjZ3aEXA0uvyfhNghJCox6kvIf3Sral2nxaL8k
+3wKq8kQl0l3zkz8Xs+kh/8vdBPPRC8eSTC0ETxAU8/QhLwzlx+R2z4qeb8Hq/nIq
+AW/mMhOGeEhKGh5DEhh2+6NV4ct3+R/fMOrYMFPmlDN1sm7ginY98IM0z3rXNUb9
+lMibsMSq5XMSbuDhWQKTwYq78dsGxPr+2Dd6XHt/6xhQJN6QnH7ai/pi9NgVyZhE
+rbmPYnSBjnH6p92YUfw/TK2hV199+tHEJ9K9761nEHAktPtux2KafOH4IhUfpmm2
+iD5FPD6u5ks=
+=W6tp
+-----END PGP SIGNATURE-----
+
+--=-f/uOGEA3qX8FsjBCGQqP--
+
