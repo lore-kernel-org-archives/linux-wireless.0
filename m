@@ -1,129 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48672 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760974AbXKTWri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:47:38 -0500
-Subject: [PATCH 3/6] libertas: reset devices upon disconnect rather than
-	module unloading
-From: Dan Williams <dcbw@redhat.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:23631 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbXK0Tjq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2007 14:39:46 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1321058ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:45 -0800 (PST)
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andres Salomon <dilinger@debian.org>
-Content-Type: text/plain
-Date: Tue, 20 Nov 2007 17:43:55 -0500
-Message-Id: <1195598635.32309.28.camel@localhost.localdomain> (sfid-20071120_224741_813247_5324F90E)
-Mime-Version: 1.0
+Subject: [PATCH 04/11] rt2x00: Add chipset version to chipset debugfs entry
+Date: Tue, 27 Nov 2007 21:48:37 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711272146.53518.IvDoorn@gmail.com>
+In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711272148.37470.IvDoorn@gmail.com> (sfid-20071127_194249_297375_B1DC2E0C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Salomon <dilinger@debian.org>
+The chipset debugfs entry already indicates it is about the chipset,
+it only makes sense to also display the chipset version in there.
 
-1) Do not reset libertas devices upon module unload.  We're unloading
-the module, we're not killing off devices.
-2) Instead, reset libertas devices inside if_usb_disconnect, as we're
-killing off interfaces and so on.
-3) Resetting via disconnect callback means we no longer need to keep
-track of probed libertas devices; kill off that list (and its wonderful
-lack of locking..), as well.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-Drop a useless comment as well.
-
-Signed-off-by: Andres Salomon <dilinger@debian.org>
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index f7d2b46..4d4f757 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -5,7 +5,6 @@
- #include <linux/moduleparam.h>
- #include <linux/firmware.h>
- #include <linux/netdevice.h>
--#include <linux/list.h>
- #include <linux/usb.h>
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 92efc5a..3aa7e0a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -251,16 +251,21 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	const struct rt2x00debug *debug = intf->debug;
+ 	char *data;
  
- #define DRV_NAME "usb8xxx"
-@@ -23,15 +22,6 @@ static const char usbdriver_name[] = "usb8xxx";
- static char *lbs_fw_name = "usb8388.bin";
- module_param_named(fw_name, lbs_fw_name, charp, 0644);
+-	data = kzalloc(4 * PRINT_LINE_LEN_MAX, GFP_KERNEL);
++	data = kzalloc(8 * PRINT_LINE_LEN_MAX, GFP_KERNEL);
+ 	if (!data)
+ 		return NULL;
  
--/*
-- * We need to send a RESET command to all USB devices before
-- * we tear down the USB connection. Otherwise we would not
-- * be able to re-init device the device if the module gets
-- * loaded again. This is a list of all initialized USB devices,
-- * for the reset code see if_usb_reset_device()
--*/
--static LIST_HEAD(usb_devices);
--
- static struct usb_device_id if_usb_table[] = {
- 	/* Enter the device signature inside */
- 	{ USB_DEVICE(0x1286, 0x2001) },
-@@ -244,8 +234,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 	if (lbs_start_card(priv))
- 		goto err_start_card;
- 
--	list_add_tail(&cardp->list, &usb_devices);
--
- 	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
- 
-@@ -279,8 +267,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 	/* Update Surprise removed to TRUE */
- 	cardp->surprise_removed = 1;
- 
--	list_del(&cardp->list);
--
- 	if (priv) {
- 		lbs_adapter *adapter = priv->adapter;
- 
-@@ -290,6 +276,10 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 		lbs_remove_card(priv);
- 	}
- 
-+	/* this is (apparently?) necessary for future usage of the device */
-+	lbs_prepare_and_send_command(priv, CMD_802_11_RESET, CMD_ACT_HALT,
-+			0, 0, NULL);
+-	blob->data = data;
++	data += sprintf(data, "rt chip: %04x\n", intf->rt2x00dev->chip.rt);
++	data += sprintf(data, "rf chip: %04x\n", intf->rt2x00dev->chip.rf);
++	data += sprintf(data, "revision:%08x\n", intf->rt2x00dev->chip.rev);
++	data += sprintf(data, "\n");
+ 	data += sprintf(data, "csr length: %d\n", debug->csr.word_count);
+ 	data += sprintf(data, "eeprom length: %d\n", debug->eeprom.word_count);
+ 	data += sprintf(data, "bbp length: %d\n", debug->bbp.word_count);
+ 	data += sprintf(data, "rf length: %d\n", debug->rf.word_count);
+-	blob->size = strlen(blob->data);
 +
- 	/* Unlink and free urb */
- 	if_usb_free(cardp);
++	blob->data = data;
++	blob->size = strlen(data);
  
-@@ -1034,16 +1024,8 @@ static int __init if_usb_init_module(void)
- 
- static void __exit if_usb_exit_module(void)
- {
--	struct usb_card_rec *cardp, *cardp_temp;
--
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
--	list_for_each_entry_safe(cardp, cardp_temp, &usb_devices, list) {
--		lbs_prepare_and_send_command(cardp->priv, CMD_802_11_RESET,
--		                                  CMD_ACT_HALT, 0, 0, NULL);
--	}
--
--	/* API unregisters the driver from USB subsystem */
- 	usb_deregister(&if_usb_driver);
- 
- 	lbs_deb_leave(LBS_DEB_MAIN);
-diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
-index 9b42308..f53ddb2 100644
---- a/drivers/net/wireless/libertas/if_usb.h
-+++ b/drivers/net/wireless/libertas/if_usb.h
-@@ -1,8 +1,6 @@
- #ifndef _LBS_IF_USB_H
- #define _LBS_IF_USB_H
- 
--#include <linux/list.h>
--
- /**
-   * This file contains definition for USB interface.
-   */
-@@ -44,7 +42,6 @@ struct read_cb_info {
- 
- /** USB card description structure*/
- struct usb_card_rec {
--	struct list_head list;
- 	struct net_device *eth_dev;
- 	struct usb_device *udev;
- 	struct urb *rx_urb, *tx_urb;
+ 	return debugfs_create_blob(name, S_IRUGO, intf->driver_folder, blob);
+ }
+-- 
+1.5.3.6
 
