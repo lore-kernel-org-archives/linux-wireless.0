@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:60960 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196AbXKYRau (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49313 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268AbXK0QIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 12:30:50 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so126210nze
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Nov 2007 09:30:49 -0800 (PST)
-Message-ID: <6995ca080711250930x14a2975ub9b11d9da97639f2@mail.gmail.com> (sfid-20071125_173054_744210_0E5E42FF)
-Date: Sun, 25 Nov 2007 12:30:48 -0500
-From: "Vadim Peretokin" <vperetokin@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Belin FD7010 v7
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1195954954.10279.4.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <6995ca080711221239t2947765ds765fd933fce5de31@mail.gmail.com>
-	 <1195781993.11966.27.camel@dv>
-	 <6995ca080711221804w7310134aw8a5902e45aa09942@mail.gmail.com>
-	 <1195784707.11966.38.camel@dv>
-	 <6995ca080711230736n54330d30s96831a664d46df1c@mail.gmail.com>
-	 <1195879405.7449.62.camel@dv>
-	 <6995ca080711241054s4aeca1f9r2496a36f93a9db43@mail.gmail.com>
-	 <20071124143310.a7pta1f4lc0k4ok0@webmail.spamcop.net>
-	 <6995ca080711241246kbb09472k777c2082a41b692a@mail.gmail.com>
-	 <1195954954.10279.4.camel@dv>
+	Tue, 27 Nov 2007 11:08:18 -0500
+Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>, Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ian Schram <ischram@telenet.be>
+In-Reply-To: <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com> (sfid-20071127_160657_238828_CAEE533A)
+References: <20071126225416.467939000@sipsolutions.net>
+	 <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com>
+	 <1196175476.6058.25.camel@johannes.berg>
+	 <1ba2fa240711270800p3312246as51b0a23f77e81f3@mail.gmail.com>
+	 <1196179471.6058.41.camel@johannes.berg>
+	 <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com>
+	 (sfid-20071127_160657_238828_CAEE533A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GvPcHadzwOqL5EZkw4f8"
+Date: Tue, 27 Nov 2007 17:08:07 +0100
+Message-Id: <1196179687.6058.45.camel@johannes.berg> (sfid-20071127_160820_348624_110B745D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed, that was horrid typing. My keyboard is okay though hehe.
 
-And thank you, when will I be able to test the driver again then?
+--=-GvPcHadzwOqL5EZkw4f8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Nov 24, 2007 8:42 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Sat, 2007-11-24 at 15:46 -0500, Vadim Peretokin wrote:
-> > Yes! Yes there was a new_id thing that we used echo on.
-> >
-> > Here is the output of that command:
-> >
-> > vadi@vadi-laptop:~$ lspci -n
-> [skip]
-> > 03:00.0 0200: 1799:701f (rev 20)
->
-> I've submitted a patch to add that ID to the driver.  Just for the
-> record, it's actually Belkin F5D7010 v7.  You lost "k" and "5" in the
-> subject, check your keyboard :)
->
-> --
-> Regards,
-> Pavel Roskin
->
+
+On Tue, 2007-11-27 at 18:06 +0200, Tomas Winkler wrote:
+> sorry for stupid question but what is the git for 24.?
+
+I don't think we have anything pending in git or I guess John would
+probably call it upstream-fixes-jgarzik or something. I diff against
+Linus's tree right now.
+
+johannes
+
+--=-GvPcHadzwOqL5EZkw4f8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR0xA5qVg1VMiehFYAQJ9lA//YHStGsVDc6rBLORMcEIQCe/u8PKIRKOH
+3IIhbARum6bCDcRXeSIBzHy6rRAFlIGC8BGvUuZCeFniu9I8tm5OAfuRDJaAnSjm
+apUQak9MhNEXjkmwb2sZExNrDv0y/y7tnmYLwp9tD3wvpsE+PfzU1SiDkB3qQ0eF
+QoB4K5puTpzeP7fqfF/Btw5RUTSg/jgtabI9TQxiyXm75autp/ugl2U3eEP1v/z7
+gteLPZTJbXd4+3260gDvUQjHgd4mQK44xut5bO2QfoW7cmiTMx3WuJl6DU3TzhU8
+XrxH9/+C1qx7n40XI5DaOwXt+30pg3J1M5D6EWaBhRQGSKW65I6LHuzBWnIDJAUv
+m4Y9Vgtysf0QZvsRMZg8/wtYTpyes/QCMRSIvbic19Y8kvL6JpIPZWyN+nq4Srbl
+gM/6vPskXgXiO2uGzeOhTHXNwC/n/6YbbZTEah5RcXxpsgRbZdzlJVWwzGmiERwP
+nCHVOBYjS5ujzkUBSsTrUcg6Fu0lYBKzpYXtnZMA36U2W8OvnK58TKGuFZRILP2i
+Y3vxyQ20bM98kOt1VzJwQrBZ3Ou2oLK5lRMw0iOHqmwx7VImt4JOIQy/xjKo2EE9
+nF5ZGON96BdLCwSg1WTvTx5YcbbQUywvqAbtGzpH9MadoUFzPx40ZEyFhoIPV1cH
+Wqw84UpGWv4=
+=wQyE
+-----END PGP SIGNATURE-----
+
+--=-GvPcHadzwOqL5EZkw4f8--
+
