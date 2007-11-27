@@ -1,31 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:20446 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759336AbXKAWWB (ORCPT
+Received: from pythia.bakeyournoodle.com ([203.82.209.197]:36657 "EHLO
+	pythia.bakeyournoodle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752499AbXK0Bec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 18:22:01 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so557029ugc
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 15:22:00 -0700 (PDT)
-Message-ID: <472A5184.8040103@gmail.com> (sfid-20071101_222226_358318_F7FB06D6)
-Date: Thu, 01 Nov 2007 23:21:56 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Mon, 26 Nov 2007 20:34:32 -0500
+Date: Tue, 27 Nov 2007 11:59:50 +1100
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mick@madwifi.org,
+	netdev@vger.kernel.org, Andy Whitcroft <apw@shadowen.org>,
+	Balbir Singh <balbir@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail - net/wireless driver
+Message-ID: <20071127005950.GZ24243@bakeyournoodle.com> (sfid-20071127_013434_944481_15DF46D4)
+References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org> <4742DFC3.80305@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 5/7] ath5k: Move OFDM timings into a helper routine
-References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo> <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo> <20071101215318.GC4182@pogo> <472A4BBD.4050207@gmail.com>
-In-Reply-To: <472A4BBD.4050207@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4742DFC3.80305@linux.vnet.ibm.com>
+From: tony@bakeyournoodle.com (Tony Breeds)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2007 10:57 PM, Jiri Slaby wrote:
-> Note, that BUG can return (on configurations where !CONFIG_BUG). It is my fault
-> writing you it won't, sorry! Could you post a patch which will add return from
-> here and also from places where the BUG() is used in other places?
+On Tue, Nov 20, 2007 at 06:53:15PM +0530, Kamalesh Babulal wrote:
+> Hi Andrew,
+> 
+> The kernel build fails, with following message
+> 
+>   LD      drivers/net/wireless/built-in.o
+> drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
+> (.opd+0x180): multiple definition of `rtl8225z2_rf_init'
+> drivers/net/wireless/rtl8180.o:(.opd+0x1b0): first defined here
+> drivers/net/wireless/rtl8187.o: In function `rtl8225z2_rf_init':
+> /root/linux-2.6.24-rc3/drivers/net/wireless/rtl8187_rtl8225.c:571: multiple definition of `.rtl8225z2_rf_init'
+> drivers/net/wireless/rtl8180.o:/root/linux-2.6.24-rc3/drivers/net/wireless/rtl8180_rtl8225.c:561: first defined here
+> ld: Warning: size of symbol `.rtl8225z2_rf_init' changed from 3836 in drivers/net/wireless/rtl8180.o to 3544 in drivers/net/wireless/rtl8187.o
 
-Ok, after a talk we agreed, that making the BUG() a void is non-recommended
-option on embedded and we can let the patch as it is. Hence it is
-Acked-by: Jiri Slaby <jirislaby@gmail.com>
+<snip>
+
+The patch below is a little ugly but will allow allyesconfig to work.  I
+don't know enough about the Realtek devices to make intellegent
+suggestions on how to fix this particular problem.  Clearly the 2
+drivers share a lot of common code so perhaps they can be merged?
+
+I assumed that the RTL8180, is still somewhat WiP based on the commit
+message for a2645795713c4374ff2efda960251cdc30b63430 (wireless-2.6.git).
+
+Appologies for the uber long CC line, wasn't sure who can be pruned.
+
+From: Tony Breeds <tony@bakeyournoodle.com>
+
+Temporarily ensure that Realtek 8185 and 8187 aren't compiled together.
+
+These two drivers share a number of common (global) functions.  While RTL8180
+is still being worked on ensure that it's not built together with the RTL8187
+(ie allyseconfig).
+
+Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
+
+---
+
+ drivers/net/wireless/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 82e5de7..ab2eac0 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -555,6 +555,7 @@ config USB_ZD1201
+ config RTL8180
+ 	tristate "Realtek 8185 PCI support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
++	depends on !RTL8187
+ 	select EEPROM_93CX6
+ 
+ config RTL8187
+
+Yours Tony
+
+  linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
+  Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
+
