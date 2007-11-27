@@ -1,306 +1,424 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63227 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753384AbXKABni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2007 21:43:38 -0400
-Subject: Re: iwl3945 in 2.6.24-rc1 dies under load
-From: Zhu Yi <yi.zhu@intel.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-wireless@vger.kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20071101001221.GA1755@elf.ucw.cz>
-References: <20071031005202.GA1534@elf.ucw.cz>
-	 <1193792098.9704.16.camel@debian.sh.intel.com>
-	 <20071101001221.GA1755@elf.ucw.cz>
-Content-Type: text/plain
-Date: Thu, 01 Nov 2007 09:37:06 +0800
-Message-Id: <1193881026.31257.52.camel@debian.sh.intel.com> (sfid-20071101_014342_257259_F1AC6F30)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.186]:16492 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755144AbXK0Tyo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2007 14:54:44 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1090951nfb
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:54:41 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/11] rt2x00: Add TX/RX frame dumping facility
+Date: Tue, 27 Nov 2007 21:49:29 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711272146.53518.IvDoorn@gmail.com>
+In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711272149.29390.IvDoorn@gmail.com> (sfid-20071127_211139_489382_989E056E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds TX/RX frame dumping capabilities through debugfs.
+The intention is that with this approach debugging of rt2x00 is
+simplified since _all_ frames going in and out of the device
+are send to debugfs as well along with additional information
+like the hardware descriptor.
 
-On Thu, 2007-11-01 at 01:12 +0100, Pavel Machek wrote:
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Start IWL Error Log Dump:
-> iwl3945: Status: 0x00010172, Config: 00000000 count: 1
-> iwl3945: Desc       Time       asrtPC  blink2 ilink1  nmiPC   Line
-> iwl3945: SYSASSERT     (#5) 0403761131 0x0089A 0x0025E 0x00300 0x073C2
-> 75
-> 
-> iwl3945: Start IWL Event Log Dump: display count 256, wraps 86422
-> iwl3945: 0000000256     0x0000006a      403761132
-> iwl3945: 0000000217     0x0000012d      403755413
-> iwl3945: 0000000047     0x00000161      8394228
-> iwl3945: 0000228273     0x00000160      403755488
-> iwl3945: 0000000000     0x0000006a      403755497
-> iwl3945: 0000000217     0x0000012d      403755504
-> iwl3945: 0000000000     0x00000161      403755506
-> iwl3945: 0000228274     0x00000160      403755577
-> iwl3945: 0000000000     0x0000006a      403755586
-> iwl3945: 0000000217     0x0000012d      403755593
-> iwl3945: 0000000000     0x00000161      403755595
-> iwl3945: 0000228275     0x00000160      403755668
-> iwl3945: 0000000000     0x0000006a      403755677
-> iwl3945: 0000000217     0x0000012d      403755684
-> iwl3945: 0000000000     0x00000161      403755686
-> iwl3945: 0000228276     0x00000160      403755757
-> iwl3945: 0000000000     0x0000006a      403755766
-> iwl3945: 0000000217     0x0000012d      403755773
-> iwl3945: 0000000000     0x00000161      403755775
-> iwl3945: 0000228277     0x00000160      403755849
-> iwl3945: 0000000000     0x0000006a      403755858
-> iwl3945: 0000000217     0x0000012d      403755865
-> iwl3945: 0000000000     0x00000161      403755866
-> iwl3945: 0000228278     0x00000160      403755941
-> iwl3945: 0000000000     0x0000006a      403755950
-> iwl3945: 0000000217     0x0000012d      403755957
-> iwl3945: 0000000000     0x00000161      403755958
-> iwl3945: 0000228279     0x00000160      403756032
-> iwl3945: 0000000000     0x0000006a      403756041
-> iwl3945: 0000000217     0x0000012d      403756048
-> iwl3945: 0000000000     0x00000161      403756050
-> iwl3945: 0000228280     0x00000160      403756123
-> iwl3945: 0000000000     0x0000006a      403756132
-> iwl3945: 0000000217     0x0000012d      403756139
-> iwl3945: 0000000000     0x00000161      403756141
-> iwl3945: 0000228281     0x00000160      403756212
-> iwl3945: 0000000000     0x0000006a      403756221
-> iwl3945: 0000000217     0x0000012d      403756228
-> iwl3945: 0000000000     0x00000161      403756230
-> iwl3945: 0000228282     0x00000160      403756303
-> iwl3945: 0000000000     0x0000006a      403756312
-> iwl3945: 0000000217     0x0000012d      403756319
-> iwl3945: 0000000000     0x00000161      403756321
-> iwl3945: 0000228283     0x00000160      403756392
-> iwl3945: 0000000000     0x0000006a      403756401
-> iwl3945: 0000000217     0x0000012d      403756408
-> iwl3945: 0000000000     0x00000161      403756410
-> iwl3945: 0000228284     0x00000160      403756484
-> iwl3945: 0000000000     0x0000006a      403756493
-> iwl3945: 0000000217     0x0000012d      403756500
-> iwl3945: 0000000000     0x00000161      403756502
-> iwl3945: 0000228285     0x00000160      403756576
-> iwl3945: 0000000000     0x0000006a      403756585
-> iwl3945: 0000000217     0x0000012d      403756592
-> iwl3945: 0000000000     0x00000161      403756594
-> iwl3945: 0000228286     0x00000160      403756667
-> iwl3945: 0000000000     0x0000006a      403756676
-> iwl3945: 0000000217     0x0000012d      403756683
-> iwl3945: 0000000000     0x00000161      403756685
-> iwl3945: 0000228287     0x00000160      403756758
-> iwl3945: 0000000000     0x0000006a      403756767
-> iwl3945: 0000000217     0x0000012d      403756774
-> iwl3945: 0000000000     0x00000161      403756776
-> iwl3945: 0000228288     0x00000160      403756847
-> iwl3945: 0000000000     0x0000006a      403756856
-> iwl3945: 0000000217     0x0000012d      403756863
-> iwl3945: 0000000000     0x00000161      403756865
-> iwl3945: 0000228289     0x00000160      403756938
-> iwl3945: 0000000000     0x0000006a      403756947
-> iwl3945: 0000000217     0x0000012d      403756954
-> iwl3945: 0000000000     0x00000161      403756956
-> iwl3945: 0000228290     0x00000160      403757027
-> iwl3945: 0000000000     0x0000006a      403757036
-> iwl3945: 0000000217     0x0000012d      403757043
-> iwl3945: 0000000000     0x00000161      403757045
-> iwl3945: 0000228291     0x00000160      403757118
-> iwl3945: 0000000000     0x0000006a      403757127
-> iwl3945: 0000000217     0x0000012d      403757134
-> iwl3945: 0000000000     0x00000161      403757136
-> iwl3945: 0000228292     0x00000160      403757207
-> iwl3945: 0000000000     0x0000006a      403757216
-> iwl3945: 0000000217     0x0000012d      403757223
-> iwl3945: 0000000000     0x00000161      403757225
-> iwl3945: 0000228293     0x00000160      403757296
-> iwl3945: 0000000000     0x0000006a      403757305
-> iwl3945: 0000000217     0x0000012d      403757312
-> iwl3945: 0000000000     0x00000161      403757314
-> iwl3945: 0000228294     0x00000160      403757387
-> iwl3945: 0000000000     0x0000006a      403757396
-> iwl3945: 0000000217     0x0000012d      403757403
-> iwl3945: 0000000000     0x00000161      403757405
-> iwl3945: 0000228295     0x00000160      403757477
-> iwl3945: 0000000000     0x0000006a      403757486
-> iwl3945: 0000000217     0x0000012d      403757493
-> iwl3945: 0000000000     0x00000161      403757494
-> iwl3945: 0000228296     0x00000160      403757566
-> iwl3945: 0000000000     0x0000006a      403757575
-> iwl3945: 0000000217     0x0000012d      403757582
-> iwl3945: 0000000000     0x00000161      403757584
-> iwl3945: 0000228297     0x00000160      403757675
-> iwl3945: 0000000000     0x0000006a      403757684
-> iwl3945: 0000000217     0x0000012d      403757690
-> iwl3945: 0000000000     0x00000161      403757692
-> iwl3945: 0000228298     0x00000160      403757763
-> iwl3945: 0000000000     0x0000006a      403757772
-> iwl3945: 0000000217     0x0000012d      403757779
-> iwl3945: 0000000000     0x00000161      403757781
-> iwl3945: 0000228299     0x00000160      403757852
-> iwl3945: 0000000000     0x0000006a      403757861
-> iwl3945: 0000000217     0x0000012d      403757868
-> iwl3945: 0000000000     0x00000161      403757870
-> iwl3945: 0000228300     0x00000160      403757942
-> iwl3945: 0000000000     0x0000006a      403757951
-> iwl3945: 0000000217     0x0000012d      403757958
-> iwl3945: 0000000000     0x00000161      403757960
-> iwl3945: 0000228301     0x00000160      403758033
-> iwl3945: 0000000000     0x0000006a      403758042
-> iwl3945: 0000000217     0x0000012d      403758049
-> iwl3945: 0000000000     0x00000161      403758051
-> iwl3945: 0000228302     0x00000160      403758123
-> iwl3945: 0000000000     0x0000006a      403758132
-> iwl3945: 0000000217     0x0000012d      403758139
-> iwl3945: 0000000000     0x00000161      403758140
-> iwl3945: 0000228303     0x00000160      403758214
-> iwl3945: 0000000000     0x0000006a      403758222
-> iwl3945: 0000000217     0x0000012d      403758229
-> iwl3945: 0000000000     0x00000161      403758231
-> iwl3945: 0000228304     0x00000160      403758302
-> iwl3945: 0000000000     0x0000006a      403758311
-> iwl3945: 0000000217     0x0000012d      403758318
-> iwl3945: 0000000000     0x00000161      403758320
-> iwl3945: 0000228305     0x00000160      403758391
-> iwl3945: 0000000000     0x0000006a      403758400
-> iwl3945: 0000000217     0x0000012d      403758407
-> iwl3945: 0000000000     0x00000161      403758409
-> iwl3945: 0000228306     0x00000160      403758483
-> iwl3945: 0000000000     0x0000006a      403758492
-> iwl3945: 0000000217     0x0000012d      403758499
-> iwl3945: 0000000000     0x00000161      403758500
-> iwl3945: 0000228307     0x00000160      403758575
-> iwl3945: 0000000000     0x0000006a      403758584
-> iwl3945: 0000000217     0x0000012d      403758591
-> iwl3945: 0000000000     0x00000161      403758592
-> iwl3945: 0000228308     0x00000160      403758666
-> iwl3945: 0000000000     0x0000006a      403758675
-> iwl3945: 0000000217     0x0000012d      403758682
-> iwl3945: 0000000000     0x00000161      403758684
-> iwl3945: 0000228309     0x00000160      403758757
-> iwl3945: 0000000000     0x0000006a      403758766
-> iwl3945: 0000000217     0x0000012d      403758773
-> iwl3945: 0000000000     0x00000161      403758775
-> iwl3945: 0000228310     0x00000160      403758846
-> iwl3945: 0000000000     0x0000006a      403758855
-> iwl3945: 0000000217     0x0000012d      403758862
-> iwl3945: 0000000000     0x00000161      403758864
-> iwl3945: 0000228311     0x00000160      403758937
-> iwl3945: 0000000000     0x0000006a      403758946
-> iwl3945: 0000000217     0x0000012d      403758953
-> iwl3945: 0000000000     0x00000161      403758955
-> iwl3945: 0000228312     0x00000160      403759026
-> iwl3945: 0000000000     0x0000006a      403759035
-> iwl3945: 0000000217     0x0000012d      403759042
-> iwl3945: 0000000000     0x00000161      403759044
-> iwl3945: 0000228313     0x00000160      403759118
-> iwl3945: 0000000000     0x0000006a      403759127
-> iwl3945: 0000000217     0x0000012d      403759134
-> iwl3945: 0000000000     0x00000161      403759136
-> iwl3945: 0000228314     0x00000160      403759210
-> iwl3945: 0000000000     0x0000006a      403759219
-> iwl3945: 0000000217     0x0000012d      403759226
-> iwl3945: 0000000000     0x00000161      403759228
-> iwl3945: 0000228315     0x00000160      403759301
-> iwl3945: 0000000000     0x0000006a      403759310
-> iwl3945: 0000000217     0x0000012d      403759317
-> iwl3945: 0000000000     0x00000161      403759319
-> iwl3945: 0000228316     0x00000160      403759392
-> iwl3945: 0000000000     0x0000006a      403759401
-> iwl3945: 0000000217     0x0000012d      403759408
-> iwl3945: 0000000000     0x00000161      403759410
-> iwl3945: 0000228317     0x00000160      403759481
-> iwl3945: 0000000000     0x0000006a      403759490
-> iwl3945: 0000000217     0x0000012d      403759497
-> iwl3945: 0000000000     0x00000161      403759499
-> iwl3945: 0000228318     0x00000160      403759572
-> iwl3945: 0000000000     0x0000006a      403759580
-> iwl3945: 0000000217     0x0000012d      403759587
-> iwl3945: 0000000000     0x00000161      403759589
-> iwl3945: 0000228319     0x00000160      403759660
-> iwl3945: 0000000000     0x0000006a      403759669
-> iwl3945: 0000000217     0x0000012d      403759676
-> iwl3945: 0000000000     0x00000161      403759678
-> iwl3945: 0000228320     0x00000160      403759749
-> iwl3945: 0000000000     0x0000006a      403759758
-> iwl3945: 0000000217     0x0000012d      403759765
-> iwl3945: 0000000000     0x00000161      403759767
-> iwl3945: 0000228321     0x00000160      403759841
-> iwl3945: 0000000000     0x0000006a      403759850
-> iwl3945: 0000000217     0x0000012d      403759857
-> iwl3945: 0000000000     0x00000161      403759858
-> iwl3945: 0000228322     0x00000160      403759930
-> iwl3945: 0000000000     0x0000006a      403759939
-> iwl3945: 0000000217     0x0000012d      403759946
-> iwl3945: 0000000000     0x00000161      403759948
-> iwl3945: 0000228323     0x00000160      403760019
-> iwl3945: 0000000000     0x0000006a      403760028
-> iwl3945: 0000000217     0x0000012d      403760035
-> iwl3945: 0000000000     0x00000161      403760037
-> iwl3945: 0000228324     0x00000160      403760110
-> iwl3945: 0000000000     0x0000006a      403760119
-> iwl3945: 0000000217     0x0000012d      403760126
-> iwl3945: 0000000000     0x00000161      403760128
-> iwl3945: 0000228325     0x00000160      403760204
-> iwl3945: 0000000000     0x0000006a      403760213
-> iwl3945: 0000000217     0x0000012d      403760220
-> iwl3945: 0000000000     0x00000161      403760222
-> iwl3945: 0000228326     0x00000160      403760293
-> iwl3945: 0000000000     0x0000006a      403760302
-> iwl3945: 0000000217     0x0000012d      403760309
-> iwl3945: 0000000000     0x00000161      403760311
-> iwl3945: 0000228327     0x00000160      403760384
-> iwl3945: 0000000000     0x0000006a      403760392
-> iwl3945: 0000000217     0x0000012d      403760399
-> iwl3945: 0000000000     0x00000161      403760401
-> iwl3945: 0000228328     0x00000160      403760474
-> iwl3945: 0000000000     0x0000006a      403760483
-> iwl3945: 0000000217     0x0000012d      403760490
-> iwl3945: 0000000000     0x00000161      403760492
-> iwl3945: 0000228329     0x00000160      403760565
-> iwl3945: 0000000000     0x0000006a      403760574
-> iwl3945: 0000000217     0x0000012d      403760581
-> iwl3945: 0000000000     0x00000161      403760583
-> iwl3945: 0000228330     0x00000160      403760654
-> iwl3945: 0000000000     0x0000006a      403760663
-> iwl3945: 0000000217     0x0000012d      403760670
-> iwl3945: 0000000000     0x00000161      403760672
-> iwl3945: 0000228331     0x00000160      403760745
-> iwl3945: 0000000000     0x0000006a      403760754
-> iwl3945: 0000000217     0x0000012d      403760761
-> iwl3945: 0000000000     0x00000161      403760763
-> iwl3945: 0000228332     0x00000160      403760836
-> iwl3945: 0000000000     0x0000006a      403760844
-> iwl3945: 0000000217     0x0000012d      403760851
-> iwl3945: 0000000000     0x00000161      403760853
-> iwl3945: 0000228333     0x00000160      403760925
-> iwl3945: 0000000000     0x0000006a      403760934
-> iwl3945: 0000000217     0x0000012d      403760941
-> iwl3945: 0000000000     0x00000161      403760943
-> iwl3945: 0000228334     0x00000160      403761015
-> iwl3945: 0000000000     0x0000006a      403761024
-> iwl3945: 0000000217     0x0000012d      403761031
-> iwl3945: 0000000000     0x00000161      403761033
-> iwl3945: 0000228335     0x00000160      403761104
-> iwl3945: 0000000000     0x0000006a      403761113
-> iwl3945: 0000000217     0x0000012d      403761120
-> iwl3945: 0000000000     0x0000007b      403761122
-> iwl3945: 0000000002     0x0000007d      403761129
-> iwl3945: I iwl_irq_handle_error Restarting adapter due to uCode error.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_TX (0x1C) seq 0x0203
-> ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
-> wlan0: No ProbeResp from current AP 00:11:2f:0e:95:a0 - assume out of
-> range
+Based on the patch by Mattias Nissler.
+Mattias also has some tools that will make the dumped frames
+available to wireshark: http://www-user.rhrk.uni-kl.de/~nissler/rt2x00/
 
-This firmware error dump is useful. Thanks!
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h      |    8 +-
+ drivers/net/wireless/rt2x00/rt2x00debug.c |  182 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   20 +++-
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |    6 +
+ drivers/net/wireless/rt2x00/rt2x00pci.c   |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |    6 +-
+ 6 files changed, 216 insertions(+), 10 deletions(-)
 
-> iwl3945: iwl-3945-rs not selected as rate control algo!
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 31e48c2..ba874cf 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -623,7 +623,7 @@ struct rt2x00_dev {
+ 	 * required for deregistration of debugfs.
+ 	 */
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-	const struct rt2x00debug_intf *debugfs_intf;
++	struct rt2x00debug_intf *debugfs_intf;
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+ 
+ 	/*
+@@ -791,6 +791,12 @@ struct rt2x00_dev {
+ 	ring_loop(__entry, (__dev)->tx, ring_end(__dev))
+ 
+ /*
++ * Compute an array index from a pointer to an element and the base pointer.
++ */
++#define ARRAY_INDEX(__elem, __base) \
++	( ((char *)(__elem) - (char *)(__base)) / sizeof(*(__elem)) )
++
++/*
+  * Generic RF access.
+  * The RF is being accessed by word index.
+  */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 3aa7e0a..e72c981 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -26,10 +26,12 @@
+ #include <linux/debugfs.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/poll.h>
+ #include <linux/uaccess.h>
+ 
+ #include "rt2x00.h"
+ #include "rt2x00lib.h"
++#include "rt2x00dump.h"
+ 
+ #define PRINT_LINE_LEN_MAX 32
+ 
+@@ -58,6 +60,8 @@ struct rt2x00debug_intf {
+ 	 *     - eeprom offset/value files
+ 	 *     - bbp offset/value files
+ 	 *     - rf offset/value files
++	 *   - frame dump folder
++	 *     - frame dump file
+ 	 */
+ 	struct dentry *driver_folder;
+ 	struct dentry *driver_entry;
+@@ -72,6 +76,24 @@ struct rt2x00debug_intf {
+ 	struct dentry *bbp_val_entry;
+ 	struct dentry *rf_off_entry;
+ 	struct dentry *rf_val_entry;
++	struct dentry *frame_folder;
++	struct dentry *frame_dump_entry;
++
++	/*
++	 * The frame dump file only allows a single reader,
++	 * so we need to store the current state here.
++	 */
++	unsigned long frame_dump_flags;
++#define FRAME_DUMP_FILE_OPEN	1
++
++	/*
++	 * We queue each frame before dumping it to the user,
++	 * per read command we will pass a single skb structure
++	 * so we should be prepared to queue multiple sk buffers
++	 * before sending it to userspace.
++	 */
++	struct sk_buff_head frame_dump_skbqueue;
++	wait_queue_head_t frame_dump_waitqueue;
+ 
+ 	/*
+ 	 * Driver and chipset files will use a data buffer
+@@ -90,6 +112,63 @@ struct rt2x00debug_intf {
+ 	unsigned int offset_rf;
+ };
+ 
++void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
++			    struct sk_buff *skb)
++{
++	struct rt2x00debug_intf *intf = rt2x00dev->debugfs_intf;
++	struct skb_desc *desc = get_skb_desc(skb);
++	struct sk_buff *skbcopy;
++	struct rt2x00dump_hdr *dump_hdr;
++	struct timeval timestamp;
++	unsigned int ring_index;
++	unsigned int entry_index;
++
++	do_gettimeofday(&timestamp);
++	ring_index = ARRAY_INDEX(desc->ring, rt2x00dev->rx);
++	entry_index = ARRAY_INDEX(desc->entry, desc->ring->entry);
++
++	if (!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags))
++		return;
++
++	if (skb_queue_len(&intf->frame_dump_skbqueue) > 20) {
++		DEBUG(rt2x00dev, "txrx dump queue length exceeded.\n");
++		return;
++	}
++
++	skbcopy = alloc_skb(sizeof(*dump_hdr) + desc->desc_len + desc->data_len,
++			    GFP_ATOMIC);
++	if (!skbcopy) {
++		DEBUG(rt2x00dev, "Failed to copy skb for dump.\n");
++		return;
++	}
++
++	dump_hdr = (struct rt2x00dump_hdr *)skb_put(skbcopy, sizeof(*dump_hdr));
++	dump_hdr->version = cpu_to_le32(DUMP_HEADER_VERSION);
++	dump_hdr->header_length = cpu_to_le32(sizeof(*dump_hdr));
++	dump_hdr->desc_length = cpu_to_le32(desc->desc_len);
++	dump_hdr->data_length = cpu_to_le32(desc->data_len);
++	dump_hdr->chip_rt = cpu_to_le16(rt2x00dev->chip.rt);
++	dump_hdr->chip_rf = cpu_to_le16(rt2x00dev->chip.rf);
++	dump_hdr->chip_rev = cpu_to_le32(rt2x00dev->chip.rev);
++	dump_hdr->type = cpu_to_le16(desc->frame_type);
++	dump_hdr->ring_index = ring_index;
++	dump_hdr->entry_index = entry_index;
++	dump_hdr->timestamp_sec = cpu_to_le32(timestamp.tv_sec);
++	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_usec);
++
++	memcpy(skb_put(skbcopy, desc->desc_len), desc->desc, desc->desc_len);
++	memcpy(skb_put(skbcopy, desc->data_len), desc->data, desc->data_len);
++
++	skb_queue_tail(&intf->frame_dump_skbqueue, skbcopy);
++	wake_up_interruptible(&intf->frame_dump_waitqueue);
++
++	/*
++	 * Verify that the file has not been closed while we were working.
++	 */
++	if (!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags))
++		skb_queue_purge(&intf->frame_dump_skbqueue);
++}
++
+ static int rt2x00debug_file_open(struct inode *inode, struct file *file)
+ {
+ 	struct rt2x00debug_intf *intf = inode->i_private;
+@@ -111,6 +190,89 @@ static int rt2x00debug_file_release(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static int rt2x00debug_open_ring_dump(struct inode *inode, struct file *file)
++{
++	struct rt2x00debug_intf *intf = inode->i_private;
++	int retval;
++
++	retval = rt2x00debug_file_open(inode, file);
++	if (retval)
++		return retval;
++
++	if (test_and_set_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags)) {
++		rt2x00debug_file_release(inode, file);
++		return -EBUSY;
++	}
++
++	return 0;
++}
++
++static int rt2x00debug_release_ring_dump(struct inode *inode, struct file *file)
++{
++	struct rt2x00debug_intf *intf = inode->i_private;
++
++	skb_queue_purge(&intf->frame_dump_skbqueue);
++
++	clear_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags);
++
++	return rt2x00debug_file_release(inode, file);
++}
++
++static ssize_t rt2x00debug_read_ring_dump(struct file *file,
++					  char __user *buf,
++					  size_t length,
++					  loff_t *offset)
++{
++	struct rt2x00debug_intf *intf = file->private_data;
++	struct sk_buff *skb;
++	size_t status;
++	int retval;
++
++	if (file->f_flags & O_NONBLOCK)
++		return -EAGAIN;
++
++	retval =
++	    wait_event_interruptible(intf->frame_dump_waitqueue,
++				     (skb =
++				     skb_dequeue(&intf->frame_dump_skbqueue)));
++	if (retval)
++		return retval;
++
++	status = min((size_t)skb->len, length);
++	if (copy_to_user(buf, skb->data, status)) {
++		status = -EFAULT;
++		goto exit;
++	}
++
++	*offset += status;
++
++exit:
++	kfree_skb(skb);
++
++	return status;
++}
++
++static unsigned int rt2x00debug_poll_ring_dump(struct file *file,
++					       poll_table *wait)
++{
++	struct rt2x00debug_intf *intf = file->private_data;
++
++	poll_wait(file, &intf->frame_dump_waitqueue, wait);
++
++	if (!skb_queue_empty(&intf->frame_dump_skbqueue))
++		return POLLOUT | POLLWRNORM;
++
++	return 0;
++}
++
++static const struct file_operations rt2x00debug_fop_ring_dump = {
++	.owner		= THIS_MODULE,
++	.read		= rt2x00debug_read_ring_dump,
++	.poll		= rt2x00debug_poll_ring_dump,
++	.open		= rt2x00debug_open_ring_dump,
++	.release	= rt2x00debug_release_ring_dump,
++};
++
+ #define RT2X00DEBUGFS_OPS_READ(__name, __format, __type)	\
+ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 					 char __user *buf,	\
+@@ -339,6 +501,20 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 
+ #undef RT2X00DEBUGFS_CREATE_REGISTER_ENTRY
+ 
++	intf->frame_folder =
++	    debugfs_create_dir("frame", intf->driver_folder);
++	if (IS_ERR(intf->frame_folder))
++		goto exit;
++
++	intf->frame_dump_entry =
++	    debugfs_create_file("dump", S_IRUGO, intf->frame_folder,
++				intf, &rt2x00debug_fop_ring_dump);
++	if (IS_ERR(intf->frame_dump_entry))
++		goto exit;
++
++	skb_queue_head_init(&intf->frame_dump_skbqueue);
++	init_waitqueue_head(&intf->frame_dump_waitqueue);
++
+ 	return;
+ 
+ exit:
+@@ -350,11 +526,15 @@ exit:
+ 
+ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+ {
+-	const struct rt2x00debug_intf *intf = rt2x00dev->debugfs_intf;
++	struct rt2x00debug_intf *intf = rt2x00dev->debugfs_intf;
+ 
+ 	if (unlikely(!intf))
+ 		return;
+ 
++	skb_queue_purge(&intf->frame_dump_skbqueue);
++
++	debugfs_remove(intf->frame_dump_entry);
++	debugfs_remove(intf->frame_folder);
+ 	debugfs_remove(intf->rf_val_entry);
+ 	debugfs_remove(intf->rf_off_entry);
+ 	debugfs_remove(intf->bbp_val_entry);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 4f32ee8..48e2515 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -28,6 +28,7 @@
+ 
+ #include "rt2x00.h"
+ #include "rt2x00lib.h"
++#include "rt2x00dump.h"
+ 
+ /*
+  * Ring handler.
+@@ -511,9 +512,11 @@ void rt2x00lib_txdone(struct data_entry *entry,
+ 	}
+ 
+ 	/*
+-	 * Send the tx_status to mac80211,
+-	 * that method also cleans up the skb structure.
++	 * Send the tx_status to mac80211 & debugfs.
++	 * mac80211 will clean up the skb structure.
+ 	 */
++	get_skb_desc(entry->skb)->frame_type = DUMP_FRAME_TXDONE;
++	rt2x00debug_dump_frame(rt2x00dev, entry->skb);
+ 	ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb, tx_status);
+ 	entry->skb = NULL;
+ }
+@@ -563,8 +566,10 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
+ 	rx_status->antenna = rt2x00dev->link.ant.active.rx;
+ 
+ 	/*
+-	 * Send frame to mac80211
++	 * Send frame to mac80211 & debugfs
+ 	 */
++	get_skb_desc(skb)->frame_type = DUMP_FRAME_RXDONE;
++	rt2x00debug_dump_frame(rt2x00dev, skb);
+ 	ieee80211_rx_irqsafe(rt2x00dev->hw, skb, rx_status);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
+@@ -715,6 +720,15 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	skbdesc->entry->skb = skb;
+ 	memcpy(&skbdesc->entry->tx_status.control, control, sizeof(*control));
++
++	/*
++	 * The frame has been completely initialized and ready
++	 * for sending to the device. The caller will push the
++	 * frame to the device, but we are going to push the
++	 * frame to debugfs here.
++	 */
++	skbdesc->frame_type = DUMP_FRAME_TX;
++	rt2x00debug_dump_frame(rt2x00dev, skb);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_write_tx_desc);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 7319411..0bf10ff 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -80,6 +80,7 @@ static inline void rt2x00lib_free_firmware(struct rt2x00_dev *rt2x00dev)
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev);
+ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev);
++void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
+ #else
+ static inline void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ {
+@@ -88,6 +89,11 @@ static inline void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ static inline void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+ {
+ }
++
++static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
++					  struct skb_buff *skb)
++{
++}
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 9b11c6d..abeffdb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -166,8 +166,8 @@ void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
+ 		 * Fill in skb descriptor
+ 		 */
+ 		skbdesc = get_skb_desc(skb);
+-		skbdesc->desc_len = desc.size;
+-		skbdesc->data_len = entry->ring->desc_size;
++		skbdesc->desc_len = entry->ring->desc_size;
++		skbdesc->data_len = skb->len;
+ 		skbdesc->desc = entry->priv;
+ 		skbdesc->data = skb->data;
+ 		skbdesc->ring = ring;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index f1282c6..82e95b9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -287,9 +287,9 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	 * Fill in skb descriptor
+ 	 */
+ 	skbdesc = get_skb_desc(entry->skb);
+-	skbdesc->desc_len = desc.size;
+-	skbdesc->data_len = entry->ring->desc_size;
+-	skbdesc->desc = entry->skb->data + desc.size;
++	skbdesc->desc_len = entry->ring->desc_size;
++	skbdesc->data_len = entry->skb->len;
++	skbdesc->desc = entry->skb->data - skbdesc->desc_len;
+ 	skbdesc->data = entry->skb->data;
+ 	skbdesc->ring = ring;
+ 	skbdesc->entry = entry;
+-- 
+1.5.3.6
 
-Can you try using the iwl-3945-rs rate scaling algorithm instead of
-rs_simple? (at this moment, try loading iwl-3945-rs before rs_simple, it
-will be fixed later). It increases performance a lot. Not sure about
-stability though.
-
-Thanks,
--yi
