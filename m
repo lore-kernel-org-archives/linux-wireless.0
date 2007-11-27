@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:8798 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754405AbXKQB1T (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56700 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758896AbXK0Q2p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 20:27:19 -0500
-Received: by py-out-1112.google.com with SMTP id u77so4539361pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2007 17:27:18 -0800 (PST)
-Message-ID: <43e72e890711161727x1c5d5dafu5883d900428182d9@mail.gmail.com> (sfid-20071117_012725_616663_B17E9852)
-Date: Fri, 16 Nov 2007 20:27:18 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: libertas-dev@lists.infradead.org
-Subject: Re: libertas ub8xxx - bcdDevice 30.06 - firmware issues?
-Cc: "Stefano Brivio" <stefano.brivio@polimi.it>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890711161726m11682a2fwcaba31c2d093310f@mail.gmail.com>
+	Tue, 27 Nov 2007 11:28:45 -0500
+Message-ID: <474C45B1.3050909@lwfinger.net> (sfid-20071127_162912_124950_8A28E0CF)
+Date: Tue, 27 Nov 2007 10:28:33 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890711161726m11682a2fwcaba31c2d093310f@mail.gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/T] b43: Fix Radio On/Off LED action
+References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711271713.02698.mb@bu3sch.de>
+In-Reply-To: <200711271713.02698.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry CC'd linux-kernel, meant linux-wireless ;)
+Michael Buesch wrote:
+> On Tuesday 27 November 2007 17:03:57 Larry Finger wrote:
+> This is not how led triggers work.
+> You are shortcutting the whole thing here. So you could as well
+> remove the whole rfkill and LEDs code.
 
-On Nov 16, 2007 8:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> I have a USB libertas 1286:2001 with bcdDevice 30.06 (from lsusb -v).
-> I tried downloading the firmware from marvell:
->
-> https://www.marvell.com/drivers/driverDisplay.do?dId=160&pId=38
->
-> renaming and to usb8388.bin and putting it in firmware dir. Is this
-> the right firmware??
->
-> Upon load this is what I get:
->
-> 17:58 < mcgrof> usb8xxx: URB in failure status: -71
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb 4-1: reset high speed USB device using ehci_hcd
-> and address 3
-> 17:58 < mcgrof> usb8xxx: probe of 4-1:1.0 failed with error -12
-> 17:58 < mcgrof> usbcore: registered new interface driver usb8xxx
->
-> I'm using the compatibility package from:
->
-> http://linuxwireless.org/en/users/Download
->
-> on 2.6.22. So this driver reflects what's on
-> wireless2.6.git#everything. I tried looking on the wiki but well can't
-> find much information. Can we please start adding some info about this
-> driver to:
->
-> http://linuxwireless.org/en/users/Drivers/libertas
->
->   Luis
->
+It just plain doesn't work now. What I'm trying to do is get something to the users that will
+restore the behavior they want while we work out the details of the rfkill and LEDs code.
+
+> Please properly register the LED in the leds code and
+> add a default LED trigger for the rfkill trigger.
+> This has several advantages to the user, among the possiblility to
+> reassign a LED to a different trigger.
+
+How do I do that?
+
+>> @@ -70,11 +75,13 @@ static int b43_rfkill_soft_toggle(void *
+>>  	struct b43_wldev *dev = data;
+>>  	struct b43_wl *wl = dev->wl;
+>>  	int err = 0;
+>> +	int lock = mutex_is_locked(&wl->mutex);
+>>  
+>>  	if (!wl->rfkill.registered)
+>>  		return 0;
+>>  
+>> -	mutex_lock(&wl->mutex);
+>> +	if (!lock)
+>> +		mutex_lock(&wl->mutex);
+> 
+> Nah, it shouldn't be locked by "current" in the first place, here.
+> (I guess that's what you are trying to check here).
+> That's what the !registered check above is for.
+> This !lock check is racy.
+
+If you recall my message from yesterday, I got a locking error. That is what I'm trying to prevent.
+I know it is racy, but I don't know the correct way to do it.
+
+Larry
+
