@@ -1,232 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32326 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751401AbXKZOVl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 09:21:41 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 02/15] mac80211: adding 802.11n definitions in ieee80211.h
-Date: Mon, 26 Nov 2007 16:14:29 +0200
-Message-Id: <11960864902404-git-send-email-ron.rindjunsky@intel.com> (sfid-20071126_142151_750020_10D73D33)
-In-Reply-To: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from will39.synserver.de ([212.40.172.10]:54913 "EHLO
+	will39.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174AbXK0B0A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 20:26:00 -0500
+Message-ID: <474B6ADE.7020808@gmail.com> (sfid-20071127_012605_534584_EA370EEC)
+Date: Tue, 27 Nov 2007 01:54:54 +0100
+From: loswillios <loswillios@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: kyle@mcmartin.ca, linux-wireless@vger.kernel.org,
+	developers@islsm.org
+Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
+References: <46631BD2.20704@willies.info>		<3871229b0706031323w5c8e3589r973b8735ed3e1f85@mail.gmail.com>		<466341AF.7050505@willies.info>		<43e72e890711211703p799a18f0qc8636f27cf17bb91@mail.gmail.com>	<43e72e890711211713y1678bc9blf75e45dae4d74b8@mail.gmail.com> <4745EE3E.8090601@willies.info>
+In-Reply-To: <4745EE3E.8090601@willies.info>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds several structs and definitions to ieee80211.h
-to support 802.11n draft specifications.
-As 802.11n depends on and extends the 802.11e standard in several issues,
-there are also several definitions that belong to 802.11e.
+Jan Willies wrote:
+> Luis R. Rodriguez wrote:
+>> Actually I've been informed this is not unaligned access problem but
+>> instead it occurs on do_be() or ip22_be_interrupt() on MIPS. I'll have
+>> to check how that works, I do not yet understand how this is reached.
+> 
+> I will try a new build with prism54 in the next days and let you know if 
+> that issue is still present.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/linux/ieee80211.h |  134 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 134 insertions(+), 0 deletions(-)
+Still the same problem with 2.6.23.1:
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 214821a..dcdfc7c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -54,6 +54,8 @@
- #define IEEE80211_STYPE_ACTION		0x00D0
- 
- /* control */
-+#define IEEE80211_STYPE_BACK_REQ	0x0080
-+#define IEEE80211_STYPE_BACK		0x0090
- #define IEEE80211_STYPE_PSPOLL		0x00A0
- #define IEEE80211_STYPE_RTS		0x00B0
- #define IEEE80211_STYPE_CTS		0x00C0
-@@ -185,6 +187,25 @@ struct ieee80211_mgmt {
- 					u8 new_chan;
- 					u8 switch_count;
- 				} __attribute__((packed)) chan_switch;
-+				struct{
-+					u8 action_code;
-+					u8 dialog_token;
-+					__le16 capab;
-+					__le16 timeout;
-+					__le16 start_seq_num;
-+				} __attribute__((packed)) addba_req;
-+				struct{
-+					u8 action_code;
-+					u8 dialog_token;
-+					__le16 status;
-+					__le16 capab;
-+					__le16 timeout;
-+				} __attribute__((packed)) addba_resp;
-+				struct{
-+					u8 action_code;
-+					__le16 params;
-+					__le16 reason_code;
-+				} __attribute__((packed)) delba;
- 			} u;
- 		} __attribute__ ((packed)) action;
- 	} u;
-@@ -205,6 +226,66 @@ struct ieee80211_cts {
- 	u8 ra[6];
- } __attribute__ ((packed));
- 
-+/**
-+ * struct ieee80211_bar - HT Block Ack Request
-+ *
-+ * This structure refers to "HT BlockAckReq" as
-+ * described in 802.11n draft section 7.2.1.7.1
-+ */
-+struct ieee80211_bar {
-+	__le16 frame_control;
-+	__le16 duration;
-+	__u8 ra[6];
-+	__u8 ta[6];
-+	__u16 control;
-+	__u16 start_seq_num;
-+} __attribute__((packed));
-+
-+/**
-+ * struct ieee80211_ht_cap - HT capabilities
-+ *
-+ * This structure refers to "HT capabilities element" as
-+ * described in 802.11n draft section 7.3.2.52
-+ */
-+struct ieee80211_ht_cap {
-+	__le16 cap_info;
-+	u8 ampdu_params_info;
-+	u8 supp_mcs_set[16];
-+	__le16 extended_ht_cap_info;
-+	__le32 tx_BF_cap_info;
-+	u8 antenna_selection_info;
-+} __attribute__ ((packed));
-+
-+/**
-+ * struct ieee80211_ht_addt_info - HT additional information
-+ *
-+ * This structure refers to "HT information element" as
-+ * described in 802.11n draft section 7.3.2.53
-+ */
-+struct ieee80211_ht_addt_info {
-+	u8 control_chan;
-+	u8 ht_param;
-+	__le16 operation_mode;
-+	__le16 stbc_param;
-+	u8 basic_set[16];
-+} __attribute__ ((packed));
-+
-+/* 802.11n HT capabilities masks */
-+#define IEEE80211_HT_CAP_SUP_WIDTH		0x0002
-+#define IEEE80211_HT_CAP_MIMO_PS		0x000C
-+#define IEEE80211_HT_CAP_GRN_FLD		0x0010
-+#define IEEE80211_HT_CAP_SGI_20			0x0020
-+#define IEEE80211_HT_CAP_SGI_40			0x0040
-+#define IEEE80211_HT_CAP_DELAY_BA		0x0400
-+#define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
-+#define IEEE80211_HT_CAP_AMPDU_FACTOR		0x03
-+#define IEEE80211_HT_CAP_AMPDU_DENSITY		0x1C
-+/* 802.11n HT IE masks */
-+#define IEEE80211_HT_IE_CHA_SEC_OFFSET		0x03
-+#define IEEE80211_HT_IE_CHA_WIDTH		0x04
-+#define IEEE80211_HT_IE_HT_PROTECTION		0x0003
-+#define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
-+#define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
- 
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
-@@ -271,6 +352,18 @@ enum ieee80211_statuscode {
- 	WLAN_STATUS_UNSUPP_RSN_VERSION = 44,
- 	WLAN_STATUS_INVALID_RSN_IE_CAP = 45,
- 	WLAN_STATUS_CIPHER_SUITE_REJECTED = 46,
-+	/* 802.11e */
-+	WLAN_STATUS_UNSPECIFIED_QOS = 32,
-+	WLAN_STATUS_ASSOC_DENIED_NOBANDWIDTH = 33,
-+	WLAN_STATUS_ASSOC_DENIED_LOWACK = 34,
-+	WLAN_STATUS_ASSOC_DENIED_UNSUPP_QOS = 35,
-+	WLAN_STATUS_REQUEST_DECLINED = 37,
-+	WLAN_STATUS_INVALID_QOS_PARAM = 38,
-+	WLAN_STATUS_CHANGE_TSPEC = 39,
-+	WLAN_STATUS_WAIT_TS_DELAY = 47,
-+	WLAN_STATUS_NO_DIRECT_LINK = 48,
-+	WLAN_STATUS_STA_NOT_PRESENT = 49,
-+	WLAN_STATUS_STA_NOT_QSTA = 50,
- };
- 
- 
-@@ -301,6 +394,16 @@ enum ieee80211_reasoncode {
- 	WLAN_REASON_INVALID_RSN_IE_CAP = 22,
- 	WLAN_REASON_IEEE8021X_FAILED = 23,
- 	WLAN_REASON_CIPHER_SUITE_REJECTED = 24,
-+	/* 802.11e */
-+	WLAN_REASON_DISASSOC_UNSPECIFIED_QOS = 32,
-+	WLAN_REASON_DISASSOC_QAP_NO_BANDWIDTH = 33,
-+	WLAN_REASON_DISASSOC_LOW_ACK = 34,
-+	WLAN_REASON_DISASSOC_QAP_EXCEED_TXOP = 35,
-+	WLAN_REASON_QSTA_LEAVE_QBSS = 36,
-+	WLAN_REASON_QSTA_NOT_USE = 37,
-+	WLAN_REASON_QSTA_REQUIRE_SETUP = 38,
-+	WLAN_REASON_QSTA_TIMEOUT = 39,
-+	WLAN_REASON_QSTA_CIPHER_NOT_SUPP = 45,
- };
- 
- 
-@@ -319,6 +422,15 @@ enum ieee80211_eid {
- 	WLAN_EID_HP_PARAMS = 8,
- 	WLAN_EID_HP_TABLE = 9,
- 	WLAN_EID_REQUEST = 10,
-+	/* 802.11e */
-+	WLAN_EID_QBSS_LOAD = 11,
-+	WLAN_EID_EDCA_PARAM_SET = 12,
-+	WLAN_EID_TSPEC = 13,
-+	WLAN_EID_TCLAS = 14,
-+	WLAN_EID_SCHEDULE = 15,
-+	WLAN_EID_TS_DELAY = 43,
-+	WLAN_EID_TCLAS_PROCESSING = 44,
-+	WLAN_EID_QOS_CAPA = 46,
- 	/* 802.11h */
- 	WLAN_EID_PWR_CONSTRAINT = 32,
- 	WLAN_EID_PWR_CAPABILITY = 33,
-@@ -333,6 +445,9 @@ enum ieee80211_eid {
- 	/* 802.11g */
- 	WLAN_EID_ERP_INFO = 42,
- 	WLAN_EID_EXT_SUPP_RATES = 50,
-+	/* 802.11n */
-+	WLAN_EID_HT_CAPABILITY = 45,
-+	WLAN_EID_HT_EXTRA_INFO = 61,
- 	/* 802.11i */
- 	WLAN_EID_RSN = 48,
- 	WLAN_EID_WPA = 221,
-@@ -341,6 +456,25 @@ enum ieee80211_eid {
- 	WLAN_EID_QOS_PARAMETER = 222
- };
- 
-+/* Action category code */
-+enum ieee80211_category {
-+	WLAN_CATEGORY_SPECTRUM_MGMT = 0,
-+	WLAN_CATEGORY_QOS = 1,
-+	WLAN_CATEGORY_DLS = 2,
-+	WLAN_CATEGORY_BACK = 3,
-+	WLAN_CATEGORY_WMM = 17,
-+};
-+
-+/* BACK action code */
-+enum ieee80211_back_actioncode {
-+	WLAN_ACTION_ADDBA_REQ = 0,
-+	WLAN_ACTION_ADDBA_RESP = 1,
-+	WLAN_ACTION_DELBA = 2,
-+};
-+
-+/* A-MSDU 802.11n */
-+#define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
-+
- /* cipher suite selectors */
- #define WLAN_CIPHER_SUITE_USE_GROUP	0x000FAC00
- #define WLAN_CIPHER_SUITE_WEP40		0x000FAC01
--- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
+root@OpenWrt:/# ifconfig eth1 up
+eth1: resetting device...
+eth1: uploading firmware...
+eth1: firmware version: 1.0.4.3
+eth1: firmware upload complete
+eth1: interface reset complete
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+root@OpenWrt:/# iwlist eth1 scanning
+Data bus error, epc == c011518c, ra == c01146cc
+Oops[#1]:
+Cpu 0
+$ 0   : 00000000 1000b800 abad0000 00000032
+$ 4   : 00000001 c00c8000 00000013 00000001
+$ 8   : 0000003c 80102bd4 ffffffff 81e2101c
+$12   : ffffffff 00000580 2ab8af24 00000498
+$16   : 81e21680 000000fa 81339380 0000004a
+$20   : 81339380 00000000 a1e80000 81339000
+$24   : 00000000 2abd55e0
+$28   : 813b4000 813b5cc8 00000019 c01146cc
+Hi    : 00000000
+Lo    : 00000580
+epc   : c011518c     Not tainted
+ra    : c01146cc Status: 1000b803    KERNEL EXL IE
+Cause : 0000001c
+PrId  : 00029007
+Modules linked in: prism54 ehci_hcd ohci_hcd nf_nat_tftp 
+nf_conntrack_tftp nf_nat_irc nf_conntrack_irc nf_nat_ftp 
+nf_conntrack_ftp ppp_async ppp_generic slhc crc_ccitt usbcore arc4 aes 
+deflate ecb cbc blkcipher crypto_hash cryptomgr crypto_algapi 
+switch_robo switch_core diag
+Process iwlist (pid: 680, threadinfo=813b4000, task=810a10c8)
+Stack : ffffff9c 2ab3549b 80074a50 7fd23300 00000000 810a10c8 8003cac4 
+81339710
+         81339710 8008c054 0000003e 00000000 00000000 813b5e60 00000060 
+17000012
+         81339380 813b5d78 00000498 c011dce0 81052920 00000000 17000012 
+00000009
+         0000003e 813b5d30 00000000 81052920 813b5e70 802a6000 802a6000 
+813b5e60
+         813b5e70 00000000 81339380 00008b0b c01187ec 00008b0b 81047360 
+000080d0
+         ...
+Call 
+Trace:[<80074a50>][<8003cac4>][<8008c054>][<c011dce0>][<c01187ec>][<c01186a4>][<801ec8ec>][<8005ecc4>][<8005ecc4>][<800cbc34>][<80118d8c>][<c01186a4>][<801ecb10>][<80060f6c>][<80164b28>][<8008d4a8>][<8008630c>][<8008661c>][<8008669c>][<8000c12c>][<80003a00>]
+
+Code: 10800014  24020002  3c02abad <8ca30010> 3442face  1462000f 
+24020008  08045470  00000000
+Segmentation fault
+
+
+Sometimes I even get this weird stuff:
+
+root@OpenWrt:/# ifconfig eth1 up
+eth1: resetting device...
+eth1: uploading firmware...
+eth1: firmware version: 1.0.4.3
+eth1: firmware upload complete
+eth1: no 'reset complete' IRQ seen - retrying
+eth1: no 'reset complete' IRQ seen - retrying
+eth1: interface reset failure
+prism54: Your card/socket may be faulty, or IRQ line too busy :(
+ifconfig: SIOCSIFFLAGS: Timer expired
+
+
+Thanks for looking into it, much appreciated.
+
+
+- Jan
