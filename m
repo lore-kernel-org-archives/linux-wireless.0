@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:8127 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753631AbXKWKvy (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59574 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752855AbXK0Eio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 05:51:54 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 2/3] ath5k: noise calibration also for rf511x
-Date: Fri, 23 Nov 2007 19:52:02 +0900
-Message-Id: <1195815123-22375-3-git-send-email-bruno@thinktube.com> (sfid-20071123_105159_068332_6942C6DD)
-In-Reply-To: <1195815123-22375-2-git-send-email-bruno@thinktube.com>
-References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
- <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+	Mon, 26 Nov 2007 23:38:44 -0500
+Date: Mon, 26 Nov 2007 20:37:16 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Tony Breeds <tony@bakeyournoodle.com>,
+	Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mm snapshot broken-out-2007-11-20-01-45 Build Fail -
+ net/wireless driver
+Message-Id: <20071126203716.ebe62999.akpm@linux-foundation.org> (sfid-20071127_043847_463069_7BD0A3CC)
+In-Reply-To: <200711262331.21176.flamingice@sourmilk.net>
+References: <200711200953.lAK9qxjO030444@imap1.linux-foundation.org>
+	<20071127023430.GA24243@bakeyournoodle.com>
+	<20071126185423.9280b263.akpm@linux-foundation.org>
+	<200711262331.21176.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
-just writing the bit.
+On Mon, 26 Nov 2007 23:31:20 -0500 Michael Wu <flamingice@sourmilk.net> wrote:
 
-Changes-licensed-under: ISC
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
- drivers/net/wireless/ath5k/phy.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> On Monday 26 November 2007 21:54:23 Andrew Morton wrote:
+> > <head spins>
+> >
+> > Why not just rename one of them?
+> >
+> Fine for your tree as a stopgap measure. Please don't merge in wireless-2.6.
+> 
 
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 9b91121..f250c2e 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1702,8 +1702,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
- 
- done:
--	/* Start noise floor calibration */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
-+	ath5k_hw_noise_floor_calibration(ah, channel->freq);
- 
- 	/* Request RF gain */
- 	if (channel->val & CHANNEL_5GHZ) {
--- 
-1.5.3.4
+Why not?
+
+Having very long and specific identifiers duplicated in two drivers is a
+daft situation.  Unless they both drive the same hardware, which afaict
+they do not?
 
