@@ -1,84 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dike.telenet-ops.be ([195.130.132.36]:46391 "EHLO
-	dike.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170AbXK0WyL (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:32919 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754997AbXK0Cpv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 17:54:11 -0500
-Received: from astra.telenet-ops.be (astra.telenet-ops.be [195.130.132.58])
-	by dike.telenet-ops.be (Postfix) with ESMTP id DEB156F85FE
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 18:25:50 +0100 (CET)
-Date: Tue, 27 Nov 2007 18:25:06 +0100 (CET)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+	Mon, 26 Nov 2007 21:45:51 -0500
+From: bruno randolf <bruno@thinktube.com>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: loswillios <loswillios@gmail.com>, kyle@mcmartin.ca,
-	linux-wireless@vger.kernel.org, developers@islsm.org,
-	linux-mips@linux-mips.org
-Subject: Re: prism54 - MIPS do_be() trap caught
-In-Reply-To: <43e72e890711270917o309441a0g99ac435a629b6d5e@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0711271824350.14777@anakin> (sfid-20071127_225420_386021_5CDFFCC3)
-References: <43e72e890711270917o309441a0g99ac435a629b6d5e@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath5k: fix noise floor calibration
+Date: Tue, 27 Nov 2007 11:45:52 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com> <1195815123-22375-2-git-send-email-bruno@thinktube.com> <43e72e890711261628j3aa9325ch8ea4284de18beb30@mail.gmail.com>
+In-Reply-To: <43e72e890711261628j3aa9325ch8ea4284de18beb30@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711271145.52829.bruno@thinktube.com> (sfid-20071127_024601_953294_AFEE4A09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Nov 2007, Luis R. Rodriguez wrote:
-> Changing subject, CC'ing linux-mips, perhaps they can help.
-> 
-> On Nov 26, 2007 7:54 PM, loswillios <loswillios@gmail.com> wrote:
-> > Jan Willies wrote:
-> > > Luis R. Rodriguez wrote:
-> > >> Actually I've been informed this is not unaligned access problem but
-> > >> instead it occurs on do_be() or ip22_be_interrupt() on MIPS. I'll have
-> > >> to check how that works, I do not yet understand how this is reached.
-> > >
-> > > I will try a new build with prism54 in the next days and let you know if
-> > > that issue is still present.
-> >
-> > Still the same problem with 2.6.23.1:
-> >
-> > root@OpenWrt:/# ifconfig eth1 up
-> > eth1: resetting device...
-> > eth1: uploading firmware...
-> > eth1: firmware version: 1.0.4.3
-> > eth1: firmware upload complete
-> > eth1: interface reset complete
-> >
-> > root@OpenWrt:/# iwlist eth1 scanning
-> > Data bus error, epc == c011518c, ra == c01146cc
-> > Oops[#1]:
-> > Cpu 0
-> > $ 0   : 00000000 1000b800 abad0000 00000032
-> > $ 4   : 00000001 c00c8000 00000013 00000001
-> > $ 8   : 0000003c 80102bd4 ffffffff 81e2101c
-> > $12   : ffffffff 00000580 2ab8af24 00000498
-> > $16   : 81e21680 000000fa 81339380 0000004a
-> > $20   : 81339380 00000000 a1e80000 81339000
-> > $24   : 00000000 2abd55e0
-> > $28   : 813b4000 813b5cc8 00000019 c01146cc
-> > Hi    : 00000000
-> > Lo    : 00000580
-> > epc   : c011518c     Not tainted
-> > ra    : c01146cc Status: 1000b803    KERNEL EXL IE
-> > Cause : 0000001c
-> > PrId  : 00029007
-> 
-> I can see that this comes from arch/mips/kernel/traps.c do_be() but I
-> fail to see when this is triggered. Perhaps someone from linux-mips
-> might be able to help shed some light here. I tried looking into the
-> stack trace before but I couldn't find any code that made me suspect
-> of a possible big endian problem (it seems that may be the problem?).
-> The stack trace used to look like this:
+On Tuesday 27 November 2007 09:28:02 Luis R. Rodriguez wrote:
+> On Nov 23, 2007 5:52 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+> > diff --git a/drivers/net/wireless/ath5k/phy.c
+> > b/drivers/net/wireless/ath5k/phy.c index 3c2a67c..9b91121 100644
+> > --- a/drivers/net/wireless/ath5k/phy.c
+> > +++ b/drivers/net/wireless/ath5k/phy.c
+> > @@ -1519,6 +1519,51 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct
+> > ieee80211_channel *channel) /*****************\
+> >    PHY calibration
+> >  \*****************/
+> > +int
+> > +ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
+> > +{
+>
+> Good idea :) Mind adding kdoc for this? I hope we can add kdoc for
+> more hw stuff to eventually export this automatically as developer
+> documentation.
 
-BE = bus error, not big endian here.
+sure:
 
-Gr{oetje,eeting}s,
+>From c6a21193965b1c6467851c0fa2b9a4a7a63ce8bb Mon Sep 17 00:00:00 2001
+From: Bruno Randolf <bruno@thinktube.com>
+Date: Tue, 27 Nov 2007 11:44:02 +0900
+Subject: [PATCH 1/1] ath5k: add kerneldoc for ath5k_hw_noise_floor_calibration
 
-						Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+---
+ drivers/net/wireless/ath5k/phy.c |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+diff --git a/drivers/net/wireless/ath5k/phy.c 
+b/drivers/net/wireless/ath5k/phy.c
+index e12a7e8..4daccc8 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1519,6 +1519,27 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct 
+ieee80211_channel *channel)
+ /*****************\
+   PHY calibration
+ \*****************/
++
++/**
++ * ath5k_hw_noise_floor_calibration - perform PHY noise floor calibration
++ *
++ * @ah: struct ath5k_hw pointer we are operating on
++ * @freq: the channel frequency, just used for error logging
++ *
++ * This function performs a noise floor calibration of the PHY and waits for
++ * it to complete. Then the noise floor value is compared to some maximum
++ * noise floor we consider valid.
++ *
++ * Note that this is different from what the madwifi HAL does: it reads the
++ * noise floor and afterwards initiates the calibration. Since the noise 
+floor
++ * calibration can take some time to finish, depending on the current channel
++ * use, that avoids the occasional timeout warnings we are seeing now.
++ *
++ * See the following link for an Atheros patent on noise floor calibration:
++ * http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1&Sect2=HITOFF&d=PALL \
++ * &p=1&u=%2Fnetahtml%2FPTO%2Fsrchnum.htm&r=1&f=G&l=50&s1=7245893.PN.&OS=PN/7
++ *
++ */
+ int
+ ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
+ {
+-- 
+1.5.3.4
+
