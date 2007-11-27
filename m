@@ -1,86 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbXKZQfZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 11:35:25 -0500
-Subject: Re: [PATCH 06/15] mac80211: adding 802.11n essential A-MSDU Rx
-	capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <119608649124-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-	 <119608649124-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pTTpitcUGKUYMoAUeeNw"
-Date: Mon, 26 Nov 2007 17:35:19 +0100
-Message-Id: <1196094919.4149.303.camel@johannes.berg> (sfid-20071126_163527_655158_64DFDB15)
-Mime-Version: 1.0
+Received: from mail.login.com ([192.195.240.2]:2138 "EHLO login.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755239AbXK0S3Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2007 13:29:16 -0500
+Message-ID: <474C61F9.2020602@wetwork.net> (sfid-20071127_182920_052453_06BA727A)
+Date: Tue, 27 Nov 2007 11:29:13 -0700
+From: Ehud Gavron <gavron@wetwork.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [RFC/T] b43: Fix Radio On/Off LED action
+References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711271713.02698.mb@bu3sch.de> <474C45B1.3050909@lwfinger.net> <200711271805.09304.mb@bu3sch.de>
+In-Reply-To: <200711271805.09304.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-pTTpitcUGKUYMoAUeeNw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+
+Michael Buesch wrote:
+> On Tuesday 27 November 2007 17:28:33 Larry Finger wrote:
+>   
+>> Michael Buesch wrote:
+>>     
+>>> On Tuesday 27 November 2007 17:03:57 Larry Finger wrote:
+>>> This is not how led triggers work.
+>>> You are shortcutting the whole thing here. So you could as well
+>>> remove the whole rfkill and LEDs code.
+>>>       
+>> It just plain doesn't work now. What I'm trying to do is get something to the users that will
+>> restore the behavior they want while we work out the details of the rfkill and LEDs code.
+>>     
+>
+> Well, ok. But we don't apply this to mainline. As
+> a temporary patch for users it's OK.
+>   
+Yes, it is! :)  Works great!
+$ uname -a
+Linux egdell.wetwork.net 2.6.24-rc3-LF27NOV2007 #2 SMP Tue Nov 27 
+09:19:11 MST 2007 x86_64 x86_64 x86_64 GNU/Linux
+
+E
 
 
-On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
-> This patch adds the ability to receive and handle A-MSDU frames.
->=20
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-Thanks for your patience on this. I have another question that is
-identical in the other code and that we should, if necessary, fix in a
-separate patch to fix both instances of this:
-
-
-> +		payload =3D frame->data;
-> +		ethertype =3D (payload[6] << 8) | payload[7];
-> +
-> +		if (likely((compare_ether_addr(payload, rfc1042_header) =3D=3D 0 &&
-[...]
-> +		} else {
-> +			memcpy(skb_push(frame, sizeof(__be16)), &len,
-> +				sizeof(__be16));
-> +			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
-> +			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-
-Here, as well as in the regular data frame handler, we push the length
-of the frame into the ethernet header. Later then, eth_type_trans() will
-load up the skb->protocol field. The thing I'm not entirely sure about
-is this: We can have frames longer than 1536 bytes, but only if the
-length is smaller than 1536 does eth_type_trans() assume that it's a
-length, if we have a frame longer won't it go wrong? I haven't quite
-managed to wrap my head around the rules for wrapping data into an
-802.11 frame nor in an 802.3 setting so this may be totally incorrect.
-
-johannes
-
---=-pTTpitcUGKUYMoAUeeNw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR0r1xqVg1VMiehFYAQLSsRAAlOaUmAawdaskFWlPiKAqEhmX02vO/iSC
-FLzfETU5Y8C0pI5OWl3lGel0huWqS7GOMHdvrsTdYIrkoYaxUKPGc9OJycn7ZuU6
-thhmFXQXl5buMYwfJv7XDAPMDalWnOVOmyPSvRxKE0gsCBltet8rAzIhBL49gmRV
-V1far2dpO5W7qaaUc3VRT5NGs/CMvx9QpI25eBFz2MOafupK6aph7eCqFayITFZ5
-P2u4c/rIaXsZZOTO7DTJPdZ2HAHVeCbiXjxwnPqSP5ifMA1uo/OIwcymJl3Mee4V
-1aoKPN0kZO0u5HaAmOIAzW6ZQtKI3dHgq4BX2GBjDtxvyLpiWnTDd+EuhYrGfyf2
-ef8oFr3SPLVI/17CJSfY8B1KNlqQZRjK/GVNxWqOuyMfDgr/yAN9M2/ZEZTXWg4W
-5yfe8g0Z/mZWIpJqlZD7stPz6vlph0Oh3rPmjNu43/KQzTwVEyikvWg2ZRr5I1AR
-HozA4tYX+Z01f+fjbCijkOwaK1d7sqIuJ35hkIn2i5u1AxVBm6HETNVnHEwBF1LB
-gENiKJwWB7lH2ZITokB9Bmsrlj6H6LKC5gs96u4h1oiQN120Jti1kQFUQb2rE680
-WLYXmy6kxtK8uA9YIYt09IfwoI3NVOe75ep7YheqpNhQ0Wmixs0Z4nMoYeA3KxQe
-Dccy5PoV7Pc=
-=8NMk
------END PGP SIGNATURE-----
-
---=-pTTpitcUGKUYMoAUeeNw--
-
+>   
+>>> Please properly register the LED in the leds code and
+>>> add a default LED trigger for the rfkill trigger.
+>>> This has several advantages to the user, among the possiblility to
+>>> reassign a LED to a different trigger.
+>>>       
+>> How do I do that?
+>>     
+>
+> Well, what you basically have to do it restore the old
+> mapping in b43_map_led().
+> Look at the "case B43_LED_RADIO_ALL" (and below) statement.
+> It maps these LEDs to the rfkill trigger.
+> So you have to find out which behaviour value your LED has and
+> map that to the rfkill trigger in this function.
+>
+> So when the rfkill LED trigger triggers, it will enable/disable this LED.
+> That's all done behind the scenes.
+>
+>   
+>>>> @@ -70,11 +75,13 @@ static int b43_rfkill_soft_toggle(void *
+>>>>  	struct b43_wldev *dev = data;
+>>>>  	struct b43_wl *wl = dev->wl;
+>>>>  	int err = 0;
+>>>> +	int lock = mutex_is_locked(&wl->mutex);
+>>>>  
+>>>>  	if (!wl->rfkill.registered)
+>>>>  		return 0;
+>>>>  
+>>>> -	mutex_lock(&wl->mutex);
+>>>> +	if (!lock)
+>>>> +		mutex_lock(&wl->mutex);
+>>>>         
+>>> Nah, it shouldn't be locked by "current" in the first place, here.
+>>> (I guess that's what you are trying to check here).
+>>> That's what the !registered check above is for.
+>>> This !lock check is racy.
+>>>       
+>> If you recall my message from yesterday, I got a locking error. That is what I'm trying to prevent.
+>> I know it is racy, but I don't know the correct way to do it.
+>>     
+>
+> I think RFkill has a bad design regarding this.
+> It does synchronously call back into the driver from a call made by
+> the driver. That is broken by design. Maybe it's best to fix this
+> in rfkill and let it asynchronously call back on rfkill_init.
+> Synchronous callbacks from calls made by drivers are broken by design
+> and will lead to recursive lockings. We can not fix this in the driver,
+> nor work around it in a sane way. We can hack around it, though, which
+> is what the !registered flag tries to do. Though, it seems it doesn't
+> work. :)
+>
+>   
