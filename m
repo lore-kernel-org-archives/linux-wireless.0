@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53353
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755141AbXKCUHs (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:18899 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899AbXK0BTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Nov 2007 16:07:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: RFC: Reproducible oops with lockdep on count_matching_names()
-Date: Sat, 3 Nov 2007 21:06:54 +0100
-Cc: "Peter Zijlstra" <peterz@infradead.org>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Ingo Molnar" <mingo@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, "Michael Chan" <mchan@broadcom.com>,
-	netdev@vger.kernel.org
-References: <20071101191716.GA3201@pogo> <1194001120.27652.353.camel@twins> <43e72e890711031258g4ccd9cd0hc4520e9473f6ce49@mail.gmail.com>
-In-Reply-To: <43e72e890711031258g4ccd9cd0hc4520e9473f6ce49@mail.gmail.com>
+	Mon, 26 Nov 2007 20:19:38 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1832294pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 17:19:37 -0800 (PST)
+Message-ID: <43e72e890711261719p3bd3e420u858b3437be24781c@mail.gmail.com> (sfid-20071127_011941_957466_15D6DB44)
+Date: Mon, 26 Nov 2007 20:19:37 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/1] ath5k: more consistent debugging
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com
+In-Reply-To: <1196077433-12358-2-git-send-email-bruno@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711032106.56569.mb@bu3sch.de> (sfid-20071103_200753_887591_BFF3116D)
+Content-Type: text/plain; charset=UTF-8
+References: <1196077433-12358-1-git-send-email-bruno@thinktube.com>
+	 <1196077433-12358-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 03 November 2007 20:58:09 Luis R. Rodriguez wrote:
-> I was using SLAB and ran into other strange oops, as the one below,
-> but after switching to SLUB, after Michael Buesch's suggestion that
-> one went away... The lockdep segfault is still present, however.
+On Nov 26, 2007 6:43 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+> * move all debugging functions to new files debug.c and debug.h.
+>
+> * consistently use ATH5K_DEBUG instead of AR_DEBUG and AR5K_DEBUG defines.
+> ATH5K_DEBUG can be set from outside the Makefile via KCFLAGS.
+>
+> * rename DPRINTF to ATH5K_DBG to be consistent with the other logging
+> functions.  ATH5K_DBG honors the debug level set on module load or by debugfs
+> and is limited by net_ratelimit().  another define ATH5K_DBG_UNLIMIT can be
+> used specifically when we do not want the output to be rate limited.
+>
+> * move all instances where the debugging output was controlled by additional
+> defines (ATH_DEBUG_MODES, ATH_DUMP_SKB) to use the debug level too.
+>
+> * make ATH5K_TRACE honor the debug level as well.
+>
+> * remove ath5k_hw_dump_state().
+>
+> * rename all debugging functions to ath5k_debug_xxx. these are static inline {}
+> when ATH5K_DEBUG is 0.
+>
+> * make ath5k_debug_dump_skb distinguish between RX and TX, so we can choose
+> wether we want to see RX or TX packets. also prepend the "phyX" name.
+>
+> * added debugfs entry (ath5k/phyX/debug) to control the debug level for each
+> device.
+>
+> * add kerneldoc for debugging levels.
+>
+> base.[ch]:
+> Changes-licensed-under: 3-clause-BSD
+>
+> hw.c, ath5k.h, phy.c:
+> Changes-licensed-under: ISC
+>
+> debug.[ch]:
+> Changes-licensed-under: GPL
 
-Who is responsible for slab btw?
-I mean, someone should be interested in getting this bug fixed. :)
-When using slab I see random corruptions. I think related to rmmod, but
-I'm not sure. I don't see this with slub.
+Very nice, I have reviewed the patch quickly and this time it seems to
+address the license issues correctly provided your intention was to
+GPL your contributions. Just going to give this a spin and review
+debug.[ch] a bit more, I'll try to do it tonight.
 
--- 
-Greetings Michael.
+  Luis
