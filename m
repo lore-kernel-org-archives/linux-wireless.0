@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37971
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbXKJQ2Y convert rfc822-to-8bit (ORCPT
+Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:39560 "EHLO
+	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477AbXK0EGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 11:28:24 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43: silence a bogus gcc warning
-Date: Sat, 10 Nov 2007 17:27:43 +0100
-Cc: Frank Lichtenheld <frank@lichtenheld.de>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200711101614.03776.mb@bu3sch.de> <20071110152533.GC32472@tuxdriver.com>
-In-Reply-To: <20071110152533.GC32472@tuxdriver.com>
+	Mon, 26 Nov 2007 23:06:13 -0500
+Date: Mon, 26 Nov 2007 20:05:36 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211: unencrypted packet vulnerability
+Message-ID: <20071127040536.GF5698@jm.kir.nu> (sfid-20071127_040616_869011_91ABBC38)
+References: <1195686097.6323.22.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200711101727.43736.mb@bu3sch.de> (sfid-20071110_162828_899537_909410D8)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1195686097.6323.22.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 November 2007 16:25:33 John W. Linville wrote:
-> On Sat, Nov 10, 2007 at 04:14:03PM +0100, Michael Buesch wrote:
-> > From: Frank Lichtenheld <frank@lichtenheld.de>
-> >=20
-> > inititalise ret to 0 to avoid the following bogus warning:
-> >   CC [M]  drivers/net/wireless/b43/debugfs.o
-> > drivers/net/wireless/b43/debugfs.c: In function =E2=80=98b43_debugf=
-s_read=E2=80=99:
-> > drivers/net/wireless/b43/debugfs.c:355: warning: =E2=80=98ret=E2=80=
-=99 may be used uninitialized in this function
-> >=20
-> > Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
->=20
-> Isn't this what uninitialized_var() is for?
->=20
+On Thu, Nov 22, 2007 at 12:01:37AM +0100, Johannes Berg wrote:
 
-I'd be OK with that, too.
+> As I just found, mac80211 is susceptible to an attack where the attacker
+> simply sends frames it wants us to see unencrypted instead of bothering
+> with replay attacks or such. This could possibly cause us to reply to
+> these frames or worse yet, a mac80211 based AP could encrypt the frames
+> and broadcast them if the attacker uses a MAC address of another station
+> that is properly associated!
 
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The reason is that ieee80211_rx_h_drop_unencrypted() drops unencrypted
+> frames, but only if "sdata->drop_unencrypted" is set which never
+> happens!
+
+Hmm.. What happened to the original code that had (rx->key ||
+rx->sdata->drop_unencrypted)?
+
+The drop_unencrypted was originally designed as just an extra layer of
+protection and it was not really needed in most configurations. There
+might have been some odd corner cases where it was needed in
+multi-SSID/BSSID case, but other than that, the rx->key part would have
+taken care of this.
+
+> The patch below is necessary for wpa_supplicant to be able to set the
+> drop_unencrypted setting, but I'm not convinced it actually needs to be
+> able to set it. Can't the kernel just do a sane default?
+
+I thought it did.. By the use of rx->key here, not by use of
+drop_unencrypted. Anyway, like I said, drop_unencrypted is an extra
+layer of security, so having possibility of using it may be nice safety
+net should something else go wrong in the RX logic.
+
+> Considering the AP case, on the other hand, hostapd will need to be able
+> to set the setting since we don't actually look into the beacon it tells
+> us to transmit. But hostapd on the other hand doesn't even invoke the
+> iwauth ioctl! I have to admit to being rather confused.
+
+The Devicescape version of hostapd did.. I do not remember why this was
+not merged, but I would assume it was just something that I never got to
+and since it was using a private ioctl for setting the parameter that
+option already disappeared. Sure, it would be reasonable to add support
+for it now that the parameter is available with WE-18.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
