@@ -1,170 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:44503 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbXKBDLk (ORCPT
+Received: from dike.telenet-ops.be ([195.130.132.36]:46391 "EHLO
+	dike.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170AbXK0WyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 23:11:40 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so733111wxd
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 20:11:39 -0700 (PDT)
-Date: Thu, 1 Nov 2007 23:11:31 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 7/7] ath5k: Add documentation for struct ath5k_rate
-Message-ID: <20071102031131.GA4070@pogo> (sfid-20071102_031151_816812_48921F74)
-References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo> <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo> <20071101043933.GG21987@pogo> <20071101044059.GH21987@pogo> <20071101215640.GE4182@pogo> <20071101150651.a61a6f0f.rdunlap@xenotime.net>
+	Tue, 27 Nov 2007 17:54:11 -0500
+Received: from astra.telenet-ops.be (astra.telenet-ops.be [195.130.132.58])
+	by dike.telenet-ops.be (Postfix) with ESMTP id DEB156F85FE
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 18:25:50 +0100 (CET)
+Date: Tue, 27 Nov 2007 18:25:06 +0100 (CET)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: loswillios <loswillios@gmail.com>, kyle@mcmartin.ca,
+	linux-wireless@vger.kernel.org, developers@islsm.org,
+	linux-mips@linux-mips.org
+Subject: Re: prism54 - MIPS do_be() trap caught
+In-Reply-To: <43e72e890711270917o309441a0g99ac435a629b6d5e@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.0711271824350.14777@anakin> (sfid-20071127_225420_386021_5CDFFCC3)
+References: <43e72e890711270917o309441a0g99ac435a629b6d5e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071101150651.a61a6f0f.rdunlap@xenotime.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 01, 2007 at 03:06:51PM -0700, Randy Dunlap wrote:
-> On Thu, 1 Nov 2007 17:56:40 -0400 Luis R. Rodriguez wrote:
+On Tue, 27 Nov 2007, Luis R. Rodriguez wrote:
+> Changing subject, CC'ing linux-mips, perhaps they can help.
 > 
-> > ** Resending after checkpatch.pl
-> > 
-> > This adds documentation for struct ath5k_rate. This also removes
-> > some unused variables, lp_ack_duration and sp_ack_duration which
-> > are simply unnecessary. We obviously have information about the rest
-> > of the rate values, we can add more as we go, this just starts this up.
-> > I'll next target cleaning up the RATE macros, think that may be there
-> > the other G mode issues are in.
+> On Nov 26, 2007 7:54 PM, loswillios <loswillios@gmail.com> wrote:
+> > Jan Willies wrote:
+> > > Luis R. Rodriguez wrote:
+> > >> Actually I've been informed this is not unaligned access problem but
+> > >> instead it occurs on do_be() or ip22_be_interrupt() on MIPS. I'll have
+> > >> to check how that works, I do not yet understand how this is reached.
+> > >
+> > > I will try a new build with prism54 in the next days and let you know if
+> > > that issue is still present.
+> >
+> > Still the same problem with 2.6.23.1:
+> >
+> > root@OpenWrt:/# ifconfig eth1 up
+> > eth1: resetting device...
+> > eth1: uploading firmware...
+> > eth1: firmware version: 1.0.4.3
+> > eth1: firmware upload complete
+> > eth1: interface reset complete
+> >
+> > root@OpenWrt:/# iwlist eth1 scanning
+> > Data bus error, epc == c011518c, ra == c01146cc
+> > Oops[#1]:
+> > Cpu 0
+> > $ 0   : 00000000 1000b800 abad0000 00000032
+> > $ 4   : 00000001 c00c8000 00000013 00000001
+> > $ 8   : 0000003c 80102bd4 ffffffff 81e2101c
+> > $12   : ffffffff 00000580 2ab8af24 00000498
+> > $16   : 81e21680 000000fa 81339380 0000004a
+> > $20   : 81339380 00000000 a1e80000 81339000
+> > $24   : 00000000 2abd55e0
+> > $28   : 813b4000 813b5cc8 00000019 c01146cc
+> > Hi    : 00000000
+> > Lo    : 00000580
+> > epc   : c011518c     Not tainted
+> > ra    : c01146cc Status: 1000b803    KERNEL EXL IE
+> > Cause : 0000001c
+> > PrId  : 00029007
 > 
-> Thanks for doing this... but one more change, please:
-> (just move lines around, see below)
-> 
-> > Changes to ath5k.h
-> > Changes-licensed-under: ISC
-> > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> > ---
-> >  drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
-> >  1 files changed, 51 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-> > index c8ab09a..7147fb4 100644
-> > --- a/drivers/net/wireless/ath5k/ath5k.h
-> > +++ b/drivers/net/wireless/ath5k/ath5k.h
-> > @@ -549,17 +549,61 @@ struct ath5k_athchan_2ghz {
-> >   * 	 used by the rate control algorytm on MadWiFi.
-> >   */
-> >  
-> > -#define AR5K_MAX_RATES	32 /*max number of rates on the rate table*/
-> > +/* Max number of rates on the rate table and what it seems
-> > + * Atheros hardware supports */
-> > +#define AR5K_MAX_RATES 32
-> 
-> As described in Documentation/kernel-doc-nano-HOWTO.txt, the
-> structure fields/members should immediately follow the first line.
-> After all of the fields/members, you can add general info, like
-> the first paragraph that is here.
-> 
-> Example from that doc file:
-> 
-> 
-> /**
->  * struct my_struct - short description
->  * @a: first member
->  * @b: second member
->  *
->  * Longer description
->  */
+> I can see that this comes from arch/mips/kernel/traps.c do_be() but I
+> fail to see when this is triggered. Perhaps someone from linux-mips
+> might be able to help shed some light here. I tried looking into the
+> stack trace before but I couldn't find any code that made me suspect
+> of a possible big endian problem (it seems that may be the problem?).
+> The stack trace used to look like this:
 
-New patch, completes the docs and addresses Randy's points.
+BE = bus error, not big endian here.
 
-This adds documentation for struct ath5k_rate. This also removes
-some unused variables, lp_ack_duration and sp_ack_duration which
-are simply unnecessary.
+Gr{oetje,eeting}s,
 
-We're now just missing information about rate hw values:
+						Geert
 
-3-5
-16
-17-23
-28-32
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-If anyone knows what those are, please let us know.
-
-Changes to ath5k.h
-Changes-licensed-under: ISC
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
----
- drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
- 1 files changed, 51 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index c8ab09a..72c24bc 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -549,17 +549,60 @@ struct ath5k_athchan_2ghz {
-  * 	 used by the rate control algorytm on MadWiFi.
-  */
- 
--#define AR5K_MAX_RATES	32 /*max number of rates on the rate table*/
-+/* Max number of rates on the rate table and what it seems
-+ * Atheros hardware supports */
-+#define AR5K_MAX_RATES 32
- 
-+/**
-+ * struct ath5k_rate - rate structure
-+ * @valid: is this a valid rate for the current mode
-+ * @modulation: respective mac80211 modulation
-+ * @rate_kbps: rate in kbit/s
-+ * @rate_code: hardware rate value, used in &struct ath5k_desc, on RX on
-+ *     &struct ath5k_rx_status.rs_rate and on TX on
-+ *     &struct ath5k_tx_status.ts_rate. Seems the ar5xxx harware supports
-+ *     up to 32 rates, indexed by 1-32. This means we really only need
-+ *     6 bits for the rate_code.
-+ * @dot11_rate: respective IEEE-802.11 rate value
-+ * @control_rate: index of rate assumed to be used to send control frames.
-+ *     This can be used to set override the value on the rate duration
-+ *     registers. This is only useful if we can override in the harware at
-+ *     what rate we want to send control frames at. Note that IEEE-802.11
-+ *     Ch. 9.6 (after IEEE 802.11g changes) defines the rate at which we
-+ *     should send ACK/CTS, if we change this value we can be breaking
-+ *     the spec.
-+ *
-+ * This structure is used to get the RX rate or set the TX rate on the
-+ * hardware descriptors. It is also used for internal modulation control
-+ * and settings.
-+ *
-+ * On RX after the &struct ath5k_desc is parsed by the appropriate
-+ * ah_proc_rx_desc() the respective hardware rate value is set in
-+ * &struct ath5k_rx_status.rs_rate. On TX the desired rate is set in
-+ * &struct ath5k_tx_status.ts_rate which is later used to setup the
-+ * &struct ath5k_desc correctly. This is the hardware rate map we are
-+ * aware of:
-+ *
-+ * rate_code   1       2       3       4       5       6       7       8
-+ * rate_kbps   3000    1000    ?       ?       ?       2000    500     48000
-+ *
-+ * rate_code   9       10      11      12      13      14      15      16
-+ * rate_kbps   24000   12000   6000    54000   36000   18000   9000    ?
-+ *
-+ * rate_code   17      18      19      20      21      22      23      24
-+ * rate_kbps   ?       ?       ?       ?       ?       ?       ?       11000
-+ *
-+ * rate_code   25      26      27      28      29      30      31      32
-+ * rate_kbps   5500    2000    1000    ?       ?       ?       ?       ?
-+ *
-+ */
- struct ath5k_rate {
--	u8	valid;		/* Valid for rate control */
-+	u8	valid;
- 	u32	modulation;
--	u16	rate_kbps;	/* Rate in kbps used in computetxtime */
--	u8	rate_code;	/* Rate mapping for h/w descriptors */
-+	u16	rate_kbps;
-+	u8	rate_code;
- 	u8	dot11_rate;
--	u8	control_rate;	/* Rate for management frames -not used */
--	u16	lp_ack_duration;/* long preamble ACK duration -not used */
--	u16	sp_ack_duration;/* short preamble ACK duration -not used */
-+	u8	control_rate;
- };
- 
- /* XXX: GRR all this stuff to get leds blinking ??? (check out setcurmode) */
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
