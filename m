@@ -1,24 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:2275 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbXK3WlK (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:38808 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753721AbXK0TmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2007 17:41:10 -0500
-Received: by py-out-1112.google.com with SMTP id u77so4722787pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2007 14:41:08 -0800 (PST)
-Message-ID: <43e72e890711301441x1f7233a1s449d3631cc85e863@mail.gmail.com> (sfid-20071130_224114_327168_E67014FE)
-Date: Fri, 30 Nov 2007 17:41:07 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Linux wireless developer documenation
+	Tue, 27 Nov 2007 14:42:04 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so1396181mue
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:42:03 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/11] rt2x00: Release rt2x00 2.0.13
+Date: Tue, 27 Nov 2007 21:52:13 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711272146.53518.IvDoorn@gmail.com>
+In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711272152.13282.IvDoorn@gmail.com> (sfid-20071127_200530_919200_20285D5B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just an FYI I've revamped the developers section to the wiki. The
-Documentation section is now more elaborate.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-http://linuxwireless.org/en/developers
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 218068b..85cfdab 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -43,7 +43,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.0.12"
++#define DRV_VERSION	"2.0.13"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
+-- 
+1.5.3.6
 
-  Luis
