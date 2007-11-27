@@ -1,80 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.tpgi.com.au ([203.12.160.61]:39124 "EHLO
-	mail4.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758076AbXKUNcw (ORCPT
+Received: from terminus.zytor.com ([198.137.202.10]:43122 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757988AbXK0RRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 08:32:52 -0500
-Message-ID: <474432E8.90304@hotmail.com> (sfid-20071121_133336_650901_28ABC18D)
-Date: Thu, 22 Nov 2007 00:30:16 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Reply-To: linux-wireless@vger.kernel.org,
-	   David Miller <davem@davemloft.net>,
-	   Johannes Berg <johannes@sipsolutions.net>,
-	   Daniel Drake <dsd@gentoo.org>, jt@hpl.hp.com
+	Tue, 27 Nov 2007 12:17:31 -0500
+Message-ID: <474C50F7.8@zytor.com> (sfid-20071127_171735_297421_AF43D270)
+Date: Tue, 27 Nov 2007 09:16:39 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	jt@hpl.hp.com, Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com>
-In-Reply-To: <47443035.1070702@hotmail.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+To: Herbert Xu <herbert@gondor.apana.org.au>
+CC: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <20071125010814.GD31668@gondor.apana.org.au>
+In-Reply-To: <20071125010814.GD31668@gondor.apana.org.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Shaddy Baddah wrote:
-=> Please find this in-lined below (with key protected):
+Herbert Xu wrote:
 > 
-> # iwconfig eth2
-> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
->           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
->           Bit Rate=1 Mb/s
->           Encryption key:<too big>
-> 
-> # iwconfig eth2 essid dixieland key "GGGGGGGGGG"
-> # iwconfig eth2
-> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
->           Mode:Managed  Frequency:2.462 GHz  Access Point: 
-> GG:GG:GG:GG:GG:GG
->           Bit Rate=24 Mb/s
->           Encryption key:<too big>
-> 
-> #
+> Luckily all sky2 users have been on x86 so far :)
 > 
 
+Hardly so.  My previous employer was MIPS and we used it there (with my 
+patch.)
 
-Interestingly, after performing the above actions, I am now getting 
-additional log messages:
-
-SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
-Kernel unaligned access at TPC[100df410] 
-ieee80211softmac_handle_assoc_response]
-Kernel unaligned access at TPC[100df548] 
-ieee80211softmac_handle_assoc_response]
-ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
-Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-[ieee802]
-Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-[ieee802]
-Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-[ieee802]
-Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-[ieee802]
-Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
-[ieee802]
-Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw] 
-
-Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw] 
-
-Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw] 
-
-Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw] 
-
-Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw] 
-
-
-
-Hope this helps,
-Shaddy
+	-hpa
