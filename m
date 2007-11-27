@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45887 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759259AbXK2Vtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 16:49:31 -0500
-Subject: Re: mac80211 broken wifi packadges
-From: Pavel Roskin <proski@gnu.org>
-To: =?iso-8859-2?Q?Sz=F6ll=F5si?= Imre <imi@szollosi.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <474EAD65.5050103@szollosi.net>
-References: <474EAD65.5050103@szollosi.net>
-Content-Type: text/plain; charset=iso-8859-2
-Date: Thu, 29 Nov 2007 16:49:29 -0500
-Message-Id: <1196372969.3350.9.camel@dv> (sfid-20071129_214933_383535_571C2C12)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.178]:33528 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755897AbXK0AbL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2007 19:31:11 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1804857pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2007 16:31:10 -0800 (PST)
+Message-ID: <43e72e890711261631g24c45b67s82befc1ff43d3097@mail.gmail.com> (sfid-20071127_003114_407214_608971DE)
+Date: Mon, 26 Nov 2007 19:31:09 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [PATCH 2/3] ath5k: noise calibration also for rf511x
+Cc: "Bruno Randolf" <bruno@thinktube.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com
+In-Reply-To: <40f31dec0711230325tf751decr1b3a0ce8af95d68d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-2-git-send-email-bruno@thinktube.com>
+	 <1195815123-22375-3-git-send-email-bruno@thinktube.com>
+	 <40f31dec0711230325tf751decr1b3a0ce8af95d68d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-11-29 at 13:15 +0100, Sz=F6ll=F5si Imre wrote:
-> Hello!
->=20
-> Sorry about breaking the work.
-> I'm a student from hungary and I have a trouble. My challange is, the=
-=20
-> get and use the broked wifi packadge.
+On Nov 23, 2007 6:25 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2007/11/23, Bruno Randolf <bruno@thinktube.com>:
+> > also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
+> > just writing the bit.
+> >
+> > Changes-licensed-under: ISC
+> > Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> > ---
+> >  drivers/net/wireless/ath5k/phy.c |    3 +--
+> >  1 files changed, 1 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+> > index 9b91121..f250c2e 100644
+> > --- a/drivers/net/wireless/ath5k/phy.c
+> > +++ b/drivers/net/wireless/ath5k/phy.c
+> > @@ -1702,8 +1702,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+> >                 ((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
+> >
+> >  done:
+> > -       /* Start noise floor calibration */
+> > -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
+> > +       ath5k_hw_noise_floor_calibration(ah, channel->freq);
+> >
+> >         /* Request RF gain */
+> >         if (channel->val & CHANNEL_5GHZ) {
+> > --
+> > 1.5.3.4
+> >
+> >
+>
+> Actually just writing the bit enables nf calibration, what this patch
+> does is that it also reads the value and check if it's ok.
 
-Please don't post the same thing several time.  I also suggest that you
-use a spellchecker, so that your e-mail is more readable.
+Know why it wasn't done before? Have you guys tested this without
+impact on performance on the affected hardware? Just curious.
 
-I assume "packadge" means "packet".
-
-> I sawed, the mac80211 is able to monitor mode with an virtual interfa=
-ce,=20
-> but it's only get good  packedges of wireless traffic. We want to use=
- it=20
-> to completion a wireless stream traffic.
-
-You probably mean that you want to receive packets with incorrect
-checksum.
-
-I checked the sources quickly, and I think you could try to change the
-first "return 1" with "return 0" in should_drop_frame() in
-net/mac80211/rx.c
-
-Also, you may get better replies if you mention the kernel version, the
-driver name and other relevant technical details.
-
-> My question is, can you give me some instuction, how can i modify the=
-=20
-> stack, or can you give me a patch? I'm not a programmer, only learn=20
-> infocommunication.
-
-Generally, this list is not the place where you can expect others to do
-your homework.
-
-> Can you help me?
-
-The last question is answered here:
-http://www.catb.org/~esr/faqs/smart-questions.html#prune
-
---=20
-Regards,
-Pavel Roskin
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
