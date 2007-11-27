@@ -1,89 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:54177 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752202AbXKUTG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 14:06:27 -0500
-Date: Wed, 21 Nov 2007 11:06:02 -0800
-To: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071121190602.GB17199@bougret.hpl.hp.com> (sfid-20071121_190634_903866_4244CA6F)
-Reply-To: jt@hpl.hp.com
-References: <1195484582.8642.18.camel@johannes.berg> <20071119.142046.188284555.davem@davemloft.net> <1195562454.10920.6.camel@johannes.berg> <20071120.044600.47940350.davem@davemloft.net> <20071120180016.GC1480@bougret.hpl.hp.com> <20071120180601.GA2019@bougret.hpl.hp.com> <47443430.3010504@hotmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.235]:41474 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058AbXK0QGz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2007 11:06:55 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so773151nze
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 08:06:54 -0800 (PST)
+Message-ID: <1ba2fa240711270806s5aa93418md0cd25d7519ae3d7@mail.gmail.com> (sfid-20071127_160700_628617_8B48A612)
+Date: Tue, 27 Nov 2007 18:06:52 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Ian Schram" <ischram@telenet.be>
+In-Reply-To: <1196179471.6058.41.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47443430.3010504@hotmail.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071126225416.467939000@sipsolutions.net>
+	 <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com>
+	 <1196175476.6058.25.camel@johannes.berg>
+	 <1ba2fa240711270800p3312246as51b0a23f77e81f3@mail.gmail.com>
+	 <1196179471.6058.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2007 at 12:35:44AM +1100, Shaddy Baddah wrote:
-> Hi Jean,
-> 
-> Jean Tourrilhes wrote:
-> >>	This is a special version of Wireless Tools with some debug
-> >>code.
-> >
-> >	Sorry, I forgot to enable some debug. This version should do it.
-> 
-> I've chosen to respond directly, because I hope not to publish my MAC 
-> address to the list,
+sorry for stupid question but what is the git for 24.?
 
-	Wise move. I made sure to blank it out.
-
-> I've run as follows:
-> 
-> # ./iwlist eth2 scanning 2>&1 | tee scan.log
-> 
-> and have attached the output.
-> 
-> Hope that helps,
-> Shaddy
-
-> Scan result 4096 [
-{removed for privacy reasons}
-00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00]
-
-	The first thing to notice is the large number of zeros at the
-end. This is the same problem as you had with the encryption key, the
-lenght of the buffer is not returned properly to user space. In
-theory, we should not crash on bad data, but having all this extra
-junk is not helpful.
-	The fix for that is the patch I sent in the other e-mail,
-already included in 2.6.23.
-
-> DBG - stream->current = 0x2c039, stream->value = (nil), stream->end = 0x2d008
-> DBG - iwe->cmd = 0x8B01, iwe->len = 24
-> DBG - event_type = 2, event_len = 16, pointer = 0x2c03d
-> DBG - alt iwe->len = 20
->                     Protocol:IEEE 802.11bg
-> DBG - stream->current = 0x2c051, stream->value = (nil), stream->end = 0x2d008
-> DBG - iwe->cmd = 0x8B07, iwe->len = 12
-> DBG - event_type = 4, event_len = 4, pointer = 0x2c055
-> DBG - alt iwe->len = 8
-
-	Are you certain the log really stop there ? It looks truncated
-to me. As far as I can see, the parsing works properly and the
-workaround kicks in properly.
-	Note that there is only a single AP in your scan log. After
-the protocol, you should see "mode: Master", "freq/channel" (twice),
-and "encoding". After that, it should try to decode "rate" but will
-most likely fail because of the extra junk (I'll look into that).
-
-	If you have time, you can try with gdb. Here is what you would
-do.
-	1) edit Makefile. Go to CFLAGS, replace "-Os" with "-g".
-	2) make clean ; make
-	3) gdb --args iwlist eth0 scan
-	4) run
-	5) bt
-
-	I'll look into that.
-	Thanks a lot !
-
-	Jean
-
-
-
+On Nov 27, 2007 6:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2007-11-27 at 18:00 +0200, Tomas Winkler wrote:
+>
+> > I found it, there was a patch by Ian Schram <ischram@telenet.be>
+> > '[PATCH] allow changing mac_addr by userspace'
+> > It should work I nacked it just because I wanted to remove a filed he
+> > was using, it never happened so I think we can apply it
+> > for 24 and then I get back to rework it.
+> > I'll resend it rebased to current everything.
+>
+> Great, thanks. Actually, John will probably prefer if you send him a
+> version against .24 as well. John, please drop 2 and 3 of this series
+> then in favour of that patch.
+>
+> johannes
+>
