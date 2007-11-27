@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:60282 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156AbXKVOtM (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:8698 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753671AbXK0QAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 09:49:12 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2462571nfb
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 06:49:11 -0800 (PST)
-Message-ID: <c85cb4470711220649vd83b72lf0e6ae537b359c93@mail.gmail.com> (sfid-20071122_144915_980264_B0AD34B8)
-Date: Thu, 22 Nov 2007 16:49:10 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
+	Tue, 27 Nov 2007 11:00:01 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1303183wah
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 08:00:00 -0800 (PST)
+Message-ID: <1ba2fa240711270800p3312246as51b0a23f77e81f3@mail.gmail.com> (sfid-20071127_160009_664339_BBD90695)
+Date: Tue, 27 Nov 2007 18:00:00 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: restructuring data Rx handlers
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <1195732107.6323.84.camel@johannes.berg>
+Subject: Re: [PATCH (2.6.24) 0/3] last minute iwlwifi fixes
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Ian Schram" <ischram@telenet.be>
+In-Reply-To: <1196175476.6058.25.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <11956348193070-git-send-email-ron.rindjunsky@intel.com>
-	 <1195732107.6323.84.camel@johannes.berg>
+References: <20071126225416.467939000@sipsolutions.net>
+	 <1ba2fa240711270654r276657ch4e56e543a3c4a427@mail.gmail.com>
+	 <1196175476.6058.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Looking into the eapol handling in more detail, I found another bug with
-> your patch. Namely, in the RX path, you have:
+On Nov 27, 2007 4:57 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> > -     if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb) &&
-> > +     if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb, hdrlen) &&
+> On Tue, 2007-11-27 at 16:54 +0200, Tomas Winkler wrote:
+> > In general it is possible to change the mac address and there was a
+> > patch for it if I remember correctly. It had some issues so I nacked
+> > it, it slipped from my attention after that. I'll try to dig the
+> > history.
 >
-> at which point the frame is already reframed to 802.3.
+> Thanks. I didn't feel confident enough with the driver to make such a
+> change since I have no idea where it should/would be uploaded to the
+> hardware and whether maybe the ucode gets it from the eeprom too etc.
 >
-> However,
+> If you can get a patch that makes this work I'm all for it since the
+> mac80211 hack isn't too nice anyway.
 >
-> > -int ieee80211_is_eapol(const struct sk_buff *skb)
-> > +int ieee80211_is_eapol(const struct sk_buff *skb, int hdrlen)
-> >  {
->
-> >       if (unlikely(skb->len >= hdrlen + sizeof(eapol_header) &&
-> >                    memcmp(skb->data + hdrlen, eapol_header,
-> >                           sizeof(eapol_header)) == 0))
->
-> here checks the full 802.2 LLC header which was removed by the
-> reframing, thus this check will always be false.
->
-> I think we should, instead, have the ieee80211_data_to_8023 function set
-> skb->protocol correctly, and leave the skb's data pointer pointing to
-> the payload rather than the ethernet header, like eth_type_trans() would
-> do. In fact, I think we can just call it after we've reframed the frame.
-> Then, we can check skb->protocol for EAPOL which is a much cheaper check
-> too.
->
-> The thing I'm not entirely sure about is what happens with
-> eth_type_trans() and the pulling of the ethernet header. Wouldn't that
-> cause us problems with the skb->data[] accesses in
-> ieee80211_subif_start_xmit() once the frame arrives back there?
-
-excellent catch, you are right.
-let me suggest an alternative, which makes use of current ieee80211_is_eapol.
-in regular Rx data frames, code will look like this:
-
-+     ieee80211_drop_802_1x_pae(rx, size of current 802.11 hdr);
-+     ieee80211_drop_unencrypted(rx, size of current 802.11 hdr);
-      ieee80211_data_to_8023(rx)
--     ieee80211_drop_802_1x_pae(rx, size of 802.3 hdr);
--     ieee80211_drop_unencrypted(rx, size of 802.3 hdr);
-
-while in A-MSDU frames code will look like this:
-
-     ieee80211_data_to_8023(rx)
-for each internal frame (that is any how in 802.2 form):
-+     ieee80211_drop_802_1x_pae(rx, 0);
-+     ieee80211_drop_unencrypted(rx, 0);
-       move from 802.2 to 802.3
--     ieee80211_drop_802_1x_pae(rx, size of 802.3 hdr);
--     ieee80211_drop_unencrypted(rx, size of 802.3 hdr);
-
-I thought it makes good use of the infrastructure we made so far, what
-do you think?
+I found it, there was a patch by Ian Schram <ischram@telenet.be>
+'[PATCH] allow changing mac_addr by userspace'
+It should work I nacked it just because I wanted to remove a filed he
+was using, it never happened so I think we can apply it
+for 24 and then I get back to rework it.
+I'll resend it rebased to current everything.
 
 > johannes
->
 >
