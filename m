@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:48884 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbXKVViE (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:23631 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026AbXK0Tjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 16:38:04 -0500
-From: Chr <chunkeey@web.de>
-To: developers@islsm.org
-Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
-Date: Thu, 22 Nov 2007 22:35:43 +0100
-Cc: Jan Willies <jan@willies.info>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, kyle@mcmartin.ca,
-	linux-wireless@vger.kernel.org
-References: <46631BD2.20704@willies.info> <43e72e890711211713y1678bc9blf75e45dae4d74b8@mail.gmail.com> <4745EE3E.8090601@willies.info>
-In-Reply-To: <4745EE3E.8090601@willies.info>
+	Tue, 27 Nov 2007 14:39:53 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1321058ugc
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:53 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 07/11] rt2x00: Use IEEE80211_IF_TYPE_INVALID directly
+Date: Tue, 27 Nov 2007 21:49:50 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711272146.53518.IvDoorn@gmail.com>
+In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711222235.44079.chunkeey@web.de> (sfid-20071122_213812_269375_704961E9)
+  charset="utf-8"
+Message-Id: <200711272149.50809.IvDoorn@gmail.com> (sfid-20071127_194249_300331_22C91BC1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Hmmz, I wasn't aware that p54 doesn't support encryption or AP mode yet.
-> Is there any website/blog or something apart from linvilles commit log
-> where I can read about its progress?
->
-> Funny thing is, I had a chat with Michael Wu because p54 was segfaulting
-> for me. Turned out that I was missing some crypto modules, which are
-> only needed for encryption I guess. Therefore I assumed encryption is
-> working.
->
-"hardware encryption" does not work, since no one has implemented it.
-but the software encryption is always available...
+No need to use a seperate define INVALID_INTERFACE while
+we can use IEEE80211_IF_TYPE_INVALID directly.
 
-The AP Mode is a pain... Beause the firmware of the device changes the beacon
-frames and does some accouting for the powersaving features...
-There're workarounds, but they'll probably break something else.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-Regards,
-	Chr
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index ba874cf..103a122 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -369,10 +369,8 @@ struct interface {
+ 
+ 	/*
+ 	 * Current working type (IEEE80211_IF_TYPE_*).
+-	 * When set to INVALID_INTERFACE, no interface is configured.
+ 	 */
+ 	int type;
+-#define INVALID_INTERFACE	IEEE80211_IF_TYPE_INVALID
+ 
+ 	/*
+ 	 * MAC of the device.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 48e2515..bd7b738 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1170,7 +1170,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Reset current working type.
+ 	 */
+-	rt2x00dev->interface.type = INVALID_INTERFACE;
++	rt2x00dev->interface.type = IEEE80211_IF_TYPE_INVALID;
+ 
+ 	/*
+ 	 * Allocate ring array.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index e216c34..bae4442 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -242,7 +242,7 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 		return;
+ 
+ 	intf->id = 0;
+-	intf->type = INVALID_INTERFACE;
++	intf->type = IEEE80211_IF_TYPE_INVALID;
+ 	memset(&intf->bssid, 0x00, ETH_ALEN);
+ 	memset(&intf->mac, 0x00, ETH_ALEN);
+ 
+-- 
+1.5.3.6
+
