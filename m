@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:13631 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbXKXWjR (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:38808 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740AbXK0TmA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 17:39:17 -0500
-Received: by py-out-1112.google.com with SMTP id u77so448726pyb
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2007 14:39:16 -0800 (PST)
-Message-ID: <8e6f94720711241439x27c1a48dxe3f3698043fb05a8@mail.gmail.com> (sfid-20071124_223919_730571_F0BAB405)
-Date: Sat, 24 Nov 2007 17:39:15 -0500
-From: "Will Dyson" <will.dyson@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 regression: doesn't associate automatically
-Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1195940177.4149.203.camel@johannes.berg>
+	Tue, 27 Nov 2007 14:42:00 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so1396181mue
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:41:58 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 09/11] rt2x00: Remove redundant code in rfkill setup
+Date: Tue, 27 Nov 2007 21:51:39 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200711272146.53518.IvDoorn@gmail.com>
+In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200711220912.10452.hs4233@mail.mn-solutions.de>
-	 <200711221719.40412.hs4233@mail.mn-solutions.de>
-	 <1195821998.4149.113.camel@johannes.berg>
-	 <200711231423.23910.hs4233@mail.mn-solutions.de>
-	 <1195940177.4149.203.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200711272151.39293.IvDoorn@gmail.com> (sfid-20071127_194249_299022_9C4E0DE8)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 24, 2007 4:36 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-> Yeah, I've been bitten by that too. It's pretty tough actually but
-> *should* be doable though I would much prefer to set it only after the
-> interface is up I can see... Thing is that before the iface is up the
-> interface mode isn't set in stone. So things like
->
-> iwconfig eth1 blabla
-> iwconfig eth1 mode monitor
-> iwconfig eth1 mode managed
-> ip link set eth1 up
->
-> can probably never work properly. In any case, we ought to fix this
-> though right now I don't know what the best way would be.
+In rt2x00rfkill.c, routine input_allocate_device() is called even though
+input_allocate_polled_device(), which was just called, includes a call to
+that routine. This patch, which has not been tested, removes the redundant code.
 
-Ugh, yeah.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-Would "bringing up a STA interface always triggers a scan" be too
-horrible of a kludge to contemplate?
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+index bbbf51d..7439637 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
++++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+@@ -136,12 +136,6 @@ int rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->poll_dev->poll = rt2x00rfkill_poll;
+ 	rt2x00dev->poll_dev->poll_interval = RFKILL_POLL_INTERVAL;
+ 
+-	rt2x00dev->poll_dev->input = input_allocate_device();
+-	if (!rt2x00dev->poll_dev->input) {
+-		ERROR(rt2x00dev, "Failed to allocate input device.\n");
+-		goto exit_free_polldev;
+-	}
+-
+ 	rt2x00dev->poll_dev->input->name = rt2x00dev->ops->name;
+ 	rt2x00dev->poll_dev->input->phys = wiphy_name(rt2x00dev->hw->wiphy);
+ 	rt2x00dev->poll_dev->input->id.bustype = BUS_HOST;
 -- 
-Will Dyson
+1.5.3.6
+
