@@ -1,53 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:39634 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753655AbXKWKvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 05:51:55 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com
-Subject: ath5k signal/noise fixes
-Date: Fri, 23 Nov 2007 19:52:00 +0900
-Message-Id: <1195815123-22375-1-git-send-email-bruno@thinktube.com> (sfid-20071123_105200_317854_FDC43811)
+Received: from mx1.redhat.com ([66.187.233.31]:45131 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757235AbXK1VqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 16:46:04 -0500
+Subject: Re: [PATCH] libertas: remove user-specified channel list
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200711281730.21327.hs4233@mail.mn-solutions.de>
+References: <200711281730.21327.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 28 Nov 2007 16:40:16 -0500
+Message-Id: <1196286016.4967.26.camel@localhost.localdomain> (sfid-20071128_214608_679268_A1895928)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-11-28 at 17:30 +0100, Holger Schurig wrote:
+> Remove the ability to specify channels to scan via debugfs
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-hello!
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-the next 3 patches contain fixes for the signal/noise level calibration and
-reporting of ath5k.  i split them up because i'm not 100% sure of the second
-two.
+> Index: wireless-2.6/drivers/net/wireless/libertas/README
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/README	2007-11-28 18:18:45.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/README	2007-11-28 18:20:09.000000000 +0100
+> @@ -195,8 +195,6 @@ setuserscan
+>  
+>           where [ARGS]:
+>  
+> -      chan=[chan#][band][mode] where band is [a,b,g] and mode is
+> -                               blank for active or 'p' for passive
+>        bssid=xx:xx:xx:xx:xx:xx  specify a BSSID filter for the scan
+>        ssid="[SSID]"            specify a SSID filter for the scan
+>        keep=[0 or 1]            keep the previous scan results (1), discard (0)
+> @@ -204,35 +202,26 @@ setuserscan
+>        type=[1,2,3]             BSS type: 1 (Infra), 2(Adhoc), 3(Any)
+>  
+>      Any combination of the above arguments can be supplied on the command
+> -      line.  If the chan token is absent, a full channel scan will be
+> -      completed by the driver.  If dur tokens are absent, the driver default
+> -      setting will be used.  The bssid and ssid fields, if blank, will
+> -      produce an unfiltered scan. The type field will default to 3 (Any) and
+> -      the keep field will default to 0 (Discard).
+> +    line. If dur tokens are absent, the driver default setting will be used.
+> +    The bssid and ssid fields, if blank, will produce an unfiltered scan.
+> +    The type field will default to 3 (Any) and the keep field will default
+> +    to 0 (Discard).
+>  
+>      Examples:
+> -    1) Perform an active scan on channels 1, 6, and 11 in the 'g' band:
+> -            echo "chan=1g,6g,11g" > setuserscan
+> -
+> -    2) Perform a passive scan on channel 11 for 20 ms:
+> -            echo "chan=11gp dur=20" > setuserscan
+> -
+> -    3) Perform an active scan on channels 1, 6, and 11; and a passive scan on
+> -       channel 36 in the 'a' band:
+> -
+> -            echo "chan=1g,6g,11g,36ap" > setuserscan
+> +    1) Perform a passive scan on all channels for 20 ms per channel:
+> +            echo "dur=20" > setuserscan
+>  
+> -    4) Perform an active scan on channel 6 and 36 for a specific SSID:
+> -            echo "chan=6g,36a ssid="TestAP"" > setuserscan
+> +    2) Perform an active scan for a specific SSID:
+> +            echo "ssid="TestAP"" > setuserscan
+>  
+> -    5) Scan all available channels (B/G, A bands) for a specific BSSID, keep
+> +    3) Scan all available channels (B/G, A bands) for a specific BSSID, keep
+>         the current scan table intact, update existing or append new scan data:
+>              echo "bssid=00:50:43:20:12:82 keep=1" > setuserscan
+>  
+> -    6) Scan channel 6, for all infrastructure networks.
+> +    4) Scan for all infrastructure networks.
+>         Keep the previous scan table intact. Update any duplicate BSSID/SSID
+>         matches with the new scan data:
+> -            echo "chan=6g type=1 keep=1" > setuserscan
+> +            echo "type=1 keep=1" > setuserscan
+>  
+>      All entries in the scan table (not just the new scan data when keep=1)
+>      will be displayed upon completion by use of the getscantable ioctl.
+> Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:22:36.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:23:27.000000000 +0100
+> @@ -196,43 +196,6 @@ out_unlock:
+>  	return count;
+>  }
+>  
+> -static int lbs_parse_chan(char *buf, size_t count,
+> -			struct lbs_ioctl_user_scan_cfg *scan_cfg, int dur)
+> -{
+> -	char *start, *end, *hold, *str;
+> -	int i = 0;
+> -
+> -	start = strstr(buf, "chan=");
+> -	if (!start)
+> -		return -EINVAL;
+> -	start += 5;
+> -	end = strchr(start, ' ');
+> -	if (!end)
+> -		end = buf + count;
+> -	hold = kzalloc((end - start)+1, GFP_KERNEL);
+> -	if (!hold)
+> -		return -ENOMEM;
+> -	strncpy(hold, start, end - start);
+> -	hold[(end-start)+1] = '\0';
+> -	while(hold && (str = strsep(&hold, ","))) {
+> -		int chan;
+> -		char band, passive = 0;
+> -		sscanf(str, "%d%c%c", &chan, &band, &passive);
+> -		scan_cfg->chanlist[i].channumber = chan;
+> -		scan_cfg->chanlist[i].scantype = passive ? 1 : 0;
+> -		if (band == 'b' || band == 'g')
+> -			scan_cfg->chanlist[i].radiotype = 0;
+> -		else if (band == 'a')
+> -			scan_cfg->chanlist[i].radiotype = 1;
+> -
+> -		scan_cfg->chanlist[i].scantime = dur;
+> -		i++;
+> -	}
+> -
+> -	kfree(hold);
+> -	return i;
+> -}
+> -
+>  static void lbs_parse_bssid(char *buf, size_t count,
+>  	struct lbs_ioctl_user_scan_cfg *scan_cfg)
+>  {
+> @@ -345,7 +308,6 @@ static ssize_t lbs_setuserscan(struct fi
+>  	scan_cfg->bsstype = LBS_SCAN_BSS_TYPE_ANY;
+>  
+>  	dur = lbs_parse_dur(buf, count, scan_cfg);
+> -	lbs_parse_chan(buf, count, scan_cfg, dur);
+>  	lbs_parse_bssid(buf, count, scan_cfg);
+>  	scan_cfg->clear_bssid = lbs_parse_clear(buf, count, "clear_bssid=");
+>  	lbs_parse_ssid(buf, count, scan_cfg);
+> Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2007-11-28 18:21:10.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2007-11-28 18:23:01.000000000 +0100
+> @@ -415,11 +415,6 @@ lbs_scan_setup_scan_config(struct lbs_pr
+>  	struct mrvlietypes_ssidparamset *pssidtlv;
+>  	struct lbs_scan_cmd_config *pscancfgout = NULL;
+>  	u8 *ptlvpos;
+> -	int chanidx;
+> -	int scantype;
+> -	int scandur;
+> -	int channel;
+> -	int radiotype;
+>  
+>  	lbs_deb_enter(LBS_DEB_SCAN);
+>  
+> @@ -504,58 +499,8 @@ lbs_scan_setup_scan_config(struct lbs_pr
+>  	 */
+>  	*ppchantlvout = (struct mrvlietypes_chanlistparamset *) ptlvpos;
+>  
+> -	if (!puserscanin || !puserscanin->chanlist[0].channumber) {
+> -		/* Create a default channel scan list */
+> -		lbs_deb_scan("creating full region channel list\n");
+> -		lbs_scan_create_channel_list(priv, pscanchanlist,
+> -					      *pfilteredscan);
+> -		goto out;
+> -	}
+> -
+> -	for (chanidx = 0;
+> -	     chanidx < LBS_IOCTL_USER_SCAN_CHAN_MAX
+> -	     && puserscanin->chanlist[chanidx].channumber; chanidx++) {
+> -
+> -		channel = puserscanin->chanlist[chanidx].channumber;
+> -		(pscanchanlist + chanidx)->channumber = channel;
+> -
+> -		radiotype = puserscanin->chanlist[chanidx].radiotype;
+> -		(pscanchanlist + chanidx)->radiotype = radiotype;
+> -
+> -		scantype = puserscanin->chanlist[chanidx].scantype;
+> -
+> -		if (scantype == CMD_SCAN_TYPE_PASSIVE) {
+> -			(pscanchanlist +
+> -			 chanidx)->chanscanmode.passivescan = 1;
+> -		} else {
+> -			(pscanchanlist +
+> -			 chanidx)->chanscanmode.passivescan = 0;
+> -		}
+> -
+> -		if (puserscanin->chanlist[chanidx].scantime) {
+> -			scandur = puserscanin->chanlist[chanidx].scantime;
+> -		} else {
+> -			if (scantype == CMD_SCAN_TYPE_PASSIVE) {
+> -				scandur = MRVDRV_PASSIVE_SCAN_CHAN_TIME;
+> -			} else {
+> -				scandur = MRVDRV_ACTIVE_SCAN_CHAN_TIME;
+> -			}
+> -		}
+> -
+> -		(pscanchanlist + chanidx)->minscantime =
+> -		    cpu_to_le16(scandur);
+> -		(pscanchanlist + chanidx)->maxscantime =
+> -		    cpu_to_le16(scandur);
+> -	}
+> -
+> -	/* Check if we are only scanning the current channel */
+> -	if ((chanidx == 1) &&
+> -	    (puserscanin->chanlist[0].channumber ==
+> -			       priv->adapter->curbssparams.channel)) {
+> -		*pscancurrentonly = 1;
+> -		lbs_deb_scan("scanning current channel only");
+> -	}
+> -
+> +	lbs_scan_create_channel_list(priv, pscanchanlist,
+> +				      *pfilteredscan);
+>  out:
+>  	return pscancfgout;
+>  }
+> Index: wireless-2.6/drivers/net/wireless/libertas/scan.h
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/scan.h	2007-11-28 18:20:13.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/scan.h	2007-11-28 18:20:50.000000000 +0100
+> @@ -121,11 +121,6 @@ struct lbs_ioctl_user_scan_cfg {
+>  
+>  	/* Clear existing scan results matching this SSID */
+>  	u8 clear_ssid;
+> -
+> -    /**
+> -     *  @brief Variable number (fixed maximum) of channels to scan up
+> -     */
+> -	struct lbs_ioctl_user_scan_chan chanlist[LBS_IOCTL_USER_SCAN_CHAN_MAX];
+>  };
+>  
+>  /**
 
-  1) fixes the reading of the noise floor register and puts it into one function.
-
-  2) also enables noise floor calibration for rf511x.
-
-  3) saves the read noise floor and exports signal/noise and "quality" to
-  mac80211/wext.
-
-i'm also not sure if what we call noise calibration in this case really is an
-calibration or just a reading of the values?
-
-is ath5k_hw the right place to store the noise_floor?
-
-the values reported, especially the noise seems a bit high, it's around -77 in
-the A bands and around -92 in G bands (thats with an AR5215/RF5111/2111), so we
-might have some more tweaking to do. since i add the RSSI to get the signal
-quality in dBm it seems a bit too high too.
-
-this comment from madwifi leads me to believe this is the correct thing to do:
-
- * rx_rssi is in units of dbm above the noise floor.  This value
- * is measured during the preamble and PLCP; i.e. with the initial
- * 4us of detection.  The noise floor is typically a consistent
- * -96dBm absolute power in a 20MHz channel
-
-at least we have some values to play with now :)
-
-ah, and they are based on my last debugging and logging, patches (although
-there are not huge dependencies).
-
-bruno
