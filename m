@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.sea5.speakeasy.net ([69.17.117.3]:58638 "EHLO
-	mail1.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbXKVEhl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50964 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757353AbXK1Nbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 23:37:41 -0500
-Date: Wed, 21 Nov 2007 20:37:22 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com
-Subject: Re: wpa_supplicant/key deletion with all-zeroes mac (was: security
-	question)
-Message-ID: <20071122043722.GC8672@jm.kir.nu> (sfid-20071122_043751_049795_89B5F8B0)
-References: <4743E5DF.9040603@linux.intel.com> <1195658254.12000.23.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1195658254.12000.23.camel@johannes.berg>
+	Wed, 28 Nov 2007 08:31:49 -0500
+Subject: Re: [PATCH] mac80211: Fix behavior of ieee80211_open and
+	ieee80211_close
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071128065708.9961.15992.stgit@tetra.sourmilk.net> (sfid-20071128_065705_054871_55A99BBC)
+References: <20071128065708.9961.15992.stgit@tetra.sourmilk.net>
+	 (sfid-20071128_065705_054871_55A99BBC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UAh7z6ZKxb61ndHTnBi/"
+Date: Wed, 28 Nov 2007 14:31:30 +0100
+Message-Id: <1196256690.6058.133.camel@johannes.berg> (sfid-20071128_133155_384376_E46A41B7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 21, 2007 at 04:17:34PM +0100, Johannes Berg wrote:
 
-> > When I connect to an AP with wpa, then I receive deauth frame, 
-> > ieee80211_rx_mgmt_deauth will be called, which will call 
-> > ieee80211_set_associated(dev, ifsta, 0); to disconnect. In function 
-> > ieee80211_set_associated, it calls wireless_send_event with SIOCGIWAP 
-> > event and memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN).
+--=-UAh7z6ZKxb61ndHTnBi/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This sounds correct.
 
-> > wpa_supplicant will 
-> > receives this event then call mac80211 to remove any old security key, 
-> > the problem it will pass 00:00:00:00:00:00 as station address. 
+On Wed, 2007-11-28 at 01:57 -0500, Michael Wu wrote:
+> This patch fixes:
+> - Incorrect calls to ieee80211_hw_config when the radiotap flag is set.
+> - Failure to actually unset the radiotap flag when all monitors are down.
+> - Failure to call ieee80211_hw_config after successful interface start.
+>=20
+> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 
-This sounds broken. wpa_supplicant should remove the key for the
-previous BSSID.
+Thanks. I knew about the second one and just ran into the third one
+yesterday after fixing up iwlwifi's radiotap support.
 
-> > ieee80211_set_encryption will fail since there are no station with 
-> > 00:00:00:00:00:00. This will leave the old key which causes the problems 
-> > in the next reconnection.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-This sounds correct behavior.
+> ---
+>=20
+>  net/mac80211/ieee80211.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+> index 59350b8..fc8b29c 100644
+> --- a/net/mac80211/ieee80211.c
+> +++ b/net/mac80211/ieee80211.c
+> @@ -216,6 +216,7 @@ static int ieee80211_open(struct net_device *dev)
+>  			res =3D local->ops->start(local_to_hw(local));
+>  		if (res)
+>  			return res;
+> +		ieee80211_hw_config(local);
+>  	}
+> =20
+>  	switch (sdata->type) {
+> @@ -232,7 +233,6 @@ static int ieee80211_open(struct net_device *dev)
+>  			netif_tx_unlock_bh(local->mdev);
+> =20
+>  			local->hw.conf.flags |=3D IEEE80211_CONF_RADIOTAP;
+> -			ieee80211_hw_config(local);
+>  		}
+>  		break;
+>  	case IEEE80211_IF_TYPE_STA:
+> @@ -334,8 +334,7 @@ static int ieee80211_stop(struct net_device *dev)
+>  			ieee80211_configure_filter(local);
+>  			netif_tx_unlock_bh(local->mdev);
+> =20
+> -			local->hw.conf.flags |=3D IEEE80211_CONF_RADIOTAP;
+> -			ieee80211_hw_config(local);
+> +			local->hw.conf.flags &=3D ~IEEE80211_CONF_RADIOTAP;
+>  		}
+>  		break;
+>  	case IEEE80211_IF_TYPE_STA:
+>=20
+>=20
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 
-> Interesting. I'd think this is a wpa_supplicant bug, Jouni, how is the
-> security wext stuff supposed to work here?
+--=-UAh7z6ZKxb61ndHTnBi/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Agreed, this sounds like a bug in wpa_supplicant. Unicast keys should be
-removed with their correct address. I think this used to work, but maybe
-some of the changes in BSSID processing in disassociation cases caused
-the old BSSID to be forgotten.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> > diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-> > @@ -97,7 +97,10 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
-> > -		sta = sta_info_get(local, sta_addr);
-> > +		if (is_zero_ether_addr(sta_addr))
-> > +			sta = sta_info_get(local, sdata->u.sta.bssid);
-> > +		else
-> > +			sta = sta_info_get(local, sta_addr);
+iQIVAwUAR01tsaVg1VMiehFYAQLLPQ//bRmIJ9Qh03Vd530veVZuq80H1sP9qefB
+jgN4qgITY2+ii+Y8J6OBPN7pqeFnM9s0Y4WJDHHG64Bix/fcv2XkY39hvP0gf2+y
+eqXUFYuncV+wtI17TIBiObPK3PWGjvk5xJKgT0Xec1ikD+E9Ry4aBbl8InuJOybT
+SYVtRoXu10TA0h59QCPvyUt0Cs+dsvaRIeAEgNyUrKnC7A+TZri1vW+m9fzIkAPT
+swSAvr0RxDCinTz/5lY3qIhziFSX2xUKoRXDM4Z9KblvkRmasZWyB4KRaYqys5U+
+cOb2P5/2ARfW9O2gerpVd9UaC6bEha3XqmbiQX16lz9GHYWvpPHjvekXiciw7tbs
+3N1RvGwQPxgz7LCn9sb+RQEOPzKYZZyeDznlpq3h9VjJ/5n757zETdd/R96OXFTH
+9wgZAYh82hya0VMMGZQnKKpcBIXzs0eiDFkw8p2BOY5hBF9gQ+eHAxFMKqipOOyF
+duA+QayDyt+iVV0ScxRb8+npHNZXxhGNMsscOa5EtWeh3mhhafLP4BkGtytFXLYm
+8y2eyWtxWRUQuP+Q9V6iCTJ8ycirODrRdD6qBu2mEJqeflMDSdYpZf4R3JaNxmz/
+54EXFuLXxRpXEinaiUXoE2vQnRywDJDaxm8Cl6nsR4gpDy9+RkXpqpfY4NjFGj/w
+dJ51cl5l21Q=
+=B5QY
+-----END PGP SIGNATURE-----
 
-NAK. I don't think this is the correct fix here.
+--=-UAh7z6ZKxb61ndHTnBi/--
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
