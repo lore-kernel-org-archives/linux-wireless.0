@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58549 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756559AbXKNPZz (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:57667 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbXK1Pid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:25:55 -0500
-Subject: Re: Virtual wireless network card for mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Henning Rogge <rogge@fgan.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <20071114150839.GA6226@tuxdriver.com> (sfid-20071114_150909_422701_3EF1A531)
-References: <200711141316.50393.rogge@fgan.de>
-	 <20071114150839.GA6226@tuxdriver.com>
-	 (sfid-20071114_150909_422701_3EF1A531)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aDqkIqrSi/6iqgKrK3f7"
-Date: Wed, 14 Nov 2007 16:27:11 +0100
-Message-Id: <1195054031.4091.22.camel@johannes.berg> (sfid-20071114_152618_681624_383EC639)
-Mime-Version: 1.0
+	Wed, 28 Nov 2007 10:38:33 -0500
+Date: Wed, 28 Nov 2007 09:38:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Simple 'fix' for radio switch LED regression
+Message-ID: <474d8b73.cCPCkkSQe1GIVt4H%Larry.Finger@lwfinger.net> (sfid-20071128_153836_491086_DDCB07A9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Since addition of the rfkill callback, the LED associated with the off/on
+switch on the radio has not worked because essential data in the rfkill
+structure is missing. When that problem was fixed, difficulties in circular
+locking surfaced. This patch fixes part of the regression in that the LED
+is turned on if the radio switch is on at startup. Adding the code to toggle
+the LED with the switch will be more involved and would likely miss the 2.6.24
+window.
 
---=-aDqkIqrSi/6iqgKrK3f7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
+John and Michael,
 
-> No, but I have been thinking about this as well.  It might be a nice
-> capability to have, so long as the regulatory spectre continues to
-> discourage some vendors from disclosing information about their
-> hardware.  At least such a scenario seems less grey w.r.t. GPL
-> compliance.
+I was able to get the full functionality working, but with two significant
+problems: (1) the LED toggled only with a switch off-on sequence, not with
+each switch change and (2) the module would no longer unload cleanly due to
+circular locking. I will be essentually off-line after today, and I hope that
+this hack, which will make the LED appear to work correctly, can be pushed
+into 2.6.24 as it is a fix, but has minimal code impact. Nearly all of the
+changes are needed just to make the LED on routine available to startup.
+Furthermore, I'm certain these changes will be needed when the complete fix
+is available.
 
-This could be doable with a shim driver and uio, but you'd need at least
-some DMA engine programming etc. in the kernel. But you want that
-anyway.
+Larry
+---
 
-johannes
+ leds.c |    3 +--
+ leds.h |    1 +
+ main.c |    3 +++
+ 3 files changed, 5 insertions(+), 2 deletions(-)
 
---=-aDqkIqrSi/6iqgKrK3f7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzsTzqVg1VMiehFYAQLmvg//ZHsX0+iQa8acWo8igEbbSydc3kDJuNZp
-MoDBm02Pv1cxSyPtI4ktRHT//x2dmrygUO9425Bd5Xf5UoMWhCYi0W8rL68y/Tjz
-aJ2G1HIqQhJ8K5C8/w2y+TKYJ4zChSrSY2l0CnsWCkZPr2VslI/l/fNkFLyno/xV
-XFGUce/H1LieWwQCXspU4sweEE8nn2CUBcr61tzKlnJwiMRmQGGaXP7OFh9+c4Mq
-QYhd3vlYMuPyalUDYa9JyB3sB9GLyM2EiuMw6Ok0m3nE/kTAuLiJ2Gtp+DYpZL8f
-znxjhZT97dW/fN4XvHgvpq7TcMKr/0f7wXBSO27cUofYy0zsNO2vcrsCAu5BhK8W
-XfaRfGC9JFVCyrYXSDfbovV9tdyQfTE+Zh7H3vOOEX1qKFG67vrLe6yM/08rDcXI
-VCALvMRJYUyGD4m2WORLjS2+wIdJUMUlnpWficLAKP0ikUYGry3H5vzVClr68f/p
-vXlCQyT/QcneKb8nR1Cg1ggv5h/DsyBykGQRNceLnijumoBw4+CEuPMsZPUEodFM
-8FBBoIA37p7vG6Uxtv+jiQAKt8VNqaGFFAwZhVUBDwI3pmo5M44532P34PPp3uo3
-AWaxxl44gKRSSCeA3Eiw5TCXqKL1SE6E/Wb+xgBbsLParkLGcCvjVoeo8qXOV1Uv
-E3NNhimGI4Y=
-=b03z
------END PGP SIGNATURE-----
-
---=-aDqkIqrSi/6iqgKrK3f7--
-
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -51,6 +51,7 @@
+ #include "xmit.h"
+ #include "lo.h"
+ #include "pcmcia.h"
++#include "leds.h"
+ 
+ MODULE_DESCRIPTION("Broadcom B43 wireless driver");
+ MODULE_AUTHOR("Martin Langer");
+@@ -2799,6 +2797,8 @@ static int b43_op_config(struct ieee8021
+ 	b43_interrupt_enable(dev, savedirqs);
+ 	mmiowb();
+ 	spin_unlock_irqrestore(&wl->irq_lock, flags);
++	if (dev->radio_hw_enable)
++		b43_led_turn_on(dev, 1, 1);
+       out_unlock_mutex:
+ 	mutex_unlock(&wl->mutex);
+ 
+Index: wireless-2.6/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.c
++++ wireless-2.6/drivers/net/wireless/b43/leds.c
+@@ -30,8 +30,7 @@
+ #include "leds.h"
+ 
+ 
+-static void b43_led_turn_on(struct b43_wldev *dev, u8 led_index,
+-			    bool activelow)
++void b43_led_turn_on(struct b43_wldev *dev, u8 led_index, bool activelow)
+ {
+ 	struct b43_wl *wl = dev->wl;
+ 	unsigned long flags;
+Index: wireless-2.6/drivers/net/wireless/b43/leds.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.h
++++ wireless-2.6/drivers/net/wireless/b43/leds.h
+@@ -44,6 +44,7 @@ enum b43_led_behaviour {
+ 
+ void b43_leds_init(struct b43_wldev *dev);
+ void b43_leds_exit(struct b43_wldev *dev);
++void b43_led_turn_on(struct b43_wldev *dev, u8 led_index, bool activelow);
+ 
+ 
+ #else /* CONFIG_B43_LEDS */
