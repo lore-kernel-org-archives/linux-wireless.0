@@ -1,417 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39283 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090AbXKIMJs (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10087 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbXK1NEN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 07:09:48 -0500
-Subject: [RFC] b43: multiple MAC addresses support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Content-Type: text/plain
-Date: Fri, 09 Nov 2007 02:43:51 +0100
-Message-Id: <1194572631.4793.64.camel@johannes.berg> (sfid-20071109_120958_259609_BC4A521E)
-Mime-Version: 1.0
+	Wed, 28 Nov 2007 08:04:13 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: tweak association debug output
+Date: Wed, 28 Nov 2007 14:05:02 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711281405.03005.hs4233@mail.mn-solutions.de> (sfid-20071128_130416_799981_6D468958)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for multiple virtual interfaces (up to 65536)
-to b43. This requires modified firmware which is detected by an invalid
-day in the firmware timestamp (254), and then the firmware time and the
-rest of the date is used for feature bits.
+Change debug output codes from LBS_DEB_JOIN to LBS_DEB_ASSOC
 
-The multi-MAC support works by having a mask of ignored bits, the
-modified firmware will mask off these bits before comparing the address
-on incoming frames with the address. This, however, means that when you
-add three MAC virtual interfaces, the firmware will at least also ACK
-frames on a fourth address. The required mask is calculated dynamically
-to be the least restrictive mask possible, but you should take care to
-allocate your MAC addresses in a way that minimises the mask to avoid
-strange behaviour. For example, avoid using addresses 02:00:00:00:00:02
-and 02:00:00:00:00:10 together because these two have only 46 bits in
-common, use 02:00:00:00:00:12 and 02:00:00:00:00:10 instead as those
-have 47 bits in common.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de
 
-Note that the mask applies only to the lower 16 bits, so the first four
-bytes of all addresses need to be identical.
-
-The required tool to patch the firmware will be published separately.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: Jiri Benc <jbenc@suse.cz>
-Cc: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/b43/b43.h  |   19 ++-
- drivers/net/wireless/b43/main.c |  200 +++++++++++++++++++++++++++++++++-------
- drivers/net/wireless/b43/xmit.c |    6 -
- 3 files changed, 180 insertions(+), 45 deletions(-)
+The lines I removed (e.g. BSSID) were emitted several times
 
---- everything.orig/drivers/net/wireless/b43/main.c	2007-11-09 01:53:47.158996039 +0100
-+++ everything/drivers/net/wireless/b43/main.c	2007-11-09 02:04:31.358978135 +0100
-@@ -543,7 +543,21 @@ static void b43_write_mac_bssid_template
- static void b43_upload_card_macaddress(struct b43_wldev *dev)
- {
- 	b43_write_mac_bssid_templates(dev);
--	b43_macfilter_set(dev, B43_MACFILTER_SELF, dev->wl->mac_addr);
-+
-+	if (dev->fw.features & B43_FW_FEATURE_MULTI_MAC_STA) {
-+		u16 tmp;
-+
-+		tmp = ((u16 *)dev->wl->mac_addr)[0];
-+		b43_shm_write16(dev, B43_SHM_SHARED, 0x320, cpu_to_le16(tmp));
-+		tmp = ((u16 *)dev->wl->mac_addr)[1];
-+		b43_shm_write16(dev, B43_SHM_SHARED, 0x322, cpu_to_le16(tmp));
-+		tmp = ((u16 *)dev->wl->mac_addr)[2];
-+		b43_shm_write16(dev, B43_SHM_SHARED, 0x324, cpu_to_le16(tmp));
-+		/* swap here because we always treat the mask as big endian */
-+		b43_shm_write16(dev, B43_SHM_SHARED, 0x326,
-+				swab16(dev->wl->mac_mask));
-+	} else
-+		b43_macfilter_set(dev, B43_MACFILTER_SELF, dev->wl->mac_addr);
+While passing, make lines touched by the patch checkpatch.pl clean
+
+Index: wireless-2.6/drivers/net/wireless/libertas/join.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/join.c	2007-11-28 09:35:57.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/join.c	2007-11-28 09:41:59.000000000 +0100
+@@ -57,7 +57,7 @@ static int get_common_rates(struct lbs_a
+ 	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
+ 	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates, num_card_rates);
+ 	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+-	lbs_deb_join("Tx datarate is currently 0x%X\n", adapter->cur_rate);
++	lbs_deb_join("TX data rate 0x%02x\n", adapter->cur_rate);
+ 
+ 	if (!adapter->auto_rate) {
+ 		for (i = 0; i < tmp_size; i++) {
+@@ -128,7 +128,7 @@ int lbs_associate(struct lbs_private *pr
+ 	struct lbs_adapter *adapter = priv->adapter;
+ 	int ret;
+ 
+-	lbs_deb_enter(LBS_DEB_JOIN);
++	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+ 	ret = lbs_prepare_and_send_command(priv, CMD_802_11_AUTHENTICATE,
+ 				    0, CMD_OPTION_WAITFORRSP,
+@@ -150,7 +150,7 @@ int lbs_associate(struct lbs_private *pr
+ 				    0, CMD_OPTION_WAITFORRSP, 0, assoc_req);
+ 
+ done:
+-	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+ 	return ret;
  }
  
- static void b43_set_slot_time(struct b43_wldev *dev, u16 slot_time)
-@@ -1174,18 +1188,18 @@ static void b43_write_probe_resp_plcp(st
- {
- 	struct b43_plcp_hdr4 plcp;
- 	u32 tmp;
--	__le16 dur;
+@@ -324,7 +324,7 @@ int lbs_cmd_80211_authenticate(struct lb
  
- 	plcp.data = 0;
- 	b43_generate_plcp_hdr(&plcp, size + FCS_LEN, rate);
--	dur = ieee80211_generic_frame_duration(dev->wl->hw,
--					       dev->wl->if_id, size,
--					       B43_RATE_TO_BASE100KBPS(rate));
- 	/* Write PLCP in two parts and timing for packet transfer */
- 	tmp = le32_to_cpu(plcp.data);
- 	b43_shm_write16(dev, B43_SHM_SHARED, shm_offset, tmp & 0xFFFF);
- 	b43_shm_write16(dev, B43_SHM_SHARED, shm_offset + 2, tmp >> 16);
--	b43_shm_write16(dev, B43_SHM_SHARED, shm_offset + 6, le16_to_cpu(dur));
-+	/*
-+	 * XXX: currently, the duration here doesn't matter, but
-+	 * when we implement offload it needs to be fixed!
-+	 */
-+	b43_shm_write16(dev, B43_SHM_SHARED, shm_offset + 6, 0);
- }
+ 	memcpy(pauthenticate->macaddr, bssid, ETH_ALEN);
  
- /* Instead of using custom probe response template, this function
-@@ -1200,7 +1214,6 @@ static u8 *b43_generate_probe_resp(struc
- 	const u8 *src_data;
- 	u8 *dest_data;
- 	u16 src_size, elem_size, src_pos, dest_pos;
--	__le16 dur;
- 	struct ieee80211_hdr *hdr;
+-	lbs_deb_join("AUTH_CMD: BSSID is : %s auth=0x%X\n",
++	lbs_deb_join("AUTH_CMD: BSSID %s, auth 0x%x\n",
+ 	             print_mac(mac, bssid), pauthenticate->authtype);
+ 	ret = 0;
  
- 	B43_WARN_ON(!dev->cached_beacon);
-@@ -1235,10 +1248,11 @@ static u8 *b43_generate_probe_resp(struc
- 	/* Set the frame control. */
- 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					 IEEE80211_STYPE_PROBE_RESP);
--	dur = ieee80211_generic_frame_duration(dev->wl->hw,
--					       dev->wl->if_id, *dest_size,
--					       B43_RATE_TO_BASE100KBPS(rate));
--	hdr->duration_id = dur;
-+	/*
-+	 * XXX: currently, the duration here doesn't matter, but
-+	 * when we implement offload it needs to be fixed!
-+	 */
-+	hdr->duration_id = 0;
+@@ -372,7 +372,7 @@ int lbs_cmd_80211_associate(struct lbs_p
+ 	struct mrvlietypes_ratesparamset *rates;
+ 	struct mrvlietypes_rsnparamset *rsn;
  
- 	return dest_data;
- }
-@@ -1792,11 +1806,23 @@ static int b43_upload_microcode(struct b
- 		err = -EOPNOTSUPP;
- 		goto out;
+-	lbs_deb_enter(LBS_DEB_JOIN);
++	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+ 	pos = (u8 *) passo;
+ 
+@@ -426,7 +426,7 @@ int lbs_cmd_80211_associate(struct lbs_p
  	}
--	b43dbg(dev->wl, "Loading firmware version %u.%u "
--	       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
--	       fwrev, fwpatch,
--	       (fwdate >> 12) & 0xF, (fwdate >> 8) & 0xF, fwdate & 0xFF,
--	       (fwtime >> 11) & 0x1F, (fwtime >> 5) & 0x3F, fwtime & 0x1F);
-+	/* special day 254: modified firmware with feature bits */
-+	if ((fwdate & 0xFF) == 0xFE) {
-+		b43dbg(dev->wl, "Loading firmware version %u.%u\n",
-+		       fwrev, fwpatch);
-+		dev->fw.features = fwtime | ((fwdate & 0xFF00) << 8);
-+		b43dbg(dev->wl, "This firmware was modified and has the"
-+				" added features 0x%06x\n", dev->fw.features);
-+		if (dev->fw.features & B43_FW_FEATURE_MULTI_MAC_STA)
-+			b43dbg(dev->wl, " * station multi MAC addr support\n");
-+	} else
-+		b43dbg(dev->wl, "Loading firmware version %u.%u "
-+		       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
-+		       fwrev, fwpatch,
-+		       (fwdate >> 12) & 0xF, (fwdate >> 8) & 0xF,
-+		       fwdate & 0xFF,
-+		       (fwtime >> 11) & 0x1F, (fwtime >> 5) & 0x3F,
-+		       fwtime & 0x1F);
+ 	pos += sizeof(rates->header) + tmplen;
+ 	rates->header.len = cpu_to_le16(tmplen);
+-	lbs_deb_join("ASSOC_CMD: num rates = %u\n", tmplen);
++	lbs_deb_assoc("ASSOC_CMD: num rates %u\n", tmplen);
  
- 	dev->fw.rev = fwrev;
- 	dev->fw.patch = fwpatch;
-@@ -2948,11 +2974,18 @@ static int b43_op_config_interface(struc
- 		return -ENODEV;
- 	mutex_lock(&wl->mutex);
- 	spin_lock_irqsave(&wl->irq_lock, flags);
--	B43_WARN_ON(wl->if_id != if_id);
--	if (conf->bssid)
--		memcpy(wl->bssid, conf->bssid, ETH_ALEN);
--	else
--		memset(wl->bssid, 0, ETH_ALEN);
-+
-+	/*
-+	 * Only take bssid of first iface, we can only adopt time from
-+	 * one BSS so arbitrarily choose the first.
-+	 */
-+	if (wl->if_id == if_id) {
-+		if (conf->bssid)
-+			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
-+		else
-+			memset(wl->bssid, 0, ETH_ALEN);
-+	}
-+
- 	if (b43_status(dev) >= B43_STAT_INITIALIZED) {
- 		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
- 			B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
-@@ -3424,6 +3457,71 @@ static int b43_wireless_core_init(struct
- 	return err;
+ 	/* Copy the infra. association rates into Current BSS state structure */
+ 	memset(&adapter->curbssparams.rates, 0, sizeof(adapter->curbssparams.rates));
+@@ -464,11 +464,10 @@ int lbs_cmd_80211_associate(struct lbs_p
+ 	if (bss->mode == IW_MODE_INFRA)
+ 		tmpcap |= WLAN_CAPABILITY_ESS;
+ 	passo->capability = cpu_to_le16(tmpcap);
+-	lbs_deb_join("ASSOC_CMD: capability=%4X CAPINFO_MASK=%4X\n",
+-		     tmpcap, CAPINFO_MASK);
++	lbs_deb_assoc("ASSOC_CMD: capability 0x%04x\n", tmpcap);
+ 
+ done:
+-	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+ 	return ret;
  }
  
-+struct mac_iter {
-+	struct b43_wl *wl;
-+	u16 mac_val;
-+	bool add;
-+	int count;
-+};
-+
-+static void b43_mac_iter(void *data, u8 *mac, int if_id)
-+{
-+	struct mac_iter *iter = data;
-+	u16 val = (mac[4] << 8) | mac[5];
-+	u16 cur = (iter->wl->mac_addr[4] << 8) | iter->wl->mac_addr[5];
-+
-+	/* skip the one that's being removed */
-+	if (!iter->add && val == iter->mac_val)
-+		return;
-+
-+	/* take first address we find as base */
-+	if (iter->count == 0) {
-+		cur = val;
-+		iter->wl->mac_addr[4] = cur >> 8;
-+		iter->wl->mac_addr[5] = cur;
-+	}
-+
-+	iter->wl->mac_mask |= cur ^ val;
-+
-+	iter->count++;
-+}
-+
-+static void b43_adjust_mac_addr_mask(struct b43_wl *wl, bool add, u8 *addr)
-+{
-+	struct mac_iter iter;
-+	DECLARE_MAC_BUF(mbuf);
-+	u16 cur;
-+	u16 val = (addr[4] << 8) | addr[5];
-+
-+	/*
-+	 * Because this is not invoked on adding the first address,
-+	 * we do not need to have any special code for that case.
-+	 * If it was invoked, we'd have to set cur to val here etc.
-+	 * like above in the iter->count == 0 case (because we don't
-+	 * see the interface that's being added in the iteration.)
-+	 */
-+
-+	wl->mac_mask = 0;
-+
-+	iter.wl = wl;
-+	iter.add = add;
-+	iter.mac_val = val;
-+	iter.count = 0;
-+	ieee80211_iterate_active_interfaces(wl->hw, b43_mac_iter, &iter);
-+
-+	/* add the one that's being added */
-+	cur = (wl->mac_addr[4] << 8) | wl->mac_addr[5];
-+	if (add)
-+		wl->mac_mask |= cur ^ val;
-+
-+	cur = cur & ~wl->mac_mask;
-+	wl->mac_addr[4] = cur >> 8;
-+	wl->mac_addr[5] = cur;
-+
-+	b43dbg(wl, "MAC address is %s, mask is 0x%.4x\n",
-+	       print_mac(mbuf, wl->mac_addr), wl->mac_mask);
-+}
-+
- static int b43_op_add_interface(struct ieee80211_hw *hw,
- 				struct ieee80211_if_init_conf *conf)
- {
-@@ -3441,16 +3539,36 @@ static int b43_op_add_interface(struct i
- 		return -EOPNOTSUPP;
+@@ -706,10 +705,10 @@ int lbs_ret_80211_associate(struct lbs_p
+ 	struct bss_descriptor * bss;
+ 	u16 status_code;
  
- 	mutex_lock(&wl->mutex);
--	if (wl->operating)
--		goto out_mutex_unlock;
-+	dev = wl->current_dev;
+-	lbs_deb_enter(LBS_DEB_JOIN);
++	lbs_deb_enter(LBS_DEB_ASSOC);
  
--	b43dbg(wl, "Adding Interface type %d\n", conf->type);
-+	if (dev->fw.features & B43_FW_FEATURE_MULTI_MAC_STA) {
-+		if (wl->if_count && conf->type != IEEE80211_IF_TYPE_STA)
-+			goto out_mutex_unlock;
-+		if (wl->if_count > 0) {
-+			if (((u8 *)conf->mac_addr)[0] != wl->mac_addr[0])
-+				goto out_mutex_unlock;
-+			if (((u8 *)conf->mac_addr)[1] != wl->mac_addr[1])
-+				goto out_mutex_unlock;
-+			if (((u8 *)conf->mac_addr)[2] != wl->mac_addr[2])
-+				goto out_mutex_unlock;
-+			if (((u8 *)conf->mac_addr)[3] != wl->mac_addr[3])
-+				goto out_mutex_unlock;
-+			b43_adjust_mac_addr_mask(wl, 1, conf->mac_addr);
-+		}
-+	} else {
-+		if (wl->if_count)
-+			goto out_mutex_unlock;
-+	}
+ 	if (!adapter->in_progress_assoc_req) {
+-		lbs_deb_join("ASSOC_RESP: no in-progress association request\n");
++		lbs_deb_assoc("ASSOC_RESP: no in-progress assoc request\n");
+ 		ret = -1;
+ 		goto done;
+ 	}
+@@ -738,30 +737,25 @@ int lbs_ret_80211_associate(struct lbs_p
+ 	status_code = le16_to_cpu(passocrsp->statuscode);
+ 	switch (status_code) {
+ 	case 0x00:
+-		lbs_deb_join("ASSOC_RESP: Association succeeded\n");
+ 		break;
+ 	case 0x01:
+-		lbs_deb_join("ASSOC_RESP: Association failed; invalid "
+-		             "parameters (status code %d)\n", status_code);
++		lbs_deb_assoc("ASSOC_RESP: invalid parameters\n");
+ 		break;
+ 	case 0x02:
+-		lbs_deb_join("ASSOC_RESP: Association failed; internal timer "
+-		             "expired while waiting for the AP (status code %d)"
+-		             "\n", status_code);
++		lbs_deb_assoc("ASSOC_RESP: internal timer "
++			"expired while waiting for the AP\n");
+ 		break;
+ 	case 0x03:
+-		lbs_deb_join("ASSOC_RESP: Association failed; association "
+-		             "was refused by the AP (status code %d)\n",
+-		             status_code);
++		lbs_deb_assoc("ASSOC_RESP: association "
++			"refused by AP\n");
+ 		break;
+ 	case 0x04:
+-		lbs_deb_join("ASSOC_RESP: Association failed; authentication "
+-		             "was refused by the AP (status code %d)\n",
+-		             status_code);
++		lbs_deb_assoc("ASSOC_RESP: authentication "
++			"refused by AP\n");
+ 		break;
+ 	default:
+-		lbs_deb_join("ASSOC_RESP: Association failed; reason unknown "
+-		             "(status code %d)\n", status_code);
++		lbs_deb_assoc("ASSOC_RESP: failure reason 0x%02x "
++			" unknown\n", status_code);
+ 		break;
+ 	}
  
--	dev = wl->current_dev;
--	wl->operating = 1;
--	wl->if_id = conf->if_id;
--	wl->if_type = conf->type;
--	memcpy(wl->mac_addr, conf->mac_addr, ETH_ALEN);
-+	wl->if_count++;
-+
-+	if (wl->if_count == 1) {
-+		wl->if_id = conf->if_id;
-+		wl->if_type = conf->type;
-+		memcpy(wl->mac_addr, conf->mac_addr, ETH_ALEN);
-+	}
-+
-+	b43dbg(wl, "Adding Interface type %d\n", conf->type);
+@@ -771,22 +765,19 @@ int lbs_ret_80211_associate(struct lbs_p
+ 		goto done;
+ 	}
  
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 	b43_adjust_opmode(dev);
-@@ -3464,6 +3582,14 @@ static int b43_op_add_interface(struct i
- 	return err;
- }
+-	lbs_deb_hex(LBS_DEB_JOIN, "ASSOC_RESP", (void *)&resp->params,
++	lbs_deb_hex(LBS_DEB_ASSOC, "ASSOC_RESP", (void *)&resp->params,
+ 		le16_to_cpu(resp->size) - S_DS_GEN);
  
-+static void b43_ifid_iter(void *data, u8 *mac, int if_id)
-+{
-+	struct b43_wl *wl = data;
-+
-+	if (wl->if_id != if_id)
-+		wl->if_id = if_id;
-+}
-+
- static void b43_op_remove_interface(struct ieee80211_hw *hw,
- 				    struct ieee80211_if_init_conf *conf)
- {
-@@ -3475,14 +3601,22 @@ static void b43_op_remove_interface(stru
+ 	/* Send a Media Connected event, according to the Spec */
+ 	adapter->connect_status = LBS_CONNECTED;
  
- 	mutex_lock(&wl->mutex);
- 
--	B43_WARN_ON(!wl->operating);
--	B43_WARN_ON(wl->if_id != conf->if_id);
-+	B43_WARN_ON(!wl->if_count);
-+
-+	wl->if_count--;
-+	if (wl->if_count == 0) {
-+		wl->if_type = IEEE80211_IF_TYPE_INVALID;
-+		memset(wl->mac_addr, 0, ETH_ALEN);
-+	}
-+
-+	/* arbitrarily adopt another if_id as main if_id */
-+	if (conf->if_id == wl->if_id)
-+		ieee80211_iterate_active_interfaces(wl->hw, b43_ifid_iter, wl);
- 
--	wl->operating = 0;
-+	b43_adjust_mac_addr_mask(wl, 0, conf->mac_addr);
- 
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 	b43_adjust_opmode(dev);
--	memset(wl->mac_addr, 0, ETH_ALEN);
- 	b43_upload_card_macaddress(dev);
- 	spin_unlock_irqrestore(&wl->irq_lock, flags);
- 
---- everything.orig/drivers/net/wireless/b43/b43.h	2007-11-09 01:53:47.248981228 +0100
-+++ everything/drivers/net/wireless/b43/b43.h	2007-11-09 02:06:41.818973253 +0100
-@@ -601,22 +601,20 @@ struct b43_wl {
- 	struct mutex mutex;
- 	spinlock_t leds_lock;
- 
--	/* We can only have one operating interface (802.11 core)
--	 * at a time. General information about this interface follows.
--	 */
+-	lbs_deb_join("ASSOC_RESP: assocated to '%s'\n",
+-	             escape_essid(bss->ssid, bss->ssid_len));
 -
--	/* Opaque ID of the operating interface from the ieee80211
-+	/*
-+	 * Opaque ID of the first operating interface from the ieee80211
- 	 * subsystem. Do not modify.
- 	 */
- 	int if_id;
--	/* The MAC address of the operating interface. */
-+	/* The MAC address */
- 	u8 mac_addr[ETH_ALEN];
-+	u16 mac_mask;
- 	/* Current BSSID */
- 	u8 bssid[ETH_ALEN];
- 	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
- 	int if_type;
--	/* Is the card operating in AP, STA or IBSS mode? */
--	bool operating;
-+	/* number of open interfaces */
-+	int if_count;
- 	/* filter flags */
- 	unsigned int filter_flags;
- 	/* Stats about the wireless interface */
-@@ -648,6 +646,9 @@ struct b43_firmware {
- 	u16 rev;
- 	/* Firmware patchlevel */
- 	u16 patch;
-+	/* Firmware features (24 bits) */
-+#define B43_FW_FEATURE_MULTI_MAC_STA	0x000001
-+	u32 features;
- };
+ 	/* Update current SSID and BSSID */
+ 	memcpy(&adapter->curbssparams.ssid, &bss->ssid, IW_ESSID_MAX_SIZE);
+ 	adapter->curbssparams.ssid_len = bss->ssid_len;
+ 	memcpy(adapter->curbssparams.bssid, bss->bssid, ETH_ALEN);
  
- /* Device (802.11 core) initialization status. */
-@@ -781,7 +782,7 @@ static inline struct b43_wldev *dev_to_b
- /* Is the device operating in a specified mode (IEEE80211_IF_TYPE_XXX). */
- static inline int b43_is_mode(struct b43_wl *wl, int type)
- {
--	return (wl->operating && wl->if_type == type);
-+	return (wl->if_count && wl->if_type == type);
+-	lbs_deb_join("ASSOC_RESP: currentpacketfilter is %x\n",
+-	       adapter->currentpacketfilter);
++	lbs_deb_assoc("ASSOC_RESP: currentpacketfilter is 0x%x\n",
++		adapter->currentpacketfilter);
+ 
+ 	adapter->SNR[TYPE_RXPD][TYPE_AVG] = 0;
+ 	adapter->NF[TYPE_RXPD][TYPE_AVG] = 0;
+@@ -809,7 +800,7 @@ int lbs_ret_80211_associate(struct lbs_p
+ 	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
+ 
+ done:
+-	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
++	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+ 	return ret;
  }
  
- static inline u16 b43_read16(struct b43_wldev *dev, u16 offset)
---- everything.orig/drivers/net/wireless/b43/xmit.c	2007-11-09 01:53:47.378984104 +0100
-+++ everything/drivers/net/wireless/b43/xmit.c	2007-11-09 01:53:57.698983181 +0100
-@@ -221,7 +221,7 @@ static void generate_txhdr_fw4(struct b4
- 	} else {
- 		int fbrate_base100kbps = B43_RATE_TO_BASE100KBPS(rate_fb);
- 		txhdr->dur_fb = ieee80211_generic_frame_duration(dev->wl->hw,
--								 dev->wl->if_id,
-+								 txctl->ifindex,
- 								 fragment_len,
- 								 fbrate_base100kbps);
- 	}
-@@ -311,7 +311,7 @@ static void generate_txhdr_fw4(struct b4
- 		rts_rate_fb_ofdm = b43_is_ofdm_rate(rts_rate_fb);
+Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2007-11-28 09:35:57.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2007-11-28 09:42:07.000000000 +0100
+@@ -638,20 +638,19 @@ void lbs_association_worker(struct work_
  
- 		if (txctl->flags & IEEE80211_TXCTL_USE_CTS_PROTECT) {
--			ieee80211_ctstoself_get(dev->wl->hw, dev->wl->if_id,
-+			ieee80211_ctstoself_get(dev->wl->hw, txctl->ifindex,
- 						fragment_data, fragment_len,
- 						txctl,
- 						(struct ieee80211_cts *)(txhdr->
-@@ -319,7 +319,7 @@ static void generate_txhdr_fw4(struct b4
- 			mac_ctl |= B43_TX4_MAC_SENDCTS;
- 			len = sizeof(struct ieee80211_cts);
- 		} else {
--			ieee80211_rts_get(dev->wl->hw, dev->wl->if_id,
-+			ieee80211_rts_get(dev->wl->hw, txctl->ifindex,
- 					  fragment_data, fragment_len, txctl,
- 					  (struct ieee80211_rts *)(txhdr->
- 								   rts_frame));
-
-
+ 		ret = assoc_helper_associate(priv, assoc_req);
+ 		if (ret) {
+-			lbs_deb_assoc("ASSOC: association attempt unsuccessful: %d\n",
++			lbs_deb_assoc("ASSOC: association unsuccessful: %d\n",
+ 				ret);
+ 			success = 0;
+ 		}
+ 
+ 		if (adapter->connect_status != LBS_CONNECTED) {
+-			lbs_deb_assoc("ASSOC: association attempt unsuccessful, "
+-				"not connected.\n");
++			lbs_deb_assoc("ASSOC: association unsuccessful, "
++				"not connected\n");
+ 			success = 0;
+ 		}
+ 
+ 		if (success) {
+-			lbs_deb_assoc("ASSOC: association attempt successful. "
+-				"Associated to '%s' (%s)\n",
++			lbs_deb_assoc("ASSOC: associated to '%s', %s\n",
+ 				escape_essid(adapter->curbssparams.ssid,
+ 				             adapter->curbssparams.ssid_len),
+ 				print_mac(mac, adapter->curbssparams.bssid));
+Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 09:35:45.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 09:42:07.000000000 +0100
+@@ -31,7 +31,7 @@ void lbs_mac_event_disconnected(struct l
+ 	if (adapter->connect_status != LBS_CONNECTED)
+ 		return;
+ 
+-	lbs_deb_enter(LBS_DEB_CMD);
++	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+ 	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+@@ -60,11 +60,6 @@ void lbs_mac_event_disconnected(struct l
+ 	memset(adapter->rawNF, 0x00, sizeof(adapter->rawNF));
+ 	adapter->nextSNRNF = 0;
+ 	adapter->numSNRNF = 0;
+-	lbs_deb_cmd("current SSID '%s', length %u\n",
+-	            escape_essid(adapter->curbssparams.ssid,
+-	                         adapter->curbssparams.ssid_len),
+-	            adapter->curbssparams.ssid_len);
+-
+ 	adapter->connect_status = LBS_DISCONNECTED;
+ 
+ 	/* Clear out associated SSID and BSSID since connection is
