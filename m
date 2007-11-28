@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47299
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751938AbXKXNvP (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:38267 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763AbXK1PCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 08:51:15 -0500
-Date: Sat, 24 Nov 2007 05:51:15 -0800 (PST)
-Message-Id: <20071124.055115.193713164.davem@davemloft.net> (sfid-20071124_135120_351985_E08C3FA7)
-To: johannes@sipsolutions.net
-Cc: herbert@gondor.apana.org.au, dsd@gentoo.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1195912176.4149.194.camel@johannes.berg>
-References: <1195893216.4149.186.camel@johannes.berg>
-	<20071124133200.GA27531@gondor.apana.org.au>
-	<1195912176.4149.194.camel@johannes.berg>
+	Wed, 28 Nov 2007 10:02:14 -0500
+Subject: Re: [PATCH] less eventcause shifts
+From: David Woodhouse <dwmw2@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1196261611.28264.0.camel@localhost.localdomain>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+	 <1196261611.28264.0.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 28 Nov 2007 15:02:09 +0000
+Message-Id: <1196262129.30806.26.camel@pmac.infradead.org> (sfid-20071128_150216_687214_E56C462B)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 24 Nov 2007 14:49:36 +0100
 
-> 
-> On Sat, 2007-11-24 at 21:32 +0800, Herbert Xu wrote:
-> > On Sat, Nov 24, 2007 at 09:33:36AM +0100, Johannes Berg wrote:
-> > >
-> > > We still require four-byte alignment, no?
+On Wed, 2007-11-28 at 09:53 -0500, Dan Williams wrote:
+> On Wed, 2007-11-28 at 09:15 +0100, Holger Schurig wrote:
+> > * only shift eventcause once
 > > 
-> > Not at all.  If NET_IP_ALIGN is zero then it won't be four-byte
-> > aligned (since the Ethernet header is 14 bytes long).
+> > * convert mac events to decimal, as this is what the firmware
+> >   manual uses in section 6.1, too
+> > 
+> > Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 > 
-> Right. I just didn't think that would be a valid value for an
-> architecture to set.
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
-It is, and explicitly used by powerpc to get more of the
-DMA transfers 64-byte aligned which is critical for
-performance on some powerpc boxes.
+s/less/fewer/ of course :)
+
+Since I'm also going to be sending a flurry of libertas patches and the
+turnaround through the wireless tree seems suboptimal, shall we put up a
+git tree and work on it together, then ask John to pull when we're done?
+
+-- 
+dwmw2
+
