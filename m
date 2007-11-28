@@ -1,49 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:36293 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1761184AbXK3C0g (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:6117 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758816AbXK1Q2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 21:26:36 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 4/5] ath5k: full noise calibration also for rf511x
-Date: Fri, 30 Nov 2007 11:26:36 +0900
-Message-Id: <1196389597-23559-5-git-send-email-bruno@thinktube.com> (sfid-20071130_022641_350784_803502AB)
-In-Reply-To: <1196389597-23559-4-git-send-email-bruno@thinktube.com>
-References: <1196389597-23559-1-git-send-email-bruno@thinktube.com>
- <1196389597-23559-2-git-send-email-bruno@thinktube.com>
- <1196389597-23559-3-git-send-email-bruno@thinktube.com>
- <1196389597-23559-4-git-send-email-bruno@thinktube.com>
+	Wed, 28 Nov 2007 11:28:46 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] remove numprobes
+Date: Wed, 28 Nov 2007 17:29:36 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711281729.37014.hs4233@mail.mn-solutions.de> (sfid-20071128_162850_906975_EEEF0878)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
-just writing the bit.
+Remove the ability to specify number of probes via debugfs
 
-Changes-licensed-under: ISC
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath5k/phy.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 7dba325..74cd97c 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1723,8 +1723,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
+Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:11:47.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:12:02.000000000 +0100
+@@ -299,23 +299,6 @@ static int lbs_parse_dur(char *buf, size
+ 	return val;
+ }
  
- done:
--	/* Start noise floor calibration */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
-+	ath5k_hw_noise_floor_calibration(ah, channel->freq);
+-static void lbs_parse_probes(char *buf, size_t count,
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg)
+-{
+-	char *hold;
+-	int val;
+-
+-	hold = strstr(buf, "probes=");
+-	if (!hold)
+-		return;
+-	hold += 7;
+-	sscanf(hold, "%d", &val);
+-
+-	scan_cfg->numprobes = val;
+-
+-	return;
+-}
+-
+ static void lbs_parse_type(char *buf, size_t count,
+ 	struct lbs_ioctl_user_scan_cfg *scan_cfg)
+ {
+@@ -367,7 +350,6 @@ static ssize_t lbs_setuserscan(struct fi
+ 	scan_cfg->clear_bssid = lbs_parse_clear(buf, count, "clear_bssid=");
+ 	lbs_parse_ssid(buf, count, scan_cfg);
+ 	scan_cfg->clear_ssid = lbs_parse_clear(buf, count, "clear_ssid=");
+-	lbs_parse_probes(buf, count, scan_cfg);
+ 	lbs_parse_type(buf, count, scan_cfg);
  
- 	/* Request RF gain */
- 	if (channel->val & CHANNEL_5GHZ) {
--- 
-1.5.3.4
-
+ 	lbs_scan_networks(priv, scan_cfg, 1);
+Index: wireless-2.6/drivers/net/wireless/libertas/scan.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/scan.h	2007-11-28 18:12:16.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/scan.h	2007-11-28 18:12:23.000000000 +0100
+@@ -105,11 +105,6 @@ struct lbs_ioctl_user_scan_cfg {
+      */
+ 	u8 bsstype;
+ 
+-    /**
+-     *  @brief Configure the number of probe requests for active chan scans
+-     */
+-	u8 numprobes;
+-
+ 	/**
+ 	 *  @brief BSSID filter sent in the firmware command to limit the results
+ 	 */
+Index: wireless-2.6/drivers/net/wireless/libertas/README
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/README	2007-11-28 18:14:13.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/README	2007-11-28 18:14:55.000000000 +0100
+@@ -201,15 +201,14 @@ setuserscan
+       ssid="[SSID]"            specify a SSID filter for the scan
+       keep=[0 or 1]            keep the previous scan results (1), discard (0)
+       dur=[scan time]          time to scan for each channel in milliseconds
+-      probes=[#]               number of probe requests to send on each chan
+       type=[1,2,3]             BSS type: 1 (Infra), 2(Adhoc), 3(Any)
+ 
+-    Any combination of the above arguments can be supplied on the command line.
+-      If the chan token is absent, a full channel scan will be completed by
+-      the driver.  If the dur or probes tokens are absent, the driver default
+-      setting will be used.  The bssid and ssid fields, if blank,
+-      will produce an unfiltered scan. The type field will default to 3 (Any)
+-      and the keep field will default to 0 (Discard).
++    Any combination of the above arguments can be supplied on the command
++      line.  If the chan token is absent, a full channel scan will be
++      completed by the driver.  If dur tokens are absent, the driver default
++      setting will be used.  The bssid and ssid fields, if blank, will
++      produce an unfiltered scan. The type field will default to 3 (Any) and
++      the keep field will default to 0 (Discard).
+ 
+     Examples:
+     1) Perform an active scan on channels 1, 6, and 11 in the 'g' band:
+@@ -230,10 +229,10 @@ setuserscan
+        the current scan table intact, update existing or append new scan data:
+             echo "bssid=00:50:43:20:12:82 keep=1" > setuserscan
+ 
+-    6) Scan channel 6, for all infrastructure networks, sending two probe
+-       requests.  Keep the previous scan table intact. Update any duplicate
+-       BSSID/SSID matches with the new scan data:
+-            echo "chan=6g type=1 probes=2 keep=1" > setuserscan
++    6) Scan channel 6, for all infrastructure networks.
++       Keep the previous scan table intact. Update any duplicate BSSID/SSID
++       matches with the new scan data:
++            echo "chan=6g type=1 keep=1" > setuserscan
+ 
+     All entries in the scan table (not just the new scan data when keep=1)
+     will be displayed upon completion by use of the getscantable ioctl.
+Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2007-11-28 18:13:06.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2007-11-28 18:13:48.000000000 +0100
+@@ -41,7 +41,6 @@
+ 
+ //! Maximum memory needed for a lbs_scan_cmd_config with all TLVs at max
+ #define MAX_SCAN_CFG_ALLOC (sizeof(struct lbs_scan_cmd_config)  \
+-                            + sizeof(struct mrvlietypes_numprobes)   \
+                             + CHAN_TLV_MAX_SIZE                 \
+                             + SSID_TLV_MAX_SIZE)
+ 
+@@ -384,7 +383,6 @@ void lbs_scan_worker(struct work_struct 
+  *             - channel list
+  *
+  *  If the SSID or BSSID filter is not present, disable/clear the filter.
+- *  If the number of probes is not set, use the adapter default setting
+  *  Qualify the channel
+  *
+  *  @param priv             A pointer to struct lbs_private structure
+@@ -414,11 +412,9 @@ lbs_scan_setup_scan_config(struct lbs_pr
+ 			    u8 * pfilteredscan,
+ 			    u8 * pscancurrentonly)
+ {
+-	struct mrvlietypes_numprobes *pnumprobestlv;
+ 	struct mrvlietypes_ssidparamset *pssidtlv;
+ 	struct lbs_scan_cmd_config *pscancfgout = NULL;
+ 	u8 *ptlvpos;
+-	u16 numprobes;
+ 	int chanidx;
+ 	int scantype;
+ 	int scandur;
+@@ -467,9 +463,6 @@ lbs_scan_setup_scan_config(struct lbs_pr
+ 		pscancfgout->bsstype =
+ 		    puserscanin->bsstype ? puserscanin->bsstype : CMD_BSS_TYPE_ANY;
+ 
+-		/* Set the number of probes to send, use adapter setting if unset */
+-		numprobes = puserscanin->numprobes ? puserscanin->numprobes : 0;
+-
+ 		/*
+ 		 * Set the BSSID filter to the incoming configuration,
+ 		 *   if non-zero.  If not set, it will remain disabled (all zeros).
+@@ -501,22 +494,11 @@ lbs_scan_setup_scan_config(struct lbs_pr
+ 		}
+ 	} else {
+ 		pscancfgout->bsstype = CMD_BSS_TYPE_ANY;
+-		numprobes = 0;
+-	}
+-
+-	/* If the input config or adapter has the number of Probes set, add tlv */
+-	if (numprobes) {
+-		pnumprobestlv = (struct mrvlietypes_numprobes *) ptlvpos;
+-		pnumprobestlv->header.type = cpu_to_le16(TLV_TYPE_NUMPROBES);
+-		pnumprobestlv->header.len = cpu_to_le16(2);
+-		pnumprobestlv->numprobes = cpu_to_le16(numprobes);
+-
+-		ptlvpos += sizeof(*pnumprobestlv);
+ 	}
+ 
+ 	/*
+ 	 * Set the output for the channel TLV to the address in the tlv buffer
+-	 *   past any TLVs that were added in this fuction (SSID, numprobes).
++	 *   past any TLVs that were added in this fuction (SSID).
+ 	 *   channel TLVs will be added past this for each scan command, preserving
+ 	 *   the TLVs that were previously added.
+ 	 */
