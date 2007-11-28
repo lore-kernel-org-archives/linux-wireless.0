@@ -1,182 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:6117 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758816AbXK1Q2q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 11:28:46 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] remove numprobes
-Date: Wed, 28 Nov 2007 17:29:36 +0100
+Received: from mx1.redhat.com ([66.187.233.31]:53797 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757607AbXK1O7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 09:59:19 -0500
+Subject: Re: [PATCH] less eventcause shifts
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200711281729.37014.hs4233@mail.mn-solutions.de> (sfid-20071128_162850_906975_EEEF0878)
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200711280915.11300.hs4233@mail.mn-solutions.de>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 28 Nov 2007 09:53:31 -0500
+Message-Id: <1196261611.28264.0.camel@localhost.localdomain> (sfid-20071128_145924_623613_1DAD344C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the ability to specify number of probes via debugfs
+On Wed, 2007-11-28 at 09:15 +0100, Holger Schurig wrote:
+> * only shift eventcause once
+> 
+> * convert mac events to decimal, as this is what the firmware
+>   manual uses in section 6.1, too
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:11:47.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2007-11-28 18:12:02.000000000 +0100
-@@ -299,23 +299,6 @@ static int lbs_parse_dur(char *buf, size
- 	return val;
- }
- 
--static void lbs_parse_probes(char *buf, size_t count,
--	struct lbs_ioctl_user_scan_cfg *scan_cfg)
--{
--	char *hold;
--	int val;
--
--	hold = strstr(buf, "probes=");
--	if (!hold)
--		return;
--	hold += 7;
--	sscanf(hold, "%d", &val);
--
--	scan_cfg->numprobes = val;
--
--	return;
--}
--
- static void lbs_parse_type(char *buf, size_t count,
- 	struct lbs_ioctl_user_scan_cfg *scan_cfg)
- {
-@@ -367,7 +350,6 @@ static ssize_t lbs_setuserscan(struct fi
- 	scan_cfg->clear_bssid = lbs_parse_clear(buf, count, "clear_bssid=");
- 	lbs_parse_ssid(buf, count, scan_cfg);
- 	scan_cfg->clear_ssid = lbs_parse_clear(buf, count, "clear_ssid=");
--	lbs_parse_probes(buf, count, scan_cfg);
- 	lbs_parse_type(buf, count, scan_cfg);
- 
- 	lbs_scan_networks(priv, scan_cfg, 1);
-Index: wireless-2.6/drivers/net/wireless/libertas/scan.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/scan.h	2007-11-28 18:12:16.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/scan.h	2007-11-28 18:12:23.000000000 +0100
-@@ -105,11 +105,6 @@ struct lbs_ioctl_user_scan_cfg {
-      */
- 	u8 bsstype;
- 
--    /**
--     *  @brief Configure the number of probe requests for active chan scans
--     */
--	u8 numprobes;
--
- 	/**
- 	 *  @brief BSSID filter sent in the firmware command to limit the results
- 	 */
-Index: wireless-2.6/drivers/net/wireless/libertas/README
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/README	2007-11-28 18:14:13.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/README	2007-11-28 18:14:55.000000000 +0100
-@@ -201,15 +201,14 @@ setuserscan
-       ssid="[SSID]"            specify a SSID filter for the scan
-       keep=[0 or 1]            keep the previous scan results (1), discard (0)
-       dur=[scan time]          time to scan for each channel in milliseconds
--      probes=[#]               number of probe requests to send on each chan
-       type=[1,2,3]             BSS type: 1 (Infra), 2(Adhoc), 3(Any)
- 
--    Any combination of the above arguments can be supplied on the command line.
--      If the chan token is absent, a full channel scan will be completed by
--      the driver.  If the dur or probes tokens are absent, the driver default
--      setting will be used.  The bssid and ssid fields, if blank,
--      will produce an unfiltered scan. The type field will default to 3 (Any)
--      and the keep field will default to 0 (Discard).
-+    Any combination of the above arguments can be supplied on the command
-+      line.  If the chan token is absent, a full channel scan will be
-+      completed by the driver.  If dur tokens are absent, the driver default
-+      setting will be used.  The bssid and ssid fields, if blank, will
-+      produce an unfiltered scan. The type field will default to 3 (Any) and
-+      the keep field will default to 0 (Discard).
- 
-     Examples:
-     1) Perform an active scan on channels 1, 6, and 11 in the 'g' band:
-@@ -230,10 +229,10 @@ setuserscan
-        the current scan table intact, update existing or append new scan data:
-             echo "bssid=00:50:43:20:12:82 keep=1" > setuserscan
- 
--    6) Scan channel 6, for all infrastructure networks, sending two probe
--       requests.  Keep the previous scan table intact. Update any duplicate
--       BSSID/SSID matches with the new scan data:
--            echo "chan=6g type=1 probes=2 keep=1" > setuserscan
-+    6) Scan channel 6, for all infrastructure networks.
-+       Keep the previous scan table intact. Update any duplicate BSSID/SSID
-+       matches with the new scan data:
-+            echo "chan=6g type=1 keep=1" > setuserscan
- 
-     All entries in the scan table (not just the new scan data when keep=1)
-     will be displayed upon completion by use of the getscantable ioctl.
-Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2007-11-28 18:13:06.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2007-11-28 18:13:48.000000000 +0100
-@@ -41,7 +41,6 @@
- 
- //! Maximum memory needed for a lbs_scan_cmd_config with all TLVs at max
- #define MAX_SCAN_CFG_ALLOC (sizeof(struct lbs_scan_cmd_config)  \
--                            + sizeof(struct mrvlietypes_numprobes)   \
-                             + CHAN_TLV_MAX_SIZE                 \
-                             + SSID_TLV_MAX_SIZE)
- 
-@@ -384,7 +383,6 @@ void lbs_scan_worker(struct work_struct 
-  *             - channel list
-  *
-  *  If the SSID or BSSID filter is not present, disable/clear the filter.
-- *  If the number of probes is not set, use the adapter default setting
-  *  Qualify the channel
-  *
-  *  @param priv             A pointer to struct lbs_private structure
-@@ -414,11 +412,9 @@ lbs_scan_setup_scan_config(struct lbs_pr
- 			    u8 * pfilteredscan,
- 			    u8 * pscancurrentonly)
- {
--	struct mrvlietypes_numprobes *pnumprobestlv;
- 	struct mrvlietypes_ssidparamset *pssidtlv;
- 	struct lbs_scan_cmd_config *pscancfgout = NULL;
- 	u8 *ptlvpos;
--	u16 numprobes;
- 	int chanidx;
- 	int scantype;
- 	int scandur;
-@@ -467,9 +463,6 @@ lbs_scan_setup_scan_config(struct lbs_pr
- 		pscancfgout->bsstype =
- 		    puserscanin->bsstype ? puserscanin->bsstype : CMD_BSS_TYPE_ANY;
- 
--		/* Set the number of probes to send, use adapter setting if unset */
--		numprobes = puserscanin->numprobes ? puserscanin->numprobes : 0;
--
- 		/*
- 		 * Set the BSSID filter to the incoming configuration,
- 		 *   if non-zero.  If not set, it will remain disabled (all zeros).
-@@ -501,22 +494,11 @@ lbs_scan_setup_scan_config(struct lbs_pr
- 		}
- 	} else {
- 		pscancfgout->bsstype = CMD_BSS_TYPE_ANY;
--		numprobes = 0;
--	}
--
--	/* If the input config or adapter has the number of Probes set, add tlv */
--	if (numprobes) {
--		pnumprobestlv = (struct mrvlietypes_numprobes *) ptlvpos;
--		pnumprobestlv->header.type = cpu_to_le16(TLV_TYPE_NUMPROBES);
--		pnumprobestlv->header.len = cpu_to_le16(2);
--		pnumprobestlv->numprobes = cpu_to_le16(numprobes);
--
--		ptlvpos += sizeof(*pnumprobestlv);
- 	}
- 
- 	/*
- 	 * Set the output for the channel TLV to the address in the tlv buffer
--	 *   past any TLVs that were added in this fuction (SSID, numprobes).
-+	 *   past any TLVs that were added in this fuction (SSID).
- 	 *   channel TLVs will be added past this for each scan command, preserving
- 	 *   the TLVs that were previously added.
- 	 */
+> Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 10:07:27.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 10:15:07.000000000 +0100
+> @@ -899,12 +899,12 @@ int lbs_process_event(struct lbs_private
+>  	lbs_deb_enter(LBS_DEB_CMD);
+>  
+>  	spin_lock_irq(&adapter->driver_lock);
+> -	eventcause = adapter->eventcause;
+> +	eventcause = adapter->eventcause >> SBI_EVENT_CAUSE_SHIFT;
+>  	spin_unlock_irq(&adapter->driver_lock);
+>  
+> -	lbs_deb_cmd("event cause 0x%x\n", eventcause);
+> +	lbs_deb_cmd("event cause %d\n", eventcause);
+>  
+> -	switch (eventcause >> SBI_EVENT_CAUSE_SHIFT) {
+> +	switch (eventcause) {
+>  	case MACREG_INT_CODE_LINK_SENSED:
+>  		lbs_deb_cmd("EVENT: MACREG_INT_CODE_LINK_SENSED\n");
+>  		break;
+> @@ -919,7 +919,7 @@ int lbs_process_event(struct lbs_private
+>  		lbs_mac_event_disconnected(priv);
+>  		break;
+>  
+> -	case MACREG_INT_CODE_LINK_LOSE_NO_SCAN:
+> +	case MACREG_INT_CODE_LINK_LOST_NO_SCAN:
+>  		lbs_deb_cmd("EVENT: link lost\n");
+>  		lbs_mac_event_disconnected(priv);
+>  		break;
+> @@ -1013,8 +1013,7 @@ int lbs_process_event(struct lbs_private
+>  		break;
+>  
+>  	default:
+> -		lbs_pr_alert("EVENT: unknown event id 0x%04x\n",
+> -		       eventcause >> SBI_EVENT_CAUSE_SHIFT);
+> +		lbs_pr_alert("EVENT: unknown event id %d\n", eventcause);
+>  		break;
+>  	}
+>  
+> Index: wireless-2.6/drivers/net/wireless/libertas/host.h
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/host.h	2007-11-28 10:07:40.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/host.h	2007-11-28 10:15:57.000000000 +0100
+> @@ -272,27 +272,35 @@ enum cmd_mesh_access_opts {
+>  };
+>  
+>  /** Card Event definition */
+> -#define MACREG_INT_CODE_TX_PPA_FREE             0x00000000
+> -#define MACREG_INT_CODE_TX_DMA_DONE             0x00000001
+> -#define MACREG_INT_CODE_LINK_LOSE_W_SCAN        0x00000002
+> -#define MACREG_INT_CODE_LINK_LOSE_NO_SCAN       0x00000003
+> -#define MACREG_INT_CODE_LINK_SENSED             0x00000004
+> -#define MACREG_INT_CODE_CMD_FINISHED            0x00000005
+> -#define MACREG_INT_CODE_MIB_CHANGED             0x00000006
+> -#define MACREG_INT_CODE_INIT_DONE               0x00000007
+> -#define MACREG_INT_CODE_DEAUTHENTICATED         0x00000008
+> -#define MACREG_INT_CODE_DISASSOCIATED           0x00000009
+> -#define MACREG_INT_CODE_PS_AWAKE                0x0000000a
+> -#define MACREG_INT_CODE_PS_SLEEP                0x0000000b
+> -#define MACREG_INT_CODE_MIC_ERR_MULTICAST       0x0000000d
+> -#define MACREG_INT_CODE_MIC_ERR_UNICAST         0x0000000e
+> -#define MACREG_INT_CODE_WM_AWAKE                0x0000000f
+> -#define MACREG_INT_CODE_ADHOC_BCN_LOST          0x00000011
+> -#define MACREG_INT_CODE_RSSI_LOW		0x00000019
+> -#define MACREG_INT_CODE_SNR_LOW			0x0000001a
+> -#define MACREG_INT_CODE_MAX_FAIL		0x0000001b
+> -#define MACREG_INT_CODE_RSSI_HIGH		0x0000001c
+> -#define MACREG_INT_CODE_SNR_HIGH		0x0000001d
+> -#define MACREG_INT_CODE_MESH_AUTO_STARTED	0x00000023
+> +#define MACREG_INT_CODE_TX_PPA_FREE             0
+> +#define MACREG_INT_CODE_TX_DMA_DONE             1
+> +#define MACREG_INT_CODE_LINK_LOST_W_SCAN        2
+> +#define MACREG_INT_CODE_LINK_LOST_NO_SCAN       3
+> +#define MACREG_INT_CODE_LINK_SENSED             4
+> +#define MACREG_INT_CODE_CMD_FINISHED            5
+> +#define MACREG_INT_CODE_MIB_CHANGED             6
+> +#define MACREG_INT_CODE_INIT_DONE               7
+> +#define MACREG_INT_CODE_DEAUTHENTICATED         8
+> +#define MACREG_INT_CODE_DISASSOCIATED           9
+> +#define MACREG_INT_CODE_PS_AWAKE                10
+> +#define MACREG_INT_CODE_PS_SLEEP                11
+> +#define MACREG_INT_CODE_MIC_ERR_MULTICAST       13
+> +#define MACREG_INT_CODE_MIC_ERR_UNICAST         14
+> +#define MACREG_INT_CODE_WM_AWAKE                15
+> +#define MACREG_INT_CODE_DEEP_SLEEP_AWAKE        16
+> +#define MACREG_INT_CODE_ADHOC_BCN_LOST          17
+> +#define MACREG_INT_CODE_HOST_AWAKE              18
+> +#define MACREG_INT_CODE_STOP_TX                 19
+> +#define MACREG_INT_CODE_START_TX                20
+> +#define MACREG_INT_CODE_CHANNEL_SWITCH          21
+> +#define MACREG_INT_CODE_MEASUREMENT_RDY         22
+> +#define MACREG_INT_CODE_WMM_CHANGE              23
+> +#define MACREG_INT_CODE_BG_SCAN_REPORT          24
+> +#define MACREG_INT_CODE_RSSI_LOW                25
+> +#define MACREG_INT_CODE_SNR_LOW                 26
+> +#define MACREG_INT_CODE_MAX_FAIL                27
+> +#define MACREG_INT_CODE_RSSI_HIGH               28
+> +#define MACREG_INT_CODE_SNR_HIGH                29
+> +#define MACREG_INT_CODE_MESH_AUTO_STARTED       35
+>  
+>  #endif
+
