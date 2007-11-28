@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3649 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753459AbXKFQmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 11:42:21 -0500
-Date: Tue, 6 Nov 2007 11:41:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Claudio Matsuoka <claudio@mandriva.com>
-Cc: linux-wireless@vger.kernel.org, flamingice@souremilk.net,
-	dsd@gentoo.org, kune@deine-taler.de
-Subject: Re: RTL8187 rate control problems
-Message-ID: <20071106164148.GB4440@tuxdriver.com> (sfid-20071106_164225_595214_E51E595E)
-References: <200711061323.16302.claudio@mandriva.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200711061323.16302.claudio@mandriva.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbXK1N3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 08:29:39 -0500
+Subject: [PATCH (2.6.24, #everything)] mac80211: allow setting
+	drop_unencrypted with wext
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 28 Nov 2007 11:04:21 +0100
+Message-Id: <1196244262.6058.120.camel@johannes.berg> (sfid-20071128_132942_523291_49015714)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 06, 2007 at 01:23:16PM -0200, Claudio Matsuoka wrote:
+This patch allows wpa_supplicant to set the drop_unencrypted setting in
+mac80211.
 
-> I've been reported a problem with RTL8187 working only at very close ranges 
-> (4-5m) in Linux while the same hardware works at much higher distances in 
-> Windows. Investigating the problem, I found that it's caused by the mac80211 
-> rate control incrementing the bit rate to 54M and never going down because 
-> the fail counter stays at zero. What would be a good way to check 
-> transmission retries or failures in the RTL8187 to prevent this problem? Is 
-> it possible to have a retry count sent to the tx callback so 
-> status->retry_count could be set accordingly?   
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+This patch applies to both 2.6.24 and #everything
 
-I think you are right -- it looks like rtl8187 never sets
-excessive_retries for transmit status.  I don't see anything obvious
-in the specs that would give us an actual indication of that either,
-which probably explains why it is missing.
+ net/mac80211/ieee80211_ioctl.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-The zd1211rw(-mac80211) driver(s) have a mechanism for matching-up
-received ACKs with transmitted frames so that they can synthesize the
-required excessive_retries data.  Probably rtl8186 needs something
-similar.  Maybe this would even be worth generalizing?
+--- linux-2.6.orig/net/mac80211/ieee80211_ioctl.c	2007-11-13 19:00:03.519120007 +0100
++++ linux-2.6/net/mac80211/ieee80211_ioctl.c	2007-11-28 11:01:25.218924587 +0100
+@@ -928,6 +928,9 @@ static int ieee80211_ioctl_siwauth(struc
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+ 	case IW_AUTH_KEY_MGMT:
+ 		break;
++	case IW_AUTH_DROP_UNENCRYPTED:
++		sdata->drop_unencrypted = !!data->value;
++		break;
+ 	case IW_AUTH_PRIVACY_INVOKED:
+ 		if (sdata->type != IEEE80211_IF_TYPE_STA)
+ 			ret = -EINVAL;
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
