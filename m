@@ -1,79 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:23631 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbXK0Tjh (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:8880 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317AbXK1PM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:39:37 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1321058ugc
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:39:35 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Tue, 27 Nov 2007 21:46:53 +0100
+	Wed, 28 Nov 2007 10:12:59 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] less eventcause shifts
+Date: Wed, 28 Nov 2007 16:13:51 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+References: <200711280915.11300.hs4233@mail.mn-solutions.de> <1196261611.28264.0.camel@localhost.localdomain> <1196262129.30806.26.camel@pmac.infradead.org>
+In-Reply-To: <1196262129.30806.26.camel@pmac.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272146.53518.IvDoorn@gmail.com> (sfid-20071127_200531_499305_97B9C489)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-15"
+Message-Id: <200711281613.51463.hs4233@mail.mn-solutions.de> (sfid-20071128_151308_733387_FF06E645)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+> s/less/fewer/ of course :)
 
-Here is the latest version of rt2x00.
+Thanks. Should I re-submit?
 
-Please merge the patches for 2.6.24
-09 - Only update rssi average approximation on receiving beacon frames.
-10 - Remove redundant code in rfkill setup
-11 - Cleanup rfkill
 
-All other patches can wait for 2.6.25, since they are code cleanups and the
-new TX/RX frame dumping facility through debugfs.
+> Since I'm also going to be sending a flurry of libertas
+> patches and the turnaround through the wireless tree seems
+> suboptimal, shall we put up a git tree and work on it
+> together, then ask John to pull when we're done?
 
-Ivo
+That might be an option. Currently, I'm working with 
+wireless-2.6/everything and quilt (because it's faster then 
+stgit).
 
----
+My goal with libertas is better roaming in an STA+MANY APs 
+scenario. Right now libertas is almost unusable for my usage 
+work type. The new-scan patch is just a stepstone in this 
+direction (so that I understand scanning much better). Also my 
+janitor-like patches are just by-products of getting used to the 
+code-base.
 
-The following changes since commit 301df40749bdf144c72637795ba93d82e4b84682:
-  Johannes Berg (1):
-        mac80211: remove more forgotten code
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
-
-Ivo van Doorn (9):
-      rt2x00: Replace DRV_NAME with KBUILD_MODNAME
-      rt2x00: Extend PLCP descriptor definition for rt2400pci
-      rt2x00: Move register value/offset files into new folder
-      rt2x00: Add chipset version to chipset debugfs entry
-      rt2x00: Add skb descriptor
-      rt2x00: Add TX/RX frame dumping facility
-      rt2x00: Use IEEE80211_IF_TYPE_INVALID directly
-      rt2x00: Cleanup rfkill
-      rt2x00: Release rt2x00 2.0.13
-
-Larry Finger (1):
-      rt2x00: Remove redundant code in rfkill setup
-
-Mattias Nissler (1):
-      rt2x00: Only update rssi average approximation on receiving beacon frames.
-
- drivers/net/wireless/rt2x00/rt2400pci.c      |   49 ++----
- drivers/net/wireless/rt2x00/rt2400pci.h      |   20 ++-
- drivers/net/wireless/rt2x00/rt2500pci.c      |    9 +-
- drivers/net/wireless/rt2x00/rt2500usb.c      |   39 +++--
- drivers/net/wireless/rt2x00/rt2x00.h         |   26 ++-
- drivers/net/wireless/rt2x00/rt2x00config.c   |    5 -
- drivers/net/wireless/rt2x00/rt2x00debug.c    |  240 +++++++++++++++++++++++---
- drivers/net/wireless/rt2x00/rt2x00dev.c      |   93 ++++++----
- drivers/net/wireless/rt2x00/rt2x00firmware.c |    5 -
- drivers/net/wireless/rt2x00/rt2x00lib.h      |    6 +
- drivers/net/wireless/rt2x00/rt2x00mac.c      |    7 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c      |   59 +++++--
- drivers/net/wireless/rt2x00/rt2x00rfkill.c   |   15 --
- drivers/net/wireless/rt2x00/rt2x00ring.h     |   22 +++
- drivers/net/wireless/rt2x00/rt2x00usb.c      |   41 +++--
- drivers/net/wireless/rt2x00/rt61pci.c        |   36 +++--
- drivers/net/wireless/rt2x00/rt73usb.c        |   36 +++--
- 17 files changed, 484 insertions(+), 224 deletions(-)
+In what parts of libertas are you working?
