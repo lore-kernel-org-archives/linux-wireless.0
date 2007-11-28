@@ -1,96 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:1835 "EHLO
-	mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751846AbXKSJRF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39994 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755116AbXK1Tr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 04:17:05 -0500
-From: Guillaume Chazarain <guichaz@yahoo.fr>
-Subject: [PATCH] ieee80211: Stop net_ratelimit/IEEE80211_DEBUG_DROP log
-	pollution
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 19 Nov 2007 10:07:00 +0100
-Message-ID: <20071119090700.24011.97730.stgit@cheypa.inria.fr> (sfid-20071119_091713_186695_B6FF9232)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 28 Nov 2007 14:47:29 -0500
+Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: dragoran <drago01@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <f6ca9fed0711281145y26fa2dc1w5d57e9dc0e45c16b@mail.gmail.com> (sfid-20071128_194557_851836_BC05120D)
+References: <47494851.4070504@gmail.com>
+	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
+	 <f6ca9fed0711260650j749de7a3x3edc084ae820d2eb@mail.gmail.com>
+	 <20071127033408.GB5698@jm.kir.nu> <474D75D9.7070908@gmail.com>
+	 <1196268612.6058.157.camel@johannes.berg>
+	 <f6ca9fed0711281145y26fa2dc1w5d57e9dc0e45c16b@mail.gmail.com>
+	 (sfid-20071128_194557_851836_BC05120D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-16drSAtqayBj+vzfFtgA"
+Date: Wed, 28 Nov 2007 20:47:16 +0100
+Message-Id: <1196279236.6058.165.camel@johannes.berg> (sfid-20071128_194732_603313_A5D5AFC6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if (net_ratelimit())
-	IEEE80211_DEBUG_DROP(...)
 
-can pollute the logs with messages like:
+--=-16drSAtqayBj+vzfFtgA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-printk: 1 messages suppressed.
-printk: 2 messages suppressed.
-printk: 7 messages suppressed.
 
-if debugging information is disabled. These messages are printed by
-net_ratelimit(). Add a wrapper to net_ratelimit() that takes into account
-the log level, so that net_ratelimit() is called only when we really want
-to print something.
 
-Signed-off-by: Guillaume Chazarain <guichaz@yahoo.fr>
----
+> > Just grap iw (from git.sipsolutions.net) and create a new monitor
+> > interface: ./iw dev wmaster0 interface add moni0 type monitor
+> > and then run tcpdump/wireshark on that.
+>=20
+> iw does not build here :
+> cc -I/lib/modules/`uname -r`/build//include -Wall
+> -I/lib/modules/`uname -r`/build/include -g   -c -o iw.o iw.c
+> iw.c:11:31: error: netlink/genl/genl.h: No such file or directory
+> iw.c:12:33: error: netlink/genl/family.h: No such file or directory
+> iw.c:13:33: error: netlink/genl/ctrl.h: No such file or directory
 
- include/net/ieee80211.h              |    8 ++++++++
- net/ieee80211/ieee80211_crypt_ccmp.c |    2 +-
- net/ieee80211/ieee80211_crypt_tkip.c |    4 ++--
- 3 files changed, 11 insertions(+), 3 deletions(-)
+Yeah, you need libnl-pre8.
 
-diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
-index 164d132..d8ae484 100644
---- a/include/net/ieee80211.h
-+++ b/include/net/ieee80211.h
-@@ -115,8 +115,16 @@ extern u32 ieee80211_debug_level;
- do { if (ieee80211_debug_level & (level)) \
-   printk(KERN_DEBUG "ieee80211: %c %s " fmt, \
-          in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
-+static inline bool ieee80211_ratelimit_debug(u32 level)
-+{
-+	return (ieee80211_debug_level & level) && net_ratelimit();
-+}
- #else
- #define IEEE80211_DEBUG(level, fmt, args...) do {} while (0)
-+static inline bool ieee80211_ratelimit_debug(u32 level)
-+{
-+	return false;
-+}
- #endif				/* CONFIG_IEEE80211_DEBUG */
- 
- /* escape_essid() is intended to be used in debug (and possibly error)
-diff --git a/net/ieee80211/ieee80211_crypt_ccmp.c b/net/ieee80211/ieee80211_crypt_ccmp.c
-index c6d760d..208bf35 100644
---- a/net/ieee80211/ieee80211_crypt_ccmp.c
-+++ b/net/ieee80211/ieee80211_crypt_ccmp.c
-@@ -338,7 +338,7 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (ccmp_replay_check(pn, key->rx_pn)) {
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("CCMP: replay detected: STA=%s "
- 				 "previous PN %02x%02x%02x%02x%02x%02x "
- 				 "received PN %02x%02x%02x%02x%02x%02x\n",
-diff --git a/net/ieee80211/ieee80211_crypt_tkip.c b/net/ieee80211/ieee80211_crypt_tkip.c
-index 58b2261..8e14694 100644
---- a/net/ieee80211/ieee80211_crypt_tkip.c
-+++ b/net/ieee80211/ieee80211_crypt_tkip.c
-@@ -464,7 +464,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("TKIP: replay detected: STA=%s"
- 			       " previous TSC %08x%04x received TSC "
- 			       "%08x%04x\n", print_mac(mac, hdr->addr2),
-@@ -504,7 +504,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 			 * it needs to be recalculated for the next packet. */
- 			tkey->rx_phase1_done = 0;
- 		}
--		if (net_ratelimit()) {
-+		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
- 			IEEE80211_DEBUG_DROP("TKIP: ICV error detected: STA="
- 			       "%s\n", print_mac(mac, hdr->addr2));
- 		}
+johannes
+
+--=-16drSAtqayBj+vzfFtgA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR03Fw6Vg1VMiehFYAQJF5g//R21uuB2N7QRvLn3lFzjb1/935b/WnMlU
+HfHOL4dwPaXeVY1Y0U8cBG387S+TTlOFk/wMEGk83LHCWLR23qWmPUJ3wmiWfZZ/
+VY9Mo9pHuMIh4xkU9QHFTcFcAaXAecyLK1B2lCiMUwVRUfWGBLyulmvaqX6Nqxhm
+zvXVUa/5NneoUXc8Xp14MD/3d44P4+V9bsj1+CFrglFvCel42p2gzCOMjpcNfVLp
+ksQyBnqWeKRSt/i2k777Qz978YBcPklCWA3sSEmUi4Lg7mhnPIvBRLNCkELu3DOl
+JBcNjZOWJmowCPaA8OGquWoGhhxQo8buMWVD0aiZl/SBVJgill52sxoXU9aqPz2k
+SFySAGLJJYnaHrksvVuCRtSoEEUw2ZS8t/IRHfQpY8iGV4WsP3bFIFf6nVinMG/+
+1VfIbKP1tIwCGdUXOT+sfkuegFQJoeq47ADdY7B6PnxiIltptRHV2K33Td5QrVaz
+/othk4UcVlXN6Q2mhbAOwATXdCXluwMaYk3xBTxOrbCePiRF8LpOrBLlN//TJ7j2
+Cfn3oVXw8uE1iPqGPIUw+bs1BDzrlfGxs2voefeaZUjvwXorFwWDv7R/1DgsyBq7
+mWhwNu9nU3ILp5/0Wb1ZfLPRqM5ouE3obsFjb3/3u5Ri9N5r2qa11l51I7IBUY16
+5RKguzA97m4=
+=1Hv1
+-----END PGP SIGNATURE-----
+
+--=-16drSAtqayBj+vzfFtgA--
+
