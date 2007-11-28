@@ -1,358 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4146 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755672AbXK2DK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 22:10:57 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 20/36] iwlwifi: move HT_IE_EXT_CHANNEL_* driver definitions to iwl-4965.h
-Date: Thu, 29 Nov 2007 11:10:00 +0800
-Message-Id: <1196305816-23023-21-git-send-email-yi.zhu@intel.com> (sfid-20071129_033537_283505_A55A2A78)
-In-Reply-To: <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
-References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-17-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-18-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-19-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
+Received: from nz-out-0506.google.com ([64.233.162.233]:60678 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbXK1Fpt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 00:45:49 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so962713nze
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 21:45:48 -0800 (PST)
+Message-ID: <43e72e890711272145l8f31864u3f798e020ccaddfb@mail.gmail.com> (sfid-20071128_054554_173213_F278CA04)
+Date: Wed, 28 Nov 2007 00:45:48 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/1] ath5k: more consistent debugging
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com
+In-Reply-To: <1196077433-12358-2-git-send-email-bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1196077433-12358-1-git-send-email-bruno@thinktube.com>
+	 <1196077433-12358-2-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+On Nov 26, 2007 6:43 AM, Bruno Randolf <bruno@thinktube.com> wrote:
 
-Move HT_IE_EXT_CHANNEL_* driver definitions to iwl-4965.h
+> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+> new file mode 100644
+> index 0000000..7427506
+> --- /dev/null
+> +++ b/drivers/net/wireless/ath5k/debug.c
 
-Add comments to guide .h file usage (hw/api/driver definitions)
+etc
 
-Minor comment cleanup
+> +#if ATH5K_DEBUG
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h |    5 +++
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h       |   32 ++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-3945.h          |    5 +++
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    5 +++
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h       |   35 ++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-4965.h          |   25 ++++++++++++---
- 6 files changed, 68 insertions(+), 39 deletions(-)
+This would be better as a CONFIG_ATH5K_DEBUG. Also the patch doesn't
+apply cleanly anymore. That's probably my fault for the delay in
+response and apologies for that. Other than that it looks fine. Sorry
+I couldn't test it. I'll try to amend it and test it.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-index dc7498d..794db78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-@@ -60,6 +60,11 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-3945-commands.h) only for uCode API definitions.
-+ * Please use iwl-3945-hw.h for hardware-related definitions.
-+ * Please use iwl-3945.h for driver implementation definitions.
-+ */
- 
- #ifndef __iwl_3945_commands_h__
- #define __iwl_3945_commands_h__
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index ea4bdd8..42da5be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -60,6 +60,11 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-3945-hw.h) only for hardware-related definitions.
-+ * Please use iwl-3945-commands.h for uCode API definitions.
-+ * Please use iwl-3945.h for driver implementation definitions.
-+ */
- 
- #ifndef __iwl_3945_hw__
- #define __iwl_3945_hw__
-@@ -73,9 +78,7 @@
- /* Tx rates */
- #define IWL_CCK_RATES 4
- #define IWL_OFDM_RATES 8
--
- #define IWL_HT_RATES 0
--
- #define IWL_MAX_RATES  (IWL_CCK_RATES+IWL_OFDM_RATES+IWL_HT_RATES)
- 
- /* Time constants */
-@@ -545,11 +548,6 @@ struct iwl3945_eeprom {
- #define FH_TSSR_CBB_BASE        (FH_TSSR_TABLE+0x000)
- #define FH_TSSR_MSG_CONFIG      (FH_TSSR_TABLE+0x008)
- #define FH_TSSR_TX_STATUS       (FH_TSSR_TABLE+0x010)
--/* 18 - reserved */
--
--/* card static random access memory (SRAM) for processor data and instructs */
--#define RTC_INST_LOWER_BOUND			(0x000000)
--#define RTC_DATA_LOWER_BOUND			(0x800000)
- 
- 
- /* DBM */
-@@ -618,7 +616,6 @@ struct iwl3945_eeprom {
- #define TFD_QUEUE_MAX           6
- #define TFD_QUEUE_SIZE_MAX      (256)
- 
--/* spectrum and channel data structures */
- #define IWL_NUM_SCAN_RATES         (2)
- 
- #define IWL_DEFAULT_TX_RETRY  15
-@@ -634,11 +631,6 @@ struct iwl3945_eeprom {
- 
- #define U32_PAD(n)		((4-(n))&0x3)
- 
--/*
-- * Generic queue structure
-- *
-- * Contains common data for Rx and Tx queues
-- */
- #define TFD_CTL_COUNT_SET(n)       (n<<24)
- #define TFD_CTL_COUNT_GET(ctl)     ((ctl>>24) & 7)
- #define TFD_CTL_PAD_SET(n)         (n<<28)
-@@ -656,18 +648,26 @@ struct iwl3945_eeprom {
- #define RX_FREE_BUFFERS 64
- #define RX_LOW_WATERMARK 8
- 
--
-+/* Size of one Rx buffer in host DRAM */
- #define IWL_RX_BUF_SIZE 3000
--/* card static random access memory (SRAM) for processor data and instructs */
-+
-+/* Sizes and addresses for instruction and data memory (SRAM) in
-+ * 3945's embedded processor.  Driver access is via HBUS_TARG_MEM_* regs. */
-+#define RTC_INST_LOWER_BOUND			(0x000000)
- #define ALM_RTC_INST_UPPER_BOUND		(0x014000)
-+
-+#define RTC_DATA_LOWER_BOUND			(0x800000)
- #define ALM_RTC_DATA_UPPER_BOUND		(0x808000)
- 
- #define ALM_RTC_INST_SIZE (ALM_RTC_INST_UPPER_BOUND - RTC_INST_LOWER_BOUND)
- #define ALM_RTC_DATA_SIZE (ALM_RTC_DATA_UPPER_BOUND - RTC_DATA_LOWER_BOUND)
- 
--#define IWL_MAX_BSM_SIZE ALM_RTC_INST_SIZE
- #define IWL_MAX_INST_SIZE ALM_RTC_INST_SIZE
- #define IWL_MAX_DATA_SIZE ALM_RTC_DATA_SIZE
-+
-+/* Size of uCode instruction memory in bootstrap state machine */
-+#define IWL_MAX_BSM_SIZE ALM_RTC_INST_SIZE
-+
- #define IWL_MAX_NUM_QUEUES	8
- 
- static inline int iwl3945_hw_valid_rtc_data_addr(u32 addr)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 2f3a8b4..75cef3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -23,6 +23,11 @@
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-3945.h) for driver implementation definitions.
-+ * Please use iwl-3945-commands.h for uCode API definitions.
-+ * Please use iwl-3945-hw.h for hardware-related definitions.
-+ */
- 
- #ifndef __iwl_3945_h__
- #define __iwl_3945_h__
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index 49582b9..9910939 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -60,6 +60,11 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-4965-commands.h) only for uCode API definitions.
-+ * Please use iwl-4965-hw.h for hardware-related definitions.
-+ * Please use iwl-4965.h for driver implementation definitions.
-+ */
- 
- #ifndef __iwl4965_commands_h__
- #define __iwl4965_commands_h__
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index c5fa086..6f91c02 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -60,6 +60,11 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-4965-hw.h) only for hardware-related definitions.
-+ * Use iwl-4965-commands.h for uCode API definitions.
-+ * Use iwl-4965.h for driver implementation definitions.
-+ */
- 
- #ifndef __iwl_4965_hw_h__
- #define __iwl_4965_hw_h__
-@@ -77,9 +82,7 @@
- /* Tx rates */
- #define IWL_CCK_RATES 4
- #define IWL_OFDM_RATES 8
--
- #define IWL_HT_RATES 16
--
- #define IWL_MAX_RATES  (IWL_CCK_RATES+IWL_OFDM_RATES+IWL_HT_RATES)
- 
- /* Time constants */
-@@ -449,8 +452,6 @@ struct iwl4965_eeprom {
-  */
- #define CSR_HW_REV_WA_REG	(CSR_BASE+0x22C)
- 
--#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM     (0x00200000)
--
- /* interrupt flags in INTA, set by uCode or hardware (e.g. dma),
-  * acknowledged (reset) by host writing "1" to flagged bits. */
- #define CSR_INT_BIT_FH_RX        (1<<31) /* Rx DMA, cmd responses, FH_INT[17:16] */
-@@ -592,17 +593,12 @@ struct iwl4965_eeprom {
- #define FH_TSSR_CBB_BASE        (FH_TSSR_TABLE+0x000)
- #define FH_TSSR_MSG_CONFIG      (FH_TSSR_TABLE+0x008)
- #define FH_TSSR_TX_STATUS       (FH_TSSR_TABLE+0x010)
--/* 18 - reserved */
- 
--/* card static random access memory (SRAM) for processor data and instructs */
--#define RTC_INST_LOWER_BOUND			(0x000000)
--#define RTC_DATA_LOWER_BOUND			(0x800000)
- 
- #define HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED         (0x00000004)
- 
- #define TFD_QUEUE_SIZE_MAX      (256)
- 
--/* spectrum and channel data structures */
- #define IWL_NUM_SCAN_RATES         (2)
- 
- #define IWL_DEFAULT_TX_RETRY  15
-@@ -623,17 +619,26 @@ struct iwl4965_eeprom {
- #define RX_FREE_BUFFERS 64
- #define RX_LOW_WATERMARK 8
- 
--
-+/* Size of one Rx buffer in host DRAM */
- #define IWL_RX_BUF_SIZE (4 * 1024)
--#define IWL_MAX_BSM_SIZE BSM_SRAM_SIZE
-+
-+/* Sizes and addresses for instruction and data memory (SRAM) in
-+ * 4965's embedded processor.  Driver access is via HBUS_TARG_MEM_* regs. */
-+#define RTC_INST_LOWER_BOUND			(0x000000)
- #define KDR_RTC_INST_UPPER_BOUND		(0x018000)
-+
-+#define RTC_DATA_LOWER_BOUND			(0x800000)
- #define KDR_RTC_DATA_UPPER_BOUND		(0x80A000)
-+
- #define KDR_RTC_INST_SIZE    (KDR_RTC_INST_UPPER_BOUND - RTC_INST_LOWER_BOUND)
- #define KDR_RTC_DATA_SIZE    (KDR_RTC_DATA_UPPER_BOUND - RTC_DATA_LOWER_BOUND)
- 
- #define IWL_MAX_INST_SIZE KDR_RTC_INST_SIZE
- #define IWL_MAX_DATA_SIZE KDR_RTC_DATA_SIZE
- 
-+/* Size of uCode instruction memory in bootstrap state machine */
-+#define IWL_MAX_BSM_SIZE BSM_SRAM_SIZE
-+
- static inline int iwl4965_hw_valid_rtc_data_addr(u32 addr)
- {
- 	return (addr >= RTC_DATA_LOWER_BOUND) &&
-@@ -641,13 +646,6 @@ static inline int iwl4965_hw_valid_rtc_data_addr(u32 addr)
- }
- 
- /********************* START TXPOWER *****************************************/
--enum {
--	HT_IE_EXT_CHANNEL_NONE = 0,
--	HT_IE_EXT_CHANNEL_ABOVE,
--	HT_IE_EXT_CHANNEL_INVALID,
--	HT_IE_EXT_CHANNEL_BELOW,
--	HT_IE_EXT_CHANNEL_MAX
--};
- 
- enum {
- 	CALIB_CH_GROUP_1 = 0,
-@@ -812,6 +810,7 @@ enum {
- #define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x00000C00)
- #define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI		(0x00000100)
- #define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
-+#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM (0x00200000)
- 
- static inline u8 iwl4965_hw_get_rate(__le32 rate_n_flags)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 9438c63..4a1ec94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -23,6 +23,12 @@
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-+/*
-+ * Please use this file (iwl-4965.h) for driver implementation definitions.
-+ * Please use iwl-4965-commands.h for uCode API definitions.
-+ * Please use iwl-4965-hw.h for hardware-related definitions.
-+ */
-+
- #ifndef __iwl_4965_h__
- #define __iwl_4965_h__
- 
-@@ -192,6 +198,15 @@ struct iwl4965_scan_power_info {
- 	s8 requested_power;	/* scan pwr (dBm) requested for chnl/rate */
- };
- 
-+/* For fat_extension_channel */
-+enum {
-+	HT_IE_EXT_CHANNEL_NONE = 0,
-+	HT_IE_EXT_CHANNEL_ABOVE,
-+	HT_IE_EXT_CHANNEL_INVALID,
-+	HT_IE_EXT_CHANNEL_BELOW,
-+	HT_IE_EXT_CHANNEL_MAX
-+};
-+
- /*
-  * One for each channel, holds all channel setup data
-  * Some of the fields (e.g. eeprom and flags/max_power_avg) are redundant
-@@ -202,14 +217,14 @@ struct iwl4965_scan_power_info {
- struct iwl4965_channel_info {
- 	struct iwl4965_channel_tgd_info tgd;
- 	struct iwl4965_channel_tgh_info tgh;
--	struct iwl4965_eeprom_channel eeprom;	/* EEPROM regulatory limit */
--	struct iwl4965_eeprom_channel fat_eeprom;	/* EEPROM regulatory limit for
--						 * FAT channel */
-+	struct iwl4965_eeprom_channel eeprom;	  /* EEPROM regulatory limit */
-+	struct iwl4965_eeprom_channel fat_eeprom; /* EEPROM regulatory limit for
-+						   * FAT channel */
- 
- 	u8 channel;	  /* channel number */
- 	u8 flags;	  /* flags copied from EEPROM */
- 	s8 max_power_avg; /* (dBm) regul. eeprom, normal Tx, any rate */
--	s8 curr_txpow;	  /* (dBm) regulatory/spectrum/user (not h/w) */
-+	s8 curr_txpow;	  /* (dBm) regulatory/spectrum/user (not h/w) limit */
- 	s8 min_power;	  /* always 0 */
- 	s8 scan_power;	  /* (dBm) regul. eeprom, direct scans, any rate */
- 
-@@ -228,7 +243,7 @@ struct iwl4965_channel_info {
- 	s8 fat_min_power;	/* always 0 */
- 	s8 fat_scan_power;	/* (dBm) eeprom, direct scans, any rate */
- 	u8 fat_flags;		/* flags copied from EEPROM */
--	u8 fat_extension_channel;
-+	u8 fat_extension_channel; /* HT_IE_EXT_CHANNEL_* */
- 
- 	/* Radio/DSP gain settings for each scan rate, for directed scans. */
- 	struct iwl4965_scan_power_info scan_pwr_info[IWL_NUM_SCAN_RATES];
--- 
-1.5.3.6
+  Luis
