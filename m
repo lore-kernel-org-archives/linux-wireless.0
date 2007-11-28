@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4340 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537AbXKNPJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 10:09:05 -0500
-Date: Wed, 14 Nov 2007 10:08:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Henning Rogge <rogge@fgan.de>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34410
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758714AbXK1Qu5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 11:50:57 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: fix double-mutex-locking
+Date: Wed, 28 Nov 2007 17:49:34 +0100
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: Virtual wireless network card for mac80211
-Message-ID: <20071114150839.GA6226@tuxdriver.com> (sfid-20071114_150909_422701_3EF1A531)
-References: <200711141316.50393.rogge@fgan.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200711141316.50393.rogge@fgan.de>
+Message-Id: <200711281749.34572.mb@bu3sch.de> (sfid-20071128_165103_199442_B31804DD)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 14, 2007 at 01:16:50PM +0100, Henning Rogge wrote:
+rfkill_toggle_radio is called from functions where
+rfkill->mutex is already aquired.
 
-> I'm looking for a way to simulate a ieee802.11 card on a linux system. Is 
-> there an equivalent for tun/tap for the mac80211 layer, so I can just send 
-> the communication with a wireless device back to userspace (and data from 
-> userspace into the wireless stack) ?
+Remove the lock from rfkill_toggle_radio() and add it to
+the only calling function that calls it without the lock held.
 
-No, but I have been thinking about this as well.  It might be a nice
-capability to have, so long as the regulatory spectre continues to
-discourage some vendors from disclosing information about their
-hardware.  At least such a scenario seems less grey w.r.t. GPL
-compliance.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Still, I would not want to put much effort into a project that
-distracts from development of fully open source drivers.  But I think
-the performance of such a solution would be sub-optimal enough to
-discourage full reliance upon it.  And the plus of having a userland
-binary driver versus no driver at all might make it worthwhile.
+Index: wireless-2.6/net/rfkill/rfkill.c
+===================================================================
+--- wireless-2.6.orig/net/rfkill/rfkill.c	2007-11-20 19:09:35.000000000 +0100
++++ wireless-2.6/net/rfkill/rfkill.c	2007-11-28 17:09:55.000000000 +0100
+@@ -60,11 +60,7 @@ static void rfkill_led_trigger(struct rf
+ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 				enum rfkill_state state)
+ {
+-	int retval;
+-
+-	retval = mutex_lock_interruptible(&rfkill->mutex);
+-	if (retval)
+-		return retval;
++	int retval = 0;
+ 
+ 	if (state != rfkill->state) {
+ 		retval = rfkill->toggle_radio(rfkill->data, state);
+@@ -74,7 +70,6 @@ static int rfkill_toggle_radio(struct rf
+ 		}
+ 	}
+ 
+-	mutex_unlock(&rfkill->mutex);
+ 	return retval;
+ }
+ 
+@@ -158,12 +153,13 @@ static ssize_t rfkill_state_store(struct
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
++	if (mutex_lock_interruptible(&rfkill->mutex))
++		return -ERESTARTSYS;
+ 	error = rfkill_toggle_radio(rfkill,
+ 			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF);
+-	if (error)
+-		return error;
++	mutex_unlock(&rfkill->mutex);
+ 
+-	return count;
++	return error ? error : count;
+ }
+ 
+ static ssize_t rfkill_claim_show(struct device *dev,
 
-What is the situation that makes this interesting to you?
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
