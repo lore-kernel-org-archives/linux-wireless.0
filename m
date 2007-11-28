@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42467 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759706AbXKOQxT (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:29175 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755121AbXK1NHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 11:53:19 -0500
-Subject: Re: 2.6.24-rc1 freezes on powerbook at first boot stage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Elimar Riesebieter <riesebie@lxtec.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071114193340.GA14921@frodo.home.lxtec.de>
-References: <20071024120739.GA4897@aragorn.home.lxtec.de>
-	 <20071024124109.GA9442@frodo.home.lxtec.de>
-	 <20071104032006.GG9695@localdomain>
-	 <20071113220235.GB9008@frodo.home.lxtec.de>
-	 <1195053964.4091.20.camel@johannes.berg>
-	 <20071114193340.GA14921@frodo.home.lxtec.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SeCLU7B+iajK0cReDtws"
-Date: Thu, 15 Nov 2007 17:48:45 +0100
-Message-Id: <1195145325.13846.70.camel@johannes.berg> (sfid-20071115_165324_397905_772CA051)
-Mime-Version: 1.0
+	Wed, 28 Nov 2007 08:07:21 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: tweak tx path debugging
+Date: Wed, 28 Nov 2007 14:08:12 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200711281408.13037.hs4233@mail.mn-solutions.de> (sfid-20071128_130731_768183_EC618D15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make two functions in the TX packet path emit
+their debug messages with LBS_DEB_TX, not LBS_DEB_MAIN.
 
---=-SeCLU7B+iajK0cReDtws
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
+---
+Before this, any TXed packed did emit some messages with
+"lbsdebug +enter +main", which was a bit annoying.
 
-> > [FWIW, my powerbook worked with -rc1]
-> >=20
-> > > 2.6.24-rc2 works so lala :)
-> >=20
-> > > b43 doesn't authenticate via wpa (bluetooth isn't loaded):
-> > > WEXT auth param 4 value 0x0 - ioctl[SIOCSIWAUTH]: Operation not suppo=
-rted
-> > > WEXT auth param 5 value 0x1 - Internet Systems Consortium DHCP Client=
- V3.1.0
-> >=20
-> > Those error messages are unrelated. My b43 works fine, even with a
-> > multi-MAC patch.
->=20
-> I tried it as follows:
->=20
-> wpa_supplicant -Dwext -ieth2 -c/etc/wpa_supplicant/wpa_supplicant.conf
->=20
-> eth2 is renamed by udev via MAC address.
->=20
-> b43-fwcutter intalled
->=20
-> Could you please enlighten me.
-
-Well, you haven't said what broke. Those "error" messages above are
-perfectlly normal.
-
-johannes
-
---=-SeCLU7B+iajK0cReDtws
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzx4bKVg1VMiehFYAQJWABAAvyctKLFynhGwJVdaf63r3kfG2YJmpcUU
-AHODPPEfUVUThewM9xl6JcBR6v1k485S/B4tKMq63bVzKTrU6tx2Mlnv2skvckWK
-8zc2vI9qKKn14g58x0WL40lLWdchT6CDOlzAnrMCVQ52/+nVRGaeHk1QL6GvWDqE
-IosH5/qUhjwwFXXuKDbunJNuDe3CdDfzxVYKJ9dQngard871hFLSqtZlFQxsh1c+
-oIIpQidNp6yJQMtIc0TPo7HmdKvDx8FeBPCNpS78Twl+F60ZVJEnDfgFdtlZisYU
-vIh0N3nMbVc944a6gZ0rk/5NJ5Wv9wMOZOhj7bjYmfAuDNGGzIN7bBzVDgKOwXCK
-efv/E+4poR7JG0aueZBEu/CnJBH7X/7e8l58kjmaM3yt6O7u/5wWCl/p4BTkhigw
-utynS9oo5KG6YLpExL+93QJVyi5j7h1UGPIsKzxhkfuG2xQwa30ZeQqkhYTw0J3v
-5cPulAoJDjsvujFy5pCQWoWbwCP/fAPXm28m49FV/fBl9vOMD6NDBTXnCuUtS/AM
-otRofZ4UTiAloBQH+sFXju/5ucClAB9Es3xCs8ZWIuS4L12vCc/SjVlaOqaQ3UTo
-oClqXmG0Y+AgyABdnCKIEtlb/2esxszTfgFufCXw4GfmdxIP3644XzVBDSKoFnHl
-Dv6Ww9re6Zw=
-=+Xzz
------END PGP SIGNATURE-----
-
---=-SeCLU7B+iajK0cReDtws--
-
+Index: wireless-2.6/drivers/net/wireless/libertas/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/main.c	2007-11-28 14:35:45.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/main.c	2007-11-28 14:37:13.000000000 +0100
+@@ -514,7 +514,7 @@ static int lbs_hard_start_xmit(struct sk
+ 	int ret = 0;
+ 	struct lbs_private *priv = dev->priv;
+ 
+-	lbs_deb_enter(LBS_DEB_NET);
++	lbs_deb_enter(LBS_DEB_TX);
+ 
+ 	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
+ 		priv->stats.tx_dropped++;
+@@ -528,7 +528,7 @@ static int lbs_hard_start_xmit(struct sk
+ 	if (lbs_process_tx(priv, skb) == 0)
+ 		dev->trans_start = jiffies;
+ done:
+-	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
++	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
+ 	return ret;
+ }
+ 
+@@ -564,7 +564,7 @@ static int lbs_pre_start_xmit(struct sk_
+ 	struct lbs_private *priv = dev->priv;
+ 	int ret;
+ 
+-	lbs_deb_enter(LBS_DEB_NET);
++	lbs_deb_enter(LBS_DEB_TX);
+ 
+ 	if (priv->adapter->monitormode != LBS_MONITOR_OFF) {
+ 		netif_stop_queue(dev);
+@@ -574,7 +574,7 @@ static int lbs_pre_start_xmit(struct sk_
+ 	UNSET_MESH_FRAME(skb);
+ 
+ 	ret = lbs_hard_start_xmit(skb, dev);
+-	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
++	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
+ 	return ret;
+ }
+ 
