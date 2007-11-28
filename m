@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:30357 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752846AbXKAWBQ (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:32794 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758856AbXK1RIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 18:01:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1183532pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 15:01:15 -0700 (PDT)
-Message-ID: <43e72e890711011501i3c2675f0o76af69f424946c5b@mail.gmail.com> (sfid-20071101_220119_849129_0E6AE152)
-Date: Thu, 1 Nov 2007 18:01:14 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 5/7] ath5k: Move OFDM timings into a helper routine
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <472A4BBD.4050207@gmail.com>
+	Wed, 28 Nov 2007 12:08:19 -0500
+Message-ID: <474DA081.7030101@lwfinger.net> (sfid-20071128_170822_636037_C9188587)
+Date: Wed, 28 Nov 2007 11:08:17 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo>
-	 <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo>
-	 <20071101215318.GC4182@pogo> <472A4BBD.4050207@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
+References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711281713.02919.mb@bu3sch.de> <474D9A46.1020300@lwfinger.net> <200711281746.56069.mb@bu3sch.de>
+In-Reply-To: <200711281746.56069.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/1/07, Jiri Slaby <jirislaby@gmail.com> wrote:
-> On 11/01/2007 10:53 PM, Luis R. Rodriguez wrote:
-> > ** Resending after checkpatch.pl..
-> >
-> > This move the OFDM timings on ath5k_hw_reset() onto a helper,
-> > ath5k_hw_write_ofdm_timings() to make code cleaner.
-> >
-> > Changes to ath5k.h, hw.c
-> > Changes-licensed-under: ISC
-> >
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> > ---
-> >  drivers/net/wireless/ath5k/hw.c |   83 ++++++++++++++++++++++++++-------------
-> >  1 files changed, 55 insertions(+), 28 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> > index 3f78d20..1b9c4f0 100644
-> > --- a/drivers/net/wireless/ath5k/hw.c
-> > +++ b/drivers/net/wireless/ath5k/hw.c
-> > @@ -458,6 +458,56 @@ void ath5k_hw_detach(struct ath5k_hw *ah)
-> >   */
-> >
-> >  /**
-> > + * ath5k_hw_write_ofdm_timings - set OFDM timings on AR5212
-> > + *
-> > + * @ah: the &struct ath5k_hw
-> > + * @channel: the currently set channel upon reset
-> > + *
-> > + * Write the OFDM timings for the AR5212 upon reset. This is a helper for
-> > + * ath5k_hw_reset(). This seems to tune the PLL a specified frequency
-> > + * depending on the bandwidth of the channel.
-> > + *
-> > + */
-> > +static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
-> > +     struct ieee80211_channel *channel)
-> > +{
-> > +     /* Get exponent and mantissa and set it */
-> > +     u32 coef_scaled, coef_exp, coef_man,
-> > +             ds_coef_exp, ds_coef_man, clock;
-> > +
-> > +     if (!(ah->ah_version == AR5K_AR5212) ||
-> > +             !(channel->val & CHANNEL_OFDM))
-> > +             BUG();
->
-> Note, that BUG can return (on configurations where !CONFIG_BUG). It is my fault
-> writing you it won't, sorry! Could you post a patch which will add return from
-> here and also from places where the BUG() is used in other places?
+Michael Buesch wrote:
+> On Wednesday 28 November 2007 17:41:42 Larry Finger wrote:
+>> Michael Buesch wrote:
+>>> I think it's a different bug. The backtrace seems corrupted.
+>>>
+>>> Can you try this patch? There is some circular locking in rfkill.
+>> I still get circular locking. The dump is
+> 
+> Ok.
+> 
+> b43 init:
+> 	mutex_lock(wl->mutex)
+> 	rfkill_init()
+> 		mutex_lock(rfkill->mutex)
+> 
+> in operation:
+> 	rfkill poll (no locks held)
+> 	calls into rfkill
+> 	mutex_lock(rfkill->mutex)
+> 	b43_rfkill_soft_toggle()
+> 		mutex_lock(wl->mutex)
+> 
+> As you can see the lock ordering of the two mutexes
+> is different. The problem is that we cannot easily drop
+> the wl->mutex on b43 init, as that would introduce some
+> race conditions. This is specific to b43 and rt2x00 most
+> likely doesn't have this requirement.
+> I'm not sure how to properly fix this.
 
-The only case where this will trigger is if someone in the driver
-called this on hardware not supported so it is intended.
+Your analysis is correct. I wrapped the call to b43_rfkill_init() with an unlock/lock pair of calls
+(races be damned) and the circular locking message went away. BTW, that kind of wrapping is already
+done for b43_rfkill_exit(). Curious.
 
-Do you want to BUG() and also return?
-
-> > +
-> > +     /* Seems there are two PLLs, one for baseband sampling and one
-> > +      * for tuning. Tuning basebands are 40 MHz or 80MHz when in
-> > +      * turbo. */
-> > +     clock = channel->val & CHANNEL_TURBO ? 80 : 40;
-> > +     coef_scaled = ((5 * (clock << 24)) / 2) /
-> > +     channel->freq;
-
-  Luis
+Larry
