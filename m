@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from there.is.no.cabal.ca ([134.117.69.58]:33438 "EHLO
-	fattire.cabal.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbXKUSFW (ORCPT
+Received: from ro-out-1112.google.com ([72.14.202.182]:11705 "EHLO
+	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759179AbXK1KlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2007 13:05:22 -0500
-Date: Wed, 21 Nov 2007 13:05:20 -0500
-From: Kyle McMartin <kyle@mcmartin.ca>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071121180520.GC13298@fattire.cabal.ca> (sfid-20071121_180525_723453_CBD33CD1)
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com> <47443F78.60701@gentoo.org>
+	Wed, 28 Nov 2007 05:41:20 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so2403981roc
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2007 02:41:20 -0800 (PST)
+From: "Joonwoo Park" <joonwpark81@gmail.com>
+To: <yi.zhu@intel.com>, <ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH 1/2] [net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
+Date: Wed, 28 Nov 2007 19:41:04 +0900
+Message-ID: <00e501c831ab$2e78daa0$9c94fea9@jason> (sfid-20071128_104143_963782_68D921D3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47443F78.60701@gentoo.org>
+Content-Type: text/plain;
+	charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 21, 2007 at 02:23:52PM +0000, Daniel Drake wrote:
-> 	network = ieee80211softmac_get_network_by_bssid_locked(mac, 
-> resp->header.addr3);
-> 
-> addr3 is offset 20 bytes in the struct and is 6 bytes long. Because 20 
-> is not evenly divisible by 6 does that make it an unaligned access?
-> 
+iwl_pci_remove can be called before delayed work queue is completed or not called at init module, so delayed init_alive_start can
+have 'image' as NULL.
+It can be happened while putting module down right next it up.
+I was able to make panic by :
+#while [ 1 ]; modprobe -r iwlx945; modprobe iwlx945; done
 
-Sort of. An "unaligned" access is one where the referenced address is
-not aligned to the size of the data type being accessed. For example,
-a 4-byte load must be accessed on 4-byte aligned boundaries:
-	0xffff0000 0xffff0004 0xffff0008, and so forth.
 
-Obviously a single byte load is always aligned.
+iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.1.17ks
+iwl3945: Copyright(c) 2003-2007 Intel Corporation
+ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 22
+PCI: Setting latency timer of device 0000:03:00.0 to 64
+iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
+printing eip: f885ff61 *pdpt = 0000000037785001 *pde = 0000000000000000 
+Oops: 0000 [#1] PREEMPT SMP 
+Modules linked in: iwl3945 e1000
 
-Unaligned accesses are universally bad. On some architectures (x86, ppc)
-they will be emulated in hardware at a performance cost. On others
-(sparc, parisc, ia64) they will trap, giving you the option of software
-emulation (very slow) or sending a SIGBUS. On still others (arm, I
-think[1]) they'll "align" in hardware, resulting in loads or stores to
-the wrong address.
+Pid: 11501, comm: iwl3945/0 Not tainted (2.6.24-rc3 #109)
+EIP: 0060:[<f885ff61>] EFLAGS: 00010246 CPU: 0
+EIP is at iwl_verify_inst_sparse+0x101/0x140 [iwl3945]
+EAX: 0f802020 EBX: 00000000 ECX: 00000000 EDX: f8878000
+ESI: 00000000 EDI: dfce8e40 EBP: dfef5f1c ESP: dfef5f00
+ DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process iwl3945/0 (pid: 11501, ti=dfef4000 task=f7cc6c90 task.ti=dfef4000)
+Stack: f7cc6c90 00000000 00000384 00000000 dfcecdf0 dfce8e40 dfcecdf0 dfef5f4c 
+       f885ffbc 22222222 22222222 22222222 22222222 dfce9384 dfce8e40 dfcecdf0 
+       dfcecdf0 dfce8e40 dfcecdf0 dfef5f78 f8862fe9 00003b84 f7cc6dd0 c1b0eb00 
+Call Trace:
+ [<c400542a>] show_trace_log_lvl+0x1a/0x30
+ [<c40054e9>] show_stack_log_lvl+0xa9/0xd0
+ [<c40055da>] show_registers+0xca/0x250
+ [<c4005880>] die+0x120/0x230
+ [<c401e21c>] do_page_fault+0x47c/0x790
+ [<c43ac38a>] error_code+0x72/0x78
+ [<f885ffbc>] iwl_verify_ucode+0x1c/0x1d0 [iwl3945]
+ [<f8862fe9>] iwl_bg_init_alive_start+0x69/0x210 [iwl3945]
+ [<c403abaf>] run_workqueue+0x7f/0x110
+ [<c403b76d>] worker_thread+0x9d/0x100
+ [<c403e922>] kthread+0x42/0x70
+ [<c4004fef>] kernel_thread_helper+0x7/0x18
+ =======================
+Code: 45 e8 00 00 00 00 85 c9 89 f6 74 38 31 db 31 c9 eb 04 83 45 f0 64 89 8a 0c 04 00 00 8b 97 74 05 00 00 8b 75 f0 8b 82 1c 04 00
+00 <3b> 06 74 0d 43 83 fb 02 77 23 c7 45 e8 fb ff ff ff 83 c1 64 39 
+EIP: [<f885ff61>] iwl_verify_inst_sparse+0x101/0x140 [iwl3945] SS:ESP 0068:dfef5f00
 
-The Linux networking code is a pretty good example of when to use the
-support macros (get|put)_unaligned to do the right thing. For something
-like a packed structure accessed in a data stream, you're invariably going
-to have to use these.
+Thanks
+Joonwoo
 
-> Is there any documentation I can read on this topic? In my current 
-> uneducated state I'm likely to write further code with these problems...
-> 
+[net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
 
-cheers,
-	Kyle
+Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+---
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 465da4f..ac6c4a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8570,6 +8570,7 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
+ 	mutex_lock(&priv->mutex);
++	cancel_delayed_work_sync(&priv->init_alive_start);
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 	__iwl_down(priv);
+ 	mutex_unlock(&priv->mutex);
+---
 
-1. Just a guess based on <asm-arm/unaligned.h> providing macros that
-actually do something, and the lack of an obvious unaligned trap
-handler.
