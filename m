@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:61691 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756110AbXK0Tnw (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34075
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757281AbXK1QsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 14:43:52 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1087203nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2007 11:43:48 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull 'upstream' branch of rt2x00
-Date: Tue, 27 Nov 2007 21:54:29 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200711272146.53518.IvDoorn@gmail.com>
-In-Reply-To: <200711272146.53518.IvDoorn@gmail.com>
+	Wed, 28 Nov 2007 11:48:12 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [RFC/T V2] b43: Fix Radio On/Off LED action
+Date: Wed, 28 Nov 2007 17:46:55 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711281713.02919.mb@bu3sch.de> <474D9A46.1020300@lwfinger.net>
+In-Reply-To: <474D9A46.1020300@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200711272154.29350.IvDoorn@gmail.com> (sfid-20071127_211135_689338_1EFC0916)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200711281746.56069.mb@bu3sch.de> (sfid-20071128_164816_339209_AE7E50CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday 28 November 2007 17:41:42 Larry Finger wrote:
+> Michael Buesch wrote:
+> > 
+> > I think it's a different bug. The backtrace seems corrupted.
+> > 
+> > Can you try this patch? There is some circular locking in rfkill.
+> 
+> I still get circular locking. The dump is
 
-> Please merge the patches for 2.6.24
-> 09 - Only update rssi average approximation on receiving beacon frames.
-> 10 - Remove redundant code in rfkill setup
-> 11 - Cleanup rfkill
+Ok.
 
-Sorry that should be:
-08 - Only update rssi average approximation on receiving beacon frames.
-09 - Remove redundant code in rfkill setup
-10 - Cleanup rfkill
+b43 init:
+	mutex_lock(wl->mutex)
+	rfkill_init()
+		mutex_lock(rfkill->mutex)
 
-Ivo
+in operation:
+	rfkill poll (no locks held)
+	calls into rfkill
+	mutex_lock(rfkill->mutex)
+	b43_rfkill_soft_toggle()
+		mutex_lock(wl->mutex)
+
+As you can see the lock ordering of the two mutexes
+is different. The problem is that we cannot easily drop
+the wl->mutex on b43 init, as that would introduce some
+race conditions. This is specific to b43 and rt2x00 most
+likely doesn't have this requirement.
+I'm not sure how to properly fix this.
+
+-- 
+Greetings Michael.
