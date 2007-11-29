@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:28562 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbXKSJIO (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:34606 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756974AbXK2PxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 04:08:14 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Thu, 29 Nov 2007 10:53:13 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by hiems2.ing.unibs.it (Postfix) with ESMTP id 0863C182553A
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 16:53:11 +0100 (CET)
+Received: from hiems2.ing.unibs.it ([127.0.0.1])
+	by localhost (hiems1.ing.unibs.it [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id utcBeklIQFko for <linux-wireless@vger.kernel.org>;
+	Thu, 29 Nov 2007 16:53:10 +0100 (CET)
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Message-Id: <0D869D0B-A5CF-4AE4-B986-DB168917296B@ing.unibs.it> (sfid-20071129_155316_945884_5BB2073C)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 To: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
-Date: Mon, 19 Nov 2007 10:08:26 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
-References: <20071117023548.79a7a33c@morte>
-In-Reply-To: <20071117023548.79a7a33c@morte>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711191008.26174.hs4233@mail.mn-solutions.de> (sfid-20071119_090818_249992_3C4C2554)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Subject: ath5k: filter patch
+Date: Thu, 29 Nov 2007 16:53:13 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Marvell USB8388, running on wireless-2.6. Firmware is:
-> 421964206b0699014a11256ac48dd0a8  /lib/firmware/usb8388.bin
+Hello everybody,
 
-lsusb says "Bus 001 Device 003: ID 1286:2001". And when I insert 
-the card, I see
+I discovered that playing with iface promiscuity to capture traffic  
+(including control, promisc and all other stuff) is not working on  
+ath5k as rx_filters are never refreshed. To make things going I added  
+a single ath5k_hw_set_rx_filters(ah,rfilt) at the end of  
+ath5k_configure_filter(). I attach the simple patch. Now tcpdump  
+captures everything in monitor mode when iface is set to promisc.
 
-usb 1-1: new high speed USB device using ehci_hcd and address 3
-usb 1-1: configuration #1 chosen from 1 choice
+By the way, has someone tried to put ath5k into using RTS/CTS procedure?
 
-When I modprobes usb8xxx.ko (I have it in my module blacklist), I 
-get an additional two lines:
-
-libertas: eth1: Marvell WLAN 802.11 adapter
-usbcore: registered new interface driver usb8xxx
-
-After this, the USB stick works.
+Regards,
+FG
 
 
 
-I use this firmware:
+--- wireless-2.6.old/drivers/net/wireless/ath5k/base.c        
+2007-11-29 16:20:27.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/ath5k/base.c       2007-11-29  
+16:21:24.000000000 +0100
+@@ -2813,6 +2813,9 @@
+                 rfilt |= AR5K_RX_FILTER_BEACON;
+         }
++        /* Set filters */
++        ath5k_hw_set_rx_filter(ah,rfilt);
++
+         /* Set multicast bits */
+         ath5k_hw_set_mcast_filter(ah, mfilt[0], mfilt[1]);
+         /* Set the cached hw filter flags, this will alter actually
 
-$ md5sum /lib/firmware/usb8388.bin
-f1dfa0042efd61dc138b01fdf8c0cdab  /lib/firmware/usb8388.bin
 
-As I got this firmware some months ago (and I hardly use this 
-device), I cannot say which download link I've used.
