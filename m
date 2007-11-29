@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.tpgi.com.au ([203.12.160.101]:50285 "EHLO
-	mail5.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbXKSBhx (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.190]:36789 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762564AbXK2XCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2007 20:37:53 -0500
-Received: from [10.1.2.66] (eth6155.nsw.adsl.internode.on.net [59.167.247.10])
-	(authenticated bits=0)
-	by mail5.tpgi.com.au (envelope-from shaddy_baddah@hotmail.com) (8.14.2/8.14.2) with ESMTP id lAJ0ueTR027821
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2007 11:56:42 +1100
-Message-ID: <4740DF47.4040206@hotmail.com> (sfid-20071119_013759_873343_CEC444F7)
-Date: Mon, 19 Nov 2007 11:56:39 +1100
-From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+	Thu, 29 Nov 2007 18:02:23 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1725216rvb
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 15:02:23 -0800 (PST)
+Message-ID: <1ba2fa240711291502k65cefd5au60f2c22d6f436c82@mail.gmail.com> (sfid-20071129_230229_964342_AEEAE973)
+Date: Fri, 30 Nov 2007 01:02:23 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: coding style lesson: iwlwifi vs. endianness
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>
+In-Reply-To: <20071129005810.GA6161@tuxdriver.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240711281020n6052980cl610f6c790788d2da@mail.gmail.com>
+	 <1196286192.4967.29.camel@localhost.localdomain>
+	 <20071129005810.GA6161@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> ACK
+>
+> While I can understand why you might think that Johannes was being
+> smug, I doubt if he really meant to be.  Please try to presume the
+> best intent. :-)
+>
+Here I'm speaking for myself here not for Intel.
+He is a smug,  he has 'everything is a crap' attitude yet that's good
+for revolution and I honestly appreciate Johannes' work on mac80211.
+Things are finally moving somewhere. Thanks Johannes.
 
-I have successfully built a 2.6.22 kernel for sparc64, by taking the 
-configuration for the Debian build of this kernel, and additionally 
-configuring the zd1211rw driver.
+> As Dan points-out, Johannes main point (i.e. convert data at system
+> boundaries) makes plenty of sense.  Please do take the time to tell
+> us what he is missing?
+>
+Since all of also hold a CS degree the first thing that come to  us is
+to create a clean cut, to translate the data from native order to
+little endian just before submitting to HW and same on the opposite
+direction.
 
-I am able to modprobe this module, and the device is correctly detected. 
-  However, beyond that, I am experiencing problems with the device here 
-and there.
+Iwlwifi driver talks to firmware using so called host command
+structures defined naturally in little endian. Statistically most of
+the operations are setting and testing bits which is endianity
+agnostic meaning no run time swap operations are needed.
+The few computation including the shifting one visible in Johannes
+example are the trade off of run time efficiency and 'ugliness'. It
+was better bargain for us.  Iwlwifi keeps that in host command
+structures through the driver operation so we don't need to keep
+shadow native layered structures and there is quite a few of them.
+Also number swap operation is much lower then the other approach.
+We rather think of all constants for host commands as liitle endian.
+As we stick consistently to this paradigma it becomes natural.
+I'm not sure if this was a good decision for a long run as we are
+adding more hardware and we are need more abstraction, at that point
+it looked correct.
+As Stephan is pressing for splitting the driver. If I look from his
+point it seams like a right way  but as I see it now  from my point he
+just made us few weeks of work more. And don't take me wrong I also
+share his opinion that those ifdefs were evil.
+So I'm not saying that Johannes is wrong in general he just came with
+different assumptions.
 
-The first noticeable problem is when using iwconfig on the device. I 
-cannot set a key for the device, and a query of the configuration always 
-claims that the "<encryption key is too long>".
+Thanks for your attentions and I'm waiting for your flames, just
+remember I don't answers to insults :)
 
-If I try to scan for APs using iwlist, I get one AP listed, before a bus 
-error occurs. This of course, does not suggest that the problem is with 
-the driver, but I mention it for the record.
+Thanks
+Tomas..
 
-If I configure my AP for open authentication, I can actually configure 
-the device, and be assigned an address via DHCP. However, the connection 
-drops out frequently, and is quite unstable.
-
-Whilst the device is up, I continually get console messages like those I 
-have inlined below:
-
-Kernel unaligned access at TPC[100ee4d4] do_rx+0x244/0x614 [zd1211rw]
-Kernel unaligned access at TPC[100ee4e8] do_rx+0x258/0x614 [zd1211rw]
-Kernel unaligned access at TPC[100ee4cc] do_rx+0x23c/0x614 [zd1211rw]
-
-
-I am supposing that the driver hasn't really been tested extensively on 
-sparc64 architecture. However, can anyone shed some light on why the 
-driver wouldn't just work as it (I assume) would do on 386 architecture?
-
-Thanks in advance,
-Shaddy
+> Thanks,
+>
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
