@@ -1,160 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:32972 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751407AbXKOPDA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2007 10:03:00 -0500
-Message-ID: <473C5F98.1050007@lwfinger.net> (sfid-20071115_150306_122967_E9B5113B)
-Date: Thu, 15 Nov 2007 09:02:48 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: seandarcy2@gmail.com, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/T] b43: Implement the BCM94311MCG rev 02 card with a rev
- 13 802.11 core
-References: <473bdf5e.LS8yn+6u1JmDiT9C%Larry.Finger@lwfinger.net> <200711151138.17468.mb@bu3sch.de>
-In-Reply-To: <200711151138.17468.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:56161 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756661AbXK2DLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 22:11:12 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 29/36] iwlwifi: add comments to RXON command and txpower formats
+Date: Thu, 29 Nov 2007 11:10:09 +0800
+Message-Id: <1196305816-23023-30-git-send-email-yi.zhu@intel.com> (sfid-20071129_033538_443459_2F774A70)
+In-Reply-To: <1196305816-23023-29-git-send-email-yi.zhu@intel.com>
+References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-17-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-18-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-19-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-21-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-22-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-23-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-24-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-25-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-26-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-27-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-28-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-29-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Thursday 15 November 2007 06:55:42 Larry Finger wrote:
->> --- wireless-2.6.orig/drivers/net/wireless/b43/dma.c
->> +++ wireless-2.6/drivers/net/wireless/b43/dma.c
->> @@ -165,7 +165,7 @@ static void op64_fill_descriptor(struct 
->>  	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
->>  	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
->>  	    >> SSB_DMA_TRANSLATION_SHIFT;
->> -	addrhi |= ssb_dma_translation(ring->dev->dev);
->> +	addrhi |= (ssb_dma_translation(ring->dev->dev) << 1);
->>  	if (slot == ring->nr_slots - 1)
->>  		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
->>  	if (start)
-> 
-> Wait, this looks broken to me. It looks like the bug is more
-> inside of the ssb_dma_translation function, rather than here.
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Yes and no. In the DMA specs (http://bcm-v4.sipsolutions.net/802.11/DMA), a 2-bit "routing code" is
-used for the address portion of a descriptor. For 32-bit, a value of 1 indicates "Client Mode
-Translation". With a 64-bit device, a value of 2 is the valid routing code and 1 leads to DMA
-Errors. It seemed easier to take a 0/1 output from ssb_dma_translation and shift it for the 64-bit
-case than to teach ssb to distinguish between 32- and 64-bit DMA. BTW, we do have one other option -
-we could ignore the routing and address extension bits and _limit_ the user to a maximum of 0.5
-Zettabytes! What is the probability that any machine will exceed that amount of memory within our
-lifetimes? But then, I never expected to see Terrabyte disk drives in a 3.5 inch package!! Have you
-noted that Broadcom uses a 2-bit routing code _AND_ a 2-bit address extension? Why they didn't use a
-flat 64-bit address is a mystery.
+Add comments to RXON command and txpower formats
 
-I can, however, go either way - your drivers and your call.
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-commands.h |   62 ++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-4965-commands.h |  104 ++++++++++++++++------
+ 2 files changed, 124 insertions(+), 42 deletions(-)
 
->> @@ -426,14 +426,15 @@ static inline
->>  static int alloc_ringmemory(struct b43_dmaring *ring)
->>  {
->>  	struct device *dev = ring->dev->dev->dev;
->> +	int size = (ring->dma64) ? 8192 : B43_DMA_RINGMEMSIZE;
-> 
-> Uhm, a page is also 4k in x86_64?
-> Why doesn't using a page here work? What does happen?
-
-You get random 4K/8K alignment and the driver fails with a Fatal DMA error for those with 4K alignment.
-
->> @@ -636,18 +637,13 @@ static int dmacontroller_setup(struct b4
->>  		if (ring->dma64) {
->>  			u64 ringbase = (u64) (ring->dmabase);
->>  
->> -			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
->> -			    >> SSB_DMA_TRANSLATION_SHIFT;
->> -			value = B43_DMA64_TXENABLE;
->> -			value |= (addrext << B43_DMA64_TXADDREXT_SHIFT)
->> -			    & B43_DMA64_TXADDREXT_MASK;
->> -			b43_dma_write(ring, B43_DMA64_TXCTL, value);
->> +			b43_dma_write(ring, B43_DMA64_TXCTL,
->> +				      B43_DMA64_TXENABLE);
-> 
-> Ehm, why are you removing this?
-
-Unlike 32-bit DMA and the 64-bit descriptors, the 64-bit case uses two full 32-bit words to store
-the Descriptor Ring Address. No fancy packing of the upper bits into the control word are needed.
-
->>  			b43_dma_write(ring, B43_DMA64_TXRINGLO,
->>  				      (ringbase & 0xFFFFFFFF));
->>  			b43_dma_write(ring, B43_DMA64_TXRINGHI,
->>  				      ((ringbase >> 32) &
->> -				       ~SSB_DMA_TRANSLATION_MASK)
->> -				      | trans);
->> +				       0xFFFFFFFF));
-> 
-> Huh?
-
-This mask is not needed. It is a carryover from when I was having a problem. This will become
-b43_dma_write(ring, B43_DMA64_TXRINGHI,(ringbase >> 32)); in the next version.
-
->>  		} else {
->>  			u32 ringbase = (u32) (ring->dmabase);
->>  
->> @@ -668,20 +664,16 @@ static int dmacontroller_setup(struct b4
->>  		if (ring->dma64) {
->>  			u64 ringbase = (u64) (ring->dmabase);
->>  
->> -			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
->> -			    >> SSB_DMA_TRANSLATION_SHIFT;
->> -			value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT);
->> -			value |= B43_DMA64_RXENABLE;
->> -			value |= (addrext << B43_DMA64_RXADDREXT_SHIFT)
->> -			    & B43_DMA64_RXADDREXT_MASK;
->> +			value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT)
->> +				| B43_DMA64_RXENABLE;
->>  			b43_dma_write(ring, B43_DMA64_RXCTL, value);
->>  			b43_dma_write(ring, B43_DMA64_RXRINGLO,
->>  				      (ringbase & 0xFFFFFFFF));
->>  			b43_dma_write(ring, B43_DMA64_RXRINGHI,
->>  				      ((ringbase >> 32) &
->> -				       ~SSB_DMA_TRANSLATION_MASK)
->> -				      | trans);
->> -			b43_dma_write(ring, B43_DMA64_RXINDEX, 200);
->> +				       0xFFFFFFFF));
->> +			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
->> +				      sizeof(struct b43_dmadesc64));
-> 
-> Same here.
-
-Same change for the RX Descriptor Ring Address.
-
->> @@ -695,11 +687,12 @@ static int dmacontroller_setup(struct b4
->>  			b43_dma_write(ring, B43_DMA32_RXRING,
->>  				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
->>  				      | trans);
->> -			b43_dma_write(ring, B43_DMA32_RXINDEX, 200);
->> +			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
->> +				      sizeof(struct b43_dmadesc32));
-> 
-> I'm not sure why you do this change.
-
-It took me a while to figure out where the magic number of 200 came from, and what I needed for the
-64-bit case. In fact I think the 200 is a bug and should be 0x200. To me, this change makes it clearer.
-
->> Index: wireless-2.6/drivers/net/wireless/b43/dma.h
->> ===================================================================
->> --- wireless-2.6.orig/drivers/net/wireless/b43/dma.h
->> +++ wireless-2.6/drivers/net/wireless/b43/dma.h
->> @@ -260,6 +260,13 @@ static inline u32 b43_dma_read(struct b4
->>  static inline
->>      void b43_dma_write(struct b43_dmaring *ring, u16 offset, u32 value)
->>  {
->> +	/* temporary debugging code */
->> +	if (((offset == 8) || (offset == 0x28)) && ring->dma64 &&
->> +	     ((value & 0x1FFF) != 0)) {
->> +		printk(KERN_ERR "b43: bad desc ring address for 64-bit DMA"
->> +		       " - offset, value: 0x%.2X 0x%.4X\n", offset, value);
->> +		dump_stack();
->> +	}
-> 
-> Ok, temporary. You know what that means :)
-
-In this case, it disappears before the patch goes to John!
-
-Larry
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
+index 3d3c7e3..4a8fc68 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
+@@ -124,7 +124,7 @@ enum {
+ 	/* Bluetooth device coexistance config command */
+ 	REPLY_BT_CONFIG = 0x9b,
+ 
+-	/* 4965 Statistics */
++	/* Statistics */
+ 	REPLY_STATISTICS_CMD = 0x9c,
+ 	STATISTICS_NOTIFICATION = 0x9d,
+ 
+@@ -140,7 +140,8 @@ enum {
+ 
+ /******************************************************************************
+  * (0)
+- * Header
++ * Commonly used structures and definitions:
++ * Command header, txpower
+  *
+  *****************************************************************************/
+ 
+@@ -183,6 +184,36 @@ struct iwl3945_cmd_header {
+ 	u8 data[0];
+ } __attribute__ ((packed));
+ 
++/**
++ * struct iwl3945_tx_power
++ *
++ * Used in REPLY_TX_PWR_TABLE_CMD, REPLY_SCAN_CMD, REPLY_CHANNEL_SWITCH
++ *
++ * Each entry contains two values:
++ * 1)  DSP gain (or sometimes called DSP attenuation).  This is a fine-grained
++ *     linear value that multiplies the output of the digital signal processor,
++ *     before being sent to the analog radio.
++ * 2)  Radio gain.  This sets the analog gain of the radio Tx path.
++ *     It is a coarser setting, and behaves in a logarithmic (dB) fashion.
++ *
++ * Driver obtains values from struct iwl3945_tx_power power_gain_table[][].
++ */
++struct iwl3945_tx_power {
++	u8 tx_gain;		/* gain for analog radio */
++	u8 dsp_atten;		/* gain for DSP */
++} __attribute__ ((packed));
++
++/**
++ * struct iwl3945_power_per_rate
++ *
++ * Used in REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
++ */
++struct iwl3945_power_per_rate {
++	u8 rate;		/* plcp */
++	struct iwl3945_tx_power tpc;
++	u8 reserved;
++} __attribute__ ((packed));
++
+ /******************************************************************************
+  * (0a)
+  * Alive and Error Commands & Responses:
+@@ -328,8 +359,22 @@ enum {
+ /* transfer to host non bssid beacons in associated state */
+ #define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
+ 
+-/*
++/**
+  * REPLY_RXON = 0x10 (command, has simple generic response)
++ *
++ * RXON tunes the radio tuner to a service channel, and sets up a number
++ * of parameters that are used primarily for Rx, but also for Tx operations.
++ *
++ * NOTE:  When tuning to a new channel, driver must set the
++ *        RXON_FILTER_ASSOC_MSK to 0.  This will clear station-dependent
++ *        info within the device, including the station tables, tx retry
++ *        rate tables, and txpower tables.  Driver must build a new station
++ *        table and txpower table before transmitting anything on the RXON
++ *        channel.
++ *
++ * NOTE:  All RXONs wipe clean the internal txpower table.  Driver must
++ *        issue a new REPLY_TX_PWR_TABLE_CMD after each REPLY_RXON (0x10),
++ *        regardless of whether RXON_FILTER_ASSOC_MSK is set.
+  */
+ struct iwl3945_rxon_cmd {
+ 	u8 node_addr[6];
+@@ -373,17 +418,6 @@ struct iwl3945_rxon_time_cmd {
+ 	__le16 reserved;
+ } __attribute__ ((packed));
+ 
+-struct iwl3945_tx_power {
+-	u8 tx_gain;		/* gain for analog radio */
+-	u8 dsp_atten;		/* gain for DSP */
+-} __attribute__ ((packed));
+-
+-struct iwl3945_power_per_rate {
+-	u8 rate;		/* plcp */
+-	struct iwl3945_tx_power tpc;
+-	u8 reserved;
+-} __attribute__ ((packed));
+-
+ /*
+  * REPLY_CHANNEL_SWITCH = 0x72 (command, has simple generic response)
+  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
+index bde3aa0..0813e3e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
+@@ -123,7 +123,7 @@ enum {
+ 	/* Bluetooth device coexistance config command */
+ 	REPLY_BT_CONFIG = 0x9b,
+ 
+-	/* 4965 Statistics */
++	/* Statistics */
+ 	REPLY_STATISTICS_CMD = 0x9c,
+ 	STATISTICS_NOTIFICATION = 0x9d,
+ 
+@@ -147,7 +147,7 @@ enum {
+ /******************************************************************************
+  * (0)
+  * Commonly used structures and definitions:
+- * Command header, rate_n_flags
++ * Command header, rate_n_flags, txpower
+  *
+  *****************************************************************************/
+ 
+@@ -273,6 +273,65 @@ struct iwl4965_cmd_header {
+ #define RATE_MCS_ANT_AB_MSK	0xc000
+ 
+ 
++/**
++ * struct iwl4965_tx_power - txpower format used in REPLY_SCAN_CMD
++ *
++ * Scan uses only one transmitter, so only one analog/dsp gain pair is needed.
++ */
++struct iwl4965_tx_power {
++	u8 tx_gain;		/* gain for analog radio */
++	u8 dsp_atten;		/* gain for DSP */
++} __attribute__ ((packed));
++
++#define POWER_TABLE_NUM_ENTRIES			33
++#define POWER_TABLE_NUM_HT_OFDM_ENTRIES		32
++#define POWER_TABLE_CCK_ENTRY			32
++
++/**
++ * union iwl4965_tx_power_dual_stream
++ *
++ * Host format used for REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
++ * Use __le32 version (struct tx_power_dual_stream) when building command.
++ *
++ * Driver provides radio gain and DSP attenuation settings to device in pairs,
++ * one value for each transmitter chain.  The first value is for transmitter A,
++ * second for transmitter B.
++ *
++ * For SISO bit rates, both values in a pair should be identical.
++ * For MIMO rates, one value may be different from the other,
++ * in order to balance the Tx output between the two transmitters.
++ *
++ * See more details in doc for TXPOWER in iwl-4965-hw.h.
++ */
++union iwl4965_tx_power_dual_stream {
++	struct {
++		u8 radio_tx_gain[2];
++		u8 dsp_predis_atten[2];
++	} s;
++	u32 dw;
++};
++
++/**
++ * struct tx_power_dual_stream
++ *
++ * Table entries in REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
++ *
++ * Same format as iwl_tx_power_dual_stream, but __le32
++ */
++struct tx_power_dual_stream {
++	__le32 dw;
++} __attribute__ ((packed));
++
++/**
++ * struct iwl4965_tx_power_db
++ *
++ * Entire table within REPLY_TX_PWR_TABLE_CMD, REPLY_CHANNEL_SWITCH
++ */
++struct iwl4965_tx_power_db {
++	struct tx_power_dual_stream power_tbl[POWER_TABLE_NUM_ENTRIES];
++} __attribute__ ((packed));
++
++
+ /******************************************************************************
+  * (0a)
+  * Alive and Error Commands & Responses:
+@@ -501,8 +560,22 @@ enum {
+ /* transfer to host non bssid beacons in associated state */
+ #define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
+ 
+-/*
++/**
+  * REPLY_RXON = 0x10 (command, has simple generic response)
++ *
++ * RXON tunes the radio tuner to a service channel, and sets up a number
++ * of parameters that are used primarily for Rx, but also for Tx operations.
++ *
++ * NOTE:  When tuning to a new channel, driver must set the
++ *        RXON_FILTER_ASSOC_MSK to 0.  This will clear station-dependent
++ *        info within the device, including the station tables, tx retry
++ *        rate tables, and txpower tables.  Driver must build a new station
++ *        table and txpower table before transmitting anything on the RXON
++ *        channel.
++ *
++ * NOTE:  All RXONs wipe clean the internal txpower table.  Driver must
++ *        issue a new REPLY_TX_PWR_TABLE_CMD after each REPLY_RXON (0x10),
++ *        regardless of whether RXON_FILTER_ASSOC_MSK is set.
+  */
+ struct iwl4965_rxon_cmd {
+ 	u8 node_addr[6];
+@@ -550,31 +623,6 @@ struct iwl4965_rxon_time_cmd {
+ 	__le16 reserved;
+ } __attribute__ ((packed));
+ 
+-struct iwl4965_tx_power {
+-	u8 tx_gain;		/* gain for analog radio */
+-	u8 dsp_atten;		/* gain for DSP */
+-} __attribute__ ((packed));
+-
+-#define POWER_TABLE_NUM_ENTRIES			33
+-#define POWER_TABLE_NUM_HT_OFDM_ENTRIES		32
+-#define POWER_TABLE_CCK_ENTRY			32
+-
+-union iwl4965_tx_power_dual_stream {
+-	struct {
+-		u8 radio_tx_gain[2];
+-		u8 dsp_predis_atten[2];
+-	} s;
+-	u32 dw;
+-};
+-
+-struct tx_power_dual_stream {
+-	__le32 dw;
+-} __attribute__ ((packed));
+-
+-struct iwl4965_tx_power_db {
+-	struct tx_power_dual_stream power_tbl[POWER_TABLE_NUM_ENTRIES];
+-} __attribute__ ((packed));
+-
+ /*
+  * REPLY_CHANNEL_SWITCH = 0x72 (command, has simple generic response)
+  */
+-- 
+1.5.3.6
