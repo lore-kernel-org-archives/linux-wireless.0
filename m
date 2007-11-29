@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38267 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763AbXK1PCO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 10:02:14 -0500
-Subject: Re: [PATCH] less eventcause shifts
-From: David Woodhouse <dwmw2@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1196261611.28264.0.camel@localhost.localdomain>
-References: <200711280915.11300.hs4233@mail.mn-solutions.de>
-	 <1196261611.28264.0.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 28 Nov 2007 15:02:09 +0000
-Message-Id: <1196262129.30806.26.camel@pmac.infradead.org> (sfid-20071128_150216_687214_E56C462B)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3549 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757850AbXK2W21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 17:28:27 -0500
+Date: Thu, 29 Nov 2007 17:26:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: Please pull 'upstream' branch of rt2x00
+Message-ID: <20071129222641.GE32730@tuxdriver.com> (sfid-20071129_222830_709747_B624E85B)
+References: <200711272146.53518.IvDoorn@gmail.com> <200711272154.29350.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200711272154.29350.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 27, 2007 at 09:54:29PM +0100, Ivo van Doorn wrote:
 
-On Wed, 2007-11-28 at 09:53 -0500, Dan Williams wrote:
-> On Wed, 2007-11-28 at 09:15 +0100, Holger Schurig wrote:
-> > * only shift eventcause once
-> > 
-> > * convert mac events to decimal, as this is what the firmware
-> >   manual uses in section 6.1, too
-> > 
-> > Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
-> Acked-by: Dan Williams <dcbw@redhat.com>
+> > Please merge the patches for 2.6.24
 
-s/less/fewer/ of course :)
+> Sorry that should be:
+> 08 - Only update rssi average approximation on receiving beacon frames.
+> 09 - Remove redundant code in rfkill setup
+> 10 - Cleanup rfkill
 
-Since I'm also going to be sending a flurry of libertas patches and the
-turnaround through the wireless tree seems suboptimal, shall we put up a
-git tree and work on it together, then ask John to pull when we're done?
+Actually it looks to me like 9 and 10 apply to code that isn't in
+2.6.24.  8 looks like it is close, but it doesn't quite apply either.
+I'll try to massage it in -- hopefully Jeff won't mind the extra
+trouble when rebasing...
 
+John
 -- 
-dwmw2
-
+John W. Linville
+linville@tuxdriver.com
