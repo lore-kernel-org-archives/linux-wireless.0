@@ -1,40 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:44182 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754028AbXKEVRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2007 16:17:05 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem with wireless-2.6
-References: <472F57A6.3020107@lwfinger.net>
-	<20071105182825.GA3478@tuxdriver.com> <472F85A6.90603@lwfinger.net>
-Date: Mon, 05 Nov 2007 22:17:03 +0100
-In-Reply-To: <472F85A6.90603@lwfinger.net> (Larry Finger's message of "Mon\, 05
-	Nov 2007 15\:05\:42 -0600")
-Message-ID: <jelk9cl7e8.fsf@sykes.suse.de> (sfid-20071105_211713_848592_8196727F)
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13690 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773AbXK2JVL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 04:21:11 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: set interface MAC address after driver's start() is called
+Date: Thu, 29 Nov 2007 10:22:06 +0100
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linville@tuxdriver.com
+References: <1196300047-6201-1-git-send-email-yi.zhu@intel.com> <1196326174.6058.173.camel@johannes.berg> <1196327209.7614.113.camel@debian.sh.intel.com>
+In-Reply-To: <1196327209.7614.113.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200711291022.07114.hs4233@mail.mn-solutions.de> (sfid-20071129_092117_970488_491228F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <larry.finger@lwfinger.net> writes:
+> Users see 00:00:00:00:00:00 address before up.
 
->>From other comments, I think I needed a git rebase command.
-
-I don't think so.  Do you have set branch.autosetupmerge to false?
-
-Andreas.
-
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How does this interact with udev?  udev uses the MAC address in 
+/etc/udev/rules.d/z25_persistent-net.rules ?
