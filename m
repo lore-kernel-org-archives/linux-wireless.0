@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web33009.mail.mud.yahoo.com ([209.191.69.124]:46089 "HELO
-	web33009.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755507AbXKZEAH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2007 23:00:07 -0500
-Date: Sun, 25 Nov 2007 20:00:05 -0800 (PST)
-From: Max <maxw_gcc@yahoo.com>
-Subject: Re: Error compiling intel mac80211-10.0.2
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <442384.57879.qm@web33009.mail.mud.yahoo.com> (sfid-20071126_040012_890866_67C290C7)
+Received: from mga03.intel.com ([143.182.124.21]:5924 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755080AbXK2Inc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 03:43:32 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: move A-MSDU identifier to flags
+Date: Thu, 29 Nov 2007 10:35:53 +0200
+Message-Id: <11963253531534-git-send-email-ron.rindjunsky@intel.com> (sfid-20071129_084339_901264_D62A2127)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch moves u8 amsdu_frame in ieee80211_txrx_data to the flags
+section as IEEE80211_TXRXD_RX_AMSDU
 
-On Sat, 2007-11-24 at 22:34 -0800, Max wrote:
->> Hi all,
->> 
->> I am trying to setup a Intel Corporation PRO/Wireless 3945ABG network
- adapter using the software provided in
- http://www.intellinuxwireless.org/. But I am getting the following
- error:
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/rx.c          |    6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-On Sun, November 25, 2007 8:35:07 PM Zhu wrote:
->Since this question doesn't relate to upstream mac80211, I'd suggest
- you
->only post it to ipw3945-devel@lists.sourceforge.net.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 399cc2d..2476cc5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -123,6 +123,7 @@ typedef enum {
+ /* frame is destined to interface currently processed (incl. multicast frames) */
+ #define IEEE80211_TXRXD_RXRA_MATCH		BIT(5)
+ #define IEEE80211_TXRXD_TX_INJECTED		BIT(6)
++#define IEEE80211_TXRXD_RX_AMSDU		BIT(7)
+ struct ieee80211_txrx_data {
+ 	struct sk_buff *skb;
+ 	struct net_device *dev;
+@@ -155,7 +156,6 @@ struct ieee80211_txrx_data {
+ 			int load;
+ 			u32 tkip_iv32;
+ 			u16 tkip_iv16;
+-			u8  amsdu_frame;
+ 		} rx;
+ 	} u;
+ };
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 878ca20..9009444 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -244,9 +244,9 @@ ieee80211_rx_h_parse_qos(struct ieee80211_txrx_data *rx)
+ 		/* frame has qos control */
+ 		tid = qc[0] & QOS_CONTROL_TID_MASK;
+ 		if (qc[0] & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
+-			rx->u.rx.amsdu_frame = 1;
++			rx->flags |= IEEE80211_TXRXD_RX_AMSDU;
+ 		else
+-			rx->u.rx.amsdu_frame = 0;
++			rx->flags &= ~IEEE80211_TXRXD_RX_AMSDU;
+ 	} else {
+ 		if (unlikely((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)) {
+ 			/* Separate TID for management frames */
+@@ -1215,7 +1215,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_txrx_data *rx)
+ 	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
+ 		return TXRX_DROP;
+ 
+-	if (!rx->u.rx.amsdu_frame)
++	if (!(rx->flags & IEEE80211_TXRXD_RX_AMSDU))
+ 		return TXRX_CONTINUE;
+ 
+ 	err = ieee80211_data_to_8023(rx);
+-- 
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Thanks for the suggestion. I will do that.
-
->> ...
->> Checking kernel compatibility in:
->>         /lib/modules/2.6.18/source//
->>   ! CONFIG_NET_WIRELESS_NETLINK can not be set in .config!
->> ...
->> 
->> Which apparently gets triggered by the following lines in the
- "../mac80211-10.0.2/scripts/determine_compat" script
->> .....
->>         grep -q "nlmsg_trim" \
->>                 ${KSRC}include/net/netlink.h && {
->>                 export has_nlmsg_trim=1
->>         } || {
->>                 grep -q "^CONFIG_NET_WIRELESS_RTNETLINK=[ym]" \
->>                         ${KSRC}.config && {
->>                         echo "  ! CONFIG_NET_WIRELESS_NETLINK can not
- be set in .config!"
->>                         exit 1
->>                 }
->>         }
->> ......
->> 
->> As you can see I am running kernel version 2.6.18.
-
->The code mac80211-10.0.2 integrated doesn't work with
->CONFIG_NET_WIRELESS_RTNETLINK enabled. You should deselect it from your
->kernel config file.
->Thanks,
->-yi
-
-I was afraid of any ill side effects and I was looking for confirmation, which you gave me. Thanks for your help.
-
-Max
-
-
-
-
-      ____________________________________________________________________________________
-Be a better pen pal. 
-Text or chat with friends inside Yahoo! Mail. See how.  http://overview.mail.yahoo.com/
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
