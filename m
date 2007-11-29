@@ -1,94 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757544AbXKPLya (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 06:54:30 -0500
-Subject: [PATCH] mac80211: remove more forgotten code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 16 Nov 2007 02:17:07 +0100
-Message-Id: <1195175827.8147.89.camel@johannes.berg> (sfid-20071116_115438_337234_8CA3CB30)
+Received: from c60.cesmail.net ([216.154.195.49]:45887 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759259AbXK2Vtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 16:49:31 -0500
+Subject: Re: mac80211 broken wifi packadges
+From: Pavel Roskin <proski@gnu.org>
+To: =?iso-8859-2?Q?Sz=F6ll=F5si?= Imre <imi@szollosi.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <474EAD65.5050103@szollosi.net>
+References: <474EAD65.5050103@szollosi.net>
+Content-Type: text/plain; charset=iso-8859-2
+Date: Thu, 29 Nov 2007 16:49:29 -0500
+Message-Id: <1196372969.3350.9.camel@dv> (sfid-20071129_214933_383535_571C2C12)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hopefully that's the rest. Seems I didn't do a very thorough job
-removing the management interface.
+On Thu, 2007-11-29 at 13:15 +0100, Sz=F6ll=F5si Imre wrote:
+> Hello!
+>=20
+> Sorry about breaking the work.
+> I'm a student from hungary and I have a trouble. My challange is, the=
+=20
+> get and use the broked wifi packadge.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |   58 ------------------------------------------------------
- 1 file changed, 58 deletions(-)
+Please don't post the same thing several time.  I also suggest that you
+use a spellchecker, so that your e-mail is more readable.
 
---- everything.orig/net/mac80211/tx.c	2007-11-16 02:13:58.771947319 +0100
-+++ everything/net/mac80211/tx.c	2007-11-16 02:14:05.211960123 +0100
-@@ -1527,64 +1527,6 @@ int ieee80211_subif_start_xmit(struct sk
- 	return ret;
- }
- 
--/*
-- * This is the transmit routine for the 802.11 type interfaces
-- * called by upper layers of the linux networking
-- * stack when it has a frame to transmit
-- */
--int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
--{
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_tx_packet_data *pkt_data;
--	struct ieee80211_hdr *hdr;
--	u16 fc;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	if (skb->len < 10) {
--		dev_kfree_skb(skb);
--		return 0;
--	}
--
--	if (skb_headroom(skb) < sdata->local->tx_headroom) {
--		if (pskb_expand_head(skb, sdata->local->tx_headroom,
--				     0, GFP_ATOMIC)) {
--			dev_kfree_skb(skb);
--			return 0;
--		}
--	}
--
--	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
--
--	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
--	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
--	pkt_data->ifindex = sdata->dev->ifindex;
--
--	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
--	skb->dev = sdata->local->mdev;
--
--	/*
--	 * We're using the protocol field of the the frame control header
--	 * to request TX callback for hostapd. BIT(1) is checked.
--	 */
--	if ((fc & BIT(1)) == BIT(1)) {
--		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
--		fc &= ~BIT(1);
--		hdr->frame_control = cpu_to_le16(fc);
--	}
--
--	if (!(fc & IEEE80211_FCTL_PROTECTED))
--		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
--
--	dev->stats.tx_packets++;
--	dev->stats.tx_bytes += skb->len;
--
--	dev_queue_xmit(skb);
--
--	return 0;
--}
--
- /* helper functions for pending packets for when queues are stopped */
- 
- void ieee80211_clear_tx_pending(struct ieee80211_local *local)
+I assume "packadge" means "packet".
 
+> I sawed, the mac80211 is able to monitor mode with an virtual interfa=
+ce,=20
+> but it's only get good  packedges of wireless traffic. We want to use=
+ it=20
+> to completion a wireless stream traffic.
 
+You probably mean that you want to receive packets with incorrect
+checksum.
+
+I checked the sources quickly, and I think you could try to change the
+first "return 1" with "return 0" in should_drop_frame() in
+net/mac80211/rx.c
+
+Also, you may get better replies if you mention the kernel version, the
+driver name and other relevant technical details.
+
+> My question is, can you give me some instuction, how can i modify the=
+=20
+> stack, or can you give me a patch? I'm not a programmer, only learn=20
+> infocommunication.
+
+Generally, this list is not the place where you can expect others to do
+your homework.
+
+> Can you help me?
+
+The last question is answered here:
+http://www.catb.org/~esr/faqs/smart-questions.html#prune
+
+--=20
+Regards,
+Pavel Roskin
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
