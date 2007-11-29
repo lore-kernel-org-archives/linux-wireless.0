@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56435 "EHLO mx2.suse.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4152 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756269AbXKNS6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2007 13:58:05 -0500
-Subject: patch softmac-fix-wext-mlme-request-reason-code-endianness.patch queued to -stable tree
-To: johannes@sipsolutions.net, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	stable@kernel.org
-Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@suse.de>
-Date: Wed, 14 Nov 2007 10:57:53 -0800
-In-Reply-To: <1193343383.4406.30.camel@johannes.berg>
-Message-Id: <20071114185803.4F26714540D0@imap.suse.de> (sfid-20071114_185809_227333_1B4907DF)
+	id S1757600AbXK2VqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 16:46:19 -0500
+Date: Thu, 29 Nov 2007 16:45:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Shaddy Baddah <shaddy_baddah@hotmail.com>,
+	David Miller <davem@davemloft.net>, dsd@gentoo.org,
+	kune@deine-taler.de
+Subject: Re: ZD1211RW unaligned accesses...
+Message-ID: <20071129214533.GD32730@tuxdriver.com> (sfid-20071129_214625_523635_09BBACFD)
+References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com> <20071124150216.GA28153@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071124150216.GA28153@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+So, did the patch below fix the problem?  Should I apply it?
 
-This is a note to let you know that we have just queued up the patch titled
+John
 
-     Subject: softmac: fix wext MLME request reason code endianness
+On Sat, Nov 24, 2007 at 11:02:16PM +0800, Herbert Xu wrote:
+> On Wed, Nov 21, 2007 at 01:00:44PM +0000, Shaddy Baddah wrote:
+> >
+> > It hasn't seemed to. I patched the source (confirming the patched lines 
+> > are in), compiled, installed and rebooted to effect the changes. My 
+> > zd1211rw modules timestamp indicates that I have an updated module:
+> 
+> Thanks for your quick response and sorry for my late answer :)
+> 
+> I think Dave's patch is definietly on the right track but there
+> are subsequent unaligned accesses of a similar kind which is
+> why it still appears to be broken if you look at the kernel
+> messages.
+> 
+> But there is definitely progress because those addresses are now
+> bigger (0x394/0x39c/0x3a8 vs. 0x2** earlier).
+> 
+> So please try the following patch (instead of the original one)
+> which should fix all the unailgned accesses in do_rx.
+> 
+> Cheers,
+> -- 
+> Visit Openswan at http://www.openswan.org/
+> Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+> Home Page: http://gondor.apana.org.au/~herbert/
+> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> --
+> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+> index a903645..d06b05b 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+> @@ -1166,15 +1166,16 @@ static void do_rx(unsigned long mac_ptr)
+>  int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
+>  {
+>  	struct sk_buff *skb;
+> +	unsigned int hlen = ALIGN(sizeof(struct zd_rt_hdr), 16);
+>  
+> -	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
+> +	skb = dev_alloc_skb(hlen + length);
+>  	if (!skb) {
+>  		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
+>  		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
+>  		ieee->stats.rx_dropped++;
+>  		return -ENOMEM;
+>  	}
+> -	skb_reserve(skb, sizeof(struct zd_rt_hdr));
+> +	skb_reserve(skb, hlen - ZD_PLCP_HEADER_SIZE);
+>  	memcpy(__skb_put(skb, length), buffer, length);
+>  	skb_queue_tail(&mac->rx_queue, skb);
+>  	tasklet_schedule(&mac->rx_tasklet);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-to the 2.6.23-stable tree.  Its filename is
-
-     softmac-fix-wext-mlme-request-reason-code-endianness.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From stable-bounces@linux.kernel.org Fri Oct 26 03:36:47 2007
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 25 Oct 2007 22:16:23 +0200
-Subject: softmac: fix wext MLME request reason code endianness
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, stable <stable@kernel.org>
-Message-ID: <1193343383.4406.30.camel@johannes.berg>
-
-From: Johannes Berg <johannes@sipsolutions.net>
-
-patch 94e10bfb8a7372df3ef2759c9ec2a37de2f24aca in mainline.
-
-The MLME request reason code is host-endian and our passing
-it to the low level functions is host-endian as well since
-they do the swapping. I noticed that the reason code 768 was
-sent (0x300) rather than 3 when wpa_supplicant terminates.
-This removes the superfluous cpu_to_le16() call.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- net/ieee80211/softmac/ieee80211softmac_wx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/net/ieee80211/softmac/ieee80211softmac_wx.c
-+++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
-@@ -469,7 +469,7 @@ ieee80211softmac_wx_set_mlme(struct net_
- {
- 	struct ieee80211softmac_device *mac = ieee80211_priv(dev);
- 	struct iw_mlme *mlme = (struct iw_mlme *)extra;
--	u16 reason = cpu_to_le16(mlme->reason_code);
-+	u16 reason = mlme->reason_code;
- 	struct ieee80211softmac_network *net;
- 	int err = -EINVAL;
- 
-
-
-Patches currently in stable-queue which might be from johannes@sipsolutions.net are
-
-queue-2.6.23/mac80211-filter-locally-originated-multicast-frames.patch
-queue-2.6.23/softmac-fix-wext-mlme-request-reason-code-endianness.patch
+-- 
+John W. Linville
+linville@tuxdriver.com
