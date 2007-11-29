@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:33574 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763229AbXK2Rvh (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:18673 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756195AbXK2QJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2007 12:51:37 -0500
-Message-ID: <474EFBEB.5000804@zytor.com> (sfid-20071129_175147_393184_FC885BBA)
-Date: Thu, 29 Nov 2007 09:50:35 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+	Thu, 29 Nov 2007 11:09:46 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1882088nfb
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 08:09:45 -0800 (PST)
+Message-ID: <6cf6b73e0711290809q7c8a2050x6daf97b5eb954cbe@mail.gmail.com> (sfid-20071129_160950_242841_B38B4515)
+Date: Thu, 29 Nov 2007 17:09:41 +0100
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: rate limit wep decrypt failed messages
+Cc: johannes@sipsolutions.net
 MIME-Version: 1.0
-To: Herbert Xu <herbert@gondor.apana.org.au>
-CC: Stephen Hemminger <shemminger@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless vs. alignment requirements
-References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <474C50D7.5010901@zytor.com> <20071129131107.GC8487@gondor.apana.org.au>
-In-Reply-To: <20071129131107.GC8487@gondor.apana.org.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herbert Xu wrote:
-> On Tue, Nov 27, 2007 at 09:16:07AM -0800, H. Peter Anvin wrote:
->> I wrote a patch for the IP stack to realign packets if necessary at one 
->> point.  I should dredge it up again and submit it for collective flamage.
-> 
-> As long as it doesn't penalise Ethernet (e.g., the 10Gb crowd :) it would
-> be good to have.
-> 
-> Thanks,
+The attached patch rate limits "WEP decrypt failed (ICV)" to avoid
+flooding the logfiles.
 
-Uhm, most cards affected *ARE* Ethernet cards, due to the bloody 14-byte 
-header.
+Signed-off-by: Adel Gadllah <adel.gadllah@gmx.net>
 
-But it doesn't affect architectures which have alignment, and the cost 
-of scanning a properly-aligned packet is minimal.
-
-I'll try to find it some time today.
-
-	-hpa
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 9bf0e1c..b5f3413 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -265,7 +265,8 @@ int ieee80211_wep_decrypt(struct ieee80211_local
+*local, struct sk_buff *skb,
+ 	if (ieee80211_wep_decrypt_data(local->wep_rx_tfm, rc4key, klen,
+ 				       skb->data + hdrlen + WEP_IV_LEN,
+ 				       len)) {
+-		printk(KERN_DEBUG "WEP decrypt failed (ICV)\n");
++		if (net_ratelimit())
++			printk(KERN_DEBUG "WEP decrypt failed (ICV)\n");
+ 		ret = -1;
+ 	}
+-
