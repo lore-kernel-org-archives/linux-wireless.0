@@ -1,74 +1,588 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4146 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:4119 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755672AbXK2DKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 22:10:51 -0500
+	id S1755166AbXK2DKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 22:10:35 -0500
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Saleem Abdulrasool <compnerd@compnerd.org>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 16/36] iwlwifi: fix possibly NULL dereference in iwl_set_rate()
-Date: Thu, 29 Nov 2007 11:09:56 +0800
-Message-Id: <1196305816-23023-17-git-send-email-yi.zhu@intel.com> (sfid-20071129_033534_493599_FEC16AFF)
-In-Reply-To: <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
+	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 05/36] iwlwifi: add comments to EEPROM stuff
+Date: Thu, 29 Nov 2007 11:09:45 +0800
+Message-Id: <1196305816-23023-6-git-send-email-yi.zhu@intel.com> (sfid-20071129_033549_573572_26FAE22B)
+In-Reply-To: <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
 References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
  <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
  <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
  <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
  <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
- <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Saleem Abdulrasool <compnerd@compnerd.org>
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Signed-off-by: Saleem Abdulrasool <compnerd@compnerd.org>
+Add comments to EEPROM stuff.
+
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h |   94 +++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    9 ++
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |  209 +++++++++++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    9 ++
+ 4 files changed, 285 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index a742309..a892e26 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2984,6 +2984,10 @@ static void iwl3945_set_rate(struct iwl3945_priv *priv)
- 	int i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index 402e347..243a225 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -85,24 +85,48 @@
+ #define IWL_RSSI_OFFSET	95
  
- 	hw = iwl3945_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
+ /*
+- * This file defines EEPROM related constants, enums, and inline functions.
+- *
++ * EEPROM related constants, enums, and structures.
+  */
  
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 01ba374..f813669 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3092,6 +3092,10 @@ static void iwl4965_set_rate(struct iwl4965_priv *priv)
- 	int i;
++/*
++ * EEPROM access time values:
++ *
++ * Driver initiates EEPROM read by writing byte address << 1 to CSR_EEPROM_REG,
++ *   then clearing (with subsequent read/modify/write) CSR_EEPROM_REG bit
++ *   CSR_EEPROM_REG_BIT_CMD (0x2).
++ * Driver then polls CSR_EEPROM_REG for CSR_EEPROM_REG_READ_VALID_MSK (0x1).
++ * When polling, wait 10 uSec between polling loops, up to a maximum 5000 uSec.
++ * Driver reads 16-bit value from bits 31-16 of CSR_EEPROM_REG.
++ */
+ #define IWL_EEPROM_ACCESS_TIMEOUT	5000 /* uSec */
+ #define IWL_EEPROM_ACCESS_DELAY		10   /* uSec */
++
+ /* EEPROM field values */
+ #define ANTENNA_SWITCH_NORMAL     0
+ #define ANTENNA_SWITCH_INVERSE    1
  
- 	hw = iwl4965_get_hw_mode(priv, priv->phymode);
-+	if (!hw) {
-+		IWL_ERROR("Failed to set rate: unable to get hw mode\n");
-+		return;
-+	}
++/*
++ * Regulatory channel usage flags in EEPROM struct iwl_eeprom_channel.flags.
++ *
++ * IBSS and/or AP operation is allowed *only* on those channels with
++ * (VALID && IBSS && ACTIVE && !RADAR).  This restriction is in place because
++ * RADAR detection is not supported by the 3945 driver, but is a
++ * requirement for establishing a new network for legal operation on channels
++ * requiring RADAR detection or restricting ACTIVE scanning.
++ *
++ * NOTE:  "WIDE" flag indicates that 20 MHz channel is supported;
++ *        3945 does not support FAT 40 MHz-wide channels.
++ *
++ * NOTE:  Using a channel inappropriately will result in a uCode error!
++ */
+ enum {
+ 	EEPROM_CHANNEL_VALID = (1 << 0),	/* usable for this SKU/geo */
+-	EEPROM_CHANNEL_IBSS = (1 << 1),	/* usable as an IBSS channel */
++	EEPROM_CHANNEL_IBSS = (1 << 1),		/* usable as an IBSS channel */
+ 	/* Bit 2 Reserved */
+ 	EEPROM_CHANNEL_ACTIVE = (1 << 3),	/* active scanning allowed */
+ 	EEPROM_CHANNEL_RADAR = (1 << 4),	/* radar detection required */
+-	EEPROM_CHANNEL_WIDE = (1 << 5),
+-	EEPROM_CHANNEL_NARROW = (1 << 6),
++	EEPROM_CHANNEL_WIDE = (1 << 5),		/* 20 MHz channel okay */
++	EEPROM_CHANNEL_NARROW = (1 << 6),	/* 10 MHz channel, not used */
+ 	EEPROM_CHANNEL_DFS = (1 << 7),	/* dynamic freq selection candidate */
+ };
  
- 	priv->active_rate = 0;
- 	priv->active_rate_basic = 0;
+@@ -147,6 +171,7 @@ struct iwl3945_eeprom_channel {
+  *   long packets in normal operation to provide feedback as to proper output
+  *   level.
+  * Data copied from EEPROM.
++ * DO NOT ALTER THIS STRUCTURE!!!
+  */
+ struct iwl3945_eeprom_txpower_sample {
+ 	u8 gain_index;		/* index into power (gain) setup table ... */
+@@ -163,11 +188,11 @@ struct iwl3945_eeprom_txpower_sample {
+  * DO NOT ALTER THIS STRUCTURE!!!
+  */
+ struct iwl3945_eeprom_txpower_group {
+-	struct iwl3945_eeprom_txpower_sample samples[5];	/* 5 power levels */
++	struct iwl3945_eeprom_txpower_sample samples[5];  /* 5 power levels */
+ 	s32 a, b, c, d, e;	/* coefficients for voltage->power
+ 				 * formula (signed) */
+ 	s32 Fa, Fb, Fc, Fd, Fe;	/* these modify coeffs based on
+-					 * frequency (signed) */
++				 * frequency (signed) */
+ 	s8 saturation_power;	/* highest power possible by h/w in this
+ 				 * band */
+ 	u8 group_channel;	/* "representative" channel # in this band */
+@@ -189,6 +214,9 @@ struct iwl3945_eeprom_temperature_corr {
+ 	u32 Te;
+ } __attribute__ ((packed));
+ 
++/*
++ * EEPROM map
++ */
+ struct iwl3945_eeprom {
+ 	u8 reserved0[16];
+ #define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
+@@ -229,29 +257,67 @@ struct iwl3945_eeprom {
+ 	u8 reserved6[42];
+ #define EEPROM_REGULATORY_SKU_ID            (2*0x60)	/* 4  bytes */
+ 	u8 sku_id[4];		/* abs.ofs: 192 */
++
++/*
++ * Per-channel regulatory data.
++ *
++ * Each channel that *might* be supported by 3945 or 4965 has a fixed location
++ * in EEPROM containing EEPROM_CHANNEL_* usage flags (LSB) and max regulatory
++ * txpower (MSB).
++ *
++ * Entries immediately below are for 20 MHz channel width.  FAT (40 MHz)
++ * channels (only for 4965, not supported by 3945) appear later in the EEPROM.
++ *
++ * 2.4 GHz channels 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
++ */
+ #define EEPROM_REGULATORY_BAND_1            (2*0x62)	/* 2  bytes */
+ 	u16 band_1_count;	/* abs.ofs: 196 */
+ #define EEPROM_REGULATORY_BAND_1_CHANNELS   (2*0x63)	/* 28 bytes */
+-	struct iwl3945_eeprom_channel band_1_channels[14];	/* abs.ofs: 196 */
++	struct iwl3945_eeprom_channel band_1_channels[14];  /* abs.ofs: 196 */
++
++/*
++ * 4.9 GHz channels 183, 184, 185, 187, 188, 189, 192, 196,
++ * 5.0 GHz channels 7, 8, 11, 12, 16
++ * (4915-5080MHz) (none of these is ever supported)
++ */
+ #define EEPROM_REGULATORY_BAND_2            (2*0x71)	/* 2  bytes */
+ 	u16 band_2_count;	/* abs.ofs: 226 */
+ #define EEPROM_REGULATORY_BAND_2_CHANNELS   (2*0x72)	/* 26 bytes */
+-	struct iwl3945_eeprom_channel band_2_channels[13];	/* abs.ofs: 228 */
++	struct iwl3945_eeprom_channel band_2_channels[13];  /* abs.ofs: 228 */
++
++/*
++ * 5.2 GHz channels 34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
++ * (5170-5320MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_3            (2*0x7F)	/* 2  bytes */
+ 	u16 band_3_count;	/* abs.ofs: 254 */
+ #define EEPROM_REGULATORY_BAND_3_CHANNELS   (2*0x80)	/* 24 bytes */
+-	struct iwl3945_eeprom_channel band_3_channels[12];	/* abs.ofs: 256 */
++	struct iwl3945_eeprom_channel band_3_channels[12];  /* abs.ofs: 256 */
++
++/*
++ * 5.5 GHz channels 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
++ * (5500-5700MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_4            (2*0x8C)	/* 2  bytes */
+ 	u16 band_4_count;	/* abs.ofs: 280 */
+ #define EEPROM_REGULATORY_BAND_4_CHANNELS   (2*0x8D)	/* 22 bytes */
+-	struct iwl3945_eeprom_channel band_4_channels[11];	/* abs.ofs: 282 */
++	struct iwl3945_eeprom_channel band_4_channels[11];  /* abs.ofs: 282 */
++
++/*
++ * 5.7 GHz channels 145, 149, 153, 157, 161, 165
++ * (5725-5825MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_5            (2*0x98)	/* 2  bytes */
+ 	u16 band_5_count;	/* abs.ofs: 304 */
+ #define EEPROM_REGULATORY_BAND_5_CHANNELS   (2*0x99)	/* 12 bytes */
+-	struct iwl3945_eeprom_channel band_5_channels[6];	/* abs.ofs: 306 */
++	struct iwl3945_eeprom_channel band_5_channels[6];  /* abs.ofs: 306 */
+ 
+ 	u8 reserved9[194];
+ 
++
++/*
++ * 3945 Txpower calibration data.
++ */
+ #define EEPROM_TXPOWER_CALIB_GROUP0 0x200
+ #define EEPROM_TXPOWER_CALIB_GROUP1 0x240
+ #define EEPROM_TXPOWER_CALIB_GROUP2 0x280
+@@ -261,12 +327,14 @@ struct iwl3945_eeprom {
+ 	struct iwl3945_eeprom_txpower_group groups[IWL_NUM_TX_CALIB_GROUPS];
+ /* abs.ofs: 512 */
+ #define EEPROM_CALIB_TEMPERATURE_CORRECT 0x340
+-	struct iwl3945_eeprom_temperature_corr corrections;	/* abs.ofs: 832 */
++	struct iwl3945_eeprom_temperature_corr corrections;  /* abs.ofs: 832 */
+ 	u8 reserved16[172];	/* fill out to full 1024 byte block */
+ } __attribute__ ((packed));
+ 
+ #define IWL_EEPROM_IMAGE_SIZE 1024
+ 
++/* End of EEPROM */
++
+ 
+ #include "iwl-3945-commands.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 953a9be..51b9030 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2202,6 +2202,7 @@ int iwl3945_init_hw_rate_table(struct iwl3945_priv *priv)
+ 				&rate_cmd);
+ }
+ 
++/* Called when initializing driver */
+ int iwl3945_hw_set_hw_setting(struct iwl3945_priv *priv)
+ {
+ 	memset((void *)&priv->hw_setting, 0,
+@@ -2284,6 +2285,14 @@ struct pci_device_id iwl3945_hw_card_ids[] = {
+ 	{0}
+ };
+ 
++/*
++ * Clear the OWNER_MSK, to establish driver (instead of uCode running on
++ * embedded controller) as EEPROM reader; each read is a series of pulses
++ * to/from the EEPROM chip, not a single event, so even reads could conflict
++ * if they weren't arbitrated by some ownership mechanism.  Here, the driver
++ * simply claims ownership, which should be safe when this function is called
++ * (i.e. before loading uCode!).
++ */
+ inline int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv)
+ {
+ 	_iwl3945_clear_bit(priv, CSR_EEPROM_GP, CSR_EEPROM_GP_IF_OWNER_MSK);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index 1800490..1c44459 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -85,24 +85,50 @@
+ #define IWL_RSSI_OFFSET	44
+ 
+ /*
+- * This file defines EEPROM related constants, enums, and inline functions.
+- *
++ * EEPROM related constants, enums, and structures.
+  */
+ 
++/*
++ * EEPROM access time values:
++ *
++ * Driver initiates EEPROM read by writing byte address << 1 to CSR_EEPROM_REG,
++ *   then clearing (with subsequent read/modify/write) CSR_EEPROM_REG bit
++ *   CSR_EEPROM_REG_BIT_CMD (0x2).
++ * Driver then polls CSR_EEPROM_REG for CSR_EEPROM_REG_READ_VALID_MSK (0x1).
++ * When polling, wait 10 uSec between polling loops, up to a maximum 5000 uSec.
++ * Driver reads 16-bit value from bits 31-16 of CSR_EEPROM_REG.
++ */
+ #define IWL_EEPROM_ACCESS_TIMEOUT	5000 /* uSec */
+ #define IWL_EEPROM_ACCESS_DELAY		10   /* uSec */
++
+ /* EEPROM field values */
+ #define ANTENNA_SWITCH_NORMAL     0
+ #define ANTENNA_SWITCH_INVERSE    1
+ 
++/*
++ * Regulatory channel usage flags in EEPROM struct iwl4965_eeprom_channel.flags.
++ *
++ * IBSS and/or AP operation is allowed *only* on those channels with
++ * (VALID && IBSS && ACTIVE && !RADAR).  This restriction is in place because
++ * RADAR detection is not supported by the 4965 driver, but is a
++ * requirement for establishing a new network for legal operation on channels
++ * requiring RADAR detection or restricting ACTIVE scanning.
++ *
++ * NOTE:  "WIDE" flag does not indicate anything about "FAT" 40 MHz channels.
++ *        It only indicates that 20 MHz channel use is supported; FAT channel
++ *        usage is indicated by a separate set of regulatory flags for each
++ *        FAT channel pair.
++ *
++ * NOTE:  Using a channel inappropriately will result in a uCode error!
++ */
+ enum {
+ 	EEPROM_CHANNEL_VALID = (1 << 0),	/* usable for this SKU/geo */
+-	EEPROM_CHANNEL_IBSS = (1 << 1),	/* usable as an IBSS channel */
++	EEPROM_CHANNEL_IBSS = (1 << 1),		/* usable as an IBSS channel */
+ 	/* Bit 2 Reserved */
+ 	EEPROM_CHANNEL_ACTIVE = (1 << 3),	/* active scanning allowed */
+ 	EEPROM_CHANNEL_RADAR = (1 << 4),	/* radar detection required */
+-	EEPROM_CHANNEL_WIDE = (1 << 5),
+-	EEPROM_CHANNEL_NARROW = (1 << 6),
++	EEPROM_CHANNEL_WIDE = (1 << 5),		/* 20 MHz channel okay */
++	EEPROM_CHANNEL_NARROW = (1 << 6),	/* 10 MHz channel, not used */
+ 	EEPROM_CHANNEL_DFS = (1 << 7),	/* dynamic freq selection candidate */
+ };
+ 
+@@ -136,9 +162,10 @@ enum {
+ #define EEPROM_SKU_CAP_HW_RF_KILL_ENABLE                (1 << 1)
+ #define EEPROM_SKU_CAP_OP_MODE_MRC                      (1 << 7)
+ 
+-/* *regulatory* channel data from eeprom, one for each channel */
++/* *regulatory* channel data format in eeprom, one for each channel.
++ * There are separate entries for FAT (40 MHz) vs. normal (20 MHz) channels. */
+ struct iwl4965_eeprom_channel {
+-	u8 flags;		/* flags copied from EEPROM */
++	u8 flags;		/* EEPROM_CHANNEL_* flags copied from EEPROM */
+ 	s8 max_power_avg;	/* max power (dBm) on this chnl, limit 31 */
+ } __attribute__ ((packed));
+ 
+@@ -193,44 +220,112 @@ struct iwl4965_eeprom_temperature_corr {
+ 	u32 Te;
+ } __attribute__ ((packed));
+ 
++/* 4965 has two radio transmitters (and 3 radio receivers) */
+ #define EEPROM_TX_POWER_TX_CHAINS      (2)
++
++/* 4965 has room for up to 8 sets of txpower calibration data */
+ #define EEPROM_TX_POWER_BANDS          (8)
++
++/* 4965 factory calibration measures txpower gain settings for
++ * each of 3 target output levels */
+ #define EEPROM_TX_POWER_MEASUREMENTS   (3)
++
+ #define EEPROM_TX_POWER_VERSION        (2)
++
++/* 4965 driver does not work with txpower calibration version < 5.
++ * Look for this in calib_version member of struct iwl4965_eeprom. */
+ #define EEPROM_TX_POWER_VERSION_NEW    (5)
+ 
++
++/*
++ * 4965 factory calibration data for one txpower level, on one channel,
++ * measured on one of the 2 tx chains (radio transmitter and associated
++ * antenna).  EEPROM contains:
++ *
++ * 1)  Temperature (degrees Celsius) of device when measurement was made.
++ *
++ * 2)  Gain table index used to achieve the target measurement power.
++ *     This refers to the "well-known" gain tables (see iwl-4965-hw.h).
++ *
++ * 3)  Actual measured output power, in half-dBm ("34" = 17 dBm).
++ *
++ * 4)  RF power amplifier detector level measurement (not used).
++ */
+ struct iwl4965_eeprom_calib_measure {
+-	u8 temperature;
+-	u8 gain_idx;
+-	u8 actual_pow;
+-	s8 pa_det;
++	u8 temperature;		/* Device temperature (Celsius) */
++	u8 gain_idx;		/* Index into gain table */
++	u8 actual_pow;		/* Measured RF output power, half-dBm */
++	s8 pa_det;		/* Power amp detector level (not used) */
+ } __attribute__ ((packed));
+ 
++
++/*
++ * 4965 measurement set for one channel.  EEPROM contains:
++ *
++ * 1)  Channel number measured
++ *
++ * 2)  Measurements for each of 3 power levels for each of 2 radio transmitters
++ *     (a.k.a. "tx chains") (6 measurements altogether)
++ */
+ struct iwl4965_eeprom_calib_ch_info {
+ 	u8 ch_num;
+ 	struct iwl4965_eeprom_calib_measure measurements[EEPROM_TX_POWER_TX_CHAINS]
+ 		[EEPROM_TX_POWER_MEASUREMENTS];
+ } __attribute__ ((packed));
+ 
++/*
++ * 4965 txpower subband info.
++ *
++ * For each frequency subband, EEPROM contains the following:
++ *
++ * 1)  First and last channels within range of the subband.  "0" values
++ *     indicate that this sample set is not being used.
++ *
++ * 2)  Sample measurement sets for 2 channels close to the range endpoints.
++ */
+ struct iwl4965_eeprom_calib_subband_info {
+-	u8 ch_from;
+-	u8 ch_to;
++	u8 ch_from;	/* channel number of lowest channel in subband */
++	u8 ch_to;	/* channel number of highest channel in subband */
+ 	struct iwl4965_eeprom_calib_ch_info ch1;
+ 	struct iwl4965_eeprom_calib_ch_info ch2;
+ } __attribute__ ((packed));
+ 
++
++/*
++ * 4965 txpower calibration info.  EEPROM contains:
++ *
++ * 1)  Factory-measured saturation power levels (maximum levels at which
++ *     tx power amplifier can output a signal without too much distortion).
++ *     There is one level for 2.4 GHz band and one for 5 GHz band.  These
++ *     values apply to all channels within each of the bands.
++ *
++ * 2)  Factory-measured power supply voltage level.  This is assumed to be
++ *     constant (i.e. same value applies to all channels/bands) while the
++ *     factory measurements are being made.
++ *
++ * 3)  Up to 8 sets of factory-measured txpower calibration values.
++ *     These are for different frequency ranges, since txpower gain
++ *     characteristics of the analog radio circuitry vary with frequency.
++ *
++ *     Not all sets need to be filled with data;
++ *     struct iwl4965_eeprom_calib_subband_info contains range of channels
++ *     (0 if unused) for each set of data.
++ */
+ struct iwl4965_eeprom_calib_info {
+-	u8 saturation_power24;
+-	u8 saturation_power52;
++	u8 saturation_power24;	/* half-dBm (e.g. "34" = 17 dBm) */
++	u8 saturation_power52;	/* half-dBm */
+ 	s16 voltage;		/* signed */
+ 	struct iwl4965_eeprom_calib_subband_info band_info[EEPROM_TX_POWER_BANDS];
+ } __attribute__ ((packed));
+ 
+ 
++/*
++ * 4965 EEPROM map
++ */
+ struct iwl4965_eeprom {
+ 	u8 reserved0[16];
+ #define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
+-	u16 device_id;	/* abs.ofs: 16 */
++	u16 device_id;		/* abs.ofs: 16 */
+ 	u8 reserved1[2];
+ #define EEPROM_PMC                          (2*0x0A)	/* 2 bytes */
+ 	u16 pmc;		/* abs.ofs: 20 */
+@@ -273,40 +368,107 @@ struct iwl4965_eeprom {
+ 	u8 reserved8[10];
+ #define EEPROM_REGULATORY_SKU_ID            (2*0x60)	/* 4  bytes */
+ 	u8 sku_id[4];		/* abs.ofs: 192 */
++
++/*
++ * Per-channel regulatory data.
++ *
++ * Each channel that *might* be supported by 3945 or 4965 has a fixed location
++ * in EEPROM containing EEPROM_CHANNEL_* usage flags (LSB) and max regulatory
++ * txpower (MSB).
++ *
++ * Entries immediately below are for 20 MHz channel width.  FAT (40 MHz)
++ * channels (only for 4965, not supported by 3945) appear later in the EEPROM.
++ *
++ * 2.4 GHz channels 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
++ */
+ #define EEPROM_REGULATORY_BAND_1            (2*0x62)	/* 2  bytes */
+ 	u16 band_1_count;	/* abs.ofs: 196 */
+ #define EEPROM_REGULATORY_BAND_1_CHANNELS   (2*0x63)	/* 28 bytes */
+-	struct iwl4965_eeprom_channel band_1_channels[14];	/* abs.ofs: 196 */
++	struct iwl4965_eeprom_channel band_1_channels[14]; /* abs.ofs: 196 */
++
++/*
++ * 4.9 GHz channels 183, 184, 185, 187, 188, 189, 192, 196,
++ * 5.0 GHz channels 7, 8, 11, 12, 16
++ * (4915-5080MHz) (none of these is ever supported)
++ */
+ #define EEPROM_REGULATORY_BAND_2            (2*0x71)	/* 2  bytes */
+ 	u16 band_2_count;	/* abs.ofs: 226 */
+ #define EEPROM_REGULATORY_BAND_2_CHANNELS   (2*0x72)	/* 26 bytes */
+-	struct iwl4965_eeprom_channel band_2_channels[13];	/* abs.ofs: 228 */
++	struct iwl4965_eeprom_channel band_2_channels[13]; /* abs.ofs: 228 */
++
++/*
++ * 5.2 GHz channels 34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
++ * (5170-5320MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_3            (2*0x7F)	/* 2  bytes */
+ 	u16 band_3_count;	/* abs.ofs: 254 */
+ #define EEPROM_REGULATORY_BAND_3_CHANNELS   (2*0x80)	/* 24 bytes */
+-	struct iwl4965_eeprom_channel band_3_channels[12];	/* abs.ofs: 256 */
++	struct iwl4965_eeprom_channel band_3_channels[12]; /* abs.ofs: 256 */
++
++/*
++ * 5.5 GHz channels 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
++ * (5500-5700MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_4            (2*0x8C)	/* 2  bytes */
+ 	u16 band_4_count;	/* abs.ofs: 280 */
+ #define EEPROM_REGULATORY_BAND_4_CHANNELS   (2*0x8D)	/* 22 bytes */
+-	struct iwl4965_eeprom_channel band_4_channels[11];	/* abs.ofs: 282 */
++	struct iwl4965_eeprom_channel band_4_channels[11]; /* abs.ofs: 282 */
++
++/*
++ * 5.7 GHz channels 145, 149, 153, 157, 161, 165
++ * (5725-5825MHz)
++ */
+ #define EEPROM_REGULATORY_BAND_5            (2*0x98)	/* 2  bytes */
+ 	u16 band_5_count;	/* abs.ofs: 304 */
+ #define EEPROM_REGULATORY_BAND_5_CHANNELS   (2*0x99)	/* 12 bytes */
+-	struct iwl4965_eeprom_channel band_5_channels[6];	/* abs.ofs: 306 */
++	struct iwl4965_eeprom_channel band_5_channels[6]; /* abs.ofs: 306 */
+ 
+ 	u8 reserved10[2];
++
++
++/*
++ * 2.4 GHz FAT channels 1 (5), 2 (6), 3 (7), 4 (8), 5 (9), 6 (10), 7 (11)
++ *
++ * The channel listed is the center of the lower 20 MHz half of the channel.
++ * The overall center frequency is actually 2 channels (10 MHz) above that,
++ * and the upper half of each FAT channel is centered 4 channels (20 MHz) away
++ * from the lower half; e.g. the upper half of FAT channel 1 is channel 5,
++ * and the overall FAT channel width centers on channel 3.
++ *
++ * NOTE:  The RXON command uses 20 MHz channel numbers to specify the
++ *        control channel to which to tune.  RXON also specifies whether the
++ *        control channel is the upper or lower half of a FAT channel.
++ *
++ * NOTE:  4965 does not support FAT channels on 2.4 GHz.
++ */
+ #define EEPROM_REGULATORY_BAND_24_FAT_CHANNELS (2*0xA0)	/* 14 bytes */
+-	struct iwl4965_eeprom_channel band_24_channels[7];	/* abs.ofs: 320 */
++	struct iwl4965_eeprom_channel band_24_channels[7]; /* abs.ofs: 320 */
+ 	u8 reserved11[2];
++
++/*
++ * 5.2 GHz FAT channels 36 (40), 44 (48), 52 (56), 60 (64),
++ * 100 (104), 108 (112), 116 (120), 124 (128), 132 (136), 149 (153), 157 (161)
++ */
+ #define EEPROM_REGULATORY_BAND_52_FAT_CHANNELS (2*0xA8)	/* 22 bytes */
+-	struct iwl4965_eeprom_channel band_52_channels[11];	/* abs.ofs: 336 */
++	struct iwl4965_eeprom_channel band_52_channels[11]; /* abs.ofs: 336 */
+ 	u8 reserved12[6];
++
++/*
++ * 4965 driver requires txpower calibration format version 5 or greater.
++ * Driver does not work with txpower calibration version < 5.
++ * This value is simply a 16-bit number, no major/minor versions here.
++ */
+ #define EEPROM_CALIB_VERSION_OFFSET            (2*0xB6)	/* 2 bytes */
+ 	u16 calib_version;	/* abs.ofs: 364 */
+ 	u8 reserved13[2];
++
+ #define EEPROM_SATURATION_POWER_OFFSET         (2*0xB8)	/* 2 bytes */
+ 	u16 satruation_power;	/* abs.ofs: 368 */
+ 	u8 reserved14[94];
++
++/*
++ * 4965 Txpower calibration data.
++ */
+ #define EEPROM_IWL_CALIB_TXPOWER_OFFSET        (2*0xE8)	/* 48  bytes */
+ 	struct iwl4965_eeprom_calib_info calib_info;	/* abs.ofs: 464 */
+ 
+@@ -317,6 +479,7 @@ struct iwl4965_eeprom {
+ 
+ #define IWL_EEPROM_IMAGE_SIZE 1024
+ 
++/* End of EEPROM */
+ 
+ #include "iwl-4965-commands.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 5dee8e5..7d95de9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4687,14 +4687,23 @@ struct pci_device_id iwl4965_hw_card_ids[] = {
+ 	{0}
+ };
+ 
++/*
++ * The device's EEPROM semaphore prevents conflicts between driver and uCode
++ * when accessing the EEPROM; each access is a series of pulses to/from the
++ * EEPROM chip, not a single event, so even reads could conflict if they
++ * weren't arbitrated by the semaphore.
++ */
+ int iwl4965_eeprom_acquire_semaphore(struct iwl4965_priv *priv)
+ {
+ 	u16 count;
+ 	int rc;
+ 
+ 	for (count = 0; count < EEPROM_SEM_RETRY_LIMIT; count++) {
++		/* Request semaphore */
+ 		iwl4965_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+ 			CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
++
++		/* See if we got it */
+ 		rc = iwl4965_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
+ 					CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM,
+ 					CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM,
 -- 
 1.5.3.6
