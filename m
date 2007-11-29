@@ -1,49 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:40400 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752158AbXKSWkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 17:40:40 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH v3] remove bcm43xx
-Date: Mon, 19 Nov 2007 23:57:43 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
+Received: from nz-out-0506.google.com ([64.233.162.227]:49300 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757253AbXK2EMJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 23:12:09 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1315692nze
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2007 20:12:07 -0800 (PST)
+Message-ID: <787b0d920711282012k38d6d2c8g2d9ae79c89b04059@mail.gmail.com> (sfid-20071129_041212_624563_9B731240)
+Date: Wed, 28 Nov 2007 23:12:06 -0500
+From: "Albert Cahalan" <acahalan@gmail.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH] libertas: remove user-specified channel list
+Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org
-References: <20071119202121.6ad3fa70@morte> <200711192300.12183.rjw@sisk.pl> <20071119231935.535674ba@morte>
-In-Reply-To: <20071119231935.535674ba@morte>
+	libertas-dev@lists.infradead.org
+In-Reply-To: <200711281730.21327.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200711192357.44407.rjw@sisk.pl> (sfid-20071119_224049_686469_3D7B65CA)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200711281730.21327.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, 19 of November 2007, Stefano Brivio wrote:
-> On Mon, 19 Nov 2007 23:00:11 +0100
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > Well, are you 100% sure that everyone interested knows that this drivers
-> > is going out in 2.6.25 and no one will object?
-> 
-> The maintainers know.
+On Nov 28, 2007 11:30 AM, Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
+> Remove the ability to specify channels to scan via debugfs
 
-I mean the users.
-
-> Having both drivers in 2.6.24 should help find out if 
-> there's anything which should be ironed out with b43/b43legacy, but right
-> now they are already working a lot better than bcm43xx, and they are more
-> stable. So I couldn't find a reason why we shouldn't remove bcm43xx in
-> 2.6.25.
-
-Many people use the old driver and you are forcing them to switch in a rather
-unfriendly fashion.
-
-Moreover, the switch generally involves a configuration change (on my system
-eth1 became wlan0) and is not _that_ seamless.
-
-IMvHO, the schedule of the removal of this driver should be discussed on LKML.
-
-Greetings,
-Rafael
+Why are you ripping out functionality? At the very least,
+that ought to be justified in the changelog comment.
