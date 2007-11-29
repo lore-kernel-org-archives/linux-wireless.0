@@ -1,56 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4458 "EHLO ra.tuxdriver.com"
+Received: from mga02.intel.com ([134.134.136.20]:25653 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754709AbXKITJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 14:09:13 -0500
-Date: Fri, 9 Nov 2007 14:08:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Dallet <ddmdllt@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: unrecognized usb card D-LINK DWA-110
-Message-ID: <20071109190855.GA32472@tuxdriver.com> (sfid-20071109_190916_940610_725F95E3)
-References: <2b74932e0711091035v323364e6n1e458e82a590dd3e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2b74932e0711091035v323364e6n1e458e82a590dd3e@mail.gmail.com>
+	id S1756401AbXK2DLC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 22:11:02 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 23/36] iwlwifi: document keep-warm buffer
+Date: Thu, 29 Nov 2007 11:10:03 +0800
+Message-Id: <1196305816-23023-24-git-send-email-yi.zhu@intel.com> (sfid-20071129_033546_613529_F955C113)
+In-Reply-To: <1196305816-23023-23-git-send-email-yi.zhu@intel.com>
+References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-17-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-18-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-19-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-21-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-22-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-23-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 09, 2007 at 07:35:40PM +0100, David Dallet wrote:
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-> Bus 004 Device 008: ID 07d1:3c07 D-Link System
-> Device Descriptor:
->   bLength                18
->   bDescriptorType         1
->   bcdUSB               2.00
->   bDeviceClass            0 (Defined at Interface level)
->   bDeviceSubClass         0
->   bDeviceProtocol         0
->   bMaxPacketSize0        64
->   idVendor           0x07d1 D-Link System
->   idProduct          0x3c07
->   bcdDevice            0.01
->   iManufacturer           1 Ralink
->   iProduct                2 802.11 bg WLAN
->   iSerial                 0
->   bNumConfigurations      1
->   (I don't paste all the lines here, but they are in http://pastebin.ca/767375)
+Document keep-warm buffer
 
-Looks like a USB Ralink device... :-)
+Consolidate flow handler address definitions
 
-Perhaps you could try this:
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   39 ++++++++++++++++++++--------
+ 1 files changed, 28 insertions(+), 11 deletions(-)
 
-	sudo modprobe rt73usb
-	sudo echo "07d1 3c07" > /sys/bus/usb/drivers/rt73usb/new_id
-
-Any chance that brings your device to life?  If not, try the above with
-"rt2500usb" instead of rt73usb?
-
-This is really just a longshot....
-
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index 40666f8..3c78e2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -1282,20 +1282,37 @@ enum {
+ 
+ /********************* END TXPOWER *****************************************/
+ 
++/****************************/
+ /* Flow Handler Definitions */
++/****************************/
+ 
+-/**********************/
+-/*     Addresses      */
+-/**********************/
+-
++/*
++ * This I/O area is directly read/writable by driver (e.g. Linux uses writel())
++ * Addresses are offsets from device's PCI hardware base address.
++ */
+ #define FH_MEM_LOWER_BOUND                   (0x1000)
+ #define FH_MEM_UPPER_BOUND                   (0x1EF0)
+ 
+-#define IWL_FH_REGS_LOWER_BOUND		     (0x1000)
+-#define IWL_FH_REGS_UPPER_BOUND		     (0x2000)
+-
++/**
++ * Keep-Warm (KW) buffer base address.
++ *
++ * Driver must allocate a 4KByte buffer that is used by 4965 for keeping the
++ * host DRAM powered on (via dummy accesses to DRAM) to maintain low-latency
++ * DRAM access when 4965 is Txing or Rxing.  The dummy accesses prevent host
++ * from going into a power-savings mode that would cause higher DRAM latency,
++ * and possible data over/under-runs, before all Tx/Rx is complete.
++ *
++ * Driver loads IWL_FH_KW_MEM_ADDR_REG with the physical address (bits 35:4)
++ * of the buffer, which must be 4K aligned.  Once this is set up, the 4965
++ * automatically invokes keep-warm accesses when normal accesses might not
++ * be sufficient to maintain fast DRAM response.
++ *
++ * Bit fields:
++ *  31-0:  Keep-warm buffer physical base address [35:4], must be 4K aligned
++ */
+ #define IWL_FH_KW_MEM_ADDR_REG		     (FH_MEM_LOWER_BOUND + 0x97C)
+ 
++
+ /* CBBC Area - Circular buffers base address cache pointers table */
+ #define FH_MEM_CBBC_LOWER_BOUND              (FH_MEM_LOWER_BOUND + 0x9D0)
+ #define FH_MEM_CBBC_UPPER_BOUND              (FH_MEM_LOWER_BOUND + 0xA10)
+@@ -1326,16 +1343,16 @@ enum {
+ #define FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV  (FH_MEM_RSSR_LOWER_BOUND + 0x008)
+ 
+ /* TCSR */
+-#define IWL_FH_TCSR_LOWER_BOUND  (IWL_FH_REGS_LOWER_BOUND + 0xD00)
+-#define IWL_FH_TCSR_UPPER_BOUND  (IWL_FH_REGS_LOWER_BOUND + 0xE60)
++#define IWL_FH_TCSR_LOWER_BOUND  (FH_MEM_LOWER_BOUND + 0xD00)
++#define IWL_FH_TCSR_UPPER_BOUND  (FH_MEM_LOWER_BOUND + 0xE60)
+ 
+ #define IWL_FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
+ 	(IWL_FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
+ 
+ /* TSSR Area - Tx shared status registers */
+ /* TSSR */
+-#define IWL_FH_TSSR_LOWER_BOUND		(IWL_FH_REGS_LOWER_BOUND + 0xEA0)
+-#define IWL_FH_TSSR_UPPER_BOUND		(IWL_FH_REGS_LOWER_BOUND + 0xEC0)
++#define IWL_FH_TSSR_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xEA0)
++#define IWL_FH_TSSR_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xEC0)
+ 
+ #define IWL_FH_TSSR_TX_STATUS_REG	(IWL_FH_TSSR_LOWER_BOUND + 0x010)
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.6
