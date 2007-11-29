@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758016AbXK1N1F (ORCPT
+Received: from shosting-26.42.nethub.hu ([87.229.26.42]:52775 "EHLO
+	shosting-26.42.nethub.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758979AbXK2V3n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 08:27:05 -0500
-Subject: [PATCH] mac80211: make ieee80211_iterate_active_interfaces not
-	need rtnl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 28 Nov 2007 10:55:32 +0100
-Message-Id: <1196243733.6058.117.camel@johannes.berg> (sfid-20071128_132710_226273_17F224E5)
-Mime-Version: 1.0
+	Thu, 29 Nov 2007 16:29:43 -0500
+Received: from [195.228.243.120] (helo=[172.16.132.202])
+	by shosting-26.42.nethub.hu with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <imi@szollosi.net>)
+	id 1IxiIu-0008O6-LW
+	for linux-wireless@vger.kernel.org; Thu, 29 Nov 2007 13:15:41 +0100
+Message-ID: <474EAD65.5050103@szollosi.net> (sfid-20071129_212947_126310_1CD0C615)
+Date: Thu, 29 Nov 2007 13:15:33 +0100
+From: =?ISO-8859-2?Q?Sz=F6ll=F5si_Imre?= <imi@szollosi.net>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 broken wifi packadges
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Interface iteration in mac80211 can be done without holding any
-locks because I converted it to RCU. Initially, I thought this
-wouldn't be needed for ieee80211_iterate_active_interfaces but
-it's turning out that multi-BSS AP support can be much simpler
-in a driver if ieee80211_iterate_active_interfaces can be called
-without holding locks. This converts it to use RCU, it adds a
-requirement that the callback it invokes cannot sleep.
+Hello!
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |    3 +--
- net/mac80211/util.c    |    7 ++++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Sorry about breaking the work.
+I'm a student from hungary and I have a trouble. My challange is, the 
+get and use the broked wifi packadge.
 
---- everything.orig/include/net/mac80211.h	2007-11-28 01:24:04.030767632 +0100
-+++ everything/include/net/mac80211.h	2007-11-28 10:51:18.718922797 +0100
-@@ -1408,10 +1408,9 @@ void ieee80211_scan_completed(struct iee
-  *
-  * This function iterates over the interfaces associated with a given
-  * hardware that are currently active and calls the callback for them.
-- * Must be called under RTNL.
-  *
-  * @hw: the hardware struct of which the interfaces should be iterated over
-- * @iterator: the iterator function to call
-+ * @iterator: the iterator function to call, cannot sleep
-  * @data: first argument of the iterator function
-  */
- void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
---- everything.orig/net/mac80211/util.c	2007-11-28 01:24:24.310766384 +0100
-+++ everything/net/mac80211/util.c	2007-11-28 01:26:40.510763509 +0100
-@@ -482,10 +482,9 @@ void ieee80211_iterate_active_interfaces
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 
--	ASSERT_RTNL();
-+	rcu_read_lock();
- 
--	/* we hold the RTNL here so can safely walk the list */
--	list_for_each_entry(sdata, &local->interfaces, list) {
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		switch (sdata->type) {
- 		case IEEE80211_IF_TYPE_INVALID:
- 		case IEEE80211_IF_TYPE_MNTR:
-@@ -504,5 +503,7 @@ void ieee80211_iterate_active_interfaces
- 			iterator(data, sdata->dev->dev_addr,
- 				 sdata->dev->ifindex);
- 	}
-+
-+	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
+I sawed, the mac80211 is able to monitor mode with an virtual interface, 
+but it's only get good  packedges of wireless traffic. We want to use it 
+to completion a wireless stream traffic.
 
+My question is, can you give me some instuction, how can i modify the 
+stack, or can you give me a patch? I'm not a programmer, only learn 
+infocommunication.
 
+Can you help me?
+
+Sorry about the tisturbance.
+
+Imre Szollosi
