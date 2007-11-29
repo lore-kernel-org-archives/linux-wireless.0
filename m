@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49978 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52121 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbXKZQ1F (ORCPT
+	with ESMTP id S1754503AbXK2Its (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2007 11:27:05 -0500
-Subject: Re: [PATCH 01/15] mac80211: adding MAC80211_HT_DEBUG config
-	variable
+	Thu, 29 Nov 2007 03:49:48 -0500
+Subject: Re: [PATCH 1/2] mac80211: set interface MAC address after driver's
+	start() is called
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-In-Reply-To: <11960864902505-git-send-email-ron.rindjunsky@intel.com>
-References: <11960864823402-git-send-email-ron.rindjunsky@intel.com>
-	 <11960864902505-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yNQe2KBQPEB31odaXpAN"
-Date: Mon, 26 Nov 2007 17:26:56 +0100
-Message-Id: <1196094416.4149.291.camel@johannes.berg> (sfid-20071126_162710_278939_904CFEFF)
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1196300047-6201-1-git-send-email-yi.zhu@intel.com> (sfid-20071129_013615_457152_DDE3939F)
+References: <1196300047-6201-1-git-send-email-yi.zhu@intel.com>
+	 (sfid-20071129_013615_457152_DDE3939F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VOfBoNsQdeMONhlklrWa"
+Date: Thu, 29 Nov 2007 09:49:34 +0100
+Message-Id: <1196326174.6058.173.camel@johannes.berg> (sfid-20071129_084953_021074_8CC2CCD4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-yNQe2KBQPEB31odaXpAN
+--=-VOfBoNsQdeMONhlklrWa
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Mon, 2007-11-26 at 16:14 +0200, Ron Rindjunsky wrote:
-> This patch adds MAC80211_HT_DEBUG config variable
-> to separate HT debug features
+On Thu, 2007-11-29 at 09:34 +0800, Zhu Yi wrote:
+> The patch enables mac80211 to set interface MAC address after the
+> interface is UP. This is useful for wireless drivers load their firmware
+> in the mac80211 interface start() callback (called when interface UP).
+> Because for kernel built-in (vs. module) network drivers, they are
+> initialized in a very early stage (even before hard disk is ready). So
+> loading firmwares in the device pci_probe time is not a good idea. Some
+> devices for example iwlwifi cannot get MAC address without firmware being
+> loaded first.
 >=20
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> It also sets mac80211 dev->validate_addr to NULL so that we don't need to
+> have a MAC address in the dev->open time.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/Kconfig |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-> index ce176e6..09711b0 100644
-> --- a/net/mac80211/Kconfig
-> +++ b/net/mac80211/Kconfig
-> @@ -51,6 +51,16 @@ config MAC80211_DEBUG
->  	  If you are not trying to debug or develop the ieee80211
->  	  subsystem, you most likely want to say N here.
-> =20
-> +config MAC80211_HT_DEBUG
-> +       bool "Enable HT debugging output"
-> +       depends on MAC80211_DEBUG
-> +       ---help---
-> +       This option enables 802.11n High Throughput features
-> +       debug tracing output.
-> +
-> +       If you are not trying to debug of develop the ieee80211
-> +       subsystem, you most likely want to say N here.
-> +
->  config MAC80211_VERBOSE_DEBUG
->  	bool "Verbose debugging output"
->  	depends on MAC80211_DEBUG
+This cannot possibly work We do a lot of MAC address sanity checking at
+_open() time *before* the place where you inserted the MAC address copy.
 
---=-yNQe2KBQPEB31odaXpAN
+Deferring MAC address setting to open() time is also *very* bad for the
+user experience because they no longer have the guarantee the the MAC
+address they see is the one that will be used when the interface is
+brought up.
+
+johannes
+
+--=-VOfBoNsQdeMONhlklrWa
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR0rzz6Vg1VMiehFYAQK2QBAAjZV+Y/iHkNzPY3HLM5DUSjgTIqcG/qoB
-TOA6X3qS+yPr8OZCZY5N28xa6TCLV07zplyFvHUkuiEgDoGwa6H3kXtL5ucKuYY/
-MHMsnViNRfc/AIfEDHjsvq3EqCEQFI0gqNaYacHzir7Oo7D3OEbHBlVvKoqbSxrq
-Se1/hOiDcf/yoOiCoVjLuCHh9NtPrXZ1TcQUcA3w605T85FW0gXXwREHRZkC8ZBj
-x73jF9nARVpCC3h5Xo+CBI3l0pyHhuW2lnSgPnxcnEWAz8zZOoU1+mio+Ld7K8W+
-169E4Qh2VuB/hJawijfh0tjfTGpg6s7ewCMTXk55eRaRasFUSuvQio6GxKrIttMa
-KUJEfXImGr0q0jFwGDhqd7GJ6WJWKgVrK3VKJ1Bf1EM/4F11RU6W5btJf+ZBEZJ7
-4n9G46mv2EP7Yz99se1GGU9M20xtYKoR9gDEvWC5cmO+ZkXmi+si6Tk/RuZztIlg
-oGWF4K++ibceFvYul5WtJc2TZgiNV+GzhLXhY1hdZaC623U+lI9xisLwwEVfiAsN
-BON3FNaBQX+uSqgYhsoFWlUIwRAJIuMUfOdMvHdNxu2mJKm0jsx3lpSS14jZZxr9
-+XWKoUEUHncV7u4Tw2mIPghGBd7indFHPWAz/FpPXgb521o+zRXRS8b+LU+0MT1l
-dxoU33EnLqg=
-=U4dm
+iQIVAwUAR059HKVg1VMiehFYAQKh+Q//ewrH2c4NBPUgG4HlO04QVm1Q5Vtb+alY
+V6j54aXZ2JywVGYgcMAn4PrJJ6/Z1yCUTMCNyDr+qm9M+mq0fo1mR5Wsth9f7xUf
+fQv6K+giP92Gie4KNEbMlXG85ZwdrO/SWq+xMrqELIKYKyV2WhblI2a64gDfIJjQ
+1xxaH1wlPcAI6uOINPQIx0W44NU7LdkO0CwOyQeYVuMlE5V6ANLoisK4VQI9DRYS
+qEoWBNLRGQOWBI+tfR/Wy65aC/kD6QrfBhekXFhYSH269GivGyfIk0RprWinUILI
+iCVfbSFTy8tgbXwXU1fGqMe6L3cnTIpRKAbkfMMu+EXqx8Pzox7FQKarHuvKsI9j
+NpchxL7VxGTfoCaUxZOSPhHzaTgJ5p8BgOlcZzdzNIC05b2niwrdyrVO+0eVLv3P
+8BxIdpYGP6V34pAjkLBigEu3dJePxMjPxJcQKS7AURvgTFCLDNXMSUafUquhXnYu
+ZUsdKpQLdX6Qcs/QnUiwVmyF851/0rSKTR3tQwGXTlLbPuuUn3Ghd8hZwazySdcG
+IDhXdmbsO/Oke9XpCUv9lXfQErnXw7kcOPOOyO13MfJmp4Zocd+iSXpgXeoG8tG5
+Oyospe7rnZbs0gGsfUGc/JuwwRAIT9qb+IcquVcS2B1MHW+g1aHt1ZuJTyMLf1l4
+kl09Agq0gAI=
+=MtVj
 -----END PGP SIGNATURE-----
 
---=-yNQe2KBQPEB31odaXpAN--
+--=-VOfBoNsQdeMONhlklrWa--
 
