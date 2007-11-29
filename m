@@ -1,82 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:35864 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951AbXKFOsm (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:61431 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760658AbXK2NKl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 09:48:42 -0500
-Received: from [99.236.101.138] (helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1IpPjO-0004Fb-C6
-	for linux-wireless@vger.kernel.org; Tue, 06 Nov 2007 09:48:42 -0500
-Date: Tue, 6 Nov 2007 09:47:02 -0500 (EST)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] WIRELESS:  Use more obvious "is_power_of_2" macro.
-Message-ID: <Pine.LNX.4.64.0711060945510.5429@localhost.localdomain> (sfid-20071106_144846_065180_75F3A9F3)
+	Thu, 29 Nov 2007 08:10:41 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1537060rvb
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2007 05:10:40 -0800 (PST)
+Message-ID: <43e72e890711290510m7c1dff15jf7e0e8f5b6166921@mail.gmail.com> (sfid-20071129_131043_502298_D3C9D0E5)
+Date: Thu, 29 Nov 2007 08:10:40 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: [BUG] libertas: probing for Marvell USB8388 fails
+Cc: linux-wireless@vger.kernel.org,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	"Dan Williams" <dcbw@redhat.com>
+In-Reply-To: <200711291020.31946.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <20071117023548.79a7a33c@morte>
+	 <1195502746.6479.11.camel@localhost.localdomain>
+	 <20071119213123.084d40f7@morte>
+	 <200711291020.31946.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Nov 29, 2007 4:20 AM, Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
+> > > Which branch of wireless-2.6 are you running?  What kernel
+> > > version?
+> >
+> > Branch everything, head:
+> > 1efded8eb6a7554748ca9486a9902fa6e86ff4a7.
+>
+> I can't find this.
+>
+> $ git clone --reference /usr/src/linux-git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+> $ cd wireless-2.6; git checkout -b everything origin/everything
+> $ git show 1efded8eb6a7554748ca9486a9902fa6e86ff4a7
+> fatal: bad object 1efded8eb6a7554748ca9486a9902fa6e86ff4a7
+>
+> My head is
+>
+> $ git log | head -1
+> commit 301df40749bdf144c72637795ba93d82e4b84682
 
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+That is indeed the latest SHA for #everything. Anyway the SHA on each
+commit changes upon rebase. It seems this is what happened. You're
+probably better off checking based on date. I believe Stefano's issues
+are the same ones as the one I reported. Would it have to do with the
+old bcdVersion? Does the device need its firmware upgraded first? If
+so how do we do this?
 
----
-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 4f22a71..53b4b4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -50,6 +50,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-+#include <linux/log2.h>
-
- #include <net/ieee80211_radiotap.h>
- #include <net/mac80211.h>
-@@ -343,7 +344,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
-
- 	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
- 	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
--	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
-+	BUILD_BUG_ON(!is_power_of_2(TFD_QUEUE_SIZE_MAX));
- 	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
-
- 	iwl_hw_tx_queue_init(priv, txq);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index d60adcb..5f3bcb3 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -50,6 +50,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-+#include <linux/log2.h>
-
- #include <net/ieee80211_radiotap.h>
- #include <net/mac80211.h>
-@@ -342,7 +343,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
-
- 	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
- 	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
--	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
-+	BUILD_BUG_ON(!is_power_of_2(TFD_QUEUE_SIZE_MAX));
- 	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
-
- 	iwl_hw_tx_queue_init(priv, txq);
-
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+  Luis
