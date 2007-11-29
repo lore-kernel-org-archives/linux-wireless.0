@@ -1,174 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37704 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:56321 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751233AbXKIICU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 03:02:20 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	tomas.winkler@intel.com, flamingice@sourmilk.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 03/14] mac80211: adding 802.11n HT framework definitions
-Date: Fri,  9 Nov 2007 10:01:55 +0200
-Message-Id: <11945953312367-git-send-email-ron.rindjunsky@intel.com> (sfid-20071109_081156_176145_DECB4D18)
-In-Reply-To: <11945953312850-git-send-email-ron.rindjunsky@intel.com>
-References: <1194595326527-git-send-email-ron.rindjunsky@intel.com>
- <11945953311871-git-send-email-ron.rindjunsky@intel.com>
- <11945953312850-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1759614AbXK2Tet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 14:34:49 -0500
+Subject: Re: [PATCH] libertas: tweak association debug output
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200711281405.03005.hs4233@mail.mn-solutions.de>
+References: <200711281405.03005.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 29 Nov 2007 14:29:02 -0500
+Message-Id: <1196364542.11556.23.camel@localhost.localdomain> (sfid-20071129_193452_905893_BC436010)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New structures:
- - ieee80211_ht_info: describing STA's HT capabilities
- - ieee80211_ht_bss_info: describing BSS's HT characteristics
-Changed structures:
- - ieee80211_hw_mode: now also holds PHY HT capabilities for each HW mode
- - ieee80211_conf: ht_conf holds current self HT configuration
-		   ht_bss_conf holds current BSS HT configuration
- - flag IEEE80211_CONF_SUPPORT_HT_MODE added to indicate if HT use is
-   desired
- - sta_info: now also holds Peer's HT capabilities
+On Wed, 2007-11-28 at 14:05 +0100, Holger Schurig wrote:
+> Change debug output codes from LBS_DEB_JOIN to LBS_DEB_ASSOC
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h  |   61 +++++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/sta_info.h |    5 ++++
- 2 files changed, 62 insertions(+), 4 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Index: wl2_6_24_HT/include/net/mac80211.h
-===================================================================
---- wl2_6_24_HT.orig/include/net/mac80211.h
-+++ wl2_6_24_HT/include/net/mac80211.h
-@@ -138,18 +138,59 @@ enum ieee80211_phymode {
- 	NUM_IEEE80211_MODES
- };
- 
-+#ifdef CONFIG_MAC80211_HT
-+
-+/**
-+ * struct ieee80211_ht_info - describing STA's HT capabilities
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11n HT capabilities for an STA.
-+ *
-+ * @ht_supported: is HT supported by STA, 0: no, 1: yes
-+ * @cap: HT capabilities map as described in 802.11n spec
-+ * @ampdu_factor: Maximum A-MPDU length factor
-+ * @ampdu_density: Minimum A-MPDU spacing
-+ * @supp_mcs_set: Supported MCS set as described in 802.11n spec
-+ */
-+struct ieee80211_ht_info {
-+	u8 ht_supported;
-+	u16 cap; /* use IEEE80211_HT_CAP_ */
-+	u8 ampdu_factor;
-+	u8 ampdu_density;
-+	u8 supp_mcs_set[16];
-+};
-+
-+/**
-+ * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11n HT characteristics in a BSS
-+ *
-+ * @primary_channel: channel number of primery channel
-+ * @bss_cap: 802.11n's general BSS capabilities (e.g. channel width)
-+ * @bss_op_mode: 802.11n's BSS operation modes (e.g. HT protection)
-+ */
-+struct ieee80211_ht_bss_info {
-+	u8 primary_channel;
-+	u8 bss_cap;  /* use IEEE80211_HT_IE_CHA_ */
-+	u8 bss_op_mode; /* use IEEE80211_HT_IE_ */
-+};
-+
-+#endif	/* CONFIG_MAC80211_HT */
-+
- /**
-  * struct ieee80211_hw_mode - PHY mode definition
-  *
-  * This structure describes the capabilities supported by the device
-  * in a single PHY mode.
-  *
-+ * @list: internal
-+ * @channels: pointer to array of supported channels
-+ * @rates: pointer to array of supported bitrates
-  * @mode: the PHY mode for this definition
-  * @num_channels: number of supported channels
-- * @channels: pointer to array of supported channels
-  * @num_rates: number of supported bitrates
-- * @rates: pointer to array of supported bitrates
-- * @list: internal
-+ * @ht_info: PHY's 802.11n HT abilities for this mode
-  */
- struct ieee80211_hw_mode {
- 	struct list_head list;
-@@ -158,6 +199,9 @@ struct ieee80211_hw_mode {
- 	enum ieee80211_phymode mode;
- 	int num_channels;
- 	int num_rates;
-+#ifdef CONFIG_MAC80211_HT
-+	struct ieee80211_ht_info ht_info;
-+#endif /* CONFIG_MAC80211_HT */
- };
- 
- /**
-@@ -406,11 +450,14 @@ struct ieee80211_tx_status {
-  *
-  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
-  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
-- *
-+ * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_SHORT_SLOT_TIME	= 1<<0,
- 	IEEE80211_CONF_RADIOTAP		= 1<<1,
-+#ifdef CONFIG_MAC80211_HT
-+	IEEE80211_CONF_SUPPORT_HT_MODE	= 1<<2,
-+#endif /* CONFIG_MAC80211_HT */
- };
- 
- /**
-@@ -434,6 +481,8 @@ enum ieee80211_conf_flags {
-  * @antenna_sel_tx: transmit antenna selection, 0: default/diversity,
-  *	1/2: antenna 0/1
-  * @antenna_sel_rx: receive antenna selection, like @antenna_sel_tx
-+ * @ht_conf: describes current self configuration of 802.11n HT capabilies
-+ * @ht_bss_conf: describes current BSS configuration of 802.11n HT parameters
-  */
- struct ieee80211_conf {
- 	int channel;			/* IEEE 802.11 channel number */
-@@ -452,6 +501,10 @@ struct ieee80211_conf {
- 	u8 antenna_max;
- 	u8 antenna_sel_tx;
- 	u8 antenna_sel_rx;
-+#ifdef CONFIG_MAC80211_HT
-+	struct ieee80211_ht_info ht_conf;
-+	struct ieee80211_ht_bss_info ht_bss_conf;
-+#endif /* CONFIG_MAC80211_HT */
- };
- 
- /**
-Index: wl2_6_24_HT/net/mac80211/sta_info.h
-===================================================================
---- wl2_6_24_HT.orig/net/mac80211/sta_info.h
-+++ wl2_6_24_HT/net/mac80211/sta_info.h
-@@ -99,6 +99,11 @@ struct sta_info {
- 
- 	u16 listen_interval;
- 
-+#ifdef CONFIG_MAC80211_HT
-+	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
-+					     of this STA */
-+#endif /* CONFIG_MAC80211_HT */
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
- 		struct dentry *dir;
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> ---
+> The lines I removed (e.g. BSSID) were emitted several times
+> 
+> While passing, make lines touched by the patch checkpatch.pl clean
+> 
+> Index: wireless-2.6/drivers/net/wireless/libertas/join.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/join.c	2007-11-28 09:35:57.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/join.c	2007-11-28 09:41:59.000000000 +0100
+> @@ -57,7 +57,7 @@ static int get_common_rates(struct lbs_a
+>  	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
+>  	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates, num_card_rates);
+>  	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+> -	lbs_deb_join("Tx datarate is currently 0x%X\n", adapter->cur_rate);
+> +	lbs_deb_join("TX data rate 0x%02x\n", adapter->cur_rate);
+>  
+>  	if (!adapter->auto_rate) {
+>  		for (i = 0; i < tmp_size; i++) {
+> @@ -128,7 +128,7 @@ int lbs_associate(struct lbs_private *pr
+>  	struct lbs_adapter *adapter = priv->adapter;
+>  	int ret;
+>  
+> -	lbs_deb_enter(LBS_DEB_JOIN);
+> +	lbs_deb_enter(LBS_DEB_ASSOC);
+>  
+>  	ret = lbs_prepare_and_send_command(priv, CMD_802_11_AUTHENTICATE,
+>  				    0, CMD_OPTION_WAITFORRSP,
+> @@ -150,7 +150,7 @@ int lbs_associate(struct lbs_private *pr
+>  				    0, CMD_OPTION_WAITFORRSP, 0, assoc_req);
+>  
+>  done:
+> -	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
+> +	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+>  	return ret;
+>  }
+>  
+> @@ -324,7 +324,7 @@ int lbs_cmd_80211_authenticate(struct lb
+>  
+>  	memcpy(pauthenticate->macaddr, bssid, ETH_ALEN);
+>  
+> -	lbs_deb_join("AUTH_CMD: BSSID is : %s auth=0x%X\n",
+> +	lbs_deb_join("AUTH_CMD: BSSID %s, auth 0x%x\n",
+>  	             print_mac(mac, bssid), pauthenticate->authtype);
+>  	ret = 0;
+>  
+> @@ -372,7 +372,7 @@ int lbs_cmd_80211_associate(struct lbs_p
+>  	struct mrvlietypes_ratesparamset *rates;
+>  	struct mrvlietypes_rsnparamset *rsn;
+>  
+> -	lbs_deb_enter(LBS_DEB_JOIN);
+> +	lbs_deb_enter(LBS_DEB_ASSOC);
+>  
+>  	pos = (u8 *) passo;
+>  
+> @@ -426,7 +426,7 @@ int lbs_cmd_80211_associate(struct lbs_p
+>  	}
+>  	pos += sizeof(rates->header) + tmplen;
+>  	rates->header.len = cpu_to_le16(tmplen);
+> -	lbs_deb_join("ASSOC_CMD: num rates = %u\n", tmplen);
+> +	lbs_deb_assoc("ASSOC_CMD: num rates %u\n", tmplen);
+>  
+>  	/* Copy the infra. association rates into Current BSS state structure */
+>  	memset(&adapter->curbssparams.rates, 0, sizeof(adapter->curbssparams.rates));
+> @@ -464,11 +464,10 @@ int lbs_cmd_80211_associate(struct lbs_p
+>  	if (bss->mode == IW_MODE_INFRA)
+>  		tmpcap |= WLAN_CAPABILITY_ESS;
+>  	passo->capability = cpu_to_le16(tmpcap);
+> -	lbs_deb_join("ASSOC_CMD: capability=%4X CAPINFO_MASK=%4X\n",
+> -		     tmpcap, CAPINFO_MASK);
+> +	lbs_deb_assoc("ASSOC_CMD: capability 0x%04x\n", tmpcap);
+>  
+>  done:
+> -	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
+> +	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+>  	return ret;
+>  }
+>  
+> @@ -706,10 +705,10 @@ int lbs_ret_80211_associate(struct lbs_p
+>  	struct bss_descriptor * bss;
+>  	u16 status_code;
+>  
+> -	lbs_deb_enter(LBS_DEB_JOIN);
+> +	lbs_deb_enter(LBS_DEB_ASSOC);
+>  
+>  	if (!adapter->in_progress_assoc_req) {
+> -		lbs_deb_join("ASSOC_RESP: no in-progress association request\n");
+> +		lbs_deb_assoc("ASSOC_RESP: no in-progress assoc request\n");
+>  		ret = -1;
+>  		goto done;
+>  	}
+> @@ -738,30 +737,25 @@ int lbs_ret_80211_associate(struct lbs_p
+>  	status_code = le16_to_cpu(passocrsp->statuscode);
+>  	switch (status_code) {
+>  	case 0x00:
+> -		lbs_deb_join("ASSOC_RESP: Association succeeded\n");
+>  		break;
+>  	case 0x01:
+> -		lbs_deb_join("ASSOC_RESP: Association failed; invalid "
+> -		             "parameters (status code %d)\n", status_code);
+> +		lbs_deb_assoc("ASSOC_RESP: invalid parameters\n");
+>  		break;
+>  	case 0x02:
+> -		lbs_deb_join("ASSOC_RESP: Association failed; internal timer "
+> -		             "expired while waiting for the AP (status code %d)"
+> -		             "\n", status_code);
+> +		lbs_deb_assoc("ASSOC_RESP: internal timer "
+> +			"expired while waiting for the AP\n");
+>  		break;
+>  	case 0x03:
+> -		lbs_deb_join("ASSOC_RESP: Association failed; association "
+> -		             "was refused by the AP (status code %d)\n",
+> -		             status_code);
+> +		lbs_deb_assoc("ASSOC_RESP: association "
+> +			"refused by AP\n");
+>  		break;
+>  	case 0x04:
+> -		lbs_deb_join("ASSOC_RESP: Association failed; authentication "
+> -		             "was refused by the AP (status code %d)\n",
+> -		             status_code);
+> +		lbs_deb_assoc("ASSOC_RESP: authentication "
+> +			"refused by AP\n");
+>  		break;
+>  	default:
+> -		lbs_deb_join("ASSOC_RESP: Association failed; reason unknown "
+> -		             "(status code %d)\n", status_code);
+> +		lbs_deb_assoc("ASSOC_RESP: failure reason 0x%02x "
+> +			" unknown\n", status_code);
+>  		break;
+>  	}
+>  
+> @@ -771,22 +765,19 @@ int lbs_ret_80211_associate(struct lbs_p
+>  		goto done;
+>  	}
+>  
+> -	lbs_deb_hex(LBS_DEB_JOIN, "ASSOC_RESP", (void *)&resp->params,
+> +	lbs_deb_hex(LBS_DEB_ASSOC, "ASSOC_RESP", (void *)&resp->params,
+>  		le16_to_cpu(resp->size) - S_DS_GEN);
+>  
+>  	/* Send a Media Connected event, according to the Spec */
+>  	adapter->connect_status = LBS_CONNECTED;
+>  
+> -	lbs_deb_join("ASSOC_RESP: assocated to '%s'\n",
+> -	             escape_essid(bss->ssid, bss->ssid_len));
+> -
+>  	/* Update current SSID and BSSID */
+>  	memcpy(&adapter->curbssparams.ssid, &bss->ssid, IW_ESSID_MAX_SIZE);
+>  	adapter->curbssparams.ssid_len = bss->ssid_len;
+>  	memcpy(adapter->curbssparams.bssid, bss->bssid, ETH_ALEN);
+>  
+> -	lbs_deb_join("ASSOC_RESP: currentpacketfilter is %x\n",
+> -	       adapter->currentpacketfilter);
+> +	lbs_deb_assoc("ASSOC_RESP: currentpacketfilter is 0x%x\n",
+> +		adapter->currentpacketfilter);
+>  
+>  	adapter->SNR[TYPE_RXPD][TYPE_AVG] = 0;
+>  	adapter->NF[TYPE_RXPD][TYPE_AVG] = 0;
+> @@ -809,7 +800,7 @@ int lbs_ret_80211_associate(struct lbs_p
+>  	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
+>  
+>  done:
+> -	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
+> +	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+>  	return ret;
+>  }
+>  
+> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2007-11-28 09:35:57.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2007-11-28 09:42:07.000000000 +0100
+> @@ -638,20 +638,19 @@ void lbs_association_worker(struct work_
+>  
+>  		ret = assoc_helper_associate(priv, assoc_req);
+>  		if (ret) {
+> -			lbs_deb_assoc("ASSOC: association attempt unsuccessful: %d\n",
+> +			lbs_deb_assoc("ASSOC: association unsuccessful: %d\n",
+>  				ret);
+>  			success = 0;
+>  		}
+>  
+>  		if (adapter->connect_status != LBS_CONNECTED) {
+> -			lbs_deb_assoc("ASSOC: association attempt unsuccessful, "
+> -				"not connected.\n");
+> +			lbs_deb_assoc("ASSOC: association unsuccessful, "
+> +				"not connected\n");
+>  			success = 0;
+>  		}
+>  
+>  		if (success) {
+> -			lbs_deb_assoc("ASSOC: association attempt successful. "
+> -				"Associated to '%s' (%s)\n",
+> +			lbs_deb_assoc("ASSOC: associated to '%s', %s\n",
+>  				escape_essid(adapter->curbssparams.ssid,
+>  				             adapter->curbssparams.ssid_len),
+>  				print_mac(mac, adapter->curbssparams.bssid));
+> Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 09:35:45.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-11-28 09:42:07.000000000 +0100
+> @@ -31,7 +31,7 @@ void lbs_mac_event_disconnected(struct l
+>  	if (adapter->connect_status != LBS_CONNECTED)
+>  		return;
+>  
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> +	lbs_deb_enter(LBS_DEB_ASSOC);
+>  
+>  	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
+>  	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+> @@ -60,11 +60,6 @@ void lbs_mac_event_disconnected(struct l
+>  	memset(adapter->rawNF, 0x00, sizeof(adapter->rawNF));
+>  	adapter->nextSNRNF = 0;
+>  	adapter->numSNRNF = 0;
+> -	lbs_deb_cmd("current SSID '%s', length %u\n",
+> -	            escape_essid(adapter->curbssparams.ssid,
+> -	                         adapter->curbssparams.ssid_len),
+> -	            adapter->curbssparams.ssid_len);
+> -
+>  	adapter->connect_status = LBS_DISCONNECTED;
+>  
+>  	/* Clear out associated SSID and BSSID since connection is
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
