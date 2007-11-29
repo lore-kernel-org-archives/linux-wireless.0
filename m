@@ -1,60 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48945 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758555AbXKHUDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2007 15:03:30 -0500
-Subject: Re: mac80211 and SIOCSIWAUTH
-From: Dan Williams <dcbw@redhat.com>
-To: =?UTF-8?Q?=D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=D0=B8=D0=BD_?=
-	 =?UTF-8?Q?=D0=9D=D0=B8=D0=BA=D0=B8=D1=82=D0=B0?=
-	<nvetoshkin@naumen.ru>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47335980.4070103@naumen.ru>
-References: <47335980.4070103@naumen.ru>
-Content-Type: text/plain; charset=utf-8
-Date: Thu, 08 Nov 2007 15:00:53 -0500
-Message-Id: <1194552053.31657.0.camel@localhost.localdomain> (sfid-20071108_200338_034151_864C1C1D)
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35864
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534AbXK2TAt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 14:00:49 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Fix radio LED problem
+Date: Thu, 29 Nov 2007 19:58:45 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <474dfe58.85Rcj/BwOPxQm8eE%Larry.Finger@lwfinger.net>
+In-Reply-To: <474dfe58.85Rcj/BwOPxQm8eE%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711291958.45631.mb@bu3sch.de> (sfid-20071129_190053_541430_02CB71A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-11-08 at 23:46 +0500, =D0=92=D0=B5=D1=82=D0=BE=D1=88=D0=BA=
-=D0=B8=D0=BD =D0=9D=D0=B8=D0=BA=D0=B8=D1=82=D0=B0 wrote:
-> Hi, I'm a user of Lenovo R61 laptop with Intel 3945 wireless card. I=20
-> have Gentoo and would like to use the iwlwifi + wpa_supplicant driver=
-,=20
-> but I can't because Wi-Fi installed in our office needs WPA2=20
-> authentication and I can't connect to it. There no problems using ipw=
-3945d.
-> #wpa_supplicant config
-> ap_scan=3D2
-> network=3D{
->          ssid=3D"point1"
->          key_mgmt=3DWPA-EAP
->          scan_ssid=3D1
->          identity=3D"nvetoshkin"
->          proto=3DWPA2
->          eap=3DTLS
->          ca_cert=3D"/home/nekto/certificate.pem"
->          private_key=3D"/home/nekto/nvetoshkin.p12"
->          private_key_passwd=3D"nvetoshkin"
-> }
-> ioctl[SIOCSIWAUTH]: Operation not supported - this error always appea=
-rs=20
-> in wpa_supplicant output. I digged a bit in source code and found out=
-=20
-> that it is mac80211 subsystem who returns ENOTSUP.
-> Is it really the cause of my problems or am I just confused?
+On Thursday 29 November 2007 00:48:40 Larry Finger wrote:
 
-There's a number of SIOCSIWAUTH sub-options, and not all are necessary,
-and not all are supported by every driver.  That's normal.  Ignore the
-wpa_supplicant message.
+> Index: wireless-2.6/drivers/net/wireless/b43/rfkill.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/b43/rfkill.c
+> +++ wireless-2.6/drivers/net/wireless/b43/rfkill.c
+> @@ -60,8 +60,12 @@ static void b43_rfkill_poll(struct input
+>  	}
+>  	mutex_unlock(&wl->mutex);
+>  
+> -	if (unlikely(report_change))
+> -		input_report_key(poll_dev->input, KEY_WLAN, enabled);
+> +	/* send the radio switch event to the system - note both a key press
+> +	 * and a release are required */
 
-Dan
+Ok, nice. Didn't know that.
+
+> +	if (unlikely(report_change)) {
+> +		input_report_key(poll_dev->input, KEY_WLAN, 1);
+> +		input_report_key(poll_dev->input, KEY_WLAN, 0);
+> +	}
+>  }
+>  
+>  /* Called when the RFKILL toggled in software. */
+> @@ -133,6 +137,12 @@ void b43_rfkill_init(struct b43_wldev *d
+>  	rfk->poll_dev->poll = b43_rfkill_poll;
+>  	rfk->poll_dev->poll_interval = 1000; /* msecs */
+>  
+> +	rfk->poll_dev->input->name = rfk->name;
+> +	rfk->poll_dev->input->id.bustype = BUS_HOST;
+> +	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
+> +	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
+> +	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
+> +
+>  	err = rfkill_register(rfk->rfkill);
+>  	if (err)
+>  		goto err_free_polldev;
+> Index: wireless-2.6/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-2.6/drivers/net/wireless/b43/main.c
+> @@ -2156,7 +2156,6 @@ static void b43_mgmtframe_txantenna(stru
+>  static void b43_chip_exit(struct b43_wldev *dev)
+>  {
+>  	b43_radio_turn_off(dev, 1);
+> -	b43_leds_exit(dev);
+>  	b43_gpio_cleanup(dev);
+>  	/* firmware is released later */
+>  }
+> @@ -2184,11 +2183,10 @@ static int b43_chip_init(struct b43_wlde
+>  	err = b43_gpio_init(dev);
+>  	if (err)
+>  		goto out;	/* firmware is released later */
+> -	b43_leds_init(dev);
+>  
+>  	err = b43_upload_initvals(dev);
+>  	if (err)
+> -		goto err_leds_exit;
+> +		goto err_gpio_clean;
+>  	b43_radio_turn_on(dev);
+>  
+>  	b43_write16(dev, 0x03E6, 0x0000);
+> @@ -2267,8 +2265,7 @@ out:
+>  
+>  err_radio_off:
+>  	b43_radio_turn_off(dev, 1);
+> -err_leds_exit:
+> -	b43_leds_exit(dev);
+> +err_gpio_clean:
+>  	b43_gpio_cleanup(dev);
+>  	return err;
+>  }
+> @@ -2703,7 +2700,8 @@ static int b43_antenna_from_ieee80211(u8
+>  static int b43_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+>  {
+>  	struct b43_wl *wl = hw_to_b43_wl(hw);
+> -	struct b43_wldev *dev;
+> +	struct b43_rfkill *rfk = &(wl->rfkill);
+> +	struct b43_wldev *uninitialized_var(dev);
+>  	struct b43_phy *phy;
+>  	unsigned long flags;
+>  	unsigned int new_phymode = 0xFFFF;
+> @@ -2802,6 +2800,13 @@ static int b43_op_config(struct ieee8021
+>        out_unlock_mutex:
+>  	mutex_unlock(&wl->mutex);
+>  
+> +	/* if a LED is devoted to the radio and the switch is on, send
+> +	 * KEY_WLAN press/release keystrokes */
+> +	if (!err && dev->radio_hw_enable && &dev->led_radio) {
+                                            ^^^^^^^^^^^^^^^
+This condition is always true.
+
+> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 1);
+> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 0);
+> +	}
+> +
+
+Anyway, sending a key event here seems pretty bogus. The comment
+doesn't really say anything useful why this is needed.
+
+>  	return err;
+>  }
+>  
+> @@ -3284,9 +3289,7 @@ static void b43_wireless_core_exit(struc
+>  		return;
+>  	b43_set_status(dev, B43_STAT_UNINIT);
+>  
+> -	mutex_unlock(&dev->wl->mutex);
+> -	b43_rfkill_exit(dev);
+> -	mutex_lock(&dev->wl->mutex);
+> +	b43_leds_exit(dev);
+>  
+>  	b43_rng_exit(dev->wl);
+>  	b43_pio_free(dev);
+> @@ -3409,8 +3412,8 @@ static int b43_wireless_core_init(struct
+>  	memset(wl->mac_addr, 0, ETH_ALEN);
+>  	b43_upload_card_macaddress(dev);
+>  	b43_security_init(dev);
+> -	b43_rfkill_init(dev);
+>  	b43_rng_init(wl);
+> +	b43_leds_init(dev);
+>  
+>  	b43_set_status(dev, B43_STAT_INITIALIZED);
+>  
+> @@ -3503,6 +3506,7 @@ static int b43_op_start(struct ieee80211
+>  	int did_init = 0;
+>  	int err = 0;
+>  
+> +	b43_rfkill_init(dev);
+
+Init rfkill _after_ the device is up.
+
+>  	mutex_lock(&wl->mutex);
+>  
+>  	if (b43_status(dev) < B43_STAT_INITIALIZED) {
+> @@ -3537,6 +3541,7 @@ static void b43_op_stop(struct ieee80211
+>  		b43_wireless_core_stop(dev);
+>  	b43_wireless_core_exit(dev);
+>  	mutex_unlock(&wl->mutex);
+> +	b43_rfkill_exit(dev);
+
+Exit rfkill before the device is going down.
+
+>  }
+>  
+>  static int b43_op_set_retry_limit(struct ieee80211_hw *hw,
+> Index: wireless-2.6/drivers/net/wireless/b43/leds.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/b43/leds.c
+> +++ wireless-2.6/drivers/net/wireless/b43/leds.c
+> @@ -232,4 +232,5 @@ void b43_leds_exit(struct b43_wldev *dev
+>  	b43_unregister_led(&dev->led_tx);
+>  	b43_unregister_led(&dev->led_rx);
+>  	b43_unregister_led(&dev->led_assoc);
+> +	b43_unregister_led(&dev->led_radio);
+>  }
+> 
+> 
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Greetings Michael.
