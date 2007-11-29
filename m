@@ -1,128 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:59568 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883AbXKANQe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2007 09:16:34 -0400
-Received: by py-out-1112.google.com with SMTP id u77so923247pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2007 06:16:33 -0700 (PDT)
-Message-ID: <40f31dec0711010616u4aec7f87k45c6a422d8cde9cf@mail.gmail.com> (sfid-20071101_131638_720345_1BB44768)
-Date: Thu, 1 Nov 2007 15:16:33 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH 7/7] ath5k: Add documentation for struct ath5k_rate
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>
-In-Reply-To: <20071101044059.GH21987@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071101043520.GC21987@pogo> <20071101043718.GD21987@pogo>
-	 <20071101043815.GE21987@pogo> <20071101043855.GF21987@pogo>
-	 <20071101043933.GG21987@pogo> <20071101044059.GH21987@pogo>
+Received: from mga02.intel.com ([134.134.136.20]:56161 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757013AbXK2DLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 22:11:19 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mabbas@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 34/36] iwlwifi: fix ucode assertion for RX queue overrun
+Date: Thu, 29 Nov 2007 11:10:14 +0800
+Message-Id: <1196305816-23023-35-git-send-email-yi.zhu@intel.com> (sfid-20071129_033539_523184_1EFA2927)
+In-Reply-To: <1196305816-23023-34-git-send-email-yi.zhu@intel.com>
+References: <1196305816-23023-1-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-2-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-3-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-4-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-5-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-6-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-7-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-8-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-9-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-10-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-11-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-12-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-13-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-14-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-15-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-16-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-17-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-18-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-19-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-20-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-21-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-22-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-23-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-24-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-25-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-26-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-27-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-28-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-29-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-30-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-31-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-32-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-33-git-send-email-yi.zhu@intel.com>
+ <1196305816-23023-34-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/11/1, Luis R. Rodriguez <mcgrof@gmail.com>:
-> This adds documentation for struct ath5k_rate. This also removes
-> some unused variables, lp_ack_duration and sp_ack_duration which
-> are simply unnecessary. We obviously have information about the rest
-> of the rate values, we can add more as we go, this just starts this up.
-> I'll next target cleaning up the RATE macros, think that may be there
-> the other G mode issues are in.
->
-> Changes to ath5k.h
-> Changes-licensed-under: ISC
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
-> ---
->  drivers/net/wireless/ath5k/ath5k.h |   58 +++++++++++++++++++++++++++++++----
->  1 files changed, 51 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-> index c8ab09a..7147fb4 100644
-> --- a/drivers/net/wireless/ath5k/ath5k.h
-> +++ b/drivers/net/wireless/ath5k/ath5k.h
-> @@ -549,17 +549,61 @@ struct ath5k_athchan_2ghz {
->   *      used by the rate control algorytm on MadWiFi.
->   */
->
-> -#define AR5K_MAX_RATES 32 /*max number of rates on the rate table*/
-> +/* Max number of rates on the rate table and what it seems
-> + * Atheros hardware supports */
-> +#define AR5K_MAX_RATES 32
->
-> +/**
-> + * struct ath5k_rate - rate structure
-> + *
-> + * This structure is used to get the RX rate or set the TX rate on the
-> + * hardware descriptors. It is also used for internal modulation control
-> + * and settings.
-> + *
-> + * @valid: is this a valid rate for the current mode
-> + * @modulation: respective mac80211 modulation
-> + * @rate_kbps: rate in kbit/s
-> + * @rate_code: hardware rate value, used in &struct ath5k_desc, on RX on
-> + *     &struct ath5k_rx_status.rs_rate and on TX on
-> + *     &struct ath5k_tx_status.ts_rate. Seems the ar5xxx harware supports
-> + *     up to 32 rates, indexed by 1-32. This means we really only need
-> + *     6 bits for the rate_code.
-> + * @dot11_rate: respective IEEE-802.11 rate value
-> + * @control_rate: index of rate assumed to be used to send control frames.
-> + *     This can be used to set override the value on the rate duration
-> + *     registers. This is only useful if we can override in the harware at
-> + *     what rate we want to send control frames at. Note that IEEE-802.11
-> + *     Ch. 9.6 (after IEEE 802.11g changes) defines the rate at which we
-> + *     should send ACK/CTS, if we change this value we can be breaking
-> + *     the spec.
-> + *
-> + * On RX after the &struct ath5k_desc is parsed by the appropriate
-> + * ah_proc_rx_desc() the respective hardware rate value is set in
-> + * &struct ath5k_rx_status.rs_rate. On TX the desired rate is set in
-> + * &struct ath5k_tx_status.ts_rate which is later used to setup the
-> + * &struct ath5k_desc correctly. This is the hardware rate map we are
-> + * aware of:
-> + *
-> + * rate_code   1       2       3       4       5       6       7       8
-> + * rate_kbps   3000    ?       ?       ?       ?       ?       ?       ?
-> + *
-> + * rate_code   9       10      11      12      13      14      15      16
-> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
-> + *
-> + * rate_code   17      18      19      20      21      22      23      24
-> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
-> + *
-> + * rate_code   25      26      27      28      29      30      31      32
-> + * rate_kbps   ?       ?       ?       ?       ?       ?       ?       ?
-> + *
-> + */
->  struct ath5k_rate {
-> -       u8      valid;          /* Valid for rate control */
-> +       u8      valid;
->         u32     modulation;
-> -       u16     rate_kbps;      /* Rate in kbps used in computetxtime */
-> -       u8      rate_code;      /* Rate mapping for h/w descriptors */
-> +       u16     rate_kbps;
-> +       u8      rate_code;
->         u8      dot11_rate;
-> -       u8      control_rate;   /* Rate for management frames -not used */
-> -       u16     lp_ack_duration;/* long preamble ACK duration -not used */
-> -       u16     sp_ack_duration;/* short preamble ACK duration -not used */
-> +       u8      control_rate;
->  };
->
->  /* XXX: GRR all this stuff to get leds blinking ??? (check out setcurmode) */
-> --
-> 1.5.2.5
->
->
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+This patch allows the driver to restock the RX queue early if the RX
+queue is almost empty. This will help on avoiding any ucode assert
+for the RX overrun problem.
 
-Also checkout setcurmode function, i believe we can live without all
-this led-timing stuff and clean up both rate tables and related
-functions.
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   37 ++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   38 +++++++++++++++++++++++++-
+ 2 files changed, 71 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 82e4e1c..5bef76d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4123,9 +4123,8 @@ static int iwl3945_rx_queue_restock(struct iwl3945_priv *priv)
+  * Also restock the Rx queue via iwl3945_rx_queue_restock.
+  * This is called as a scheduled work item (except for during initialization)
+  */
+-void iwl3945_rx_replenish(void *data)
++static void iwl3945_rx_allocate(struct iwl3945_priv *priv)
+ {
+-	struct iwl3945_priv *priv = data;
+ 	struct iwl3945_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl3945_rx_mem_buffer *rxb;
+@@ -4158,6 +4157,26 @@ void iwl3945_rx_replenish(void *data)
+ 		rxq->free_count++;
+ 	}
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
++}
++
++/*
++ * this should be called while priv->lock is locked
++ */
++void __iwl3945_rx_replenish(void *data)
++{
++	struct iwl3945_priv *priv = data;
++
++	iwl3945_rx_allocate(priv);
++	iwl3945_rx_queue_restock(priv);
++}
++
++
++void iwl3945_rx_replenish(void *data)
++{
++	struct iwl3945_priv *priv = data;
++	unsigned long flags;
++
++	iwl3945_rx_allocate(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl3945_rx_queue_restock(priv);
+@@ -4335,12 +4354,16 @@ static void iwl3945_rx_handle(struct iwl3945_priv *priv)
+ 	u32 r, i;
+ 	int reclaim;
+ 	unsigned long flags;
++	u8 fill_rx = 0;
++	u32 count = 0;
+ 
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	 * buffer that the driver may process (last buffer filled by ucode). */
+ 	r = iwl3945_hw_get_rx_read(priv);
+ 	i = rxq->read;
+ 
++	if (iwl3945_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
++		fill_rx = 1;
+ 	/* Rx interrupt, but nothing sent from uCode */
+ 	if (i == r)
+ 		IWL_DEBUG(IWL_DL_RX | IWL_DL_ISR, "r = %d, i = %d\n", r, i);
+@@ -4411,6 +4434,16 @@ static void iwl3945_rx_handle(struct iwl3945_priv *priv)
+ 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 		i = (i + 1) & RX_QUEUE_MASK;
++		/* If there are a lot of unused frames,
++		 * restock the Rx queue so ucode won't assert. */
++		if (fill_rx) {
++			count++;
++			if (count >= 8) {
++				priv->rxq.read = i;
++				__iwl3945_rx_replenish(priv);
++				count = 0;
++			}
++		}
+ 	}
+ 
+ 	/* Backtrack one entry */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index f806e70..c9e5b95 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4477,9 +4477,8 @@ static int iwl4965_rx_queue_restock(struct iwl4965_priv *priv)
+  * Also restock the Rx queue via iwl4965_rx_queue_restock.
+  * This is called as a scheduled work item (except for during initialization)
+  */
+-void iwl4965_rx_replenish(void *data)
++static void iwl4965_rx_allocate(struct iwl4965_priv *priv)
+ {
+-	struct iwl4965_priv *priv = data;
+ 	struct iwl4965_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl4965_rx_mem_buffer *rxb;
+@@ -4512,6 +4511,26 @@ void iwl4965_rx_replenish(void *data)
+ 		rxq->free_count++;
+ 	}
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
++}
++
++/*
++ * this should be called while priv->lock is locked
++*/
++void __iwl4965_rx_replenish(void *data)
++{
++	struct iwl4965_priv *priv = data;
++
++	iwl4965_rx_allocate(priv);
++	iwl4965_rx_queue_restock(priv);
++}
++
++
++void iwl4965_rx_replenish(void *data)
++{
++	struct iwl4965_priv *priv = data;
++	unsigned long flags;
++
++	iwl4965_rx_allocate(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl4965_rx_queue_restock(priv);
+@@ -4689,6 +4708,8 @@ static void iwl4965_rx_handle(struct iwl4965_priv *priv)
+ 	u32 r, i;
+ 	int reclaim;
+ 	unsigned long flags;
++	u8 fill_rx = 0;
++	u32 count = 0;
+ 
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	 * buffer that the driver may process (last buffer filled by ucode). */
+@@ -4699,6 +4720,9 @@ static void iwl4965_rx_handle(struct iwl4965_priv *priv)
+ 	if (i == r)
+ 		IWL_DEBUG(IWL_DL_RX | IWL_DL_ISR, "r = %d, i = %d\n", r, i);
+ 
++	if (iwl4965_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
++		fill_rx = 1;
++
+ 	while (i != r) {
+ 		rxb = rxq->queue[i];
+ 
+@@ -4768,6 +4792,16 @@ static void iwl4965_rx_handle(struct iwl4965_priv *priv)
+ 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 		i = (i + 1) & RX_QUEUE_MASK;
++		/* If there are a lot of unused frames,
++		 * restock the Rx queue so ucode wont assert. */
++		if (fill_rx) {
++			count++;
++			if (count >= 8) {
++				priv->rxq.read = i;
++				__iwl4965_rx_replenish(priv);
++				count = 0;
++			}
++		}
+ 	}
+ 
+ 	/* Backtrack one entry */
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.3.6
