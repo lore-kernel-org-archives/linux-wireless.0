@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:64500 "EHLO deine-taler.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751830AbXKXQwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2007 11:52:04 -0500
-Date: Sat, 24 Nov 2007 17:52:01 +0100
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Shaddy Baddah <shaddy_baddah@hotmail.com>,
-	David Miller <davem@davemloft.net>
-Subject: Re: ZD1211RW unaligned accesses...
-Message-ID: <20071124165201.GA31677@deine-taler.de> (sfid-20071124_165214_888211_D82137D6)
-References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com> <20071124150216.GA28153@gondor.apana.org.au>
+Received: from terminus.zytor.com ([198.137.202.10]:33574 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763229AbXK2Rvh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 12:51:37 -0500
+Message-ID: <474EFBEB.5000804@zytor.com> (sfid-20071129_175147_393184_FC885BBA)
+Date: Thu, 29 Nov 2007 09:50:35 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071124150216.GA28153@gondor.apana.org.au>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+CC: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <474C50D7.5010901@zytor.com> <20071129131107.GC8487@gondor.apana.org.au>
+In-Reply-To: <20071129131107.GC8487@gondor.apana.org.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Herbert Xu wrote:
-
-> So please try the following patch (instead of the original one)
-> which should fix all the unailgned accesses in do_rx.
+> On Tue, Nov 27, 2007 at 09:16:07AM -0800, H. Peter Anvin wrote:
+>> I wrote a patch for the IP stack to realign packets if necessary at one 
+>> point.  I should dredge it up again and submit it for collective flamage.
 > 
-> Cheers,
-> -- 
-> Visit Openswan at http://www.openswan.org/
-> Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-> Home Page: http://gondor.apana.org.au/~herbert/
-> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
-> --
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index a903645..d06b05b 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -1166,15 +1166,16 @@ static void do_rx(unsigned long mac_ptr)
->  int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
->  {
->  	struct sk_buff *skb;
-> +	unsigned int hlen = ALIGN(sizeof(struct zd_rt_hdr), 16);
->  
-> -	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
-> +	skb = dev_alloc_skb(hlen + length);
->  	if (!skb) {
->  		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
->  		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
->  		ieee->stats.rx_dropped++;
->  		return -ENOMEM;
->  	}
-> -	skb_reserve(skb, sizeof(struct zd_rt_hdr));
-> +	skb_reserve(skb, hlen - ZD_PLCP_HEADER_SIZE);
->  	memcpy(__skb_put(skb, length), buffer, length);
->  	skb_queue_tail(&mac->rx_queue, skb);
->  	tasklet_schedule(&mac->rx_tasklet);
+> As long as it doesn't penalise Ethernet (e.g., the 10Gb crowd :) it would
+> be good to have.
+> 
+> Thanks,
 
-ACK. This patch should solve it and is better than my patch.
+Uhm, most cards affected *ARE* Ethernet cards, due to the bloody 14-byte 
+header.
 
--- 
-Uli Kunitz
+But it doesn't affect architectures which have alignment, and the cost 
+of scanning a properly-aligned packet is minimal.
+
+I'll try to find it some time today.
+
+	-hpa
