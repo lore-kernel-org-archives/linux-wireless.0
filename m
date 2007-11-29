@@ -1,100 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.login.com ([192.195.240.2]:2138 "EHLO login.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755239AbXK0S3Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2007 13:29:16 -0500
-Message-ID: <474C61F9.2020602@wetwork.net> (sfid-20071127_182920_052453_06BA727A)
-Date: Tue, 27 Nov 2007 11:29:13 -0700
-From: Ehud Gavron <gavron@wetwork.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFC/T] b43: Fix Radio On/Off LED action
-References: <474c3fed.AWsUCELaFNf32i8C%Larry.Finger@lwfinger.net> <200711271713.02698.mb@bu3sch.de> <474C45B1.3050909@lwfinger.net> <200711271805.09304.mb@bu3sch.de>
-In-Reply-To: <200711271805.09304.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57684 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773AbXK2JVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 04:21:53 -0500
+Subject: Re: [PATCH 1/2] mac80211: set interface MAC address after driver's
+	start() is called
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1196327209.7614.113.camel@debian.sh.intel.com>
+References: <1196300047-6201-1-git-send-email-yi.zhu@intel.com>
+	 (sfid-20071129_013615_457152_DDE3939F)  <1196326174.6058.173.camel@johannes.berg>
+	 <1196327209.7614.113.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RKUMHOnRf+cOMpWghDfb"
+Date: Thu, 29 Nov 2007 10:21:38 +0100
+Message-Id: <1196328099.6058.175.camel@johannes.berg> (sfid-20071129_092157_921604_7E66EA42)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-
-Michael Buesch wrote:
-> On Tuesday 27 November 2007 17:28:33 Larry Finger wrote:
->   
->> Michael Buesch wrote:
->>     
->>> On Tuesday 27 November 2007 17:03:57 Larry Finger wrote:
->>> This is not how led triggers work.
->>> You are shortcutting the whole thing here. So you could as well
->>> remove the whole rfkill and LEDs code.
->>>       
->> It just plain doesn't work now. What I'm trying to do is get something to the users that will
->> restore the behavior they want while we work out the details of the rfkill and LEDs code.
->>     
->
-> Well, ok. But we don't apply this to mainline. As
-> a temporary patch for users it's OK.
->   
-Yes, it is! :)  Works great!
-$ uname -a
-Linux egdell.wetwork.net 2.6.24-rc3-LF27NOV2007 #2 SMP Tue Nov 27 
-09:19:11 MST 2007 x86_64 x86_64 x86_64 GNU/Linux
-
-E
+--=-RKUMHOnRf+cOMpWghDfb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
->   
->>> Please properly register the LED in the leds code and
->>> add a default LED trigger for the rfkill trigger.
->>> This has several advantages to the user, among the possiblility to
->>> reassign a LED to a different trigger.
->>>       
->> How do I do that?
->>     
->
-> Well, what you basically have to do it restore the old
-> mapping in b43_map_led().
-> Look at the "case B43_LED_RADIO_ALL" (and below) statement.
-> It maps these LEDs to the rfkill trigger.
-> So you have to find out which behaviour value your LED has and
-> map that to the rfkill trigger in this function.
->
-> So when the rfkill LED trigger triggers, it will enable/disable this LED.
-> That's all done behind the scenes.
->
->   
->>>> @@ -70,11 +75,13 @@ static int b43_rfkill_soft_toggle(void *
->>>>  	struct b43_wldev *dev = data;
->>>>  	struct b43_wl *wl = dev->wl;
->>>>  	int err = 0;
->>>> +	int lock = mutex_is_locked(&wl->mutex);
->>>>  
->>>>  	if (!wl->rfkill.registered)
->>>>  		return 0;
->>>>  
->>>> -	mutex_lock(&wl->mutex);
->>>> +	if (!lock)
->>>> +		mutex_lock(&wl->mutex);
->>>>         
->>> Nah, it shouldn't be locked by "current" in the first place, here.
->>> (I guess that's what you are trying to check here).
->>> That's what the !registered check above is for.
->>> This !lock check is racy.
->>>       
->> If you recall my message from yesterday, I got a locking error. That is what I'm trying to prevent.
->> I know it is racy, but I don't know the correct way to do it.
->>     
->
-> I think RFkill has a bad design regarding this.
-> It does synchronously call back into the driver from a call made by
-> the driver. That is broken by design. Maybe it's best to fix this
-> in rfkill and let it asynchronously call back on rfkill_init.
-> Synchronous callbacks from calls made by drivers are broken by design
-> and will lead to recursive lockings. We can not fix this in the driver,
-> nor work around it in a sane way. We can hack around it, though, which
-> is what the !registered flag tries to do. Though, it seems it doesn't
-> work. :)
->
->   
+On Thu, 2007-11-29 at 17:06 +0800, Zhu Yi wrote:
+> On Thu, 2007-11-29 at 09:49 +0100, Johannes Berg wrote:
+> > This cannot possibly work We do a lot of MAC address sanity checking
+> > at _open() time *before* the place where you inserted the MAC address
+> > copy.
+>=20
+> I tested the patch. It works.
+
+I know it "works". But it doesn't work when there are multiple virtual
+interfaces etc.
+
+> Anyway, Tomas pointed my assert for "iwlwifi cannot get MAC address
+> without firmware being loaded first" is not true. So I don't need to
+> change mac80211 to adapt this any more (not sure if other driver
+> requires). An updated patch for iwlwifi will be sent shortly.
+
+Great.
+
+johannes
+
+--=-RKUMHOnRf+cOMpWghDfb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR06EoaVg1VMiehFYAQITdw//YVPihOOZraED0PpMlmCI2zWfDKoZSgmf
+oo4k0oiQriS+U4Db9VSVPLSCLUZLOaQ7gGbmsfSugs2WvK00ERl+FLuFPHRkAipa
+C47Od3jptx5LbQW3hDeJpUrt5DCHFWw9edy0mElEtN7pYkgTCNQu+Ab1YyJjs347
+uwdu6A/Oq1XynQGnNLit3Zl8aDT1QANW/criK+dh2qXLa4lVjccrXLmBIod610wh
+pu+vvHtTezevq0hVzVuGEk81T3BzI/YV3gDu30O9039i3M5gPPakREv5ps7KQGEF
+J+Xu3bFUPk4/a868ooWjJLjtcCKJUMqPBakgKhy/mu6PV73RyrkWTPU7oh3lIScb
+hFgUECFVqFfDuh+WjMiB6zFeik7fksz2h/royiW6xFxutTGvIbIfPzJt7l3no8P1
+UFOBcnlEBCK0C9xvL9pxGQuk+EoHp+cF0mCSahKZJXF7mNuMNEJvj+OE8QXWaD/3
+lCEZzTg76IG+cuhS4aoFbCq7nrcvUZd6rN0hj7nbFAK50R6pKcs3MuzTL8l8gr1X
+c5zehdt4vFX1EsXvEpQoPBSbX7xLmAL/g6uthVPDNJnnwlWDs0wFjP2DDWlr6pIc
+nCZuY2TZpxSiLuzIF+nIldPlhtTlNwVMuWjd532AYkRvlEdrzz5kydHg8mDW9kC4
+QNK9ycNf+Ac=
+=h/AX
+-----END PGP SIGNATURE-----
+
+--=-RKUMHOnRf+cOMpWghDfb--
+
