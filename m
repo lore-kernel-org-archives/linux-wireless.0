@@ -1,71 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbXKJJdN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2007 04:33:13 -0500
-Subject: Re: [PATCH 2/4] o80211s: (nl80211) support for mesh interfaces and
-	set_mesh_cfg command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <473516df.18bb720a.41e8.5fdc@mx.google.com> (sfid-20071110_022645_005653_498DB7A6)
-References: <473516df.18bb720a.41e8.5fdc@mx.google.com>
-	 (sfid-20071110_022645_005653_498DB7A6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y33dC8XcJayl4yrU864x"
-Date: Sat, 10 Nov 2007 10:34:35 +0100
-Message-Id: <1194687275.7258.36.camel@johannes.berg> (sfid-20071110_093316_192833_53CD4ECB)
+Received: from mfe1.polimi.it ([131.175.12.23]:33578 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756340AbXK2EIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2007 23:08:24 -0500
+Date: Thu, 29 Nov 2007 05:02:46 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [RFC/T][PATCH][V3] mac80211: Exponential moving average
+ estimate for rc80211_simple
+Message-ID: <20071129050246.6d8deacc@morte> (sfid-20071129_040828_774606_A860F76A)
+In-Reply-To: <1196301583.7622.11.camel@localhost>
+References: <1196112605.8318.6.camel@localhost>
+	<20071127163520.028f91fb@morte>
+	<1196199484.8298.23.camel@localhost>
+	<20071128002902.5dad5804@morte>
+	<1196267661.8234.19.camel@localhost>
+	<20071128184348.2d5843d1@morte>
+	<1196301583.7622.11.camel@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 29 Nov 2007 02:59:43 +0100
+Mattias Nissler <mattias.nissler@gmx.de> wrote:
 
---=-Y33dC8XcJayl4yrU864x
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Ok, I your case study sounds reasonable :-) So I guess I'll stick with
+> averaging over fix sized time intervals. The interpolation approach you
+> suggest seems good enough. How I'd expect the rate control algorithm to
+> behave in situations with not much input data is:
+> 
+> a) Stay at the current rate, just assume conditions didn't change.
+> b) Be optimistic: Slowly ramp up tx rate, so if more data to be
+> transmitted is available, it'll get good rates from the beginning, if
+> possible.
+> 
+> I think the approach you suggest is basically a) if we aren't adjusting
+> rate heavily at the moment.
+
+Yes, because:
+1) if the number of frame errors is over some threshold, by interpolating
+the way I suggested we will probably switch to a lower rate (mostly because
+of the I term - as the slope there would be 1); this should be just fine
+because anyway we didn't need the extra bitrate, and once we need it, we'll
+have enough data to switch to an higher rate, in case. A caveat here: what
+if we don't want an high throughput but we want low latency? We'll have to
+see if your b) approach is reasonable - i.e. if the increased latency
+provided by a lower bitrate is significant;
+2) if the frame errors are below the threshold, no problem because we won't
+switch rate (if we are near to the threshold) or we'll switch to an higher
+one. We don't aim to 0 frame errors, but we aim to the threshold (and this
+threshold could be meant as a userspace parameter, maybe, and may be seen as
+a 'reliability over throughput' parameter).
+
+> Ok, this whole thing sounds very promising to me. Now that we've
+> discussed some important points, I'll go ahead and write some code,
+> probably over the weekend.
+
+If I'm not too busy, I'm going to help you.
 
 
-> @@ -36,6 +36,7 @@
->   *	%NL80211_ATTR_IFINDEX and %NL80211_ATTR_WIPHY. Can also be sent from
->   *	userspace to request deletion of a virtual interface, then requires
->   *	attribute %NL80211_ATTR_IFINDEX.
-> + * @NL80211_CMD_SET_MESH_CFG: start mesh operation
-
-So if I bring up a mesh interface and don't use SET_MESH_CFG, it won't
-operate at all?
-
-I think I'd prefer if the MESH_ID attribute would be given as part of
-SET_INTERFACE/NEW_INTERFACE instead of a new command. I'm attempting to
-keep nl80211 as object oriented as possible and this single command
-doesn't really fit the picture.
-
-In fact, you could deny creating a MESH type interface when no mesh ID
-is given, that would be more obvious to the user imho than to deny
-bringing it up later.
-
-johannes
-
---=-Y33dC8XcJayl4yrU864x
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzV7KqVg1VMiehFYAQJ8sQ/9EZWWzt2gLMtRMUCbZdGHzYV7rjCuNx77
-c1uf2o1WovEF85u4wxnjLaNR25l2h6i0ilh5c/2GxT/lWISiouKEp79Wlo4VG+Iw
-hNvQWEh/j5qTyKABmugTT20Qf5Ogd+REbBURSGt+2ZmSCf/MMwEWuaAm5HqgQGd1
-tu2lbJdKyjy/5P6gPt4RRozZqGNKXCk3iQeWjCIu7BdkSsd7JlXr46ny+1L7BM+g
-3dZOpyQUle0plbJgKovnlJBCa46pi/oCx9VMzsDyovFDuwe5Iz3N4eiHln07COlX
-E0WhwgiIlPCXOu7++SMoFTReLd3sCPk1MLYaaXZNLg6TriRB8hOnU9kdH5pUIPNU
-FGf+rCxv+AAvkdjuoafWviaHrJKz2x6u3ogsNL5lZUfcWCXstSqB/Q2If2Sx9ZYM
-odxstIelsajprLGK4AXQssXPRC6J32eeqzyqIIffGE0fdx+jNNahY+mHymB99wv4
-/TYHZgJij8xEUxSCVsz3FfOwuqfgdQklxILyplqDdrtiHxhZr+hAiknFUiQoHC+f
-ms6kn7x/m/gycTIW4HRHJn4JvCTxaW5p4LS3jnie9DpMzhlIQfb6nIbhjm+LZ3w7
-QErKcorqHfQNF8S+YQoxCPOX8SoRwpIX+0cfajecXDqlbS1ZYanjD8bSmR2COtx3
-DlBHDm+BUiA=
-=6wnJ
------END PGP SIGNATURE-----
-
---=-Y33dC8XcJayl4yrU864x--
-
+--
+Ciao
+Stefano
