@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.inmail.at ([217.198.113.92]:52677 "EHLO smtp.inmail24.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752424AbXKVWKK convert rfc822-to-8bit (ORCPT
+Received: from mail10.tpgi.com.au ([203.12.160.147]:33841 "EHLO
+	mail10.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325AbXK3FeP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2007 17:10:10 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.inmail24.com (Postfix) with ESMTP id F3D9268000D22
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 23:10:07 +0100 (CET)
-Received: from smtp.inmail24.com ([127.0.0.1])
-	by localhost (smtp.inmail24.com [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id mslAYxZcXrfC for <linux-wireless@vger.kernel.org>;
-	Thu, 22 Nov 2007 23:10:04 +0100 (CET)
-Received: from dhcppc0.local (chello089173159021.chello.sk [89.173.159.21])
-	by smtp.inmail24.com (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2007 23:10:01 +0100 (CET)
-From: Majo <virec@inmail.sk>
-To: linux-wireless@vger.kernel.org
-Subject: AR5006X on Fijitsu-Siemens Lifebook E8410 - not work
-Date: Thu, 22 Nov 2007 23:10:01 +0100
+	Fri, 30 Nov 2007 00:34:15 -0500
+Message-ID: <474FA03E.9090805@hotmail.com> (sfid-20071130_053422_148785_576E8AE3)
+Date: Fri, 30 Nov 2007 16:31:42 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200711222310.01165.virec@inmail.sk> (sfid-20071122_221015_002844_9F796A5B)
+To: Daniel Drake <dsd@gentoo.org>
+CC: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <474432E8.90304@hotmail.com> <47443F78.60701@gentoo.org>
+In-Reply-To: <47443F78.60701@gentoo.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Daniel,
 
-ath5sudo k don't work with my Notebook Wifi Card
+Daniel Drake wrote:
+>> Interestingly, after performing the above actions, I am now getting 
+>> additional log messages:
+>>
+>> SoftMAC: Open Authentication completed with GG:GG:GG:GG:GG:GG
+>> Kernel unaligned access at TPC[100df410] 
+>> ieee80211softmac_handle_assoc_response]
+>> Kernel unaligned access at TPC[100df548] 
+>> ieee80211softmac_handle_assoc_response]
+> 
+> This one doesn't include any offsets, did the line get cut off?
 
-sudo lspci -v
+Yes, it did. Sorry about that. Please find it extracted from syslog:
 
-14:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG 802.=
-11 b/g
-Wireless PCI Express Adapter (rev 01)
-=A0 =A0 =A0 =A0 Subsystem: Atheros Communications, Inc. Unknown device =
-3067
-=A0 =A0 =A0 =A0 Flags: fast devsel, IRQ 19
-=A0 =A0 =A0 =A0 Memory at fe200000 (64-bit, non-prefetchable) [size=3D6=
-4K]
-=A0 =A0 =A0 =A0 Capabilities: [40] Power Management version 2
-=A0 =A0 =A0 =A0 Capabilities: [50] Message Signalled Interrupts: Mask- =
-64bit-=20
-Queue=3D0/0
-Enable-
-=A0 =A0 =A0 =A0 Capabilities: [60] Express Legacy Endpoint IRQ 0
-=A0 =A0 =A0 =A0 Capabilities: [90] MSI-X: Enable- Mask- TabSize=3D1
+Kernel unaligned access at TPC[100df410] 
+ieee80211softmac_handle_assoc_response+0x18/0x1fc [ieee80211softmac]
+Kernel unaligned access at TPC[100df548] 
+ieee80211softmac_handle_assoc_response+0x150/0x1fc [ieee80211softmac]
 
-- in Windows XP is detected as AR5006X
+>> ADDRCONF(NETDEV_CHANGE): eth2: link becomes ready
+>> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+>> [ieee802]
+>> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+>> [ieee802]
+>> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+>> [ieee802]
+>> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+>> [ieee802]
+>> Kernel unaligned access at TPC[100d03ec] ieee80211_copy_snap+0x74/0x78 
+>> [ieee802]
+> 
+> This one should be fixed by the attached patch. Sorry for not sending it 
+> sooner, the contributor has not yet solved all problems and I was 
+> waiting to see if more patches would come.
+> 
+>> Kernel unaligned access at TPC[100ee624] do_rx+0x394/0x5ec [zd1211rw]
+>> Kernel unaligned access at TPC[100ee62c] do_rx+0x39c/0x5ec [zd1211rw]
+>> Kernel unaligned access at TPC[100ee638] do_rx+0x3a8/0x5ec [zd1211rw]
+>> Kernel unaligned access at TPC[100ee668] do_rx+0x3d8/0x5ec [zd1211rw]
+>> Kernel unaligned access at TPC[100ee670] do_rx+0x3e0/0x5ec [zd1211rw]
+> 
+> These might be solved by the patch David sent to the list a few days ago 
+> (thanks!). Have you applied it? If you can confirm it helps I will send 
+> it up through John.
 
-dmesg
+I am catching up with patches at the moment, and will report back on 
+this shortly.
 
-[ 1276.969782] ACPI: PCI Interrupt 0000:14:00.0[A] -> GSI 19 (level, lo=
-w) ->=20
-IRQ
-19
-[ 1276.969811] PCI: Setting latency timer of device 0000:14:00.0 to 64
-[ 1277.982089] ath5k_hw_nic_wakeup: failed to resume the MAC Chip
-[ 1277.984330] ACPI: PCI interrupt for device 0000:14:00.0 disabled
-[ 1277.984399] ath5k_pci: probe of 0000:14:00.0 failed with error -5
+Thanks for your help,
+Shaddy
 
-I use Kubuntu 7.10 Gutsy
-I Downloadet ath5k from
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2=
-=2E6.tar.bz
-2 on 22.11.2007
-
-
-Marian Virec
-----------
-AKCNA ZLAVA na Zoner Photo Studio 9 - viacej na - http://www.zps9.sk/
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
