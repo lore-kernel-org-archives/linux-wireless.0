@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45864
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752833AbXKHAcB (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:4128 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762436AbXK3MeY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 19:32:01 -0500
-Date: Wed, 07 Nov 2007 16:32:00 -0800 (PST)
-Message-Id: <20071107.163200.25509588.davem@davemloft.net> (sfid-20071108_003210_085967_C4923DA5)
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	Fri, 30 Nov 2007 07:34:24 -0500
+Date: Fri, 30 Nov 2007 23:34:12 +1100
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
 Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071107185147.GA21097@tuxdriver.com>
-References: <20071107001314.GH4440@tuxdriver.com>
-	<20071107185147.GA21097@tuxdriver.com>
+Message-ID: <20071130123412.GE26848@gondor.apana.org.au> (sfid-20071130_123448_600918_EA799096)
+References: <20071130033158.GB29165@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071130033158.GB29165@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 7 Nov 2007 13:51:54 -0500
-
-> Hold-off on this one for now if -- clearly Johannes and I need to
-> brush-up on our Kconfig skills... :-(
+On Thu, Nov 29, 2007 at 10:31:58PM -0500, John W. Linville wrote:
+> Dave/Herbert,
 > 
-> I'll post a new pull request soon.
+> Here is another clutch of patches intended for 2.6.24.
+> 
+> Let me know if there are any problems!
 
-Ok.
+Pulled.  Thanks John!
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
