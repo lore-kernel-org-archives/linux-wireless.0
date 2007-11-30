@@ -1,28 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:49300 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757253AbXK2EMJ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49809
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760198AbXK3QUo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 23:12:09 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1315692nze
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2007 20:12:07 -0800 (PST)
-Message-ID: <787b0d920711282012k38d6d2c8g2d9ae79c89b04059@mail.gmail.com> (sfid-20071129_041212_624563_9B731240)
-Date: Wed, 28 Nov 2007 23:12:06 -0500
-From: "Albert Cahalan" <acahalan@gmail.com>
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Subject: Re: [PATCH] libertas: remove user-specified channel list
-Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	Fri, 30 Nov 2007 11:20:44 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFT] [PATCH v4] b43: fix calc_nrssi_slope
+Date: Fri, 30 Nov 2007 17:19:12 +0100
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <200711281730.21327.hs4233@mail.mn-solutions.de>
+	linux-wireless@vger.kernel.org
+References: <20071129043957.739b4d3f@morte> <20071129215139.60ae663a@morte> <20071129220654.6c0c0d35@morte>
+In-Reply-To: <20071129220654.6c0c0d35@morte>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200711281730.21327.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200711301719.13245.mb@bu3sch.de> (sfid-20071130_162055_173998_1C7918CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 28, 2007 11:30 AM, Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-> Remove the ability to specify channels to scan via debugfs
+On Thursday 29 November 2007 22:06:54 Stefano Brivio wrote:
+> Fix calc_nrssi_slope() which caused PHY TX errors on devices containing a
+> 802.11a PHY. The code is synced to v4 specs and relevant registers are
+> renamed accordingly.
+> 
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> 
+> ---
 
-Why are you ripping out functionality? At the very least,
-that ought to be justified in the changelog comment.
+That patch looks good, though I did not test it, yet.
+
+John, please don't apply this, yet. It needs a lot more testing on
+several different devices. In the past we had this kind of rewrite patches
+already improve one device and completely break another.
+
+So, people, please try this and check if it causes any regressions.
+
+Thanks.
+
+-- 
+Greetings Michael.
