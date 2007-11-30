@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50440 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132AbXKIMXo (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:2667 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751414AbXK3Jus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 07:23:44 -0500
-Subject: Re: [RFC] b43: multiple MAC addresses support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <1194572631.4793.64.camel@johannes.berg> (sfid-20071109_120958_259609_BC4A521E)
-References: <1194572631.4793.64.camel@johannes.berg>
-	 (sfid-20071109_120958_259609_BC4A521E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sTZzMOyL6PAnKkkcR+bM"
-Date: Fri, 09 Nov 2007 13:25:01 +0100
-Message-Id: <1194611101.4793.104.camel@johannes.berg> (sfid-20071109_122349_065842_A704666E)
+	Fri, 30 Nov 2007 04:50:48 -0500
+Date: Fri, 30 Nov 2007 20:50:39 +1100
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	David Miller <davem@davemloft.net>, dsd@gentoo.org,
+	kune@deine-taler.de
+Subject: Re: ZD1211RW unaligned accesses...
+Message-ID: <20071130095039.GA17911@gondor.apana.org.au> (sfid-20071130_095056_788847_EAD273B9)
+References: <20071120.040546.222294375.davem@davemloft.net> <47442BFC.8090008@hotmail.com> <20071124150216.GA28153@gondor.apana.org.au> <20071129214533.GD32730@tuxdriver.com> <20071129234327.GA23769@gondor.apana.org.au> <474FBD20.10202@hotmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <474FBD20.10202@hotmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 30, 2007 at 06:34:56PM +1100, Shaddy Baddah wrote:
+> 
+> OK... so I've applied patches left right and centre. As there have been 
+> a few, I'll in-line them all at the bottom of this email.
+> 
+> The result is that there are no more unaligned access messages at all. 
 
---=-sTZzMOyL6PAnKkkcR+bM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Good stuff! I was sort of worried that you might end up getting unaligned
+traps in the IP stack but it's good to see that you didn't.  Of course
+it's still something that we need to fix up at some point for other
+configurations.
 
+John, you can apply my patch now.
 
-On Fri, 2007-11-09 at 02:43 +0100, Johannes Berg wrote:
-> This patch adds support for multiple virtual interfaces (up to 65536)
-> to b43.
+> However, I still can only scan one (occasionally two) AP, using iwlist 
+> eth2 scanning command before a bus error. Jean, I missed your emails 
+> regarding compiling the wireless-tools, I will try these and see if they 
+> help.
 
-Ok, turns out I need to do more testing, somehow I broke something, it
-seems that the RX header lost the "frame is for me" bit or something. Or
-maybe mac80211 has a bug.
+That's kind of expected because we haven't completely fixed up the
+user-kernel wireless interface for the 32-in-64 case.  But rest assured
+we will be working on that.
 
-johannes
-
---=-sTZzMOyL6PAnKkkcR+bM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARzRRnKVg1VMiehFYAQIbmRAAms64mUadmREcHu28GaciLKarZ1A1SZn9
-JC1xY+DWX+STEENrPs/RTn35coI5ysSW1c18zbLjWij6eRcOBkKJa786jfQclzGG
-SVSqG/4R0gb4BjWeylhcs8ZsUG5UR+wY3vdCCr95JQkNLKtnaW6cb3CgKzpZQ1yt
-dWW3Nzio6vRPxpd46JXL02iJD6j7UwWRrbQFbSYYW7kF+lBABavTwpTgVgeg7DrE
-vrBBLs/aHqpogvUvTBLpPP4tP+gPjPcKEe4nI8mupJCIQXueiMkypCRN+ktK4vjj
-EJlvR3t5Fs3+xoz9vE+EJwVAcued6OnoyGdhNADRkkwd1oeG0shUBcmuGcDagEvM
-x2mSaoNRtyHv6u4kBa/41/R8sDXtsdZICi+4R1MT2QJl0gLNjkwoFHf5pRqNrWb6
-ECNZ4m54uKa98joCF/aQgZwyo494fesZfB2SEedC9Fa4mAEutNy2GnCOUjK8WZDu
-ZPwTqoyD0JuuB0Aa2q1LTohCQyjYrn3eC1EomeSzFFH1HPJSvHkjW3sIoX8B3po+
-V/FRYo+scX4fmGlOYarntXloBAGMVjrtk65iuxvP08npV5YPX/6AJ89kpJdvcHMe
-CPvabVwXAFXSmj3mK9qke6i5XUPO9StRf1BzMg8V4Ep1OAlo3PWhnaCbCll7TIlF
-MyHuxyI5ybA=
-=x680
------END PGP SIGNATURE-----
-
---=-sTZzMOyL6PAnKkkcR+bM--
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
