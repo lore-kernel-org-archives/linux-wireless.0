@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:55988 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756563AbXKFJ5B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2007 04:57:01 -0500
-Date: Tue, 6 Nov 2007 04:55:22 -0500 (EST)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: is net/mac80211/ieee80211_common.h being used?
-In-Reply-To: <1194342976.4066.0.camel@johannes.berg>
-Message-ID: <Pine.LNX.4.64.0711060455050.10166@localhost.localdomain> (sfid-20071106_095739_521515_FE91EC1B)
-References: <Pine.LNX.4.64.0711060136410.30254@localhost.localdomain>
- (sfid-20071106_064027_299099_72B25D2B) <1194342976.4066.0.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2642 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754624AbXK3Wzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Nov 2007 17:55:41 -0500
+Date: Fri, 30 Nov 2007 17:55:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+Subject: Re: [PATCH 1/2] mac80211: add power management support -v2
+Message-ID: <20071130225525.GB31953@tuxdriver.com> (sfid-20071130_225546_062555_42A48A6D)
+References: <200711170007.01676.mboton.lkml@gmail.com> <200711170113.58396.mboton.lkml@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200711170113.58396.mboton.lkml@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 6 Nov 2007, Johannes Berg wrote:
+On Sat, Nov 17, 2007 at 01:13:58AM +0100, Miguel Bot=F3n wrote:
 
->
-> On Tue, 2007-11-06 at 01:38 -0500, Robert P. J. Day wrote:
-> > hoping this is the right list, does that header file have any value
-> > given that no one is including it?
->
-> No, I should've removed it along with the management interface. I
-> can send a patch.
+> This patch adds power management support in mac80211.
+>=20
+> This allows us to enable power management through the "iwconfig <devi=
+ce> power <off/on>" command.
+> The code is based on "mac80211-10.0.0" but it is a little bit modifie=
+d.
+>=20
+> Signed-off-by: Miguel Bot=F3n <mboton@gmail.com>
+>=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 5fcc4c1..c82b6fa 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -452,6 +452,8 @@ struct ieee80211_conf {
+>  	u8 antenna_max;
+>  	u8 antenna_sel_tx;
+>  	u8 antenna_sel_rx;
+> +
+> +	u8 power_management_enable;     /* flag to enable/disable power man=
+agement */
+>  };
+> =20
+>  /**
 
-ok, it's all yours.
+I'm not overly happy with this.  What about folding this into the
+flags variable?
 
-rday
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
