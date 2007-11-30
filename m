@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbXKPOjx (ORCPT
+Received: from mail11.tpgi.com.au ([203.12.160.161]:43734 "EHLO
+	mail11.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762399AbXK3DpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2007 09:39:53 -0500
-Subject: Re: Suspend/Resume support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: Li YanBo <dreamfly281@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
-	linux-wireless@vger.kernel.org,
-	Jose Ignacio Naranjo Hernandez
-	<joseignacio.naranjo@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <87ir42z5kq.fsf@nokia.com>
-References: <1195087905.3814.11.camel@mercury>
-	 <1197ff4c0711141937gc7bb1f8w499cd9d8634fa232@mail.gmail.com>
-	 <1195171869.8147.79.camel@johannes.berg>  <87ir42z5kq.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ubtYh+m5WIZhBu/uUgAW"
-Date: Fri, 16 Nov 2007 15:41:07 +0100
-Message-Id: <1195224067.8147.122.camel@johannes.berg> (sfid-20071116_144002_576293_95DB90B8)
-Mime-Version: 1.0
+	Thu, 29 Nov 2007 22:45:12 -0500
+Message-ID: <474F86AD.4040403@hotmail.com> (sfid-20071130_034518_140115_A2842F88)
+Date: Fri, 30 Nov 2007 14:42:37 +1100
+From: Shaddy Baddah <shaddy_baddah@hotmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: jt@hpl.hp.com, Daniel Drake <dsd@gentoo.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <20071121184459.GA17199@bougret.hpl.hp.com>
+In-Reply-To: <20071121184459.GA17199@bougret.hpl.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-ubtYh+m5WIZhBu/uUgAW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+First off, sorry for the delay in responding. I am now trying to catch 
+up with my backlog on this issue.
 
-On Fri, 2007-11-16 at 15:24 +0200, Kalle Valo wrote:
-> I think that at least most (if not all) of the APs do send a deauth
-> frame in that case. I have seen this happening when debugging some
-> bugs. But I don't know if the standard specifies that.
+Jean Tourrilhes wrote:
+> 	The patch from Masakazu Mokuno I was talking about is not in
+> your kernel. It defintely would explain why you would get the
+> "Encryption key:<too big>". Basically the length of any variable field
+> is not properly return to user space. This patch would fix that
+> problem.
+> 	The patch from Masakazu Mokuno is not in 2.6.22, and it not
+> either in 2.6.14. The patch is only included in 2.6.23 and later. I
+> would suggest upgrading to 2.6.23 to get that patch. Alternatively,
+> I've included the patch as attachement, and you can use it with
+> 2.6.22.
+> 	I would like you to try that patch and report.
 
-mac80211 has a comment that NULL frames are just for PS control
-operation and otherwise ignored. So no idea.
+Yes, this solved that problem. Thank you,
 
-johannes
+>>> 	Can you give me the exact error text as reported by iwconfig ?
+>>> I'll probably have to send you a test version to see what's happening
+>>> under the cover.
+>> Please find this in-lined below (with key protected):
+>>
+>> # iwconfig eth2
+>> eth2      IEEE 802.11b/g  ESSID:off/any  Nickname:"zd1211"
+>>           Mode:Managed  Frequency:2.462 GHz  Access Point: Invalid
+>>           Bit Rate=1 Mb/s
+>>           Encryption key:<too big>
+> 
+> 	Note that under Wireless Tools 30, you will notice that it
+> won't return too bug but will print an absurdly long encryption
+> key. Two symptoms of the same bug.
+> 
+>>> 		o version of Wireless Tools (iwconfig --version).
+>>> 	Most likely, you need to upgrade your Wireless Tools to
+>>> version 29 which fixes this 32/64 interop problem.
+>>> 	With the latest kernel and the latest wireless tools, the only
+>>> known bugs are the two ESSID bugs.
+>> I think I'm right for version:
+>> # iwconfig --version
+>> iwconfig  Wireless-Tools version 29
+>>           Compatible with Wireless Extension v11 to v22.
+>>
+>> Kernel    Currently compiled with Wireless Extension v22.
+>>
+>> eth2      Recommend Wireless Extension v20 or later,
+>>           Currently compiled with Wireless Extension v22.
+> 
+> 	Yep, that's the correct version. I was afraid you were running
+> Debian stable. I'll need to dig up a little bit more in this.
+> 	Note that the patch above *may* help with this issue as well.
 
---=-ubtYh+m5WIZhBu/uUgAW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+No, it does not seem to have. An iwlist eth2 scanning command still 
+lists a single access point, then fails with a bus error.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARz2sAqVg1VMiehFYAQKvwBAAvigxa4ZWJNv+UZpgqmm/gvmUdAVDbJv6
-pMdwh+PcBnQNAUHjQu7kLWoHVJ0r7wX0ZJoA+uOVy1fi6+DiJM7jwxUqXTVDetey
-2w02Wqi3cCAbsL8KuyL95TeZCLIXhRiY3NUVYvQpY/Z6oV6Kv3sfvftjlv9KayeF
-I65ju8tEW3+8mC0GPeMpSyD+Mg+2gRZoluYckr+HJvxUH9Jm/ZUneH1It0HO12BU
-TsHLrrFjnMa0f8ie4pMx2zbn2GUkmu1PuWoc9E+uHUIquQ8IRXa08643fSGzL5mh
-spTGOb3Wk5WeCeJN4r2rAkF9A6xpNuRhahe5mFpSaF2f05ucum2B0Gq7Em1nY+iq
-BK6tKrWjBd7Ejvi8q15EaRBk5vWC6ydMSM+z8qwckRE0iHANQOvySrSLVgpBWt5V
-EW/Q2vLaqlL2igjqH3270BzALThDI4KjMb8f8TEvJvHhrazs/ZLCRrTx5gbJus+1
-sUJpp3CHfVtDHZqPa+r7P27TNyGbMN4mq1mzDQVDAz9og7QFLElwhIiIX3bI8Wnp
-0hx+H5deAHxaceJ1rOdv+2MT4KNp6pY5bRVeAYh80JtTzTf7T6OFd4LuIPdYMTqh
-LnBFFC6GOt9VCaploen+XNUgumBoIiAKUUmwcxfJ9gId6y0EOK3un2HiQe5fDHgZ
-2ElPBO9KNu8=
-=dmp0
------END PGP SIGNATURE-----
-
---=-ubtYh+m5WIZhBu/uUgAW--
+Thanks for your help,
+Shaddy
 
