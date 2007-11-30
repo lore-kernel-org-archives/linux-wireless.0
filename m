@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:38586 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751174AbXKST11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2007 14:27:27 -0500
-Date: Mon, 19 Nov 2007 20:26:39 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: add Dan Williams as maintainer
-Message-ID: <20071119202639.32fa3e0b@morte> (sfid-20071119_192731_456279_A52A6B2C)
-In-Reply-To: <43e72e890711191106m40a90d94w230dc0bf0eff2808@mail.gmail.com>
-References: <20071117023020.0a164e90@morte>
-	<20071117165551.GA5817@tuxdriver.com>
-	<20071117181153.480d75d8@morte>
-	<1195493292.3248.6.camel@localhost.localdomain>
-	<20071119191652.05023a27@morte>
-	<43e72e890711191106m40a90d94w230dc0bf0eff2808@mail.gmail.com>
+Received: from rhun.apana.org.au ([64.62.148.172]:2775 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762831AbXK3A11 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 19:27:27 -0500
+Date: Fri, 30 Nov 2007 11:26:21 +1100
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+Message-ID: <20071130002621.GI23769@gondor.apana.org.au> (sfid-20071130_002738_862841_A07499EB)
+References: <E1IvoID-0006aR-00@gondolin.me.apana.org.au> <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <474C50D7.5010901@zytor.com> <20071129131107.GC8487@gondor.apana.org.au> <474EFBEB.5000804@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <474EFBEB.5000804@zytor.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 19 Nov 2007 14:06:50 -0500
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+On Thu, Nov 29, 2007 at 09:50:35AM -0800, H. Peter Anvin wrote:
+>
+> Uhm, most cards affected *ARE* Ethernet cards, due to the bloody 14-byte 
+> header.
 
-> Libertas driver supports PCMCIA devices as well too right? Perhaps
-> best to just remove the specific "USB8388" here.
+Well most Ethernet drivers are using NET_IP_ALIGN which means that IP
+stack gets aligned packets only.
 
-Yes, sorry, I got confused by your report about 88w8335.
+sky2 is the exception here, not the rule.
 
-
+Cheers,
 -- 
-Ciao
-Stefano
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
