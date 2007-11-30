@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52445 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755323AbXKGGGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2007 01:06:31 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mabbas@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/5] iwl4965: fix cannot find a suitable rate issue
-Date: Tue,  6 Nov 2007 22:06:25 -0800
-Message-Id: <11944155913421-git-send-email-reinette.chatre@intel.com> (sfid-20071107_060637_662745_F7D91B75)
-In-Reply-To: <1194415589137-git-send-email-reinette.chatre@intel.com>
-References: <11944155883607-git-send-email-reinette.chatre@intel.com>
- <1194415589137-git-send-email-reinette.chatre@intel.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:36293 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1761184AbXK3C0g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2007 21:26:36 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 4/5] ath5k: full noise calibration also for rf511x
+Date: Fri, 30 Nov 2007 11:26:36 +0900
+Message-Id: <1196389597-23559-5-git-send-email-bruno@thinktube.com> (sfid-20071130_022641_350784_803502AB)
+In-Reply-To: <1196389597-23559-4-git-send-email-bruno@thinktube.com>
+References: <1196389597-23559-1-git-send-email-bruno@thinktube.com>
+ <1196389597-23559-2-git-send-email-bruno@thinktube.com>
+ <1196389597-23559-3-git-send-email-bruno@thinktube.com>
+ <1196389597-23559-4-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mabbas@linux.intel.com>
+also perform full noise calibration in ath5k_hw_rf511x_calibrate() instead of
+just writing the bit.
 
-This patch fixes the iwl4965 problem for "Can not find a suitable rate
-issues." by making rs_switch_to_mimo and rs_switch_to_siso functions
-return -1 when CONFIG_IWL4965_HT is not selected. They used to return 0,
-which means we can switch to HT rate causing the rate scale problem and
-the error message.
-
-The patch also fix another bug reported by Ben Cahill that it uses wrong
-value for max_success_limit.
-
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Changes-licensed-under: ISC
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath5k/phy.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 5189788..19d1b05 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -782,7 +782,7 @@ static void rs_set_stay_in_table(u8 is_legacy,
- 	if (is_legacy) {
- 		lq_data->table_count_limit = IWL_LEGACY_TABLE_COUNT;
- 		lq_data->max_failure_limit = IWL_LEGACY_FAILURE_LIMIT;
--		lq_data->max_success_limit = IWL_LEGACY_TABLE_COUNT;
-+		lq_data->max_success_limit = IWL_LEGACY_SUCCESS_LIMIT;
- 	} else {
- 		lq_data->table_count_limit = IWL_NONE_LEGACY_TABLE_COUNT;
- 		lq_data->max_failure_limit = IWL_NONE_LEGACY_FAILURE_LIMIT;
-@@ -937,9 +937,10 @@ static int rs_switch_to_mimo(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 7dba325..74cd97c 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1723,8 +1723,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
  
- 	IWL_DEBUG_HT("LQ: Switch to new mcs %X index is green %X\n",
- 		     tbl->current_rate.rate_n_flags, is_green);
--
--#endif				/*CONFIG_IWL4965_HT */
- 	return 0;
-+#else
-+	return -1;
-+#endif				/*CONFIG_IWL4965_HT */
- }
+ done:
+-	/* Start noise floor calibration */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
++	ath5k_hw_noise_floor_calibration(ah, channel->freq);
  
- static int rs_switch_to_siso(struct iwl_priv *priv,
-@@ -991,9 +992,11 @@ static int rs_switch_to_siso(struct iwl_priv *priv,
- 	rs_mcs_from_tbl(&tbl->current_rate, tbl, rate, is_green);
- 	IWL_DEBUG_HT("LQ: Switch to new mcs %X index is green %X\n",
- 		     tbl->current_rate.rate_n_flags, is_green);
-+	return 0;
-+#else
-+	return -1;
- 
- #endif				/*CONFIG_IWL4965_HT */
--	return 0;
- }
- 
- static int rs_move_legacy_other(struct iwl_priv *priv,
-@@ -1282,7 +1285,7 @@ static void rs_stay_in_table(struct iwl_rate_scale_priv *lq_data)
- 			lq_data->total_failed = 0;
- 			lq_data->total_success = 0;
- 			lq_data->flush_timer = 0;
--		} else if (lq_data->table_count > 0) {
-+		} else {
- 			lq_data->table_count++;
- 			if (lq_data->table_count >=
- 			    lq_data->table_count_limit) {
+ 	/* Request RF gain */
+ 	if (channel->val & CHANNEL_5GHZ) {
 -- 
-1.5.2.5
+1.5.3.4
+
