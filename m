@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.182]:11705 "EHLO
-	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759179AbXK1KlU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60117 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932204AbXK3Lkp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2007 05:41:20 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so2403981roc
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2007 02:41:20 -0800 (PST)
-From: "Joonwoo Park" <joonwpark81@gmail.com>
-To: <yi.zhu@intel.com>, <ipw3945-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH 1/2] [net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
-Date: Wed, 28 Nov 2007 19:41:04 +0900
-Message-ID: <00e501c831ab$2e78daa0$9c94fea9@jason> (sfid-20071128_104143_963782_68D921D3)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+	Fri, 30 Nov 2007 06:40:45 -0500
+Subject: Re: [PATCH] mac80211: rate limit wep decrypt failed messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adel Gadllah <adel.gadllah@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <6cf6b73e0711290809q7c8a2050x6daf97b5eb954cbe@mail.gmail.com> (sfid-20071129_160947_895228_70E521FB)
+References: <6cf6b73e0711290809q7c8a2050x6daf97b5eb954cbe@mail.gmail.com>
+	 (sfid-20071129_160947_895228_70E521FB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mPvJUjDmwD75QL9uQyik"
+Date: Fri, 30 Nov 2007 12:38:08 +0100
+Message-Id: <1196422688.6058.183.camel@johannes.berg> (sfid-20071130_114048_359951_E0C5FDFD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl_pci_remove can be called before delayed work queue is completed or not called at init module, so delayed init_alive_start can
-have 'image' as NULL.
-It can be happened while putting module down right next it up.
-I was able to make panic by :
-#while [ 1 ]; modprobe -r iwlx945; modprobe iwlx945; done
+
+--=-mPvJUjDmwD75QL9uQyik
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
-iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.1.17ks
-iwl3945: Copyright(c) 2003-2007 Intel Corporation
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 22
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-iwl3945: Detected Intel PRO/Wireless 3945ABG Network Connection
-BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
-printing eip: f885ff61 *pdpt = 0000000037785001 *pde = 0000000000000000 
-Oops: 0000 [#1] PREEMPT SMP 
-Modules linked in: iwl3945 e1000
+On Thu, 2007-11-29 at 17:09 +0100, Adel Gadllah wrote:
+> The attached patch rate limits "WEP decrypt failed (ICV)" to avoid
+> flooding the logfiles.
+>=20
+> Signed-off-by: Adel Gadllah <adel.gadllah@gmx.net>
 
-Pid: 11501, comm: iwl3945/0 Not tainted (2.6.24-rc3 #109)
-EIP: 0060:[<f885ff61>] EFLAGS: 00010246 CPU: 0
-EIP is at iwl_verify_inst_sparse+0x101/0x140 [iwl3945]
-EAX: 0f802020 EBX: 00000000 ECX: 00000000 EDX: f8878000
-ESI: 00000000 EDI: dfce8e40 EBP: dfef5f1c ESP: dfef5f00
- DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-Process iwl3945/0 (pid: 11501, ti=dfef4000 task=f7cc6c90 task.ti=dfef4000)
-Stack: f7cc6c90 00000000 00000384 00000000 dfcecdf0 dfce8e40 dfcecdf0 dfef5f4c 
-       f885ffbc 22222222 22222222 22222222 22222222 dfce9384 dfce8e40 dfcecdf0 
-       dfcecdf0 dfce8e40 dfcecdf0 dfef5f78 f8862fe9 00003b84 f7cc6dd0 c1b0eb00 
-Call Trace:
- [<c400542a>] show_trace_log_lvl+0x1a/0x30
- [<c40054e9>] show_stack_log_lvl+0xa9/0xd0
- [<c40055da>] show_registers+0xca/0x250
- [<c4005880>] die+0x120/0x230
- [<c401e21c>] do_page_fault+0x47c/0x790
- [<c43ac38a>] error_code+0x72/0x78
- [<f885ffbc>] iwl_verify_ucode+0x1c/0x1d0 [iwl3945]
- [<f8862fe9>] iwl_bg_init_alive_start+0x69/0x210 [iwl3945]
- [<c403abaf>] run_workqueue+0x7f/0x110
- [<c403b76d>] worker_thread+0x9d/0x100
- [<c403e922>] kthread+0x42/0x70
- [<c4004fef>] kernel_thread_helper+0x7/0x18
- =======================
-Code: 45 e8 00 00 00 00 85 c9 89 f6 74 38 31 db 31 c9 eb 04 83 45 f0 64 89 8a 0c 04 00 00 8b 97 74 05 00 00 8b 75 f0 8b 82 1c 04 00
-00 <3b> 06 74 0d 43 83 fb 02 77 23 c7 45 e8 fb ff ff ff 83 c1 64 39 
-EIP: [<f885ff61>] iwl_verify_inst_sparse+0x101/0x140 [iwl3945] SS:ESP 0068:dfef5f00
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+> index 9bf0e1c..b5f3413 100644
+> --- a/net/mac80211/wep.c
+> +++ b/net/mac80211/wep.c
+> @@ -265,7 +265,8 @@ int ieee80211_wep_decrypt(struct ieee80211_local
+> *local, struct sk_buff *skb,
+>  	if (ieee80211_wep_decrypt_data(local->wep_rx_tfm, rc4key, klen,
+>  				       skb->data + hdrlen + WEP_IV_LEN,
+>  				       len)) {
+> -		printk(KERN_DEBUG "WEP decrypt failed (ICV)\n");
+> +		if (net_ratelimit())
+> +			printk(KERN_DEBUG "WEP decrypt failed (ICV)\n");
+>  		ret =3D -1;
+>  	}
+> -
+>=20
 
-Thanks
-Joonwoo
+--=-mPvJUjDmwD75QL9uQyik
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-[net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
----
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 465da4f..ac6c4a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8570,6 +8570,7 @@ static void iwl_pci_remove(struct pci_dev *pdev)
- 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
- 
- 	mutex_lock(&priv->mutex);
-+	cancel_delayed_work_sync(&priv->init_alive_start);
- 	set_bit(STATUS_EXIT_PENDING, &priv->status);
- 	__iwl_down(priv);
- 	mutex_unlock(&priv->mutex);
----
+iQIVAwUAR0/2H6Vg1VMiehFYAQLNYg/8DsF3UiLWHrOFlbgytwZEYLkHCqfzmERk
+uBMO2qUDxdNTlRRPDs1pzPMZ2gzQwibKRU4WkINafJVbYSPdVHaGdhMnVNke+5dZ
+uFymaO0427XHTLOQHG8Slmhq4TA5F7i8fiet5LPQEuqogTI3UMdrzCEGkRxeuAIG
+H0S/zeLQGQCCkj2SDNsk5FfCdzuTGxscoRbxiEzjvm+gPvD+RzJyHRSoB9WCaXDt
+etf1xFYtK7Z9AtpCutQ5289QutsyaUITjfcTOGlHEAZNyioXOX6ngSR2CT/cdueC
+aKvoP0Z7CMLXoklPkPcKFRw6qj2v8ZC35urXXhUnTcZmYIq+pd4N/sAcHaCs2722
+zT6zDD/IiBfmcfajNnNJhI+FfvulSFqpzACSXYKpVDVb8+JpPi+qByDn0Wx3YNgy
+B10gsw4OBh0e7p5WQRXPd5jyNQ1Pp7WAGLaHdCKim5iYkGYof9p14M+lX3Zz4Pdo
+/vZl0kLNIXH9upQj+BHQhZKCA3GH7fOhTvPcfoMjCAojU8+J8v0U/Fh7J7Gkt0Oi
+v3SaiQhwkrIhvrkl65zMxR0wD1TKqZI3xuPLKoSLtj8GV4EHbuzifh+wizORgNoH
+C/HRhKKe7FHzS+WVrKfyfXCRdfJhPsdYeHGsuIpCAKVVKvyFgkqRXA5I54FXmEPL
+r1bLAcHxkhs=
+=q8nb
+-----END PGP SIGNATURE-----
+
+--=-mPvJUjDmwD75QL9uQyik--
 
