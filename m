@@ -1,212 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:19235 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754842AbXKWKvy (ORCPT
+Received: from terminus.zytor.com ([198.137.202.10]:36175 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534AbXK3Ali (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2007 05:51:54 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 1/3] ath5k: fix noise floor calibration
-Date: Fri, 23 Nov 2007 19:52:01 +0900
-Message-Id: <1195815123-22375-2-git-send-email-bruno@thinktube.com> (sfid-20071123_105159_678019_FCF237C0)
-In-Reply-To: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
-References: <1195815123-22375-1-git-send-email-bruno@thinktube.com>
+	Thu, 29 Nov 2007 19:41:38 -0500
+Message-ID: <474F5C2B.8040300@zytor.com> (sfid-20071130_004143_012129_0DE5AB2D)
+Date: Thu, 29 Nov 2007 16:41:15 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
+MIME-Version: 1.0
+To: Herbert Xu <herbert@gondor.apana.org.au>
+CC: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>, dsd@gentoo.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless vs. alignment requirements
+References: <1195893216.4149.186.camel@johannes.berg> <20071124133200.GA27531@gondor.apana.org.au> <1195912176.4149.194.camel@johannes.berg> <20071124141319.GA27819@gondor.apana.org.au> <4748855C.5090103@linux-foundation.org> <474C50D7.5010901@zytor.com> <20071129131107.GC8487@gondor.apana.org.au> <474EFBEB.5000804@zytor.com> <20071130002621.GI23769@gondor.apana.org.au> <474F5932.1030103@zytor.com> <20071130003426.GJ23769@gondor.apana.org.au>
+In-Reply-To: <20071130003426.GJ23769@gondor.apana.org.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix noise floor calibration by applying AR5K_PHY_NF_AVAL after
-AR5K_PHY_NF_RVAL. that way the XORed mask and value have the same length and we
-get a reasonable noise value in -dBm.
+Herbert Xu wrote:
+> On Thu, Nov 29, 2007 at 04:28:34PM -0800, H. Peter Anvin wrote:
+>>> sky2 is the exception here, not the rule.
+>> It is, but it's not unique.  Several USB adapters have the same problem, 
+>> for example.
+> 
+> Notice the common theme here that slow (or slower, i.e., certainly nowhere
+> near 10Gb) NICs are the norm for violating alignment :)
+> 
+> So I'd prefer something that only penalised them rather than everybody
+> else.
 
-move duplicate noise floor calibration code from two different places into one
-function ath5k_hw_noise_floor_calibration().
+Obviously, and this should be a configure option anyway.
 
-the check for accepted noise_floor values (<= AR5K_TUNE_NOISE_FLOOR) should
-only happen when we have an active reading and a converted value, so move it up
-into the first if.
-
-Changes-licensed-under: ISC
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
- drivers/net/wireless/ath5k/ath5k.h |    1 +
- drivers/net/wireless/ath5k/hw.c    |   36 +---------------
- drivers/net/wireless/ath5k/phy.c   |   79 +++++++++++++++++++++--------------
- 3 files changed, 51 insertions(+), 65 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index 1b8ddd9..5bcbbf9 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -1127,6 +1127,7 @@ extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
- extern u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
- extern void ath5k_hw_set_def_antenna(struct ath5k_hw *ah, unsigned int ant);
- extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
-+extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
- /* TX power setup */
- extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, unsigned int txpower);
- extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, unsigned int power);
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 2a826a7..b42fc8f 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -593,7 +593,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- {
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 	u32 data, s_seq, s_ant, s_led[3];
--	s32 noise_floor;
- 	unsigned int i, mode, freq, ee_mode, ant[2], driver_mode = -1;
- 	int ret;
- 
-@@ -916,38 +915,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		return -EAGAIN;
- 	}
- 
--	/*
--	 * Enable noise floor calibration and wait until completion
--	 */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
--				AR5K_PHY_AGCCTL_NF);
--
--	if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
--			AR5K_PHY_AGCCTL_NF, 0, false)) {
--		ATH5K_ERR(ah->ah_sc,
--			"noise floor calibration timeout (%uMHz)\n",
--			channel->freq);
--		return -EAGAIN;
--	}
--
--	/* Wait until the noise floor is calibrated and read the value */
--	for (i = 20; i > 0; i--) {
--		mdelay(1);
--		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
--
--		if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
--			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
--
--		if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
--			break;
--	}
--
--	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
--		ATH5K_ERR(ah->ah_sc,
--			"noise floor calibration failed (%uMHz)\n",
--			channel->freq);
--		return -EIO;
--	}
-+	ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
-+	if (ret)
-+		return ret;
- 
- 	ah->ah_calibration = false;
- 
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 3c2a67c..9b91121 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1519,6 +1519,51 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
- /*****************\
-   PHY calibration
- \*****************/
-+int
-+ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
-+{
-+	int ret;
-+	unsigned int i;
-+	s32 noise_floor;
-+
-+	/*
-+	 * Enable noise floor calibration and wait until completion
-+	 */
-+	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
-+				AR5K_PHY_AGCCTL_NF);
-+
-+	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
-+			AR5K_PHY_AGCCTL_NF, 0, false);
-+	if (ret) {
-+		ATH5K_ERR(ah->ah_sc,
-+			"noise floor calibration timeout (%uMHz)\n", freq);
-+		return ret;
-+	}
-+
-+	/* Wait until the noise floor is calibrated and read the value */
-+	for (i = 20; i > 0; i--) {
-+		mdelay(1);
-+		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
-+		noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
-+		if (noise_floor & AR5K_PHY_NF_ACTIVE) {
-+			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
-+
-+			if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
-+				break;
-+		}
-+	}
-+
-+	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-+		"noise floor %d, %d\n", noise_floor, AR5K_TUNE_NOISE_FLOOR);
-+
-+	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
-+		ATH5K_ERR(ah->ah_sc,
-+			"noise floor calibration failed (%uMHz)\n", freq);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
- 
- /*
-  * Perform a PHY calibration on RF5110
-@@ -1529,8 +1574,6 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
- 		struct ieee80211_channel *channel)
- {
- 	u32 phy_sig, phy_agc, phy_sat, beacon;
--	s32 noise_floor;
--	unsigned int i;
- 	int ret;
- 
- 	/*
-@@ -1612,37 +1655,9 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
- 		return ret;
- 	}
- 
--	/*
--	 * Enable noise floor calibration and wait until completion
--	 */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF);
--
--	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
--			AR5K_PHY_AGCCTL_NF, 0, false);
--	if (ret) {
--		ATH5K_ERR(ah->ah_sc,
--			"noise floor calibration timeout (%uMHz)\n",
--			channel->freq);
-+	ret = ath5k_hw_noise_floor_calibration(ah, channel->freq);
-+	if (ret)
- 		return ret;
--	}
--
--	/* Wait until the noise floor is calibrated */
--	for (i = 20; i > 0; i--) {
--		mdelay(1);
--		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
--
--		if (AR5K_PHY_NF_RVAL(noise_floor) & AR5K_PHY_NF_ACTIVE)
--			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
--
--		if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
--			break;
--	}
--
--	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
--		ATH5K_ERR(ah->ah_sc, "noise floor calibration failed (%uMHz)\n",
--			channel->freq);
--		return -EIO;
--	}
- 
- 	/*
- 	 * Re-enable RX/TX and beacons
--- 
-1.5.3.4
-
+	-hpa
