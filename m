@@ -1,156 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbXLEKQ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 05:16:28 -0500
-Subject: [PATCH] mac80211: conditionally include timestamp in radiotap
-	information
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 20:26:48 +0100
-Message-Id: <1196796408.10274.30.camel@johannes.berg> (sfid-20071205_101632_340589_12AA9D8A)
-Mime-Version: 1.0
+Received: from deine-taler.de ([217.160.107.63]:63456 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751484AbXLAK0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Dec 2007 05:26:08 -0500
+Date: Sat, 1 Dec 2007 11:26:05 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.org, dsd@gentoo.org, netdev@vger.kernel.org,
+	shaddy_baddah@hotmail.com, davem@davemloft.net,
+	herbert@gondor.apana.org.au, johannes@sipsolutions.net
+Subject: [PATCH] zd1211rw: Fix alignment problems
+Message-ID: <20071201102605.GA25387@deine-taler.de> (sfid-20071201_102627_153329_3F014082)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes mac80211 include the low-level MAC timestamp
-in the radiotap header if the driver indicated (by a new
-RX flag) that the timestamp is valid.
+Shaddy Baddah found an alignment problem with zd1211rw driver at
+2007-11-19. This patch fixes it, it is based on the patch proposed by
+Herbert Xu. The alignment 4 has been the agreed value on the
+linux-wireless mailing list.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Notify that the problem does only affect the old zd1211rw softmac
+driver and not the zd1211rw-mac80211 driver. Daniel Drake has
+already provided a patch for the replacement of the softmac
+driver, which this patch will break.
+
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
 ---
- include/net/mac80211.h |    3 +++
- net/mac80211/rx.c      |   45 ++++++++++++++++++++++++++++-----------------
- 2 files changed, 31 insertions(+), 17 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_mac.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
---- everything.orig/net/mac80211/rx.c	2007-12-04 20:02:04.696956217 +0100
-+++ everything/net/mac80211/rx.c	2007-12-04 20:16:02.486950411 +0100
-@@ -80,8 +80,9 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_rate *rate;
- 	int needed_headroom = 0;
--	struct ieee80211_rtap_hdr {
--		struct ieee80211_radiotap_header hdr;
-+	struct ieee80211_radiotap_header *rthdr;
-+	__le64 *rttsft = NULL;
-+	struct ieee80211_rtap_fixed_data {
- 		u8 flags;
- 		u8 rate;
- 		__le16 chan_freq;
-@@ -89,7 +90,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 		u8 antsignal;
- 		u8 padding_for_rxflags;
- 		__le16 rx_flags;
--	} __attribute__ ((packed)) *rthdr;
-+	} __attribute__ ((packed)) *rtfixed;
- 	struct sk_buff *skb, *skb2;
- 	struct net_device *prev_dev = NULL;
- 	int present_fcs_len = 0;
-@@ -106,7 +107,8 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 	if (status->flag & RX_FLAG_RADIOTAP)
- 		rtap_len = ieee80211_get_radiotap_len(origskb->data);
- 	else
--		needed_headroom = sizeof(*rthdr);
-+		/* room for radiotap header, always present fields and TSFT */
-+		needed_headroom = sizeof(*rthdr) + sizeof(*rtfixed) + 8;
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index a903645..5298a8b 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -1130,6 +1130,8 @@ static void zd_mac_rx(struct zd_mac *mac, struct sk_buff *skb)
+ 	__skb_trim(skb, skb->len -
+ 		        (IEEE80211_FCS_LEN + sizeof(struct rx_status)));
  
- 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
- 		present_fcs_len = FCS_LEN;
-@@ -134,7 +136,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 		 * them allocate enough headroom to start with.
- 		 */
- 		if (skb_headroom(skb) < needed_headroom &&
--		    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
-+		    pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
- 			dev_kfree_skb(skb);
- 			return NULL;
- 		}
-@@ -153,42 +155,51 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 
- 	/* if necessary, prepend radiotap information */
- 	if (!(status->flag & RX_FLAG_RADIOTAP)) {
-+		rtfixed = (void *) skb_push(skb, sizeof(*rtfixed));
-+		if (status->flag & RX_FLAG_TSFT)
-+			rttsft = (void *) skb_push(skb, sizeof(*rttsft));
- 		rthdr = (void *) skb_push(skb, sizeof(*rthdr));
- 		memset(rthdr, 0, sizeof(*rthdr));
--		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
--		rthdr->hdr.it_present =
--			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
-+		memset(rtfixed, 0, sizeof(*rtfixed));
-+		rthdr->it_len = cpu_to_le16(sizeof(*rthdr));
-+		rthdr->it_present =
-+			cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
-+				    (1 << IEEE80211_RADIOTAP_FLAGS) |
- 				    (1 << IEEE80211_RADIOTAP_RATE) |
- 				    (1 << IEEE80211_RADIOTAP_CHANNEL) |
- 				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
- 				    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
--		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
--			       IEEE80211_RADIOTAP_F_FCS : 0;
-+		rtfixed->flags = 0;
-+		if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
-+			rtfixed->flags |= IEEE80211_RADIOTAP_F_FCS;
++	ZD_ASSERT(IS_ALIGNED((unsigned long)skb->data, 4));
 +
-+		if (rttsft)
-+			*rttsft = cpu_to_le64(status->mactime);
+ 	update_qual_rssi(mac, skb->data, skb->len, stats.signal,
+ 		         status->signal_strength);
  
- 		/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
--		rthdr->rx_flags = 0;
-+		rtfixed->rx_flags = 0;
- 		if (status->flag &
- 		    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
--			rthdr->rx_flags |=
-+			rtfixed->rx_flags |=
- 				cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
+@@ -1166,15 +1168,19 @@ static void do_rx(unsigned long mac_ptr)
+ int zd_mac_rx_irq(struct zd_mac *mac, const u8 *buffer, unsigned int length)
+ {
+ 	struct sk_buff *skb;
++	unsigned int reserved =
++		ALIGN(max_t(unsigned int,
++		            sizeof(struct zd_rt_hdr), ZD_PLCP_HEADER_SIZE), 4) -
++		ZD_PLCP_HEADER_SIZE;
  
- 		rate = ieee80211_get_rate(local, status->phymode,
- 					  status->rate);
- 		if (rate)
--			rthdr->rate = rate->rate / 5;
-+			rtfixed->rate = rate->rate / 5;
- 
--		rthdr->chan_freq = cpu_to_le16(status->freq);
-+		rtfixed->chan_freq = cpu_to_le16(status->freq);
- 
- 		if (status->phymode == MODE_IEEE80211A)
--			rthdr->chan_flags =
-+			rtfixed->chan_flags =
- 				cpu_to_le16(IEEE80211_CHAN_OFDM |
- 					    IEEE80211_CHAN_5GHZ);
- 		else
--			rthdr->chan_flags =
-+			rtfixed->chan_flags =
- 				cpu_to_le16(IEEE80211_CHAN_DYN |
- 					    IEEE80211_CHAN_2GHZ);
- 
--		rthdr->antsignal = status->ssi;
-+		rtfixed->antsignal = status->ssi;
+-	skb = dev_alloc_skb(sizeof(struct zd_rt_hdr) + length);
++	skb = dev_alloc_skb(reserved + length);
+ 	if (!skb) {
+ 		struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
+ 		dev_warn(zd_mac_dev(mac), "Could not allocate skb.\n");
+ 		ieee->stats.rx_dropped++;
+ 		return -ENOMEM;
  	}
- 
- 	skb_set_mac_header(skb, 0);
---- everything.orig/include/net/mac80211.h	2007-12-04 20:12:00.226951171 +0100
-+++ everything/include/net/mac80211.h	2007-12-04 20:20:25.366949924 +0100
-@@ -350,6 +350,8 @@ struct ieee80211_tx_control {
-  *	the frame.
-  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
-  *	the frame.
-+ * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime field)
-+ *	is valid.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR	= 1<<0,
-@@ -359,6 +361,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_IV_STRIPPED	= 1<<4,
- 	RX_FLAG_FAILED_FCS_CRC	= 1<<5,
- 	RX_FLAG_FAILED_PLCP_CRC = 1<<6,
-+	RX_FLAG_TSFT		= 1<<7,
- };
- 
- /**
-
-
+-	skb_reserve(skb, sizeof(struct zd_rt_hdr));
++	skb_reserve(skb, reserved);
+ 	memcpy(__skb_put(skb, length), buffer, length);
+ 	skb_queue_tail(&mac->rx_queue, skb);
+ 	tasklet_schedule(&mac->rx_tasklet);
+-- 
+1.5.3.6
