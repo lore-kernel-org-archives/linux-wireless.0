@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:51712 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519AbXLEWL4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 17:11:56 -0500
-Date: Wed, 5 Dec 2007 14:11:19 -0800
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] fixing the ap_scan and hidden SSID mess
-Message-ID: <20071205221119.GA28457@bougret.hpl.hp.com> (sfid-20071205_221200_554569_4E95E9EB)
-Reply-To: jt@hpl.hp.com
+Received: from smtp.rutgers.edu ([128.6.72.243]:27555 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755907AbXLABxS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Nov 2007 20:53:18 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: don't use if_id, use if_priv
+Date: Fri, 30 Nov 2007 20:59:19 -0500
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1196423301.6058.187.camel@johannes.berg>
+In-Reply-To: <1196423301.6058.187.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: multipart/signed;
+  boundary="nextPart2243303.nA2TFVrn1F";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200711302059.23415.flamingice@sourmilk.net> (sfid-20071201_015322_437195_B2223F1F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote :
-> 
-> Hidden SSID is a mess right now.  Here's why, and here's a proposal for
-> fixing it.
+--nextPart2243303.nA2TFVrn1F
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-	If you want my participation, it's usually wise to cc me.
+On Friday 30 November 2007 06:48:21 Johannes Berg wrote:
+> Here's a non-functioning (except for b43/b43legacy) patch that gets rid
+> of the if_id stuff all over in favour of a new if_priv pointer.
+>
+Note that a good chunk of the if_id stuff in the api was just brain damage=
+=20
+from the ERP info changes. Anywhere we have access to a skb, we have access=
+=20
+to a netdev, and we don't need an extra if_id argument to tell us what we=20
+need to know. I would love to see that get fixed first as that simplifies a=
+ll=20
+drivers.
 
-> The problem is that there isn't a nice, generic capabilities field in
-> WEXT.  So we have to abuse an existing one, and I picked enc_capa.
+Having said that, a per-interface private area for drivers is a great idea =
+if=20
+drivers need it. They probably do.
 
-	Please don't do that. It's fairly trivial to add a new field
-in iwrange. And it's not like the sky will fall down if we add a field
-in iwrange. If you want to do it, please do it right.
-	Note that there is one gotcha because of the state of
-userspace, so if you want I can produce a kernel patch that will work
-properly, and I'll add the usespace support for it as well.
+=2DMichael Wu
 
-> +#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
 
-	That won't work. You have a tri-state, and with only a single
-bit you can encode only two state. You basically have :
-	o driver that support ap_scan=1
-	o driver that do not support ap_scan=1
-	o driver that have not been updated or reside in old kernels
-	So, at the minimum, you'd want :
--------------------------------------
-+#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
-+#define IW_ENC_CAPA_ANY_SSID_SCAN	0x00000020
--------------------------------------
 
-> However, userspace is f*cked because it can't figure out which one to
-> use, and trying both is not an option because you get unacceptable
-> latency for the user when trying to associate.
+--nextPart2243303.nA2TFVrn1F
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-	Another option would be for SIOCSIWSCAN to fail if a specific
-SSID is set and it does not support it, instead of just ignoring it.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
 
-	Regards,
+iD8DBQBHUL/7T3Oqt9AH4aERAtNhAKDRaiGFVU1hBsgvMAixFg8AoFK+mQCeO8pS
+IB9naCUXYiAlc9+HQUg2Jug=
+=YfqB
+-----END PGP SIGNATURE-----
 
-	Jean
+--nextPart2243303.nA2TFVrn1F--
