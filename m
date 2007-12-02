@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64561 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753037AbXLSAzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 19:55:32 -0500
-Date: Wed, 19 Dec 2007 08:54:08 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: Miguel Bot??n <mboton.lkml@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix typo in
-	'drivers/net/wireless/iwlwifi/Kconfig'
-Message-ID: <20071219005408.GA21768@mail.intel.com> (sfid-20071219_005538_349692_CE170FA3)
-Reply-To: yi.zhu@intel.com
-References: <200712181736.13130.mboton@gmail.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:16101 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750717AbXLBWLN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Dec 2007 17:11:13 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 1/8] rtl8187: fix tx power reading
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Sun, 02 Dec 2007 17:17:51 -0500
+Message-ID: <20071202221751.7347.54891.stgit@tetra.sourmilk.net> (sfid-20071202_221118_018794_0591B8C5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200712181736.13130.mboton@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 18, 2007 at 05:36:12PM +0100, Miguel Bot??n wrote:
->  config IWL4965_SPECTRUM_MEASUREMENT
-> -	bool "Enable Spectrum Measurement in iw4965 driver"
-> +	bool "Enable Spectrum Measurement in iwl4965 driver"
->  	depends on IWL4965
->  	---help---
->  	  This option will enable spectrum measurement for the iwl4965 driver.
+From: Andrea Merello <andreamrl@tiscali.it>
 
-Thanks, but there is another one.
+CCK and OFDM power levels are stored in adjacent bytes, not nibbles.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
+---
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index c91e5f9..66ca942 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -31,7 +31,7 @@ config IWL4965_QOS
- 	depends on IWL4965
- 	---help---
- 	  This option will enable wireless quality of service (QoS) for the
--	  iw4965 driver.
-+	  iwl4965 driver.
+ drivers/net/wireless/rtl8187_rtl8225.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
+index efc4120..eade81f 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -283,8 +283,8 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	u32 reg;
+ 	int i;
  
- config IWL4965_HT
- 	bool "Enable 802.11n HT features in iwl4965 driver"
-@@ -43,7 +43,7 @@ config IWL4965_HT
- 	  for the iwl4965 driver.
+-	cck_power = priv->channels[channel - 1].val & 0xF;
+-	ofdm_power = priv->channels[channel - 1].val >> 4;
++	cck_power = priv->channels[channel - 1].val & 0xFF;
++	ofdm_power = priv->channels[channel - 1].val >> 8;
  
- config IWL4965_SPECTRUM_MEASUREMENT
--	bool "Enable Spectrum Measurement in iw4965 driver"
-+	bool "Enable Spectrum Measurement in iwl4965 driver"
- 	depends on IWL4965
- 	---help---
- 	  This option will enable spectrum measurement for the iwl4965 driver.
+ 	cck_power = min(cck_power, (u8)11);
+ 	ofdm_power = min(ofdm_power, (u8)35);
+@@ -500,8 +500,8 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	u32 reg;
+ 	int i;
+ 
+-	cck_power = priv->channels[channel - 1].val & 0xF;
+-	ofdm_power = priv->channels[channel - 1].val >> 4;
++	cck_power = priv->channels[channel - 1].val & 0xFF;
++	ofdm_power = priv->channels[channel - 1].val >> 8;
+ 
+ 	cck_power = min(cck_power, (u8)15);
+ 	cck_power += priv->txpwr_base & 0xF;
+
+
