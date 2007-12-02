@@ -1,165 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:36081 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751008AbXLCDTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 22:19:52 -0500
-Date: Mon, 3 Dec 2007 04:16:08 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-Message-ID: <20071203041608.3af3b462@morte> (sfid-20071203_032007_327730_0568A185)
-In-Reply-To: <1196622331.7472.4.camel@localhost>
-References: <1196622331.7472.4.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from agave.telenet-ops.be ([195.130.137.77]:59048 "EHLO
+	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbXLBWSr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Dec 2007 17:18:47 -0500
+Message-ID: <47532F45.9020508@telenet.be> (sfid-20071202_221853_056924_9279767B)
+Date: Sun, 02 Dec 2007 23:18:45 +0100
+From: Ian Schram <ischram@telenet.be>
+MIME-Version: 1.0
+To: Zhu Yi <yi.zhu@intel.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomasw@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] iwlwifi: delay firmware loading from pci_probe to network
+ interface open
+References: <1196327913-24715-1-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1196327913-24715-1-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 02 Dec 2007 20:05:31 +0100
-Mattias Nissler <mattias.nissler@gmx.de> wrote:
+Zhu Yi wrote:
+> Tomas pointed my assertion "iwlwifi cannot get MAC address without
+> firmware being loaded first" is not true. Here is a updated patch to
+> get iwlwifi device MAC address from EEPROM before firmware being
+> loaded. With this function, I don't need the mac80211 change for "set
+> interface MAC address after driver's start() is called".
+>
+> BTW, I also pci_enable_device() and pci_disable_device() in the
+> driver's start() and stop() handler. Hope it will make the device
+> consume less power when the interface is not up.
+>
+> P.S. If you use wpa_supplicant with the patch. Please use 0.6.0 or
+> above. I've seen problems with wpa_supplicant-0.4.8 in the order of
+> interface up and wext parameters setting. After this patch, setting
+> any wext parameters before interface up will likely return an error.
+>
+>
+> This patch moves the firmware loading (read firmware from disk and load
+> it into the device SRAM) from pci_probe time to the first network
+> interface open time. There are two reasons for doing this:
+>
 
-> Hi,
-> 
-> the patch below is a first attempt on the PID-controller approach for TX
-> rate control. It kind of works here, but I haven't spent much time
-> tuning the coefficients.
 
-It looks good! I tested it a bit with different TX powers and moving around
-with a microwave oven turned on [1]. It looks like we don't have the
-rollercoaster effect anymore, and overall quality of the algorithm seems
-just fine. However, I noticed about two issues:
+There are a few problems with this patch as was reported on ipw3945-devel
 
-1) as soon as I loaded mac80211 it took a lot of time to get up with rate,
-and this actually happens every time I'm not sending frames for a while
-(including get down with rate here).
-	- IMHO, it doesn't make sense to check for RSSI of previous packets
-as soon as we get associated, because it's very likely that we just switched
-between two APs.
-	- Here, either we know that something happened (such an association)
-and we need to react quite quickly, either we don't know what's happening
-and relying solely on interpolation seems not to work so well.
-So I thought rather of a "sharpening" factor to be taken into account
-when some important events (i.e. association) or interpolation happened.
-This seems to work quite well, so in perfect conditions and average load I
-need ~6 seconds vs ~11 to get up to 54M, while still maintaining smoothness
-during regular operation (thus it looks like there aren't rollercoasting
-risks - obviously this will need more testing):
-[this patch applies on top of yours]
+I have attempted to identify and fix them all, which makes it work for
+me again.
 
-Index: wireless-2.6/net/mac80211/rc80211_simple.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_simple.c
-+++ wireless-2.6/net/mac80211/rc80211_simple.c
-@@ -26,13 +26,15 @@
-  *
-  * The controller basically computes the following:
-  *
-- * adj = CP * err + CI * err_avg + CD * (err - last_err)
-+ * adj = CP * err + CI * err_avg + CD * (1 + sharpening) * (err - last_err)
-  *
-  * where
-  * 	adj	adjustment value that is used to switch TX rate (see below)
-  * 	err	current error: target vs. current failed frames percentage
-  * 	last_err	last error
-  * 	err_avg	average (i.e. poor man's integral) of recent errors
-+ *	sharpening	non-zero when fast response is needed (i.e. right after
-+ *			association or interpolation)
-  * 	CP	Proportional coefficient
-  * 	CI	Integral coefficient
-  * 	CD	Derivative coefficient
-@@ -62,6 +64,11 @@
- #define RATE_CONTROL_SMOOTHING_SHIFT 3
- #define RATE_CONTROL_SMOOTHING (1 << RATE_CONTROL_SMOOTHING_SHIFT)
- 
-+/* Sharpening factor (used for D part of PID controller) */
-+#define RATE_CONTROL_SHARPENING_SHIFT 2
-+#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-+#define RATE_CONTROL_SHARPENING_DURATION 3
+The main problem was:
+pci_save/restore_state() wasn't being called when the device was
+disabled in pci_probe to save power. which meant that when it was
+reenabled it had no idea about the dma and hence the card would
+seemingly never wake up, seeing as no init_alive_resp would be received
+
+secondary problems:
+1) additionally the code should not have dereferenced a null pointer. This
+happened in mac80211 because the failure was hidden and null was returned
+in ops->start
+
+2) when the ops->start failed, the irq was registered, but never freeded because
+ops->close wouldn't be called. i added a bit of error handling in the function
+and pulled enable/disbale msi there because i was having additional oopses when testing
+but i think they might be redundant. I figured it made sense to keep these two events
+together though
+
+3) there was an inconsistency in iwl*_mac_stop
+the if condition was ones checked for falseness in 3945 and for trueness in 4965
+i believe 4965 code was right so i altered it in the 3945 code
+
+I wasn't really sure what mailinglists to spam with this message, but seeing as it
+was (only?) posted here but only in iwlwifi git, ... Anyway the patch i reviewed
+was the one in iwlwifi git, and my patch below is diffed against that git. The 4965
+part of the patch is not tested. Without further ado:
+
+signed-off-by Ian Schram <ischram@telenet.be>
+---
+diff --git a/origin/iwl3945-base.c b/origin/iwl3945-base.c
+index 970ae6e..e6e778a 100644
+--- a/origin/iwl3945-base.c
++++ b/origin/iwl3945-base.c
+@@ -6979,12 +6979,14 @@ static int iwl3945_mac_open(struct ieee80211_hw *hw)
+ 		IWL_ERROR("Fail to pci_enable_device\n");
+ 		return -ENODEV;
+ 	}
++	pci_restore_state(priv->pci_dev);
+
++	pci_enable_msi(priv->pci_dev);
+ 	ret = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
+ 			  DRV_NAME, priv);
+ 	if (ret) {
+ 		IWL_ERROR("Error allocating IRQ %d\n", priv->pci_dev->irq);
+-		return ret;
++		goto out_disable_msi;
+ 	}
+
+ 	/* we should be verifying the device is ready to be opened */
+@@ -6999,7 +7001,7 @@ static int iwl3945_mac_open(struct ieee80211_hw *hw)
+ 		if (ret) {
+ 			IWL_ERROR("Could not read microcode: %d\n", ret);
+ 			mutex_unlock(&priv->mutex);
+-			return ret;
++			goto out_release_irq;
+ 		}
+ 	}
+
+@@ -7018,11 +7020,19 @@ static int iwl3945_mac_open(struct ieee80211_hw *hw)
+ 		if (!test_bit(STATUS_READY, &priv->status)) {
+ 			IWL_ERROR("Wait for START_ALIVE timeout after %dms.\n",
+ 				  jiffies_to_msecs(UCODE_READY_TIMEOUT));
++			ret = -ENODEV;
++			goto out_release_irq;
+ 		}
+ 	}
+
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
 +
- /* Fixed point arithmetic shifting amount. */
- #define RATE_CONTROL_ARITH_SHIFT 8
- 
-@@ -122,6 +129,9 @@ struct sta_rate_control {
- 	/* Last framed failes percentage sample */
- 	u32 last_pf;
- 
-+	/* Sharpening needed */
-+	u8 sharp_cnt;
++out_release_irq:
++	free_irq(priv->pci_dev->irq, priv);
++out_disable_msi:
++	pci_disable_msi(priv->pci_dev);
++	return ret;	
+ }
+
+ static int iwl3945_mac_stop(struct ieee80211_hw *hw)
+@@ -7036,7 +7046,7 @@ static int iwl3945_mac_stop(struct ieee80211_hw *hw)
+ 	 */
+ 	priv->is_open = 0;
+
+-	if (!iwl3945_is_ready_rf(priv)) {
++	if (iwl3945_is_ready_rf(priv)) {
+ 		mutex_lock(&priv->mutex);
+ 		iwl3945_scan_cancel_timeout(priv, 100);
+ 		cancel_delayed_work(&priv->post_associate);
+@@ -7047,6 +7057,7 @@ static int iwl3945_mac_stop(struct ieee80211_hw *hw)
+
+ 	flush_workqueue(priv->workqueue);
+ 	free_irq(priv->pci_dev->irq, priv);
++	pci_disable_msi(priv->pci_dev);
+
+ 	pci_disable_device(priv->pci_dev);
+
+@@ -8638,8 +8649,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+
+ 	iwl3945_disable_interrupts(priv);
+
+-	pci_enable_msi(pdev);
+-
+ 	err = sysfs_create_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ 	if (err) {
+ 		IWL_ERROR("failed to create sysfs device attributes\n");
+@@ -8678,6 +8687,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+
+ 	priv->hw->conf.beacon_int = 100;
+ 	priv->mac80211_registered = 1;
++	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+
+ 	return 0;
+@@ -8686,8 +8696,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+
+  out_release_irq:
+-	free_irq(pdev->irq, priv);
+-	pci_disable_msi(pdev);
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 	iwl3945_unset_hw_setting(priv);
+@@ -8754,7 +8762,6 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+
+-	pci_disable_msi(pdev);
+ 	pci_iounmap(pdev, priv->hw_base);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+diff --git a/origin/iwl4965-base.c b/origin/iwl4965-base.c
+index 21397bd..e3a9bb9 100644
+--- a/origin/iwl4965-base.c
++++ b/origin/iwl4965-base.c
+@@ -7418,12 +7418,14 @@ static int iwl4965_mac_open(struct ieee80211_hw *hw)
+ 		IWL_ERROR("Fail to pci_enable_device\n");
+ 		return -ENODEV;
+ 	}
++	pci_restore_state(priv->pci_dev);
+
++	pci_enable_msi(priv->pci_dev);
+ 	ret = request_irq(priv->pci_dev->irq, iwl4965_isr, IRQF_SHARED,
+ 			  DRV_NAME, priv);
+ 	if (ret) {
+ 		IWL_ERROR("Error allocating IRQ %d\n", priv->pci_dev->irq);
+-		return ret;
++		goto out_disable_msi;
+ 	}
+
+ 	/* we should be verifying the device is ready to be opened */
+@@ -7438,7 +7440,7 @@ static int iwl4965_mac_open(struct ieee80211_hw *hw)
+ 		if (ret) {
+ 			IWL_ERROR("Could not read microcode: %d\n", ret);
+ 			mutex_unlock(&priv->mutex);
+-			return ret;
++			goto out_free_irq;
+ 		}
+ 	}
+
+@@ -7457,11 +7459,19 @@ static int iwl4965_mac_open(struct ieee80211_hw *hw)
+ 		if (!test_bit(STATUS_READY, &priv->status)) {
+ 			IWL_ERROR("Wait for START_ALIVE timeout after %dms.\n",
+ 				  jiffies_to_msecs(UCODE_READY_TIMEOUT));
++			ret=-ETIMEDOUT;
++			goto out_release_irq;
+ 		}
+ 	}
+
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
 +
- 	unsigned long avg_rate_update;
- 	u32 tx_avg_rate_sum;
- 	u32 tx_avg_rate_num;
-@@ -252,10 +262,12 @@ static void rate_control_simple_tx_statu
- 		srctrl->last_sample = jiffies;
- 
- 		/* If no frames were transmitted, we assume the old sample is
--		 * still a good measurement and copy it.
-+		 * still a good measurement and copy it, and turn the
-+		 * sharpening factor on.
- 		 */
--		if (srctrl->tx_num_xmit == 0)
-+		if (srctrl->tx_num_xmit == 0) {
- 			pf = srctrl->last_pf;
-+			srctrl->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
- 		else {
- 			pf = srctrl->tx_num_failed * 100 / srctrl->tx_num_xmit;
- 			pf <<= RATE_CONTROL_ARITH_SHIFT;
-@@ -271,8 +283,11 @@ static void rate_control_simple_tx_statu
- 		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
- 		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
- 
--		err_der = pf - srctrl->last_pf;
-+		err_der = pf - srctrl->last_pf
-+			  + RATE_CONTROL_SHARPENING * srctrl->sharp;
- 		srctrl->last_pf = pf;
-+		if (srctrl->sharp)
-+			srctrl->sharp--;
- 
- 		/* Compute the controller output. */
- 		adj = (err_prop * RATE_CONTROL_COEFF_P
++out_release_irq:
++	free_irq(priv->pci_dev->irq, priv);
++out_disable_msi:
++	pci_disable_msi(priv->pci_dev);
++	return ret;
+ }
 
+ static int iwl4965_mac_stop(struct ieee80211_hw *hw)
+@@ -7486,6 +7496,7 @@ static int iwl4965_mac_stop(struct ieee80211_hw *hw)
 
-2) It seems that most of the devices out there have better sensitivity at 6
-and 9M than at 11M, while others haven't, e.g.:
-Rate [Mbps]	Sensitivity [dBm]
-	(1)	(2)	(3)	(4)
-1	-97	-91	-90	-96
-2	-96		-90	-95
-5.5	-95		-86	-94
-11	-92	-88	-82	-94
-6	-94	-85	-90	-91
-9	-93		-89	-90
-12	-91		-86	-88
-18	-90		-82	-86
-24	-86		-79	-83
-36	-83		-76	-78
-48	-77		-72	-76
-54	-74	-69	-72	-75
+ 	flush_workqueue(priv->workqueue);
+ 	free_irq(priv->pci_dev->irq, priv);
++	pci_disable_msi(priv->pci_dev);
 
-(1) Ubiquiti SR2, Atheros-based
-(2) Marvell 88W8686 SM module
-(3) Cheap Atheros based access point
-(4) Cheap Broadcom 4318E device
+ 	pci_disable_device(priv->pci_dev);
 
-So, I guess we can't think of a preset ordering for rates. I tested this
-with a Broadcom based device (which should be pretty similar to (4)), but the
-only other wireless card which supports both 802.11b and 802.11g I got is
-an Intel IPW2200 (which is not supported by any mac80211 driver). So,
-testing this with an Atheros, e.g., or some new Intel device, could lead to
-unexpected behaviour and thus we may need to keep some table like: rate <->
-recent failed frames. But we would really need more testers here!
+@@ -9283,8 +9294,6 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 
-I'll try to provide more comments and tuning in a few days.
+ 	iwl4965_disable_interrupts(priv);
 
+-	pci_enable_msi(pdev);
+-
+ 	err = sysfs_create_group(&pdev->dev.kobj, &iwl4965_attribute_group);
+ 	if (err) {
+ 		IWL_ERROR("failed to create sysfs device attributes\n");
+@@ -9323,6 +9332,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 
-[1] Always remember: put at least 20cc (426 U.S. microbarrels) of water in
-the microwave oven before turning it on. Failing to do so could cause kitchen
-regressions.
+ 	priv->hw->conf.beacon_int = 100;
+ 	priv->mac80211_registered = 1;
++	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
 
+ 	return 0;
+@@ -9331,8 +9341,6 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl4965_attribute_group);
 
---
-Ciao
-Stefano
+  out_release_irq:
+-	free_irq(pdev->irq, priv);
+-	pci_disable_msi(pdev);
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 	iwl4965_unset_hw_setting(priv);
+@@ -9399,7 +9407,6 @@ static void iwl4965_pci_remove(struct pci_dev *pdev)
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+
+-	pci_disable_msi(pdev);
+ 	pci_iounmap(pdev, priv->hw_base);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
