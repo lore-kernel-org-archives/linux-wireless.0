@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51984 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756759AbXLLKoe (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:39664 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751179AbXLBWLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 05:44:34 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Brennan Ashton" <comphappy@gmail.com>
-Subject: Re: b43 regression
-Date: Wed, 12 Dec 2007 11:42:45 +0100
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200712101136.48669.mb@bu3sch.de> <200712111202.34101.mb@bu3sch.de> <b2d05de20712111916o7e7b0395j974c06591de38965@mail.gmail.com>
-In-Reply-To: <b2d05de20712111916o7e7b0395j974c06591de38965@mail.gmail.com>
+	Sun, 2 Dec 2007 17:11:15 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 8/8] rtl8187: Add USB ID for Sitecom WL-168 v1 001
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Sun, 02 Dec 2007 17:17:51 -0500
+Message-ID: <20071202221751.7347.65203.stgit@tetra.sourmilk.net> (sfid-20071202_221131_711387_384AC5D6)
+In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
+References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712121142.45386.mb@bu3sch.de> (sfid-20071212_104438_172468_F7D3BEBE)
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 December 2007 04:16:22 Brennan Ashton wrote:
-> On Dec 11, 2007 3:02 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Tuesday 11 December 2007 02:14:05 Brennan Ashton wrote:
-> > > https://bugzilla.redhat.com/show_bug.cgi?id=412861
-> > > I downloaded the source for 2.6.23.8-63.fc8.src.rpm the package that
-> > > things started to stop working at, and could not find any part of this
-> > > patch applied, so at least for that bug it is something else.
-> > >
-> >
-> > Please find out which patch broke it then. Nobody but you can do this.
-> 
-> What do you use to hammer the card with data to see if if fails?  I
+From: Matthias Mueller <matthias.mueller@rz.uni-karlsruhe.de>
 
-You can use iperf or simply wget some file from a http server in the
-network.
+Thanks to Matthias Mueller for reporting this device.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+
+ drivers/net/wireless/rtl8187_dev.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 859235f..db2e0e0 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -38,6 +38,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0846, 0x6a00)},
+ 	/* HP */
+ 	{USB_DEVICE(0x03f0, 0xca02)},
++	/* Sitecom */
++	{USB_DEVICE(0x0df6, 0x000d)},
+ 	{}
+ };
+ 
 
 
--- 
-Greetings Michael.
