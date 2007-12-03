@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56542 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762767AbXLMG7S (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:25485 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbXLCKuk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:18 -0500
-Subject: [PATCH 56/48] libertas: improve reliability of firmware reloading on USB
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	Mon, 3 Dec 2007 05:50:40 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so5061297wah
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2007 02:50:40 -0800 (PST)
+Message-ID: <aa79d98a0712030250s748bb7dfjb50f3fe5fed67fa7@mail.gmail.com> (sfid-20071203_105045_617347_56E5300A)
+Date: Mon, 3 Dec 2007 13:50:38 +0300
+From: "Cyrill Gorcunov" <gorcunov@gmail.com>
+To: "Michael Wu" <flamingice@sourmilk.net>
+Subject: [PATCH] NET: mac80211 - fix missed mutex unlock
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2X-0005rM-Q1@shinybook.infradead.org> (sfid-20071213_070639_991018_4D364ABE)
-Date: Thu, 13 Dec 2007 01:59:25 -0500
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_9679_805667.1196679038971"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Mon, 10 Dec 2007 18:53:34 -0500
+------=_Part_9679_805667.1196679038971
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Increase the delay between issuing the RESET command and the usb reset,
-and be prepared to discard more than one 'normal' packet from it before
-it resets.
+This patch does fix missed mutex unlock. Please see it attached.
+(Can't send it as a plain text patch - have only IE based mail access)
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/if_usb.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Cyrill
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 8ff57a6..0a37950 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -389,9 +389,9 @@ static int if_usb_reset_device(struct usb_card_rec *cardp)
- 	cmd->params.reset.action = cpu_to_le16(CMD_ACT_HALT);
- 	usb_tx_block(cardp, cardp->bulk_out_buffer, 4 + S_DS_GEN + sizeof(struct cmd_ds_802_11_reset));
- 
--	msleep(10);
-+	msleep(100);
- 	ret = usb_reset_device(cardp->udev);
--	msleep(10);
-+	msleep(100);
- 
- 	lbs_deb_leave_args(LBS_DEB_USB, "ret %d", ret);
- 
-@@ -500,7 +500,7 @@ static void if_usb_receive_fwload(struct urb *urb)
- 		return;
- 	}
- 
--	if (cardp->bootcmdresp == 0) {
-+	if (cardp->bootcmdresp <= 0) {
- 		memcpy (&bootcmdresp, skb->data + IPFIELD_ALIGN_OFFSET,
- 			sizeof(bootcmdresp));
- 		if (le16_to_cpu(cardp->udev->descriptor.bcdDevice) < 0x3106) {
--- 
-1.5.3.4
+------=_Part_9679_805667.1196679038971
+Content-Type: text/plain; name=NET-mac80211-fix-missed-mutex-unlock.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f9qvlrnz
+Content-Disposition: attachment;
+ filename=NET-mac80211-fix-missed-mutex-unlock.patch
 
+RnJvbTogQ3lyaWxsIEdvcmN1bm92IDxnb3JjdW5vdkBnbWFpbC5jb20+CkRhdGU6IE1vbiwgMyBE
+ZWMgMjAwNyAxMzozNjo1OCArMDMwMApTdWJqZWN0OiBbUEFUQ0hdIE5FVDogbWFjODAyMTEgLSBm
+aXggbWlzc2VkIG11dGV4IHVubG9jawoKU2lnbmVkLW9mZi1ieTogQ3lyaWxsIEdvcmN1bm92IDxn
+b3JjdW5vdkBnbWFpbC5jb20+Ci0tLQogbmV0L21hYzgwMjExL2llZWU4MDIxMV9yYXRlLmMgfCAg
+ICAxICsKIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQoK
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9pZWVlODAyMTFfcmF0ZS5jIGIvbmV0L21hYzgwMjEx
+L2llZWU4MDIxMV9yYXRlLmMKaW5kZXggNzI1NGJkNi4uMzI2MGE0YSAxMDA2NDQKLS0tIGEvbmV0
+L21hYzgwMjExL2llZWU4MDIxMV9yYXRlLmMKKysrIGIvbmV0L21hYzgwMjExL2llZWU4MDIxMV9y
+YXRlLmMKQEAgLTMzLDYgKzMzLDcgQEAgaW50IGllZWU4MDIxMV9yYXRlX2NvbnRyb2xfcmVnaXN0
+ZXIoc3RydWN0IHJhdGVfY29udHJvbF9vcHMgKm9wcykKIAkJaWYgKCFzdHJjbXAoYWxnLT5vcHMt
+Pm5hbWUsIG9wcy0+bmFtZSkpIHsKIAkJCS8qIGRvbid0IHJlZ2lzdGVyIGFuIGFsZ29yaXRobSB0
+d2ljZSAqLwogCQkJV0FSTl9PTigxKTsKKwkJCW11dGV4X3VubG9jaygmcmF0ZV9jdHJsX211dGV4
+KTsKIAkJCXJldHVybiAtRUFMUkVBRFk7CiAJCX0KIAl9Ci0tIAoxLjUuMy41LjE0ODEuZzlkY2YK
+
+------=_Part_9679_805667.1196679038971--
