@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37387 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbXLIK7J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 05:59:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John H." <mistamaila@gmail.com>
-Subject: Re: b43 continues to have issue with APs at times
-Date: Sun, 9 Dec 2007 11:57:21 +0100
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com> <200712082135.11685.mb@bu3sch.de> <5b9417770712090001t631bb650l531fbb7efb1cc80c@mail.gmail.com>
-In-Reply-To: <5b9417770712090001t631bb650l531fbb7efb1cc80c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712091157.22000.mb@bu3sch.de> (sfid-20071209_105925_784002_884FDA9D)
+Received: from mga11.intel.com ([192.55.52.93]:50174 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751362AbXLCGV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2007 01:21:29 -0500
+Subject: Re: [PATCH] iwlwifi: delay firmware loading from pci_probe to
+	network interface open
+From: Zhu Yi <yi.zhu@intel.com>
+To: Ian Schram <ischram@telenet.be>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomasw@gmail.com>, Ben Gamari <ben@mw0.ath.cx>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <47532F45.9020508@telenet.be>
+References: <1196327913-24715-1-git-send-email-yi.zhu@intel.com>
+	 <47532F45.9020508@telenet.be>
+Content-Type: text/plain
+Date: Mon, 03 Dec 2007 14:21:29 +0800
+Message-Id: <1196662889.3109.27.camel@debian.sh.intel.com> (sfid-20071203_062134_934608_EF35D4F0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 December 2007 09:01:26 John H. wrote:
-> no, i stopped using ndiswrapper a while back because I wanted to use
-> b43, but I did not have this issue then.
 
-But ndiswrapper doesn't use mac80211, right?
-Do you see this issue with other _mac80211_ drivers?
-
-> On Dec 8, 2007 2:35 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> >
-> > On Saturday 08 December 2007 21:22:37 John H. wrote:
-> > > I have this problem at two different locations with two different
-> > > access points.  2.6.23.1 kernel, and sometimes until I actually power
-> > > down the AP and restart it, wpa_supplicant and such just times out on
-> > > the AP.
-> > >
-> > > Any ideas?
-> > >
-> > >
-> >
-> > I think that's rather a mac80211 or supplicant issue.
-> > I think roaming should handle this.
-> > Do you see this with other drivers, too?
-> >
-> > --
-> > Greetings Michael.
-> >
+On Sun, 2007-12-02 at 23:18 +0100, Ian Schram wrote:
 > 
+> The main problem was:
+> pci_save/restore_state() wasn't being called when the device was
+> disabled in pci_probe to save power. which meant that when it was
+> reenabled it had no idea about the dma and hence the card would
+> seemingly never wake up, seeing as no init_alive_resp would be
+> received
 > 
+> secondary problems:
+> 1) additionally the code should not have dereferenced a null pointer.
+> This
+> happened in mac80211 because the failure was hidden and null was
+> returned
+> in ops->start
+> 
+> 2) when the ops->start failed, the irq was registered, but never
+> freeded because
+> ops->close wouldn't be called. i added a bit of error handling in the
+> function
+> and pulled enable/disbale msi there because i was having additional
+> oopses when testing
+> but i think they might be redundant. I figured it made sense to keep
+> these two events
+> together though
+> 
+> 3) there was an inconsistency in iwl*_mac_stop
+> the if condition was ones checked for falseness in 3945 and for
+> trueness in 4965
+> i believe 4965 code was right so i altered it in the 3945 code
 
+The patch is correct. I also add pci_save_state in ops->stop in case the
+interface is up and down multiple times. I also move iwl_down() from the
+branch so that it will be called in ops->stop anyway in case we don't
+clean up the h/w state in some rare cases. Fixed a typo also for 4965.
 
+Thanks for the patch! It's in the GIT tip now.
+http://intellinuxwireless.org/repos/?p=iwlwifi.git;a=commitdiff;h=523a55dd0f182f3aa8534d25398832d71d61c655
 
--- 
-Greetings Michael.
+-yi
