@@ -1,42 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51782 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbXLKVzM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 16:55:12 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John H." <mistamaila@gmail.com>
-Subject: Re: b43 continues to have issue with APs at times
-Date: Tue, 11 Dec 2007 22:53:23 +0100
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com> <200712091240.06060.mb@bu3sch.de> <5b9417770712111341t746920c4jee69ef8b498c0f94@mail.gmail.com>
-In-Reply-To: <5b9417770712111341t746920c4jee69ef8b498c0f94@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712112253.24062.mb@bu3sch.de> (sfid-20071211_215516_928534_FAC1B10C)
+Received: from mga02.intel.com ([134.134.136.20]:56602 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753168AbXLCLok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2007 06:44:40 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
+Subject: [PATCH 06/34] iwl-4965-hw.h: clean up unused eeprom structures and definitions
+Date: Mon,  3 Dec 2007 13:43:18 +0200
+Message-Id: <11966822293340-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114446_179221_D89953CF)
+In-Reply-To: <119668222978-git-send-email-tomas.winkler@intel.com>
+References: <11966822261109-git-send-email-tomas.winkler@intel.com>
+ <11966822291406-git-send-email-tomas.winkler@intel.com>
+ <1196682229843-git-send-email-tomas.winkler@intel.com>
+ <11966822293932-git-send-email-tomas.winkler@intel.com>
+ <11966822291956-git-send-email-tomas.winkler@intel.com>
+ <119668222978-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 December 2007 22:41:49 John H. wrote:
-> Is that a question?
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Not really.
-You know the history of this driver? I mean. It's good
-that it works at all. If you need better performance
-someone has to fix it, probably. You could start with it. :)
+Clean up unused eeprom structures and definitions in iwl-4965-hw.h.
 
-> On Dec 9, 2007 5:40 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Sunday 09 December 2007 12:37:27 John H. wrote:
-> > > i dont know what other ones i would have used.  bcm43xx never worked
-> > > right, really, and had bandwidth limitations.
-> > >
-> > > Right now I am downloading over a wireless lan and getting 1mb/s.
-> > > Why?  That just makes no sense.
-> >
-> > Because it's broken?
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   58 +---------------------------
+ 1 files changed, 1 insertions(+), 57 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index 381ca93..fbdc7f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -169,57 +169,6 @@ struct iwl4965_eeprom_channel {
+ 	s8 max_power_avg;	/* max power (dBm) on this chnl, limit 31 */
+ } __attribute__ ((packed));
+ 
+-/*
+- * Mapping of a Tx power level, at factory calibration temperature,
+- *   to a radio/DSP gain table index.
+- * One for each of 5 "sample" power levels in each band.
+- * v_det is measured at the factory, using the 3945's built-in power amplifier
+- *   (PA) output voltage detector.  This same detector is used during Tx of
+- *   long packets in normal operation to provide feedback as to proper output
+- *   level.
+- * Data copied from EEPROM.
+- */
+-struct iwl4965_eeprom_txpower_sample {
+-	u8 gain_index;		/* index into power (gain) setup table ... */
+-	s8 power;		/* ... for this pwr level for this chnl group */
+-	u16 v_det;		/* PA output voltage */
+-} __attribute__ ((packed));
+-
+-/*
+- * Mappings of Tx power levels -> nominal radio/DSP gain table indexes.
+- * One for each channel group (a.k.a. "band") (1 for BG, 4 for A).
+- * Tx power setup code interpolates between the 5 "sample" power levels
+- *    to determine the nominal setup for a requested power level.
+- * Data copied from EEPROM.
+- * DO NOT ALTER THIS STRUCTURE!!!
+- */
+-struct iwl4965_eeprom_txpower_group {
+-	struct iwl4965_eeprom_txpower_sample samples[5];	/* 5 power levels */
+-	s32 a, b, c, d, e;	/* coefficients for voltage->power
+-				 * formula (signed) */
+-	s32 Fa, Fb, Fc, Fd, Fe;	/* these modify coeffs based on
+-					 * frequency (signed) */
+-	s8 saturation_power;	/* highest power possible by h/w in this
+-				 * band */
+-	u8 group_channel;	/* "representative" channel # in this band */
+-	s16 temperature;	/* h/w temperature at factory calib this band
+-				 * (signed) */
+-} __attribute__ ((packed));
+-
+-/*
+- * Temperature-based Tx-power compensation data, not band-specific.
+- * These coefficients are use to modify a/b/c/d/e coeffs based on
+- *   difference between current temperature and factory calib temperature.
+- * Data copied from EEPROM.
+- */
+-struct iwl4965_eeprom_temperature_corr {
+-	u32 Ta;
+-	u32 Tb;
+-	u32 Tc;
+-	u32 Td;
+-	u32 Te;
+-} __attribute__ ((packed));
+-
+ /* 4965 has two radio transmitters (and 3 radio receivers) */
+ #define EEPROM_TX_POWER_TX_CHAINS      (2)
+ 
+@@ -230,8 +179,6 @@ struct iwl4965_eeprom_temperature_corr {
+  * each of 3 target output levels */
+ #define EEPROM_TX_POWER_MEASUREMENTS   (3)
+ 
+-#define EEPROM_TX_POWER_VERSION        (2)
+-
+ /* 4965 driver does not work with txpower calibration version < 5.
+  * Look for this in calib_version member of struct iwl4965_eeprom. */
+ #define EEPROM_TX_POWER_VERSION_NEW    (5)
+@@ -461,10 +408,7 @@ struct iwl4965_eeprom {
+ #define EEPROM_CALIB_VERSION_OFFSET            (2*0xB6)	/* 2 bytes */
+ 	u16 calib_version;	/* abs.ofs: 364 */
+ 	u8 reserved13[2];
+-
+-#define EEPROM_SATURATION_POWER_OFFSET         (2*0xB8)	/* 2 bytes */
+-	u16 satruation_power;	/* abs.ofs: 368 */
+-	u8 reserved14[94];
++	u8 reserved14[96];	/* abs.ofs: 368 */
+ 
+ /*
+  * 4965 Txpower calibration data.
 -- 
-Greetings Michael.
+1.5.2.2
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
