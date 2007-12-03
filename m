@@ -1,53 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:51022 "EHLO madara.hpl.hp.com"
+Received: from mga11.intel.com ([192.55.52.93]:32093 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbXLFVn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 16:43:58 -0500
-Date: Thu, 6 Dec 2007 13:43:41 -0800
-To: Michael Buesch <mb@bu3sch.de>
-Cc: David Miller <davem@davemloft.net>, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071206214341.GA6821@bougret.hpl.hp.com> (sfid-20071206_214402_135467_E2AACAD3)
-Reply-To: jt@hpl.hp.com
-References: <20071204000138.GA1363@bougret.hpl.hp.com> <20071205.183628.211180882.davem@davemloft.net> <20071206212525.GA6509@bougret.hpl.hp.com> <200712062233.18634.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200712062233.18634.mb@bu3sch.de>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	id S1753124AbXLCLpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2007 06:45:13 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
+Subject: [PATCH 22/34] iwlwifi: document keep-warm buffer
+Date: Mon,  3 Dec 2007 13:43:34 +0200
+Message-Id: <11966822311945-git-send-email-tomas.winkler@intel.com> (sfid-20071203_120600_367616_009F962A)
+In-Reply-To: <11966822311498-git-send-email-tomas.winkler@intel.com>
+References: <11966822261109-git-send-email-tomas.winkler@intel.com>
+ <11966822291406-git-send-email-tomas.winkler@intel.com>
+ <1196682229843-git-send-email-tomas.winkler@intel.com>
+ <11966822293932-git-send-email-tomas.winkler@intel.com>
+ <11966822291956-git-send-email-tomas.winkler@intel.com>
+ <119668222978-git-send-email-tomas.winkler@intel.com>
+ <11966822293340-git-send-email-tomas.winkler@intel.com>
+ <11966822291143-git-send-email-tomas.winkler@intel.com>
+ <11966822301152-git-send-email-tomas.winkler@intel.com>
+ <11966822302864-git-send-email-tomas.winkler@intel.com>
+ <1196682230902-git-send-email-tomas.winkler@intel.com>
+ <11966822302932-git-send-email-tomas.winkler@intel.com>
+ <11966822302681-git-send-email-tomas.winkler@intel.com>
+ <11966822301936-git-send-email-tomas.winkler@intel.com>
+ <11966822302007-git-send-email-tomas.winkler@intel.com>
+ <1196682230754-git-send-email-tomas.winkler@intel.com>
+ <1196682231211-git-send-email-tomas.winkler@intel.com>
+ <11966822313647-git-send-email-tomas.winkler@intel.com>
+ <11966822312049-git-send-email-tomas.winkler@intel.com>
+ <11966822311588-git-send-email-tomas.winkler@intel.com>
+ <11966822314158-git-send-email-tomas.winkler@intel.com>
+ <11966822311498-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 06, 2007 at 10:33:18PM +0100, Michael Buesch wrote:
-> On Thursday 06 December 2007 22:25:25 Jean Tourrilhes wrote:
-> > On Wed, Dec 05, 2007 at 06:36:28PM -0800, David Miller wrote:
-> > > From: Jean Tourrilhes <jt@hpl.hp.com>
-> > > Date: Wed, 5 Dec 2007 13:56:00 -0800
-> > > 
-> > > > 	Personally, I was under the impression that in userspace libc
-> > > > trap unaligned access and make them work. I mean, this code was tested
-> > > > on other 64/32 bit platforms (PPC, AMD-64, PS3) and was working there,
-> > > > so this seems to be specific to your platform.
-> > > 
-> > > None of those listed platforms trap on unaligned accesses like sparc
-> > > does.
-> > 
-> 
-> > 	Now, I'm wondering how to deal with unaligned access in
-> > userspace. If you get data from hardware or the network, you can not
-> > guarantee that everything will always be aligned, so we need a way to
-> > deal with it.
-> > 	In the kernel, we have get_unaligned(). I wonder what's the
-> > equivalent in userspace.
-> 
-> Userspace handles this transparently through fault traps.
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-	This is exactly what I was assuming. On the SPARC, in this
-instance, it did not (check back earlier in this discussion).
+Document keep-warm buffer
 
-> Greetings Michael.
+Consolidate flow handler address definitions
 
-	Regards,
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   39 ++++++++++++++++++++--------
+ 1 files changed, 28 insertions(+), 11 deletions(-)
 
-	Jean
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index e02860c..cc348de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -1282,20 +1282,37 @@ enum {
+ 
+ /********************* END TXPOWER *****************************************/
+ 
++/****************************/
+ /* Flow Handler Definitions */
++/****************************/
+ 
+-/**********************/
+-/*     Addresses      */
+-/**********************/
+-
++/*
++ * This I/O area is directly read/writable by driver (e.g. Linux uses writel())
++ * Addresses are offsets from device's PCI hardware base address.
++ */
+ #define FH_MEM_LOWER_BOUND                   (0x1000)
+ #define FH_MEM_UPPER_BOUND                   (0x1EF0)
+ 
+-#define IWL_FH_REGS_LOWER_BOUND		     (0x1000)
+-#define IWL_FH_REGS_UPPER_BOUND		     (0x2000)
+-
++/**
++ * Keep-Warm (KW) buffer base address.
++ *
++ * Driver must allocate a 4KByte buffer that is used by 4965 for keeping the
++ * host DRAM powered on (via dummy accesses to DRAM) to maintain low-latency
++ * DRAM access when 4965 is Txing or Rxing.  The dummy accesses prevent host
++ * from going into a power-savings mode that would cause higher DRAM latency,
++ * and possible data over/under-runs, before all Tx/Rx is complete.
++ *
++ * Driver loads IWL_FH_KW_MEM_ADDR_REG with the physical address (bits 35:4)
++ * of the buffer, which must be 4K aligned.  Once this is set up, the 4965
++ * automatically invokes keep-warm accesses when normal accesses might not
++ * be sufficient to maintain fast DRAM response.
++ *
++ * Bit fields:
++ *  31-0:  Keep-warm buffer physical base address [35:4], must be 4K aligned
++ */
+ #define IWL_FH_KW_MEM_ADDR_REG		     (FH_MEM_LOWER_BOUND + 0x97C)
+ 
++
+ /* CBBC Area - Circular buffers base address cache pointers table */
+ #define FH_MEM_CBBC_LOWER_BOUND              (FH_MEM_LOWER_BOUND + 0x9D0)
+ #define FH_MEM_CBBC_UPPER_BOUND              (FH_MEM_LOWER_BOUND + 0xA10)
+@@ -1326,16 +1343,16 @@ enum {
+ #define FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV  (FH_MEM_RSSR_LOWER_BOUND + 0x008)
+ 
+ /* TCSR */
+-#define IWL_FH_TCSR_LOWER_BOUND  (IWL_FH_REGS_LOWER_BOUND + 0xD00)
+-#define IWL_FH_TCSR_UPPER_BOUND  (IWL_FH_REGS_LOWER_BOUND + 0xE60)
++#define IWL_FH_TCSR_LOWER_BOUND  (FH_MEM_LOWER_BOUND + 0xD00)
++#define IWL_FH_TCSR_UPPER_BOUND  (FH_MEM_LOWER_BOUND + 0xE60)
+ 
+ #define IWL_FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
+ 	(IWL_FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
+ 
+ /* TSSR Area - Tx shared status registers */
+ /* TSSR */
+-#define IWL_FH_TSSR_LOWER_BOUND		(IWL_FH_REGS_LOWER_BOUND + 0xEA0)
+-#define IWL_FH_TSSR_UPPER_BOUND		(IWL_FH_REGS_LOWER_BOUND + 0xEC0)
++#define IWL_FH_TSSR_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xEA0)
++#define IWL_FH_TSSR_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xEC0)
+ 
+ #define IWL_FH_TSSR_TX_STATUS_REG	(IWL_FH_TSSR_LOWER_BOUND + 0x010)
+ 
+-- 
+1.5.2.2
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
