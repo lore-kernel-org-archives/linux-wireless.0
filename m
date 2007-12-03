@@ -1,78 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49981 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315AbXLRMmK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 07:42:10 -0500
-Subject: Re: [RFC] mac80211: clean up frame receive handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from mfe1.polimi.it ([131.175.12.23]:57407 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751116AbXLCDab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Dec 2007 22:30:31 -0500
+Date: Mon, 3 Dec 2007 04:26:56 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20071218042253.GC5698@jm.kir.nu>
-References: <1197483844.6558.158.camel@johannes.berg>
-	 <20071213204933.GD3083@tuxdriver.com>
-	 <1197634443.16079.36.camel@johannes.berg> <20071218042253.GC5698@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-srbYuINnusWYGVEIPzR6"
-Date: Tue, 18 Dec 2007 13:42:05 +0100
-Message-Id: <1197981725.4885.114.camel@johannes.berg> (sfid-20071218_124215_477863_BA932791)
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
+Message-ID: <20071203042656.1aad7ad6@morte> (sfid-20071203_033112_503688_FCB487EE)
+In-Reply-To: <20071203041608.3af3b462@morte>
+References: <1196622331.7472.4.camel@localhost>
+	<20071203041608.3af3b462@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sorry, it looks like I didn't refresh the patch I just inlined:
 
---=-srbYuINnusWYGVEIPzR6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Index: wireless-2.6/net/mac80211/rc80211_simple.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_simple.c
++++ wireless-2.6/net/mac80211/rc80211_simple.c
+@@ -26,13 +26,15 @@
+  *
+  * The controller basically computes the following:
+  *
+- * adj = CP * err + CI * err_avg + CD * (err - last_err)
++ * adj = CP * err + CI * err_avg + CD * (1 + sharpening) * (err - last_err)
+  *
+  * where
+  * 	adj	adjustment value that is used to switch TX rate (see below)
+  * 	err	current error: target vs. current failed frames percentage
+  * 	last_err	last error
+  * 	err_avg	average (i.e. poor man's integral) of recent errors
++ *	sharpening	non-zero when fast response is needed (i.e. right after
++ *			association or interpolation)
+  * 	CP	Proportional coefficient
+  * 	CI	Integral coefficient
+  * 	CD	Derivative coefficient
+@@ -62,6 +64,11 @@
+ #define RATE_CONTROL_SMOOTHING_SHIFT 3
+ #define RATE_CONTROL_SMOOTHING (1 << RATE_CONTROL_SMOOTHING_SHIFT)
+ 
++/* Sharpening factor (used for D part of PID controller) */
++#define RATE_CONTROL_SHARPENING_SHIFT 2
++#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
++#define RATE_CONTROL_SHARPENING_DURATION 3
++
+ /* Fixed point arithmetic shifting amount. */
+ #define RATE_CONTROL_ARITH_SHIFT 8
+ 
+@@ -122,6 +129,9 @@ struct sta_rate_control {
+ 	/* Last framed failes percentage sample */
+ 	u32 last_pf;
+ 
++	/* Sharpening needed */
++	u8 sharp_cnt;
++
+ 	unsigned long avg_rate_update;
+ 	u32 tx_avg_rate_sum;
+ 	u32 tx_avg_rate_num;
+@@ -252,11 +262,13 @@ static void rate_control_simple_tx_statu
+ 		srctrl->last_sample = jiffies;
+ 
+ 		/* If no frames were transmitted, we assume the old sample is
+-		 * still a good measurement and copy it.
++		 * still a good measurement and copy it, and turn the
++		 * sharpening factor on.
+ 		 */
+-		if (srctrl->tx_num_xmit == 0)
++		if (srctrl->tx_num_xmit == 0) {
+ 			pf = srctrl->last_pf;
+-		else {
++			srctrl->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
++		} else {
+ 			pf = srctrl->tx_num_failed * 100 / srctrl->tx_num_xmit;
+ 			pf <<= RATE_CONTROL_ARITH_SHIFT;
+ 
+@@ -271,8 +283,11 @@ static void rate_control_simple_tx_statu
+ 		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
+ 		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
+ 
+-		err_der = pf - srctrl->last_pf;
++		err_der = (pf - srctrl->last_pf) *
++			  (1 + RATE_CONTROL_SHARPENING * srctrl->sharp_cnt);
+ 		srctrl->last_pf = pf;
++		if (srctrl->sharp_cnt)
++			srctrl->sharp_cnt--;
+ 
+ 		/* Compute the controller output. */
+ 		adj = (err_prop * RATE_CONTROL_COEFF_P
 
 
-> > I think in theory all eapol frames are sent to the PAE group address,
-> > but I have no idea which of the checks would be more efficient. It seem=
-s
-> > that the first could be optimised a lot because it's constant too...
->=20
-> They are not.. PAE group address is used for all EAPOL frames in
-> non-shared media LANs (e.g., wired Ethernet switch), but IEEE 802.11
-> uses the specific MAC address of the PAE since it is a shared media LAN
-> (i.e., the frames are between the unicast MAC address of the non-AP
-> STA/Supplicant and AP/Authenticator).=20
-
-If that's how it's specified, ok, but I think it's not strictly
-necessary because the AP is addressed already by the BSSID, no?
-
-> If we end up having to drop the
-> PAE group addressed EAPOL frames in mac80211 anyway due to Linux
-> bridging code not doing this,
-
-No, we don't. We have to drop "unicast to somebody else". Group
-addressed frames are dropped just fine.
-
-johannes
-
---=-srbYuINnusWYGVEIPzR6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2fAHKVg1VMiehFYAQIwjw/+O1M4aK0D0xHVE5FBpVB1n0PM/KvmAlwg
-gPMF+p/3IdRSxzgrtPc1ZZXxUcpN1eWe2a4an2W/5duAGE3TqAMseV6IDlhnUyLT
-IhGIbfaAaRRRdpZWlamQdV9iZ+SBfZUDgHKAN52SaGbhT9MtvgmkauLhbB7jU96n
-zc2+rasQ2C0RRcMeDEnMsY9rCDwVpUMX1K+/5I8iHuvYMItNREd6MQTFWx5njU2k
-2RQRJkge7oL+zgY7zqYwwMv+pTlMLc6rLy+nQQqDah8o+7ZQgAC686GAXN9MdK9f
-iNc4LCLx0hYKreT0FaWzjDG9baa34V5XTsgc14pOz90TfNldWESioCwJrHFogdG5
-QBAsotafwguSpsdVAmRk1kv//j3l7eYGgfSMaUYOn+xNeo6iHhs+4k61kRTESzL9
-cnNgJZUfJbux32/xjYIb6n/0YKNUOOg+xiEPSFClNpnhBzSy3NKdGeRz2xSZ3Fp0
-fOx82QTs52r3dEueWOy73tcuEr+H1fg38MtKwNhKtQP2X8qyDj0i/qzghZiMXpa5
-UTkfyXjdZb3tCEpnG3TyIgqouwUfPfkHmeWolTnQd3ofqcMwvUtIuuhRnxSfJgM1
-k9y1m/kaD1KBsxGjoQy8/llOy5Pq3hwXJ7MKnIOBCDoVCgqJOqBzDI4m3uPsTRci
-dchplAMwTyo=
-=eKKj
------END PGP SIGNATURE-----
-
---=-srbYuINnusWYGVEIPzR6--
-
+-- 
+Ciao
+Stefano
