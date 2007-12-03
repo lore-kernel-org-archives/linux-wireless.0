@@ -1,116 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5937 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589AbXLEQ5h convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbXLCKmk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 11:57:37 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 1/5] [LIBERTAS] Remove cmd_oid from struct cmd_ctrl_node
-Date: Wed, 5 Dec 2007 17:57:54 +0100
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	David Woodhouse <dwmw2@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712051757.54806.hs4233@mail.mn-solutions.de> (sfid-20071205_165740_280583_BAED1AB8)
+	Mon, 3 Dec 2007 05:42:40 -0500
+Subject: Re: [RFC] mac80211: don't use if_id, use if_priv
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <43e72e890711300833m20bb79ffof1cc228c6ec4922c@mail.gmail.com> (sfid-20071130_163345_344106_A3FA7031)
+References: <1196423301.6058.187.camel@johannes.berg>
+	 <43e72e890711300833m20bb79ffof1cc228c6ec4922c@mail.gmail.com>
+	 (sfid-20071130_163345_344106_A3FA7031)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+KiqtcNlb5uPdDLnTBzY"
+Date: Mon, 03 Dec 2007 11:42:31 +0100
+Message-Id: <1196678551.6060.29.camel@johannes.berg> (sfid-20071203_104243_359650_1C408739)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 873ae059c3d82664a0198423da6f3efdceb6e7e3 Mon Sep 17 00:00:00 2001
-From: David Woodhouse <dwmw2@infradead.org>
-Date: Sat, 1 Dec 2007 15:15:41 +0000
-Subject: [PATCH] [LIBERTAS] Remove cmd_oid from struct cmd_ctrl_node
 
-This is only needed for SNMP and key operations; it doesn't need to be
-preserved outside that context.
+--=-+KiqtcNlb5uPdDLnTBzY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.c     |    9 +++------
- drivers/net/wireless/libertas/decl.h    |    2 +-
- drivers/net/wireless/libertas/hostcmd.h |    2 --
- 3 files changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 8d22ec3..71c3833 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1209,7 +1209,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		goto done;
- 	}
- 
--	lbs_set_cmd_ctrl_node(priv, cmdnode, cmd_oid, wait_option, pdata_buf);
-+	lbs_set_cmd_ctrl_node(priv, cmdnode, wait_option, pdata_buf);
- 
- 	cmdptr = (struct cmd_ds_command *)cmdnode->bufvirtualaddr;
- 
-@@ -1382,7 +1382,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 	case CMD_802_11_INACTIVITY_TIMEOUT:
- 		ret = lbs_cmd_802_11_inactivity_timeout(priv, cmdptr,
- 							 cmd_action, pdata_buf);
--		lbs_set_cmd_ctrl_node(priv, cmdnode, 0, 0, pdata_buf);
-+		lbs_set_cmd_ctrl_node(priv, cmdnode, 0, pdata_buf);
- 		break;
- 
- 	case CMD_802_11_TPC_CFG:
-@@ -1643,7 +1643,6 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode)
- 	ptempnode->cmdwaitqwoken = 1;
- 	wake_up_interruptible(&ptempnode->cmdwait_q);
- 	ptempnode->status = 0;
--	ptempnode->cmd_oid = (u32) 0;
- 	ptempnode->wait_option = 0;
- 	ptempnode->pdata_buf = NULL;
- 
-@@ -1658,21 +1657,19 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode)
-  *
-  *  @param priv		A pointer to struct lbs_private structure
-  *  @param ptempnode	A pointer to cmd_ctrl_node structure
-- *  @param cmd_oid	cmd oid: treated as sub command
-  *  @param wait_option	wait option: wait response or not
-  *  @param pdata_buf	A pointer to informaion buffer
-  *  @return 		0 or -1
-  */
- void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
- 		    struct cmd_ctrl_node *ptempnode,
--		    u32 cmd_oid, u16 wait_option, void *pdata_buf)
-+		    u16 wait_option, void *pdata_buf)
- {
- 	lbs_deb_enter(LBS_DEB_HOST);
- 
- 	if (!ptempnode)
- 		return;
- 
--	ptempnode->cmd_oid = cmd_oid;
- 	ptempnode->wait_option = wait_option;
- 	ptempnode->pdata_buf = pdata_buf;
- 
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index 74187f3..447297a 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -26,7 +26,7 @@ struct cmd_ctrl_node *lbs_get_free_cmd_ctrl_node(struct lbs_private *priv);
- 
- void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
- 	struct cmd_ctrl_node *ptempnode,
--	u32 cmd_oid, u16 wait_option, void *pdata_buf);
-+	u16 wait_option, void *pdata_buf);
- 
- int lbs_prepare_and_send_command(struct lbs_private *priv,
- 	u16 cmd_no,
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index fd80d2f..66934f8 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -69,8 +69,6 @@ struct cmd_ctrl_node {
- 	/* CMD link list */
- 	struct list_head list;
- 	u32 status;
--	/* CMD ID */
--	u32 cmd_oid;
- 	/*CMD wait option: wait for finish or no wait */
- 	u16 wait_option;
- 	/* command parameter */
--- 
-1.5.3.4
+> > Comments welcome. I'll be improving this and making it at least compile
+> > with all other drivers.
+>=20
+> What will ieee80211_sub_if_data's if_priv look like?
+
+It's in the patch, simply
+
+|	struct if_priv if_priv;
+
+and then where needed we take &sdata->if_priv to pass to the driver.
+
+> >  Maybe "struct if_priv" should be renamed?
+>=20
+> Yeah, hm... mac80211_priv, iw_priv, subif_priv??
+
+Yeah, I'll search/replace to something better.
+
+johannes
+
+--=-+KiqtcNlb5uPdDLnTBzY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR1PdlqVg1VMiehFYAQJSrQ//c5VT75O/L1As1VZtMOCJIj9FCgLFkGx7
+DtHCzikw/dZC6N1q7nCFA5hGaZ6B0+J825sDgFQYwPR7LHDD8ExPI4NpJCVp1Vq/
+9wVkqyovwzeuc5Z8utXL0J2gEJB8kbPz8Ltp2AwyThJNLW29Oj9ZysON669ZlImE
+gP/OEQr3aHe1/FJvsiViab3MH9pAYIg4CtoW5C82Vk0m/lgEp/7GQjCK5Yq2ixNT
+q4byBAKhfXXSRCR1gqFs+ccMs/+houg5J4gMlqMbx1S7PyhQ6ykQMuMOWpiikTkb
+Q1YlA2BDH8xvkg2gwP+Wdb8Z7BXNmDK71LbcvQz3y6clX/Jv0GHie7APmweJ/MPJ
+Uml79rfYprwTQI8+xRF5iqmCdXiikPmIp3JZFPZNt4/w4omx5ThqTpf5+E/P6rjs
+LprQdWbmHQV2NcwLfAygE12dcVZYilbIDPhwYFz+F3sNqzw1xJgJhZjgadmZ8+/T
+MxR+zttHwTdg37H4FFy3G03zkLyOe1eqEkXblbg15pZ1qGXNoeyLpJxeIhs1Sbno
+oDXXH3sRYFmO3ShSbj/CtEu2Fmc4WUqJjJzC+mvh+QtJw5gh9ihyhpANsW1+IBG/
+6Ag4Ot60paxbe43sKucf1ki+OyXIZ9FWYtJjSPASGRKOn7knAixyseiV3qi2Id+W
+94bOt6oOqbE=
+=+Tx0
+-----END PGP SIGNATURE-----
+
+--=-+KiqtcNlb5uPdDLnTBzY--
 
