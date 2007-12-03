@@ -1,29 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7302 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248AbXLDKxL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 05:53:11 -0500
-Received: from lin01.mn-solutions.de (pD95F94BA.dip0.t-ipconnect.de [217.95.148.186])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 2041B5E4115
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Dec 2007 11:53:09 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id EC0E31E00FD
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Dec 2007 11:50:15 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-Date: Tue, 4 Dec 2007 11:53:24 +0100
-References: <200712041140.07516.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200712041140.07516.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712041153.24896.hs4233@mail.mn-solutions.de> (sfid-20071204_105315_872371_0254E00F)
+Received: from mga02.intel.com ([134.134.136.20]:40544 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753168AbXLCLpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2007 06:45:34 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/34 V2] iwlwifi (version 1.1.22)
+Date: Mon,  3 Dec 2007 13:43:12 +0200
+Message-Id: <11966822261109-git-send-email-tomas.winkler@intel.com> (sfid-20071203_120553_787563_7320FB0B)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-7. escape_ssid()
+This is a resend of latest iwlwifi patches from Yi
+The version is rebased against current #everything branch 
+and especially against iwlwifi 11n patches.
+Some minor warnings were fixed as well.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-This code from ieee80211 is used in various debug messages.
-Should I re-implement this locally in the driver?
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
