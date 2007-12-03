@@ -1,31 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53129
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752005AbXLVEwl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:52:41 -0500
-Date: Fri, 21 Dec 2007 20:52:40 -0800 (PST)
-Message-Id: <20071221.205240.186733706.davem@davemloft.net> (sfid-20071222_045249_847391_3BFE70A5)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 0/12]: Un-crapify compat handling.
-From: David Miller <davem@davemloft.net>
+Received: from mail.gmx.net ([213.165.64.20]:48352 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751358AbXLCXgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2007 18:36:09 -0500
+Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <40f31dec0712031442q51a658abwfde965dae3fb6b72@mail.gmail.com>
+References: <1196622331.7472.4.camel@localhost>
+	 <20071203041608.3af3b462@morte> <1196679780.7470.9.camel@localhost>
+	 <20071203125402.76562f26@morte> <1196683144.7470.14.camel@localhost>
+	 <20071203130602.49ab7234@morte>
+	 <40f31dec0712031442q51a658abwfde965dae3fb6b72@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 00:36:05 +0100
+Message-Id: <1196724965.7468.74.camel@localhost> (sfid-20071203_233624_035777_0E213A1F)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Nick,
 
-This set of 12 patches pulls all of the existing compat
-handling for WEXT ioctls out of fs/compat_ioctl.c and
-allows implementations down in the driver layers to
-handle compat issues properly when necessary.
+thanks for your input.
 
-In particular it fixes the bug where iw_point objects
-were not being size translated properly in scan
-streams and similar.
+On Tue, 2007-12-04 at 00:42 +0200, Nick Kossifidis wrote: 
+> Here are some tests with ath5k + your patches...
+> 
+> I've tested a 5213 and a 5413 card, both have poor phy performance (we
+> still work on phy initialization,  txpower etc) that means they
+> receive ok but they can't transmit well (with other supported cards
+> i've got much better performance up to 27Mbits/sec but i didn't have
+> one in hand while testing, if you want i can repeat the test).
 
-Currently I've only made sure this compiles properly.
-I'm half-way done with a dummy wireless driver that
-can be used purely to validate WEXT ioctl handling
-correctness in the core wireless layers.
+Hm, so the rate control will probably limit TX rate more than necessary
+because of transmission failures caused by the driver.
+
+> 
+> I've run iperf on the previous rate control, the patched one and with
+> locked tx rate.
+
+Looking at your data, it's interesting to see that TX rate varies a lot.
+I don't know your setup, but I doubt this is due to noise/interference
+varying at your place. Question is whether it's the drivers fault or the
+rate control failing. But still the PID rate control performs better
+than the old simple algorithm.
+
+I'll run a similar set of tests on my rt61 for comparison.
+
+Mattias
+
+
