@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40347 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750991AbXLHLVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 06:21:50 -0500
-Subject: [RFC][PATCH 0/4] mac80211: rate control rework
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain
-Date: Sat, 08 Dec 2007 12:21:46 +0100
-Message-Id: <1197112906.7472.48.camel@localhost> (sfid-20071208_112159_239303_8B2441B7)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4177 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752084AbXLDSUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 13:20:38 -0500
+Date: Tue, 4 Dec 2007 13:19:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] [try 2] orinoco: more reliable scan handling
+Message-ID: <20071204181950.GA28285@tuxdriver.com> (sfid-20071204_182057_187931_094B9DCB)
+References: <1191946643.20183.2.camel@localhost.localdomain> <20071010183251.GK5962@tuxdriver.com> <1192074985.31110.4.camel@localhost.localdomain> <47489C2D.7030606@gmail.com> <1196790166.14628.2.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1196790166.14628.2.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set does some general maintenance at the rate control front,
-adds the PID algorithm, makes it the default and removes the old simple
-algorihtm. Note that it is WIP, I'm sending it to get comments and to
-sync my PID work with Stefano.
+On Tue, Dec 04, 2007 at 12:42:46PM -0500, Dan Williams wrote:
+> On Sat, 2007-11-24 at 21:48 +0000, Dave wrote:
+> > 
+> > 
+> > Dan Williams wrote:
+> > > Bring scan result handling more in line with drivers like ipw.  Scan
+> > > results are aggregated and a BSS dropped after 15 seconds if no beacon
+> > > is received.  This allows the driver to interact better with userspace
+> > > where more than one process may request scans or results at any time.
+> > 
+> > I've only seen this recently, and am using it as a basis for some other changes. However I've noticed a couple issues:
+> 
+> Will clean up these and submit for 2.6.25 then, thanks.
 
-Other things I plan to do but not yet in the patches are:
-* Change the get_rate() interface to remove the local pointer (can be
-obtained from the netdev)
-* track wich packets actually use a rate assigned by the rate control
-(maybe add a flag to tx control) and only pass them pack to the rate
-control for evaluation. Or at least give the rate control tx_status()
-the information whether the frame was sent with a rate obtained from the
-rate control algo.
+The patch is already queued in Jeff's tree.  Please send any changes
+as new patches on top.
 
-Mattias
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
