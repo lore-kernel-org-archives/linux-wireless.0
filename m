@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55579 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760524AbXLUMJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 07:09:51 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] mac80211: remove useless sdata variable
-References: <1198195385.16241.68.camel@johannes.berg>
-Date: Fri, 21 Dec 2007 13:09:49 +0100
-In-Reply-To: <1198195385.16241.68.camel@johannes.berg> (Johannes Berg's
-	message of "Fri\, 21 Dec 2007 01\:03\:05 +0100")
-Message-ID: <je63ysp7ua.fsf@sykes.suse.de> (sfid-20071221_121012_286000_386B63BC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from pentafluge.infradead.org ([213.146.154.40]:54822 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbXLDQ2B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 11:28:01 -0500
+Subject: Re: [PATCH] fewer eventcause shifts
+From: David Woodhouse <dwmw2@infradead.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <20071204161231.GI19911@tuxdriver.com>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+	 <1196704681.21151.13.camel@localhost.localdomain>
+	 <1196714939.13978.171.camel@pmac.infradead.org>
+	 <20071204145437.GC19911@tuxdriver.com>
+	 <1196780866.13978.275.camel@pmac.infradead.org>
+	 <20071204152122.GE19911@tuxdriver.com>
+	 <1196782170.13978.296.camel@pmac.infradead.org>
+	 <20071204161231.GI19911@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 16:27:35 +0000
+Message-Id: <1196785655.13978.333.camel@pmac.infradead.org> (sfid-20071204_162809_611081_4D59FD7F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+(the subject line was annoying me; I fixed it)
 
-> Dunno why I slipped that variable in...
+On Tue, 2007-12-04 at 11:12 -0500, John W. Linville wrote:
+> On Tue, Dec 04, 2007 at 03:29:30PM +0000, David Woodhouse wrote:
+> 
+> > Basically, trees which get rebased aren't suitable for git users to base
+> > their work on. It just doesn't work.
+> 
+> Well I think that is an overstatement, but you are entitled to it... :-)
 
-Perhaps because it is used?
+Well, I am making the distinction between 'git as git' and 'git as quilt
+storage'. If you interpret 'git users' to mean those who want the
+former, it really isn't much of an overstatement at all.
 
-> --- everything.orig/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:11.=
-253160428 +0100
-> +++ everything/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:32.11316=
-5907 +0100
-> @@ -458,12 +458,10 @@ static void ieee80211_set_associated(str
->  		return;
-> =20
->  	if (assoc) {
-> -		struct ieee80211_sub_if_data *sdata;
->  		struct ieee80211_sta_bss *bss;
-> =20
->  		ifsta->flags |=3D IEEE80211_STA_ASSOCIATED;
-> =20
-> -		sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
->  		if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA)
-                    ^^^^^
+> Again, I don't have any more libertas patches in queue.  So don't
+> send any more until you are ready to merge and I don't think there
+> will be a serious problem.
 
-Andreas.
+OK. 
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > I'm open to better suggestions, as long as they're not "you are not
+> > allowed to use git, except as a primitive way of storing patches". :)
+> 
+> Keeping a clean patch stack at the top is the only way I know to
+> come close to guaranteeing you have mergeable patches.  Beyond that,
+> I'll work with you the best that I can.
+
+Again you're talking of 'patches'. But if we're using "git as git", then
+it isn't about guaranteeing you have mergeable _patches_. It's about
+guaranteeing you have a mergeable _tree_.
+
+On Tue, 2007-12-04 at 11:14 -0500, John W. Linville wrote:
+> If the new patches come fast enough to guarantee that then I have to
+> believe that we can work-out how to merge the new patches on top of
+> what I've already sent.  So, I would prefer to let the pull request
+> I sent today stand.
+
+OK, that's fine, I think. Because if you've actually sent the pull
+request, then I can use those _commits_ and those will be the ones which
+turn up upstream. Those patches won't get recommitted, cherry-picked,
+rebased or otherwise mangled so that they're no longer the same commits
+that I'm basing my tree on.
+
+Which branch of yours contains the commits (not patches) which are
+actually going upstream? I'll throw away my tree and rebase it on that.
+
+-- 
+dwmw2
+
