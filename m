@@ -1,352 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:51732 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751509AbXLJCam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 21:30:42 -0500
-Date: Mon, 10 Dec 2007 03:24:21 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC/T][PATCH v2 1/3] rc80211-pid: introduce rate behaviour
- learning algorithm
-Message-ID: <20071210032421.7017c681@morte> (sfid-20071210_023047_158604_D190B88C)
-In-Reply-To: <20071210002158.654ed960@morte>
-References: <20071209211547.2d7fca32@morte>
-	<20071209211931.26ff42fa@morte>
-	<1197239150.7543.13.camel@localhost>
-	<20071210002158.654ed960@morte>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50662 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbXLDQmG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 11:42:06 -0500
+Subject: [RFC v2] iwl4965: proper monitor support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>, dragoran <drago01@gmail.com>
+In-Reply-To: <1196266230.6058.155.camel@johannes.berg> (sfid-20071128_165025_987022_9FAA5A8E)
+References: <1196266230.6058.155.camel@johannes.berg>
+	 (sfid-20071128_165025_987022_9FAA5A8E)
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 16:30:50 +0100
+Message-Id: <1196782250.10274.2.camel@johannes.berg> (sfid-20071204_164214_253446_677BD03C)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a learning algorithm in order for the PID controller
-to learn how to map adjustment values to rates. This is better described in
-code comments.
+This patch changes the iwl4965 driver to properly support
+monitor interfaces after the filter flags change.
 
-
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Tomas Winkler <tomasw@gmail.com<
+Cc: drago01@gmail.com
 ---
+Somebody needs to port this to iwl3945 too.
 
-Mattias,
-this series addresses some of your concerns and some stupid bugs I just
-noticed about. Thank you for your comments.
+This is just rediffed against the current wireless-2.6#everything tree.
 
----
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |  120 ++++++++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |   24 -----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   90 ---------------------
+ 3 files changed, 115 insertions(+), 119 deletions(-)
 
-Index: wireless-2.6/net/mac80211/rc80211_pid.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-+++ wireless-2.6/net/mac80211/rc80211_pid.c
-@@ -2,6 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
-+ * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -39,12 +40,18 @@
-  * an actual sliding window. Advantage is that we don't need to keep an array of
-  * the last N error values and computation is easier.
-  *
-- * Once we have the adj value, we need to map it to a TX rate to be selected.
-- * For now, we depend on the rates to be ordered in a way such that more robust
-- * rates (i.e. such that exhibit a lower framed failed percentage) come first.
-- * E.g. for the 802.11b/g case, we first have the b rates in ascending order,
-- * then the g rates. The adj simply decides the index of the TX rate in the list
-- * to switch to (relative to the current TX rate entry).
-+ * Once we have the adj value, we map it to a rate by means of a learning
-+ * algorithm. This algorithm keeps the state of the percentual failed frames
-+ * difference between rates. The behaviour of the lowest available rate is kept
-+ * as a reference value, and every time we switch between two rates, we compute
-+ * the difference between the failed frames each rate exhibited. By doing so,
-+ * we compare behaviours which different rates exhibited in adjacent timeslices,
-+ * thus the comparison is minimally affected by external conditions. This
-+ * difference gets propagated to the whole set of measurements, so that the
-+ * reference is always the same. Periodically, we normalize this set so that
-+ * recent events weigh the most. By comparing the adj value with this set, we
-+ * avoid pejorative switches to lower rates and allow for switches to higher
-+ * rates if they behaved well.
-  *
-  * Note that for the computations we use a fixed-point representation to avoid
-  * floating point arithmetic. Hence, all values are shifted left by
-@@ -78,6 +85,16 @@
-  */
- #define RC_PID_TARGET_PF (20 << RC_PID_ARITH_SHIFT)
- 
-+/* Rate behaviour normalization quantity over time. */
-+#define RC_PID_NORM_OFFSET 3
-+
-+/* Push high rates right after loading. */
-+#define RC_PID_FAST_START 0
-+
-+/* Arithmetic right shift for positive and negative values for ISO C. */
-+#define RC_PID_DO_ARITH_RIGHT_SHIFT(x, y) \
-+	(x) < 0 ? -((-(x))) >> (y) : (x) >> (y)
-+
- struct rc_pid_sta_info {
- 	unsigned long last_change;
- 	unsigned long last_sample;
-@@ -121,6 +138,18 @@ struct rc_pid_sta_info {
- /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
-  * be tuned individually for each interface.
-  */
-+struct rc_pid_rateinfo {
-+
-+	/* The rate index in ieee80211_hw_mode. */
-+	int index;
-+
-+	/* Did we do any measurement on this rate? */
-+	bool valid;
-+
-+	/* Comparison with the lowest rate. */
-+	int diff;
-+};
-+
- struct rc_pid_info {
- 
- 	/* The failed frames percentage target. */
-@@ -130,15 +159,69 @@ struct rc_pid_info {
- 	s32 coeff_p;
- 	s32 coeff_i;
- 	s32 coeff_d;
-+
-+	/* Rates information. */
-+	struct rc_pid_rateinfo *rinfo;
-+
-+	/* Index of the last used rate. */
-+	int oldrate;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.h	2007-12-04 14:43:48.776410265 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-4965.h	2007-12-04 14:51:57.496408583 +0100
+@@ -87,29 +87,6 @@ struct iwl4965_rx_mem_buffer {
+ 	struct list_head list;
  };
  
-+static inline int rate_control_pid_r_to_i(struct rc_pid_rateinfo *r, int rate,
-+					  int l)
-+{
-+	int i;
-+
-+	for (i = 0; i < l; i++)
-+		if (r[i].index == rate)
-+			break;
-+
-+	return i;
-+}
-+
-+/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
-+ * a worse failed frames behaviour and we'll choose the highest rate whose
-+ * failed frames behaviour is not worse than the one of the original rate
-+ * target. While at it, check that the adjustment is within the ranges. Then,
-+ * provide the new rate index. */
-+static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
-+					 int adj, int cur, int l)
-+{
-+	int i, j, k, tmp;
-+
-+	if (cur + adj < 0)
-+		return 0;
-+	if (cur + adj >= l)
-+		return l - 1;
-+
-+	i = rate_control_pid_r_to_i(r, cur + adj, l);
-+	if (unlikely(!r[i].valid))
-+		return cur + adj;
-+	j = rate_control_pid_r_to_i(r, cur, l);
-+
-+	if (adj < 0 && r[j].valid) {
-+			tmp = i;
-+			for (k = j; k >= i; k--)
-+				if (r[k].valid && r[k].diff <= r[j].diff)
-+					tmp = k;
-+			return r[tmp].index;
-+	} else if (adj > 0) {
-+			tmp = i;
-+			for (k = i + 1; k + i < l; k++)
-+				if (r[k].valid && r[k].diff <= r[i].diff)
-+					tmp = k;
-+			return r[tmp].index;
-+	}
-+	return cur + adj;
-+}
- 
- static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
--					 struct sta_info *sta, int adj)
-+					 struct sta_info *sta, int adj,
-+					 struct rc_pid_rateinfo *rinfo)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hw_mode *mode;
--	int newidx = sta->txrate + adj;
-+	int newidx;
- 	int maxrate;
- 	int back = (adj > 0) ? 1 : -1;
- 
-@@ -151,10 +234,8 @@ static void rate_control_pid_adjust_rate
- 	mode = local->oper_hw_mode;
- 	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
- 
--	if (newidx < 0)
--		newidx = 0;
--	else if (newidx >= mode->num_rates)
--		newidx = mode->num_rates - 1;
-+	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
-+					       mode->num_rates);
- 
- 	while (newidx != sta->txrate) {
- 		if (rate_supported(sta, mode, newidx) &&
-@@ -167,18 +248,39 @@ static void rate_control_pid_adjust_rate
- 	}
- }
- 
-+/* Normalize the failed frames per-rate differences. */
-+static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
-+{
-+	int i;
-+
-+	if (r[0].diff > RC_PID_NORM_OFFSET)
-+		r[0].diff -= RC_PID_NORM_OFFSET;
-+	else if (r[0].diff < -RC_PID_NORM_OFFSET)
-+		r[0].diff += RC_PID_NORM_OFFSET;
-+	for (i = 0; i < l - 1; i++)
-+		if (likely(r[i + 1].valid)) {
-+			if (r[i + 1].diff > r[i].diff + RC_PID_NORM_OFFSET)
-+				r[i + 1].diff -= RC_PID_NORM_OFFSET;
-+			else if (r[i + 1].diff <= r[i].diff)
-+				r[i + 1].diff += RC_PID_NORM_OFFSET;
-+		}
-+}
-+
- static void rate_control_pid_sample(struct rc_pid_info *pinfo,
- 				    struct ieee80211_local *local,
- 				    struct sta_info *sta)
- {
- 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
-+	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
-+	struct ieee80211_hw_mode *mode;
- 	u32 pf;
- 	s32 err_avg;
- 	s32 err_prop;
- 	s32 err_int;
- 	s32 err_der;
--	int adj;
-+	int adj, i, j, tmp;
- 
-+	mode = local->oper_hw_mode;
- 	spinfo = sta->rate_ctrl_priv;
- 	spinfo->last_sample = jiffies;
- 
-@@ -194,6 +296,24 @@ static void rate_control_pid_sample(stru
- 		spinfo->tx_num_failed = 0;
- 	}
- 
-+	/* If we just switched rate, update the rate behaviour info. */
-+	if (pinfo->oldrate != sta->txrate) {
-+
-+		i = rate_control_pid_r_to_i(rinfo, pinfo->oldrate,
-+					    mode->num_rates);
-+		j = rate_control_pid_r_to_i(rinfo, sta->txrate,
-+					    mode->num_rates);
-+		rinfo[j].valid = 1;
-+
-+		tmp = (pf - spinfo->last_pf);
-+		tmp = RC_PID_DO_ARITH_RIGHT_SHIFT(tmp, RC_PID_ARITH_SHIFT);
-+
-+		rinfo[j].diff = rinfo[i].diff + tmp;
-+		rinfo[j].valid = 1;
-+		pinfo->oldrate = sta->txrate;
-+	}
-+	rate_control_pid_normalize(rinfo, mode->num_rates);
-+
- 	/* Compute the proportional, integral and derivative errors. */
- 	err_prop = RC_PID_TARGET_PF - pf;
- 
-@@ -207,16 +327,11 @@ static void rate_control_pid_sample(stru
- 	/* Compute the controller output. */
- 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
- 	      + err_der * pinfo->coeff_d);
+-struct iwl4965_rt_rx_hdr {
+-	struct ieee80211_radiotap_header rt_hdr;
+-	__le64 rt_tsf;		/* TSF */
+-	u8 rt_flags;		/* radiotap packet flags */
+-	u8 rt_rate;		/* rate in 500kb/s */
+-	__le16 rt_channelMHz;	/* channel in MHz */
+-	__le16 rt_chbitmask;	/* channel bitfield */
+-	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
+-	s8 rt_dbmnoise;
+-	u8 rt_antenna;		/* antenna number */
+-	u8 payload[0];		/* payload... */
+-} __attribute__ ((packed));
 -
--	/* We need to do an arithmetic right shift. ISO C says this is
--	 * implementation defined for negative left operands. Hence, be
--	 * careful to get it right, also for negative values. */
--	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
--			  adj >> (2 * RC_PID_ARITH_SHIFT);
-+	adj = RC_PID_DO_ARITH_RIGHT_SHIFT(adj, 2 * RC_PID_ARITH_SHIFT);
+-struct iwl4965_rt_tx_hdr {
+-	struct ieee80211_radiotap_header rt_hdr;
+-	u8 rt_rate;		/* rate in 500kb/s */
+-	__le16 rt_channel;	/* channel in mHz */
+-	__le16 rt_chbitmask;	/* channel bitfield */
+-	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
+-	u8 rt_antenna;		/* antenna number */
+-	u8 payload[0];		/* payload... */
+-} __attribute__ ((packed));
+-
+ /*
+  * Generic queue structure
+  *
+@@ -1063,6 +1040,7 @@ struct iwl4965_priv {
  
- 	/* Change rate. */
- 	if (adj)
--		rate_control_pid_adjust_rate(local, sta, adj);
-+		rate_control_pid_adjust_rate(local, sta, adj, rinfo);
+ 	u8 phymode;
+ 	int alloc_rxb_skb;
++	bool add_radiotap;
+ 
+ 	void (*rx_handlers[REPLY_MAX])(struct iwl4965_priv *priv,
+ 				       struct iwl4965_rx_mem_buffer *rxb);
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-04 14:43:48.816409722 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-04 14:51:57.506409234 +0100
+@@ -51,7 +51,6 @@
+ #include <linux/etherdevice.h>
+ #include <linux/if_arp.h>
+ 
+-#include <net/ieee80211_radiotap.h>
+ #include <net/mac80211.h>
+ 
+ #include <asm/div64.h>
+@@ -3152,93 +3151,6 @@ void iwl4965_set_decrypted_flag(struct i
+ 	}
  }
  
- static void rate_control_pid_tx_status(void *priv, struct net_device *dev,
-@@ -315,13 +430,55 @@ static void rate_control_pid_rate_init(v
- static void *rate_control_pid_alloc(struct ieee80211_local *local)
- {
- 	struct rc_pid_info *pinfo;
-+	struct rc_pid_rateinfo *rinfo;
-+	struct ieee80211_hw_mode *mode;
-+	int i, j, tmp;
-+	bool s;
+-void iwl4965_handle_data_packet_monitor(struct iwl4965_priv *priv,
+-				    struct iwl4965_rx_mem_buffer *rxb,
+-				    void *data, short len,
+-				    struct ieee80211_rx_status *stats,
+-				    u16 phy_flags)
+-{
+-	struct iwl4965_rt_rx_hdr *iwl4965_rt;
+-
+-	/* First cache any information we need before we overwrite
+-	 * the information provided in the skb from the hardware */
+-	s8 signal = stats->ssi;
+-	s8 noise = 0;
+-	int rate = stats->rate;
+-	u64 tsf = stats->mactime;
+-	__le16 phy_flags_hw = cpu_to_le16(phy_flags);
+-
+-	/* We received data from the HW, so stop the watchdog */
+-	if (len > priv->hw_setting.rx_buf_size - sizeof(*iwl4965_rt)) {
+-		IWL_DEBUG_DROP("Dropping too large packet in monitor\n");
+-		return;
+-	}
+-
+-	/* copy the frame data to write after where the radiotap header goes */
+-	iwl4965_rt = (void *)rxb->skb->data;
+-	memmove(iwl4965_rt->payload, data, len);
+-
+-	iwl4965_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
+-	iwl4965_rt->rt_hdr.it_pad = 0; /* always good to zero */
+-
+-	/* total header + data */
+-	iwl4965_rt->rt_hdr.it_len = cpu_to_le16(sizeof(*iwl4965_rt));
+-
+-	/* Set the size of the skb to the size of the frame */
+-	skb_put(rxb->skb, sizeof(*iwl4965_rt) + len);
+-
+-	/* Big bitfield of all the fields we provide in radiotap */
+-	iwl4965_rt->rt_hdr.it_present =
+-	    cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
+-			(1 << IEEE80211_RADIOTAP_FLAGS) |
+-			(1 << IEEE80211_RADIOTAP_RATE) |
+-			(1 << IEEE80211_RADIOTAP_CHANNEL) |
+-			(1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
+-			(1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
+-			(1 << IEEE80211_RADIOTAP_ANTENNA));
+-
+-	/* Zero the flags, we'll add to them as we go */
+-	iwl4965_rt->rt_flags = 0;
+-
+-	iwl4965_rt->rt_tsf = cpu_to_le64(tsf);
+-
+-	/* Convert to dBm */
+-	iwl4965_rt->rt_dbmsignal = signal;
+-	iwl4965_rt->rt_dbmnoise = noise;
+-
+-	/* Convert the channel frequency and set the flags */
+-	iwl4965_rt->rt_channelMHz = cpu_to_le16(stats->freq);
+-	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
+-		iwl4965_rt->rt_chbitmask =
+-		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
+-	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
+-		iwl4965_rt->rt_chbitmask =
+-		    cpu_to_le16((IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ));
+-	else	/* 802.11g */
+-		iwl4965_rt->rt_chbitmask =
+-		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ));
+-
+-	rate = iwl4965_rate_index_from_plcp(rate);
+-	if (rate == -1)
+-		iwl4965_rt->rt_rate = 0;
+-	else
+-		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
+-
+-	/* antenna number */
+-	iwl4965_rt->rt_antenna =
+-		le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
+-
+-	/* set the preamble flag if we have it */
+-	if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
+-		iwl4965_rt->rt_flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
+-
+-	IWL_DEBUG_RX("Rx packet of %d bytes.\n", rxb->skb->len);
+-
+-	stats->flag |= RX_FLAG_RADIOTAP;
+-	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
+-	rxb->skb = NULL;
+-}
+-
  
- 	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
-+	if (!pinfo)
-+		return NULL;
-+
-+	mode = local->oper_hw_mode;
-+	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
-+	if (!rinfo) {
-+		kfree(pinfo);
-+		return NULL;
-+	}
-+
-+	/* Sort the rates. This is optimized for the most common case (i.e.
-+	 * almost-sorted CCK+OFDM rates). */
-+	for (i = 0; i < mode->num_rates; i++) {
-+		rinfo[i].index = i;
-+		if (RC_PID_FAST_START) {
-+			rinfo[i].valid = 1;
-+			rinfo[i].diff = 0;
-+		} else
-+			rinfo[i].valid = 0;
-+	}
-+	for (i = 1; i < mode->num_rates; i++) {
-+		s = 0;
-+		for (j = 0; j < mode->num_rates - i; j++)
-+			if (unlikely(mode->rates[rinfo[j].index].rate >
-+				     mode->rates[rinfo[j + 1].index].rate)) {
-+				tmp = rinfo[j].index;
-+				rinfo[j].index = rinfo[j + 1].index;
-+				rinfo[j + 1].index = tmp;
-+				s = 1;
-+			}
-+		if (!s)
-+			break;
-+	}
-+
-+	rinfo[0].diff = 0;
-+	rinfo[0].valid = 1;
+ #define IWL_PACKET_RETRY_TIME HZ
  
- 	pinfo->target = RC_PID_TARGET_PF;
- 	pinfo->coeff_p = RC_PID_COEFF_P;
- 	pinfo->coeff_i = RC_PID_COEFF_I;
- 	pinfo->coeff_d = RC_PID_COEFF_D;
-+	pinfo->rinfo = rinfo;
-+	pinfo->oldrate = 0;
+@@ -7374,6 +7286,8 @@ static int iwl4965_mac_config(struct iee
+ 	mutex_lock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211("enter to channel %d\n", conf->channel);
  
- 	return pinfo;
++	priv->add_radiotap = !!(conf->flags & IEEE80211_CONF_RADIOTAP);
++
+ 	if (!iwl4965_is_ready(priv)) {
+ 		IWL_DEBUG_MAC80211("leave - not ready\n");
+ 		ret = -EIO;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-12-04 13:59:55.596411133 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-12-04 14:51:57.516409452 +0100
+@@ -36,6 +36,7 @@
+ #include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
++#include <asm/unaligned.h>
+ 
+ #include "iwl-4965.h"
+ #include "iwl-helpers.h"
+@@ -3488,6 +3489,114 @@ void iwl4965_hw_rx_statistics(struct iwl
+ 		queue_work(priv->workqueue, &priv->txpower_work);
  }
-@@ -330,6 +487,7 @@ static void *rate_control_pid_alloc(stru
- static void rate_control_pid_free(void *priv)
- {
- 	struct rc_pid_info *pinfo = priv;
-+	kfree(pinfo->rinfo);
- 	kfree(pinfo);
- }
  
++static void iwl4965_add_radiotap(struct iwl4965_priv *priv,
++				 struct sk_buff *skb,
++				 struct iwl4965_rx_phy_res *rx_start,
++				 void *data, short len,
++				 struct ieee80211_rx_status *stats,
++				 u32 ampdu_status)
++{
++	s8 signal = stats->ssi;
++	s8 noise = 0;
++	int rate = stats->rate;
++	u64 tsf = stats->mactime;
++	__le16 phy_flags_hw = rx_start->phy_flags;
++	struct iwl4965_rt_rx_hdr {
++		struct ieee80211_radiotap_header rt_hdr;
++		__le64 rt_tsf;		/* TSF */
++		u8 rt_flags;		/* radiotap packet flags */
++		u8 rt_rate;		/* rate in 500kb/s */
++		__le16 rt_channelMHz;	/* channel in MHz */
++		__le16 rt_chbitmask;	/* channel bitfield */
++		s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
++		s8 rt_dbmnoise;
++		u8 rt_antenna;		/* antenna number */
++	} __attribute__ ((packed)) *iwl4965_rt;
++
++	/*
++	 * If we receive an 11n frame (non-legacy) do we have enough
++	 * headroom here? The original code copied all the data which
++	 * is too expensive. If we don't have enough headroom we need
++	 * to reserve some headroom in the RX descriptor.
++	 */
++	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
++		printk(KERN_DEBUG "not enough headroom for radiotap\n");
++		return;
++	}
++
++	/* put radiotap header in front of 802.11 header and data */
++	iwl4965_rt = (void *)skb_push(skb, sizeof(*iwl4965_rt));
++
++	/* initialise radiotap header */
++	iwl4965_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
++	iwl4965_rt->rt_hdr.it_pad = 0;
++
++	/* total header + data */
++	put_unaligned(cpu_to_le16(sizeof(*iwl4965_rt)),
++		      &iwl4965_rt->rt_hdr.it_len);
++
++	/* Indicate all the fields we add to the radiotap header */
++	put_unaligned(cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
++				  (1 << IEEE80211_RADIOTAP_FLAGS) |
++				  (1 << IEEE80211_RADIOTAP_RATE) |
++				  (1 << IEEE80211_RADIOTAP_CHANNEL) |
++				  (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
++				  (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
++				  (1 << IEEE80211_RADIOTAP_ANTENNA)),
++		      &iwl4965_rt->rt_hdr.it_present);
++
++	/* Zero the flags, we'll add to them as we go */
++	iwl4965_rt->rt_flags = 0;
++
++	put_unaligned(cpu_to_le64(tsf), &iwl4965_rt->rt_tsf);
++
++	iwl4965_rt->rt_dbmsignal = signal;
++	iwl4965_rt->rt_dbmnoise = noise;
++
++	/* Convert the channel frequency and set the flags */
++	put_unaligned(cpu_to_le16(stats->freq), &iwl4965_rt->rt_channelMHz);
++	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
++		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
++					  IEEE80211_CHAN_5GHZ),
++			      &iwl4965_rt->rt_chbitmask);
++	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
++		put_unaligned(cpu_to_le16(IEEE80211_CHAN_CCK |
++					  IEEE80211_CHAN_2GHZ),
++			      &iwl4965_rt->rt_chbitmask);
++	else	/* 802.11g */
++		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
++					  IEEE80211_CHAN_2GHZ),
++			      &iwl4965_rt->rt_chbitmask);
++
++	rate = iwl4965_rate_index_from_plcp(rate);
++	if (rate == -1)
++		iwl4965_rt->rt_rate = 0;
++	else
++		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
++
++	/*
++	 * "antenna number"
++	 *
++	 * It seems that the antenna field in the phy flags value
++	 * is actually a bitfield. This is undefined by radiotap,
++	 * it wants an actual antenna number but I always get "7"
++	 * for most legacy frames I receive indicating that the
++	 * same frame was received on all three RX chains.
++	 *
++	 * I think this field should be removed in favour of a
++	 * new 802.11n radiotap field "RX chains" that is defined
++	 * as a bitmask.
++	 */
++	iwl4965_rt->rt_antenna =
++		le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
++
++	/* set the preamble flag if appropriate */
++	if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
++		iwl4965_rt->rt_flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
++
++	stats->flag |= RX_FLAG_RADIOTAP;
++}
++
+ static void iwl4965_handle_data_packet(struct iwl4965_priv *priv, int is_data,
+ 				       int include_phy,
+ 				       struct iwl4965_rx_mem_buffer *rxb,
+@@ -3549,20 +3658,15 @@ static void iwl4965_handle_data_packet(s
+ 		return;
+ 	}
+ 
+-	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+-		if (iwl4965_param_hwcrypto)
+-			iwl4965_set_decrypted_flag(priv, rxb->skb,
+-					       ampdu_status, stats);
+-		iwl4965_handle_data_packet_monitor(priv, rxb, hdr, len, stats, 0);
+-		return;
+-	}
+-
+ 	stats->flag = 0;
+ 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
+ 
+ 	if (iwl4965_param_hwcrypto)
+ 		iwl4965_set_decrypted_flag(priv, rxb->skb, ampdu_status, stats);
+ 
++	if (priv->add_radiotap)
++		iwl4965_add_radiotap(priv, rxb->skb, rx_start, hdr, len, stats, ampdu_status);
++
+ 	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
+ 	priv->alloc_rxb_skb--;
+ 	rxb->skb = NULL;
 
 
--- 
-Ciao
-Stefano
