@@ -1,169 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:64610 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762780AbXLNCNH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 21:13:07 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so673237wra.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2007 18:13:07 -0800 (PST)
-Message-ID: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com> (sfid-20071214_021313_168625_7240875B)
-Date: Fri, 14 Dec 2007 10:13:06 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: 2.6.24-rc5-mm1 ath5k build issue
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([66.187.233.31]:56719 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753752AbXLDPNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 10:13:19 -0500
+Subject: Re: [PATCH] less eventcause shifts
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1196780866.13978.275.camel@pmac.infradead.org>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+	 <1196704681.21151.13.camel@localhost.localdomain>
+	 <1196714939.13978.171.camel@pmac.infradead.org>
+	 <20071204145437.GC19911@tuxdriver.com>
+	 <1196780866.13978.275.camel@pmac.infradead.org>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 10:06:45 -0500
+Message-Id: <1196780805.26155.29.camel@localhost.localdomain> (sfid-20071204_151341_229794_44D1D48B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 10, 2007 1:55 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/12/7, Dave Young <hidave.darkstar@gmail.com>:
->
-> > Hi,
-> >
-> > 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
-> > drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
-> >
-> > fix it with adjust the order of inline function body.
-> >
-> > Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
-> >
-> > ---
-> > drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
-> > 1 file changed, 29 insertions(+), 38 deletions(-)
-> >
-> > diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
-> > --- linux/drivers/net/wireless/ath5k/base.c     2007-12-07 10:01:42.000000000 +0800
-> > +++ linux.new/drivers/net/wireless/ath5k/base.c 2007-12-07 10:01:49.000000000 +0800
-> > @@ -250,8 +250,19 @@ static int         ath5k_rxbuf_setup(struct ath
-> >  static int     ath5k_txbuf_setup(struct ath5k_softc *sc,
-> >                                 struct ath5k_buf *bf,
-> >                                 struct ieee80211_tx_control *ctl);
-> > +
-> >  static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
-> > -                               struct ath5k_buf *bf);
-> > +                               struct ath5k_buf *bf)
-> > +{
-> > +       BUG_ON(!bf);
-> > +       if (!bf->skb)
-> > +               return;
-> > +       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
-> > +                       PCI_DMA_TODEVICE);
-> > +       dev_kfree_skb(bf->skb);
-> > +       bf->skb = NULL;
-> > +}
-> > +
-> >  /* Queues setup */
-> >  static struct  ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
-> >                                 int qtype, int subtype);
-> > @@ -278,14 +289,29 @@ static int        ath5k_beacon_setup(struct at
-> >                                 struct ieee80211_tx_control *ctl);
-> >  static void    ath5k_beacon_send(struct ath5k_softc *sc);
-> >  static void    ath5k_beacon_config(struct ath5k_softc *sc);
-> > -static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
-> > +
-> > +static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-> > +{
-> > +       u64 tsf = ath5k_hw_get_tsf64(ah);
-> > +
-> > +       if ((tsf & 0x7fff) < rstamp)
-> > +               tsf -= 0x8000;
-> > +
-> > +       return (tsf & ~0x7fff) | rstamp;
-> > +}
-> > +
-> >  /* Interrupt handling */
-> >  static int     ath5k_init(struct ath5k_softc *sc);
-> >  static int     ath5k_stop_locked(struct ath5k_softc *sc);
-> >  static int     ath5k_stop_hw(struct ath5k_softc *sc);
-> >  static irqreturn_t ath5k_intr(int irq, void *dev_id);
-> >  static void    ath5k_tasklet_reset(unsigned long data);
-> > -static inline void ath5k_update_txpow(struct ath5k_softc *sc);
-> > +
-> > +static inline void ath5k_update_txpow(struct ath5k_softc *sc)
-> > +{
-> > +       ath5k_hw_set_txpower_limit(sc->ah, 0);
-> > +}
-> > +
-> >  static void    ath5k_calibrate(unsigned long data);
-> >  /* LED functions */
-> >  static void    ath5k_led_off(unsigned long data);
-> > @@ -1341,21 +1367,6 @@ err_unmap:
-> >         return ret;
-> >  }
-> >
-> > -static inline void
-> > -ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
-> > -{
-> > -       BUG_ON(!bf);
-> > -       if (!bf->skb)
-> > -               return;
-> > -       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
-> > -                       PCI_DMA_TODEVICE);
-> > -       dev_kfree_skb(bf->skb);
-> > -       bf->skb = NULL;
-> > -}
-> > -
-> > -
-> > -
-> > -
-> >  /**************\
-> >  * Queues setup *
-> >  \**************/
-> > @@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
-> >  #undef TSF_TO_TU
-> >  }
-> >
-> > -static inline
-> > -u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-> > -{
-> > -       u64 tsf = ath5k_hw_get_tsf64(ah);
-> > -
-> > -       if ((tsf & 0x7fff) < rstamp)
-> > -               tsf -= 0x8000;
-> > -
-> > -       return (tsf & ~0x7fff) | rstamp;
-> > -}
-> > -
-> > -
-> > -
-> > -
-> >  /********************\
-> >  * Interrupt handling *
-> >  \********************/
-> > @@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
-> >         ath5k_reset(sc->hw);
-> >  }
-> >
-> > -static inline void
-> > -ath5k_update_txpow(struct ath5k_softc *sc)
-> > -{
-> > -       ath5k_hw_set_txpower_limit(sc->ah, 0);
-> > -}
-> > -
-> >  /*
-> >   * Periodically recalibrate the PHY to account
-> >   * for temperature/environment changes.
-> >
->
-> We'll change their order in the code, plz keep prototype declarations
-> clean. I'll submit a patch asap on this.
->
+On Tue, 2007-12-04 at 15:07 +0000, David Woodhouse wrote:
+> On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
+> > The result is a nice, rebased set of patches on top of the current
+> > upstream work.	If you simply did a "commit, pull, commit, pull,
+> > etc" cycle then you would end-up with a set of patches that might
+> > no longer apply on top of a clean upstream branch -- been there,
+> > wireless-dev RIP.
+> 
+> Ah, I understand your confusion. It reflects akpm's confusion when he
+> first started trying to use git-bisect.
+> 
+> This thing is, there is no actual need for a 'set of patches'. Git isn't
+> about patches. It's about commits and pulls. It doesn't _matter_ if you
+> had to fix up something when you merged from Linus, because when Linus
+> pulls from your tree, he pulls your manual merge effort too.
+> 
+> That's how git is designed. You're trying to use it as a kind of staging
+> post before you send a set of patches to Linus, which is why it looks
+> strange to me. That's the kind of thing that quilt does best, I think.
+> 
+> Perhaps you should investigate stgit, which {ab,}uses git for this kind
+> of thing and lets you deal with patches that way quite nicely too.
+> 
+> > I really think this is the best methodology for processing patches
+> > so that they are ready for merging when posted.
+> 
+> You're probably right.
+> 
+> On the other hand, I think the best methodology for processing code
+> changes to the Linux kernel so that they are ready for merging into
+> Linus' git tree is probably in a normal git tree :)
+> 
+> Yes, it's useful not to do daily pulls and end up with a ton of 'empty'
+> merge commits in the graph -- that gets message. For that reason, I tend
+> to pull from upstream only when there's something there which I depend
+> on, or when I'll have to do a manual merge. But a reasonable number of
+> merges is perfectly normal. That's what git was designed to do, after
+> all.
+> 
+> > [1] If your work does _not_ rely on patches already merged in my tree
+> > then by all means just use Linus' tree.
+> 
+> That was my intention, right up to the point at which a bunch of
+> libertas patches appeared in your tree :)
 
-Hi,
+Those patches should get into 2.6.25; I don't want them held up if you
+don't think you can get the command rework done by 2.6.25...  As long as
+the stuff that's queued up in John's tree gets up to Linus for 2.6.25,
+then you can develop however you want in libertas-2.6 based of Linus or
+whatever.
 
-2.6.24-rc5-mm1 still can't built.
+Dan
 
-Regards
-dave
 
-> --
-> GPG ID: 0xD21DB2DB
-> As you read this post global entropy rises. Have Fun ;-)
-> Nick
->
