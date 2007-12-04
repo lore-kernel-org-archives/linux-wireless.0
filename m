@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:18763 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751087AbXLMAba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 19:31:30 -0500
-Subject: Re: mac80211 ethtool support
-From: Pavel Roskin <proski@gnu.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com>
-References: <1197361048.3170.381.camel@debian.sh.intel.com>
-	 <200712111350.25522.mb@bu3sch.de>
-	 <1197421988.3170.405.camel@debian.sh.intel.com>
-	 <200712121148.48716.mb@bu3sch.de> <1197481520.6558.140.camel@johannes.berg>
-	 <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 12 Dec 2007 19:31:28 -0500
-Message-Id: <1197505888.13188.9.camel@dv> (sfid-20071213_003135_139409_D4439CB3)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.181]:35123 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbXLDG5s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 01:57:48 -0500
+Received: by py-out-1112.google.com with SMTP id u77so7014415pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2007 22:57:47 -0800 (PST)
+Message-ID: <f6ca9fed0712032257p225f97f3pae00b878f15d09@mail.gmail.com> (sfid-20071204_065750_547441_67A5AE35)
+Date: Tue, 4 Dec 2007 07:57:47 +0100
+From: dragoran <drago01@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
+Cc: "Jouni Malinen" <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <f6ca9fed0712030347s3d1fde9cnad9046c83316163b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <47494851.4070504@gmail.com>
+	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
+	 <f6ca9fed0711260650j749de7a3x3edc084ae820d2eb@mail.gmail.com>
+	 <20071127033408.GB5698@jm.kir.nu>
+	 <1196676895.6060.19.camel@johannes.berg>
+	 <f6ca9fed0712030347s3d1fde9cnad9046c83316163b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-12-13 at 01:23 +0200, Tomas Winkler wrote:
+On Dec 3, 2007 12:47 PM, dragoran <drago01@gmail.com> wrote:
+> It seems not to happen today (with an updated kernel 2.6.23.9-77.fc8;
+> which contains recent wireless updates from #everything).
+> I don't know if its fixed or if the I am just not receiving crap right
+> now... but will be connected for ~4hours to this ap now..
+> will report if it happens or not until then...
+>
 
-> > NACK. Which virtual interface should get this? wmaster sounds like the
-> > "obvious" candidate but we want to get rid of it ASAP. And the others
-> > ones are pretty wrong because you can, technically, have a wiphy without
-> > any virtual interfaces on it.
-> >
-> Just a thought. What if all virtual interfaces will quasi implements
-> it. It doesn't matter if all the interfaces answers the same.
-
-I think The True Linux Way (c) would be to have EEPROM support for
-devices (those that live in /sys/device) without tying it to network
-interfaces or cfg80211.
-
-See __ATTR in include/linux/device.h, although I'm not sure if
-attributes are suitable for EEPROM as is.
-
-Maybe EEPROM should even be a separate class of devices connected to
-other devices.
-
-Of course, the topic would be better suited for LKML.
-
--- 
-Regards,
-Pavel Roskin
+ok confirmed it does no longer happen with the updated kernel.
+maybe the drop_unencrypted stuff fixed it...
