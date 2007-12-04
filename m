@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173AbXLKNWA (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.224]:18081 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613AbXLDS7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 08:22:00 -0500
-Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Dan Williams <dcbw@redhat.com>, David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071210180921.GB7168@bougret.hpl.hp.com>
-References: <20071206191150.GC5237@bougret.hpl.hp.com>
-	 <1197022818.2603.20.camel@localhost.localdomain>
-	 <20071207192756.GA15864@bougret.hpl.hp.com>
-	 <20071207.180408.55119728.davem@davemloft.net>
-	 <1197221706.9149.36.camel@localhost.localdomain>
-	 <1197223174.9149.60.camel@localhost.localdomain>
-	 <1197288928.6035.59.camel@johannes.berg>
-	 <20071210180921.GB7168@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ifcSWt8z2ZbcfJwEYUlZ"
-Date: Tue, 11 Dec 2007 14:21:33 +0100
-Message-Id: <1197379293.4037.7.camel@johannes.berg> (sfid-20071211_132204_654888_DD248905)
-Mime-Version: 1.0
+	Tue, 4 Dec 2007 13:59:30 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so3078728wra
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2007 10:59:29 -0800 (PST)
+Message-ID: <4755A382.5000806@gmail.com> (sfid-20071204_185938_603003_625E4173)
+Date: Tue, 04 Dec 2007 18:59:14 +0000
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] [try 2] orinoco: more reliable scan handling
+References: <1191946643.20183.2.camel@localhost.localdomain>	 <20071010183251.GK5962@tuxdriver.com>	 <1192074985.31110.4.camel@localhost.localdomain>	 <47489C2D.7030606@gmail.com> <1196790911.14982.4.camel@localhost.localdomain>
+In-Reply-To: <1196790911.14982.4.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dan Williams wrote:
+> On Sat, 2007-11-24 at 21:48 +0000, Dave wrote:
+>> Dan Williams wrote:
+>>> Bring scan result handling more in line with drivers like ipw.  Scan
+>>> results are aggregated and a BSS dropped after 15 seconds if no beacon
+>>> is received.  This allows the driver to interact better with userspace
+>>> where more than one process may request scans or results at any time.
+>> I've only seen this recently, and am using it as a basis for some other changes. However I've noticed a couple issues:
+>>
+>>> +static int orinoco_process_scan_results(struct net_device *dev,
+>>> +					unsigned char *buf,
+>>> +					int len)
+>>> +{
+>>  <snip>
+>>> +		/* Try to update an existing bss first */
+>>> +		list_for_each_entry(bss, &priv->bss_list, list) {
+>>> +			if (compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
+>>                         if (!compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
+>>
+>> So that we proceed to the next bss when ether_addr doesn't match. Otherwise this loop never matches.
+> 
+> compare_ether_addr(), like memcmp, returns 0 when the two arguments
+> match.  So I think this is OK.
 
---=-ifcSWt8z2ZbcfJwEYUlZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Agreed. My mistake.
 
+>  What the loop should be doing is trying
+> to find a BSSID + ESSID match and just update the last_seen value, which
+> from my reread is what it's doing here...
 
-> > Because wext is stupidly defined, you can never extend any structures i=
-t
-> > uses. Wext never passes in the length that userspace expects to passing
-> > in longer structures than the fixed one userspace expects will always
-> > overwrite something in userspace, possibly on the stack.
-> >=20
-> > johannes
->=20
-> 	Please check again...
+Agreed.
 
-I have. It's worse than I thought, there's a length parameter but it's
-not used properly.
+If something in userspace triggers a scan every 10 seconds, the scan results will always be the same (the oldest).
 
-johannes
+If that is the desired behaviour (or we don't care about this misuse) this is fine. Personally I'd expect the results to be updated, but I've only recently started messing with wireless drivers.
 
---=-ifcSWt8z2ZbcfJwEYUlZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thanks,
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR16O3KVg1VMiehFYAQIicw/+OGnrnipqurU5rpbuFWar4hBdvs3BvSJD
-/qbyGSxoUDydWc7MHJbzh9BIm0iuSzGYyjJSAwPcUJo2nO1Mu1ybTmkX6pu96Wy5
-mpY1Q9blOZnyosdojPSr4En3jG63LAPCbSNhg4T5YaIzfY9v2N/AZ160bpXD3/D1
-LXnQ//zO7ZVuX1yaf5RUOLt2/hiLkAsV+vu1p76KRxVebPVYcRqPG+OjmfLXk08g
-MHe7J7Yaael8s0PH1FPiRWksDXO8t6ms0u3q+efeNia8MJmfBXXtduWS7xFlL7kd
-tz9r5q7cv1Bn/LNOEvW36evqrnL4SfL+wHPvwy91RPoFZX4cFAjAKWvqkGC+ELhy
-UphCNmxbZNaX3mpQfexLawVp7Joo/RiI0SYBn1YmzqT6gEdnCF+dEU+mdb9SUUeH
-e64l0aHf4viIA2Y1RjoNSaL/UDRQCSG4gOvBiPJ9v8rKwgU/3M4pt+0Oa3iEPLG3
-nNrJSGc3p9B7i49s5YZfxJpjjJr8QsSwQBYZ3pQ3CRVNl98+AxPX4HkR98K+mZFw
-a3SbGImQqb/UHj8cDgf5urWJFIQ6dDyIHncK5boi3korCBkvRAM2DUl6yVMh59lU
-TAllTgmekIY/AZPyKG3gKJRKiJKcJtDKcP+hsvuGrKuJg7i4KtcG0MfVACcUlGD/
-B04fS5KPZog=
-=XjJQ
------END PGP SIGNATURE-----
-
---=-ifcSWt8z2ZbcfJwEYUlZ--
-
+Dave.
