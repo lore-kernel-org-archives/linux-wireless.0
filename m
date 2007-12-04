@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta19.adelphia.net ([68.168.78.226]:40243 "EHLO
-	mta19.adelphia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758216AbXLLLF3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 06:05:29 -0500
-Received: from [127.0.0.1] (really [69.204.11.190]) by mta9.adelphia.net
-          (InterMail vM.6.01.05.02 201-2131-123-102-20050715) with ESMTP
-          id <20071212003911.CQY3002.mta9.adelphia.net@[127.0.0.1]>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 11 Dec 2007 19:39:11 -0500
-Message-ID: <475F2DAD.4000708@roadrunner.com> (sfid-20071212_110544_110578_F8FBB681)
-Date: Tue, 11 Dec 2007 19:39:09 -0500
-From: Randy Cushman <rcushman_linux@roadrunner.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: BCM4306 Questions
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:4504 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751656AbXLDWYv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 17:24:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: correct "skb_buff" typo
+Date: Tue,  4 Dec 2007 17:24:35 -0500
+Message-Id: <1196807075-28518-1-git-send-email-linville@tuxdriver.com> (sfid-20071204_222454_622411_AA52D2A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently I retrofitted my older HP laptop with a "Broadcom 802.11b/g 
-WLAN" miniPCI adapter.  The adapter works well with Windows XP.  Now I 
-would like to be able to use the adapter with Linux.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Jeff,
 
-Question:  Is there any hope of using this adapter with a native driver, 
-or should I use ndiswrapper?  Requirement:  I want to be able to connect 
-to networks using WPA-PSK.
+I found this one when pushing the latest round of wireless bits
+into rawhide.  Wanna just go ahead and apply it to netdev-2.6#upstream?
 
-Complication:  Neither bcm43xx-fwcutter nor b43-fwcutter recognizes the 
-latest driver I found at HP.  I figure it would be best for me to use 
-this firmware because this is the only driver that I have found to be 
-stable.
+John
 
-Question:  Could someone instruct a mere applications software engineer 
-on how to determine the values to insert into fwcutter_list.h to support 
-this driver (or provide documentation to this effect)?
+ drivers/net/wireless/rt2x00/rt2x00lib.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Details:
-- BCM-4306 -based adapter.  Vendor 14E4, Device 4320, Subsys 12F8103C, 
-Rev 03
-- HP driver SP36684.EXE, v4.150.29.0 (7/11/2007) (BCMWL5.SYS)
-- unstable driver tried: v4.100.15.5
-- openSUSE 10.3 installed bcm43xx-fwcutter and loaded modules bcm43xx 
-and ieee80211_softmac
-
-Randy Cushman
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 0bf10ff..108488d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -91,7 +91,7 @@ static inline void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+ }
+ 
+ static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+-					  struct skb_buff *skb)
++					  struct sk_buff *skb)
+ {
+ }
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+-- 
+1.5.3.3
 
