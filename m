@@ -1,68 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:33064 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746AbXLXW3g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Dec 2007 17:29:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: Strange mac80211 oops
-Date: Mon, 24 Dec 2007 23:28:55 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mx1.redhat.com ([66.187.233.31]:48171 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753559AbXLDQGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 11:06:22 -0500
+Subject: Re: [PATCH] less eventcause shifts
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <200712242237.28913.mb@bu3sch.de> <1198532736.4103.44.camel@johannes.berg> <1198533423.4103.46.camel@johannes.berg>
-In-Reply-To: <1198533423.4103.46.camel@johannes.berg>
-MIME-Version: 1.0
-Message-Id: <200712242328.56060.mb@bu3sch.de> (sfid-20071224_222952_123781_68587F36)
-Content-Type: text/plain;
-  charset="iso-8859-15"
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1196782170.13978.296.camel@pmac.infradead.org>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+	 <1196704681.21151.13.camel@localhost.localdomain>
+	 <1196714939.13978.171.camel@pmac.infradead.org>
+	 <20071204145437.GC19911@tuxdriver.com>
+	 <1196780866.13978.275.camel@pmac.infradead.org>
+	 <20071204152122.GE19911@tuxdriver.com>
+	 <1196782170.13978.296.camel@pmac.infradead.org>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 11:00:02 -0500
+Message-Id: <1196784002.26155.62.camel@localhost.localdomain> (sfid-20071204_160628_097006_EA66D39E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 24 December 2007 22:57:03 Johannes Berg wrote:
-> On Mon, 2007-12-24 at 22:45 +0100, Johannes Berg wrote:
-> > > [   98.415423] ------------[ cut here ]------------
-> > > [   98.415627] Badness at e221c924 [verbose debug info unavailable]
+On Tue, 2007-12-04 at 15:29 +0000, David Woodhouse wrote:
+> On Tue, 2007-12-04 at 10:21 -0500, John W. Linville wrote:
+> > On Tue, Dec 04, 2007 at 03:07:46PM +0000, David Woodhouse wrote:
+> > > On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
+> > > > The result is a nice, rebased set of patches on top of the current
+> > > > upstream work.	If you simply did a "commit, pull, commit, pull,
+> > > > etc" cycle then you would end-up with a set of patches that might
+> > > > no longer apply on top of a clean upstream branch -- been there,
+> > > > wireless-dev RIP.
+> > > 
+> > > Ah, I understand your confusion. It reflects akpm's confusion when he
+> > > first started trying to use git-bisect.
+> > > 
+> > > This thing is, there is no actual need for a 'set of patches'. Git isn't
+> > > about patches. It's about commits and pulls. It doesn't _matter_ if you
+> > > had to fix up something when you merged from Linus, because when Linus
+> > > pulls from your tree, he pulls your manual merge effort too.
 > > 
-> > > [   98.416905] NIP [e221c924] __ieee80211_rx+0x48c/0xd44 [mac80211]
+> > Well I'm a bit hemmed-in -- Linus pull's from Dave and Jeff, they
+> > pull from me.  Both of them are a bit prone to rebasing as well.
+> > Even if I just "let it ride" (i.e. didn't rebase), I would still be
+> > prone to some of the merge difficulties I described when I pulled
+> > duplicate patches back in from Linus later.
 > > 
-> > ieee80211_rx_monitor() is inlined into __ieee80211_rx() and that +0x48c
-> > is quite a high number, so I'm guessing it's this:
+> > FWIW, I've seen Linus complain about dirty git history on several
+> > occassions.  So even if he were pulling directly from me I imagine
+> > that there would still be a need for some of this quilt-like use of
+> > git to clean-up things from time to time.
+> 
+> Very occasionally. Never, in my experience, when I'm careful about when
+> I actually merge. As I said, daily merges are probably a bad idea. :)
+> 
+> > Still, it is true that I might be able to maintain a more consistent
+> > 'everything' branch if I weren't "serving two masters"...alas.
+> 
+> Yeah, I don't really mean to tell you how to handle it -- I'm just
+> trying to find a way to work that actually allows me to use git
+> properly, rather than forcing me in to the old method of stacks of
+> patches.
+> 
+> Basically, trees which get rebased aren't suitable for git users to base
+> their work on. It just doesn't work.
+> 
+> > > > [1] If your work does _not_ rely on patches already merged in my tree
+> > > > then by all means just use Linus' tree.
+> > > 
+> > > That was my intention, right up to the point at which a bunch of
+> > > libertas patches appeared in your tree :)
 > > 
-> >         /*
-> >          * Drivers are required to align the payload data to a four-byte
-> >          * boundary, so the last two bits of the address where it starts
-> >          * may not be set. The header is required to be directly before
-> >          * the payload data, padding like atheros hardware adds which is
-> >          * inbetween the 802.11 header and the payload is not supported,
-> >          * the driver is required to move the 802.11 header further back
-> >          * in that case.
-> >          */
-> >         hdrlen = ieee80211_get_hdrlen(rx.fc);
-> >         WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+> > It was my understanding that you were working on top of these patches
+> > anyway (i.e. not rewriting or replacing them).  Anyway they are all
+> > destined for 2.6.25 so your "Linus + libertas patches" just still be
+> > just as valid...?
 > 
-> Yup, that's what it is, Michael sent me the assembly, __ieee80211_rx
-> starts at 0x1990 and we find at 0x1990+0x48c == 0x1e1c
+> The important question is: is the commit sha1sum the same?
 > 
+> And the answer is no -- the commit corresponding to a given patch may
+> have a different sha1sum from day to day, in your tree, and when it
+> finally gets to Linus. That's fair enough -- you deal with patches, not
+> git. But it sucks for anyone who wants to use git and to base their work
+> on stuff you have in those patches.
 > 
->     1df8:       48 00 00 01     bl      1df8 <__ieee80211_rx+0x468>
->                         1df8: R_PPC_REL24       ieee80211_get_hdrlen
->     1dfc:       80 18 00 a0     lwz     r0,160(r24)
->     1e00:       7c 00 1a 14     add     r0,r0,r3
->     1e04:       70 09 00 03     andi.   r9,r0,3
->     1e08:       41 a2 00 2c     beq+    1e34 <__ieee80211_rx+0x4a4>
->     1e0c:       3d 20 00 00     lis     r9,0
->                         1e0e: R_PPC_ADDR16_HA   .sbss
->     1e10:       80 09 00 00     lwz     r0,0(r9)
->                         1e12: R_PPC_ADDR16_LO   .sbss
->     1e14:       7c 00 00 34     cntlzw  r0,r0
->     1e18:       54 00 d9 7e     rlwinm  r0,r0,27,5,31
->     1e1c:       0f 00 00 00     twnei   r0,0
-> 
-> which is exactly the WARN_ON_ONCE above.
+> Which is why I thought we'd agreed that I'll commit libertas-related
+> stuff to libertas-2.6.git for now, where Holger and I can play to our
+> hearts' content, then ask you to pull when we're done.
 
-So zd1211rw-mac80211 is pushing some unaligned data up the RX path, hm.
+However it works out, as long as the work in libertas-2.6 doesn't drag
+out too long.  Slow and steady does not win the race here :)  Not sure
+what's involved if Jeff has already pulled from John; but if not, John
+could drop the current libertas set and you (david) can _ensure_ that
+they get into libertas-2.6 so nothing gets dropped on the floor.
 
--- 
-Greetings Michael.
+Dan
+
+
