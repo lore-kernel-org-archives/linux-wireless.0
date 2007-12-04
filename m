@@ -1,44 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56009 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762607AbXLMHAQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 02:00:16 -0500
-Subject: [PATCH 96/48] libertas: use spin_is_locked() instead of spin_trylock() in lbs_interrupt()
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i3R-0005uz-52@shinybook.infradead.org> (sfid-20071213_070637_107618_9B53AD06)
-Date: Thu, 13 Dec 2007 02:00:21 -0500
+Received: from ra.tuxdriver.com ([70.61.120.52]:4146 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754480AbXLDNzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 08:55:33 -0500
+Date: Tue, 4 Dec 2007 08:55:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-jgarzik' branch of wireless-2.6
+Message-ID: <20071204135512.GA19911@tuxdriver.com> (sfid-20071204_135552_135746_846D7D27)
+References: <20071127144748.GA12408@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071127144748.GA12408@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Thu, 13 Dec 2007 01:53:57 -0500
+On Tue, Nov 27, 2007 at 09:47:48AM -0500, John W. Linville wrote:
 
-We get scary warnings on UP if we use spin_trylock() and find, as we
-hoped, that the lock in question is already locked.
+> A slew of patches for 2.6.25...
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/main.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Disregard this request -- new request coming shortly.
 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 9232b97..5d2bf53 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1414,8 +1414,7 @@ void lbs_interrupt(struct lbs_private *priv)
- 
- 	lbs_deb_thread("lbs_interrupt: intcounter=%d\n", priv->intcounter);
- 
--	if (spin_trylock(&priv->driver_lock)) {
--		spin_unlock(&priv->driver_lock);
-+	if (!spin_is_locked(&priv->driver_lock)) {
- 		printk(KERN_CRIT "%s called without driver_lock held\n", __func__);
- 		WARN_ON(1);
- 	}
+John
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
