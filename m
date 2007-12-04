@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60894 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933351AbXLMVd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 16:33:27 -0500
-Subject: Re: status wireless extensions API for new drivers
-From: Dan Williams <dcbw@redhat.com>
-To: Bjorge Dijkstra <bjd@jooz.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4761A108.2080005@jooz.net>
-References: <4761A108.2080005@jooz.net>
-Content-Type: text/plain
-Date: Thu, 13 Dec 2007 16:33:05 -0500
-Message-Id: <1197581585.14270.26.camel@localhost.localdomain> (sfid-20071213_213331_306506_538C6A9F)
+Received: from mfe1.polimi.it ([131.175.12.23]:42369 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751434AbXLDRxA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 12:53:00 -0500
+Date: Tue, 4 Dec 2007 18:48:39 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
+Message-ID: <20071204184839.46eb3ad9@morte> (sfid-20071204_175303_578148_170EF8B0)
+In-Reply-To: <1196775624.6060.52.camel@johannes.berg>
+References: <1196622331.7472.4.camel@localhost>
+	<20071203041608.3af3b462@morte>
+	<1196679780.7470.9.camel@localhost>
+	<1ba2fa240712030321g58b8df39y24240c63facba2cd@mail.gmail.com>
+	<1196681514.7470.12.camel@localhost>
+	<1196775624.6060.52.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-12-13 at 22:15 +0100, Bjorge Dijkstra wrote:
-> Hello all,
+On Tue, 04 Dec 2007 14:40:23 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> If anybody's interested, here's what I'd do:
 > 
-> I have been working on adding support for RNDIS based USB wireless 
+>  (a) add new attributes "rate control algorithm" and "rate control
+>      algorithm attributes"
+>  (b) allow setting them with NL80211_CMD_SET_INTERFACE
+>  (c) the "rate control algorithm attributes" attribute is nested and
+>      contains per-algorithm information, the indexes in it are specific
+>      to each algorithm
+> 
+> This allows changing the algorithm as well as algorithm parameters.
 
-Quick question about these; does the firmware on the wireless device
-itself talk RNDIS directly?  i.e., is RNDIS intended to replace all the
-manufacturer-specific proprietary host<->adapter protocols?  How common
-are the devices these days?  I trawled through CDW this weekend and
-could only find one or two adapters (out of 30 or so) that were RNDIS.
-I assume it's the wave of the Windows future though.
-
-> devices[1]. Recently I've been getting some help from another developer 
-> and the state of the driver has improved quite a bit. So we are thinking
-> about getting it into the mainline kernel.
-> We have used the Wireless Extensions API, but I get the impression that
-> things are moving towards the cfg/nl80211 API's. Is it still acceptable
-> for new drivers trying to get into mainline to use WEXT, or should we
-> switch to the new API's?
-
-Well, if you want to allow your driver to be backported at all, you'll
-pretty much have to support WEXT.
-
-_But_, since your driver doesn't have any need for backwards
-compatibility requirements since it's not already upstream, you might
-want to be the guinea pig for cfg80211/nl80211 :)  If you decided to
-only support cfg80211, you'd get WEXT support since cfg80211 provides a
-backwards compat solution for WEXT.  Plus you'd be helping out a great
-deal by finding and fixing bugs in cfg80211/nl80211 and proving the
-framework, which would be a great help.
-
-Dan
+This sounds great to me. Anyway, I'm still not completely convinced that we
+need to actually make any parameter available for 'rc80211-pid', but it's
+likely anyway. And that would be needed very likely for other rate control
+algorithm, so yes, I agree with this.
 
 
+--
+Ciao
+Stefano
