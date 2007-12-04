@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35141 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbXLLRmt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 12:42:49 -0500
-Subject: Re: [PATCH v2] introduce WEXT scan capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>
-In-Reply-To: <43e72e890712120858y4141d894j6b8e71a72a36dfe4@mail.gmail.com> (sfid-20071212_165832_508058_EDE585E0)
-References: <1197473107.12484.3.camel@localhost.localdomain>
-	 <43e72e890712120858y4141d894j6b8e71a72a36dfe4@mail.gmail.com>
-	 (sfid-20071212_165832_508058_EDE585E0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z+hGoAt9RqiyF4AnoFmy"
-Date: Wed, 12 Dec 2007 18:41:31 +0100
-Message-Id: <1197481291.6558.136.camel@johannes.berg> (sfid-20071212_174256_690566_37856CF9)
+Received: from mx1.redhat.com ([66.187.233.31]:34608 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753756AbXLDQXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 11:23:36 -0500
+Subject: Re: [PATCH] less eventcause shifts
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <20071204161445.GJ19911@tuxdriver.com>
+References: <200711280915.11300.hs4233@mail.mn-solutions.de>
+	 <1196704681.21151.13.camel@localhost.localdomain>
+	 <1196714939.13978.171.camel@pmac.infradead.org>
+	 <20071204145437.GC19911@tuxdriver.com>
+	 <1196780866.13978.275.camel@pmac.infradead.org>
+	 <20071204152122.GE19911@tuxdriver.com>
+	 <1196782170.13978.296.camel@pmac.infradead.org>
+	 <1196784002.26155.62.camel@localhost.localdomain>
+	 <20071204161445.GJ19911@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 11:17:20 -0500
+Message-Id: <1196785040.26155.70.camel@localhost.localdomain> (sfid-20071204_162353_955746_D36B48CA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2007-12-04 at 11:14 -0500, John W. Linville wrote:
+> On Tue, Dec 04, 2007 at 11:00:02AM -0500, Dan Williams wrote:
+> 
+> > However it works out, as long as the work in libertas-2.6 doesn't drag
+> > out too long.  Slow and steady does not win the race here :)  Not sure
+> > what's involved if Jeff has already pulled from John; but if not, John
+> > could drop the current libertas set and you (david) can _ensure_ that
+> > they get into libertas-2.6 so nothing gets dropped on the floor.
+> 
+> If the new patches come fast enough to guarantee that then I have to
+> believe that we can work-out how to merge the new patches on top of
+> what I've already sent.  So, I would prefer to let the pull request
+> I sent today stand.
 
---=-z+hGoAt9RqiyF4AnoFmy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That would be my preference too; since it's already all said and done...
 
-
-> Oh well... Would you mind putting this on enum and kerneldoc'ing them?
-> I'm not sure what some of these would imply capabilities for.
-
-kerneldoc isn't very useful on that file and nobody's going to convert
-all the comments there any more.
-
-johannes
-
---=-z+hGoAt9RqiyF4AnoFmy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2AdSqVg1VMiehFYAQLq+Q//U6u4GCOWUcXV5lLR39ucjd50pBEgMMls
-4k7bGHQ06qXMk3n8k3b8YTWhoubcJS0Z6nU7KMrJ4v4vJdpNVEA2pPEmqT+JvnMz
-dIREG4qnVp8DEYtXCem/UCHIcLI4j/Xt5H4Ic7+iOn+jouCEv06fLwaLhy/0MtFW
-wTCPpMgAqLmx+xD4IsbU5+sBt1f6k24vb0Tgl/Un/dq6a8ZeO7Go2W0e5UN2RBix
-a4GUkywjvV5T6Zn7IKIMtJM8uH4rQz2Ig5hy4Q6vbE4CqfnGAcv87SLjtAhketg7
-zJaG8jKD0s6M5hG1U7C8tsWGyVGjcGUHEm4n/ju6PhhvthHgTX1yWaTZX/UNB929
-4xHMLf2/qViuDLtVlTom/WNqmmHGARbybZ6VFglIvykSfV+hXyyp3c1/Fy8GaJpF
-VP55lHFdVSBFYrPH1peC25YEWLu6WyBmlmkJWXRWzhLBsGmB1yYapqNoE1BtsCIW
-YKueqsL54blPGgdh0BL7iHfj46AWnIbAnQZdG5WUPY7u3SG7V2nllGlvMlxQX8sa
-dZD9PvmLFlQUQQEIzBtaFNXNLsbJKtqU6i6Vkok/dKU+nUGa/z7GWdIl/b5waZo/
-4yXrcY5s6dDm51REyW6nDpJb78Cao97AQ7Y1ZlQoKxUBrik+gCxf4s1Ly7ye3LLk
-IYH2w5IZxe4=
-=ALI1
------END PGP SIGNATURE-----
-
---=-z+hGoAt9RqiyF4AnoFmy--
+Dan
 
