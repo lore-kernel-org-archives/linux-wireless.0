@@ -1,289 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56950 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762792AbXLMG7d (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbXLEKQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:33 -0500
-Subject: [PATCH 70/48] libertas: convert DATA_RATE to a direct command
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
+	Wed, 5 Dec 2007 05:16:28 -0500
+Subject: [PATCH] mac80211: conditionally include timestamp in radiotap
+	information
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2s-0005se-Cz@shinybook.infradead.org> (sfid-20071213_070637_678994_210A4462)
-Date: Thu, 13 Dec 2007 01:59:46 -0500
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 04 Dec 2007 20:26:48 +0100
+Message-Id: <1196796408.10274.30.camel@johannes.berg> (sfid-20071205_101632_340589_12AA9D8A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Tue, 11 Dec 2007 15:50:59 -0500
+This makes mac80211 include the low-level MAC timestamp
+in the radiotap header if the driver indicated (by a new
+RX flag) that the timestamp is valid.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/libertas/cmd.c     |   93 ++++++++++++++++++++++++-------
- drivers/net/wireless/libertas/cmd.h     |    3 +
- drivers/net/wireless/libertas/cmdresp.c |   23 --------
- drivers/net/wireless/libertas/hostcmd.h |    3 +-
- drivers/net/wireless/libertas/main.c    |    8 +--
- drivers/net/wireless/libertas/wext.c    |    9 +--
- 6 files changed, 83 insertions(+), 56 deletions(-)
+ include/net/mac80211.h |    3 +++
+ net/mac80211/rx.c      |   45 ++++++++++++++++++++++++++++-----------------
+ 2 files changed, 31 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 9d621fe..eff7879 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -706,30 +706,86 @@ static int lbs_cmd_802_11_rate_adapt_rateset(struct lbs_private *priv,
- 	return 0;
- }
+--- everything.orig/net/mac80211/rx.c	2007-12-04 20:02:04.696956217 +0100
++++ everything/net/mac80211/rx.c	2007-12-04 20:16:02.486950411 +0100
+@@ -80,8 +80,9 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_rate *rate;
+ 	int needed_headroom = 0;
+-	struct ieee80211_rtap_hdr {
+-		struct ieee80211_radiotap_header hdr;
++	struct ieee80211_radiotap_header *rthdr;
++	__le64 *rttsft = NULL;
++	struct ieee80211_rtap_fixed_data {
+ 		u8 flags;
+ 		u8 rate;
+ 		__le16 chan_freq;
+@@ -89,7 +90,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 		u8 antsignal;
+ 		u8 padding_for_rxflags;
+ 		__le16 rx_flags;
+-	} __attribute__ ((packed)) *rthdr;
++	} __attribute__ ((packed)) *rtfixed;
+ 	struct sk_buff *skb, *skb2;
+ 	struct net_device *prev_dev = NULL;
+ 	int present_fcs_len = 0;
+@@ -106,7 +107,8 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 	if (status->flag & RX_FLAG_RADIOTAP)
+ 		rtap_len = ieee80211_get_radiotap_len(origskb->data);
+ 	else
+-		needed_headroom = sizeof(*rthdr);
++		/* room for radiotap header, always present fields and TSFT */
++		needed_headroom = sizeof(*rthdr) + sizeof(*rtfixed) + 8;
  
--static int lbs_cmd_802_11_data_rate(struct lbs_private *priv,
--				     struct cmd_ds_command *cmd,
--				     u16 cmd_action)
-+/**
-+ *  @brief Get the current data rate
-+ *
-+ *  @param priv    	A pointer to struct lbs_private structure
-+ *
-+ *  @return 	   	The data rate on success, error on failure
-+ */
-+int lbs_get_data_rate(struct lbs_private *priv)
- {
--	struct cmd_ds_802_11_data_rate *pdatarate = &cmd->params.drate;
-+	struct cmd_ds_802_11_data_rate cmd;
-+	int ret = -1;
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
+@@ -134,7 +136,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 		 * them allocate enough headroom to start with.
+ 		 */
+ 		if (skb_headroom(skb) < needed_headroom &&
+-		    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
++		    pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
+ 			dev_kfree_skb(skb);
+ 			return NULL;
+ 		}
+@@ -153,42 +155,51 @@ ieee80211_rx_monitor(struct ieee80211_lo
  
- 	lbs_deb_enter(LBS_DEB_CMD);
+ 	/* if necessary, prepend radiotap information */
+ 	if (!(status->flag & RX_FLAG_RADIOTAP)) {
++		rtfixed = (void *) skb_push(skb, sizeof(*rtfixed));
++		if (status->flag & RX_FLAG_TSFT)
++			rttsft = (void *) skb_push(skb, sizeof(*rttsft));
+ 		rthdr = (void *) skb_push(skb, sizeof(*rthdr));
+ 		memset(rthdr, 0, sizeof(*rthdr));
+-		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
+-		rthdr->hdr.it_present =
+-			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
++		memset(rtfixed, 0, sizeof(*rtfixed));
++		rthdr->it_len = cpu_to_le16(sizeof(*rthdr));
++		rthdr->it_present =
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
++				    (1 << IEEE80211_RADIOTAP_FLAGS) |
+ 				    (1 << IEEE80211_RADIOTAP_RATE) |
+ 				    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+ 				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
+ 				    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
+-		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
+-			       IEEE80211_RADIOTAP_F_FCS : 0;
++		rtfixed->flags = 0;
++		if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
++			rtfixed->flags |= IEEE80211_RADIOTAP_F_FCS;
++
++		if (rttsft)
++			*rttsft = cpu_to_le64(status->mactime);
  
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_data_rate) +
--			     S_DS_GEN);
--	cmd->command = cpu_to_le16(CMD_802_11_DATA_RATE);
--	memset(pdatarate, 0, sizeof(struct cmd_ds_802_11_data_rate));
--	pdatarate->action = cpu_to_le16(cmd_action);
--
--	if (cmd_action == CMD_ACT_SET_TX_FIX_RATE) {
--		pdatarate->rates[0] = lbs_data_rate_to_fw_index(priv->cur_rate);
--		lbs_deb_cmd("DATA_RATE: set fixed 0x%02X\n",
--		       priv->cur_rate);
--	} else if (cmd_action == CMD_ACT_SET_TX_AUTO) {
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_GET_TX_RATE);
-+
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_DATA_RATE, cmd);
-+	if (ret)
-+		goto out;
-+
-+	lbs_deb_hex(LBS_DEB_CMD, "DATA_RATE_RESP", (u8 *) &cmd, sizeof (cmd));
-+
-+	ret = (int) lbs_fw_index_to_data_rate(cmd.rates[0]);
-+	lbs_deb_cmd("DATA_RATE: current rate 0x%02x\n", ret);
-+
-+out:
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+	return ret;
-+}
-+
-+/**
-+ *  @brief Set the data rate
-+ *
-+ *  @param priv    	A pointer to struct lbs_private structure
-+ *  @param rate  	The desired data rate, or 0 to clear a locked rate
-+ *
-+ *  @return 	   	0 on success, error on failure
-+ */
-+int lbs_set_data_rate(struct lbs_private *priv, u8 rate)
-+{
-+	struct cmd_ds_802_11_data_rate cmd;
-+	int ret = 0;
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+
-+	if (rate > 0) {
-+		cmd.action = cpu_to_le16(CMD_ACT_SET_TX_FIX_RATE);
-+		cmd.rates[0] = lbs_data_rate_to_fw_index(rate);
-+		if (cmd.rates[0] == 0) {
-+			lbs_deb_cmd("DATA_RATE: invalid requested rate of"
-+			            " 0x%02X\n", rate);
-+			ret = 0;
-+			goto out;
-+		}
-+		lbs_deb_cmd("DATA_RATE: set fixed 0x%02X\n", cmd.rates[0]);
-+	} else {
-+		cmd.action = cpu_to_le16(CMD_ACT_SET_TX_AUTO);
- 		lbs_deb_cmd("DATA_RATE: setting auto\n");
+ 		/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
+-		rthdr->rx_flags = 0;
++		rtfixed->rx_flags = 0;
+ 		if (status->flag &
+ 		    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
+-			rthdr->rx_flags |=
++			rtfixed->rx_flags |=
+ 				cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
+ 
+ 		rate = ieee80211_get_rate(local, status->phymode,
+ 					  status->rate);
+ 		if (rate)
+-			rthdr->rate = rate->rate / 5;
++			rtfixed->rate = rate->rate / 5;
+ 
+-		rthdr->chan_freq = cpu_to_le16(status->freq);
++		rtfixed->chan_freq = cpu_to_le16(status->freq);
+ 
+ 		if (status->phymode == MODE_IEEE80211A)
+-			rthdr->chan_flags =
++			rtfixed->chan_flags =
+ 				cpu_to_le16(IEEE80211_CHAN_OFDM |
+ 					    IEEE80211_CHAN_5GHZ);
+ 		else
+-			rthdr->chan_flags =
++			rtfixed->chan_flags =
+ 				cpu_to_le16(IEEE80211_CHAN_DYN |
+ 					    IEEE80211_CHAN_2GHZ);
+ 
+-		rthdr->antsignal = status->ssi;
++		rtfixed->antsignal = status->ssi;
  	}
  
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_DATA_RATE, cmd);
-+	if (ret)
-+		goto out;
-+
-+	lbs_deb_hex(LBS_DEB_CMD, "DATA_RATE_RESP", (u8 *) &cmd, sizeof (cmd));
-+
-+	/* FIXME: get actual rates FW can do if this command actually returns
-+	 * all data rates supported.
-+	 */
-+	priv->cur_rate = lbs_fw_index_to_data_rate(cmd.rates[0]);
-+	lbs_deb_cmd("DATA_RATE: current rate is 0x%02x\n", priv->cur_rate);
-+
-+out:
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+	return ret;
- }
- 
- static int lbs_cmd_mac_multicast_adr(struct lbs_private *priv,
-@@ -1348,9 +1404,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_802_11_radio_control(priv, cmdptr, cmd_action);
- 		break;
- 
--	case CMD_802_11_DATA_RATE:
--		ret = lbs_cmd_802_11_data_rate(priv, cmdptr, cmd_action);
--		break;
- 	case CMD_802_11_RATE_ADAPT_RATESET:
- 		ret = lbs_cmd_802_11_rate_adapt_rateset(priv,
- 							 cmdptr, cmd_action);
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index 950acce..4bd6f56 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -27,4 +27,7 @@ int lbs_update_hw_spec(struct lbs_private *priv);
- int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
- 		    struct cmd_ds_mesh_access *cmd);
- 
-+int lbs_get_data_rate(struct lbs_private *priv);
-+int lbs_set_data_rate(struct lbs_private *priv, u8 rate);
-+
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 6ff705b..797c943 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -325,26 +325,6 @@ static int lbs_ret_802_11_rate_adapt_rateset(struct lbs_private *priv,
- 	return 0;
- }
- 
--static int lbs_ret_802_11_data_rate(struct lbs_private *priv,
--				     struct cmd_ds_command *resp)
--{
--	struct cmd_ds_802_11_data_rate *pdatarate = &resp->params.drate;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	lbs_deb_hex(LBS_DEB_CMD, "DATA_RATE_RESP", (u8 *) pdatarate,
--		sizeof(struct cmd_ds_802_11_data_rate));
--
--	/* FIXME: get actual rates FW can do if this command actually returns
--	 * all data rates supported.
--	 */
--	priv->cur_rate = lbs_fw_index_to_data_rate(pdatarate->rates[0]);
--	lbs_deb_cmd("DATA_RATE: current rate 0x%02x\n", priv->cur_rate);
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_ret_802_11_rf_channel(struct lbs_private *priv,
- 				      struct cmd_ds_command *resp)
- {
-@@ -565,9 +545,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 		ret = lbs_ret_802_11_enable_rsn(priv, resp);
- 		break;
- 
--	case CMD_RET(CMD_802_11_DATA_RATE):
--		ret = lbs_ret_802_11_data_rate(priv, resp);
--		break;
- 	case CMD_RET(CMD_802_11_RATE_ADAPT_RATESET):
- 		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
- 		break;
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index d9b151a..d51010c 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -461,6 +461,8 @@ struct PS_CMD_ConfirmSleep {
+ 	skb_set_mac_header(skb, 0);
+--- everything.orig/include/net/mac80211.h	2007-12-04 20:12:00.226951171 +0100
++++ everything/include/net/mac80211.h	2007-12-04 20:20:25.366949924 +0100
+@@ -350,6 +350,8 @@ struct ieee80211_tx_control {
+  *	the frame.
+  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
+  *	the frame.
++ * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime field)
++ *	is valid.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	= 1<<0,
+@@ -359,6 +361,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_IV_STRIPPED	= 1<<4,
+ 	RX_FLAG_FAILED_FCS_CRC	= 1<<5,
+ 	RX_FLAG_FAILED_PLCP_CRC = 1<<6,
++	RX_FLAG_TSFT		= 1<<7,
  };
  
- struct cmd_ds_802_11_data_rate {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
- 	__le16 reserved;
- 	u8 rates[MAX_RATES];
-@@ -659,7 +661,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_802_11_rf_tx_power txp;
- 		struct cmd_ds_802_11_rf_antenna rant;
- 		struct cmd_ds_802_11_monitor_mode monitor;
--		struct cmd_ds_802_11_data_rate drate;
- 		struct cmd_ds_802_11_rate_adapt_rateset rateset;
- 		struct cmd_ds_mac_multicast_adr madr;
- 		struct cmd_ds_802_11_ad_hoc_join adj;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 7f6b3cc..2fe7ad0 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -854,12 +854,8 @@ static int lbs_setup_firmware(struct lbs_private *priv)
- 
- 	lbs_set_mac_packet_filter(priv);
- 
--	/* Get the supported Data rates */
--	ret = lbs_prepare_and_send_command(priv, CMD_802_11_DATA_RATE,
--				    CMD_ACT_GET_TX_RATE,
--				    CMD_OPTION_WAITFORRSP, 0, NULL);
--
--	if (ret) {
-+	ret = lbs_get_data_rate(priv);
-+	if (ret < 0) {
- 		ret = -1;
- 		goto done;
- 	}
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 1e0b224..e44c0ce 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -19,6 +19,7 @@
- #include "join.h"
- #include "wext.h"
- #include "assoc.h"
-+#include "cmd.h"
- 
- 
- static inline void lbs_postpone_association_work(struct lbs_private *priv)
-@@ -962,8 +963,7 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
- 		  struct iw_param *vwrq, char *extra)
- {
- 	struct lbs_private *priv = dev->priv;
--	u32 new_rate;
--	u16 action;
-+	u8 new_rate = 0;
- 	int ret = -EINVAL;
- 	u8 rates[MAX_RATES + 1];
- 
-@@ -972,7 +972,6 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
- 
- 	/* Auto rate? */
- 	if (vwrq->value == -1) {
--		action = CMD_ACT_SET_TX_AUTO;
- 		priv->auto_rate = 1;
- 		priv->cur_rate = 0;
- 	} else {
-@@ -989,12 +988,10 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
- 		}
- 
- 		priv->cur_rate = new_rate;
--		action = CMD_ACT_SET_TX_FIX_RATE;
- 		priv->auto_rate = 0;
- 	}
- 
--	ret = lbs_prepare_and_send_command(priv, CMD_802_11_DATA_RATE,
--				    action, CMD_OPTION_WAITFORRSP, 0, NULL);
-+	ret = lbs_set_data_rate(priv, new_rate);
- 
- out:
- 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--- 
-1.5.3.4
+ /**
+
 
