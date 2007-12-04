@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50971 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889AbXLDPfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:35:53 -0500
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071204152538.GF19911@tuxdriver.com>
-References: <200712041140.07516.hs4233@mail.mn-solutions.de>
-	 <200712041153.24896.hs4233@mail.mn-solutions.de>
-	 <1196780198.26155.17.camel@localhost.localdomain>
-	 <20071204152538.GF19911@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 10:29:48 -0500
-Message-Id: <1196782188.26155.49.camel@localhost.localdomain> (sfid-20071204_153556_825699_9BDA6661)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.179]:27873 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbXLDH5Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2007 02:57:24 -0500
+Received: by py-out-1112.google.com with SMTP id u77so7039944pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2007 23:57:22 -0800 (PST)
+Message-ID: <f6ca9fed0712032357y7860a694ta81ec373ca82da67@mail.gmail.com> (sfid-20071204_075728_866646_2618DED4)
+Date: Tue, 4 Dec 2007 08:57:21 +0100
+From: dragoran <drago01@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
+Cc: "Jouni Malinen" <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <f6ca9fed0712032257p225f97f3pae00b878f15d09@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <47494851.4070504@gmail.com>
+	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
+	 <f6ca9fed0711260650j749de7a3x3edc084ae820d2eb@mail.gmail.com>
+	 <20071127033408.GB5698@jm.kir.nu>
+	 <1196676895.6060.19.camel@johannes.berg>
+	 <f6ca9fed0712030347s3d1fde9cnad9046c83316163b@mail.gmail.com>
+	 <f6ca9fed0712032257p225f97f3pae00b878f15d09@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-12-04 at 10:25 -0500, John W. Linville wrote:
-> On Tue, Dec 04, 2007 at 09:56:38AM -0500, Dan Williams wrote:
-> > On Tue, 2007-12-04 at 11:53 +0100, Holger Schurig wrote:
-> > > 7. escape_ssid()
-> > > 
-> > > This code from ieee80211 is used in various debug messages.
-> > > Should I re-implement this locally in the driver?
-> > 
-> > Part of the _point_ of depending on ieee80211 was so that we wouldn't
-> > have a lot of pointless code duplication.  Like this.
-> 
-> ACK
-> 
-> We've been talking about a new component for this kind of
-> shared generic 802.11 code for some time.  In my head I call it
-> "lib80211". :-)
-> 
-> Maybe it is time to start it?  The header of a thousand bytes start
-> with a single char... :-)
-
-I was thinking about lib80211 this morning too; specifically the code
-that everyone has to write to convert local BSS entries into WEXT scan
-results.  The problem is that drivers have different ideas of what a BSS
-is.  I think the _first_ thing to do is to define a BSS structure (I
-used the ipw2x00 bss structure in libertas when doing this) that all the
-fullmac drivers can use (airo, atmel, libertas, orinoco, etc).  Then,
-each driver can fill out that structure from it's internal scan result,
-and hand that off to the lib80211 bss list handling code.  We could have
-a help that these driver's get_scan calls to convert the internal list
-into WEXT scan results.  The important thing is getting these drivers to
-fill out the common bss structure when their firmware returns a scan
-result.  We could even make the lib80211 code handle scan result aging
-internally.  Could have helper functions to allocate and dispose of the
-bss list instead of having to duplicate that code in every driver (it's
-already in airo & libertas, and I posted a patch that dupes it again for
-orinoco).
-
-It might mean more memory usage for these drivers because not all of
-them need all the fields in the common BSS structure.  It may mean
-slightly more CPU time used to convert the driver's internal BSS
-representation into the common BSS structure.  But that is pretty small
-in both cases and I think the benefits outweigh the drawbacks in this
-regard.
-
-Each fullmac driver right now is it's own little box, with quite a lot
-of duplicated code floating around.  We need to start replacing that
-duplicated code/functionality with common stuff for maintainability and
-sanity :)
-
-Dan
-
-
+On Dec 4, 2007 7:57 AM, dragoran <drago01@gmail.com> wrote:
+>
+> On Dec 3, 2007 12:47 PM, dragoran <drago01@gmail.com> wrote:
+> > It seems not to happen today (with an updated kernel 2.6.23.9-77.fc8;
+> > which contains recent wireless updates from #everything).
+> > I don't know if its fixed or if the I am just not receiving crap right
+> > now... but will be connected for ~4hours to this ap now..
+> > will report if it happens or not until then...
+> >
+>
+> ok confirmed it does no longer happen with the updated kernel.
+> maybe the drop_unencrypted stuff fixed it...
+>
+I was wrong ... it happened again...
+will try the to create the dump sometime this week and send it to you.
