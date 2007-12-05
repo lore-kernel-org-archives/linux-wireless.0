@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46793 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbXLLRSS (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:46752 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050AbXLEKT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 12:18:18 -0500
-Subject: [PATCH] mac80211: fix header ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	Stephen Hemminger <shemminger@linux-foundation.org>
-Content-Type: text/plain
-Date: Wed, 12 Dec 2007 16:31:52 +0100
-Message-Id: <1197473512.6558.96.camel@johannes.berg> (sfid-20071212_171820_772036_BC82965B)
-Mime-Version: 1.0
+	Wed, 5 Dec 2007 05:19:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] wireless: make drivers include the TSF RX flag where appropriate
+Date: Wed, 5 Dec 2007 11:17:42 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1196796820.12472.1.camel@johannes.berg>
+In-Reply-To: <1196796820.12472.1.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712051117.43276.mb@bu3sch.de> (sfid-20071205_101932_824680_52CB91EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using recvfrom() on a SOCK_DGRAM packet socket, I noticed that the MAC
-address passed back for wireless frames was always completely wrong. The
-reason for this is that the header parse function assigned to our virtual
-interfaces is a function parsing an 802.11 rather than 802.3 header. This
-patch fixes it by keeping the default ethernet header operations assigned.
+On Tuesday 04 December 2007 20:33:40 Johannes Berg wrote:
+> These drivers pass full mactime information to the stack, make them
+> indicate this via the new RX_FLAG_TSFT to get mac80211 to show this
+> information in monitor mode.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> iwlwifi does own radiotap headers (well, tries, it's broken) so is not
+> modified.
+> 
+>  drivers/net/wireless/b43/xmit.c       |    1 +
+>  drivers/net/wireless/b43legacy/xmit.c |    1 +
+>  drivers/net/wireless/p54common.c      |    1 +
+>  drivers/net/wireless/rtl8180_dev.c    |    1 +
+>  drivers/net/wireless/rtl8187_dev.c    |    1 +
+>  5 files changed, 5 insertions(+)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-I think this should go into 2.6.24. I have no idea what broke this or if
-it has been wrong forever... However, my eapol stuff relies on this fix.
+> --- everything.orig/drivers/net/wireless/b43/xmit.c	2007-12-04 20:32:32.096962565 +0100
+> +++ everything/drivers/net/wireless/b43/xmit.c	2007-12-04 20:33:11.046949707 +0100
+> @@ -541,6 +541,7 @@ void b43_rx(struct b43_wldev *dev, struc
+>  		status.mactime += mactime;
+>  		if (low_mactime_now <= mactime)
+>  			status.mactime -= 0x10000;
+> +		status.flag |= RX_FLAG_TSFT;
+>  	}
+>  
+>  	chanid = (chanstat & B43_RX_CHAN_ID) >> B43_RX_CHAN_ID_SHIFT;
 
-There is one small problem with this: monitor interfaces are also set up
-with this function but have 802.11 frame type. I have found that to not
-matter but I'm not entirely sure. Does anybody think it does? In that
-case I'll have to (re-)assign this conditionally when changing the
-interface type.
-
- net/mac80211/ieee80211.c |    1 -
- 1 file changed, 1 deletion(-)
-
---- everything.orig/net/mac80211/ieee80211.c	2007-12-12 16:24:31.929129394 +0100
-+++ everything/net/mac80211/ieee80211.c	2007-12-12 16:25:23.609131835 +0100
-@@ -449,7 +449,6 @@ static const struct header_ops ieee80211
- void ieee80211_if_setup(struct net_device *dev)
- {
- 	ether_setup(dev);
--	dev->header_ops = &ieee80211_header_ops;
- 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
- 	dev->wireless_handlers = &ieee80211_iw_handler_def;
- 	dev->set_multicast_list = ieee80211_set_multicast_list;
+Acked-by: Michael Buesch <mb@bu3sch.de>
 
 
+-- 
+Greetings Michael.
