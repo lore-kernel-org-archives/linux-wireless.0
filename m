@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755276AbXLULVx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 06:21:53 -0500
-Subject: [PATCH] ath5k: don't build by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:59942 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751369AbXLEUlW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 15:41:22 -0500
+Subject: Re: [PATCH 0/5] libertas: allow easier command playing
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200712052057.32996.hs4233@mail.mn-solutions.de>
+References: <200712051757.52053.hs4233@mail.mn-solutions.de>
+	 <1196874408.12263.9.camel@localhost.localdomain>
+	 <200712052057.32996.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Fri, 21 Dec 2007 00:59:04 +0100
-Message-Id: <1198195144.16241.65.camel@johannes.berg> (sfid-20071221_112158_638221_5D25FC11)
+Date: Wed, 05 Dec 2007 15:35:50 -0500
+Message-Id: <1196886950.5941.1.camel@localhost.localdomain> (sfid-20071205_204127_269846_0A3445FF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Must have been hubris, everybody needs ath5k, right?
+On Wed, 2007-12-05 at 20:57 +0100, Holger Schurig wrote:
+> > Yeah; need to get this figured out with David; he'll probably start
+> > yelling loudly if these get acked.
+> 
+> Hmm, seems he acked those patches by himself, he committed all of them
+> into his libertas-2.6 :-)
+> 
+> > He might be committing/reverting 
+> > locally and just not pushing up to libertas-2.6 until he's ready.
+> 
+> That's ok with me.
+> 
+> However, even with me having write access to libertas-2.6, I'd like
+> to keep posting patches to the mailing list so that more eyeballs
+> are seeing them and can speak up.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/Kconfig |    1 -
- 1 file changed, 1 deletion(-)
+Always a good idea.  more eyes == better
 
---- everything.orig/drivers/net/wireless/Kconfig	2007-12-21 00:57:26.393161350 +0100
-+++ everything/drivers/net/wireless/Kconfig	2007-12-21 00:57:29.913160862 +0100
-@@ -664,7 +664,6 @@ config P54_PCI
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
--	default m
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
+Dan
 
 
