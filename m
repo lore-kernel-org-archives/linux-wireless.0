@@ -1,138 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754920AbXLQSZ1 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5933 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589AbXLEQ5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 13:25:27 -0500
-Subject: Re: [PATCH 6/8] mac80211: A-MPDU Rx adding BAR handling capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11979070783125-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070783125-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PEjr1QPqEchh502sFRnD"
-Date: Mon, 17 Dec 2007 19:24:44 +0100
-Message-Id: <1197915884.4885.93.camel@johannes.berg> (sfid-20071217_182530_368131_D7B3AEB2)
-Mime-Version: 1.0
+	Wed, 5 Dec 2007 11:57:35 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 0/5] libertas: allow easier command playing
+Date: Wed, 5 Dec 2007 17:57:51 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	David Woodhouse <dwmw2@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200712051757.52053.hs4233@mail.mn-solutions.de> (sfid-20071205_165739_406299_C6D3D7A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'll want to investigate the behavior of my libertas CF card
+firmware, e.g. to decide if I can use the background scan feature
+of the card or not.
 
---=-PEjr1QPqEchh502sFRnD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Unfortunately, currently the firmware command execution is spread
+over several files, e.g. hostcmd.h, host.h, types.h, cmd.c,
+cmdresp.c and sometimes even other files. Add two very large
+switch() statements, a structure with a union of about 60 structs
+and misc functions at other places (do a "grep -l lbs_cmd_ *.c" to
+find out).
 
+It's not really easy to just-write-a-test for a specific firmware
+command.
 
-> -u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len);
-> +u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
-> +			unsigned int type);
-
-Please use the proper enum.
-
-> @@ -1530,6 +1533,48 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx=
-)
->  }
-> =20
->  static ieee80211_txrx_result
-> +ieee80211_rx_h_ctrl(struct ieee80211_txrx_data *rx)
-> +{
-> +	struct ieee80211_local *local =3D rx->local;
-> +	struct ieee80211_hw *hw =3D &local->hw;
-> +	struct sk_buff *skb =3D rx->skb;
-> +	struct ieee80211_bar *bar =3D (struct ieee80211_bar *) skb->data;
-> +	struct tid_ampdu_rx *tid_agg_rx;
-> +	u16 start_seq_num;
-> +	u16 tid;
-> +
-> +	if (likely((rx->fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_CTL))
-> +		return TXRX_CONTINUE;
-> +
-> +	if ((rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_BACK_REQ) {
-> +		if (!rx->sta)
-> +			return TXRX_CONTINUE;
-> +		tid =3D le16_to_cpu(bar->control) >> 12;
-> +		tid_agg_rx =3D &(rx->sta->ampdu_mlme.tid_rx[tid]);
-> +		if (tid_agg_rx->state !=3D HT_AGG_STATE_OPERATIONAL)
-> +			return TXRX_CONTINUE;
-> +
-> +		start_seq_num =3D le16_to_cpu(bar->start_seq_num) >> 4;
-> +
-> +		/* reset session timer */
-> +		if (tid_agg_rx->timeout) {
-> +			unsigned long expires =3D
-> +				jiffies + (tid_agg_rx->timeout / 1000) * HZ;
-> +			mod_timer(&tid_agg_rx->session_timer, expires);
-> +		}
-> +
-> +		/* manage reordering buffer according to requested */
-> +		/* sequence number */
-> +		ieee80211_sta_manage_reorder_buf(hw, rx, tid_agg_rx,
-> +						NULL, start_seq_num, 1);
-> +
-> +		return TXRX_DROP;
-> +	}
-> +
-> +	return TXRX_CONTINUE;
-> +}
-> +
-> +static ieee80211_txrx_result
->  ieee80211_rx_h_mgmt(struct ieee80211_txrx_data *rx)
->  {
->  	struct ieee80211_sub_if_data *sdata;
-> @@ -1680,6 +1725,7 @@ ieee80211_rx_handler ieee80211_rx_handlers[] =3D
->  	ieee80211_rx_h_remove_qos_control,
->  	ieee80211_rx_h_amsdu,
->  	ieee80211_rx_h_data,
-> +	ieee80211_rx_h_ctrl,
->  	ieee80211_rx_h_mgmt,
-
-Maybe we should have a single rx_h_frame function that passes it to
-three control/data/mgmt functions depending on the frame type? Not sure
-though since data comes first and that's the hot path.
+So I made a new function, lbs_cmd(), that is an easier substitute
+for subset of possible lbs_prepare_and_send_command(). I know
+that this might clash with David Woodhouse's cmd-cleanup
+attempt, but it seems that he didn't start yet, as my patches
+still apply to his git tree :-)   I didn't commit them there,
+because I'm confused if my patches go upstream via David or John.
 
 
-> @@ -163,6 +164,15 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, s=
-ize_t len)
->  	case IEEE80211_FTYPE_CTL:
->  		if ((fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PSPOLL)
->  			return hdr->addr1;
-> +		else if ((fc & IEEE80211_FCTL_STYPE) =3D=3D
-> +						IEEE80211_STYPE_BACK_REQ) {
-> +			switch (type) {
-> +			case IEEE80211_IF_TYPE_STA:
-> +				return hdr->addr2;
-> +			case IEEE80211_IF_TYPE_AP:
-> +				return hdr->addr1;
-> +			}
+Usage example
+-------------
+When I want to deal with the CMD_802_11_BG_SCAN_QUERY command, I
+can now put all the code at one place to test it:
 
-Doesn't that result in a compiler warning? And what does happen if we
-receive a BACK_REQ when we're an IBSS/MESH?
 
-johannes
+// This is from firmware manual, Appendix A
+#define CMD_802_11_BG_SCAN_QUERY 0x006c
 
---=-PEjr1QPqEchh502sFRnD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+// This is from firmware manual, section 5.7.3:
+struct cmd_scan_query {
+        u8 flush;
+};
+struct cmd_bg_scan_query_rsp {
+        __le32 report_cond;
+        __le16 bss_size;
+        u8 num_sets;
+        u8 bss[0];
+};
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+// Allocate space for command response
+int rsp_size = sizeof(struct cmd_bg_scan_query_rsp) + 1024;
+struct cmd_bg_scan_query_rsp *rsp = kzalloc(rsp_size, GFP_KERNEL);
 
-iQIVAwUAR2a+66Vg1VMiehFYAQLf4hAAgxzPPmHlXpafmb44KMtYavgXsc2a7KMK
-zTj8iYsGF/IFMqnKrxI6d2atsz5aplcgraC9/JJidI080cuZJmLj/cs0PEck7+oJ
-lAQrsIR+IdmYzJurgsoHt1cny2ZSQPeZaoLK84JN3crrLbeWE6z71gv6a1WZbI/D
-Zz4S/qHnb1S5zQzBD9cF/gp0pcr/5X81KxoafwR9nrY1NuYTSXc6XwW2wngfFW1f
-ngpJcUzhnIHQrwalDY7ncjX3D6pQ8OCfxv8xEIV5hM7brZGmWbtXQAtpiEFojlpc
-Q5gGXCPEm0/T9yLP/Yf9S0iuTi+wbnbv3I6FE7m2I5ngoNYzusvrWo9N+ShT3Uf9
-rU/sJ3EECmryIboD0PpAHH6p2810OAJKa9t5aiyF49rsQRZcW7ZhwwuaUE1pcHDX
-XXAwcMc8JHm8XeyL5/IWFYInG4ZFCbAU/1aOyk+OCNiq4/jgAKV/GaX2Wg6zgngi
-uLw4tzryMiQJm83noPp2aGoc+XOdjg6wjlirfzSj8jRWHnn3x/QL2fZ1auAFSQ3i
-nPnK7PxLTY31+UbZRpV2WuaqHleubmi9QTo1wqydMDkhzd5Xgm2GFR/2JzUvHy5n
-kCp7WA+pZ6K7Leb8ir5WNUfsc19XwGfI0qsuXuPtL5AEuVhrPkbbNPKzD3JNRvsm
-dyh+8rmylRM=
-=trFd
------END PGP SIGNATURE-----
+// "Allocate" space for the command itself
+struct cmd_bg_scan_query cmd;
+cmd.flush = 0;
 
---=-PEjr1QPqEchh502sFRnD--
+// Send command and use result:
+res = lbs_cmd(priv, CMD_802_11_BG_SCAN_QUERY, &cmd, sizeof(cmd), rsp, &rsp_size);
+if (res == 0)
+        printk("num_sets %d, resp_size %d\n", resp->num_sets, resp_size);
 
+
+
+Some notes:
+
+a) the cmd structs no longer need or care for the 4 common
+   fields (command, size, seqnum, result)
+b) resp_size must be a pointer to an int, because some
+   firmware functions return a variable amount of bytes and
+   we need to know how much bytes that might be
+c) however, if you just get a fixed response (or the beginning
+   of your response has fixed fields), you can simply use
+   resp->(whatever field you want> to access it
+d) from 69 calls to lbs_prepare_and_send_command() 56 use
+   CMD_OPTION_WAITFORRSP. So my first stab was using this.
+   However, it would be possible to add a function pointer
+   argument to lbs_cmd(), which could be called asynchronously
+   if the result is there. A lbs_cmd_noop() could the be
+   used for commands where one don't need the callback.
+
+The lbs_cmd() function could not only used while prototyping
+(as I need it), but also to slowly rewrite much of the ugly
+cmd.c / cmdresp.c code into an simpler way.
+
+
+In this patchset are also some cleanup patches. They depend
+on a patch that David Woodhouse has in his tree, but that isn't
+yet in wireless-2.6/everything. I've added this patch to the
+patch series as well.
