@@ -1,54 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:18013 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbXLWWKP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 17:10:15 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1143223mue.5
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 14:10:13 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: add unified BSS configuration
-Date: Sun, 23 Dec 2007 23:10:36 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>
-References: <1198109817.16241.7.camel@johannes.berg>
-In-Reply-To: <1198109817.16241.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712232310.36974.IvDoorn@gmail.com> (sfid-20071223_221026_659169_9F9DCB95)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:58960 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751988AbXLEWxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 17:53:55 -0500
+Subject: Re: [RFC] fixing the ap_scan and hidden SSID mess
+From: Dan Williams <dcbw@redhat.com>
+To: jt@hpl.hp.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071205221119.GA28457@bougret.hpl.hp.com>
+References: <20071205221119.GA28457@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Wed, 05 Dec 2007 17:44:32 -0500
+Message-Id: <1196894672.14901.5.camel@localhost.localdomain> (sfid-20071205_225401_654761_D47BD536)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 December 2007, Johannes Berg wrote:
-> This patch (based on Ron Rindjunsky's) creates a framework for
-> a unified way to pass BSS configuration to drivers that require
-> the information, e.g. for implementing power save mode.
+On Wed, 2007-12-05 at 14:11 -0800, Jean Tourrilhes wrote:
+> Dan Williams wrote :
+> > 
+> > Hidden SSID is a mess right now.  Here's why, and here's a proposal for
+> > fixing it.
 > 
-> A new ieee80211_bss_conf structure is embedded into each virtual
-> interface structure to allow the driver to access the BSS
-> configuration at any time, changes in the structure are passed
-> to the driver via the new bss_info_changed() callback.
-> 
-> This new BSS configuration infrastructure adds the following
-> new features:
->  * drivers are notified of their association AID
->  * drivers are notified of association status
-> 
-> and replaces the erp_ie_changed() callback. The patch also does
-> the relevant driver updates for the latter change.
-> 
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Ivo, can you see if you can address the FIXME item in the rt2x00 driver?
-> It is probably very easy but I don't know how you'd want to handle it.
+> 	If you want my participation, it's usually wise to cc me.
 
-Sure, I'll look into it. I also have to lookup what parts of the rt2x00 can
-now be optimized because the assocation state is known as well. :)
-Patch will follow soon. :)
+Unintentional omission, sorry...  I was thinking of it more as a driver
+issue but you're right.
 
-Ivo
+> > The problem is that there isn't a nice, generic capabilities field in
+> > WEXT.  So we have to abuse an existing one, and I picked enc_capa.
+> 
+> 	Please don't do that. It's fairly trivial to add a new field
+> in iwrange. And it's not like the sky will fall down if we add a field
+> in iwrange. If you want to do it, please do it right.
+
+Well, the problem I had with this is that it's less likely to get
+backported because it potentially breaks binary compatibility for
+distros.  There are 3 options here:
+
+1) overload enc_capa
+
+2) add a field and start doing comparisons of the size of the iw_range
+structure to figure out what is available and what's not
+
+3) Bump the WEXT version
+
+#3 is a non-starter because it is a much larger, more invasive change
+and requires more breakage of ABI and such.
+
+I guess #2 is acceptable.
+
+> 	Note that there is one gotcha because of the state of
+> userspace, so if you want I can produce a kernel patch that will work
+> properly, and I'll add the usespace support for it as well.
+
+Could you describe that more?
+
+> > +#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
+> 
+> 	That won't work. You have a tri-state, and with only a single
+> bit you can encode only two state. You basically have :
+> 	o driver that support ap_scan=1
+> 	o driver that do not support ap_scan=1
+> 	o driver that have not been updated or reside in old kernels
+
+Well, to be fair, the patch posted handles this perfectly well, because
+older kernels with drivers that don't have the capability just dont'
+advertise it.  Therefore everything works fine.
+
+> 	So, at the minimum, you'd want :
+> -------------------------------------
+> +#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
+> +#define IW_ENC_CAPA_ANY_SSID_SCAN	0x00000020
+> -------------------------------------
+
+I'm not sure why we'd want ANY_SSID_SCAN?  It's already assumed that all
+drivers support scanning.  Drivers that don't support scanning and are
+already in the tree have so few users and are so old that we just don't
+care.  New drivers will get a HUGE NAK if they don't have scanning
+support, so I don't really see this as necessary.
+
+> > However, userspace is f*cked because it can't figure out which one to
+> > use, and trying both is not an option because you get unacceptable
+> > latency for the user when trying to associate.
+> 
+> 	Another option would be for SIOCSIWSCAN to fail if a specific
+> SSID is set and it does not support it, instead of just ignoring it.
+
+Again, that won't work because it requires changing _all_ drivers.  We
+need to fix this by ensuring that the change only affects those drivers
+that support the capability, not requiring drivers that dont' have it to
+change.  Extending range would work here.
+
+Dan
+
+
