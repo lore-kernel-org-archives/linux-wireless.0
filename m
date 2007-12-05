@@ -1,46 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:39664 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751179AbXLBWLP (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5580 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751780AbXLEIkY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:15 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 8/8] rtl8187: Add USB ID for Sitecom WL-168 v1 001
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.65203.stgit@tetra.sourmilk.net> (sfid-20071202_221131_711387_384AC5D6)
-In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
+	Wed, 5 Dec 2007 03:40:24 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH, take 3] libertas: implement new scanning logic
+Date: Wed, 5 Dec 2007 09:40:41 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200712042136.45610.h.schurig@mn-solutions.de>
+In-Reply-To: <200712042136.45610.h.schurig@mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
+Message-Id: <200712050940.41760.hs4233@mail.mn-solutions.de> (sfid-20071205_084027_673987_8A540093)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthias Mueller <matthias.mueller@rz.uni-karlsruhe.de>
+Oh, somehow the "take 2" patch to dev.h (which changed
+last_scanned_channel from u8 to int) was missing here.
 
-Thanks to Matthias Mueller for reporting this device.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- drivers/net/wireless/rtl8187_dev.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index 859235f..db2e0e0 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -38,6 +38,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
- 	{USB_DEVICE(0x0846, 0x6a00)},
- 	/* HP */
- 	{USB_DEVICE(0x03f0, 0xca02)},
-+	/* Sitecom */
-+	{USB_DEVICE(0x0df6, 0x000d)},
- 	{}
- };
- 
-
-
+As I'm using last_scanned_channel == -1 as a marker, u8 is a
+nono. New patch follows ...
