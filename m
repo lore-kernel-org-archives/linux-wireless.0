@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:64862 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbXL2Lrj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 06:47:39 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2144711fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 03:47:37 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sat, 29 Dec 2007 12:47:53 +0100
-Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <200712291121.31120.IvDoorn@gmail.com> <1198924603.4172.34.camel@johannes.berg>
-In-Reply-To: <1198924603.4172.34.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712291247.54258.IvDoorn@gmail.com> (sfid-20071229_114742_952160_05D678BD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:55778 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751531AbXLEJ5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 04:57:07 -0500
+Date: Wed, 5 Dec 2007 10:52:30 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
+Message-ID: <20071205105230.0ecc56dc@morte> (sfid-20071205_095711_342991_F57F4BE7)
+In-Reply-To: <200712050849.46760.hs4233@mail.mn-solutions.de>
+References: <1196622331.7472.4.camel@localhost>
+	<20071204024146.15689ee3@morte>
+	<40f31dec0712041405sb14243dw9ccb7509e6f58d8@mail.gmail.com>
+	<200712050849.46760.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 December 2007, Johannes Berg wrote:
-> 
-> > If it helps as reference, rt2x00 allocates and initializes the data as follows:
-> > 
-> > 		skb_reserve(skb, NET_IP_ALIGN);
-> > 		skb_put(skb, desc.size); /* Always a multiple of 4 bytes */
-> > 		memcpy(skb->data, entry->data_addr, desc.size);
-> 
-> So why do you copy all the data anyway? You have DMA queues and no need
-> to not have the hardware dump the data into the frame to start with, no?
+On Wed, 5 Dec 2007 08:49:46 +0100
+Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
 
-True, if no further aligning would be required that would be true,
-but since the payload should be aligned to a 4 byte boundrary anyway
-this would mean we must use memcpy() in all cases anyway since we
-can't predict what header length the frame will contain. :(
+> Or, in other words: if we put the AP 80m away and then try the 
+> test, would the same PID parameters that yielded high MB/s rates 
+> now still keep us a sane (for that distance!) connection?
 
-Although it would safe the initial allocation of the DMA buffer...
-I'll look into it to see if it would be useful.
+Theoretically, a properly tuned PID controller should act well in both
+scenarios. The problem here is that we need testing in worse scenarios. I
+just detached the antenna from my AP, this decreases the signal level by
+some 20-23dB. Will do some tests.
 
-> In any case, with wireless NET_IP_ALIGN is pretty useless unless you
-> want to add two to it and then align the result. Maybe the mac80211
-> warning should be relaxed to take NET_IP_ALIGN into account.
 
-Ok, I'll look into better aligning of the skb buffer then.
-
-Ivo
+--
+Ciao
+Stefano
