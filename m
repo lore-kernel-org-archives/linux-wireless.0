@@ -1,325 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:64911 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560AbXLFXiJ (ORCPT
+Received: from hs-out-0708.google.com ([64.233.178.244]:2896 "EHLO
+	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751662AbXLEJNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 18:38:09 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so70337mue
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 15:38:06 -0800 (PST)
-Message-ID: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com> (sfid-20071206_233816_263038_E7A018D3)
-Date: Thu, 6 Dec 2007 18:38:04 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Automated kerneldoc for all wireless drivers
+	Wed, 5 Dec 2007 04:13:01 -0500
+Received: by hs-out-2122.google.com with SMTP id 54so462540hsz
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2007 01:12:59 -0800 (PST)
+Message-ID: <47566B95.5080101@gmail.com> (sfid-20071205_091309_017722_B39AB67A)
+Date: Wed, 05 Dec 2007 10:12:53 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Bruno Randolf <bruno@thinktube.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
+Subject: Re: [PATCH 1/1] ath5k: add debugfs entries for registers, tsf, beacon
+References: <1196839665-14178-1-git-send-email-bruno@thinktube.com>
+In-Reply-To: <1196839665-14178-1-git-send-email-bruno@thinktube.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We now have automated kerneldoc HTML output for all Linux wireless
-drivers. We just need to the references to our wiki added, and that's
-it.
+On 12/05/2007 08:27 AM, Bruno Randolf wrote:
+> 'registers' prints the value of some registers. this should be adapted to what
+> we actually need later.
+> 
+> 'tsf' prints the current HW TSF. writing "reset" into the file will reset the
+> TSF.
+> 
+> 'beacon' shows beacon relevant registers. writing "enable" into the file will
+> enable beacons by writing AR5K_BEACON_ENABLE, "disable" will disable that bit.
+> 
+> Changes-licensed-under: GPL
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>  drivers/net/wireless/ath5k/debug.c |  188 ++++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath5k/debug.h |    3 +
+>  2 files changed, 191 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+> index 7427506..8d4fd5f 100644
+> --- a/drivers/net/wireless/ath5k/debug.c
+> +++ b/drivers/net/wireless/ath5k/debug.c
+> @@ -68,8 +68,178 @@ module_param_named(debug, ath5k_debug, uint, 0);
+>  
+>  #include "reg.h"
+>  
+> +/* this assumes variables buf for buffer and len for count */
+> +#define REG_PRINT_APPEND(_reg) \
+> +	len += snprintf(buf+len, sizeof(buf)-len, "%-30s0x%08x\n", #_reg, \
+> +		ath5k_hw_reg_read(sc->ah, _reg));
+> +
+> +
+>  static struct dentry *ath5k_global_debugfs;
+>  
+> +
+> +static int ath5k_debugfs_open(struct inode *inode, struct file *file)
+> +{
+> +	file->private_data = inode->i_private;
+> +	return 0;
+> +}
+> +
+> +
+> +/* debugfs: registers */
+> +
+> +static ssize_t read_file_registers(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +
+> +	char buf[5000];
 
-For example ath5k.h wiki entry just has:
+Doh, 4k stacks on i386! You can't do this safely.
 
-<<kerneldoc(ath5k/ath5k.h)>>
+I think we can use seq_* stuff here instead, see below.
 
-This is: http://linuxwireless.org/en/users/Drivers/ath5k/kerneldoc/ath5k.h
+> +	int len = 0;
+> +
+> +	/* just a few random registers, might want to add more */
+> +	REG_PRINT_APPEND(AR5K_CR);
+> +	REG_PRINT_APPEND(AR5K_RXDP);
+> +	REG_PRINT_APPEND(AR5K_CFG);
+> +	REG_PRINT_APPEND(AR5K_IER);
+> +	REG_PRINT_APPEND(AR5K_BCR);
+> +	REG_PRINT_APPEND(AR5K_RTSD0);
+> +	REG_PRINT_APPEND(AR5K_RTSD1);
+> +	REG_PRINT_APPEND(AR5K_TXCFG);
+> +	REG_PRINT_APPEND(AR5K_RXCFG);
+> +	REG_PRINT_APPEND(AR5K_RXJLA);
+> +	REG_PRINT_APPEND(AR5K_MIBC);
+> +	REG_PRINT_APPEND(AR5K_TOPS);
+> +	REG_PRINT_APPEND(AR5K_RXNOFRM);
+> +	REG_PRINT_APPEND(AR5K_TXNOFRM);
+> +	REG_PRINT_APPEND(AR5K_RPGTO);
+> +	REG_PRINT_APPEND(AR5K_RFCNT);
+> +	REG_PRINT_APPEND(AR5K_MISC);
+> +	REG_PRINT_APPEND(AR5K_QCUDCU_CLKGT);
+> +
+> +	REG_PRINT_APPEND(AR5K_ISR);
+> +	REG_PRINT_APPEND(AR5K_PISR);
+> +	REG_PRINT_APPEND(AR5K_SISR0);
+> +	REG_PRINT_APPEND(AR5K_SISR1);
+> +	REG_PRINT_APPEND(AR5K_SISR2);
+> +	REG_PRINT_APPEND(AR5K_SISR3);
+> +	REG_PRINT_APPEND(AR5K_SISR4);
+> +	REG_PRINT_APPEND(AR5K_IMR);
+> +	REG_PRINT_APPEND(AR5K_PIMR);
+> +	REG_PRINT_APPEND(AR5K_SIMR0);
+> +	REG_PRINT_APPEND(AR5K_SIMR1);
+> +	REG_PRINT_APPEND(AR5K_SIMR2);
+> +	REG_PRINT_APPEND(AR5K_SIMR3);
+> +	REG_PRINT_APPEND(AR5K_SIMR4);
+> +
+> +	REG_PRINT_APPEND(AR5K_DCM_ADDR);
+> +	REG_PRINT_APPEND(AR5K_DCCFG);
+> +	REG_PRINT_APPEND(AR5K_CCFG);
+> +	REG_PRINT_APPEND(AR5K_CPC0);
+> +	REG_PRINT_APPEND(AR5K_CPC1);
+> +	REG_PRINT_APPEND(AR5K_CPC2);
+> +	REG_PRINT_APPEND(AR5K_CPC3);
+> +	REG_PRINT_APPEND(AR5K_CPCORN);
+> +
+> +	REG_PRINT_APPEND(AR5K_RESET_CTL);
+> +	REG_PRINT_APPEND(AR5K_SLEEP_CTL);
+> +	REG_PRINT_APPEND(AR5K_INTPEND);
+> +	REG_PRINT_APPEND(AR5K_SFR);
+> +	REG_PRINT_APPEND(AR5K_PCICFG);
+> +	REG_PRINT_APPEND(AR5K_GPIOCR);
+> +	REG_PRINT_APPEND(AR5K_GPIODO);
+> +	REG_PRINT_APPEND(AR5K_SREV);
 
-The ipw2200 driver though, has:
+Put those register in the array, and from .seq_next, return &array[++*pos] or
+NULL for the last member. .seq_show will contain the REG_PRINT_APPEND macro
+contents.
 
-<<kerneldoc(ipw2200.c)>>
+> +
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+> +
+> +static const struct file_operations fops_registers = {
+> +	.read = read_file_registers,
+> +	.open = ath5k_debugfs_open,
+> +};
+> +
+> +
+> +/* debugfs: TSF */
+> +
+> +static ssize_t read_file_tsf(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	char buf[100];
+> +	snprintf(buf, 100, "0x%016llx\n", ath5k_hw_get_tsf64(sc->ah));
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
+> +}
+> +
+> +static ssize_t write_file_tsf(struct file *file,
+> +				 const char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	if (strncmp(userbuf, "reset", 5) == 0) {
+> +		ath5k_hw_reset_tsf(sc->ah);
+> +		printk(KERN_INFO "debugfs reset TSF\n");
+> +	}
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_tsf = {
+> +	.read = read_file_tsf,
+> +	.write = write_file_tsf,
+> +	.open = ath5k_debugfs_open,
+> +};
+> +
+> +
+> +/* debugfs: beacons */
+> +
+> +static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	struct ath5k_hw *ah = sc->ah;
+> +
+> +	char buf[1000];
+> +	int len = 0;
+> +	REG_PRINT_APPEND(AR5K_BEACON);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacon period:\t%d\n",
+> +		ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_PERIOD);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacon tim:\t%x\n",
+> +		(ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_TIM)
+> +		>> AR5K_BEACON_TIM_S);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacons enabled: %s\n",
+> +		ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_ENABLE ?
+> +			"YES" : "NO");
+> +	REG_PRINT_APPEND(AR5K_TIMER0);
+> +	REG_PRINT_APPEND(AR5K_TIMER1);
+> +	REG_PRINT_APPEND(AR5K_TIMER2);
+> +	REG_PRINT_APPEND(AR5K_LAST_TSTP);
+> +	REG_PRINT_APPEND(AR5K_BEACON_CNT);
+> +
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+> +
+> +static ssize_t write_file_beacon(struct file *file,
+> +				 const char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	struct ath5k_hw *ah = sc->ah;
+> +
+> +	if (strncmp(userbuf, "disable", 7) == 0) {
+> +		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+> +		printk(KERN_INFO "debugfs disable beacons\n");
+> +	} else if (strncmp(userbuf, "enable", 6) == 0) {
+> +		AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+> +		printk(KERN_INFO "debugfs enable beacons\n");
+> +	}
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_beacon = {
+> +	.read = read_file_beacon,
+> +	.write = write_file_beacon,
+> +	.open = ath5k_debugfs_open,
+> +};
+> +
+> +
+> +/* init */
+> +
+>  void
+>  ath5k_debug_init(void)
+>  {
+> @@ -84,6 +254,18 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
+>  			ath5k_global_debugfs);
+>  	sc->debug.debugfs_debug = debugfs_create_u32("debug",
+>  			0666, sc->debug.debugfs_phydir, &sc->debug.level);
+> +
+> +	sc->debug.debugfs_registers = debugfs_create_file("registers", 0444,
+> +				sc->debug.debugfs_phydir,
+> +				sc, &fops_registers);
+> +
+> +	sc->debug.debugfs_tsf = debugfs_create_file("tsf", 0666,
+> +				sc->debug.debugfs_phydir,
+> +				sc, &fops_tsf);
+> +
+> +	sc->debug.debugfs_beacon = debugfs_create_file("beacon", 0666,
+> +				sc->debug.debugfs_phydir,
+> +				sc, &fops_beacon);
+>  }
+>  
+>  void
+> @@ -96,9 +278,15 @@ void
+>  ath5k_debug_finish_device(struct ath5k_softc *sc)
+>  {
+>  	debugfs_remove(sc->debug.debugfs_debug);
+> +	debugfs_remove(sc->debug.debugfs_registers);
+> +	debugfs_remove(sc->debug.debugfs_tsf);
+> +	debugfs_remove(sc->debug.debugfs_beacon);
+>  	debugfs_remove(sc->debug.debugfs_phydir);
+>  }
+>  
+> +
+> +/* functions used in other places */
+> +
+>  void
+>  ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
+>  {
+> diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
+> index 115073f..b640147 100644
+> --- a/drivers/net/wireless/ath5k/debug.h
+> +++ b/drivers/net/wireless/ath5k/debug.h
+> @@ -77,6 +77,9 @@ struct ath5k_dbg_info {
+>  	/* debugfs entries */
+>  	struct dentry		*debugfs_phydir;
+>  	struct dentry		*debugfs_debug;
+> +	struct dentry		*debugfs_registers;
+> +	struct dentry		*debugfs_tsf;
+> +	struct dentry		*debugfs_beacon;
+>  };
+>  
+>  /**
 
-This is: http://linuxwireless.org/en/users/Drivers/ipw2200/kerneldoc/ipw2200.c
 
-Although this uses directories, it really is getting translated to
-ath5kath5kh-doc.html to prevent smarty pants from doing stupid things.
-Only a few drivers have some content. Please help add their references
-and integrate it into the wiki when you can. Below is a line count of
-all generated output. In all, 3910 lines of Linux wireless automated
-HTML documentation.
-
-     0 adm8211c-doc.html
-     0 adm8211h-doc.html
-     0 airoc-doc.html
-     0 airo_csc-doc.html
-     0 airoh-doc.html
-     0 airportc-doc.html
-     0 arlanh-doc.html
-     0 arlan-mainc-doc.html
-     0 arlan-procc-doc.html
-    32 at76_usbc-doc.html
-     0 at76_usbh-doc.html
-   167 ath5kath5kh-doc.html
-     0 ath5kbasec-doc.html
-     0 ath5kbaseh-doc.html
-     0 ath5kdebugc-doc.html
-    69 ath5kdebugh-doc.html
-   174 ath5khwc-doc.html
-     0 ath5khwh-doc.html
-     0 ath5kinitvalsc-doc.html
-    37 ath5kphyc-doc.html
-     0 ath5kregdomc-doc.html
-     0 ath5kregdomh-doc.html
-     0 ath5kregh-doc.html
-     0 atmelc-doc.html
-     0 atmel_csc-doc.html
-     0 atmelh-doc.html
-     0 atmel_pcic-doc.html
-     0 b43b43h-doc.html
-     0 b43debugfsc-doc.html
-     0 b43debugfsh-doc.html
-     0 b43dmac-doc.html
-     0 b43dmah-doc.html
-     0 b43ledsc-doc.html
-     0 b43ledsh-doc.html
-     0 b43legacyb43legacyh-doc.html
-     0 b43legacydebugfsc-doc.html
-     0 b43legacydebugfsh-doc.html
-     0 b43dmac-doc.html
-     0 b43dmah-doc.html
-     0 b43ledsc-doc.html
-     0 b43ledsh-doc.html
-     0 b43legacyb43legacyh-doc.html
-     0 b43legacydebugfsc-doc.html
-     0 b43legacydebugfsh-doc.html
-     0 b43legacydmac-doc.html
-     0 b43legacydmah-doc.html
-     0 b43legacyiltc-doc.html
-     0 b43legacyilth-doc.html
-     0 b43legacyledsc-doc.html
-     0 b43legacyledsh-doc.html
-     0 b43legacymainc-doc.html
-     0 b43legacymainh-doc.html
-     0 b43legacyphyc-doc.html
-     0 b43legacyphyh-doc.html
-     0 b43legacypioc-doc.html
-     0 b43legacypioh-doc.html
-     0 b43legacyradioc-doc.html
-     0 b43legacyradioh-doc.html
-     0 b43legacyrfkillc-doc.html
-     0 b43legacyrfkillh-doc.html
-     0 b43legacysysfsc-doc.html
-     0 b43legacysysfsh-doc.html
-     0 b43legacyxmitc-doc.html
-     0 b43legacyxmith-doc.html
-     0 b43loc-doc.html
-     0 b43loh-doc.html
-     0 b43mainc-doc.html
-     0 b43mainh-doc.html
-     0 b43pcmciac-doc.html
-     0 b43pcmciah-doc.html
-     0 b43phyc-doc.html
-     0 b43phyh-doc.html
-     0 b43pioc-doc.html
-     0 b43pioh-doc.html
-     0 b43rfkillc-doc.html
-     0 b43rfkillh-doc.html
-     0 b43sysfsc-doc.html
-     0 b43sysfsh-doc.html
-     0 b43tablesc-doc.html
-     0 b43tablesh-doc.html
-     0 b43wac-doc.html
-     0 b43wah-doc.html
-     0 b43xmitc-doc.html
-     0 b43xmith-doc.html
-    60 cfg80211-doc.html
-     0 hermesc-doc.html
-     0 hermesh-doc.html
-     0 hermes_ridh-doc.html
-     0 i82586h-doc.html
-     0 i82593h-doc.html
-    68 ipw2100c-doc.html
-     0 ipw2100h-doc.html
-   186 ipw2200c-doc.html
-     0 ipw2200h-doc.html
-     0 libertas11dc-doc.html
-     0 libertas11dh-doc.html
-     0 libertasadm8211c-doc.html
-     0 libertasadm8211h-doc.html
-     0 libertasairoc-doc.html
-     0 libertasairo_csc-doc.html
-     0 libertasairoh-doc.html
-     0 libertasairportc-doc.html
-     0 libertasarlanh-doc.html
-     0 libertasarlan-mainc-doc.html
-     0 libertasarlan-procc-doc.html
-     0 libertasassocc-doc.html
-     0 libertasassoch-doc.html
-    32 libertasat76_usbc-doc.html
-     0 libertasat76_usbh-doc.html
-     0 libertasatmelc-doc.html
-     0 libertasatmel_csc-doc.html
-     0 libertasatmelh-doc.html
-     0 libertasatmel_pcic-doc.html
-    25 libertascmdc-doc.html
-    12 libertascmdrespc-doc.html
-     0 libertasdebugfsc-doc.html
-     0 libertasdebugfsh-doc.html
-     0 libertasdeclh-doc.html
-     0 libertasdefsh-doc.html
-     0 libertasdevh-doc.html
-     0 libertasethtoolc-doc.html
-     0 libertashermesc-doc.html
-     0 libertashermesh-doc.html
-     0 libertashermes_ridh-doc.html
-     0 libertashostcmdh-doc.html
-     0 libertashosth-doc.html
-     0 libertasi82586h-doc.html
-     0 libertasi82593h-doc.html
-     0 libertasif_csc-doc.html
-     0 libertasif_sdioc-doc.html
-     0 libertasif_sdioh-doc.html
-     0 libertasif_usbc-doc.html
-     0 libertasif_usbh-doc.html
-    68 libertasipw2100c-doc.html
-     0 libertasipw2100h-doc.html
-   186 libertasipw2200c-doc.html
-     0 libertasipw2200h-doc.html
-    14 libertasjoinc-doc.html
-     0 libertasjoinh-doc.html
-    73 libertasmainc-doc.html
-     0 libertasnet2280h-doc.html
-     0 libertasnetwave_csc-doc.html
-     0 libertasorinococ-doc.html
-     0 libertasorinoco_csc-doc.html
-     0 libertasorinocoh-doc.html
-     0 libertasorinoco_nortelc-doc.html
-     0 libertasorinoco_pcic-doc.html
-     0 libertasorinoco_pcih-doc.html
-     0 libertasorinoco_plxc-doc.html
-     0 libertasorinoco_tmdc-doc.html
-     0 libertasp54commonc-doc.html
-     0 libertasp54commonh-doc.html
-     0 libertasp54h-doc.html
-     0 libertasp54pcic-doc.html
-     0 libertasp54pcih-doc.html
-     0 libertasp54usbc-doc.html
-     0 libertasp54usbh-doc.html
-     0 libertasradiotaph-doc.html
-     0 libertasray_csc-doc.html
-     0 libertasray_csh-doc.html
-     0 libertasrayctlh-doc.html
-     0 libertasrtl8180_devc-doc.html
-     0 libertasrtl8180h-doc.html
-     0 libertasrtl8180_max2820c-doc.html
-     0 libertasrtl8180_max2820h-doc.html
-     0 libertasrtl8180_rtl8225c-doc.html
-     0 libertasrtl8180_rtl8225h-doc.html
-     0 libertasrtl8180_sa2400c-doc.html
-     0 libertasrtl8180_sa2400h-doc.html
-     0 libertasrtl8187_devc-doc.html
-     0 libertasrtl8187h-doc.html
-     0 libertasrtl8187_rtl8225c-doc.html
-     0 libertasrtl8187_rtl8225h-doc.html
-     0 libertasrtl818xh-doc.html
-     0 libertasrxc-doc.html
-     0 libertasscanc-doc.html
-     0 libertasscanh-doc.html
-     0 libertasspectrum_csc-doc.html
-     0 libertasstripc-doc.html
-     8 libertastxc-doc.html
-     0 libertastypesh-doc.html
-     0 libertaswavelanc-doc.html
-     0 libertaswavelan_csc-doc.html
-     0 libertaswavelan_csh-doc.html
-     0 libertaswavelan_cs.ph-doc.html
-     0 libertaswavelanh-doc.html
-     0 libertaswavelan.ph-doc.html
-     8 libertaswextc-doc.html
-     0 libertaswexth-doc.html
-   254 libertaswl3501_csc-doc.html
-     0 libertaswl3501h-doc.html
-     0 libertaszd1201c-doc.html
-     0 libertaszd1201h-doc.html
-  1621 mac80211-doc.html
-     0 net2280h-doc.html
-     0 netwave_csc-doc.html
-   135 nl80211-doc.html
-     0 orinococ-doc.html
-     0 orinoco_csc-doc.html
-     0 orinocoh-doc.html
-     0 orinoco_nortelc-doc.html
-     0 orinoco_pcic-doc.html
-     0 orinoco_pcih-doc.html
-     0 orinoco_plxc-doc.html
-     0 orinoco_tmdc-doc.html
-     0 p54commonc-doc.html
-     0 p54commonh-doc.html
-     0 p54h-doc.html
-     0 p54pcic-doc.html
-     0 p54pcih-doc.html
-     0 p54usbc-doc.html
-     0 p54usbh-doc.html
-     0 ray_csc-doc.html
-     0 ray_csh-doc.html
-     0 rayctlh-doc.html
-     0 rt2x00rt2400pcic-doc.html
-     0 rt2x00rt2400pcih-doc.html
-     0 rt2x00rt2500pcic-doc.html
-     0 rt2x00rt2500pcih-doc.html
-     0 rt2x00rt2500usbc-doc.html
-     0 rt2x00rt2500usbh-doc.html
-     0 rt2x00rt2x00configc-doc.html
-     0 rt2x00rt2x00debugc-doc.html
-     0 rt2x00rt2x00debugh-doc.html
-     0 rt2x00rt2x00devc-doc.html
-   104 rt2x00rt2x00dumph-doc.html
-     0 rt2x00rt2x00firmwarec-doc.html
-     0 rt2x00rt2x00h-doc.html
-     0 rt2x00rt2x00libh-doc.html
-     0 rt2x00rt2x00macc-doc.html
-     0 rt2x00rt2x00pcic-doc.html
-     0 rt2x00rt2x00pcih-doc.html
-     0 rt2x00rt2x00regh-doc.html
-     0 rt2x00rt2x00rfkillc-doc.html
-     0 rt2x00rt2x00ringh-doc.html
-     0 rt2x00rt2x00usbc-doc.html
-     0 rt2x00rt2x00usbh-doc.html
-     0 rt2x00rt61pcic-doc.html
-     0 rt2x00rt61pcih-doc.html
-     0 rt2x00rt73usbc-doc.html
-     0 rt2x00rt73usbh-doc.html
-     0 rtl8180_devc-doc.html
-     0 rtl8180h-doc.html
-     0 rtl8180_max2820c-doc.html
-     0 rtl8180_max2820h-doc.html
-     0 rtl8180_rtl8225c-doc.html
-     0 rtl8180_rtl8225h-doc.html
-     0 rtl8180_sa2400c-doc.html
-     0 rtl8180_sa2400h-doc.html
-     0 rtl8187_devc-doc.html
-     0 rtl8187h-doc.html
-     0 rtl8187_rtl8225c-doc.html
-     0 rtl8187_rtl8225h-doc.html
-     0 rtl818xh-doc.html
-     0 spectrum_csc-doc.html
-     0 stripc-doc.html
-     0 wavelanc-doc.html
-     0 wavelan_csc-doc.html
-     0 wavelan_csh-doc.html
-     0 wavelan_cs.ph-doc.html
-     0 wavelanh-doc.html
-     0 wavelan.ph-doc.html
-   254 wl3501_csc-doc.html
-     0 wl3501h-doc.html
-     0 zd1201c-doc.html
-     0 zd1201h-doc.html
-    17 zd1211rwzd_chipc-doc.html
-     0 zd1211rwzd_chiph-doc.html
-     0 zd1211rwzd_defh-doc.html
-     0 zd1211rwzd_ieee80211c-doc.html
-     0 zd1211rwzd_ieee80211h-doc.html
-   157 zd1211rwzd_macc-doc.html
-    20 zd1211rwzd_mach-doc.html
-     0 zd1211rwzd_rf_al2230c-doc.html
-     0 zd1211rwzd_rf_al7230bc-doc.html
-     0 zd1211rwzd_rfc-doc.html
-     0 zd1211rwzd_rfh-doc.html
-     0 zd1211rwzd_rf_rf2959c-doc.html
-     0 zd1211rwzd_rf_uw2453c-doc.html
-   106 zd1211rwzd_usbc-doc.html
-    23 zd1211rwzd_usbh-doc.html
-  3910 total
-
-  Luis
+-- 
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
