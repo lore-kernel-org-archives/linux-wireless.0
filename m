@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:52616 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752839AbXLTXMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 18:12:05 -0500
-Date: Fri, 21 Dec 2007 00:02:55 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] rc80211-pid: fix debugfs missing symbols
-Message-ID: <20071221000255.5887a71c@morte> (sfid-20071220_231218_029095_6D2203B4)
-In-Reply-To: <200712202035.45909.mb@bu3sch.de>
-References: <200712202020.51320.mb@bu3sch.de>
-	<200712202035.45909.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5944 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909AbXLEQ5j convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 11:57:39 -0500
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 2/5] libertas: remove cmd_ctrl_node->cmdflags
+Date: Wed, 5 Dec 2007 17:57:56 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	David Woodhouse <dwmw2@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200712051757.56664.h.schurig@mn-solutions.de> (sfid-20071205_165743_096034_024FC7D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Declare the module license, so that debugfs will happily export its
-symbols to us.
+There was no code that ever did set this flag.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
-@@ -12,12 +12,17 @@
- #include <linux/netdevice.h>
- #include <linux/types.h>
- #include <linux/skbuff.h>
-+#include <linux/debugfs.h>
- 
- #include <net/mac80211.h>
- #include "ieee80211_rate.h"
- 
- #include "rc80211_pid.h"
- 
-+MODULE_DESCRIPTION("PID controller based rate control algorithm");
-+MODULE_AUTHOR("Stefano Brivio");
-+MODULE_AUTHOR("Mattias Nissler");
-+MODULE_LICENSE("GPL");
- 
- /* This is an implementation of a TX rate control algorithm that uses a PID
-  * controller. Given a target failed frames rate, the controller decides about
-Index: wireless-2.6/net/mac80211/rc80211_pid_debugfs.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid_debugfs.c
-+++ wireless-2.6/net/mac80211/rc80211_pid_debugfs.c
-@@ -11,6 +11,7 @@
- #include <linux/netdevice.h>
- #include <linux/types.h>
- #include <linux/skbuff.h>
-+#include <linux/debugfs.h>
- 
- #include <net/mac80211.h>
- #include "ieee80211_rate.h"
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
 
+Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-12-0=
+5 14:50:37.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-12-05 17:=
+59:51.000000000 +0100
+@@ -856,13 +856,6 @@ int lbs_process_rx_command(struct lbs_pr
+ 		goto done;
+ 	}
+=20
+-	if (adapter->cur_cmd->cmdflags & CMD_F_HOSTCMD) {
+-		/* Copy the response back to response buffer */
+-		memcpy(adapter->cur_cmd->pdata_buf, resp,
+-		       le16_to_cpu(resp->size));
+-		adapter->cur_cmd->cmdflags &=3D ~CMD_F_HOSTCMD;
+-	}
+-
+ 	/* If the command is not successful, cleanup and return failure */
+ 	if ((result !=3D 0 || !(respcmd & 0x8000))) {
+ 		lbs_deb_host("CMD_RESP: error 0x%04x in command reply 0x%04x\n",
+Index: wireless-2.6/drivers/net/wireless/libertas/hostcmd.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-2.6.orig/drivers/net/wireless/libertas/hostcmd.h	2007-12-0=
+5 14:50:37.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/hostcmd.h	2007-12-05 17:=
+59:51.000000000 +0100
+@@ -75,7 +75,6 @@ struct cmd_ctrl_node {
+ 	void *pdata_buf;
+ 	/*command data */
+ 	u8 *bufvirtualaddr;
+-	u16 cmdflags;
+ 	/* wait queue */
+ 	u16 cmdwaitqwoken;
+ 	wait_queue_head_t cmdwait_q;
 
--- 
-Ciao
-Stefano
+--=20
+M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
+Holger Schurig
+Raiffeisenstr. 10           ACHTUNG: die Stra=DFe hat sich ge=E4ndert
+61191 Rosbach
+Tel: 06003/9141-15          Fax 06003/9141-49
+http://www.mn-solutions.de/
+
+Handelsregister Friedberg, HRB 5903
+Gesch=E4ftsf=FChrer: H.Herzig, P.Schrittenlocher
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
