@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1034 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751327AbXLRBex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 20:34:53 -0500
-Subject: Re: Please pull 'upstream-jgarzik' branch of wireless-2.6
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <476708EF.10403@garzik.org>
-References: <20071216043419.GF3096@tuxdriver.com>
-	 <47670514.4030204@garzik.org>  <476708EF.10403@garzik.org>
-Content-Type: text/plain; charset=GB2312
-Date: Tue, 18 Dec 2007 09:24:49 +0800
-Message-Id: <1197941089.2857.252.camel@debian.sh.intel.com> (sfid-20071218_013458_199744_78899EC4)
-Mime-Version: 1.0
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5952 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbXLEQ5l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 11:57:41 -0500
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 3/5] libertas: remove cmd_ctrl_node->status
+Date: Wed, 5 Dec 2007 17:57:58 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	David Woodhouse <dwmw2@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200712051757.58489.h.schurig@mn-solutions.de> (sfid-20071205_165744_545969_FB86BE47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There was no code that ever did set this variable.
 
-On Mon, 2007-12-17 at 18:40 -0500, Jeff Garzik wrote:
-> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=20
-> =A1=AEiwl3945_alive_start=A1=AF:
-> drivers/net/wireless/iwlwifi/iwl3945-base.c:6285: error: implicit=20
-> declaration of function =A1=AEiwl_rate_control_unregister=A1=AF
-> make[4]: *** [drivers/net/wireless/iwlwifi/iwl3945-base.o] Error 1
-> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-We changed the namespace between 2.6.24 and upstream. So
-iwl_rate_control_unregister should be renamed to
-iwl3945_rate_control_unregister when the patch is merged from
-fix-jgarzik to upstream-jgarzik. The same thing is also for
-iwl4965_rate_control_unregister.
 
-> I'll leave it there and assume that you will send a fix --on top of--=
+Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2007-12-05 18=
+:07:16.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2007-12-05 18:11:2=
+7.000000000 +0100
+@@ -1672,7 +1672,6 @@ static void cleanup_cmdnode(struct cmd_c
+ 		return;
+ 	ptempnode->cmdwaitqwoken =3D 1;
+ 	wake_up_interruptible(&ptempnode->cmdwait_q);
+-	ptempnode->status =3D 0;
+ 	ptempnode->wait_option =3D 0;
+ 	ptempnode->pdata_buf =3D NULL;
 =20
-> netdev#upstream ...
+Index: wireless-2.6/drivers/net/wireless/libertas/hostcmd.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-2.6.orig/drivers/net/wireless/libertas/hostcmd.h	2007-12-0=
+5 18:03:40.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/hostcmd.h	2007-12-05 18:=
+10:38.000000000 +0100
+@@ -68,7 +68,6 @@ struct rxpd {
+ struct cmd_ctrl_node {
+ 	/* CMD link list */
+ 	struct list_head list;
+-	u32 status;
+ 	/*CMD wait option: wait for finish or no wait */
+ 	u16 wait_option;
+ 	/* command parameter */
 
-I assume John will do it.
+--=20
+M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
+Holger Schurig
+Raiffeisenstr. 10           ACHTUNG: die Stra=DFe hat sich ge=E4ndert
+61191 Rosbach
+Tel: 06003/9141-15          Fax 06003/9141-49
+http://www.mn-solutions.de/
 
-Thanks,
--yi
-
+Handelsregister Friedberg, HRB 5903
+Gesch=E4ftsf=FChrer: H.Herzig, P.Schrittenlocher
 -
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
