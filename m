@@ -1,106 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pmac.infradead.org ([90.155.92.200]:44868 "EHLO
-	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbXLSQKX (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878AbXLEKSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:10:23 -0500
-Subject: [PATCH 119/48] libertas: handle HOST_AWAKE event by sending WAKEUP_CONFIRM command
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J50tw-00020E-42@pmac.infradead.org> (sfid-20071219_161029_459601_E3CA4FBB)
-Date: Wed, 19 Dec 2007 15:32:04 +0000
+	Wed, 5 Dec 2007 05:18:25 -0500
+Subject: Re: [PATCH] mac80211: don't use interface indizes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, Daniel Drake <dsd@gentoo.org>,
+	Yanbo Li <dreamfly281@gmail.com>
+In-Reply-To: <200712050057.19819.flamingice@sourmilk.net>
+References: <1196782831.10274.12.camel@johannes.berg>
+	 <200712050057.19819.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HZdzyhv9gfJWosUbRLPe"
+Date: Wed, 05 Dec 2007 11:18:20 +0100
+Message-Id: <1196849900.4121.4.camel@johannes.berg> (sfid-20071205_101838_959371_6E84D3F8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Mon, 17 Dec 2007 13:26:42 -0500
 
-lbs_send_confirmwake() is a bit ugly but matches the way we confirm
-sleep. We'll deal with that whole thing later.
+--=-HZdzyhv9gfJWosUbRLPe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmdresp.c |   30 +++++++++++++++++++++++++++++-
- drivers/net/wireless/libertas/dev.h     |    1 +
- drivers/net/wireless/libertas/host.h    |    1 +
- 3 files changed, 31 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index c05fef0..8f9eda4 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -773,6 +773,30 @@ done:
- 	return ret;
- }
- 
-+static int lbs_send_confirmwake(struct lbs_private *priv)
-+{
-+	struct cmd_header *cmd = &priv->lbs_ps_confirm_wake;
-+	int ret = 0;
-+
-+	lbs_deb_enter(LBS_DEB_HOST);
-+
-+	cmd->command = cpu_to_le16(CMD_802_11_WAKEUP_CONFIRM);
-+	cmd->size = cpu_to_le16(sizeof(*cmd));
-+	cmd->seqnum = cpu_to_le16(++priv->seqnum);
-+	cmd->result = 0;
-+
-+	lbs_deb_host("SEND_WAKEC_CMD: before download\n");
-+
-+	lbs_deb_hex(LBS_DEB_HOST, "wake confirm command", (void *)cmd, sizeof(*cmd));
-+
-+	ret = priv->hw_host_to_card(priv, MVMS_CMD, (void *)cmd, sizeof(*cmd));
-+	if (ret)
-+		lbs_pr_alert("SEND_WAKEC_CMD: Host to Card failed for Confirm Wake\n");
-+
-+	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
-+	return ret;
-+}
-+
- int lbs_process_event(struct lbs_private *priv)
- {
- 	int ret = 0;
-@@ -821,9 +845,13 @@ int lbs_process_event(struct lbs_private *priv)
- 
- 		break;
- 
-+	case MACREG_INT_CODE_HOST_AWAKE:
-+		lbs_deb_cmd("EVENT: HOST_AWAKE\n");
-+		lbs_send_confirmwake(priv);
-+		break;
-+
- 	case MACREG_INT_CODE_PS_AWAKE:
- 		lbs_deb_cmd("EVENT: awake\n");
--
- 		/* handle unexpected PS AWAKE event */
- 		if (priv->psstate == PS_STATE_FULL_POWER) {
- 			lbs_deb_cmd(
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 465080f..fe50457 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -263,6 +263,7 @@ struct lbs_private {
- 	u8 needtowakeup;
- 
- 	struct PS_CMD_ConfirmSleep lbs_ps_confirm_sleep;
-+	struct cmd_header lbs_ps_confirm_wake;
- 
- 	struct assoc_request * pending_assoc_req;
- 	struct assoc_request * in_progress_assoc_req;
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index bdf9017..4c03e12 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -74,6 +74,7 @@
- #define CMD_802_11_GET_AFC			0x003d
- #define CMD_802_11_AD_HOC_STOP			0x0040
- #define CMD_802_11_HOST_SLEEP_CFG		0x0043
-+#define CMD_802_11_WAKEUP_CONFIRM		0x0044
- #define CMD_802_11_HOST_SLEEP_ACTIVATE		0x0045
- #define CMD_802_11_BEACON_STOP			0x0049
- #define CMD_802_11_MAC_ADDRESS			0x004d
--- 
-1.5.3.4
+> That's a pretty terrible name. mac80211 is not a valid prefix to be used =
+in=20
+> the codebase, at least not for structures and functions. Everything else =
+uses=20
+> ieee80211 so use of mac80211 is not acceptable, especially for driver fac=
+ing=20
+> API. (the use of that prefix in event.c isn't right either.. need to fix=20
+> that)
+
+Heh. True, I'll s/mac80211_vif/ieee80211_vif/
+
+> Leaving it to the driver to allocate the private space isn't too great ei=
+ther.=20
+> Something like a char subif_priv[] at the end of ieee80211_sub_if_data an=
+d a=20
+> way to specify the length of the private area will be more useful to driv=
+ers=20
+> which wish to use the per-subif private space by avoiding extra allocatio=
+n=20
+> and allocation failure handling and also for drivers which don't, by=20
+> eliminating the overhead of storing an unused pointer. It is also more=20
+> consistent with the other apis that allocate ieee80211_hw and net_device.
+
+Most drivers won't ever need private space, so leaving it to them to
+allocate is more efficient.
+
+johannes
+
+--=-HZdzyhv9gfJWosUbRLPe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR1Z666Vg1VMiehFYAQI7MQ/8CQcNimKnzaOvlZGk9vJI/mxDmfWfSpBB
+X2U5IWUI0o1oIPxTarr9C0boDLcNk5RJkFy3/RpXXrUkOeo5aTNkkdfkIR7wx0L6
+X/AUzzQ2BSHvmeei8KO5z8rxMtBCx4D9sw7N1AaaDjCR0EFTww7EEmG1DRc7EjG3
+MUDSVNwXLURvk24L9/FM+N1iQaS84Gwtv45Cked1rX5HeBm0SY4hh48avifUL4rt
+LfCjVXSHZ1vo7cAlMkoDmUtV9PP0yjGOAh4nHVQlg6ff+eAc35tBqwHkYvMkMkG5
+AE77kfUlXBXPC9bVvl7BISzqqWYrENoECUO3bY4ZEUynPlHvRLsv2ImI7CZx1dZx
+oQBi8Rfv86qT4YsK9G7y8v1lZs4+dRm5EbERJ/a1xR72YvrYEKSAucPHbxBmvXS3
+PRItMZDuX2rQXV50vEhKrQNvYfAJ96AOhAlPafSDfxheyUNBg+fd6u8sRpOjIuvo
+kv9BSLOa+GVQjKtleqUAj/GDeDh86hAa4MrBtm5dyMIcSRGNrqRwQz+OAakxKemm
+k/2ygorXlKEB/TbnMs0UNUqr6R/zwDdLGjmxaTDMJJMhbmY6sSvCQp2VInNpQgLM
+Drmqu/yCjNU+m8kKqpurltM1PMosuZssiP7Y9lUgKEG5DHfQQlE0/XxLLTDtIUVk
+wCO3qCOYWHU=
+=uuzm
+-----END PGP SIGNATURE-----
+
+--=-HZdzyhv9gfJWosUbRLPe--
 
