@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:9169 "EHLO
-	viefep18-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbXLVVvg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 16:51:36 -0500
-From: Bjorge Dijkstra <bjd@jooz.net>
-To: dbrownell@users.sourceforge.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 8/8] [PATCH] Use wlan device name for RNDIS wireless devices
-Date: Sat, 22 Dec 2007 22:51:34 +0100
-Message-Id: <11983602952006-git-send-email-bjd@jooz.net> (sfid-20071222_215152_255444_32321C9C)
-In-Reply-To: <11983602942818-git-send-email-bjd@jooz.net>
-References: <11983602942818-git-send-email-bjd@jooz.net>
+Received: from mga03.intel.com ([143.182.124.21]:53321 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751592AbXLETA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 14:00:58 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/3] iwlwifi: add missing comments
+Date: Wed,  5 Dec 2007 20:59:59 +0200
+Message-Id: <1196881200841-git-send-email-tomas.winkler@intel.com> (sfid-20071205_190111_567417_C2A8180C)
+In-Reply-To: <1196881200305-git-send-email-tomas.winkler@intel.com>
+References: <1196881199774-git-send-email-tomas.winkler@intel.com>
+ <1196881200305-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+This patch add comments that escaped from the previous merge
 
-Use wlan device name for RNDIS wireless devices.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/usb/rndis_wext.c |    2 +-
- drivers/net/usb/usbnet.c     |    3 +++
- drivers/net/usb/usbnet.h     |    2 ++
- 3 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/usb/rndis_wext.c b/drivers/net/usb/rndis_wext.c
-index a9ce944..1c28b2a 100644
---- a/drivers/net/usb/rndis_wext.c
-+++ b/drivers/net/usb/rndis_wext.c
-@@ -2166,7 +2166,7 @@ static int rndis_wext_reset(struct usbnet *dev)
- 
- struct driver_info rndis_wext_info = {
- 	.description =	"Wireless RNDIS device",
--	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
-+	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT,
- 	.bind =		rndis_wext_bind,
- 	.unbind =	rndis_wext_unbind,
- 	.status =	rndis_status,
-diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
-index 8ed1fc5..a2a2d5e 100644
---- a/drivers/net/usb/usbnet.c
-+++ b/drivers/net/usb/usbnet.c
-@@ -1204,6 +1204,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
- 		if ((dev->driver_info->flags & FLAG_ETHER) != 0
- 				&& (net->dev_addr [0] & 0x02) == 0)
- 			strcpy (net->name, "eth%d");
-+		/* WLAN devices should always be named "wlan%d" */
-+		if ((dev->driver_info->flags & FLAG_WLAN) != 0)
-+			strcpy(net->name, "wlan%d");
- 
- 		/* maybe the remote can't receive an Ethernet MTU */
- 		if (net->mtu > (dev->hard_mtu - net->hard_header_len))
-diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-index 83860a0..5c98ddc 100644
---- a/drivers/net/usb/usbnet.h
-+++ b/drivers/net/usb/usbnet.h
-@@ -88,6 +88,8 @@ struct driver_info {
- #define FLAG_ETHER	0x0020		/* maybe use "eth%d" names */
- 
- #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
-+#define FLAG_WLAN	0x0080		/* use "wlan%d" names */
-+
- 
- 	/* init device ... can sleep, or cause probe() failure */
- 	int	(*bind)(struct usbnet *, struct usb_interface *);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 5a410e2..267ae75 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -516,7 +516,7 @@ struct iwl_ht_info {
+ 	u8 supported_chan_width;
+ 	u16 tx_mimo_ps_mode;
+ 	u8 is_green_field;
+-	u8 sgf;
++	u8 sgf;			/* HT_SHORT_GI_* short guard interval */
+ 	u8 max_amsdu_size;
+ 	u8 ampdu_factor;
+ 	u8 mpdu_density;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 14fccd6..f14c44a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -350,7 +350,7 @@ int iwl4965_tx_queue_init(struct iwl4965_priv *priv,
+ 	 * For the command queue (#4), allocate command space + one big
+ 	 * command for scan, since scan command is very huge; the system will
+ 	 * not have two scans at the same time, so only one is needed.
+-	 * For data Tx queues (all other queues), no super-size command
++	 * For normal Tx queues (all other queues), no super-size command
+ 	 * space is needed.
+ 	 */
+ 	len = sizeof(struct iwl4965_cmd) * slots_num;
 -- 
-1.5.2.5
+1.5.2.2
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
