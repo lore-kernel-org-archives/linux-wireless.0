@@ -1,181 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:24790 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbXLNLCE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2007 06:02:04 -0500
-Received: by an-out-0708.google.com with SMTP id d31so275877and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2007 03:02:02 -0800 (PST)
-Message-ID: <40f31dec0712140302h23bf0650n9adbadf213adc041@mail.gmail.com> (sfid-20071214_110210_766943_4B2CCB9B)
-Date: Fri, 14 Dec 2007 13:02:02 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: 2.6.24-rc5-mm1 ath5k build issue
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:55056 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752105AbXLEV0X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 16:26:23 -0500
+Subject: [RFC] fixing the ap_scan and hidden SSID mess
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: drago01 <drago01@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
+Date: Wed, 05 Dec 2007 16:20:57 -0500
+Message-Id: <1196889657.6677.22.camel@localhost.localdomain> (sfid-20071205_212627_390359_6AD6651B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/12/14, Dave Young <hidave.darkstar@gmail.com>:
-> On Dec 10, 2007 1:55 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > 2007/12/7, Dave Young <hidave.darkstar@gmail.com>:
-> >
-> > > Hi,
-> > >
-> > > 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
-> > > drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
-> > >
-> > > fix it with adjust the order of inline function body.
-> > >
-> > > Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
-> > >
-> > > ---
-> > > drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
-> > > 1 file changed, 29 insertions(+), 38 deletions(-)
-> > >
-> > > diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
-> > > --- linux/drivers/net/wireless/ath5k/base.c     2007-12-07 10:01:42.000000000 +0800
-> > > +++ linux.new/drivers/net/wireless/ath5k/base.c 2007-12-07 10:01:49.000000000 +0800
-> > > @@ -250,8 +250,19 @@ static int         ath5k_rxbuf_setup(struct ath
-> > >  static int     ath5k_txbuf_setup(struct ath5k_softc *sc,
-> > >                                 struct ath5k_buf *bf,
-> > >                                 struct ieee80211_tx_control *ctl);
-> > > +
-> > >  static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
-> > > -                               struct ath5k_buf *bf);
-> > > +                               struct ath5k_buf *bf)
-> > > +{
-> > > +       BUG_ON(!bf);
-> > > +       if (!bf->skb)
-> > > +               return;
-> > > +       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
-> > > +                       PCI_DMA_TODEVICE);
-> > > +       dev_kfree_skb(bf->skb);
-> > > +       bf->skb = NULL;
-> > > +}
-> > > +
-> > >  /* Queues setup */
-> > >  static struct  ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
-> > >                                 int qtype, int subtype);
-> > > @@ -278,14 +289,29 @@ static int        ath5k_beacon_setup(struct at
-> > >                                 struct ieee80211_tx_control *ctl);
-> > >  static void    ath5k_beacon_send(struct ath5k_softc *sc);
-> > >  static void    ath5k_beacon_config(struct ath5k_softc *sc);
-> > > -static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
-> > > +
-> > > +static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-> > > +{
-> > > +       u64 tsf = ath5k_hw_get_tsf64(ah);
-> > > +
-> > > +       if ((tsf & 0x7fff) < rstamp)
-> > > +               tsf -= 0x8000;
-> > > +
-> > > +       return (tsf & ~0x7fff) | rstamp;
-> > > +}
-> > > +
-> > >  /* Interrupt handling */
-> > >  static int     ath5k_init(struct ath5k_softc *sc);
-> > >  static int     ath5k_stop_locked(struct ath5k_softc *sc);
-> > >  static int     ath5k_stop_hw(struct ath5k_softc *sc);
-> > >  static irqreturn_t ath5k_intr(int irq, void *dev_id);
-> > >  static void    ath5k_tasklet_reset(unsigned long data);
-> > > -static inline void ath5k_update_txpow(struct ath5k_softc *sc);
-> > > +
-> > > +static inline void ath5k_update_txpow(struct ath5k_softc *sc)
-> > > +{
-> > > +       ath5k_hw_set_txpower_limit(sc->ah, 0);
-> > > +}
-> > > +
-> > >  static void    ath5k_calibrate(unsigned long data);
-> > >  /* LED functions */
-> > >  static void    ath5k_led_off(unsigned long data);
-> > > @@ -1341,21 +1367,6 @@ err_unmap:
-> > >         return ret;
-> > >  }
-> > >
-> > > -static inline void
-> > > -ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
-> > > -{
-> > > -       BUG_ON(!bf);
-> > > -       if (!bf->skb)
-> > > -               return;
-> > > -       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
-> > > -                       PCI_DMA_TODEVICE);
-> > > -       dev_kfree_skb(bf->skb);
-> > > -       bf->skb = NULL;
-> > > -}
-> > > -
-> > > -
-> > > -
-> > > -
-> > >  /**************\
-> > >  * Queues setup *
-> > >  \**************/
-> > > @@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
-> > >  #undef TSF_TO_TU
-> > >  }
-> > >
-> > > -static inline
-> > > -u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-> > > -{
-> > > -       u64 tsf = ath5k_hw_get_tsf64(ah);
-> > > -
-> > > -       if ((tsf & 0x7fff) < rstamp)
-> > > -               tsf -= 0x8000;
-> > > -
-> > > -       return (tsf & ~0x7fff) | rstamp;
-> > > -}
-> > > -
-> > > -
-> > > -
-> > > -
-> > >  /********************\
-> > >  * Interrupt handling *
-> > >  \********************/
-> > > @@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
-> > >         ath5k_reset(sc->hw);
-> > >  }
-> > >
-> > > -static inline void
-> > > -ath5k_update_txpow(struct ath5k_softc *sc)
-> > > -{
-> > > -       ath5k_hw_set_txpower_limit(sc->ah, 0);
-> > > -}
-> > > -
-> > >  /*
-> > >   * Periodically recalibrate the PHY to account
-> > >   * for temperature/environment changes.
-> > >
-> >
-> > We'll change their order in the code, plz keep prototype declarations
-> > clean. I'll submit a patch asap on this.
-> >
->
-> Hi,
->
-> 2.6.24-rc5-mm1 still can't built.
->
-> Regards
-> dave
->
-> > --
-> > GPG ID: 0xD21DB2DB
-> > As you read this post global entropy rises. Have Fun ;-)
-> > Nick
-> >
->
+Hidden SSID is a mess right now.  Here's why, and here's a proposal for
+fixing it.
 
-I'm working on a patch series that's going to take a while, i hope
-it'll be ready until Sunday.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Background:
+-----------
+
+There are two settings for ap_scan with wpa_supplicant.  ap_scan=1 along
+with scan_ssid=1 in a network block lets wpa_supplicant tell the driver
+to probe for the SSID it wants to connect to, exposing hidden SSIDs to
+the supplicant and allowing it to successfully connect.
+
+ap_scan=2 just blows the settings to the driver via WEXT, and hopes the
+driver can do the right thing.  That's problematic for a few reasons;
+namely that WEXT doesn't have the concept of "packets" of association
+settings (so drivers have to guess which settings to apply together and
+which not to based on timeouts, or else just fail here entirely), and
+that ordering relationships between WEXT commands are ambiguous.  This
+leads to failure.
+
+ap_scan=2 _should_ be supported by all drivers, because it is the
+brute-force fallback.  Unfortunately, iwlwifi drivers are currently
+broken with hidden SSIDs and ap_scan=2, and maybe all mac80211 drivers
+too.  Regardless of whether ap_scan=2 should work or not, drivers that
+support specific SSID scans can do better.  But keep in mind that
+ap_scan=2 is ALWAYS the fallback and should ALWAYS work with any driver.
+Drivers that can't do specific SSID scans mostly don't work with
+ap_scan=1 because they usually don't do probe requests on command.
+
+Some drivers (most fullmac ones) require ap_scan=2 for hidden SSID
+support.  Those would include orinoco, airo, atmel, and ipw2100.
+
+Other drivers (mostly softmac ones) work well with ap_scan=1 because
+they support scanning for specific SSIDs.
+
+However, userspace is f*cked because it can't figure out which one to
+use, and trying both is not an option because you get unacceptable
+latency for the user when trying to associate.  And special-casing based
+on the driver name is NOT an option.  Ever. At all.
+
+Solution
+--------
+
+Drivers should advertise the ability to do specific SSID scans (which
+allows them to find hidden SSIDs).  As a requirement for supporting this
+capability, the driver _MUST_ implement the required bits in its
+SIOCSIWSCAN handler to scan for the requested SSID, or else the driver
+is in error.
+
+Userspace apps can then intelligently determine whether to use ap_scan=1
+or ap_scan=2 with wpa_supplicant.  If the driver is not fixed to
+advertise this capability, userspace can fall back to ap_scan=2 and the
+driver is clearly the problem in this case, and the responsible piece of
+code can be blamed and fixed.
+
+The problem is that there isn't a nice, generic capabilities field in
+WEXT.  So we have to abuse an existing one, and I picked enc_capa.
+
+
+Notes
+-----
+
+I know that the ap_scan=1 or 2 is really supposed to be for selecting
+roaming behavior.  However, it's also overloaded in wpa_supplicant to
+control hidden SSID handling as a workaround for drivers not supporting
+specific SSID scans.  Other utilities have to be able to figure out
+which one to use for hidden SSIDs.
+
+Obviously cfg80211/net80211 would be able to export this capability
+directly in the capability bits for each driver.  This issue is only a
+problem with WEXT (unless cfg80211 doesn't have this capability yet).
+
+The patch below is just to show how this might be accomplished.
+Obviously mac80211 drivers have this capability.  So does ipw2200.
+ipw2100 does not have this capability, and therefore does not set the
+bit in enc_capa.
+
+Thoughts?  It's at the point where something just needs to be done to
+fix the situation.
+
+Dan
+
+
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 54f44e5..726e30e 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -8901,6 +8901,8 @@ static int ipw_wx_get_range(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	range->enc_capa |= IW_ENC_CAPA_SPECIFIC_SSID_SCAN;
++
+ 	IPW_DEBUG_WX("GET Range\n");
+ 	return 0;
+ }
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 0987aa7..e2a8fd8 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -625,6 +625,10 @@
+ #define IW_ENC_CAPA_CIPHER_TKIP	0x00000004
+ #define IW_ENC_CAPA_CIPHER_CCMP	0x00000008
+ 
++/* Abuse enc_capa because there is no generic capabilties
++ * field in the range struct. */
++#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
++
+ /* Event capability macros - in (struct iw_range *)->event_capa
+  * Because we have more than 32 possible events, we use an array of
+  * 32 bit bitmasks. Note : 32 bits = 0x20 = 2^5. */
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 646e2f2..fd842c4 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -190,6 +190,9 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	/* All mac80211 drivers support this capability */
++	range->enc_capa |= IW_ENC_CAPA_SPECIFIC_SSID_SCAN;
++
+ 	list_for_each_entry(mode, &local->modes_list, list) {
+ 		int i = 0;
+ 
+
