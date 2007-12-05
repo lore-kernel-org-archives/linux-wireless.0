@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33952 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751669AbXLJUvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 15:51:12 -0500
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
-	learning algorithm
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20071210090853.79ea4645@morte>
-References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
-	 <1197239150.7543.13.camel@localhost>  <20071210090853.79ea4645@morte>
+Received: from mx1.redhat.com ([66.187.233.31]:51923 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750896AbXLEQHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 11:07:43 -0500
+Subject: [PATCH] orinoco: always use latest BSS info when caching scan
+	results
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org,
+	proski@gnu.org
 Content-Type: text/plain
-Date: Mon, 10 Dec 2007 21:51:07 +0100
-Message-Id: <1197319867.7493.4.camel@localhost> (sfid-20071210_205115_249319_727D7F72)
+Date: Wed, 05 Dec 2007 11:01:23 -0500
+Message-Id: <1196870483.2519.32.camel@localhost.localdomain> (sfid-20071205_160747_444545_AB8F27A3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Always copy the latest BSS information from the firmware's results to
+the driver's BSS table to ensure that everything is up-to-date (IEs,
+supported rates, encryption status, etc).
 
-On Mon, 2007-12-10 at 09:08 +0100, Stefano Brivio wrote:
-> On Sun, 09 Dec 2007 23:25:50 +0100
-> Mattias Nissler <mattias.nissler@gmx.de> wrote:
-> 
-> > >  static void *rate_control_pid_alloc(struct ieee80211_local *local)
-> > >  {
-> > >  	struct rc_pid_info *pinfo;
-> > > +	struct rc_pid_rateinfo *rinfo;
-> > > +	struct ieee80211_hw_mode *mode;
-> > > +	int i, j, tmp;
-> > > +	bool s;
-> > >  
-> > >  	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
-> > > +	if (!pinfo)
-> > > +		return NULL;
-> > > +
-> > > +	mode = local->oper_hw_mode;
-> > > +	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
-> > > +	if (!rinfo) {
-> > > +		kfree(pinfo);
-> > > +		return NULL;
-> > > +	}
-> > 
-> > What if the mode is changed? Have you checked the rate control algorithm
-> > gets reinitialized? If not, we're scheduling a crash here, when
-> > mode->num_rates changes.
-> 
-> After a discussion on IRC with Michael (Wu), we came to the conclusion that
-> it doesn't make sense for mode->num_rates to change, because:
-> 1) if the AP drops supported rates, it'll drop the association as well,
-> then everything here will be destroyed and created again;
-> 2) that can be changed in userspace, but we couldn't figure out a scenario
-> where it would make any sense. Johannes, any comments? Wouldn't it make
-> sense to just forbid to change this in userspace?
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-I don't agree. For example, what if you have some broken 802.11b only
-hardware that you desperately need to get going, but it freaks out on
-802.11g encoded frames. Now if your AP is hostapd on a Linux machine,
-you'll want to change the mode. Hence, also the number of available
-rates change.
-
-Moreover, I think we can do better than just disallowing changes to the
-rate set, don't you think?
-
-Mattias
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 100ae33..cd9e0c7 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -1194,7 +1208,7 @@ static int orinoco_process_scan_results(struct net_device *dev,
+ 	/* Read the entries one by one */
+ 	for (; offset + atom_len <= len; offset += atom_len) {
+ 		int found = 0;
+-		bss_element *bss;
++		bss_element *bss = NULL;
+ 
+ 		/* Get next atom */
+ 		atom = (union hermes_scan_info *) (buf + offset);
+@@ -1209,7 +1223,6 @@ static int orinoco_process_scan_results(struct net_device *dev,
+ 			if (memcmp(bss->bss.a.essid, atom->a.essid,
+ 			      le16_to_cpu(atom->a.essid_len)))
+ 				continue;
+-			bss->last_scanned = jiffies;
+ 			found = 1;
+ 			break;
+ 		}
+@@ -1220,10 +1233,14 @@ static int orinoco_process_scan_results(struct net_device *dev,
+ 					 bss_element, list);
+ 			list_del(priv->bss_free_list.next);
+ 
+-			memcpy(bss, atom, sizeof(bss->bss));
+-			bss->last_scanned = jiffies;
+ 			list_add_tail(&bss->list, &priv->bss_list);
+ 		}
++
++		if (bss) {
++			/* Always update the BSS to get latest beacon info */
++			memcpy(&bss->bss, atom, sizeof(bss->bss));
++			bss->last_scanned = jiffies;
++		}
+ 	}
+ 
+ 	return 0;
 
