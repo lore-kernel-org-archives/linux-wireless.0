@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58427
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751471AbXL0I50 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2007 03:57:26 -0500
-Date: Thu, 27 Dec 2007 00:57:25 -0800 (PST)
-Message-Id: <20071227.005725.144782426.davem@davemloft.net> (sfid-20071227_085734_078384_72FE2941)
-To: mokuno@sm.sony.co.jp
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: : Emit event stream compat iw_point objects correctly.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071227173802.6F56.40F06B3A@sm.sony.co.jp>
-References: <20071221.205808.213484078.davem@davemloft.net>
-	<20071227173802.6F56.40F06B3A@sm.sony.co.jp>
+Received: from mfe1.polimi.it ([131.175.12.23]:48963 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751442AbXLELMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2007 06:12:38 -0500
+Date: Wed, 5 Dec 2007 12:07:52 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless: make drivers include the TSF RX flag where
+ appropriate
+Message-ID: <20071205120752.7fb040b8@morte> (sfid-20071205_111243_937725_1B058DFD)
+In-Reply-To: <1196796820.12472.1.camel@johannes.berg>
+References: <1196796820.12472.1.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Date: Thu, 27 Dec 2007 17:51:49 +0900
+On Tue, 04 Dec 2007 20:33:40 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> 	Hi
-> 
-> On Fri, 21 Dec 2007 20:58:08 -0800 (PST)
-> David Miller <davem@davemloft.net> wrote:
-> 
-> > @@ -520,7 +530,7 @@ iwe_stream_add_point(char *	stream,		/* Stream of events */
-> >  		memcpy(stream + IW_EV_LCP_LEN,
-> >  		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
-> >  		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
-> 
-> As the alignment of 64bit platforms may be defferent from 32bit one,
-> should it be like the following?
+> --- everything.orig/drivers/net/wireless/b43legacy/xmit.c
+> 2007-12-04 20:32:32.076950086 +0100 +++
+> everything/drivers/net/wireless/b43legacy/xmit.c	2007-12-04
+> 20:33:13.996951714 +0100 @@ -548,6 +548,7 @@ void b43legacy_rx(struct
+> b43legacy_wldev status.mactime += mactime; if (low_mactime_now <= mactime)
+>  			status.mactime -= 0x10000;
+> +		status.flag |= RX_FLAG_TSFT;
+>  	}
 
-IW_EV_LCP_LEN is the same on both 32-bit and 64-bit platforms, it is
-just the size of the "len" and "cmd" portions of struct iw_event.
+Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-Those are both __u16, so IW_EV_LCP_LEN always evaluates to "4",
-try it if you do not believe me. :-)
 
-The iwreq_data size is invariant across the calculations.
-If it's bigger on 64-bit, more will be subtracted in the
-calculation performed by IW_EV_LCP_LEN.
-
-So my patches are correct as-is and we do not need to
-be mindful of compat'ness wrt. IW_EV_LCP_LEN.
+-- 
+Ciao
+Stefano
