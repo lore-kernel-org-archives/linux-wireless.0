@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35433 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbXLWJMA (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:54962 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbXLFJu3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 04:12:00 -0500
-Subject: [PATCH] mac80211: remove misleading 'res' variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Thu, 6 Dec 2007 04:50:29 -0500
+Subject: Re: [PATCH] libertas: fix data packet size errors
+From: David Woodhouse <dwmw2@infradead.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <200712061015.54478.hs4233@mail.mn-solutions.de>
+References: <200712061015.54478.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Sun, 23 Dec 2007 10:11:55 +0100
-Message-Id: <1198401115.4116.4.camel@johannes.berg> (sfid-20071223_091218_398053_302E7965)
+Date: Thu, 06 Dec 2007 09:50:26 +0000
+Message-Id: <1196934626.13978.485.camel@pmac.infradead.org> (sfid-20071206_095032_744686_9417ED29)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When this function returns != CONTINUE, it needs to put the
-station struct it has acquired. Hence, having this unused
-variable is not just superfluous but also misleading.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On Thu, 2007-12-06 at 10:15 +0100, Holger Schurig wrote:
+> 
+> +       /* This is a workaround for a firmware that reports too much
+> +        * bytes */
+> +       *len -= 8
+>         ret = 0;
 
---- everything.orig/net/mac80211/tx.c	2007-12-23 10:09:52.148939344 +0100
-+++ everything/net/mac80211/tx.c	2007-12-23 10:09:57.548937012 +0100
-@@ -932,7 +932,6 @@ __ieee80211_tx_prepare(struct ieee80211_
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_sub_if_data *sdata;
--	ieee80211_txrx_result res = TXRX_CONTINUE;
- 
- 	int hdrlen;
- 
-@@ -997,7 +996,7 @@ __ieee80211_tx_prepare(struct ieee80211_
- 	}
- 	control->flags |= IEEE80211_TXCTL_FIRST_FRAGMENT;
- 
--	return res;
-+	return TXRX_CONTINUE;
- }
- 
- /*
+You might want another semicolon somewhere in there?
 
+And if we're not looking at the length at all, that's bad. We should
+probably at _least_ compare it with the size field, to make sure we got
+everything that was sent, and that we're not reading off the end of the
+buffer.
+
+-- 
+dwmw2
 
