@@ -1,25 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5580 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751780AbXLEIkY (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:22045 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbXLFXm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 03:40:24 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 3] libertas: implement new scanning logic
-Date: Wed, 5 Dec 2007 09:40:41 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200712042136.45610.h.schurig@mn-solutions.de>
-In-Reply-To: <200712042136.45610.h.schurig@mn-solutions.de>
+	Thu, 6 Dec 2007 18:42:27 -0500
+Received: by py-out-1112.google.com with SMTP id u77so986662pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 15:42:21 -0800 (PST)
+Message-ID: <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com> (sfid-20071206_234231_028114_BEF3C89D)
+Date: Thu, 6 Dec 2007 18:42:15 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Automated kerneldoc for all wireless drivers
+In-Reply-To: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712050940.41760.hs4233@mail.mn-solutions.de> (sfid-20071205_084027_673987_8A540093)
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh, somehow the "take 2" patch to dev.h (which changed
-last_scanned_channel from u8 to int) was missing here.
+On Dec 6, 2007 6:38 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>   3910 total
 
-As I'm using last_scanned_channel == -1 as a marker, u8 is a
-nono. New patch follows ...
+Sorry, I forgot the iwlwifi drivers:
+
+   670 iwlwifiiwl3945-basec-doc.html
+   325 iwlwifiiwl-3945c-doc.html
+   134 iwlwifiiwl-3945-commandsh-doc.html
+     0 iwlwifiiwl-3945-debugh-doc.html
+   121 iwlwifiiwl-3945h-doc.html
+     0 iwlwifiiwl-3945-hwh-doc.html
+     0 iwlwifiiwl-3945-ioh-doc.html
+    78 iwlwifiiwl-3945-rsc-doc.html
+    65 iwlwifiiwl-3945-rsh-doc.html
+   715 iwlwifiiwl4965-basec-doc.html
+   438 iwlwifiiwl-4965c-doc.html
+   422 iwlwifiiwl-4965-commandsh-doc.html
+     0 iwlwifiiwl-4965-debugh-doc.html
+   171 iwlwifiiwl-4965h-doc.html
+   566 iwlwifiiwl-4965-hwh-doc.html
+     0 iwlwifiiwl-4965-ioh-doc.html
+    69 iwlwifiiwl-4965-rsc-doc.html
+    65 iwlwifiiwl-4965-rsh-doc.html
+    54 iwlwifiiwl-helpersh-doc.html
+   119 iwlwifiiwl-prphh-doc.html
+     0 iwlwifiiwl-spectrumh-doc.html
+  4012 total
+
+For a total of 7922 for us now. Thanks Intel, great job!
+
+  Luis
