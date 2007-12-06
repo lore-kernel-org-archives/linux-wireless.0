@@ -1,207 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:50704 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbXLCLVW (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:9248 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbXLFKyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:21:22 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so5082610wah
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2007 03:21:21 -0800 (PST)
-Message-ID: <1ba2fa240712030321g58b8df39y24240c63facba2cd@mail.gmail.com> (sfid-20071203_112125_892148_5E2DA22E)
-Date: Mon, 3 Dec 2007 13:21:21 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Mattias Nissler" <mattias.nissler@gmx.de>
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-Cc: "Stefano Brivio" <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1196679780.7470.9.camel@localhost>
+	Thu, 6 Dec 2007 05:54:25 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] libertas: don't cast a pointer to pointer of
+Date: Thu, 6 Dec 2007 11:54:45 +0100
+Cc: Dan Williams <dcbw@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1196622331.7472.4.camel@localhost> <20071203041608.3af3b462@morte>
-	 <1196679780.7470.9.camel@localhost>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200712061154.46070.hs4233@mail.mn-solutions.de> (sfid-20071206_105430_152501_8B1F1719)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A little suggestion, maybe instead of overriding the simple algorithm
-you should create new let say pid_controler rate scale algorithm.  It
-doesn't look simple anymore :)
-Tomas
+Don't cast struct foo * to struct list_head *, it's safe only when
+the list member is the first member of struct foo.
 
-On Dec 3, 2007 1:03 PM, Mattias Nissler <mattias.nissler@gmx.de> wrote:
->
-> On Mon, 2007-12-03 at 04:16 +0100, Stefano Brivio wrote:
-> > On Sun, 02 Dec 2007 20:05:31 +0100
-> > Mattias Nissler <mattias.nissler@gmx.de> wrote:
-> >
-> > > Hi,
-> > >
-> > > the patch below is a first attempt on the PID-controller approach for TX
-> > > rate control. It kind of works here, but I haven't spent much time
-> > > tuning the coefficients.
-> >
-> > It looks good! I tested it a bit with different TX powers and moving around
-> > with a microwave oven turned on [1]. It looks like we don't have the
-> > rollercoaster effect anymore, and overall quality of the algorithm seems
-> > just fine. However, I noticed about two issues:
-> >
-> > 1) as soon as I loaded mac80211 it took a lot of time to get up with rate,
-> > and this actually happens every time I'm not sending frames for a while
-> > (including get down with rate here).
-> >       - IMHO, it doesn't make sense to check for RSSI of previous packets
-> > as soon as we get associated, because it's very likely that we just switched
-> > between two APs.
->
-> Wait a sec. Rate control is per station, so each AP will have it's own
-> rate control state.
->
-> >       - Here, either we know that something happened (such an association)
-> > and we need to react quite quickly, either we don't know what's happening
-> > and relying solely on interpolation seems not to work so well.
-> > So I thought rather of a "sharpening" factor to be taken into account
-> > when some important events (i.e. association) or interpolation happened.
-> > This seems to work quite well, so in perfect conditions and average load I
-> > need ~6 seconds vs ~11 to get up to 54M, while still maintaining smoothness
-> > during regular operation (thus it looks like there aren't rollercoasting
-> > risks - obviously this will need more testing):
->
-> Have you tried shorter sample intervals? Currently, it's once per
-> second. I plan to shorten it, maybe to 2Hz or even 4Hz and see whether
-> we can get better responsiveness and still stay stable. Also, the
-> integration time needs to be fine-tuned then.
->
->
-> > [this patch applies on top of yours]
-> >
-> > Index: wireless-2.6/net/mac80211/rc80211_simple.c
-> > ===================================================================
-> > --- wireless-2.6.orig/net/mac80211/rc80211_simple.c
-> > +++ wireless-2.6/net/mac80211/rc80211_simple.c
-> > @@ -26,13 +26,15 @@
-> >   *
-> >   * The controller basically computes the following:
-> >   *
-> > - * adj = CP * err + CI * err_avg + CD * (err - last_err)
-> > + * adj = CP * err + CI * err_avg + CD * (1 + sharpening) * (err - last_err)
-> >   *
-> >   * where
-> >   *   adj     adjustment value that is used to switch TX rate (see below)
-> >   *   err     current error: target vs. current failed frames percentage
-> >   *   last_err        last error
-> >   *   err_avg average (i.e. poor man's integral) of recent errors
-> > + *   sharpening      non-zero when fast response is needed (i.e. right after
-> > + *                   association or interpolation)
-> >   *   CP      Proportional coefficient
-> >   *   CI      Integral coefficient
-> >   *   CD      Derivative coefficient
-> > @@ -62,6 +64,11 @@
-> >  #define RATE_CONTROL_SMOOTHING_SHIFT 3
-> >  #define RATE_CONTROL_SMOOTHING (1 << RATE_CONTROL_SMOOTHING_SHIFT)
-> >
-> > +/* Sharpening factor (used for D part of PID controller) */
-> > +#define RATE_CONTROL_SHARPENING_SHIFT 2
-> > +#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-> > +#define RATE_CONTROL_SHARPENING_DURATION 3
-> > +
-> >  /* Fixed point arithmetic shifting amount. */
-> >  #define RATE_CONTROL_ARITH_SHIFT 8
-> >
-> > @@ -122,6 +129,9 @@ struct sta_rate_control {
-> >       /* Last framed failes percentage sample */
-> >       u32 last_pf;
-> >
-> > +     /* Sharpening needed */
-> > +     u8 sharp_cnt;
-> > +
-> >       unsigned long avg_rate_update;
-> >       u32 tx_avg_rate_sum;
-> >       u32 tx_avg_rate_num;
-> > @@ -252,10 +262,12 @@ static void rate_control_simple_tx_statu
-> >               srctrl->last_sample = jiffies;
-> >
-> >               /* If no frames were transmitted, we assume the old sample is
-> > -              * still a good measurement and copy it.
-> > +              * still a good measurement and copy it, and turn the
-> > +              * sharpening factor on.
-> >                */
-> > -             if (srctrl->tx_num_xmit == 0)
-> > +             if (srctrl->tx_num_xmit == 0) {
-> >                       pf = srctrl->last_pf;
-> > +                     srctrl->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
-> >               else {
-> >                       pf = srctrl->tx_num_failed * 100 / srctrl->tx_num_xmit;
-> >                       pf <<= RATE_CONTROL_ARITH_SHIFT;
-> > @@ -271,8 +283,11 @@ static void rate_control_simple_tx_statu
-> >               srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
-> >               err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
-> >
-> > -             err_der = pf - srctrl->last_pf;
-> > +             err_der = pf - srctrl->last_pf
-> > +                       + RATE_CONTROL_SHARPENING * srctrl->sharp;
-> >               srctrl->last_pf = pf;
-> > +             if (srctrl->sharp)
-> > +                     srctrl->sharp--;
-> >
-> >               /* Compute the controller output. */
-> >               adj = (err_prop * RATE_CONTROL_COEFF_P
-> >
-> >
-> > 2) It seems that most of the devices out there have better sensitivity at 6
-> > and 9M than at 11M, while others haven't, e.g.:
-> > Rate [Mbps]   Sensitivity [dBm]
-> >       (1)     (2)     (3)     (4)
-> > 1     -97     -91     -90     -96
-> > 2     -96             -90     -95
-> > 5.5   -95             -86     -94
-> > 11    -92     -88     -82     -94
-> > 6     -94     -85     -90     -91
-> > 9     -93             -89     -90
-> > 12    -91             -86     -88
-> > 18    -90             -82     -86
-> > 24    -86             -79     -83
-> > 36    -83             -76     -78
-> > 48    -77             -72     -76
-> > 54    -74     -69     -72     -75
-> >
-> > (1) Ubiquiti SR2, Atheros-based
-> > (2) Marvell 88W8686 SM module
-> > (3) Cheap Atheros based access point
-> > (4) Cheap Broadcom 4318E device
-> >
-> > So, I guess we can't think of a preset ordering for rates. I tested this
-> > with a Broadcom based device (which should be pretty similar to (4)), but the
-> > only other wireless card which supports both 802.11b and 802.11g I got is
-> > an Intel IPW2200 (which is not supported by any mac80211 driver). So,
-> > testing this with an Atheros, e.g., or some new Intel device, could lead to
-> > unexpected behaviour and thus we may need to keep some table like: rate <->
-> > recent failed frames.
->
-> Hm, from your table above, there doesn't seem to be a significant
-> problem with the 6 and 9 OFDM rates. We could also just leave them out
-> and go to 12Mbps OFDM from 11Mbps CCK.
->
-> I also thought about your rate <-> failed frames table. I'm not
-> convinced this works, because I cannot see a way to obtain consistent
-> values for the table. Clearly, measuring table entries should be done
-> with equal interference conditions for all entries, and they must also
-> be adjusted over time. However, if we only collect data during normal
-> operation, we'll likely have good data only for the few recent rates we
-> were operating at.
->
-> >  But we would really need more testers here!
->
-> Indeed :-)
->
-> >
-> > I'll try to provide more comments and tuning in a few days.
->
-> Great!
->
-> Mattias
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Also don't cast struct list_head * to struct foo *.
+
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+
+Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2007-12-06 12:47:21.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2007-12-06 12:54:47.000000000 +0100
+@@ -1016,11 +1016,10 @@ void lbs_queue_cmd(struct lbs_adapter *a
+ 	spin_lock_irqsave(&adapter->driver_lock, flags);
+ 
+ 	if (addtail) {
+-		list_add_tail((struct list_head *)cmdnode,
+-			      &adapter->cmdpendingq);
++		list_add_tail(&cmdnode->list, &adapter->cmdpendingq);
+ 		adapter->nr_cmd_pending++;
+ 	} else
+-		list_add((struct list_head *)cmdnode, &adapter->cmdpendingq);
++		list_add(&cmdnode->list, &adapter->cmdpendingq);
+ 
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+ 
+@@ -1139,7 +1138,7 @@ void __lbs_cleanup_and_insert_cmd(struct
+ 		return;
+ 
+ 	cleanup_cmdnode(ptempcmd);
+-	list_add_tail((struct list_head *)ptempcmd, &adapter->cmdfreeq);
++	list_add_tail(&ptempcmd->list, &adapter->cmdfreeq);
+ }
+ 
+ static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
+@@ -1637,8 +1636,9 @@ struct cmd_ctrl_node *lbs_get_free_cmd_c
+ 	spin_lock_irqsave(&adapter->driver_lock, flags);
+ 
+ 	if (!list_empty(&adapter->cmdfreeq)) {
+-		tempnode = (struct cmd_ctrl_node *)adapter->cmdfreeq.next;
+-		list_del((struct list_head *)tempnode);
++		tempnode = list_first_entry(&adapter->cmdfreeq,
++					    struct cmd_ctrl_node, list);
++		list_del(&tempnode->list);
+ 	} else {
+ 		lbs_deb_host("GET_CMD_NODE: cmd_ctrl_node is not available\n");
+ 		tempnode = NULL;
+@@ -1735,8 +1735,8 @@ int lbs_execute_next_command(struct lbs_
+ 	}
+ 
+ 	if (!list_empty(&adapter->cmdpendingq)) {
+-		cmdnode = (struct cmd_ctrl_node *)
+-		    adapter->cmdpendingq.next;
++		cmdnode = list_first_entry(&adapter->cmdpendingq,
++					   struct cmd_ctrl_node, list);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+@@ -1800,7 +1800,7 @@ int lbs_execute_next_command(struct lbs_
+ 				    cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
+-					list_del((struct list_head *)cmdnode);
++					list_del(&cmdnode->list);
+ 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
+ 
+ 					ret = 0;
+@@ -1811,7 +1811,7 @@ int lbs_execute_next_command(struct lbs_
+ 				    (adapter->psstate == PS_STATE_PRE_SLEEP)) {
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: ignore EXIT_PS cmd in sleep\n");
+-					list_del((struct list_head *)cmdnode);
++					list_del(&cmdnode->list);
+ 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
+ 					adapter->needtowakeup = 1;
+ 
+@@ -1823,7 +1823,7 @@ int lbs_execute_next_command(struct lbs_
+ 				       "EXEC_NEXT_CMD: sending EXIT_PS\n");
+ 			}
+ 		}
+-		list_del((struct list_head *)cmdnode);
++		list_del(&cmdnode->list);
+ 		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
+ 			    le16_to_cpu(cmdptr->command));
+ 		DownloadcommandToStation(priv, cmdnode);
