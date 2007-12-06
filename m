@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbXLWNsi (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:50964 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbXLFVfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 08:48:38 -0500
-Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
-	ieee80211_invoke_rx_handlers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <20071223123517.17ds9zttxc4goo00@imap.suse.de>
-References: <200712211516.35731.hschaa@suse.de>
-	 (sfid-20071221_141215_108356_0F4BE6F7) <1198401880.4116.6.camel@johannes.berg>
-	 <20071223123517.17ds9zttxc4goo00@imap.suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jT1g7ynL12AtFsWev5oM"
-Date: Sun, 23 Dec 2007 14:48:26 +0100
-Message-Id: <1198417706.4000.1.camel@johannes.berg> (sfid-20071223_134844_803148_2A2083E4)
-Mime-Version: 1.0
+	Thu, 6 Dec 2007 16:35:13 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: jt@hpl.hp.com
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Date: Thu, 6 Dec 2007 22:33:18 +0100
+Cc: David Miller <davem@davemloft.net>, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+References: <20071204000138.GA1363@bougret.hpl.hp.com> <20071205.183628.211180882.davem@davemloft.net> <20071206212525.GA6509@bougret.hpl.hp.com>
+In-Reply-To: <20071206212525.GA6509@bougret.hpl.hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712062233.18634.mb@bu3sch.de> (sfid-20071206_213518_097567_2000A724)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 06 December 2007 22:25:25 Jean Tourrilhes wrote:
+> On Wed, Dec 05, 2007 at 06:36:28PM -0800, David Miller wrote:
+> > From: Jean Tourrilhes <jt@hpl.hp.com>
+> > Date: Wed, 5 Dec 2007 13:56:00 -0800
+> > 
+> > > 	Personally, I was under the impression that in userspace libc
+> > > trap unaligned access and make them work. I mean, this code was tested
+> > > on other 64/32 bit platforms (PPC, AMD-64, PS3) and was working there,
+> > > so this seems to be specific to your platform.
+> > 
+> > None of those listed platforms trap on unaligned accesses like sparc
+> > does.
+> 
 
---=-jT1g7ynL12AtFsWev5oM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 	Now, I'm wondering how to deal with unaligned access in
+> userspace. If you get data from hardware or the network, you can not
+> guarantee that everything will always be aligned, so we need a way to
+> deal with it.
+> 	In the kernel, we have get_unaligned(). I wonder what's the
+> equivalent in userspace.
 
+Userspace handles this transparently through fault traps.
 
-> >> This patch fixes a problem with rx handling on multiple interfaces. =20
-> >>  Especially
-> >> when using hardware-scanning and a wireless driver (i.e. iwlwifi) whic=
-h is
-> >> able to receive data while scanning.
-> >
-> > Can you explain how you even got multiple interfaces with iwlwifi? The
-> > patch looks (superficially) correct, but I'm a bit confused.
->=20
-> I was only referring to wmaster0 and wlan0 as two interfaces. While a sca=
-n
-> is in progress the master interface (wmaster0) processes all frames relat=
-ed
-> to scanning and it happened to me that data-frames got dropped on wmaster=
-0
-> (which is obviously correct) and due to the frame control being modified
-> wlan0 was not able to process the frame correctly anymore.
-
-Ah, that must be because of the stuff Zhu Yi did wrt. hw scanning. Could
-you take a look too please? The patch looks pretty much ok to me and I
-think it'd be required with say VLAN interfaces as well.
-
-johannes
-
---=-jT1g7ynL12AtFsWev5oM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR25nKaVg1VMiehFYAQJV5BAAvmOX9fIyDHBfG+Fvlxew3ccmmjEEBd8z
-bAwgH6/wSZWg2siV96kNewgOUrtvHuaeGTt8CUhMfqqgm5ljQWIIF7hvZuzQp9+n
-GljGq9j+FDwJoZi/ZC6whK+DVdAG65Tg3TceOQShugr3Xeg+7v2KvPLtCHv8Ciiu
-/C9FWZMhaCL89z4syS8hNy6QSiJTyoVI8sCpOgz6YAbhwmkQNttViiNSGbLVr57A
-fJxTdi/ZfI1IUaGNPx89zOoKoJ1Nn9y/QTB54bQ3JMDoTpS2yERh+6Q1d4N8nlGr
-kzderdNTiwVs10zqWRMfnwiN0cHBgYf2hGLXILgcDGsEAkstT2GBlS5mOnqMMcqy
-VUC9WzqId7cMxs+9MEjdMFXHLoIXbb+j8XxeHXJHbenS2oH7CuzZN3SeaCn5zUrt
-B2Mjfgn4vNE8ztWo+ReMBcIznzYKREsrKmZjiLty8V8+O73ZnwKQnrQ3eqrgIV4G
-3gRSetjiWkUIUXyb8xEKPquwkyMpTrezjhzyyPZZvQOapjQatUfX8fKdTF9wMPfR
-guVPqjrXa4odJrS/ke/wBomcpfKmRW2wqv1nvPuf47BDNb0DkXr7Gn8RI7CgRSAt
-za+2d4FDO29ZDJEl8lUDF75vBrghALpfTw0Xt5ysx78YAK4kK1j4lEfVplJ9OOrM
-/eo/mWrIq/4=
-=NvBH
------END PGP SIGNATURE-----
-
---=-jT1g7ynL12AtFsWev5oM--
-
+-- 
+Greetings Michael.
