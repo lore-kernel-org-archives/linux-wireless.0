@@ -1,38 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56864
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750891AbXLYGHk (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:23018 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391AbXLFLTF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 01:07:40 -0500
-Date: Mon, 24 Dec 2007 22:07:40 -0800 (PST)
-Message-Id: <20071224.220740.210148455.davem@davemloft.net> (sfid-20071225_060746_054538_CBAE072D)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071220155227.GE3139@tuxdriver.com>
-References: <20071220155227.GE3139@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 6 Dec 2007 06:19:05 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas: don't cast a pointer to pointer of
+Date: Thu, 6 Dec 2007 12:19:27 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <200712061154.46070.hs4233@mail.mn-solutions.de> <1196939134.3980.25.camel@localhost.localdomain>
+In-Reply-To: <1196939134.3980.25.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712061219.27171.hs4233@mail.mn-solutions.de> (sfid-20071206_111911_234549_FF0CD69E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 20 Dec 2007 10:52:27 -0500
+> Haven't tested it, but this looks like the right thing to do. 
+> I'll probably step all over Woodhouse's command rework though.
 
-> A few more stragglers for 2.6.24...let me know if there are any
-> problems!
-...
-> The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
->   Linus Torvalds (1):
->         Linux 2.6.24-rc5
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-> 
-> Johannes Berg (2):
->       mac80211: round station cleanup timer
->       mac80211: warn when receiving frames with unaligned data
+Not yet :-)
 
-Pulled and pushed back out to net-2.6, thanks John.
+It applied cleanly to libertas-2.6 and is already in his 
+libertas-2.6 tree.
