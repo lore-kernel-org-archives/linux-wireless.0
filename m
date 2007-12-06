@@ -1,60 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:62707 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbXLFSw0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 13:52:26 -0500
-Received: by py-out-1112.google.com with SMTP id u77so760495pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 10:52:25 -0800 (PST)
-Message-ID: <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com> (sfid-20071206_185229_676084_03A134F1)
-Date: Thu, 6 Dec 2007 13:52:25 -0500
-From: "Will Dyson" <will.dyson@gmail.com>
-To: lynx.abraxas@freenet.de
-Subject: Re: What's wrong if wlan0 device is not reacting?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20071206170858.GA2008@drago>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20071206170858.GA2008@drago>
+Received: from mx1.redhat.com ([66.187.233.31]:40930 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751964AbXLFLiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 06:38:09 -0500
+Subject: [RFC PATCH] introduce WEXT scan capabilities
+From: Dan Williams <dcbw@redhat.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
+Date: Thu, 06 Dec 2007 06:28:39 -0500
+Message-Id: <1196940519.3980.51.camel@localhost.localdomain> (sfid-20071206_113813_153868_BF0D373C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 6, 2007 12:08 PM,  <lynx.abraxas@freenet.de> wrote:
+See the previous thread about fixing the ap_scan mess.  I think Jean's
+correct in asserting that we need more bits for scan capability.
 
-> I'm  desperately  trying  to get a micronet SP907GK V5 (USB 1.1 WLAN-Stick) to
-> run under openSuSE 10.3.
->
-> lsusb tells me the manufacturer is Realtek rtl8187 so  I  compiled,  installed
-> and modprobed rtl8187 for the 2.6.22.5 kernel.
+This patch introduces scan capability bits for WEXT; hopefully cfg80211
+can also pick up equivalent functionality.  Capability bits are provided
+for all the current options that may be passed to drivers in the
+iw_scan_req structure.  It can be assumed that if the driver reports the
+scan capability, that the driver respects the options specified in the
+iw_scan_req structure when performing the scan.
 
-You might want to mention where you got the source for the rtl8187
-module that you compiled. Git checkout? Tarball from a website?
+Clients can use logic like (cribbed from wpa_supplicant's driver_wext.c)
+this to figure out whether or not the capability bits are supported:
 
-This driver is included in the 2.6.23 kernel, so you may want to try that.
+struct iwreq iwr;
+struct iw_range *range;
 
-> The module loads and iwconfig lists wlan0 as wireless device. wmaster0 is also
-> created. I could not find any info on what wmaster0 is for. Some say it  is  a
-> hint  for  malfunction of the driver. I did configure the device with Yast and
-> also by hand (setting essid and key with iwconfig and using dhcpcd or ifconfig
-> with static local ip) but had no success when pinging the router.
+<set up iwr/range for request>
 
-Fortunately, those who say the presence of the wmaster0 is a problem
-are wrong. It is completely normal.
+if (ioctl(drv->ioctl_sock, SIOCGIWRANGE, &iwr) == 0) {
+	u8 minlen = ((char *) &range->scan_capa) - (char *) range + sizeof(range->scan_capa);
 
-Your iwconfig output reveals that the device is not associated, so
-naturally you will not be able to ping the router.
+	if (iwr.u.data.length >= minlen) {
+		/* SCAN_CAPA is supported */
+	}
+}
 
-Also, you seem to imply that your network uses a WEP key (as opposed
-to WPA), but please make sure.
+Jean; what do you think?
 
-Other thoughts:
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Can you scan with the device? You will need to set the interface up
-(ifconfig wlan0 up) before scanning.
 
-When configuring the device manually with a WEP key, you will need to
-make sure that setting the essid is the last step. Setting the essid
-and then the key will not work.
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 54f44e5..e30ad24 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -8901,6 +8901,8 @@ static int ipw_wx_get_range(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	range->scan_capa = IW_SCAN_CAPA_ESSID | IW_SCAN_CAPA_TYPE;
++
+ 	IPW_DEBUG_WX("GET Range\n");
+ 	return 0;
+ }
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 0987aa7..9342801 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -541,6 +541,15 @@
+ /* Maximum size of returned data */
+ #define IW_SCAN_MAX_DATA	4096	/* In bytes */
+ 
++/* Scan capabilitiy macros - in (struct iw_range *)->scan_capa */
++#define IW_SCAN_CAPA_ESSID		0x00000001
++#define IW_SCAN_CAPA_BSSID		0x00000002
++#define IW_SCAN_CAPA_CHANNEL	0x00000004
++#define IW_SCAN_CAPA_MODE		0x00000008
++#define IW_SCAN_CAPA_RATE		0x00000010
++#define IW_SCAN_CAPA_TYPE		0x00000020
++#define IW_SCAN_CAPA_TIME		0x00000040
++
+ /* Max number of char in custom event - use multiple of them if needed */
+ #define IW_CUSTOM_MAX		256	/* In bytes */
+ 
+@@ -1040,6 +1049,8 @@ struct	iw_range
+ 	 * because each entry contain its channel index */
+ 
+ 	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
++
++	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
+ };
+ 
+ /*
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 646e2f2..0c52ed8 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -218,6 +218,8 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
+ 
++	range->scan_capa |= IW_SCAN_CAPA_ESSID;
++
+ 	return 0;
+ }
+ 
 
--- 
-Will Dyson
