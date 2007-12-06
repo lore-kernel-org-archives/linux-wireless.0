@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34023 "EHLO mga03.intel.com"
+Received: from madara.hpl.hp.com ([192.6.19.124]:51717 "EHLO madara.hpl.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756691AbXLTJsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 04:48:33 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 4/8 v2] mac80211: A-MPDU Rx MLME data initialization
-Date: Thu, 20 Dec 2007 11:39:08 +0200
-Message-Id: <11981435612774-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094839_294731_24B7497A)
-In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752592AbXLFWBX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 17:01:23 -0500
+Date: Thu, 6 Dec 2007 13:59:50 -0800
+To: Shaddy Baddah <shaddy_baddah@hotmail.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Message-ID: <20071206215950.GA6987@bougret.hpl.hp.com> (sfid-20071206_220153_422358_9B2E1E16)
+Reply-To: jt@hpl.hp.com
+References: <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <20071121184459.GA17199@bougret.hpl.hp.com> <474F86AD.4040403@hotmail.com> <20071130202115.GA32444@bougret.hpl.hp.com> <20071204000138.GA1363@bougret.hpl.hp.com> <4756AABC.3000204@hotmail.com> <20071205215600.GA28349@bougret.hpl.hp.com> <4757336F.7050301@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4757336F.7050301@hotmail.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch initialize A-MPDU MLME data for Rx sessions.
+On Thu, Dec 06, 2007 at 10:25:35AM +1100, Shaddy Baddah wrote:
+> Hi Jean,
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/sta_info.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+	Hi again,
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index cc28e82..c03a714 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -135,6 +135,7 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 			       struct net_device *dev, u8 *addr, gfp_t gfp)
- {
- 	struct sta_info *sta;
-+	int i;
- 	DECLARE_MAC_BUF(mac);
- 
- 	sta = kzalloc(sizeof(*sta), gfp);
-@@ -154,6 +155,19 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	sta->local = local;
- 	sta->dev = dev;
-+	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-+	for (i = 0; i < STA_TID_NUM; i++) {
-+		/* timer_to_tid must be initialized with identity mapping to
-+		 * enable session_timer's data differentiation. refer to
-+		 * sta_rx_agg_session_timer_expired for useage */
-+		sta->timer_to_tid[i] = i;
-+		/* rx timers */
-+		sta->ampdu_mlme.tid_rx[i].session_timer.function =
-+			sta_rx_agg_session_timer_expired;
-+		sta->ampdu_mlme.tid_rx[i].session_timer.data =
-+			(unsigned long)&sta->timer_to_tid[i];
-+		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
- 	__sta_info_get(sta);	/* sta used by caller, decremented by
--- 
-1.5.3.3
+> >	So, you'll find attached a new version of Wireless Tools. Just
+> >tell me if it work. You can remove the debugging output by commenting
+> >out the "#define DEBUG" lines (grep for it).
+> 
+> Yes, that has fixed it. Thank you very much.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+	Would you mind testing the attached version ? Following the
+suggestions of David, I came up with a slightly better fix (use a
+union instead of memcpy).
+	As soon as I know it worka, I'll push that to the Debian
+maintainer...
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> Regards,
+> Shaddy
+
+	Thanks again for your help...
+
+	Jean
 
