@@ -1,104 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:9248 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbXLFKyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 05:54:25 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] libertas: don't cast a pointer to pointer of
-Date: Thu, 6 Dec 2007 11:54:45 +0100
-Cc: Dan Williams <dcbw@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712061154.46070.hs4233@mail.mn-solutions.de> (sfid-20071206_105430_152501_8B1F1719)
+Received: from mx1.redhat.com ([66.187.233.31]:52891 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751983AbXLFLMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 06:12:06 -0500
+Subject: Re: [RFC] fixing the ap_scan and hidden SSID mess
+From: Dan Williams <dcbw@redhat.com>
+To: jt@hpl.hp.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071205230507.GA28902@bougret.hpl.hp.com>
+References: <20071205221119.GA28457@bougret.hpl.hp.com>
+	 <1196894672.14901.5.camel@localhost.localdomain>
+	 <20071205230507.GA28902@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Thu, 06 Dec 2007 06:02:35 -0500
+Message-Id: <1196938955.3980.23.camel@localhost.localdomain> (sfid-20071206_111211_019769_F25B94BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't cast struct foo * to struct list_head *, it's safe only when
-the list member is the first member of struct foo.
+On Wed, 2007-12-05 at 15:05 -0800, Jean Tourrilhes wrote:
+> On Wed, Dec 05, 2007 at 05:44:32PM -0500, Dan Williams wrote:
+> > 
+> > > > The problem is that there isn't a nice, generic capabilities field in
+> > > > WEXT.  So we have to abuse an existing one, and I picked enc_capa.
+> > > 
+> > > 	Please don't do that. It's fairly trivial to add a new field
+> > > in iwrange. And it's not like the sky will fall down if we add a field
+> > > in iwrange. If you want to do it, please do it right.
+> > 
+> > Well, the problem I had with this is that it's less likely to get
+> > backported because it potentially breaks binary compatibility for
+> > distros.  There are 3 options here:
+> > 
+> > 1) overload enc_capa
+> > 
+> > 2) add a field and start doing comparisons of the size of the iw_range
+> > structure to figure out what is available and what's not
+> > 
+> > 3) Bump the WEXT version
+> > 
+> > #3 is a non-starter because it is a much larger, more invasive change
+> > and requires more breakage of ABI and such.
+> 
+> 	Hu ? Please tell me what will break. We can bump the WEXT
+> version pretty much any time we want, no userspace will fail. THe
+> worse you may see is an anoying warning message.
 
-Also don't cast struct list_head * to struct foo *.
+It's a problem for backporting this fix to older kernels that are not
+2.6.25.  If a WEXT version bump is required, then you have two options
+to backport this to drivers:
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+1) take the entire driver as-is.  This usually won't work because many
+drivers are in a lot of flux, especially the softmac ones with their
+interdependencies on the stack.
+
+2) Backport the SCAN_CAPA stuff only and bump the wext version.  This
+may mean that the driver says it supports WEXT 24 for example, but
+doesn't actually have all the features that the current kernel driver
+that advertises v24 has.  Another dead end.
+
+> > I guess #2 is acceptable.
+> 
+> 	Option 4 : use two flags (as described below), that way you
+> know if iwrange implement the feature or not.
+> 
+> > > 	Note that there is one gotcha because of the state of
+> > > userspace, so if you want I can produce a kernel patch that will work
+> > > properly, and I'll add the usespace support for it as well.
+> > 
+> > Could you describe that more?
+> 
+> 	The iwrange in userspace has a few more stuff defined, so you
+> need to make sure to include padding to not add your field on an
+> already existing field. Check the wireless.21.h file.
+> 	Note that if you sign the usual suspects on that change, I'll
+> do the patch for you.
+> 
+> > > 	That won't work. You have a tri-state, and with only a single
+> > > bit you can encode only two state. You basically have :
+> > > 	o driver that support ap_scan=1
+> > > 	o driver that do not support ap_scan=1
+> > > 	o driver that have not been updated or reside in old kernels
+> > 
+> > Well, to be fair, the patch posted handles this perfectly well, because
+> > older kernels with drivers that don't have the capability just dont'
+> > advertise it.  Therefore everything works fine.
+> > 
+> > > 	So, at the minimum, you'd want :
+> > > -------------------------------------
+> > > +#define IW_ENC_CAPA_SPECIFIC_SSID_SCAN	0x00000010
+> > > +#define IW_ENC_CAPA_ANY_SSID_SCAN	0x00000020
+> > > -------------------------------------
+> > 
+> > I'm not sure why we'd want ANY_SSID_SCAN?
+> 
+> 	To distinguish driver that have not been updated or driver in
+> order kernel from drivers that do not support ap_scan=1. You may want
+> to do things slightly differently between those two.
+> 	It just act as : yes this driver has been audited and fixed to
+> export proper scanning capability support.
+
+So is the ANY_SSID_SCAN thing different from just calling SIOCSIWSCAN
+_without_ any options?  I was under the impression that just calling
+SIWSCAN would scan for all SSIDs.
+
+I've actually thought about your proposal, and decided that you're
+right.  I'll post another patch for more comments.
+
+dan
 
 
-Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2007-12-06 12:47:21.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2007-12-06 12:54:47.000000000 +0100
-@@ -1016,11 +1016,10 @@ void lbs_queue_cmd(struct lbs_adapter *a
- 	spin_lock_irqsave(&adapter->driver_lock, flags);
- 
- 	if (addtail) {
--		list_add_tail((struct list_head *)cmdnode,
--			      &adapter->cmdpendingq);
-+		list_add_tail(&cmdnode->list, &adapter->cmdpendingq);
- 		adapter->nr_cmd_pending++;
- 	} else
--		list_add((struct list_head *)cmdnode, &adapter->cmdpendingq);
-+		list_add(&cmdnode->list, &adapter->cmdpendingq);
- 
- 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
- 
-@@ -1139,7 +1138,7 @@ void __lbs_cleanup_and_insert_cmd(struct
- 		return;
- 
- 	cleanup_cmdnode(ptempcmd);
--	list_add_tail((struct list_head *)ptempcmd, &adapter->cmdfreeq);
-+	list_add_tail(&ptempcmd->list, &adapter->cmdfreeq);
- }
- 
- static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
-@@ -1637,8 +1636,9 @@ struct cmd_ctrl_node *lbs_get_free_cmd_c
- 	spin_lock_irqsave(&adapter->driver_lock, flags);
- 
- 	if (!list_empty(&adapter->cmdfreeq)) {
--		tempnode = (struct cmd_ctrl_node *)adapter->cmdfreeq.next;
--		list_del((struct list_head *)tempnode);
-+		tempnode = list_first_entry(&adapter->cmdfreeq,
-+					    struct cmd_ctrl_node, list);
-+		list_del(&tempnode->list);
- 	} else {
- 		lbs_deb_host("GET_CMD_NODE: cmd_ctrl_node is not available\n");
- 		tempnode = NULL;
-@@ -1735,8 +1735,8 @@ int lbs_execute_next_command(struct lbs_
- 	}
- 
- 	if (!list_empty(&adapter->cmdpendingq)) {
--		cmdnode = (struct cmd_ctrl_node *)
--		    adapter->cmdpendingq.next;
-+		cmdnode = list_first_entry(&adapter->cmdpendingq,
-+					   struct cmd_ctrl_node, list);
- 	}
- 
- 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
-@@ -1800,7 +1800,7 @@ int lbs_execute_next_command(struct lbs_
- 				    cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
- 					lbs_deb_host(
- 					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
--					list_del((struct list_head *)cmdnode);
-+					list_del(&cmdnode->list);
- 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
- 
- 					ret = 0;
-@@ -1811,7 +1811,7 @@ int lbs_execute_next_command(struct lbs_
- 				    (adapter->psstate == PS_STATE_PRE_SLEEP)) {
- 					lbs_deb_host(
- 					       "EXEC_NEXT_CMD: ignore EXIT_PS cmd in sleep\n");
--					list_del((struct list_head *)cmdnode);
-+					list_del(&cmdnode->list);
- 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
- 					adapter->needtowakeup = 1;
- 
-@@ -1823,7 +1823,7 @@ int lbs_execute_next_command(struct lbs_
- 				       "EXEC_NEXT_CMD: sending EXIT_PS\n");
- 			}
- 		}
--		list_del((struct list_head *)cmdnode);
-+		list_del(&cmdnode->list);
- 		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
- 			    le16_to_cpu(cmdptr->command));
- 		DownloadcommandToStation(priv, cmdnode);
