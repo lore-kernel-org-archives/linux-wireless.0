@@ -1,488 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756497AbXLSPsO (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:2451 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbXLFJPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:48:14 -0500
-Message-Id: <20071219010338.951084000@sipsolutions.net> (sfid-20071219_154821_200480_EE7DC4EA)
-References: <20071219010328.762470000@sipsolutions.net>
-Date: Wed, 19 Dec 2007 02:03:29 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/9] cfg80211/nl80211: introduce key handling
-Mime-Version: 1.0
+	Thu, 6 Dec 2007 04:15:33 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] libertas: fix data packet size errors
+Date: Thu, 6 Dec 2007 10:15:54 +0100
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200712061015.54478.hs4233@mail.mn-solutions.de> (sfid-20071206_091750_821738_8CE53D0C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This introduces key handling to cfg80211/nl80211. Default
-and group keys can be added, changed and removed; sequence
-counters for each key can be retrieved.
+I wondered about junk bytes at the end when using "lbsdebug +hex
++host" until I noticed that firmware for the CF card sends my
+extranous bytes. It says "I have 20 bytes", I take 20 bytes, but
+the last 8 bytes of this are just data junk.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Also, in the new lbs_cmd() where was a size miscalulation
+that made itself clear after fixing this bug.
+
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+
 ---
- include/linux/nl80211.h |   34 +++++
- include/net/cfg80211.h  |   44 +++++++
- net/wireless/core.c     |    3 
- net/wireless/nl80211.c  |  289 ++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 370 insertions(+)
+The length the low-level-driver (usb, cf, sdio)
+if_XXX_receive_cmdres() reports back via *len ends up
+in "priv->upld_len". upld_len is only used in debugging
+statements, all code was looking at the "__le16 size" field
+anyway.
 
---- everything.orig/include/linux/nl80211.h	2007-12-18 23:29:54.763041612 +0100
-+++ everything/include/linux/nl80211.h	2007-12-19 00:50:15.363022189 +0100
-@@ -37,6 +37,16 @@
-  *	userspace to request deletion of a virtual interface, then requires
-  *	attribute %NL80211_ATTR_IFINDEX.
-  *
-+ * @NL80211_CMD_GET_KEY: Get sequence counter information for a key specified
-+ *	by %NL80211_ATTR_KEY_IDX and/or %NL80211_ATTR_MAC.
-+ * @NL80211_CMD_SET_KEY: Set key attributes %NL80211_ATTR_KEY_DEFAULT or
-+ *	%NL80211_ATTR_KEY_THRESHOLD.
-+ * @NL80211_CMD_NEW_KEY: add a key with given %NL80211_ATTR_KEY_DATA,
-+ *	%NL80211_ATTR_KEY_IDX, %NL80211_ATTR_MAC and %NL80211_ATTR_KEY_CIPHER
-+ *	attributes.
-+ * @NL80211_CMD_DEL_KEY: delete a key identified by %NL80211_ATTR_KEY_IDX
-+ *	or %NL80211_ATTR_MAC.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -54,6 +64,11 @@ enum nl80211_commands {
- 	NL80211_CMD_NEW_INTERFACE,
- 	NL80211_CMD_DEL_INTERFACE,
- 
-+	NL80211_CMD_GET_KEY,
-+	NL80211_CMD_SET_KEY,
-+	NL80211_CMD_NEW_KEY,
-+	NL80211_CMD_DEL_KEY,
-+
- 	/* add commands here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -75,6 +90,17 @@ enum nl80211_commands {
-  * @NL80211_ATTR_IFNAME: network interface name
-  * @NL80211_ATTR_IFTYPE: type of virtual interface, see &enum nl80211_iftype
-  *
-+ * @NL80211_ATTR_MAC: MAC address (various uses)
-+ *
-+ * @NL80211_ATTR_KEY_DATA: (temporal) key data; for TKIP this consists of
-+ *	16 bytes encryption key followed by 8 bytes each for TX and RX MIC
-+ *	keys
-+ * @NL80211_ATTR_KEY_IDX: key ID (u8, 0-3)
-+ * @NL80211_ATTR_KEY_CIPHER: key cipher suite (u32, as defined by IEEE 802.11
-+ *	section 7.3.2.25.1, e.g. 0x000FAC04)
-+ * @NL80211_ATTR_KEY_SEQ: transmit key sequence number (IV/PN) for TKIP and
-+ *	CCMP keys, each six bytes in little endian
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -89,6 +115,14 @@ enum nl80211_attrs {
- 	NL80211_ATTR_IFNAME,
- 	NL80211_ATTR_IFTYPE,
- 
-+	NL80211_ATTR_MAC,
-+
-+	NL80211_ATTR_KEY_DATA,
-+	NL80211_ATTR_KEY_IDX,
-+	NL80211_ATTR_KEY_CIPHER,
-+	NL80211_ATTR_KEY_SEQ,
-+	NL80211_ATTR_KEY_DEFAULT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- everything.orig/net/wireless/nl80211.c	2007-12-18 23:29:54.883026638 +0100
-+++ everything/net/wireless/nl80211.c	2007-12-19 00:50:15.363022189 +0100
-@@ -61,6 +61,14 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFNAME] = { .type = NLA_NUL_STRING, .len = IFNAMSIZ-1 },
-+
-+	[NL80211_ATTR_MAC] = { .type = NLA_BINARY, .len = ETH_ALEN },
-+
-+	[NL80211_ATTR_KEY_DATA] = { .type = NLA_BINARY,
-+				    .len = WLAN_MAX_KEY_LEN },
-+	[NL80211_ATTR_KEY_IDX] = { .type = NLA_U8 },
-+	[NL80211_ATTR_KEY_CIPHER] = { .type = NLA_U32 },
-+	[NL80211_ATTR_KEY_DEFAULT] = { .type = NLA_FLAG },
- };
- 
- /* message building helper */
-@@ -335,6 +343,263 @@ static int nl80211_del_interface(struct 
- 	return err;
- }
- 
-+struct get_key_cookie {
-+	struct sk_buff *msg;
-+	int error;
-+};
-+
-+static void get_key_callback(void *c, struct key_params *params)
-+{
-+	struct get_key_cookie *cookie = c;
-+
-+	if (params->key)
-+		NLA_PUT(cookie->msg, NL80211_ATTR_KEY_DATA,
-+			params->key_len, params->key);
-+
-+	if (params->seq)
-+		NLA_PUT(cookie->msg, NL80211_ATTR_KEY_SEQ,
-+			params->seq_len, params->seq);
-+
-+	if (params->cipher)
-+		NLA_PUT_U32(cookie->msg, NL80211_ATTR_KEY_CIPHER,
-+			    params->cipher);
-+
-+	return;
-+ nla_put_failure:
-+	cookie->error = 1;
-+}
-+
-+static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	u8 key_idx = 0;
-+	u8 *mac_addr = NULL;
-+	struct get_key_cookie cookie = {
-+		.error = 0,
-+	};
-+	void *hdr;
-+	struct sk_buff *msg;
-+
-+	if (info->attrs[NL80211_ATTR_KEY_IDX])
-+		key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	if (key_idx > 3)
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_MAC])
-+		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->get_key) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-+	if (!msg) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+			     NL80211_CMD_NEW_KEY);
-+
-+	if (IS_ERR(hdr)) {
-+		err = PTR_ERR(hdr);
-+		goto out;
-+	}
-+
-+	cookie.msg = msg;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
-+	NLA_PUT_U8(msg, NL80211_ATTR_KEY_IDX, key_idx);
-+	if (mac_addr)
-+		NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+
-+	rtnl_lock();
-+	err = drv->ops->get_key(&drv->wiphy, dev, key_idx, mac_addr,
-+				&cookie, get_key_callback);
-+	rtnl_unlock();
-+
-+	if (err)
-+		goto out;
-+
-+	if (cookie.error)
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+	err = genlmsg_unicast(msg, info->snd_pid);
-+	goto out;
-+
-+ nla_put_failure:
-+	err = -ENOBUFS;
-+	nlmsg_free(msg);
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
-+
-+static int nl80211_set_key(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	u8 key_idx;
-+
-+	if (!info->attrs[NL80211_ATTR_KEY_IDX])
-+		return -EINVAL;
-+
-+	key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	if (key_idx > 3)
-+		return -EINVAL;
-+
-+	/* currently only support setting default key */
-+	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
-+		return -EINVAL;
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->set_default_key) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	err = drv->ops->set_default_key(&drv->wiphy, dev, key_idx);
-+	rtnl_unlock();
-+
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
-+
-+static int nl80211_new_key(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	struct key_params params;
-+	u8 key_idx = 0;
-+	u8 *mac_addr = NULL;
-+
-+	memset(&params, 0, sizeof(params));
-+
-+	if (!info->attrs[NL80211_ATTR_KEY_CIPHER])
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_KEY_DATA]) {
-+		params.key = nla_data(info->attrs[NL80211_ATTR_KEY_DATA]);
-+		params.key_len = nla_len(info->attrs[NL80211_ATTR_KEY_DATA]);
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_KEY_IDX])
-+		key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	params.cipher = nla_get_u32(info->attrs[NL80211_ATTR_KEY_CIPHER]);
-+
-+	if (info->attrs[NL80211_ATTR_MAC])
-+		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+
-+	if (key_idx > 3)
-+		return -EINVAL;
-+
-+	/*
-+	 * Disallow pairwise keys with non-zero index unless it's WEP
-+	 * (because current deployments use pairwise WEP keys with
-+	 * non-zero indizes but 802.11i clearly specifies to use zero)
-+	 */
-+	if (mac_addr && key_idx &&
-+	    params.cipher != WLAN_CIPHER_SUITE_WEP40 &&
-+	    params.cipher != WLAN_CIPHER_SUITE_WEP104)
-+		return -EINVAL;
-+
-+	/* TODO: add definitions for the lengths to linux/ieee80211.h */
-+	switch (params.cipher) {
-+	case WLAN_CIPHER_SUITE_WEP40:
-+		if (params.key_len != 5)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		if (params.key_len != 32)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		if (params.key_len != 16)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		if (params.key_len != 13)
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->add_key) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	err = drv->ops->add_key(&drv->wiphy, dev, key_idx, mac_addr, &params);
-+	rtnl_unlock();
-+
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
-+
-+static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	u8 key_idx = 0;
-+	u8 *mac_addr = NULL;
-+
-+	if (info->attrs[NL80211_ATTR_KEY_IDX])
-+		key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	if (key_idx > 3)
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_MAC])
-+		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->del_key) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	err = drv->ops->del_key(&drv->wiphy, dev, key_idx, mac_addr);
-+	rtnl_unlock();
-+
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -374,6 +639,30 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_GET_KEY,
-+		.doit = nl80211_get_key,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
-+	{
-+		.cmd = NL80211_CMD_SET_KEY,
-+		.doit = nl80211_set_key,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
-+	{
-+		.cmd = NL80211_CMD_NEW_KEY,
-+		.doit = nl80211_new_key,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
-+	{
-+		.cmd = NL80211_CMD_DEL_KEY,
-+		.doit = nl80211_del_key,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- /* multicast groups */
---- everything.orig/net/wireless/core.c	2007-12-18 23:29:54.993022461 +0100
-+++ everything/net/wireless/core.c	2007-12-19 00:50:15.363022189 +0100
-@@ -184,6 +184,9 @@ struct wiphy *wiphy_new(struct cfg80211_
- 	struct cfg80211_registered_device *drv;
- 	int alloc_size;
- 
-+	WARN_ON(!ops->add_key && ops->del_key);
-+	WARN_ON(ops->add_key && !ops->del_key);
-+
- 	alloc_size = sizeof(*drv) + sizeof_priv;
- 
- 	drv = kzalloc(alloc_size, GFP_KERNEL);
---- everything.orig/include/net/cfg80211.h	2007-12-18 23:29:54.853023383 +0100
-+++ everything/include/net/cfg80211.h	2007-12-19 00:50:15.363022189 +0100
-@@ -49,6 +49,26 @@ extern int ieee80211_radiotap_iterator_n
-    struct ieee80211_radiotap_iterator *iterator);
- 
- 
-+ /**
-+ * struct key_params - key information
-+ *
-+ * Information about a key
-+ *
-+ * @key: key material
-+ * @key_len: length of key material
-+ * @cipher: cipher suite selector
-+ * @seq: sequence counter (IV/PN) for TKIP and CCMP keys, only used
-+ *	with the get_key() callback, must be in little endian,
-+ *	length given by @seq_len.
-+ */
-+struct key_params {
-+	u8 *key;
-+	u8 *seq;
-+	int key_len;
-+	int seq_len;
-+	u32 cipher;
-+};
-+
- /* from net/wireless.h */
- struct wiphy;
- 
-@@ -71,6 +91,18 @@ struct wiphy;
-  *
-  * @change_virtual_intf: change type of virtual interface
-  *
-+ * @add_key: add a key with the given parameters. @mac_addr will be %NULL
-+ *	when adding a group key.
-+ *
-+ * @get_key: get information about the key with the given parameters.
-+ *	@mac_addr will be %NULL when requesting information for a group
-+ *	key. All pointers given to the @callback function need not be valid
-+ *	after it returns.
-+ *
-+ * @del_key: remove a key given the @mac_addr (%NULL for a group key)
-+ *	and @key_index
-+ *
-+ * @set_default_key: set the default key on an interface
-  */
- struct cfg80211_ops {
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
-@@ -78,6 +110,18 @@ struct cfg80211_ops {
- 	int	(*del_virtual_intf)(struct wiphy *wiphy, int ifindex);
- 	int	(*change_virtual_intf)(struct wiphy *wiphy, int ifindex,
- 				       enum nl80211_iftype type);
-+
-+	int	(*add_key)(struct wiphy *wiphy, struct net_device *netdev,
-+			   u8 key_index, u8 *mac_addr,
-+			   struct key_params *params);
-+	int	(*get_key)(struct wiphy *wiphy, struct net_device *netdev,
-+			   u8 key_index, u8 *mac_addr, void *cookie,
-+			   void (*callback)(void *cookie, struct key_params*));
-+	int	(*del_key)(struct wiphy *wiphy, struct net_device *netdev,
-+			   u8 key_index, u8 *mac_addr);
-+	int	(*set_default_key)(struct wiphy *wiphy,
-+				   struct net_device *netdev,
-+				   u8 key_index);
- };
- 
- #endif /* __NET_CFG80211_H */
+We might as well remove "priv->upld_len" completely.
 
--- 
 
+Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-12-06 10:48:02.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2007-12-06 11:02:43.000000000 +0100
+@@ -373,6 +373,9 @@ static int if_cs_receive_cmdres(struct l
+ 	if (*len & 1)
+ 		data[*len-1] = if_cs_read8(priv->card, IF_CS_C_CMD);
+ 
++	/* This is a workaround for a firmware that reports too much
++	 * bytes */
++	*len -= 8
+ 	ret = 0;
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d, len %d", ret, *len);
+Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-12-06 10:42:41.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-12-06 10:50:02.000000000 +0100
+@@ -882,7 +882,7 @@ int lbs_process_rx_command(struct lbs_pr
+ 
+ 	if (adapter->cur_cmd->pdata_size) {
+ 		struct cmd_ds_gen *r = (struct cmd_ds_gen *)resp;
+-		u16 sz = cpu_to_le16(resp->size);
++		u16 sz = cpu_to_le16(resp->size) - S_DS_GEN;
+ 		if (sz > *adapter->cur_cmd->pdata_size) {
+ 			lbs_pr_err("response 0x%04x doesn't fit into "
+ 				"buffer (%d > %d)\n", respcmd,
