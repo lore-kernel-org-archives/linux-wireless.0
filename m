@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44015 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756854AbXLQXkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 18:40:33 -0500
-Message-ID: <476708EF.10403@garzik.org> (sfid-20071217_234039_117782_0924CB55)
-Date: Mon, 17 Dec 2007 18:40:31 -0500
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Please pull 'upstream-jgarzik' branch of wireless-2.6
-References: <20071216043419.GF3096@tuxdriver.com> <47670514.4030204@garzik.org>
-In-Reply-To: <47670514.4030204@garzik.org>
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48548
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753153AbXLGDuZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 22:50:25 -0500
+Date: Thu, 06 Dec 2007 19:50:24 -0800 (PST)
+Message-Id: <20071206.195024.42638255.davem@davemloft.net> (sfid-20071207_035027_488000_AB5C8A51)
+To: mb@bu3sch.de
+Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200712062233.18634.mb@bu3sch.de>
+References: <20071205.183628.211180882.davem@davemloft.net>
+	<20071206212525.GA6509@bougret.hpl.hp.com>
+	<200712062233.18634.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hum, this required merging also, and broke the build too :/
+From: Michael Buesch <mb@bu3sch.de>
+Date: Thu, 6 Dec 2007 22:33:18 +0100
 
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=20
-=91iwl3945_alive_start=92:
-drivers/net/wireless/iwlwifi/iwl3945-base.c:6285: error: implicit=20
-declaration of function =91iwl_rate_control_unregister=92
-make[4]: *** [drivers/net/wireless/iwlwifi/iwl3945-base.o] Error 1
-make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+> On Thursday 06 December 2007 22:25:25 Jean Tourrilhes wrote:
+> > On Wed, Dec 05, 2007 at 06:36:28PM -0800, David Miller wrote:
+> > 	Now, I'm wondering how to deal with unaligned access in
+> > userspace. If you get data from hardware or the network, you can not
+> > guarantee that everything will always be aligned, so we need a way to
+> > deal with it.
+> > 	In the kernel, we have get_unaligned(). I wonder what's the
+> > equivalent in userspace.
+> 
+> Userspace handles this transparently through fault traps.
 
-I'll leave it there and assume that you will send a fix --on top of--=20
-netdev#upstream ...
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It does not, the process gets a SIGBUS.
