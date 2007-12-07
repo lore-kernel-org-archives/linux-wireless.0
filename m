@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:1091 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755689AbXLLQwI (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:58621 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553AbXLGLgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 11:52:08 -0500
-Received: by py-out-1112.google.com with SMTP id u77so773499pyb.16
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2007 08:52:06 -0800 (PST)
-Message-ID: <43e72e890712120852u18585536yd2a040d772f873e3@mail.gmail.com> (sfid-20071212_165213_567843_9C05F2CF)
-Date: Wed, 12 Dec 2007 11:52:05 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: Misleading PCI id information on chipsets supported by ath5k
-Cc: "Joachim Frieben" <jfrieben@hotmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <40f31dec0712112237rc9f7c06g9c1c5f46943e1d0@mail.gmail.com>
+	Fri, 7 Dec 2007 06:36:53 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Date: Fri, 7 Dec 2007 12:35:11 +0100
+Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+References: <20071206212525.GA6509@bougret.hpl.hp.com> <20071206214341.GA6821@bougret.hpl.hp.com> <20071206.195214.09557695.davem@davemloft.net>
+In-Reply-To: <20071206.195214.09557695.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <BAY134-W251B269AE3F727106D931FD4640@phx.gbl>
-	 <40f31dec0712112237rc9f7c06g9c1c5f46943e1d0@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712071235.11969.mb@bu3sch.de> (sfid-20071207_113706_910393_C8A904DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 12, 2007 1:37 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+On Friday 07 December 2007 04:52:14 David Miller wrote:
+> From: Jean Tourrilhes <jt@hpl.hp.com>
+> Date: Thu, 6 Dec 2007 13:43:41 -0800
+> 
+> > On Thu, Dec 06, 2007 at 10:33:18PM +0100, Michael Buesch wrote:
+> > > Userspace handles this transparently through fault traps.
+> > 
+> > 	This is exactly what I was assuming. On the SPARC, in this
+> > instance, it did not (check back earlier in this discussion).
+> 
+> Right, you get a SIGBUS, and this is what will happen on
+> MIPS as well.
+> 
+> It is even defined in the application ABIs for these platforms that
+> all objects must be aligned to their type's natural size.
+> 
+> 
 
-> > Strange enough, 001c is cited as an [unsupported] (b/g) device whereas 0013 should be an (a/b/g) device which is apparently wrong. So, either the PCI id is not an appropriate way to label whether a device is supported or not, or the support page is wrong. Needless to say that the DWL-G520 does not work with ath5k. Right now, it does not even scan access points at all. Could some authorized person have a look into this and make the necessary corrections on the web page?
+So, how do we handle unaligned data in userspace then?
+A _lot_ of applications are broken if that's right what you say.
 
-The wiki lets anyone make edits, you just need to register first.
-
-  Luis
+-- 
+Greetings Michael.
