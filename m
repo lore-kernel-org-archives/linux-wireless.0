@@ -1,101 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:57267 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762770AbXLMG7m (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48998 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754260AbXLGVix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:42 -0500
-Subject: [PATCH 77/48] libertas: kill rx_urb_recall and eth_dev members of struct usb_card_rec
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i30-0005tD-19@shinybook.infradead.org> (sfid-20071213_070014_731168_0EC9304C)
-Date: Thu, 13 Dec 2007 01:59:54 -0500
+	Fri, 7 Dec 2007 16:38:53 -0500
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20071207192756.GA15864@bougret.hpl.hp.com> (sfid-20071207_192851_749770_5C5B444C)
+References: <1196940519.3980.51.camel@localhost.localdomain>
+	 <20071206191150.GC5237@bougret.hpl.hp.com>
+	 <1197022818.2603.20.camel@localhost.localdomain>
+	 <20071207192756.GA15864@bougret.hpl.hp.com>
+	 (sfid-20071207_192851_749770_5C5B444C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7Kc5bc2WxLil3+7PWJBH"
+Date: Fri, 07 Dec 2007 22:38:06 +0100
+Message-Id: <1197063487.4171.26.camel@johannes.berg> (sfid-20071207_213910_942927_B9FB01E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 18:36:35 -0500
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/if_usb.c |   12 ++----------
- drivers/net/wireless/libertas/if_usb.h |    3 ---
- 2 files changed, 2 insertions(+), 13 deletions(-)
+--=-7Kc5bc2WxLil3+7PWJBH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index b19a6c9..02192e8 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -175,8 +175,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 				       "Rx URB allocation failed\n");
- 				goto dealloc;
- 			}
--			cardp->rx_urb_recall = 0;
--
- 			cardp->bulk_in_size =
- 				le16_to_cpu(endpoint->wMaxPacketSize);
- 			cardp->bulk_in_endpointAddr =
-@@ -232,8 +230,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 	cardp->priv = priv;
- 	cardp->priv->fw_ready = 1;
- 
--	cardp->eth_dev = priv->dev;
--
- 	priv->hw_host_to_card = if_usb_host_to_card;
- 	priv->hw_get_int_status = if_usb_get_int_status;
- 	priv->hw_read_event_cause = if_usb_read_event_cause;
-@@ -978,15 +974,13 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	if (priv->psstate != PS_STATE_FULL_POWER)
- 		return -1;
- 
--	netif_device_detach(cardp->eth_dev);
-+	netif_device_detach(priv->dev);
- 	netif_device_detach(priv->mesh_dev);
- 
- 	/* Unlink tx & rx urb */
- 	usb_kill_urb(cardp->tx_urb);
- 	usb_kill_urb(cardp->rx_urb);
- 
--	cardp->rx_urb_recall = 1;
--
- 	lbs_deb_leave(LBS_DEB_USB);
- 	return 0;
- }
-@@ -998,11 +992,9 @@ static int if_usb_resume(struct usb_interface *intf)
- 
- 	lbs_deb_enter(LBS_DEB_USB);
- 
--	cardp->rx_urb_recall = 0;
--
- 	if_usb_submit_rx_urb(cardp);
- 
--	netif_device_attach(cardp->eth_dev);
-+	netif_device_attach(priv->dev);
- 	netif_device_attach(priv->mesh_dev);
- 
- 	lbs_deb_leave(LBS_DEB_USB);
-diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
-index f028df1..668410f 100644
---- a/drivers/net/wireless/libertas/if_usb.h
-+++ b/drivers/net/wireless/libertas/if_usb.h
-@@ -47,7 +47,6 @@ struct read_cb_info {
- 
- /** USB card description structure*/
- struct usb_card_rec {
--	struct net_device *eth_dev;
- 	struct usb_device *udev;
- 	struct urb *rx_urb, *tx_urb;
- 	struct lbs_private *priv;
-@@ -75,8 +74,6 @@ struct usb_card_rec {
- 	u32 usb_event_cause;
- 	u8 usb_int_cause;
- 
--	u8 rx_urb_recall;
--
- 	s8 bootcmdresp;
- };
- 
--- 
-1.5.3.4
+
+> > >         __u32           enc_capa;       /* IW_ENC_CAPA_* bit field */
+> > > +
+> > > +       /* Do *NOT* use those fields, they are just used as padding t=
+o get
+> > > +        * proper alignement with user space */
+> > > +       __s32           min_pms;
+> > > +       __s32           max_pms;
+> > > +       __u16           pms_flags;
+> > > +       __s32           modul_capa;
+> > > +       __u32           bitrate_capa;
+> > > +
+> > > +       __u32           scan_capa;      /* IW_SCAN_CAPA_* bit field *=
+/
+
+> 	Those fields are defined and used in userspace, please check
+> wireless.21.h in Wireless Tools.
+
+Eww. That's absolutely tasteless.
+
+johannes
+
+--=-7Kc5bc2WxLil3+7PWJBH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR1m9PaVg1VMiehFYAQLieA//WHKPfJgaug0W8/UTrZ544339eUeYH8/y
+84Kpa46D3vu5FV5SyUdgKHQ/XPJN79Sh+6WNEWTgUpB8hPR2AGjbTmwjMFY38ZeF
+vi1wkw01yxjbbPKZWeQLPcr/4LHNJxeMIXf6sqAVmY2gDb8p6Ew+JXxLXmw2aZHR
+l7euM+N3SVAxKVo+5FsZeKZEbrGicOcBxbvPMeXOgnBcF2+9cnr/qEOL8Fcoz6Id
+NlD5fqIRmGbbSAmbK8f3s84pfYoA2nyGGTBOyxX9GY1hKg1nNzLuiiTAX+cMVTJ5
+MIoukqRbl3NXUBr3Eh/VnolJrIn7AxpF9wiJ/IKJimw1lDF4D6l9tax6l3aCe7b6
+FRpbtyITq/D7NR2UldpjWRtnASOVSsvBAhc+Jh7KUQa8q3NztOkKUFpweIh9TORs
+Fju7Ykk3BMhVSo7pqvPUSvZrBBPb1bGebgVFNtQ+wbahPQdNMtnfKxtTx2uHy7Zt
+hGqREkzes+eWorcQv0RBfz0b0P7n4cr4JLQkXi6qqzBuy87SgY/mOq7Yrpq8w0+i
+FYBvTUfoYpn35f2rImAE1khnfYu6H/nZnvbrMqKTr18kqOeNEFwGi/rMMwLceI5G
+qn4JPwa+AVFAGJMLMXEfgX76EwS+A/SBuRm/OZCPGoH20OAfL7JoxzdNeImXbhbj
+XBK8nNWJRiQ=
+=4Ax8
+-----END PGP SIGNATURE-----
+
+--=-7Kc5bc2WxLil3+7PWJBH--
 
