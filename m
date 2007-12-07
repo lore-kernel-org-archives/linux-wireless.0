@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59443 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:51195 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbXLSQ3z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:29:55 -0500
-MIME-Version: 1.0
-Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-Date: Wed, 19 Dec 2007 18:29:37 +0200
-Message-ID: <C07C4589BE74A34981C3C3525EE1F8010308C398@hasmsx412.ger.corp.intel.com> (sfid-20071219_163000_905159_C2A2EC80)
-In-Reply-To: <1198079220.4747.10.camel@johannes.berg>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070782762-git-send-email-ron.rindjunsky@intel.com> <1197915515.4885.86.camel@johannes.berg> <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com> (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg> <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com> <1198079220.4747.10.camel@johannes.berg>
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<flamingice@sourmilk.net>, "Zhu, Yi" <yi.zhu@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752187AbXLGKa0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2007 05:30:26 -0500
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+From: Dan Williams <dcbw@redhat.com>
+To: jt@hpl.hp.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20071206191150.GC5237@bougret.hpl.hp.com>
+References: <1196940519.3980.51.camel@localhost.localdomain>
+	 <20071206191150.GC5237@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Fri, 07 Dec 2007 05:20:18 -0500
+Message-Id: <1197022818.2603.20.camel@localhost.localdomain> (sfid-20071207_103030_815629_6C074530)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-12-06 at 11:11 -0800, Jean Tourrilhes wrote:
+> On Thu, Dec 06, 2007 at 06:28:39AM -0500, Dan Williams wrote:
+> > See the previous thread about fixing the ap_scan mess.  I think Jean's
+> > correct in asserting that we need more bits for scan capability.
+> > 
+> > This patch introduces scan capability bits for WEXT; hopefully cfg80211
+> > can also pick up equivalent functionality.  Capability bits are provided
+> > for all the current options that may be passed to drivers in the
+> > iw_scan_req structure.  It can be assumed that if the driver reports the
+> > scan capability, that the driver respects the options specified in the
+> > iw_scan_req structure when performing the scan.
+> > 
+> > Clients can use logic like (cribbed from wpa_supplicant's driver_wext.c)
+> > this to figure out whether or not the capability bits are supported:
+> > 
+> > struct iwreq iwr;
+> > struct iw_range *range;
+> > 
+> > <set up iwr/range for request>
+> > 
+> > if (ioctl(drv->ioctl_sock, SIOCGIWRANGE, &iwr) == 0) {
+> > 	u8 minlen = ((char *) &range->scan_capa) - (char *) range + sizeof(range->scan_capa);
+> > 
+> > 	if (iwr.u.data.length >= minlen) {
+> > 		/* SCAN_CAPA is supported */
+> > 	}
+> > }
+> > 
+> > Jean; what do you think?
+> 
+> 	Actually, I like your new proposal. I told you there was a
+> gotcha, you need to add some padding to not screw up userspace. Note
+> that we have already some padding in that structure (look at 'old_*'),
+> so it's not the first time we do that.
+> 	Basically, it should look like the patch below...
+> 
+> 	Regards,
+> 
+> 	Jean
+> 
+> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+> 
+> --- linux/include/linux/wireless.d1.h   2007-12-06 11:04:16.000000000 -0800
+> +++ linux/include/linux/wireless.h      2007-12-06 11:06:26.000000000 -0800
+> @@ -1040,6 +1040,16 @@ struct   iw_range
+>          * because each entry contain its channel index */
+>  
+>         __u32           enc_capa;       /* IW_ENC_CAPA_* bit field */
+> +
+> +       /* Do *NOT* use those fields, they are just used as padding to get
+> +        * proper alignement with user space */
+> +       __s32           min_pms;
+> +       __s32           max_pms;
+> +       __u16           pms_flags;
+> +       __s32           modul_capa;
+> +       __u32           bitrate_capa;
+> +
+> +       __u32           scan_capa;      /* IW_SCAN_CAPA_* bit field */
+>  };
 
+Can you explain a bit more about this patch?  Also, if nobody is
+supposed to use these fields, shouldn't their names be 'reserved' or
+something like that?
 
->-----Original Message-----
->From: Johannes Berg [mailto:johannes@sipsolutions.net]
->Sent: Wednesday, December 19, 2007 5:47 PM
->To: Rindjunsky, Ron
->Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org;
->flamingice@sourmilk.net; Winkler, Tomas; Zhu, Yi
->Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation
->reordering
->
->
->> > I'm just not sure why you'd want to. As far as I can the frames
->> already
->> > passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
->>
->> No, not passed it yet, they are still queued for reordering, but as
->> aggregation is being tear down I am expected to drop the frames
->> that are still not in order.
->
->But haven't they passed through __ieee80211_rx() as the aggregate
-frame?
+Thanks,
+Dan
 
-AMsDU aggregation is different from AMpDU aggregation. For AMPDU the
-disaggregating is happening let say in PHY level. First one is many
-packets in packed into one. Second one is packets in a row without ACK
-between them. (You answer with Block Ack to them). They appear as
-regular frames to mac80211 but they are not in order. Only ordered
-sequence might be passed to the network stack. So we might drop the
-frames are result of non order.
-So what Ron was concerning about is whether we it's not waste of time to
-pass packets through rx handler before we know the sequence is
-completed.
-
-Tomas
->johannes
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
