@@ -1,102 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51479 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751951AbXLYPAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 10:00:52 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 7/8 v3] mac80211: A-MPDU Rx handling DELBA requests
-Date: Tue, 25 Dec 2007 17:00:37 +0200
-Message-Id: <11985948452195-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150104_838642_81DA9BA5)
-In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from tranquility.mcc.ac.uk ([130.88.200.145]:64092 "EHLO
+	tranquility.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbXLGOsH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2007 09:48:07 -0500
+Message-ID: <47595D4E.6080901@gentoo.org> (sfid-20071207_144811_599046_34BEC380)
+Date: Fri, 07 Dec 2007 14:48:46 +0000
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: David Miller <davem@davemloft.net>, jt@hpl.hp.com,
+	shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+References: <20071206214341.GA6821@bougret.hpl.hp.com> <200712071235.11969.mb@bu3sch.de> <20071207.043407.72593148.davem@davemloft.net> <200712071436.08954.mb@bu3sch.de>
+In-Reply-To: <200712071436.08954.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch opens the flow to DELBA management frames, and handles end
-of A-MPDU session produced by this event.
+Michael Buesch wrote:
+> The wire protocol for the iv files is the following structure:
+> 
+> struct b43_iv {
+> 	be16 a;
+> 	union {
+> 		be16 x;
+> 		be32 y;
+> 	} ((attr_packed));
+> } ((attr_packed));
+> 
+> How do I handle that in userspace? In kernel space it's simple
+> (and we already use get_unaligned() for the 32bit value there).
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 39 insertions(+), 1 deletions(-)
+Please correct me if I'm wrong, but adding the "packed" attribute causes 
+gcc to generate extra instructions to avoid the potentially unaligned 
+accesses.
+(i.e. it basically does put_aligned/get_unaligned automatically)
 
-Index: wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
-===================================================================
---- wl2_6_24_rc5.orig/net/mac80211/ieee80211_sta.c
-+++ wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
-@@ -63,6 +63,8 @@
- #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
- #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
- #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
-+#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
-+#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
- 
- /* next values represent the buffer size for A-MPDU frame.
-  * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2) */
-@@ -1268,6 +1270,36 @@ void ieee80211_sta_stop_rx_ba_session(st
- 	sta_info_put(sta);
- }
- 
-+static void ieee80211_sta_process_delba(struct net_device *dev,
-+			struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+	u16 tid, params;
-+	u16 initiator;
-+	DECLARE_MAC_BUF(mac);
-+
-+	sta = sta_info_get(local, mgmt->sa);
-+	if (!sta)
-+		return;
-+
-+	params = le16_to_cpu(mgmt->u.action.u.delba.params);
-+	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
-+	initiator = (params & IEEE80211_DELBA_PARAM_INITIATOR_MASK) >> 11;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	if (net_ratelimit())
-+		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
-+			print_mac(mac, mgmt->sa), tid,
-+			mgmt->u.action.u.delba.reason_code);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	if (initiator == WLAN_BACK_INITIATOR)
-+		ieee80211_sta_stop_rx_ba_session(dev, sta->addr, tid,
-+						 WLAN_BACK_INITIATOR, 0);
-+	sta_info_put(sta);
-+}
-+
- /*
-  * After receiving Block Ack Request (BAR) we activated a
-  * timer after each frame arrives from the originator.
-@@ -2222,9 +2254,15 @@ void ieee80211_rx_mgmt_action(struct net
- 				break;
- 			ieee80211_sta_process_addba_request(dev, mgmt, len);
- 			break;
-+		case WLAN_ACTION_DELBA:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.delba)))
-+				break;
-+			ieee80211_sta_process_delba(dev, mgmt, len);
-+			break;
- 		default:
- 			if (net_ratelimit())
--			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
-+			   printk(KERN_DEBUG "%s: Rx unknown A-MPDU action\n",
- 					dev->name);
- 			break;
- 		}
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Daniel
