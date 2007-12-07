@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44566 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757756AbXLQVMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 16:12:48 -0500
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197892362.4885.23.camel@johannes.berg>
-References: <20071217012517.882216322@gmx.de> >
-	 <20071217012550.213561122@gmx.de> >
-	 (sfid-20071217_012738_361990_F4488E8A)  <1197892362.4885.23.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 17 Dec 2007 22:12:45 +0100
-Message-Id: <1197925965.7505.24.camel@localhost> (sfid-20071217_211254_740225_DDAEDD10)
-Mime-Version: 1.0
+Received: from vs166246.vserver.de ([62.75.166.246]:42121 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbXLGAOQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 19:14:16 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Fix radio LED problem
+Date: Fri, 7 Dec 2007 01:12:35 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <474dfe58.85Rcj/BwOPxQm8eE%Larry.Finger@lwfinger.net> <200711291958.45631.mb@bu3sch.de> <47588E37.4080400@lwfinger.net>
+In-Reply-To: <47588E37.4080400@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712070112.35515.mb@bu3sch.de> (sfid-20071207_001419_116334_412E205A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Mon, 2007-12-17 at 12:52 +0100, Johannes Berg wrote:
-> > +config MAC80211_RCSIMPLE
-> > +	bool "'simple' rate control algorithm (DEPRECATED)"
-> > +	default n
-> > +	depends on MAC80211
-> > +	---help---
+On Friday 07 December 2007 01:05:11 Larry Finger wrote:
+> Sorry it has taken so long to answer, but I am traveling.
 > 
-> I'm pretty sure just "help" is preferred style these days.
+> Michael Buesch wrote:
+> > On Thursday 29 November 2007 00:48:40 Larry Finger wrote:
+> > 
+> >> @@ -2802,6 +2800,13 @@ static int b43_op_config(struct ieee8021
+> >>        out_unlock_mutex:
+> >>  	mutex_unlock(&wl->mutex);
+> >>  
+> >> +	/* if a LED is devoted to the radio and the switch is on, send
+> >> +	 * KEY_WLAN press/release keystrokes */
+> >> +	if (!err && dev->radio_hw_enable && &dev->led_radio) {
+> >                                             ^^^^^^^^^^^^^^^
+> > This condition is always true.
 > 
-> And I already said that I'd rather see a single patch that replaces
-> _SIMPLE with _PID.
+> It looks to me that the code uses the contents of the LED section of the SPROM to initialize
+> dev->led_radio. Can we be certain that the initialization will always be done?
+
+I think you didn't quite understand what I tried to say.
+Let's give a more obvious example:
+
+int a;
+if (&a) {
+	/* This is always true, as (&a) can't be a NULL pointer. */
+}
+
+Your condition above can never be false. (in practice)
+I guess you tried to check if a radio led exists.
+I'd suggest you do
+if (... && dev->led_radio.dev)
+
+The code in led.c does also assume that the LED is used, if struct b43_led->dev was
+assigned to something non-NULL. So I think that kind of check would be OK.
+But it might need an additional comment if done here outside of the led.c context.
+
+> >> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 1);
+> >> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 0);
+> >> +	}
+> >> +
+> > 
+> > Anyway, sending a key event here seems pretty bogus. The comment
+> > doesn't really say anything useful why this is needed.
 > 
-> I'd split up the patch series as follows:
->  1) API cleanup, including all rate control algorithms
->  2) PID replace SIMPLE
+> If a key event (down/up) is not sent, the LED remains off. This location may not be the best place,
+> but it is needed someplace, otherwise the switch must be cycled off/on to get the LED on.
 
-These two refer to stuff I'm happy with.
+So I guess we should do this at initialization and not in the config callback.
 
->  3..N) PID improvements
-
-These are patches that IMHO need further testing. They extend the PID
-controller concept in a non-standard way. Stefano says they help in some
-situations.
-
-> 
-> Although since this is all new code 2..N should probably be collapsed
-> into a single patch.
-
-See the comment above for why they're separate patches at the time of
-writing this.
-
-Mattias
-
+-- 
+Greetings Michael.
