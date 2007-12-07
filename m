@@ -1,87 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:32952 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755707AbXLQVKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 16:10:15 -0500
-Message-ID: <4766E5B5.1080400@garzik.org> (sfid-20071217_211020_540265_B80B0575)
-Date: Mon, 17 Dec 2007 16:10:13 -0500
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
-References: <20071216043148.GE3096@tuxdriver.com>
-In-Reply-To: <20071216043148.GE3096@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40672
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753180AbXLGDwP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 22:52:15 -0500
+Date: Thu, 06 Dec 2007 19:52:14 -0800 (PST)
+Message-Id: <20071206.195214.09557695.davem@davemloft.net> (sfid-20071207_035218_258052_49A6DA3A)
+To: jt@hpl.hp.com
+Cc: mb@bu3sch.de, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071206214341.GA6821@bougret.hpl.hp.com>
+References: <20071206212525.GA6509@bougret.hpl.hp.com>
+	<200712062233.18634.mb@bu3sch.de>
+	<20071206214341.GA6821@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Jeff,
-> 
-> A few more fixes for 2.6.24...let me know if there are any problems!
-> 
-> Thanks,
-> 
-> John
-> 
-> P.S.  The zd1211rw patch is already in netdev-2.6#upstream, but it
-> belongs in 2.6.24 as well.
-> 
-> ---
-> 
-> Individual patches available here:
-> 
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik
-> 
-> ---
-> 
-> The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
->   Linus Torvalds (1):
->         Linux 2.6.24-rc5
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-> 
-> Adrian Bunk (1):
->       wireless/ipw2200.c: add __dev{init,exit} annotations
-> 
-> Andrew Morton (1):
->       bcm43xx_debugfs sscanf fix
-> 
-> Cyrill Gorcunov (2):
->       ieee80211_rate: missed unlock
->       iwlwifi3945/4965: fix rate control algo reference leak
-> 
-> Dan Williams (1):
->       libertas: select WIRELESS_EXT
-> 
-> Larry Finger (1):
->       b43: Fix rfkill radio LED
-> 
-> Stefano Brivio (1):
->       libertas: add Dan Williams as maintainer
-> 
-> Ulrich Kunitz (1):
->       zd1211rw: Fix alignment problems
-> 
-> Zhu Yi (1):
->       iwlwifi: fix rf_kill state inconsistent during suspend and resume
-> 
->  MAINTAINERS                                    |    6 ++++
->  drivers/net/wireless/Kconfig                   |    1 +
->  drivers/net/wireless/b43/leds.c                |    4 ++
->  drivers/net/wireless/b43/main.c                |   22 +++++++-------
->  drivers/net/wireless/b43/rfkill.c              |   37 ++++++++++++++++++++---
->  drivers/net/wireless/bcm43xx/bcm43xx_debugfs.c |    2 +-
->  drivers/net/wireless/ipw2200.c                 |    7 ++--
->  drivers/net/wireless/iwlwifi/iwl3945-base.c    |    5 ++-
->  drivers/net/wireless/iwlwifi/iwl4965-base.c    |    5 ++-
->  drivers/net/wireless/zd1211rw/zd_mac.c         |   10 +++++-
->  net/mac80211/ieee80211_rate.c                  |    1 +
->  11 files changed, 76 insertions(+), 24 deletions(-)
+From: Jean Tourrilhes <jt@hpl.hp.com>
+Date: Thu, 6 Dec 2007 13:43:41 -0800
 
-pulled
+> On Thu, Dec 06, 2007 at 10:33:18PM +0100, Michael Buesch wrote:
+> > Userspace handles this transparently through fault traps.
+> 
+> 	This is exactly what I was assuming. On the SPARC, in this
+> instance, it did not (check back earlier in this discussion).
 
+Right, you get a SIGBUS, and this is what will happen on
+MIPS as well.
 
+It is even defined in the application ABIs for these platforms that
+all objects must be aligned to their type's natural size.
