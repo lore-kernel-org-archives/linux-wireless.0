@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:63172 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756903AbXL3WBo (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:55606 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbXLGTem (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Dec 2007 17:01:44 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so5002916fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2007 14:01:43 -0800 (PST)
-To: chris2553@googlemail.com
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sun, 30 Dec 2007 23:01:40 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <200712301311.42895.IvDoorn@gmail.com> <200712301926.45380.chris2553@googlemail.com>
-In-Reply-To: <200712301926.45380.chris2553@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712302301.40526.IvDoorn@gmail.com> (sfid-20071230_220153_215073_B5617DD1)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 7 Dec 2007 14:34:42 -0500
+Subject: Re: [PATCH] libertas: implement new scanning logic
+From: David Woodhouse <dwmw2@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1197054852.4465.7.camel@localhost.localdomain>
+References: <200711290927.15915.hs4233@mail.mn-solutions.de>
+	 <1196787130.4772.2.camel@localhost.localdomain>
+	 <200712071547.37944.hs4233@mail.mn-solutions.de>
+	 <1197050263.30465.7.camel@localhost.localdomain>
+	 <1197050743.13978.606.camel@pmac.infradead.org>
+	 <1197050996.30465.17.camel@localhost.localdomain>
+	 <1197051573.13978.612.camel@pmac.infradead.org>
+	 <1197051857.30465.30.camel@localhost.localdomain>
+	 <1197052412.13978.620.camel@pmac.infradead.org>
+	 <1197054852.4465.7.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 07 Dec 2007 19:34:38 +0000
+Message-Id: <1197056078.13978.629.camel@pmac.infradead.org> (sfid-20071207_193445_776997_93C81251)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-> > Here is the patch against the latest vanilla kernel,
-> > the previous piece of code was bugged since the header size check was
-> > incorrect, but that is fixed in this one.
-> >
-> 
-> Thanks. You'll be pleased to here that with this patch, the warning has gone 
-> away and laptop's connection to my wireless network is still fine. I'll be 
-> using it over the New Year holiday. If anything negative happens I'll let you 
-> know.
+On Fri, 2007-12-07 at 14:14 -0500, Dan Williams wrote:
+> You could, but there's not too much of a point in spending time on
+> this unless you've got a really good reason?  I'm sure there are more
+> important things to do in the driver...
 
-excellent news, I have a few other patches currently under testing,
-and if no big problems are reported with them rt2x00 2.6.14 will be
-released at the end of this week.
+Indeed. That's exactly the reason I left it returning IW_ENCODE_NOKEY
+for WPA, although my patch fixes it for WEP.
 
-Ivo
+-- 
+dwmw2
+
