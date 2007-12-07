@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52904.mail.re2.yahoo.com ([206.190.49.14]:45298 "HELO
-	web52904.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752010AbXLJQkf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 11:40:35 -0500
-Date: Mon, 10 Dec 2007 16:40:34 +0000 (GMT)
-From: Chris Rankin <rankincj@yahoo.com>
-Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20071209143237.1e608d9f@laptopd505.fenrus.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <224362.84373.qm@web52904.mail.re2.yahoo.com> (sfid-20071210_164038_957013_1162D53D)
+Received: from mx1.redhat.com ([66.187.233.31]:44375 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754191AbXLGTU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2007 14:20:56 -0500
+Subject: Re: [PATCH] libertas: implement new scanning logic
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1197052412.13978.620.camel@pmac.infradead.org>
+References: <200711290927.15915.hs4233@mail.mn-solutions.de>
+	 <1196787130.4772.2.camel@localhost.localdomain>
+	 <200712071547.37944.hs4233@mail.mn-solutions.de>
+	 <1197050263.30465.7.camel@localhost.localdomain>
+	 <1197050743.13978.606.camel@pmac.infradead.org>
+	 <1197050996.30465.17.camel@localhost.localdomain>
+	 <1197051573.13978.612.camel@pmac.infradead.org>
+	 <1197051857.30465.30.camel@localhost.localdomain>
+	 <1197052412.13978.620.camel@pmac.infradead.org>
+Content-Type: text/plain
+Date: Fri, 07 Dec 2007 14:14:12 -0500
+Message-Id: <1197054852.4465.7.camel@localhost.localdomain> (sfid-20071207_192104_439509_952BDF9E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- Arjan van de Ven <arjan@infradead.org> wrote:
-> > > I wonder if there's anything else in that area as well..
+On Fri, 2007-12-07 at 18:33 +0000, David Woodhouse wrote:
+> On Fri, 2007-12-07 at 13:24 -0500, Dan Williams wrote:
+> > You can really just take that NOKEY line out completely, you don't need
+> > anything else in this patch.
+> 
+> Well, there's no point in setting/clearing IW_ENCODE_DISABLED twice,
+> which is why I removed that bit...
+> 
+> > > -	if (   adapter->secinfo.wep_enabled
+> > > -	    || adapter->secinfo.WPAenabled
+> > > -	    || adapter->secinfo.WPA2enabled) {
+> > > -		dwrq->flags &= ~IW_ENCODE_DISABLED;
+> > > -	} else {
+> > > -		dwrq->flags |= IW_ENCODE_DISABLED;
+> > > -	}
+> > > -
+> > >  	memset(extra, 0, 16);
+> > >  
+> > >  	mutex_lock(&adapter->lock);
+> 
+> 
+> And since I don't see anywhere that we'd copy a WPA key into the
+> response, I figured it made sense to keep IW_ENCODE_NOKEY in this bit
+> too: 
+> 
+> > > @@ -1150,14 +1142,13 @@ static int lbs_get_encode(struct net_device *dev,
+> > >  		   || (adapter->secinfo.WPA2enabled)) {
+> > >  		/* return WPA enabled */
+> > >  		dwrq->flags &= ~IW_ENCODE_DISABLED;
+> > > +		dwrq->flags |= IW_ENCODE_NOKEY;
+> > >  	} else {
+> > >  		dwrq->flags |= IW_ENCODE_DISABLED;
+> > >  	}
+> 
+> I'd want to set up an AP with WPA and test it if I was going to actually
+> make it find and return the WPA key.
 
-This is what /proc/iomem contains:
+You could, but there's not too much of a point in spending time on this
+unless you've got a really good reason?  I'm sure there are more
+important things to do in the driver...
 
-00000000-0009f7ff : System RAM
-0009f800-0009ffff : reserved
-000a0000-000bffff : Video RAM area
-000c0000-000cbfff : Video ROM
-000e4000-000effff : Adapter ROM
-000f0000-000fffff : System ROM
-00100000-17ffdbff : System RAM
-  00100000-002adf17 : Kernel code
-  002adf18-0034a263 : Kernel data
-17ffdc00-17fffbff : ACPI Tables
-17fffc00-17ffffff : ACPI Non-volatile Storage
-e8000000-e8000fff : 0000:00:0d.0
-  e8000000-e8000fff : ohci_hcd
-e8001000-e8001fff : 0000:00:0d.1
-  e8001000-e8001fff : ohci_hcd
-e8002000-e8002fff : 0000:00:0e.0
-e8003000-e80030ff : 0000:00:0d.2
-  e8003000-e80030ff : ehci_hcd
-e8100000-e81fffff : PCI Bus #01
-  e8100000-e810ffff : 0000:01:00.0
-    e8100000-e810ffff : radeonfb mmio
-  e8120000-e813ffff : 0000:01:00.0
-ec000000-efffffff : 0000:00:00.0
-f0000000-f7ffffff : PCI Bus #01
-  f0000000-f7ffffff : 0000:01:00.0
-    f0000000-f7ffffff : radeonfb framebuffer
-fffe7000-ffffffff : reserved
+Dan
 
-# lspci -tvvv
--[0000:00]-+-00.0  Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge
-           +-01.0-[0000:01]----00.0  ATI Technologies Inc Radeon RV100 QY [Radeon 7000/VE]
-           +-07.0  Intel Corporation 82371AB/EB/MB PIIX4 ISA
-           +-07.1  Intel Corporation 82371AB/EB/MB PIIX4 IDE
-           +-07.2  Intel Corporation 82371AB/EB/MB PIIX4 USB
-           +-07.3  Intel Corporation 82371AB/EB/MB PIIX4 ACPI
-           +-0d.0  NEC Corporation USB
-           +-0d.1  NEC Corporation USB
-           +-0d.2  NEC Corporation USB 2.0
-           +-0e.0  Netgear MA301 802.11b Wireless PCI Adapter
-           +-0f.0  Creative Labs SB Live! EMU10k1
-           \-0f.1  Creative Labs SB Live! Game Port
-
-The wireless PC card is device 0000:00:0e.0. And replacing ioremap() with ioremap_nocache() did
-not help either.
-
-This is the PCI entry for the host bridge:
-
-00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (rev 03)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+
-FastB2B-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR-
-<PERR-
-        Latency: 64
-        Region 0: Memory at ec000000 (32-bit, prefetchable) [size=64M]
-        Capabilities: [a0] AGP version 1.0
-                Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64- HTrans- 64bit- FW- AGP3-
-Rate=x1,x2
-                Command: RQ=1 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW- Rate=x2
-
-One other thing I should mention is that this card works fine in an old P120/Zappa motherboard
-machine running Linux 2.4.34.
-
-Cheers,
-Chris
-
-
-
-      __________________________________________________________
-Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
 
