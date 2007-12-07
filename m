@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53145
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751167AbXLVE4X (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:5824 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752874AbXLGWW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:56:23 -0500
-Date: Fri, 21 Dec 2007 20:56:23 -0800 (PST)
-Message-Id: <20071221.205623.141035851.davem@davemloft.net> (sfid-20071222_045626_377386_7A7123A7)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 8/12]: Pull top-level ioctl dispatch logic into helper
- function.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 7 Dec 2007 17:22:27 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1854732pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 14:22:25 -0800 (PST)
+Message-ID: <43e72e890712071422j34ca2338xf98fda661f3c22fc@mail.gmail.com> (sfid-20071207_222230_268610_5A08193D)
+Date: Fri, 7 Dec 2007 17:22:24 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: 2.6.24-rc4-mm1
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <20071207021258.GA12624@darkstar.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071204211701.994dfce6.akpm@linux-foundation.org>
+	 <20071207021258.GA12624@darkstar.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Dec 6, 2007 9:12 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> Hi,
+>
+> 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
+> drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
+>
+> fix it with adjust the order of inline function body.
+>
+> Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
 
-[WEXT]: Pull top-level ioctl dispatch logic into helper function.
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   26 ++++++++++++++++++++------
- 1 files changed, 20 insertions(+), 6 deletions(-)
+Thanks Dave. What version of gcc were you using? I haven't run into this.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 18fa13c..03b0051 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1111,8 +1111,10 @@ static int wext_permission_check(unsigned int cmd)
- }
- 
- /* entry point from dev ioctl */
--int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
--		      void __user *arg)
-+static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
-+			       unsigned int cmd,
-+			       wext_ioctl_func standard,
-+			       wext_ioctl_func private)
- {
- 	int ret = wext_permission_check(cmd);
- 
-@@ -1121,12 +1123,24 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd,
--				     ioctl_standard_call,
--				     ioctl_private_call);
-+	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
- 	rtnl_unlock();
--	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
-+
-+	return ret;
-+}
-+
-+int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
-+		      void __user *arg)
-+{
-+	int ret = wext_ioctl_dispatch(net, ifr, cmd,
-+				      ioctl_standard_call,
-+				      ioctl_private_call);
-+
-+	if (ret > 0 &&
-+	    IW_IS_GET(cmd) &&
-+	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
- 		return -EFAULT;
-+
- 	return ret;
- }
- 
--- 
-1.5.4.rc1
+BTW, nothing new was added in this patch, things were just shifted,
+but even that may be copyrightable. Is it fair to assume you are
+licensing these changes under the same license the file is in?
 
+For this file we'd usually use:
+
+Changes-licensed-under: 3-clause-BSD
+
+For future reference:
+
+http://linuxwireless.org/en/developers/Documentation/SubmittingPatches#Changes-licensed-undertag
+
+  Luis
