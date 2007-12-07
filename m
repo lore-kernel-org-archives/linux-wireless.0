@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52902.mail.re2.yahoo.com ([206.190.49.12]:33547 "HELO
-	web52902.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751021AbXLIWGW (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51220 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbXLGNiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 17:06:22 -0500
-Date: Sun, 9 Dec 2007 22:06:21 +0000 (GMT)
-From: Chris Rankin <rankincj@yahoo.com>
-Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20071209133311.2db5ce4f@laptopd505.fenrus.org>
+	Fri, 7 Dec 2007 08:38:24 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+Date: Fri, 7 Dec 2007 14:36:08 +0100
+Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+References: <20071206214341.GA6821@bougret.hpl.hp.com> <200712071235.11969.mb@bu3sch.de> <20071207.043407.72593148.davem@davemloft.net>
+In-Reply-To: <20071207.043407.72593148.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <642708.11296.qm@web52902.mail.re2.yahoo.com> (sfid-20071209_220628_186444_745207D2)
+Message-Id: <200712071436.08954.mb@bu3sch.de> (sfid-20071207_133827_181650_4F08DD05)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- Arjan van de Ven <arjan@infradead.org> wrote:
-> can you check if the attr_mem is properly ioremap'd ?
-> (probably with ioremap_nocache)
+On Friday 07 December 2007 13:34:07 David Miller wrote:
+> From: Michael Buesch <mb@bu3sch.de>
+> Date: Fri, 7 Dec 2007 12:35:11 +0100
+> 
+> > So, how do we handle unaligned data in userspace then?
+> > A _lot_ of applications are broken if that's right what you say.
+> 
+> Applications make sure data is always properly aligned, that's how
+> it's handled.  I don't see what the big mystery is. :-)
 
-Can you elaborate, please? I am not familiar with these I/O primitives.
+That's not always possible. For example if we are handling
+some kind of wire protocol data.
 
-> I wonder if there's anything else in that area as well..
+let's give you some real world example: b43-fwcutter
 
-So I should check /proc/iomem? But wouldn't Linux complain if two PCI devices conflicted as you're
-suggesting?
+The wire protocol for the iv files is the following structure:
 
-Cheers,
-Chris
+struct b43_iv {
+	be16 a;
+	union {
+		be16 x;
+		be32 y;
+	} ((attr_packed));
+} ((attr_packed));
 
+How do I handle that in userspace? In kernel space it's simple
+(and we already use get_unaligned() for the 32bit value there).
 
-
-
-
-      ___________________________________________________________
-Support the World Aids Awareness campaign this month with Yahoo! For Good http://uk.promotions.yahoo.com/forgood/
+-- 
+Greetings Michael.
