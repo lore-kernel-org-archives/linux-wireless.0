@@ -1,45 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35678
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752453AbXLKEvk (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:35743 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874AbXLGSTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 23:51:40 -0500
-Date: Mon, 10 Dec 2007 20:51:39 -0800 (PST)
-Message-Id: <20071210.205139.262078026.davem@davemloft.net> (sfid-20071211_045145_279704_A882F9F6)
-To: dcbw@redhat.com
-Cc: jt@hpl.hp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1197346930.16807.7.camel@localhost.localdomain>
-References: <1197307403.18585.10.camel@localhost.localdomain>
-	<20071210.161144.190139513.davem@davemloft.net>
-	<1197346930.16807.7.camel@localhost.localdomain>
+	Fri, 7 Dec 2007 13:19:44 -0500
+Subject: Re: [PATCH] libertas: implement new scanning logic
+From: David Woodhouse <dwmw2@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1197050996.30465.17.camel@localhost.localdomain>
+References: <200711290927.15915.hs4233@mail.mn-solutions.de>
+	 <1196787130.4772.2.camel@localhost.localdomain>
+	 <200712071547.37944.hs4233@mail.mn-solutions.de>
+	 <1197050263.30465.7.camel@localhost.localdomain>
+	 <1197050743.13978.606.camel@pmac.infradead.org>
+	 <1197050996.30465.17.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 07 Dec 2007 18:19:33 +0000
+Message-Id: <1197051573.13978.612.camel@pmac.infradead.org> (sfid-20071207_181946_272091_8698F846)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Mon, 10 Dec 2007 23:22:10 -0500
 
-> On Mon, 2007-12-10 at 16:11 -0800, David Miller wrote:
-> > From: Dan Williams <dcbw@redhat.com>
-> > Date: Mon, 10 Dec 2007 12:23:23 -0500
+On Fri, 2007-12-07 at 13:09 -0500, Dan Williams wrote:
+> On Fri, 2007-12-07 at 18:05 +0000, David Woodhouse wrote:
+> > On Fri, 2007-12-07 at 12:57 -0500, Dan Williams wrote:
+> > > Yeah, go ahead.  I got distracted because of changes in > 2.6.23 kernels
+> > > that cause the driver not to build there, and haven't chased them down
+> > > yet.
 > > 
-> > > Is this an unconditional NAK for any changes to WEXT?
-> > 
-> > Well, it is at least completely proven that you cannot
-> > extend the structures without crapping all over random
-> > areas of the stack space of the user application.
-> > 
-> > So at a minimum you're going to get NAKs for any patch
-> > that does things that way.
+> > Hm, it's building for me. Where can I get hold of hardware?
 > 
-> So would another WEXT subcommand be acceptable to you?
+> Either get some from Manas, or find me.
 
-I might find using the existing spare space bearable, but
-even that is a stretch.
+I'll be in Boston next week. I'll try to find you.
 
-We need to completely deprecate WEXT as fast as possible
-and adding new features to it won't help that.
+Btw, is there any particular reason we're setting IW_ENCODE_NOKEY in
+lbs_get_encode()? Looks like we aren't returning it for WPA, but we
+could return it in WEP modes. This seems to work...
+
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index b8c93c0..1af140b 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1122,14 +1122,6 @@ static int lbs_get_encode(struct net_device *dev,
+ 		break;
+ 	}
+ 
+-	if (   adapter->secinfo.wep_enabled
+-	    || adapter->secinfo.WPAenabled
+-	    || adapter->secinfo.WPA2enabled) {
+-		dwrq->flags &= ~IW_ENCODE_DISABLED;
+-	} else {
+-		dwrq->flags |= IW_ENCODE_DISABLED;
+-	}
+-
+ 	memset(extra, 0, 16);
+ 
+ 	mutex_lock(&adapter->lock);
+@@ -1150,14 +1142,13 @@ static int lbs_get_encode(struct net_device *dev,
+ 		   || (adapter->secinfo.WPA2enabled)) {
+ 		/* return WPA enabled */
+ 		dwrq->flags &= ~IW_ENCODE_DISABLED;
++		dwrq->flags |= IW_ENCODE_NOKEY;
+ 	} else {
+ 		dwrq->flags |= IW_ENCODE_DISABLED;
+ 	}
+ 
+ 	mutex_unlock(&adapter->lock);
+ 
+-	dwrq->flags |= IW_ENCODE_NOKEY;
+-
+ 	lbs_deb_wext("key: %02x:%02x:%02x:%02x:%02x:%02x, keylen %d\n",
+ 	       extra[0], extra[1], extra[2],
+ 	       extra[3], extra[4], extra[5], dwrq->length);
+
+
+-- 
+dwmw2
+
