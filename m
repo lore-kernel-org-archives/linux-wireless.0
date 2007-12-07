@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:16101 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750717AbXLBWLN (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:61864 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737AbXLGUrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:13 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 1/8] rtl8187: fix tx power reading
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.54891.stgit@tetra.sourmilk.net> (sfid-20071202_221118_018794_0591B8C5)
+	Fri, 7 Dec 2007 15:47:09 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1776457pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 12:47:08 -0800 (PST)
+Message-ID: <43e72e890712071247p78dcaf36p868d1dc002935417@mail.gmail.com> (sfid-20071207_204714_404685_5ABA90C0)
+Date: Fri, 7 Dec 2007 15:47:07 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: lynx.abraxas@freenet.de
+Subject: Re: What's wrong if wlan0 device is not reacting?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890712071225p774a2f9bg92540905dbd19e66@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
+References: <20071206170858.GA2008@drago>
+	 <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
+	 <20071206214807.GB1811@drago>
+	 <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com>
+	 <20071207201737.GA9192@drago>
+	 <43e72e890712071225p774a2f9bg92540905dbd19e66@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
+On Dec 7, 2007 3:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-CCK and OFDM power levels are stored in adjacent bytes, not nibbles.
+> > make
+> > make -C /lib/modules/2.6.23.9/build M=/home/lynx/compat-wireless-2.6 modules
+> > make[1]: Entering directory `/usr/src/linux-2.6.23.9'
+> >   CC [M]  /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o
+> > In file included from /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:44:
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/b43.h:783:3: error: #error "Using neither DMA nor PIO? Confused..."
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_interrupt_tasklet':
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:1451: error: implicit declaration of function 'b43_using_pio'
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_one_core_attach':
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: 'modparam_pio' undeclared (first use in this function)
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: (Each undeclared identifier is reported only once
+> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: for each function it appears in.)
+> > make[4]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o] Error 1
+> > make[3]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43] Error 2
+> > make[2]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless] Error 2
+> > make[1]: *** [_module_/home/lynx/compat-wireless-2.6] Error 2
+> > make[1]: Leaving directory `/usr/src/linux-2.6.23.9'
+> > make: *** [modules] Error 2
+>
+> I just fixed this. I'll e-mail once I propagate the tarball.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
----
+OK give it a shot again, I just regenerated it.
 
- drivers/net/wireless/rtl8187_rtl8225.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
 
-diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
-index efc4120..eade81f 100644
---- a/drivers/net/wireless/rtl8187_rtl8225.c
-+++ b/drivers/net/wireless/rtl8187_rtl8225.c
-@@ -283,8 +283,8 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	u32 reg;
- 	int i;
- 
--	cck_power = priv->channels[channel - 1].val & 0xF;
--	ofdm_power = priv->channels[channel - 1].val >> 4;
-+	cck_power = priv->channels[channel - 1].val & 0xFF;
-+	ofdm_power = priv->channels[channel - 1].val >> 8;
- 
- 	cck_power = min(cck_power, (u8)11);
- 	ofdm_power = min(ofdm_power, (u8)35);
-@@ -500,8 +500,8 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	u32 reg;
- 	int i;
- 
--	cck_power = priv->channels[channel - 1].val & 0xF;
--	ofdm_power = priv->channels[channel - 1].val >> 4;
-+	cck_power = priv->channels[channel - 1].val & 0xFF;
-+	ofdm_power = priv->channels[channel - 1].val >> 8;
- 
- 	cck_power = min(cck_power, (u8)15);
- 	cck_power += priv->txpwr_base & 0xF;
-
-
+  Luis
