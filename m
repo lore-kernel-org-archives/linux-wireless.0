@@ -1,149 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:49374 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751040AbXLJIJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 03:09:54 -0500
-Date: Mon, 10 Dec 2007 09:03:23 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
- learning algorithm
-Message-ID: <20071210090323.47d657e6@morte> (sfid-20071210_081008_103329_A8A190FE)
-In-Reply-To: <1197269336.7490.25.camel@localhost>
-References: <20071209211547.2d7fca32@morte>
-	<20071209211931.26ff42fa@morte>
-	<1197239150.7543.13.camel@localhost>
-	<20071210002158.654ed960@morte>
-	<1197269336.7490.25.camel@localhost>
+Received: from mx1.redhat.com ([66.187.233.31]:34987 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753720AbXLGSbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2007 13:31:10 -0500
+Subject: Re: [RFC] endianness fixes
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <1197050972.30465.15.camel@localhost.localdomain>
+References: <200712071615.19156.hs4233@mail.mn-solutions.de>
+	 <1197050972.30465.15.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 07 Dec 2007 13:25:17 -0500
+Message-Id: <1197051917.30465.32.camel@localhost.localdomain> (sfid-20071207_183113_978752_3D16A1B1)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 10 Dec 2007 07:48:56 +0100
-Mattias Nissler <mattias.nissler@gmx.de> wrote:
-
-> > > > +/* Normalize the failed frames per-rate differences. */
-> > > > +static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
-> > > > +{
-> > > > +	int i;
-> > > > +
-> > > > +	if (r[0].diff > RC_PID_NORM_FACTOR)
-> > > > +		r[0].diff -= RC_PID_NORM_FACTOR;
-> > > > +	else if (r[0].diff < -RC_PID_NORM_FACTOR)
-> > > > +		r[0].diff += RC_PID_NORM_FACTOR;
-> > > > +	for (i = 0; i < l - 1; i++)
-> > > > +		if (likely(r[i + 1].valid)) {
-> > > > +			if (r[i + 1].diff > r[i].diff + RC_PID_NORM_FACTOR)
-> > > > +				r[i + 1].diff -= RC_PID_NORM_FACTOR;
-> > > > +			else if (r[i + 1].diff <= r[i].diff)
-> > > > +				r[i + 1].diff += RC_PID_NORM_FACTOR;
-> > > > +		}
-> > > 
-> > > If I understand correctly, you apply an offset to all valid entries. So
-> > > I'd rather call it RC_PID_NORM_OFFSET.
+On Fri, 2007-12-07 at 13:09 -0500, Dan Williams wrote:
+> On Fri, 2007-12-07 at 16:15 +0100, Holger Schurig wrote:
+> > Hi !
 > > 
-> > Well, I don't care that much. I was referring to this definition of factor:
+> > Recently I found that that sparse by default doesn't endianness
+> > checks. So I changed my compilation habit to be
 > > 
-> > n., 1. One that actively contributes to an accomplishment, result, or process
+> > make modules C=1 SUBDIRS=drivers/net/wireless/libertas CHECKFLAGS="-D__CHECK_ENDIAN__"      
 > > 
-> > Anyway "offset" may be more clear. Will fix it.
+> > so that I get the little-endian checks from sparse as well. That
+> > showed up a good bunch of problems. The following RFC patch is
+> > against libertas-2.6. I hope that all fixes are correct.
 > > 
-> > > Furthermore, what if the diff
-> > > values are larger than k * RC_PID_NORM_OFFSET (with k an integer)? If
-> > > you first compute the offset, you can just loop over the array and apply
-> > > the offset without checking for the condition.
 > > 
-> > I frankly don't get your point here. No offsets are computed...
+> > diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+> > index be69ae6..32c97b9 100644
+> > --- a/drivers/net/wireless/libertas/hostcmd.h
+> > +++ b/drivers/net/wireless/libertas/hostcmd.h
+> > @@ -418,13 +418,13 @@ struct cmd_ds_802_11_rf_antenna {
+> >  };
+> >  
+> >  struct cmd_ds_802_11_monitor_mode {
+> > -	u16 action;
+> > -	u16 mode;
+> > +	__le16 action;
+> > +	__le16 mode;
+> >  };
+> >  
+> >  struct cmd_ds_set_boot2_ver {
+> > -	u16 action;
+> > -	u16 version;
+> > +	__le16 action;
+> > +	__le16 version;
+> >  };
+> >  
+> >  struct cmd_ds_802_11_ps_mode {
+> > diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> > index 9563636..4a45d2b 100644
+> > --- a/drivers/net/wireless/libertas/cmd.c
+> > +++ b/drivers/net/wireless/libertas/cmd.c
+> > @@ -431,7 +431,7 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+> >  		u8 mode = (u8) (size_t) pdata_buf;
+> >  		pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_SET);
+> >  		pSNMPMIB->oid = cpu_to_le16((u16) DESIRED_BSSTYPE_I);
+> > -		pSNMPMIB->bufsize = sizeof(u8);
+> > +		pSNMPMIB->bufsize = cpu_to_le16(sizeof(u8));
+> >  		if (mode == IW_MODE_ADHOC) {
+> >  			ucTemp = SNMP_MIB_VALUE_ADHOC;
+> >  		} else {
+> > @@ -451,8 +451,8 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+> >  			pSNMPMIB->oid = cpu_to_le16((u16) DOT11D_I);
+> >  
+> >  			if (cmd_action == CMD_ACT_SET) {
+> > -				pSNMPMIB->querytype = CMD_ACT_SET;
+> > -				pSNMPMIB->bufsize = sizeof(u16);
+> > +				pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_SET);
+> > +				pSNMPMIB->bufsize = cpu_to_le16(sizeof(u16));
+> >  				ulTemp = *(u32 *)pdata_buf;
+> >  				*((__le16 *)(pSNMPMIB->value)) =
+> >  				    cpu_to_le16((u16) ulTemp);
+> > @@ -484,7 +484,7 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+> >  		{
+> >  
+> >  			u32 ulTemp;
+> > -			pSNMPMIB->oid = le16_to_cpu((u16) RTSTHRESH_I);
+> > +			pSNMPMIB->oid = cpu_to_le16(RTSTHRESH_I);
+> >  
+> >  			if (cmd_action == CMD_ACT_GET) {
+> >  				pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_GET);
+> > @@ -759,7 +759,7 @@ static int lbs_cmd_reg_access(struct lbs_private *priv,
+> >  
+> >  	offval = (struct lbs_offset_value *)pdata_buf;
+> >  
+> > -	switch (cmdptr->command) {
+> > +	switch (le16_to_cpu(cmdptr->command)) {
+> >  	case CMD_MAC_REG_ACCESS:
+> >  		{
+> >  			struct cmd_ds_mac_reg_access *macreg;
+> > @@ -999,7 +999,7 @@ void lbs_queue_cmd(struct lbs_adapter *adapter,
+> >  	}
+> >  
+> >  	/* Exit_PS command needs to be queued in the header always. */
+> > -	if (cmdptr->command == CMD_802_11_PS_MODE) {
+> > +	if (le16_to_cpu(cmdptr->command) == CMD_802_11_PS_MODE) {
+> >  		struct cmd_ds_802_11_ps_mode *psm = &cmdptr->params.psmode;
+> >  		if (psm->action == cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
+> >  			if (adapter->psstate != PS_STATE_FULL_POWER)
+> > @@ -1062,15 +1062,14 @@ static int DownloadcommandToStation(struct lbs_private *priv,
+> >  	adapter->cur_cmd_retcode = 0;
+> >  	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+> >  
+> > -	cmdsize = cmdptr->size;
+> > -	command = cpu_to_le16(cmdptr->command);
+> > +	cmdsize = le16_to_cpu(cmdptr->size);
+> > +	command = le16_to_cpu(cmdptr->command);
+> >  
+> >  	lbs_deb_host("DNLD_CMD: command 0x%04x, size %d, jiffies %lu\n",
+> > -		    command, le16_to_cpu(cmdptr->size), jiffies);
+> > +		    command, cmdsize, jiffies);
+> >  	lbs_deb_hex(LBS_DEB_HOST, "DNLD_CMD", cmdnode->bufvirtualaddr, cmdsize);
+> >  
+> >  	cmdnode->cmdwaitqwoken = 0;
+> > -	cmdsize = cpu_to_le16(cmdsize);
+> >  
+> >  	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmdptr, cmdsize);
+> >  
+> > @@ -1426,9 +1425,10 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+> >  
+> >  #define ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN 8
+> >  			cmdptr->size =
+> > -			    cpu_to_le16(gpio->header.len + S_DS_GEN +
+> > -					     ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
+> > -			gpio->header.len = cpu_to_le16(gpio->header.len);
+> > +			    cpu_to_le16(le16_to_cpu(gpio->header.len)
+> > +				+ S_DS_GEN
+> > +				+ ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
+> > +			gpio->header.len = gpio->header.len;
 > 
-> Well, let's see, maybe I misunderstood the code. I thought the idea was:
-> If the diff values grow too large (too small), we substract (add)
-> RC_PID_NORM_FACTOR from (to) all of them. But now it seems to me you do
-> this for every diff value individually to achieve something like an
-> aging effect. Is that correct? The term "normalize" probably confused
-> me.
+> You can remove the line immediately.  gpio->header.len _should_ be
 
-I used the "normalize" term as in "process that makes something more
-normal, which typically means conforming to some regularity or rule, or
-returning from some state of abnormality" [wikipedia].
+By which I meant "immediately above".  Take all the time you want to
+actually hit Ctl+K or whatever your line-delete key combo is :)
 
-What I do here is to assume that lower rates will perform better, in the
-long term, let's make an example: my card can transmit at three rates, 1,
-2, and 3M. But it performs really bad at 3M, so what I can expect to have
-is:
+Dan
 
-[rate] [diff]
-  1      0
-  2      10
-  3      105
-[this means we have used rate 1, then switched to rate 2 and had 10% more
-fails, then switched to rate 3 and had 95% more fails than rate 2]
-
-But now we don't know if bad performance of rate 3 was due to external
-conditions or to a somehow broken device. Let's say that we move our
-laptop to a different environment, which causes the rate 3 to work
-reasonably well. That 105 doesn't make sense now and we have to make it
-similar to diff for rate 2. But not equal, as 1) it's unlikely to be equal;
-2) if it would be equal we would never use rate 2, which we can
-theoretically suppose to be a little better than rate 3 (compare with
-_shift_adjust() here). So in the end, if we don't get any recent events,
-we should end up with something like:
-
-[rate] [diff]
-  1      0
-  2      3
-  3      6
-[with norm_offset set to 3]
-
-So what really matters here are recent events. Yes, it's something like an
-aging effect. Note that norm_offset is meant to tune how fast it's supposed
-that we move between different environments. A little caveat here: all
-values can be negative, even the one for rate 1. This doesn't matter,
-because anyway, as per the definition of the algorithm, all values are
-referred to the lowest rate behaviour (and not to zero).
-
-> > > > +	for (i = 1; i < mode->num_rates; i++) {
-> > > > +		s = 0;
-> > > > +		for (j = 0; j < mode->num_rates - i; j++)
-> > > > +			if (unlikely(mode->rates[rinfo[j].index].rate >
-> > > > +				     mode->rates[rinfo[j + 1].index].rate)) {
-> > > > +				tmp = rinfo[j].index;
-> > > > +				rinfo[j].index = rinfo[j + 1].index;
-> > > > +				rinfo[j + 1].index = tmp;
-> > > > +				s = 1;
-> > > > +			}
-> > > > +		if (!s)
-> > > > +			break;
-> > > > +	}
-> > > 
-> > > There is include/linux/sort.h. I guess using this would make the code
-> > > clearer. It took me a moment to recognize the code as bubble sort.
+> __le16 already (from types.h) so therefore we don't need this bit at
+> all.
+> 
+> Rest of the stuff looks great though.
+> 
+> Dan
+> 
+> >  			ret = 0;
+> >  			break;
+> > diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+> > index 22a6973..d229967 100644
+> > --- a/drivers/net/wireless/libertas/cmdresp.c
+> > +++ b/drivers/net/wireless/libertas/cmdresp.c
+> > @@ -561,7 +561,7 @@ static int lbs_ret_802_11_subscribe_event(struct lbs_private *priv,
+> >  	lbs_deb_enter(LBS_DEB_CMD);
+> >  
+> >  	if (dst_event->action == cpu_to_le16(CMD_ACT_GET)) {
+> > -		dst_event->events = le16_to_cpu(cmd_event->events);
+> > +		dst_event->events = cmd_event->events;
+> >  		memcpy(dst_event->tlv, cmd_event->tlv, sizeof(dst_event->tlv));
+> >  	}
+> >  
+> > @@ -882,7 +882,7 @@ int lbs_process_rx_command(struct lbs_private *priv)
+> >  
+> >  	if (adapter->cur_cmd->pdata_size) {
+> >  		struct cmd_ds_gen *r = (struct cmd_ds_gen *)resp;
+> > -		u16 sz = cpu_to_le16(resp->size) - S_DS_GEN;
+> > +		u16 sz = le16_to_cpu(resp->size) - S_DS_GEN;
+> >  		if (sz > *adapter->cur_cmd->pdata_size) {
+> >  			lbs_pr_err("response 0x%04x doesn't fit into "
+> >  				"buffer (%d > %d)\n", respcmd,
+> > diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> > index d5fc7d7..c51ca0b 100644
+> > --- a/drivers/net/wireless/libertas/if_usb.c
+> > +++ b/drivers/net/wireless/libertas/if_usb.c
+> > @@ -107,7 +107,7 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
+> >  	int rsp_len = sizeof(b2_cmd);
+> >  
+> >  	b2_cmd.action = 0;
+> > -	b2_cmd.version = cpu_to_le16(priv->boot2_version);
+> > +	b2_cmd.version = priv->boot2_version;
+> >  
+> >  	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, sizeof(b2_cmd),
+> >  		    &b2_cmd, &rsp_len)) {
+> > @@ -227,7 +227,7 @@ static int if_usb_probe(struct usb_interface *intf,
+> >  	priv->hw_host_to_card = if_usb_host_to_card;
+> >  	priv->hw_get_int_status = if_usb_get_int_status;
+> >  	priv->hw_read_event_cause = if_usb_read_event_cause;
+> > -	priv->boot2_version = le16_to_cpu(udev->descriptor.bcdDevice);
+> > +	priv->boot2_version = udev->descriptor.bcdDevice;
+> >  
+> >  	/* Delay 200 ms to waiting for the FW ready */
+> >  	if_usb_submit_rx_urb(cardp);
 > > 
-> > Heapsort (please see lib/sort.c) is suboptimal here. I think that
-> > bubblesort is the right compromise between insertion sort (performance) and
-> > readability here.
+> > 
+> > I now only have a few sparse warnings related to get_unaligned() or a weird
+> > casting in if_sdio.c.
 > 
-> This is one of the places where you don't have performance issues at
-> all. This only called once when initializing the rate control algorithm,
-> so you will never need to optimize this code :-)
-> 
-> If you don't want the sort() call, please at least add a comment that
-> you're doing a bubble sort here, just to aid people reading this.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ok, I'll pick one. :)
-
-> However, the issue here is quite subtle: Currently, we don't know
-> whether the frames that we receive status about in tx_status() were
-> actually sent with the rate as decided by the algorithm. This is
-> something I have on my list, but I currently don't know how to address
-> it properly. Comments welcome.
-
-Could you elaborate here? I miss the point (i.e. what's the problem here).
-
-
---
-Ciao
-Stefano
