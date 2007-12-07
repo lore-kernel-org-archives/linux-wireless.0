@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38068 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425AbXLJR3l (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:29987 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbXLGKVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 12:29:41 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 41/48] libertas: TX packet is radiotap iff it comes from rtap_dev
-Message-Id: <E1J1kpl-0006nQ-90@shinybook.infradead.org> (sfid-20071210_172950_066135_7651C7C7)
-Date: Mon, 10 Dec 2007 10:46:17 -0500
+	Fri, 7 Dec 2007 05:21:54 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1284371pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 02:21:53 -0800 (PST)
+Message-ID: <c68f135e0712070221x36cffd95q724d8ecb23f4e1cf@mail.gmail.com> (sfid-20071207_102158_177864_3D64FEC8)
+Date: Fri, 7 Dec 2007 11:21:53 +0100
+From: "Andrea Merello" <andreamrl@tiscali.it>
+Reply-To: andreamrl@tiscali.it
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: What's wrong if wlan0 device is not reacting?
+Cc: lynx.abraxas@freenet.de, linux-wireless@vger.kernel.org,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071206170858.GA2008@drago>
+	 <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
+	 <20071206214807.GB1811@drago>
+	 <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sun, 9 Dec 2007 22:00:55 -0500
+> > > lsusb tells me the  manufacturer  is  Realtek  rtl8187  so   I   compiled, installed
+> > > and modprobed rtl8187 for the 2.6.22.5 kernel.
 
-Fix one of the barriers to simultaneous radiotap and normal operation --
-stop misinterpreting the TX packets on the normal devices. We're also
-going to have to clone the incoming skbs and feed them into both
-devices, and there seem to be firmware problems with staying associated
-too. But this is a reasonable start...
+Can you please tell us which version of RF frontend and MAC processor
+do you have?
+You can see it in the dmesg output. I need the line where it talks about rtl8225
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > Also "ifconfig wlan0 up" takes a long time
+> > to finish  compared to other devices I have worked with.
 
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index aefe524..c2881a9 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -105,7 +105,7 @@ int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	p802x_hdr = skb->data;
- 	pkt_len = skb->len;
- 
--	if (priv->monitormode != LBS_MONITOR_OFF) {
-+	if (dev == priv->rtap_net_dev) {
- 		struct tx_radiotap_hdr *rtap_hdr = (void *)skb->data;
- 
- 		/* set txpd fields from the radiotap header */
--- 
-1.5.3.4
+This is OK. Especially earlier version of the rtl8187 MAC need a quite
+long procedure to turn on. It is not symptom of any problem.
 
+> > iwlist wlan0 scan gives: wlan0 No scan results
+
+Should the scan find a lot of APs or just one ? Are you close to any
+AP? If you have other working cards can you please provide us a
+indicative measure of AP signal strength? Is it possible that the
+sensitivity of the card is not enough to find the AP? on which channel
+is the AP?
+
+> > Is  it  possible,  though  the  driver  catches the device and I don't get any
+> > error-messages, that the Stick cannot be used under linux?
+
+If the device is a rtl818L, and it is likely to be, since the driver
+catches it, then it should work. If it doesn't not then it is probably
+a bug. rtl8187B is not supported, but it should not be catched by the
+driver (should have different USB id).
+
+Oh, do you have an USB port 1.x or 2.0 ?
+
+Thanks
+Andrea
