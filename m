@@ -1,90 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:58731 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbXL3MLu (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:29660 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785AbXLGPOy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Dec 2007 07:11:50 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so4770707fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2007 04:11:48 -0800 (PST)
-To: chris2553@googlemail.com
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sun, 30 Dec 2007 13:11:42 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <200712291614.55732.IvDoorn@gmail.com> <200712301149.39388.chris2553@googlemail.com>
-In-Reply-To: <200712301149.39388.chris2553@googlemail.com>
+	Fri, 7 Dec 2007 10:14:54 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: [RFC] endianness fixes
+Date: Fri, 7 Dec 2007 16:15:18 +0100
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dcbw@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712301311.42895.IvDoorn@gmail.com> (sfid-20071230_121156_943110_D1C237D5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200712071615.19156.hs4233@mail.mn-solutions.de> (sfid-20071207_151500_290979_E7A58547)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 30 December 2007, Chris Clayton wrote:
-> On Saturday 29 December 2007, Ivo van Doorn wrote:
-> > On Saturday 29 December 2007, Johannes Berg wrote:
-> > > > Well Ralink doesn't seem to add this padding since this bug appeared,
-> > > > remember all bytes from the DMA was copied to the skb buffer so if
-> > > > there was any padding included it would have been copied as well. ;)
-> > >
-> > > Not necessarily, Broadcom hardware adds the padding in front of the
-> > > 802.11 header so if you'd start copying with the 802.11 header you'd run
-> > > into the same thing. A quick look at the rt2x00pci.c file doesn't
-> > > suggest that there's anything variable about the RX header though so I
-> > > guess that indeed this may be a problem.
-> > >
-> > > > Anyway, I have worked on a fix for the padding and I'll commit it to
-> > > > rt2x00.git first to see if anybody reports any problems with it before
-> > > > sending it to wireless-dev.
-> > >
-> 
-> If it would help, I'd be happy to test your fix, but I'm not a git user, so 
-> you would need to post a patch that I could use...
+Hi !
 
-Here is the patch against the latest vanilla kernel,
-the previous piece of code was bugged since the header size check was incorrect,
-but that is fixed in this one.
+Recently I found that that sparse by default doesn't endianness
+checks. So I changed my compilation habit to be
 
-----
+make modules C=1 SUBDIRS=drivers/net/wireless/libertas CHECKFLAGS="-D__CHECK_ENDIAN__"      
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index ff399f8..4f8a37b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -386,6 +386,7 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
- 	struct ieee80211_rx_status *rx_status = &rt2x00dev->rx_status;
- 	struct ieee80211_hw_mode *mode;
- 	struct ieee80211_rate *rate;
-+	unsigned int header_size;
- 	unsigned int i;
- 	int val = 0;
+so that I get the little-endian checks from sparse as well. That
+showed up a good bunch of problems. The following RFC patch is
+against libertas-2.6. I hope that all fixes are correct.
+
+
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index be69ae6..32c97b9 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -418,13 +418,13 @@ struct cmd_ds_802_11_rf_antenna {
+ };
  
-@@ -412,6 +413,26 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
- 		}
+ struct cmd_ds_802_11_monitor_mode {
+-	u16 action;
+-	u16 mode;
++	__le16 action;
++	__le16 mode;
+ };
+ 
+ struct cmd_ds_set_boot2_ver {
+-	u16 action;
+-	u16 version;
++	__le16 action;
++	__le16 version;
+ };
+ 
+ struct cmd_ds_802_11_ps_mode {
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 9563636..4a45d2b 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -431,7 +431,7 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+ 		u8 mode = (u8) (size_t) pdata_buf;
+ 		pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_SET);
+ 		pSNMPMIB->oid = cpu_to_le16((u16) DESIRED_BSSTYPE_I);
+-		pSNMPMIB->bufsize = sizeof(u8);
++		pSNMPMIB->bufsize = cpu_to_le16(sizeof(u8));
+ 		if (mode == IW_MODE_ADHOC) {
+ 			ucTemp = SNMP_MIB_VALUE_ADHOC;
+ 		} else {
+@@ -451,8 +451,8 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+ 			pSNMPMIB->oid = cpu_to_le16((u16) DOT11D_I);
+ 
+ 			if (cmd_action == CMD_ACT_SET) {
+-				pSNMPMIB->querytype = CMD_ACT_SET;
+-				pSNMPMIB->bufsize = sizeof(u16);
++				pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_SET);
++				pSNMPMIB->bufsize = cpu_to_le16(sizeof(u16));
+ 				ulTemp = *(u32 *)pdata_buf;
+ 				*((__le16 *)(pSNMPMIB->value)) =
+ 				    cpu_to_le16((u16) ulTemp);
+@@ -484,7 +484,7 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+ 		{
+ 
+ 			u32 ulTemp;
+-			pSNMPMIB->oid = le16_to_cpu((u16) RTSTHRESH_I);
++			pSNMPMIB->oid = cpu_to_le16(RTSTHRESH_I);
+ 
+ 			if (cmd_action == CMD_ACT_GET) {
+ 				pSNMPMIB->querytype = cpu_to_le16(CMD_ACT_GET);
+@@ -759,7 +759,7 @@ static int lbs_cmd_reg_access(struct lbs_private *priv,
+ 
+ 	offval = (struct lbs_offset_value *)pdata_buf;
+ 
+-	switch (cmdptr->command) {
++	switch (le16_to_cpu(cmdptr->command)) {
+ 	case CMD_MAC_REG_ACCESS:
+ 		{
+ 			struct cmd_ds_mac_reg_access *macreg;
+@@ -999,7 +999,7 @@ void lbs_queue_cmd(struct lbs_adapter *adapter,
  	}
  
-+	/*
-+	 * Properly align the ieee80211 frame and make sure the
-+	 * data behind the ieee80211 header is on a 4 byte boundrary.
-+	 */
-+	header_size = ieee80211_get_hdrlen_from_skb(skb);
-+	if (!header_size) {
-+		/*
-+		 * Frame is too short to contain a valid header,
-+		 * drop the entire frame since it is useless.
-+		 */
-+		kfree_skb(skb);
-+		return;
-+	} else if (header_size % 4 == 0) {
-+		/*
-+		 * Move entire frame 2 bytes to the front.
-+		 */
-+		skb_push(skb, 2);
-+		memmove(skb->data, skb->data + 2, skb->len - 2);
-+	}
-+
- 	rt2x00_update_link_rssi(&rt2x00dev->link, desc->rssi);
- 	rt2x00dev->link.rx_success++;
- 	rx_status->rate = val;
+ 	/* Exit_PS command needs to be queued in the header always. */
+-	if (cmdptr->command == CMD_802_11_PS_MODE) {
++	if (le16_to_cpu(cmdptr->command) == CMD_802_11_PS_MODE) {
+ 		struct cmd_ds_802_11_ps_mode *psm = &cmdptr->params.psmode;
+ 		if (psm->action == cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
+ 			if (adapter->psstate != PS_STATE_FULL_POWER)
+@@ -1062,15 +1062,14 @@ static int DownloadcommandToStation(struct lbs_private *priv,
+ 	adapter->cur_cmd_retcode = 0;
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+ 
+-	cmdsize = cmdptr->size;
+-	command = cpu_to_le16(cmdptr->command);
++	cmdsize = le16_to_cpu(cmdptr->size);
++	command = le16_to_cpu(cmdptr->command);
+ 
+ 	lbs_deb_host("DNLD_CMD: command 0x%04x, size %d, jiffies %lu\n",
+-		    command, le16_to_cpu(cmdptr->size), jiffies);
++		    command, cmdsize, jiffies);
+ 	lbs_deb_hex(LBS_DEB_HOST, "DNLD_CMD", cmdnode->bufvirtualaddr, cmdsize);
+ 
+ 	cmdnode->cmdwaitqwoken = 0;
+-	cmdsize = cpu_to_le16(cmdsize);
+ 
+ 	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmdptr, cmdsize);
+ 
+@@ -1426,9 +1425,10 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 
+ #define ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN 8
+ 			cmdptr->size =
+-			    cpu_to_le16(gpio->header.len + S_DS_GEN +
+-					     ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
+-			gpio->header.len = cpu_to_le16(gpio->header.len);
++			    cpu_to_le16(le16_to_cpu(gpio->header.len)
++				+ S_DS_GEN
++				+ ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
++			gpio->header.len = gpio->header.len;
+ 
+ 			ret = 0;
+ 			break;
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 22a6973..d229967 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -561,7 +561,7 @@ static int lbs_ret_802_11_subscribe_event(struct lbs_private *priv,
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 
+ 	if (dst_event->action == cpu_to_le16(CMD_ACT_GET)) {
+-		dst_event->events = le16_to_cpu(cmd_event->events);
++		dst_event->events = cmd_event->events;
+ 		memcpy(dst_event->tlv, cmd_event->tlv, sizeof(dst_event->tlv));
+ 	}
+ 
+@@ -882,7 +882,7 @@ int lbs_process_rx_command(struct lbs_private *priv)
+ 
+ 	if (adapter->cur_cmd->pdata_size) {
+ 		struct cmd_ds_gen *r = (struct cmd_ds_gen *)resp;
+-		u16 sz = cpu_to_le16(resp->size) - S_DS_GEN;
++		u16 sz = le16_to_cpu(resp->size) - S_DS_GEN;
+ 		if (sz > *adapter->cur_cmd->pdata_size) {
+ 			lbs_pr_err("response 0x%04x doesn't fit into "
+ 				"buffer (%d > %d)\n", respcmd,
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index d5fc7d7..c51ca0b 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -107,7 +107,7 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
+ 	int rsp_len = sizeof(b2_cmd);
+ 
+ 	b2_cmd.action = 0;
+-	b2_cmd.version = cpu_to_le16(priv->boot2_version);
++	b2_cmd.version = priv->boot2_version;
+ 
+ 	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, sizeof(b2_cmd),
+ 		    &b2_cmd, &rsp_len)) {
+@@ -227,7 +227,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	priv->hw_host_to_card = if_usb_host_to_card;
+ 	priv->hw_get_int_status = if_usb_get_int_status;
+ 	priv->hw_read_event_cause = if_usb_read_event_cause;
+-	priv->boot2_version = le16_to_cpu(udev->descriptor.bcdDevice);
++	priv->boot2_version = udev->descriptor.bcdDevice;
+ 
+ 	/* Delay 200 ms to waiting for the FW ready */
+ 	if_usb_submit_rx_urb(cardp);
 
+
+I now only have a few sparse warnings related to get_unaligned() or a weird
+casting in if_sdio.c.
