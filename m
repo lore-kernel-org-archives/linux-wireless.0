@@ -1,98 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:57270 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762656AbXLMG7m (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49171
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753061AbXLGMeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:42 -0500
-Subject: [PATCH 80/48] libertas: allow setting channel on mshX device
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i33-0005tS-7x@shinybook.infradead.org> (sfid-20071213_070001_011029_74B28960)
-Date: Thu, 13 Dec 2007 01:59:57 -0500
+	Fri, 7 Dec 2007 07:34:09 -0500
+Date: Fri, 07 Dec 2007 04:34:07 -0800 (PST)
+Message-Id: <20071207.043407.72593148.davem@davemloft.net> (sfid-20071207_123418_301238_07D2D2FD)
+To: mb@bu3sch.de
+Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200712071235.11969.mb@bu3sch.de>
+References: <20071206214341.GA6821@bougret.hpl.hp.com>
+	<20071206.195214.09557695.davem@davemloft.net>
+	<200712071235.11969.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 19:56:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+Date: Fri, 7 Dec 2007 12:35:11 +0100
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/wext.c |   53 +++++++++++++++++++++++++++++++++-
- 1 files changed, 52 insertions(+), 1 deletions(-)
+> So, how do we handle unaligned data in userspace then?
+> A _lot_ of applications are broken if that's right what you say.
 
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 0a06072..262d4cc 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -959,6 +959,57 @@ out:
- 	return ret;
- }
- 
-+static int lbs_mesh_set_freq(struct net_device *dev,
-+			     struct iw_request_info *info,
-+			     struct iw_freq *fwrq, char *extra)
-+{
-+	struct lbs_private *priv = dev->priv;
-+	struct chan_freq_power *cfp;
-+	int ret = -EINVAL;
-+
-+	lbs_deb_enter(LBS_DEB_WEXT);
-+
-+	/* If setting by frequency, convert to a channel */
-+	if (fwrq->e == 1) {
-+		long f = fwrq->m / 100000;
-+
-+		cfp = find_cfp_by_band_and_freq(priv, 0, f);
-+		if (!cfp) {
-+			lbs_deb_wext("invalid freq %ld\n", f);
-+			goto out;
-+		}
-+
-+		fwrq->e = 0;
-+		fwrq->m = (int) cfp->channel;
-+	}
-+
-+	/* Setting by channel number */
-+	if (fwrq->m > 1000 || fwrq->e > 0) {
-+		goto out;
-+	}
-+
-+	cfp = lbs_find_cfp_by_band_and_channel(priv, 0, fwrq->m);
-+	if (!cfp) {
-+		goto out;
-+	}
-+
-+	if (fwrq->m != priv->curbssparams.channel) {
-+		lbs_deb_wext("mesh channel change forces eth disconnect\n");
-+		if (priv->mode == IW_MODE_INFRA)
-+			lbs_send_deauthentication(priv);
-+		else if (priv->mode == IW_MODE_ADHOC)
-+			lbs_stop_adhoc_network(priv);
-+	}
-+	priv->curbssparams.channel = fwrq->m;
-+	lbs_mesh_config(priv, 0);
-+	lbs_mesh_config(priv, 1);
-+	ret = 0;
-+
-+out:
-+	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
-+	return ret;
-+}
-+
- static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
- 		  struct iw_param *vwrq, char *extra)
- {
-@@ -2097,7 +2148,7 @@ static const iw_handler mesh_wlan_handler[] = {
- 	(iw_handler) lbs_get_name,	/* SIOCGIWNAME */
- 	(iw_handler) NULL,	/* SIOCSIWNWID */
- 	(iw_handler) NULL,	/* SIOCGIWNWID */
--	(iw_handler) lbs_set_freq,	/* SIOCSIWFREQ */
-+	(iw_handler) lbs_mesh_set_freq,	/* SIOCSIWFREQ */
- 	(iw_handler) lbs_get_freq,	/* SIOCGIWFREQ */
- 	(iw_handler) NULL,		/* SIOCSIWMODE */
- 	(iw_handler) mesh_wlan_get_mode,	/* SIOCGIWMODE */
--- 
-1.5.3.4
+Applications make sure data is always properly aligned, that's how
+it's handled.  I don't see what the big mystery is. :-)
 
+In the rare cases where these bugs pop up, they simply get fixed.
+
+And you should be thankful these things are being explicitly
+flagged as errors on at least some platforms, they could be
+silent performance problems otherwise.
