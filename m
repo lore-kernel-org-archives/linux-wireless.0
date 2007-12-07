@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2371 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753320AbXLSPAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:00:00 -0500
-Date: Wed, 19 Dec 2007 09:29:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Greg KH <gregkh@suse.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 7/8] debugfs: allow access to signed values
-Message-ID: <20071219142902.GB3139@tuxdriver.com> (sfid-20071219_150008_254241_EEF621EA)
-References: <20071219001955.055692620@polimi.it> <20071219012739.6dcdd150@morte> <20071219064510.GA18876@suse.de> <20071219102016.7785c4d3@morte>
+Received: from py-out-1112.google.com ([64.233.166.180]:63856 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbXLGATR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2007 19:19:17 -0500
+Received: by py-out-1112.google.com with SMTP id u77so1008431pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 16:19:17 -0800 (PST)
+Message-ID: <43e72e890712061619n6eca015fj9f2e4409c767547d@mail.gmail.com> (sfid-20071207_001921_136626_E6502FC9)
+Date: Thu, 6 Dec 2007 19:19:16 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Automated kerneldoc for all wireless drivers
+In-Reply-To: <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071219102016.7785c4d3@morte>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
+	 <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 19, 2007 at 10:20:16AM +0100, Stefano Brivio wrote:
-> On Tue, 18 Dec 2007 22:45:10 -0800
-> Greg KH <gregkh@suse.de> wrote:
-> 
-> > On Wed, Dec 19, 2007 at 01:27:39AM +0100, Stefano Brivio wrote:
+On Dec 6, 2007 6:42 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Dec 6, 2007 6:38 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >   3910 total
+>
+> Sorry, I forgot the iwlwifi drivers:
+>
+>    670 iwlwifiiwl3945-basec-doc.html
+>    325 iwlwifiiwl-3945c-doc.html
+>    134 iwlwifiiwl-3945-commandsh-doc.html
+>      0 iwlwifiiwl-3945-debugh-doc.html
+>    121 iwlwifiiwl-3945h-doc.html
+>      0 iwlwifiiwl-3945-hwh-doc.html
+>      0 iwlwifiiwl-3945-ioh-doc.html
+>     78 iwlwifiiwl-3945-rsc-doc.html
+>     65 iwlwifiiwl-3945-rsh-doc.html
+>    715 iwlwifiiwl4965-basec-doc.html
+>    438 iwlwifiiwl-4965c-doc.html
+>    422 iwlwifiiwl-4965-commandsh-doc.html
+>      0 iwlwifiiwl-4965-debugh-doc.html
+>    171 iwlwifiiwl-4965h-doc.html
+>    566 iwlwifiiwl-4965-hwh-doc.html
+>      0 iwlwifiiwl-4965-ioh-doc.html
+>     69 iwlwifiiwl-4965-rsc-doc.html
+>     65 iwlwifiiwl-4965-rsh-doc.html
+>     54 iwlwifiiwl-helpersh-doc.html
+>    119 iwlwifiiwl-prphh-doc.html
+>      0 iwlwifiiwl-spectrumh-doc.html
+>   4012 total
+>
+> For a total of 7922 for us now. Thanks Intel, great job!
+>
+>   Luis
+>
 
-> > > here comes an implementation of debugfs_create_s{8,16,32,64} which avoids code
-> > > duplication, suggested by Johannes Berg. We would need this to be merged to
-> > > 2.6.25, as we need those functions to be available for rc80211-pid, the new
-> > > mac80211 rate control algorithm.
-> > 
-> > Looks good to me, do you want me to add this to my tree and send it to
-> > Linus when 2.6.25 opens up, or do you want this to go through the
-> > wireless tree as you have patches relying on it?
-> 
-> I have one patch (rate control rework, 8/8) relying on it. Let's ask John. John,
-> what's the best for you?
 
-Since Greg approves, I'll take it through wireless-2.6 to avoid any
-staging problems for patch 8/8.
+Also, forgot to mention, if you want to see your kerneldoc warnings
+you can add page with something like:
 
-Thanks,
+If this page is empty it means there are no kerneldoc warnings
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+<<kerneldocwarn(ath5k/ath5k.h)>>
