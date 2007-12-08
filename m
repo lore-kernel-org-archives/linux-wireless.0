@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3138 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbXLMA7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 19:59:36 -0500
-Date: Wed, 12 Dec 2007 19:27:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 ethtool support
-Message-ID: <20071213002739.GB3139@tuxdriver.com> (sfid-20071213_005942_352540_C260AA08)
-References: <1197361048.3170.381.camel@debian.sh.intel.com> <200712111350.25522.mb@bu3sch.de> <1197421988.3170.405.camel@debian.sh.intel.com> <200712121148.48716.mb@bu3sch.de> <1197481520.6558.140.camel@johannes.berg> <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48994
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753287AbXLHBfp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2007 20:35:45 -0500
+Date: Fri, 07 Dec 2007 17:35:44 -0800 (PST)
+Message-Id: <20071207.173544.98612200.davem@davemloft.net> (sfid-20071208_013551_179104_C8D7F507)
+To: mb@bu3sch.de
+Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200712071436.08954.mb@bu3sch.de>
+References: <200712071235.11969.mb@bu3sch.de>
+	<20071207.043407.72593148.davem@davemloft.net>
+	<200712071436.08954.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 13, 2007 at 01:23:55AM +0200, Tomas Winkler wrote:
-> On Dec 12, 2007 7:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Michael Buesch <mb@bu3sch.de>
+Date: Fri, 7 Dec 2007 14:36:08 +0100
 
-> > NACK. Which virtual interface should get this? wmaster sounds like the
-> > "obvious" candidate but we want to get rid of it ASAP. And the others
-> > ones are pretty wrong because you can, technically, have a wiphy without
-> > any virtual interfaces on it.
-> >
-> Just a thought. What if all virtual interfaces will quasi implements
-> it. It doesn't matter if all the interfaces answers the same. Since
-> these are get only operations the mutual exclusion shouldn't be so
-> hard. All interfaces will support equally the handlers.  But I'm not
-> sure about other ethool handlers.
-> If wmaster goes will be all virtual interfaces equal citizens ?
+> The wire protocol for the iv files is the following structure:
+> 
+> struct b43_iv {
+> 	be16 a;
+> 	union {
+> 		be16 x;
+> 		be32 y;
+> 	} ((attr_packed));
+> } ((attr_packed));
+> 
+> How do I handle that in userspace? In kernel space it's simple
+> (and we already use get_unaligned() for the 32bit value there).
 
-Has anyone taken the trouble to analyze the various ethtool operations
-to see which ones even make sense for wireless devices?  That might
-make a better starting point for discussing how to implement whatever
-remains.
+If you marked it packed, on platforms like sparc, MIPS, and IA-64, the
+compiler is only going to use byte loads and stores to objects of this
+type.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+You don't need to use get_unaligned() on members of structures that
+are marked packed.
+
+If you look at the asm-generic/unaligned.h pure-C implementation,
+it uses the packed attribute, which really shows how redundant it
+is to use get_unaligned() on packed structure member access :-)
