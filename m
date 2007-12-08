@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:6634 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbXLYDG0 (ORCPT
+Received: from web52911.mail.re2.yahoo.com ([206.190.49.21]:44834 "HELO
+	web52911.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750789AbXLHSqB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Dec 2007 22:06:26 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3097528wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Dec 2007 19:06:25 -0800 (PST)
-Message-ID: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com> (sfid-20071225_030635_964364_290EF08C)
-Date: Mon, 24 Dec 2007 22:06:25 -0500
-From: "Andrew Lutomirski" <luto@myrealbox.com>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k oops (recent regression, I think)
+	Sat, 8 Dec 2007 13:46:01 -0500
+Date: Sat, 8 Dec 2007 18:39:20 +0000 (GMT)
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Re: [2.6.23.1] PCI device locking up the computer when its module loads
+To: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Chris Rankin <rankincj@yahoo.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1193657365.19938.17.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Message-ID: <624437.35639.qm@web52911.mail.re2.yahoo.com> (sfid-20071208_184612_747632_14238F69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm getting oopses in ath5k, which is either:
-1. A recent regression (past few days in wireless-2.6 everything branch.
-2. A less-recent regression that I think is recent because I don't
-really know how to use git.
+> > On Mon, 22 Oct 2007 13:43:16 +0100 (BST) Chris Rankin <rankincj@yahoo.com> wrote:
+> > > I have a Netgear MA301 PLX wireless networking adapter which wants to use the hostap_plx
+> > > driver in Linux 2.6.23.1. This very same piece of hardware works fine in an old(!) P120
+> > > machine running 2.4.33, but makes the 2.6.23.1 kernel freeze as soon as the
+> > > pci_enable_device() function is called in prism2_plx_probe.
 
-A slightly older version didn't oops but couldn't associate.  madwifi
-works fine.
+Interestingly, I have just discovered that I can do the following on this machine *without*
+locking it up (on Linux 2.6.23.9):
 
-I'm running 2d0811f5ed506397d85792abfd8ef0983f4e8b7c, I think.
+# cat /sys/bus/pci/devices/0000:00:0e.0/enable
+0
+# echo 1 > /sys/bus/pci/devices/0000:00:0e.0/enable
+# cat /sys/bus/pci/devices/0000:00:0e.0/enable
+1
 
-I can try to bisect in the next few days or provide any other useful
-debugging, but I figured I'd let you all know first.
+where according to lspci:
 
-Relevant pieces of dmesg are:
+00:0e.0 Network controller: Netgear MA301 802.11b Wireless PCI Adapter (rev 02)
 
-[   15.097097] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-[   15.097107] ath5k phy0: RF5112A multiband radio found (0x36)
+Doesn't writing to this sysfs file also call pci_enable_device()? Loading the hostap_plx module is
+still instantly lethal.
 
-...
+Cheers,
+Chris
 
-[  149.641321] BUG: unable to handle kernel paging request at virtual
-address fffffd88
-[  149.641329] printing eip: b0335b41 *pde = 00490027 *pte = 00000000
-[  149.641336] Oops: 0000 [#1] PREEMPT
-[  149.641339] Modules linked in: ipv6 binfmt_misc cpufreq_stats
-cpufreq_ondemand cpufreq_powersave cpufreq_userspace bay container sbs
-sbshc dock sbp2 joydev pcmcia snd_intel8x0 snd_ac97_codec ac97_bus
-snd_pcm_oss snd_mixer_oss snd_pcm psmouse serio_raw snd_seq_dummy
-snd_seq_oss pcspkr snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq
-snd_timer snd_seq_device snd soundcore snd_page_alloc yenta_socket
-rsrc_nonstatic pcmcia_core iTCO_wdt iTCO_vendor_support intel_agp
-agpgart evdev ext3 jbd mbcache sg sr_mod cdrom sd_mod ata_generic
-ata_piix ohci1394 ieee1394 libata scsi_mod ehci_hcd uhci_hcd usbcore
-fan fuse
-[  149.641379]
-[  149.641382] Pid: 5808, comm: NetworkManager Not tainted (2.6.24-rc5 #4)
-[  149.641386] EIP: 0060:[<b0335b41>] EFLAGS: 00210246 CPU: 0
-[  149.641395] EIP is at ieee80211_generic_frame_duration+0x21/0x70
-[  149.641398] EAX: cdb28160 EBX: cdb28160 ECX: 0000000a EDX: 00000000
-[  149.641400] ESI: 00000000 EDI: 0000000a EBP: 000003e8 ESP: cd833b08
-[  149.641403]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-[  149.641407] Process NetworkManager (pid: 5808, ti=cd832000
-task=cdd7cc80 task.ti=cd832000)
-[  149.641409] Stack: b028ec3b 0016ba51 0000876c 00000000 cdb52000
-b028b4ed 0000000a 4fa14d63
-[  149.641416]        00000034 cdb28160 00000000 b0359aa4 cdb28f0c
-00000000 00000000 00000003
-[  149.641423]        00000002 00000002 00000014 00000000 b0359a80
-cdb28e00 00000000 00000000
-[  149.641429] Call Trace:
-[  149.641431]  [<b028ec3b>] ath5k_hw_rfgain+0x4b/0x80
-[  149.641441]  [<b028b4ed>] ath5k_hw_reset+0xa9d/0xeb0
-[  149.641453]  [<b0283e76>] ath5k_init+0x46/0x110
-[  149.641462]  [<b03231cc>] ieee80211_open+0x19c/0x4e0
-[  149.641468]  [<b011a4be>] set_next_entity+0xae/0xd0
-[  149.641479]  [<b02afdec>] dev_open+0x4c/0x80
-[  149.641486]  [<b02aee62>] dev_change_flags+0x82/0x1b0
-[  149.641492]  [<b02b7d46>] do_setlink+0x2d6/0x3b0
-[  149.641497]  [<b015d5d6>] __alloc_pages+0x56/0x360
-[  149.641506]  [<b02b914b>] rtnl_setlink+0xdb/0x130
-[  149.641517]  [<b015d500>] __free_pages+0x20/0x30
-[  149.641522]  [<b02b9070>] rtnl_setlink+0x0/0x130
-[  149.641526]  [<b02b8d6c>] rtnetlink_rcv_msg+0x1cc/0x200
-[  149.641532]  [<b02b8ba0>] rtnetlink_rcv_msg+0x0/0x200
-[  149.641536]  [<b02c6550>] netlink_rcv_skb+0x70/0xa0
-[  149.641542]  [<b02b8b94>] rtnetlink_rcv+0x14/0x20
-[  149.641546]  [<b02c62e3>] netlink_unicast+0x203/0x230
-[  149.641553]  [<b02c6b00>] netlink_sendmsg+0x200/0x2f0
-[  149.641563]  [<b02a2a01>] sock_sendmsg+0x101/0x120
-[  149.641575]  [<b0136310>] autoremove_wake_function+0x0/0x50
-[  149.641585]  [<b0136310>] autoremove_wake_function+0x0/0x50
-[  149.641590]  [<b0314b27>] unix_stream_recvmsg+0x3c7/0x630
-[  149.641600]  [<b02a1f48>] sock_aio_write+0x118/0x140
-[  149.641608]  [<b02a2b84>] sys_sendmsg+0x164/0x280
-[  149.641620]  [<b02c5a16>] netlink_insert+0xe6/0x170
-[  149.641625]  [<b017c5ed>] fget_light+0x9d/0xc0
-[  149.641631]  [<b02a370f>] move_addr_to_user+0x5f/0x70
-[  149.641637]  [<b02a3cc7>] sys_getsockname+0xd7/0xe0
-[  149.641642]  [<b02a4cb5>] lock_sock_nested+0xd5/0xf0
-[  149.641647]  [<b012762e>] local_bh_enable+0x2e/0xb0
-[  149.641654]  [<b02a6449>] sock_setsockopt+0x149/0x5e0
-[  149.641658]  [<b018e281>] d_alloc+0x131/0x1a0
-[  149.641665]  [<b018e125>] d_instantiate+0x45/0x70
-[  149.641670]  [<b017c5ed>] fget_light+0x9d/0xc0
-[  149.641674]  [<b02a20d2>] sockfd_lookup_light+0x32/0x60
-[  149.641683]  [<b02a414f>] sys_socketcall+0x24f/0x280
-[  149.641691]  [<b0126faa>] sys_time+0xa/0x30
-[  149.641695]  [<b010421e>] sysenter_past_esp+0x5f/0x85
-[  149.641706]  =======================
-[  149.641707] Code: 5d c3 90 8d b4 26 00 00 00 00 83 ec 14 89 5c 24
-08 89 c3 89 74 24 0c 89 d6 89 7c 24 10 89 cf 8b 4c 24 18 83 78 0c 02
-74 31 31 d2 <8b> 86 88 fd ff ff 89 14 24 89 fa 83 e0 08 89 44 24 04 89
-d8 e8
-[  149.641740] EIP: [<b0335b41>]
-ieee80211_generic_frame_duration+0x21/0x70 SS:ESP 0068:cd833b08
+
+
+      __________________________________________________________
+Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
