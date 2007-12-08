@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4992 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936378AbXLQT6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 14:58:33 -0500
-Date: Mon, 17 Dec 2007 14:34:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
-Message-ID: <20071217193402.GD3121@tuxdriver.com> (sfid-20071217_195904_216029_1AA0E92E)
-References: <20071216043148.GE3096@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071216043148.GE3096@tuxdriver.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:36455 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755045AbXLHJvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2007 04:51:39 -0500
+Date: Sat, 8 Dec 2007 10:45:49 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
+Message-ID: <20071208104549.608bf66d@morte> (sfid-20071208_095143_397176_C60D5D29)
+In-Reply-To: <20071204024146.15689ee3@morte>
+References: <1196622331.7472.4.camel@localhost>
+	<20071203041608.3af3b462@morte>
+	<1196679780.7470.9.camel@localhost>
+	<20071203125402.76562f26@morte>
+	<1196683144.7470.14.camel@localhost>
+	<20071203130602.49ab7234@morte>
+	<40f31dec0712031442q51a658abwfde965dae3fb6b72@mail.gmail.com>
+	<20071204024146.15689ee3@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 15, 2007 at 11:31:48PM -0500, John W. Linville wrote:
+On Tue, 4 Dec 2007 02:41:46 +0100
+Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
-> Cyrill Gorcunov (2):
->       ieee80211_rate: missed unlock
+> -		err_avg = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
+> +		err_avg = srctrl->err_avg_sc >> modparam_rc_sh_s;
+							     ^
 
->  net/mac80211/ieee80211_rate.c                  |    1 +
+>  		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
+> -		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
+> +		err_int = srctrl->err_avg_sc >> modparam_rc_sh_s;
+							     ^
 
-> diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
-> index 7254bd6..3260a4a 100644
-> --- a/net/mac80211/ieee80211_rate.c
-> +++ b/net/mac80211/ieee80211_rate.c
-> @@ -33,6 +33,7 @@ int ieee80211_rate_control_register(struct rate_control_ops *ops)
->  		if (!strcmp(alg->ops->name, ops->name)) {
->  			/* don't register an algorithm twice */
->  			WARN_ON(1);
-> +			mutex_unlock(&rate_ctrl_mutex);
->  			return -EALREADY;
->  		}
->  	}
+Sorry, I forgot to resend. Will send another patch soon so I won't bother.
 
-Crud...there is a one-line fix in here that should have gone to Dave.
 
-Jeff, (assuming Dave ACKs it) would you mind just taking it your
-way along with the other posted patches?  Since this is intended for
-2.6.24, there should be no great maintenance hardship if it goes to
-Linus through your tree instead of Dave's.
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Ciao
+Stefano
