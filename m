@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3983 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753435AbXLDP0X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:26:23 -0500
-Date: Tue, 4 Dec 2007 10:25:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-Message-ID: <20071204152538.GF19911@tuxdriver.com> (sfid-20071204_152625_949526_A1849EC3)
-References: <200712041140.07516.hs4233@mail.mn-solutions.de> <200712041153.24896.hs4233@mail.mn-solutions.de> <1196780198.26155.17.camel@localhost.localdomain>
+Received: from vs166246.vserver.de ([62.75.166.246]:41803 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbXLHUgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2007 15:36:52 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John H." <mistamaila@gmail.com>
+Subject: Re: b43 continues to have issue with APs at times
+Date: Sat, 8 Dec 2007 21:35:11 +0100
+Cc: "Larry Finger" <larry.finger@lwfinger.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
+In-Reply-To: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1196780198.26155.17.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712082135.11685.mb@bu3sch.de> (sfid-20071208_203656_434019_C2DB24B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2007 at 09:56:38AM -0500, Dan Williams wrote:
-> On Tue, 2007-12-04 at 11:53 +0100, Holger Schurig wrote:
-> > 7. escape_ssid()
-> > 
-> > This code from ieee80211 is used in various debug messages.
-> > Should I re-implement this locally in the driver?
+On Saturday 08 December 2007 21:22:37 John H. wrote:
+> I have this problem at two different locations with two different
+> access points.  2.6.23.1 kernel, and sometimes until I actually power
+> down the AP and restart it, wpa_supplicant and such just times out on
+> the AP.
 > 
-> Part of the _point_ of depending on ieee80211 was so that we wouldn't
-> have a lot of pointless code duplication.  Like this.
+> Any ideas?
+> 
+> 
 
-ACK
+I think that's rather a mac80211 or supplicant issue.
+I think roaming should handle this.
+Do you see this with other drivers, too?
 
-We've been talking about a new component for this kind of
-shared generic 802.11 code for some time.  In my head I call it
-"lib80211". :-)
-
-Maybe it is time to start it?  The header of a thousand bytes start
-with a single char... :-)
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
