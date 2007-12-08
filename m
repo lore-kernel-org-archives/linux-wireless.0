@@ -1,84 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:50299 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754585AbXLFV0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 16:26:55 -0500
-Date: Thu, 6 Dec 2007 13:25:25 -0800
-To: David Miller <davem@davemloft.net>
-Cc: shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
-	dsd@gentoo.org, johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071206212525.GA6509@bougret.hpl.hp.com> (sfid-20071206_212703_868416_C5707324)
-Reply-To: jt@hpl.hp.com
-References: <20071204000138.GA1363@bougret.hpl.hp.com> <4756AABC.3000204@hotmail.com> <20071205215600.GA28349@bougret.hpl.hp.com> <20071205.183628.211180882.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071205.183628.211180882.davem@davemloft.net>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59604 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbXLHLgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2007 06:36:54 -0500
+Subject: Re: [PATCH 1/4] mac80211: Clean up rate selection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1197113615.7472.56.camel@localhost> (sfid-20071208_113407_806694_1684F565)
+References: <1197112439.7472.34.camel@localhost>
+	 <1197112909.7472.49.camel@localhost>
+	 (sfid-20071208_112222_400278_02DE29F9)  <1197113375.4171.50.camel@johannes.berg>
+	 <1197113615.7472.56.camel@localhost> (sfid-20071208_113407_806694_1684F565)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lBuXevkpZRtwDQxElueL"
+Date: Sat, 08 Dec 2007 12:36:52 +0100
+Message-Id: <1197113812.4171.53.camel@johannes.berg> (sfid-20071208_113656_336746_ADA6C1DA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 05, 2007 at 06:36:28PM -0800, David Miller wrote:
-> From: Jean Tourrilhes <jt@hpl.hp.com>
-> Date: Wed, 5 Dec 2007 13:56:00 -0800
-> 
-> > 	Personally, I was under the impression that in userspace libc
-> > trap unaligned access and make them work. I mean, this code was tested
-> > on other 64/32 bit platforms (PPC, AMD-64, PS3) and was working there,
-> > so this seems to be specific to your platform.
-> 
-> None of those listed platforms trap on unaligned accesses like sparc
-> does.
 
-	I knew it was a problem in kernel space, and this is why we
-have nice macros to perform unaligned access. My assumption that
-userspace was behaving differently, and that all this stuff was hidden
-from the end user through some trap handler.
-
-> > 	In any case, I've modified my code to use a memcpy() instead
-> > of direct memory access. I'm not 100% sure it will fix it because many
-> > time memcpy() is optimised away to a direct memory access.
-> 
-> This only works if you hide the underlying types from the compiler,
-> using something like:
-> 
-> static void copy_object(void *dst, void *src, int len)
-> {
-> 	memcpy(dst, src, len);
-> }
-> 
-> And use the copy_object() thing to move unaligned things around.
-
-	Most likely, copy_object() will be inlined.
-
-> Otherwise gcc can see the underlying types and assume alignment, and
-> thus generate the memcpy inline using word sized loads and stores, and
-> you'll just get the same unaligned access problems.
-
-	Well, it seems that the memcpy() did the trick. I guess that
-the gcc optimiser is smart enough to recognise the fact that the
-pointers may be unaligned.
-	I don't like being at the mercy of gcc, so I'll fix that
-better.
-
-> The fix is to eliminate the unaligned data in the first place.  This
-> compat fixup stuff really belongs in the kernel.
-
-	If people were using the kernel API directly and not using
-iwlib, I would agree 100% with you.
-	My long term plan is to fix the problem at the source,
-i.e. always generate the data with the proper alignement regardless of
-32 or 64 bits, so that you don't need any "fix" in the compat layer or
-in userspace. Unfortunately, it's too early for that.
+--=-lBuXevkpZRtwDQxElueL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-	Now, I'm wondering how to deal with unaligned access in
-userspace. If you get data from hardware or the network, you can not
-guarantee that everything will always be aligned, so we need a way to
-deal with it.
-	In the kernel, we have get_unaligned(). I wonder what's the
-equivalent in userspace.
+On Sat, 2007-12-08 at 12:33 +0100, Mattias Nissler wrote:
+> On Sat, 2007-12-08 at 12:29 +0100, Johannes Berg wrote:
+> > > +	/* Send management frames and broadcast/multicast data using lowest
+> > > +	 * rate. */
+> > > +	fc =3D le16_to_cpu(hdr->frame_control);
+> > > +	if ((fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA ||
+> > > +	    (hdr->addr1[0] & 0x01))
+> > > +		sel->rate =3D rate_lowest(local, mode, sta);
+> >=20
+> > I'm not sure but I don't think we want this. And you should use
+> > is_multicast_addr() or whatever it's called.
+>=20
+> This piece comes directly from the old "simple" algo. You're right about
+> is_multicast_addr. I agree this is something we might to get rid of, but
+> I leave that decision to you.
 
-	Have fun...
+Right, but I guess that Intel's algorithms do something different and
+this would break it. IMHO that decision should stay in the algorithm
+itself.
 
-	Jean
+> Yes. It's after the get_rate() call so the algorithm can override it.
+> But if it doesn't we compute it ourselves.
+
+Hmm. Then the algorithm can't specify "no fallback rate", can it? Well,
+this will have to be reviewed anyway when the API is changed to support
+minstrel.
+
+johannes
+
+--=-lBuXevkpZRtwDQxElueL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR1qB06Vg1VMiehFYAQIjsg//dK13FriSX6ygg8gjhqmdSkoa5Lgefso/
+nFjWVKWd4akO4E8JRHjiiKsTSFQw0tEJBMnY2v8KWAKG2RseSqXp4g8Cv9bEe/zH
+A/cDUs3hzOlry2vbqNUFKzs/Wa4FUs+lFdI4WLfSCZ+Qxiq6wGIanM8tLQFqTxUw
+WStk12R7k1Y1bNP9grE4083Tnhs/4BpeZLTXk38EqvPlpGwlPd7ZJtReMjg77Hu4
+mEBj3maHvY3aBDXSZPRk50/kScpt02RlpUvRSzofNg7mR3jrdSfIZhabcIF80Zyp
+aKEpIAtGpRHF8QJ8J2ZoiHS/7OjmPcFCdzVIe3L7TqVCIPiUbqzoMOw1DmPL28J5
+ST3xQPcWrRDTesL2LE1BhBal5XW5puDXGUmuOmOgF4SQYMcy2i7SP3BJtsrgfq4v
+juod8dmnQ6S0I+4yk5X9SP95EsRLeQu21xu6/7X2ctPuMvcD02X/ghKj1MbtH4co
+/HZw9jYvelUhW0aVPTbwe1CoQDgPGnjFND6wxeS9DblHhn+EMMH7n7ZywSdneLos
+jIbHf7BMiUmoAqp0c2zmtXFRBGFi3tM2/duCG3YK4sG91laV7pP4//FJsUQpcAMS
+16AIMJfZ4Nk1l/FidJ98vfxg+AbOzF1ltmvt0ubNsi1PRAFheEVlFf97hVsG6mYX
+tzm1z3Weqb0=
+=qYPb
+-----END PGP SIGNATURE-----
+
+--=-lBuXevkpZRtwDQxElueL--
+
