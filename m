@@ -1,76 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbXL1TPb (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49003
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753650AbXLHBgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2007 14:15:31 -0500
-Subject: Re: [PATCH v4 7/8] debugfs: allow access to signed values
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Arnd Bergmann <ARNDB@de.ibm.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20071228185832.GA4462@lst.de> (sfid-20071228_185955_765323_9702EDF1)
-References: <20071219001955.055692620@polimi.it>
-	 <1198080034.4747.15.camel@johannes.berg> <20071220131548.1d09cd62@morte>
-	 <200712201347.15022.ARNDB@de.ibm.com>  <20071228185832.GA4462@lst.de>
-	 (sfid-20071228_185955_765323_9702EDF1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sbce2iiqZVNKzLyeq37Z"
-Date: Fri, 28 Dec 2007 20:15:08 +0100
-Message-Id: <1198869309.4172.12.camel@johannes.berg> (sfid-20071228_191541_153311_955B54CF)
+	Fri, 7 Dec 2007 20:36:04 -0500
+Date: Fri, 07 Dec 2007 17:36:03 -0800 (PST)
+Message-Id: <20071207.173603.37779169.davem@davemloft.net> (sfid-20071208_013607_771404_B7C850BA)
+To: dsd@gentoo.org
+Cc: mb@bu3sch.de, jt@hpl.hp.com, shaddy_baddah@hotmail.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <47595D4E.6080901@gentoo.org>
+References: <20071207.043407.72593148.davem@davemloft.net>
+	<200712071436.08954.mb@bu3sch.de>
+	<47595D4E.6080901@gentoo.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Daniel Drake <dsd@gentoo.org>
+Date: Fri, 07 Dec 2007 14:48:46 +0000
 
---=-sbce2iiqZVNKzLyeq37Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Please correct me if I'm wrong, but adding the "packed" attribute causes 
+> gcc to generate extra instructions to avoid the potentially unaligned 
+> accesses.
+> (i.e. it basically does put_aligned/get_unaligned automatically)
 
-
-On Fri, 2007-12-28 at 19:58 +0100, Christoph Hellwig wrote:
-> On Thu, Dec 20, 2007 at 01:47:13PM +0100, Arnd Bergmann wrote:
-> > Also, Christoph has recently posted a suggestion for how to improve
-> > the interface to allow the 'get' operation to return an error:
-> > http://patchwork.ozlabs.org/cbe-oss-dev/patch?id=3D14962
-> >=20
-> > I'd suggest consolidating the two changes in order to avoid merge
-> > conflicts.
->=20
-> Stefano, I couldn't find your complete patch series.  Where are the
-> other 7 patches for that series?   Anyway, I'll post my series with
-> the simple attribute chanegs ASAP and I'll Cc you.  If you send me the
-> latest version of your patches I'll port it ontop of my patches.
-
-There was only one, the seven other patches are plain wireless patches.
-
-johannes
-
---=-sbce2iiqZVNKzLyeq37Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR3VLO6Vg1VMiehFYAQLjxQ//UnG3CxRpY3fNAOfUhbyUfaTAaz3jgxDG
-YQWVASx5j/dWNloXFu/4bFnonZExF/x/SBLtAIHT7p6MIHrTdCtFxa/I9hgf5p+d
-/k3m3T/qg+I++9Dy0lsh34Z/gUg/xnCUezKXheq4OKhRUs0uQKhNedWdDy+Gu487
-wFLIs7XzJjLsT1LFBtBuUq6AlDB57QeFgpi/AXOYHz8X7TWDWcH/gQC63sJWy0RN
-Rez/2wybvGpfyuS1XMzy1EmJc/zQ5vPKnZVRxPVrB0qp5fJ547qPSjTkYSqboIX/
-RcfqPnivbMkYCs3LRBvzPNtXVmn1FPzD+G/oOZTwoiNDdyLZWte8aN68tEkCXbh2
-fvl5yjDGGnRpwfI6NCebJG4gaPq52PIgDieGAiih+lPXq8d0vwixRUgyVd1/8OAm
-cglGvyBlgw96ZJGmLiguQGq+eIhCrGvO5eOyWeNgqs5L0QYNnW1Dnqh0dvdod52D
-blAUIvCPrfhz5PVbnT299TYUqkb1J9dFQLf/xSwpwMsZECzTP5Fg5oRP+d4Zmj0/
-F2pPRzaoqlaifa45poUfxDo2zeofs8D8p+txuc/RrJiV5jcb8YmIwet63KW3C18m
-0Ev3J0N9BfAR7e+5vKxm8WGjwlYBEtVMSzbhXl98s/n+hq/0uY1Ro9tzCxYI4grM
-Y7hxAL0f/2M=
-=zTCb
------END PGP SIGNATURE-----
-
---=-sbce2iiqZVNKzLyeq37Z--
-
+Exactly.
