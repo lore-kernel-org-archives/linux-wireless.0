@@ -1,212 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56003 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762413AbXLMHAJ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:55237 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756107AbXLHImk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 02:00:09 -0500
-Subject: [PATCH 92/48] libertas: add ethtool support for wake-on-lan configuration
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i3K-0005uX-2j@shinybook.infradead.org> (sfid-20071213_070626_151238_0F2D593C)
-Date: Thu, 13 Dec 2007 02:00:14 -0500
+	Sat, 8 Dec 2007 03:42:40 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so501125nfb
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Dec 2007 00:42:39 -0800 (PST)
+Message-ID: <475A58F9.2080009@gmail.com> (sfid-20071208_084242_870853_E3617507)
+Date: Sat, 08 Dec 2007 09:42:33 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: bruno randolf <bruno@thinktube.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
+Subject: Re: [PATCH 1/1] ath5k: add debugfs entries for registers, tsf, beacon
+References: <1196839665-14178-1-git-send-email-bruno@thinktube.com> <47566B95.5080101@gmail.com> <200712051950.08672.bruno@thinktube.com>
+In-Reply-To: <200712051950.08672.bruno@thinktube.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Wed, 12 Dec 2007 20:06:06 -0500
+On 12/05/2007 11:50 AM, bruno randolf wrote:
+[...]
+> +static int open_file_registers(struct inode *inode, struct file *file)
+> +{
+> +	struct seq_file *s;
+> +	int res;
+> +	res = seq_open(file, &register_seq_ops);
+> +	s = (struct seq_file *)file->private_data;
 
-Also, check that suspend is refused if HOST_SLEEP_CFG hasn't been done.
+you don't need to cast here (from void *).
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.c     |   14 +++++----
- drivers/net/wireless/libertas/cmd.h     |    3 +-
- drivers/net/wireless/libertas/dev.h     |    5 +++
- drivers/net/wireless/libertas/ethtool.c |   47 +++++++++++++++++++++++++++++++
- drivers/net/wireless/libertas/if_usb.c  |    6 ++--
- drivers/net/wireless/libertas/main.c    |    8 +++++
- 6 files changed, 72 insertions(+), 11 deletions(-)
+> +	s->private = inode->i_private;
+> +	return res;
+> +}
+> +
+> +static const struct file_operations fops_registers = {
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index f87cecb..ddf1527 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -111,21 +111,23 @@ out:
- 	return ret;
- }
- 
--int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
--		       uint8_t gpio, uint8_t gap)
-+int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria)
- {
- 	struct cmd_ds_host_sleep cmd_config;
- 	int ret;
- 
- 	cmd_config.criteria = cpu_to_le32(criteria);
--	cmd_config.gpio = gpio;
--	cmd_config.gap = gap;
-+	cmd_config.gpio = priv->wol_gpio;
-+	cmd_config.gap = priv->wol_gap;
- 
- 	ret = lbs_cmd_with_response(priv, CMD_802_11_HOST_SLEEP_CFG, &cmd_config);
--	if (ret) {
-+	if (!ret) {
-+		lbs_deb_cmd("Set WOL criteria to %x\n", criteria);
-+		priv->wol_criteria = criteria;
-+	} else {
- 		lbs_pr_info("HOST_SLEEP_CFG failed %d\n", ret);
--		return ret;
- 	}
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(lbs_host_sleep_cfg);
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index e44a0db..55f2436 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -33,8 +33,7 @@ int lbs_set_channel(struct lbs_private *priv, u8 channel);
- 
- int lbs_mesh_config(struct lbs_private *priv, int enable);
- 
--int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
--		       uint8_t gpio, uint8_t gap);
-+int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria);
- int lbs_suspend(struct lbs_private *priv);
- int lbs_resume(struct lbs_private *priv);
- 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 86b45a4..60a6a51 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -153,6 +153,11 @@ struct lbs_private {
- 	int (*hw_get_int_status) (struct lbs_private *priv, u8 *);
- 	int (*hw_read_event_cause) (struct lbs_private *);
- 
-+	/* Wake On LAN */
-+	uint32_t wol_criteria;
-+	uint8_t wol_gpio;
-+	uint8_t wol_gap;
-+
- 	/* was struct lbs_adapter from here... */
- 
- 	/** Wlan adapter data structure*/
-diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-index a54b4f4..21e6f98 100644
---- a/drivers/net/wireless/libertas/ethtool.c
-+++ b/drivers/net/wireless/libertas/ethtool.c
-@@ -8,6 +8,8 @@
- #include "dev.h"
- #include "join.h"
- #include "wext.h"
-+#include "cmd.h"
-+
- static const char * mesh_stat_strings[]= {
- 			"drop_duplicate_bcast",
- 			"drop_ttl_zero",
-@@ -172,6 +174,49 @@ static void lbs_ethtool_get_strings(struct net_device *dev,
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
- }
- 
-+static void lbs_ethtool_get_wol(struct net_device *dev,
-+				struct ethtool_wolinfo *wol)
-+{
-+	struct lbs_private *priv = dev->priv;
-+
-+	if (priv->wol_criteria == 0xffffffff) {
-+		/* Interface driver didn't configure wake */
-+		wol->supported = wol->wolopts = 0;
-+		return;
-+	}
-+
-+	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
-+
-+	if (priv->wol_criteria & EHS_WAKE_ON_UNICAST_DATA)
-+		wol->wolopts |= WAKE_UCAST;
-+	if (priv->wol_criteria & EHS_WAKE_ON_MULTICAST_DATA)
-+		wol->wolopts |= WAKE_MCAST;
-+	if (priv->wol_criteria & EHS_WAKE_ON_BROADCAST_DATA)
-+		wol->wolopts |= WAKE_BCAST;
-+	if (priv->wol_criteria & EHS_WAKE_ON_MAC_EVENT)
-+		wol->wolopts |= WAKE_PHY;
-+}
-+
-+static int lbs_ethtool_set_wol(struct net_device *dev,
-+			       struct ethtool_wolinfo *wol)
-+{
-+	struct lbs_private *priv = dev->priv;
-+	uint32_t criteria = 0;
-+
-+	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
-+		return -EOPNOTSUPP;
-+
-+	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
-+		return -EOPNOTSUPP;
-+
-+	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
-+	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
-+	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
-+	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
-+
-+	return lbs_host_sleep_cfg(priv, criteria);
-+}
-+
- struct ethtool_ops lbs_ethtool_ops = {
- 	.get_drvinfo = lbs_ethtool_get_drvinfo,
- 	.get_eeprom =  lbs_ethtool_get_eeprom,
-@@ -179,5 +224,7 @@ struct ethtool_ops lbs_ethtool_ops = {
- 	.get_sset_count = lbs_ethtool_get_sset_count,
- 	.get_ethtool_stats = lbs_ethtool_get_stats,
- 	.get_strings = lbs_ethtool_get_strings,
-+	.get_wol = lbs_ethtool_get_wol,
-+	.set_wol = lbs_ethtool_set_wol,
- };
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 15715a6..8191416 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -242,9 +242,9 @@ static int if_usb_probe(struct usb_interface *intf,
- 
- 	if_usb_set_boot2_ver(priv);
- 
--	/* Set suspend/resume configuration:
--	   wake via GPIO2 after a 20ms delay */
--	lbs_host_sleep_cfg(priv, EHS_WAKE_ON_UNICAST_DATA, 2, 20);
-+	priv->wol_gpio = 2; /* Wake via GPIO2... */
-+	priv->wol_gap = 20; /* ... after 20ms    */
-+	lbs_host_sleep_cfg(priv, EHS_WAKE_ON_UNICAST_DATA);
- 
- 	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 1ea119e..5e2f329 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -839,6 +839,11 @@ int lbs_suspend(struct lbs_private *priv)
- 	struct cmd_header cmd;
- 	int ret;
- 
-+	if (priv->wol_criteria == 0xffffffff) {
-+		lbs_pr_info("Suspend attempt without configuring wake params!\n");
-+		return -EINVAL;
-+	}
-+
- 	memset(&cmd, 0, sizeof(cmd));
- 	
- 	ret = __lbs_cmd(priv, CMD_802_11_HOST_SLEEP_ACTIVATE, &cmd,
-@@ -1088,6 +1093,9 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
- 	sprintf(priv->mesh_ssid, "mesh");
- 	priv->mesh_ssid_len = 4;
- 
-+	priv->wol_criteria = 0xffffffff;
-+	priv->wol_gpio = 0xff;
-+
- 	goto done;
- 
- err_init_adapter:
+BTW. to prevent removing the module while having opened this debug stuff, you
+should add:
+.owner = THIS_MODULE,
+
+> +	.open = open_file_registers,
+> +	.read    = seq_read,
+> +	.llseek  = seq_lseek,
+> +	.release = seq_release
+> +};
+> +
+> +
+> +/* debugfs: TSF */
+> +
+> +static ssize_t read_file_tsf(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	char buf[100];
+> +	snprintf(buf, 100, "0x%016llx\n", ath5k_hw_get_tsf64(sc->ah));
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
+> +}
+> +
+> +static ssize_t write_file_tsf(struct file *file,
+> +				 const char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	if (strncmp(userbuf, "reset", 5) == 0) {
+> +		ath5k_hw_reset_tsf(sc->ah);
+> +		printk(KERN_INFO "debugfs reset TSF\n");
+> +	}
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_tsf = {
+
+and here
+
+> +	.read = read_file_tsf,
+> +	.write = write_file_tsf,
+> +	.open = ath5k_debugfs_open,
+> +};
+> +
+> +
+> +/* debugfs: beacons */
+> +
+> +static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	struct ath5k_hw *ah = sc->ah;
+> +
+> +	char buf[1000];
+> +	int len = 0;
+> +	REG_PRINT_APPEND(AR5K_BEACON);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacon period:\t%d\n",
+> +		ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_PERIOD);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacon tim:\t%x\n",
+> +		(ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_TIM)
+> +		>> AR5K_BEACON_TIM_S);
+> +	len += snprintf(buf+len, 1000-len, "\tbeacons enabled: %s\n",
+> +		ath5k_hw_reg_read(ah, AR5K_BEACON) & AR5K_BEACON_ENABLE ?
+> +			"YES" : "NO");
+> +	REG_PRINT_APPEND(AR5K_TIMER0);
+> +	REG_PRINT_APPEND(AR5K_TIMER1);
+> +	REG_PRINT_APPEND(AR5K_TIMER2);
+> +	REG_PRINT_APPEND(AR5K_TIMER3);
+> +	REG_PRINT_APPEND(AR5K_LAST_TSTP);
+> +	REG_PRINT_APPEND(AR5K_BEACON_CNT);
+> +
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+> +
+> +static ssize_t write_file_beacon(struct file *file,
+> +				 const char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	struct ath5k_hw *ah = sc->ah;
+> +
+> +	if (strncmp(userbuf, "disable", 7) == 0) {
+> +		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+> +		printk(KERN_INFO "debugfs disable beacons\n");
+> +	} else if (strncmp(userbuf, "enable", 6) == 0) {
+> +		AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+> +		printk(KERN_INFO "debugfs enable beacons\n");
+> +	}
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_beacon = {
+
+and here.
+
+> +	.read = read_file_beacon,
+> +	.write = write_file_beacon,
+> +	.open = ath5k_debugfs_open,
+> +};
+> +
+> +
+> +/* debugfs: reset */
+> +
+> +static ssize_t write_file_reset(struct file *file,
+> +				 const char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_softc *sc = file->private_data;
+> +	tasklet_schedule(&sc->restq);
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_reset = {
+
+and here :)
+
+> +	.write = write_file_reset,
+> +	.open = ath5k_debugfs_open,
+> +};
+
+thanks,
 -- 
-1.5.3.4
-
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
