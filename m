@@ -1,114 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52378 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753468AbXLIW3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 17:29:25 -0500
-Subject: Re: [RFC/T][PATCH 2/3] rc80211-pid: introduce PID sharpening factor
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20071209212133.43030d03@morte>
-References: <20071209211547.2d7fca32@morte>  <20071209212133.43030d03@morte>
-Content-Type: text/plain
-Date: Sun, 09 Dec 2007 23:29:21 +0100
-Message-Id: <1197239361.7543.17.camel@localhost> (sfid-20071209_222950_791474_5B899962)
-Mime-Version: 1.0
+Received: from mout0.freenet.de ([195.4.92.90]:45752 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676AbXLHHoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2007 02:44:06 -0500
+Received: from [195.4.92.13] (helo=3.mx.freenet.de)
+	by mout0.freenet.de with esmtpa (Exim 4.68)
+	(envelope-from <lynx.abraxas@freenet.de>)
+	id 1J0uLz-0005jb-IE
+	for linux-wireless@vger.kernel.org; Sat, 08 Dec 2007 08:44:03 +0100
+Received: from p508e40ce.dip.t-dialin.net ([80.142.64.206]:58296 helo=localhost)
+	by 3.mx.freenet.de with esmtpsa (ID lynx.abraxas@freenet.de) (TLSv1:AES256-SHA:256) (port 587) (Exim 4.68 #1)
+	id 1J0uLz-0003qj-9N
+	for linux-wireless@vger.kernel.org; Sat, 08 Dec 2007 08:44:03 +0100
+Date: Sat, 8 Dec 2007 08:44:02 +0100
+From: lynx.abraxas@freenet.de
+To: linux-wireless@vger.kernel.org
+Subject: Re: What's wrong if wlan0 device is not reacting?
+Message-ID: <20071208074402.GA2508@drago> (sfid-20071208_074409_550016_54D5C6D0)
+References: <20071206170858.GA2008@drago> <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com> <20071206214807.GB1811@drago> <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com> <8e6f94720712071121n234d9d23idaaf49d76b2fe227@mail.gmail.com> <43e72e890712071336v2a4a805eu6aff9ff9c10c9418@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890712071336v2a4a805eu6aff9ff9c10c9418@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-12-09 at 21:21 +0100, Stefano Brivio wrote:
-> This patch introduces a PID sharpening factor for faster response on
-> association and interpolation.
-> 
-> 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-> 
-> ---
-> 
-> Index: wireless-2.6/net/mac80211/rc80211_pid.c
-> ===================================================================
-> --- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-> +++ wireless-2.6/net/mac80211/rc80211_pid.c
-> @@ -23,13 +23,15 @@
->   *
->   * The controller basically computes the following:
->   *
-> - * adj = CP * err + CI * err_avg + CD * (err - last_err)
-> + * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
->   *
->   * where
->   * 	adj	adjustment value that is used to switch TX rate (see below)
->   * 	err	current error: target vs. current failed frames percentage
->   * 	last_err	last error
->   * 	err_avg	average (i.e. poor man's integral) of recent errors
-> + *	sharpening	non-zero when fast response is needed (i.e. right after
-> + *			association or interpolation), heading to zero over time
->   * 	CP	Proportional coefficient
->   * 	CI	Integral coefficient
->   * 	CD	Derivative coefficient
-> @@ -65,6 +67,11 @@
->  #define RC_PID_SMOOTHING_SHIFT 3
->  #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
->  
-> +/* Sharpening factor (used for D part of PID controller) */
-> +#define RATE_CONTROL_SHARPENING_SHIFT 2
-> +#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-> +#define RATE_CONTROL_SHARPENING_DURATION 1
-> +
->  /* Fixed point arithmetic shifting amount. */
->  #define RC_PID_ARITH_SHIFT 8
->  
-> @@ -127,8 +134,11 @@ struct rc_pid_sta_info {
->  	 */
->  	s32 err_avg_sc;
->  
-> -	/* Last framed failes percentage sample */
-> +	/* Last framed failes percentage sample. */
->  	u32 last_pf;
-> +
-> +	/* Sharpening needed. */
-> +	u8 sharp_cnt;
->  };
->  
->  /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
-> @@ -271,10 +281,12 @@ static void rate_control_pid_sample(stru
->  	spinfo->last_sample = jiffies;
->  
->  	/* If no frames were transmitted, we assume the old sample is
-> -	 * still a good measurement and copy it. */
-> -	if (spinfo->tx_num_xmit == 0)
-> +	 * still a good measurement and copy it, and turn the sharpening factor
-> +	 * on. */
-> +	if (spinfo->tx_num_xmit == 0) {
->  		pf = spinfo->last_pf;
-> -	else {
-> +		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
-> +	} else {
+Checked  this  morning  but I'm still getting errors there. Could I be missing
+some configuration of the build?
 
-Note that current rate_control_pid_sample() is only called from
-rate_control_pid_tx_status(), which does an tx_num_xmit++ in advance. So
-the tx_num_xmit branch should actually never be executed (I kept it only
-to guard against any division by zero errors). I guess this makes the
-whole patch basically a noop.
 
->  		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
->  		pf <<= RC_PID_ARITH_SHIFT;
->  
-> @@ -314,8 +326,11 @@ static void rate_control_pid_sample(stru
->  	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
->  	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
->  
-> -	err_der = pf - spinfo->last_pf;
-> +	err_der = pf - spinfo->last_pf
-> +		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
->  	spinfo->last_pf = pf;
-> +	if (spinfo->sharp_cnt)
-> +			spinfo->sharp_cnt--;
->  
->  	/* Compute the controller output. */
->  	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
-> 
-> 
+  CC [M]  /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o
+In file included from /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:44:
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/b43.h:783:3: error: #error "Using neither DMA nor PIO? Confused..."
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_interrupt_tasklet':
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:1451: error: implicit declaration of function 'b43_using_pio'
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_one_core_attach':
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: 'modparam_pio' undeclared (first use in this function)
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: (Each undeclared identifier is reported only once
+/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: for each function it appears in.)
+make[4]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o] Error 1
+make[3]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43] Error 2
+make[2]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_module_/home/lynx/compat-wireless-2.6] Error 2
+make[1]: Leaving directory `/usr/src/linux-2.6.23.9'
+make: *** [modules] Error 2
 
+
+I'll  be  off  my  parents  house till the next year. I'll be able to test the
+compilation but not the function with the device  till  January.  I'll  reprot
+back then.
+
+
+Thanks  very much for the help so far. Would be great to get the thing running
+some time.
+
+Lynx
