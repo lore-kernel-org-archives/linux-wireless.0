@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32735 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750741AbXLBWLN (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:37387 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbXLIK7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:13 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 2/8] rtl8180: fix tx power reading
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.62860.stgit@tetra.sourmilk.net> (sfid-20071202_221119_913769_A0D40E84)
-In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
+	Sun, 9 Dec 2007 05:59:09 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John H." <mistamaila@gmail.com>
+Subject: Re: b43 continues to have issue with APs at times
+Date: Sun, 9 Dec 2007 11:57:21 +0100
+Cc: "Larry Finger" <larry.finger@lwfinger.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com> <200712082135.11685.mb@bu3sch.de> <5b9417770712090001t631bb650l531fbb7efb1cc80c@mail.gmail.com>
+In-Reply-To: <5b9417770712090001t631bb650l531fbb7efb1cc80c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
+Message-Id: <200712091157.22000.mb@bu3sch.de> (sfid-20071209_105925_784002_884FDA9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
+On Sunday 09 December 2007 09:01:26 John H. wrote:
+> no, i stopped using ndiswrapper a while back because I wanted to use
+> b43, but I did not have this issue then.
 
-CCK and OFDM power levels are stored in adjacent bytes, not nibbles.
+But ndiswrapper doesn't use mac80211, right?
+Do you see this issue with other _mac80211_ drivers?
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
----
-
- drivers/net/wireless/rtl8180_rtl8225.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
-index 96b9b7f..6fb0659 100644
---- a/drivers/net/wireless/rtl8180_rtl8225.c
-+++ b/drivers/net/wireless/rtl8180_rtl8225.c
-@@ -261,8 +261,8 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	u32 reg;
- 	int i;
- 
--	cck_power = priv->channels[channel - 1].val & 0xF;
--	ofdm_power = priv->channels[channel - 1].val >> 4;
-+	cck_power = priv->channels[channel - 1].val & 0xFF;
-+	ofdm_power = priv->channels[channel - 1].val >> 8;
- 
- 	cck_power = min(cck_power, (u8)35);
- 	ofdm_power = min(ofdm_power, (u8)35);
-@@ -505,8 +505,8 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	const u8 *tmp;
- 	int i;
- 
--	cck_power = priv->channels[channel - 1].val & 0xF;
--	ofdm_power = priv->channels[channel - 1].val >> 4;
-+	cck_power = priv->channels[channel - 1].val & 0xFF;
-+	ofdm_power = priv->channels[channel - 1].val >> 8;
- 
- 	if (channel == 14)
- 		tmp = rtl8225z2_tx_power_cck_ch14;
+> On Dec 8, 2007 2:35 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> >
+> > On Saturday 08 December 2007 21:22:37 John H. wrote:
+> > > I have this problem at two different locations with two different
+> > > access points.  2.6.23.1 kernel, and sometimes until I actually power
+> > > down the AP and restart it, wpa_supplicant and such just times out on
+> > > the AP.
+> > >
+> > > Any ideas?
+> > >
+> > >
+> >
+> > I think that's rather a mac80211 or supplicant issue.
+> > I think roaming should handle this.
+> > Do you see this with other drivers, too?
+> >
+> > --
+> > Greetings Michael.
+> >
+> 
+> 
 
 
+
+-- 
+Greetings Michael.
