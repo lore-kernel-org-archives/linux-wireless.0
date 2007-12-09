@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:5824 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874AbXLGWW1 (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:42201 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbXLIVeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 17:22:27 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1854732pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 14:22:25 -0800 (PST)
-Message-ID: <43e72e890712071422j34ca2338xf98fda661f3c22fc@mail.gmail.com> (sfid-20071207_222230_268610_5A08193D)
-Date: Fri, 7 Dec 2007 17:22:24 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: 2.6.24-rc4-mm1
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <20071207021258.GA12624@darkstar.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071204211701.994dfce6.akpm@linux-foundation.org>
-	 <20071207021258.GA12624@darkstar.lan>
+	Sun, 9 Dec 2007 16:34:01 -0500
+Date: Sun, 9 Dec 2007 13:33:11 -0800
+From: Arjan van de Ven <arjan@infradead.org>
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
+Message-ID: <20071209133311.2db5ce4f@laptopd505.fenrus.org> (sfid-20071209_213407_535284_68CCE832)
+In-Reply-To: <587622.50680.qm@web52902.mail.re2.yahoo.com>
+References: <1193657365.19938.17.camel@localhost.localdomain>
+	<587622.50680.qm@web52902.mail.re2.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 6, 2007 9:12 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
+On Sun, 9 Dec 2007 19:41:58 +0000 (GMT)
+Chris Rankin <rankincj@yahoo.com> wrote:
+
 > Hi,
->
-> 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
-> drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
->
-> fix it with adjust the order of inline function body.
->
-> Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+> 
+> I've recently been having trouble loading the hostap_plx 802.11b
+> wireless networking driver, and this evening I managed to narrow the
+> problem down to these lines of code by copying code from hostap_plx
+> into a "test driver" until the test driver also locked the PC up:
+> 
+>         /* read CIS; it is in even offsets in the beginning of
+> attr_mem */ for (i = 0; i < CIS_MAX_LEN; i++)
+>                 cis[i] = readb(attr_mem + 2 * i);
+> 
+> If I comment these lines out then my test driver just complains about
+> the garbage CIS information and fails gracefully. Leave these lines
+> in and my PC freezes instantly.
+> 
+> These lines are part of the prism2_plx_check_cis() function, which is
+> called when the module first loads. CIX_MAX_LEN is a #define for 256,
+> and cis is a u8* pointer previously allocated as:
+> 
+> cis = kmalloc(CIS_MAX_LEN, GFP_KERNEL);
+> 
+> attr_mem is one of the function's paramters, and is defined as void
+> __iomem *attr_mem.
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-Thanks Dave. What version of gcc were you using? I haven't run into this.
+can you check if the attr_mem is properly ioremap'd ?
+(probably with ioremap_nocache)
 
-BTW, nothing new was added in this patch, things were just shifted,
-but even that may be copyrightable. Is it fair to assume you are
-licensing these changes under the same license the file is in?
 
-For this file we'd usually use:
+>         Region 2: Memory at e8002000 (32-bit, non-prefetchable)
+> [size=4K] Region 3: I/O ports at 1080 [size=64]
+> 
+> so there is apparently 4K of I/O memory at 0xe8002000.
+> 
+> Can anyone help me understand why my PC is locking up when it
+> executes this code, please?
 
-Changes-licensed-under: 3-clause-BSD
+I wonder if there's anything else in that area as well..
 
-For future reference:
 
-http://linuxwireless.org/en/developers/Documentation/SubmittingPatches#Changes-licensed-undertag
-
-  Luis
+-- 
+If you want to reach me at my work email, use arjan@linux.intel.com
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
