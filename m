@@ -1,77 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40744 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753090AbXLSPuK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:50:10 -0500
-Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
-	 <1197915515.4885.86.camel@johannes.berg>
-	 <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com>
-	 (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg>
-	 <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JIpq/jF0NrXxNcHK4kZx"
-Date: Wed, 19 Dec 2007 16:47:00 +0100
-Message-Id: <1198079220.4747.10.camel@johannes.berg> (sfid-20071219_155020_068728_87ADD046)
+Received: from mfe1.polimi.it ([131.175.12.23]:34599 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751138AbXLIU1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 15:27:46 -0500
+Date: Sun, 9 Dec 2007 21:21:33 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC/T][PATCH 2/3] rc80211-pid: introduce PID sharpening factor
+Message-ID: <20071209212133.43030d03@morte> (sfid-20071209_202749_864559_C3582E0C)
+In-Reply-To: <20071209211547.2d7fca32@morte>
+References: <20071209211547.2d7fca32@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-JIpq/jF0NrXxNcHK4kZx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch introduces a PID sharpening factor for faster response on
+association and interpolation.
 
 
-> > I'm just not sure why you'd want to. As far as I can the frames
-> already
-> > passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
->=20
-> No, not passed it yet, they are still queued for reordering, but as
-> aggregation is being tear down I am expected to drop the frames
-> that are still not in order.
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-But haven't they passed through __ieee80211_rx() as the aggregate frame?
+---
 
-> Again, if you see any performance issue with it, although this may
-> occur only once per session, do tell, if not, I would prefer to
-> leave it that way, as this will 1 - give more accurate statistics
-> of dropped frames, 2 - I don't want to drop frames in places
-> people will have trouble finding, other then the in the handlers.
+Index: wireless-2.6/net/mac80211/rc80211_pid.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid.c
++++ wireless-2.6/net/mac80211/rc80211_pid.c
+@@ -23,13 +23,15 @@
+  *
+  * The controller basically computes the following:
+  *
+- * adj = CP * err + CI * err_avg + CD * (err - last_err)
++ * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
+  *
+  * where
+  * 	adj	adjustment value that is used to switch TX rate (see below)
+  * 	err	current error: target vs. current failed frames percentage
+  * 	last_err	last error
+  * 	err_avg	average (i.e. poor man's integral) of recent errors
++ *	sharpening	non-zero when fast response is needed (i.e. right after
++ *			association or interpolation), heading to zero over time
+  * 	CP	Proportional coefficient
+  * 	CI	Integral coefficient
+  * 	CD	Derivative coefficient
+@@ -65,6 +67,11 @@
+ #define RC_PID_SMOOTHING_SHIFT 3
+ #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
+ 
++/* Sharpening factor (used for D part of PID controller) */
++#define RATE_CONTROL_SHARPENING_SHIFT 2
++#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
++#define RATE_CONTROL_SHARPENING_DURATION 1
++
+ /* Fixed point arithmetic shifting amount. */
+ #define RC_PID_ARITH_SHIFT 8
+ 
+@@ -127,8 +134,11 @@ struct rc_pid_sta_info {
+ 	 */
+ 	s32 err_avg_sc;
+ 
+-	/* Last framed failes percentage sample */
++	/* Last framed failes percentage sample. */
+ 	u32 last_pf;
++
++	/* Sharpening needed. */
++	u8 sharp_cnt;
+ };
+ 
+ /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
+@@ -271,10 +281,12 @@ static void rate_control_pid_sample(stru
+ 	spinfo->last_sample = jiffies;
+ 
+ 	/* If no frames were transmitted, we assume the old sample is
+-	 * still a good measurement and copy it. */
+-	if (spinfo->tx_num_xmit == 0)
++	 * still a good measurement and copy it, and turn the sharpening factor
++	 * on. */
++	if (spinfo->tx_num_xmit == 0) {
+ 		pf = spinfo->last_pf;
+-	else {
++		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
++	} else {
+ 		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
+ 		pf <<= RC_PID_ARITH_SHIFT;
+ 
+@@ -314,8 +326,11 @@ static void rate_control_pid_sample(stru
+ 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
+ 	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
+ 
+-	err_der = pf - spinfo->last_pf;
++	err_der = pf - spinfo->last_pf
++		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
+ 	spinfo->last_pf = pf;
++	if (spinfo->sharp_cnt)
++			spinfo->sharp_cnt--;
+ 
+ 	/* Compute the controller output. */
+ 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
 
-No I guess it's ok I'm just trying to understand it better.
 
-johannes
-
---=-JIpq/jF0NrXxNcHK4kZx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2k886Vg1VMiehFYAQLwPg/+ID2o2Nxsee6++OLO8JCY3Bks8JfaByMw
-dRwL0qsCJshnwdusAJsE2jpf9hnaYVzi2KgVmrhYuq4TPdJTHq02VtI3j0TTgF5e
-s59oy3seS+Yz2YlCGaQaQ/mo5r5Q+X/26rGLR7bJfheNIMhBOR2b8zAsaq04bx9U
-F4abCj4tUFs/IVLNXS6w9bAEu64Kmz2gIW3AVgZzIWhAgyMsARWT0izhCRGot8dT
-FPcQg/nvVBio/GcHegfMq18NmdU2uNwU7c57oW+B52yL5kCqMRapKFUB1ibS7v0j
-S0eqgrszo3j9Op3Uq8ycsEfRWKP+SwBTttteJcvcjSFg3VkQOXg/PQ3Gs4esv35j
-WnFJ5WR8aBxk1jJvHOcJKo+NY1gwQwdiVKvRayImdKrxuQqHtvN+xEWpOaiWnvSS
-KDmwDZT+vXDMKYOUnDdiCG87s4r4IIA4c8pDsmEgAD2EkGtLUVzAsVUaPhLeFNBx
-XjHMalcizTmG23RGCs46sTd1IKyRgTdtNPi/xW7vlZ4a3Zw18vInK5NrbuzGLeO7
-Gg/i2Kk6BT7zAZIAeSasbBgTtOfH0N0wC6OlKcHn/YOrGCNGklxccbgx4uT/6N6S
-ul2/v9JmyROoLyUNX7sF9+H5gK7ed9yq5hgbsd4qPs3MUcaccu64KSfShwmNxHhu
-0qcn8ogFyBY=
-=bBI7
------END PGP SIGNATURE-----
-
---=-JIpq/jF0NrXxNcHK4kZx--
-
+-- 
+Ciao
+Stefano
