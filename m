@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s24.bay0.hotmail.com ([65.54.246.224]:13857 "EHLO
-	bay0-omc3-s24.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751674AbXLLGcH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 01:32:07 -0500
-Message-ID: <BAY134-W31772881320A4FEC2E822FD4650@phx.gbl> (sfid-20071212_063213_851933_665DD91E)
-From: Joachim Frieben <jfrieben@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: RE: Misleading PCI id information on chipsets supported by ath5k
-Date: Wed, 12 Dec 2007 06:32:06 +0000
-In-Reply-To: <59117.84.58.189.94.1197434396.squirrel@webmail.madwifi.org>
-References: <BAY134-W251B269AE3F727106D931FD4640@phx.gbl>
- <59117.84.58.189.94.1197434396.squirrel@webmail.madwifi.org>
-Content-Type: text/plain; charset=US-ASCII
+Received: from web52902.mail.re2.yahoo.com ([206.190.49.12]:33547 "HELO
+	web52902.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751021AbXLIWGW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 17:06:22 -0500
+Date: Sun, 9 Dec 2007 22:06:21 +0000 (GMT)
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071209133311.2db5ce4f@laptopd505.fenrus.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Message-ID: <642708.11296.qm@web52902.mail.re2.yahoo.com> (sfid-20071209_220628_186444_745207D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- Arjan van de Ven <arjan@infradead.org> wrote:
+> can you check if the attr_mem is properly ioremap'd ?
+> (probably with ioremap_nocache)
 
-> Date: Wed, 12 Dec 2007 05:39:56 +0100
-> Subject: Re: Misleading PCI id information on chipsets supported by ath5k
-> From: mrenzmann@madwifi.org
-> To: jfrieben@hotmail.com
-> CC: linux-wireless@vger.kernel.org
-> ...
-> If at all, PCI IDs can be seen as evidence but should not be regarded
-> authoritative in terms of chipset identification. ath_info does a better
-> job here.
-> 
-> Bye, Mike
- 
-Sure, that's what I wrote in my last mail ".. either the PCI id is not an appropriate way to label whether a device is supported or not .." - which brings me back to my initial request to update the ath5k information page in order to account for this ambiguity. ~jf
-_________________________________________________________________
-Importieren Sie ganz einfach Ihre E-Mail Adressen in den Messenger!
-http://messenger.live.de/community/neuekontakte_adressimport.html
+Can you elaborate, please? I am not familiar with these I/O primitives.
+
+> I wonder if there's anything else in that area as well..
+
+So I should check /proc/iomem? But wouldn't Linux complain if two PCI devices conflicted as you're
+suggesting?
+
+Cheers,
+Chris
+
+
+
+
+
+      ___________________________________________________________
+Support the World Aids Awareness campaign this month with Yahoo! For Good http://uk.promotions.yahoo.com/forgood/
