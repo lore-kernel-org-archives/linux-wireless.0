@@ -1,278 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28918 "EHLO mga02.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:34896 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610AbXLYPAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 10:00:52 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 5/8 v3] mac80211: A-MPDU Rx handling aggregation reordering
-Date: Tue, 25 Dec 2007 17:00:35 +0200
-Message-Id: <11985948452088-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150106_448517_F15F9014)
-In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751502AbXLISfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 13:35:06 -0500
+Received: from public by ciao.gmane.org with local (Exim 4.43)
+	id 1J1QzJ-000738-8W
+	for linux-wireless@vger.kernel.org; Sun, 09 Dec 2007 18:34:49 +0000
+Message-ID: <475C3538.1070501@gmail.com> (sfid-20071209_183512_285697_129CC7E7)
+Date: Sun, 09 Dec 2007 18:34:32 +0000
+MIME-Version: 1.0
+To: Dan Williams <public-dcbw-H+wXaHxf7aLQT0dZR+AlfA@ciao.gmane.org>
+CC: David Miller <public-davem-fT/PcQaiUtIeIZ0/mPfg9Q@ciao.gmane.org>,
+	public-linville-2XuSBdqkA4R54TAoqtyWWQ@ciao.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@ciao.gmane.org,
+	public-jt-sDzT885Ts8HQT0dZR+AlfA@ciao.gmane.org
+Subject: Re: [PATCH] introduce WEXT scan capabilities
+References: <1197073366.4563.15.camel@localhost.localdomain>	 <20071207.181221.09900510.davem@davemloft.net> <1197221467.9149.31.camel@localhost.localdomain>
+In-Reply-To: <1197221467.9149.31.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch handles the reordering of the Rx A-MPDU.
-This issue occurs when the sequence of the internal MPDUs is not in the
-right order. such a case can be encountered for example when some MPDUs from
-previous aggregations were recieved, while others failed, so current A-MPDU
-will contain a mix of re-transmited MPDUs and new ones.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   10 ++-
- net/mac80211/rx.c            |  185 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 192 insertions(+), 3 deletions(-)
 
-Index: wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
-===================================================================
---- wl2_6_24_rc5.orig/net/mac80211/ieee80211_sta.c
-+++ wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
-@@ -1212,7 +1212,7 @@ void ieee80211_sta_stop_rx_ba_session(st
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct sta_info *sta;
--	int ret;
-+	int ret, i;
- 
- 	sta = sta_info_get(local, ra);
- 	if (!sta)
-@@ -1254,6 +1254,14 @@ void ieee80211_sta_stop_rx_ba_session(st
- 		ieee80211_send_delba(dev, ra, tid, 0, reason);
- 
- 	/* free the reordering buffer */
-+	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid].buf_size; i++) {
-+		if (sta->ampdu_mlme.tid_rx[tid].reorder_buf[i]) {
-+			/* release the reordered frames */
-+			dev_kfree_skb(sta->ampdu_mlme.tid_rx[tid].reorder_buf[i]);
-+			sta->ampdu_mlme.tid_rx[tid].stored_mpdu_num--;
-+			sta->ampdu_mlme.tid_rx[tid].reorder_buf[i] = NULL;
-+		}
-+	}
- 	kfree(sta->ampdu_mlme.tid_rx[tid].reorder_buf);
- 
- 	sta->ampdu_mlme.tid_rx[tid].state = HT_AGG_STATE_IDLE;
-Index: wl2_6_24_rc5/net/mac80211/rx.c
-===================================================================
---- wl2_6_24_rc5.orig/net/mac80211/rx.c
-+++ wl2_6_24_rc5/net/mac80211/rx.c
-@@ -314,7 +314,6 @@ u32 ieee80211_rx_load_stats(struct ieee8
- 
- 	/* Divide channel_use by 8 to avoid wrapping around the counter */
- 	load >>= CHAN_UTIL_SHIFT;
--	local->channel_use_raw += load;
- 
- 	return load;
- }
-@@ -1715,6 +1714,186 @@ void __ieee80211_rx_handle_packet(struct
- 		sta_info_put(sta);
- }
- 
-+#define SEQ_MODULO 0x1000
-+#define SEQ_MASK   0xfff
-+
-+static inline int seq_less(u16 sq1, u16 sq2)
-+{
-+	return (((sq1 - sq2) & SEQ_MASK) > (SEQ_MODULO >> 1));
-+}
-+
-+static inline u16 seq_inc(u16 sq)
-+{
-+	return ((sq + 1) & SEQ_MASK);
-+}
-+
-+static inline u16 seq_sub(u16 sq1, u16 sq2)
-+{
-+	return ((sq1 - sq2) & SEQ_MASK);
-+}
-+
-+
-+u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
-+				struct tid_ampdu_rx *tid_agg_rx,
-+				struct sk_buff *skb, u16 mpdu_seq_num,
-+				int bar_req)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_rx_status status;
-+	u16 head_seq_num, buf_size;
-+	int index;
-+	u32 pkt_load;
-+
-+	buf_size = tid_agg_rx->buf_size;
-+	head_seq_num = tid_agg_rx->head_seq_num;
-+
-+	/* frame with out of date sequence number */
-+	if (seq_less(mpdu_seq_num, head_seq_num)) {
-+		dev_kfree_skb(skb);
-+		return 1;
-+	}
-+
-+	/* if frame sequence number exceeds our buffering window size or
-+	 * block Ack Request arrived - release stored frames */
-+	if ((!seq_less(mpdu_seq_num, head_seq_num + buf_size)) || (bar_req)) {
-+		/* new head to the ordering buffer */
-+		if (bar_req)
-+			head_seq_num = mpdu_seq_num;
-+		else
-+			head_seq_num =
-+				seq_inc(seq_sub(mpdu_seq_num, buf_size));
-+		/* release stored frames up to new head to stack */
-+		while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
-+			index = seq_sub(tid_agg_rx->head_seq_num,
-+				tid_agg_rx->ssn)
-+				% tid_agg_rx->buf_size;
-+
-+			if (tid_agg_rx->reorder_buf[index]) {
-+				/* release the reordered frames to stack */
-+				memcpy(&status,
-+					tid_agg_rx->reorder_buf[index]->cb,
-+					sizeof(status));
-+				pkt_load = ieee80211_rx_load_stats(local,
-+						tid_agg_rx->reorder_buf[index],
-+						&status);
-+				__ieee80211_rx_handle_packet(hw,
-+					tid_agg_rx->reorder_buf[index],
-+					&status, pkt_load);
-+				tid_agg_rx->stored_mpdu_num--;
-+				tid_agg_rx->reorder_buf[index] = NULL;
-+			}
-+			tid_agg_rx->head_seq_num =
-+				seq_inc(tid_agg_rx->head_seq_num);
-+		}
-+		if (bar_req)
-+			return 1;
-+	}
-+
-+	/* now the new frame is always in the range of the reordering */
-+	/* buffer window */
-+	index = seq_sub(mpdu_seq_num, tid_agg_rx->ssn)
-+				% tid_agg_rx->buf_size;
-+	/* check if we already stored this frame */
-+	if (tid_agg_rx->reorder_buf[index]) {
-+		dev_kfree_skb(skb);
-+		return 1;
-+	}
-+
-+	/* if arrived mpdu is in the right order and nothing else stored */
-+	/* release it immediately */
-+	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
-+			tid_agg_rx->stored_mpdu_num == 0) {
-+		tid_agg_rx->head_seq_num =
-+			seq_inc(tid_agg_rx->head_seq_num);
-+		return 0;
-+	}
-+
-+	/* put the frame in the reordering buffer */
-+	tid_agg_rx->reorder_buf[index] = skb;
-+	tid_agg_rx->stored_mpdu_num++;
-+	/* release the buffer until next missing frame */
-+	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
-+						% tid_agg_rx->buf_size;
-+	while (tid_agg_rx->reorder_buf[index]) {
-+		/* release the reordered frame back to stack */
-+		memcpy(&status, tid_agg_rx->reorder_buf[index]->cb,
-+			sizeof(status));
-+		pkt_load = ieee80211_rx_load_stats(local,
-+					tid_agg_rx->reorder_buf[index],
-+					&status);
-+		__ieee80211_rx_handle_packet(hw, tid_agg_rx->reorder_buf[index],
-+						&status, pkt_load);
-+		tid_agg_rx->stored_mpdu_num--;
-+		tid_agg_rx->reorder_buf[index] = NULL;
-+		tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-+		index =	seq_sub(tid_agg_rx->head_seq_num,
-+			tid_agg_rx->ssn) % tid_agg_rx->buf_size;
-+	}
-+	return 1;
-+}
-+
-+u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
-+			      struct sk_buff *skb)
-+{
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct sta_info *sta;
-+	struct tid_ampdu_rx *tid_agg_rx;
-+	u16 fc, sc;
-+	u16 mpdu_seq_num;
-+	u8 ret = 0, *qc;
-+	int tid;
-+
-+	sta = sta_info_get(local, hdr->addr2);
-+	if (!sta)
-+		return ret;
-+
-+	fc = le16_to_cpu(hdr->frame_control);
-+
-+	/* filter the QoS data rx stream according to
-+	 * STA/TID and check if this STA/TID is on aggregation */
-+	if (!WLAN_FC_IS_QOS_DATA(fc))
-+		goto end_reorder;
-+
-+	qc = skb->data + ieee80211_get_hdrlen(fc) - QOS_CONTROL_LEN;
-+	tid = qc[0] & QOS_CONTROL_TID_MASK;
-+	tid_agg_rx = &(sta->ampdu_mlme.tid_rx[tid]);
-+
-+	if (tid_agg_rx->state != HT_AGG_STATE_OPERATIONAL)
-+		goto end_reorder;
-+
-+	/* null data frames are excluded */
-+	if (unlikely(fc & IEEE80211_STYPE_QOS_NULLFUNC))
-+		goto end_reorder;
-+
-+	/* new un-ordered ampdu frame - process it */
-+
-+	/* reset session timer */
-+	if (tid_agg_rx->timeout) {
-+		unsigned long expires =
-+			jiffies + (tid_agg_rx->timeout / 1000) * HZ;
-+		mod_timer(&tid_agg_rx->session_timer, expires);
-+	}
-+
-+	/* if this mpdu is fragmented - terminate rx aggregation session */
-+	sc = le16_to_cpu(hdr->seq_ctrl);
-+	if (sc & IEEE80211_SCTL_FRAG) {
-+		ieee80211_sta_stop_rx_ba_session(sta->dev, sta->addr,
-+			tid, 0, WLAN_REASON_QSTA_REQUIRE_SETUP);
-+		ret = 1;
-+		goto end_reorder;
-+	}
-+
-+	/* according to mpdu sequence number deal with reordering buffer */
-+	mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
-+	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
-+						mpdu_seq_num, 0);
-+end_reorder:
-+	if (sta)
-+		sta_info_put(sta);
-+	return ret;
-+}
-+
- /*
-  * This is the receive path handler. It is called by a low level driver when an
-  * 802.11 MPDU is received from the hardware.
-@@ -1745,8 +1924,10 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	}
- 
- 	pkt_load = ieee80211_rx_load_stats(local, skb, status);
-+	local->channel_use_raw += pkt_load;
- 
--	__ieee80211_rx_handle_packet(hw, skb, status, pkt_load);
-+	if (!ieee80211_rx_reorder_ampdu(local, skb))
-+		__ieee80211_rx_handle_packet(hw, skb, status, pkt_load);
- 
- 	rcu_read_unlock();
- }
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Dan Williams wrote:
+> On Fri, 2007-12-07 at 18:12 -0800, David Miller wrote:
+>> From: Dan Williams <dcbw-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Date: Fri, 07 Dec 2007 19:22:46 -0500
+>>
+>>> @@ -1040,6 +1049,16 @@ struct	iw_range
+>>>  	 * because each entry contain its channel index */
+>>>  
+>>>  	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
+>>> +
+>>> +	/* Do *NOT* use those fields, they are just used as padding to get
+>>> +	 * proper alignement with user space */
+>>> +	__s32		reserved1;
+>>> +	__s32		reserved2;
+>>> +	__u16		reserved3;
+>>> +	__s32		reserved4;
+>>> +	__u32		reserved5;
+>>> +
+>>> +	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
+>>>  };
+>>>  
+>>>  /*
+>> Major NACK.  These datastructure usages are complete wrong, and
+>> we have to stop spreading this problem instead of continuing on
+>> with it as if it's OK.
+> 
+> There's not too much we can do here.  We need a better way to support
+> driver/card capabilities in WEXT right _now_, in parallel with
+> cfg80211/nl80211.  The other alternative here is to have a 64-bit
+> generic capabilities field-to-end-all-fields and add more bitfield
+> position constants to that without extending the structure any more.
+> 
+> Is there a better way you'd propose to do this _in_WEXT_?
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Since iw_range is not packed, there are a few locations where there is some padding. You could quite easily shoehorn an 8 bit bitmask into the existing structure without impacting backward compatibility (unless userspace is using the padding for something). For example:
+
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -1035,6 +1035,7 @@ struct    iw_range
+        /* Frequency */
+        __u16           num_channels;   /* Number of channels [0; num - 1] */
+        __u8            num_frequency;  /* Number of entry in the list */
++       __u8            scan_capa;      /* scan capabilities */
+        struct iw_freq  freq[IW_MAX_FREQUENCIES];       /* list */
+        /* Note : this frequency list doesn't need to fit channel numbers,
+         * because each entry contain its channel index */
+
+Other candidate blocks are Old Frequency, Rates, Encoder stuff, Transmit power.
+
+Dave.
+
+> I don't really forsee any more extending of this structure, since I
+> think scan capabilities are the last thing we really need to know about.
 
