@@ -1,113 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56787 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762779AbXLMG71 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:27 -0500
-Subject: [PATCH 64/48] libertas: wait for 'firmware ready' event from firmware after loading
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2j-0005s8-V9@shinybook.infradead.org> (sfid-20071213_070634_391102_E9961370)
-Date: Thu, 13 Dec 2007 01:59:37 -0500
+Received: from mga03.intel.com ([143.182.124.21]:10037 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750865AbXLIMdv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 07:33:51 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: pass in PS_POLL frames
+Date: Sun,  9 Dec 2007 14:33:42 +0200
+Message-Id: <11972036221022-git-send-email-ron.rindjunsky@intel.com> (sfid-20071209_123357_394901_AC10C55A)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 13:15:25 -0500
+This patch fixes should_drop_frame function to pass in ps poll control
+frames required for power save functioanlity. Interface types that do not
+have interest for PS POLL frames now drop it in handler.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/libertas/host.h   |    1 +
- drivers/net/wireless/libertas/if_usb.c |   26 +++++++++++++++++++++-----
- 2 files changed, 22 insertions(+), 5 deletions(-)
+ net/mac80211/ieee80211_i.h |    5 +++++
+ net/mac80211/rx.c          |   10 ++++++++--
+ net/mac80211/util.c        |    6 +++++-
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index 4828bbf..b23af19 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -304,5 +304,6 @@ enum cmd_mesh_access_opts {
- #define MACREG_INT_CODE_RSSI_HIGH               28
- #define MACREG_INT_CODE_SNR_HIGH                29
- #define MACREG_INT_CODE_MESH_AUTO_STARTED       35
-+#define MACREG_INT_CODE_FIRMWARE_READY          48
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2476cc5..a7746da 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -58,6 +58,11 @@ struct ieee80211_local;
+  * increased memory use (about 2 kB of RAM per entry). */
+ #define IEEE80211_FRAGMENT_MAX 4
  
- #endif
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 6cd6c96..c94b6df 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -230,6 +230,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 		goto err_prog_firmware;
- 
- 	cardp->priv = priv;
-+	cardp->priv->fw_ready = 1;
- 
- 	if (lbs_add_mesh(priv, &udev->dev))
- 		goto err_add_mesh;
-@@ -241,10 +242,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 	priv->hw_read_event_cause = if_usb_read_event_cause;
- 	priv->boot2_version = udev->descriptor.bcdDevice;
- 
--	/* Delay 200 ms to waiting for the FW ready */
- 	if_usb_submit_rx_urb(cardp);
--	msleep_interruptible(200);
--	priv->fw_ready = 1;
- 
- 	if (lbs_start_card(priv))
- 		goto err_start_card;
-@@ -514,6 +512,21 @@ static void if_usb_receive_fwload(struct urb *urb)
- 		return;
- 	}
- 
-+	if (cardp->fwdnldover) {
-+		__le32 *tmp = (__le32 *)(skb->data + IPFIELD_ALIGN_OFFSET);
++/* IEEE 80211.11 minimal headers length */
++#define IEEE80211_HDR_MIN_LEN_CTRL 16
++#define IEEE80211_HDR_MIN_LEN_DATA 24
++#define IEEE80211_HDR_MIN_LEN_MGMT 24
 +
-+		if (tmp[0] == cpu_to_le32(CMD_TYPE_INDICATION) &&
-+		    tmp[1] == cpu_to_le32(MACREG_INT_CODE_FIRMWARE_READY)) {
-+			lbs_pr_info("Firmware ready event received\n");
-+			wake_up(&cardp->fw_wq);
-+		} else {
-+			lbs_deb_usb("Waiting for confirmation; got %x %x\n", le32_to_cpu(tmp[0]),
-+				    le32_to_cpu(tmp[1]));
-+			if_usb_submit_rx_urb_fwload(cardp);
-+		}
-+		kfree_skb(skb);
-+		return;
-+	}
- 	if (cardp->bootcmdresp <= 0) {
- 		memcpy (&bootcmdresp, skb->data + IPFIELD_ALIGN_OFFSET,
- 			sizeof(bootcmdresp));
-@@ -529,7 +542,8 @@ static void if_usb_receive_fwload(struct urb *urb)
- 			if (bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_REQUEST) ||
- 			    bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_DATA) ||
- 			    bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_INDICATION)) {
--				lbs_pr_info("Firmware already seems alive; resetting\n");
-+				if (!cardp->bootcmdresp)
-+					lbs_pr_info("Firmware already seems alive; resetting\n");
- 				cardp->bootcmdresp = -1;
- 			} else {
- 				lbs_pr_info("boot cmd response wrong magic number (0x%x)\n",
-@@ -590,8 +604,9 @@ static void if_usb_receive_fwload(struct urb *urb)
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9009444..3bd9edc 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -61,8 +61,10 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
+ 		return 1;
+ 	if (unlikely(skb->len < 16 + present_fcs_len + radiotap_len))
+ 		return 1;
+-	if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
+-			cpu_to_le16(IEEE80211_FTYPE_CTL))
++	if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
++			cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
++	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
++			cpu_to_le16(IEEE80211_STYPE_PSPOLL)))
+ 		return 1;
+ 	return 0;
+ }
+@@ -874,6 +876,7 @@ ieee80211_rx_h_defragment(struct ieee80211_txrx_data *rx)
+ static ieee80211_txrx_result
+ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 	struct sk_buff *skb;
+ 	int no_pending_pkts;
+ 	DECLARE_MAC_BUF(mac);
+@@ -884,6 +887,9 @@ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
+ 		   !(rx->flags & IEEE80211_TXRXD_RXRA_MATCH)))
+ 		return TXRX_CONTINUE;
  
- 	if_usb_send_fw_pkt(cardp);
- 
--	if_usb_submit_rx_urb_fwload(cardp);
-  exit:
-+	if_usb_submit_rx_urb_fwload(cardp);
++	if (sdata->type == IEEE80211_IF_TYPE_STA)
++		return TXRX_DROP;
 +
- 	kfree(syncfwheader);
+ 	skb = skb_dequeue(&rx->sta->tx_filtered);
+ 	if (!skb) {
+ 		skb = skb_dequeue(&rx->sta->ps_tx_buf);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f90287a..b53644c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -134,13 +134,15 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
+ {
+ 	u16 fc;
  
- 	return;
-@@ -934,6 +949,7 @@ restart:
- 	wait_event_interruptible(cardp->fw_wq, cardp->surprise_removed || cardp->fwdnldover);
- 	
- 	del_timer_sync(&cardp->fw_timeout);
-+	usb_kill_urb(cardp->rx_urb);
+-	if (len < 24)
++	if (len < IEEE80211_HDR_MIN_LEN_CTRL)
+ 		return NULL;
  
- 	if (!cardp->fwdnldover) {
- 		lbs_pr_info("failed to load fw, resetting device!\n");
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	switch (fc & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_DATA:
++		if (len < IEEE80211_HDR_MIN_LEN_DATA)
++			return NULL;
+ 		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+ 		case IEEE80211_FCTL_TODS:
+ 			return hdr->addr1;
+@@ -153,6 +155,8 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
+ 		}
+ 		break;
+ 	case IEEE80211_FTYPE_MGMT:
++		if (len < IEEE80211_HDR_MIN_LEN_MGMT)
++			return NULL;
+ 		return hdr->addr3;
+ 	case IEEE80211_FTYPE_CTL:
+ 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
 -- 
-1.5.3.4
+1.5.3.3
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
