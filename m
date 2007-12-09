@@ -1,55 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41494 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbXLKPLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 10:11:34 -0500
-Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
-From: Dan Williams <dcbw@redhat.com>
-To: David Miller <davem@davemloft.net>
-Cc: jt@hpl.hp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-In-Reply-To: <20071210.205139.262078026.davem@davemloft.net>
-References: <1197307403.18585.10.camel@localhost.localdomain>
-	 <20071210.161144.190139513.davem@davemloft.net>
-	 <1197346930.16807.7.camel@localhost.localdomain>
-	 <20071210.205139.262078026.davem@davemloft.net>
-Content-Type: text/plain
-Date: Tue, 11 Dec 2007 10:01:23 -0500
-Message-Id: <1197385283.26363.1.camel@localhost.localdomain> (sfid-20071211_151137_603501_52035F87)
-Mime-Version: 1.0
+Received: from el-out-1112.google.com ([209.85.162.179]:25145 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbXLIRzb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 12:55:31 -0500
+Received: by el-out-1112.google.com with SMTP id v27so173318ele
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Dec 2007 09:55:29 -0800 (PST)
+Message-ID: <40f31dec0712090955l4ffada24p302414593e440c9d@mail.gmail.com> (sfid-20071209_175542_968957_057C1C6C)
+Date: Sun, 9 Dec 2007 19:55:29 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: 2.6.24-rc4-mm1
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20071207021258.GA12624@darkstar.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20071204211701.994dfce6.akpm@linux-foundation.org>
+	 <20071207021258.GA12624@darkstar.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-12-10 at 20:51 -0800, David Miller wrote:
-> From: Dan Williams <dcbw@redhat.com>
-> Date: Mon, 10 Dec 2007 23:22:10 -0500
-> 
-> > On Mon, 2007-12-10 at 16:11 -0800, David Miller wrote:
-> > > From: Dan Williams <dcbw@redhat.com>
-> > > Date: Mon, 10 Dec 2007 12:23:23 -0500
-> > > 
-> > > > Is this an unconditional NAK for any changes to WEXT?
-> > > 
-> > > Well, it is at least completely proven that you cannot
-> > > extend the structures without crapping all over random
-> > > areas of the stack space of the user application.
-> > > 
-> > > So at a minimum you're going to get NAKs for any patch
-> > > that does things that way.
-> > 
-> > So would another WEXT subcommand be acceptable to you?
-> 
-> I might find using the existing spare space bearable, but
-> even that is a stretch.
-> 
-> We need to completely deprecate WEXT as fast as possible
-> and adding new features to it won't help that.
+2007/12/7, Dave Young <hidave.darkstar@gmail.com>:
+> Hi,
+>
+> 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
+> drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
+>
+> fix it with adjust the order of inline function body.
+>
+> Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+>
+> ---
+> drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
+> 1 file changed, 29 insertions(+), 38 deletions(-)
+>
+> diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
+> --- linux/drivers/net/wireless/ath5k/base.c     2007-12-07 10:01:42.000000000 +0800
+> +++ linux.new/drivers/net/wireless/ath5k/base.c 2007-12-07 10:01:49.000000000 +0800
+> @@ -250,8 +250,19 @@ static int         ath5k_rxbuf_setup(struct ath
+>  static int     ath5k_txbuf_setup(struct ath5k_softc *sc,
+>                                 struct ath5k_buf *bf,
+>                                 struct ieee80211_tx_control *ctl);
+> +
+>  static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
+> -                               struct ath5k_buf *bf);
+> +                               struct ath5k_buf *bf)
+> +{
+> +       BUG_ON(!bf);
+> +       if (!bf->skb)
+> +               return;
+> +       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> +                       PCI_DMA_TODEVICE);
+> +       dev_kfree_skb(bf->skb);
+> +       bf->skb = NULL;
+> +}
+> +
+>  /* Queues setup */
+>  static struct  ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
+>                                 int qtype, int subtype);
+> @@ -278,14 +289,29 @@ static int        ath5k_beacon_setup(struct at
+>                                 struct ieee80211_tx_control *ctl);
+>  static void    ath5k_beacon_send(struct ath5k_softc *sc);
+>  static void    ath5k_beacon_config(struct ath5k_softc *sc);
+> -static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
+> +
+> +static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> +{
+> +       u64 tsf = ath5k_hw_get_tsf64(ah);
+> +
+> +       if ((tsf & 0x7fff) < rstamp)
+> +               tsf -= 0x8000;
+> +
+> +       return (tsf & ~0x7fff) | rstamp;
+> +}
+> +
+>  /* Interrupt handling */
+>  static int     ath5k_init(struct ath5k_softc *sc);
+>  static int     ath5k_stop_locked(struct ath5k_softc *sc);
+>  static int     ath5k_stop_hw(struct ath5k_softc *sc);
+>  static irqreturn_t ath5k_intr(int irq, void *dev_id);
+>  static void    ath5k_tasklet_reset(unsigned long data);
+> -static inline void ath5k_update_txpow(struct ath5k_softc *sc);
+> +
+> +static inline void ath5k_update_txpow(struct ath5k_softc *sc)
+> +{
+> +       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> +}
+> +
+>  static void    ath5k_calibrate(unsigned long data);
+>  /* LED functions */
+>  static void    ath5k_led_off(unsigned long data);
+> @@ -1341,21 +1367,6 @@ err_unmap:
+>         return ret;
+>  }
+>
+> -static inline void
+> -ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
+> -{
+> -       BUG_ON(!bf);
+> -       if (!bf->skb)
+> -               return;
+> -       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> -                       PCI_DMA_TODEVICE);
+> -       dev_kfree_skb(bf->skb);
+> -       bf->skb = NULL;
+> -}
+> -
+> -
+> -
+> -
+>  /**************\
+>  * Queues setup *
+>  \**************/
+> @@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
+>  #undef TSF_TO_TU
+>  }
+>
+> -static inline
+> -u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> -{
+> -       u64 tsf = ath5k_hw_get_tsf64(ah);
+> -
+> -       if ((tsf & 0x7fff) < rstamp)
+> -               tsf -= 0x8000;
+> -
+> -       return (tsf & ~0x7fff) | rstamp;
+> -}
+> -
+> -
+> -
+> -
+>  /********************\
+>  * Interrupt handling *
+>  \********************/
+> @@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
+>         ath5k_reset(sc->hw);
+>  }
+>
+> -static inline void
+> -ath5k_update_txpow(struct ath5k_softc *sc)
+> -{
+> -       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> -}
+> -
+>  /*
+>   * Periodically recalibrate the PHY to account
+>   * for temperature/environment changes.
+>
 
-Yeah, but dropping WEXT on the floor is unacceptable when it is the only
-thing that is in use today.  We will certainly work to get
-nl80211/cfg80211 in shape, but we must live with WEXT.  I will post a
-patch that uses the existing space inside the range structure.
+We'll change their order in the code, plz keep prototype declarations
+clean. I'll submit a patch asap on this.
 
-Dan
-
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
