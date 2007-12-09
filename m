@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47468 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755463AbXLQSJI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 13:09:08 -0500
-Subject: Re: [PATCH 4/8] mac80211: A-MPDU Rx MLME data initialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Received: from mx1.redhat.com ([66.187.233.31]:52031 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750940AbXLIRmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 12:42:08 -0500
+Subject: Re: [PATCH] introduce WEXT scan capabilities
+From: Dan Williams <dcbw@redhat.com>
+To: David Miller <davem@davemloft.net>
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11979070784033-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070784033-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FzTqix0HtePUj66/AX/Y"
-Date: Mon, 17 Dec 2007 19:09:03 +0100
-Message-Id: <1197914943.4885.78.camel@johannes.berg> (sfid-20071217_180912_652090_5C25FAA3)
+	jt@hpl.hp.com
+In-Reply-To: <20071207.181221.09900510.davem@davemloft.net>
+References: <1197073366.4563.15.camel@localhost.localdomain>
+	 <20071207.181221.09900510.davem@davemloft.net>
+Content-Type: text/plain
+Date: Sun, 09 Dec 2007 12:31:07 -0500
+Message-Id: <1197221467.9149.31.camel@localhost.localdomain> (sfid-20071209_174216_087963_DD06254C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-12-07 at 18:12 -0800, David Miller wrote:
+> From: Dan Williams <dcbw@redhat.com>
+> Date: Fri, 07 Dec 2007 19:22:46 -0500
+> 
+> > @@ -1040,6 +1049,16 @@ struct	iw_range
+> >  	 * because each entry contain its channel index */
+> >  
+> >  	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
+> > +
+> > +	/* Do *NOT* use those fields, they are just used as padding to get
+> > +	 * proper alignement with user space */
+> > +	__s32		reserved1;
+> > +	__s32		reserved2;
+> > +	__u16		reserved3;
+> > +	__s32		reserved4;
+> > +	__u32		reserved5;
+> > +
+> > +	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
+> >  };
+> >  
+> >  /*
+> 
+> Major NACK.  These datastructure usages are complete wrong, and
+> we have to stop spreading this problem instead of continuing on
+> with it as if it's OK.
 
---=-FzTqix0HtePUj66/AX/Y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There's not too much we can do here.  We need a better way to support
+driver/card capabilities in WEXT right _now_, in parallel with
+cfg80211/nl80211.  The other alternative here is to have a 64-bit
+generic capabilities field-to-end-all-fields and add more bitfield
+position constants to that without extending the structure any more.
 
+Is there a better way you'd propose to do this _in_WEXT_?
 
-> +	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-> +	for (i =3D 0; i < STA_TID_NUM; i++) {
-> +		sta->timer_to_tid[i] =3D i;
+I don't really forsee any more extending of this structure, since I
+think scan capabilities are the last thing we really need to know about.
 
-Please add a comment here as well that this *must* be initialised to the
-identity mapping and have the comment mention the user(s).
+Dan
 
-johannes
-
---=-FzTqix0HtePUj66/AX/Y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2a7PqVg1VMiehFYAQLStg//bc+1lYa2L0gvnbhtEkZIeRjVl/PUg/P+
-5D0tR2MuDHtnRmmgBe9mlXOACBzAx0OvzJJJxmli3Qbp/W7lX/UWYvJY9U5B3CA9
-86zOvXTG6lLT1jVszwFWMNa7V+EV03PTlwwZqzQrnmmzzZTQMVBqBaDecbH2bkvH
-KeFwksmbDXZW1vFv6fVG7aYOOorOW4ZCNTkYA775vK2AqG6Cx1AgDdowsZ9P8m3M
-j+TE4nm9+Cle3+L//fnpCI+biAWzWx2UgX6VAzAqDAxQvin4G4CKurdehzvOuwmC
-7eAihVwMHCBba9scWkm6TnNP4pnc6BzuaiKLPH0yu/9/ZMNqDWifmVY/vbjW0LpA
-SsXDBK0pgcQKnjzDcmakaapozLGvTLMw6m+s9uvoOsEUiM/rH5hK7Lb949Mjjs40
-07UeOu2subC6Un3o1aqo55mBa03mP4hHKhLCzMokmT8OwkrbbbakVW9ushPvG/rP
-jscZsuulG32ByyattxQzsAkc742l/kqtbdIZRDYyMm+X5/HHqSFDayUFMDxdATzu
-mmK/cb2LP4PrLZHoDYoLGYcVMRuQRxpMph4IfKE/eNVQZHMzKemGt5r/89C2us/w
-Yh8xOhPmm5I1nLKrNRuRMp2WusoAsbnpPd6khqUv3lbi7bI+Wyym3fGKjjNIT2Tu
-tgi3Ypych50=
-=g1nk
------END PGP SIGNATURE-----
-
---=-FzTqix0HtePUj66/AX/Y--
 
