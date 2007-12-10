@@ -1,68 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2296 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973AbXLPSaB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 13:30:01 -0500
-Date: Sun, 16 Dec 2007 13:00:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: b43 problem with led trigger registration
-Message-ID: <20071216180006.GA3606@tuxdriver.com> (sfid-20071216_183008_827132_40A06B56)
-References: <1197822019.4138.2.camel@johannes.berg> <47655E26.2040309@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47655E26.2040309@lwfinger.net>
+Received: from bombadil.infradead.org ([18.85.46.34]:43169 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752971AbXLJRle (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 12:41:34 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 13/48] libertas: don't cast a pointer to pointer of
+Message-Id: <E1J1kpH-0006lA-OS@shinybook.infradead.org> (sfid-20071210_174137_085646_B490C44A)
+Date: Mon, 10 Dec 2007 10:45:47 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 16, 2007 at 09:19:34AM -0800, Larry Finger wrote:
-> Johannes Berg wrote:
->> Hi,
->>
->> Just booted into my shiny new #everything and got:
->>
->> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
->> [   40.220119] in_atomic():1, irqs_disabled():0
->> [   40.230514] Call Trace:
->> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
->> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
->> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
->> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
->> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
->> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
->> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
->> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
->> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
->> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
->> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
->> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
->> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
->> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
->> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
->> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
->> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
->> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
->>
->> I haven't found yet where the atomic is entered...
->
-> Is your system "vanilla" wireless-2.6, or does it include the LED switch 
-> patch (http://marc.info/?l=linux-wireless&m=119763729709783&w=2)?
+From: Li Zefan <lizf@cn.fujitsu.com>
+Date: Thu, 6 Dec 2007 13:01:21 +0100
 
-Not sure what you mean by "vanilla"...that patch is in
-wireless-2.6#everything as of last night.
+Don't cast struct foo * to struct list_head *, it's safe only when
+the list member is the first member of struct foo.
 
-There are not any new mac80211 patches in there yet -- does your fix
-depend on a pending mac80211 patch?
+Also don't cast struct list_head * to struct foo *.
 
-FWIW, I don't see anything obvious in a quick code inspection.
-I presume that Larry and Michael tested this on the previous iteration
-of wireless-2.6 which was based on 2.6.24-rc3.  Any chance that
-something in the rc3->rc5 difference accounts for this?
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 7097dcf..851eb3c 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1021,11 +1021,10 @@ void lbs_queue_cmd(struct lbs_adapter *adapter,
+ 	spin_lock_irqsave(&adapter->driver_lock, flags);
+ 
+ 	if (addtail) {
+-		list_add_tail((struct list_head *)cmdnode,
+-			      &adapter->cmdpendingq);
++		list_add_tail(&cmdnode->list, &adapter->cmdpendingq);
+ 		adapter->nr_cmd_pending++;
+ 	} else
+-		list_add((struct list_head *)cmdnode, &adapter->cmdpendingq);
++		list_add(&cmdnode->list, &adapter->cmdpendingq);
+ 
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+ 
+@@ -1144,7 +1143,7 @@ void __lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
+ 		return;
+ 
+ 	cleanup_cmdnode(ptempcmd);
+-	list_add_tail((struct list_head *)ptempcmd, &adapter->cmdfreeq);
++	list_add_tail(&ptempcmd->list, &adapter->cmdfreeq);
+ }
+ 
+ static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
+@@ -1642,8 +1641,9 @@ struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv)
+ 	spin_lock_irqsave(&adapter->driver_lock, flags);
+ 
+ 	if (!list_empty(&adapter->cmdfreeq)) {
+-		tempnode = (struct cmd_ctrl_node *)adapter->cmdfreeq.next;
+-		list_del((struct list_head *)tempnode);
++		tempnode = list_first_entry(&adapter->cmdfreeq,
++					    struct cmd_ctrl_node, list);
++		list_del(&tempnode->list);
+ 	} else {
+ 		lbs_deb_host("GET_CMD_NODE: cmd_ctrl_node is not available\n");
+ 		tempnode = NULL;
+@@ -1738,8 +1738,8 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 	}
+ 
+ 	if (!list_empty(&adapter->cmdpendingq)) {
+-		cmdnode = (struct cmd_ctrl_node *)
+-		    adapter->cmdpendingq.next;
++		cmdnode = list_first_entry(&adapter->cmdpendingq,
++					   struct cmd_ctrl_node, list);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+@@ -1803,7 +1803,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				    cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
+-					list_del((struct list_head *)cmdnode);
++					list_del(&cmdnode->list);
+ 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
+ 
+ 					ret = 0;
+@@ -1814,7 +1814,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				    (adapter->psstate == PS_STATE_PRE_SLEEP)) {
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: ignore EXIT_PS cmd in sleep\n");
+-					list_del((struct list_head *)cmdnode);
++					list_del(&cmdnode->list);
+ 					lbs_cleanup_and_insert_cmd(priv, cmdnode);
+ 					adapter->needtowakeup = 1;
+ 
+@@ -1826,7 +1826,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				       "EXEC_NEXT_CMD: sending EXIT_PS\n");
+ 			}
+ 		}
+-		list_del((struct list_head *)cmdnode);
++		list_del(&cmdnode->list);
+ 		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
+ 			    le16_to_cpu(cmdptr->command));
+ 		DownloadcommandToStation(priv, cmdnode);
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.4
+
