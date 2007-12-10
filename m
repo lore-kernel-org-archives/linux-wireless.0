@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55592 "EHLO c60.cesmail.net"
+Received: from mx1.riseup.net ([204.13.164.18]:47325 "EHLO mx1.riseup.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751285AbXLMBRr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 20:17:47 -0500
-Subject: Re: BCM4306 Questions
-From: Pavel Roskin <proski@gnu.org>
-To: Randy Cushman <rcushman_linux@roadrunner.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <47608102.5010105@roadrunner.com>
-References: <475F2DAD.4000708@roadrunner.com>
-	 <200712121214.50522.mb@bu3sch.de> <475FCB46.2030209@roadrunner.com>
-	 <200712121300.59811.mb@bu3sch.de>  <47608102.5010105@roadrunner.com>
-Content-Type: text/plain
-Date: Wed, 12 Dec 2007 20:17:44 -0500
-Message-Id: <1197508664.13188.27.camel@dv> (sfid-20071213_011755_968896_A028EC34)
+	id S1752598AbXLJVfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 16:35:17 -0500
+Date: Mon, 10 Dec 2007 22:31:47 +0100
+From: st3 <st3@riseup.net>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+ learning algorithm
+Message-ID: <20071210223147.6e56e088@morte> (sfid-20071210_213522_429890_99319F17)
+In-Reply-To: <20071210222213.0cf8ce0d@morte>
+References: <20071209211547.2d7fca32@morte>
+	<20071209211931.26ff42fa@morte>
+	<1197239150.7543.13.camel@localhost>
+	<20071210090853.79ea4645@morte>
+	<1197319867.7493.4.camel@localhost>
+	<20071210222213.0cf8ce0d@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Mon, 10 Dec 2007 22:22:13 +0100
+Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
-On Wed, 2007-12-12 at 19:46 -0500, Randy Cushman wrote:
-> Michael Buesch wrote:
-> > Not at all.
-> > You have to read the webpage. Here's the link again:
-> > http://www.linuxwireless.org/en/users/Drivers/b43#devicefirmware
-> > Everything is described there.
-> >
-> >   
-> Thank you for being patient with me.
-> 
-> When I read that web page for the fourth time, I finally realized that 
-> what I needed to do was forget about using the correct driver for my 
-> adapter, and instead download an ancient driver for an unidentified 
-> adapter from a website of unknown authenticity, and use the firmware 
-> from that driver instead.  Should have been obvious, I guess.
+> 3) let's say that a thunderstorm makes the air CCK-hostile, so we want to
+						 ^^^ OFDM
 
-I have looked at that page, and I don't see anything confusing there.  I
-wish I could improve it, but I don't see how.
-
-The firmware checksum is verified, so either you are getting the right
-firmware, or you are not getting any.
-
-There is no talk of choosing "the correct driver".  Instead, the page
-suggests downloading both firmwares rather than guessing:
-
-"If you are unsure and don't know what we are talking about here, always
-build both b43 and b43legacy (and get firmware for both too). The kernel
-autoloader will automatically do the right thing and load the correct
-driver for your device."
 
 -- 
-Regards,
-Pavel Roskin
+Ciao
+Stefano
