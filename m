@@ -1,48 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37097 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753090AbXLPU2x (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:55287 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754375AbXLJPqE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 15:28:53 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: b43 problem with led trigger registration
-Date: Sun, 16 Dec 2007 21:26:56 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Richard Purdie <rpurdie@openedhand.com>
-References: <1197822019.4138.2.camel@johannes.berg> <200712162036.11084.mb@bu3sch.de> <1197835176.6769.21.camel@johannes.berg>
-In-Reply-To: <1197835176.6769.21.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712162126.56483.mb@bu3sch.de> (sfid-20071216_202857_142162_714C346E)
+	Mon, 10 Dec 2007 10:46:04 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 30/48] libertas: use lbs_host_to_card_done() in lbs_tx_timeout()
+Message-Id: <E1J1kpZ-0006mX-N8@shinybook.infradead.org> (sfid-20071210_154607_839781_A7EC0D14)
+Date: Mon, 10 Dec 2007 10:46:05 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 16 December 2007 20:59:36 Johannes Berg wrote:
-> 
-> > I have no idea where we enter atomic state.
-> 
-> Uh huh...
-> 
-> drivers/leds/led-triggers.c:led_trigger_register:
-> 
-> |        read_lock(&leds_list_lock);
-> |        list_for_each_entry(led_cdev, &leds_list, node) {
-> |                down_write(&led_cdev->trigger_lock);
-> 
-> introduced in
-> 
-> commit dc47206e552c0850ad11f7e9a1fca0a3c92f5d65
-> Author: Richard Purdie <rpurdie@rpsys.net>
-> Date:   Sat Nov 10 13:29:04 2007 +0000
-> 
->     leds: Fix led trigger locking bugs
-> 
-> I guess the read_lock needs to be a mutex/rw semaphore.
+Date: Sat, 8 Dec 2007 20:56:44 +0000
 
-Uh, yes. Was this patch tested at all?
+Also attempt some locking in lbs_host_to_card_done()
 
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/main.c |   40 ++++++++++++++-------------------
+ 1 files changed, 17 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 243cdea..2ff5f1b 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -601,31 +601,24 @@ static void lbs_tx_timeout(struct net_device *dev)
+ 
+ 	lbs_pr_err("tx watch dog timeout\n");
+ 
+-	priv->dnld_sent = DNLD_RES_RECEIVED;
+ 	dev->trans_start = jiffies;
+ 
+ 	if (priv->currenttxskb) {
+-		if (priv->monitormode != LBS_MONITOR_OFF) {
+-			/* If we are here, we have not received feedback from
+-			   the previous packet.  Assume TX_FAIL and move on. */
+-			priv->eventcause = 0x01000000;
+-			lbs_send_tx_feedback(priv);
+-		} else
+-			wake_up_interruptible(&priv->waitq);
+-	} else if (dev == priv->dev) {
+-		if (priv->connect_status == LBS_CONNECTED)
+-			netif_wake_queue(priv->dev);
+-
+-	} else if (dev == priv->mesh_dev) {
+-		if (priv->mesh_connect_status == LBS_CONNECTED)
+-			netif_wake_queue(priv->mesh_dev);
++		priv->eventcause = 0x01000000;
++		lbs_send_tx_feedback(priv);
+ 	}
++	/* XX: Shouldn't we also call into the hw-specific driver
++	   to kick it somehow? */
++	lbs_host_to_card_done(priv);
+ 
+ 	lbs_deb_leave(LBS_DEB_TX);
+ }
+ 
+ void lbs_host_to_card_done(struct lbs_private *priv)
+ {
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 
+ 	priv->dnld_sent = DNLD_RES_RECEIVED;
+ 
+@@ -634,15 +627,16 @@ void lbs_host_to_card_done(struct lbs_private *priv)
+ 		wake_up_interruptible(&priv->waitq);
+ 
+ 	/* Don't wake netif queues if we're in monitor mode and
+-	   a TX packet is already pending. */
+-	if (priv->currenttxskb)
+-		return;
+-
+-	if (priv->dev && priv->connect_status == LBS_CONNECTED)
+-		netif_wake_queue(priv->dev);
++	   a TX packet is already pending, or if there are commands
++	   queued to be sent. */
++	if (!priv->currenttxskb && list_empty(&priv->cmdpendingq)) {
++		if (priv->dev && priv->connect_status == LBS_CONNECTED)
++			netif_wake_queue(priv->dev);
+ 
+-	if (priv->mesh_dev && priv->mesh_connect_status == LBS_CONNECTED)
+-		netif_wake_queue(priv->mesh_dev);
++		if (priv->mesh_dev && priv->mesh_connect_status == LBS_CONNECTED)
++			netif_wake_queue(priv->mesh_dev);
++	}
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(lbs_host_to_card_done);
+ 
 -- 
-Greetings Michael.
+1.5.3.4
+
