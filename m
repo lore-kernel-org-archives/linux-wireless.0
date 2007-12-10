@@ -1,77 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49259 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38466 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbXLTRpW (ORCPT
+	with ESMTP id S1752423AbXLJQTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 12:45:22 -0500
-Subject: Re: [PATCH 5/8 v2] mac80211: A-MPDU Rx handling aggregation
-	reordering
+	Mon, 10 Dec 2007 11:19:13 -0500
+Subject: Re: coding style lesson: iwlwifi vs. endianness
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11981435613464-git-send-email-ron.rindjunsky@intel.com>
-References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-	 <11981435613464-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OpdmVYuzLSbEqqsTbT+O"
-Date: Thu, 20 Dec 2007 18:14:27 +0100
-Message-Id: <1198170867.16241.56.camel@johannes.berg> (sfid-20071220_174616_578798_3307266B)
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <200712101630.48124.mb@bu3sch.de>
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240712100618g35a8e13ve143f8687f1b531a@mail.gmail.com>
+	 <1197299937.6035.81.camel@johannes.berg>  <200712101630.48124.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Duk/1ka2kIaB2XxdSQva"
+Date: Mon, 10 Dec 2007 17:18:43 +0100
+Message-Id: <1197303523.6035.92.camel@johannes.berg> (sfid-20071210_161915_963222_EEBF4C26)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-OpdmVYuzLSbEqqsTbT+O
+--=-Duk/1ka2kIaB2XxdSQva
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> @@ -1212,7 +1212,8 @@ void ieee80211_sta_stop_rx_BA_session(struct net_de=
-vice *dev, u8 *ra, u16 tid,
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_hw *hw =3D &local->hw;
->  	struct sta_info *sta;
-> -	int ret;
-> +	struct ieee80211_rx_status status;
-> +	int ret, i;
-> =20
->  	sta =3D sta_info_get(local, ra);
->  	if (!sta)
-> @@ -1254,6 +1255,20 @@ void ieee80211_sta_stop_rx_BA_session(struct net_d=
-evice *dev, u8 *ra, u16 tid,
->  		ieee80211_send_delba(dev, ra, tid, 0, reason);
-> =20
->  	/* free the reordering buffer */
-> +	for (i =3D 0; i < sta->ampdu_mlme.tid_rx[tid].buf_size; i++) {
+> my_data =3D read_drom_device()
+> swap_to_cpu(my_data)
+> do_whatever(my_data)
+> store the data somewhere else in the device structs for
+> later use, maybe.
+> do_something_else(my_data)
+>=20
+> You see that now you have only _one_ place that you have to care about.
+> And if you have to write your data back at some point, simply do it
+> just before the write.
 
-Something I just thought of but probably simply missed: where's the
-session torn down when we ifdown an interface while an A-MPDU session is
-active? I didn't go through all the patches again, did I miss that
-somewhere?
+The thing is that Tomas is saying that because they don't have a
+function to "read_from_device()" but that is rather only
+"shared_structure->something" it is special and completely different
+than regular drivers.
+
+The absolute worst thing imo is in the current radiotap code (before my
+patch) where it passes around a value as "u16" but then needs to convert
+it to __le16 before accessing bits in it because things are defined as
+LE.
+
+Also, let me reiterate the argument that this is not using more
+code/run-time-memory size:
+
+Consider
+
+u16 phyflags =3D le16_to_cpu(shared_struct->phy_flags);
+
+[...]
+if (phyflags & ...)
+[...]
+
+vs.
+
+[...]
+if (shared_struct->phy_flags & ...)
+[...]
+
+If you have a LE machine, then the compiler should in both cases emit
+the same code. If you have BE machine, you have a *single* "superfluous"
+byteswap, and if there are multi-bit fields you have far *fewer*
+byteswaps. If you instead wrote
+
+u16 phyflags =3D le16_to_cpup(&shared_struct->phy_flags);
+
+then most likely the byteswap would be microcoded/done by hardware
+during the load.
+
+The actual runtime penalty of byteswaps is insignificant since fetching
+the value from memory already takes forever.
 
 johannes
 
---=-OpdmVYuzLSbEqqsTbT+O
+--=-Duk/1ka2kIaB2XxdSQva
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR2qi8aVg1VMiehFYAQITCBAAweCEr0QvYd41bb1mBdUbbObbMp4D7W/z
-/msD6BArSqGSwTJESFc8t7qOedy4nVaPEBsccPShXfjtykXpZVw8j3qAI8EytrLt
-gyQuN23oZG0hBf/qwK9VfNZ1sOZCEtd1+C8ArceO/looX60T1cZYy0xf6ZASIIH9
-xiIQNYQQdXJoWlZKLnsnCmkNQ55FIsdOMUfQaGSQbtxrSYQMvHdUAuJ9BJ0P5h6F
-+O2hl126GEZnHgjV7vyqPX9UaklPLjjGbZNvrui3vErwd/9IdFyHXy2bbdyhCuz7
-Ekasosfr7exMgVygAljMlRSDSldC/f1dJP2DyfYm+5hra25xvylNuZ4UjsAnfZD1
-yPPqYO9YfnyUnEE56YHV8QM8JVXgC+2naHdKIQ95IreIBwTr09Qq+By9ShScARoJ
-bOJIifF05oKeUdgg17yDGTEa5wAVL7mpz4Vb3lyToD74IRBVJKd/YfiF3Mdp2+Sy
-zwFzulprAzVpgFZSLvEfdJpk5YrVIMQQHh1ol2doMBx8lEw6tU96zLXgwXL2x7q0
-lVOygpRrmm+FSNtE66d0qINFmufmcQSM8zk3ieq1xhPMCyudg8ZJFWuy5MWacV+/
-L4pxQXgo+rrmn4vtC2i4I8ctixSLsjWH63DSTaetYyEHk8BxPxZj6eayNyc9DN2o
-MVHWUODa2SY=
-=UHT8
+iQIVAwUAR11m4qVg1VMiehFYAQLzvg/9EMdp22msnjQ8tpCOfjwk2g2CNOExrtqV
+gKNLVQnAsrMTJiTVsveBSl798vSOt4NG3pIGeRpGoMu01nvE/uoIuEaSBztWGSLj
+RqL/wxdnXgV2pwaPNK2menE4lbSQg7613wFwXHAMGvHLRConfE/InT5gWQOdZkB7
+f9TGSsXsX9jNl7eUnRwerkAdfyorrHUTg55x2aOEKSoVjkOkOVJ+wBNxWfO7pf5G
+fmHPduy3Ynf0nI7unV266wwr4uq248Yh7gCjfEkt9Sm5mwjdk3pa6aH37f/oqHK7
+ktXcoP+sRRagLj5RxgO9MKPL8miuAt6EztxrK10k16meSKO8eKyQETeb/DN1hCdZ
+j96KFaseMfm2cgpmjEUrhrZnW3BrG+veXD46OPc2HmobOPA8q7DdkDd0a84fQ4vP
+uTVWLw+vtz6wSebEcud2xfp0aKyNM+dH1sjTBncbRxkm+JfhF3LsHPwWxZhHTpnK
+W2gSNdt8iqDwColkw5ybA26NSHKTFFn+04FE5gt9B3MlHPOfG/xJd4BvFwU+SZLq
+zpkh2x549z2DuW2uMbc4d22Y+nL5+ASzZQx3ZUecXKVwR98f9apVuxCu2nJwtXqy
+tFc+5T417D6Fb6V9PDHraKBga/GKPIjJpwghfdCsoikr4c2HXXVCfMFDzULEsEBF
+zLSihXwxdPE=
+=XOJL
 -----END PGP SIGNATURE-----
 
---=-OpdmVYuzLSbEqqsTbT+O--
+--=-Duk/1ka2kIaB2XxdSQva--
 
