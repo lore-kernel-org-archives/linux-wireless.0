@@ -1,176 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40673 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753692AbXLSPsQ (ORCPT
+Received: from lvs00-fl-n18.ftl.affinity.com ([216.219.253.56]:44095 "EHLO
+	lvs00-fl-n18.ftl.affinity.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753231AbXLJTRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:48:16 -0500
-Message-Id: <20071219010340.310330000@sipsolutions.net> (sfid-20071219_154824_823699_E332D984)
-References: <20071219010328.762470000@sipsolutions.net>
-Date: Wed, 19 Dec 2007 02:03:31 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/9] mac80211: support getting key sequence counters via
-	cfg80211
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 14:17:41 -0500
+Received: from [24.234.206.24] ([24.234.206.24]:4250 "HELO localhost")
+	by ams018.ftl.affinity.com with SMTP id S450715AbXLJTRh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 14:17:37 -0500
+Date: Mon, 10 Dec 2007 11:17:34 -0800
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC V3] b43: Fix rfkill radio LED
+Message-ID: <475d90ce.sPlOhTt+8EwSo+ue%Larry.Finger@lwfinger.net> (sfid-20071210_191745_606550_C974D52E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements cfg80211's get_key() to allow retrieving the sequence
-counter for a TKIP or CCMP key from userspace. It also cleans up and
-documents the associated low-level driver interface.
+Since addition of the rfkill callback, the LED associated with the off
+switch on the radio has not worked for several reasons:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+(1) Essential data in the rfkill structure were missing.
+(2) The rfkill structure was initialized after the LED initialization.
+(3) There was a minor memory leak if the radio LED structure was inited.
+
+Once the above problems were fixed, additional difficulties were noted:
+
+(4) The radio LED was in the wrong state at startup.
+(5) The radio switch had to be manipulated twice for each state change.
+(6) A circular mutex locking situation existed.
+(7) If rfkill-input is built as a module, it is not automatically loaded.
+
+This patch fixes all of the above.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/net/mac80211.h |   14 ++------
- net/mac80211/cfg.c     |   85 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 89 insertions(+), 10 deletions(-)
 
---- everything.orig/net/mac80211/cfg.c	2007-12-19 00:50:16.293022569 +0100
-+++ everything/net/mac80211/cfg.c	2007-12-19 00:50:17.133022895 +0100
-@@ -1,7 +1,7 @@
- /*
-  * mac80211 configuration hooks for cfg80211
-  *
-- * Copyright 2006	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -175,6 +175,88 @@ static int ieee80211_del_key(struct wiph
- 	return 0;
+Michael,
+
+This material is intended for wireless-2.6; however, it is a fix for Bug #9414
+reported for 2.6.24. Once you clear up the locking situation, this patch should
+be pushed into mainline. Note: In mainline, the patch has offsets and one hunk
+has some fuzz, but it applies correctly.
+
+Larry
+---
+
+ leds.c   |    3 ++-
+ leds.h   |    2 ++
+ main.c   |   24 +++++++++++++++---------
+ rfkill.c |   21 +++++++++++++++++++--
+ 4 files changed, 38 insertions(+), 12 deletions(-)
+
+---
+Index: wireless-2.6/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-2.6/drivers/net/wireless/b43/rfkill.c
+@@ -60,8 +60,12 @@ static void b43_rfkill_poll(struct input
+ 	}
+ 	mutex_unlock(&wl->mutex);
+ 
+-	if (unlikely(report_change))
+-		input_report_key(poll_dev->input, KEY_WLAN, enabled);
++	/* send the radio switch event to the system - note both a key press
++	 * and a release are required */
++	if (unlikely(report_change)) {
++		input_report_key(poll_dev->input, KEY_WLAN, 1);
++		input_report_key(poll_dev->input, KEY_WLAN, 0);
++	}
  }
  
-+static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 key_idx, u8 *mac_addr, void *cookie,
-+			     void (*callback)(void *cookie,
-+					      struct key_params *params))
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta = NULL;
-+	u8 seq[6] = {0};
-+	struct key_params params;
-+	struct ieee80211_key *key;
-+	u32 iv32;
-+	u16 iv16;
-+	int err = -ENOENT;
-+
-+	if (mac_addr) {
-+		sta = sta_info_get(sdata->local, mac_addr);
-+		if (!sta)
-+			goto out;
-+
-+		key = sta->key;
-+	} else
-+		key = sdata->keys[key_idx];
-+
-+	if (!key)
-+		goto out;
-+
-+	memset(&params, 0, sizeof(params));
-+
-+	switch (key->conf.alg) {
-+	case ALG_TKIP:
-+		params.cipher = WLAN_CIPHER_SUITE_TKIP;
-+
-+		iv32 = key->u.tkip.iv32;
-+		iv16 = key->u.tkip.iv16;
-+
-+		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-+		    sdata->local->ops->get_tkip_seq)
-+			sdata->local->ops->get_tkip_seq(
-+				local_to_hw(sdata->local),
-+				key->conf.hw_key_idx,
-+				&iv32, &iv16);
-+
-+		seq[0] = iv16 & 0xff;
-+		seq[1] = (iv16 >> 8) & 0xff;
-+		seq[2] = iv32 & 0xff;
-+		seq[3] = (iv32 >> 8) & 0xff;
-+		seq[4] = (iv32 >> 16) & 0xff;
-+		seq[5] = (iv32 >> 24) & 0xff;
-+		params.seq = seq;
-+		params.seq_len = 6;
-+		break;
-+	case ALG_CCMP:
-+		params.cipher = WLAN_CIPHER_SUITE_CCMP;
-+		seq[0] = key->u.ccmp.tx_pn[5];
-+		seq[1] = key->u.ccmp.tx_pn[4];
-+		seq[2] = key->u.ccmp.tx_pn[3];
-+		seq[3] = key->u.ccmp.tx_pn[2];
-+		seq[4] = key->u.ccmp.tx_pn[1];
-+		seq[5] = key->u.ccmp.tx_pn[0];
-+		params.seq = seq;
-+		params.seq_len = 6;
-+		break;
-+	case ALG_WEP:
-+		if (key->conf.keylen == 5)
-+			params.cipher = WLAN_CIPHER_SUITE_WEP40;
-+		else
-+			params.cipher = WLAN_CIPHER_SUITE_WEP104;
-+		break;
-+	}
-+
-+	params.key = key->conf.key;
-+	params.key_len = key->conf.keylen;
-+
-+	callback(cookie, &params);
-+	err = 0;
-+
-+ out:
-+	if (sta)
-+		sta_info_put(sta);
-+	return err;
-+}
-+
- static int ieee80211_config_default_key(struct wiphy *wiphy,
- 					struct net_device *dev,
- 					u8 key_idx)
-@@ -193,5 +275,6 @@ struct cfg80211_ops mac80211_config_ops 
- 	.change_virtual_intf = ieee80211_change_iface,
- 	.add_key = ieee80211_add_key,
- 	.del_key = ieee80211_del_key,
-+	.get_key = ieee80211_get_key,
- 	.set_default_key = ieee80211_config_default_key,
- };
---- everything.orig/include/net/mac80211.h	2007-12-19 00:50:13.963022840 +0100
-+++ everything/include/net/mac80211.h	2007-12-19 00:50:17.133022895 +0100
-@@ -661,9 +661,6 @@ struct ieee80211_key_conf {
- 	u8 key[0];
- };
+ /* Called when the RFKILL toggled in software. */
+@@ -133,9 +137,22 @@ void b43_rfkill_init(struct b43_wldev *d
+ 	rfk->poll_dev->poll = b43_rfkill_poll;
+ 	rfk->poll_dev->poll_interval = 1000; /* msecs */
  
--#define IEEE80211_SEQ_COUNTER_RX	0
--#define IEEE80211_SEQ_COUNTER_TX	1
++	rfk->poll_dev->input->name = rfk->name;
++	rfk->poll_dev->input->id.bustype = BUS_HOST;
++	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
++	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
++	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
++
+ 	err = rfkill_register(rfk->rfkill);
+ 	if (err)
+ 		goto err_free_polldev;
++	/* This code doesn't work without rfkill-input - if it is a module, be
++	 * sure it is loaded here. If built-in or not available, an error will
++	 * result. Just log an appropriate message */
++	err = request_module("rfkill-input");
++	if (err)
++		printk(KERN_INFO "b43: rfkill-input is not available as a"
++		       "module. If not built-in, the radio LED will fail\n");
+ 	err = input_register_polled_device(rfk->poll_dev);
+ 	if (err)
+ 		goto err_unreg_rfk;
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c
++++ wireless-2.6/drivers/net/wireless/b43/main.c
+@@ -2165,7 +2165,6 @@ static void b43_mgmtframe_txantenna(stru
+ static void b43_chip_exit(struct b43_wldev *dev)
+ {
+ 	b43_radio_turn_off(dev, 1);
+-	b43_leds_exit(dev);
+ 	b43_gpio_cleanup(dev);
+ 	/* firmware is released later */
+ }
+@@ -2193,11 +2192,10 @@ static int b43_chip_init(struct b43_wlde
+ 	err = b43_gpio_init(dev);
+ 	if (err)
+ 		goto out;	/* firmware is released later */
+-	b43_leds_init(dev);
+ 
+ 	err = b43_upload_initvals(dev);
+ 	if (err)
+-		goto err_leds_exit;
++		goto err_gpio_clean;
+ 	b43_radio_turn_on(dev);
+ 
+ 	b43_write16(dev, 0x03E6, 0x0000);
+@@ -2279,8 +2277,7 @@ out:
+ 
+ err_radio_off:
+ 	b43_radio_turn_off(dev, 1);
+-err_leds_exit:
+-	b43_leds_exit(dev);
++err_gpio_clean:
+ 	b43_gpio_cleanup(dev);
+ 	return err;
+ }
+@@ -2718,7 +2715,7 @@ static int b43_antenna_from_ieee80211(u8
+ static int b43_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+ {
+ 	struct b43_wl *wl = hw_to_b43_wl(hw);
+-	struct b43_wldev *dev;
++	struct b43_wldev *uninitialized_var(dev);
+ 	struct b43_phy *phy;
+ 	unsigned long flags;
+ 	unsigned int new_phymode = 0xFFFF;
+@@ -3305,6 +3302,7 @@ static void b43_wireless_core_exit(struc
+ 	b43_rfkill_exit(dev);
+ 	mutex_lock(&dev->wl->mutex);
+ 
++	b43_leds_exit(dev);
+ 	b43_rng_exit(dev->wl);
+ 	b43_pio_free(dev);
+ 	b43_dma_free(dev);
+@@ -3426,12 +3424,20 @@ static int b43_wireless_core_init(struct
+ 	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	b43_upload_card_macaddress(dev);
+ 	b43_security_init(dev);
+-	b43_rfkill_init(dev);
+ 	b43_rng_init(wl);
 -
- /**
-  * enum set_key_cmd - key command
-  *
-@@ -1014,9 +1011,9 @@ enum ieee80211_erp_change_flags {
-  *
-  * @get_stats: return low-level statistics
-  *
-- * @get_sequence_counter: For devices that have internal sequence counters this
-- *	callback allows mac80211 to access the current value of a counter.
-- *	This callback seems not well-defined, tell us if you need it.
-+ * @get_tkip_seq: If your device implements TKIP encryption in hardware this
-+ *	callback should be provided to read the TKIP transmit IVs (both IV32
-+ *	and IV16) for the given key from hardware.
-  *
-  * @set_rts_threshold: Configuration of RTS threshold (if device needs it)
-  *
-@@ -1092,9 +1089,8 @@ struct ieee80211_ops {
- 	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
- 	int (*get_stats)(struct ieee80211_hw *hw,
- 			 struct ieee80211_low_level_stats *stats);
--	int (*get_sequence_counter)(struct ieee80211_hw *hw,
--				    u8* addr, u8 keyidx, u8 txrx,
--				    u32* iv32, u16* iv16);
-+	void (*get_tkip_seq)(struct ieee80211_hw *hw, u8 hw_key_idx,
-+			     u32 *iv32, u16 *iv16);
- 	int (*set_rts_threshold)(struct ieee80211_hw *hw, u32 value);
- 	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
- 	int (*set_retry_limit)(struct ieee80211_hw *hw,
-
--- 
-
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+-      out:
++	mutex_unlock(&dev->wl->mutex);
++	b43_rfkill_init(dev);
++	mutex_lock(&dev->wl->mutex);
++	b43_leds_init(dev);
++	/* if an LED is associated with the rfkill switch,
++	 * and the hardware radio enable switch is on, now is the
++	 * time to turn that LED on */
++	if (dev->led_radio.dev && dev->radio_hw_enable)
++		b43_led_turn_on(dev, dev->led_radio.index,
++				dev->led_radio.activelow);
++out:
+ 	return err;
+ 
+       err_chip_exit:
+Index: wireless-2.6/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.c
++++ wireless-2.6/drivers/net/wireless/b43/leds.c
+@@ -30,7 +30,7 @@
+ #include "leds.h"
+ 
+ 
+-static void b43_led_turn_on(struct b43_wldev *dev, u8 led_index,
++void b43_led_turn_on(struct b43_wldev *dev, u8 led_index,
+ 			    bool activelow)
+ {
+ 	struct b43_wl *wl = dev->wl;
+@@ -232,4 +232,5 @@ void b43_leds_exit(struct b43_wldev *dev
+ 	b43_unregister_led(&dev->led_tx);
+ 	b43_unregister_led(&dev->led_rx);
+ 	b43_unregister_led(&dev->led_assoc);
++	b43_unregister_led(&dev->led_radio);
+ }
+Index: wireless-2.6/drivers/net/wireless/b43/leds.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/leds.h
++++ wireless-2.6/drivers/net/wireless/b43/leds.h
+@@ -44,6 +44,8 @@ enum b43_led_behaviour {
+ 
+ void b43_leds_init(struct b43_wldev *dev);
+ void b43_leds_exit(struct b43_wldev *dev);
++void b43_led_turn_on(struct b43_wldev *dev, u8 led_index,
++			    bool activelow);
+ 
+ 
+ #else /* CONFIG_B43_LEDS */
