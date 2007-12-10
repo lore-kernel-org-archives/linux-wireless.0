@@ -1,69 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42201 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbXLIVeB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 16:34:01 -0500
-Date: Sun, 9 Dec 2007 13:33:11 -0800
-From: Arjan van de Ven <arjan@infradead.org>
-To: Chris Rankin <rankincj@yahoo.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
-Message-ID: <20071209133311.2db5ce4f@laptopd505.fenrus.org> (sfid-20071209_213407_535284_68CCE832)
-In-Reply-To: <587622.50680.qm@web52902.mail.re2.yahoo.com>
-References: <1193657365.19938.17.camel@localhost.localdomain>
-	<587622.50680.qm@web52902.mail.re2.yahoo.com>
+Received: from mail.gmx.net ([213.165.64.20]:42458 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751313AbXLJWJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 17:09:32 -0500
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+	learning algorithm
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20071210222213.0cf8ce0d@morte>
+References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
+	 <1197239150.7543.13.camel@localhost> <20071210090853.79ea4645@morte>
+	 <1197319867.7493.4.camel@localhost>  <20071210222213.0cf8ce0d@morte>
+Content-Type: text/plain
+Date: Mon, 10 Dec 2007 23:09:29 +0100
+Message-Id: <1197324569.7493.19.camel@localhost> (sfid-20071210_220935_013835_B4435AFF)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 9 Dec 2007 19:41:58 +0000 (GMT)
-Chris Rankin <rankincj@yahoo.com> wrote:
 
-> Hi,
+On Mon, 2007-12-10 at 22:22 +0100, Stefano Brivio wrote:
+> On Mon, 10 Dec 2007 21:51:07 +0100
+> Mattias Nissler <mattias.nissler@gmx.de> wrote:
 > 
-> I've recently been having trouble loading the hostap_plx 802.11b
-> wireless networking driver, and this evening I managed to narrow the
-> problem down to these lines of code by copying code from hostap_plx
-> into a "test driver" until the test driver also locked the PC up:
+> > 
+> > On Mon, 2007-12-10 at 09:08 +0100, Stefano Brivio wrote:
+> > > On Sun, 09 Dec 2007 23:25:50 +0100
+> > > Mattias Nissler <mattias.nissler@gmx.de> wrote:
+> > > 
+> > > > >  static void *rate_control_pid_alloc(struct ieee80211_local *local)
+> > > > >  {
+> > > > >  	struct rc_pid_info *pinfo;
+> > > > > +	struct rc_pid_rateinfo *rinfo;
+> > > > > +	struct ieee80211_hw_mode *mode;
+> > > > > +	int i, j, tmp;
+> > > > > +	bool s;
+> > > > >  
+> > > > >  	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
+> > > > > +	if (!pinfo)
+> > > > > +		return NULL;
+> > > > > +
+> > > > > +	mode = local->oper_hw_mode;
+> > > > > +	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
+> > > > > +	if (!rinfo) {
+> > > > > +		kfree(pinfo);
+> > > > > +		return NULL;
+> > > > > +	}
+> > > > 
+> > > > What if the mode is changed? Have you checked the rate control algorithm
+> > > > gets reinitialized? If not, we're scheduling a crash here, when
+> > > > mode->num_rates changes.
+> > > 
+> > > After a discussion on IRC with Michael (Wu), we came to the conclusion that
+> > > it doesn't make sense for mode->num_rates to change, because:
+> > > 1) if the AP drops supported rates, it'll drop the association as well,
+> > > then everything here will be destroyed and created again;
+> > > 2) that can be changed in userspace, but we couldn't figure out a scenario
+> > > where it would make any sense. Johannes, any comments? Wouldn't it make
+> > > sense to just forbid to change this in userspace?
+> > 
+> > I don't agree. For example, what if you have some broken 802.11b only
+> > hardware that you desperately need to get going, but it freaks out on
+> > 802.11g encoded frames. Now if your AP is hostapd on a Linux machine,
+> > you'll want to change the mode. Hence, also the number of available
+> > rates change.
 > 
->         /* read CIS; it is in even offsets in the beginning of
-> attr_mem */ for (i = 0; i < CIS_MAX_LEN; i++)
->                 cis[i] = readb(attr_mem + 2 * i);
+> Yes, but the association gets dropped. I'm not sure about the hostapd
+> implementation (will check), but APs drop association when they change
+> supported rates. So the per-sta rate control would obviously get reinitialized.
+> I didn't find anything clear about this in the 802.11 standard, though.
+
+Still, just disallowing mode switches seems odd to me.
+
 > 
-> If I comment these lines out then my test driver just complains about
-> the garbage CIS information and fails gracefully. Leave these lines
-> in and my PC freezes instantly.
+> > Moreover, I think we can do better than just disallowing changes to the
+> > rate set, don't you think?
 > 
-> These lines are part of the prism2_plx_check_cis() function, which is
-> called when the module first loads. CIX_MAX_LEN is a #define for 256,
-> and cis is a u8* pointer previously allocated as:
+> Well, I still can't find an example of where this would be needed. Your
+> scenario looks like this:
+> 1) the AP STA periodically advertises supported rates;
+> 2) the non-AP STA supported rates are the intersection (as in set theory)
+> of the rates supported by the non-AP STA and the rate advertised by the AP
+> STA (in this case, assuming that the both the non-AP and the AP STAs
+> support 802.11b and g, rates supported by the non-AP STA are both CCK and
+> OFDM rates);
+> 3) let's say that a thunderstorm makes the air CCK-hostile, so we want to
+> reconfigure our AP STA to work with 802.11b only: the association will need
+> to be recreated (thus the rc algorithm gets reinitialized), and now rates
+> supported by the non-AP STA are the CCK rates only -> everything works as
+> expected and wanted.
 > 
-> cis = kmalloc(CIS_MAX_LEN, GFP_KERNEL);
-> 
-> attr_mem is one of the function's paramters, and is defined as void
-> __iomem *attr_mem.
+> Anyway, it's not an issue at all to deal with rates changing in
+> rc80211-pid - I would just need to reallocate a struct and copy over some
+> data (but please think about this now: OFDM rates are the same for 802.11a
+> and 802.11g, but it really doesn't make any sense to assume that behaviour
+> at 2.4GHz is anywhere near to behaviour at 5GHz - so maybe I would just
+> reallocate the struct and that's it). But before than doing this, I wanted
+> to be sure that we aren't just hiding a bug in mac80211.
+
+You're right, we should find out what behaviour would be correct for the
+stack to implement. Who make a more educated statement? Johannes?
+Michael?
 
 
-can you check if the attr_mem is properly ioremap'd ?
-(probably with ioremap_nocache)
-
-
->         Region 2: Memory at e8002000 (32-bit, non-prefetchable)
-> [size=4K] Region 3: I/O ports at 1080 [size=64]
-> 
-> so there is apparently 4K of I/O memory at 0xe8002000.
-> 
-> Can anyone help me understand why my PC is locking up when it
-> executes this code, please?
-
-I wonder if there's anything else in that area as well..
-
-
--- 
-If you want to reach me at my work email, use arjan@linux.intel.com
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
