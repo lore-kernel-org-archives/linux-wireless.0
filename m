@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:36455 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755045AbXLHJvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 04:51:39 -0500
-Date: Sat, 8 Dec 2007 10:45:49 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Mattias Nissler" <mattias.nissler@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57411 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752807AbXLJQ0G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 11:26:06 -0500
+Subject: Re: coding style lesson: iwlwifi vs. endianness
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-Message-ID: <20071208104549.608bf66d@morte> (sfid-20071208_095143_397176_C60D5D29)
-In-Reply-To: <20071204024146.15689ee3@morte>
-References: <1196622331.7472.4.camel@localhost>
-	<20071203041608.3af3b462@morte>
-	<1196679780.7470.9.camel@localhost>
-	<20071203125402.76562f26@morte>
-	<1196683144.7470.14.camel@localhost>
-	<20071203130602.49ab7234@morte>
-	<40f31dec0712031442q51a658abwfde965dae3fb6b72@mail.gmail.com>
-	<20071204024146.15689ee3@morte>
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1ba2fa240712100821u284571d7k39b326e58aac93af@mail.gmail.com> (sfid-20071210_162131_710145_6241CB89)
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240712100618g35a8e13ve143f8687f1b531a@mail.gmail.com>
+	 <1197299937.6035.81.camel@johannes.berg> <200712101630.48124.mb@bu3sch.de>
+	 <1ba2fa240712100821u284571d7k39b326e58aac93af@mail.gmail.com>
+	 (sfid-20071210_162131_710145_6241CB89)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YOKJejE6LLX2lb7a0CRb"
+Date: Mon, 10 Dec 2007 17:25:38 +0100
+Message-Id: <1197303938.6035.100.camel@johannes.berg> (sfid-20071210_162610_310116_D791B299)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 4 Dec 2007 02:41:46 +0100
-Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
-> -		err_avg = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
-> +		err_avg = srctrl->err_avg_sc >> modparam_rc_sh_s;
-							     ^
-
->  		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
-> -		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
-> +		err_int = srctrl->err_avg_sc >> modparam_rc_sh_s;
-							     ^
-
-Sorry, I forgot to resend. Will send another patch soon so I won't bother.
+--=-YOKJejE6LLX2lb7a0CRb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Ciao
-Stefano
+> Our case is
+>=20
+> Loop:
+>  my_big_little_endian_struct.
+>  set little tiny bit in it
+>  send to HW
+> end
+
+You could even code the "set little tiny bit in it" as
+
+struct->flags |=3D cpu_to_le32(flag value);
+
+which all other drivers do.
+
+It boils down to what I just said:
+
+Most people prefer making endian conversions explicit in the code while
+you're hiding it in defines which is unintuitive if only because it
+differs from what everybody else does.
+
+johannes
+
+--=-YOKJejE6LLX2lb7a0CRb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR11ogaVg1VMiehFYAQIO4w/9EInsAGLAyqq5azH33qZb44OcqmzRRUwt
+x6QkFJsrcsWHgUxoQY9TPRCQGMbAbTlUZifIVuC8WURD9RrtQ0TAIfJghMxgRRwT
+fL76GIe1x42/cRIsStsr1qopaILmKTe2F9poLeLvO5fEOg1SJy5DixQIgn7Sfefu
+qXLA3WaK78+zOgVzImwgtNIXgQrlV6VRrsx+wLdnNv9zFd4DJYlFcN/DJKrc+csf
+ap4I6UTyWg8DdmzGn4wxBeN9Yq/qhlr0gRivjdIll5Dgk2azSVHaAmWT5ya3u/l6
+T5a2U28BNcq6GWO0SjqX867bUZykiqIs33NFQAIuHy/4BhdpJq2uqHGwojPHJDe/
+qpf9DCDzwIIY1lxkPl7tcFh1b4GFetcWIXWbhxAkdJH4mlskigZrmv/Sxp/ljfB0
+KbqJDbvhy21iHbUXZ7G5FpOQLnAfohDQs+pL8EZKYsIM/hirivTQWyGL4zLSCK8x
+pGf8A2ToyHzpKuPM2IwkiE6hnyFqC9L6TqheotQROB2dxmYDEEn3BDT5P6uP2CBy
+FOZJe6jiUIRfTmYSa65hkn8dvwpZoucoJ34JXb3ZvodUQ9K9MaQ4krTw/Z5nCcRW
+crEDKKYuy4mgJYMw+se6YtxK2FDlpTN3ZiFsFP+bangbj/FPR6RekGRl+9wyqOK3
+kNmBYDfgTeg=
+=P/1q
+-----END PGP SIGNATURE-----
+
+--=-YOKJejE6LLX2lb7a0CRb--
+
