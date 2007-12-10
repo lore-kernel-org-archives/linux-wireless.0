@@ -1,190 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:41020 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753852AbXLCLDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:03:04 -0500
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20071203041608.3af3b462@morte>
-References: <1196622331.7472.4.camel@localhost>
-	 <20071203041608.3af3b462@morte>
-Content-Type: text/plain
-Date: Mon, 03 Dec 2007 12:03:00 +0100
-Message-Id: <1196679780.7470.9.camel@localhost> (sfid-20071203_110330_004562_0F0BD090)
-Mime-Version: 1.0
+Received: from madara.hpl.hp.com ([192.6.19.124]:59423 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753123AbXLJSMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 13:12:02 -0500
+Date: Mon, 10 Dec 2007 10:11:21 -0800
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+Message-ID: <20071210181121.GC7168@bougret.hpl.hp.com> (sfid-20071210_181206_858869_2BEABCA6)
+Reply-To: jt@hpl.hp.com
+References: <20071206191150.GC5237@bougret.hpl.hp.com> <1197022818.2603.20.camel@localhost.localdomain> <20071207192756.GA15864@bougret.hpl.hp.com> <20071207.180408.55119728.davem@davemloft.net> <1197221706.9149.36.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197221706.9149.36.camel@localhost.localdomain>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Mon, 2007-12-03 at 04:16 +0100, Stefano Brivio wrote:
-> On Sun, 02 Dec 2007 20:05:31 +0100
-> Mattias Nissler <mattias.nissler@gmx.de> wrote:
+On Sun, Dec 09, 2007 at 12:35:06PM -0500, Dan Williams wrote:
 > 
-> > Hi,
-> > 
-> > the patch below is a first attempt on the PID-controller approach for TX
-> > rate control. It kind of works here, but I haven't spent much time
-> > tuning the coefficients.
+> So how would _you_ add a scan capabilities bitfield (or a new generic
+> capabilities bitfield) to the WEXT range call?
 > 
-> It looks good! I tested it a bit with different TX powers and moving around
-> with a microwave oven turned on [1]. It looks like we don't have the
-> rollercoaster effect anymore, and overall quality of the algorithm seems
-> just fine. However, I noticed about two issues:
-> 
-> 1) as soon as I loaded mac80211 it took a lot of time to get up with rate,
-> and this actually happens every time I'm not sending frames for a while
-> (including get down with rate here).
-> 	- IMHO, it doesn't make sense to check for RSSI of previous packets
-> as soon as we get associated, because it's very likely that we just switched
-> between two APs.
+> We need the scan capability flag functionality; I don't care how we get
+> it as long as the patch is not too invasive.  But userspace needs to
+> know what the driver can do, and the patch needs to be written so that
+> drivers that don't have the capabilities don't need to be touched.
 
-Wait a sec. Rate control is per station, so each AP will have it's own
-rate control state.
+	Dan,
 
-> 	- Here, either we know that something happened (such an association)
-> and we need to react quite quickly, either we don't know what's happening
-> and relying solely on interpolation seems not to work so well.
-> So I thought rather of a "sharpening" factor to be taken into account
-> when some important events (i.e. association) or interpolation happened.
-> This seems to work quite well, so in perfect conditions and average load I
-> need ~6 seconds vs ~11 to get up to 54M, while still maintaining smoothness
-> during regular operation (thus it looks like there aren't rollercoasting
-> risks - obviously this will need more testing):
+	In my first e-mail, I offered you a way to do that without
+having to change the API. You rejected it because it means fixing
+various drivers. Well, there was a reason why I proposed it...
 
-Have you tried shorter sample intervals? Currently, it's once per
-second. I plan to shorten it, maybe to 2Hz or even 4Hz and see whether
-we can get better responsiveness and still stay stable. Also, the
-integration time needs to be fine-tuned then.
+> Dan
 
-> [this patch applies on top of yours]
-> 
-> Index: wireless-2.6/net/mac80211/rc80211_simple.c
-> ===================================================================
-> --- wireless-2.6.orig/net/mac80211/rc80211_simple.c
-> +++ wireless-2.6/net/mac80211/rc80211_simple.c
-> @@ -26,13 +26,15 @@
->   *
->   * The controller basically computes the following:
->   *
-> - * adj = CP * err + CI * err_avg + CD * (err - last_err)
-> + * adj = CP * err + CI * err_avg + CD * (1 + sharpening) * (err - last_err)
->   *
->   * where
->   * 	adj	adjustment value that is used to switch TX rate (see below)
->   * 	err	current error: target vs. current failed frames percentage
->   * 	last_err	last error
->   * 	err_avg	average (i.e. poor man's integral) of recent errors
-> + *	sharpening	non-zero when fast response is needed (i.e. right after
-> + *			association or interpolation)
->   * 	CP	Proportional coefficient
->   * 	CI	Integral coefficient
->   * 	CD	Derivative coefficient
-> @@ -62,6 +64,11 @@
->  #define RATE_CONTROL_SMOOTHING_SHIFT 3
->  #define RATE_CONTROL_SMOOTHING (1 << RATE_CONTROL_SMOOTHING_SHIFT)
->  
-> +/* Sharpening factor (used for D part of PID controller) */
-> +#define RATE_CONTROL_SHARPENING_SHIFT 2
-> +#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-> +#define RATE_CONTROL_SHARPENING_DURATION 3
-> +
->  /* Fixed point arithmetic shifting amount. */
->  #define RATE_CONTROL_ARITH_SHIFT 8
->  
-> @@ -122,6 +129,9 @@ struct sta_rate_control {
->  	/* Last framed failes percentage sample */
->  	u32 last_pf;
->  
-> +	/* Sharpening needed */
-> +	u8 sharp_cnt;
-> +
->  	unsigned long avg_rate_update;
->  	u32 tx_avg_rate_sum;
->  	u32 tx_avg_rate_num;
-> @@ -252,10 +262,12 @@ static void rate_control_simple_tx_statu
->  		srctrl->last_sample = jiffies;
->  
->  		/* If no frames were transmitted, we assume the old sample is
-> -		 * still a good measurement and copy it.
-> +		 * still a good measurement and copy it, and turn the
-> +		 * sharpening factor on.
->  		 */
-> -		if (srctrl->tx_num_xmit == 0)
-> +		if (srctrl->tx_num_xmit == 0) {
->  			pf = srctrl->last_pf;
-> +			srctrl->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
->  		else {
->  			pf = srctrl->tx_num_failed * 100 / srctrl->tx_num_xmit;
->  			pf <<= RATE_CONTROL_ARITH_SHIFT;
-> @@ -271,8 +283,11 @@ static void rate_control_simple_tx_statu
->  		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
->  		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
->  
-> -		err_der = pf - srctrl->last_pf;
-> +		err_der = pf - srctrl->last_pf
-> +			  + RATE_CONTROL_SHARPENING * srctrl->sharp;
->  		srctrl->last_pf = pf;
-> +		if (srctrl->sharp)
-> +			srctrl->sharp--;
->  
->  		/* Compute the controller output. */
->  		adj = (err_prop * RATE_CONTROL_COEFF_P
-> 
-> 
-> 2) It seems that most of the devices out there have better sensitivity at 6
-> and 9M than at 11M, while others haven't, e.g.:
-> Rate [Mbps]	Sensitivity [dBm]
-> 	(1)	(2)	(3)	(4)
-> 1	-97	-91	-90	-96
-> 2	-96		-90	-95
-> 5.5	-95		-86	-94
-> 11	-92	-88	-82	-94
-> 6	-94	-85	-90	-91
-> 9	-93		-89	-90
-> 12	-91		-86	-88
-> 18	-90		-82	-86
-> 24	-86		-79	-83
-> 36	-83		-76	-78
-> 48	-77		-72	-76
-> 54	-74	-69	-72	-75
-> 
-> (1) Ubiquiti SR2, Atheros-based
-> (2) Marvell 88W8686 SM module
-> (3) Cheap Atheros based access point
-> (4) Cheap Broadcom 4318E device
-> 
-> So, I guess we can't think of a preset ordering for rates. I tested this
-> with a Broadcom based device (which should be pretty similar to (4)), but the
-> only other wireless card which supports both 802.11b and 802.11g I got is
-> an Intel IPW2200 (which is not supported by any mac80211 driver). So,
-> testing this with an Atheros, e.g., or some new Intel device, could lead to
-> unexpected behaviour and thus we may need to keep some table like: rate <->
-> recent failed frames.
+	Regards,
 
-Hm, from your table above, there doesn't seem to be a significant
-problem with the 6 and 9 OFDM rates. We could also just leave them out
-and go to 12Mbps OFDM from 11Mbps CCK.
-
-I also thought about your rate <-> failed frames table. I'm not
-convinced this works, because I cannot see a way to obtain consistent
-values for the table. Clearly, measuring table entries should be done
-with equal interference conditions for all entries, and they must also
-be adjusted over time. However, if we only collect data during normal
-operation, we'll likely have good data only for the few recent rates we
-were operating at.
-
->  But we would really need more testers here!
-
-Indeed :-)
-
-> 
-> I'll try to provide more comments and tuning in a few days.
-
-Great!
-
-Mattias
-
+	Jean
