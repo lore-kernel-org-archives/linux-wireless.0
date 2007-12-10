@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbXLJMe6 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:18355 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170AbXLJJD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 07:34:58 -0500
-Subject: Re: [PATCH] introduce WEXT scan capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Dave <kilroyd@googlemail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1197289394.6035.63.camel@johannes.berg> (sfid-20071210_122324_683415_A737E009)
-References: <1197073366.4563.15.camel@localhost.localdomain>
-	 <20071207.181221.09900510.davem@davemloft.net>
-	 <1197221467.9149.31.camel@localhost.localdomain>
-	 <475C3538.1070501@gmail.com>
-	 <1197225300.9149.74.camel@localhost.localdomain>
-	 (sfid-20071210_002335_513389_B559D9A5)  <1197289394.6035.63.camel@johannes.berg>
-	 (sfid-20071210_122324_683415_A737E009)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aa91SjzQY6O8v9AEEmXn"
-Date: Mon, 10 Dec 2007 13:34:52 +0100
-Message-Id: <1197290092.6035.67.camel@johannes.berg> (sfid-20071210_123501_563718_E6816913)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 04:03:29 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1456059ugc
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 01:03:27 -0800 (PST)
+Message-ID: <475D00D7.10309@gmail.com> (sfid-20071210_090334_133262_DA53D33B)
+Date: Mon, 10 Dec 2007 10:03:19 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Bruno Randolf <bruno@thinktube.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
+Subject: Re: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon,
+ reset
+References: <1197274926-14334-1-git-send-email-bruno@thinktube.com>
+In-Reply-To: <1197274926-14334-1-git-send-email-bruno@thinktube.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/10/2007 09:22 AM, Bruno Randolf wrote:
+> i resend this patch to address jiris comments and with some small improvements.
+> 
+> 'registers' prints the name and value of some registers. this should be adapted
+> to what we actually need later and is supposed to replace the hwdump facility i
+> removed in my earlier debugging changes.
+> 
+> 'tsf' prints the current HW TSF. writing "reset" into the file will reset the
+> TSF.
+> 
+> 'beacon' shows beacon relevant registers.  it is good for watching the beacon
+> timers with something like "watch -n0 cat /dbg/ath5k/phy0/beacon". writing
+> "enable" into the file will try to enable beacons by setting the flag
+> AR5K_BEACON_ENABLE, "disable" will disable that bit.
+> 
+> 'reset' can be used to trigger a HW reset, by writing "reset" into it.
+> 
+> Changes-licensed-under: GPL
+> 
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
+> ---
+>  drivers/net/wireless/ath5k/debug.c |  267 ++++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath5k/debug.h |    4 +
+>  2 files changed, 271 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+> index 7427506..7e34684 100644
+> --- a/drivers/net/wireless/ath5k/debug.c
+> +++ b/drivers/net/wireless/ath5k/debug.c
+[...]
+> +static int open_file_registers(struct inode *inode, struct file *file)
+> +{
+> +	struct seq_file *s;
+> +	int res;
+> +	res = seq_open(file, &register_seq_ops);
+> +	s = file->private_data;
+> +	s->private = inode->i_private;
 
---=-aa91SjzQY6O8v9AEEmXn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry for not noticing this earlier, if res is nonzero, you are dereferencing
+NULL (s) here.
 
+> +	return res;
+> +}
 
-On Mon, 2007-12-10 at 13:23 +0100, Johannes Berg wrote:
-> [what happened here with all the gmane addresses??]
->=20
-> > > Since iw_range is not packed, there are a few locations where there
-> > is some padding. You could quite easily shoehorn an 8 bit bitmask into
-> > the existing structure without impacting backward compatibility
-> > (unless userspace is using the padding for something). For example:
->=20
-> Ouch. But possible since we cannot do this.
-
-Eh. I mean. Possible since we cannot expand the structure.
-
-johannes
-
---=-aa91SjzQY6O8v9AEEmXn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR10yaqVg1VMiehFYAQLgrRAAkkugN9LsawQWJmEwFr3v9rLBMMsY42xx
-SxdItzbilCbXFCfPopi0q2VESaMvgqQJZWGaS7EDpFFS7thpMb+OD64raP52r2U0
-rl7vJUqC88fmKpalEtxFMWMEagXIlNjWNxUeUp9aBcBeDEN/UqGbTj7XXr20x1dM
-vlnQMon3tqRjZql0zWCmtmGT/QqcZbfoYfpW9Aq8MXHd+RHGlJh+KiA5Wd0eldf8
-Ojpi3XLLMZ0gD22nbUIeWPKME7OHFFDSnswFxfSdQXdIp31VFSD//ZTqiNLO/K1T
-MQfeIFR0KiGLFRL6uvFBGHtpDAsltBHJwTxGs7ldfuMXChofHBqTBp+kbdkFGDYN
-gYO3+5aDWolIS3jfJ/HJQgDSkuDgj2k9qr24gB7QtNYwzCdMsU5d2cxbkophrOU5
-AbvZmjkkZ7n0Ftrj79UO/joHUQx6aPLgUCKBAw4I5wifUirnkTgO1T+nBWsyOAWw
-Z+Yio8xFnocI80T3WX5Oy6KClwjZdxwyqiw81LBTpw4CsqY+Y9k+gocSX/0tDler
-Y+MLYzHIv9bZmaDlf0TIKH1OtJ5SytHkKqknnDEnOXGwWP7J8xfs3pKGuTACgFeU
-du44JH0mDdmgQc3uEYMzJvIAaOzCMkh5XKEUumjQ/XNYldoJ3fW0aUzoxNBH8xbz
-aegOgA0XHi0=
-=EITJ
------END PGP SIGNATURE-----
-
---=-aa91SjzQY6O8v9AEEmXn--
-
+regards,
+-- 
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
