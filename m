@@ -1,99 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:26651 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753113AbXLRXhV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 18:37:21 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] p54: add Kconfig description
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 18 Dec 2007 18:36:10 -0500
-Message-ID: <20071218233610.15652.21165.stgit@tetra.sourmilk.net> (sfid-20071218_233727_412256_881086ED)
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Received: from mail.gmx.net ([213.165.64.20]:33952 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751669AbXLJUvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 15:51:12 -0500
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+	learning algorithm
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20071210090853.79ea4645@morte>
+References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
+	 <1197239150.7543.13.camel@localhost>  <20071210090853.79ea4645@morte>
+Content-Type: text/plain
+Date: Mon, 10 Dec 2007 21:51:07 +0100
+Message-Id: <1197319867.7493.4.camel@localhost> (sfid-20071210_205115_249319_727D7F72)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some people would like to know what p54 is.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+On Mon, 2007-12-10 at 09:08 +0100, Stefano Brivio wrote:
+> On Sun, 09 Dec 2007 23:25:50 +0100
+> Mattias Nissler <mattias.nissler@gmx.de> wrote:
+> 
+> > >  static void *rate_control_pid_alloc(struct ieee80211_local *local)
+> > >  {
+> > >  	struct rc_pid_info *pinfo;
+> > > +	struct rc_pid_rateinfo *rinfo;
+> > > +	struct ieee80211_hw_mode *mode;
+> > > +	int i, j, tmp;
+> > > +	bool s;
+> > >  
+> > >  	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
+> > > +	if (!pinfo)
+> > > +		return NULL;
+> > > +
+> > > +	mode = local->oper_hw_mode;
+> > > +	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
+> > > +	if (!rinfo) {
+> > > +		kfree(pinfo);
+> > > +		return NULL;
+> > > +	}
+> > 
+> > What if the mode is changed? Have you checked the rate control algorithm
+> > gets reinitialized? If not, we're scheduling a crash here, when
+> > mode->num_rates changes.
+> 
+> After a discussion on IRC with Michael (Wu), we came to the conclusion that
+> it doesn't make sense for mode->num_rates to change, because:
+> 1) if the AP drops supported rates, it'll drop the association as well,
+> then everything here will be destroyed and created again;
+> 2) that can be changed in userspace, but we couldn't figure out a scenario
+> where it would make any sense. Johannes, any comments? Wouldn't it make
+> sense to just forbid to change this in userspace?
 
- drivers/net/wireless/Kconfig |   51 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 51 insertions(+), 0 deletions(-)
+I don't agree. For example, what if you have some broken 802.11b only
+hardware that you desperately need to get going, but it freaks out on
+802.11g encoded frames. Now if your AP is hostapd on a Linux machine,
+you'll want to change the mode. Hence, also the number of available
+rates change.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 4430b32..e4be4bb 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -600,15 +600,66 @@ config ADM8211
- config P54_COMMON
- 	tristate "Softmac Prism54 support"
- 	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
-+	---help---
-+	  This is common code for isl38xx based cards.
-+	  This module does nothing by itself - the USB/PCI frontends
-+	  also need to be enabled in order to support any devices.
-+
-+	  These devices require softmac firmware which can be found at
-+	  http://prism54.org/
-+
-+	  If you choose to build a module, it'll be called p54common.
- 
- config P54_USB
- 	tristate "Prism54 USB support"
- 	depends on P54_COMMON && USB
- 	select CRC32
-+	---help---
-+	  This driver is for USB isl38xx based wireless cards.
-+	  These are USB based adapters found in devices such as:
-+
-+	  3COM 3CRWE254G72
-+	  SMC 2862W-G
-+	  Accton 802.11g WN4501 USB
-+	  Siemens Gigaset USB
-+	  Netgear WG121
-+	  Netgear WG111
-+	  Medion 40900, Roper Europe
-+	  Shuttle PN15, Airvast WM168g, IOGear GWU513
-+	  Linksys WUSB54G
-+	  Linksys WUSB54G Portable
-+	  DLink DWL-G120 Spinnaker
-+	  DLink DWL-G122
-+	  Belkin F5D7050 ver 1000
-+	  Cohiba Proto board
-+	  SMC 2862W-G version 2
-+	  U.S. Robotics U5 802.11g Adapter
-+	  FUJITSU E-5400 USB D1700
-+	  Sagem XG703A
-+	  DLink DWL-G120 Cohiba
-+	  Spinnaker Proto board
-+	  Linksys WUSB54AG
-+	  Inventel UR054G
-+	  Spinnaker DUT
-+
-+	  These devices require softmac firmware which can be found at
-+	  http://prism54.org/
-+
-+	  If you choose to build a module, it'll be called p54usb.
- 
- config P54_PCI
- 	tristate "Prism54 PCI support"
- 	depends on P54_COMMON && PCI
-+	---help---
-+	  This driver is for PCI isl38xx based wireless cards.
-+	  This driver supports most devices that are supported by the
-+	  fullmac prism54 driver plus many devices which are not
-+	  supported by the fullmac driver/firmware.
-+
-+	  This driver requires softmac firmware which can be found at
-+	  http://prism54.org/
-+
-+	  If you choose to build a module, it'll be called p54pci.
- 
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
+Moreover, I think we can do better than just disallowing changes to the
+rate set, don't you think?
 
+Mattias
 
