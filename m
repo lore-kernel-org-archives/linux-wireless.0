@@ -1,144 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55893 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762776AbXLMG7U (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43145 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbXLJRkF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:20 -0500
-Subject: [PATCH 57/48] libertas: switch to a waitqueue and timer for handling USB firmware load
-From: David Woodhouse <dwmw2@infradead.org>
+	Mon, 10 Dec 2007 12:40:05 -0500
 In-Reply-To: <libertas-12345@shinybook.infradead.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2Y-0005rR-SL@shinybook.infradead.org> (sfid-20071213_065941_311189_F7412C70)
-Date: Thu, 13 Dec 2007 01:59:26 -0500
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 45/48] libertas: remove unreachable code from process_rxed_802_11_packet()
+Message-Id: <E1J1kpp-0006nk-HC@shinybook.infradead.org> (sfid-20071210_174009_845735_F543C3B7)
+Date: Mon, 10 Dec 2007 10:46:21 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 00:07:58 -0500
+Date: Mon, 10 Dec 2007 00:05:37 -0500
 
-No need to busy-wait, even if we did have a 100ms delay in the loop.
-This makes it easier to support the new 'firmware ready' event which is
-in the new firmware, too.
+The function is only ever called if we're in rtap mode. So the bit in it
+which is conditional on rtap mode seems a little superfluous.
 
 Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- drivers/net/wireless/libertas/if_usb.c |   38 +++++++++++++++++++++----------
- drivers/net/wireless/libertas/if_usb.h |    5 ++++
- 2 files changed, 31 insertions(+), 12 deletions(-)
+ drivers/net/wireless/libertas/rx.c |   75 +++++++++++++++--------------------
+ 1 files changed, 32 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 0a37950..a086653 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -113,7 +113,18 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
- 		lbs_deb_usb("Setting boot2 version failed\n");
- }
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 58e8311..90a2199 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -355,52 +355,41 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+ 	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
  
-+void if_usb_fw_timeo(unsigned long priv)
-+{
-+	struct usb_card_rec *cardp = (void *)priv;
+ 	/* create the exported radio header */
+-	if (priv->monitormode == LBS_MONITOR_OFF) {
+-		/* no radio header */
+-		/* chop the rxpd */
+-		skb_pull(skb, sizeof(struct rxpd));
+-	}
  
-+	if (cardp->fwdnldover) {
-+		lbs_deb_usb("Download complete, no event. Assuming success\n");
-+	} else {
-+		lbs_pr_err("Download timed out\n");
-+		cardp->surprise_removed = 1;
-+	}
-+	wake_up(&cardp->fw_wq);
-+}
- /**
-  *  @brief sets the configuration values
-  *  @param ifnum	interface number
-@@ -138,6 +149,9 @@ static int if_usb_probe(struct usb_interface *intf,
- 		goto error;
- 	}
- 
-+	setup_timer(&cardp->fw_timeout, if_usb_fw_timeo, (unsigned long)cardp);
-+	init_waitqueue_head(&cardp->fw_wq);
-+								     
- 	cardp->udev = udev;
- 	iface_desc = intf->cur_altsetting;
- 
-@@ -296,7 +310,7 @@ static void if_usb_disconnect(struct usb_interface *intf)
-  *  @param priv		pointer to struct lbs_private
-  *  @return 	   	0
-  */
--static int if_prog_firmware(struct usb_card_rec *cardp)
-+static int if_usb_send_fw_pkt(struct usb_card_rec *cardp)
- {
- 	struct FWData *fwdata;
- 	struct fwheader *fwheader;
-@@ -566,19 +580,21 @@ static void if_usb_receive_fwload(struct urb *urb)
- 
- 	kfree_skb(skb);
- 
-+	/* reschedule timer for 200ms hence */
-+	mod_timer(&cardp->fw_timeout, jiffies + (HZ/5));
-+
- 	if (cardp->fwfinalblk) {
- 		cardp->fwdnldover = 1;
- 		goto exit;
- 	}
- 
--	if_prog_firmware(cardp);
-+	if_usb_send_fw_pkt(cardp);
- 
- 	if_usb_submit_rx_urb_fwload(cardp);
--exit:
-+ exit:
- 	kfree(syncfwheader);
- 
- 	return;
+-	else {
+-		/* radiotap header */
+-		radiotap_hdr.hdr.it_version = 0;
+-		/* XXX must check this value for pad */
+-		radiotap_hdr.hdr.it_pad = 0;
+-		radiotap_hdr.hdr.it_len = cpu_to_le16 (sizeof(struct rx_radiotap_hdr));
+-		radiotap_hdr.hdr.it_present = cpu_to_le32 (RX_RADIOTAP_PRESENT);
+-		/* unknown values */
+-		radiotap_hdr.flags = 0;
+-		radiotap_hdr.chan_freq = 0;
+-		radiotap_hdr.chan_flags = 0;
+-		radiotap_hdr.antenna = 0;
+-		/* known values */
+-		radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
+-		/* XXX must check no carryout */
+-		radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
+-		radiotap_hdr.rx_flags = 0;
+-		if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
+-			radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
+-		//memset(radiotap_hdr.pad, 0x11, IEEE80211_RADIOTAP_HDRLEN - 18);
 -
- }
- 
- #define MRVDRV_MIN_PKT_LEN	30
-@@ -911,15 +927,13 @@ restart:
- 	cardp->totalbytes = 0;
- 	cardp->fwfinalblk = 0;
- 
--	if_prog_firmware(cardp);
-+	/* Send the first firmware packet... */
-+	if_usb_send_fw_pkt(cardp);
- 
--	do {
--		lbs_deb_usbd(&cardp->udev->dev,"Wlan sched timeout\n");
--		i++;
--		msleep_interruptible(100);
--		if (cardp->surprise_removed || i >= 20)
--			break;
--	} while (!cardp->fwdnldover);
-+	/* ... and wait for the process to complete */
-+	wait_event_interruptible(cardp->fw_wq, cardp->surprise_removed || cardp->fwdnldover);
-+	
-+	del_timer_sync(&cardp->fw_timeout);
- 
- 	if (!cardp->fwdnldover) {
- 		lbs_pr_info("failed to load fw, resetting device!\n");
-diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
-index 940a369..224c957 100644
---- a/drivers/net/wireless/libertas/if_usb.h
-+++ b/drivers/net/wireless/libertas/if_usb.h
-@@ -1,6 +1,9 @@
- #ifndef _LBS_IF_USB_H
- #define _LBS_IF_USB_H
- 
-+#include <linux/wait.h>
-+#include <linux/timer.h>
+-		/* chop the rxpd */
+-		skb_pull(skb, sizeof(struct rxpd));
+-
+-		/* add space for the new radio header */
+-		if ((skb_headroom(skb) < sizeof(struct rx_radiotap_hdr)) &&
+-		    pskb_expand_head(skb, sizeof(struct rx_radiotap_hdr), 0,
+-				     GFP_ATOMIC)) {
+-			lbs_pr_alert("%s: couldn't pskb_expand_head\n",
+-			       __func__);
+-		}
+-
+-		pradiotap_hdr =
+-		    (struct rx_radiotap_hdr *)skb_push(skb,
+-						     sizeof(struct
+-							    rx_radiotap_hdr));
+-		memcpy(pradiotap_hdr, &radiotap_hdr,
+-		       sizeof(struct rx_radiotap_hdr));
++	/* radiotap header */
++	radiotap_hdr.hdr.it_version = 0;
++	/* XXX must check this value for pad */
++	radiotap_hdr.hdr.it_pad = 0;
++	radiotap_hdr.hdr.it_len = cpu_to_le16 (sizeof(struct rx_radiotap_hdr));
++	radiotap_hdr.hdr.it_present = cpu_to_le32 (RX_RADIOTAP_PRESENT);
++	/* unknown values */
++	radiotap_hdr.flags = 0;
++	radiotap_hdr.chan_freq = 0;
++	radiotap_hdr.chan_flags = 0;
++	radiotap_hdr.antenna = 0;
++	/* known values */
++	radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
++	/* XXX must check no carryout */
++	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
++	radiotap_hdr.rx_flags = 0;
++	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
++		radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
++	//memset(radiotap_hdr.pad, 0x11, IEEE80211_RADIOTAP_HDRLEN - 18);
 +
- /**
-   * This file contains definition for USB interface.
-   */
-@@ -56,6 +59,8 @@ struct usb_card_rec {
- 	u8 bulk_out_endpointAddr;
++	/* chop the rxpd */
++	skb_pull(skb, sizeof(struct rxpd));
++
++	/* add space for the new radio header */
++	if ((skb_headroom(skb) < sizeof(struct rx_radiotap_hdr)) &&
++	    pskb_expand_head(skb, sizeof(struct rx_radiotap_hdr), 0,
++			     GFP_ATOMIC)) {
++		lbs_pr_alert("%s: couldn't pskb_expand_head\n",
++			     __func__);
+ 	}
  
- 	const struct firmware *fw;
-+	struct timer_list fw_timeout;
-+	wait_queue_head_t fw_wq;
- 	u8 CRC_OK;
- 	u32 fwseqnum;
- 	u32 lastseqnum;
++	pradiotap_hdr = (void *)skb_push(skb, sizeof(struct rx_radiotap_hdr));
++	memcpy(pradiotap_hdr, &radiotap_hdr, sizeof(struct rx_radiotap_hdr));
++
+ 	/* Take the data rate from the rxpd structure
+ 	 * only if the rate is auto
+ 	 */
 -- 
 1.5.3.4
 
