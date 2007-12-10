@@ -1,89 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:41875 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071AbXLWQPY (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:55301 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228AbXLJPqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 11:15:24 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so686060fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 08:15:22 -0800 (PST)
-Message-ID: <c85cb4470712230815u158cd19fjc1ff58a7e2c83fbc@mail.gmail.com> (sfid-20071223_161530_246214_F8E329B8)
-Date: Sun, 23 Dec 2007 18:15:22 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1198154463.16241.46.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
-	 <1198145667.16241.23.camel@johannes.berg>
-	 <c85cb4470712200432w3640359dje70f57c86be3497a@mail.gmail.com>
-	 <1198154463.16241.46.camel@johannes.berg>
+	Mon, 10 Dec 2007 10:46:20 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 44/48] libertas: Move actual transmission to main thread
+Message-Id: <E1J1kpo-0006nf-Eu@shinybook.infradead.org> (sfid-20071210_154642_689785_F370C5A4)
+Date: Mon, 10 Dec 2007 10:46:20 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Basically, it seems to me that you're injecting frames down the same
-> __ieee80211_rx() path when they have already gone through that, and then
-> after the fact annotate pretty much all of that path before the actual
-> rx handlers (after pre-handlers) with "skip if reordered frame". That I
-> don't really like, it means we need to special-case everything we ever
-> put there.
->
-> Hence, I think it'd be best to first reorganise the current code:
->  (1) split __ieee80211_rx() right after the pre handler invocation and
->     call e.g. __ieee80211_rx_handlers() which contains all the code
->     from "if (sta && !(sta->flags & (WLAN_STA_WDS | WLAN_STA_ASSOC_AP"
->     to "} else dev_kfree_skb(skb);"
->     The function would have certain requirements like a filled
->     ieee80211_txrx_data and running under rcu_read_lock().
->  (2) then, you don't need status.ordered but can drop the frame right
->     away or pass it to __ieee80211_rx_handlers().
->
-> That way, we guarantee that each frame only passes through the complete
-> RX path once and your dropping the unordered frames is equivalent to
+Date: Sun, 9 Dec 2007 23:54:27 -0500
 
-Johannes, i re-inspected the code to implement your solution, and it
-is not straight forward as you have seen it.
-what we do now in __ieee80211_rx is:
-- invoke monitor
-- fill in txrx_data
-- invoke michael_mic_report (if needed)
-- call pre-handlers of QoS that change txrx_data as well.
-- call pre-handlers of statistics that change txrx_data
-- call reorder buffer prehandler
-    - saving sk_buff to reordering buffer.
-    - if we can, send sk_buffs back to __ieee80211_rx, that will
-properly fill txrx_data
+The locking issues with TX, especially TX from multiple netdevs, get
+_so_ much easier if you do it like this.
 
-now, in order to proceed according to your implementation, as i do not
-call again  __ieee80211, and do not get the txrx_data restored,  i
-will either:
-1 - have to fill in txrx_data inside reordering function, which will
-end in massive code duplication, and i don't like this solution
-2 - keep the whole txrx_data and not only the sk_buff inside
-reordering buffer, which will end up in allocation of the txrx_data
-struct for every incoming frame, or in a big maximum possible size of
-64 pre-allocated array of txrx_data per tid - this is either waste of
-cpu or memory
-3 - stick to my current implementation, but assure that no function
-will be called for ordered frames on their second call in __ieee80211.
-we already mentioned it may lead to low encapsulation of reordering
-mechanism.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/dev.h  |    5 +-
+ drivers/net/wireless/libertas/main.c |   24 ++++++++
+ drivers/net/wireless/libertas/tx.c   |  103 ++++++++++++++--------------------
+ 3 files changed, 71 insertions(+), 61 deletions(-)
 
-so, what do you think about next solution:
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 04cf33d..4681405 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -164,7 +164,10 @@ struct lbs_private {
+ 
+ 	struct mutex lock;
+ 
+-	u8 tmptxbuf[LBS_UPLD_SIZE];
++	/* TX packet ready to be sent... */
++	int tx_pending_len;		/* -1 while building packet */
++
++	u8 tx_pending_buf[LBS_UPLD_SIZE];
+ 	/* protected by hard_start_xmit serialization */
+ 
+ 	/** command-related variables */
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 42b64b5..f16c93b 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -739,6 +739,8 @@ static int lbs_thread(void *data)
+ 			shouldsleep = 0;	/* Interrupt pending. Deal with it now */
+ 		else if (priv->dnld_sent)
+ 			shouldsleep = 1;	/* Something is en route to the device already */
++		else if (priv->tx_pending_len > 0)
++			shouldsleep = 0;	/* We've a packet to send */
+ 		else if (priv->cur_cmd)
+ 			shouldsleep = 1;	/* Can't send a command; one already running */
+ 		else if (!list_empty(&priv->cmdpendingq))
+@@ -852,6 +854,28 @@ static int lbs_thread(void *data)
+ 		 */
+ 		if (!list_empty(&priv->cmdpendingq))
+ 			wake_up_all(&priv->cmd_pending);
++
++		spin_lock_irq(&priv->driver_lock);
++		if (!priv->dnld_sent && priv->tx_pending_len > 0) {
++			int ret = priv->hw_host_to_card(priv, MVMS_DAT,
++							priv->tx_pending_buf,
++							priv->tx_pending_len);
++			if (ret) {
++				lbs_deb_tx("host_to_card failed %d\n", ret);
++				priv->dnld_sent = DNLD_RES_RECEIVED;
++			}
++			priv->tx_pending_len = 0;
++			if (!priv->currenttxskb) {
++				/* We can wake the queues immediately if we aren't
++				   waiting for TX feedback */
++				if (priv->connect_status == LBS_CONNECTED)
++					netif_wake_queue(priv->dev);
++				if (priv->mesh_dev &&
++				    priv->mesh_connect_status == LBS_CONNECTED)
++					netif_wake_queue(priv->mesh_dev);
++			}
++		}
++		spin_unlock_irq(&priv->driver_lock);
+ 	}
+ 
+ 	del_timer(&priv->command_timer);
+diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+index 300aa05..e2141f0 100644
+--- a/drivers/net/wireless/libertas/tx.c
++++ b/drivers/net/wireless/libertas/tx.c
+@@ -67,39 +67,45 @@ int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	lbs_deb_enter(LBS_DEB_TX);
+ 
+-	ret = NETDEV_TX_BUSY;
+-
+-	if (priv->dnld_sent) {
+-		lbs_pr_alert( "TX error: dnld_sent = %d, not sending\n",
+-		       priv->dnld_sent);
+-		goto done;
+-	}
+-
+-	if (priv->currenttxskb) {
+-		lbs_pr_err("%s while TX skb pending\n", __func__);
+-		goto done;
+-	}
++	ret = NETDEV_TX_OK;
+ 
+-	if ((priv->psstate == PS_STATE_SLEEP) ||
+-	    (priv->psstate == PS_STATE_PRE_SLEEP)) {
+-		lbs_pr_alert("TX error: packet xmit in %ssleep mode\n",
+-			     priv->psstate == PS_STATE_SLEEP?"":"pre-");
+-		goto done;
+-	}
++	/* We need to protect against the queues being restarted before
++	   we get round to stopping them */
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 
+ 	if (priv->surpriseremoved)
+-		goto drop;
++		goto free;
+ 
+ 	if (!skb->len || (skb->len > MRVDRV_ETH_TX_PACKET_BUFFER_SIZE)) {
+ 		lbs_deb_tx("tx err: skb length %d 0 or > %zd\n",
+ 		       skb->len, MRVDRV_ETH_TX_PACKET_BUFFER_SIZE);
+ 		/* We'll never manage to send this one; drop it and return 'OK' */
+-		goto drop;
++
++		priv->stats.tx_dropped++;
++		priv->stats.tx_errors++;
++		goto free;
++	}
++
++
++	netif_stop_queue(priv->dev);
++	if (priv->mesh_dev)
++		netif_stop_queue(priv->mesh_dev);
++
++	if (priv->tx_pending_len) {
++		/* This can happen if packets come in on the mesh and eth 
++		   device simultaneously -- there's no mutual exclusion on 
++		   hard_start_xmit() calls between devices. */
++		lbs_deb_tx("Packet on %s while busy\n", dev->name);
++		ret = NETDEV_TX_BUSY;
++		goto unlock;
+ 	}
+ 
++	priv->tx_pending_len = -1;
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
++
+ 	lbs_deb_hex(LBS_DEB_TX, "TX Data", skb->data, min_t(unsigned int, skb->len, 100));
+ 
+-	txpd = (void *)priv->tmptxbuf;
++	txpd = (void *)priv->tx_pending_buf;
+ 	memset(txpd, 0, sizeof(struct txpd));
+ 
+ 	p802x_hdr = skb->data;
+@@ -134,54 +140,31 @@ int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	memcpy(&txpd[1], p802x_hdr, le16_to_cpu(txpd->tx_packet_length));
+ 
+-	/* We need to protect against the queues being restarted before
+-	   we get round to stopping them */
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
++	priv->tx_pending_len = pkt_len + sizeof(struct txpd);
+ 
+-	ret = priv->hw_host_to_card(priv, MVMS_DAT, priv->tmptxbuf,
+-				    pkt_len + sizeof(struct txpd));
+-
+-	if (!ret) {
+-		lbs_deb_tx("%s succeeds\n", __func__);
+-
+-		/* Stop processing outgoing pkts before submitting */
+-		netif_stop_queue(priv->dev);
+-		if (priv->mesh_dev)
+-			netif_stop_queue(priv->mesh_dev);
+-
+-		priv->stats.tx_packets++;
+-		priv->stats.tx_bytes += skb->len;
+-
+-		dev->trans_start = jiffies;
++	lbs_deb_tx("%s lined up packet\n", __func__);
+ 
+-		if (priv->monitormode != LBS_MONITOR_OFF) {
+-			/* Keep the skb to echo it back once Tx feedback is
+-			   received from FW */
+-			skb_orphan(skb);
++	priv->stats.tx_packets++;
++	priv->stats.tx_bytes += skb->len;
+ 
+-			/* Keep the skb around for when we get feedback */
+-			priv->currenttxskb = skb;
+-		} else
+-			dev_kfree_skb_any(skb);
+-		
+-	}
+-	
+-	spin_unlock_irqrestore(&priv->driver_lock, flags);
++	dev->trans_start = jiffies;
+ 
+-	if (ret) {
+-		lbs_deb_tx("tx err: hw_host_to_card returned 0x%X\n", ret);
+-drop:
+-		priv->stats.tx_dropped++;
+-		priv->stats.tx_errors++;
++	if (priv->monitormode != LBS_MONITOR_OFF) {
++		/* Keep the skb to echo it back once Tx feedback is
++		   received from FW */
++		skb_orphan(skb);
+ 
++		/* Keep the skb around for when we get feedback */
++		priv->currenttxskb = skb;
++	} else {
++ free:
+ 		dev_kfree_skb_any(skb);
+ 	}
++ unlock:
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
++	wake_up(&priv->waitq);
+ 
+-	/* Even if we dropped the packet, return OK. Otherwise the
+-	   packet gets requeued. */
+-	ret = NETDEV_TX_OK;
+-
+-done:
+ 	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
+ 	return ret;
+ }
+-- 
+1.5.3.4
 
-1 - move the rxtx_data indifferent functionality out of __ieee80211_rx
-(monitor, load and reordering) to, lets say __ieee80211_rx_pre_handle.
-2 - __ieee80211_rx_pre_handle will be called for each frame. either
-directly or through tasklet.
-3 - in regular state, proceed to __ieee80211_rx immediately, in
-reorder state loop over __ieee80211_rx for each already ordered frame.
-4 - I thought to eliminate __ieee80211_invoke_rx_handlers(local,
-local->rx_pre_handlers), as QoS will be the only one to inhabit it
-now, so it may move to ieee80211_invoke_rx_handlers(local,
-local->rx_handlers)
-
-sorry for the long mail, but i wanted to write my full opinion about this issue.
