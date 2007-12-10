@@ -1,62 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49021 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732AbXLPVAd (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:55261 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbXLJPps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 16:00:33 -0500
-Subject: Re: b43 problem with led trigger registration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Richard Purdie <rpurdie@openedhand.com>
-In-Reply-To: <1197837505.6769.25.camel@johannes.berg> (sfid-20071216_203834_318779_C51C7629)
-References: <1197822019.4138.2.camel@johannes.berg>
-	 <200712162036.11084.mb@bu3sch.de> <1197835176.6769.21.camel@johannes.berg>
-	 <200712162126.56483.mb@bu3sch.de>  <1197837505.6769.25.camel@johannes.berg>
-	 (sfid-20071216_203834_318779_C51C7629)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aBlYhJJWlt6c3cMXqh4C"
-Date: Sun, 16 Dec 2007 22:00:26 +0100
-Message-Id: <1197838826.6769.36.camel@johannes.berg> (sfid-20071216_210036_815003_43C1EE15)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 10:45:48 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 23/48] libertas: Fix up error handling in lbs_setuserscan()
+Message-Id: <E1J1kpS-0006ly-8N@shinybook.infradead.org> (sfid-20071210_154551_859860_A95E0D5A)
+Date: Mon, 10 Dec 2007 10:45:58 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Sat, 8 Dec 2007 00:23:55 +0000
 
---=-aBlYhJJWlt6c3cMXqh4C
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/debugfs.c |   29 +++++++++++++++++++----------
+ 1 files changed, 19 insertions(+), 10 deletions(-)
 
-
-> Not with default triggers, I guess. The code in question only triggers
-> when a default is assigned to any LED I think.
-
-Come to think of it, it only triggers if the LED-trigger is registered
-before the LED, unrelated of whether we have defaults or not.
-
-johannes
-
---=-aBlYhJJWlt6c3cMXqh4C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2WR6aVg1VMiehFYAQJxzQ//f0keEFXiIbrHuJAFS/T/l1JQPmpr5rJS
-3Au999ZfVuab2jR59xoRo5pft/0aXt7q2b4LmOuNg6nPL+SitwAghD8ThaOewQJe
-+x5wLOOUdt2jHdvu66h7Z5Vv7oc3iFJymKvXpnkNQUizI+TcDcV7uoA0GyhAbcPN
-mBkXVLpwtKVb+gmBEIfDUvpJuROSN0/fM5Rw1D95zshCQGeEjrNjDRyQN5/MYWLg
-eD8g+W4MIbBRWIb7kokKlrtf8EuObwcJIMAMXPl2Zpo9/EY9LZiA8aBXzwqZ4yhG
-jgoLID7zGHJKpS1Nb8VAZWFUInQKWilnhdhtZ9ItosOjzO34LYO/wG0MfMhP0gbM
-XelgJIJ6vbUx25+PoAg1wts9bQs4lp7xDJtoEyLqY7RFIJ6bbR74vmCiaxHo66Tw
-wr2tcYXCaaBNVAvvzcVWYO3k2K8Zrw86YhSTEr/5X+U3+zo1EHNyogVW/rXGhJud
-bON9xgOYixFya8x/CvVJMvv+Koh6mgf+pMuEBgrrAlXPUZnKtNQ5TEJ2Q7vN31Il
-1KB8URT3rf5Aw7tPB+ADt0UXAAK/Nu6tVVs+U/gsqMLH2Qx58tbJJ3hP8S0Y4E74
-q08Bd1VQmNH6+YiM/Pat0wqNjtQbAOC8eETCDNUP5aRTdQ5X6yY8z6Z20TBfSTrl
-1g/bYEa17GE=
-=djG5
------END PGP SIGNATURE-----
-
---=-aBlYhJJWlt6c3cMXqh4C--
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 1d881ae..dde0c37 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -292,18 +292,23 @@ static ssize_t lbs_setuserscan(struct file *file,
+ 	struct lbs_ioctl_user_scan_cfg *scan_cfg;
+ 	union iwreq_data wrqu;
+ 	int dur;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *)addr;
++	char *buf = (char *)get_zeroed_page(GFP_KERNEL);
+ 
+-	scan_cfg = kzalloc(sizeof(struct lbs_ioctl_user_scan_cfg), GFP_KERNEL);
+-	if (!scan_cfg)
++	if (!buf)
+ 		return -ENOMEM;
+-
++		
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+ 		res = -EFAULT;
+-		goto out_unlock;
++		goto out_buf;
++	}
++
++	scan_cfg = kzalloc(sizeof(struct lbs_ioctl_user_scan_cfg), GFP_KERNEL);
++	if (!scan_cfg) {
++		res = -ENOMEM;
++		goto out_buf;
+ 	}
++	res = count;
+ 
+ 	scan_cfg->bsstype = LBS_SCAN_BSS_TYPE_ANY;
+ 
+@@ -316,15 +321,19 @@ static ssize_t lbs_setuserscan(struct file *file,
+ 
+ 	lbs_scan_networks(priv, scan_cfg, 1);
+ 	wait_event_interruptible(priv->adapter->cmd_pending,
+-				 !priv->adapter->nr_cmd_pending);
++				 priv->adapter->surpriseremoved || !priv->adapter->nr_cmd_pending);
++
++	if (priv->adapter->surpriseremoved)
++		goto out_scan_cfg;
+ 
+ 	memset(&wrqu, 0x00, sizeof(union iwreq_data));
+ 	wireless_send_event(priv->dev, SIOCGIWSCAN, &wrqu, NULL);
+ 
+-out_unlock:
+-	free_page(addr);
++ out_scan_cfg:
+ 	kfree(scan_cfg);
+-	return count;
++ out_buf:
++	free_page((unsigned long)buf);
++	return res;
+ }
+ 
+ 
+-- 
+1.5.3.4
 
