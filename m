@@ -1,83 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6283 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960AbXLSK7e convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32813 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881AbXLJQwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 05:59:34 -0500
-MIME-Version: 1.0
-Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-Date: Wed, 19 Dec 2007 12:57:48 +0200
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com> (sfid-20071219_105938_368896_5FCF3AE2)
-In-Reply-To: <1197986248.4885.149.camel@johannes.berg>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070782762-git-send-email-ron.rindjunsky@intel.com> <1197915515.4885.86.camel@johannes.berg> <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com> (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<flamingice@sourmilk.net>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 10 Dec 2007 11:52:21 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 39/48] libertas: stop using ieee80211 for radiotap device
+Message-Id: <E1J1kpj-0006nG-4x@shinybook.infradead.org> (sfid-20071210_165224_136889_1ADE9D38)
+Date: Mon, 10 Dec 2007 10:46:15 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Sun, 9 Dec 2007 16:22:21 -0500
 
->>> +     int ordered;
->>
->> type int was chosen as it is not a bool type (can be
->> drop/continue/queue) so it can't be fit to flags.
+There seems to be no point in doing it as an ieee80211 device instead of
+a normal netdev, and when we override its ->priv and then call
+free_ieee80211() it has a distressing tendency to crash horribly.
 
-> No, I was thinking that it's enum txrx_result or whatever that is
-named.
-> But you can't use that type in mac80211.h since it's only defined in
-> ieee80211_i.h... Maybe you should put the declaration into mac80211.h
-> and use it here so that the compiler can error check this ordered
-field
-> better...
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/dev.h  |    2 -
+ drivers/net/wireless/libertas/main.c |   36 ++++++++++++++-------------------
+ 2 files changed, 15 insertions(+), 23 deletions(-)
 
-I thought about doing it. The txrx_result enum did look to me
-as a very useful one for low level drivers, as the same set
-of actions of drop/continue/queue is relevant there as well.
-As you have the same opinion I'll go ahead with it.
-
->>> @@ -1252,6 +1254,20 @@ void ieee80211_sta_stop_rx_BA_session(struct 
->>>               ieee80211_send_delba(dev, ra, tid, 0, reason);
->>>
->>>       /* free the reordering buffer */
->>> +     for (i = 0; i < sta->ampdu_mlme.tid_rx[tid].buf_size; i++) {
->>> +             if (sta->ampdu_mlme.tid_rx[tid].reorder_buf[i]) {
->>> +                     /* release the reordered frames to stack,
->>> +                      * but drop them there */
->>> +                     memcpy(&status, sta->ampdu_mlme.tid_rx[tid].
->>> +                             reorder_buf[i]->cb, sizeof(status));
->>> +                     status.ordered = TXRX_DROP;
->>> +                     __ieee80211_rx(hw, sta->ampdu_mlme.
->>> +                                    tid_rx[tid].reorder_buf[i],
->>> +                                    &status);
->>>
->>> This is strange. Why are they even passed to __ieee80211_rx?
->> 
->> of course i can get rid from there here, but thought it will be more
->> systematic and clearer to pass them back to __ieee80211_rx. if you
->> have any objection to this (efficiency considerations or like) i will
->> reconsider it.
-
-> I'm just not sure why you'd want to. As far as I can the frames
-already
-> passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
-
-No, not passed it yet, they are still queued for reordering, but as
-aggregation is being tear down I am expected to drop the frames
-that are still not in order.
-Again, if you see any performance issue with it, although this may
-occur only once per session, do tell, if not, I would prefer to
-leave it that way, as this will 1 - give more accurate statistics
-of dropped frames, 2 - I don't want to drop frames in places
-people will have trouble finding, other then the in the handlers.
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index a9c3adc..04cf33d 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -10,7 +10,6 @@
+ #include <linux/wireless.h>
+ #include <linux/ethtool.h>
+ #include <linux/debugfs.h>
+-#include <net/ieee80211.h>
+ 
+ #include "defs.h"
+ #include "scan.h"
+@@ -114,7 +113,6 @@ struct lbs_private {
+ 	struct net_device_stats stats;
+ 	struct net_device *mesh_dev; /* Virtual device */
+ 	struct net_device *rtap_net_dev;
+-	struct ieee80211_device *ieee;
+ 
+ 	struct iw_statistics wstats;
+ 	struct lbs_mesh_stats mstats;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 5c8cb00..55dce8d 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1448,7 +1448,7 @@ static int lbs_rtap_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
+ {
+ 	struct lbs_private *priv = dev->priv;
+-	return &priv->ieee->stats;
++	return &priv->stats;
+ }
+ 
+ 
+@@ -1457,42 +1457,36 @@ void lbs_remove_rtap(struct lbs_private *priv)
+ 	if (priv->rtap_net_dev == NULL)
+ 		return;
+ 	unregister_netdev(priv->rtap_net_dev);
+-	free_ieee80211(priv->rtap_net_dev);
++	free_netdev(priv->rtap_net_dev);
+ 	priv->rtap_net_dev = NULL;
+ }
+ 
+ int lbs_add_rtap(struct lbs_private *priv)
+ {
+ 	int rc = 0;
++	struct net_device *rtap_dev;
+ 
+ 	if (priv->rtap_net_dev)
+ 		return -EPERM;
+ 
+-	priv->rtap_net_dev = alloc_ieee80211(0);
+-	if (priv->rtap_net_dev == NULL)
++	rtap_dev = alloc_netdev(0, "rtap%d", ether_setup);
++	if (rtap_dev == NULL)
+ 		return -ENOMEM;
+ 
++	rtap_dev->type = ARPHRD_IEEE80211_RADIOTAP;
++	rtap_dev->open = lbs_rtap_open;
++	rtap_dev->stop = lbs_rtap_stop;
++	rtap_dev->get_stats = lbs_rtap_get_stats;
++	rtap_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
++	rtap_dev->set_multicast_list = lbs_set_multicast_list;
++	rtap_dev->priv = priv;
+ 
+-	priv->ieee = netdev_priv(priv->rtap_net_dev);
+-
+-	strcpy(priv->rtap_net_dev->name, "rtap%d");
+-
+-	priv->rtap_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
+-	priv->rtap_net_dev->open = lbs_rtap_open;
+-	priv->rtap_net_dev->stop = lbs_rtap_stop;
+-	priv->rtap_net_dev->get_stats = lbs_rtap_get_stats;
+-	priv->rtap_net_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
+-	priv->rtap_net_dev->set_multicast_list = lbs_set_multicast_list;
+-	priv->rtap_net_dev->priv = priv;
+-
+-	priv->ieee->iw_mode = IW_MODE_MONITOR;
+-
+-	rc = register_netdev(priv->rtap_net_dev);
++	rc = register_netdev(rtap_dev);
+ 	if (rc) {
+-		free_ieee80211(priv->rtap_net_dev);
+-		priv->rtap_net_dev = NULL;
++		free_netdev(rtap_dev);
+ 		return rc;
+ 	}
++	priv->rtap_net_dev = rtap_dev;
+ 
+ 	return 0;
+ }
+-- 
+1.5.3.4
 
