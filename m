@@ -1,117 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:44948 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288AbXLPBBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2007 20:01:04 -0500
-Date: Sun, 16 Dec 2007 03:01:04 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 5/9] ath5k: Reorder reset function to match regdumps
-Message-ID: <20071216010104.GE5482@makis.domain.invalid> (sfid-20071216_010107_935281_B0550F80)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51077 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbXLJMXV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 07:23:21 -0500
+Subject: Re: [PATCH] introduce WEXT scan capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Dave <kilroyd@googlemail.com>, Dan Williams <dcbw@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1197225300.9149.74.camel@localhost.localdomain> (sfid-20071210_002335_513389_B559D9A5)
+References: <1197073366.4563.15.camel@localhost.localdomain>
+	 <20071207.181221.09900510.davem@davemloft.net>
+	 <1197221467.9149.31.camel@localhost.localdomain>
+	 <475C3538.1070501@gmail.com>
+	 <1197225300.9149.74.camel@localhost.localdomain>
+	 (sfid-20071210_002335_513389_B559D9A5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ITz6SjrLCfoIvoASqgtK"
+Date: Mon, 10 Dec 2007 13:23:14 +0100
+Message-Id: <1197289394.6035.63.camel@johannes.berg> (sfid-20071210_122324_683415_A737E009)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Modify reset function to match regdumps, we still have some things to fix.
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+--=-ITz6SjrLCfoIvoASqgtK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 72d0432..ed311ae 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -683,7 +683,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 	}
- 
--	ath5k_hw_write_initvals(ah, mode, change_channel);
-+	ret = ath5k_hw_write_initvals(ah, mode, change_channel);
-+	if (ret)
-+		return ret;
- 
- 	/*
- 	 * 5211/5212 Specific
-@@ -699,8 +701,23 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 		mdelay(1);
- 
--		if (ah->ah_version == AR5K_AR5212)
--			ath5k_hw_write_rate_duration(ah, driver_mode);
-+		/*
-+		 * Write some more initial register settings
-+		 */
-+		if (ah->ah_version > AR5K_AR5211){ /* found on 5213+ */
-+			ath5k_hw_reg_write(ah, 0x0002a002, AR5K_PHY(11));
-+
-+			if (channel->val == CHANNEL_G)
-+				ath5k_hw_reg_write(ah, 0x00f80d80, AR5K_PHY(83)); /* 0x00fc0ec0 */
-+			else
-+				ath5k_hw_reg_write(ah, 0x00000000, AR5K_PHY(83));
-+
-+			ath5k_hw_reg_write(ah, 0x000001b5, 0xa228); /* 0x000009b5 */
-+			ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
-+			ath5k_hw_reg_write(ah, 0x0000000f, 0x8060);
-+			ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
-+			ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
-+		}
- 
- 		/* Fix for first revision of the RF5112 RF chipset */
- 		if (ah->ah_radio >= AR5K_RF5112 &&
-@@ -716,12 +733,16 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		}
- 
- 		/*
--		 * Set TX power (XXX use txpower from net80211)
-+		 * Set TX power (FIXME)
- 		 */
- 		ret = ath5k_hw_txpower(ah, channel, AR5K_TUNE_DEFAULT_TXPOWER);
- 		if (ret)
- 			return ret;
- 
-+		/* Write rate duration table */
-+		if (ah->ah_version == AR5K_AR5212)
-+			ath5k_hw_write_rate_duration(ah, driver_mode);
-+
- 		/*
- 		 * Write RF registers
- 		 * TODO:Does this work on 5211 (5111) ?
-@@ -754,6 +775,17 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		}
- 
- 		/*
-+		 * Set channel and calibrate the PHY
-+		 */
-+		ret = ath5k_hw_channel(ah, channel);
-+		if (ret)
-+			return ret;
-+
-+		/* Set antenna mode */
-+		AR5K_REG_MASKED_BITS(ah, AR5K_PHY(0x44),
-+			ah->ah_antenna[ee_mode][0], 0xfffffc06);
-+
-+		/*
- 		 * In case a fixed antenna was set as default
- 		 * write the same settings on both AR5K_PHY_ANT_SWITCH_TABLE
- 		 * registers.
-@@ -862,13 +894,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	}
- 
- 	/*
--	 * Set channel and calibrate the PHY
--	 */
--	ret = ath5k_hw_channel(ah, channel);
--	if (ret)
--		return ret;
--
--	/*
- 	 * Enable the PHY and wait until completion
- 	 */
- 	ath5k_hw_reg_write(ah, AR5K_PHY_ACT_ENABLE, AR5K_PHY_ACT);
+[what happened here with all the gmane addresses??]
 
+> > Since iw_range is not packed, there are a few locations where there
+> is some padding. You could quite easily shoehorn an 8 bit bitmask into
+> the existing structure without impacting backward compatibility
+> (unless userspace is using the padding for something). For example:
 
+Ouch. But possible since we cannot do this.
+
+> Hmm; this could work as long as that part of the structure is guaranteed
+> to be 0 if it wasn't touched by the driver.  If it could be filled with
+> garbage bits at any point, then it's not going to work.  Interesting
+> thought.
+
+That depends how the driver allocates it. Some drivers leak stack data
+in these fields which is bad per se, and it's something we need to fix
+fix in the kernel anyway.
+
+johannes
+
+--=-ITz6SjrLCfoIvoASqgtK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR10vsaVg1VMiehFYAQKzXRAAt/m8Ln0+TQadD1hppprsgBrLBpMuL63B
+7AgikyAnIP2tlTtmr9usgmdRZ2NVafrZTt3S+wnCyRvj7o9t8ljdJrRyAhXkaeXQ
+ReySkWjL4yUwbAtpcSaFX7CdKnPTjTYJPZ4vIM1+98tfyuj4L4D61pjCw0AMyaNT
+NrPEZw8JTzc3dqa3HLjRLX+OCLfRkU9fJ1qOO+gUm2WYcU/SasTI/xxClmpfyoxo
+FyCnMCteX3xWbUfTXrU7H4s+uD84r4EXnySCa9H1rQFLnT0cmjlvOxLTn779udzn
+7UYyqhZQ0v8tsrUJrNFtONcopahdITDcgoVyk9H1awFvR3aiRsEMwWWPOSaABuvc
+BiVIdb8nwJwfIzwjC5iEZ7CxudV8LJ3XJgWLoUaOE51fpTUpy+L5IYYKzt9QBTkY
+iwqZeKu1gO/w4VNU3OEwDurYu6GHnytI8XMepiIznQaitOa068fCtb2kvoP5fQLQ
+5xY4MU3bTIAfb3BqPqA3Uwfno53DySyN66G+iiQ1MMjWNWRXtsdIRSjyOynPtEKj
+UHAeJ937sMhQBWv6uuBp013aBjVwyFA9giEMHTPE9q2nXGpY6jgaKiucrY7MLFhJ
+FBZYMW89UalLRiAf4SqfN8If4WQ57SWGHNhXn+yBN7CHhCCoIvKp++E9wf1comcK
+JaGxmwRT3N8=
+=TjOv
+-----END PGP SIGNATURE-----
+
+--=-ITz6SjrLCfoIvoASqgtK--
 
