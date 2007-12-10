@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pmac.infradead.org ([90.155.92.200]:44869 "EHLO
-	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752973AbXLSQKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:10:25 -0500
-Subject: [PATCH 120/48] libertas: allow for PS mode to be disabled when firmware doesn't support it
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J50ty-00020K-7r@pmac.infradead.org> (sfid-20071219_161031_229476_F908DADA)
-Date: Wed, 19 Dec 2007 15:32:06 +0000
+Received: from mfe1.polimi.it ([131.175.12.23]:44251 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751170AbXLJAX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 19:23:58 -0500
+Date: Mon, 10 Dec 2007 01:17:38 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+ learning algorithm
+Message-ID: <20071210011738.2267cb65@morte> (sfid-20071210_002400_583337_9C4C6E11)
+In-Reply-To: <20071210002158.654ed960@morte>
+References: <20071209211547.2d7fca32@morte>
+	<20071209211931.26ff42fa@morte>
+	<1197239150.7543.13.camel@localhost>
+	<20071210002158.654ed960@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Mon, 17 Dec 2007 14:41:13 -0500
+On Mon, 10 Dec 2007 00:21:58 +0100
+Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
-Otherwise, we go into an endless busy loop trying to enable PS mode when
-the command queue is empty, dealing with the error response, and then
-trying to enable PS mode again because the command queue is empty.... it
-doesn't really save much power.
+> > > +	/* If we just switched rate, update the rate behaviour info. */
+> > > +	if (pinfo->oldrate != sta->txrate) {
+> > > +		for (i = 0; i < mode->num_rates; i++)
+> > > +			if (rinfo[i].index == pinfo->oldrate)
+> > > +				break;
+> > > +		for (j = 0; j < mode->num_rates; j++)
+> > > +			if (rinfo[j].index == sta->txrate) {
+> > > +				rinfo[j].valid = 1;
+> > > +				break;
+> > > +			}
+> > 
+> > This is no 3 and 4 of the call sites to the to be written
+> > find_index_for_rate() function ;-)
+> >
+> > Or what about this idea: Store direct indices into the rinfo table, so
+> > you needn't convert them back from the mode->rates indexing everywhere.
+> 
+> This makes sense. Unless you are working to the find_index_for_rate()
+> function, which would make more sense.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/dev.h  |    1 +
- drivers/net/wireless/libertas/host.h |    5 +++++
- drivers/net/wireless/libertas/wext.c |    7 +++++++
- 3 files changed, 13 insertions(+), 0 deletions(-)
+Eek, sorry, bullshit. I didn't get your point here, I do now. Will write
+that function.
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index fe50457..1c6ec4d 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -260,6 +260,7 @@ struct lbs_private {
- 	u16 psmode;		/* Wlan802_11PowermodeCAM=disable
- 				   Wlan802_11PowermodeMAX_PSP=enable */
- 	u32 psstate;
-+	char ps_supported;
- 	u8 needtowakeup;
- 
- 	struct PS_CMD_ConfirmSleep lbs_ps_confirm_sleep;
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index 4c03e12..1aa0407 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -209,6 +209,11 @@
- #define	CMD_TYPE_MAX_PSP		0x0001
- #define CMD_TYPE_FAST_PSP		0x0002
- 
-+/* Options for CMD_802_11_FW_WAKE_METHOD */
-+#define CMD_WAKE_METHOD_UNCHANGED	0x0000
-+#define CMD_WAKE_METHOD_COMMAND_INT	0x0001
-+#define CMD_WAKE_METHOD_GPIO		0x0002
-+
- /* Define action or option for CMD_BT_ACCESS */
- enum cmd_bt_access_opts {
- 	/* The bt commands start at 5 instead of 1 because the old dft commands
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index b1e2472..3e8d555 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -734,6 +734,13 @@ static int lbs_set_power(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
-+	if (!priv->ps_supported) {
-+		if (vwrq->disabled)
-+			return 0;
-+		else
-+			return -EINVAL;
-+	}
-+
- 	/* PS is currently supported only in Infrastructure mode
- 	 * Remove this check if it is to be supported in IBSS mode also
- 	 */
--- 
-1.5.3.4
 
+--
+Ciao
+Stefano
