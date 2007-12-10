@@ -1,472 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60869 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbXLLSYN (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:35555 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751075AbXLJIWB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 13:24:13 -0500
-Subject: [RFC] mac80211: clean up frame receive handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain
-Date: Wed, 12 Dec 2007 19:24:04 +0100
-Message-Id: <1197483844.6558.158.camel@johannes.berg> (sfid-20071212_182419_921972_853D21C5)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 03:22:01 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon, reset
+Date: Mon, 10 Dec 2007 17:22:06 +0900
+Message-Id: <1197274926-14334-1-git-send-email-bruno@thinktube.com> (sfid-20071210_082207_593530_247F5BF2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[comments welcome. I really need a refresher on what the frame formats
-mean but I think I did the right thing with skb->protocol here, I also
-think we had a bug with rfc2042 header frames bigger than 15xx bytes and
-eth_type_trans()]
+i resend this patch to address jiris comments and with some small improvements.
 
-This cleans up the frame receive handling. After this patch
- * EAPOL frames addressed to us or the EAPOL group address are
-   always accepted regardless of whether they are encrypted or not
- * other frames from a station are dropped if PAE is enabled and
-   the station is not authorized
- * unencrypted frames (except the EAPOL frames above) are dropped if
-   drop_unencrypted is enabled
- * we no longer invoke eth_type_trans() as we've done most of the work
-   already, this patch implements the rest of the work needed
- * port control is not done for injected packets
+'registers' prints the name and value of some registers. this should be adapted
+to what we actually need later and is supposed to replace the hwdump facility i
+removed in my earlier debugging changes.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+'tsf' prints the current HW TSF. writing "reset" into the file will reset the
+TSF.
+
+'beacon' shows beacon relevant registers.  it is good for watching the beacon
+timers with something like "watch -n0 cat /dbg/ath5k/phy0/beacon". writing
+"enable" into the file will try to enable beacons by setting the flag
+AR5K_BEACON_ENABLE, "disable" will disable that bit.
+
+'reset' can be used to trigger a HW reset, by writing "reset" into it.
+
+Changes-licensed-under: GPL
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
 ---
-I've made a corresponding hostapd patch which is on my website
-http://johannes.sipsolutions.net/patches/hostap/all/2007-12-12-17%3a18/005-eapol-on-regular-iface.patch
+ drivers/net/wireless/ath5k/debug.c |  267 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath5k/debug.h |    4 +
+ 2 files changed, 271 insertions(+), 0 deletions(-)
 
-It works fine and is IMHO nicer than doing the eapol stuff over the
-management interface.
-
- net/mac80211/debugfs_netdev.c  |   27 +++--------
- net/mac80211/ieee80211_i.h     |   22 +++------
- net/mac80211/ieee80211_iface.c |    1 
- net/mac80211/rx.c              |  100 ++++++++++++++++++++++-------------------
- net/mac80211/tx.c              |   10 ++--
- 5 files changed, 79 insertions(+), 81 deletions(-)
-
---- everything.orig/net/mac80211/ieee80211_i.h	2007-12-12 16:25:05.819131294 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2007-12-12 16:31:58.749134385 +0100
-@@ -306,11 +306,11 @@ struct ieee80211_sub_if_data {
- 	unsigned int flags;
+diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+index 7427506..7e34684 100644
+--- a/drivers/net/wireless/ath5k/debug.c
++++ b/drivers/net/wireless/ath5k/debug.c
+@@ -64,12 +64,256 @@
+ static unsigned int ath5k_debug;
+ module_param_named(debug, ath5k_debug, uint, 0);
  
- 	int drop_unencrypted;
--	int eapol; /* 0 = process EAPOL frames as normal data frames,
--		    * 1 = send EAPOL frames through wlan#ap to hostapd
--		    *     (default) */
--	int ieee802_1x; /* IEEE 802.1X PAE - drop packet to/from unauthorized
--			 * port */
-+	/*
-+	 * IEEE 802.1X Port access control in effect,
-+	 * drop packets to/from unauthorized port
-+	 */
-+	int ieee802_1x_pac;
++
+ #if ATH5K_DEBUG
  
- 	u16 sequence;
++#include <linux/seq_file.h>
+ #include "reg.h"
  
-@@ -339,8 +339,7 @@ struct ieee80211_sub_if_data {
- 		struct {
- 			struct dentry *channel_use;
- 			struct dentry *drop_unencrypted;
--			struct dentry *eapol;
--			struct dentry *ieee8021_x;
-+			struct dentry *ieee802_1x_pac;
- 			struct dentry *state;
- 			struct dentry *bssid;
- 			struct dentry *prev_bssid;
-@@ -359,8 +358,7 @@ struct ieee80211_sub_if_data {
- 		struct {
- 			struct dentry *channel_use;
- 			struct dentry *drop_unencrypted;
--			struct dentry *eapol;
--			struct dentry *ieee8021_x;
-+			struct dentry *ieee802_1x_pac;
- 			struct dentry *num_sta_ps;
- 			struct dentry *dtim_period;
- 			struct dentry *dtim_count;
-@@ -374,15 +372,13 @@ struct ieee80211_sub_if_data {
- 		struct {
- 			struct dentry *channel_use;
- 			struct dentry *drop_unencrypted;
--			struct dentry *eapol;
--			struct dentry *ieee8021_x;
-+			struct dentry *ieee802_1x_pac;
- 			struct dentry *peer;
- 		} wds;
- 		struct {
- 			struct dentry *channel_use;
- 			struct dentry *drop_unencrypted;
--			struct dentry *eapol;
--			struct dentry *ieee8021_x;
-+			struct dentry *ieee802_1x_pac;
- 		} vlan;
- 		struct {
- 			struct dentry *mode;
---- everything.orig/net/mac80211/rx.c	2007-12-12 16:25:05.849130805 +0100
-+++ everything/net/mac80211/rx.c	2007-12-12 16:31:58.749134385 +0100
-@@ -190,7 +190,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 		rthdr->antsignal = status->ssi;
- 	}
+ static struct dentry *ath5k_global_debugfs;
  
--	skb_set_mac_header(skb, 0);
-+	skb_reset_mac_header(skb);
- 	skb->ip_summed = CHECKSUM_UNNECESSARY;
- 	skb->pkt_type = PACKET_OTHERHOST;
- 	skb->protocol = htons(ETH_P_802_2);
-@@ -387,18 +387,6 @@ ieee80211_rx_h_check(struct ieee80211_tx
- 		return TXRX_DROP;
- 	}
- 
--	if (!(rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
--		rx->skb->pkt_type = PACKET_OTHERHOST;
--	else if (compare_ether_addr(rx->dev->dev_addr, hdr->addr1) == 0)
--		rx->skb->pkt_type = PACKET_HOST;
--	else if (is_multicast_ether_addr(hdr->addr1)) {
--		if (is_broadcast_ether_addr(hdr->addr1))
--			rx->skb->pkt_type = PACKET_BROADCAST;
--		else
--			rx->skb->pkt_type = PACKET_MULTICAST;
--	} else
--		rx->skb->pkt_type = PACKET_OTHERHOST;
--
- 	/* Drop disallowed frame classes based on STA auth/assoc state;
- 	 * IEEE 802.11, Chap 5.5.
- 	 *
-@@ -967,18 +955,10 @@ ieee80211_rx_h_remove_qos_control(struct
- }
- 
- static int
--ieee80211_drop_802_1x_pae(struct ieee80211_txrx_data *rx, int hdrlen)
-+ieee80211_802_1x_port_control(struct ieee80211_txrx_data *rx)
- {
--	if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb, hdrlen) &&
--	    rx->sdata->type != IEEE80211_IF_TYPE_STA &&
--	    (rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
--		return 0;
--
--	if (unlikely(rx->sdata->ieee802_1x &&
--		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
--		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
--		     (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED)) &&
--		     !ieee80211_is_eapol(rx->skb, hdrlen))) {
-+	if (unlikely(rx->sdata->ieee802_1x_pac &&
-+		     (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED)))) {
- #ifdef CONFIG_MAC80211_DEBUG
- 		printk(KERN_DEBUG "%s: dropped frame "
- 		       "(unauthorized port)\n", rx->dev->name);
-@@ -990,7 +970,7 @@ ieee80211_drop_802_1x_pae(struct ieee802
- }
- 
- static int
--ieee80211_drop_unencrypted(struct ieee80211_txrx_data *rx, int hdrlen)
-+ieee80211_drop_unencrypted(struct ieee80211_txrx_data *rx)
- {
- 	/*
- 	 * Pass through unencrypted frames if the hardware has
-@@ -1003,9 +983,7 @@ ieee80211_drop_unencrypted(struct ieee80
- 	if (unlikely(!(rx->fc & IEEE80211_FCTL_PROTECTED) &&
- 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
- 		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
--		     (rx->key || rx->sdata->drop_unencrypted) &&
--		     (rx->sdata->eapol == 0 ||
--		      !ieee80211_is_eapol(rx->skb, hdrlen)))) {
-+		     (rx->key || rx->sdata->drop_unencrypted))) {
- 		if (net_ratelimit())
- 			printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
- 			       "encryption\n", rx->dev->name);
-@@ -1014,6 +992,24 @@ ieee80211_drop_unencrypted(struct ieee80
- 	return 0;
- }
- 
-+static bool ieee80211_frame_allowed(struct ieee80211_txrx_data *rx)
++static int ath5k_debugfs_open(struct inode *inode, struct file *file)
 +{
-+	static const u8 pae_group_addr[ETH_ALEN]
-+		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
-+	struct ethhdr *ehdr = (struct ethhdr *)rx->skb->data;
-+
-+	if (rx->skb->protocol == htons(ETH_P_PAE) &&
-+	    (compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0 ||
-+	     compare_ether_addr(ehdr->h_dest, rx->dev->dev_addr) == 0))
-+		return true;
-+
-+	if (ieee80211_802_1x_port_control(rx) ||
-+	    ieee80211_drop_unencrypted(rx))
-+		return false;
-+
-+	return true;
++	file->private_data = inode->i_private;
++	return 0;
 +}
 +
- static int
- ieee80211_data_to_8023(struct ieee80211_txrx_data *rx)
- {
-@@ -1130,6 +1126,7 @@ ieee80211_data_to_8023(struct ieee80211_
- 		skb_pull(skb, hdrlen + 6);
- 		memcpy(skb_push(skb, ETH_ALEN), src, ETH_ALEN);
- 		memcpy(skb_push(skb, ETH_ALEN), dst, ETH_ALEN);
-+		skb->protocol = htons(ethertype);
- 	} else {
- 		struct ethhdr *ehdr;
- 		__be16 len;
-@@ -1139,6 +1136,7 @@ ieee80211_data_to_8023(struct ieee80211_
- 		memcpy(ehdr->h_dest, dst, ETH_ALEN);
- 		memcpy(ehdr->h_source, src, ETH_ALEN);
- 		ehdr->h_proto = len;
-+		skb->protocol = htons(ETH_P_802_2);
- 	}
- 	return 0;
- }
-@@ -1150,14 +1148,27 @@ ieee80211_deliver_skb(struct ieee80211_t
- 	struct ieee80211_local *local = rx->local;
- 	struct sk_buff *skb, *xmit_skb;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	u8 *dst;
- 
- 	skb = rx->skb;
- 	xmit_skb = NULL;
- 
--	if (local->bridge_packets && (sdata->type == IEEE80211_IF_TYPE_AP
--	    || sdata->type == IEEE80211_IF_TYPE_VLAN) &&
-+	dst = skb->data;
 +
-+	if (compare_ether_addr(dev->dev_addr, dst) == 0)
-+		skb->pkt_type = PACKET_HOST;
-+	else if (is_multicast_ether_addr(dst)) {
-+		if (is_broadcast_ether_addr(dst))
-+			skb->pkt_type = PACKET_BROADCAST;
-+		else
-+			skb->pkt_type = PACKET_MULTICAST;
-+	} else
-+		skb->pkt_type = PACKET_OTHERHOST;
++/* debugfs: registers */
 +
-+	if (local->bridge_packets && (sdata->type == IEEE80211_IF_TYPE_AP ||
-+				      sdata->type == IEEE80211_IF_TYPE_VLAN) &&
- 	    (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
--		if (is_multicast_ether_addr(skb->data)) {
-+		if (is_multicast_ether_addr(dst)) {
- 			/* send multicast frames both to higher layers in
- 			 * local net stack and back to the wireless media */
- 			xmit_skb = skb_copy(skb, GFP_ATOMIC);
-@@ -1186,16 +1197,18 @@ ieee80211_deliver_skb(struct ieee80211_t
- 
- 	if (skb) {
- 		/* deliver to local stack */
--		skb->protocol = eth_type_trans(skb, dev);
- 		memset(skb->cb, 0, sizeof(skb->cb));
-+		skb->dev = dev;
-+		skb_reset_mac_header(skb);
-+		skb_pull(skb, ETH_HLEN);
- 		netif_rx(skb);
- 	}
- 
- 	if (xmit_skb) {
- 		/* send to wireless media */
- 		xmit_skb->protocol = __constant_htons(ETH_P_802_3);
--		skb_set_network_header(xmit_skb, 0);
--		skb_set_mac_header(xmit_skb, 0);
-+		skb_reset_network_header(xmit_skb);
-+		skb_reset_mac_header(xmit_skb);
- 		dev_queue_xmit(xmit_skb);
- 	}
- }
-@@ -1280,13 +1293,12 @@ ieee80211_rx_h_amsdu(struct ieee80211_tx
- 			}
- 		}
- 
--		skb_set_network_header(frame, 0);
-+		skb_reset_network_header(frame);
- 		frame->dev = dev;
- 		frame->priority = skb->priority;
- 		rx->skb = frame;
- 
--		if ((ieee80211_drop_802_1x_pae(rx, 0)) ||
--		    (ieee80211_drop_unencrypted(rx, 0))) {
-+		if (!ieee80211_frame_allowed(rx)) {
- 			if (skb == frame) /* last frame */
- 				return TXRX_DROP;
- 			dev_kfree_skb(frame);
-@@ -1305,14 +1317,15 @@ ieee80211_rx_h_amsdu(struct ieee80211_tx
- 			skb_pull(frame, 6);
- 			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
- 			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+			frame->protocol = htons(ethertype);
- 		} else {
- 			memcpy(skb_push(frame, sizeof(__be16)), &len,
- 				sizeof(__be16));
- 			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
- 			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+			frame->protocol = htons(ETH_P_802_2);
- 		}
- 
--
- 		ieee80211_deliver_skb(rx);
- 	}
- 
-@@ -1324,7 +1337,7 @@ ieee80211_rx_h_data(struct ieee80211_txr
- {
- 	struct net_device *dev = rx->dev;
- 	u16 fc;
--	int err, hdrlen;
-+	int err;
- 
- 	fc = rx->fc;
- 	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
-@@ -1333,16 +1346,13 @@ ieee80211_rx_h_data(struct ieee80211_txr
- 	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
- 		return TXRX_DROP;
- 
--	hdrlen = ieee80211_get_hdrlen(fc);
--
--	if ((ieee80211_drop_802_1x_pae(rx, hdrlen)) ||
--	    (ieee80211_drop_unencrypted(rx, hdrlen)))
--		return TXRX_DROP;
--
- 	err = ieee80211_data_to_8023(rx);
- 	if (unlikely(err))
- 		return TXRX_DROP;
- 
-+	if (!ieee80211_frame_allowed(rx))
-+		return TXRX_DROP;
++struct reg {
++	char *name;
++	int addr;
++};
 +
- 	rx->skb->dev = dev;
- 
- 	dev->stats.rx_packets++;
---- everything.orig/net/mac80211/debugfs_netdev.c	2007-12-12 16:25:05.899132325 +0100
-+++ everything/net/mac80211/debugfs_netdev.c	2007-12-12 16:31:58.759132161 +0100
-@@ -91,8 +91,7 @@ static const struct file_operations name
- /* common attributes */
- IEEE80211_IF_FILE(channel_use, channel_use, DEC);
- IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
--IEEE80211_IF_FILE(eapol, eapol, DEC);
--IEEE80211_IF_FILE(ieee8021_x, ieee802_1x, DEC);
-+IEEE80211_IF_FILE(ieee802_1x_pac, ieee802_1x_pac, DEC);
- 
- /* STA/IBSS attributes */
- IEEE80211_IF_FILE(state, u.sta.state, DEC);
-@@ -170,8 +169,7 @@ static void add_sta_files(struct ieee802
++#define REG_STRUCT_INIT(r) { #r, r }
++
++/* just a few random registers, might want to add more */
++static struct reg regs[] = {
++	REG_STRUCT_INIT(AR5K_CR),
++	REG_STRUCT_INIT(AR5K_RXDP),
++	REG_STRUCT_INIT(AR5K_CFG),
++	REG_STRUCT_INIT(AR5K_IER),
++	REG_STRUCT_INIT(AR5K_BCR),
++	REG_STRUCT_INIT(AR5K_RTSD0),
++	REG_STRUCT_INIT(AR5K_RTSD1),
++	REG_STRUCT_INIT(AR5K_TXCFG),
++	REG_STRUCT_INIT(AR5K_RXCFG),
++	REG_STRUCT_INIT(AR5K_RXJLA),
++	REG_STRUCT_INIT(AR5K_MIBC),
++	REG_STRUCT_INIT(AR5K_TOPS),
++	REG_STRUCT_INIT(AR5K_RXNOFRM),
++	REG_STRUCT_INIT(AR5K_TXNOFRM),
++	REG_STRUCT_INIT(AR5K_RPGTO),
++	REG_STRUCT_INIT(AR5K_RFCNT),
++	REG_STRUCT_INIT(AR5K_MISC),
++	REG_STRUCT_INIT(AR5K_QCUDCU_CLKGT),
++	REG_STRUCT_INIT(AR5K_ISR),
++	REG_STRUCT_INIT(AR5K_PISR),
++	REG_STRUCT_INIT(AR5K_SISR0),
++	REG_STRUCT_INIT(AR5K_SISR1),
++	REG_STRUCT_INIT(AR5K_SISR2),
++	REG_STRUCT_INIT(AR5K_SISR3),
++	REG_STRUCT_INIT(AR5K_SISR4),
++	REG_STRUCT_INIT(AR5K_IMR),
++	REG_STRUCT_INIT(AR5K_PIMR),
++	REG_STRUCT_INIT(AR5K_SIMR0),
++	REG_STRUCT_INIT(AR5K_SIMR1),
++	REG_STRUCT_INIT(AR5K_SIMR2),
++	REG_STRUCT_INIT(AR5K_SIMR3),
++	REG_STRUCT_INIT(AR5K_SIMR4),
++	REG_STRUCT_INIT(AR5K_DCM_ADDR),
++	REG_STRUCT_INIT(AR5K_DCCFG),
++	REG_STRUCT_INIT(AR5K_CCFG),
++	REG_STRUCT_INIT(AR5K_CPC0),
++	REG_STRUCT_INIT(AR5K_CPC1),
++	REG_STRUCT_INIT(AR5K_CPC2),
++	REG_STRUCT_INIT(AR5K_CPC3),
++	REG_STRUCT_INIT(AR5K_CPCORN),
++	REG_STRUCT_INIT(AR5K_RESET_CTL),
++	REG_STRUCT_INIT(AR5K_SLEEP_CTL),
++	REG_STRUCT_INIT(AR5K_INTPEND),
++	REG_STRUCT_INIT(AR5K_SFR),
++	REG_STRUCT_INIT(AR5K_PCICFG),
++	REG_STRUCT_INIT(AR5K_GPIOCR),
++	REG_STRUCT_INIT(AR5K_GPIODO),
++	REG_STRUCT_INIT(AR5K_SREV),
++};
++
++static void *reg_start(struct seq_file *seq, loff_t *pos)
++{
++	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : 0;
++}
++
++static void reg_stop(struct seq_file *seq, void *p)
++{
++	/* nothing to do */
++}
++
++static void *reg_next(struct seq_file *seq, void *p, loff_t *pos)
++{
++	++*pos;
++	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : 0;
++}
++
++static int reg_show(struct seq_file *seq, void *p)
++{
++	struct ath5k_softc *sc = seq->private;
++	struct reg *r = p;
++	seq_printf(seq, "%-25s0x%08x\n", r->name,
++		ath5k_hw_reg_read(sc->ah, r->addr));
++	return 0;
++}
++
++static struct seq_operations register_seq_ops = {
++	.start = reg_start,
++	.next  = reg_next,
++	.stop  = reg_stop,
++	.show  = reg_show
++};
++
++static int open_file_registers(struct inode *inode, struct file *file)
++{
++	struct seq_file *s;
++	int res;
++	res = seq_open(file, &register_seq_ops);
++	s = file->private_data;
++	s->private = inode->i_private;
++	return res;
++}
++
++static const struct file_operations fops_registers = {
++	.open = open_file_registers,
++	.read    = seq_read,
++	.llseek  = seq_lseek,
++	.release = seq_release,
++	.owner = THIS_MODULE,
++};
++
++
++/* debugfs: TSF */
++
++static ssize_t read_file_tsf(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	char buf[100];
++	snprintf(buf, 100, "0x%016llx\n", ath5k_hw_get_tsf64(sc->ah));
++	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
++}
++
++static ssize_t write_file_tsf(struct file *file,
++				 const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	if (strncmp(userbuf, "reset", 5) == 0) {
++		ath5k_hw_reset_tsf(sc->ah);
++		printk(KERN_INFO "debugfs reset TSF\n");
++	}
++	return count;
++}
++
++static const struct file_operations fops_tsf = {
++	.read = read_file_tsf,
++	.write = write_file_tsf,
++	.open = ath5k_debugfs_open,
++	.owner = THIS_MODULE,
++};
++
++
++/* debugfs: beacons */
++
++static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	struct ath5k_hw *ah = sc->ah;
++	char buf[1000];
++	int len = 0;
++	unsigned int v;
++	u64 tsf;
++
++	v = ath5k_hw_reg_read(sc->ah, AR5K_BEACON);
++	len += snprintf(buf+len, sizeof(buf)-len,
++		"%-24s0x%08x\tintval: %d\tTIM: 0x%x\n",
++		"AR5K_BEACON", v, v & AR5K_BEACON_PERIOD,
++		(v & AR5K_BEACON_TIM) >> AR5K_BEACON_TIM_S);
++
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\n",
++		"AR5K_LAST_TSTP", ath5k_hw_reg_read(sc->ah, AR5K_LAST_TSTP));
++
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\n\n",
++		"AR5K_BEACON_CNT", ath5k_hw_reg_read(sc->ah, AR5K_BEACON_CNT));
++
++	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER0);
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
++		"AR5K_TIMER0 (TBTT)", v, v);
++
++	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER1);
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
++		"AR5K_TIMER1 (DMA)", v, v >> 3);
++
++	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER2);
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
++		"AR5K_TIMER2 (SWBA)", v, v >> 3);
++
++	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER3);
++	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
++		"AR5K_TIMER3 (ATIM)", v, v);
++
++	tsf = ath5k_hw_get_tsf64(sc->ah);
++	len += snprintf(buf+len, sizeof(buf)-len,
++		"TSF\t\t0x%016llx\tTU: %08x\n", tsf, (u32)(tsf >> 10));
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_beacon(struct file *file,
++				 const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	struct ath5k_hw *ah = sc->ah;
++
++	if (strncmp(userbuf, "disable", 7) == 0) {
++		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
++		printk(KERN_INFO "debugfs disable beacons\n");
++	} else if (strncmp(userbuf, "enable", 6) == 0) {
++		AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
++		printk(KERN_INFO "debugfs enable beacons\n");
++	}
++	return count;
++}
++
++static const struct file_operations fops_beacon = {
++	.read = read_file_beacon,
++	.write = write_file_beacon,
++	.open = ath5k_debugfs_open,
++	.owner = THIS_MODULE,
++};
++
++
++/* debugfs: reset */
++
++static ssize_t write_file_reset(struct file *file,
++				 const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	tasklet_schedule(&sc->restq);
++	return count;
++}
++
++static const struct file_operations fops_reset = {
++	.write = write_file_reset,
++	.open = ath5k_debugfs_open,
++	.owner = THIS_MODULE,
++};
++
++
++/* init */
++
+ void
+ ath5k_debug_init(void)
  {
- 	DEBUGFS_ADD(channel_use, sta);
- 	DEBUGFS_ADD(drop_unencrypted, sta);
--	DEBUGFS_ADD(eapol, sta);
--	DEBUGFS_ADD(ieee8021_x, sta);
-+	DEBUGFS_ADD(ieee802_1x_pac, sta);
- 	DEBUGFS_ADD(state, sta);
- 	DEBUGFS_ADD(bssid, sta);
- 	DEBUGFS_ADD(prev_bssid, sta);
-@@ -192,8 +190,7 @@ static void add_ap_files(struct ieee8021
- {
- 	DEBUGFS_ADD(channel_use, ap);
- 	DEBUGFS_ADD(drop_unencrypted, ap);
--	DEBUGFS_ADD(eapol, ap);
--	DEBUGFS_ADD(ieee8021_x, ap);
-+	DEBUGFS_ADD(ieee802_1x_pac, ap);
- 	DEBUGFS_ADD(num_sta_ps, ap);
- 	DEBUGFS_ADD(dtim_period, ap);
- 	DEBUGFS_ADD(dtim_count, ap);
-@@ -209,8 +206,7 @@ static void add_wds_files(struct ieee802
- {
- 	DEBUGFS_ADD(channel_use, wds);
- 	DEBUGFS_ADD(drop_unencrypted, wds);
--	DEBUGFS_ADD(eapol, wds);
--	DEBUGFS_ADD(ieee8021_x, wds);
-+	DEBUGFS_ADD(ieee802_1x_pac, wds);
- 	DEBUGFS_ADD(peer, wds);
+@@ -84,6 +328,22 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
+ 			ath5k_global_debugfs);
+ 	sc->debug.debugfs_debug = debugfs_create_u32("debug",
+ 			0666, sc->debug.debugfs_phydir, &sc->debug.level);
++
++	sc->debug.debugfs_registers = debugfs_create_file("registers", 0444,
++				sc->debug.debugfs_phydir,
++				sc, &fops_registers);
++
++	sc->debug.debugfs_tsf = debugfs_create_file("tsf", 0666,
++				sc->debug.debugfs_phydir,
++				sc, &fops_tsf);
++
++	sc->debug.debugfs_beacon = debugfs_create_file("beacon", 0666,
++				sc->debug.debugfs_phydir,
++				sc, &fops_beacon);
++
++	sc->debug.debugfs_reset = debugfs_create_file("reset", 0222,
++				sc->debug.debugfs_phydir,
++				sc, &fops_reset);
  }
  
-@@ -218,8 +214,7 @@ static void add_vlan_files(struct ieee80
+ void
+@@ -96,9 +356,16 @@ void
+ ath5k_debug_finish_device(struct ath5k_softc *sc)
  {
- 	DEBUGFS_ADD(channel_use, vlan);
- 	DEBUGFS_ADD(drop_unencrypted, vlan);
--	DEBUGFS_ADD(eapol, vlan);
--	DEBUGFS_ADD(ieee8021_x, vlan);
-+	DEBUGFS_ADD(ieee802_1x_pac, vlan);
+ 	debugfs_remove(sc->debug.debugfs_debug);
++	debugfs_remove(sc->debug.debugfs_registers);
++	debugfs_remove(sc->debug.debugfs_tsf);
++	debugfs_remove(sc->debug.debugfs_beacon);
++	debugfs_remove(sc->debug.debugfs_reset);
+ 	debugfs_remove(sc->debug.debugfs_phydir);
  }
  
- static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
-@@ -263,8 +258,7 @@ static void del_sta_files(struct ieee802
++
++/* functions used in other places */
++
+ void
+ ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
  {
- 	DEBUGFS_DEL(channel_use, sta);
- 	DEBUGFS_DEL(drop_unencrypted, sta);
--	DEBUGFS_DEL(eapol, sta);
--	DEBUGFS_DEL(ieee8021_x, sta);
-+	DEBUGFS_DEL(ieee802_1x_pac, sta);
- 	DEBUGFS_DEL(state, sta);
- 	DEBUGFS_DEL(bssid, sta);
- 	DEBUGFS_DEL(prev_bssid, sta);
-@@ -285,8 +279,7 @@ static void del_ap_files(struct ieee8021
- {
- 	DEBUGFS_DEL(channel_use, ap);
- 	DEBUGFS_DEL(drop_unencrypted, ap);
--	DEBUGFS_DEL(eapol, ap);
--	DEBUGFS_DEL(ieee8021_x, ap);
-+	DEBUGFS_DEL(ieee802_1x_pac, ap);
- 	DEBUGFS_DEL(num_sta_ps, ap);
- 	DEBUGFS_DEL(dtim_period, ap);
- 	DEBUGFS_DEL(dtim_count, ap);
-@@ -302,8 +295,7 @@ static void del_wds_files(struct ieee802
- {
- 	DEBUGFS_DEL(channel_use, wds);
- 	DEBUGFS_DEL(drop_unencrypted, wds);
--	DEBUGFS_DEL(eapol, wds);
--	DEBUGFS_DEL(ieee8021_x, wds);
-+	DEBUGFS_DEL(ieee802_1x_pac, wds);
- 	DEBUGFS_DEL(peer, wds);
- }
+diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
+index 115073f..2b491cb 100644
+--- a/drivers/net/wireless/ath5k/debug.h
++++ b/drivers/net/wireless/ath5k/debug.h
+@@ -77,6 +77,10 @@ struct ath5k_dbg_info {
+ 	/* debugfs entries */
+ 	struct dentry		*debugfs_phydir;
+ 	struct dentry		*debugfs_debug;
++	struct dentry		*debugfs_registers;
++	struct dentry		*debugfs_tsf;
++	struct dentry		*debugfs_beacon;
++	struct dentry		*debugfs_reset;
+ };
  
-@@ -311,8 +303,7 @@ static void del_vlan_files(struct ieee80
- {
- 	DEBUGFS_DEL(channel_use, vlan);
- 	DEBUGFS_DEL(drop_unencrypted, vlan);
--	DEBUGFS_DEL(eapol, vlan);
--	DEBUGFS_DEL(ieee8021_x, vlan);
-+	DEBUGFS_DEL(ieee802_1x_pac, vlan);
- }
- 
- static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
---- everything.orig/net/mac80211/ieee80211_iface.c	2007-12-12 16:25:05.939130533 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2007-12-12 16:31:58.759132161 +0100
-@@ -22,7 +22,6 @@ void ieee80211_if_sdata_init(struct ieee
- 
- 	/* Default values for sub-interface parameters */
- 	sdata->drop_unencrypted = 0;
--	sdata->eapol = 1;
- 	for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++)
- 		skb_queue_head_init(&sdata->fragments[i].skb_list);
- 
---- everything.orig/net/mac80211/tx.c	2007-12-12 16:25:06.039131944 +0100
-+++ everything/net/mac80211/tx.c	2007-12-12 16:31:58.759132161 +0100
-@@ -221,6 +221,7 @@ ieee80211_tx_h_check_assoc(struct ieee80
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 	u32 sta_flags;
-+	u16 fc = tx->fc;
- 
- 	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
- 		return TXRX_CONTINUE;
-@@ -261,8 +262,10 @@ ieee80211_tx_h_check_assoc(struct ieee80
- 		return TXRX_CONTINUE;
- 	}
- 
--	if (unlikely(/* !injected && */ tx->sdata->ieee802_1x &&
--		     !(sta_flags & WLAN_STA_AUTHORIZED))) {
-+	if (unlikely(!(tx->flags & IEEE80211_TXRXD_TX_INJECTED) &&
-+		     tx->sdata->ieee802_1x_pac &&
-+		     !(sta_flags & WLAN_STA_AUTHORIZED) &&
-+		     !ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc)))) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		DECLARE_MAC_BUF(mac);
- 		printk(KERN_DEBUG "%s: dropped frame to %s"
-@@ -449,8 +452,7 @@ ieee80211_tx_h_select_key(struct ieee802
- 	else if ((key = rcu_dereference(tx->sdata->default_key)))
- 		tx->key = key;
- 	else if (tx->sdata->drop_unencrypted &&
--		 !(tx->sdata->eapol &&
--		   ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc)))) {
-+		 !ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc))) {
- 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
- 		return TXRX_DROP;
- 	} else {
-
+ /**
+-- 
+1.5.3.4
 
