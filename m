@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:53306 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbXLREYH (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5326 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbXLJQXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 23:24:07 -0500
-Date: Mon, 17 Dec 2007 20:22:53 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: clean up frame receive handling
-Message-ID: <20071218042253.GC5698@jm.kir.nu> (sfid-20071218_042427_775224_9C44F7DF)
-References: <1197483844.6558.158.camel@johannes.berg> <20071213204933.GD3083@tuxdriver.com> <1197634443.16079.36.camel@johannes.berg>
+	Mon, 10 Dec 2007 11:23:13 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH 07/48] libertas: make more functions static
+Date: Mon, 10 Dec 2007 17:23:53 +0100
+Cc: Arnd Bergmann <arnd@arndb.de>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	John Linville <linville@tuxdriver.com>
+References: <E1J1kpB-0006kg-FH@shinybook.infradead.org> <200712101708.32668.arnd@arndb.de>
+In-Reply-To: <200712101708.32668.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1197634443.16079.36.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712101723.53678.hs4233@mail.mn-solutions.de> (sfid-20071210_162317_780110_67A29577)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 14, 2007 at 01:14:03PM +0100, Johannes Berg wrote:
+> * Better, avoid forward declarations entirely by
+> ordering the functions in the way they are called.
 
-> I think in theory all eapol frames are sent to the PAE group address,
-> but I have no idea which of the checks would be more efficient. It seems
-> that the first could be optimised a lot because it's constant too...
+Right.
 
-They are not.. PAE group address is used for all EAPOL frames in
-non-shared media LANs (e.g., wired Ethernet switch), but IEEE 802.11
-uses the specific MAC address of the PAE since it is a shared media LAN
-(i.e., the frames are between the unicast MAC address of the non-AP
-STA/Supplicant and AP/Authenticator). If we end up having to drop the
-PAE group addressed EAPOL frames in mac80211 anyway due to Linux
-bridging code not doing this, we could combine these two validations and
-just accept the unicast MAC address of the device itself as a valid
-destination address for received EAPOL frames (and as the only valid
-source address for transmitted ones).
+I wanted to keep the patch small, as I knew that David might 
+create patches in the same area.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+But libertas can easily take another 200 cleanup-patches ... :-)
