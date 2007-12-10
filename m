@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44446 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452AbXLFPJG (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45604 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbXLJRX2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 10:09:06 -0500
-Subject: Re: [PATCH 0/5] libertas: allow easier command playing
-From: David Woodhouse <dwmw2@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	Mon, 10 Dec 2007 12:23:28 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20071205213044.GA5659@tuxdriver.com>
-References: <200712051757.52053.hs4233@mail.mn-solutions.de>
-	 <1196874408.12263.9.camel@localhost.localdomain>
-	 <200712052057.32996.hs4233@mail.mn-solutions.de>
-	 <20071205213044.GA5659@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 06 Dec 2007 15:07:42 +0000
-Message-Id: <1196953662.13978.543.camel@pmac.infradead.org> (sfid-20071206_150959_095982_2DFA6241)
-Mime-Version: 1.0
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 15/48] libertas: Use lbs_cmd() for setting Boot2 version
+Message-Id: <E1J1kpJ-0006lK-RS@shinybook.infradead.org> (sfid-20071210_172330_159712_98F6F356)
+Date: Mon, 10 Dec 2007 10:45:49 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Thu, 6 Dec 2007 12:51:00 +0000
 
-On Wed, 2007-12-05 at 16:30 -0500, John W. Linville wrote:
-> On Wed, Dec 05, 2007 at 08:57:32PM +0100, Holger Schurig wrote:
-> 
-> > However, even with me having write access to libertas-2.6, I'd like
-> > to keep posting patches to the mailing list so that more eyeballs
-> > are seeing them and can speak up.
-> 
-> Amen
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |   20 ++++++++++++++++----
+ 1 files changed, 16 insertions(+), 4 deletions(-)
 
-That makes a lot of sense; I wouldn't want to encourage you to do
-otherwise.
-
-Unfortunately it isn't a substitute for _testing_, as demonstrated by
-the totally broken patch 'libertas: reset devices upon disconnect rather
-than module unloading', which completely fails to issue the reset
-command because it always gets -ENOENT from usb_submit_urb(), when
-calling it from within the disconnect function.
-
-Thankfully, we aren't forced to choose one _or_ the other.
-
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index f858928..4d89fd0 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -101,6 +101,21 @@ static void if_usb_free(struct usb_card_rec *cardp)
+ 	lbs_deb_leave(LBS_DEB_USB);
+ }
+ 
++static void if_usb_set_boot2_ver(struct lbs_private *priv)
++{
++	struct cmd_ds_set_boot2_ver b2_cmd;
++	int rsp_len = sizeof(b2_cmd);
++
++	b2_cmd.action = 0;
++	b2_cmd.version = cpu_to_le16(priv->boot2_version);
++
++	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, sizeof(b2_cmd),
++		    &b2_cmd, &rsp_len)) {
++		lbs_deb_usb("Setting boot2 version failed\n");
++	}
++}
++
++
+ /**
+  *  @brief sets the configuration values
+  *  @param ifnum	interface number
+@@ -222,10 +237,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (lbs_start_card(priv))
+ 		goto err_start_card;
+ 
+-	/* Set the boot2 version in firmware, ignoring errors. */
+-	(void)lbs_prepare_and_send_command(priv, CMD_SET_BOOT2_VER,
+-					   0, CMD_OPTION_WAITFORRSP, 0, NULL);
+-
++	if_usb_set_boot2_ver(priv);
+ 
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
 -- 
-dwmw2
+1.5.3.4
 
