@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:60215 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754591AbXLSAcW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 19:32:22 -0500
-Date: Wed, 19 Dec 2007 01:25:09 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
+Received: from madara.hpl.hp.com ([192.6.19.124]:59410 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755790AbXLJSLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 13:11:30 -0500
+Date: Mon, 10 Dec 2007 10:09:21 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, David Miller <davem@davemloft.net>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/8] rate control rework
-Message-ID: <20071219012509.721c834e@morte> (sfid-20071219_003224_042024_A61A8A21)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+Message-ID: <20071210180921.GB7168@bougret.hpl.hp.com> (sfid-20071210_181154_438592_AE9FE6CB)
+Reply-To: jt@hpl.hp.com
+References: <20071206191150.GC5237@bougret.hpl.hp.com> <1197022818.2603.20.camel@localhost.localdomain> <20071207192756.GA15864@bougret.hpl.hp.com> <20071207.180408.55119728.davem@davemloft.net> <1197221706.9149.36.camel@localhost.localdomain> <1197223174.9149.60.camel@localhost.localdomain> <1197288928.6035.59.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197288928.6035.59.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset is the result of my recent joint-venture with Mattias. It
-introduces a new rate control algorithm based on a PID controller. First
-tests show it works much better than the old simple rate control
-algorithm.
+On Mon, Dec 10, 2007 at 01:15:27PM +0100, Johannes Berg wrote:
+> 
+> > Do either of those sound better to you than extending struct iw_range?
+> 
+> Because wext is stupidly defined, you can never extend any structures it
+> uses. Wext never passes in the length that userspace expects to passing
+> in longer structures than the fixed one userspace expects will always
+> overwrite something in userspace, possibly on the stack.
+> 
+> johannes
 
-I think that this should really go into 2.6.25, as the current rate control
-algorithm was just written for reference and performs very poorly.
+	Please check again...
 
-Johannes' and John's concerns have been addressed here.
-This patchset won't (hopefully!) get line-wrapped.
-
-Patches 1 to 3 introduce the PID controller algorithm. Patches 4 and 5 are
-algorithm enhancements, while 6 to 8 are meant for debugging and tuning.
-
-
---
-Ciao
-Stefano
+	Jean
