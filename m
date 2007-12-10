@@ -1,43 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55606 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbXLGTem (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43171 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbXLJRli (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 14:34:42 -0500
-Subject: Re: [PATCH] libertas: implement new scanning logic
+	Mon, 10 Dec 2007 12:41:38 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
 From: David Woodhouse <dwmw2@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1197054852.4465.7.camel@localhost.localdomain>
-References: <200711290927.15915.hs4233@mail.mn-solutions.de>
-	 <1196787130.4772.2.camel@localhost.localdomain>
-	 <200712071547.37944.hs4233@mail.mn-solutions.de>
-	 <1197050263.30465.7.camel@localhost.localdomain>
-	 <1197050743.13978.606.camel@pmac.infradead.org>
-	 <1197050996.30465.17.camel@localhost.localdomain>
-	 <1197051573.13978.612.camel@pmac.infradead.org>
-	 <1197051857.30465.30.camel@localhost.localdomain>
-	 <1197052412.13978.620.camel@pmac.infradead.org>
-	 <1197054852.4465.7.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Fri, 07 Dec 2007 19:34:38 +0000
-Message-Id: <1197056078.13978.629.camel@pmac.infradead.org> (sfid-20071207_193445_776997_93C81251)
-Mime-Version: 1.0
+Subject: [PATCH 38/48] libertas: kill lbs_pre_start_xmit(), lib_mesh_pre_start_xmit()
+Message-Id: <E1J1kpi-0006nB-3g@shinybook.infradead.org> (sfid-20071210_174141_515830_D70EC910)
+Date: Mon, 10 Dec 2007 10:46:14 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Sun, 9 Dec 2007 15:04:19 -0500
 
-On Fri, 2007-12-07 at 14:14 -0500, Dan Williams wrote:
-> You could, but there's not too much of a point in spending time on
-> this unless you've got a really good reason?  I'm sure there are more
-> important things to do in the driver...
+These wrappers only do two things.
 
-Indeed. That's exactly the reason I left it returning IW_ENCODE_NOKEY
-for WPA, although my patch fixes it for WEP.
+Firstly, they set the frame type, which isn't necessary since
+lbs_hard_start_xmit() gets to see which device it belongs to anyway.
 
+Secondly, they return -EOPNOTSUPP if the device is in monitor mode.
+Which is a strange thing to do and will provide nasty warnings from
+qdisc_restart(). And lbs_hard_start_xmit() seems to have code to cope
+with monitor mode anyway.
+
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/main.c |   50 +--------------------------------
+ 1 files changed, 2 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index d311d57..5c8cb00 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -515,52 +515,6 @@ static int lbs_close(struct net_device *dev)
+ 		return 0;
+ }
+ 
+-/**
+- * @brief Mark mesh packets and handover them to lbs_hard_start_xmit
+- *
+- */
+-static int lbs_mesh_pre_start_xmit(struct sk_buff *skb,
+-		struct net_device *dev)
+-{
+-	struct lbs_private *priv = dev->priv;
+-	int ret;
+-
+-	lbs_deb_enter(LBS_DEB_MESH);
+-	if (priv->monitormode != LBS_MONITOR_OFF) {
+-		netif_stop_queue(dev);
+-		return -EOPNOTSUPP;
+-	}
+-
+-	SET_MESH_FRAME(skb);
+-
+-	ret = lbs_hard_start_xmit(skb, priv->mesh_dev);
+-	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
+-	return ret;
+-}
+-
+-/**
+- * @brief Mark non-mesh packets and handover them to lbs_hard_start_xmit
+- *
+- */
+-static int lbs_pre_start_xmit(struct sk_buff *skb, struct net_device *dev)
+-{
+-	struct lbs_private *priv = dev->priv;
+-	int ret;
+-
+-	lbs_deb_enter(LBS_DEB_TX);
+-
+-	if (priv->monitormode != LBS_MONITOR_OFF) {
+-		netif_stop_queue(dev);
+-		return -EOPNOTSUPP;
+-	}
+-
+-	UNSET_MESH_FRAME(skb);
+-
+-	ret = lbs_hard_start_xmit(skb, dev);
+-	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
+-	return ret;
+-}
+-
+ static void lbs_tx_timeout(struct net_device *dev)
+ {
+ 	struct lbs_private *priv = (struct lbs_private *) dev->priv;
+@@ -1104,7 +1058,7 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
+ 
+ 	/* Setup the OS Interface to our functions */
+ 	dev->open = lbs_open;
+-	dev->hard_start_xmit = lbs_pre_start_xmit;
++	dev->hard_start_xmit = lbs_hard_start_xmit;
+ 	dev->stop = lbs_close;
+ 	dev->set_mac_address = lbs_set_mac_address;
+ 	dev->tx_timeout = lbs_tx_timeout;
+@@ -1276,7 +1230,7 @@ int lbs_add_mesh(struct lbs_private *priv, struct device *dev)
+ 	priv->mesh_dev = mesh_dev;
+ 
+ 	mesh_dev->open = lbs_mesh_open;
+-	mesh_dev->hard_start_xmit = lbs_mesh_pre_start_xmit;
++	mesh_dev->hard_start_xmit = lbs_hard_start_xmit;
+ 	mesh_dev->stop = lbs_mesh_close;
+ 	mesh_dev->get_stats = lbs_get_stats;
+ 	mesh_dev->set_mac_address = lbs_set_mac_address;
 -- 
-dwmw2
+1.5.3.4
 
