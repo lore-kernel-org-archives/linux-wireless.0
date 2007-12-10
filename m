@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:1706 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753653AbXLNTLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2007 14:11:21 -0500
-Subject: Can we please schedule orinoco_pci for removal?
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	orinoco-devel <orinoco-devel@lists.sourceforge.net>
-Content-Type: text/plain
-Date: Fri, 14 Dec 2007 14:11:18 -0500
-Message-Id: <1197659478.1539.23.camel@dv> (sfid-20071214_191124_898780_3F294D27)
-Mime-Version: 1.0
+Received: from pentafluge.infradead.org ([213.146.154.40]:55263 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbXLJPpt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 10:45:49 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 16/48] libertas: Remove SET_BOOT2_VER support from the Big Switch Statement.
+Message-Id: <E1J1kpK-0006lP-Sn@shinybook.infradead.org> (sfid-20071210_154552_639959_BE1BD930)
+Date: Mon, 10 Dec 2007 10:45:50 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Date: Thu, 6 Dec 2007 14:44:21 +0000
 
-Examples of other drivers have convinced me that orinoco_pci should be
-removed from the kernel.  It's superseded by hostap_pci.  Those replying
-on orinoco_pci should look at hostap_pci now and make sure that it's
-working for them.
+And the death of libertas_prepare_and_send_command() starts...
 
-orinoco_pci supports Prism 2.5/3 chipset only, so the support for other
-related chipsets (Agere and Symbol) is useless for that driver.
-Considering that all hostap drivers are Prism-only, orinoco_pci and
-hostap_pci support exactly the same hardware.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
 
-Other backends for Orinoco deal with PCMCIA cards, inserted (or even
-soldered) into proper PCMCIA adapters or into some less capable
-replacements.  PCI cards are real 32-bit PCI devices, and stand apart to
-a certain degree.  I think it would be useful if Orinoco driver
-concentrates on supporting 16-bit PCMCIA cards.  That can possibly
-include Orinoco USB.  There is still work to be done in that direction.
-
-Let's not turn this discussion into another discussion whether Orinoco
-should give up all Prism IDs in all drivers.  It's not as trivial as it
-seems to some, as some cards can only be recognized by the firmware
-version.  I'm aware of the problem.  It's a different issue.
-
-So, what timeframe for orinoco_pci removal from the kernel would be
-reasonable?
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 851eb3c..b1ea878 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -974,17 +974,6 @@ static int lbs_cmd_bcn_ctrl(struct lbs_private * priv,
+ 	return 0;
+ }
+ 
+-static int lbs_cmd_set_boot2_ver(struct lbs_private *priv,
+-				struct cmd_ds_command *cmd,
+-				u16 cmd_action, void *pdata_buf)
+-{
+-	struct cmd_ds_set_boot2_ver *boot2_ver = &cmd->params.boot2_ver;
+-	cmd->command = cpu_to_le16(CMD_SET_BOOT2_VER);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_set_boot2_ver) + S_DS_GEN);
+-	boot2_ver->version = priv->boot2_version;
+-	return 0;
+-}
+-
+ /*
+  * Note: NEVER use lbs_queue_cmd() with addtail==0 other than for
+  * the command timer, because it does not account for queued commands.
+@@ -1470,10 +1459,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 		ret = lbs_cmd_mesh_access(priv, cmdptr, cmd_action, pdata_buf);
+ 		break;
+ 
+-	case CMD_SET_BOOT2_VER:
+-		ret = lbs_cmd_set_boot2_ver(priv, cmdptr, cmd_action, pdata_buf);
+-		break;
+-
+ 	case CMD_GET_TSF:
+ 		cmdptr->command = cpu_to_le16(CMD_GET_TSF);
+ 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_ds_get_tsf) +
 -- 
-Regards,
-Pavel Roskin
+1.5.3.4
+
