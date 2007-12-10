@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33229 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38415 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbXLTKnW (ORCPT
+	with ESMTP id S1752246AbXLJQRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 05:43:22 -0500
-Subject: Re: [PATCH 0/8 v2] mac80211/iwlwifi: integrate IEEE802.11n A-MPDU
-	Rx MLME
+	Mon, 10 Dec 2007 11:17:47 -0500
+Subject: Re: coding style lesson: iwlwifi vs. endianness
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OdeCKBDsIC0rPv1GfcuR"
-Date: Thu, 20 Dec 2007 11:43:17 +0100
-Message-Id: <1198147397.16241.28.camel@johannes.berg> (sfid-20071220_104329_971214_B117E003)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1ba2fa240712100810s1216bee4v8142fb9a279feedf@mail.gmail.com> (sfid-20071210_161015_599477_99D634D7)
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240711281020n6052980cl610f6c790788d2da@mail.gmail.com>
+	 <1196286192.4967.29.camel@localhost.localdomain>
+	 <20071129005810.GA6161@tuxdriver.com>
+	 <1ba2fa240711291502k65cefd5au60f2c22d6f436c82@mail.gmail.com>
+	 <1197286949.6035.49.camel@johannes.berg>
+	 <1ba2fa240712100618g35a8e13ve143f8687f1b531a@mail.gmail.com>
+	 <1197299937.6035.81.camel@johannes.berg>
+	 <1ba2fa240712100810s1216bee4v8142fb9a279feedf@mail.gmail.com>
+	 (sfid-20071210_161015_599477_99D634D7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EAsx/Kl6HE9rfhlC8zKn"
+Date: Mon, 10 Dec 2007 17:17:05 +0100
+Message-Id: <1197303425.6035.89.camel@johannes.berg> (sfid-20071210_161750_153405_99FB5177)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-OdeCKBDsIC0rPv1GfcuR
+--=-EAsx/Kl6HE9rfhlC8zKn
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Thu, 2007-12-20 at 11:39 +0200, Ron Rindjunsky wrote:
-> This series of patches contains implementation for the IEEE802.11n=20
-> aggregated MPDUs (A-MPDU) MLME. The series handles Rx A-MPDU (recipient p=
-arty).
+> This is really arguing about taste and feel. I don't find it more
+> confusing then any mixture of native and some-endian platform. I don't
+> know how to measure it but I didn't see any endianity bug for more
+> then 6 months  so I guess my approach is working.
 
-Thanks. I'll re-review once you've commented on my last mail from this
-morning.
+I recently fixed one due to this style in the ieee80211 TKIP (or QoS?)
+code.
 
 johannes
 
---=-OdeCKBDsIC0rPv1GfcuR
+--=-EAsx/Kl6HE9rfhlC8zKn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR2pHQ6Vg1VMiehFYAQLENQ/9GrCwwYe26A7v/VevA/n5piQxBEETmSB/
-+awHpEj6MMv3C/eTwLLUelOi3Kg6+Mg8EdUFQvAYDV3EBWKLucRxuh2kdtxv94Tz
-um5Du49A5v+w9/FfPqoqjPFggLxwT87cVm6NVtzwYRb/TYEFzbfbbk4QDY6+4ZG5
-VYFc/6o+i6SdBchna2KljUhMk390C9ay2uOYIsuwhYiLtw7Za8WmnWY0GjMrEl8t
-rUOW0v5DSk8Mt9ltwx0OVSP66Eujk5bom3tLg0QGyC+pHvpUY0FZpWhNFlSZWO+r
-GmfyHDi4cyEbTuOXS50ubdHchUziba/8p/iZ69nb4fONNmbBYDJgVdlVISq4FErq
-bkdVRgO047cDA99r0ovl1ZKa7sVDhO52aXJSumSOY4FZzXGc10BtH4v5T+RpcJlD
-vhVqunmNIW0DEvuunAHn3BCbr8D69ajVb6Id/4ABd1NyXkVwjYWmTFbXKgVLKSDw
-vyN7yDOTFACJcQlMBEEokMF7FzJI7RU4kaOY2xu6KdwHYDrHE7c1Du9G31B2w2BV
-KkaEbnd71blbl2YCdPfaz0RyAQXs1EHzeSzBWtgd8vtHqNd1zAfmGpbhjGSMYR1F
-NzA3GqJON8Rf3IZ8PIacRiyJxLvn913P/azYtYl4Q4eheh+pM9/6A5tqsmmIze/T
-fVlFWsLw03g=
-=UM/c
+iQIVAwUAR11mgKVg1VMiehFYAQLIHg/+N8d4Jrbb16QjMCgVFQG6kk9+hSQJl4yX
+ytCi2mReNLny7PAqrR+pxFVoHVGz5XkqE4FDl8HJJOcytTejmLfczxhMDqnKKGZg
+66K3GE3DjD3AjnytE7iI/qsaM9Zja2ghbrmp+nJ83C4tLodvcxmjRfIj/VEbxE6y
+D24VukRvQ+yMieWjzDGkbki06IAlBnijQYrbbo5sJ1/Uux1YZYtg8AalYEIEeqq/
+kvZJgY7S4u7z3nRa33E0KO4F6YR2Hfchs0DiDCXmfp/xNvmYAcw/rAd3YhblyPID
+3/5OvHSFRGfUl4VS0w3kk/omLhzYeafYCL43l4Jv7oHNnqc7l/J3L/X9UGWOPN+y
+O5dgcOtQXwpiEodkyFZ4hoppi1/9StlhPv0kLR1KZGesLsOC4SPQ6nW74xAVd3w2
+xFT7f0Bm3vQy20PowMpoentQVwdtYg2l8J22hRfNjQpZxpvXF6Xc5RdQHpReL6ja
+k/8H3UlIhkUW2zWXbeBhsp6YFDh9/4TLt4asKGlExR73HOOTeRw3Bs+T8dbHO/0m
+0Rnsn2yEeneKZRMWGQRSCT2HTw8sA5ta0fA9L/vmuqkft7HHqWmDmLJK//3vjguF
+1Pmts+qB56Zvep7zF6xDaREyEFwmBiwW9GGcAXFDvoZd6TySAV+a+54yeOSWM3aq
+2zQubJPFDj4=
+=GBoR
 -----END PGP SIGNATURE-----
 
---=-OdeCKBDsIC0rPv1GfcuR--
+--=-EAsx/Kl6HE9rfhlC8zKn--
 
