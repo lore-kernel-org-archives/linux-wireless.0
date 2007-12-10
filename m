@@ -1,60 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52031 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbXLIRmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 12:42:08 -0500
-Subject: Re: [PATCH] introduce WEXT scan capabilities
-From: Dan Williams <dcbw@redhat.com>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-In-Reply-To: <20071207.181221.09900510.davem@davemloft.net>
-References: <1197073366.4563.15.camel@localhost.localdomain>
-	 <20071207.181221.09900510.davem@davemloft.net>
-Content-Type: text/plain
-Date: Sun, 09 Dec 2007 12:31:07 -0500
-Message-Id: <1197221467.9149.31.camel@localhost.localdomain> (sfid-20071209_174216_087963_DD06254C)
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:45585 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753013AbXLJRVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 12:21:53 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 35/48] libertas: move lbs_hard_start_xmit() into tx.c
+Message-Id: <E1J1kpe-0006mw-VV@shinybook.infradead.org> (sfid-20071210_172156_529680_3EA8C313)
+Date: Mon, 10 Dec 2007 10:46:10 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-12-07 at 18:12 -0800, David Miller wrote:
-> From: Dan Williams <dcbw@redhat.com>
-> Date: Fri, 07 Dec 2007 19:22:46 -0500
-> 
-> > @@ -1040,6 +1049,16 @@ struct	iw_range
-> >  	 * because each entry contain its channel index */
-> >  
-> >  	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
-> > +
-> > +	/* Do *NOT* use those fields, they are just used as padding to get
-> > +	 * proper alignement with user space */
-> > +	__s32		reserved1;
-> > +	__s32		reserved2;
-> > +	__u16		reserved3;
-> > +	__s32		reserved4;
-> > +	__u32		reserved5;
-> > +
-> > +	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
-> >  };
-> >  
-> >  /*
-> 
-> Major NACK.  These datastructure usages are complete wrong, and
-> we have to stop spreading this problem instead of continuing on
-> with it as if it's OK.
+Date: Sun, 9 Dec 2007 12:52:19 -0500
 
-There's not too much we can do here.  We need a better way to support
-driver/card capabilities in WEXT right _now_, in parallel with
-cfg80211/nl80211.  The other alternative here is to have a 64-bit
-generic capabilities field-to-end-all-fields and add more bitfield
-position constants to that without extending the structure any more.
+... where it can shortly be merged with lbs_process_tx()...
 
-Is there a better way you'd propose to do this _in_WEXT_?
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/decl.h |    2 +-
+ drivers/net/wireless/libertas/main.c |   32 --------------------------------
+ drivers/net/wireless/libertas/tx.c   |   33 ++++++++++++++++++++++++++++++++-
+ 3 files changed, 33 insertions(+), 34 deletions(-)
 
-I don't really forsee any more extending of this structure, since I
-think scan capabilities are the last thing we really need to know about.
-
-Dan
-
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index b094514..fcb5a85 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -50,10 +50,10 @@ void lbs_upload_rx_packet(struct lbs_private *priv, struct sk_buff *skb);
+ 
+ /** The proc fs interface */
+ int lbs_process_rx_command(struct lbs_private *priv);
+-int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb);
+ void __lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
+ 	struct cmd_ctrl_node *ptempcmd);
+ 
++int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev);
+ int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band);
+ 
+ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index c638995..d311d57 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -515,38 +515,6 @@ static int lbs_close(struct net_device *dev)
+ 		return 0;
+ }
+ 
+-
+-static int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+-{
+-	int ret = 0;
+-	struct lbs_private *priv = dev->priv;
+-
+-	lbs_deb_enter(LBS_DEB_TX);
+-
+-	/* We could return NETDEV_TX_BUSY here, but I'd actually 
+-	   like to get the point where we can BUG() */
+-	if (priv->dnld_sent) {
+-		lbs_pr_err("%s while dnld_sent\n", __func__);
+-		priv->stats.tx_dropped++;
+-		goto done;
+-	}
+-	if (priv->currenttxskb) {
+-		lbs_pr_err("%s while TX skb pending\n", __func__);
+-		priv->stats.tx_dropped++;
+-		goto done;
+-	}
+-
+-	netif_stop_queue(priv->dev);
+-	if (priv->mesh_dev)
+-		netif_stop_queue(priv->mesh_dev);
+-
+-	if (lbs_process_tx(priv, skb) == 0)
+-		dev->trans_start = jiffies;
+-done:
+-	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
+-	return ret;
+-}
+-
+ /**
+  * @brief Mark mesh packets and handover them to lbs_hard_start_xmit
+  *
+diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+index 10596f3..336544c 100644
+--- a/drivers/net/wireless/libertas/tx.c
++++ b/drivers/net/wireless/libertas/tx.c
+@@ -56,7 +56,7 @@ static u32 convert_radiotap_rate_to_mv(u8 rate)
+  *  @param skb     A pointer to skb which includes TX packet
+  *  @return 	   0 or -1
+  */
+-int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
++static int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
+ {
+ 	int ret = -1;
+ 	struct txpd localtxpd;
+@@ -179,6 +179,37 @@ done:
+ 	return ret;
+ }
+ 
++int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
++{
++	int ret = 0;
++	struct lbs_private *priv = dev->priv;
++
++	lbs_deb_enter(LBS_DEB_TX);
++
++	/* We could return NETDEV_TX_BUSY here, but I'd actually 
++	   like to get the point where we can BUG() */
++	if (priv->dnld_sent) {
++		lbs_pr_err("%s while dnld_sent\n", __func__);
++		priv->stats.tx_dropped++;
++		goto done;
++	}
++	if (priv->currenttxskb) {
++		lbs_pr_err("%s while TX skb pending\n", __func__);
++		priv->stats.tx_dropped++;
++		goto done;
++	}
++
++	netif_stop_queue(priv->dev);
++	if (priv->mesh_dev)
++		netif_stop_queue(priv->mesh_dev);
++
++	if (lbs_process_tx(priv, skb) == 0)
++		dev->trans_start = jiffies;
++done:
++	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
++	return ret;
++}
++
+ /**
+  *  @brief This function sends to the host the last transmitted packet,
+  *  filling the radiotap headers with transmission information.
+-- 
+1.5.3.4
 
