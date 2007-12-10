@@ -1,103 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:24488 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.181]:36533 "EHLO
 	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757710AbXLGWf1 (ORCPT
+	with ESMTP id S1752570AbXLJT00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 17:35:27 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1865010pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 14:35:23 -0800 (PST)
-Message-ID: <43e72e890712071435l7b20420cq4b13aaaebcd729dd@mail.gmail.com> (sfid-20071207_223553_975359_E738FC2E)
-Date: Fri, 7 Dec 2007 17:35:21 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 1/1] ath5k: add debugfs entries for registers, tsf, beacon
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mickflemm@gmail.com
-In-Reply-To: <200712051950.08672.bruno@thinktube.com>
+	Mon, 10 Dec 2007 14:26:26 -0500
+Received: by py-out-1112.google.com with SMTP id u77so470669pyb
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 11:26:25 -0800 (PST)
+Message-ID: <43e72e890712101126q7ba69b00sac3538a742659fbb@mail.gmail.com> (sfid-20071210_192629_056559_17CD82FA)
+Date: Mon, 10 Dec 2007 14:26:24 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: lynx.abraxas@freenet.de
+Subject: Re: What's wrong if wlan0 device is not reacting?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20071210171521.GC1475@drago>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1196839665-14178-1-git-send-email-bruno@thinktube.com>
-	 <47566B95.5080101@gmail.com> <200712051950.08672.bruno@thinktube.com>
+References: <20071206170858.GA2008@drago>
+	 <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
+	 <20071206214807.GB1811@drago>
+	 <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com>
+	 <8e6f94720712071121n234d9d23idaaf49d76b2fe227@mail.gmail.com>
+	 <43e72e890712071336v2a4a805eu6aff9ff9c10c9418@mail.gmail.com>
+	 <20071208074402.GA2508@drago> <20071210171521.GC1475@drago>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 5, 2007 5:50 AM, bruno randolf <bruno@thinktube.com> wrote:
-> On Wednesday 05 December 2007 18:12:53 Jiri Slaby wrote:
-> > > +   char buf[5000];
+On Dec 10, 2007 12:15 PM,  <lynx.abraxas@freenet.de> wrote:
+> On 08/12/07 08:44:02, lynx.abraxas@freenet.de wrote:
+> > Checked  this  morning  but I'm still getting errors there. Could I be missing
+> > some configuration of the build?
 > >
-> > Doh, 4k stacks on i386! You can't do this safely.
 >
-> ohh! i didn't know.
->
-> > I think we can use seq_* stuff here instead, see below.
->
-> > Put those register in the array, and from .seq_next, return &array[++*pos]
-> > or NULL for the last member. .seq_show will contain the REG_PRINT_APPEND
-> > macro contents.
->
-> thanks for the hint. i changed the patch to do that now. but unfortunately by
-> doing so we loose the ability to print the register names.
->
-> anyways, here is the new version:
+> Found  the problem: I seem to have gotten a cached tarball which didn't differ
+> at all. Downloading it with wget got the new one  and  that  compiles  without
+> problems under 2.6.23.9. I'm sorry for the fuzz.
+> Well testing the device with the new drivers will have to wait untill January.
 >
 >
-> ath5k: add debugfs entries for registers, tsf, beacon
->
-> 'registers' prints the value of some registers. this should be adapted to what
-> we actually need later.
->
-> 'tsf' prints the current HW TSF. writing "reset" into the file will reset the
-> TSF.
->
-> 'beacon' shows beacon relevant registers. writing "enable" into the file will
-> enable beacons by writing AR5K_BEACON_ENABLE, "disable" will disable that bit.
->
-> 'reset' performs a HW reset.
->
-> Changes-licensed-under: GPL
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> Till then, mary Christmas and a happy New Year.
 
-Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
-
-Seems the patch may just need to be resent, not sure, but your mailer
-may be messing with it. I'm using gmail --> show-original to retrieve
-this as a patch so not sure if that would have messed the patch up (I
-don't think so). But I get:
-
-mcgrof@nesi:~/devel/compat-wireless-2.6$ patch -p1 <
-/home/mcgrof/patches/new-debug.diff
-patching file drivers/net/wireless/ath5k/debug.c
-patch: **** malformed patch at line 238: *modes)
-
-That hunk looks like this:
-
-@@ -96,9 +294,16 @@ void
- ath5k_debug_finish_device(struct ath5k_softc *sc)
- {
-        debugfs_remove(sc->debug.debugfs_debug);
-+       debugfs_remove(sc->debug.debugfs_registers);
-+       debugfs_remove(sc->debug.debugfs_tsf);
-+       debugfs_remove(sc->debug.debugfs_beacon);
-+       debugfs_remove(sc->debug.debugfs_reset);
-        debugfs_remove(sc->debug.debugfs_phydir);
- }
-
-+
-+/* functions used in other places */
-+
- void
- ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode
-*modes)
- {
-
-
-The last *modes line is the one it is complaining about. After moving
-this line as:
-
- ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
-
-it patches well. I can't test this as my laptops have all gone dead,
-but it looks well, and compiles well.
+Heh, thanks, I was about to reply that I tested the build with the
+same exact kernel. Please do get back with test results :)
 
   Luis
