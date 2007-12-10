@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbXLLRos (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:38069 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075AbXLJR3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 12:44:48 -0500
-Subject: Re: [PATCH] mac80211: Fix swapped parameters to
-	ieee80211_set_channel()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: flamingice@sourmilk.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20071212153158.GB16947@lunn.ch> (sfid-20071212_160807_495838_2B0FE495)
-References: <20071212153158.GB16947@lunn.ch>
-	 (sfid-20071212_160807_495838_2B0FE495)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t9pbAzmlgZeuBWSQXz2l"
-Date: Wed, 12 Dec 2007 18:43:46 +0100
-Message-Id: <1197481426.6558.138.camel@johannes.berg> (sfid-20071212_174520_933953_65CFA8AE)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 12:29:42 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 09/48] libertas: Don't claim to have checksummed incoming packets.
+Message-Id: <E1J1kpD-0006kq-Hw@shinybook.infradead.org> (sfid-20071210_172951_155817_869C9C39)
+Date: Mon, 10 Dec 2007 10:45:43 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Thu, 6 Dec 2007 10:36:08 +0000
 
---=-t9pbAzmlgZeuBWSQXz2l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This explains why we never noticed the corruption of checksums on
+outgoing packets... we weren't actually checking them either.
 
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->                 } else
-> -                       return ieee80211_set_channel(local, freq->m, -1);
-> +                        return ieee80211_set_channel(local, -1, freq->m)=
-;
-
-Good catch, but please resubmit with tabs as indentation and CC John as
-he gets to apply patches. Or I can send it on if you wish.
-
-johannes
-
---=-t9pbAzmlgZeuBWSQXz2l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2Ad0aVg1VMiehFYAQJqFhAAnQEqlacBZQ4gnOWJFW34++bcce6szXwq
-s8XQszclMT8lWsFSl+MR6jhqHTMyB52L22qsHDhFYvLwikCXKCIo8vfGUTrl8ddM
-gEr+troPoSj83is4aeiEt2xYsuj+eZAFpwn6LTbGSGGmv2UaaI9NiAWBN6KrXwLN
-F/dZOMJ/jHMKn6P3O08ezU/yIby+lFYKcrmIG07TnoJGVnuqHkGmFBfmzswjoBmR
-C/TwTKV7JWW3hO6ZM6kJuob/x2J8TwemsxFCnBPPyh2F1jD8UHeGdumnkUSlgWvL
-WnZZ8ym4oJ1hV/98a0UF8wJjME3/TBL86pQUhYVEOjoDae7yuAaiaesGRFtVWHXq
-+sQ3W/dmKNOnJvbUDTeB7Y0fzscM87vPngFjW6W98o0PH95iiwfgpfsuG3HTCvz/
-NihIZjXtbJu9IVud2ShcrO8BJveyYn/5w6wCDQIRN02ANfmQDHNu87DtpaURgF8R
-2yKllriDtuaUhViDZfaM8sbRb+lpuK6lxVlb0ndlyKtwm2DdMONLdbAKtqKMW64E
-vS2Yu1hih5twmfRLr4tIhEPzWeykycFokLTfErgsR2V/IFPv48NoGPTZoe4haD1M
-s3lGT63FrCXhTipq/0anwsWj229uOFC5KahFyMArGO0tBiF/1FAUCx+Ni8Qsz6Qb
-j2p44+Ch5Oo=
-=oCmS
------END PGP SIGNATURE-----
-
---=-t9pbAzmlgZeuBWSQXz2l--
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index fa467df..a252a8f 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -147,7 +147,7 @@ void lbs_upload_rx_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 		else
+ 			skb->protocol = eth_type_trans(skb, priv->dev);
+ 	}
+-	skb->ip_summed = CHECKSUM_UNNECESSARY;
++	skb->ip_summed = CHECKSUM_NONE;
+ 	netif_rx(skb);
+ }
+ 
+-- 
+1.5.3.4
 
