@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:7791 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751842AbXLWVQz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 16:16:55 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1494877fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 13:16:53 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: tx_status reporting of RTS/CTS frames
-Date: Sun, 23 Dec 2007 22:17:18 +0100
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
-	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-References: <1197412922.7030.11.camel@localhost> <1197479702.6558.125.camel@johannes.berg>
-In-Reply-To: <1197479702.6558.125.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712232217.18941.IvDoorn@gmail.com> (sfid-20071223_211659_208987_F1E71D47)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:54289 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751294AbXLJIX0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 03:23:26 -0500
+Date: Mon, 10 Dec 2007 09:17:01 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening
+ factor
+Message-ID: <20071210091701.208c2d2a@morte> (sfid-20071210_082329_660324_8FB6A635)
+In-Reply-To: <1197272696.7490.31.camel@localhost>
+References: <20071209211547.2d7fca32@morte>
+	<20071209212133.43030d03@morte>
+	<1197239361.7543.17.camel@localhost>
+	<20071210003120.0078db1d@morte>
+	<1197244416.7543.27.camel@localhost>
+	<20071210032811.5cea4909@morte>
+	<1197268081.7490.10.camel@localhost>
+	<20071210082154.015f6e6a@morte>
+	<1197272696.7490.31.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 10 Dec 2007 08:44:56 +0100
+Mattias Nissler <mattias.nissler@gmx.de> wrote:
 
-> > rt2x00 devices can't generate rts/cts frames themselves, but rely on the
-> > driver to generate them. Also, the hardware reports tx status back for
-> > those frames. Now the question is whether these frames should be
-> > reported back to mac80211 using ieee80211_tx_status[_irqsafe]. AFAIK,
-> > this has some subtle effects, e.g. they won't show up on monitor
-> > interfaces if we don't report them.
-> 
-> They never show up on monitor interfaces for all other hardware because
-> there the hardware handles them. How is it that rt2x00 cannot handle
-> rts? It has to at least know that an RTS was sent and to send the frame
-> only after the CTS, and that needs to be a MAC function and cannot be
-> implemented in host software.
-> 
-> So, I'd think they shouldn't be reported at all.
+> You're totally right. But IMHO it's nicer to be a little defensive here.
+> You never know what happens to your code in the future. Just imagine
+> somebody coming up with: Hey, let's use a timer-based approach for
+> sampling. Ok, that's easy to do, just call sample() every time the timer
+> expires. And whoops, there's the division by zero when no packets are
+> transmitted...
 
-Than this is a problem in multiple mac80211 drivers, since rt2x00 previously
-did filter out rts and cts frames when reporting txdone events to mac80211
-and upon request on the linux-wireless list that filter was disabled, because
-the other drivers didn't filter the RTS/CTS frames so for consistent behavior
-the filter was removed from rt2x00.
+Ok, you are right, I'll fix this.
 
-Ivo
 
+-- 
+Ciao
+Stefano
