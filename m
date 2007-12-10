@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40452 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753962AbXLRNf4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:46172 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829AbXLJVS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 08:35:56 -0500
-Subject: Re: [patch (for 2.6.24?) 1/4] ieee80211_rate: missed unlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: akpm@linux-foundation.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	gorcunov@gmail.com, flamingice@sourmilk.net
-In-Reply-To: <200712180022.lBI0MpTh010069@imap1.linux-foundation.org> (sfid-20071218_002400_882717_90E820B8)
-References: <200712180022.lBI0MpTh010069@imap1.linux-foundation.org>
-	 (sfid-20071218_002400_882717_90E820B8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-giqpbt/DPt1SldY4GUjr"
-Date: Tue, 18 Dec 2007 14:35:14 +0100
-Message-Id: <1197984914.4885.139.camel@johannes.berg> (sfid-20071218_133604_341469_F6277C3C)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 16:18:26 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3572758wah
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 13:18:25 -0800 (PST)
+Message-ID: <1ba2fa240712101318q303df7c3x407b4d4de3d42713@mail.gmail.com> (sfid-20071210_211832_292999_26C54561)
+Date: Mon, 10 Dec 2007 23:18:21 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: coding style lesson: iwlwifi vs. endianness
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>
+In-Reply-To: <1197303938.6035.100.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240712100618g35a8e13ve143f8687f1b531a@mail.gmail.com>
+	 <1197299937.6035.81.camel@johannes.berg>
+	 <200712101630.48124.mb@bu3sch.de>
+	 <1ba2fa240712100821u284571d7k39b326e58aac93af@mail.gmail.com>
+	 <1197303938.6035.100.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Dec 10, 2007 6:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> You could even code the "set little tiny bit in it" as
+>
+> struct->flags |= cpu_to_le32(flag value);
+>
+> which all other drivers do.
 
---=-giqpbt/DPt1SldY4GUjr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I hope you grep the kernel before you wrote this :). No iwlwifi is not
+the only driver that does that. I cannot claim invented this.
 
+> It boils down to what I just said:
+>
+> Most people prefer making endian conversions explicit in the code while
+> you're hiding it in defines which is unintuitive if only because it
+> differs from what everybody else does.
 
-On Mon, 2007-12-17 at 16:22 -0800, akpm@linux-foundation.org wrote:
-> From: Cyrill Gorcunov <gorcunov@gmail.com>
->=20
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+We did it because it's more readable for us you are free to think
+differently. If you referring to everybody else as the code of other
+drivers then they are different because the HW is different.
 
-My mistake, good catch.
+Just make it clear I'm part of this argument because I believe I'm
+correct from technical point.. We didn't hide anything and we are glad
+that other people contribute to the iwlwifi. any other suggestions are
+pure speculations.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Personally I think this conversation was saturated enough. I'll
+reconsider all your suggestions mainly the cpup stuff that I wasn't
+aware of.
+Thanks
+Tomas
 
-> ---
->=20
->  net/mac80211/ieee80211_rate.c |    1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff -puN net/mac80211/ieee80211_rate.c~ieee80211_rate-missed-unlock net/=
-mac80211/ieee80211_rate.c
-> --- a/net/mac80211/ieee80211_rate.c~ieee80211_rate-missed-unlock
-> +++ a/net/mac80211/ieee80211_rate.c
-> @@ -33,6 +33,7 @@ int ieee80211_rate_control_register(stru
->  		if (!strcmp(alg->ops->name, ops->name)) {
->  			/* don't register an algorithm twice */
->  			WARN_ON(1);
-> +			mutex_unlock(&rate_ctrl_mutex);
->  			return -EALREADY;
->  		}
->  	}
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-giqpbt/DPt1SldY4GUjr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2fMkaVg1VMiehFYAQJLhA/9HLnTM51d6+zfkpCyQrLlVNAqQ4PCWZf/
-lFhBwHy8y+Cut4ZMF8vd/kmRQwyKyWz1fNe4JfU+igpM/5/xqD3fDem3r/8Ggpw6
-rjSZjhYsoQ4TSRZ3FfHUlVB/azbSqes2sQyxzAOG3oKFNMQst+6CYWUm6/7QA4dL
-OkQv8PWrQycWhZt6VxOJZBsS6+lkoqoFhkDWh3iPXFBsVo5k0b8Ho5CxzmXvQYQc
-8IXVcbuR9gDOVkWiAO3hhPaqxY2conwts90/jDnCnCSJ+rxtV3Rg57cgJd2xMHhM
-9Z6T0gVMZL019yn4zyuBnc8z4RMDsIfPX6f7GCZ5lVmoPhHpaAKtTm421wG9FvNs
-zIh07PS3ElsxtIrG0JZUSap2Yuy+2aW0PStMzT8+2vQZ4fBKX7lwtml0Z4gXi6hj
-OREznHbYlJDsqCeQn9Kme5F398OgK5S6N+UvBuGce1a2kWfl9kAi6NwEpcWImrn0
-7XREs7USgHCiNLBmcg0Y1RGHOD4C4TgODQVUPzSc4oK7m1Vl2khxC9s/wtuRdE97
-FA7ZUtleS56vpa+17a5g21Yn+s1rckb+X9FqhEysr7niiFgLHdCF1BqVvqVXQ7ke
-aFqyjRdpcy4QJHtj4XBci09mZ9FQuBr5WFeutFOsE6fAsiJokqi5cQDZFupClu8/
-UOAnFOUXulQ=
-=jyNG
------END PGP SIGNATURE-----
-
---=-giqpbt/DPt1SldY4GUjr--
-
+> johannes
+>
