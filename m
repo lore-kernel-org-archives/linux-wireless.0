@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46092 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbXL2Kg5 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:28349 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752282AbXLJQV1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 05:36:57 -0500
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <200712291121.31120.IvDoorn@gmail.com> (sfid-20071229_102122_537113_95530FCD)
-References: <200712290942.37396.chris2553@googlemail.com>
-	 <1198922056.4172.25.camel@johannes.berg>
-	 <200712291121.31120.IvDoorn@gmail.com>
-	 (sfid-20071229_102122_537113_95530FCD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-REqksYWHcxfBT/uWNFij"
-Date: Sat, 29 Dec 2007 11:36:43 +0100
-Message-Id: <1198924603.4172.34.camel@johannes.berg> (sfid-20071229_103719_753703_0D914C0F)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 11:21:27 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3433288wah
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 08:21:26 -0800 (PST)
+Message-ID: <1ba2fa240712100821u284571d7k39b326e58aac93af@mail.gmail.com> (sfid-20071210_162134_240116_972B549F)
+Date: Mon, 10 Dec 2007 18:21:26 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: coding style lesson: iwlwifi vs. endianness
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>
+In-Reply-To: <200712101630.48124.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1196189059.6058.95.camel@johannes.berg>
+	 <1ba2fa240712100618g35a8e13ve143f8687f1b531a@mail.gmail.com>
+	 <1197299937.6035.81.camel@johannes.berg>
+	 <200712101630.48124.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> my_data = read_drom_device()
+> swap_to_cpu(my_data)
+> do_whatever(my_data)
+> store the data somewhere else in the device structs for
+> later use, maybe.
+> do_something_else(my_data)
+>
+> You see that now you have only _one_ place that you have to care about.
+> And if you have to write your data back at some point, simply do it
+> just before the write.
+>
 
---=-REqksYWHcxfBT/uWNFij
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Correct xxcept that this is not the case.
+
+Our case is
+
+Loop:
+ my_big_little_endian_struct.
+ set little tiny bit in it
+ send to HW
+end
 
 
-> If it helps as reference, rt2x00 allocates and initializes the data as fo=
-llows:
->=20
-> 		skb_reserve(skb, NET_IP_ALIGN);
-> 		skb_put(skb, desc.size); /* Always a multiple of 4 bytes */
-> 		memcpy(skb->data, entry->data_addr, desc.size);
 
-So why do you copy all the data anyway? You have DMA queues and no need
-to not have the hardware dump the data into the frame to start with, no?
+> And, little endian intel guys, this will simplify your life a lot by
+> removing lots of cpu_to_xxx stuff _and_ result
+> in no performance loss, as the swap will be optimized away. :)
+> That's a deal, eh?
+> And we big endian people, we don't care about one or two swap instructions.
+> It won't hurt performance in any way.
 
-In any case, with wireless NET_IP_ALIGN is pretty useless unless you
-want to add two to it and then align the result. Maybe the mac80211
-warning should be relaxed to take NET_IP_ALIGN into account.
+I care. I'm running it on big endian, truly. Yes I cannot really say
+how the performance be hurt, but I still prefer my way.
 
-johannes
-
---=-REqksYWHcxfBT/uWNFij
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR3YjOqVg1VMiehFYAQLkuQ/9Hl2s4BjQZHi22c6Yo+gT7bNXdHOFv7k6
-M5vifjr+W3mhQ4nE95iWq3zutHR+hKFqmGatQyqSxYSbJEJEHCYz3LLWHnuZy1h6
-wRS/ZxVqYglmgwm7dTgmr0plhVDVD28zL65EywC1boc+kb4Q8M3YWmM5sttkrIIF
-w+pyeApSkjCVG1PDzNPRjI/jsGRSbZJjkB1qGv7w5fal3eNvZcSMuF+hIo6rCC5f
-MzWAxAvJK9S4+WKOLeDsGZUMUBy2fwnojuBujERXSv9miTVjcjKwimE1pI/sb9hB
-/vfyfXTLAQJxLQNNgvfrtAz4ePWHl5XoUgJuRiiW2sztZLPsfYvPko+CcGcmglZX
-eJh1ZQX6ryRkkeBYLZcaEJry52O8KJ/eGYzDg7GAw0nPKaB/q2h1hM/daaOIEGgq
-mS9yal/vNXbD20XJUn1CE5HXB8RVWdyzei7ggP1l9TE+3TCWyN58XrT3C1YQ4i03
-WufJhACv+MxH7iWFcIkzNGQflbKxA1UBkdKPW7P37H56qExQjekkq/o4s1i2ZlhT
-vXQKGznwWMzuMgyhf4fW3XSnSVOhg883tss+UtCUKe5I9RlgU99fkOtGmi13g/G+
-7m4KcvFsr6OMFgZghji2+2GUFGYIPACw+2sfXYf/dUTjGuVF2Zm6BAwEsP/bkMSx
-OPwi0KI/X/I=
-=97BC
------END PGP SIGNATURE-----
-
---=-REqksYWHcxfBT/uWNFij--
-
+> (Johannes also showed that in most cases this approach doesn't even
+> add extra instructions).
+>
+> --
+> Greetings Michael.
+>
