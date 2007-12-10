@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59632 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753440AbXLSQFi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:05:38 -0500
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mfe1.polimi.it ([131.175.12.23]:60784 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754334AbXLJVg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 16:36:59 -0500
+Date: Mon, 10 Dec 2007 22:30:18 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
 To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1198008087.7553.9.camel@localhost> (sfid-20071218_200138_269873_1AF5AE72)
-References: <20071217012517.882216322@gmx.de>
-	 <20071217012550.213561122@gmx.de> <20071217150202.GC3121@tuxdriver.com>
-	 <20071217210649.370ba385@morte> <20071217204112.GE3121@tuxdriver.com>
-	 <20071217221610.7906f3e2@morte>  <1197982157.4885.124.camel@johannes.berg>
-	 <1198008087.7553.9.camel@localhost> (sfid-20071218_200138_269873_1AF5AE72)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aeFgVRH8zK4JsAOcdTBq"
-Date: Wed, 19 Dec 2007 17:05:27 +0100
-Message-Id: <1198080328.4747.17.camel@johannes.berg> (sfid-20071219_160551_139417_2B51B708)
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+ learning algorithm
+Message-ID: <20071210223018.2f7a31d1@morte> (sfid-20071210_213702_759822_AE7DFEA9)
+In-Reply-To: <1197320192.7493.10.camel@localhost>
+References: <20071209211547.2d7fca32@morte>
+	<20071209211931.26ff42fa@morte>
+	<1197239150.7543.13.camel@localhost>
+	<20071210002158.654ed960@morte>
+	<1197269336.7490.25.camel@localhost>
+	<20071210090323.47d657e6@morte>
+	<1197320192.7493.10.camel@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 10 Dec 2007 21:56:32 +0100
+Mattias Nissler <mattias.nissler@gmx.de> wrote:
 
---=-aeFgVRH8zK4JsAOcdTBq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Sometimes, the stack sends frames at different rates than what was
+> decided by the rate control algorithm (there are several situations in
+> which this can happen, e.g. an AP only allowing 802.11b rates, rts/cts
+
+No, wait, to consider rts/cts frames makes sense here, but I'd say that the
+same doesn't apply to AP only allowing 802.11b rates, because anyway
+non-CCK rates would get excluded from supported rates, and we wouldn't even
+map them.
+
+> frames, maybe more). But still, the tx status is reported back to the
+> rate control algorithm as for normal frames. Now the rate control
+> algorithm just doesn't care and accounts the tx status to the wrong
+> rate. This is clearly suboptimal. I cannot estimate how much impact this
+> behaviour has. However, it shouldn't be hard to improve the situation
+> either by reporting back to the rate control algorithm on which rate the
+> frame handed to tx_status() was actually transmitted, so it can decide
+> itself what to do about this (this is my preferred solution). Or you
+> could just have the stack don't call tx_status() for frames that were
+> transmitted on another rate.
+
+Ok, got it. But I would just discard them, I can't think of any
+significant measurement on those frames. So I would follow the second
+approach here. Or do you have any suggestions on how to consider those
+frames?
 
 
-> The only issue I know about is that if people disable module auto
-> loading, they'll end up without rate control algorithm. If you don't
-> like this, please comment on how to fix it.
-
-That's exactly the issue we had before hence we started building one
-into mac80211. Please build the default one into mac80211 and the other
-one as a module *and* fall back to the built-in one when the default was
-changed via debugfs but that one is not available.
-
-johannes
-
---=-aeFgVRH8zK4JsAOcdTBq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2lBRqVg1VMiehFYAQJJeg/9FImUPKkR5sFcarf4FPNT6xlNgGC1urfQ
-+zTUtnuMTJNav5KVsLXXZfR0McEGTA6fBauF3X7UjMaDnHr8pa4zKR1cTL/YglRq
-oFOylRSydp6N/l4MMdFWFw8/qBUxnZCl3iRNqUUx+NqM29wesM7gN/LB7MjsjK+x
-4TpmK/PJLa7vf4O1CSEA6ZiE1jmrxvuIKs7gu1MbU55joWRSURPSHbWfj9/MLWqC
-x16a6owai2G8DWEKejbkgn9ELDDvbGt/JS9d+PS/9xFsx5PaxPZPm3nt9EvbR/aX
-3SyRnS+eBnF8DDf3YPANiyJEipSpNLV5bopthPEnkRitph4T0vlJY1JocH/k1/DR
-lWDfbtntRznNPmkW32TdZj0Eay5audo06zK4K2sEUtRn3e1iW75pnYfQS3GdwG7h
-gp0kwa268/PKYoNEjTwLI5b+yXJaTxvYNz/96GyTMDCy5pFqevjCXozV1UPDiTkv
-q3jQEE+kUnnMHz/Dmg/9A6riO3w++Z9VpAoscdOKtThBQnWxwnELkSR/mdVhhtUn
-UFHytTkI4emhUuCmFJ9cifpZpR/hZaAko2rxkThsYm9LIN4PGx343vx3qxs7Yq6W
-vjM/yP9SDhbJVouULTT1S8utodzygavjf7Q7WYYON6ZU2Jnz7F4T5sa0rg5HmbHa
-q5tJMFKjTRY=
-=DpoL
------END PGP SIGNATURE-----
-
---=-aeFgVRH8zK4JsAOcdTBq--
-
+--
+Ciao
+Stefano
