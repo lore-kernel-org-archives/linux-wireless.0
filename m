@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28918 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751396AbXLYPAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 10:00:50 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/8 v3] mac80211: A-MPDU Rx add low level driver API
-Date: Tue, 25 Dec 2007 17:00:31 +0200
-Message-Id: <11985948452941-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150102_888724_92807C8D)
-In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from bombadil.infradead.org ([18.85.46.34]:38066 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbXLJR3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 12:29:39 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 05/48] libertas: remove cmd_ctrl_node->cmdflags
+Message-Id: <E1J1kp9-0006kW-CY@shinybook.infradead.org> (sfid-20071210_172947_621105_EED97C2A)
+Date: Mon, 10 Dec 2007 10:45:39 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the API to perform A-MPDU actions between mac80211 and low
-level driver.
+From: Holger Schurig <h.schurig@mn-solutions.de>
+Date: Wed, 5 Dec 2007 17:57:56 +0100
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+There was no code that ever did set this flag.
+
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- include/net/mac80211.h |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+ drivers/net/wireless/libertas/cmdresp.c |    7 -------
+ drivers/net/wireless/libertas/hostcmd.h |    1 -
+ 2 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0d67b33..418cd38 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -915,6 +915,18 @@ enum ieee80211_erp_change_flags {
- 	IEEE80211_ERP_CHANGE_PREAMBLE	= 1<<1,
- };
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 90f1c49..cbd28ee 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -856,13 +856,6 @@ int lbs_process_rx_command(struct lbs_private *priv)
+ 		goto done;
+ 	}
  
-+/**
-+ * enum ieee80211_ampdu_mlme_action - A-MPDU actions
-+ *
-+ * These flags are used with the ampdu_action() callback in
-+ * &struct ieee80211_ops to indicate which action is needed.
-+ * @IEEE80211_AMPDU_RX_START: start Rx aggregation
-+ * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
-+ */
-+enum ieee80211_ampdu_mlme_action {
-+	IEEE80211_AMPDU_RX_START,
-+	IEEE80211_AMPDU_RX_STOP,
-+};
- 
- /**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-@@ -1043,6 +1055,12 @@ enum ieee80211_erp_change_flags {
-  *	used to determine whether to reply to Probe Requests.
-  *
-  * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
-+ *
-+ * @ampdu_action: Perform a certain A-MPDU action
-+ * 	The RA/TID combination determines the destination and TID we want
-+ * 	the ampdu action to be performed for. The action is defined through
-+ * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
-+ * 	is the first frame we expect to perform the action on.
-  */
- struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
-@@ -1089,6 +1107,9 @@ struct ieee80211_ops {
- 			     struct ieee80211_tx_control *control);
- 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
- 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
-+	int (*ampdu_action)(struct ieee80211_hw *hw,
-+			    enum ieee80211_ampdu_mlme_action action,
-+			    const u8 *ra, u16 tid, u16 ssn);
- };
- 
- /**
+-	if (adapter->cur_cmd->cmdflags & CMD_F_HOSTCMD) {
+-		/* Copy the response back to response buffer */
+-		memcpy(adapter->cur_cmd->pdata_buf, resp,
+-		       le16_to_cpu(resp->size));
+-		adapter->cur_cmd->cmdflags &= ~CMD_F_HOSTCMD;
+-	}
+-
+ 	/* If the command is not successful, cleanup and return failure */
+ 	if ((result != 0 || !(respcmd & 0x8000))) {
+ 		lbs_deb_host("CMD_RESP: error 0x%04x in command reply 0x%04x\n",
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index c029149..217ae12 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -75,7 +75,6 @@ struct cmd_ctrl_node {
+ 	void *pdata_buf;
+ 	/*command data */
+ 	u8 *bufvirtualaddr;
+-	u16 cmdflags;
+ 	/* wait queue */
+ 	u16 cmdwaitqwoken;
+ 	wait_queue_head_t cmdwait_q;
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.3.4
 
