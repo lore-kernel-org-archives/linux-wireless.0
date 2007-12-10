@@ -1,107 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49266 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761598AbXLPW6k (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50996 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695AbXLJRMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:40 -0500
-Subject: [PATCH 107/48] libertas: kill cleanup_cmdnode()
-From: David Woodhouse <dwmw2@infradead.org>
+	Mon, 10 Dec 2007 12:12:25 -0500
 In-Reply-To: <libertas-12345@shinybook.infradead.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-Message-Id: <E1J42S3-00038Q-I7@shinybook.infradead.org> (sfid-20071216_232738_547524_D3A70181)
-Date: Sun, 16 Dec 2007 17:59:15 -0500
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 33/48] libertas: kill internal tx queue for PS mode
+Message-Id: <E1J1kpc-0006mm-SU@shinybook.infradead.org> (sfid-20071210_171230_223437_A51100B9)
+Date: Mon, 10 Dec 2007 10:46:08 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 15 Dec 2007 02:02:56 -0500
+Date: Sun, 9 Dec 2007 12:37:27 -0500
 
-Move the wakeup into lbs_complete_command(), and leave the other bits
-in __lbs_cleanup_and_insert_cmd() which was the only caller now anyway.
+It was buggy as hell anyway, since it was just spewing packets at the
+device when it wasn't necessarily ready for them (in the USB case, while
+the URB was still busy).
 
-There are two remaining direct callers of lbs_cleanup_and_insert_cmd(),
-and they are both fine without the wakeup.
+We could probably do with a better way of flushing packets to the device
+_immediately_, before we stick it back into sleep mode. But we can no
+longer just dequeue packets directly, it seems.
 
 Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- drivers/net/wireless/libertas/cmd.c |   39 +++++++++++++++-------------------
- 1 files changed, 17 insertions(+), 22 deletions(-)
+ drivers/net/wireless/libertas/decl.h |    2 -
+ drivers/net/wireless/libertas/dev.h  |    5 ----
+ drivers/net/wireless/libertas/main.c |    6 -----
+ drivers/net/wireless/libertas/tx.c   |   40 ++-------------------------------
+ 4 files changed, 3 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index fd321dd..4c0bd9f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -13,7 +13,6 @@
- #include "wext.h"
- #include "cmd.h"
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index e255b19..b094514 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -62,8 +62,6 @@ void lbs_ps_sleep(struct lbs_private *priv, int wait_option);
+ void lbs_ps_confirm_sleep(struct lbs_private *priv, u16 psmode);
+ void lbs_ps_wakeup(struct lbs_private *priv, int wait_option);
  
--static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode);
- static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
- static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
- 		    struct cmd_ctrl_node *ptempnode,
-@@ -1274,14 +1273,22 @@ static int lbs_cmd_mac_control(struct lbs_private *priv,
-  *  after cleans it. Requires priv->driver_lock held.
-  */
- static void __lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
--					 struct cmd_ctrl_node *ptempcmd)
-+					 struct cmd_ctrl_node *cmdnode)
- {
-+	lbs_deb_enter(LBS_DEB_HOST);
+-void lbs_tx_runqueue(struct lbs_private *priv);
+-
+ struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
+ 	struct lbs_private *priv,
+ 	u8 band,
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 21b0d38..a9c3adc 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -197,11 +197,6 @@ struct lbs_private {
+ 	/** Timers */
+ 	struct timer_list command_timer;
  
--	if (!ptempcmd)
--		return;
-+	if (!cmdnode)
-+		goto out;
+-	/* TX queue used in PS mode */
+-	spinlock_t txqueue_lock;
+-	struct sk_buff *tx_queue_ps[NR_TX_QUEUE];
+-	unsigned int tx_queue_idx;
+-
+ 	u8 hisregcpy;
  
--	cleanup_cmdnode(ptempcmd);
--	list_add_tail(&ptempcmd->list, &priv->cmdfreeq);
-+	cmdnode->pdata_buf = NULL;
-+	cmdnode->callback = NULL;
-+	cmdnode->callback_arg = 0;
-+
-+	memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
-+
-+	list_add_tail(&cmdnode->list, &priv->cmdfreeq);
-+ out:
-+	lbs_deb_leave(LBS_DEB_HOST);
+ 	/** current ssid/bssid related parameters*/
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 2ff5f1b..c638995 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -914,8 +914,6 @@ static int lbs_thread(void *data)
+ 		 */
+ 		if (!list_empty(&priv->cmdpendingq))
+ 			wake_up_all(&priv->cmd_pending);
+-
+-		lbs_tx_runqueue(priv);
+ 	}
+ 
+ 	del_timer(&priv->command_timer);
+@@ -1072,10 +1070,6 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 
+ 	mutex_init(&priv->lock);
+ 
+-	memset(&priv->tx_queue_ps, 0, NR_TX_QUEUE*sizeof(struct sk_buff*));
+-	priv->tx_queue_idx = 0;
+-	spin_lock_init(&priv->txqueue_lock);
+-
+ 	setup_timer(&priv->command_timer, command_timer_fn,
+ 	            (unsigned long)priv);
+ 
+diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+index 4cb39d3..749535e 100644
+--- a/drivers/net/wireless/libertas/tx.c
++++ b/drivers/net/wireless/libertas/tx.c
+@@ -164,41 +164,6 @@ done:
  }
  
- static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
-@@ -1299,6 +1306,10 @@ void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
- {
- 	if (cmd == priv->cur_cmd)
- 		priv->cur_cmd_retcode = result;
-+
-+	cmd->cmdwaitqwoken = 1;
-+	wake_up_interruptible(&cmd->cmdwait_q);
-+
- 	__lbs_cleanup_and_insert_cmd(priv, cmd);
- 	priv->cur_cmd = NULL;
- }
-@@ -1771,22 +1782,6 @@ static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv)
-  *  @param ptempnode	A pointer to cmdCtrlNode structure
-  *  @return 		n/a
-  */
--static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
+ 
+-void lbs_tx_runqueue(struct lbs_private *priv)
 -{
--	lbs_deb_enter(LBS_DEB_HOST);
+-	int i;
 -
--	if (!cmdnode)
--		return;
--	cmdnode->cmdwaitqwoken = 1;
--	wake_up_interruptible(&cmdnode->cmdwait_q);
--	cmdnode->pdata_buf = NULL;
--	cmdnode->callback = NULL;
--	cmdnode->callback_arg = 0;
--
--	memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
--
--	lbs_deb_leave(LBS_DEB_HOST);
+-	spin_lock(&priv->txqueue_lock);
+-	for (i = 0; i < priv->tx_queue_idx; i++) {
+-		struct sk_buff *skb = priv->tx_queue_ps[i];
+-		spin_unlock(&priv->txqueue_lock);
+-		SendSinglePacket(priv, skb);
+-		spin_lock(&priv->txqueue_lock);
+-	}
+-	priv->tx_queue_idx = 0;
+-	spin_unlock(&priv->txqueue_lock);
 -}
- 
+-
+-static void lbs_tx_queue(struct lbs_private *priv, struct sk_buff *skb)
+-{
+-
+-	spin_lock(&priv->txqueue_lock);
+-
+-	WARN_ON(priv->tx_queue_idx >= NR_TX_QUEUE);
+-	priv->tx_queue_ps[priv->tx_queue_idx++] = skb;
+-	if (priv->tx_queue_idx == NR_TX_QUEUE) {
+-		netif_stop_queue(priv->dev);
+-		if (priv->mesh_dev)
+-			netif_stop_queue(priv->mesh_dev);
+-	} else {
+-		netif_start_queue(priv->dev);
+-		if (priv->mesh_dev)
+-			netif_start_queue(priv->mesh_dev);
+-	}
+-
+-	spin_unlock(&priv->txqueue_lock);
+-}
+-
  /**
-  *  @brief This function initializes the command node.
+  *  @brief This function checks the conditions and sends packet to IF
+  *  layer if everything is ok.
+@@ -221,8 +186,9 @@ int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
+ 
+ 	if ((priv->psstate == PS_STATE_SLEEP) ||
+ 	    (priv->psstate == PS_STATE_PRE_SLEEP)) {
+-		lbs_tx_queue(priv, skb);
+-		return ret;
++		lbs_pr_alert("TX error: packet xmit in %ssleep mode\n",
++			     priv->psstate == PS_STATE_SLEEP?"":"pre-");
++		goto done;
+ 	}
+ 
+ 	ret = SendSinglePacket(priv, skb);
 -- 
 1.5.3.4
 
