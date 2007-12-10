@@ -1,151 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43808 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbXLWR2z (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45590 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394AbXLJRV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 12:28:55 -0500
-Subject: Re: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <c85cb4470712230815u158cd19fjc1ff58a7e2c83fbc@mail.gmail.com> (sfid-20071223_161528_053408_3DC1FC3D)
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
-	 <1198145667.16241.23.camel@johannes.berg>
-	 <c85cb4470712200432w3640359dje70f57c86be3497a@mail.gmail.com>
-	 <1198154463.16241.46.camel@johannes.berg>
-	 <c85cb4470712230815u158cd19fjc1ff58a7e2c83fbc@mail.gmail.com>
-	 (sfid-20071223_161528_053408_3DC1FC3D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NCE/X9uDiQrGxoFqrGsN"
-Date: Sun, 23 Dec 2007 18:28:40 +0100
-Message-Id: <1198430920.4541.11.camel@johannes.berg> (sfid-20071223_172901_920891_E8BBB595)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 12:21:58 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 31/48] libertas: cope with device which already has firmware loaded
+Message-Id: <E1J1kpa-0006mc-OP@shinybook.infradead.org> (sfid-20071210_172200_889787_D1E9B02D)
+Date: Mon, 10 Dec 2007 10:46:06 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Sat, 8 Dec 2007 23:49:06 +0000
 
---=-NCE/X9uDiQrGxoFqrGsN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |   35 ++++++++++++++++++++-----------
+ drivers/net/wireless/libertas/if_usb.h |    2 +-
+ 2 files changed, 23 insertions(+), 14 deletions(-)
 
-Hi Ron,
-
-> Johannes, i re-inspected the code to implement your solution, and it
-> is not straight forward as you have seen it.
-
-Ok.
-
-> what we do now in __ieee80211_rx is:
-> - invoke monitor
-> - fill in txrx_data
-> - invoke michael_mic_report (if needed)
-> - call pre-handlers of QoS that change txrx_data as well.
-> - call pre-handlers of statistics that change txrx_data
-> - call reorder buffer prehandler
->     - saving sk_buff to reordering buffer.
->     - if we can, send sk_buffs back to __ieee80211_rx, that will
-> properly fill txrx_data
-
-Yeah, sounds like it. Some things like monitor may discard the frame.
-
-> now, in order to proceed according to your implementation, as i do not
-> call again  __ieee80211, and do not get the txrx_data restored,  i
-> will either:
-> 1 - have to fill in txrx_data inside reordering function, which will
-> end in massive code duplication, and i don't like this solution
-> 2 - keep the whole txrx_data and not only the sk_buff inside
-> reordering buffer, which will end up in allocation of the txrx_data
-> struct for every incoming frame, or in a big maximum possible size of
-> 64 pre-allocated array of txrx_data per tid - this is either waste of
-> cpu or memory
-
-Hmm, good points. Didn't really think about it but yeah, txrx data is on
-the stack there.
-
-> so, what do you think about next solution:
->=20
-> 1 - move the rxtx_data indifferent functionality out of __ieee80211_rx
-> (monitor, load and reordering) to, lets say __ieee80211_rx_pre_handle.
-
-Sounds fine.
-
-> 2 - __ieee80211_rx_pre_handle will be called for each frame. either
-> directly or through tasklet.
-
-Hm, ok, we should keep __ieee80211_rx() as the entry point though so we
-don't have to change drivers.
-
-> 3 - in regular state, proceed to __ieee80211_rx immediately, in
-> reorder state loop over __ieee80211_rx for each already ordered frame.
-
-Ah ok.
-
-> 4 - I thought to eliminate __ieee80211_invoke_rx_handlers(local,
-> local->rx_pre_handlers), as QoS will be the only one to inhabit it
-> now, so it may move to ieee80211_invoke_rx_handlers(local,
-> local->rx_handlers)
-
-I don't think it can move there because the rx handlers can potentially
-be invoked multiple times. Will that work? In any case, I'm not against
-totally dissolving the pre-handlers into function calls. Makes for
-better code generation anyway since gcc will be able to optimise across
-the functions when inlining them (since they'll all have only one user)
-
-> sorry for the long mail, but i wanted to write my full opinion about this=
- issue.
-
-Not at all, thanks for doing that.
-
-I think we should probably keep __iee80211_rx() as the entry point for
-the tasklet or the drivers.
-
-So I'd see the flow as:
-
-tasklet/driver
-__ieee80211_rx()
-	__rx_pre_monitor()
-	__rx_pre_load()
-	__rx_pre_qos()
-
-	if (agg)
-		__rx_handle_reorder()
-	else
-		__rx_handle_packet()
-
-and __rx_handle_reorder() calls __rx_handle_packet() which does all the
-rest, I guess.
-
-Does that sound sane to you? You're in a better position to judge. I
-think this is basically what you wanted, just keeping __ieee80211_rx()
-as the main entry point.
-
-Or maybe I'm totally off. Can you explain again what we need to do for
-such a reordered frame?
-
-johannes
-
---=-NCE/X9uDiQrGxoFqrGsN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR26ax6Vg1VMiehFYAQLLSQ/+L4chWj628hK7yKq2CZ0vL5f9DW9K1Kw6
-RFeEWCDPgIEiZ3K+SGQMmsEOowUItp1xkJqqBNGvOaoTM0SEKRpaOzTXbr05Kh49
-2n7Vto3wIodkoDW4l3UkPLm0YEXa4vMTPMQ2IeSWxb+ZdfcVZh63z7nJvuveQ/IW
-1Kw+WY6nCVabPQHKBWwAIAOWpdiFvG02v1GUJZ7oN616G3J0VFOYH3fTwuFnE4H7
-8jFLBBitTgPqp9RjfDe7jAO9cfajGXTj2cHYc8lt+MIMbmdTokEe2jPd02Q8Vaj1
-XjxPQw2k2WK4W/Z6eNzAJcmgLPz7AMnhkTvU85RznjBV0CDo1+O8HPUU/3Z0owwh
-xWn/Ngffq6ZgDBcGC0aoRKChloNFEOuSMNzSNl95bPDVG1BXsLpXmodJcMaPz5a/
-LdMbOwlzQtVc2ksHYhYqG2QYPp8fE9hFF2FOR2cwpdc/17GAH+m9M3L6vrmGMvf8
-J/yjzgNrV8jI875dfP0CerWB0FV/JMZTa9d8vofsMZxYDG4nwdsJiGkhqOCM+ae6
-sCNMi/mbMXQLlBVvZ7y50A1q4aiK4aiEh/BGnOGsn8lS5OANGKEit6//ugztsyPa
-VXPVUhG04vqZVntPUfSZFxvgAbsiOlZWdie3yCfshmXj25OYzunjCJQEimy29G/I
-qAE7th6+fUk=
-=nBBt
------END PGP SIGNATURE-----
-
---=-NCE/X9uDiQrGxoFqrGsN--
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 87bed4a..141d185 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -374,20 +374,23 @@ static int if_prog_firmware(struct usb_card_rec *cardp)
+ 
+ static int if_usb_reset_device(struct usb_card_rec *cardp)
+ {
++	struct cmd_ds_command *cmd = (void *)&cardp->bulk_out_buffer[4];
+ 	int ret;
+-	struct lbs_private *priv = cardp->priv;
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+ 
+-	/* Try a USB port reset first, if that fails send the reset
+-	 * command to the firmware.
+-	 */
++	*(__le32 *)cardp->bulk_out_buffer = cpu_to_le32(CMD_TYPE_REQUEST);
++
++	cmd->command = cpu_to_le16(CMD_802_11_RESET);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_reset) + S_DS_GEN);
++	cmd->result = cpu_to_le16(0);
++	cmd->seqnum = cpu_to_le16(0x5a5a);
++	cmd->params.reset.action = cpu_to_le16(CMD_ACT_HALT);
++	usb_tx_block(cardp, cardp->bulk_out_buffer, 4 + S_DS_GEN + sizeof(struct cmd_ds_802_11_reset));
++
++	msleep(10);
+ 	ret = usb_reset_device(cardp->udev);
+-	if (!ret && priv) {
+-		msleep(10);
+-		ret = lbs_reset_device(priv);
+-		msleep(10);
+-	}
++	msleep(10);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_USB, "ret %d", ret);
+ 
+@@ -508,9 +511,15 @@ static void if_usb_receive_fwload(struct urb *urb)
+ 			return;
+ 		}
+ 		if (bootcmdresp.u32magicnumber != cpu_to_le32(BOOT_CMD_MAGIC_NUMBER)) {
+-			lbs_pr_info(
+-				"boot cmd response wrong magic number (0x%x)\n",
+-				le32_to_cpu(bootcmdresp.u32magicnumber));
++			if (bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_REQUEST) ||
++			    bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_DATA) ||
++			    bootcmdresp.u32magicnumber == cpu_to_le32(CMD_TYPE_INDICATION)) {
++				lbs_pr_info("Firmware already seems alive; resetting\n");
++				cardp->bootcmdresp = -1;
++			} else {
++				lbs_pr_info("boot cmd response wrong magic number (0x%x)\n",
++					    le32_to_cpu(bootcmdresp.u32magicnumber));
++			}
+ 		} else if (bootcmdresp.u8cmd_tag != BOOT_CMD_FW_BY_USB) {
+ 			lbs_pr_info(
+ 				"boot cmd response cmd_tag error (%d)\n",
+@@ -883,7 +892,7 @@ restart:
+ 		} while (cardp->bootcmdresp == 0 && j < 10);
+ 	} while (cardp->bootcmdresp == 0 && i < 5);
+ 
+-	if (cardp->bootcmdresp == 0) {
++	if (cardp->bootcmdresp <= 0) {
+ 		if (--reset_count >= 0) {
+ 			if_usb_reset_device(cardp);
+ 			goto restart;
+diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
+index f53ddb2..940a369 100644
+--- a/drivers/net/wireless/libertas/if_usb.h
++++ b/drivers/net/wireless/libertas/if_usb.h
+@@ -70,7 +70,7 @@ struct usb_card_rec {
+ 
+ 	u8 rx_urb_recall;
+ 
+-	u8 bootcmdresp;
++	s8 bootcmdresp;
+ };
+ 
+ /** fwheader */
+-- 
+1.5.3.4
 
