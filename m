@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:61027 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754548AbXLFTCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 14:02:35 -0500
-Date: Thu, 6 Dec 2007 11:01:56 -0800
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] fixing the ap_scan and hidden SSID mess
-Message-ID: <20071206190156.GA5237@bougret.hpl.hp.com> (sfid-20071206_190345_971903_00CDD3C2)
-Reply-To: jt@hpl.hp.com
-References: <20071205221119.GA28457@bougret.hpl.hp.com> <1196894672.14901.5.camel@localhost.localdomain> <20071205230507.GA28902@bougret.hpl.hp.com> <1196938955.3980.23.camel@localhost.localdomain>
+Received: from an-out-0708.google.com ([209.85.132.244]:19456 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509AbXLJJav (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 04:30:51 -0500
+Received: by an-out-0708.google.com with SMTP id d31so372477and
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 01:30:50 -0800 (PST)
+Message-ID: <475D0747.7010701@gmail.com> (sfid-20071210_093055_469377_DC5998F7)
+Date: Mon, 10 Dec 2007 10:30:47 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1196938955.3980.23.camel@localhost.localdomain>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Bruno Randolf <bruno@thinktube.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
+Subject: Re: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon,
+ reset
+References: <200712101822.43487.bruno@thinktube.com> <1197278831-17030-1-git-send-email-bruno@thinktube.com>
+In-Reply-To: <1197278831-17030-1-git-send-email-bruno@thinktube.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 06, 2007 at 06:02:35AM -0500, Dan Williams wrote:
+On 12/10/2007 10:27 AM, Bruno Randolf wrote:
+ > 'registers' prints the name and value of some registers. this should be adapted
+> to what we actually need later and is supposed to replace the hwdump facility i
+> removed in my earlier debugging changes.
 > 
-> It's a problem for backporting this fix to older kernels that are not
-> 2.6.25.
-
-	I think backporting would be a non starter, only bug fixes are
-suppossed to be backported. For out-of-tree driver, a #ifdef will do
-the trick trivially.
-
-> So is the ANY_SSID_SCAN thing different from just calling SIOCSIWSCAN
-> _without_ any options?  I was under the impression that just calling
-> SIWSCAN would scan for all SSIDs.
-
-	You are right. Actually, if you stuff a empty essid in
-SIOCSIWSCAN, I doubt it would work.
-	The purpose of the flag is different : identify audited from
-non audited drivers.
-
-> I've actually thought about your proposal, and decided that you're
-> right.  I'll post another patch for more comments.
+> 'tsf' prints the current HW TSF. writing "reset" into the file will reset the
+> TSF.
 > 
-> dan
+> 'beacon' shows beacon relevant registers.  it is good for watching the beacon
+> timers with something like "watch -n0 cat /dbg/ath5k/phy0/beacon". writing
+> "enable" into the file will try to enable beacons by setting the flag
+> AR5K_BEACON_ENABLE, "disable" will disable that bit.
+> 
+> 'reset' can be used to trigger a HW reset, by writing "reset" into it.
+> 
+> Changes-licensed-under: GPL
+> 
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
 
-	Regards,
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
 
-	Jean
+> ---
+>  drivers/net/wireless/ath5k/debug.c |  269 ++++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath5k/debug.h |    4 +
+>  2 files changed, 273 insertions(+), 0 deletions(-)
