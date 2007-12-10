@@ -1,64 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45294 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753932AbXL2QZy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 11:25:54 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: Strange mac80211 oops
-Date: Sat, 29 Dec 2007 17:24:23 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <200712242237.28913.mb@bu3sch.de> <47764C5A.7060109@gentoo.org> <1198936128.4172.41.camel@johannes.berg>
-In-Reply-To: <1198936128.4172.41.camel@johannes.berg>
-MIME-Version: 1.0
-Message-Id: <200712291724.23726.mb@bu3sch.de> (sfid-20071229_162558_444791_97F21B69)
-Content-Type: text/plain;
-  charset="utf-8"
+Received: from mail.gmx.net ([213.165.64.20]:38300 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750971AbXLJG2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 01:28:05 -0500
+Subject: Re: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening
+	factor
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20071210032811.5cea4909@morte>
+References: <20071209211547.2d7fca32@morte> <20071209212133.43030d03@morte>
+	 <1197239361.7543.17.camel@localhost> <20071210003120.0078db1d@morte>
+	 <1197244416.7543.27.camel@localhost>  <20071210032811.5cea4909@morte>
+Content-Type: text/plain
+Date: Mon, 10 Dec 2007 07:28:01 +0100
+Message-Id: <1197268081.7490.10.camel@localhost> (sfid-20071210_062822_223084_1FC0B7D8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes RX packet alignment issues in the zd1211rw driver.
-This is based on a patch by Johannes Berg.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Mon, 2007-12-10 at 03:28 +0100, Stefano Brivio wrote:
+> This patch introduces a PID sharpening factor for faster response after
+> association and low activity events.
+> 
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> Cc: Mattias Nissler <mattias.nissler@gmx.de>
+> 
+> ---
+> 
+> Ok, this isn't a no-op anymore. :)
+> 
+> ---
+> 
+> Index: wireless-2.6/net/mac80211/rc80211_pid.c
+> ===================================================================
+> --- wireless-2.6.orig/net/mac80211/rc80211_pid.c
+> +++ wireless-2.6/net/mac80211/rc80211_pid.c
+> @@ -23,13 +23,16 @@
+>   *
+>   * The controller basically computes the following:
+>   *
+> - * adj = CP * err + CI * err_avg + CD * (err - last_err)
+> + * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
+>   *
+>   * where
+>   * 	adj	adjustment value that is used to switch TX rate (see below)
+>   * 	err	current error: target vs. current failed frames percentage
+>   * 	last_err	last error
+>   * 	err_avg	average (i.e. poor man's integral) of recent errors
+> + *	sharpening	non-zero when fast response is needed (i.e. right after
+> + *			association or no frames sent for a long time), heading
+> + * 			to zero over time
+>   * 	CP	Proportional coefficient
+>   * 	CI	Integral coefficient
+>   * 	CD	Derivative coefficient
+> @@ -65,6 +68,11 @@
+>  #define RC_PID_SMOOTHING_SHIFT 3
+>  #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
+>  
+> +/* Sharpening factor (used for D part of PID controller) */
+> +#define RATE_CONTROL_SHARPENING_SHIFT 2
+> +#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
+> +#define RATE_CONTROL_SHARPENING_DURATION 1
+> +
+>  /* Fixed point arithmetic shifting amount. */
+>  #define RC_PID_ARITH_SHIFT 8
+>  
+> @@ -131,8 +139,11 @@ struct rc_pid_sta_info {
+>  	 */
+>  	s32 err_avg_sc;
+>  
+> -	/* Last framed failes percentage sample */
+> +	/* Last framed failes percentage sample. */
+>  	u32 last_pf;
+> +
+> +	/* Sharpening needed. */
+> +	u8 sharp_cnt;
+>  };
+>  
+>  /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
+> @@ -282,19 +293,19 @@ static void rate_control_pid_sample(stru
+>  
+>  	mode = local->oper_hw_mode;
+>  	spinfo = sta->rate_ctrl_priv;
+> +
+> +	/* In case nothing happened during the previous control interval, turn
+> +	 * on the sharpening factor. */
+> +	if (jiffies - spinfo->last_sample > RC_PID_INTERVAL)
+> +		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
+> +
+>  	spinfo->last_sample = jiffies;
+>  
+> -	/* If no frames were transmitted, we assume the old sample is
+> -	 * still a good measurement and copy it. */
+> -	if (spinfo->tx_num_xmit == 0)
+> -		pf = spinfo->last_pf;
 
-Index: wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 17:14:41.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 17:15:00.000000000 +0100
-@@ -623,6 +623,8 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
- 	const struct rx_status *status;
- 	struct sk_buff *skb;
- 	int bad_frame = 0;
-+	u16 fc;
-+	bool is_qos, is_4addr, need_padding;
- 
- 	if (length < ZD_PLCP_HEADER_SIZE + 10 /* IEEE80211_1ADDR_LEN */ +
- 	             FCS_LEN + sizeof(struct rx_status))
-@@ -674,9 +676,22 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
- 			&& !mac->pass_ctrl)
- 		return 0;
- 
--	skb = dev_alloc_skb(length);
-+	fc = le16_to_cpu(*((__le16 *) buffer));
-+
-+	is_qos = ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) &&
-+		 ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_QOS_DATA);
-+	is_4addr = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
-+		   (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
-+	need_padding = is_qos ^ is_4addr;
-+
-+	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
- 	if (skb == NULL)
- 		return -ENOMEM;
-+	if (need_padding) {
-+		/* Make sure the the payload data is 4 byte aligned. */
-+		skb_reserve(skb, 2);
-+	}
-+
- 	memcpy(skb_put(skb, length), buffer, length);
- 
- 	ieee80211_rx_irqsafe(hw, skb, &stats);
+Please don't remove this check. We can never know when anybody starts
+calling rate_control_pid_sample() without packets transmitted. Then it's
+good to have it, else we divide by zero in the next line.
+
+> -	else {
+> -		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
+> -		pf <<= RC_PID_ARITH_SHIFT;
+> +	pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
+> +	pf <<= RC_PID_ARITH_SHIFT;
+>  
+> -		spinfo->tx_num_xmit = 0;
+> -		spinfo->tx_num_failed = 0;
+> -	}
+> +	spinfo->tx_num_xmit = 0;
+> +	spinfo->tx_num_failed = 0;
+>  
+>  	/* If we just switched rate, update the rate behaviour info. */
+>  	if (pinfo->oldrate != sta->txrate) {
+> @@ -321,8 +332,11 @@ static void rate_control_pid_sample(stru
+>  	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
+>  	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
+>  
+> -	err_der = pf - spinfo->last_pf;
+> +	err_der = pf - spinfo->last_pf
+> +		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
+>  	spinfo->last_pf = pf;
+> +	if (spinfo->sharp_cnt)
+> +			spinfo->sharp_cnt--;
+>  
+>  	/* Compute the controller output. */
+>  	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
+> 
+> 
+
