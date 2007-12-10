@@ -1,74 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:51176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470AbXLFJjc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 04:39:32 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so647308ugc
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 01:39:30 -0800 (PST)
-Date: Thu, 6 Dec 2007 12:39:23 +0300
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-To: Thomas Tuttle <linux-kernel@ttuttle.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	LWML <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwlwifi3945/4965 - fix rate control algo reference leak
-Message-ID: <20071206093922.GA7356@cvg> (sfid-20071206_093936_404692_EF344A66)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mfe1.polimi.it ([131.175.12.23]:51732 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751509AbXLJCam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 21:30:42 -0500
+Date: Mon, 10 Dec 2007 03:24:21 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC/T][PATCH v2 1/3] rc80211-pid: introduce rate behaviour
+ learning algorithm
+Message-ID: <20071210032421.7017c681@morte> (sfid-20071210_023047_158604_D190B88C)
+In-Reply-To: <20071210002158.654ed960@morte>
+References: <20071209211547.2d7fca32@morte>
+	<20071209211931.26ff42fa@morte>
+	<1197239150.7543.13.camel@localhost>
+	<20071210002158.654ed960@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Thomas,
+This patch introduces a learning algorithm in order for the PID controller
+to learn how to map adjustment values to rates. This is better described in
+code comments.
 
-could you test this one please.
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>
 
 ---
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-Subject: [PATCH] iwlwifi3945/4965 - fix rate control algo reference leak
 
-This patch does fix rate control algo reference leak in case
-if network device has been failed to register. In this case
-special flag priv->mac80211_registered is not set and the
-rate algo reference is not freeing on module unload. That leads
-to OOPs in further ieee80211 rate register/unregister procedure
-(by any callee).
+Mattias,
+this series addresses some of your concerns and some stupid bugs I just
+noticed about. Thank you for your comments.
 
-It should fix the bug #9470
-
-	http://bugzilla.kernel.org/show_bug.cgi?id=9470
-
-Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 465da4f..c222bec 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6167,6 +6167,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		mutex_lock(&priv->mutex);
+Index: wireless-2.6/net/mac80211/rc80211_pid.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid.c
++++ wireless-2.6/net/mac80211/rc80211_pid.c
+@@ -2,6 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
++ * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -39,12 +40,18 @@
+  * an actual sliding window. Advantage is that we don't need to keep an array of
+  * the last N error values and computation is easier.
+  *
+- * Once we have the adj value, we need to map it to a TX rate to be selected.
+- * For now, we depend on the rates to be ordered in a way such that more robust
+- * rates (i.e. such that exhibit a lower framed failed percentage) come first.
+- * E.g. for the 802.11b/g case, we first have the b rates in ascending order,
+- * then the g rates. The adj simply decides the index of the TX rate in the list
+- * to switch to (relative to the current TX rate entry).
++ * Once we have the adj value, we map it to a rate by means of a learning
++ * algorithm. This algorithm keeps the state of the percentual failed frames
++ * difference between rates. The behaviour of the lowest available rate is kept
++ * as a reference value, and every time we switch between two rates, we compute
++ * the difference between the failed frames each rate exhibited. By doing so,
++ * we compare behaviours which different rates exhibited in adjacent timeslices,
++ * thus the comparison is minimally affected by external conditions. This
++ * difference gets propagated to the whole set of measurements, so that the
++ * reference is always the same. Periodically, we normalize this set so that
++ * recent events weigh the most. By comparing the adj value with this set, we
++ * avoid pejorative switches to lower rates and allow for switches to higher
++ * rates if they behaved well.
+  *
+  * Note that for the computations we use a fixed-point representation to avoid
+  * floating point arithmetic. Hence, all values are shifted left by
+@@ -78,6 +85,16 @@
+  */
+ #define RC_PID_TARGET_PF (20 << RC_PID_ARITH_SHIFT)
  
- 		if (rc) {
-+			iwl_rate_control_unregister(priv->hw);
- 			IWL_ERROR("Failed to register network "
- 				  "device (error %d)\n", rc);
- 			return;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9918780..9295755 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6523,6 +6523,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		mutex_lock(&priv->mutex);
++/* Rate behaviour normalization quantity over time. */
++#define RC_PID_NORM_OFFSET 3
++
++/* Push high rates right after loading. */
++#define RC_PID_FAST_START 0
++
++/* Arithmetic right shift for positive and negative values for ISO C. */
++#define RC_PID_DO_ARITH_RIGHT_SHIFT(x, y) \
++	(x) < 0 ? -((-(x))) >> (y) : (x) >> (y)
++
+ struct rc_pid_sta_info {
+ 	unsigned long last_change;
+ 	unsigned long last_sample;
+@@ -121,6 +138,18 @@ struct rc_pid_sta_info {
+ /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
+  * be tuned individually for each interface.
+  */
++struct rc_pid_rateinfo {
++
++	/* The rate index in ieee80211_hw_mode. */
++	int index;
++
++	/* Did we do any measurement on this rate? */
++	bool valid;
++
++	/* Comparison with the lowest rate. */
++	int diff;
++};
++
+ struct rc_pid_info {
  
- 		if (rc) {
-+			iwl_rate_control_unregister(priv->hw);
- 			IWL_ERROR("Failed to register network "
- 				  "device (error %d)\n", rc);
- 			return;
+ 	/* The failed frames percentage target. */
+@@ -130,15 +159,69 @@ struct rc_pid_info {
+ 	s32 coeff_p;
+ 	s32 coeff_i;
+ 	s32 coeff_d;
++
++	/* Rates information. */
++	struct rc_pid_rateinfo *rinfo;
++
++	/* Index of the last used rate. */
++	int oldrate;
+ };
+ 
++static inline int rate_control_pid_r_to_i(struct rc_pid_rateinfo *r, int rate,
++					  int l)
++{
++	int i;
++
++	for (i = 0; i < l; i++)
++		if (r[i].index == rate)
++			break;
++
++	return i;
++}
++
++/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
++ * a worse failed frames behaviour and we'll choose the highest rate whose
++ * failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the adjustment is within the ranges. Then,
++ * provide the new rate index. */
++static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
++					 int adj, int cur, int l)
++{
++	int i, j, k, tmp;
++
++	if (cur + adj < 0)
++		return 0;
++	if (cur + adj >= l)
++		return l - 1;
++
++	i = rate_control_pid_r_to_i(r, cur + adj, l);
++	if (unlikely(!r[i].valid))
++		return cur + adj;
++	j = rate_control_pid_r_to_i(r, cur, l);
++
++	if (adj < 0 && r[j].valid) {
++			tmp = i;
++			for (k = j; k >= i; k--)
++				if (r[k].valid && r[k].diff <= r[j].diff)
++					tmp = k;
++			return r[tmp].index;
++	} else if (adj > 0) {
++			tmp = i;
++			for (k = i + 1; k + i < l; k++)
++				if (r[k].valid && r[k].diff <= r[i].diff)
++					tmp = k;
++			return r[tmp].index;
++	}
++	return cur + adj;
++}
+ 
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+-					 struct sta_info *sta, int adj)
++					 struct sta_info *sta, int adj,
++					 struct rc_pid_rateinfo *rinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_hw_mode *mode;
+-	int newidx = sta->txrate + adj;
++	int newidx;
+ 	int maxrate;
+ 	int back = (adj > 0) ? 1 : -1;
+ 
+@@ -151,10 +234,8 @@ static void rate_control_pid_adjust_rate
+ 	mode = local->oper_hw_mode;
+ 	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
+ 
+-	if (newidx < 0)
+-		newidx = 0;
+-	else if (newidx >= mode->num_rates)
+-		newidx = mode->num_rates - 1;
++	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
++					       mode->num_rates);
+ 
+ 	while (newidx != sta->txrate) {
+ 		if (rate_supported(sta, mode, newidx) &&
+@@ -167,18 +248,39 @@ static void rate_control_pid_adjust_rate
+ 	}
+ }
+ 
++/* Normalize the failed frames per-rate differences. */
++static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
++{
++	int i;
++
++	if (r[0].diff > RC_PID_NORM_OFFSET)
++		r[0].diff -= RC_PID_NORM_OFFSET;
++	else if (r[0].diff < -RC_PID_NORM_OFFSET)
++		r[0].diff += RC_PID_NORM_OFFSET;
++	for (i = 0; i < l - 1; i++)
++		if (likely(r[i + 1].valid)) {
++			if (r[i + 1].diff > r[i].diff + RC_PID_NORM_OFFSET)
++				r[i + 1].diff -= RC_PID_NORM_OFFSET;
++			else if (r[i + 1].diff <= r[i].diff)
++				r[i + 1].diff += RC_PID_NORM_OFFSET;
++		}
++}
++
+ static void rate_control_pid_sample(struct rc_pid_info *pinfo,
+ 				    struct ieee80211_local *local,
+ 				    struct sta_info *sta)
+ {
+ 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
++	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
++	struct ieee80211_hw_mode *mode;
+ 	u32 pf;
+ 	s32 err_avg;
+ 	s32 err_prop;
+ 	s32 err_int;
+ 	s32 err_der;
+-	int adj;
++	int adj, i, j, tmp;
+ 
++	mode = local->oper_hw_mode;
+ 	spinfo = sta->rate_ctrl_priv;
+ 	spinfo->last_sample = jiffies;
+ 
+@@ -194,6 +296,24 @@ static void rate_control_pid_sample(stru
+ 		spinfo->tx_num_failed = 0;
+ 	}
+ 
++	/* If we just switched rate, update the rate behaviour info. */
++	if (pinfo->oldrate != sta->txrate) {
++
++		i = rate_control_pid_r_to_i(rinfo, pinfo->oldrate,
++					    mode->num_rates);
++		j = rate_control_pid_r_to_i(rinfo, sta->txrate,
++					    mode->num_rates);
++		rinfo[j].valid = 1;
++
++		tmp = (pf - spinfo->last_pf);
++		tmp = RC_PID_DO_ARITH_RIGHT_SHIFT(tmp, RC_PID_ARITH_SHIFT);
++
++		rinfo[j].diff = rinfo[i].diff + tmp;
++		rinfo[j].valid = 1;
++		pinfo->oldrate = sta->txrate;
++	}
++	rate_control_pid_normalize(rinfo, mode->num_rates);
++
+ 	/* Compute the proportional, integral and derivative errors. */
+ 	err_prop = RC_PID_TARGET_PF - pf;
+ 
+@@ -207,16 +327,11 @@ static void rate_control_pid_sample(stru
+ 	/* Compute the controller output. */
+ 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
+ 	      + err_der * pinfo->coeff_d);
+-
+-	/* We need to do an arithmetic right shift. ISO C says this is
+-	 * implementation defined for negative left operands. Hence, be
+-	 * careful to get it right, also for negative values. */
+-	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
+-			  adj >> (2 * RC_PID_ARITH_SHIFT);
++	adj = RC_PID_DO_ARITH_RIGHT_SHIFT(adj, 2 * RC_PID_ARITH_SHIFT);
+ 
+ 	/* Change rate. */
+ 	if (adj)
+-		rate_control_pid_adjust_rate(local, sta, adj);
++		rate_control_pid_adjust_rate(local, sta, adj, rinfo);
+ }
+ 
+ static void rate_control_pid_tx_status(void *priv, struct net_device *dev,
+@@ -315,13 +430,55 @@ static void rate_control_pid_rate_init(v
+ static void *rate_control_pid_alloc(struct ieee80211_local *local)
+ {
+ 	struct rc_pid_info *pinfo;
++	struct rc_pid_rateinfo *rinfo;
++	struct ieee80211_hw_mode *mode;
++	int i, j, tmp;
++	bool s;
+ 
+ 	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
++	if (!pinfo)
++		return NULL;
++
++	mode = local->oper_hw_mode;
++	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
++	if (!rinfo) {
++		kfree(pinfo);
++		return NULL;
++	}
++
++	/* Sort the rates. This is optimized for the most common case (i.e.
++	 * almost-sorted CCK+OFDM rates). */
++	for (i = 0; i < mode->num_rates; i++) {
++		rinfo[i].index = i;
++		if (RC_PID_FAST_START) {
++			rinfo[i].valid = 1;
++			rinfo[i].diff = 0;
++		} else
++			rinfo[i].valid = 0;
++	}
++	for (i = 1; i < mode->num_rates; i++) {
++		s = 0;
++		for (j = 0; j < mode->num_rates - i; j++)
++			if (unlikely(mode->rates[rinfo[j].index].rate >
++				     mode->rates[rinfo[j + 1].index].rate)) {
++				tmp = rinfo[j].index;
++				rinfo[j].index = rinfo[j + 1].index;
++				rinfo[j + 1].index = tmp;
++				s = 1;
++			}
++		if (!s)
++			break;
++	}
++
++	rinfo[0].diff = 0;
++	rinfo[0].valid = 1;
+ 
+ 	pinfo->target = RC_PID_TARGET_PF;
+ 	pinfo->coeff_p = RC_PID_COEFF_P;
+ 	pinfo->coeff_i = RC_PID_COEFF_I;
+ 	pinfo->coeff_d = RC_PID_COEFF_D;
++	pinfo->rinfo = rinfo;
++	pinfo->oldrate = 0;
+ 
+ 	return pinfo;
+ }
+@@ -330,6 +487,7 @@ static void *rate_control_pid_alloc(stru
+ static void rate_control_pid_free(void *priv)
+ {
+ 	struct rc_pid_info *pinfo = priv;
++	kfree(pinfo->rinfo);
+ 	kfree(pinfo);
+ }
+ 
+
+
 -- 
-1.5.3.5
-
+Ciao
+Stefano
