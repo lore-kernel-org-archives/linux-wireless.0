@@ -1,83 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56602 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393AbXLCLoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:44:37 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 08/34] iwlwifi: Move is_legacy() macro family from iwl-4965-hw.h to iwl-4965-rs.h
-Date: Mon,  3 Dec 2007 13:43:20 +0200
-Message-Id: <11966822301152-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114441_399244_2290C246)
-In-Reply-To: <11966822291143-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from web52904.mail.re2.yahoo.com ([206.190.49.14]:45298 "HELO
+	web52904.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752010AbXLJQkf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 11:40:35 -0500
+Date: Mon, 10 Dec 2007 16:40:34 +0000 (GMT)
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20071209143237.1e608d9f@laptopd505.fenrus.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Message-ID: <224362.84373.qm@web52904.mail.re2.yahoo.com> (sfid-20071210_164038_957013_1162D53D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+--- Arjan van de Ven <arjan@infradead.org> wrote:
+> > > I wonder if there's anything else in that area as well..
 
-Move is_legacy() macro family from iwl-4965-hw.h to iwl-4965-rs.h
+This is what /proc/iomem contains:
 
-These macros are for driver's rate scaling implementation, and are not
-related to hardware or uCode API values (moved from iwl-4965-hw.h).
+00000000-0009f7ff : System RAM
+0009f800-0009ffff : reserved
+000a0000-000bffff : Video RAM area
+000c0000-000cbfff : Video ROM
+000e4000-000effff : Adapter ROM
+000f0000-000fffff : System ROM
+00100000-17ffdbff : System RAM
+  00100000-002adf17 : Kernel code
+  002adf18-0034a263 : Kernel data
+17ffdc00-17fffbff : ACPI Tables
+17fffc00-17ffffff : ACPI Non-volatile Storage
+e8000000-e8000fff : 0000:00:0d.0
+  e8000000-e8000fff : ohci_hcd
+e8001000-e8001fff : 0000:00:0d.1
+  e8001000-e8001fff : ohci_hcd
+e8002000-e8002fff : 0000:00:0e.0
+e8003000-e80030ff : 0000:00:0d.2
+  e8003000-e80030ff : ehci_hcd
+e8100000-e81fffff : PCI Bus #01
+  e8100000-e810ffff : 0000:01:00.0
+    e8100000-e810ffff : radeonfb mmio
+  e8120000-e813ffff : 0000:01:00.0
+ec000000-efffffff : 0000:00:00.0
+f0000000-f7ffffff : PCI Bus #01
+  f0000000-f7ffffff : 0000:01:00.0
+    f0000000-f7ffffff : radeonfb framebuffer
+fffe7000-ffffffff : reserved
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |    7 -------
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h |    7 +++++++
- 2 files changed, 7 insertions(+), 7 deletions(-)
+# lspci -tvvv
+-[0000:00]-+-00.0  Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge
+           +-01.0-[0000:01]----00.0  ATI Technologies Inc Radeon RV100 QY [Radeon 7000/VE]
+           +-07.0  Intel Corporation 82371AB/EB/MB PIIX4 ISA
+           +-07.1  Intel Corporation 82371AB/EB/MB PIIX4 IDE
+           +-07.2  Intel Corporation 82371AB/EB/MB PIIX4 USB
+           +-07.3  Intel Corporation 82371AB/EB/MB PIIX4 ACPI
+           +-0d.0  NEC Corporation USB
+           +-0d.1  NEC Corporation USB
+           +-0d.2  NEC Corporation USB 2.0
+           +-0e.0  Netgear MA301 802.11b Wireless PCI Adapter
+           +-0f.0  Creative Labs SB Live! EMU10k1
+           \-0f.1  Creative Labs SB Live! Game Port
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index fbdc7f9..65c2ae4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -1036,13 +1036,6 @@ union iwl4965_tx_power_dual_stream {
- #define R_MCS_36M_DUAL_MSK 0x400
- #define R_MCS_48M_DUAL_MSK 0x800
- 
--#define is_legacy(tbl) (((tbl) == LQ_G) || ((tbl) == LQ_A))
--#define is_siso(tbl) (((tbl) == LQ_SISO))
--#define is_mimo(tbl) (((tbl) == LQ_MIMO))
--#define is_Ht(tbl) (is_siso(tbl) || is_mimo(tbl))
--#define is_a_band(tbl) (((tbl) == LQ_A))
--#define is_g_and(tbl) (((tbl) == LQ_G))
--
- /* Flow Handler Definitions */
- 
- /**********************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
-index 0c9552b..31e21e2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
-@@ -223,6 +223,13 @@ enum iwl4965_table_type {
- 	LQ_MAX,
- };
- 
-+#define is_legacy(tbl) (((tbl) == LQ_G) || ((tbl) == LQ_A))
-+#define is_siso(tbl) (((tbl) == LQ_SISO))
-+#define is_mimo(tbl) (((tbl) == LQ_MIMO))
-+#define is_Ht(tbl) (is_siso(tbl) || is_mimo(tbl))
-+#define is_a_band(tbl) (((tbl) == LQ_A))
-+#define is_g_and(tbl) (((tbl) == LQ_G))
-+
- /* 4965 has 2 antennas/chains for Tx (but 3 for Rx) */
- enum iwl4965_antenna_type {
- 	ANT_NONE,
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+The wireless PC card is device 0000:00:0e.0. And replacing ioremap() with ioremap_nocache() did
+not help either.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+This is the PCI entry for the host bridge:
+
+00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX Host bridge (rev 03)
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+
+FastB2B-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR-
+<PERR-
+        Latency: 64
+        Region 0: Memory at ec000000 (32-bit, prefetchable) [size=64M]
+        Capabilities: [a0] AGP version 1.0
+                Status: RQ=32 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64- HTrans- 64bit- FW- AGP3-
+Rate=x1,x2
+                Command: RQ=1 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW- Rate=x2
+
+One other thing I should mention is that this card works fine in an old P120/Zappa motherboard
+machine running Linux 2.4.34.
+
+Cheers,
+Chris
+
+
+
+      __________________________________________________________
+Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
+
