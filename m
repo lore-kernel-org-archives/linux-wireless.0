@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55172 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbXLXV5K (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45591 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407AbXLJRV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Dec 2007 16:57:10 -0500
-Subject: Re: Strange mac80211 oops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1198532736.4103.44.camel@johannes.berg> (sfid-20071224_214550_097878_F699D24B)
-References: <200712242237.28913.mb@bu3sch.de>
-	 <1198532736.4103.44.camel@johannes.berg>
-	 (sfid-20071224_214550_097878_F699D24B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zCWsqE1ra63Jig6yHSfy"
-Date: Mon, 24 Dec 2007 22:57:03 +0100
-Message-Id: <1198533423.4103.46.camel@johannes.berg> (sfid-20071224_215715_804934_D07F8E7D)
-Mime-Version: 1.0
+	Mon, 10 Dec 2007 12:21:59 -0500
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH 10/48] libertas: Move SET_BOOT2_VER command to if_usb where it belongs
+Message-Id: <E1J1kpE-0006kv-JZ@shinybook.infradead.org> (sfid-20071210_172201_689715_4125EB87)
+Date: Mon, 10 Dec 2007 10:45:44 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Thu, 6 Dec 2007 14:41:08 +0000
 
---=-zCWsqE1ra63Jig6yHSfy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is meaningless for non-USB devices and unimplemented in their
+firmware. It's somewhat dubious for USB devices too, but that's a
+different story.
 
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |    5 +++++
+ drivers/net/wireless/libertas/main.c   |    4 ----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-On Mon, 2007-12-24 at 22:45 +0100, Johannes Berg wrote:
-> > [   98.415423] ------------[ cut here ]------------
-> > [   98.415627] Badness at e221c924 [verbose debug info unavailable]
->=20
-> > [   98.416905] NIP [e221c924] __ieee80211_rx+0x48c/0xd44 [mac80211]
->=20
-> ieee80211_rx_monitor() is inlined into __ieee80211_rx() and that +0x48c
-> is quite a high number, so I'm guessing it's this:
->=20
->         /*
->          * Drivers are required to align the payload data to a four-byte
->          * boundary, so the last two bits of the address where it starts
->          * may not be set. The header is required to be directly before
->          * the payload data, padding like atheros hardware adds which is
->          * inbetween the 802.11 header and the payload is not supported,
->          * the driver is required to move the 802.11 header further back
->          * in that case.
->          */
->         hdrlen =3D ieee80211_get_hdrlen(rx.fc);
->         WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
-
-Yup, that's what it is, Michael sent me the assembly, __ieee80211_rx
-starts at 0x1990 and we find at 0x1990+0x48c =3D=3D 0x1e1c
-
-
-    1df8:       48 00 00 01     bl      1df8 <__ieee80211_rx+0x468>
-                        1df8: R_PPC_REL24       ieee80211_get_hdrlen
-    1dfc:       80 18 00 a0     lwz     r0,160(r24)
-    1e00:       7c 00 1a 14     add     r0,r0,r3
-    1e04:       70 09 00 03     andi.   r9,r0,3
-    1e08:       41 a2 00 2c     beq+    1e34 <__ieee80211_rx+0x4a4>
-    1e0c:       3d 20 00 00     lis     r9,0
-                        1e0e: R_PPC_ADDR16_HA   .sbss
-    1e10:       80 09 00 00     lwz     r0,0(r9)
-                        1e12: R_PPC_ADDR16_LO   .sbss
-    1e14:       7c 00 00 34     cntlzw  r0,r0
-    1e18:       54 00 d9 7e     rlwinm  r0,r0,27,5,31
-    1e1c:       0f 00 00 00     twnei   r0,0
-
-which is exactly the WARN_ON_ONCE above.
-
-johannes
-
---=-zCWsqE1ra63Jig6yHSfy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR3ArLaVg1VMiehFYAQKS4Q/9FlU/hfbZvO8xoKe6z5uealRmixqxQG8h
-8Vt47ee3f5GN+hHu7O5gE2CnH/qV2t8ynhuRoSLetVlUsnSLEzEgfLwlf+tQdvJh
-KiQEJ3oAWVviVHX50XiEpMXKv6r4vthLBasD5I+bxJ0uWhsJJb5rv+qan8SP8BUX
-lL7UOYsfCI7sJyr8aUImL+TYfXuUHXpc63t+I1X8q3effSqS9F34xFxRHpYloFHI
-lKQZzXfIs+X+3VWqKrHo6PdlCJs4U6XQJcRwb1CNHo0FA/SGKBfhsSDGvqinKpzD
-B24DTt0Qa23FPjK0r7LJq+235nz7wi2x8mBlGyVb3/phLEwu0R3goi74L7C5KkTt
-U5FYdxQj0xbHqOb5K/+m/x+3lH9hKQdMpWTb1TtzJAvfKUK8ZoTTKzx0lGxNOpKi
-9NHg5HwtP967SQeN+k0cQdI0EmyEnpZVHjbTON4YxxI2wVOHrO4RExd9+sYpxsMe
-n28U6f0Saz5p78RzJ5BdGRNluGA5o7i3rtWHeXdZMg8ghMz527CA1ud1Taz77cQR
-Ie8/xTQ1OvIaASFtipA6zylBmvoTFCMLLlA3Wb/9O6txPRRHJxcF9bRAx3FohcNI
-mau0Dd8ueKwRmtODqqLhheUxRdOKyZIuePfgsp/BOc5faBZMgdtUQ2/FcFCTwjT5
-bzFOsiwVnkw=
-=LsLl
------END PGP SIGNATURE-----
-
---=-zCWsqE1ra63Jig6yHSfy--
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 418dcab..f858928 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -222,6 +222,11 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (lbs_start_card(priv))
+ 		goto err_start_card;
+ 
++	/* Set the boot2 version in firmware, ignoring errors. */
++	(void)lbs_prepare_and_send_command(priv, CMD_SET_BOOT2_VER,
++					   0, CMD_OPTION_WAITFORRSP, 0, NULL);
++
++
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index ed02c02..a5b573c 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -999,10 +999,6 @@ static int lbs_setup_firmware(struct lbs_private *priv)
+ 		priv->mesh_autostart_enabled = 0;
+ 	}
+ 
+-       /* Set the boot2 version in firmware */
+-       ret = lbs_prepare_and_send_command(priv, CMD_SET_BOOT2_VER,
+-                                   0, CMD_OPTION_WAITFORRSP, 0, NULL);
+-
+ 	ret = 0;
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+-- 
+1.5.3.4
 
