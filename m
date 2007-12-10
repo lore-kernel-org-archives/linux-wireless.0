@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55862 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762610AbXLMG7O (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.238]:24803 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbXLJBHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:14 -0500
-Subject: [PATCH 49/48] libertas: fix use-after-free error
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2Q-0005qn-4n@shinybook.infradead.org> (sfid-20071213_065920_101073_DE68B89C)
-Date: Thu, 13 Dec 2007 01:59:18 -0500
+	Sun, 9 Dec 2007 20:07:30 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so1144085wra
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Dec 2007 17:07:27 -0800 (PST)
+Message-ID: <a8e1da0712091707ve2edf0el7103b66ae28b58@mail.gmail.com> (sfid-20071210_010734_474817_FCC1DE4B)
+Date: Mon, 10 Dec 2007 09:07:27 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Subject: Re: 2.6.24-rc4-mm1
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <43e72e890712071422j34ca2338xf98fda661f3c22fc@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20071204211701.994dfce6.akpm@linux-foundation.org>
+	 <20071207021258.GA12624@darkstar.lan>
+	 <43e72e890712071422j34ca2338xf98fda661f3c22fc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Mon, 10 Dec 2007 12:19:55 +0100
+On Dec 8, 2007 6:22 AM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
+> On Dec 6, 2007 9:12 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> > Hi,
+> >
+> > 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
+> > drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
+> >
+> > fix it with adjust the order of inline function body.
+> >
+> > Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+>
+> Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-Previously, the display of subscribed events could be wrong.
+Thanks.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/debugfs.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+>
+> Thanks Dave. What version of gcc were you using? I haven't run into this.
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index e8a24d7..f4858bd 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -409,30 +409,32 @@ static ssize_t lbs_threshold_read(
- 	char *buf = (char *)addr;
- 	u8 value;
- 	u8 freq;
-+	int events = 0;
- 
--	struct cmd_ds_802_11_subscribe_event *events = kzalloc(
-+	struct cmd_ds_802_11_subscribe_event *subscribed = kzalloc(
- 		sizeof(struct cmd_ds_802_11_subscribe_event),
- 		GFP_KERNEL);
- 	struct mrvlietypes_thresholds *got;
- 
- 	res = lbs_prepare_and_send_command(priv,
- 			CMD_802_11_SUBSCRIBE_EVENT, CMD_ACT_GET,
--			CMD_OPTION_WAITFORRSP, 0, events);
-+			CMD_OPTION_WAITFORRSP, 0, subscribed);
- 	if (res) {
--		kfree(events);
-+		kfree(subscribed);
- 		return res;
- 	}
- 
--	got = lbs_tlv_find(tlv_type, events->tlv, sizeof(events->tlv));
-+	got = lbs_tlv_find(tlv_type, subscribed->tlv, sizeof(subscribed->tlv));
- 	if (got) {
- 		value = got->value;
- 		freq  = got->freq;
-+		events = le16_to_cpu(subscribed->events);
- 	}
--	kfree(events);
-+	kfree(subscribed);
- 
- 	if (got)
- 		pos += snprintf(buf, len, "%d %d %d\n", value, freq,
--			!!(le16_to_cpu(events->events) & event_mask));
-+			!!(events & event_mask));
- 
- 	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
- 
--- 
-1.5.3.4
+gcc 3.4.6
 
+>
+> BTW, nothing new was added in this patch, things were just shifted,
+> but even that may be copyrightable. Is it fair to assume you are
+> licensing these changes under the same license the file is in?
+
+Ok, I don't care.
+
+>
+> For this file we'd usually use:
+>
+> Changes-licensed-under: 3-clause-BSD
+>
+> For future reference:
+>
+> http://linuxwireless.org/en/developers/Documentation/SubmittingPatches#Changes-licensed-undertag
+>
+>   Luis
+>
