@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:27810 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbXLHK4s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 05:56:48 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1140757ugc
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Dec 2007 02:56:47 -0800 (PST)
-Message-ID: <475A786E.60200@gmail.com> (sfid-20071208_105653_255562_5E39A0F7)
-Date: Sat, 08 Dec 2007 11:56:46 +0100
-From: drago01 <drago01@gmail.com>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: dcbw@redhat.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, jt@hpl.hp.com
-Subject: Re: [PATCH] introduce WEXT scan capabilities
-References: <1197073366.4563.15.camel@localhost.localdomain> <20071207.181221.09900510.davem@davemloft.net>
-In-Reply-To: <20071207.181221.09900510.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.gmx.net ([213.165.64.20]:42598 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750806AbXLJHpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 02:45:01 -0500
+Subject: Re: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening
+	factor
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20071210082154.015f6e6a@morte>
+References: <20071209211547.2d7fca32@morte> <20071209212133.43030d03@morte>
+	 <1197239361.7543.17.camel@localhost> <20071210003120.0078db1d@morte>
+	 <1197244416.7543.27.camel@localhost> <20071210032811.5cea4909@morte>
+	 <1197268081.7490.10.camel@localhost>  <20071210082154.015f6e6a@morte>
+Content-Type: text/plain
+Date: Mon, 10 Dec 2007 08:44:56 +0100
+Message-Id: <1197272696.7490.31.camel@localhost> (sfid-20071210_074507_588948_FF59697A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Dan Williams <dcbw@redhat.com>
-> Date: Fri, 07 Dec 2007 19:22:46 -0500
->
->   
->> @@ -1040,6 +1049,16 @@ struct	iw_range
->>  	 * because each entry contain its channel index */
->>  
->>  	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
->> +
->> +	/* Do *NOT* use those fields, they are just used as padding to get
->> +	 * proper alignement with user space */
->> +	__s32		reserved1;
->> +	__s32		reserved2;
->> +	__u16		reserved3;
->> +	__s32		reserved4;
->> +	__u32		reserved5;
->> +
->> +	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
->>  };
->>  
->>  /*
->>     
->
-> Major NACK.  These datastructure usages are complete wrong, and
-> we have to stop spreading this problem instead of continuing on
-> with it as if it's OK.
->   
-But it seems like we have to deal with this api until nl80211/cfg80211 
-is ready. But the situation is _worse_ without this patch (hidden ssid 
-support is a huge mess).
+
+On Mon, 2007-12-10 at 08:21 +0100, Stefano Brivio wrote:
+> On Mon, 10 Dec 2007 07:28:01 +0100
+> Mattias Nissler <mattias.nissler@gmx.de> wrote:
+> 
+> > > -	/* If no frames were transmitted, we assume the old sample is
+> > > -	 * still a good measurement and copy it. */
+> > > -	if (spinfo->tx_num_xmit == 0)
+> > > -		pf = spinfo->last_pf;
+> > 
+> > Please don't remove this check. We can never know when anybody starts
+> > calling rate_control_pid_sample() without packets transmitted. Then it's
+> > good to have it, else we divide by zero in the next line.
+> 
+> But, as you said, rate_control_pid_sample() only gets called by
+> rate_control_pid_tx_status(). There, spinfo->tx_num_xmit always get
+> increased. The only other spot where spinfo->tx_num_xmit gets changed is in
+> rate_control_pid_sample(), where we set it to 0 after that that division
+> gets done, and we obviously change its value after having been called by
+> rate_control_pid_tx_status(). So, it always get increased before the
+> division, and it's never set to a negative value. Therefore, I assume that
+> it will never be zero in the division. Am I wrong?
+
+You're totally right. But IMHO it's nicer to be a little defensive here.
+You never know what happens to your code in the future. Just imagine
+somebody coming up with: Hey, let's use a timer-based approach for
+sampling. Ok, that's easy to do, just call sample() every time the timer
+expires. And whoops, there's the division by zero when no packets are
+transmitted...
+
+Mattias
+
