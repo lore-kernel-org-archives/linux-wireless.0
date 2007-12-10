@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:64257 "EHLO
-	viefep15-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933900AbXLMXBQ (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:54664 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbXLJIUC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 18:01:16 -0500
-Message-ID: <4761B9C0.3080309@jooz.net> (sfid-20071213_230129_548257_6C3D5FA5)
-Date: Fri, 14 Dec 2007 00:01:20 +0100
-From: Bjorge Dijkstra <bjd@jooz.net>
+	Mon, 10 Dec 2007 03:20:02 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so2435820mue
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 00:20:00 -0800 (PST)
+Message-ID: <c85cb4470712100019x50f61ben828c0c86ee2c7141@mail.gmail.com> (sfid-20071210_082007_493187_795F2EC1)
+Date: Mon, 10 Dec 2007 10:19:59 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <20071210045955.GN5698@jm.kir.nu>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: status wireless extensions API for new drivers
-References: <4761A108.2080005@jooz.net> <20071213213118.GE3083@tuxdriver.com> <4761AD18.8000004@jooz.net> <20071213221323.GF3083@tuxdriver.com>
-In-Reply-To: <20071213221323.GF3083@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11972036221022-git-send-email-ron.rindjunsky@intel.com>
+	 <20071210045955.GN5698@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> BTW, how is your patchset looking?  If you want it to be in 2.6.25
-> then you need to post it soon.
-> 
+> > +/* IEEE 80211.11 minimal headers length */
+> > +#define IEEE80211_HDR_MIN_LEN_CTRL 16
+>
+> Where does this value 16 come from? It is likely the shortest length one
+> would receive from hardware/firmware in normal mode, but it is not the
+> shortest length for a valid IEEE 802.11 control frame. Both CTS and ACK
+> frames have only 10 octets in the header (just one address). Having
+> IEEE80211_HDR_MIN_LEN_CTRL defined to 16 would be a bit confusing.. CTS
+> and ACK frames are received at least in monitor mode, so these frames
+> with 10 octet headers will need to be processed in some cases.
 
-It's currently in the form of a seperate self supporting package based
-on an older kernel. So that probably needs a little bit of work to get
-it rebased on current kernel. It's not a must for me to get it in 2.6.25
-though, so if we miss it that's not a problem.
+this check comes after monitor interface has been fed, so it shouldn't
+damage it.
+My intention in the name was "min length for a frame that i want to
+pass" so i see why it can cause confusion. As no good name for it
+comes to my mind i think i will drop the #defines , add remarks to
+explain length use, and will welcome any change for better naming
+convention.
 
-BTW, when is the approx. deadline for 2.6.25?
+ron
 
-> FWIW, as long as you have just enough WEXT support to get it to work
-> with open networks I think that would be enough to get a patch merged.
-> Having experimented a bit earlier with your patchset, I suspect you
-> can probably support WEP and maybe more by now...
-
-Yes, WEP, WPA and WPA2 all should work fine. I'm using it everyday on a
-WPA2 network with no issues. I don't have a wired connection here, so I
-depend on it working for me :)
-
-> 
-> So, when will we see your patches?
-> 
-
-I'll try get something out during the weekend.
-
-> Thanks,
-> 
-> John
-
-regards,
-Bjorge
-
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
