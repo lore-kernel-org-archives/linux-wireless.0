@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:16488 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbXLDUea convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754621AbXLJMPw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 15:34:30 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Mon, 10 Dec 2007 07:15:52 -0500
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] libertas: implement new scanning logic
-Date: Tue, 4 Dec 2007 21:34:52 +0100
-References: <200711290927.15915.hs4233@mail.mn-solutions.de> <1196787130.4772.2.camel@localhost.localdomain>
-In-Reply-To: <1196787130.4772.2.camel@localhost.localdomain>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <200712042134.53084.hs4233@mail.mn-solutions.de> (sfid-20071204_203435_673808_B8B446B3)
+Cc: David Miller <davem@davemloft.net>, jt@hpl.hp.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1197223174.9149.60.camel@localhost.localdomain> (sfid-20071209_180959_144382_2B68811A)
+References: <20071206191150.GC5237@bougret.hpl.hp.com>
+	 <1197022818.2603.20.camel@localhost.localdomain>
+	 <20071207192756.GA15864@bougret.hpl.hp.com>
+	 <20071207.180408.55119728.davem@davemloft.net>
+	 <1197221706.9149.36.camel@localhost.localdomain>
+	 <1197223174.9149.60.camel@localhost.localdomain>
+	 (sfid-20071209_180959_144382_2B68811A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JwQJ52LA9vQjWd9wm5V7"
+Date: Mon, 10 Dec 2007 13:15:27 +0100
+Message-Id: <1197288928.6035.59.camel@johannes.berg> (sfid-20071210_121555_506551_10700975)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So I tested this one, not the one from libertas-dev (which was posted
-> a day earlier).  And this one seems fine.  Ack for commit to
-> libertas-2.6.
 
-Hmm, for the patch you just "acked" inofficially is already older.
-I know at least two changes that I made since then:
-
-* add a comment to the section where I change the basic rates by
-  setting the high bit (your idea)
-
-* adapt to the patch "ibertas: separate mesh connectivity from that
-  of the main interface" that appeared in wireless-2.6/everything
-
-Please note that my current patch doesn't apply anymore to 
-wireless-2.6/everything (a.k.a wl26e). It might still apply to 
-libertas-2.6, because this tree lacked (four hours ago) at least 4 
-patches that are in wl26e.
-
->From the 40 mails about git, commits, patches, rebases etc I was not 
-able to draw a real conclusion. I'm tending towards basing my patches 
-against wl26e, so that John, Jeff etc can push the patches easily up. 
-And if a patch still applies, I can commit/push the patch once you 
-acked them. If the patch doesn't apply there, I'll post about this face 
-in libertas-dev. I hope that helps all sides the most.
+--=-JwQJ52LA9vQjWd9wm5V7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-> Would you like me to confirm on SDIO?
+> Do either of those sound better to you than extending struct iw_range?
 
-Yes, please. I think the patch is hardware agnistic, but you can
-never know because SDIO firmware != CF firmware != USB firmware.
+Because wext is stupidly defined, you can never extend any structures it
+uses. Wext never passes in the length that userspace expects to passing
+in longer structures than the fixed one userspace expects will always
+overwrite something in userspace, possibly on the stack.
+
+johannes
+
+--=-JwQJ52LA9vQjWd9wm5V7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR10t3qVg1VMiehFYAQIdwg//UU3zSX2JlGdo7QOLIF67fltarDEDgmVF
+3hAYU+T0HWw8xw6XqTrbdEK1jgwxyYFUyM3IWkDWnfF4UfHeSOLHlxxPys5ZHbWK
+wKy/SfnuWg3shi+hcMV6n9CQVxgV1VOZl7TWxA1db0usKFiI4h6pLu8A6ilKrkmd
+d5MsYLjPWFj5iM81xdVf4GDYwblqnLCgVW+Od5xJJ7u8LVq52M4AegCs1eZXgWHo
+6xh69ZRL9ypcMWvkaVva54qI2sbD54T6BnlA8WjBXcNQhBZ3n6fJ7jTMRktjWFVd
+8dSw9Z7f1YWjhv1XlQVEkCCUAzfdhzaDUHgCLe6efSpfEORu9hxFjN/lmfV6u5pZ
+0uDiLBRvmRBbFsUe93Ll5gejJmDLDsozWOR5scxLztFlLZKz8VL77gAjaKCHXj3S
+oTOkjHjrdHQV4vGTIAMix5bGDpqWMbutKKmZ+F1bVHIbf4pjUT5SLOGGTt/SiOfd
+zmtuUBNECVWuVaeokdComOaRvEJo7JVe1N+pfb9yctXepjPAWXTwoBFIgk915hKq
+ztb9HPcaI7ea1BHbwciqAaZItmP52FD0ZdChov9+C1tUib+M3gFPOMdo5qOXYm8G
+SSNCpcR8Qk0z8MkEaFMu8cjxWEq9zPEVPVYg+u5hUcK3MgJSZ1BUQw6hPrvqJpSu
+mLiLkVz22U0=
+=RdzR
+-----END PGP SIGNATURE-----
+
+--=-JwQJ52LA9vQjWd9wm5V7--
+
