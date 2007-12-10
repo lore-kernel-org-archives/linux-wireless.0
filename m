@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52901.mail.re2.yahoo.com ([206.190.49.11]:34256 "HELO
-	web52901.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753142AbXLLUpn (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.171]:60073 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbXLJQJc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 15:45:43 -0500
-Date: Wed, 12 Dec 2007 20:45:42 +0000 (GMT)
-From: Chris Rankin <rankincj@yahoo.com>
-Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: dcbw@redhat.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071212020325.96dbf41b.akpm@linux-foundation.org>
+	Mon, 10 Dec 2007 11:09:32 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH 07/48] libertas: make more functions static
+Date: Mon, 10 Dec 2007 17:08:31 +0100
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <E1J1kpB-0006kg-FH@shinybook.infradead.org>
+In-Reply-To: <E1J1kpB-0006kg-FH@shinybook.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <479158.92576.qm@web52901.mail.re2.yahoo.com> (sfid-20071212_204548_092566_0CA98747)
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200712101708.32668.arnd@arndb.de> (sfid-20071210_160938_743439_AC465139)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--- Andrew Morton <akpm@linux-foundation.org> wrote: 
-> hostap_plx.c first appeared in 2.6.14.
-> 
+On Monday 10 December 2007, David Woodhouse wrote:
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -13,6 +13,11 @@
+> =A0#include "wext.h"
+> =A0
+> =A0static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode);
+> +struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv=
+);
+> +void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
+> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0 =A0struct cmd_ctrl=
+_node *ptempnode,
+> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0 =A0u16 wait_option=
+, void *pdata_buf);
+> +
 
-Just a thought: How far back will I be able to compile kernels correctly with gcc 4.1.2?
-Specifically:
+You should never need forward declarations for global functions in a C =
+file,
+it is error prone in any case:
 
-gcc (GCC) 4.1.2 20070925 (Red Hat 4.1.2-33)
+* if the functions are only used in one file, make them static.
+* Better, avoid forward declarations entirely by ordering the functions=
+ in the
+way they are called.
+* If they are used in one file and defined in another, declare them in
+a common header, and only there, in order to avoid the prototypes from =
+diverging.
 
-Cheers,
-Chris
-
-
-
-      __________________________________________________________
-Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
-
+	Arnd <><
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
