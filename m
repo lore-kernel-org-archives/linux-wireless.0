@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49171
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753061AbXLGMeJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 07:34:09 -0500
-Date: Fri, 07 Dec 2007 04:34:07 -0800 (PST)
-Message-Id: <20071207.043407.72593148.davem@davemloft.net> (sfid-20071207_123418_301238_07D2D2FD)
-To: mb@bu3sch.de
-Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200712071235.11969.mb@bu3sch.de>
-References: <20071206214341.GA6821@bougret.hpl.hp.com>
-	<20071206.195214.09557695.davem@davemloft.net>
-	<200712071235.11969.mb@bu3sch.de>
+Received: from mfe1.polimi.it ([131.175.12.23]:45354 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751540AbXLJH3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2007 02:29:51 -0500
+Date: Mon, 10 Dec 2007 08:23:28 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/T][PATCH v2 1/3] rc80211-pid: introduce rate behaviour
+ learning algorithm
+Message-ID: <20071210082328.50d1ad7f@morte> (sfid-20071210_072953_502653_5D1F7D9B)
+In-Reply-To: <1197269480.7490.27.camel@localhost>
+References: <20071209211547.2d7fca32@morte>
+	<20071209211931.26ff42fa@morte>
+	<1197239150.7543.13.camel@localhost>
+	<20071210002158.654ed960@morte>
+	<20071210032421.7017c681@morte>
+	<1197269480.7490.27.camel@localhost>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Fri, 7 Dec 2007 12:35:11 +0100
+On Mon, 10 Dec 2007 07:51:20 +0100
+Mattias Nissler <mattias.nissler@gmx.de> wrote:
 
-> So, how do we handle unaligned data in userspace then?
-> A _lot_ of applications are broken if that's right what you say.
+> > +static inline int rate_control_pid_r_to_i(struct rc_pid_rateinfo *r, int rate,
+> > +					  int l)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i = 0; i < l; i++)
+> > +		if (r[i].index == rate)
+> > +			break;
+> > +
+> > +	return i;
+> > +}
+> 
+> Isn't the store-direct-rinfo-indices approach nicer? Why did you decide
+> for the index conversion function in favour of storing direct indices?
 
-Applications make sure data is always properly aligned, that's how
-it's handled.  I don't see what the big mystery is. :-)
+Yesterday there was a reason, now I just forgot it. If I can't recall about
+it within tomorrow, I'll switch to the other approach. ;)
 
-In the rare cases where these bugs pop up, they simply get fixed.
 
-And you should be thankful these things are being explicitly
-flagged as errors on at least some platforms, they could be
-silent performance problems otherwise.
+-- 
+Ciao
+Stefano
