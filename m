@@ -1,79 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50813 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761533AbXLPW6a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:30 -0500
-Subject: [PATCH 104/48] libertas: remove some pointless checks for cmdnode buffer being present
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J42Rx-00038B-7V@shinybook.infradead.org> (sfid-20071216_225843_136025_87793516)
-Date: Sun, 16 Dec 2007 17:59:09 -0500
+Received: from mfe1.polimi.it ([131.175.12.23]:35187 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751485AbXLJCea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2007 21:34:30 -0500
+Date: Mon, 10 Dec 2007 03:28:11 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening factor
+Message-ID: <20071210032811.5cea4909@morte> (sfid-20071210_023433_117580_ADFBFCA6)
+In-Reply-To: <1197244416.7543.27.camel@localhost>
+References: <20071209211547.2d7fca32@morte>
+	<20071209212133.43030d03@morte>
+	<1197239361.7543.17.camel@localhost>
+	<20071210003120.0078db1d@morte>
+	<1197244416.7543.27.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 15 Dec 2007 00:41:51 -0500
+This patch introduces a PID sharpening factor for faster response after
+association and low activity events.
 
-We allocate them all at the same time, at startup. If they go missing,
-we have more serious things to worry about, and the resulting oops will
-be a perfectly acceptable result.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>
+
 ---
- drivers/net/wireless/libertas/cmd.c |   16 ++++------------
- 1 files changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 4dc6bbe..4ffb84a 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1166,8 +1166,8 @@ void lbs_queue_cmd(struct lbs_private *priv,
+Ok, this isn't a no-op anymore. :)
+
+---
+
+Index: wireless-2.6/net/mac80211/rc80211_pid.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid.c
++++ wireless-2.6/net/mac80211/rc80211_pid.c
+@@ -23,13 +23,16 @@
+  *
+  * The controller basically computes the following:
+  *
+- * adj = CP * err + CI * err_avg + CD * (err - last_err)
++ * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
+  *
+  * where
+  * 	adj	adjustment value that is used to switch TX rate (see below)
+  * 	err	current error: target vs. current failed frames percentage
+  * 	last_err	last error
+  * 	err_avg	average (i.e. poor man's integral) of recent errors
++ *	sharpening	non-zero when fast response is needed (i.e. right after
++ *			association or no frames sent for a long time), heading
++ * 			to zero over time
+  * 	CP	Proportional coefficient
+  * 	CI	Integral coefficient
+  * 	CD	Derivative coefficient
+@@ -65,6 +68,11 @@
+ #define RC_PID_SMOOTHING_SHIFT 3
+ #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
  
- 	lbs_deb_enter(LBS_DEB_HOST);
++/* Sharpening factor (used for D part of PID controller) */
++#define RATE_CONTROL_SHARPENING_SHIFT 2
++#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
++#define RATE_CONTROL_SHARPENING_DURATION 1
++
+ /* Fixed point arithmetic shifting amount. */
+ #define RC_PID_ARITH_SHIFT 8
  
--	if (!cmdnode || !cmdnode->cmdbuf) {
--		lbs_deb_host("QUEUE_CMD: cmdnode or cmdbuf is NULL\n");
-+	if (!cmdnode) {
-+		lbs_deb_host("QUEUE_CMD: cmdnode is NULL\n");
- 		goto done;
- 	}
- 	if (!cmdnode->cmdbuf->size) {
-@@ -1195,7 +1195,7 @@ void lbs_queue_cmd(struct lbs_private *priv,
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+@@ -131,8 +139,11 @@ struct rc_pid_sta_info {
+ 	 */
+ 	s32 err_avg_sc;
  
- 	lbs_deb_host("QUEUE_CMD: inserted command 0x%04x into cmdpendingq\n",
--	       le16_to_cpu(cmdnode->cmdbuf->command));
-+		     le16_to_cpu(cmdnode->cmdbuf->command));
+-	/* Last framed failes percentage sample */
++	/* Last framed failes percentage sample. */
+ 	u32 last_pf;
++
++	/* Sharpening needed. */
++	u8 sharp_cnt;
+ };
  
- done:
- 	lbs_deb_leave(LBS_DEB_HOST);
-@@ -1380,13 +1380,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
+@@ -282,19 +293,19 @@ static void rate_control_pid_sample(stru
  
- 	lbs_deb_host("PREP_CMD: command 0x%04x\n", cmd_no);
+ 	mode = local->oper_hw_mode;
+ 	spinfo = sta->rate_ctrl_priv;
++
++	/* In case nothing happened during the previous control interval, turn
++	 * on the sharpening factor. */
++	if (jiffies - spinfo->last_sample > RC_PID_INTERVAL)
++		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
++
+ 	spinfo->last_sample = jiffies;
  
--	if (!cmdptr) {
--		lbs_deb_host("PREP_CMD: cmdptr is NULL\n");
--		lbs_cleanup_and_insert_cmd(priv, cmdnode);
--		ret = -1;
--		goto done;
+-	/* If no frames were transmitted, we assume the old sample is
+-	 * still a good measurement and copy it. */
+-	if (spinfo->tx_num_xmit == 0)
+-		pf = spinfo->last_pf;
+-	else {
+-		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
+-		pf <<= RC_PID_ARITH_SHIFT;
++	pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
++	pf <<= RC_PID_ARITH_SHIFT;
+ 
+-		spinfo->tx_num_xmit = 0;
+-		spinfo->tx_num_failed = 0;
 -	}
--
- 	/* Set sequence number, command and INT option */
- 	priv->seqnum++;
- 	cmdptr->seqnum = cpu_to_le16(priv->seqnum);
-@@ -1786,8 +1779,7 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
- 	cmdnode->callback = NULL;
- 	cmdnode->callback_arg = 0;
++	spinfo->tx_num_xmit = 0;
++	spinfo->tx_num_failed = 0;
  
--	if (cmdnode->cmdbuf != NULL)
--		memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
-+	memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
+ 	/* If we just switched rate, update the rate behaviour info. */
+ 	if (pinfo->oldrate != sta->txrate) {
+@@ -321,8 +332,11 @@ static void rate_control_pid_sample(stru
+ 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
+ 	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
  
- 	lbs_deb_leave(LBS_DEB_HOST);
- }
--- 
-1.5.3.4
+-	err_der = pf - spinfo->last_pf;
++	err_der = pf - spinfo->last_pf
++		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
+ 	spinfo->last_pf = pf;
++	if (spinfo->sharp_cnt)
++			spinfo->sharp_cnt--;
+ 
+ 	/* Compute the controller output. */
+ 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
 
+
+-- 
+Ciao
+Stefano
