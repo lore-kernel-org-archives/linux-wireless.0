@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:49494 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195AbXLVW4o (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:22351 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751800AbXLJJWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 17:56:44 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so853975ugc.16
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2007 14:56:42 -0800 (PST)
-Date: Sat, 22 Dec 2007 23:54:12 +0100
-From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
-	<ariveira@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: rt2x00 is sapmming my logs
-Message-ID: <20071222235412.5438945a@Varda> (sfid-20071222_225655_521149_70E8E9F8)
-In-Reply-To: <200712230004.42957.rjw@sisk.pl>
-References: <20071222173153.42f574fd@Varda>
-	<200712230004.42957.rjw@sisk.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Dec 2007 04:22:38 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon, reset
+Date: Mon, 10 Dec 2007 18:22:42 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
+References: <1197274926-14334-1-git-send-email-bruno@thinktube.com> <475D00D7.10309@gmail.com>
+In-Reply-To: <475D00D7.10309@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200712101822.43487.bruno@thinktube.com> (sfid-20071210_092240_699150_CE4C9CF9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Sun, 23 Dec 2007 00:04:42 +0100
-"Rafael J. Wysocki" <rjw@sisk.pl> escribi=C3=B3:
-
-> On Saturday, 22 of December 2007, Alejandro Riveira Fern=C3=A1ndez wr=
-ote:
+On Monday 10 December 2007 18:03:19 Jiri Slaby wrote:
+> > +static int open_file_registers(struct inode *inode, struct file *file)
+> > +{
+> > +	struct seq_file *s;
+> > +	int res;
+> > +	res = seq_open(file, &register_seq_ops);
+> > +	s = file->private_data;
+> > +	s->private = inode->i_private;
 >
->=20
-> I have created a bugzilla entry for this problem at:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D9622
-> and added it to the list of reported regressions.
+> Sorry for not noticing this earlier, if res is nonzero, you are
+> dereferencing NULL (s) here.
 
-  Thanks!
->=20
-> Thanks,
-> Rafael
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
-l" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+oh, sorry for not realizing that myself. so i add:
+
++       if (res == 0) {
++               s = file->private_data;
++               s->private = inode->i_private;
++       }
+
+and resend.
+
+thanks,
+bruno
+
