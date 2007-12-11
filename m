@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53143
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750922AbXLVEzz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbXLKNWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:55:55 -0500
-Date: Fri, 21 Dec 2007 20:55:54 -0800 (PST)
-Message-Id: <20071221.205554.40677101.davem@davemloft.net> (sfid-20071222_045557_527470_C228F344)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 7/12]: Pass iwreq pointer down into standard/private
- handlers.
-From: David Miller <davem@davemloft.net>
+	Tue, 11 Dec 2007 08:22:00 -0500
+Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Dan Williams <dcbw@redhat.com>, David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071210180921.GB7168@bougret.hpl.hp.com>
+References: <20071206191150.GC5237@bougret.hpl.hp.com>
+	 <1197022818.2603.20.camel@localhost.localdomain>
+	 <20071207192756.GA15864@bougret.hpl.hp.com>
+	 <20071207.180408.55119728.davem@davemloft.net>
+	 <1197221706.9149.36.camel@localhost.localdomain>
+	 <1197223174.9149.60.camel@localhost.localdomain>
+	 <1197288928.6035.59.camel@johannes.berg>
+	 <20071210180921.GB7168@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ifcSWt8z2ZbcfJwEYUlZ"
+Date: Tue, 11 Dec 2007 14:21:33 +0100
+Message-Id: <1197379293.4037.7.camel@johannes.berg> (sfid-20071211_132204_654888_DD248905)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-[WEXT]: Pass iwreq pointer down into standard/private handlers.
+--=-ifcSWt8z2ZbcfJwEYUlZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-They have no need to see the object as an ifreq.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+> > Because wext is stupidly defined, you can never extend any structures i=
+t
+> > uses. Wext never passes in the length that userspace expects to passing
+> > in longer structures than the fixed one userspace expects will always
+> > overwrite something in userspace, possibly on the stack.
+> >=20
+> > johannes
+>=20
+> 	Please check again...
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index ad982c0..18fa13c 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -864,11 +864,10 @@ out:
-  * user space and kernel space.
-  */
- static int ioctl_standard_call(struct net_device *	dev,
--			       struct ifreq *		ifr,
-+			       struct iwreq *		iwr,
- 			       unsigned int		cmd,
- 			       iw_handler		handler)
- {
--	struct iwreq *				iwr = (struct iwreq *) ifr;
- 	const struct iw_ioctl_description *	descr;
- 	struct iw_request_info			info;
- 	int					ret = -EINVAL;
-@@ -1016,10 +1015,9 @@ out:
- 	return err;
- }
- 
--static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
- 			      unsigned int cmd, iw_handler handler)
- {
--	struct iwreq *iwr = (struct iwreq *) ifr;
- 	int extra_size = 0, ret = -EINVAL;
- 	const struct iw_priv_args *descr;
- 	struct iw_request_info info;
-@@ -1047,7 +1045,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- }
- 
- /* ---------------------------------------------------------------- */
--typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
-+typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
- 			       unsigned int, iw_handler);
- 
- /*
-@@ -1059,6 +1057,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 				  wext_ioctl_func standard,
- 				  wext_ioctl_func private)
- {
-+	struct iwreq *iwr = (struct iwreq *) ifr;
- 	struct net_device *dev;
- 	iw_handler	handler;
- 
-@@ -1073,11 +1072,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_private);
- 
- 	/* Basic check */
-@@ -1089,9 +1088,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return standard(dev, ifr, cmd, handler);
-+			return standard(dev, iwr, cmd, handler);
- 		else
--			return private(dev, ifr, cmd, handler);
-+			return private(dev, iwr, cmd, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
--- 
-1.5.4.rc1
+I have. It's worse than I thought, there's a length parameter but it's
+not used properly.
+
+johannes
+
+--=-ifcSWt8z2ZbcfJwEYUlZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR16O3KVg1VMiehFYAQIicw/+OGnrnipqurU5rpbuFWar4hBdvs3BvSJD
+/qbyGSxoUDydWc7MHJbzh9BIm0iuSzGYyjJSAwPcUJo2nO1Mu1ybTmkX6pu96Wy5
+mpY1Q9blOZnyosdojPSr4En3jG63LAPCbSNhg4T5YaIzfY9v2N/AZ160bpXD3/D1
+LXnQ//zO7ZVuX1yaf5RUOLt2/hiLkAsV+vu1p76KRxVebPVYcRqPG+OjmfLXk08g
+MHe7J7Yaael8s0PH1FPiRWksDXO8t6ms0u3q+efeNia8MJmfBXXtduWS7xFlL7kd
+tz9r5q7cv1Bn/LNOEvW36evqrnL4SfL+wHPvwy91RPoFZX4cFAjAKWvqkGC+ELhy
+UphCNmxbZNaX3mpQfexLawVp7Joo/RiI0SYBn1YmzqT6gEdnCF+dEU+mdb9SUUeH
+e64l0aHf4viIA2Y1RjoNSaL/UDRQCSG4gOvBiPJ9v8rKwgU/3M4pt+0Oa3iEPLG3
+nNrJSGc3p9B7i49s5YZfxJpjjJr8QsSwQBYZ3pQ3CRVNl98+AxPX4HkR98K+mZFw
+a3SbGImQqb/UHj8cDgf5urWJFIQ6dDyIHncK5boi3korCBkvRAM2DUl6yVMh59lU
+TAllTgmekIY/AZPyKG3gKJRKiJKcJtDKcP+hsvuGrKuJg7i4KtcG0MfVACcUlGD/
+B04fS5KPZog=
+=XjJQ
+-----END PGP SIGNATURE-----
+
+--=-ifcSWt8z2ZbcfJwEYUlZ--
 
