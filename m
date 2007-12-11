@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:22440 "HELO
-	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754438AbXLWB1e (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.233]:55147 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357AbXLKBOG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:27:34 -0500
-Date: Sat, 22 Dec 2007 17:27:32 -0800
-From: David Brownell <david-b@pacbell.net>
-To: dbrownell@users.sourceforge.net, bjd@jooz.net
-Subject: Re: [PATCH 7/8] Add Wireless Extensions to rndis_host
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <11983602942818-git-send-email-bjd@jooz.net>
- <11983602951628-git-send-email-bjd@jooz.net>
-In-Reply-To: <11983602951628-git-send-email-bjd@jooz.net>
+	Mon, 10 Dec 2007 20:14:06 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so1544496wra
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 17:14:05 -0800 (PST)
+Message-ID: <b2d05de20712101714x38c2dec6la9c4f496732b053d@mail.gmail.com> (sfid-20071211_011411_488598_981042AB)
+Date: Mon, 10 Dec 2007 17:14:05 -0800
+From: "Brennan Ashton" <comphappy@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: b43 regression
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200712101136.48669.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223012732.B547F166E03@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_012746_573411_4DEFC7C5)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200712101136.48669.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> Subject: [PATCH 7/8] Add Wireless Extensions to rndis_host
-> Date: Sat, 22 Dec 2007 22:51:33 +0100
+On Dec 10, 2007 2:36 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> I have identified another regression introduced by
+> commit f04b3787bbce4567e28069a9ec97dcd804626ac7.
 >
-> The bulk of this patch is the addition of a new file that
-> implements the wireless extensions for RNDIS devices.
-> The rest are some smaller changes to usbnet and rndis_host
-> to hook the wireless extensions into them:
-> * a private data pointer is added to usbnet.
-> * a callback is added to driver_info to signal link state changes.
-> * a physical medium type check is added to rndis_bind to check for
->   wireless lan devices and turn on the wireless extensions.
-> * and finally a Kconfig option to enable/disable this all.
+> On my device it shows up as broken transmission after
+> a suspend/resume cycle. The workaround for it is to boot
+> a known good driver (in my case the vendor driver in OSX)
+> and then reboot (without turning the machine off) into the
+> broken driver.
 >
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+> It seems like we unintentionally removed some significant
+> initialization step in that patch. I could not identify it, yet.
+> The patch I sent yesterday did fix two other bugs, but not this one.
+>
+> I am trying to find the reason for this.
+> If someone wants to help searching, the best way would be to look
+> at that patch I mentioned above and compare the stuff that it
+> removes to the stuff that it adds. There must be some tiny line
+> that it removes but does not re-add it at another place.
+> Four eyes see more than two.
+>
+> I have no idea how this bug could be related to the few bugreports
+> in the redhat bugzilla. Though, one could test that by trying a
+> kernel that does not include the patch.
+>
+> Sorry for the inconvenience.
+>
+> --
+> Greetings Michael.
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>
+RE:
+https://bugzilla.redhat.com/show_bug.cgi?id=412861
+I downloaded the source for 2.6.23.8-63.fc8.src.rpm the package that
+things started to stop working at, and could not find any part of this
+patch applied, so at least for that bug it is something else.
 
-I'm basically fine with this, but I'll hold off any ack until the
-issue with the preceding patch (6/8) is resolved.  That would boil
-down to making this a standalone module, or knowing why that's not
-such a good idea.
+-- 
+Brennan Ashton
+Bellingham, Washington
 
-I'd prefer to see the usbnet core extension packaged separately
-instead of buried in this patch.  :)
-
-And I think a MAINTAINERS update for rndis_wext would be appropriate.
-No way can I take care of that code!
-
-(In fact, would you feel comfortable taking over rndis_host too?)
-
-- Dave
-
-
-> ---
->  drivers/net/usb/Kconfig      |    7 +
->  drivers/net/usb/Makefile     |    4 +
->  drivers/net/usb/rndis_base.c |   50 +-
->  drivers/net/usb/rndis_host.h |   18 +
->  drivers/net/usb/rndis_wext.c | 2177 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/net/usb/usbnet.h     |    4 +
->  6 files changed, 2255 insertions(+), 5 deletions(-)
->  create mode 100644 drivers/net/usb/rndis_wext.c
+"The box said, 'Requires Windows XP or better'. So I installed Linux"
