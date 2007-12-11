@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppsw-1.csi.cam.ac.uk ([131.111.8.131]:53067 "EHLO
-	ppsw-1.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283AbXLWBqF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbXLKOwg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:46:05 -0500
-Received: from ssnt2.quns.cam.ac.uk ([131.111.255.37]:46461 helo=neotoaster.lan)
-	by ppsw-1.csi.cam.ac.uk (smtp.hermes.cam.ac.uk [131.111.8.151]:25)
-	with esmtpsa (PLAIN:ssnt2) (TLSv1:DHE-RSA-AES256-SHA:256)
-	id 1J6FTF-0007EB-3t (Exim 4.67) for linux-wireless@vger.kernel.org
-	(return-path <ssnt2@hermes.cam.ac.uk>); Sun, 23 Dec 2007 01:17:37 +0000
-From: Shawn Tan <ssnt2@eng.cam.ac.uk>
-Reply-To: ssnt2@eng.cam.ac.uk
-To: linux-wireless@vger.kernel.org
-Subject: B43 not working
-Date: Sun, 23 Dec 2007 01:17:35 +0000
-MIME-Version: 1.0
-Message-Id: <200712230117.35920.ssnt2@eng.cam.ac.uk> (sfid-20071223_014616_346516_D6422003)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Tue, 11 Dec 2007 09:52:36 -0500
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+	learning algorithm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1197319867.7493.4.camel@localhost> (sfid-20071210_205142_109612_504EEC93)
+References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
+	 <1197239150.7543.13.camel@localhost>  <20071210090853.79ea4645@morte>
+	 <1197319867.7493.4.camel@localhost> (sfid-20071210_205142_109612_504EEC93)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rcBXHSTtwh1FmfOL/otz"
+Date: Tue, 11 Dec 2007 15:52:34 +0100
+Message-Id: <1197384754.4037.23.camel@johannes.berg> (sfid-20071211_145239_477230_132E50A1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-B43 still doesn't work for me. Let me know if any additional information from 
-me will help.
+--=-rcBXHSTtwh1FmfOL/otz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-dmesg:
 
-[40699.800000] PCI: Setting latency timer of device 0000:30:00.0 to 64
-[40699.840000] ssb: SPROM revision 3 detected.
-[40699.860000] ssb: Sonics Silicon Backplane found on PCI device 0000:30:00.0
-[40699.876000] b43-phy0: Broadcom 4311 WLAN found
-[40700.044000] phy0: Failed to select rate control algorithm
-[40700.044000] phy0: Failed to initialize rate control algorithm
-[40700.080000] b43: probe of ssb0:0 failed with error -2
+> > 2) that can be changed in userspace, but we couldn't figure out a scena=
+rio
+> > where it would make any sense. Johannes, any comments? Wouldn't it make
+> > sense to just forbid to change this in userspace?
+>=20
+> I don't agree. For example, what if you have some broken 802.11b only
+> hardware that you desperately need to get going, but it freaks out on
+> 802.11g encoded frames. Now if your AP is hostapd on a Linux machine,
+> you'll want to change the mode. Hence, also the number of available
+> rates change.
+>=20
+> Moreover, I think we can do better than just disallowing changes to the
+> rate set, don't you think?
 
-lspci -vvn:
+All of this is going to change anyway, but disallowing mode/rateset
+changes while associated is definitely the right thing to do.
 
-30:00.0 0280: 14e4:4312 (rev 02)
-        Subsystem: 103c:1371
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 11
-        Region 0: Memory at c8000000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
-        Capabilities: [58] Vendor Specific Information
-        Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ 
-Queue=0/0 Enable-
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [d0] Express Endpoint IRQ 0
-                Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag+
-                Device: Latency L0s <4us, L1 unlimited
-                Device: AtnBtn+ AtnInd+ PwrInd-
-                Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                Device: RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
-                Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s, Port 0
-                Link: Latency L0s <4us, L1 <64us
-                Link: ASPM L0s L1 Enabled RCB 64 bytes CommClk- ExtSynch-
-                Link: Speed 2.5Gb/s, Width x
+johannes
 
--- 
-with metta,
-Shawn Tan
+--=-rcBXHSTtwh1FmfOL/otz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Centre for Advanced Photonics and Electronics
-Department of Engineering, University of Cambridge
-9 JJ Thomson Avenue, Cambridge CB3 0FA, UK.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR16kMaVg1VMiehFYAQKqaxAAlX5I3NM+bd+LMVtDbvNLP52YD5FD2KOh
+i14fCsiYe0dOInngQERiYZHufKkUWNJVBErV0/L1mZCXia7QXYNStk81jyTHqiIS
+yIjI+RtdBgTBkFgsj/AHLJ8cee/HqWQKRKIHE2MLCJc3uujid8VZshymxTFf50dJ
+tBbQWPjuwfWI/DNf9t07NIaTbPH27LnIo3/eSGHscH0gHcwBvj6F0EGPwAJuNs7v
+qHtdkFPwjwtmV7MDbsfmh8ak6e9GOUTasX3SGU19WlJF0fhjveqCTG0lOYZ2tARf
+Tq6zcUQUB2MqJ4ilIXAU8TaFDbwUHbG93GKEgbiENPPO1T0H2Y2qZmOawc0P9txK
+TinqMueuYy4vnVG3Gmibmws7i9w5PygPPMBi15+dUrchNfo7V8rqYnVfIaOq0zKl
+DZ7OZk5CU+MtG37eURJDnGELCADS3QqsNlnCm7UGQRBW0idOsNdgqww62rbs6wl8
+y/ySl5ufsEY8ttB/Xocp3dlpgrakgNTN7Bp+6XIN77GwcJxa2HpKXiZ6RJsUGkYc
+KTYRFys1IIpkVToV/YYXmbHCC/lEM4nLCyfBRZgHvKVhInwie/en+m5KgCI5ZDSH
+0l1RtEVKkFuqUTmupk+oPnH6by5F+a7PGccLUFHVWuG+69JidYCK5DoL0nHh3MwL
+0tpVQRTawI0=
+=EEQl
+-----END PGP SIGNATURE-----
+
+--=-rcBXHSTtwh1FmfOL/otz--
+
