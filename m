@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:2451 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbXLFJPd (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759708AbXLLRIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 04:15:33 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] libertas: fix data packet size errors
-Date: Thu, 6 Dec 2007 10:15:54 +0100
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712061015.54478.hs4233@mail.mn-solutions.de> (sfid-20071206_091750_821738_8CE53D0C)
+	Wed, 12 Dec 2007 12:08:45 -0500
+Subject: Re: [PATCH] mac80211: don't use interface indizes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, Daniel Drake <dsd@gentoo.org>,
+	Yanbo Li <dreamfly281@gmail.com>
+In-Reply-To: <1196849900.4121.4.camel@johannes.berg> (sfid-20071205_101838_959371_6E84D3F8)
+References: <1196782831.10274.12.camel@johannes.berg>
+	 <200712050057.19819.flamingice@sourmilk.net>
+	 <1196849900.4121.4.camel@johannes.berg>
+	 (sfid-20071205_101838_959371_6E84D3F8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C6+QcLilRmcX51SgqYBm"
+Date: Tue, 11 Dec 2007 19:44:57 +0100
+Message-Id: <1197398697.2214.5.camel@johannes.berg> (sfid-20071212_170910_494659_654E745C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I wondered about junk bytes at the end when using "lbsdebug +hex
-+host" until I noticed that firmware for the CF card sends my
-extranous bytes. It says "I have 20 bytes", I take 20 bytes, but
-the last 8 bytes of this are just data junk.
 
-Also, in the new lbs_cmd() where was a size miscalulation
-that made itself clear after fixing this bug.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+--=-C6+QcLilRmcX51SgqYBm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
----
-The length the low-level-driver (usb, cf, sdio)
-if_XXX_receive_cmdres() reports back via *len ends up
-in "priv->upld_len". upld_len is only used in debugging
-statements, all code was looking at the "__le16 size" field
-anyway.
+> > Leaving it to the driver to allocate the private space isn't too great =
+either.=20
+> > Something like a char subif_priv[] at the end of ieee80211_sub_if_data =
+and a=20
+> > way to specify the length of the private area will be more useful to dr=
+ivers=20
+> > which wish to use the per-subif private space by avoiding extra allocat=
+ion=20
+> > and allocation failure handling and also for drivers which don't, by=20
+> > eliminating the overhead of storing an unused pointer. It is also more=20
+> > consistent with the other apis that allocate ieee80211_hw and net_devic=
+e.
+>=20
+> Most drivers won't ever need private space, so leaving it to them to
+> allocate is more efficient.
 
-We might as well remove "priv->upld_len" completely.
+Uh, wait, thinko. New patch coming up.
 
+johannes
 
-Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2007-12-06 10:48:02.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2007-12-06 11:02:43.000000000 +0100
-@@ -373,6 +373,9 @@ static int if_cs_receive_cmdres(struct l
- 	if (*len & 1)
- 		data[*len-1] = if_cs_read8(priv->card, IF_CS_C_CMD);
- 
-+	/* This is a workaround for a firmware that reports too much
-+	 * bytes */
-+	*len -= 8
- 	ret = 0;
- out:
- 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d, len %d", ret, *len);
-Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-12-06 10:42:41.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-12-06 10:50:02.000000000 +0100
-@@ -882,7 +882,7 @@ int lbs_process_rx_command(struct lbs_pr
- 
- 	if (adapter->cur_cmd->pdata_size) {
- 		struct cmd_ds_gen *r = (struct cmd_ds_gen *)resp;
--		u16 sz = cpu_to_le16(resp->size);
-+		u16 sz = cpu_to_le16(resp->size) - S_DS_GEN;
- 		if (sz > *adapter->cur_cmd->pdata_size) {
- 			lbs_pr_err("response 0x%04x doesn't fit into "
- 				"buffer (%d > %d)\n", respcmd,
+--=-C6+QcLilRmcX51SgqYBm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR17aqKVg1VMiehFYAQIkJxAAj6ky0Se4UOlkESPPqMYel98q2SJsyX8R
+SONY1HL7UYM+RauRi31xhlK2V2zLB/zWg6WvkMfoShUG8pn536ehqNksujos+gd5
+i0Rf5rSBxw6MrCrOgwSN0MNkC7vvA/bXVck0GIaagxbSh6ZjWAVxgkWTRNUlmW5a
+JAAZpZ83Sgfq3BwvX8uoHr9kQSzv1U1wP7Tl5GaMeYLycfF5lMrKL6lNsqQuQYGG
+yxP6xoz5JOeqwdSv5sK/wO/84cf5Z5vqV79Ph23zqzUUleO+sNaziI76ed+mlXIc
+UC6uAmOapY/sCKZkhYfN76iozhoSIJJkklsFp74yFLjd2jPaoNWfUPYS5U2wrdIb
+BVgK3tcIRnIEhpuZ/M4FE7wsXsNG3lRnTFfLyUEN/RNyJuQzAQKTNX/4irc+5txp
+2tGArax5sxHXnilqFUD9BFKRHzMsDdzE/6cctqCdthwqMCBGl9P3zUZBHrGT3cQt
+cpNJSsD/MM18VDXQUgJG5BbKl8dg1/eZm5IyTG3OpFQ2LxP9cdhREO55sr5ncnSu
+ZKK1FemIqG3qbNi1WXmQeO8vLBf2ccM01j79knOR+0oAuiieDrvcSlYgUwrBCO6L
+S+bF8KpJyQLOwpxJyeQ76KkkOGNJYN12ZuCKRfcuQahYb+SNEvvrWW2KXgO70DVI
+qEsRnxFyBEk=
+=mhkI
+-----END PGP SIGNATURE-----
+
+--=-C6+QcLilRmcX51SgqYBm--
+
