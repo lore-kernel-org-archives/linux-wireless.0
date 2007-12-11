@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tranquility.mcc.ac.uk ([130.88.200.145]:64092 "EHLO
-	tranquility.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbXLGOsH (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51782 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110AbXLKVzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 09:48:07 -0500
-Message-ID: <47595D4E.6080901@gentoo.org> (sfid-20071207_144811_599046_34BEC380)
-Date: Fri, 07 Dec 2007 14:48:46 +0000
-From: Daniel Drake <dsd@gentoo.org>
+	Tue, 11 Dec 2007 16:55:12 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John H." <mistamaila@gmail.com>
+Subject: Re: b43 continues to have issue with APs at times
+Date: Tue, 11 Dec 2007 22:53:23 +0100
+Cc: "Larry Finger" <larry.finger@lwfinger.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com> <200712091240.06060.mb@bu3sch.de> <5b9417770712111341t746920c4jee69ef8b498c0f94@mail.gmail.com>
+In-Reply-To: <5b9417770712111341t746920c4jee69ef8b498c0f94@mail.gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: David Miller <davem@davemloft.net>, jt@hpl.hp.com,
-	shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-References: <20071206214341.GA6821@bougret.hpl.hp.com> <200712071235.11969.mb@bu3sch.de> <20071207.043407.72593148.davem@davemloft.net> <200712071436.08954.mb@bu3sch.de>
-In-Reply-To: <200712071436.08954.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712112253.24062.mb@bu3sch.de> (sfid-20071211_215516_928534_FAC1B10C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> The wire protocol for the iv files is the following structure:
-> 
-> struct b43_iv {
-> 	be16 a;
-> 	union {
-> 		be16 x;
-> 		be32 y;
-> 	} ((attr_packed));
-> } ((attr_packed));
-> 
-> How do I handle that in userspace? In kernel space it's simple
-> (and we already use get_unaligned() for the 32bit value there).
+On Tuesday 11 December 2007 22:41:49 John H. wrote:
+> Is that a question?
 
-Please correct me if I'm wrong, but adding the "packed" attribute causes 
-gcc to generate extra instructions to avoid the potentially unaligned 
-accesses.
-(i.e. it basically does put_aligned/get_unaligned automatically)
+Not really.
+You know the history of this driver? I mean. It's good
+that it works at all. If you need better performance
+someone has to fix it, probably. You could start with it. :)
 
-Daniel
+> On Dec 9, 2007 5:40 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Sunday 09 December 2007 12:37:27 John H. wrote:
+> > > i dont know what other ones i would have used.  bcm43xx never worked
+> > > right, really, and had bandwidth limitations.
+> > >
+> > > Right now I am downloading over a wireless lan and getting 1mb/s.
+> > > Why?  That just makes no sense.
+> >
+> > Because it's broken?
+
+-- 
+Greetings Michael.
