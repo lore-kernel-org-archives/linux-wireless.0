@@ -1,200 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40377 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752245AbXLHLVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 06:21:54 -0500
-Subject: [PATCH 2/4] iwlwifi: Update to changed mac80211 rate control
-	interface
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1197112439.7472.34.camel@localhost>
-References: <1197112439.7472.34.camel@localhost>
-Content-Type: text/plain
-Date: Sat, 08 Dec 2007 12:21:51 +0100
-Message-Id: <1197112911.7472.50.camel@localhost> (sfid-20071208_112159_242287_9A8FB022)
-Mime-Version: 1.0
+Received: from vs166246.vserver.de ([62.75.166.246]:41649 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbXLKMqF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 07:46:05 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH RFT] b43: Fix for broken transmission
+Date: Tue, 11 Dec 2007 13:43:50 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200712111343.50943.mb@bu3sch.de> (sfid-20071211_124609_591704_D8C446AB)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This brings iwlwifi rate control code back in sync with mac80211.
+This patch fixes the transmission problems introduced by
+commit f04b3787bbce4567e28069a9ec97dcd804626ac7
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   44 ++++----------------------
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   47 ++++++----------------------
- 2 files changed, 17 insertions(+), 74 deletions(-)
+It depends on
+[PATCH] b43: Fix ofdmtab write regression
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index adcd106..022cea0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -560,22 +560,6 @@ static void rs_tx_status(void *priv_rate,
- 	return;
- }
- 
--static struct ieee80211_rate *iwl3945_get_lowest_rate(struct ieee80211_local
--						  *local)
--{
--	struct ieee80211_hw_mode *mode = local->oper_hw_mode;
--	int i;
--
--	for (i = 0; i < mode->num_rates; i++) {
--		struct ieee80211_rate *rate = &mode->rates[i];
--
--		if (rate->flags & IEEE80211_RATE_SUPPORTED)
--			return rate;
--	}
--
--	return &mode->rates[0];
--}
--
- static u16 iwl3945_get_adjacent_rate(struct iwl3945_rate_scale_priv *rs_priv,
- 				 u8 index, u16 rate_mask, int phymode)
+I'm not sure if the dummy read is really required.
+The old code does it. I think it can't hurt and can possibly
+fix some write posting problems (hardware bugs or whatever. Who knows).
+
+Please test this.
+
+NOT-signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+
+Index: wireless-2.6/drivers/net/wireless/b43/wa.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/wa.c	2007-12-11 01:08:40.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/wa.c	2007-12-11 13:35:26.000000000 +0100
+@@ -123,10 +123,16 @@ static void b43_wa_rssi_lt(struct b43_wl
  {
-@@ -654,10 +638,9 @@ static u16 iwl3945_get_adjacent_rate(struct iwl3945_rate_scale_priv *rs_priv,
-  * rate table and must reference the driver allocated rate table
-  *
-  */
--static struct ieee80211_rate *rs_get_rate(void *priv_rate,
--					  struct net_device *dev,
--					  struct sk_buff *skb,
--					  struct rate_control_extra *extra)
-+static void rs_get_rate(void *priv_rate, struct net_device *dev,
-+			struct ieee80211_hw_mode *mode, struct sk_buff *skb,
-+			struct rate_selection *sel)
- {
- 	u8 low = IWL_RATE_INVALID;
- 	u8 high = IWL_RATE_INVALID;
-@@ -674,32 +657,19 @@ static struct ieee80211_rate *rs_get_rate(void *priv_rate,
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct sta_info *sta;
--	u16 fc, rate_mask;
-+	u16 rate_mask;
- 	struct iwl3945_priv *priv = (struct iwl3945_priv *)priv_rate;
- 	DECLARE_MAC_BUF(mac);
- 
- 	IWL_DEBUG_RATE("enter\n");
- 
--	memset(extra, 0, sizeof(*extra));
--
--	fc = le16_to_cpu(hdr->frame_control);
--	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
--	    (is_multicast_ether_addr(hdr->addr1))) {
--		/* Send management frames and broadcast/multicast data using
--		 * lowest rate. */
--		/* TODO: this could probably be improved.. */
--		IWL_DEBUG_RATE("leave: lowest rate (not data or is "
--			       "multicast)\n");
--
--		return iwl3945_get_lowest_rate(local);
--	}
--
- 	sta = sta_info_get(local, hdr->addr1);
- 	if (!sta || !sta->rate_ctrl_priv) {
- 		IWL_DEBUG_RATE("leave: No STA priv data to update!\n");
-+		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
- 		if (sta)
- 			sta_info_put(sta);
--		return NULL;
-+		return;
- 	}
- 
- 	rate_mask = sta->supp_rates;
-@@ -844,7 +814,7 @@ static struct ieee80211_rate *rs_get_rate(void *priv_rate,
- 
- 	IWL_DEBUG_RATE("leave: %d\n", index);
- 
--	return &priv->ieee_rates[index];
-+	sel->rate = &priv->ieee_rates[index];
- }
- 
- static struct rate_control_ops rs_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 4b6aa96..4455a5f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1667,55 +1667,26 @@ static void rs_initialize_lq(struct iwl4965_priv *priv,
- 	return;
- }
- 
--static struct ieee80211_rate *rs_get_lowest_rate(struct ieee80211_local
--						 *local)
-+static void rs_get_rate(void *priv_rate, struct net_device *dev,
-+			struct ieee80211_hw_mode *mode, struct sk_buff *skb,
-+			struct rate_selection *sel)
- {
--	struct ieee80211_hw_mode *mode = local->oper_hw_mode;
--	int i;
--
--	for (i = 0; i < mode->num_rates; i++) {
--		struct ieee80211_rate *rate = &mode->rates[i];
--
--		if (rate->flags & IEEE80211_RATE_SUPPORTED)
--			return rate;
--	}
--
--	return &mode->rates[0];
--}
--
--static struct ieee80211_rate *rs_get_rate(void *priv_rate,
--					       struct net_device *dev,
--					       struct sk_buff *skb,
--					       struct rate_control_extra
--					       *extra)
--{
--
  	int i;
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct sta_info *sta;
--	u16 fc;
- 	struct iwl4965_priv *priv = (struct iwl4965_priv *)priv_rate;
- 	struct iwl4965_rate_scale_priv *lq;
  
- 	IWL_DEBUG_RATE_LIMIT("rate scale calculate new rate for skb\n");
- 
--	memset(extra, 0, sizeof(*extra));
--
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1)) {
--		/* Send management frames and broadcast/multicast data using
--		 * lowest rate. */
--		/* TODO: this could probably be improved.. */
--		return rs_get_lowest_rate(local);
--	}
--
- 	sta = sta_info_get(local, hdr->addr1);
- 
- 	if (!sta || !sta->rate_ctrl_priv) {
-+		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
- 		if (sta)
- 			sta_info_put(sta);
--		return rs_get_lowest_rate(local);
-+		return;
- 	}
- 
- 	lq = (struct iwl4965_rate_scale_priv *)sta->rate_ctrl_priv;
-@@ -1742,11 +1713,13 @@ static struct ieee80211_rate *rs_get_rate(void *priv_rate,
- 	}
- 
-  done:
-+	if ((i < 0) || (i > IWL_RATE_COUNT)) {
-+		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
-+		return;
-+	}
- 	sta_info_put(sta);
--	if ((i < 0) || (i > IWL_RATE_COUNT))
--		return rs_get_lowest_rate(local);
- 
--	return &priv->ieee_rates[i];
-+	sel->rate = &priv->ieee_rates[i];
++#if 0
+ 	for (i = 0; i < 8; i++)
+ 		b43_ofdmtab_write16(dev, B43_OFDMTAB_RSSI, i, i + 8);
+ 	for (i = 8; i < 16; i++)
+ 		b43_ofdmtab_write16(dev, B43_OFDMTAB_RSSI, i, i - 8);
++#endif
++	/* FIXME: Current specs are wrong. The following loop matches the
++	 * old specs, which works great on my device. --mb */
++	for (i = 0; i < 64; i++)
++		b43_ofdmtab_write16(dev, B43_OFDMTAB_RSSI, i, i);
  }
  
- static void *rs_alloc_sta(void *priv, gfp_t gfp)
--- 
-1.5.3.4
+ static void b43_wa_analog(struct b43_wldev *dev)
+@@ -306,16 +312,16 @@ static void b43_wa_crs_ed(struct b43_wld
+ 	struct b43_phy *phy = &dev->phy;
+ 
+ 	if (phy->rev == 1) {
+-		b43_phy_write(dev, B43_PHY_CRSTHRES1, 0x4F19);
++		b43_phy_write(dev, B43_PHY_CRSTHRES1_R1, 0x4F19);
+ 	} else if (phy->rev == 2) {
+-		b43_phy_write(dev, B43_PHY_CRSTHRES1_R1, 0x1861);
+-		b43_phy_write(dev, B43_PHY_CRSTHRES2_R1, 0x1861);
++		b43_phy_write(dev, B43_PHY_CRSTHRES1, 0x1861);
++		b43_phy_write(dev, B43_PHY_CRSTHRES2, 0x0271);
+ 		b43_phy_write(dev, B43_PHY_ANTDWELL,
+ 				  b43_phy_read(dev, B43_PHY_ANTDWELL)
+ 				  | 0x0800);
+ 	} else {
+-		b43_phy_write(dev, B43_PHY_CRSTHRES1_R1, 0x0098);
+-		b43_phy_write(dev, B43_PHY_CRSTHRES2_R1, 0x0070);
++		b43_phy_write(dev, B43_PHY_CRSTHRES1, 0x0098);
++		b43_phy_write(dev, B43_PHY_CRSTHRES2, 0x0070);
+ 		b43_phy_write(dev, B43_PHY_OFDM(0xC9), 0x0080);
+ 		b43_phy_write(dev, B43_PHY_ANTDWELL,
+ 				  b43_phy_read(dev, B43_PHY_ANTDWELL)
+@@ -441,7 +447,7 @@ static void b43_wa_altagc(struct b43_wld
+ 		}
+ 	}
+ 	b43_phy_write(dev, B43_PHY_DIVSRCHIDX,
+-		(b43_phy_read(dev, B43_PHY_DIVSRCHIDX) & 0x7F7F) | 0x7874);
++		(b43_phy_read(dev, B43_PHY_DIVSRCHIDX) & 0x8080) | 0x7874);
+ 	b43_phy_write(dev, B43_PHY_OFDM(0x8E), 0x1C00);
+ 	if (phy->rev == 1) {
+ 		b43_phy_write(dev, B43_PHY_DIVP1P2GAIN,
+@@ -466,6 +472,7 @@ static void b43_wa_altagc(struct b43_wld
+ 		b43_phy_write(dev, B43_PHY_OFDM(0x26),
+ 			b43_phy_read(dev, B43_PHY_OFDM(0x26)) & ~0x1000);
+ 	}
++	b43_phy_read(dev, B43_PHY_VERSION_OFDM); /* Dummy read */
+ }
+ 
+ static void b43_wa_tr_ltov(struct b43_wldev *dev) /* TR Lookup Table Original Values */
+Index: wireless-2.6/drivers/net/wireless/b43/phy.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/phy.h	2007-12-11 01:08:40.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/phy.h	2007-12-11 12:57:40.000000000 +0100
+@@ -25,7 +25,7 @@ struct b43_phy;
+ #define  B43_PHY_BBANDCFG_RXANT		0x180	/* RX Antenna selection */
+ #define  B43_PHY_BBANDCFG_RXANT_SHIFT	7
+ #define B43_PHY_PWRDOWN			B43_PHY_OFDM(0x03)	/* Powerdown */
+-#define B43_PHY_CRSTHRES1		B43_PHY_OFDM(0x06)	/* CRS Threshold 1 */
++#define B43_PHY_CRSTHRES1_R1		B43_PHY_OFDM(0x06)	/* CRS Threshold 1 (phy.rev 1 only) */
+ #define B43_PHY_LNAHPFCTL		B43_PHY_OFDM(0x1C)	/* LNA/HPF control */
+ #define B43_PHY_LPFGAINCTL		B43_PHY_OFDM(0x20)	/* LPF Gain control */
+ #define B43_PHY_ADIVRELATED		B43_PHY_OFDM(0x27)	/* FIXME rename */
+@@ -69,8 +69,8 @@ struct b43_phy;
+ #define B43_PHY_DIVP1P2GAIN		B43_PHY_OFDM(0xAB)
+ #define B43_PHY_DIVSRCHGAINBACK		B43_PHY_OFDM(0xAD)	/* Divider search gain back */
+ #define B43_PHY_DIVSRCHGAINCHNG		B43_PHY_OFDM(0xAE)	/* Divider search gain change */
+-#define B43_PHY_CRSTHRES1_R1		B43_PHY_OFDM(0xC0)	/* CRS Threshold 1 (rev 1 only) */
+-#define B43_PHY_CRSTHRES2_R1		B43_PHY_OFDM(0xC1)	/* CRS Threshold 2 (rev 1 only) */
++#define B43_PHY_CRSTHRES1		B43_PHY_OFDM(0xC0)	/* CRS Threshold 1 (phy.rev >= 2 only) */
++#define B43_PHY_CRSTHRES2		B43_PHY_OFDM(0xC1)	/* CRS Threshold 2 (phy.rev >= 2 only) */
+ #define B43_PHY_TSSIP_LTBASE		B43_PHY_OFDM(0x380)	/* TSSI power lookup table base */
+ #define B43_PHY_DC_LTBASE		B43_PHY_OFDM(0x3A0)	/* DC lookup table base */
+ #define B43_PHY_GAIN_LTBASE		B43_PHY_OFDM(0x3C0)	/* Gain lookup table base */
+Index: wireless-2.6/drivers/net/wireless/b43/tables.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/tables.c	2007-12-11 12:57:39.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/tables.c	2007-12-11 12:57:40.000000000 +0100
+@@ -403,7 +403,7 @@ void b43_ofdmtab_write16(struct b43_wlde
+ 
+ 	addr = table + offset;
+ 	if ((phy->ofdmtab_addr_direction != B43_OFDMTAB_DIRECTION_WRITE) ||
+-	    (addr -1 != phy->ofdmtab_addr)) {
++	    (addr - 1 != phy->ofdmtab_addr)) {
+ 		/* The hardware has a different address in memory. Update it. */
+ 		b43_phy_write(dev, B43_PHY_OTABLECTL, addr);
+ 		phy->ofdmtab_addr_direction = B43_OFDMTAB_DIRECTION_WRITE;
 
+-- 
+Greetings Michael.
