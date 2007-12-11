@@ -1,43 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4504 "EHLO ra.tuxdriver.com"
+Received: from mga01.intel.com ([192.55.52.88]:3197 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656AbXLDWYv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 17:24:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: correct "skb_buff" typo
-Date: Tue,  4 Dec 2007 17:24:35 -0500
-Message-Id: <1196807075-28518-1-git-send-email-linville@tuxdriver.com> (sfid-20071204_222454_622411_AA52D2A2)
+	id S1751873AbXLKIRq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 03:17:46 -0500
+Subject: mac80211 ethtool support
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 11 Dec 2007 16:17:28 +0800
+Message-Id: <1197361048.3170.381.camel@debian.sh.intel.com> (sfid-20071211_081751_659282_DA741E72)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Jeff,
+Hi,
 
-I found this one when pushing the latest round of wireless bits
-into rawhide.  Wanna just go ahead and apply it to netdev-2.6#upstream?
+I want to add ethtool .get_eeprom and .get_eeprom_len support for
+iwlwifi. But it seems mac80211 hides the netdev structure from the
+driver. What's the suggested way for doing so (i.e dump EEPROM) for
+mac80211 devices?
 
-John
-
- drivers/net/wireless/rt2x00/rt2x00lib.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 0bf10ff..108488d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -91,7 +91,7 @@ static inline void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
- }
- 
- static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
--					  struct skb_buff *skb)
-+					  struct sk_buff *skb)
- {
- }
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
--- 
-1.5.3.3
-
+Thanks,
+-yi
