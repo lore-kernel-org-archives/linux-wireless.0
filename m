@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:39184 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1760077AbXLQBB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 20:01:58 -0500
-Date: Mon, 17 Dec 2007 01:57:48 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: mattias.nissler@gmx.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
- default
-Message-ID: <20071217015748.5bb3f7fc@morte> (sfid-20071217_010201_328561_0B861C8D)
-In-Reply-To: <1197852873.4885.2.camel@johannes.berg>
-References: <20071217001956.640555983@gmx.de>
-	<20071217002056.351743954@gmx.de>
-	<1197852547.4885.1.camel@johannes.berg>
-	<20071217015004.2400ab33@morte>
-	<1197852873.4885.2.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from vs166246.vserver.de ([62.75.166.246]:56545 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbXLKLEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 06:04:24 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Brennan Ashton" <comphappy@gmail.com>
+Subject: Re: b43 regression
+Date: Tue, 11 Dec 2007 12:02:33 +0100
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200712101136.48669.mb@bu3sch.de> <b2d05de20712101714x38c2dec6la9c4f496732b053d@mail.gmail.com>
+In-Reply-To: <b2d05de20712101714x38c2dec6la9c4f496732b053d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712111202.34101.mb@bu3sch.de> (sfid-20071211_110427_451656_0D8C4CE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 17 Dec 2007 01:54:33 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
-
+On Tuesday 11 December 2007 02:14:05 Brennan Ashton wrote:
+> https://bugzilla.redhat.com/show_bug.cgi?id=412861
+> I downloaded the source for 2.6.23.8-63.fc8.src.rpm the package that
+> things started to stop working at, and could not find any part of this
+> patch applied, so at least for that bug it is something else.
 > 
-> > > > +What:	rc80211-simple rate control algorithm for mac80211
-> > > > +When:	2.6.26
-> > > > +Files:	net/mac80211/rc80211-simple.c
-> > > > +Why:	This algorithm was provided for reference but always exhibited bad
-> > > > +	responsiveness and performance and has some serious flaws. It has been
-> > > > +	replaced by rc80211-pid.
-> > > > +Who:	Stefano Brivio <stefano.brivio@polimi.it>
-> > > 
-> > > I don't think we really want to do this. We can't even change the
-> > > algorithm anyway except by recompiling with a different default.
-> > 
-> > What do you suggest instead?
-> 
-> Just kick it out right away.
 
-That was my original proposal, but during a recent discussion John
-suggested not to remove rc80211-simple right now, as it's currently
-almost working for a lot of people. John, any suggestions?
-
+Please find out which patch broke it then. Nobody but you can do this.
 
 -- 
-Ciao
-Stefano
+Greetings Michael.
