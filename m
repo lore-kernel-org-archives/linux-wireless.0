@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56578 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbXKJBwi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2007 20:52:38 -0500
-Subject: Re: [RFC] b43: multiple MAC addresses support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <1194572631.4793.64.camel@johannes.berg> (sfid-20071109_120958_259609_BC4A521E)
-References: <1194572631.4793.64.camel@johannes.berg>
-	 (sfid-20071109_120958_259609_BC4A521E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-p2ka+pfR4rpJX2orRqzU"
-Date: Sat, 10 Nov 2007 02:53:59 +0100
-Message-Id: <1194659639.7258.20.camel@johannes.berg> (sfid-20071110_015245_812007_C5FEDBB5)
-Mime-Version: 1.0
+Received: from bay0-omc3-s12.bay0.hotmail.com ([65.54.246.212]:7922 "EHLO
+	bay0-omc3-s12.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752115AbXLKUT0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 15:19:26 -0500
+Message-ID: <BAY134-W251B269AE3F727106D931FD4640@phx.gbl> (sfid-20071211_201929_818410_029A9D4F)
+From: Joachim Frieben <jfrieben@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Misleading PCI id information on chipsets supported by ath5k
+Date: Tue, 11 Dec 2007 20:19:25 +0000
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-p2ka+pfR4rpJX2orRqzU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is some misleading information on the chipsets supported by the ath5k driver at
+ 
+  http://www.linuxwireless.org/en/users/Drivers/ath5k#supportedchips .
 
+In particular, the following entry is incorrect:
 
-> The required tool to patch the firmware will be published separately.
+Vendor:device   Type       Basic-testing
+168c:0013      AR5212   OK
 
-http://git.sipsolutions.net/bcom-ucode.git
+I have a D-Link DWL-G520 Rev. B4 card, and its [chipset's] PCI id is exactly the one indicated above. However, it's based upon an AR5212 802.11 (b/g) chipset, and ath_info reports:
 
-Requires patched bcm43xx-asm and bcm43xx-dasm so you won't be happy
-until Michael does similar changes, I've sent them to him in private
-mail.
+   -==Device Information==-
+  MAC Version:  5213A (0x70)
+  MAC Revision: 5213A (0x79)
+  PHY Revision: 2112a (0x56)
+   -==EEPROM Information==-
+  EEPROM Version:     5.1
+  EEPROM Size:        16K
+  Regulatory Domain:  0x30
+   -==== Capabilities ====-
+  |  802.11a Support: no   |
+  |  802.11b Support: yes  |
+  |  802.11g Support: yes  |
+  |  RFKill  Support: no   |
+  |  32KHz   Crystal: no   |
+   ========================
+  GPIO registers: CR 00000000 DO 00000000 DI 00000010
 
-johannes
+which is consistent with the information given on the retail box stating that it is a (b/g) device. Thus, 802.11a is not supported, and according to the next section on the support page called "Notes on supported devices", the whole card is not supported by ath5k because
 
---=-p2ka+pfR4rpJX2orRqzU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+"Please note that 001c is an 802.11bg device. As you can see from above the current driver design is for 802.11a, 802.11ab, or 802.11abg. We'll probably need a new device type in the driver for this device to pass only bg initial register writes and baseband gain settings."
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Strange enough, 001c is cited as an [unsupported] (b/g) device whereas 0013 should be an (a/b/g) device which is apparently wrong. So, either the PCI id is not an appropriate way to label whether a device is supported or not, or the support page is wrong. Needless to say that the DWL-G520 does not work with ath5k. Right now, it does not even scan access points at all. Could some authorized person have a look into this and make the necessary corrections on the web page?
 
-iQIVAwUARzUPNqVg1VMiehFYAQKpnQ//TlPqlRzoG+FhN3CPtn/ACFXJQmrdBbfy
-NzkU8IwbWJ09eAjIKYt+iE4y78u5AX8YKydY6HS22zr9mh27QZoGnnrO5iYNNQBm
-8Bwo3l1zgsukprAaMQNbBRDWB85/fx8SUhZlEWv2ggYYeAz8Tt2G5Omj4m1AKYD9
-d21GT1BHUCkSOUDxB069DBXADWQxY7Ze+YMTsat2ylUc50KHadcYcmsf8h6JZMD3
-85ra1HTsQXYtxM0/qK1knpgJfuUWYIXI/BtJgFCZLWYDwxoErrEkU0osIAetVSqR
-j5Z8/BMQM9OiwiU6yQxF6rQsZHeiz40FO1f+R50Hs1XEV1EqQP18LaYMxfN9hoDj
-eBJWCNdpdPI6ZSOcH0nZ0BNoNvzUamaJ11TEIEy9jG1Z4LD+q5KWtffum6UjVzmO
-LR+2X+ZpVo90U+bl7ejlhZW81UxvkFMLh9dVvlAJ1o+tEJby6j8T7gru90/v/PJn
-bnvNaWal6GinbvfEvoe1lEzwZq0V/93xnHeYcYumJizw4efllfFe76Gda86TITN9
-514vDBoxCIhm06v8oS3NLP5rKgLMKAWoUvz0xavNnUP2CvoKZBwx18YVPmd0nl4x
-8GLHNks8UmagYXdGfTN37UsFWGh2Zwoo8QgFboW5flxsd0XFvW7OdBsBFDCKclXN
-KAO5H49jzkE=
-=7U5k
------END PGP SIGNATURE-----
+Thanks,
 
---=-p2ka+pfR4rpJX2orRqzU--
-
+~jf
+_________________________________________________________________
+Importieren Sie ganz einfach Ihre E-Mail Adressen in den Messenger!
+http://messenger.live.de/community/neuekontakte_adressimport.html
