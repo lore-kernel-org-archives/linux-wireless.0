@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:44716 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754564AbXLLHtn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46784 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbXLLRSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 02:49:43 -0500
-Message-ID: <475F926C.2000003@lwfinger.net> (sfid-20071212_074947_201736_5C8E4577)
-Date: Tue, 11 Dec 2007 23:49:00 -0800
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Stefano Brivio <stefano.brivio@polimi.it>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RFT] b43: Fix for broken transmission
-References: <200712111343.50943.mb@bu3sch.de> <200712111622.54086.mb@bu3sch.de>
-In-Reply-To: <200712111622.54086.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 12 Dec 2007 12:18:07 -0500
+Subject: privacy_invoked in AP interfaces?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z0w/LLkzz9/pYBiBCMJV"
+Date: Wed, 12 Dec 2007 10:53:07 +0100
+Message-Id: <1197453187.6558.88.camel@johannes.berg> (sfid-20071212_171811_071957_488FDC1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Tuesday 11 December 2007 13:43:50 Michael Buesch wrote:
->> This patch fixes the transmission problems introduced by
->> commit f04b3787bbce4567e28069a9ec97dcd804626ac7
->>
->> It depends on
->> [PATCH] b43: Fix ofdmtab write regression
->>
->> I'm not sure if the dummy read is really required.
->> The old code does it. I think it can't hurt and can possibly
->> fix some write posting problems (hardware bugs or whatever. Who knows).
->>
->> Please test this.
->>
->> NOT-signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> Here's an updated version that should fix even more bugs:
-> http://bu3sch.de/patches/wireless-2.6/20071211-1622/patches/005-b43-fix-init-rewrite-breakage.patch
 
-This patch (and its predecessor) seem to make transmission at the OFDM rates a bit more reliable on 
-my BCM4311/2 card.
+--=-z0w/LLkzz9/pYBiBCMJV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+Hi,
+
+I was just testing hostapd and it told me:
+Could not set PrivacyInvoked for interface wlan0
+
+This is because we only allow setting that for STA interfaces, but what
+should the setting do for AP interfaces? I don't see any point in it, is
+there?
+
+johannes
+
+--=-z0w/LLkzz9/pYBiBCMJV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR1+vgaVg1VMiehFYAQKvwA/+LhepESyxTRk+ERotcAcsDCe/toUwVl/Z
+MrxNsK7pJ5GZD23U3u72Gg4UDWIzK9+kTLouU2yqoH41J7UdlkhGwuo6GhaPEYKo
+5VjBy0rIVSEtw+VriVCUvdt3TY6/OsgekEuM+b+7vhchtpcxl4lMaiFju3f9FtPY
+mB0XtoDPjMUZHugvTe6mL6DRaVZIpVXqN/CtgszFQQ3dfTWRo6lwbno7cvod++YP
+xhmyu68sjz6P4A1QK/MSo+z7lmCIPuVXi72wjD+w65zRxpKs4MFHCKyjxJHem45A
+Jcth4o7zpeHUiMjIGo4vuMFk6Ho3FqhNhbbQoJ+cQSK7aoXBvamWxgvriwSP51Da
+WzOAWmlW602jy50HkO1oUHwovmGU2jvz6Y/c3kDE9m91A3syWCAbbNXlnqIUvl+1
+1i5OaWQFkEFfIh+uZRzrlgXEFQIct+VBB8evlsQuuPmmjtCutsEfvgpNPM1gdRlv
+sBurFscjm3RShNX4O1wfQEXyTeaSSVjLnF+ZBumyo4yEYQGOm9gzB7nGwnMxnkgN
+TnEzh60Ofp7urqPf/Dd3MQId6FRHC9fdoqmejaaJ5BcHh1clerxabyG+EUPRXaIf
+izOUWPDPbFG0Q0FlbbzQRk42dEsZepBpfVurgExafRgP5cSyV4/5sknaakGEJUas
+W67O8vTK4bs=
+=9zzX
+-----END PGP SIGNATURE-----
+
+--=-z0w/LLkzz9/pYBiBCMJV--
+
