@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:36279 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbXL3LuB (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:58075 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657AbXLLLQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Dec 2007 06:50:01 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2385439fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2007 03:50:00 -0800 (PST)
-From: Chris Clayton <chris2553@googlemail.com>
-Reply-To: chris2553@googlemail.com
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sun, 30 Dec 2007 11:49:39 +0000
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <1198939208.4172.46.camel@johannes.berg> <200712291614.55732.IvDoorn@gmail.com>
-In-Reply-To: <200712291614.55732.IvDoorn@gmail.com>
+	Wed, 12 Dec 2007 06:16:37 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Randy Cushman <rcushman_linux@roadrunner.com>
+Subject: Re: BCM4306 Questions
+Date: Wed, 12 Dec 2007 12:14:50 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <475F2DAD.4000708@roadrunner.com>
+In-Reply-To: <475F2DAD.4000708@roadrunner.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712301149.39388.chris2553@googlemail.com> (sfid-20071230_115007_700156_77B6A02D)
+  charset="iso-8859-1"
+Message-Id: <200712121214.50522.mb@bu3sch.de> (sfid-20071212_111644_456258_93F7797A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 December 2007, Ivo van Doorn wrote:
-> On Saturday 29 December 2007, Johannes Berg wrote:
-> > > Well Ralink doesn't seem to add this padding since this bug appeared,
-> > > remember all bytes from the DMA was copied to the skb buffer so if
-> > > there was any padding included it would have been copied as well. ;)
-> >
-> > Not necessarily, Broadcom hardware adds the padding in front of the
-> > 802.11 header so if you'd start copying with the 802.11 header you'd run
-> > into the same thing. A quick look at the rt2x00pci.c file doesn't
-> > suggest that there's anything variable about the RX header though so I
-> > guess that indeed this may be a problem.
-> >
-> > > Anyway, I have worked on a fix for the padding and I'll commit it to
-> > > rt2x00.git first to see if anybody reports any problems with it before
-> > > sending it to wireless-dev.
-> >
+On Wednesday 12 December 2007 01:39:09 Randy Cushman wrote:
+> Recently I retrofitted my older HP laptop with a "Broadcom 802.11b/g 
+> WLAN" miniPCI adapter.  The adapter works well with Windows XP.  Now I 
+> would like to be able to use the adapter with Linux.
+> 
+> Question:  Is there any hope of using this adapter with a native driver,
 
-If it would help, I'd be happy to test your fix, but I'm not a git user, so 
-you would need to post a patch that I could use...
+Yes.
+ 
+> Complication:  Neither bcm43xx-fwcutter nor b43-fwcutter recognizes the 
+> latest driver I found at HP.  I figure it would be best for me to use 
+> this firmware because this is the only driver that I have found to be 
+> stable.
 
-> > Great. I just posted a similar fix in the other thread for zd1211, does
-> > that look similar to yours as well? Should we have a static inline with
-> > this code "ieee80211_needs_padding()" or something?
->
-> My code looks more like:
->
-> 	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
-> 	if (header_size % 4 == 2) {
-> 		/*
-> 		 * Move entire frame 2 bytes to the front.
-> 		 */
-> 		skb_push(entry->skb, 2);
-> 		memmove(entry->skb->data, entry->skb->data + 2,
-> 			entry->skb->len - 2);
-> 	}
->
-> Ivo
+The driver stability is not related to the firmware.
+You have to use this firmware:
+http://linuxwireless.org/en/users/Drivers/b43#devicefirmware
 
-Chris
+> Question:  Could someone instruct a mere applications software engineer 
+> on how to determine the values to insert into fwcutter_list.h to support 
+> this driver (or provide documentation to this effect)?
+
+No. Use the officially supported firmware.
 
 -- 
-Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
+Greetings Michael.
