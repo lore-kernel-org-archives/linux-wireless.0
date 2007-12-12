@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52097
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752242AbXLFCg3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 21:36:29 -0500
-Date: Wed, 05 Dec 2007 18:36:28 -0800 (PST)
-Message-Id: <20071205.183628.211180882.davem@davemloft.net> (sfid-20071206_023633_576569_820424F5)
-To: jt@hpl.hp.com
-Cc: shaddy_baddah@hotmail.com, linux-wireless@vger.kernel.org,
-	dsd@gentoo.org, johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071205215600.GA28349@bougret.hpl.hp.com>
-References: <20071204000138.GA1363@bougret.hpl.hp.com>
-	<4756AABC.3000204@hotmail.com>
-	<20071205215600.GA28349@bougret.hpl.hp.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bay0-omc3-s24.bay0.hotmail.com ([65.54.246.224]:13857 "EHLO
+	bay0-omc3-s24.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751674AbXLLGcH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 01:32:07 -0500
+Message-ID: <BAY134-W31772881320A4FEC2E822FD4650@phx.gbl> (sfid-20071212_063213_851933_665DD91E)
+From: Joachim Frieben <jfrieben@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: RE: Misleading PCI id information on chipsets supported by ath5k
+Date: Wed, 12 Dec 2007 06:32:06 +0000
+In-Reply-To: <59117.84.58.189.94.1197434396.squirrel@webmail.madwifi.org>
+References: <BAY134-W251B269AE3F727106D931FD4640@phx.gbl>
+ <59117.84.58.189.94.1197434396.squirrel@webmail.madwifi.org>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jean Tourrilhes <jt@hpl.hp.com>
-Date: Wed, 5 Dec 2007 13:56:00 -0800
 
-> 	Personally, I was under the impression that in userspace libc
-> trap unaligned access and make them work. I mean, this code was tested
-> on other 64/32 bit platforms (PPC, AMD-64, PS3) and was working there,
-> so this seems to be specific to your platform.
-
-None of those listed platforms trap on unaligned accesses like sparc
-does.
-
-> 	In any case, I've modified my code to use a memcpy() instead
-> of direct memory access. I'm not 100% sure it will fix it because many
-> time memcpy() is optimised away to a direct memory access.
-
-This only works if you hide the underlying types from the compiler,
-using something like:
-
-static void copy_object(void *dst, void *src, int len)
-{
-	memcpy(dst, src, len);
-}
-
-And use the copy_object() thing to move unaligned things around.
-
-Otherwise gcc can see the underlying types and assume alignment, and
-thus generate the memcpy inline using word sized loads and stores, and
-you'll just get the same unaligned access problems.
-
-The fix is to eliminate the unaligned data in the first place.  This
-compat fixup stuff really belongs in the kernel.
+> Date: Wed, 12 Dec 2007 05:39:56 +0100
+> Subject: Re: Misleading PCI id information on chipsets supported by ath5k
+> From: mrenzmann@madwifi.org
+> To: jfrieben@hotmail.com
+> CC: linux-wireless@vger.kernel.org
+> ...
+> If at all, PCI IDs can be seen as evidence but should not be regarded
+> authoritative in terms of chipset identification. ath_info does a better
+> job here.
+> 
+> Bye, Mike
+ 
+Sure, that's what I wrote in my last mail ".. either the PCI id is not an appropriate way to label whether a device is supported or not .." - which brings me back to my initial request to update the ath5k information page in order to account for this ambiguity. ~jf
+_________________________________________________________________
+Importieren Sie ganz einfach Ihre E-Mail Adressen in den Messenger!
+http://messenger.live.de/community/neuekontakte_adressimport.html
