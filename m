@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:2241 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470AbXLFKs5 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44629
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751498AbXLLPiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 05:48:57 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] wireless/libertas: don't cast a pointer to pointer of list_head
-Date: Thu, 6 Dec 2007 11:49:18 +0100
-Cc: Li Zefan <lizf@cn.fujitsu.com>, davem@davemloft.net,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <4757C773.5010604@cn.fujitsu.com>
-In-Reply-To: <4757C773.5010604@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200712061149.18209.hs4233@mail.mn-solutions.de> (sfid-20071206_104903_015180_632642F8)
+	Wed, 12 Dec 2007 10:38:24 -0500
+Date: Wed, 12 Dec 2007 07:38:19 -0800 (PST)
+Message-Id: <20071212.073819.49869597.davem@davemloft.net> (sfid-20071212_153827_208611_A5BAE5FF)
+To: dcbw@redhat.com
+Cc: linville@tuxdriver.com, jt@hpl.hp.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] introduce WEXT scan capabilities
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1197473107.12484.3.camel@localhost.localdomain>
+References: <1197473107.12484.3.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> BTW: I'm not so sure where this patch should go to.
+From: Dan Williams <dcbw@redhat.com>
+Date: Wed, 12 Dec 2007 10:25:07 -0500
 
-To <linux-wireless@vger.kernel.org>, as Dan Williams (libertas 
-maintainer) monitors this list.
+> Introduce scan capabilities to WEXT so that userspace can do intelligent
+> things with scan behavior such as handling hidden SSIDs more gracefully.
+> If the driver reports a specific scan capability, the driver must
+> respect the options specified in the iw_scan_req structure when handling
+> the SIOCSIWSCAN call, unless it's mode or state does not allow it to do
+> so, in which case it must return an error.
+> 
+> This version switches to Dave Kilroy's suggestion of claiming unused
+> padding space for the scan_capa field.
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-The wireless development tree is wireless-2.6, branch everything. 
-You patch doesn't apply to this tree currently, but it's easy to 
-fix. I'll bring it in shape, and resubmit.
-
-
-
-
-As a side note: if you want to make comments, put them below --- 
-under your Signed-off-by line. Your "BTW"-Line would have ended 
-up in the output of "git log".
-
-
-
-libertas: fixes blah mumpf worps
-
-This fixes the worps feature.
-
-Signed-of-by: Donald Duck <dduck@entenhausen.de>
-
----
-Here you can put any comments about your patch that should not 
-end up in the history of git that you can see with "git log".
-
-[patch comes here]
+Ok, I'm fine with this.
