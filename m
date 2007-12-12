@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38260 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751569AbXLDU5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 15:57:53 -0500
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Holger Schurig <holgerschurig@gmx.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <200712042150.12050.holgerschurig@gmx.de>
-References: <1196622331.7472.4.camel@localhost>
-	 <20071204110135.1835a57e@morte> <1196790047.7472.5.camel@localhost>
-	 <200712042150.12050.holgerschurig@gmx.de>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 21:57:50 +0100
-Message-Id: <1196801870.7472.19.camel@localhost> (sfid-20071204_205757_590650_FA718EA2)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:53563 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755264AbXLLIV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 03:21:28 -0500
+Message-ID: <20071212032126.f62e3tx3c408ocgo@webmail.spamcop.net> (sfid-20071212_082137_270608_6109C2F7)
+Date: Wed, 12 Dec 2007 03:21:26 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Joseph Jezak <josejx@gentoo.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH RFT] b43: Fix for broken transmission
+References: <200712111343.50943.mb@bu3sch.de>
+	<200712111622.54086.mb@bu3sch.de> <475F926C.2000003@lwfinger.net>
+In-Reply-To: <475F926C.2000003@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Larry Finger <larry.finger@lwfinger.net>:
 
-On Tue, 2007-12-04 at 21:50 +0100, Holger Schurig wrote:
-> > but if we want to make some parameters available for everybody, we
-> > cannot rely on module parameters, i.e. when mac80211 is compiled int
-> > the kernel.
-> 
-> It doesn't matter if a something is compiled as a module or if this 
-> something is part of a monolithic kernel. The "something" will still 
-> get it's /sys/module/SOMETHING/ directory and if it happens to have 
-> parameters, a /sys/module/SOMETHING/parameters/ directory.
+> Michael Buesch wrote:
+>> Here's an updated version that should fix even more bugs:
+>> http://bu3sch.de/patches/wireless-2.6/20071211-1622/patches/005-b43-fix-init-rewrite-breakage.patch
 
-Thanks, good to know.
+I had to omit the last part (for tables.c) - it's unrelated, cosmetic  
+and doesn't apply to wireless-2.6/everything.
 
-> But don't do it for rate control. Maybe you want to have on wlan0 a 
-> different rate control than on wlan1. And 
-> a /sys/module/SOMETHING/parameters/ exported variables are 
-> module-global.
+> This patch (and its predecessor) seem to make transmission at the   
+> OFDM rates a bit more reliable on
+> my BCM4311/2 card.
 
-Agreed.
+It's working fine on BCM4318 on PowerPC.  I haven't done any specific  
+comparisons, but it used to disconnect a lot (at least one an hour)  
+with a small antenna, so I installed a bigger antenna, but then gave  
+up and switched to using another wireless device (rtl8185).
 
-Mattias
+Right now, it's been working for over 2 hours with a small antenna  
+(although it's a different antenna borrowed from rtl8185) and no  
+disconnects.  Scanning finds 5 APs, which is the most I have seen here.
 
+-- 
+Regards,
+Pavel Roskin
