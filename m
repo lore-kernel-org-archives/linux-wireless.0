@@ -1,104 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40930 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751964AbXLFLiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 06:38:09 -0500
-Subject: [RFC PATCH] introduce WEXT scan capabilities
-From: Dan Williams <dcbw@redhat.com>
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain
-Date: Thu, 06 Dec 2007 06:28:39 -0500
-Message-Id: <1196940519.3980.51.camel@localhost.localdomain> (sfid-20071206_113813_153868_BF0D373C)
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:41531 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752763AbXLLBLo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 20:11:44 -0500
+Date: Tue, 11 Dec 2007 17:11:06 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: dcbw@redhat.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
+Message-Id: <20071211171106.ec6f6d38.akpm@linux-foundation.org> (sfid-20071212_011148_890606_C0086012)
+In-Reply-To: <587622.50680.qm@web52902.mail.re2.yahoo.com>
+References: <1193657365.19938.17.camel@localhost.localdomain>
+	<587622.50680.qm@web52902.mail.re2.yahoo.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-See the previous thread about fixing the ap_scan mess.  I think Jean's
-correct in asserting that we need more bits for scan capability.
+On Sun, 9 Dec 2007 19:41:58 +0000 (GMT)
+Chris Rankin <rankincj@yahoo.com> wrote:
 
-This patch introduces scan capability bits for WEXT; hopefully cfg80211
-can also pick up equivalent functionality.  Capability bits are provided
-for all the current options that may be passed to drivers in the
-iw_scan_req structure.  It can be assumed that if the driver reports the
-scan capability, that the driver respects the options specified in the
-iw_scan_req structure when performing the scan.
+> Hi,
+> 
+> I've recently been having trouble loading the hostap_plx 802.11b wireless networking driver, and
+> this evening I managed to narrow the problem down to these lines of code by copying code from
+> hostap_plx into a "test driver" until the test driver also locked the PC up:
+> 
+>         /* read CIS; it is in even offsets in the beginning of attr_mem */
+>         for (i = 0; i < CIS_MAX_LEN; i++)
+>                 cis[i] = readb(attr_mem + 2 * i);
+> 
+> If I comment these lines out then my test driver just complains about the garbage CIS information
+> and fails gracefully. Leave these lines in and my PC freezes instantly.
+> 
+> These lines are part of the prism2_plx_check_cis() function, which is called when the module first
+> loads. CIX_MAX_LEN is a #define for 256, and cis is a u8* pointer previously allocated as:
+> 
+> cis = kmalloc(CIS_MAX_LEN, GFP_KERNEL);
+> 
+> attr_mem is one of the function's paramters, and is defined as void __iomem *attr_mem.
+> 
+> As far as I can tell, the PCI I/O memory information is correct, and matches what lspci tells me:
+> 
+> 00:0e.0 Network controller: Netgear MA301 802.11b Wireless PCI Adapter (rev 02)
+>         Subsystem: Netgear MA301 802.11b Wireless PCI Adapter
+>         Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+
+> FastB2B-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR-
+> <PERR-
+>         Interrupt: pin A routed to IRQ 5
+>         Region 1: I/O ports at 1000 [size=128]
+>         Region 2: Memory at e8002000 (32-bit, non-prefetchable) [size=4K]
+>         Region 3: I/O ports at 1080 [size=64]
+> 
+> so there is apparently 4K of I/O memory at 0xe8002000.
+> 
+> Can anyone help me understand why my PC is locking up when it executes this code, please?
+> 
 
-Clients can use logic like (cribbed from wpa_supplicant's driver_wext.c)
-this to figure out whether or not the capability bits are supported:
-
-struct iwreq iwr;
-struct iw_range *range;
-
-<set up iwr/range for request>
-
-if (ioctl(drv->ioctl_sock, SIOCGIWRANGE, &iwr) == 0) {
-	u8 minlen = ((char *) &range->scan_capa) - (char *) range + sizeof(range->scan_capa);
-
-	if (iwr.u.data.length >= minlen) {
-		/* SCAN_CAPA is supported */
-	}
-}
-
-Jean; what do you think?
-
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+I guess something like this:
 
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 54f44e5..e30ad24 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -8901,6 +8901,8 @@ static int ipw_wx_get_range(struct net_device *dev,
- 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
- 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+--- a/drivers/net/wireless/hostap/hostap_plx.c~a
++++ a/drivers/net/wireless/hostap/hostap_plx.c
+@@ -343,13 +343,14 @@ static int prism2_plx_check_cis(void __i
+ 	int i, pos;
+ 	unsigned int rmsz, rasz, manfid1, manfid2;
+ 	struct prism2_plx_manfid *manfid;
++	int len = min(CIS_MAX_LEN, attr_len);
  
-+	range->scan_capa = IW_SCAN_CAPA_ESSID | IW_SCAN_CAPA_TYPE;
-+
- 	IPW_DEBUG_WX("GET Range\n");
- 	return 0;
- }
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 0987aa7..9342801 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -541,6 +541,15 @@
- /* Maximum size of returned data */
- #define IW_SCAN_MAX_DATA	4096	/* In bytes */
+-	cis = kmalloc(CIS_MAX_LEN, GFP_KERNEL);
++	cis = kmalloc(len, GFP_KERNEL);
+ 	if (cis == NULL)
+ 		return -ENOMEM;
  
-+/* Scan capabilitiy macros - in (struct iw_range *)->scan_capa */
-+#define IW_SCAN_CAPA_ESSID		0x00000001
-+#define IW_SCAN_CAPA_BSSID		0x00000002
-+#define IW_SCAN_CAPA_CHANNEL	0x00000004
-+#define IW_SCAN_CAPA_MODE		0x00000008
-+#define IW_SCAN_CAPA_RATE		0x00000010
-+#define IW_SCAN_CAPA_TYPE		0x00000020
-+#define IW_SCAN_CAPA_TIME		0x00000040
-+
- /* Max number of char in custom event - use multiple of them if needed */
- #define IW_CUSTOM_MAX		256	/* In bytes */
+ 	/* read CIS; it is in even offsets in the beginning of attr_mem */
+-	for (i = 0; i < CIS_MAX_LEN; i++)
++	for (i = 0; i < len; i++)
+ 		cis[i] = readb(attr_mem + 2 * i);
+ 	printk(KERN_DEBUG "%s: CIS: %02x %02x %02x %02x %02x %02x ...\n",
+ 	       dev_info, cis[0], cis[1], cis[2], cis[3], cis[4], cis[5]);
+@@ -361,8 +362,8 @@ static int prism2_plx_check_cis(void __i
+ 	manfid1 = manfid2 = 0;
  
-@@ -1040,6 +1049,8 @@ struct	iw_range
- 	 * because each entry contain its channel index */
+ 	pos = 0;
+-	while (pos < CIS_MAX_LEN - 1 && cis[pos] != CISTPL_END) {
+-		if (pos + 2 + cis[pos + 1] > CIS_MAX_LEN)
++	while (pos < len - 1 && cis[pos] != CISTPL_END) {
++		if (pos + 2 + cis[pos + 1] > len)
+ 			goto cis_error;
  
- 	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
-+
-+	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
- };
+ 		switch (cis[pos]) {
+@@ -401,7 +402,7 @@ static int prism2_plx_check_cis(void __i
+ 		pos += cis[pos + 1] + 2;
+ 	}
  
- /*
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 646e2f2..0c52ed8 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -218,6 +218,8 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
- 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
- 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
+-	if (pos >= CIS_MAX_LEN || cis[pos] != CISTPL_END)
++	if (pos >= len || cis[pos] != CISTPL_END)
+ 		goto cis_error;
  
-+	range->scan_capa |= IW_SCAN_CAPA_ESSID;
-+
- 	return 0;
- }
- 
+ 	for (manfid = prism2_plx_known_manfids; manfid->manfid1 != 0; manfid++)
+_
 
+would be a bit safer, but looking at your /proc/iomem I doubt if it will
+fix anything.
+
+It might be interesting to see what value of `i' is causing it to fall
+over.
+
+Did any earlier version of the 2.6 kernel work OK?
