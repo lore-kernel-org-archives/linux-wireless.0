@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52885 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611AbXLGSGA (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.235]:14711 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbXLLOl0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 13:06:00 -0500
-Subject: Re: [PATCH] libertas: implement new scanning logic
-From: David Woodhouse <dwmw2@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1197050263.30465.7.camel@localhost.localdomain>
-References: <200711290927.15915.hs4233@mail.mn-solutions.de>
-	 <1196787130.4772.2.camel@localhost.localdomain>
-	 <200712071547.37944.hs4233@mail.mn-solutions.de>
-	 <1197050263.30465.7.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Fri, 07 Dec 2007 18:05:43 +0000
-Message-Id: <1197050743.13978.606.camel@pmac.infradead.org> (sfid-20071207_180604_192098_1C8C18E4)
-Mime-Version: 1.0
+	Wed, 12 Dec 2007 09:41:26 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so137573nze.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2007 06:41:25 -0800 (PST)
+Message-ID: <b25c3fa70712120641l1fcf4447u2501cc8539396cf3@mail.gmail.com> (sfid-20071212_144132_441475_5D005E16)
+Date: Wed, 12 Dec 2007 23:41:24 +0900
+From: "Joonwoo Park" <joonwpark81@gmail.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] [net/wireless/iwlwifi] : iwlwifi 3945 Fix raceconditional panic.
+Cc: "Zhu Yi" <yi.zhu@intel.com>, ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20071212034325.4a022320.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <00e501c831ab$2e78daa0$9c94fea9@jason>
+	 <1196298656.7614.77.camel@debian.sh.intel.com>
+	 <016401c83229$3302d250$9c94fea9@jason>
+	 <20071212034325.4a022320.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-12-07 at 12:57 -0500, Dan Williams wrote:
-> Yeah, go ahead.  I got distracted because of changes in > 2.6.23 kernels
-> that cause the driver not to build there, and haven't chased them down
-> yet.
+2007/12/12, Andrew Morton <akpm@linux-foundation.org>:
+>
+> Did drivers/net/wireless/iwlwifi/iwl4965-base.c get fixed in a simlar
+> fashion?
+>
 
-Hm, it's building for me. Where can I get hold of hardware?
+Hi Andrew,
+Both of them was applied to mainline.
 
--- 
-dwmw2
+commit 3ae6a054553ee8b7f74bf7de8904022b26705778
+Author: Joonwoo Park <joonwpark81@gmail.com>
+Date:   Thu Nov 29 10:43:16 2007 +0900
 
+    iwlwifi 4965 Fix race conditional panic.
+
+    Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+commit e47eb6ad41e8fc4c2696665512b70d1fd4cf3f22
+Author: Joonwoo Park <joonwpark81@gmail.com>
+Date:   Thu Nov 29 10:42:49 2007 +0900
+
+    iwlwifi 3945 Fix race conditional panic.
+
+    Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Thanks,
+Joonwoo
