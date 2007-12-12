@@ -1,106 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2998 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758305AbXLQV2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 16:28:52 -0500
-Date: Mon, 17 Dec 2007 15:54:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20071217205454.GG3121@tuxdriver.com> (sfid-20071217_212857_436708_485132DA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.gmx.net ([213.165.64.20]:36938 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752603AbXLLTte (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 14:49:34 -0500
+Subject: Re: tx_status reporting of RTS/CTS frames
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <1197479702.6558.125.camel@johannes.berg>
+References: <1197412922.7030.11.camel@localhost>
+	 (sfid-20071211_224234_989906_7701C071)  <1197479702.6558.125.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 12 Dec 2007 20:49:31 +0100
+Message-Id: <1197488971.7491.1.camel@localhost> (sfid-20071212_194938_801766_1DC41A29)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-A few more small fixes for 2.6.24.  Let me know if there are any
-problems!
+On Wed, 2007-12-12 at 18:15 +0100, Johannes Berg wrote:
+> Hi,
+> 
+> > rt2x00 devices can't generate rts/cts frames themselves, but rely on the
+> > driver to generate them. Also, the hardware reports tx status back for
+> > those frames. Now the question is whether these frames should be
+> > reported back to mac80211 using ieee80211_tx_status[_irqsafe]. AFAIK,
+> > this has some subtle effects, e.g. they won't show up on monitor
+> > interfaces if we don't report them.
+> 
+> They never show up on monitor interfaces for all other hardware because
+> there the hardware handles them. How is it that rt2x00 cannot handle
+> rts? It has to at least know that an RTS was sent and to send the frame
+> only after the CTS, and that needs to be a MAC function and cannot be
+> implemented in host software.
 
-Thanks,
+rt2x00 devices have some flags in the TX descriptor that basically tell
+the device to send a burst of frames, optionally requesting to wait for
+an ack (i.e. CTS in the case of an RTS frame) for any of them.
 
-John
+> So, I'd think they shouldn't be reported at all.
 
----
+Ok, I'll prepare a patch for rt2x00.
 
-Individual patches are available here:
+Mattias
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
-
----
-
-The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc5
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Cyrill Gorcunov (1):
-      NET: mac80211: fix inappropriate memory freeing
-
-Johannes Berg (1):
-      mac80211: fix header ops
-
-Michael Wu (1):
-      mac80211: Drop out of associated state if link is lost
-
- net/mac80211/ieee80211.c      |    1 -
- net/mac80211/ieee80211_rate.c |    2 +-
- net/mac80211/ieee80211_sta.c  |    8 ++------
- 3 files changed, 3 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 505af1f..6378850 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -427,7 +427,6 @@ static const struct header_ops ieee80211_header_ops = {
- void ieee80211_if_setup(struct net_device *dev)
- {
- 	ether_setup(dev);
--	dev->header_ops = &ieee80211_header_ops;
- 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
- 	dev->wireless_handlers = &ieee80211_iw_handler_def;
- 	dev->set_multicast_list = ieee80211_set_multicast_list;
-diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
-index 7254bd6..9f26a10 100644
---- a/net/mac80211/ieee80211_rate.c
-+++ b/net/mac80211/ieee80211_rate.c
-@@ -59,11 +59,11 @@ void ieee80211_rate_control_unregister(struct rate_control_ops *ops)
- 	list_for_each_entry(alg, &rate_ctrl_algs, list) {
- 		if (alg->ops == ops) {
- 			list_del(&alg->list);
-+			kfree(alg);
- 			break;
- 		}
- 	}
- 	mutex_unlock(&rate_ctrl_mutex);
--	kfree(alg);
- }
- EXPORT_SYMBOL(ieee80211_rate_control_unregister);
- 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 16afd24..bee8080 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -808,12 +808,8 @@ static void ieee80211_associated(struct net_device *dev,
- 		sta_info_put(sta);
- 	}
- 	if (disassoc) {
--		union iwreq_data wrqu;
--		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
--		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
--		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
--		mod_timer(&ifsta->timer, jiffies +
--				      IEEE80211_MONITORING_INTERVAL + 30 * HZ);
-+		ifsta->state = IEEE80211_DISABLED;
-+		ieee80211_set_associated(dev, ifsta, 0);
- 	} else {
- 		mod_timer(&ifsta->timer, jiffies +
- 				      IEEE80211_MONITORING_INTERVAL);
--- 
-John W. Linville
-linville@tuxdriver.com
