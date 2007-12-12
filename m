@@ -1,255 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pmac.infradead.org ([90.155.92.200]:40764 "EHLO
-	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbXLSQKF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:10:05 -0500
-Subject: [PATCH 130/48] libertas: convert SET_WEP to a direct command
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J50vE-00021k-Jg@pmac.infradead.org> (sfid-20071219_162100_279560_E23E2A2D)
-Date: Wed, 19 Dec 2007 15:33:24 +0000
+Received: from mx1.redhat.com ([66.187.233.31]:52040 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757821AbXLLPaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 10:30:21 -0500
+Subject: [PATCH v2] introduce WEXT scan capabilities
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jean Tourrilhes <jt@hpl.hp.com>, linux-wireless@vger.kernel.org,
+	David Miller <davem@davemloft.net>
+Content-Type: text/plain
+Date: Wed, 12 Dec 2007 10:25:07 -0500
+Message-Id: <1197473107.12484.3.camel@localhost.localdomain> (sfid-20071212_153046_541924_F187547A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 18 Dec 2007 00:18:05 -0500
+Introduce scan capabilities to WEXT so that userspace can do intelligent
+things with scan behavior such as handling hidden SSIDs more gracefully.
+If the driver reports a specific scan capability, the driver must
+respect the options specified in the iw_scan_req structure when handling
+the SIOCSIWSCAN call, unless it's mode or state does not allow it to do
+so, in which case it must return an error.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/assoc.c   |   26 ++++----------
- drivers/net/wireless/libertas/cmd.c     |   57 +++++++++++--------------------
- drivers/net/wireless/libertas/cmd.h     |    2 +
- drivers/net/wireless/libertas/cmdresp.c |    1 -
- drivers/net/wireless/libertas/hostcmd.h |    7 ++--
- 5 files changed, 34 insertions(+), 59 deletions(-)
+This version switches to Dave Kilroy's suggestion of claiming unused
+padding space for the scan_capa field.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index 882e51c..e91cd67 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -258,7 +258,7 @@ static int assoc_helper_channel(struct lbs_private *priv,
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index d8f5efc..3a57d48 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -1089,6 +1089,9 @@ static int prism2_ioctl_giwrange(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
  
- 
- static int assoc_helper_wep_keys(struct lbs_private *priv,
--                                 struct assoc_request * assoc_req)
-+				 struct assoc_request *assoc_req)
- {
- 	int i;
- 	int ret = 0;
-@@ -266,22 +266,11 @@ static int assoc_helper_wep_keys(struct lbs_private *priv,
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
- 	/* Set or remove WEP keys */
--	if (   assoc_req->wep_keys[0].len
--	    || assoc_req->wep_keys[1].len
--	    || assoc_req->wep_keys[2].len
--	    || assoc_req->wep_keys[3].len) {
--		ret = lbs_prepare_and_send_command(priv,
--					    CMD_802_11_SET_WEP,
--					    CMD_ACT_ADD,
--					    CMD_OPTION_WAITFORRSP,
--					    0, assoc_req);
--	} else {
--		ret = lbs_prepare_and_send_command(priv,
--					    CMD_802_11_SET_WEP,
--					    CMD_ACT_REMOVE,
--					    CMD_OPTION_WAITFORRSP,
--					    0, NULL);
--	}
-+	if (assoc_req->wep_keys[0].len || assoc_req->wep_keys[1].len ||
-+	    assoc_req->wep_keys[2].len || assoc_req->wep_keys[3].len)
-+		ret = lbs_cmd_802_11_set_wep(priv, CMD_ACT_ADD, assoc_req);
-+	else
-+		ret = lbs_cmd_802_11_set_wep(priv, CMD_ACT_REMOVE, assoc_req);
- 
- 	if (ret)
- 		goto out;
-@@ -291,6 +280,7 @@ static int assoc_helper_wep_keys(struct lbs_private *priv,
- 		priv->currentpacketfilter |= CMD_ACT_MAC_WEP_ENABLE;
- 	else
- 		priv->currentpacketfilter &= ~CMD_ACT_MAC_WEP_ENABLE;
++	if (local->sta_fw_ver >= PRISM2_FW_VER(1,3,1))
++		range->scan_capa = IW_SCAN_CAPA_ESSID;
 +
- 	ret = lbs_set_mac_packet_filter(priv);
- 	if (ret)
- 		goto out;
-@@ -300,7 +290,7 @@ static int assoc_helper_wep_keys(struct lbs_private *priv,
- 	/* Copy WEP keys into priv wep key fields */
- 	for (i = 0; i < 4; i++) {
- 		memcpy(&priv->wep_keys[i], &assoc_req->wep_keys[i],
--			sizeof(struct enc_key));
-+		       sizeof(struct enc_key));
- 	}
- 	priv->wep_tx_keyidx = assoc_req->wep_tx_keyidx;
- 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 3d9ad0e..05e25ce 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -240,74 +240,61 @@ int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
  	return 0;
  }
  
--static int lbs_cmd_802_11_set_wep(struct lbs_private *priv,
--                                   struct cmd_ds_command *cmd,
--                                   u32 cmd_act,
--                                   void * pdata_buf)
-+int lbs_cmd_802_11_set_wep(struct lbs_private *priv, uint16_t cmd_action,
-+			   struct assoc_request *assoc)
- {
--	struct cmd_ds_802_11_set_wep *wep = &cmd->params.wep;
-+	struct cmd_ds_802_11_set_wep cmd;
- 	int ret = 0;
--	struct assoc_request * assoc_req = pdata_buf;
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 54f44e5..e30ad24 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -8901,6 +8901,8 @@ static int ipw_wx_get_range(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
  
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
--	cmd->command = cpu_to_le16(CMD_802_11_SET_WEP);
--	cmd->size = cpu_to_le16(sizeof(*wep) + S_DS_GEN);
--
--	if (cmd_act == CMD_ACT_ADD) {
--		int i;
-+	cmd.hdr.command = cpu_to_le16(CMD_802_11_SET_WEP);
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 
--		if (!assoc_req) {
--			lbs_deb_cmd("Invalid association request!\n");
--			ret = -1;
--			goto done;
--		}
-+	cmd.action = cpu_to_le16(cmd_action);
- 
--		wep->action = cpu_to_le16(CMD_ACT_ADD);
-+	if (cmd_action == CMD_ACT_ADD) {
-+		int i;
- 
- 		/* default tx key index */
--		wep->keyindex = cpu_to_le16((u16)(assoc_req->wep_tx_keyidx &
--						  (u32)CMD_WEP_KEY_INDEX_MASK));
-+		cmd.keyindex = cpu_to_le16(assoc->wep_tx_keyidx &
-+					   CMD_WEP_KEY_INDEX_MASK);
- 
- 		/* Copy key types and material to host command structure */
- 		for (i = 0; i < 4; i++) {
--			struct enc_key * pkey = &assoc_req->wep_keys[i];
-+			struct enc_key *pkey = &assoc->wep_keys[i];
- 
- 			switch (pkey->len) {
- 			case KEY_LEN_WEP_40:
--				wep->keytype[i] = CMD_TYPE_WEP_40_BIT;
--				memmove(&wep->keymaterial[i], pkey->key,
--				        pkey->len);
-+				cmd.keytype[i] = CMD_TYPE_WEP_40_BIT;
-+				memmove(cmd.keymaterial[i], pkey->key, pkey->len);
- 				lbs_deb_cmd("SET_WEP: add key %d (40 bit)\n", i);
- 				break;
- 			case KEY_LEN_WEP_104:
--				wep->keytype[i] = CMD_TYPE_WEP_104_BIT;
--				memmove(&wep->keymaterial[i], pkey->key,
--				        pkey->len);
-+				cmd.keytype[i] = CMD_TYPE_WEP_104_BIT;
-+				memmove(cmd.keymaterial[i], pkey->key, pkey->len);
- 				lbs_deb_cmd("SET_WEP: add key %d (104 bit)\n", i);
- 				break;
- 			case 0:
- 				break;
- 			default:
- 				lbs_deb_cmd("SET_WEP: invalid key %d, length %d\n",
--				       i, pkey->len);
-+					    i, pkey->len);
- 				ret = -1;
- 				goto done;
- 				break;
- 			}
- 		}
--	} else if (cmd_act == CMD_ACT_REMOVE) {
-+	} else if (cmd_action == CMD_ACT_REMOVE) {
- 		/* ACT_REMOVE clears _all_ WEP keys */
--		wep->action = cpu_to_le16(CMD_ACT_REMOVE);
- 
- 		/* default tx key index */
--		wep->keyindex = cpu_to_le16((u16)(priv->wep_tx_keyidx &
--						  (u32)CMD_WEP_KEY_INDEX_MASK));
-+		cmd.keyindex = cpu_to_le16(priv->wep_tx_keyidx &
-+					   CMD_WEP_KEY_INDEX_MASK);
- 		lbs_deb_cmd("SET_WEP: remove key %d\n", priv->wep_tx_keyidx);
- 	}
- 
--	ret = 0;
--
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_SET_WEP, &cmd);
- done:
- 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
- 	return ret;
-@@ -1422,10 +1409,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_80211_deauthenticate(priv, cmdptr);
- 		break;
- 
--	case CMD_802_11_SET_WEP:
--		ret = lbs_cmd_802_11_set_wep(priv, cmdptr, cmd_action, pdata_buf);
--		break;
--
- 	case CMD_802_11_AD_HOC_START:
- 		ret = lbs_cmd_80211_ad_hoc_start(priv, cmdptr, pdata_buf);
- 		break;
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index ca09b18..d9947c3 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -51,5 +51,7 @@ int lbs_cmd_802_11_inactivity_timeout(struct lbs_private *priv,
- 				      uint16_t cmd_action, uint16_t *timeout);
- int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
- 				struct sleep_params *sp);
-+int lbs_cmd_802_11_set_wep(struct lbs_private *priv, uint16_t cmd_action,
-+			   struct assoc_request *assoc);
- 
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 40615a8..d670a81 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -490,7 +490,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 
- 	case CMD_RET(CMD_MAC_MULTICAST_ADR):
- 	case CMD_RET(CMD_MAC_CONTROL):
--	case CMD_RET(CMD_802_11_SET_WEP):
- 	case CMD_RET(CMD_802_11_RESET):
- 	case CMD_RET(CMD_802_11_AUTHENTICATE):
- 	case CMD_RET(CMD_802_11_BEACON_STOP):
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 855c2d0..6d76634 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -256,6 +256,8 @@ struct cmd_ds_802_11_ad_hoc_result {
- };
- 
- struct cmd_ds_802_11_set_wep {
-+	struct cmd_header hdr;
++	range->scan_capa = IW_SCAN_CAPA_ESSID | IW_SCAN_CAPA_TYPE;
 +
- 	/* ACT_ADD, ACT_REMOVE or ACT_ENABLE */
- 	__le16 action;
+ 	IPW_DEBUG_WX("GET Range\n");
+ 	return 0;
+ }
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 0987aa7..74e84ca 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -541,6 +541,16 @@
+ /* Maximum size of returned data */
+ #define IW_SCAN_MAX_DATA	4096	/* In bytes */
  
-@@ -263,8 +265,8 @@ struct cmd_ds_802_11_set_wep {
- 	__le16 keyindex;
++/* Scan capability flags - in (struct iw_range *)->scan_capa */
++#define IW_SCAN_CAPA_NONE		0x00
++#define IW_SCAN_CAPA_ESSID		0x01
++#define IW_SCAN_CAPA_BSSID		0x02
++#define IW_SCAN_CAPA_CHANNEL	0x04
++#define IW_SCAN_CAPA_MODE		0x08
++#define IW_SCAN_CAPA_RATE		0x10
++#define IW_SCAN_CAPA_TYPE		0x20
++#define IW_SCAN_CAPA_TIME		0x40
++
+ /* Max number of char in custom event - use multiple of them if needed */
+ #define IW_CUSTOM_MAX		256	/* In bytes */
  
- 	/* 40, 128bit or TXWEP */
--	u8 keytype[4];
--	u8 keymaterial[4][16];
-+	uint8_t keytype[4];
-+	uint8_t keymaterial[4][16];
- };
+@@ -963,6 +973,9 @@ struct	iw_range
+ 	__u16		old_num_channels;
+ 	__u8		old_num_frequency;
  
- struct cmd_ds_802_3_get_stat {
-@@ -688,7 +690,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_mac_control macctrl;
- 		struct cmd_ds_802_11_associate associate;
- 		struct cmd_ds_802_11_deauthenticate deauth;
--		struct cmd_ds_802_11_set_wep wep;
- 		struct cmd_ds_802_11_ad_hoc_start ads;
- 		struct cmd_ds_802_11_reset reset;
- 		struct cmd_ds_802_11_ad_hoc_result result;
--- 
-1.5.3.4
++	/* Scan capabilities */
++	__u8		scan_capa; 	/* IW_SCAN_CAPA_* bit field */
++
+ 	/* Wireless event capability bitmasks */
+ 	__u32		event_capa[6];
+ 
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 646e2f2..0c52ed8 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -218,6 +218,8 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
+ 
++	range->scan_capa |= IW_SCAN_CAPA_ESSID;
++
+ 	return 0;
+ }
+ 
 
