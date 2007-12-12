@@ -1,132 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:35187 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751485AbXLJCea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 21:34:30 -0500
-Date: Mon, 10 Dec 2007 03:28:11 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening factor
-Message-ID: <20071210032811.5cea4909@morte> (sfid-20071210_023433_117580_ADFBFCA6)
-In-Reply-To: <1197244416.7543.27.camel@localhost>
-References: <20071209211547.2d7fca32@morte>
-	<20071209212133.43030d03@morte>
-	<1197239361.7543.17.camel@localhost>
-	<20071210003120.0078db1d@morte>
-	<1197244416.7543.27.camel@localhost>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53742 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbXLLSJe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 13:09:34 -0500
+Subject: Re: [PATCH] try 2: mac80211: Fix swapped parameters to
+	ieee80211_set_channel()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <20071212180204.GP31218@lunn.ch>
+References: <20071212153158.GB16947@lunn.ch>
+	 <1197481426.6558.138.camel@johannes.berg>  <20071212180204.GP31218@lunn.ch>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LvCgloeT1fw6G8xjK9mC"
+Date: Wed, 12 Dec 2007 19:09:29 +0100
+Message-Id: <1197482969.6558.149.camel@johannes.berg> (sfid-20071212_180937_711926_82CF467E)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a PID sharpening factor for faster response after
-association and low activity events.
 
+--=-LvCgloeT1fw6G8xjK9mC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>
+On Wed, 2007-12-12 at 19:02 +0100, Andrew Lunn wrote:
+> > Good catch, but please resubmit with tabs as indentation and CC John
+> as
+> > he gets to apply patches. Or I can send it on if you wish.
+>=20
+> OK. Here it is with tabs, and with CC to John Linville
 
----
+Except now you have a bad patch description. Keep in mind that the patch
+will most likely be applied with automatic tools :)
 
-Ok, this isn't a no-op anymore. :)
+I'll leave it up to John whether he wants a new one.
 
----
+> Signed-off-by Andrew lunn <andrew@lunn.ch>
 
-Index: wireless-2.6/net/mac80211/rc80211_pid.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-+++ wireless-2.6/net/mac80211/rc80211_pid.c
-@@ -23,13 +23,16 @@
-  *
-  * The controller basically computes the following:
-  *
-- * adj = CP * err + CI * err_avg + CD * (err - last_err)
-+ * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
-  *
-  * where
-  * 	adj	adjustment value that is used to switch TX rate (see below)
-  * 	err	current error: target vs. current failed frames percentage
-  * 	last_err	last error
-  * 	err_avg	average (i.e. poor man's integral) of recent errors
-+ *	sharpening	non-zero when fast response is needed (i.e. right after
-+ *			association or no frames sent for a long time), heading
-+ * 			to zero over time
-  * 	CP	Proportional coefficient
-  * 	CI	Integral coefficient
-  * 	CD	Derivative coefficient
-@@ -65,6 +68,11 @@
- #define RC_PID_SMOOTHING_SHIFT 3
- #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
- 
-+/* Sharpening factor (used for D part of PID controller) */
-+#define RATE_CONTROL_SHARPENING_SHIFT 2
-+#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-+#define RATE_CONTROL_SHARPENING_DURATION 1
-+
- /* Fixed point arithmetic shifting amount. */
- #define RC_PID_ARITH_SHIFT 8
- 
-@@ -131,8 +139,11 @@ struct rc_pid_sta_info {
- 	 */
- 	s32 err_avg_sc;
- 
--	/* Last framed failes percentage sample */
-+	/* Last framed failes percentage sample. */
- 	u32 last_pf;
-+
-+	/* Sharpening needed. */
-+	u8 sharp_cnt;
- };
- 
- /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
-@@ -282,19 +293,19 @@ static void rate_control_pid_sample(stru
- 
- 	mode = local->oper_hw_mode;
- 	spinfo = sta->rate_ctrl_priv;
-+
-+	/* In case nothing happened during the previous control interval, turn
-+	 * on the sharpening factor. */
-+	if (jiffies - spinfo->last_sample > RC_PID_INTERVAL)
-+		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
-+
- 	spinfo->last_sample = jiffies;
- 
--	/* If no frames were transmitted, we assume the old sample is
--	 * still a good measurement and copy it. */
--	if (spinfo->tx_num_xmit == 0)
--		pf = spinfo->last_pf;
--	else {
--		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
--		pf <<= RC_PID_ARITH_SHIFT;
-+	pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
-+	pf <<= RC_PID_ARITH_SHIFT;
- 
--		spinfo->tx_num_xmit = 0;
--		spinfo->tx_num_failed = 0;
--	}
-+	spinfo->tx_num_xmit = 0;
-+	spinfo->tx_num_failed = 0;
- 
- 	/* If we just switched rate, update the rate behaviour info. */
- 	if (pinfo->oldrate != sta->txrate) {
-@@ -321,8 +332,11 @@ static void rate_control_pid_sample(stru
- 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
- 	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
- 
--	err_der = pf - spinfo->last_pf;
-+	err_der = pf - spinfo->last_pf
-+		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
- 	spinfo->last_pf = pf;
-+	if (spinfo->sharp_cnt)
-+			spinfo->sharp_cnt--;
- 
- 	/* Compute the controller output. */
- 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>=20
+>=20
+> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioct=
+l.c
+> index 7027eed..50d4a46 100644
+> --- a/net/mac80211/ieee80211_ioctl.c
+> +++ b/net/mac80211/ieee80211_ioctl.c
+> @@ -344,7 +344,7 @@ static int ieee80211_ioctl_siwfreq(struct net_device =
+*dev,
+>                                         IEEE80211_STA_AUTO_CHANNEL_SEL;
+>                         return 0;
+>                 } else
+> -                       return ieee80211_set_channel(local, freq->m, -1);
+> +                       return ieee80211_set_channel(local, -1, freq->m);
+>         } else {
+>                 int i, div =3D 1000000;
+>                 for (i =3D 0; i < freq->e; i++)
+>=20
 
+--=-LvCgloeT1fw6G8xjK9mC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Ciao
-Stefano
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2Aj16Vg1VMiehFYAQKJuA/7BdSbRjiqikJNGHJ6OJu95km14DDV39FQ
+hW2AAmTlsdZUYEuk5z2vlIW8ZI3ryaBq61BAcnV9lPfdlUh+l2sisWCotjM1il06
+2wGHJj+gmeYvYMEnWAwbB/Nak5qlNTeVgos88vVmPEx2rkdQWluL9HMyXR4Wk0Id
+Gwym5yNfL4q73DTfDwy/OPDArJVadwxv+Djgsu2N5oef9iHsmR+UcoTMF64PgarF
+2BzVKu5Csnywxyaei1GMl+tzWtVDE8AZr69rCaRYNpE9rsrv3jtyKfyQ1Z1zgAOK
+tV1cvgXTXz7srf74Xnse/e5ysNQO2uf2Mg9i93tXfg/RQQv615Vymeznxry9FLjE
+4DTGBh8DknPCs9JEMQlf9kOCgh9nRB0mTEhcdRnt3AV4txQ/Ko93LMvUJSYIaTXr
+5Nqujexhaur2PGhlmW0Rv2XQI5xWwqOSGPhZOTqsz7qnwrBTs2Zx0dWOC+hwWmQZ
+pn/AlF1T2mhf9f0+Y1HyaRsGLbs8syEp09T7wBeDcoSWPYnRA+rdLrKNupXiijSx
+m96ehkXdqmp1hCXIVGGjtpdGrq3yxL9bUm5/vfydKjVG2clXvi9spsOIP0aDr6Ti
+7+huQP61ksQ3ZbUpYBJLed/6zW53kXAcjrduKnsZY9lkvpkdOrO+c59ZkXx4v0Ql
+OIxnTXmFGdo=
+=4+//
+-----END PGP SIGNATURE-----
+
+--=-LvCgloeT1fw6G8xjK9mC--
+
