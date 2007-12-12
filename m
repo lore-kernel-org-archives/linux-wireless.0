@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:61864 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753737AbXLGUrJ (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51984 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756759AbXLLKoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 15:47:09 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1776457pyb
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2007 12:47:08 -0800 (PST)
-Message-ID: <43e72e890712071247p78dcaf36p868d1dc002935417@mail.gmail.com> (sfid-20071207_204714_404685_5ABA90C0)
-Date: Fri, 7 Dec 2007 15:47:07 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: lynx.abraxas@freenet.de
-Subject: Re: What's wrong if wlan0 device is not reacting?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890712071225p774a2f9bg92540905dbd19e66@mail.gmail.com>
+	Wed, 12 Dec 2007 05:44:34 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Brennan Ashton" <comphappy@gmail.com>
+Subject: Re: b43 regression
+Date: Wed, 12 Dec 2007 11:42:45 +0100
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200712101136.48669.mb@bu3sch.de> <200712111202.34101.mb@bu3sch.de> <b2d05de20712111916o7e7b0395j974c06591de38965@mail.gmail.com>
+In-Reply-To: <b2d05de20712111916o7e7b0395j974c06591de38965@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20071206170858.GA2008@drago>
-	 <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
-	 <20071206214807.GB1811@drago>
-	 <43e72e890712061714i3427f558p9b94390955b0a817@mail.gmail.com>
-	 <20071207201737.GA9192@drago>
-	 <43e72e890712071225p774a2f9bg92540905dbd19e66@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200712121142.45386.mb@bu3sch.de> (sfid-20071212_104438_172468_F7D3BEBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 7, 2007 3:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+On Wednesday 12 December 2007 04:16:22 Brennan Ashton wrote:
+> On Dec 11, 2007 3:02 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Tuesday 11 December 2007 02:14:05 Brennan Ashton wrote:
+> > > https://bugzilla.redhat.com/show_bug.cgi?id=412861
+> > > I downloaded the source for 2.6.23.8-63.fc8.src.rpm the package that
+> > > things started to stop working at, and could not find any part of this
+> > > patch applied, so at least for that bug it is something else.
+> > >
+> >
+> > Please find out which patch broke it then. Nobody but you can do this.
+> 
+> What do you use to hammer the card with data to see if if fails?  I
 
-> > make
-> > make -C /lib/modules/2.6.23.9/build M=/home/lynx/compat-wireless-2.6 modules
-> > make[1]: Entering directory `/usr/src/linux-2.6.23.9'
-> >   CC [M]  /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o
-> > In file included from /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:44:
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/b43.h:783:3: error: #error "Using neither DMA nor PIO? Confused..."
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_interrupt_tasklet':
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:1451: error: implicit declaration of function 'b43_using_pio'
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c: In function 'b43_one_core_attach':
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: 'modparam_pio' undeclared (first use in this function)
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: (Each undeclared identifier is reported only once
-> > /home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.c:3857: error: for each function it appears in.)
-> > make[4]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43/main.o] Error 1
-> > make[3]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless/b43] Error 2
-> > make[2]: *** [/home/lynx/compat-wireless-2.6/drivers/net/wireless] Error 2
-> > make[1]: *** [_module_/home/lynx/compat-wireless-2.6] Error 2
-> > make[1]: Leaving directory `/usr/src/linux-2.6.23.9'
-> > make: *** [modules] Error 2
->
-> I just fixed this. I'll e-mail once I propagate the tarball.
+You can use iperf or simply wget some file from a http server in the
+network.
 
-OK give it a shot again, I just regenerated it.
 
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
-
-  Luis
+-- 
+Greetings Michael.
