@@ -1,77 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49285 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760758AbXLPW64 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:56 -0500
-Subject: [PATCH 115/48] libertas: fix return from lbs_update_channel()
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J42SK-000394-C8@shinybook.infradead.org> (sfid-20071216_232038_786707_919D68F8)
-Date: Sun, 16 Dec 2007 17:59:32 -0500
+Received: from mail.gmx.net ([213.165.64.20]:46740 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753954AbXLLUG3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2007 15:06:29 -0500
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+	learning algorithm
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1197479594.6558.122.camel@johannes.berg>
+References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
+	 <1197239150.7543.13.camel@localhost>  <20071210090853.79ea4645@morte>
+	 <1197319867.7493.4.camel@localhost>
+	 (sfid-20071210_205142_109612_504EEC93)  <1197384754.4037.23.camel@johannes.berg>
+	 <1197393788.7528.5.camel@localhost>
+	 (sfid-20071211_172341_980688_FC3BC8E2)  <1197479594.6558.122.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 12 Dec 2007 21:06:26 +0100
+Message-Id: <1197489986.7491.11.camel@localhost> (sfid-20071212_200633_591979_363C4497)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sun, 16 Dec 2007 17:21:00 -0500
 
-If we return the channel number in a 'ret' variable where anything
-non-zero is later interpreted as an error, that isn't nice. It breaks
-WPA, for a start. OLPC trac #5485
+On Wed, 2007-12-12 at 18:13 +0100, Johannes Berg wrote:
+> > Just to sum up the issue for Johannes: Stefano's patch adds per-rate
+> > information to the PID algorithm state. This is fine, however we need to
+> > make sure the rate control algorithm gets reinitialized when the number
+> > of rates changes (i.e. due to a mode change, what about about regulatory
+> > domain changes?), as otherwise we might be indexing array entries we
+> > don't have allocated. Now this spawned the more general discussion about
+> > when the stack should allow changing modes etc.
+> 
+> Thanks.
+> 
+> > So let's go back to the original issue: Johannes, can we assume rate
+> > control always gets reinitialized when the number of rates or even the
+> > hardware mode is changed?
+> 
+> I have no idea. Doesn't it get initialised when the interface is brought
+> up, and as such it would because those changes can only be done when
+> it's down? If we want to be strict and allow changes while it's not
+> associated but up then I think the answer is a clear no.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/assoc.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+I'm pretty sure we currently don't support switching modulations via
+WEXT. Any ideas on how this is going to be implemented with nl80211?
+Should we be able to switch e.g. from 802.11g to 802.11b while the
+interface is up?
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index cd8e043..882e51c 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -167,13 +167,14 @@ int lbs_update_channel(struct lbs_private *priv)
- {
- 	int ret;
- 
--	/* the channel in f/w could be out of sync, get the current channel */
-+	/* the channel in f/w could be out of sync; get the current channel */
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
- 	ret = lbs_get_channel(priv);
--	if (ret > 0)
--		priv->curbssparams.channel = (u8) ret;
--
-+	if (ret > 0) {
-+		priv->curbssparams.channel = ret;
-+		ret = 0;
-+	}
- 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
- 	return ret;
- }
-@@ -197,8 +198,9 @@ static int assoc_helper_channel(struct lbs_private *priv,
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
- 	ret = lbs_update_channel(priv);
--	if (ret < 0) {
-+	if (ret) {
- 		lbs_deb_assoc("ASSOC: channel: error getting channel.\n");
-+		goto done;
- 	}
- 
- 	if (assoc_req->channel == priv->curbssparams.channel)
-@@ -222,8 +224,10 @@ static int assoc_helper_channel(struct lbs_private *priv,
- 	 * it since the firmware is supposed to return the new channel, but
- 	 * whatever... */
- 	ret = lbs_update_channel(priv);
--	if (ret < 0)
-+	if (ret) {
- 		lbs_deb_assoc("ASSOC: channel: error getting channel.\n");
-+		goto done;
-+	}
- 
- 	if (assoc_req->channel != priv->curbssparams.channel) {
- 		lbs_deb_assoc("ASSOC: channel: failed to update channel to %d\n",
--- 
-1.5.3.4
+Anyway, I think we don't need any special handling of this situation at
+the moment. The stack needs more nl80211/cfg80211 work anyway, so let's
+fix this once we've fixed the stack.
+
+Mattias
 
