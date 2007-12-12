@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:45848 "EHLO
-	viefep12-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753354AbXLVVve (ORCPT
+Received: from dreamhostlb1.dreamhost.com ([208.97.187.133]:43666 "EHLO
+	webmail5.dreamhost.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753919AbXLLAPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 16:51:34 -0500
-From: Bjorge Dijkstra <bjd@jooz.net>
-To: dbrownell@users.sourceforge.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 5/8] Fix rndis packet filter flags.
-Date: Sat, 22 Dec 2007 22:51:31 +0100
-Message-Id: <1198360295996-git-send-email-bjd@jooz.net> (sfid-20071222_215142_895476_F0794C91)
-In-Reply-To: <11983602942818-git-send-email-bjd@jooz.net>
-References: <11983602942818-git-send-email-bjd@jooz.net>
+	Tue, 11 Dec 2007 19:15:31 -0500
+Message-ID: <50633.68.40.216.125.1197418099.squirrel@webmail.nostar.net> (sfid-20071212_001534_960262_6F3499B8)
+Date: Tue, 11 Dec 2007 16:08:19 -0800 (PST)
+Subject: Re: Problems with b43 using BCM4306 r3
+From: doug@nostar.net
+To: "Michael Buesch" <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+References: <475DA27F.2040004@nostar.net> <200712102258.29802.mb@bu3sch.de>
+In-Reply-To: <200712102258.29802.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+The problems only exist on the planet CCRMA
 
-RNDIS packet filter flags are not exactly the same as CDC flags
-so we cannot reuse them.
+http://ccrma.stanford.edu/planetccrma/software/
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
----
- drivers/net/usb/rndis_host.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+low-lat patched kernel that I was using.  I'm now running a stock Fedora 
+8 2.6.23.8-63.fc8 kernel and there dont appear to be anymore wifi 
+problems.  My reasons for using the ccrma kernel werent low latency 
+performance so much as a working firewire stack (fedora 7 and above uses 
+a new, broken stack) but I found another method.
 
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index c686025..3c116f9 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -256,6 +256,27 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
- #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
- #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
- 
-+/* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
-+#define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
-+#define RNDIS_PACKET_TYPE_MULTICAST		ccpu2(0x00000002)
-+#define RNDIS_PACKET_TYPE_ALL_MULTICAST		ccpu2(0x00000004)
-+#define RNDIS_PACKET_TYPE_BROADCAST		ccpu2(0x00000008)
-+#define RNDIS_PACKET_TYPE_SOURCE_ROUTING	ccpu2(0x00000010)
-+#define RNDIS_PACKET_TYPE_PROMISCUOUS		ccpu2(0x00000020)
-+#define RNDIS_PACKET_TYPE_SMT			ccpu2(0x00000040)
-+#define RNDIS_PACKET_TYPE_ALL_LOCAL		ccpu2(0x00000080)
-+#define RNDIS_PACKET_TYPE_GROUP			ccpu2(0x00001000)
-+#define RNDIS_PACKET_TYPE_ALL_FUNCTIONAL	ccpu2(0x00002000)
-+#define RNDIS_PACKET_TYPE_FUNCTIONAL		ccpu2(0x00004000)
-+#define RNDIS_PACKET_TYPE_MAC_FRAME		ccpu2(0x00008000)
-+
-+/* default filter used with RNDIS devices */
-+#define RNDIS_DEFAULT_FILTER ( \
-+	RNDIS_PACKET_TYPE_DIRECTED | \
-+	RNDIS_PACKET_TYPE_BROADCAST | \
-+	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
-+	RNDIS_PACKET_TYPE_PROMISCUOUS )
-+
- /*
-  * RNDIS notifications from device: command completion; "reverse"
-  * keepalives; etc
-@@ -551,7 +572,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 	u.set->oid = OID_GEN_CURRENT_PACKET_FILTER;
- 	u.set->len = ccpu2(4);
- 	u.set->offset = ccpu2((sizeof *u.set) - 8);
--	*(__le32 *)(u.buf + sizeof *u.set) = ccpu2(DEFAULT_FILTER);
-+	*(__le32 *)(u.buf + sizeof *u.set) = RNDIS_DEFAULT_FILTER;
- 
- 	retval = rndis_command(dev, u.header);
- 	if (unlikely(retval < 0)) {
--- 
-1.5.2.5
+Michael Buesch wrote:
+> On Monday 10 December 2007 21:33:03 Doug McLain wrote:
+>> I have an emachines M6805 with the BCM4306 r3 wifi chip.  Using the
+ndiswrapper driver, all is ok, but using the b43 driver results in
+constant flow of dmesg output (see link), eventual lockup of wifi under
+heavy network traffic, and constant xruns when using JACK audio server.
+>>   Again, when I use the ndiswrapper driver, everything works ok.
+>> http://nostar.net/ardour/dmesg.txt
+>
+> That's weird. These messages say that interrupts are not disabled in the
+IRQ handler. Which driver are you using? Please try vanilla
+> wireless-2.6.
+>
+
+
+
+
 
