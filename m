@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:2314 "EHLO c60.cesmail.net"
+Received: from mga11.intel.com ([192.55.52.93]:58754 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753178AbXL3Qjd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Dec 2007 11:39:33 -0500
-Message-ID: <20071230113931.d96ytsjusgos48oo@webmail.spamcop.net> (sfid-20071230_163939_820604_CB3217CC)
-Date: Sun, 30 Dec 2007 11:39:31 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Marcin Juszkiewicz <openembedded@haerwu.biz>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] Add Linksys WCF11 to hostap driver
-References: <200712281416.59079.openembedded@haerwu.biz>
-	<1198901689.2221.3.camel@dv> <200712301600.46342.openembedded@haerwu.biz>
-In-Reply-To: <200712301600.46342.openembedded@haerwu.biz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+	id S1751773AbXLLBEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 20:04:04 -0500
+Subject: Re: [2.6 patch] wireless/ipw2200.c: add __dev{init,exit}
+	annotations
+From: Zhu Yi <yi.zhu@intel.com>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: jketreno@linux.intel.com, linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+In-Reply-To: <20071211222022.GC14204@stusta.de>
+References: <20071211222022.GC14204@stusta.de>
+Content-Type: text/plain
+Date: Wed, 12 Dec 2007 09:02:19 +0800
+Message-Id: <1197421340.3170.400.camel@debian.sh.intel.com> (sfid-20071212_010410_485281_AE92CAA0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Marcin Juszkiewicz <openembedded@haerwu.biz>:
 
-> +       PCMCIA_DEVICE_PROD_ID1233(
-> +               "The Linksys Group, Inc.", "Wireless Network CF   
-> Card", "ISL37300P",
-> +               0xa5f472c2, 0x9c05598d, 0xc9049a39),
+On Tue, 2007-12-11 at 23:20 +0100, Adrian Bunk wrote:
+> This patch adds __dev{init,exit} annotations.
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Acked-by: Pavel Roskin <proski@gnu.org>
+ACK.
 
--- 
-Regards,
-Pavel Roskin
+Thanks,
+-yi
