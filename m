@@ -1,130 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60959 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236AbXLRMrP (ORCPT
+Received: from web52901.mail.re2.yahoo.com ([206.190.49.11]:34256 "HELO
+	web52901.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753142AbXLLUpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 07:47:15 -0500
-Subject: Re: [RFC] mac80211: clean up frame receive handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20071218041810.GB5698@jm.kir.nu>
-References: <1197483844.6558.158.camel@johannes.berg>
-	 <20071214050808.GE5698@jm.kir.nu> <1197634385.16079.34.camel@johannes.berg>
-	 <20071218041810.GB5698@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iBKqh71Z208HIBR6UlH8"
-Date: Tue, 18 Dec 2007 13:47:14 +0100
-Message-Id: <1197982034.4885.120.camel@johannes.berg> (sfid-20071218_124719_903683_2CB3EC58)
-Mime-Version: 1.0
+	Wed, 12 Dec 2007 15:45:43 -0500
+Date: Wed, 12 Dec 2007 20:45:42 +0000 (GMT)
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: dcbw@redhat.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071212020325.96dbf41b.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Message-ID: <479158.92576.qm@web52901.mail.re2.yahoo.com> (sfid-20071212_204548_092566_0CA98747)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+-- Andrew Morton <akpm@linux-foundation.org> wrote: 
+> hostap_plx.c first appeared in 2.6.14.
+> 
 
---=-iBKqh71Z208HIBR6UlH8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just a thought: How far back will I be able to compile kernels correctly with gcc 4.1.2?
+Specifically:
+
+gcc (GCC) 4.1.2 20070925 (Red Hat 4.1.2-33)
+
+Cheers,
+Chris
 
 
-> > Unfortunately not. Does that really matter? It seems that the
-> > verification whether the frame was encrypted would either be "always
-> > require encryption when pairwise keys in use" (which this patch doesn't
-> > do right now but could trivially be done) or simply "don't care since i=
-t
-> > doesn't really matter".
->=20
-> In theory, yes, this does matter and the implementation does not comply
-> with the standard if we do not verify this for WPA/WPA2/IEEE 802.11 RSN.
 
-Ouch, ok.
-
-> However, I do not believe there is any real security issue in not doing
-> so and even worse, some client implementations end up using unencrypted
-> EAPOL frames when they should really be encrypted..
-
-That was what I was thinking. I guess being lax caused those
-implementations to "work" to a point where now it can't be changed?
-
-> hostapd has a place in the implementation where this information could
-> be processed, but I did not actually ever enable such validation because
-> of the potential interoperability issues. Likewise, wpa_supplicant does
-> not validate this either.
-
-Ok.
-
-> In other words, this would be kind of nice to have feature in the kernel
-> interface, but not really something that would be strictly required from
-> security view point.
-
-Right. I don't see how we can do this though of course it ought to be
-possible with some sort of out-of-band data even on the regular data
-interface. I still think the regular data interface is a better place
-for these frames because of fragmentation/encryption/aggregation issues.
-
-> > Actually, 802.1X doesn't specify that, as I said previously it
-> > *recommends* it in C.3.3 (not C.1.1 as the 802.11 specs lead you to
-> > believe). Also, a patch to do this was rejected by Stephen Hemminger, s=
-o
-> > I decided to only pass up EAPOL frames that are either for our own
-> > unicast address or the link-local eapol address, both of which won't be
-> > bridged.
->=20
-> It is a "must" requirement, but apparently only in informative clause of
-> IEEE 802.1X. However, this is a real issue and if the bridging code
-> cannot be changed to do this, so dropping multicast/broadcast EAPOL
-> frames in mac80211 (in both RX and TX direction) sounds reasonable
-> workaround to prevent cases where wireless clients could otherwise mess
-> with other IEEE 802.1X authentications (e.g., for the wired port of an
-> AP).
-
-It's a tad more complicated than that. The patch as it stands will allow
-a station to mess with other 802.1X authentications when it has already
-authenticated its own virtual port. It also drops frames in a way that
-when the own virtual port is not authenticated it cannot do this. I
-believe that the former is an issue with the linux bridging code and if
-somebody wants to deploy linux-based 802.1X they need to install the
-appropriate ebtables rules on all equipment.
-
-> I added the C.3.3 vs. C.1.1 issue to my pending comments for the next
-> IEEE 802.11 maintenance task group (TGmb). Should you find any other
-> issues with IEEE Std 802.11-2007, I can add them to that list so that
-> they can eventually be fixed.
-
-Thanks. I'll let you know. I have one request for clarification
-actually:
-The standard always talks about DTIM count and how stations can use that
-to know when the next DTIM beacon is sent. However, in one sentence
-where it talks about timing, it also says that TSF=3D=3D0 is not only a TBT=
-T
-but also a DTIM beacon. Is that intentional? No implementations I know
-of seem to require TSF=3D=3D0 to be DTIM but rather use the DTIM count to
-sync.
-
-johannes
-
---=-iBKqh71Z208HIBR6UlH8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2fBUaVg1VMiehFYAQI/5w//SfJbwGGYeUjt9ubekY4vkx6PflbYb7E0
-/oHJALOUlGUap90/oSaUVasrQ0ZpNBV+81qt4WNDYQK7QwHqVRXjSZlqncHRimBO
-m2z7Wsdd3qrDbDp6mZ14hqgrFYYJBJU/ZUGjF5q2Dp0/JmkxYRAUjYt0BhazD49P
-zSDeE2v96J9ItskYq+AOute269YSMDqmYuISm7y/n5yjXkLxndUdhH/WAUNFf9MY
-cVBKKupkJ/RJTnrZTKLNWHBKiYDTOjpRBAdO7J75aFDY/cjQZDC+bz99pSxtuA0D
-BCrzIbFjMHivzBNur2rwzoe+6Wt0qHcLUQZ7cm3u8eDMndgdK9joxEYu+yM1y2BQ
-27mw53WTj0xrt21/6GPOTj65G8V7nC4MxfZT05SpcPOAsaXByk2WC0H9eZC9cn4m
-/OnPJBCQSzYRAJGU6TBxH111MUCpV9bToYKiAcVdli2HKf6AnE0X+FWVj7bxLeNa
-5uTFk1QwStOJ8IwkCmybdTMpU+CmKYSsO5xb/frwF/KQygF34farwgQJgnY9pRLH
-VTZ/c9CKlmQXEVWWRsd4CLwn4wuvoh0dAppkiDwIaaMoQcq3FRS11NBhD5tgjRZw
-zpnJ44X80c8l29YI/yELLkS68+cJxWjDvv4Z+hZc2Gdb6/Phxvz9ZwvaM4ta/H0x
-tPZRsiQ+VG8=
-=3GCz
------END PGP SIGNATURE-----
-
---=-iBKqh71Z208HIBR6UlH8--
+      __________________________________________________________
+Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
 
