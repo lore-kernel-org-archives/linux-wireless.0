@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56941 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762793AbXLMG7c (ORCPT
+Received: from mta19.adelphia.net ([68.168.78.226]:40243 "EHLO
+	mta19.adelphia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758216AbXLLLF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:32 -0500
-Subject: [PATCH 68/48] libertas: remove casts from lbs_cmd() and lbs_cmd_with_response() macros
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2p-0005sU-1D@shinybook.infradead.org> (sfid-20071213_070630_801516_CAB6841B)
-Date: Thu, 13 Dec 2007 01:59:43 -0500
+	Wed, 12 Dec 2007 06:05:29 -0500
+Received: from [127.0.0.1] (really [69.204.11.190]) by mta9.adelphia.net
+          (InterMail vM.6.01.05.02 201-2131-123-102-20050715) with ESMTP
+          id <20071212003911.CQY3002.mta9.adelphia.net@[127.0.0.1]>
+          for <linux-wireless@vger.kernel.org>;
+          Tue, 11 Dec 2007 19:39:11 -0500
+Message-ID: <475F2DAD.4000708@roadrunner.com> (sfid-20071212_110544_110578_F8FBB681)
+Date: Tue, 11 Dec 2007 19:39:09 -0500
+From: Randy Cushman <rcushman_linux@roadrunner.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: BCM4306 Questions
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 15:28:18 -0500
+Recently I retrofitted my older HP laptop with a "Broadcom 802.11b/g 
+WLAN" miniPCI adapter.  The adapter works well with Windows XP.  Now I 
+would like to be able to use the adapter with Linux.
 
-If stupid people like me give it arguments with the wrong type (like a
-pointer to the structure, for example, instead of the structure itself),
-then we should probably notice that at compile time. Otherwise, much
-confusion ensues.
+Question:  Is there any hope of using this adapter with a native driver, 
+or should I use ndiswrapper?  Requirement:  I want to be able to connect 
+to networks using WPA-PSK.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Complication:  Neither bcm43xx-fwcutter nor b43-fwcutter recognizes the 
+latest driver I found at HP.  I figure it would be best for me to use 
+this firmware because this is the only driver that I have found to be 
+stable.
 
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index 716f25b..950acce 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -7,11 +7,11 @@
- #include "dev.h"
- 
- #define lbs_cmd(priv, cmdnr, cmd, callback, callback_arg) \
--	__lbs_cmd(priv, cmdnr, (struct cmd_header *) &cmd, sizeof(cmd), \
-+	__lbs_cmd(priv, cmdnr, &(cmd).hdr, sizeof(cmd),	  \
- 			callback, callback_arg)
- 
- #define lbs_cmd_with_response(priv, cmdnr, cmd) \
--	__lbs_cmd(priv, cmdnr, (struct cmd_header *) &cmd, sizeof(cmd), \
-+	__lbs_cmd(priv, cmdnr, &(cmd).hdr, sizeof(cmd), \
- 		  lbs_cmd_copyback, (unsigned long) &cmd)
-  
- int __lbs_cmd(struct lbs_private *priv, uint16_t command,
--- 
-1.5.3.4
+Question:  Could someone instruct a mere applications software engineer 
+on how to determine the values to insert into fwcutter_list.h to support 
+this driver (or provide documentation to this effect)?
+
+Details:
+- BCM-4306 -based adapter.  Vendor 14E4, Device 4320, Subsys 12F8103C, 
+Rev 03
+- HP driver SP36684.EXE, v4.150.29.0 (7/11/2007) (BCMWL5.SYS)
+- unstable driver tried: v4.100.15.5
+- openSUSE 10.3 installed bcm43xx-fwcutter and loaded modules bcm43xx 
+and ieee80211_softmac
+
+Randy Cushman
 
