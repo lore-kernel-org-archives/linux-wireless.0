@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3656 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270AbXLDPW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:22:28 -0500
-Date: Tue, 4 Dec 2007 10:21:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] less eventcause shifts
-Message-ID: <20071204152122.GE19911@tuxdriver.com> (sfid-20071204_152231_199616_07AACB0C)
-References: <200711280915.11300.hs4233@mail.mn-solutions.de> <1196704681.21151.13.camel@localhost.localdomain> <1196714939.13978.171.camel@pmac.infradead.org> <20071204145437.GC19911@tuxdriver.com> <1196780866.13978.275.camel@pmac.infradead.org>
+Received: from wr-out-0506.google.com ([64.233.184.234]:1467 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbXLLDQX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2007 22:16:23 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so58305wra.1
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2007 19:16:22 -0800 (PST)
+Message-ID: <b2d05de20712111916o7e7b0395j974c06591de38965@mail.gmail.com> (sfid-20071212_031628_135585_20775077)
+Date: Tue, 11 Dec 2007 19:16:22 -0800
+From: "Brennan Ashton" <comphappy@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: b43 regression
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200712111202.34101.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1196780866.13978.275.camel@pmac.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200712101136.48669.mb@bu3sch.de>
+	 <b2d05de20712101714x38c2dec6la9c4f496732b053d@mail.gmail.com>
+	 <200712111202.34101.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2007 at 03:07:46PM +0000, David Woodhouse wrote:
-> On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
-> > The result is a nice, rebased set of patches on top of the current
-> > upstream work.	If you simply did a "commit, pull, commit, pull,
-> > etc" cycle then you would end-up with a set of patches that might
-> > no longer apply on top of a clean upstream branch -- been there,
-> > wireless-dev RIP.
-> 
-> Ah, I understand your confusion. It reflects akpm's confusion when he
-> first started trying to use git-bisect.
-> 
-> This thing is, there is no actual need for a 'set of patches'. Git isn't
-> about patches. It's about commits and pulls. It doesn't _matter_ if you
-> had to fix up something when you merged from Linus, because when Linus
-> pulls from your tree, he pulls your manual merge effort too.
+On Dec 11, 2007 3:02 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Tuesday 11 December 2007 02:14:05 Brennan Ashton wrote:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=412861
+> > I downloaded the source for 2.6.23.8-63.fc8.src.rpm the package that
+> > things started to stop working at, and could not find any part of this
+> > patch applied, so at least for that bug it is something else.
+> >
+>
+> Please find out which patch broke it then. Nobody but you can do this.
 
-Well I'm a bit hemmed-in -- Linus pull's from Dave and Jeff, they
-pull from me.  Both of them are a bit prone to rebasing as well.
-Even if I just "let it ride" (i.e. didn't rebase), I would still be
-prone to some of the merge difficulties I described when I pulled
-duplicate patches back in from Linus later.
+What do you use to hammer the card with data to see if if fails?  I
+have been just surfing the web, and moving data back and forth, but it
+is very inefficient and a poor form of a test. I think I may have
+narrowed down the kernel were it starting failing, but I want to make
+sure.
 
-FWIW, I've seen Linus complain about dirty git history on several
-occassions.  So even if he were pulling directly from me I imagine
-that there would still be a need for some of this quilt-like use of
-git to clean-up things from time to time.
-
-Still, it is true that I might be able to maintain a more consistent
-'everything' branch if I weren't "serving two masters"...alas.
-
-> > [1] If your work does _not_ rely on patches already merged in my tree
-> > then by all means just use Linus' tree.
-> 
-> That was my intention, right up to the point at which a bunch of
-> libertas patches appeared in your tree :)
-
-It was my understanding that you were working on top of these patches
-anyway (i.e. not rewriting or replacing them).  Anyway they are all
-destined for 2.6.25 so your "Linus + libertas patches" just still be
-just as valid...?
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Brennan Ashton
+Bellingham, Washington
+
+"The box said, 'Requires Windows XP or better'. So I installed Linux"
