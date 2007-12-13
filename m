@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52903.mail.re2.yahoo.com ([206.190.49.13]:27171 "HELO
-	web52903.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753480AbXL1BjZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56938 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762791AbXLMG7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2007 20:39:25 -0500
-Date: Fri, 28 Dec 2007 01:39:24 +0000 (GMT)
-From: Chris Rankin <rankincj@yahoo.com>
-Subject: Re: [2.6.23.9] hostap_plx locks up PC when reading PCI I/O memory
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: dcbw@redhat.com, linux-kernel@vger.kernel.org,
+	Thu, 13 Dec 2007 01:59:32 -0500
+Subject: [PATCH 69/48] libertas: fix case of FWT_ACCESS_LIST_ROUTE and FWT_ACCESS_LIST_NEIGHBOR commands
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20071212020325.96dbf41b.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <463453.24516.qm@web52903.mail.re2.yahoo.com> (sfid-20071228_013931_454098_1CF8F960)
+Message-Id: <E1J2i2r-0005sZ-BD@shinybook.infradead.org> (sfid-20071213_070632_721547_B2F794E9)
+Date: Thu, 13 Dec 2007 01:59:45 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > Did any earlier version of the 2.6 kernel work OK?
+From: Dan Williams <dcbw@redhat.com>
+Date: Tue, 11 Dec 2007 15:29:10 -0500
 
-Kernel 2.6.14 does not work any better than 2.6.23.x, and my F8 userspace environment rejects a
-2.4.35 kernel. I will try a 2.6.0 kernel next, but have noticed tonight that a stock Fedora kernel
-also hangs when it tries to load the orinoco_plx.ko kernel module. (This module also expect a
-PLX9052 bridge.)
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/host.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-For reference, I have found a datasheet for the PLX9052 here:
-
-http://www.dyneng.com/plx_9052.pdf
-
-One theory could be that the PLX9052 chip requires an extra initialisation step for an Intel
-SE440BX-2 motherboard (the board that hangs) vs an older Intel Zappa motherboard (where the chip
-works OK). However, I don't know anything like enough about PCI to guess what such a step might
-be.
-
-Cheers,
-Chris
-
-
-
-      __________________________________________________________
-Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index b23af19..cc5f9bf 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -247,8 +247,8 @@ enum cmd_fwt_access_opts {
+ 	CMD_ACT_FWT_ACCESS_DEL,
+ 	CMD_ACT_FWT_ACCESS_LOOKUP,
+ 	CMD_ACT_FWT_ACCESS_LIST,
+-	CMD_ACT_FWT_ACCESS_LIST_route,
+-	CMD_ACT_FWT_ACCESS_LIST_neighbor,
++	CMD_ACT_FWT_ACCESS_LIST_ROUTE,
++	CMD_ACT_FWT_ACCESS_LIST_NEIGHBOR,
+ 	CMD_ACT_FWT_ACCESS_RESET,
+ 	CMD_ACT_FWT_ACCESS_CLEANUP,
+ 	CMD_ACT_FWT_ACCESS_TIME,
+-- 
+1.5.3.4
 
