@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4744 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753466AbXLWCXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 21:23:42 -0500
-Date: Sat, 22 Dec 2007 21:23:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Shawn Tan <ssnt2@eng.cam.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: B43 not working
-Message-ID: <20071223022326.GA13785@tuxdriver.com> (sfid-20071223_022344_689238_F8BE5EEA)
-References: <200712230117.35920.ssnt2@eng.cam.ac.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200712230117.35920.ssnt2@eng.cam.ac.uk>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbXLMMxY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 07:53:24 -0500
+Subject: Re: [PATCH] try 2: mac80211: Fix swapped parameters to
+	ieee80211_set_channel()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <20071213125047.GD501@lunn.ch>
+References: <20071212153158.GB16947@lunn.ch>
+	 <1197481426.6558.138.camel@johannes.berg> <20071212180204.GP31218@lunn.ch>
+	 <1197482969.6558.149.camel@johannes.berg>
+	 <1197504975.6558.199.camel@johannes.berg> <20071213120904.GB501@lunn.ch>
+	 <1197549025.6558.253.camel@johannes.berg>  <20071213125047.GD501@lunn.ch>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rSlMgn61TlJwya098ryx"
+Date: Thu, 13 Dec 2007 13:53:18 +0100
+Message-Id: <1197550398.6558.257.camel@johannes.berg> (sfid-20071213_125326_376100_4453C5B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 23, 2007 at 01:17:35AM +0000, Shawn Tan wrote:
-> Hi,
-> 
-> B43 still doesn't work for me. Let me know if any additional information from 
-> me will help.
-> 
-> dmesg:
-> 
-> [40699.800000] PCI: Setting latency timer of device 0000:30:00.0 to 64
-> [40699.840000] ssb: SPROM revision 3 detected.
-> [40699.860000] ssb: Sonics Silicon Backplane found on PCI device 0000:30:00.0
-> [40699.876000] b43-phy0: Broadcom 4311 WLAN found
-> [40700.044000] phy0: Failed to select rate control algorithm
-> [40700.044000] phy0: Failed to initialize rate control algorithm
-> [40700.080000] b43: probe of ssb0:0 failed with error -2
 
-You must be using an old tree.  'modprobe rc80211_simple' or use the
-'everything' branch of a recent (last month or so) wireless-2.6.
+--=-rSlMgn61TlJwya098ryx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hth!
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> However this description does not match the implementation. The
+> implementation is that its a channel if e =3D 0. My "frequency" is > 1000=
+, =20
+> but it was still interpreted as a channel. Looking at the
+> implementation of iw_float2freq(), the description should be that a
+> value less than 1e9 is a channel.=20
+>=20
+> So there should really be a check in the user space tools which says
+> that values between 1000 and 1e9 are invalid. This would catch errors
+> like the one i made for both 2.4GHz and 5GHz.
+
+Yeah, well, we all know wext sucks. You are of course right, but I think
+that nobody's motivated any more to fix things.
+
+johannes
+
+--=-rSlMgn61TlJwya098ryx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2ErPaVg1VMiehFYAQInWhAAs6tSdbrbSKoKVEBoroG05lUgMUOvcUj8
+YnxYyLyHWC2tJNYZJNKtz9s346xFxPlKOUKjqCqQwyCO1xeOfcNK3GJ3Qc4oGH5f
+uDC0xzg/fjuP/suhA+Uj9N7y/JOK51e7LuZ+fGqpqXkKKTjybfY+kEXQF3IjtVGd
+0/ZoUbRMk19GB0hWqOIbNk3nHGeARlDuYzzU2Rp2SA+qiIjIZjw//GPPzYUpwm4q
+oOqtr6gu/HbRuLQw7UkMrmq0N90vZDAsjQOPClwze7fcoo34MdM4cjKnqblJAyEn
+PGJKnMcLzNrD9vWYuBnC5w0wgQbZljp4dNBjvtEZLe9gN1xgaZIXKfWUCBX0PJb5
+lhaw4uqcFXUE3sXM9+MbCh66vfwc1TNx4ky+alyVVAXYf6Itiiya/3u5I4+b1e8M
+u8DDfw838LJ0anI5wqDUA1TXJu4woqRdaVC2bdsJwlacFHJ6SqSbwHyZ5QKqP7IR
+SJrNC3LEamAor8rFoVhXDBgQNUqkLyjNlOSjnGCdnLxnv3Ar4MNrXXBWIEVGRbu+
+VzrAIKtLwg/ceq4qWY9pe+bIMZkvCaMADsb8O9dPPLylKctDqUS86YUKSLUsOCzF
+zt/jeI2sG0iXpKQiVTzj593SZ42qjjRtp/5sZShY8RPmqmsUeUjazXJj0sVvIvS5
+4rR5IG9Cv8Y=
+=dGA+
+-----END PGP SIGNATURE-----
+
+--=-rSlMgn61TlJwya098ryx--
+
