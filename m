@@ -1,89 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:23598 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643AbXLDPrc (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56519 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762763AbXLMG7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:47:32 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-Date: Tue, 4 Dec 2007 16:47:46 +0100
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Javier Cardona" <javier@cozybit.com>
-References: <200712041140.07516.hs4233@mail.mn-solutions.de> <1196780650.26155.26.camel@localhost.localdomain>
-In-Reply-To: <1196780650.26155.26.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712041647.46523.hs4233@mail.mn-solutions.de> (sfid-20071204_154806_562295_DA1AB7B8)
+	Thu, 13 Dec 2007 01:59:17 -0500
+Subject: [PATCH 50/48] libertas: add opaque extra argument to cmd callback function
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i2R-0005qs-9z@shinybook.infradead.org> (sfid-20071213_065939_401295_BA17FB37)
+Date: Thu, 13 Dec 2007 01:59:19 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > 3. MAX_NETWORK_COUNT
-> Again, the point of using already defined stuff was to take
-> code out of libertas.  If this is in a header, it's pointless
-> to move it back into libertas.
+Date: Mon, 10 Dec 2007 13:36:10 -0500
 
-I haven't found something similar in linux/ieee80211.h, but I 
-don't know if something with this meaning is in some other 
-header file which I don't know. I just doubt it.
+This will be useful for letting callbacks do stuff like copying the
+response into a buffer provided by the caller of lbs_cmd()
 
-> I assume that the reason you 
-> want to remove the dep on ieee80211 is to remove the
-> requirement to load that module, which moving this define back
-> to libertas wouldn't accomplish.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c     |    6 +++++-
+ drivers/net/wireless/libertas/cmdresp.c |   11 ++++++-----
+ drivers/net/wireless/libertas/decl.h    |    3 ++-
+ drivers/net/wireless/libertas/hostcmd.h |    3 ++-
+ drivers/net/wireless/libertas/if_usb.c  |    2 +-
+ 5 files changed, 16 insertions(+), 9 deletions(-)
 
-And the reason that some people want to remove the old ieee80211 
-code from the kernel source "really soon now" :-)
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 49a9aee..228e3fe 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1642,6 +1642,7 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode)
+ 	ptempnode->wait_option = 0;
+ 	ptempnode->pdata_buf = NULL;
+ 	ptempnode->callback = NULL;
++	ptempnode->callback_arg = 0;
+ 
+ 	if (ptempnode->bufvirtualaddr != NULL)
+ 		memset(ptempnode->bufvirtualaddr, 0, MRVDRV_SIZE_OF_CMD_BUFFER);
+@@ -1670,6 +1671,7 @@ void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
+ 	ptempnode->wait_option = wait_option;
+ 	ptempnode->pdata_buf = pdata_buf;
+ 	ptempnode->callback = NULL;
++	ptempnode->callback_arg = 0;
+ 
+ 	lbs_deb_leave(LBS_DEB_HOST);
+ }
+@@ -1993,7 +1995,8 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv, u16 psmode)
+  */
+ 
+ int lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_size,
+-	    int (*callback)(uint16_t, struct cmd_ds_command *, struct lbs_private *))
++	    int (*callback)(struct lbs_private *, unsigned long, struct cmd_ds_command *),
++	    unsigned long callback_arg)
+ {
+ 	struct cmd_ctrl_node *cmdnode;
+ 	struct cmd_ds_gen *cmdptr;
+@@ -2028,6 +2031,7 @@ int lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_size,
+ 	cmdptr = (struct cmd_ds_gen *)cmdnode->bufvirtualaddr;
+ 	cmdnode->wait_option = CMD_OPTION_WAITFORRSP;
+ 	cmdnode->callback = callback;
++	cmdnode->callback_arg = callback_arg;
+ 
+ 	/* Set sequence number, clean result, move to buffer */
+ 	priv->seqnum++;
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index ab6e729..7bad257 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -552,12 +552,13 @@ static int lbs_ret_802_11_subscribe_event(struct lbs_private *priv,
+ 	return 0;
+ }
+ 
+-static inline int handle_cmd_response(u16 respcmd,
+-				      struct cmd_ds_command *resp,
+-				      struct lbs_private *priv)
++static inline int handle_cmd_response(struct lbs_private *priv,
++				      unsigned long dummy,
++				      struct cmd_ds_command *resp)
+ {
+ 	int ret = 0;
+ 	unsigned long flags;
++	uint16_t respcmd = le16_to_cpu(resp->command);
+ 
+ 	lbs_deb_enter(LBS_DEB_HOST);
+ 
+@@ -861,9 +862,9 @@ int lbs_process_rx_command(struct lbs_private *priv)
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	if (priv->cur_cmd && priv->cur_cmd->callback)
+-		ret = priv->cur_cmd->callback(respcmd, resp, priv);
++		ret = priv->cur_cmd->callback(priv, priv->cur_cmd->callback_arg, resp);
+ 	else
+-		ret = handle_cmd_response(respcmd, resp, priv);
++		ret = handle_cmd_response(priv, 0, resp);
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index e8387c7..a086d0c 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -24,7 +24,8 @@ void lbs_send_tx_feedback(struct lbs_private *priv);
+ int lbs_free_cmd_buffer(struct lbs_private *priv);
+ 
+ int lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_size, 
+-	    int (*callback)(uint16_t, struct cmd_ds_command *, struct lbs_private *));
++	    int (*callback)(struct lbs_private *, unsigned long, struct cmd_ds_command *),
++	    unsigned long callback_arg);
+ 
+ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 	u16 cmd_no,
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index f1c1d3f..ed502b7 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -71,7 +71,8 @@ struct cmd_ctrl_node {
+ 	u16 wait_option;
+ 	/* command response */
+ 	void *pdata_buf;
+-	int (*callback)(uint16_t respcmd, struct cmd_ds_command *resp, struct lbs_private *priv);
++	int (*callback)(struct lbs_private *priv, unsigned long arg, struct cmd_ds_command *resp);
++	unsigned long callback_arg;
+ 	/* command data */
+ 	u8 *bufvirtualaddr;
+ 	/* wait queue */
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 141d185..f59fd73 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -108,7 +108,7 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
+ 	b2_cmd.action = 0;
+ 	b2_cmd.version = priv->boot2_version;
+ 
+-	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, sizeof(b2_cmd), NULL))
++	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, sizeof(b2_cmd), NULL, 0))
+ 		lbs_deb_usb("Setting boot2 version failed\n");
+ }
+ 
+-- 
+1.5.3.4
 
-> If you'd like to propose moving this define to some other
-> shared header that would be better (linux/ieee80211.h?). 
-> Libertas is not the only driver that uses this define (ipw*,
-> airo, libertas).
-
-Okay, if other's don't object I can do that.
-
-
-> > 4. DEFAULT_MAX_SCAN_AGE
-> No, but it does age the scan results after 15 seconds or
-> something.  Or at least it should.  It shouldn't be throwing
-> any AP in the scan list away until it's 15 seconds old.  This
-> define was picked because it was pointless to create yet
-> another define when there was already a usable and established
-> one.
-
-If I understand you correctly, then this constant should end up 
-in linux/ieee80211.h as well?
-
-
-> > 7. RADIOTAP
-> >
-> > Libertas contains lot's of code for it's monitoring mode,
-> > which uses radiotap. It used "struct net_device
-> > *rtap_net_dev" and "struct ieee80211_device *ieee". It
-> > contains code like
-> >
-> >    priv->rtap_net_dev = alloc_ieee80211(0);
-> >    priv->ieee = netdev_priv(priv->rtap_net_dev);
-> >
-> > and I don't have any knowledge about radiotap and how to
-> > substitue the alloc_ieee80211(). All I could currently to is
-> > to put those sections into #ifdef CONFIG_IEEE80211.
->
-> Javier might have more comments on this.
-
-I actually have a WIP patch that removes the ieee80211 
-dependency, it just clashes with my WIP 
-patch "new-scan.patch" :-)
-
-The patch applies, compiles sparse-clean and is checkpatch clean, 
-so all is well ---- except that it completely disables monitor 
-mode via radiotap. Maybe I add the bunches you said and the ask 
-Javier to take things over, if he wants & has time. Or I split 
-the patch into things that can be committed today and only 
-remove ieee80211-dependency halfway.
-
-But then again, ieee80211 is still in the kernel, so there's no 
-haste in making libertas ready for the post-ieee80211 time. So I 
-think I'll wait until David's patches settled.
