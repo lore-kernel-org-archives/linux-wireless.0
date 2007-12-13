@@ -1,49 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:19456 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509AbXLJJav (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57270 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762656AbXLMG7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 04:30:51 -0500
-Received: by an-out-0708.google.com with SMTP id d31so372477and
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 01:30:50 -0800 (PST)
-Message-ID: <475D0747.7010701@gmail.com> (sfid-20071210_093055_469377_DC5998F7)
-Date: Mon, 10 Dec 2007 10:30:47 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Bruno Randolf <bruno@thinktube.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, mickflemm@gmail.com
-Subject: Re: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon,
- reset
-References: <200712101822.43487.bruno@thinktube.com> <1197278831-17030-1-git-send-email-bruno@thinktube.com>
-In-Reply-To: <1197278831-17030-1-git-send-email-bruno@thinktube.com>
-Content-Type: text/plain; charset=ISO-8859-2
+	Thu, 13 Dec 2007 01:59:42 -0500
+Subject: [PATCH 80/48] libertas: allow setting channel on mshX device
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i33-0005tS-7x@shinybook.infradead.org> (sfid-20071213_070001_011029_74B28960)
+Date: Thu, 13 Dec 2007 01:59:57 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2007 10:27 AM, Bruno Randolf wrote:
- > 'registers' prints the name and value of some registers. this should be adapted
-> to what we actually need later and is supposed to replace the hwdump facility i
-> removed in my earlier debugging changes.
-> 
-> 'tsf' prints the current HW TSF. writing "reset" into the file will reset the
-> TSF.
-> 
-> 'beacon' shows beacon relevant registers.  it is good for watching the beacon
-> timers with something like "watch -n0 cat /dbg/ath5k/phy0/beacon". writing
-> "enable" into the file will try to enable beacons by setting the flag
-> AR5K_BEACON_ENABLE, "disable" will disable that bit.
-> 
-> 'reset' can be used to trigger a HW reset, by writing "reset" into it.
-> 
-> Changes-licensed-under: GPL
-> 
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-> Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
+Date: Tue, 11 Dec 2007 19:56:28 -0500
 
-Acked-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/wext.c |   53 +++++++++++++++++++++++++++++++++-
+ 1 files changed, 52 insertions(+), 1 deletions(-)
 
-> ---
->  drivers/net/wireless/ath5k/debug.c |  269 ++++++++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath5k/debug.h |    4 +
->  2 files changed, 273 insertions(+), 0 deletions(-)
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 0a06072..262d4cc 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -959,6 +959,57 @@ out:
+ 	return ret;
+ }
+ 
++static int lbs_mesh_set_freq(struct net_device *dev,
++			     struct iw_request_info *info,
++			     struct iw_freq *fwrq, char *extra)
++{
++	struct lbs_private *priv = dev->priv;
++	struct chan_freq_power *cfp;
++	int ret = -EINVAL;
++
++	lbs_deb_enter(LBS_DEB_WEXT);
++
++	/* If setting by frequency, convert to a channel */
++	if (fwrq->e == 1) {
++		long f = fwrq->m / 100000;
++
++		cfp = find_cfp_by_band_and_freq(priv, 0, f);
++		if (!cfp) {
++			lbs_deb_wext("invalid freq %ld\n", f);
++			goto out;
++		}
++
++		fwrq->e = 0;
++		fwrq->m = (int) cfp->channel;
++	}
++
++	/* Setting by channel number */
++	if (fwrq->m > 1000 || fwrq->e > 0) {
++		goto out;
++	}
++
++	cfp = lbs_find_cfp_by_band_and_channel(priv, 0, fwrq->m);
++	if (!cfp) {
++		goto out;
++	}
++
++	if (fwrq->m != priv->curbssparams.channel) {
++		lbs_deb_wext("mesh channel change forces eth disconnect\n");
++		if (priv->mode == IW_MODE_INFRA)
++			lbs_send_deauthentication(priv);
++		else if (priv->mode == IW_MODE_ADHOC)
++			lbs_stop_adhoc_network(priv);
++	}
++	priv->curbssparams.channel = fwrq->m;
++	lbs_mesh_config(priv, 0);
++	lbs_mesh_config(priv, 1);
++	ret = 0;
++
++out:
++	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
++	return ret;
++}
++
+ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
+ 		  struct iw_param *vwrq, char *extra)
+ {
+@@ -2097,7 +2148,7 @@ static const iw_handler mesh_wlan_handler[] = {
+ 	(iw_handler) lbs_get_name,	/* SIOCGIWNAME */
+ 	(iw_handler) NULL,	/* SIOCSIWNWID */
+ 	(iw_handler) NULL,	/* SIOCGIWNWID */
+-	(iw_handler) lbs_set_freq,	/* SIOCSIWFREQ */
++	(iw_handler) lbs_mesh_set_freq,	/* SIOCSIWFREQ */
+ 	(iw_handler) lbs_get_freq,	/* SIOCGIWFREQ */
+ 	(iw_handler) NULL,		/* SIOCSIWMODE */
+ 	(iw_handler) mesh_wlan_get_mode,	/* SIOCGIWMODE */
+-- 
+1.5.3.4
+
