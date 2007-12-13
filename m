@@ -1,77 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:35431 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751239AbXLEFsa (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57840 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762770AbXLMHAA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 00:48:30 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: don't use interface indizes
-Date: Wed, 5 Dec 2007 00:57:15 -0500
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>, Daniel Drake <dsd@gentoo.org>,
-	Yanbo Li <dreamfly281@gmail.com>
-References: <1196782831.10274.12.camel@johannes.berg>
-In-Reply-To: <1196782831.10274.12.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3710021.bDftaFxQSg";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200712050057.19819.flamingice@sourmilk.net> (sfid-20071205_054836_531604_92C0D5A9)
+	Thu, 13 Dec 2007 02:00:00 -0500
+Subject: [PATCH 90/48] libertas: implement suspend and resume core methods
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i3G-0005uN-KR@shinybook.infradead.org> (sfid-20071213_070017_131110_389ED9E9)
+Date: Thu, 13 Dec 2007 02:00:10 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3710021.bDftaFxQSg
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Date: Wed, 12 Dec 2007 17:38:56 -0500
 
-On Tuesday 04 December 2007 10:40:30 Johannes Berg wrote:
-> This patch gets rid of the if_id stuff all over in favour of a new
-> virtual-interface structure "struct mac80211_vif".
-That's a pretty terrible name. mac80211 is not a valid prefix to be used in=
-=20
-the codebase, at least not for structures and functions. Everything else us=
-es=20
-ieee80211 so use of mac80211 is not acceptable, especially for driver facin=
-g=20
-API. (the use of that prefix in event.c isn't right either.. need to fix=20
-that)
+We (ab)use priv->fw_ready to stop the worker thread from sending more
+commands or data after the response to the HOST_SLEEP_ACTIVATE command
+comes in. And we set it from the callback function _directly_ to ensure
+that the worker thread sees it immediately; if we did it in
+lbs_suspend() after waking up, that might be too late.
 
-Leaving it to the driver to allocate the private space isn't too great eith=
-er.=20
-Something like a char subif_priv[] at the end of ieee80211_sub_if_data and =
-a=20
-way to specify the length of the private area will be more useful to driver=
-s=20
-which wish to use the per-subif private space by avoiding extra allocation=
-=20
-and allocation failure handling and also for drivers which don't, by=20
-eliminating the overhead of storing an unused pointer. It is also more=20
-consistent with the other apis that allocate ieee80211_hw and net_device.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.h  |    2 +
+ drivers/net/wireless/libertas/main.c |   47 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+), 0 deletions(-)
 
-> Only compile-tested the driver changes, sanity checks required.
->
-There you go. ;)
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index e800295..e44a0db 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -35,5 +35,7 @@ int lbs_mesh_config(struct lbs_private *priv, int enable);
+ 
+ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
+ 		       uint8_t gpio, uint8_t gap);
++int lbs_suspend(struct lbs_private *priv);
++int lbs_resume(struct lbs_private *priv);
+ 
+ #endif /* _LBS_CMD_H */
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index dd432ea..1ea119e 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -820,6 +820,53 @@ static int lbs_thread(void *data)
+ 	return 0;
+ }
+ 
++static int lbs_suspend_callback(struct lbs_private *priv, unsigned long dummy,
++				struct cmd_header *cmd)
++{
++	lbs_deb_fw("HOST_SLEEP_ACTIVATE succeeded\n");
++
++	netif_device_detach(priv->dev);
++	if (priv->mesh_dev)
++		netif_device_detach(priv->mesh_dev);
++
++	priv->fw_ready = 0;
++	return 0;
++}
++
++
++int lbs_suspend(struct lbs_private *priv)
++{
++	struct cmd_header cmd;
++	int ret;
++
++	memset(&cmd, 0, sizeof(cmd));
++	
++	ret = __lbs_cmd(priv, CMD_802_11_HOST_SLEEP_ACTIVATE, &cmd,
++			sizeof(cmd), lbs_suspend_callback, 0);
++	if (ret)
++		lbs_pr_info("HOST_SLEEP_ACTIVATE failed: %d\n", ret);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(lbs_suspend);
++
++int lbs_resume(struct lbs_private *priv)
++{
++	priv->fw_ready = 1;
++
++	/* Firmware doesn't seem to give us RX packets any more
++	   until we send it some command. Might as well update */
++	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
++				     0, 0, NULL);
++
++	netif_device_attach(priv->dev);
++	if (priv->mesh_dev)
++		netif_device_attach(priv->mesh_dev);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(lbs_resume);
++
+ /**
+  *  @brief This function downloads firmware image, gets
+  *  HW spec from firmware and set basic parameters to
+-- 
+1.5.3.4
 
-=2DMichael Wu
-
---nextPart3710021.bDftaFxQSg
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHVj2/T3Oqt9AH4aERApMWAKCcBfmhc6lVVjsnj3Y0NBDHF53sHgCgrApA
-tJeLqCW09SAGeC8ajOckOBI=
-=onZ2
------END PGP SIGNATURE-----
-
---nextPart3710021.bDftaFxQSg--
