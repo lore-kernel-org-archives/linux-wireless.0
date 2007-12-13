@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:10833 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbXL2CpG (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45279 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319AbXLMLjc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2007 21:45:06 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so5922409wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2007 18:45:05 -0800 (PST)
-Message-ID: <cb0375e10712281845j472b2161vfd9815428b01dd32@mail.gmail.com> (sfid-20071229_024512_012588_1C377DBB)
-Date: Fri, 28 Dec 2007 18:45:05 -0800
-From: "Andrew Lutomirski" <luto@myrealbox.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: ath5k oops (recent regression, I think)
-Cc: "bruno randolf" <bruno@thinktube.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-In-Reply-To: <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com>
-	 <200712251804.13693.bruno@thinktube.com>
-	 <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com>
+	Thu, 13 Dec 2007 06:39:32 -0500
+Subject: Re: [RFC] mac80211: clean up frame receive handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: drago01 <drago01@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <f6ca9fed0712121039n1c287f48n7ece3107bd0b50ca@mail.gmail.com> (sfid-20071212_184013_928458_78921AE4)
+References: <1197483844.6558.158.camel@johannes.berg>
+	 <f6ca9fed0712121039n1c287f48n7ece3107bd0b50ca@mail.gmail.com>
+	 (sfid-20071212_184013_928458_78921AE4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZOk6UhIM3vb06j3bbswg"
+Date: Thu, 13 Dec 2007 12:35:40 +0100
+Message-Id: <1197545740.6558.240.camel@johannes.berg> (sfid-20071213_113935_109542_11872D2F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 25, 2007 6:23 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2007/12/25, bruno randolf <bruno@thinktube.com>:
-> > seems ath5k likes to write some rate registers before vif is set up. i used
-> > the following as a stopgap fix. johannes, do you have any advice how to
-> > properly fix that?
-> >
-> > diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> > index f4478f6..2e9f5c5 100644
-> > --- a/drivers/net/wireless/ath5k/hw.c
-> > +++ b/drivers/net/wireless/ath5k/hw.c
-> > @@ -510,6 +510,11 @@ static inline void ath5k_hw_write_rate_duration(struct
-> > ath5k_hw *ah,
-> >         const struct ath5k_rate_table *rt;
-> >         unsigned int i;
-> >
-> > +       if (sc->vif == NULL) {
-> > +               printk("*** sc->vif NULL\n");
-> > +               return;
-> > +       }
-> > +
-> >         /* Get rate table for the current operating mode */
-> >         rt = ath5k_hw_get_rate_table(ah,
-> >                 driver_mode);
-> >
 
-Works for me.  This patch is ugly, but:
+--=-ZOk6UhIM3vb06j3bbswg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tested-By: Andy Lutomirski <luto@myrealbox.com>
+
+> > This cleans up the frame receive handling. After this patch
+> >  * EAPOL frames addressed to us or the EAPOL group address are
+> >    always accepted regardless of whether they are encrypted or not
+>=20
+> why? userspace (wap_supplicant) tryes to control this depending on the
+> network settings.
+
+No, wpa_supplicant actually requires EAPOL frames to go through. hostapd
+currently wants them on the management interface but on the data
+interface makes much more sense and doesn't matter for any sort of
+control since we only let link-local and unicast packets through the
+port control/drop_unencrypted.
+
+johannes
+
+--=-ZOk6UhIM3vb06j3bbswg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2EZC6Vg1VMiehFYAQJKBRAAicoEgLB4Y0oFbuhDMEOUsbBb9x/1Dy3G
+XIMimT4jxhsvFBLLSDVIgLtPGvipopdMcOK2xiiBkuHJpxrsmyucoDbJ2CldgDgR
+1p/e0Ma8KQLJphQt912fTpYtuHKl++8J9rxCf2DgYJokzab6TOMBoxuGnC8J2nVC
+r8Lb2ZtBMmBifOoXnmDLJxE/1WtgO0KGEazaSiR3hcUqQm350xBiK9+pE4nHeCzv
+I6K9PbzWvHP6GJQQEKxxp8XRWozfa3tN/SHu8QJ0JPSy5gS/l0S36w98mbZyv7yF
+BdL2AO1c5Cd0BEqKitA+VKy7WsHT/Pm68kdODNRaxRo8LQ2dG7taq/LT2kP+nw8T
+yCLId9J5yw3YoyDerCVMNaIurqimdOexIP4XixyvBpTlp2uShSougXVkdbSAyU3F
+c11UQxMWfyUQ9siIeUXus4jBMnioqinppfDjVjK4Q7OhOfezKLkKYAGmXbqDcCcK
+HMdNf9qiCabLlg567hSLDSXiNUXwFtkLK9cjW6NWr7whOzsL408pBsxVT0aUzwal
+y7Qc5Wvj9CXcdS18BB52rSWdtn4ATT7I4J9zxCXoC1inEqaRbJ4bgtMIvDfBR+Z2
+aCF/v8FaGfpgY6UXT6AtQ0f0TT316xYB3AqxV5D8CNLr5QPfikb4j7peYZrvFsPP
+waX4V6GzBCE=
+=qva2
+-----END PGP SIGNATURE-----
+
+--=-ZOk6UhIM3vb06j3bbswg--
+
