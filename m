@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:42573 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752061AbXLXDew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 22:34:52 -0500
-Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
-	ieee80211_invoke_rx_handlers
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Helmut Schaa <hschaa@suse.de>, linville@tuxdriver.com,
+Received: from bombadil.infradead.org ([18.85.46.34]:56749 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762742AbXLMG70 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 01:59:26 -0500
+Subject: [PATCH 62/48] libertas: switch USB cardp->priv to 'struct lbs_private *' and resulting fix
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1198417706.4000.1.camel@johannes.berg>
-References: <200712211516.35731.hschaa@suse.de>
-	 (sfid-20071221_141215_108356_0F4BE6F7) <1198401880.4116.6.camel@johannes.berg>
-	 <20071223123517.17ds9zttxc4goo00@imap.suse.de>
-	 <1198417706.4000.1.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 24 Dec 2007 11:34:54 +0800
-Message-Id: <1198467294.3065.180.camel@debian.sh.intel.com> (sfid-20071224_033500_476146_C2FA1472)
-Mime-Version: 1.0
+Message-Id: <E1J2i2h-0005ry-PV@shinybook.infradead.org> (sfid-20071213_070638_995250_BB306713)
+Date: Thu, 13 Dec 2007 01:59:35 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Tue, 11 Dec 2007 12:53:43 -0500
 
-On Sun, 2007-12-23 at 14:48 +0100, Johannes Berg wrote:
-> Ah, that must be because of the stuff Zhu Yi did wrt. hw scanning.
-> Could you take a look too please? The patch looks pretty much ok to me
-> and I think it'd be required with say VLAN interfaces as well.
+Amazing what interesting things the compiler will tell you if you let it
+know what types you expect to be passing around.
 
-The patch looks fine to me. Hardware scanning is a trigger that makes
-the condition more likely to happen, the patch itself fixes the more
-general problem for multiple interfaces.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |    2 +-
+ drivers/net/wireless/libertas/if_usb.h |    4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-An off-topic question: should wmaster0 continue to execute more rx
-handlers (i.e ieee80211_rx_h_remove_qos_control) even if it knows it
-will drop them finially?
-
-Thanks,
--yi
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index a086653..6cd6c96 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -1003,7 +1003,7 @@ static int if_usb_resume(struct usb_interface *intf)
+ 
+ 	cardp->rx_urb_recall = 0;
+ 
+-	if_usb_submit_rx_urb(cardp->priv);
++	if_usb_submit_rx_urb(cardp);
+ 
+ 	netif_device_attach(cardp->eth_dev);
+ 	netif_device_attach(priv->mesh_dev);
+diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
+index 224c957..f028df1 100644
+--- a/drivers/net/wireless/libertas/if_usb.h
++++ b/drivers/net/wireless/libertas/if_usb.h
+@@ -4,6 +4,8 @@
+ #include <linux/wait.h>
+ #include <linux/timer.h>
+ 
++struct lbs_private;
++
+ /**
+   * This file contains definition for USB interface.
+   */
+@@ -48,7 +50,7 @@ struct usb_card_rec {
+ 	struct net_device *eth_dev;
+ 	struct usb_device *udev;
+ 	struct urb *rx_urb, *tx_urb;
+-	void *priv;
++	struct lbs_private *priv;
+ 	struct read_cb_info rinfo;
+ 
+ 	int bulk_in_size;
+-- 
+1.5.3.4
 
