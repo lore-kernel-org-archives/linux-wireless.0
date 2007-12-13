@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3826 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720AbXLUO24 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 09:28:56 -0500
-Date: Fri, 21 Dec 2007 09:13:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211: rc algos broken
-Message-ID: <20071221141307.GB19874@tuxdriver.com> (sfid-20071221_142900_155379_39C61C99)
-References: <200712202020.51320.mb@bu3sch.de> <200712202035.45909.mb@bu3sch.de> <20071220215150.3ffcafbe@morte>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071220215150.3ffcafbe@morte>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49357 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823AbXLMLm3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 06:42:29 -0500
+Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
+	learning algorithm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1197489986.7491.11.camel@localhost> (sfid-20071212_200658_771608_5D92BC72)
+References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
+	 <1197239150.7543.13.camel@localhost>  <20071210090853.79ea4645@morte>
+	 <1197319867.7493.4.camel@localhost>
+	 (sfid-20071210_205142_109612_504EEC93)  <1197384754.4037.23.camel@johannes.berg>
+	 <1197393788.7528.5.camel@localhost>
+	 (sfid-20071211_172341_980688_FC3BC8E2)  <1197479594.6558.122.camel@johannes.berg>
+	 <1197489986.7491.11.camel@localhost> (sfid-20071212_200658_771608_5D92BC72)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9Ex2tXJ+XALQyMMkAxLy"
+Date: Thu, 13 Dec 2007 12:42:23 +0100
+Message-Id: <1197546143.6558.249.camel@johannes.berg> (sfid-20071213_114231_959364_828BDB11)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 20, 2007 at 09:51:50PM +0100, Stefano Brivio wrote:
-> On Thu, 20 Dec 2007 20:35:45 +0100
-> Michael Buesch <mb@bu3sch.de> wrote:
-> 
-> > Grepping the code it seems that nobody is ever calling
-> > ieee80211_rate_control_register(). I guess that it kind of a fatal problem. ;)
-> 
-> Indeed. Really sorry for the breakage, I'm fixing that in a bit.
 
-Stefano,
+--=-9Ex2tXJ+XALQyMMkAxLy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the patches.  I mostly adopted your patch 2/2, but then
-I did some Kconfig/Makefile hacking on top.  What I have merged
-keeps the rc algorithms built into the mac80211 module instead of
-their own modules.  You can include either or both of simple and
-pid to be included, or neither if EMBEDDED.  And of course you can
-select the default, which is also modifiable via a module option.
-I think this is simpler than the other options, and it gets the tree
-working again.  I'm still open to some options for building one or
-both of the algorithms as a module, but that can be worked-out later.
 
-I have folded my changes back into your patches for the push to davem.
-On the 'everything' branch I just included one fix-up patch to minimize
-disruption to the 'git pull' developers. :-)  That is currently the
-head of the everything branch -- please take a look at it for details
-of what I have changed versus your patches.
+> I'm pretty sure we currently don't support switching modulations via
+> WEXT. Any ideas on how this is going to be implemented with nl80211?
 
-Thanks,
+The way I see it, I'm going to rip out the whole *mode* stuff completely
+and drill it down to
+ (1) pure frequencies (no channels)
+ (2) supported rates (which implies modulations)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> Should we be able to switch e.g. from 802.11g to 802.11b while the
+> interface is up?
+
+Probably not.
+
+> Anyway, I think we don't need any special handling of this situation at
+> the moment. The stack needs more nl80211/cfg80211 work anyway, so let's
+> fix this once we've fixed the stack.
+
+Right.
+
+johannes
+
+--=-9Ex2tXJ+XALQyMMkAxLy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2EanqVg1VMiehFYAQLYmQ//c3dl34YxB7+mjPTijV3l0UADbTKy2gO5
+sYOT8GM3g0XxayGFVkEf+juyatoe44B9ta6N9DDqCeNP/Zl/wlgTpyc28qBA1F1k
+9y+dRpLMi2EbgyBuziF5zAe9dUwyh2MyKDZsGqqnbrdsIgU/ONdp+w+pbbBj3FSV
+XMtDXG8sLwYI76Lj2n6JwawWCc1ZfM4D0cZRvNVo0hn3MKN1GR8CEPIDJz2FDHCZ
+5T4rMwgge3P/v06Ya6nwgUohL0ZyvM+YIogAIKs8bSrm3rP3x0yT4lSUVk399tTb
+XoAxtn8aPsZ9SzKckydyA5v3aQ4L587Pff08h/RB2qjUQsFDvdX2ofhjRWLE0gMA
+y1//nokMsxtg7296PJycY1COXsNT+vM937LEeBoi/yQNNLcLYat19KSjGiMbMd7k
+AvkdIBRAS7sp7gpQ5otthgEJQBjEavWYgCJRJcL1zriWcAbwtUaxPq26vAf4uA56
+YXiKlSyKNfttVIbEbE3Ualth1mypn5MslKZ8HASGPUx77fhtuJAn/mzn+1JtBpP+
+kzarzEQkLX75fb6MKkzUw7GNcUXQuT6Rs/lvHNlaP0jP2dHebiXiK7SeWkl72is/
+GNbDNNSMqUoTX3oriMHvbwhO72/ICYCPNFcVF4/MXYIOJrUBipqeuvpGOSXZqqu8
+SOMYBdHH2lk=
+=PQEr
+-----END PGP SIGNATURE-----
+
+--=-9Ex2tXJ+XALQyMMkAxLy--
+
