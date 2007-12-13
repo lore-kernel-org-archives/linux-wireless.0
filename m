@@ -1,131 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:37157 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754503AbXLSAJI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 19:09:08 -0500
-Date: Wed, 19 Dec 2007 01:04:12 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
+Received: from viefep18-int.chello.at ([213.46.255.22]:64257 "EHLO
+	viefep15-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933900AbXLMXBQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 18:01:16 -0500
+Message-ID: <4761B9C0.3080309@jooz.net> (sfid-20071213_230129_548257_6C3D5FA5)
+Date: Fri, 14 Dec 2007 00:01:20 +0100
+From: Bjorge Dijkstra <bjd@jooz.net>
+MIME-Version: 1.0
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 5/8] rc80211-pid: add sharpening factor
-Message-ID: <20071219010412.7d5abaeb@morte> (sfid-20071219_000911_215992_CCBA66C7)
-In-Reply-To: <20071218233749.871878037@polimi.it>
-References: <20071218233749.871878037@polimi.it>>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: status wireless extensions API for new drivers
+References: <4761A108.2080005@jooz.net> <20071213213118.GE3083@tuxdriver.com> <4761AD18.8000004@jooz.net> <20071213221323.GF3083@tuxdriver.com>
+In-Reply-To: <20071213221323.GF3083@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a PID sharpening factor for faster response after
-association and low activity events.
+John W. Linville wrote:
+> BTW, how is your patchset looking?  If you want it to be in 2.6.25
+> then you need to post it soon.
+> 
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
----
- rc80211_pid.c |   35 +++++++++++++++++++++++++++--------
- 1 file changed, 27 insertions(+), 8 deletions(-)
+It's currently in the form of a seperate self supporting package based
+on an older kernel. So that probably needs a little bit of work to get
+it rebased on current kernel. It's not a must for me to get it in 2.6.25
+though, so if we miss it that's not a problem.
 
-Index: wireless-2.6/net/mac80211/rc80211_pid.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-+++ wireless-2.6/net/mac80211/rc80211_pid.c
-@@ -23,13 +23,16 @@
-  *
-  * The controller basically computes the following:
-  *
-- * adj = CP * err + CI * err_avg + CD * (err - last_err)
-+ * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
-  *
-  * where
-  * 	adj	adjustment value that is used to switch TX rate (see
-below)
-  * 	err	current error: target vs. current failed frames
-percentage
-  * 	last_err	last error
-  * 	err_avg	average (i.e. poor man's integral) of recent
-errors
-+ *	sharpening	non-zero when fast response is needed (i.e.
-right after
-+ *			association or no frames sent for a long time),
-heading
-+ * 			to zero over time
-  * 	CP	Proportional coefficient
-  * 	CI	Integral coefficient
-  * 	CD	Derivative coefficient
-@@ -65,6 +68,10 @@
- #define RC_PID_SMOOTHING_SHIFT 3
- #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
+BTW, when is the approx. deadline for 2.6.25?
 
-+/* Sharpening factor (used for D part of PID controller) */
-+#define RC_PID_SHARPENING_FACTOR 0
-+#define RC_PID_SHARPENING_DURATION 0
-+
- /* Fixed point arithmetic shifting amount. */
- #define RC_PID_ARITH_SHIFT 8
+> FWIW, as long as you have just enough WEXT support to get it to work
+> with open networks I think that would be enough to get a patch merged.
+> Having experimented a bit earlier with your patchset, I suspect you
+> can probably support WEP and maybe more by now...
 
-@@ -131,8 +138,11 @@ struct rc_pid_sta_info {
- 	 */
- 	s32 err_avg_sc;
+Yes, WEP, WPA and WPA2 all should work fine. I'm using it everyday on a
+WPA2 network with no issues. I don't have a wired connection here, so I
+depend on it working for me :)
 
--	/* Last framed failes percentage sample */
-+	/* Last framed failes percentage sample. */
- 	u32 last_pf;
-+
-+	/* Sharpening needed. */
-+	u8 sharp_cnt;
- };
+> 
+> So, when will we see your patches?
+> 
 
- /* Algorithm parameters. We keep them on a per-algorithm approach, so they
-can @@ -267,20 +277,26 @@ static void rate_control_pid_sample(stru
+I'll try get something out during the weekend.
 
- 	mode = local->oper_hw_mode;
- 	spinfo = sta->rate_ctrl_priv;
-+
-+	/* In case nothing happened during the previous control interval,
-turn
-+	 * the sharpening factor on. */
-+	if (jiffies - spinfo->last_sample > 2 * RC_PID_INTERVAL)
-+		spinfo->sharp_cnt = RC_PID_SHARPENING_DURATION;
-+
- 	spinfo->last_sample = jiffies;
+> Thanks,
+> 
+> John
 
--	/* If no frames were transmitted, we assume the old sample is
-+	/* This should never happen, but in case, we assume the old sample
-is
- 	 * still a good measurement and copy it. */
--	if (spinfo->tx_num_xmit == 0)
-+	if (unlikely(spinfo->tx_num_xmit == 0))
- 		pf = spinfo->last_pf;
- 	else {
- 		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
- 		pf <<= RC_PID_ARITH_SHIFT;
--
--		spinfo->tx_num_xmit = 0;
--		spinfo->tx_num_failed = 0;
- 	}
+regards,
+Bjorge
 
-+	spinfo->tx_num_xmit = 0;
-+	spinfo->tx_num_failed = 0;
-+
- 	/* If we just switched rate, update the rate behaviour info. */
- 	if (pinfo->oldrate != sta->txrate) {
-
-@@ -302,8 +318,11 @@ static void rate_control_pid_sample(stru
- 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
- 	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
-
--	err_der = pf - spinfo->last_pf;
-+	err_der = pf - spinfo->last_pf
-+		  * (1 + RC_PID_SHARPENING_FACTOR * spinfo->sharp_cnt);
- 	spinfo->last_pf = pf;
-+	if (spinfo->sharp_cnt)
-+			spinfo->sharp_cnt--;
-
- 	/* Compute the controller output. */
- 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
-
---
-Ciao
-Stefano
