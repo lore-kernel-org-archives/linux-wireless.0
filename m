@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35000 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764533AbXLNMRs (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57506 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759573AbXLMG7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2007 07:17:48 -0500
-Subject: Re: [RFC] mac80211: clean up frame receive handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <20071213204933.GD3083@tuxdriver.com>
-References: <1197483844.6558.158.camel@johannes.berg>
-	 <20071213204933.GD3083@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vyMkho/Ki09YepF1Y++N"
-Date: Fri, 14 Dec 2007 13:14:03 +0100
-Message-Id: <1197634443.16079.36.camel@johannes.berg> (sfid-20071214_121758_220639_6ED59E94)
-Mime-Version: 1.0
+	Thu, 13 Dec 2007 01:59:50 -0500
+Subject: [PATCH 83/48] libertas: add debugging output to lbs_mesh_config()
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i36-0005th-HN@shinybook.infradead.org> (sfid-20071213_070016_580994_14BA0B3F)
+Date: Thu, 13 Dec 2007 02:00:00 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Tue, 11 Dec 2007 22:52:03 -0500
 
---=-vyMkho/Ki09YepF1Y++N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-
-> > +static bool ieee80211_frame_allowed(struct ieee80211_txrx_data *rx)
-> > +{
-> > +	static const u8 pae_group_addr[ETH_ALEN]
-> > +		=3D { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
-> > +	struct ethhdr *ehdr =3D (struct ethhdr *)rx->skb->data;
-> > +
-> > +	if (rx->skb->protocol =3D=3D htons(ETH_P_PAE) &&
-> > +	    (compare_ether_addr(ehdr->h_dest, pae_group_addr) =3D=3D 0 ||
-> > +	     compare_ether_addr(ehdr->h_dest, rx->dev->dev_addr) =3D=3D 0))
-> > +		return true;
->=20
-> Should you reverse these two compare_ether_addr calls?
-> rx->dev->dev_addr seems more likely for any given packet.  It probably
-> makes little difference but it seems like checking for that first
-> would still be better.
-
-I think in theory all eapol frames are sent to the PAE group address,
-but I have no idea which of the checks would be more efficient. It seems
-that the first could be optimised a lot because it's constant too...
-
-johannes
-
---=-vyMkho/Ki09YepF1Y++N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2JziaVg1VMiehFYAQI1hw/5AUc49QxnVte0QaTBmFksMjn4MqnJApuu
-q1sHo5DVutvmrxVvR5kV0AeleVb//1uyMT1mXOOgN+uZqAlzlqi1qvBVA5j87KxA
-B4oQcwISSQ9Pu+SPiBLtSBQ9IlwN+dG1Wuyn6hrjXOkpF6YlSuXN7bh53OFsxALw
-CGZGMPZ66UCpabSb23qOWjW3ea016gPGFnt4EA8UijrsQ5sQRoV8wnAscVrkzVoP
-LGJ1Aq4cHTxoTWrWf6e8AGnendflzQG0dT6KXjfgNcv3q0TySKh6XGAp7PzLx9Zt
-q8FDLB6xk0+Ntul3xW8ZxxbjZozg8yH1QtBzOIzv5Y4lyIgkAPUTum6WLrOhTgUy
-5ISCrJqFw6Z9vW//zV9c1Xy86bi+zppxOTG3s/2xz5dObB5B0mipc0LdgJM3k04m
-dNy/0WNP5DYMN1sX2K+6qumgxHjMV3dR1GS76wXTn3sODwSFum3Nvf27vEfLqsSK
-FaewNuSj1eOD1kEAvJ6AZxP5ZiXmUZcCS5KeLC+8F3mcEHFKsH26JMmTI76e68ef
-5XDRX3egbv4sYkppfV0tWygo6K/a7V5Q3uEOtbaRKwiiDk8cxSZf3de2+0QYs+M7
-+NRbFUEAPEY398PAbliGOmzd4Z67Dm6hoNFPkkl1GeTgBmfm+Ckv23/8W/2e8aKh
-n+EFzgRBFfk=
-=iFoJ
------END PGP SIGNATURE-----
-
---=-vyMkho/Ki09YepF1Y++N--
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 01d2349..1cb42dc 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1106,7 +1106,9 @@ int lbs_mesh_config(struct lbs_private *priv, int enable)
+ 		cmd.length = cpu_to_le16(priv->mesh_ssid_len);
+ 		memcpy(cmd.data, priv->mesh_ssid, priv->mesh_ssid_len);
+ 	}
+-
++	lbs_deb_cmd("mesh config channel %d SSID %s\n",
++		    priv->curbssparams.channel,
++		    escape_essid(priv->mesh_ssid, priv->mesh_ssid_len));
+ 	return lbs_cmd_with_response(priv, CMD_MESH_CONFIG, cmd);
+ }
+ 
+-- 
+1.5.3.4
 
