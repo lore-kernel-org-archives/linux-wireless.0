@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:39988 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754165AbXLWDlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 22:41:10 -0500
-Date: Sun, 23 Dec 2007 04:39:17 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Mattias Nissler <mattias.nissler@gmx.de>
-Subject: [PATCH 1/7] rc80211-pid: export human-readable target_pf value to
- debugfs
-Message-ID: <20071223043917.7ec437e9@morte> (sfid-20071223_034113_985251_517DFDE1)
-In-Reply-To: <20071223033633.710907923@polimi.it>
-References: <20071223033633.710907923@polimi.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bombadil.infradead.org ([18.85.46.34]:56951 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762772AbXLMG7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 01:59:33 -0500
+Subject: [PATCH 74/48] libertas: fix sparse endianness warnings in scan.c
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i2w-0005sy-Mf@shinybook.infradead.org> (sfid-20071213_070109_181119_82861026)
+Date: Thu, 13 Dec 2007 01:59:50 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Export the non-shifted target_pf value to debugfs, so that it's human-readable.
+Date: Tue, 11 Dec 2007 17:54:36 -0500
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- rc80211_pid.h      |    2 +-
- rc80211_pid_algo.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/libertas/scan.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-Index: wireless-2.6/net/mac80211/rc80211_pid.h
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid.h
-+++ wireless-2.6/net/mac80211/rc80211_pid.h
-@@ -38,7 +38,7 @@
-  * link quality is good, the controller will fail to adjust failed frames
-  * percentage to the target. This is intentional.
-  */
--#define RC_PID_TARGET_PF (11 << RC_PID_ARITH_SHIFT)
-+#define RC_PID_TARGET_PF 11
-
- /* Rate behaviour normalization quantity over time. */
- #define RC_PID_NORM_OFFSET 3
-Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
-@@ -210,7 +210,7 @@ static void rate_control_pid_sample(stru
- 	rate_control_pid_normalize(pinfo, mode->num_rates);
-
- 	/* Compute the proportional, integral and derivative errors. */
--	err_prop = pinfo->target - pf;
-+	err_prop = (pinfo->target << RC_PID_ARITH_SHIFT) - pf;
-
- 	err_avg = spinfo->err_avg_sc >> pinfo->smoothing_shift;
- 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
-
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index 8b6ce61..92d84c7 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -709,7 +709,7 @@ static int lbs_process_bss(struct bss_descriptor *bss,
+ 
+ 	if (*bytesleft >= sizeof(beaconsize)) {
+ 		/* Extract & convert beacon size from the command buffer */
+-		beaconsize = le16_to_cpu(get_unaligned((u16 *)*pbeaconinfo));
++		beaconsize = le16_to_cpu(get_unaligned((__le16 *)*pbeaconinfo));
+ 		*bytesleft -= sizeof(beaconsize);
+ 		*pbeaconinfo += sizeof(beaconsize);
+ 	}
+@@ -823,7 +823,7 @@ static int lbs_process_bss(struct bss_descriptor *bss,
+ 
+ 		case MFIE_TYPE_IBSS_SET:
+ 			pibss = (struct ieeetypes_ibssparamset *) pos;
+-			bss->atimwindow = le32_to_cpu(pibss->atimwindow);
++			bss->atimwindow = le16_to_cpu(pibss->atimwindow);
+ 			memmove(&bss->ssparamset.ibssparamset, pibss,
+ 				sizeof(struct ieeetypes_ibssparamset));
+ 			lbs_deb_scan("got IBSS IE\n");
+@@ -1562,12 +1562,11 @@ int lbs_ret_80211_scan(struct lbs_private *priv, struct cmd_ds_command *resp)
+ 		goto done;
+ 	}
+ 
+-	bytesleft = le16_to_cpu(get_unaligned((u16*)&pscan->bssdescriptsize));
++	bytesleft = le16_to_cpu(pscan->bssdescriptsize);
+ 	lbs_deb_scan("SCAN_RESP: bssdescriptsize %d\n", bytesleft);
+ 
+-	scanrespsize = le16_to_cpu(get_unaligned((u16*)&resp->size));
+-	lbs_deb_scan("SCAN_RESP: scan results %d\n",
+-	       pscan->nr_sets);
++	scanrespsize = le16_to_cpu(resp->size);
++	lbs_deb_scan("SCAN_RESP: scan results %d\n", pscan->nr_sets);
+ 
+ 	pbssinfo = pscan->bssdesc_and_tlvbuffer;
+ 
 -- 
-Ciao
-Stefano
+1.5.3.4
+
