@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56719 "EHLO mx1.redhat.com"
+Received: from londo.lunn.ch ([80.238.139.98]:35717 "EHLO londo.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753752AbXLDPNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:13:19 -0500
-Subject: Re: [PATCH] less eventcause shifts
-From: Dan Williams <dcbw@redhat.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1196780866.13978.275.camel@pmac.infradead.org>
-References: <200711280915.11300.hs4233@mail.mn-solutions.de>
-	 <1196704681.21151.13.camel@localhost.localdomain>
-	 <1196714939.13978.171.camel@pmac.infradead.org>
-	 <20071204145437.GC19911@tuxdriver.com>
-	 <1196780866.13978.275.camel@pmac.infradead.org>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 10:06:45 -0500
-Message-Id: <1196780805.26155.29.camel@localhost.localdomain> (sfid-20071204_151341_229794_44D1D48B)
-Mime-Version: 1.0
+	id S1752644AbXLMMu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 07:50:58 -0500
+Date: Thu, 13 Dec 2007 13:50:47 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Lunn <andrew@lunn.ch>, flamingice@sourmilk.net,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] try 2: mac80211: Fix swapped parameters to
+	ieee80211_set_channel()
+Message-ID: <20071213125047.GD501@lunn.ch> (sfid-20071213_125104_616105_F22520E7)
+References: <20071212153158.GB16947@lunn.ch> <1197481426.6558.138.camel@johannes.berg> <20071212180204.GP31218@lunn.ch> <1197482969.6558.149.camel@johannes.berg> <1197504975.6558.199.camel@johannes.berg> <20071213120904.GB501@lunn.ch> <1197549025.6558.253.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197549025.6558.253.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-12-04 at 15:07 +0000, David Woodhouse wrote:
-> On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
-> > The result is a nice, rebased set of patches on top of the current
-> > upstream work.	If you simply did a "commit, pull, commit, pull,
-> > etc" cycle then you would end-up with a set of patches that might
-> > no longer apply on top of a clean upstream branch -- been there,
-> > wireless-dev RIP.
+On Thu, Dec 13, 2007 at 01:30:25PM +0100, Johannes Berg wrote:
 > 
-> Ah, I understand your confusion. It reflects akpm's confusion when he
-> first started trying to use git-bisect.
+> > iwconfig wlan0 freq 5240
 > 
-> This thing is, there is no actual need for a 'set of patches'. Git isn't
-> about patches. It's about commits and pulls. It doesn't _matter_ if you
-> had to fix up something when you merged from Linus, because when Linus
-> pulls from your tree, he pulls your manual merge effort too.
+> man iwconfig(8)
 > 
-> That's how git is designed. You're trying to use it as a kind of staging
-> post before you send a set of patches to Linus, which is why it looks
-> strange to me. That's the kind of thing that quilt does best, I think.
-> 
-> Perhaps you should investigate stgit, which {ab,}uses git for this kind
-> of thing and lets you deal with patches that way quite nicely too.
-> 
-> > I really think this is the best methodology for processing patches
-> > so that they are ready for merging when posted.
-> 
-> You're probably right.
-> 
-> On the other hand, I think the best methodology for processing code
-> changes to the Linux kernel so that they are ready for merging into
-> Linus' git tree is probably in a normal git tree :)
-> 
-> Yes, it's useful not to do daily pulls and end up with a ton of 'empty'
-> merge commits in the graph -- that gets message. For that reason, I tend
-> to pull from upstream only when there's something there which I depend
-> on, or when I'll have to do a manual merge. But a reasonable number of
-> merges is perfectly normal. That's what git was designed to do, after
-> all.
-> 
-> > [1] If your work does _not_ rely on patches already merged in my tree
-> > then by all means just use Linus' tree.
-> 
-> That was my intention, right up to the point at which a bunch of
-> libertas patches appeared in your tree :)
+>        freq/channel
+>               Set the operating frequency or channel in the  device.  A  value
+>               below 1000 indicates a channel number, a value greater than 1000
+>               is a frequency in Hz. You may append the suffix k, M or G to the
+>               value  (for  example,  "2.46G"  for  2.46 GHz frequency), or add
+>               enough ???0???.
 
-Those patches should get into 2.6.25; I don't want them held up if you
-don't think you can get the command rework done by 2.6.25...  As long as
-the stuff that's queued up in John's tree gets up to Linus for 2.6.25,
-then you can develop however you want in libertas-2.6 based of Linus or
-whatever.
+Yup, see my last email. 
 
-Dan
+However this description does not match the implementation. The
+implementation is that its a channel if e = 0. My "frequency" is > 1000,  
+but it was still interpreted as a channel. Looking at the
+implementation of iw_float2freq(), the description should be that a
+value less than 1e9 is a channel. 
 
+So there should really be a check in the user space tools which says
+that values between 1000 and 1e9 are invalid. This would catch errors
+like the one i made for both 2.4GHz and 5GHz.
+
+     Andrew
 
