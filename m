@@ -1,282 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40000
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754226AbXLVE5l (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:56001 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762666AbXLMHAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:57:41 -0500
-Date: Fri, 21 Dec 2007 20:57:40 -0800 (PST)
-Message-Id: <20071221.205740.156308612.davem@davemloft.net> (sfid-20071222_045806_327805_46D3E86F)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 11/12]: Create IW_REQUEST_FLAG_COMPAT and set it as needed.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 13 Dec 2007 02:00:09 -0500
+Subject: [PATCH 91/48] libertas: implement suspend/resume for USB devices
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i3I-0005uS-Bc@shinybook.infradead.org> (sfid-20071213_070631_982477_E3F7B2BF)
+Date: Thu, 13 Dec 2007 02:00:12 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Date: Wed, 12 Dec 2007 17:40:56 -0500
 
-[WEXT]: Create IW_REQUEST_FLAG_COMPAT and set it as needed.
-
-Now low-level WEXT ioctl handlers can do compat handling
-when necessary.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- include/net/iw_handler.h |    2 +-
- net/wireless/wext.c      |   73 +++++++++++++++++++++-------------------------
- 2 files changed, 34 insertions(+), 41 deletions(-)
+ drivers/net/wireless/libertas/if_usb.c |   16 +++++++++++-----
+ 1 files changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index 369d50e..c99a8ee 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -256,7 +256,7 @@
- #define EIWCOMMIT	EINPROGRESS
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 74fec9d..15715a6 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -242,6 +242,10 @@ static int if_usb_probe(struct usb_interface *intf,
  
- /* Flags available in struct iw_request_info */
--#define IW_REQUEST_FLAG_NONE	0x0000	/* No flag so far */
-+#define IW_REQUEST_FLAG_COMPAT	0x0001	/* Compat ioctl call */
+ 	if_usb_set_boot2_ver(priv);
  
- /* Type of headers we know about (basically union iwreq_data) */
- #define IW_HEADER_TYPE_NULL	0	/* Not available */
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 5869b70..b7f5973 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -866,10 +866,10 @@ out:
- static int ioctl_standard_call(struct net_device *	dev,
- 			       struct iwreq *		iwr,
- 			       unsigned int		cmd,
-+			       struct iw_request_info	*info,
- 			       iw_handler		handler)
++	/* Set suspend/resume configuration:
++	   wake via GPIO2 after a 20ms delay */
++	lbs_host_sleep_cfg(priv, EHS_WAKE_ON_UNICAST_DATA, 2, 20);
++
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+@@ -969,21 +973,24 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
  {
- 	const struct iw_ioctl_description *	descr;
--	struct iw_request_info			info;
- 	int					ret = -EINVAL;
- 
- 	/* Get the description of the IOCTL */
-@@ -877,15 +877,11 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		return -EOPNOTSUPP;
- 	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not */
- 	if (descr->header_type != IW_HEADER_TYPE_POINT) {
- 
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), NULL);
-+		ret = handler(dev, info, &(iwr->u), NULL);
- 
- 		/* Generate an event to notify listeners of the change */
- 		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
-@@ -893,7 +889,7 @@ static int ioctl_standard_call(struct net_device *	dev,
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
- 	} else {
- 		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
--					      handler, dev, &info);
-+					      handler, dev, info);
- 	}
- 
- 	/* Call commit handler if needed and defined */
-@@ -1016,25 +1012,21 @@ out:
- }
- 
- static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
--			      unsigned int cmd, iw_handler handler)
-+			      unsigned int cmd, struct iw_request_info *info,
-+			      iw_handler handler)
- {
- 	int extra_size = 0, ret = -EINVAL;
- 	const struct iw_priv_args *descr;
--	struct iw_request_info info;
- 
- 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not. */
- 	if (extra_size == 0) {
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
- 	} else {
- 		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
--					     handler, dev, &info, extra_size);
-+					     handler, dev, info, extra_size);
- 	}
- 
- 	/* Call commit handler if needed and defined */
-@@ -1046,7 +1038,8 @@ static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
- 
- /* ---------------------------------------------------------------- */
- typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
--			       unsigned int, iw_handler);
-+			       unsigned int, struct iw_request_info *,
-+			       iw_handler);
- 
- /*
-  * Main IOCTl dispatcher.
-@@ -1054,6 +1047,7 @@ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
-  */
- static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 				  unsigned int cmd,
-+				  struct iw_request_info *info,
- 				  wext_ioctl_func standard,
- 				  wext_ioctl_func private)
- {
-@@ -1072,11 +1066,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return standard(dev, iwr, cmd,
-+		return standard(dev, iwr, cmd, info,
- 				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return standard(dev, iwr, cmd,
-+		return standard(dev, iwr, cmd, info,
- 				&iw_handler_get_private);
- 
- 	/* Basic check */
-@@ -1088,9 +1082,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return standard(dev, iwr, cmd, handler);
-+			return standard(dev, iwr, cmd, info, handler);
- 		else
--			return private(dev, iwr, cmd, handler);
-+			return private(dev, iwr, cmd, info, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
-@@ -1112,7 +1106,7 @@ static int wext_permission_check(unsigned int cmd)
- 
- /* entry point from dev ioctl */
- static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
--			       unsigned int cmd,
-+			       unsigned int cmd, struct iw_request_info *info,
- 			       wext_ioctl_func standard,
- 			       wext_ioctl_func private)
- {
-@@ -1123,7 +1117,7 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
-+	ret = wireless_process_ioctl(net, ifr, cmd, info, standard, private);
- 	rtnl_unlock();
- 
- 	return ret;
-@@ -1132,10 +1126,12 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
- int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 		      void __user *arg)
- {
--	int ret = wext_ioctl_dispatch(net, ifr, cmd,
--				      ioctl_standard_call,
--				      ioctl_private_call);
-+	struct iw_request_info info = { .cmd = cmd, .flags = 0 };
+ 	struct usb_card_rec *cardp = usb_get_intfdata(intf);
+ 	struct lbs_private *priv = cardp->priv;
 +	int ret;
  
-+	ret = wext_ioctl_dispatch(net, ifr, cmd, &info,
-+				  ioctl_standard_call,
-+				  ioctl_private_call);
- 	if (ret > 0 &&
- 	    IW_IS_GET(cmd) &&
- 	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
-@@ -1148,28 +1144,25 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- static int compat_standard_call(struct net_device *	dev,
- 				struct iwreq *		iwr,
- 				unsigned int		cmd,
-+				struct iw_request_info	*info,
- 				iw_handler		handler)
- {
- 	const struct iw_ioctl_description *descr;
- 	struct compat_iw_point *iwp_compat;
--	struct iw_request_info info;
- 	struct iw_point iwp;
- 	int err;
+ 	lbs_deb_enter(LBS_DEB_USB);
  
- 	descr = standard_ioctl + (cmd - SIOCIWFIRST);
+ 	if (priv->psstate != PS_STATE_FULL_POWER)
+ 		return -1;
  
- 	if (descr->header_type != IW_HEADER_TYPE_POINT)
--		return ioctl_standard_call(dev, iwr, cmd, handler);
-+		return ioctl_standard_call(dev, iwr, cmd, info, handler);
+-	netif_device_detach(priv->dev);
+-	netif_device_detach(priv->mesh_dev);
++	ret = lbs_suspend(priv);
++	if (ret)
++		goto out;
  
- 	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
- 	iwp.pointer = compat_ptr(iwp_compat->pointer);
- 	iwp.length = iwp_compat->length;
- 	iwp.flags = iwp_compat->flags;
+ 	/* Unlink tx & rx urb */
+ 	usb_kill_urb(cardp->tx_urb);
+ 	usb_kill_urb(cardp->rx_urb);
  
--	info.cmd = cmd;
--	info.flags = 0;
--
--	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
-+	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, info);
- 
- 	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
- 	iwp_compat->length = iwp.length;
-@@ -1179,22 +1172,18 @@ static int compat_standard_call(struct net_device *	dev,
++ out:
+ 	lbs_deb_leave(LBS_DEB_USB);
+-	return 0;
++	return ret;
  }
  
- static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
--			       unsigned int cmd, iw_handler handler)
-+			       unsigned int cmd, struct iw_request_info *info,
-+			       iw_handler handler)
- {
- 	const struct iw_priv_args *descr;
--	struct iw_request_info info;
- 	int ret, extra_size;
+ static int if_usb_resume(struct usb_interface *intf)
+@@ -995,8 +1002,7 @@ static int if_usb_resume(struct usb_interface *intf)
  
- 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
+ 	if_usb_submit_rx_urb(cardp);
  
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not. */
- 	if (extra_size == 0) {
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
- 	} else {
- 		struct compat_iw_point *iwp_compat;
- 		struct iw_point iwp;
-@@ -1205,7 +1194,7 @@ static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
- 		iwp.flags = iwp_compat->flags;
+-	netif_device_attach(priv->dev);
+-	netif_device_attach(priv->mesh_dev);
++	lbs_resume(priv);
  
- 		ret = ioctl_private_iw_point(&iwp, cmd, descr,
--					     handler, dev, &info, extra_size);
-+					     handler, dev, info, extra_size);
- 
- 		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
- 		iwp_compat->length = iwp.length;
-@@ -1223,6 +1212,7 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 			     unsigned long arg)
- {
- 	void __user *argp = (void __user *)arg;
-+	struct iw_request_info info;
- 	struct iwreq iwr;
- 	char *colon;
- 	int ret;
-@@ -1235,7 +1225,10 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 	if (colon)
- 		*colon = 0;
- 
--	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
-+	info.cmd = cmd;
-+	info.flags = IW_REQUEST_FLAG_COMPAT;
-+
-+	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd, &info,
- 				  compat_standard_call,
- 				  compat_private_call);
- 
+ 	lbs_deb_leave(LBS_DEB_USB);
+ 	return 0;
 -- 
-1.5.4.rc1
+1.5.3.4
 
