@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:9438 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862AbXLTAJA (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:55862 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762610AbXLMG7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 19:09:00 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1689952nze.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2007 16:08:59 -0800 (PST)
-Message-ID: <1ba2fa240712191608oa7f36e9ma05a04b4797d715a@mail.gmail.com> (sfid-20071220_000902_798350_66859B83)
-Date: Thu, 20 Dec 2007 02:08:58 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH] iwlwifi: proper monitor support
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1ba2fa240712191604l1f5343c0s62e66aaf2077cce1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1198052938-25637-1-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240712191604l1f5343c0s62e66aaf2077cce1@mail.gmail.com>
+	Thu, 13 Dec 2007 01:59:14 -0500
+Subject: [PATCH 49/48] libertas: fix use-after-free error
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i2Q-0005qn-4n@shinybook.infradead.org> (sfid-20071213_065920_101073_DE68B89C)
+Date: Thu, 13 Dec 2007 01:59:18 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 20, 2007 2:04 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Dec 19, 2007 10:28 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> > This patch changes the iwlwifi driver to properly support
-> > monitor interfaces after the filter flags change.
-> >
-> > The patch is originally created by Johannes Berg for iwl4965. I fixed some
-> > of the comments and created a similar patch for iwl3945.
-> >
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-3945.c     |  118 ++++++++++++++++++++++----
-> >  drivers/net/wireless/iwlwifi/iwl-3945.h     |   36 +++------
-> >  drivers/net/wireless/iwlwifi/iwl-4965.c     |  120 ++++++++++++++++++++++++--
-> >  drivers/net/wireless/iwlwifi/iwl-4965.h     |   24 +-----
-> >  drivers/net/wireless/iwlwifi/iwl3945-base.c |  109 +++----------------------
-> >  drivers/net/wireless/iwlwifi/iwl4965-base.c |   90 +--------------------
-> >  6 files changed, 236 insertions(+), 261 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > index 7d15b33..07fa363 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > @@ -35,9 +35,9 @@
-> >
-> > +static void iwl4965_add_radiotap(struct iwl4965_priv *priv,
-> > +                                struct sk_buff *skb,
-> > +                                struct iwl4965_rx_phy_res *rx_start,
-> > +                                struct ieee80211_rx_status *stats,
-> > +                                u32 ampdu_status)
-> > +{
-> > +       s8 signal = stats->ssi;
-> > +       s8 noise = 0;
-> > +       int rate = stats->rate;
-> > +       u64 tsf = stats->mactime;
-> > +       __le16 phy_flags_hw = rx_start->phy_flags;
-> > +       struct iwl4965_rt_rx_hdr {
-> > +               struct ieee80211_radiotap_header rt_hdr;
-> > +               __le64 rt_tsf;          /* TSF */
-> > +               u8 rt_flags;            /* radiotap packet flags */
-> > +               u8 rt_rate;             /* rate in 500kb/s */
->
-> You probably wants to have u32 value to accommodate HT rates (MCS)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Mon, 10 Dec 2007 12:19:55 +0100
 
-I've made a mistake this is not logical but actual rate so it
-theoretically we can go up to 600Mbs so it will make it 120 < 256.
-But aren't we interested in MSC rate a packet was sent?
+Previously, the display of subscribed events could be wrong.
 
-> > +               __le16 rt_channelMHz;   /* channel in MHz */
->
-> > +               __le16 rt_chbitmask;    /* channel bitfield */
-> > +               s8 rt_dbmsignal;        /* signal in dBm, kluged to signed */
-> > +               s8 rt_dbmnoise;
-> > +               u8 rt_antenna;          /* antenna number */
-> > +       } __attribute__ ((packed)) *iwl4965_rt;
-> > +
-> > +       /*
-> Tomas
->
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/debugfs.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index e8a24d7..f4858bd 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -409,30 +409,32 @@ static ssize_t lbs_threshold_read(
+ 	char *buf = (char *)addr;
+ 	u8 value;
+ 	u8 freq;
++	int events = 0;
+ 
+-	struct cmd_ds_802_11_subscribe_event *events = kzalloc(
++	struct cmd_ds_802_11_subscribe_event *subscribed = kzalloc(
+ 		sizeof(struct cmd_ds_802_11_subscribe_event),
+ 		GFP_KERNEL);
+ 	struct mrvlietypes_thresholds *got;
+ 
+ 	res = lbs_prepare_and_send_command(priv,
+ 			CMD_802_11_SUBSCRIBE_EVENT, CMD_ACT_GET,
+-			CMD_OPTION_WAITFORRSP, 0, events);
++			CMD_OPTION_WAITFORRSP, 0, subscribed);
+ 	if (res) {
+-		kfree(events);
++		kfree(subscribed);
+ 		return res;
+ 	}
+ 
+-	got = lbs_tlv_find(tlv_type, events->tlv, sizeof(events->tlv));
++	got = lbs_tlv_find(tlv_type, subscribed->tlv, sizeof(subscribed->tlv));
+ 	if (got) {
+ 		value = got->value;
+ 		freq  = got->freq;
++		events = le16_to_cpu(subscribed->events);
+ 	}
+-	kfree(events);
++	kfree(subscribed);
+ 
+ 	if (got)
+ 		pos += snprintf(buf, len, "%d %d %d\n", value, freq,
+-			!!(le16_to_cpu(events->events) & event_mask));
++			!!(events & event_mask));
+ 
+ 	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
+ 
+-- 
+1.5.3.4
+
