@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:27969 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbXLRTwe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56931 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762690AbXLMRhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 14:52:34 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1359800nze.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Dec 2007 11:52:33 -0800 (PST)
-Message-ID: <43e72e890712181152u1c543754j66ad1ed2acf7e344@mail.gmail.com> (sfid-20071218_195251_209769_272D1F4A)
-Date: Tue, 18 Dec 2007 14:52:32 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Update cycle of compat-wireless-2.6
-Cc: "Joachim Frieben" <jfrieben@freesurf.fr>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197996743.4885.178.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <62219.89.246.167.112.1197989446.squirrel@jose.freesurf.fr>
-	 <1197996743.4885.178.camel@johannes.berg>
+	Thu, 13 Dec 2007 12:37:05 -0500
+Subject: Re: [FYI] hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	hostap <hostap@shmoo.com>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com> (sfid-20071213_143532_407063_3AB777D4)
+References: <1197512614.6558.224.camel@johannes.berg>
+	 <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com>
+	 (sfid-20071213_143532_407063_3AB777D4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e4aild2MnwZ5p1LFRgRF"
+Date: Thu, 13 Dec 2007 18:36:55 +0100
+Message-Id: <1197567415.8313.33.camel@johannes.berg> (sfid-20071213_173717_081719_0E45FAA2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 18, 2007 11:52 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Tue, 2007-12-18 at 15:50 +0100, Joachim Frieben wrote:
-> > It appears that the content of
-> > http://linuxwireless.org/download/compat-wireless-2.6 is still labeled
-> > 2007-Dec-15 whereas on the download page
-> > http://www.linuxwireless.org/en/users/Download
-> > a daily update is announced. Any explanation for this discrepancy? ~jf
->
-> It is updated daily, but if the compat patch fails to apply the old
-> files stay around. I've just arranged for Luis to get mail if that
-> happens so he can fix it.
 
-I've updated comat/compat.diff which lets the patch apply and made a
-few updates to the load/unload scripts. I've forced a regeneration of
-the tarball. We're at v2.6.24-rc1-2799-gb8b5f6a. Feel free to download
-and help test.
+--=-e4aild2MnwZ5p1LFRgRF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
 
-  Luis
+> We have mostly configuration patches - (enhanced hostap_ioctls.h)  and
+> some minor changes in hostapd flows that we would like to rebase over
+> your changes to nl80211/mac80211 and hostap respectively. We can start
+> with 11n Association flows patches.
+
+Oh btw, will you be publishing driver updates to support AP mode in
+iwlwifi? You must have them anyway if you're working on this and I'd
+love have a second driver capable of AP mode in the kernel.
+
+johannes
+
+--=-e4aild2MnwZ5p1LFRgRF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2FttqVg1VMiehFYAQIgLhAAwJv0C+J4MsO4/du2jf1vyUz+iYF8CCXN
+YtZMZJ0xJWtBO3tdHvbpnftDnB5dp/Iw0ax3OTykxm39eBBWyC858G6qFXYTgoUE
+AyVaT6DtuBKRFnpKTnUSHFZJe+O0Drd4LMrrE89cSqY9xLIpPOTuy8nCiTdWzD+e
+eRLA4Zq4OuOVx7l8uOBSfUffSCo40y8QbChxfOz0QoAWydqbLwMjHp/eE8wdJTnA
+uRRJ4IcAoGV+gLL23bAvI3wkdXImUePghrQbu4mhYFPiRwrK0mz8i3C18pMpH0VO
+5B/kPXI3qQD89P8oIRt+zqRc5QGLntL5jg8yoW3aQ5ck0t5r9/LmRGC3JgvJOoKC
+zwRujlgm1cgEIrAfojcNUM8ntvCwn9DDgrCoiFUvc7Wfu4STG8BWuh0Xr++GqLbQ
+uGR2MTL+LX4/6kbX2wkWtpHarErkZxm8ByrSLS6gNREHhdyATOxKkF4dEC2q+Rt2
+Y4j0zZkYxqsPv4QcpQwRLTj7OlrDwqPjaRxN3viugAbMrUUXNgLq4hoKI74Pe1+w
+kuR0ejH0B2vhTsFskuQX/L0YYrAK79G7s8IpL+vZPL622n6nPXGphT51a0n2n/lr
+LAbKjvWMv9WH+MKdpCWw6iEp3cNeInsdH53/fI+EWE2IM3gwLOp9Zkbfcr4rFK07
+oUrcY5alZjs=
+=wl3o
+-----END PGP SIGNATURE-----
+
+--=-e4aild2MnwZ5p1LFRgRF--
+
