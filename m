@@ -1,107 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:65458 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754821AbXLDRz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 12:55:59 -0500
-Date: Tue, 4 Dec 2007 09:55:52 -0800
-To: Sunny Kim <sungyi.kim@samsung.com>
-Cc: ????????? <trukhin.vladimir@samsung.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wireless.c bug report] 32 character ESSID not displayed in iwconfig
-Message-ID: <20071204175552.GA12545@bougret.hpl.hp.com> (sfid-20071204_175625_068061_051A16DB)
-Reply-To: jt@hpl.hp.com
-References: <0JSI00BH8E2H36@ms2.samsung.com>
+Received: from viefep18-int.chello.at ([213.46.255.22]:39712 "EHLO
+	viefep16-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761552AbXLMWFx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 17:05:53 -0500
+Message-ID: <4761ACC7.9050108@jooz.net> (sfid-20071213_220559_479160_9CD2A73A)
+Date: Thu, 13 Dec 2007 23:05:59 +0100
+From: Bjorge Dijkstra <bjd@jooz.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0JSI00BH8E2H36@ms2.samsung.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: status wireless extensions API for new drivers
+References: <4761A108.2080005@jooz.net> <1197581585.14270.26.camel@localhost.localdomain>
+In-Reply-To: <1197581585.14270.26.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2007 at 05:03:53AM +0000, Sunny Kim wrote:
-> Hi, I'm Sunny Kim from SAMSUNG Electro-Mechanics.
-> I want to give you a bug report.
-> Please, see my pdf doc attached.
-> I hope you find this helpful.
+Dan Williams wrote:
 > 
-> < the first part of pdf doc >
-> Title: 32 character ESSID not displayed in iwconfig
-> Reported by: Sunny Kim (sungyi.kim@samsung.com)
-> Detail descriptions:
-> I found the problem in net/core/wireless.c when ESSID was 32 character long.
-> This problem prevents iwconfig from displaying ESSID correctly when ESSID is 32 character long. 
+> Quick question about these; does the firmware on the wireless device
+> itself talk RNDIS directly?  i.e., is RNDIS intended to replace all the
+> manufacturer-specific proprietary host<->adapter protocols?
+
+Yes, the devices themselves talk RNDIS. It's basically Windows NDIS
+driver API calls over a USB transport. What I have created is not much
+more than a layer that translates the WEXT calls to appropriate RNDIS
+messages to allow the device to be configured. The actual networking
+part is handled by rndis_host and usbnet.
+
+> How common
+> are the devices these days?  I trawled through CDW this weekend and
+> could only find one or two adapters (out of 30 or so) that were RNDIS.
+> I assume it's the wave of the Windows future though.
 > 
-> Regards,
-> Sunny Kim
 
-	Hi,
+I know of about 5 or 6 different devices and none of them are new, but
+they seem to be fairly popular. AFAIK all are based on the same
+broadcom 4320 chipset.
 
-	Thanks for the bug report. This bug is well known and has been
-reported to me many times over the last 6 months. The kernel
-maintainers don't want to fix it. The patch for the 2.6.22 and later
-is attached to this e-mail.
-	Have fun...
+> 
+> Well, if you want to allow your driver to be backported at all, you'll
+> pretty much have to support WEXT.
+> 
+> _But_, since your driver doesn't have any need for backwards
+> compatibility requirements since it's not already upstream, you might
+> want to be the guinea pig for cfg80211/nl80211 :)  If you decided to
+> only support cfg80211, you'd get WEXT support since cfg80211 provides a
+> backwards compat solution for WEXT.  Plus you'd be helping out a great
+> deal by finding and fixing bugs in cfg80211/nl80211 and proving the
+> framework, which would be a great help.
 
-	Jean
+Well, regular WEXT is already more or less done, so I'd prefer to not
+throw that away :)  I was just wondering about the current state of the
+wireless api's.
 
-----------------------------------------------------------
+> 
+> Dan
+> 
 
---- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
-+++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
-@@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
- 		int	extra_size;
- 		int	user_length = 0;
- 		int	err;
--		int	essid_compat = 0;
- 
- 		/* Calculate space needed by arguments. Always allocate
- 		 * for max space. Easier, and won't last long... */
- 		extra_size = descr->max_tokens * descr->token_size;
- 
--		/* Check need for ESSID compatibility for WE < 21 */
--		switch (cmd) {
--		case SIOCSIWESSID:
--		case SIOCGIWESSID:
--		case SIOCSIWNICKN:
--		case SIOCGIWNICKN:
--			if (iwr->u.data.length == descr->max_tokens + 1)
--				essid_compat = 1;
--			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--				char essid[IW_ESSID_MAX_SIZE + 1];
--
--				err = copy_from_user(essid, iwr->u.data.pointer,
--						     iwr->u.data.length *
--						     descr->token_size);
--				if (err)
--					return -EFAULT;
--
--				if (essid[iwr->u.data.length - 1] == '\0')
--					essid_compat = 1;
--			}
--			break;
--		default:
--			break;
--		}
--
--		iwr->u.data.length -= essid_compat;
--
- 		/* Check what user space is giving us */
- 		if (IW_IS_SET(cmd)) {
- 			/* Check NULL pointer */
-@@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
- 		}
- 
- 		/* Create the kernel buffer */
--		/*    kzalloc ensures NULL-termination for essid_compat */
- 		extra = kzalloc(extra_size, GFP_KERNEL);
- 		if (extra == NULL)
- 			return -ENOMEM;
-@@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
- 		/* Call the handler */
- 		ret = handler(dev, &info, &(iwr->u), extra);
- 
--		iwr->u.data.length += essid_compat;
--
- 		/* If we have something to return to the user */
- 		if (!ret && IW_IS_GET(cmd)) {
- 			/* Check if there is enough buffer up there */
+regards,
+Bjorge
+
