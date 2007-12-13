@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40657 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51238 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756468AbXLSPsI (ORCPT
+	with ESMTP id S1762827AbXLMRde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:48:08 -0500
-Message-Id: <20071219010343.497175000@sipsolutions.net> (sfid-20071219_154812_081105_D71FFC9A)
-References: <20071219010328.762470000@sipsolutions.net>
-Date: Wed, 19 Dec 2007 02:03:37 +0100
+	Thu, 13 Dec 2007 12:33:34 -0500
+Subject: iwl4965 vs b43 time drift?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 9/9] mac80211: implement station stats retrieval
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BFVdVZgn/w49r6tlw7G9"
+Date: Thu, 13 Dec 2007 18:33:17 +0100
+Message-Id: <1197567197.8313.27.camel@johannes.berg> (sfid-20071213_173345_742079_655EF7D5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements the required cfg80211 callback in mac80211
-to allow userspace to get station statistics.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+--=-BFVdVZgn/w49r6tlw7G9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/cfg.c	2007-12-19 00:50:23.043022894 +0100
-+++ everything/net/mac80211/cfg.c	2007-12-19 00:50:26.723022188 +0100
-@@ -611,6 +611,31 @@ static int ieee80211_change_station(stru
- 	return 0;
- }
- 
-+static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
-+				 u8 *mac, struct station_stats *stats)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+
-+	sta = sta_info_get(local, mac);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	/* XXX: verify sta->dev == dev */
-+
-+	stats->filled = STATION_STAT_INACTIVE_TIME |
-+			STATION_STAT_RX_BYTES |
-+			STATION_STAT_TX_BYTES;
-+
-+	stats->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-+	stats->rx_bytes = sta->rx_bytes;
-+	stats->tx_bytes = sta->tx_bytes;
-+
-+	sta_info_put(sta);
-+
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -625,4 +650,5 @@ struct cfg80211_ops mac80211_config_ops 
- 	.add_station = ieee80211_add_station,
- 	.del_station = ieee80211_del_station,
- 	.change_station = ieee80211_change_station,
-+	.get_station = ieee80211_get_station,
- };
+Hi,
 
--- 
+I'm debugging a timing problem with b43, can you tell me exactly when
+the timestamp iwl4965 shows in radiotap is taken? Is it the first bit of
+the preamble?
+
+When associated to my b43 AP, I'd expect the difference between the
+beacon/proberesp timestamp and the MAC timestamp of the iwl4965 monitor
+mode to be 192us for the MAC header and another 192us for the PLCP
+preamble/PLCP header, a total of 384 us.
+
+However, when I have just associated, the difference starts out at 383us
+and decreases, down to ~370us and then varies between 370-380us, afaict
+never reaching 384us.
+
+The strange thing is that it doesn't seem to recover. No matter which of
+the timers is actually wrong (I guess I could find out by comparing with
+the system timestamp and hoping that the delay through mac80211 into
+wireshark is constant) shouldn't it recover the time?
+
+Another problem is that when I enable powersave on the iwl4965, I see no
+beacons at all. And oddly, the difference between the timestamp in the
+probe responses and the iwl4965 MAC timestamp starts varying wildly, up
+to almost 5000us.
+
+I guess that b43 has a timing problem otherwise we'd be seeing totally
+bad behaviour of iwl4965 on stock APs. I'm just trying to understand the
+problem better right now. Do you know when iwl4965 will resync the
+timer?
+
+Thanks,
+johannes
+
+--=-BFVdVZgn/w49r6tlw7G9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2Fs3KVg1VMiehFYAQIyDRAApnCJjf6h5kL3evKj57XmC2ncuNqnLmyd
+87wmIJ6S5bYZHdYGVOEgqz0clV8NVl4zdF+u7w74b5x643qB15/SqBOVu3DGD2fz
+8opWgjN6CAmSUsf6stx0IAkn9UJCBKPrNoYhJw3bzDtfX5H0CoAeD14I9sScqxH8
+aFyQxGEaHJXj2oTvucDJifYRFueaW6hu15oMjIYib88970E9oBDWSylNY2062lCz
+x9YKHtk6P0P/suos84onsx/4CLV4xqKfaECl49n++2LE1ZPrsnskkK2bbVNSoSVV
+YZUR6WSeZl28qloqHCg/Z3xVcY94W3YU+rLF+7zdr7sr4F4p+gG5+l44snG1d1nI
+xU5smPGGmcrn5lrXtj0R9Nf3y1SFCfjwV+txBXa06j1tJNG6UVDMSexxcl3HiKKg
+8CxRmcREZ05BqYeCKFOwn2gHQtw6OvTDlJtZvBOpLq92snAadJd5Xq0oxqT+Ug7U
+gSz1U+lt3OIF4Kug9+tkuLpaJ38hmy516nJ2OVWRixELe28ywz08tXe0nWAVpIev
++DGvkbVGMfdtXjU6zVQB+Ov8A7ErU/Csurz55Bbff/uYbjuHtGnGgEX8ebwui0dX
++D0xmdWkyHN09LSwTrF1osWsH47sJfPYpfLt/X2/lOJn6wkDhO0yGF0QAsxcou24
+m6fdq4cviPs=
+=na1T
+-----END PGP SIGNATURE-----
+
+--=-BFVdVZgn/w49r6tlw7G9--
 
