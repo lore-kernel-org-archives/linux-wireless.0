@@ -1,129 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49944 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104AbXLJRPC (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45231 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753306AbXLMLiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 12:15:02 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 28/48] libertas: kill TxLockFlag
-Message-Id: <E1J1kpX-0006mN-GP@shinybook.infradead.org> (sfid-20071210_171508_259787_002F0D54)
-Date: Mon, 10 Dec 2007 10:46:03 -0500
+	Thu, 13 Dec 2007 06:38:21 -0500
+Subject: [FYI] hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	hostap <hostap@shmoo.com>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t6ciuG8Eu8DQvOVHq7GN"
+Date: Thu, 13 Dec 2007 03:23:34 +0100
+Message-Id: <1197512614.6558.224.camel@johannes.berg> (sfid-20071213_113823_799536_82B49721)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 8 Dec 2007 19:46:19 +0000
 
-We don't need this. We can use adapter->currenttxskb instead.
+--=-t6ciuG8Eu8DQvOVHq7GN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/dev.h  |    1 -
- drivers/net/wireless/libertas/main.c |   25 ++++++++++++++++++++++---
- drivers/net/wireless/libertas/tx.c   |    9 +++------
- 3 files changed, 25 insertions(+), 10 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 5cb2923..eaa45d4 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -285,7 +285,6 @@ struct lbs_adapter {
- 
- 	/** Tx-related variables (for single packet tx) */
- 	struct sk_buff *currenttxskb;
--	u16 TxLockFlag;
- 
- 	/** NIC Operation characteristics */
- 	u16 currentpacketfilter;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index d03a2f8..7155f48 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -290,8 +290,14 @@ static ssize_t lbs_rtap_set(struct device *dev,
- 			return strlen(buf);
- 		adapter->monitormode = LBS_MONITOR_OFF;
- 		lbs_remove_rtap(priv);
--		netif_wake_queue(priv->dev);
--		netif_wake_queue(priv->mesh_dev);
-+
-+		if (adapter->currenttxskb) {
-+			dev_kfree_skb_any(adapter->currenttxskb);
-+			adapter->currenttxskb = NULL;
-+		}
-+
-+		/* Wake queues, command thread, etc. */
-+		lbs_host_to_card_done(priv);
- 	}
- 
- 	lbs_prepare_and_send_command(priv,
-@@ -521,7 +527,15 @@ static int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- 	lbs_deb_enter(LBS_DEB_TX);
- 
--	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
-+	/* We could return NETDEV_TX_BUSY here, but I'd actually 
-+	   like to get the point where we can BUG() */
-+	if (priv->dnld_sent) {
-+		lbs_pr_err("%s while dnld_sent\n", __func__);
-+		priv->stats.tx_dropped++;
-+		goto done;
-+	}
-+	if (priv->adapter->currenttxskb) {
-+		lbs_pr_err("%s while TX skb pending\n", __func__);
- 		priv->stats.tx_dropped++;
- 		goto done;
- 	}
-@@ -624,6 +638,11 @@ void lbs_host_to_card_done(struct lbs_private *priv)
- 	if (!adapter->cur_cmd)
- 		wake_up_interruptible(&priv->waitq);
- 
-+	/* Don't wake netif queues if we're in monitor mode and
-+	   a TX packet is already pending. */
-+	if (priv->adapter->currenttxskb)
-+		return;
-+
- 	if (priv->dev && adapter->connect_status == LBS_CONNECTED)
- 		netif_wake_queue(priv->dev);
- 
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index b423ce1..131ef3f 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -152,11 +152,11 @@ done:
- 		netif_stop_queue(priv->dev);
- 		if (priv->mesh_dev)
- 			netif_stop_queue(priv->mesh_dev);
--		/* freeze any packets already in our queues */
--		priv->adapter->TxLockFlag = 1;
-+
-+		/* Keep the skb around for when we get feedback */
-+		priv->adapter->currenttxskb = skb;
- 	} else {
- 		dev_kfree_skb_any(skb);
--		priv->adapter->currenttxskb = NULL;
- 	}
- 
- 	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
-@@ -227,8 +227,6 @@ int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
- 		return ret;
- 	}
- 
--	priv->adapter->currenttxskb = skb;
--
- 	ret = SendSinglePacket(priv, skb);
- done:
- 	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
-@@ -272,7 +270,6 @@ void lbs_send_tx_feedback(struct lbs_private *priv)
- 	    (1 + adapter->txretrycount - try_count) : 0;
- 	lbs_upload_rx_packet(priv, adapter->currenttxskb);
- 	adapter->currenttxskb = NULL;
--	priv->adapter->TxLockFlag = 0;
- 
- 	if (adapter->connect_status == LBS_CONNECTED)
- 		netif_wake_queue(priv->dev);
--- 
-1.5.3.4
+I thought I'd write another update because I'm much further than last
+time, I've been able to remove the management interface.
+
+With my "[RFC] mac80211: clean up frame receive handling" patch and a
+few more patches like "[PATCH] mac80211: fix header ops" I've been able
+to implement hostapd without the management interface.
+
+That requires a whole bunch of patches which, as always, you can find on
+http://johannes.sipsolutions.net/patches/. I will be sending them out as
+I feel appropriate. There are, contrary to what some think, reasons I
+haven't done so yet. For example, I just found a bug with multicast keys
+in my hostapd key patches.
+
+The only ioctls I now still need are:
+
+020-prism2-ioctl-bridge-packets.patch
+021-prism2-ioctl-8021x.patch
+022-hostapd-ioctl-hw-features.patch
+
+However, a few more things are missing:
+ * set_rate_sets <*>
+ * set_channel_flag <*>
+ * set_regulatory_domain <*>
+ * set_tx_queue_params
+ * set_cts_protect
+ * set_preamble
+ * set_short_slot_time
+ * sta_clear_stats
+
+hostapd works without these, but obviously not actually correctly (it
+advertises WMM without being able to set queue parameters etc). The
+items marked with <*> depend on the regulatory stuff we're going to
+implement in the kernel.
+
+The big thing with removing the management interface was the receive
+frame handling cleanup that also made EAPOL frames show up on the
+respective data interface rather than requiring the management
+interface. This means that we can now use a monitor interface for
+getting the management frames (and TX status callbacks) instead of the
+management interface. Michael Wu is working on optimising this by adding
+a "cooked" monitor mode that doesn't show data frames that were handled
+by other virtual interfaces, but right now that's only an optimisation.
+It will matter again when 802.11w is implemented where "cooked" will
+give us decrypted frames, but w/o 802.11w management frames are always
+sent in clear (and never fragmented in either case) so the regular
+monitor interfaces work fine.
+
+Also, using the monitor interfaces here means that we'll again send
+deauth/disassoc frames when receiving class three frames from
+not-associated stations as soon as the cooked monitor is used instead of
+the socket filter. That still needs to be fixed up to work with PS-poll
+packets, but that's a SMOP.
+
+Other things to do include:
+ * key threshold notifications
+ * Michael MIC failure notifications (disable TKIP for now)
+
+Ron, have you started working on traffic flows for hostapd yet? If so, I
+guess I should set up a git tree or simply push all my hostapd patches
+to Jouni (and send fixes as I find the bugs) because otherwise we're
+going to produce many conflicts, most of my changes are quite large.
+OTOH, I guess the only thing you need to do in the nl80211 driver stuff
+is add support for flows to the station management. Let me know how you
+want to proceed.
+
+All, any help with hostapd would be much appreciated. In case I forget
+to publish my hostapd patches though, ping me rather than working from
+older ones. Any patches older than this mail are too old.
+
+johannes
+
+--=-t6ciuG8Eu8DQvOVHq7GN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2CXpaVg1VMiehFYAQKp4RAAkkgf2B0LiuROXce/0+IaOAbiIxM4gWqV
+SSE0ALaOtmROAIIaXl9KMevm1CMbrjvSjGqxyfZNmpBIUbgW3xOCHwkbFHXB5bJY
+FTTWkUp2tIE7c8y4jFo9OLecOwB7p7Qcu6YPztaSYOnRyhoomuCDojkfd5BkR4oz
+I173iUnhFx/wgXyDBt4hLqmfC8sIicJTEPxSctcBMjXfzVNeQi4aUrK/qXb3JZy5
+QGYE8F9kkRGU+GFPqV/JeSnhIohc98T3xLnOnPMmye1kwGuS70OWyHVdPvUCD0qy
+QygJEQK881Qxb0CdYa1ctvdZ1v8ZsO7BLtxVdRypwPfcWkiq42XlcSZ7l1C5GHFL
+7kdCm2H0Vky6GraYxUuf7iRovH/I3oy4KY7qOVGeUJcCMfUU/xvPeobU6XE1w6G0
+dly/XgwsaxLcyZvwxBxv5VrFpEjbb1/M8x3uO7gPV05J+vtdTUmMFG1vlonxNOYW
+reMIuZ3oIibJfaGIZ0eM4NTbsiql2EaaCPO7ZucI/sU7aDxmhb1CsNNwAJpHm2Va
+NB5cWbJMxfrOqB8Ttz15S09jtUsiqapYWDUnQJUS2+ZNuMg45WM/ZP6VEH2jQ2vl
+/YDnNUrtdQmjo1GyXHudH0TAz67dPI9CeqEqhS7y9dPJoykhSxxjZ2xtoPWOe6ck
+tdSj2+SH/9U=
+=GVCi
+-----END PGP SIGNATURE-----
+
+--=-t6ciuG8Eu8DQvOVHq7GN--
 
