@@ -1,77 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5944 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909AbXLEQ5j convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 11:57:39 -0500
-From: Holger Schurig <h.schurig@mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 2/5] libertas: remove cmd_ctrl_node->cmdflags
-Date: Wed, 5 Dec 2007 17:57:56 +0100
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	David Woodhouse <dwmw2@infradead.org>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2750 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754823AbXLMV6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 16:58:25 -0500
+Date: Thu, 13 Dec 2007 16:31:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bjorge Dijkstra <bjd@jooz.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: status wireless extensions API for new drivers
+Message-ID: <20071213213118.GE3083@tuxdriver.com> (sfid-20071213_215828_482877_D0A795A3)
+References: <4761A108.2080005@jooz.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200712051757.56664.h.schurig@mn-solutions.de> (sfid-20071205_165743_096034_024FC7D7)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4761A108.2080005@jooz.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was no code that ever did set this flag.
+On Thu, Dec 13, 2007 at 10:15:52PM +0100, Bjorge Dijkstra wrote:
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> We have used the Wireless Extensions API, but I get the impression that
+> things are moving towards the cfg/nl80211 API's. Is it still acceptable
+> for new drivers trying to get into mainline to use WEXT, or should we
+> switch to the new API's?
 
+WEXT is fine for new drivers.  At this time cfg80211 does not offer
+a suitable replacement.
 
-Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2007-12-0=
-5 14:50:37.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2007-12-05 17:=
-59:51.000000000 +0100
-@@ -856,13 +856,6 @@ int lbs_process_rx_command(struct lbs_pr
- 		goto done;
- 	}
-=20
--	if (adapter->cur_cmd->cmdflags & CMD_F_HOSTCMD) {
--		/* Copy the response back to response buffer */
--		memcpy(adapter->cur_cmd->pdata_buf, resp,
--		       le16_to_cpu(resp->size));
--		adapter->cur_cmd->cmdflags &=3D ~CMD_F_HOSTCMD;
--	}
--
- 	/* If the command is not successful, cleanup and return failure */
- 	if ((result !=3D 0 || !(respcmd & 0x8000))) {
- 		lbs_deb_host("CMD_RESP: error 0x%04x in command reply 0x%04x\n",
-Index: wireless-2.6/drivers/net/wireless/libertas/hostcmd.h
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-2.6.orig/drivers/net/wireless/libertas/hostcmd.h	2007-12-0=
-5 14:50:37.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/hostcmd.h	2007-12-05 17:=
-59:51.000000000 +0100
-@@ -75,7 +75,6 @@ struct cmd_ctrl_node {
- 	void *pdata_buf;
- 	/*command data */
- 	u8 *bufvirtualaddr;
--	u16 cmdflags;
- 	/* wait queue */
- 	u16 cmdwaitqwoken;
- 	wait_queue_head_t cmdwait_q;
-
---=20
-M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
-Holger Schurig
-Raiffeisenstr. 10           ACHTUNG: die Stra=DFe hat sich ge=E4ndert
-61191 Rosbach
-Tel: 06003/9141-15          Fax 06003/9141-49
-http://www.mn-solutions.de/
-
-Handelsregister Friedberg, HRB 5903
-Gesch=E4ftsf=FChrer: H.Herzig, P.Schrittenlocher
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
