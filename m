@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:42369 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751434AbXLDRxA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 12:53:00 -0500
-Date: Tue, 4 Dec 2007 18:48:39 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-Message-ID: <20071204184839.46eb3ad9@morte> (sfid-20071204_175303_578148_170EF8B0)
-In-Reply-To: <1196775624.6060.52.camel@johannes.berg>
-References: <1196622331.7472.4.camel@localhost>
-	<20071203041608.3af3b462@morte>
-	<1196679780.7470.9.camel@localhost>
-	<1ba2fa240712030321g58b8df39y24240c63facba2cd@mail.gmail.com>
-	<1196681514.7470.12.camel@localhost>
-	<1196775624.6060.52.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bombadil.infradead.org ([18.85.46.34]:56529 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762765AbXLMG7R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 01:59:17 -0500
+Subject: [PATCH 58/48] libertas: don't run thread while firmware not yet ready
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i2Z-0005rW-UI@shinybook.infradead.org> (sfid-20071213_070111_121046_DD4DEA51)
+Date: Thu, 13 Dec 2007 01:59:27 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 04 Dec 2007 14:40:23 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Date: Tue, 11 Dec 2007 11:55:37 -0500
 
-> If anybody's interested, here's what I'd do:
-> 
->  (a) add new attributes "rate control algorithm" and "rate control
->      algorithm attributes"
->  (b) allow setting them with NL80211_CMD_SET_INTERFACE
->  (c) the "rate control algorithm attributes" attribute is nested and
->      contains per-algorithm information, the indexes in it are specific
->      to each algorithm
-> 
-> This allows changing the algorithm as well as algorithm parameters.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-This sounds great to me. Anyway, I'm still not completely convinced that we
-need to actually make any parameter available for 'rc80211-pid', but it's
-likely anyway. And that would be needed very likely for other rate control
-algorithm, so yes, I agree with this.
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 8866402..9a23109 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -671,6 +671,8 @@ static int lbs_thread(void *data)
+ 			shouldsleep = 1;	/* Sleep mode. Nothing we can do till it wakes */
+ 		else if (priv->intcounter)
+ 			shouldsleep = 0;	/* Interrupt pending. Deal with it now */
++		else if (!priv->fw_ready)
++			shouldsleep = 1;	/* Firmware not ready. We're waiting for it */
+ 		else if (priv->dnld_sent)
+ 			shouldsleep = 1;	/* Something is en route to the device already */
+ 		else if (priv->tx_pending_len > 0)
+@@ -753,6 +755,9 @@ static int lbs_thread(void *data)
+ 		} else
+ 			spin_unlock_irq(&priv->driver_lock);
+ 
++		if (!priv->fw_ready)
++			continue;
++
+ 		/* Check if we need to confirm Sleep Request received previously */
+ 		if (priv->psstate == PS_STATE_PRE_SLEEP &&
+ 		    !priv->dnld_sent && !priv->cur_cmd) {
+-- 
+1.5.3.4
 
-
---
-Ciao
-Stefano
