@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38066 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbXLJR3j (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:30325 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbXLMOjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 12:29:39 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 05/48] libertas: remove cmd_ctrl_node->cmdflags
-Message-Id: <E1J1kp9-0006kW-CY@shinybook.infradead.org> (sfid-20071210_172947_621105_EED97C2A)
-Date: Mon, 10 Dec 2007 10:45:39 -0500
+	Thu, 13 Dec 2007 09:39:41 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1114497wah.23
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2007 06:35:27 -0800 (PST)
+Message-ID: <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com> (sfid-20071213_143945_092983_8749E8B7)
+Date: Thu, 13 Dec 2007 16:35:27 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [FYI] hostapd with mac80211 progress
+Cc: linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>, hostap <hostap@shmoo.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1197512614.6558.224.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1197512614.6558.224.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Holger Schurig <h.schurig@mn-solutions.de>
-Date: Wed, 5 Dec 2007 17:57:56 +0100
+> Ron, have you started working on traffic flows for hostapd yet? If so, I
+> guess I should set up a git tree or simply push all my hostapd patches
+> to Jouni (and send fixes as I find the bugs) because otherwise we're
+> going to produce many conflicts, most of my changes are quite large.
+> OTOH, I guess the only thing you need to do in the nl80211 driver stuff
+> is add support for flows to the station management. Let me know how you
+> want to proceed.
+>
 
-There was no code that ever did set this flag.
+I take this question instead of Ron.
+We have mostly configuration patches - (enhanced hostap_ioctls.h)  and
+some minor changes in hostapd flows that we would like to rebase over
+your changes to nl80211/mac80211 and hostap respectively. We can start
+with 11n Association flows patches.
+It would be great if you can setup git repository. Unfortunately it's
+rather complicated to export one from Intel.
+Thanks
+Tomas
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmdresp.c |    7 -------
- drivers/net/wireless/libertas/hostcmd.h |    1 -
- 2 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 90f1c49..cbd28ee 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -856,13 +856,6 @@ int lbs_process_rx_command(struct lbs_private *priv)
- 		goto done;
- 	}
- 
--	if (adapter->cur_cmd->cmdflags & CMD_F_HOSTCMD) {
--		/* Copy the response back to response buffer */
--		memcpy(adapter->cur_cmd->pdata_buf, resp,
--		       le16_to_cpu(resp->size));
--		adapter->cur_cmd->cmdflags &= ~CMD_F_HOSTCMD;
--	}
--
- 	/* If the command is not successful, cleanup and return failure */
- 	if ((result != 0 || !(respcmd & 0x8000))) {
- 		lbs_deb_host("CMD_RESP: error 0x%04x in command reply 0x%04x\n",
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index c029149..217ae12 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -75,7 +75,6 @@ struct cmd_ctrl_node {
- 	void *pdata_buf;
- 	/*command data */
- 	u8 *bufvirtualaddr;
--	u16 cmdflags;
- 	/* wait queue */
- 	u16 cmdwaitqwoken;
- 	wait_queue_head_t cmdwait_q;
--- 
-1.5.3.4
-
+> All, any help with hostapd would be much appreciated. In case I forget
+> to publish my hostapd patches though, ping me rather than working from
+> older ones. Any patches older than this mail are too old.
+>
+> johannes
+>
+> _______________________________________________
+> HostAP mailing list
+> HostAP@shmoo.com
+> http://lists.shmoo.com/mailman/listinfo/hostap
+>
+>
