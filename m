@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48994
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753287AbXLHBfp (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56941 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762793AbXLMG7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 20:35:45 -0500
-Date: Fri, 07 Dec 2007 17:35:44 -0800 (PST)
-Message-Id: <20071207.173544.98612200.davem@davemloft.net> (sfid-20071208_013551_179104_C8D7F507)
-To: mb@bu3sch.de
-Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200712071436.08954.mb@bu3sch.de>
-References: <200712071235.11969.mb@bu3sch.de>
-	<20071207.043407.72593148.davem@davemloft.net>
-	<200712071436.08954.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 13 Dec 2007 01:59:32 -0500
+Subject: [PATCH 68/48] libertas: remove casts from lbs_cmd() and lbs_cmd_with_response() macros
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i2p-0005sU-1D@shinybook.infradead.org> (sfid-20071213_070630_801516_CAB6841B)
+Date: Thu, 13 Dec 2007 01:59:43 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Fri, 7 Dec 2007 14:36:08 +0100
+Date: Tue, 11 Dec 2007 15:28:18 -0500
 
-> The wire protocol for the iv files is the following structure:
-> 
-> struct b43_iv {
-> 	be16 a;
-> 	union {
-> 		be16 x;
-> 		be32 y;
-> 	} ((attr_packed));
-> } ((attr_packed));
-> 
-> How do I handle that in userspace? In kernel space it's simple
-> (and we already use get_unaligned() for the 32bit value there).
+If stupid people like me give it arguments with the wrong type (like a
+pointer to the structure, for example, instead of the structure itself),
+then we should probably notice that at compile time. Otherwise, much
+confusion ensues.
 
-If you marked it packed, on platforms like sparc, MIPS, and IA-64, the
-compiler is only going to use byte loads and stores to objects of this
-type.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-You don't need to use get_unaligned() on members of structures that
-are marked packed.
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 716f25b..950acce 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -7,11 +7,11 @@
+ #include "dev.h"
+ 
+ #define lbs_cmd(priv, cmdnr, cmd, callback, callback_arg) \
+-	__lbs_cmd(priv, cmdnr, (struct cmd_header *) &cmd, sizeof(cmd), \
++	__lbs_cmd(priv, cmdnr, &(cmd).hdr, sizeof(cmd),	  \
+ 			callback, callback_arg)
+ 
+ #define lbs_cmd_with_response(priv, cmdnr, cmd) \
+-	__lbs_cmd(priv, cmdnr, (struct cmd_header *) &cmd, sizeof(cmd), \
++	__lbs_cmd(priv, cmdnr, &(cmd).hdr, sizeof(cmd), \
+ 		  lbs_cmd_copyback, (unsigned long) &cmd)
+  
+ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+-- 
+1.5.3.4
 
-If you look at the asm-generic/unaligned.h pure-C implementation,
-it uses the packed attribute, which really shows how redundant it
-is to use get_unaligned() on packed structure member access :-)
