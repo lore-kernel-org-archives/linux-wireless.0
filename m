@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:51394 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752491AbXLSAUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 19:20:05 -0500
-Date: Wed, 19 Dec 2007 01:15:04 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@suse.de
-Subject: Re: [PATCH v2 0/8] rate control rework
-Message-ID: <20071219011504.445c55be@morte> (sfid-20071219_002031_745740_93E64157)
-In-Reply-To: <20071218233749.871878037@polimi.it>
-References: <20071218233749.871878037@polimi.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bombadil.infradead.org ([18.85.46.34]:57429 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762661AbXLMG7r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 01:59:47 -0500
+Subject: [PATCH 81/48] libertas: add missing newline on debug message
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J2i34-0005tX-A6@shinybook.infradead.org> (sfid-20071213_070015_281165_1D073CDD)
+Date: Thu, 13 Dec 2007 01:59:58 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, people are telling me that this is line wrapped. Which is strange
-because claws-mail doesn't show that, will try to fix and resend anyway.
-Sorry again for the noise.
+Date: Tue, 11 Dec 2007 19:57:05 -0500
 
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/assoc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---
-Ciao
-Stefano
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index bd9cfe1..a4b9756 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -219,7 +219,7 @@ static int assoc_helper_channel(struct lbs_private *priv,
+ 		lbs_deb_assoc("ASSOC: channel: error getting channel.");
+ 
+ 	if (assoc_req->channel != priv->curbssparams.channel) {
+-		lbs_deb_assoc("ASSOC: channel: failed to update channel to %d",
++		lbs_deb_assoc("ASSOC: channel: failed to update channel to %d\n",
+ 		              assoc_req->channel);
+ 		goto done;
+ 	}
+-- 
+1.5.3.4
+
