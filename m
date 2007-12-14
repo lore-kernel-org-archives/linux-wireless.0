@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:54289 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751294AbXLJIX0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 03:23:26 -0500
-Date: Mon, 10 Dec 2007 09:17:01 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening
- factor
-Message-ID: <20071210091701.208c2d2a@morte> (sfid-20071210_082329_660324_8FB6A635)
-In-Reply-To: <1197272696.7490.31.camel@localhost>
-References: <20071209211547.2d7fca32@morte>
-	<20071209212133.43030d03@morte>
-	<1197239361.7543.17.camel@localhost>
-	<20071210003120.0078db1d@morte>
-	<1197244416.7543.27.camel@localhost>
-	<20071210032811.5cea4909@morte>
-	<1197268081.7490.10.camel@localhost>
-	<20071210082154.015f6e6a@morte>
-	<1197272696.7490.31.camel@localhost>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35021 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932213AbXLNMSI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2007 07:18:08 -0500
+Subject: Re: [FYI] hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Tomas Winkler <tomasw@gmail.com>, hostap@shmoo.com,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <20071214033807.GV5698@jm.kir.nu>
+References: <1197512614.6558.224.camel@johannes.berg>
+	 <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com>
+	 <1197567363.8313.31.camel@johannes.berg>  <20071214033807.GV5698@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MAGniyPX5tlqQ9FAwgEs"
+Date: Fri, 14 Dec 2007 13:16:23 +0100
+Message-Id: <1197634583.16079.40.camel@johannes.berg> (sfid-20071214_121822_910657_BBA930C2)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 10 Dec 2007 08:44:56 +0100
-Mattias Nissler <mattias.nissler@gmx.de> wrote:
 
-> You're totally right. But IMHO it's nicer to be a little defensive here.
-> You never know what happens to your code in the future. Just imagine
-> somebody coming up with: Hey, let's use a timer-based approach for
-> sampling. Ok, that's easy to do, just call sample() every time the timer
-> expires. And whoops, there's the division by zero when no packets are
-> transmitted...
-
-Ok, you are right, I'll fix this.
+--=-MAGniyPX5tlqQ9FAwgEs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Ciao
-Stefano
+> I'm fine with patches that are either specific to driver_devicescape.c
+> or are clearly not breaking other driver wrappers (or core hostapd
+> functionality) as long as they are somehow in sync with a commonly used
+> Linux kernel tree. At some point, I would like to limit this to proper
+> kernel releases, but for the time being, any development tree should be
+> fine taken into account the current state of the AP support.
+
+Great. I think all the remaining patches I have are specific to
+driver_nl80211.c (I think I sent you the rename patch, didn't I?) I'll
+send them to you as appropriate, I think the beaconing/station and eapol
+stuff is pretty well fleshed out right now.
+
+johannes
+
+--=-MAGniyPX5tlqQ9FAwgEs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2J0FKVg1VMiehFYAQKUTA/+LNL/Dv1k9j8UKzIGoMrfQfhEyGgUFKP4
+sl2FeaPU77ld3wqzaaVd6oqP099Ir0+HGmRYi1qY7PGxUbZcQyj5T/cnuuphTpyD
+F7pH6RalFrSL5sFPQNTSjKsqhEPpE1c+qiWMLEFftu8We+kyTmkM9n1Csyc4XViA
+SHRGIA6UFEmVYzbYVMcNz3YrjQjqxBYu6pKlJJmppGqkkHpVkxnKOZtzUewvQjeh
+DVNw/ArENLAJ7s3tiAP34S7huIsQJUU1vrnM1qH2L+xTOrLSR4zYMHCp0/ev8jc8
+Lscihf7anOPYda+3DaFEO8DW9ovrweoeqhbD+WEtOFbcSbeR/WCfts3TU53fz6hz
+Mc8nldKQI9HFQ+/oynj+VUpB3+qD8gaYyoJV4JZSQGmpWRbUWb17MdG1XTc1bojo
+hFu2YxxCgu0keunlUYO6ey3RmAIxHjVjAai27N8yXZsUrG5lJ0AWfVtVX3C8ELyi
+TksGcXU/gz6AyHRdiCkCQG39g6shC0DDozPDMQZzvAEnRFTkAv51Vjf+kUIqXcFW
+H85JbOLBvB8PEExTQnzeVYzIgkw7oDD9FqLlaOcXrzXhC9vzBUqbbQss3roZbqZw
+16Ux6VAWRAwJOdXhxV5PlazieMSLbmI8M9xBEyiTPvfbVTMbznY7KeEpn9dE/GjH
+18+lqCQjn7A=
+=266g
+-----END PGP SIGNATURE-----
+
+--=-MAGniyPX5tlqQ9FAwgEs--
+
