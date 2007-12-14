@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754821AbXLSPrW (ORCPT
+Received: from mta10.adelphia.net ([68.168.78.202]:64987 "EHLO
+	mta10.adelphia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759058AbXLNBnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:47:22 -0500
-Subject: [PATCH] iwl4965: fix bogus hardware scan configuration caching
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 19 Dec 2007 01:30:23 +0100
-Message-Id: <1198024224.4885.188.camel@johannes.berg> (sfid-20071219_154729_785972_17734D5B)
-Mime-Version: 1.0
+	Thu, 13 Dec 2007 20:43:09 -0500
+Message-ID: <4761DFA9.3020305@roadrunner.com> (sfid-20071214_014312_560424_420BDFD1)
+Date: Thu, 13 Dec 2007 20:43:05 -0500
+From: Randy Cushman <rcushman_linux@roadrunner.com>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: BCM4306 Questions
+References: <475F2DAD.4000708@roadrunner.com>	 <200712121214.50522.mb@bu3sch.de> <475FCB46.2030209@roadrunner.com>	 <200712121300.59811.mb@bu3sch.de>  <47608102.5010105@roadrunner.com> <1197508664.13188.27.camel@dv>
+In-Reply-To: <1197508664.13188.27.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When iwl4965 is scanning, it needs to cache any configuration requests.
-This was implemented but the implementation is buggy: it uses only
-the *first* configuration rather than the *last* that is requested
-during scanning. This patch fixes that and also removes a bogus
-comment related to the issue.
+Pavel Roskin wrote:
+> Hello!
+>
+>   
+>> Thank you for being patient with me.
+>>
+>> When I read that web page for the fourth time, I finally realized that 
+>> what I needed to do was forget about using the correct driver for my 
+>> adapter, and instead download an ancient driver for an unidentified 
+>> adapter from a website of unknown authenticity, and use the firmware 
+>> from that driver instead.  Should have been obvious, I guess.
+>>     
+>
+> I have looked at that page, and I don't see anything confusing there.  I
+> wish I could improve it, but I don't see how.
+>
+> The firmware checksum is verified, so either you are getting the right
+> firmware, or you are not getting any.
+>
+> There is no talk of choosing "the correct driver".  Instead, the page
+> suggests downloading both firmwares rather than guessing:
+>
+>   
+Considered by itself the web page makes sense.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This patch requires porting to iwl3965. For correctness, it
-needs to be applied to 2.6.24 although most likely nobody will
-ask to change channel twice during a single hardware scan. Duh!
+However considering how I process information, along with additional 
+factors, the process caused difficulty for me:
+1) The bcm43xx-fwcutter man page and its -l option contradict the web 
+page, indicating that firmware can be extracted from recent versions of 
+bcmwl5.sys (include many versions 4.x) for use with bcm43xx.
+2) Personal experience:  The driver Windows XP found for this HP adapter 
+was unstable.  This led me to treat as suspect any driver not obtained 
+from HP.
+3) I had no way of knowing that firmware from any random driver would 
+work with my adapter.
+4) I preferred using a driver/firmware from a trusted website over one 
+from an unknown website.
 
-Warning: patch is not even compile tested yet because I currently have a
-broken tree. I don't see why it shouldn't work though.
+The above information led me to believe that I already had an 
+appropriate driver, so when reading the web page I repeatedly skipped 
+over the section discussing driver downloads.
 
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-19 01:17:23.773023329 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-19 01:20:08.943020887 +0100
-@@ -7471,25 +7471,21 @@ static int iwl4965_mac_config(struct iee
- 		goto out;
- 	}
- 
--	/* TODO: Figure out how to get ieee80211_local->sta_scanning w/ only
--	 * what is exposed through include/ declarations */
- 	if (unlikely(!iwl4965_param_disable_hw_scan &&
- 		     test_bit(STATUS_SCANNING, &priv->status))) {
-+		/*
-+		 * Cache the configuration now so that we can
-+		 * replay it after the hardware scan is finished.
-+		 */
- 
--		if (unlikely(priv->cache_conf))
--			IWL_DEBUG_MAC80211("leave - still scanning\n");
--		else {
--			/* Cache the configuration now so that we can
--			 * replay it after the hardware scan is finished. */
-+		if (likely(!priv->cache_conf))
- 			priv->cache_conf = kmalloc(sizeof(*conf), GFP_KERNEL);
--			if (priv->cache_conf) {
--				memcpy(priv->cache_conf, conf, sizeof(*conf));
--				IWL_DEBUG_MAC80211("leave - scanning\n");
--			} else {
--				IWL_DEBUG_MAC80211("leave - no memory\n");
--				ret = -ENOMEM;
--			}
--		}
-+
-+		if (likely(priv->cache_conf))
-+			memcpy(priv->cache_conf, conf, sizeof(*conf));
-+		else
-+			ret = -ENOMEM;
-+
- 		mutex_unlock(&priv->mutex);
- 		return ret;
- 	}
-
+I don't think any changes to the web page are needed.  At the first sign 
+of trouble I should have read the instructions more carefully and 
+considered the possibility that there was a reason I was being 
+instructed to download a particular driver.
 
