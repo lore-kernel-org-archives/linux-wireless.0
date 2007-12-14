@@ -1,108 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42458 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751313AbXLJWJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 17:09:32 -0500
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
-	learning algorithm
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20071210222213.0cf8ce0d@morte>
-References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
-	 <1197239150.7543.13.camel@localhost> <20071210090853.79ea4645@morte>
-	 <1197319867.7493.4.camel@localhost>  <20071210222213.0cf8ce0d@morte>
-Content-Type: text/plain
-Date: Mon, 10 Dec 2007 23:09:29 +0100
-Message-Id: <1197324569.7493.19.camel@localhost> (sfid-20071210_220935_013835_B4435AFF)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765626AbXLNMSP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2007 07:18:15 -0500
+Subject: Re: [FYI] hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	hostap <hostap@shmoo.com>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240712131525o6c0767e8je8a4feff21fbae69@mail.gmail.com> (sfid-20071213_232539_914393_6ACC0719)
+References: <1197512614.6558.224.camel@johannes.berg>
+	 <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com>
+	 <1197567415.8313.33.camel@johannes.berg>
+	 <1ba2fa240712131525o6c0767e8je8a4feff21fbae69@mail.gmail.com>
+	 (sfid-20071213_232539_914393_6ACC0719)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hc0kQQYsnrkixC86lP39"
+Date: Fri, 14 Dec 2007 13:16:54 +0100
+Message-Id: <1197634614.16079.42.camel@johannes.berg> (sfid-20071214_121823_490488_1B1E710F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Mon, 2007-12-10 at 22:22 +0100, Stefano Brivio wrote:
-> On Mon, 10 Dec 2007 21:51:07 +0100
-> Mattias Nissler <mattias.nissler@gmx.de> wrote:
-> 
-> > 
-> > On Mon, 2007-12-10 at 09:08 +0100, Stefano Brivio wrote:
-> > > On Sun, 09 Dec 2007 23:25:50 +0100
-> > > Mattias Nissler <mattias.nissler@gmx.de> wrote:
-> > > 
-> > > > >  static void *rate_control_pid_alloc(struct ieee80211_local *local)
-> > > > >  {
-> > > > >  	struct rc_pid_info *pinfo;
-> > > > > +	struct rc_pid_rateinfo *rinfo;
-> > > > > +	struct ieee80211_hw_mode *mode;
-> > > > > +	int i, j, tmp;
-> > > > > +	bool s;
-> > > > >  
-> > > > >  	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
-> > > > > +	if (!pinfo)
-> > > > > +		return NULL;
-> > > > > +
-> > > > > +	mode = local->oper_hw_mode;
-> > > > > +	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
-> > > > > +	if (!rinfo) {
-> > > > > +		kfree(pinfo);
-> > > > > +		return NULL;
-> > > > > +	}
-> > > > 
-> > > > What if the mode is changed? Have you checked the rate control algorithm
-> > > > gets reinitialized? If not, we're scheduling a crash here, when
-> > > > mode->num_rates changes.
-> > > 
-> > > After a discussion on IRC with Michael (Wu), we came to the conclusion that
-> > > it doesn't make sense for mode->num_rates to change, because:
-> > > 1) if the AP drops supported rates, it'll drop the association as well,
-> > > then everything here will be destroyed and created again;
-> > > 2) that can be changed in userspace, but we couldn't figure out a scenario
-> > > where it would make any sense. Johannes, any comments? Wouldn't it make
-> > > sense to just forbid to change this in userspace?
-> > 
-> > I don't agree. For example, what if you have some broken 802.11b only
-> > hardware that you desperately need to get going, but it freaks out on
-> > 802.11g encoded frames. Now if your AP is hostapd on a Linux machine,
-> > you'll want to change the mode. Hence, also the number of available
-> > rates change.
-> 
-> Yes, but the association gets dropped. I'm not sure about the hostapd
-> implementation (will check), but APs drop association when they change
-> supported rates. So the per-sta rate control would obviously get reinitialized.
-> I didn't find anything clear about this in the 802.11 standard, though.
+--=-hc0kQQYsnrkixC86lP39
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Still, just disallowing mode switches seems odd to me.
 
-> 
-> > Moreover, I think we can do better than just disallowing changes to the
-> > rate set, don't you think?
-> 
-> Well, I still can't find an example of where this would be needed. Your
-> scenario looks like this:
-> 1) the AP STA periodically advertises supported rates;
-> 2) the non-AP STA supported rates are the intersection (as in set theory)
-> of the rates supported by the non-AP STA and the rate advertised by the AP
-> STA (in this case, assuming that the both the non-AP and the AP STAs
-> support 802.11b and g, rates supported by the non-AP STA are both CCK and
-> OFDM rates);
-> 3) let's say that a thunderstorm makes the air CCK-hostile, so we want to
-> reconfigure our AP STA to work with 802.11b only: the association will need
-> to be recreated (thus the rc algorithm gets reinitialized), and now rates
-> supported by the non-AP STA are the CCK rates only -> everything works as
-> expected and wanted.
-> 
-> Anyway, it's not an issue at all to deal with rates changing in
-> rc80211-pid - I would just need to reallocate a struct and copy over some
-> data (but please think about this now: OFDM rates are the same for 802.11a
-> and 802.11g, but it really doesn't make any sense to assume that behaviour
-> at 2.4GHz is anywhere near to behaviour at 5GHz - so maybe I would just
-> reallocate the struct and that's it). But before than doing this, I wanted
-> to be sure that we aren't just hiding a bug in mac80211.
+> > Oh btw, will you be publishing driver updates to support AP mode in
+> > iwlwifi? You must have them anyway if you're working on this and I'd
+> > love have a second driver capable of AP mode in the kernel.
+>=20
+> We have frozen the AP stack before you've removed management interface
 
-You're right, we should find out what behaviour would be correct for the
-stack to implement. Who make a more educated statement? Johannes?
-Michael?
+How's that relevant to the driver?
 
+johannes
+
+--=-hc0kQQYsnrkixC86lP39
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2J0NaVg1VMiehFYAQKFFRAApYS7buPjeq2Mbc7Bmld+yH5iGTG2ovfB
+5bRU9zzGDuduKr09lrtvNXKi68+q64nvB9G3ZUngrVj1aIEJQUwwq9i5naUiJlko
+HN5pDBFISiGyoh8XHjI6ePZjJmpfVLzYLHfpTQE87huQXaMzNmNZIlk7Hmb1GuQN
+E9M5Lt0oJWqLTvg/TkFCmuiuUZE7RMCATb3pfV4wA5i9l3N5w/5yTptQW4XWe3C/
+j7+6o/SN/X7pyTKmPwFkSUrOfmQQ+5HY3ZPZwSV7pfZpMBMuR6T8O2Qc9IFTLcCv
+VuXTke7A1tKLcbNxYNeXuUbQAGjwe3kiAKWoLPcHti7M9AQpzIDpffgZ5XAQaYqY
+AK+xe3SObDgZhmfZhS8sRZo17dyV7DaPe/C3E5UbRdKhksvDmnITacckOXV6qVdU
+PGMhbivbHWA5d4AgvVA+ZmiLlgQtNrZykYt8bXdnF5ClWdu1kzErR6oKwKPLMxZM
+yqTkRWtq1fWhWrXX3bs9+gY30bsCGSORVhcs2HQsrxEJIVw3JpjI9zO5WxoBs9Rm
+fSTyfovUvB3J9aBFWz7MGivmmkdsHaSihIldGzBmRb4jFEJnu3eeM53HGVYeRjAB
+IiLp0/0IN9kU3Xknjuc5y5GJ2dggS7OZB+bVk6BPS64+a0Yt/MB2bGcq14EyQEdS
+TPRFE6FN+/g=
+=f4hR
+-----END PGP SIGNATURE-----
+
+--=-hc0kQQYsnrkixC86lP39--
 
