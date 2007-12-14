@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34365 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751552AbXLEKQc (ORCPT
+Received: from mail1.sea5.speakeasy.net ([69.17.117.3]:58669 "EHLO
+	mail1.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbXLNFVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 05:16:32 -0500
-Subject: [NOTE] ath5k vs. mactime
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ath5k-devel <ath5k-devel@lists.ath5k.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 20:29:40 +0100
-Message-Id: <1196796580.10274.36.camel@johannes.berg> (sfid-20071205_101635_789853_01CE295C)
-Mime-Version: 1.0
+	Fri, 14 Dec 2007 00:21:47 -0500
+Date: Thu, 13 Dec 2007 21:20:46 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: tx_status reporting of RTS/CTS frames
+Message-ID: <20071214052046.GF5698@jm.kir.nu> (sfid-20071214_052150_081419_03035872)
+References: <1197412922.7030.11.camel@localhost> <1197479702.6558.125.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197479702.6558.125.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/ath5k/base.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+On Wed, Dec 12, 2007 at 06:15:02PM +0100, Johannes Berg wrote:
 
---- everything.orig/drivers/net/wireless/ath5k/base.c	2007-12-04 20:23:27.246950249 +0100
-+++ everything/drivers/net/wireless/ath5k/base.c	2007-12-04 20:24:44.936949598 +0100
-@@ -1717,6 +1717,13 @@ accept:
- 			skb_pull(skb, pad);
- 		}
- 
-+		/*
-+		 * FIXME: opmode cannot be MNTR ever since the filter
-+		 * 	  flags were introduced. make this depend on the
-+		 *	  "want radiotap" flag (which should be named
-+		 *	  "want monitor".)
-+		 *	  Then, set RX_FLAG_TSFT in rxs.flags.
-+		 */
- 		if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
- 			rxs.mactime = ath5k_extend_tsf(sc->ah,
- 					ds->ds_rxstat.rs_tstamp);
+> > rt2x00 devices can't generate rts/cts frames themselves, but rely on the
+> > driver to generate them. Also, the hardware reports tx status back for
+> > those frames. Now the question is whether these frames should be
+> > reported back to mac80211 using ieee80211_tx_status[_irqsafe]. AFAIK,
+> > this has some subtle effects, e.g. they won't show up on monitor
+> > interfaces if we don't report them.
+> 
+> They never show up on monitor interfaces for all other hardware because
+> there the hardware handles them. How is it that rt2x00 cannot handle
+> rts? It has to at least know that an RTS was sent and to send the frame
+> only after the CTS, and that needs to be a MAC function and cannot be
+> implemented in host software.
+> 
+> So, I'd think they shouldn't be reported at all.
 
+I'm not sure I understood the comment about monitor interface correctly.
+If the driver is configured in monitor mode (or whatever you would call
+a mode where it receives all frames), I do expect to see ACK and RTS/CTS
+frames in mac80211 (and in the monitor interface in user space for that
+matter). I hope that this won't be changed.
 
+It sounds perfectly reasonable to not indicate these control frame
+subtypes when in normal (non-monitor) mode since they are most likely
+processed in hardware/microcode/firmware. However, if they provide
+additional information (say, signal strength), it could be useful to
+send them to mac80211 anyway to provide more information for TX rate
+control.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
