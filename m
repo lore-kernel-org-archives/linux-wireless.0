@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:45050 "EHLO venema.h4ckr.net"
+Received: from c60.cesmail.net ([216.154.195.49]:1706 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753555AbXLPBDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2007 20:03:06 -0500
-Date: Sun, 16 Dec 2007 03:03:01 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 6/9] ath5k: Skip non-data queues for 5210 for now
-Message-ID: <20071216010301.GF5482@makis.domain.invalid> (sfid-20071216_010309_805478_F361EA35)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753653AbXLNTLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2007 14:11:21 -0500
+Subject: Can we please schedule orinoco_pci for removal?
+From: Pavel Roskin <proski@gnu.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	orinoco-devel <orinoco-devel@lists.sourceforge.net>
+Content-Type: text/plain
+Date: Fri, 14 Dec 2007 14:11:18 -0500
+Message-Id: <1197659478.1539.23.camel@dv> (sfid-20071214_191124_898780_3F294D27)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Skip non-data tx queues on 5210, don't return -EINVAL since it breaks ifup. This is a temp mesure until we review tx queues etc in base.c. Note that 5210 will wake up and may even scan but needs some more work.
+Hello!
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Examples of other drivers have convinced me that orinoco_pci should be
+removed from the kernel.  It's superseded by hostap_pci.  Those replying
+on orinoco_pci should look at hostap_pci now and make sure that it's
+working for them.
 
----
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index ed311ae..ea5960e 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -3184,7 +3184,7 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 	if (ah->ah_version == AR5K_AR5210) {
- 		/* Only handle data queues, others will be ignored */
- 		if (tq->tqi_type != AR5K_TX_QUEUE_DATA)
--			return -EINVAL;
-+			return 0;
- 
- 		/* Set Slot time */
- 		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
+orinoco_pci supports Prism 2.5/3 chipset only, so the support for other
+related chipsets (Agere and Symbol) is useless for that driver.
+Considering that all hostap drivers are Prism-only, orinoco_pci and
+hostap_pci support exactly the same hardware.
 
+Other backends for Orinoco deal with PCMCIA cards, inserted (or even
+soldered) into proper PCMCIA adapters or into some less capable
+replacements.  PCI cards are real 32-bit PCI devices, and stand apart to
+a certain degree.  I think it would be useful if Orinoco driver
+concentrates on supporting 16-bit PCMCIA cards.  That can possibly
+include Orinoco USB.  There is still work to be done in that direction.
 
+Let's not turn this discussion into another discussion whether Orinoco
+should give up all Prism IDs in all drivers.  It's not as trivial as it
+seems to some, as some cards can only be recognized by the firmware
+version.  I'm aware of the problem.  It's a different issue.
 
+So, what timeframe for orinoco_pci removal from the kernel would be
+reasonable?
+
+-- 
+Regards,
+Pavel Roskin
