@@ -1,136 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59685 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407AbXLVUzK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35000 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764533AbXLNMRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:55:10 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Only select allowed TX and RX antennas
-Date: Sat, 22 Dec 2007 21:54:20 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712222154.20424.mb@bu3sch.de> (sfid-20071222_205514_086048_54224C56)
+	Fri, 14 Dec 2007 07:17:48 -0500
+Subject: Re: [RFC] mac80211: clean up frame receive handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <20071213204933.GD3083@tuxdriver.com>
+References: <1197483844.6558.158.camel@johannes.berg>
+	 <20071213204933.GD3083@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vyMkho/Ki09YepF1Y++N"
+Date: Fri, 14 Dec 2007 13:14:03 +0100
+Message-Id: <1197634443.16079.36.camel@johannes.berg> (sfid-20071214_121758_220639_6ED59E94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes antenna selection in b43. It adds a sanity check
-for the antenna numbers we get from mac80211.
 
-This patch depends on
-[PATCH] ssb: Fix extraction of values from SPROM
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-vyMkho/Ki09YepF1Y++N
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-12-12 19:55:48.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-12-12 19:55:53.000000000 +0100
-@@ -2692,8 +2692,36 @@ static int b43_switch_phymode(struct b43
- 	return err;
- }
- 
--static int b43_antenna_from_ieee80211(u8 antenna)
-+/* Check if the use of the antenna that ieee80211 told us to
-+ * use is possible. This will fall back to DEFAULT.
-+ * "antenna_nr" is the antenna identifier we got from ieee80211. */
-+u8 b43_ieee80211_antenna_sanitize(struct b43_wldev *dev,
-+				  u8 antenna_nr)
-+{
-+	u8 antenna_mask;
-+
-+	if (antenna_nr == 0) {
-+		/* Zero means "use default antenna". That's always OK. */
-+		return 0;
-+	}
-+
-+	/* Get the mask of available antennas. */
-+	if (dev->phy.gmode)
-+		antenna_mask = dev->dev->bus->sprom.ant_available_bg;
-+	else
-+		antenna_mask = dev->dev->bus->sprom.ant_available_a;
-+
-+	if (!(antenna_mask & (1 << (antenna_nr - 1)))) {
-+		/* This antenna is not available. Fall back to default. */
-+		return 0;
-+	}
-+
-+	return antenna_nr;
-+}
-+
-+static int b43_antenna_from_ieee80211(struct b43_wldev *dev, u8 antenna)
- {
-+	antenna = b43_ieee80211_antenna_sanitize(dev, antenna);
- 	switch (antenna) {
- 	case 0:		/* default/diversity */
- 		return B43_ANTENNA_DEFAULT;
-@@ -2713,14 +2741,10 @@ static int b43_op_config(struct ieee8021
- 	struct b43_phy *phy;
- 	unsigned long flags;
- 	unsigned int new_phymode = 0xFFFF;
--	int antenna_tx;
--	int antenna_rx;
-+	int antenna;
- 	int err = 0;
- 	u32 savedirqs;
- 
--	antenna_tx = b43_antenna_from_ieee80211(conf->antenna_sel_tx);
--	antenna_rx = b43_antenna_from_ieee80211(conf->antenna_sel_rx);
--
- 	mutex_lock(&wl->mutex);
- 
- 	/* Switch the PHY mode (if necessary). */
-@@ -2781,8 +2805,10 @@ static int b43_op_config(struct ieee8021
- 	}
- 
- 	/* Antennas for RX and management frame TX. */
--	b43_mgmtframe_txantenna(dev, antenna_tx);
--	b43_set_rx_antenna(dev, antenna_rx);
-+	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_tx);
-+	b43_mgmtframe_txantenna(dev, antenna);
-+	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_rx);
-+	b43_set_rx_antenna(dev, antenna);
- 
- 	/* Update templates for AP mode. */
- 	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-Index: wireless-2.6/drivers/net/wireless/b43/main.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.h	2007-12-12 18:29:32.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.h	2007-12-12 19:55:53.000000000 +0100
-@@ -96,6 +96,9 @@ static inline int b43_is_ofdm_rate(int r
- 	return !b43_is_cck_rate(rate);
- }
- 
-+u8 b43_ieee80211_antenna_sanitize(struct b43_wldev *dev,
-+				  u8 antenna_nr);
-+
- void b43_tsf_read(struct b43_wldev *dev, u64 * tsf);
- void b43_tsf_write(struct b43_wldev *dev, u64 tsf);
- 
-Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c	2007-12-12 18:29:32.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/xmit.c	2007-12-12 19:55:53.000000000 +0100
-@@ -270,14 +270,15 @@ static void generate_txhdr_fw4(struct b4
- 		phy_ctl |= B43_TX4_PHY_OFDM;
- 	if (dev->short_preamble)
- 		phy_ctl |= B43_TX4_PHY_SHORTPRMBL;
--	switch (txctl->antenna_sel_tx) {
--	case 0:
-+
-+	switch (b43_ieee80211_antenna_sanitize(dev, txctl->antenna_sel_tx)) {
-+	case 0: /* Default */
- 		phy_ctl |= B43_TX4_PHY_ANTLAST;
- 		break;
--	case 1:
-+	case 1: /* Antenna 0 */
- 		phy_ctl |= B43_TX4_PHY_ANT0;
- 		break;
--	case 2:
-+	case 2: /* Antenna 1 */
- 		phy_ctl |= B43_TX4_PHY_ANT1;
- 		break;
- 	default:
+> > +static bool ieee80211_frame_allowed(struct ieee80211_txrx_data *rx)
+> > +{
+> > +	static const u8 pae_group_addr[ETH_ALEN]
+> > +		=3D { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
+> > +	struct ethhdr *ehdr =3D (struct ethhdr *)rx->skb->data;
+> > +
+> > +	if (rx->skb->protocol =3D=3D htons(ETH_P_PAE) &&
+> > +	    (compare_ether_addr(ehdr->h_dest, pae_group_addr) =3D=3D 0 ||
+> > +	     compare_ether_addr(ehdr->h_dest, rx->dev->dev_addr) =3D=3D 0))
+> > +		return true;
+>=20
+> Should you reverse these two compare_ether_addr calls?
+> rx->dev->dev_addr seems more likely for any given packet.  It probably
+> makes little difference but it seems like checking for that first
+> would still be better.
+
+I think in theory all eapol frames are sent to the PAE group address,
+but I have no idea which of the checks would be more efficient. It seems
+that the first could be optimised a lot because it's constant too...
+
+johannes
+
+--=-vyMkho/Ki09YepF1Y++N
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2JziaVg1VMiehFYAQI1hw/5AUc49QxnVte0QaTBmFksMjn4MqnJApuu
+q1sHo5DVutvmrxVvR5kV0AeleVb//1uyMT1mXOOgN+uZqAlzlqi1qvBVA5j87KxA
+B4oQcwISSQ9Pu+SPiBLtSBQ9IlwN+dG1Wuyn6hrjXOkpF6YlSuXN7bh53OFsxALw
+CGZGMPZ66UCpabSb23qOWjW3ea016gPGFnt4EA8UijrsQ5sQRoV8wnAscVrkzVoP
+LGJ1Aq4cHTxoTWrWf6e8AGnendflzQG0dT6KXjfgNcv3q0TySKh6XGAp7PzLx9Zt
+q8FDLB6xk0+Ntul3xW8ZxxbjZozg8yH1QtBzOIzv5Y4lyIgkAPUTum6WLrOhTgUy
+5ISCrJqFw6Z9vW//zV9c1Xy86bi+zppxOTG3s/2xz5dObB5B0mipc0LdgJM3k04m
+dNy/0WNP5DYMN1sX2K+6qumgxHjMV3dR1GS76wXTn3sODwSFum3Nvf27vEfLqsSK
+FaewNuSj1eOD1kEAvJ6AZxP5ZiXmUZcCS5KeLC+8F3mcEHFKsH26JMmTI76e68ef
+5XDRX3egbv4sYkppfV0tWygo6K/a7V5Q3uEOtbaRKwiiDk8cxSZf3de2+0QYs+M7
++NRbFUEAPEY398PAbliGOmzd4Z67Dm6hoNFPkkl1GeTgBmfm+Ckv23/8W/2e8aKh
+n+EFzgRBFfk=
+=iFoJ
+-----END PGP SIGNATURE-----
+
+--=-vyMkho/Ki09YepF1Y++N--
+
