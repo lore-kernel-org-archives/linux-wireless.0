@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42261 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755467AbXLLLnf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 06:43:35 -0500
-Date: Wed, 12 Dec 2007 03:43:25 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Joonwoo Park" <joonwpark81@gmail.com>
-Cc: "'Zhu Yi'" <yi.zhu@intel.com>,
-	<ipw3945-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/2] [net/wireless/iwlwifi] : iwlwifi 3945 Fix
- raceconditional panic.
-Message-Id: <20071212034325.4a022320.akpm@linux-foundation.org> (sfid-20071212_114339_963733_E60E5E4E)
-In-Reply-To: <016401c83229$3302d250$9c94fea9@jason>
-References: <00e501c831ab$2e78daa0$9c94fea9@jason>
-	<1196298656.7614.77.camel@debian.sh.intel.com>
-	<016401c83229$3302d250$9c94fea9@jason>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from MGW2.Sony.CO.JP ([137.153.0.14]:51399 "EHLO mgw2.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750872AbXLNFEn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2007 00:04:43 -0500
+Date: Fri, 14 Dec 2007 14:03:13 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <1197580418.14270.6.camel@localhost.localdomain>
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp> <1197580418.14270.6.camel@localhost.localdomain>
+Message-Id: <20071214134918.275E.MOKUNO@sm.sony.co.jp> (sfid-20071214_050453_884616_1AF06D79)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 29 Nov 2007 10:42:49 +0900 "Joonwoo Park" <joonwpark81@gmail.com> wrote:
 
-> 2007/11/29, Zhu Yi <yi.zhu@intel.com>:
-> > 
-> > Good catch. But it will be better if you add it into
-> > iwl_cancel_deferred_work().
-> > 
-> 
-> Thanks.
-> I agree with you. 
-> Actually, I considered it, but I was afraid of side effect.
-> Anyway, I'm attaching a new one.
-> 
-> Thanks.
-> Joonwoo
-> 
-> [net/wireless/iwlwifi] : iwlwifi 3945 Fix race conditional panic.
-> 
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 465da4f..e51e872 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -8270,6 +8270,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
->  {
->  	iwl_hw_cancel_deferred_work(priv);
->  
-> +	cancel_delayed_work_sync(&priv->init_alive_start);
->  	cancel_delayed_work(&priv->scan_check);
->  	cancel_delayed_work(&priv->alive_start);
->  	cancel_delayed_work(&priv->post_associate);
+On Thu, 13 Dec 2007 16:13:38 -0500
+Dan Williams <dcbw@redhat.com> wrote:
 
-Did drivers/net/wireless/iwlwifi/iwl4965-base.c get fixed in a simlar
-fashion?
+> One more question; does the driver work with wpa_supplicant for WPA, or
+> does the firmware capture the EAPOL frames and handle the 4 way
+> handshake internally?  Ideally the firmware would have the ability to
+> pass those frames up unmodified so the driver would at least have a
+> _hope_ of 802.1x capability.  Does the firmware handle Dynamic WEP at
+> all?
+> 
+> Basically, what happens when the AP you've just associated with starts
+> sending you EAPOL traffic to start the 802.1x process?
+
+The PS3 wireless device does the association and 4way handshake in its
+firmware/hypervisor.  No interventions between them are allowed to the guest
+OSes.  
+All frames which are sent/received from/to before the connection process
+completed seems to be dropped by the hardware.  Only the static WEP is
+supported.
+
+
+-- 
+Masakazu MOKUNO
+
