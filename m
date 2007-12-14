@@ -1,97 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.mud.yahoo.com ([68.142.198.202]:37456 "HELO
-	smtp103.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754040AbXLWBAy (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:49173 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061AbXLNGs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:00:54 -0500
-Date: Sat, 22 Dec 2007 16:54:11 -0800
-From: David Brownell <david-b@pacbell.net>
-To: bjd@jooz.net
-Subject: Re: [PATCH 4/8] [PATCH] Halt device if rndis_bind fails.
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-References: <11983602942818-git-send-email-bjd@jooz.net>
- <1198360295683-git-send-email-bjd@jooz.net>
-In-Reply-To: <1198360295683-git-send-email-bjd@jooz.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223005412.0811E22313C@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_010059_515740_3576CC03)
+	Fri, 14 Dec 2007 01:48:28 -0500
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+From: David Woodhouse <dwmw2@infradead.org>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp>
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp>
+Content-Type: text/plain
+Date: Fri, 14 Dec 2007 01:48:52 -0500
+Message-Id: <1197614933.3798.36.camel@shinybook.infradead.org> (sfid-20071214_064831_966266_5236A0F8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From bjd@jooz.net  Sat Dec 22 13:53:07 2007
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> To: dbrownell@users.sourceforge.net
-> Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-> 	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Subject: [PATCH 4/8] [PATCH] Halt device if rndis_bind fails.
-> Date: Sat, 22 Dec 2007 22:51:30 +0100
->
-> From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->
-> When bind fails after device was initialized, shutdown device properly
-> by sending RNDIS_MSG_HALT.
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+--- linux-2.6.23.ppc64/drivers/net/ps3_gelic_net.c~	2007-12-14 01:31:50.000000000 -0500
++++ linux-2.6.23.ppc64/drivers/net/ps3_gelic_net.c	2007-12-14 01:39:25.000000000 -0500
+@@ -1139,7 +1139,7 @@ static irqreturn_t gelic_card_interrupt(
+  *
+  * see Documentation/networking/netconsole.txt
+  */
+-static void gelic_net_poll_controller(struct net_device *netdev)
++void gelic_net_poll_controller(struct net_device *netdev)
+ {
+ 	struct gelic_card *card = netdev_card(netdev);
+ 
+--- linux-2.6.23.ppc64/drivers/net/ps3_gelic_net.h~	2007-12-14 01:31:50.000000000 -0500
++++ linux-2.6.23.ppc64/drivers/net/ps3_gelic_net.h	2007-12-14 01:39:47.000000000 -0500
+@@ -346,6 +346,7 @@ extern void gelic_net_tx_timeout(struct 
+ extern int gelic_net_change_mtu(struct net_device *netdev, int new_mtu);
+ extern int gelic_net_setup_netdev(struct net_device *netdev,
+ 				  struct gelic_card *card);
++extern void gelic_net_poll_controller(struct net_device *netdev);
+ 
+ /* shared ethtool ops */
+ extern void gelic_net_get_drvinfo(struct net_device *netdev,
 
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+-- 
+dwmw2
 
-> ---
->  drivers/net/usb/rndis_host.c |   12 +++++++++---
->  1 files changed, 9 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-> index 42b161c..c686025 100644
-> --- a/drivers/net/usb/rndis_host.c
-> +++ b/drivers/net/usb/rndis_host.c
-> @@ -467,6 +467,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  		struct rndis_query_c	*get_c;
->  		struct rndis_set	*set;
->  		struct rndis_set_c	*set_c;
-> +		struct rndis_halt	*halt;
->  	} u;
->  	u32			tmp;
->  	int			reply_len;
-> @@ -517,7 +518,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  				"dev can't take %u byte packets (max %u)\n",
->  				dev->hard_mtu, tmp);
->  			retval = -EINVAL;
-> -			goto fail_and_release;
-> +			goto halt_fail_and_release;
->  		}
->  		dev->hard_mtu = tmp;
->  		net->mtu = dev->hard_mtu - net->hard_header_len;
-> @@ -539,7 +540,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  			48, (void **) &bp, &reply_len);
->  	if (unlikely(retval< 0)) {
->  		dev_err(&intf->dev, "rndis get ethaddr, %d\n", retval);
-> -		goto fail_and_release;
-> +		goto halt_fail_and_release;
->  	}
->  	memcpy(net->dev_addr, bp, ETH_ALEN);
->  
-> @@ -555,7 +556,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  	retval = rndis_command(dev, u.header);
->  	if (unlikely(retval < 0)) {
->  		dev_err(&intf->dev, "rndis set packet filter, %d\n", retval);
-> -		goto fail_and_release;
-> +		goto halt_fail_and_release;
->  	}
->  
->  	retval = 0;
-> @@ -563,6 +564,11 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  	kfree(u.buf);
->  	return retval;
->  
-> +halt_fail_and_release:
-> +	memset(u.halt, 0, sizeof *u.halt);
-> +	u.halt->msg_type = RNDIS_MSG_HALT;
-> +	u.halt->msg_len = ccpu2(sizeof *u.halt);
-> +	(void) rndis_command(dev, (void *)u.halt);
->  fail_and_release:
->  	usb_set_intfdata(info->data, NULL);
->  	usb_driver_release_interface(driver_of(intf), info->data);
-> -- 
-> 1.5.2.5
->
