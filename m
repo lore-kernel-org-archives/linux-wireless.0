@@ -1,105 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51790 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750949AbXLHKkC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 05:40:02 -0500
-Subject: Re: rc80211-pid: some tuning test results
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20071208044202.20c91ae1@morte>
-References: <1196622331.7472.4.camel@localhost>
-	 <20071204024146.15689ee3@morte>
-	 <40f31dec0712041405sb14243dw9ccb7509e6f58d8@mail.gmail.com>
-	 <200712050849.46760.hs4233@mail.mn-solutions.de>
-	 <20071205105230.0ecc56dc@morte> <20071205131310.6b4c232a@morte>
-	 <20071208044202.20c91ae1@morte>
-Content-Type: text/plain
-Date: Sat, 08 Dec 2007 11:39:58 +0100
-Message-Id: <1197110398.7472.17.camel@localhost> (sfid-20071208_104012_515866_B9397934)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:49148 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758820AbXLNEVG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 23:21:06 -0500
+Message-ID: <20071213232103.kbrglyv2848c444w@webmail.spamcop.net> (sfid-20071214_042114_421511_2E9DA344)
+Date: Thu, 13 Dec 2007 23:21:03 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Randy Cushman <rcushman_linux@roadrunner.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: BCM4306 Questions
+References: <475F2DAD.4000708@roadrunner.com>
+	<200712121214.50522.mb@bu3sch.de> <475FCB46.2030209@roadrunner.com>
+	<200712121300.59811.mb@bu3sch.de> <47608102.5010105@roadrunner.com>
+	<1197508664.13188.27.camel@dv> <4761DFA9.3020305@roadrunner.com>
+In-Reply-To: <4761DFA9.3020305@roadrunner.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Randy Cushman <rcushman_linux@roadrunner.com>:
 
-On Sat, 2007-12-08 at 04:42 +0100, Stefano Brivio wrote:
-> I run further tests. It looks like I found out the optimal parameters for
-> minimizing latency or maximizing throughput or maximizing reliability.
+> However considering how I process information, along with additional
+> factors, the process caused difficulty for me:
+> 1) The bcm43xx-fwcutter man page and its -l option contradict the web
+> page, indicating that firmware can be extracted from recent versions of
+> bcmwl5.sys (include many versions 4.x) for use with bcm43xx.
 
-Great. I haven't had much time and probably cannot find more time this
-weekend, so I still haven't done much testing.
+OK, this part could probably be "deemphasized" or preceded with the  
+comment that the latest firmware in not necessarily the best, at least  
+for the purpose of the reverse engineered driver.
 
-> 
-> Best throughput:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 1       8        11     14       10     12       3      0        1
-> 
-> Best latency:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 1       8        15     12       8      16       2      1        1
-> 
-> Best reliability:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 1       8        4      15       8      15       3      0        0
-> 
-> While a general good setup looks to be:
-> 
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 1       8        10     15       9      15       3      0        1
-> 
-> I would then adopt a system like the one outlined below in order to take
-> into account userspace parameters.
-> 
-> We have Three userspace parameters, ranging from 0 (don't care) to 5
-> (care the most). I don't think it makes any sense to have more granularity
-> here.
+In the same time, support for extracting the firmware from the new  
+drivers could be added, just to provide such option for whatever  
+reasons.
 
-Why wouldn't you let userspace set the raw parameters directly? The
-complicated scheme you propose prevents us to tell users/testers to
-"change the X parameter to see it gives better Y results". If you give
-access to the raw parameters, people can still tweak and tune them if
-the rate control fails for special situations (e.g. hardware that cannot
-report whether a frame was only retried or totally failed, special noise
-situations, whatever).
+> 2) Personal experience:  The driver Windows XP found for this HP
+> adapter was unstable.  This led me to treat as suspect any driver not
+> obtained from HP.
 
-Furthermore, you can still have the simplified scheme by providing a
-userspace tool (maybe even add it to iw, once we have an interface) that
-takes the input, calculates the raw parameters as below and writes the
-results to the kernel.
+The firmware in "soft-MAC" devices has little effect on stability.   
+It's the driver that does most of the work and communicates with the  
+OS.  The driver is not being extracted, only the firmware.
 
-Bottom line: This thing complicates the kernel, makes the thing less
-understandable for people who now what a PID controller is, complicates
-future tweaking and tuning of the (default) parameters and moreover
-could also be implemented in userspace. So my vote is against it.
+> 3) I had no way of knowing that firmware from any random driver would
+> work with my adapter.
+> 4) I preferred using a driver/firmware from a trusted website over one
+> from an unknown website.
 
-> 
-> Starting from:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 1       8        10     15       9      15       3      0        1
-> 
-> We add:
-> For every threshold point:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 		+0.2	-0.2	+0.2	-0.6
-> 
-> latency points:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 		+1	-0.6	-0.2	+0.2	-0.2	+0.2
-> 
-> reliability points:
-> rc_imul rc_idiv rc_pf   rc_p    rc_i    rc_d    rc_sm_s rc_sh_s rc_sh_d
-> 		-1.2		-0.2				-0.2
-> 
-> I'll now try to implement this sorting out the fixed point calculation
-> issues.
+OK, that's just healthy skepticism :)
 
-I've done a lot of code cleaning, maybe you want to base your patches on
-that. There's more to come, but I'll send them so you have something to
-start.
+Thanks for your detailed answers.  It may help create a better  
+experience for the future users.
 
-Mattias
-
+-- 
+Regards,
+Pavel Roskin
