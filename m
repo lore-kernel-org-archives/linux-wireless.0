@@ -1,59 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:41355 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751705AbXLEJEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 04:04:07 -0500
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <200712050849.46760.hs4233@mail.mn-solutions.de>
-References: <1196622331.7472.4.camel@localhost>
-	 <20071204024146.15689ee3@morte>
-	 <40f31dec0712041405sb14243dw9ccb7509e6f58d8@mail.gmail.com>
-	 <200712050849.46760.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 05 Dec 2007 10:04:04 +0100
-Message-Id: <1196845444.7472.6.camel@localhost> (sfid-20071205_090412_012660_AD604D50)
-Mime-Version: 1.0
+Received: from wr-out-0506.google.com ([64.233.184.233]:64610 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762780AbXLNCNH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2007 21:13:07 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so673237wra.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2007 18:13:07 -0800 (PST)
+Message-ID: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com> (sfid-20071214_021313_168625_7240875B)
+Date: Fri, 14 Dec 2007 10:13:06 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: 2.6.24-rc5-mm1 ath5k build issue
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Dec 10, 2007 1:55 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2007/12/7, Dave Young <hidave.darkstar@gmail.com>:
+>
+> > Hi,
+> >
+> > 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
+> > drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
+> >
+> > fix it with adjust the order of inline function body.
+> >
+> > Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+> >
+> > ---
+> > drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
+> > 1 file changed, 29 insertions(+), 38 deletions(-)
+> >
+> > diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
+> > --- linux/drivers/net/wireless/ath5k/base.c     2007-12-07 10:01:42.000000000 +0800
+> > +++ linux.new/drivers/net/wireless/ath5k/base.c 2007-12-07 10:01:49.000000000 +0800
+> > @@ -250,8 +250,19 @@ static int         ath5k_rxbuf_setup(struct ath
+> >  static int     ath5k_txbuf_setup(struct ath5k_softc *sc,
+> >                                 struct ath5k_buf *bf,
+> >                                 struct ieee80211_tx_control *ctl);
+> > +
+> >  static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
+> > -                               struct ath5k_buf *bf);
+> > +                               struct ath5k_buf *bf)
+> > +{
+> > +       BUG_ON(!bf);
+> > +       if (!bf->skb)
+> > +               return;
+> > +       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> > +                       PCI_DMA_TODEVICE);
+> > +       dev_kfree_skb(bf->skb);
+> > +       bf->skb = NULL;
+> > +}
+> > +
+> >  /* Queues setup */
+> >  static struct  ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
+> >                                 int qtype, int subtype);
+> > @@ -278,14 +289,29 @@ static int        ath5k_beacon_setup(struct at
+> >                                 struct ieee80211_tx_control *ctl);
+> >  static void    ath5k_beacon_send(struct ath5k_softc *sc);
+> >  static void    ath5k_beacon_config(struct ath5k_softc *sc);
+> > -static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
+> > +
+> > +static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> > +{
+> > +       u64 tsf = ath5k_hw_get_tsf64(ah);
+> > +
+> > +       if ((tsf & 0x7fff) < rstamp)
+> > +               tsf -= 0x8000;
+> > +
+> > +       return (tsf & ~0x7fff) | rstamp;
+> > +}
+> > +
+> >  /* Interrupt handling */
+> >  static int     ath5k_init(struct ath5k_softc *sc);
+> >  static int     ath5k_stop_locked(struct ath5k_softc *sc);
+> >  static int     ath5k_stop_hw(struct ath5k_softc *sc);
+> >  static irqreturn_t ath5k_intr(int irq, void *dev_id);
+> >  static void    ath5k_tasklet_reset(unsigned long data);
+> > -static inline void ath5k_update_txpow(struct ath5k_softc *sc);
+> > +
+> > +static inline void ath5k_update_txpow(struct ath5k_softc *sc)
+> > +{
+> > +       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> > +}
+> > +
+> >  static void    ath5k_calibrate(unsigned long data);
+> >  /* LED functions */
+> >  static void    ath5k_led_off(unsigned long data);
+> > @@ -1341,21 +1367,6 @@ err_unmap:
+> >         return ret;
+> >  }
+> >
+> > -static inline void
+> > -ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
+> > -{
+> > -       BUG_ON(!bf);
+> > -       if (!bf->skb)
+> > -               return;
+> > -       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> > -                       PCI_DMA_TODEVICE);
+> > -       dev_kfree_skb(bf->skb);
+> > -       bf->skb = NULL;
+> > -}
+> > -
+> > -
+> > -
+> > -
+> >  /**************\
+> >  * Queues setup *
+> >  \**************/
+> > @@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
+> >  #undef TSF_TO_TU
+> >  }
+> >
+> > -static inline
+> > -u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> > -{
+> > -       u64 tsf = ath5k_hw_get_tsf64(ah);
+> > -
+> > -       if ((tsf & 0x7fff) < rstamp)
+> > -               tsf -= 0x8000;
+> > -
+> > -       return (tsf & ~0x7fff) | rstamp;
+> > -}
+> > -
+> > -
+> > -
+> > -
+> >  /********************\
+> >  * Interrupt handling *
+> >  \********************/
+> > @@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
+> >         ath5k_reset(sc->hw);
+> >  }
+> >
+> > -static inline void
+> > -ath5k_update_txpow(struct ath5k_softc *sc)
+> > -{
+> > -       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> > -}
+> > -
+> >  /*
+> >   * Periodically recalibrate the PHY to account
+> >   * for temperature/environment changes.
+> >
+>
+> We'll change their order in the code, plz keep prototype declarations
+> clean. I'll submit a patch asap on this.
+>
 
-On Wed, 2007-12-05 at 08:49 +0100, Holger Schurig wrote:
-> On Tuesday 04 December 2007 23:05:28 Nick Kossifidis wrote:
-> > [  3]  0.0-60.0 sec  29.4 MBytes  4.11 Mbits/sec  3.242 ms
-> > [  3]  0.0-60.0 sec  29.4 MBytes  4.11 Mbits/sec  4.439 ms
-> > [  3]  0.0-60.0 sec  32.7 MBytes  4.57 Mbits/sec
-> ...
-> 
-> 
-> Could it be the case that if we test the PID controller such way,
-> then we optimize for throughtput in a scenario like "laptop sits 
-> next the the AP".
-> 
-> Or, in other words: if we put the AP 80m away and then try the 
-> test, would the same PID parameters that yielded high MB/s rates 
-> now still keep us a sane (for that distance!) connection?
+Hi,
 
-Good question. The important parameter here is the failed frames
-precentage target value. If we're sitting next to the AP, the percentage
-of failed frames will be very low, so the PID controller won't ever be
-able to tune the TX rate to increase the failed frames percentage to the
-target value. So this is not the right test case for tuning PID rate
-control parameters. It'd be interesting to find out about the failed
-frames percentage target value that gives us the best throughput. And
-then do this experiment several times for different levels of distance
-(or noise). Then see whether the optimal value is constant or not.
+2.6.24-rc5-mm1 still can't built.
 
-At the moment, I'm still cleaning up the rate control code. I also plan
-to add some debugfs support, so we can retrieve the relevant data from
-the kernel and make graphs from them. Only when this is done, I'm gonna
-resume tuning parameters.
+Regards
+dave
 
-Mattias
-
+> --
+> GPG ID: 0xD21DB2DB
+> As you read this post global entropy rises. Have Fun ;-)
+> Nick
+>
