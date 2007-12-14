@@ -1,48 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:54664 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbXLJIUC (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:24790 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800AbXLNLCE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 03:20:02 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so2435820mue
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2007 00:20:00 -0800 (PST)
-Message-ID: <c85cb4470712100019x50f61ben828c0c86ee2c7141@mail.gmail.com> (sfid-20071210_082007_493187_795F2EC1)
-Date: Mon, 10 Dec 2007 10:19:59 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <20071210045955.GN5698@jm.kir.nu>
+	Fri, 14 Dec 2007 06:02:04 -0500
+Received: by an-out-0708.google.com with SMTP id d31so275877and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2007 03:02:02 -0800 (PST)
+Message-ID: <40f31dec0712140302h23bf0650n9adbadf213adc041@mail.gmail.com> (sfid-20071214_110210_766943_4B2CCB9B)
+Date: Fri, 14 Dec 2007 13:02:02 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Dave Young" <hidave.darkstar@gmail.com>
+Subject: Re: 2.6.24-rc5-mm1 ath5k build issue
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11972036221022-git-send-email-ron.rindjunsky@intel.com>
-	 <20071210045955.GN5698@jm.kir.nu>
+Content-Type: text/plain; charset=UTF-8
+References: <a8e1da0712131813w1b651cf5x4048e2362659cc43@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +/* IEEE 80211.11 minimal headers length */
-> > +#define IEEE80211_HDR_MIN_LEN_CTRL 16
+2007/12/14, Dave Young <hidave.darkstar@gmail.com>:
+> On Dec 10, 2007 1:55 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > 2007/12/7, Dave Young <hidave.darkstar@gmail.com>:
+> >
+> > > Hi,
+> > >
+> > > 2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
+> > > drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
+> > >
+> > > fix it with adjust the order of inline function body.
+> > >
+> > > Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
+> > >
+> > > ---
+> > > drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
+> > > 1 file changed, 29 insertions(+), 38 deletions(-)
+> > >
+> > > diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
+> > > --- linux/drivers/net/wireless/ath5k/base.c     2007-12-07 10:01:42.000000000 +0800
+> > > +++ linux.new/drivers/net/wireless/ath5k/base.c 2007-12-07 10:01:49.000000000 +0800
+> > > @@ -250,8 +250,19 @@ static int         ath5k_rxbuf_setup(struct ath
+> > >  static int     ath5k_txbuf_setup(struct ath5k_softc *sc,
+> > >                                 struct ath5k_buf *bf,
+> > >                                 struct ieee80211_tx_control *ctl);
+> > > +
+> > >  static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
+> > > -                               struct ath5k_buf *bf);
+> > > +                               struct ath5k_buf *bf)
+> > > +{
+> > > +       BUG_ON(!bf);
+> > > +       if (!bf->skb)
+> > > +               return;
+> > > +       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> > > +                       PCI_DMA_TODEVICE);
+> > > +       dev_kfree_skb(bf->skb);
+> > > +       bf->skb = NULL;
+> > > +}
+> > > +
+> > >  /* Queues setup */
+> > >  static struct  ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
+> > >                                 int qtype, int subtype);
+> > > @@ -278,14 +289,29 @@ static int        ath5k_beacon_setup(struct at
+> > >                                 struct ieee80211_tx_control *ctl);
+> > >  static void    ath5k_beacon_send(struct ath5k_softc *sc);
+> > >  static void    ath5k_beacon_config(struct ath5k_softc *sc);
+> > > -static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
+> > > +
+> > > +static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> > > +{
+> > > +       u64 tsf = ath5k_hw_get_tsf64(ah);
+> > > +
+> > > +       if ((tsf & 0x7fff) < rstamp)
+> > > +               tsf -= 0x8000;
+> > > +
+> > > +       return (tsf & ~0x7fff) | rstamp;
+> > > +}
+> > > +
+> > >  /* Interrupt handling */
+> > >  static int     ath5k_init(struct ath5k_softc *sc);
+> > >  static int     ath5k_stop_locked(struct ath5k_softc *sc);
+> > >  static int     ath5k_stop_hw(struct ath5k_softc *sc);
+> > >  static irqreturn_t ath5k_intr(int irq, void *dev_id);
+> > >  static void    ath5k_tasklet_reset(unsigned long data);
+> > > -static inline void ath5k_update_txpow(struct ath5k_softc *sc);
+> > > +
+> > > +static inline void ath5k_update_txpow(struct ath5k_softc *sc)
+> > > +{
+> > > +       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> > > +}
+> > > +
+> > >  static void    ath5k_calibrate(unsigned long data);
+> > >  /* LED functions */
+> > >  static void    ath5k_led_off(unsigned long data);
+> > > @@ -1341,21 +1367,6 @@ err_unmap:
+> > >         return ret;
+> > >  }
+> > >
+> > > -static inline void
+> > > -ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
+> > > -{
+> > > -       BUG_ON(!bf);
+> > > -       if (!bf->skb)
+> > > -               return;
+> > > -       pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
+> > > -                       PCI_DMA_TODEVICE);
+> > > -       dev_kfree_skb(bf->skb);
+> > > -       bf->skb = NULL;
+> > > -}
+> > > -
+> > > -
+> > > -
+> > > -
+> > >  /**************\
+> > >  * Queues setup *
+> > >  \**************/
+> > > @@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
+> > >  #undef TSF_TO_TU
+> > >  }
+> > >
+> > > -static inline
+> > > -u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+> > > -{
+> > > -       u64 tsf = ath5k_hw_get_tsf64(ah);
+> > > -
+> > > -       if ((tsf & 0x7fff) < rstamp)
+> > > -               tsf -= 0x8000;
+> > > -
+> > > -       return (tsf & ~0x7fff) | rstamp;
+> > > -}
+> > > -
+> > > -
+> > > -
+> > > -
+> > >  /********************\
+> > >  * Interrupt handling *
+> > >  \********************/
+> > > @@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
+> > >         ath5k_reset(sc->hw);
+> > >  }
+> > >
+> > > -static inline void
+> > > -ath5k_update_txpow(struct ath5k_softc *sc)
+> > > -{
+> > > -       ath5k_hw_set_txpower_limit(sc->ah, 0);
+> > > -}
+> > > -
+> > >  /*
+> > >   * Periodically recalibrate the PHY to account
+> > >   * for temperature/environment changes.
+> > >
+> >
+> > We'll change their order in the code, plz keep prototype declarations
+> > clean. I'll submit a patch asap on this.
+> >
 >
-> Where does this value 16 come from? It is likely the shortest length one
-> would receive from hardware/firmware in normal mode, but it is not the
-> shortest length for a valid IEEE 802.11 control frame. Both CTS and ACK
-> frames have only 10 octets in the header (just one address). Having
-> IEEE80211_HDR_MIN_LEN_CTRL defined to 16 would be a bit confusing.. CTS
-> and ACK frames are received at least in monitor mode, so these frames
-> with 10 octet headers will need to be processed in some cases.
-
-this check comes after monitor interface has been fed, so it shouldn't
-damage it.
-My intention in the name was "min length for a frame that i want to
-pass" so i see why it can cause confusion. As no good name for it
-comes to my mind i think i will drop the #defines , add remarks to
-explain length use, and will welcome any change for better naming
-convention.
-
-ron
-
+> Hi,
 >
-> --
-> Jouni Malinen                                            PGP id EFC895FA
+> 2.6.24-rc5-mm1 still can't built.
+>
+> Regards
+> dave
+>
+> > --
+> > GPG ID: 0xD21DB2DB
+> > As you read this post global entropy rises. Have Fun ;-)
+> > Nick
+> >
+>
+
+I'm working on a patch series that's going to take a while, i hope
+it'll be ready until Sunday.
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
