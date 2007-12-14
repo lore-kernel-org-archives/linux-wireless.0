@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:28999 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758786AbXLLSkC (ORCPT
+Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:35595 "EHLO
+	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756069AbXLNDjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 13:40:02 -0500
-Received: by py-out-1112.google.com with SMTP id u77so860578pyb.16
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2007 10:40:01 -0800 (PST)
-Message-ID: <f6ca9fed0712121039n1c287f48n7ece3107bd0b50ca@mail.gmail.com> (sfid-20071212_184030_288233_FA4DE53C)
-Date: Wed, 12 Dec 2007 19:39:59 +0100
-From: drago01 <drago01@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: clean up frame receive handling
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Tomas Winkler" <tomasw@gmail.com>, "Jouni Malinen" <j@w1.fi>
-In-Reply-To: <1197483844.6558.158.camel@johannes.berg>
+	Thu, 13 Dec 2007 22:39:09 -0500
+Date: Thu, 13 Dec 2007 19:38:07 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>, hostap@shmoo.com,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: [FYI] hostapd with mac80211 progress
+Message-ID: <20071214033807.GV5698@jm.kir.nu> (sfid-20071214_033914_990691_1CAC7D03)
+References: <1197512614.6558.224.camel@johannes.berg> <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com> <1197567363.8313.31.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1197483844.6558.158.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197567363.8313.31.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 12, 2007 7:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> [comments welcome. I really need a refresher on what the frame formats
-> mean but I think I did the right thing with skb->protocol here, I also
-> think we had a bug with rfc2042 header frames bigger than 15xx bytes and
-> eth_type_trans()]
->
-> This cleans up the frame receive handling. After this patch
->  * EAPOL frames addressed to us or the EAPOL group address are
->    always accepted regardless of whether they are encrypted or not
+On Thu, Dec 13, 2007 at 06:36:03PM +0100, Johannes Berg wrote:
 
-why? userspace (wap_supplicant) tryes to control this depending on the
-network settings.
-(I don't really know why thought)
-maybe it should be handled like drop_unencrypted with default to accept all?
+> Not sure if I really want to, maybe we can convince Jouni to take
+> patches early if they don't break anything else?
+
+I'm fine with patches that are either specific to driver_devicescape.c
+or are clearly not breaking other driver wrappers (or core hostapd
+functionality) as long as they are somehow in sync with a commonly used
+Linux kernel tree. At some point, I would like to limit this to proper
+kernel releases, but for the time being, any development tree should be
+fine taken into account the current state of the AP support.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
