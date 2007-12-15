@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55296 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755119AbXLJPqQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:46:16 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 40/48] libertas: set dev_addr on rtap device
-Message-Id: <E1J1kpk-0006nL-6q@shinybook.infradead.org> (sfid-20071210_154639_909919_B1C80E13)
-Date: Mon, 10 Dec 2007 10:46:16 -0500
+Received: from ra.tuxdriver.com ([70.61.120.52]:3349 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752504AbXLOS2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Dec 2007 13:28:33 -0500
+Date: Sat, 15 Dec 2007 12:56:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP][PATCH] rc80211_pid: Send events to userspace for
+	debugging
+Message-ID: <20071215175656.GB3096@tuxdriver.com> (sfid-20071215_182838_118221_3BDAB8AA)
+References: <1197414686.7030.27.camel@localhost> <20071214231452.21ece93d@morte>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071214231452.21ece93d@morte>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sun, 9 Dec 2007 19:54:11 -0500
+On Fri, Dec 14, 2007 at 11:14:52PM +0100, Stefano Brivio wrote:
+> Here comes an amended patch which works with my tree and should be more
+> mergeable (as it splits the debugfs stuff to another file) just for
+> convenience and to save Mattias some hassle. Hope this helps.
 
-This lets us bring it up, because eth_validate_addr() succeeds instead
-of returning -EINVAL. And finally monitor mode seems to (mostly) work.
+Speaking of mergeable, we need some "final" patches RSN if we want
+to have this available in 2.6.25.  So, are we satisified with it?
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 55dce8d..e9c6b4f 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1473,6 +1473,7 @@ int lbs_add_rtap(struct lbs_private *priv)
- 	if (rtap_dev == NULL)
- 		return -ENOMEM;
- 
-+	memcpy(rtap_dev->dev_addr, priv->current_addr, ETH_ALEN);
- 	rtap_dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 	rtap_dev->open = lbs_rtap_open;
- 	rtap_dev->stop = lbs_rtap_stop;
+John
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
