@@ -1,102 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5168 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153AbXLJJQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 04:16:58 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/1] mac80211: pass in PS_POLL frames
-Date: Mon, 10 Dec 2007 11:16:45 +0200
-Message-Id: <1197278205280-git-send-email-ron.rindjunsky@intel.com> (sfid-20071210_091702_743163_7AD8D7EB)
-Content-Type: text/plain; charset="us-ascii"
+Received: from vs166246.vserver.de ([62.75.166.246]:55275 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088AbXLPTis (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 14:38:48 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: b43 problem with led trigger registration
+Date: Sun, 16 Dec 2007 20:36:10 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <1197822019.4138.2.camel@johannes.berg>
+In-Reply-To: <1197822019.4138.2.camel@johannes.berg>
+MIME-Version: 1.0
+Message-Id: <200712162036.11084.mb@bu3sch.de> (sfid-20071216_193853_032514_3571F981)
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes should_drop_frame function to pass in ps poll control
-frames required for power save functioanlity. Interface types that do not
-have interest for PS POLL frames now drop it in handler.
+On Sunday 16 December 2007 17:20:19 Johannes Berg wrote:
+> Hi,
+> 
+> Just booted into my shiny new #everything and got:
+> 
+> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
+> [   40.220119] in_atomic():1, irqs_disabled():0
+> [   40.230514] Call Trace:
+> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
+> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
+> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
+> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
+> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
+> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
+> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
+> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
+> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
+> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
+> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
+> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
+> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
+> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
+> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
+> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
+> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
+> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
+> 
+> I haven't found yet where the atomic is entered...
+> 
+> johannes
+> 
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/rx.c   |   10 ++++++++--
- net/mac80211/util.c |    7 ++++++-
- 2 files changed, 14 insertions(+), 3 deletions(-)
+I have no idea where we enter atomic state.
+I am using a slightly older kernel but also with the patch Larry
+mentioned applied. This doesn't happen here.
+Could you please try putting an WARN_ON(in_atomic()) assertion into
+b43_probe? Though, I'm pretty sure it won't trigger.
+I'd rather say mac80211 is aquireing some spinlock in the
+register_hw codepath.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 50f99e7..5dbf5d6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -61,8 +61,10 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
- 		return 1;
- 	if (unlikely(skb->len < 16 + present_fcs_len + radiotap_len))
- 		return 1;
--	if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
--			cpu_to_le16(IEEE80211_FTYPE_CTL))
-+	if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
-+			cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
-+	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
-+			cpu_to_le16(IEEE80211_STYPE_PSPOLL)))
- 		return 1;
- 	return 0;
- }
-@@ -880,6 +882,7 @@ ieee80211_rx_h_defragment(struct ieee80211_txrx_data *rx)
- static ieee80211_txrx_result
- ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
- {
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 	struct sk_buff *skb;
- 	int no_pending_pkts;
- 	DECLARE_MAC_BUF(mac);
-@@ -890,6 +893,9 @@ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
- 		   !(rx->flags & IEEE80211_TXRXD_RXRA_MATCH)))
- 		return TXRX_CONTINUE;
- 
-+	if (sdata->type == IEEE80211_IF_TYPE_STA)
-+		return TXRX_DROP;
-+
- 	skb = skb_dequeue(&rx->sta->tx_filtered);
- 	if (!skb) {
- 		skb = skb_dequeue(&rx->sta->ps_tx_buf);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7b278e9..fb7fd89 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -135,13 +135,16 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
- {
- 	u16 fc;
- 
--	if (len < 24)
-+	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
-+	if (len < 16)
- 		return NULL;
- 
- 	fc = le16_to_cpu(hdr->frame_control);
- 
- 	switch (fc & IEEE80211_FCTL_FTYPE) {
- 	case IEEE80211_FTYPE_DATA:
-+		if (len < 24) /* drop incorrect hdr len (data) */
-+			return NULL;
- 		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
- 		case IEEE80211_FCTL_TODS:
- 			return hdr->addr1;
-@@ -154,6 +157,8 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
- 		}
- 		break;
- 	case IEEE80211_FTYPE_MGMT:
-+		if (len < 24) /* drop incorrect hdr len (mgmt) */
-+			return NULL;
- 		return hdr->addr3;
- 	case IEEE80211_FTYPE_CTL:
- 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
+Larry, note that this is not related to the b43 LEDs code.
+This assertion triggers at the place where we register the
+mac80211 TX, RX and radio LED triggers. The place where b43
+initialized rfkill and leds is not in the b43_probe stage.
+
 -- 
-1.5.3.3
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Greetings Michael.
