@@ -1,96 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:53426 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750718AbXLBWLN (ORCPT
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:33549 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763646AbXLPSNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:13 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 3/8] rtl818x: update register struct
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.52982.stgit@tetra.sourmilk.net> (sfid-20071202_221121_748676_0A4541D8)
-In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
+	Sun, 16 Dec 2007 13:13:08 -0500
+Date: Sun, 16 Dec 2007 10:11:59 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+Message-ID: <20071216181159.GP5698@jm.kir.nu> (sfid-20071216_181318_999442_C6780215)
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp> <1197580418.14270.6.camel@localhost.localdomain> <20071214134918.275E.MOKUNO@sm.sony.co.jp> <1197637127.16724.1.camel@localhost.localdomain> <20071215014244.GI5698@jm.kir.nu> <1197827354.6358.2.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197827354.6358.2.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
+On Sun, Dec 16, 2007 at 12:49:14PM -0500, Dan Williams wrote:
 
-Add the SECURITY and CARRIER_SENSE_COUNTER registers.
-Change PGSELECT length from 16 to 8 bits.
+> Yeah, I was going to propose that on Friday but got side-tracked.  What
+> would require a new key type?  Are there some firmwares that _only_
+> accept the WPA passphrase?  Because if there aren't (PS3 accepts WPA hex
+> keys too) then the supplicant could just pass the hex key.  Not quite
+> sure what you mean here with "new key type".
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
----
+It is a new key type regardless of whether it is PSK or passphrase. The
+current key types (IW_AUTH_CIPHER_*) are WEP40, TKIP, CCMP, and WEP104..
 
- drivers/net/wireless/rtl8187_dev.c |   12 ++++++------
- drivers/net/wireless/rtl818x.h     |    6 ++++--
- 2 files changed, 10 insertions(+), 8 deletions(-)
+I don't know whether there are any Linux drivers that would use WPA
+passphrase, but at least the Mac OS X driver interface seems to only use
+passphrase for WPA-Personal, so it is apparently possible to design such
+a architecture ;-). Anyway, I would be fine with just adding
+IW_AUTH_CIPHER_PMK for now (and the new capability to figure out whether
+this is needed). That PMK would be PSK for WPA-Personal, but it could
+also be used as PMK for WPA-Enterprise, so the more generic PMK name.
 
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index e454ae8..859235f 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -393,12 +393,12 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
- 	priv->rf_init(dev);
- 
- 	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
--	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & 0xfffe;
--	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 0x1);
-+	reg = rtl818x_ioread8(priv, &priv->map->PGSELECT) & ~1;
-+	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg | 1);
- 	rtl818x_iowrite16(priv, (__le16 *)0xFFFE, 0x10);
- 	rtl818x_iowrite8(priv, &priv->map->TALLY_SEL, 0x80);
- 	rtl818x_iowrite8(priv, (u8 *)0xFFFF, 0x60);
--	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
-+	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg);
- 
- 	return 0;
- }
-@@ -750,13 +750,13 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
- 	eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_TXPWR_BASE,
- 			  &priv->txpwr_base);
- 
--	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & ~1;
--	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 1);
-+	reg = rtl818x_ioread8(priv, &priv->map->PGSELECT) & ~1;
-+	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg | 1);
- 	/* 0 means asic B-cut, we should use SW 3 wire
- 	 * bit-by-bit banging for radio. 1 means we can use
- 	 * USB specific request to write radio registers */
- 	priv->asic_rev = rtl818x_ioread8(priv, (u8 *)0xFFFE) & 0x3;
--	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
-+	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
- 
- 	rtl8225_write(dev, 0, 0x1B7);
-diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
-index 99b8b1b..1322f6a 100644
---- a/drivers/net/wireless/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x.h
-@@ -113,14 +113,16 @@ struct rtl818x_csr {
- #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
- 	u8	TESTR;
- 	u8	reserved_9[2];
--	__le16	PGSELECT;
-+	u8	PGSELECT;
-+	u8	SECURITY;
- 	__le32	ANAPARAM2;
- 	u8	reserved_10[12];
- 	__le16	BEACON_INTERVAL;
- 	__le16	ATIM_WND;
- 	__le16	BEACON_INTERVAL_TIME;
- 	__le16	ATIMTR_INTERVAL;
--	__le16	PHY_DELAY;
-+	u8	PHY_DELAY;
-+	u8	CARRIER_SENSE_COUNTER;
- 	u8	reserved_11[2];
- 	u8	PHY[4];
- 	__le16	RFPinsOutput;
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
