@@ -1,46 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3174 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933450AbXLQU7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 15:59:40 -0500
-Date: Mon, 17 Dec 2007 15:41:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
-Message-ID: <20071217204112.GE3121@tuxdriver.com> (sfid-20071217_205949_754061_7DA45D08)
-References: <20071217012517.882216322@gmx.de> <20071217012550.213561122@gmx.de> <20071217150202.GC3121@tuxdriver.com> <20071217210649.370ba385@morte>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071217210649.370ba385@morte>
+Received: from pentafluge.infradead.org ([213.146.154.40]:49282 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761394AbXLPW6z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 17:58:55 -0500
+Subject: [PATCH 114/48] libertas: kill 'addtail' argument to lbs_queue_cmd() and make it static
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J42SI-00038z-96@shinybook.infradead.org> (sfid-20071216_232050_447979_B5F3277B)
+Date: Sun, 16 Dec 2007 17:59:30 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 17, 2007 at 09:06:49PM +0100, Stefano Brivio wrote:
-> On Mon, 17 Dec 2007 10:02:02 -0500
-> "John W. Linville" <linville@tuxdriver.com> wrote:
-> 
-> > On Mon, Dec 17, 2007 at 02:25:21AM +0100, Mattias Nissler wrote:
-> > 
-> > >  config MAC80211_RCPID
-> > > -	bool "'PID' rate control algorithm" if EMBEDDED
-> > > +	bool "'PID' rate control algorithm"
-> > 
-> > Shouldn't this keep the "if EMBEDDED"?  Especially if it is going to be the default?
-> 
-> How is EMBEDDED supposed to be related to this? Anyway, I'll go for the two
-> modules approach, forcing one module to be selected.
+Date: Sat, 15 Dec 2007 20:04:54 -0500
 
-As I recall, the "if EMBEDDED" was there basically to say "it should
-always be built-in, but if you are trying to totally minimize your
-footprint you can turn it off".  Of course, that still would only
-work if you had another rate control algorithm available e.g. the
-iwlwifi drivers.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c  |   14 +++++---------
+ drivers/net/wireless/libertas/decl.h |    4 ----
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index c3d7f60..7682b9d 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1155,15 +1155,11 @@ static int lbs_cmd_bcn_ctrl(struct lbs_private * priv,
+ 	return 0;
+ }
+ 
+-/*
+- * Note: NEVER use lbs_queue_cmd() with addtail==0 other than for
+- * the command timer, because it does not account for queued commands.
+- */
+-void lbs_queue_cmd(struct lbs_private *priv,
+-	struct cmd_ctrl_node *cmdnode,
+-	u8 addtail)
++static void lbs_queue_cmd(struct lbs_private *priv,
++			  struct cmd_ctrl_node *cmdnode)
+ {
+ 	unsigned long flags;
++	int addtail = 1;
+ 
+ 	lbs_deb_enter(LBS_DEB_HOST);
+ 
+@@ -1635,7 +1631,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 
+ 	cmdnode->cmdwaitqwoken = 0;
+ 
+-	lbs_queue_cmd(priv, cmdnode, 1);
++	lbs_queue_cmd(priv, cmdnode);
+ 	wake_up_interruptible(&priv->waitq);
+ 
+ 	if (wait_option & CMD_OPTION_WAITFORRSP) {
+@@ -2185,7 +2181,7 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command
+ 	 * because the caller of lbs_cmd() sets up all of *cmd for us. */
+ 
+ 	cmdnode->cmdwaitqwoken = 0;
+-	lbs_queue_cmd(priv, cmdnode, 1);
++	lbs_queue_cmd(priv, cmdnode);
+ 	wake_up_interruptible(&priv->waitq);
+ 
+  done:
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index 5dd5c9e..aaacd9b 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -28,10 +28,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 	u16 cmd_action,
+ 	u16 wait_option, u32 cmd_oid, void *pdata_buf);
+ 
+-void lbs_queue_cmd(struct lbs_private *priv,
+-	struct cmd_ctrl_node *cmdnode,
+-	u8 addtail);
+-
+ int lbs_allocate_cmd_buffer(struct lbs_private *priv);
+ int lbs_execute_next_command(struct lbs_private *priv);
+ int lbs_process_event(struct lbs_private *priv);
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.4
+
