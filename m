@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41132 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36859 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839AbXLMMcK (ORCPT
+	with ESMTP id S1751896AbXLPUqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 07:32:10 -0500
-Subject: Re: [PATCH] try 2: mac80211: Fix swapped parameters to
-	ieee80211_set_channel()
+	Sun, 16 Dec 2007 15:46:44 -0500
+Subject: Re: b43 problem with led trigger registration
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20071213120904.GB501@lunn.ch> (sfid-20071213_120944_016806_DBA9D772)
-References: <20071212153158.GB16947@lunn.ch>
-	 <1197481426.6558.138.camel@johannes.berg> <20071212180204.GP31218@lunn.ch>
-	 <1197482969.6558.149.camel@johannes.berg>
-	 <1197504975.6558.199.camel@johannes.berg>  <20071213120904.GB501@lunn.ch>
-	 (sfid-20071213_120944_016806_DBA9D772)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-90yBXcdgpNOp+ddFN5NV"
-Date: Thu, 13 Dec 2007 13:30:25 +0100
-Message-Id: <1197549025.6558.253.camel@johannes.berg> (sfid-20071213_123214_940004_FBABB5F7)
+To: Richard Purdie <rpurdie@openedhand.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1197837799.4653.21.camel@localhost.localdomain>
+References: <1197822019.4138.2.camel@johannes.berg>
+	 <200712162036.11084.mb@bu3sch.de> <1197835176.6769.21.camel@johannes.berg>
+	 <200712162126.56483.mb@bu3sch.de>  <1197837505.6769.25.camel@johannes.berg>
+	 <1197837799.4653.21.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Sun, 16 Dec 2007 21:46:38 +0100
+Message-Id: <1197837998.6769.29.camel@johannes.berg> (sfid-20071216_204650_978330_2650CC8A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-90yBXcdgpNOp+ddFN5NV
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> Amongst other things it was tested on the Zaurus which has default
+> triggers. What is the problem you're seeing?
 
+Odd. The problem is this:
 
-> iwconfig wlan0 freq 5240
-
-man iwconfig(8)
-
-       freq/channel
-              Set the operating frequency or channel in the  device.  A  va=
-lue
-              below 1000 indicates a channel number, a value greater than 1=
-000
-              is a frequency in Hz. You may append the suffix k, M or G to =
-the
-              value  (for  example,  "2.46G"  for  2.46 GHz frequency), or =
-add
-              enough =E2=80=990=E2=80=99.
+> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
+> [   40.220119] in_atomic():1, irqs_disabled():0
+> [   40.230514] Call Trace:
+> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
+> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
+> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
+> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
+> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
+> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
+> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
+> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
+> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
+> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
+> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
+> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
+> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
+> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
+> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
+> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
+> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
+> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
 
 johannes
-
---=-90yBXcdgpNOp+ddFN5NV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2El4KVg1VMiehFYAQL5Gw//cbcyAWTNJb7de9lc8QyqdmQuQW1n/BYv
-5YGWw7+JVaXnsyVphnhJC/eIrOkFnmVn9ut0uec6S1MOEb9f3aBJS/fF1YlBOVyw
-xEvuDMrDnkRJCYUm/kz6eeLOqV5Tz1qUpE1e5IxcEReyv4XL9dUQGw64UaLo+6a0
-DUTYeTQk/F19UyJlEILtDFmeL18dKM5kqvusq2j0kTiXmZcVjFxoG1ciljdm6vAb
-JHJvtgL4JwNKxck2iJiqVCe5Ki/TfKRlVLqQHo+ARvh3pRZl/tHQmJlv6TqtBHuk
-6rBNLb2NcMee7DiXtGAZSCxkbdoOlFKcXOcueQmQ8hF1UEq8A7bggQDsDaXhK7OM
-VXWkvak9oP4bXk7WQ6NhVV6jPGmSPGhergdiaC099nqFb2DwgKyrV3QRmd72G0/i
-2PhaVObSy9Rw5+6U58EnhX01PRzHjjXjRHxpmZ3VI+JbOmQC1XINX2bhVhsbetCZ
-0DlAMq2Y+1ANIb9vbrjbQg+AO0cPnKcvuRY+ynFxPhQUd3RqRp0PN892E86JaiUY
-t3eHqt2Wagpzes5XyVOzVbk6dlkOrniFq2myeVWYT4NJtL6Ao7PWMy57tqgD8W8k
-uw5Q3muUJpGdFXaPBXSe50u6TSzdqzy2DaNl7NUFzgA8mdmShGXzqM1rSsMq2FiD
-FxP8iJ/Gxpw=
-=4iVR
------END PGP SIGNATURE-----
-
---=-90yBXcdgpNOp+ddFN5NV--
 
