@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754265AbXLDQ5R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 11:57:17 -0500
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <200712041140.07516.hs4233@mail.mn-solutions.de> (sfid-20071204_104003_822443_169A4663)
-References: <200712041140.07516.hs4233@mail.mn-solutions.de>
-	 (sfid-20071204_104003_822443_169A4663)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S1GqGbaw6Q/dtOr08VBs"
-Date: Tue, 04 Dec 2007 17:57:14 +0100
-Message-Id: <1196787434.10274.22.camel@johannes.berg> (sfid-20071204_165737_858383_BF367E2C)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3179 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752288AbXLPC63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Dec 2007 21:58:29 -0500
+Date: Sat, 15 Dec 2007 21:24:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP][PATCH] rc80211_pid: Send events to userspace for
+	debugging
+Message-ID: <20071216022402.GD3096@tuxdriver.com> (sfid-20071216_025906_493994_B82C1A38)
+References: <1197414686.7030.27.camel@localhost> <20071214231452.21ece93d@morte> <20071215175656.GB3096@tuxdriver.com> <1197756838.7540.12.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197756838.7540.12.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Dec 15, 2007 at 11:13:58PM +0100, Mattias Nissler wrote:
+> 
+> On Sat, 2007-12-15 at 12:56 -0500, John W. Linville wrote:
+> > On Fri, Dec 14, 2007 at 11:14:52PM +0100, Stefano Brivio wrote:
+> > > Here comes an amended patch which works with my tree and should be more
+> > > mergeable (as it splits the debugfs stuff to another file) just for
+> > > convenience and to save Mattias some hassle. Hope this helps.
+> > 
+> > Speaking of mergeable, we need some "final" patches RSN if we want
+> > to have this available in 2.6.25.  So, are we satisified with it?
+> 
+> I'm still tuning, testing, etc. I hope we can get a polished patch set
+> ready by the end of Sunday.
 
---=-S1GqGbaw6Q/dtOr08VBs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If it mostly works and the code is reasonable, then let's get it
+merged.  We have plenty of time for final tuning patches, but if the
+rc80211_pid code isn't in before the merge window then it will have
+to wait another whole release cycle.
 
-
-> 7. RADIOTAP
->=20
-> Libertas contains lot's of code for it's monitoring mode, which=20
-> uses radiotap. It used "struct net_device *rtap_net_dev"=20
-> and "struct ieee80211_device *ieee". It contains code like
->=20
->    priv->rtap_net_dev =3D alloc_ieee80211(0);
->    priv->ieee =3D netdev_priv(priv->rtap_net_dev);
->=20
-> and I don't have any knowledge about radiotap and how to=20
-> substitue the alloc_ieee80211(). All I could currently to is to=20
-> put those sections into #ifdef CONFIG_IEEE80211.
-
-You don't really need a ieee80211 interface for radiotap, look how
-mac80211 does it, it's a simple netdev with the right arp header. You
-don't need to provide anything like wext on it if you don't wish to.
-
-johannes
-
---=-S1GqGbaw6Q/dtOr08VBs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR1WG6aVg1VMiehFYAQJa1BAArEbWhA07M4eNiKFcPSvs7M9xS45ASf7b
-+ZfGAXwc2jL5k7wSpFTeL1je0QAeRIXWcBD4okPZoV+8dyyF6iXsQKpffk7WAJOS
-72AA7ZL9W5Xy2kq3AuxDwmxjX5BkovEIBEcciXEAVXoEIFoS9aZMpYL22cR1Vr39
-/7Pcw4y08vluqZsjFNszu0mu/nxApRAmJOVHYTkZS1y8+6kNyELmHeb9zmEZrClQ
-I2hHTg8zSlObev0LuddZ07gBAIX+XCBqC/lGHI2Nr2ohp2QrElPyBs25PdAmUsdN
-BGXdcFMPcE70UNjObmWZNB3C1J9vkirzlwyeWw1vp3/d8Gtg39G+uf7t0PjQdsrm
-5y/ybZOnyX72kk00liti41iv888ijSMizj2ASohEH/JOgWiMbcQAM74Wwz7zl1nr
-OJjnMRYrkglkx92+yhS/YRHIGsqwSEIYREW+LxpCziNuzekVVIyIjo3o8nTUbOOk
-pOKGVZIUOSco75MS6T5Zs1zUWclJZpCuBh2xRYh7A0brLiemcsuZpe9fi4E4ZffL
-SMMIXN71JDOyo7mUiz4ZPsdu/2eoqzycYuhUUy17+/q25GhIghbayvB498+Ib0U5
-jGw3pUpKAUlRpHMl8NDJq00pV7elTJqXht+mfNc0gn2pNlgMBZivRRsUgrUeRwaD
-5ALojWqMRHA=
-=icsm
------END PGP SIGNATURE-----
-
---=-S1GqGbaw6Q/dtOr08VBs--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
