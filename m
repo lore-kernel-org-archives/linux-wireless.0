@@ -1,148 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:41106 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392AbXLGCMg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50744 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760407AbXLPW6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 21:12:36 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so238487mue
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 18:12:34 -0800 (PST)
-Date: Fri, 7 Dec 2007 10:12:58 +0800
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: Re: 2.6.24-rc4-mm1
-Message-ID: <20071207021258.GA12624@darkstar.lan> (sfid-20071207_021240_706499_1F908D5E)
-References: <20071204211701.994dfce6.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071204211701.994dfce6.akpm@linux-foundation.org>
+	Sun, 16 Dec 2007 17:58:24 -0500
+Subject: [PATCH 101/48] libertas: kill unused wait_option field in struct cmd_ctrl_node
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J42Rq-00037w-SM@shinybook.infradead.org> (sfid-20071216_225829_151119_6AEB06C9)
+Date: Sun, 16 Dec 2007 17:59:02 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Date: Fri, 14 Dec 2007 23:08:13 -0500
 
-2.6.24-rc4-mm1 build failed at drivers/net/wireless/ath5k/base.c for some inline functions like this:
-drivers/net/wireless/ath5k/base.c:292: sorry, unimplemented: inlining failed in call to 'ath5k_extend_tsf': function body not available
-
-fix it with adjust the order of inline function body.
-
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com> 
-
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
-drivers/net/wireless/ath5k/base.c |   67 ++++++++++++++++----------------------
-1 file changed, 29 insertions(+), 38 deletions(-)
+ drivers/net/wireless/libertas/cmd.c     |   12 ++++--------
+ drivers/net/wireless/libertas/hostcmd.h |    2 --
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-diff -upr linux/drivers/net/wireless/ath5k/base.c linux.new/drivers/net/wireless/ath5k/base.c
---- linux/drivers/net/wireless/ath5k/base.c	2007-12-07 10:01:42.000000000 +0800
-+++ linux.new/drivers/net/wireless/ath5k/base.c	2007-12-07 10:01:49.000000000 +0800
-@@ -250,8 +250,19 @@ static int 	ath5k_rxbuf_setup(struct ath
- static int 	ath5k_txbuf_setup(struct ath5k_softc *sc,
- 				struct ath5k_buf *bf,
- 				struct ieee80211_tx_control *ctl);
-+
- static inline void ath5k_txbuf_free(struct ath5k_softc *sc,
--				struct ath5k_buf *bf);
-+				struct ath5k_buf *bf)
-+{
-+	BUG_ON(!bf);
-+	if (!bf->skb)
-+		return;
-+	pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
-+			PCI_DMA_TODEVICE);
-+	dev_kfree_skb(bf->skb);
-+	bf->skb = NULL;
-+}
-+
- /* Queues setup */
- static struct 	ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
- 				int qtype, int subtype);
-@@ -278,14 +289,29 @@ static int 	ath5k_beacon_setup(struct at
- 				struct ieee80211_tx_control *ctl);
- static void 	ath5k_beacon_send(struct ath5k_softc *sc);
- static void 	ath5k_beacon_config(struct ath5k_softc *sc);
--static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp);
-+
-+static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
-+{
-+	u64 tsf = ath5k_hw_get_tsf64(ah);
-+
-+	if ((tsf & 0x7fff) < rstamp)
-+		tsf -= 0x8000;
-+
-+	return (tsf & ~0x7fff) | rstamp;
-+}
-+
- /* Interrupt handling */
- static int 	ath5k_init(struct ath5k_softc *sc);
- static int 	ath5k_stop_locked(struct ath5k_softc *sc);
- static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
--static inline void ath5k_update_txpow(struct ath5k_softc *sc);
-+
-+static inline void ath5k_update_txpow(struct ath5k_softc *sc)
-+{
-+	ath5k_hw_set_txpower_limit(sc->ah, 0);
-+}
-+
- static void 	ath5k_calibrate(unsigned long data);
- /* LED functions */
- static void 	ath5k_led_off(unsigned long data);
-@@ -1341,21 +1367,6 @@ err_unmap:
- 	return ret;
- }
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index ffef721..5ceb331 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -17,7 +17,7 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode);
+ static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
+ static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
+ 		    struct cmd_ctrl_node *ptempnode,
+-		    u16 wait_option, void *pdata_buf);
++		    void *pdata_buf);
  
--static inline void
--ath5k_txbuf_free(struct ath5k_softc *sc, struct ath5k_buf *bf)
--{
--	BUG_ON(!bf);
--	if (!bf->skb)
--		return;
--	pci_unmap_single(sc->pdev, bf->skbaddr, bf->skb->len,
--			PCI_DMA_TODEVICE);
--	dev_kfree_skb(bf->skb);
--	bf->skb = NULL;
--}
--
--
--
--
- /**************\
- * Queues setup *
- \**************/
-@@ -2046,20 +2057,6 @@ ath5k_beacon_config(struct ath5k_softc *
- #undef TSF_TO_TU
- }
  
--static inline
--u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
--{
--	u64 tsf = ath5k_hw_get_tsf64(ah);
--
--	if ((tsf & 0x7fff) < rstamp)
--		tsf -= 0x8000;
--
--	return (tsf & ~0x7fff) | rstamp;
--}
--
--
--
--
- /********************\
- * Interrupt handling *
- \********************/
-@@ -2295,12 +2292,6 @@ ath5k_tasklet_reset(unsigned long data)
- 	ath5k_reset(sc->hw);
- }
+ /**
+@@ -1392,7 +1392,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 		goto done;
+ 	}
  
--static inline void
--ath5k_update_txpow(struct ath5k_softc *sc)
--{
--	ath5k_hw_set_txpower_limit(sc->ah, 0);
--}
--
- /*
-  * Periodically recalibrate the PHY to account
-  * for temperature/environment changes.
+-	lbs_set_cmd_ctrl_node(priv, cmdnode, wait_option, pdata_buf);
++	lbs_set_cmd_ctrl_node(priv, cmdnode, pdata_buf);
+ 
+ 	cmdptr = (struct cmd_ds_command *)cmdnode->cmdbuf;
+ 
+@@ -1554,7 +1554,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 	case CMD_802_11_INACTIVITY_TIMEOUT:
+ 		ret = lbs_cmd_802_11_inactivity_timeout(priv, cmdptr,
+ 							 cmd_action, pdata_buf);
+-		lbs_set_cmd_ctrl_node(priv, cmdnode, 0, pdata_buf);
++		lbs_set_cmd_ctrl_node(priv, cmdnode, pdata_buf);
+ 		break;
+ 
+ 	case CMD_802_11_TPC_CFG:
+@@ -1800,7 +1800,6 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
+ 		return;
+ 	cmdnode->cmdwaitqwoken = 1;
+ 	wake_up_interruptible(&cmdnode->cmdwait_q);
+-	cmdnode->wait_option = 0;
+ 	cmdnode->pdata_buf = NULL;
+ 	cmdnode->callback = NULL;
+ 	cmdnode->callback_arg = 0;
+@@ -1816,20 +1815,18 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
+  *
+  *  @param priv		A pointer to struct lbs_private structure
+  *  @param ptempnode	A pointer to cmd_ctrl_node structure
+- *  @param wait_option	wait option: wait response or not
+  *  @param pdata_buf	A pointer to informaion buffer
+  *  @return 		0 or -1
+  */
+ static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
+ 				  struct cmd_ctrl_node *ptempnode,
+-				  u16 wait_option, void *pdata_buf)
++				  void *pdata_buf)
+ {
+ 	lbs_deb_enter(LBS_DEB_HOST);
+ 
+ 	if (!ptempnode)
+ 		return;
+ 
+-	ptempnode->wait_option = wait_option;
+ 	ptempnode->pdata_buf = pdata_buf;
+ 	ptempnode->callback = NULL;
+ 	ptempnode->callback_arg = 0;
+@@ -2213,7 +2210,6 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+ 		goto done;
+ 	}
+ 
+-	cmdnode->wait_option = CMD_OPTION_WAITFORRSP;
+ 	cmdnode->callback = callback;
+ 	cmdnode->callback_arg = callback_arg;
+ 
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index aa4cea0..1b31250 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -74,8 +74,6 @@ struct cmd_header {
+ 
+ struct cmd_ctrl_node {
+ 	struct list_head list;
+-	/* wait for finish or not */
+-	u16 wait_option;
+ 	/* command response */
+ 	void *pdata_buf;
+ 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *);
+-- 
+1.5.3.4
+
