@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58696 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41778 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759708AbXLLRIp (ORCPT
+	with ESMTP id S1751615AbXLPUi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 12:08:45 -0500
-Subject: Re: [PATCH] mac80211: don't use interface indizes
+	Sun, 16 Dec 2007 15:38:28 -0500
+Subject: Re: b43 problem with led trigger registration
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>, Daniel Drake <dsd@gentoo.org>,
-	Yanbo Li <dreamfly281@gmail.com>
-In-Reply-To: <1196849900.4121.4.camel@johannes.berg> (sfid-20071205_101838_959371_6E84D3F8)
-References: <1196782831.10274.12.camel@johannes.berg>
-	 <200712050057.19819.flamingice@sourmilk.net>
-	 <1196849900.4121.4.camel@johannes.berg>
-	 (sfid-20071205_101838_959371_6E84D3F8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C6+QcLilRmcX51SgqYBm"
-Date: Tue, 11 Dec 2007 19:44:57 +0100
-Message-Id: <1197398697.2214.5.camel@johannes.berg> (sfid-20071212_170910_494659_654E745C)
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Richard Purdie <rpurdie@openedhand.com>
+In-Reply-To: <200712162126.56483.mb@bu3sch.de>
+References: <1197822019.4138.2.camel@johannes.berg>
+	 <200712162036.11084.mb@bu3sch.de> <1197835176.6769.21.camel@johannes.berg>
+	 <200712162126.56483.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C4ugSvK+HLKYvO1o2dJU"
+Date: Sun, 16 Dec 2007 21:38:25 +0100
+Message-Id: <1197837505.6769.25.camel@johannes.berg> (sfid-20071216_203834_318779_C51C7629)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-C6+QcLilRmcX51SgqYBm
+--=-C4ugSvK+HLKYvO1o2dJU
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> > Leaving it to the driver to allocate the private space isn't too great =
-either.=20
-> > Something like a char subif_priv[] at the end of ieee80211_sub_if_data =
-and a=20
-> > way to specify the length of the private area will be more useful to dr=
-ivers=20
-> > which wish to use the per-subif private space by avoiding extra allocat=
-ion=20
-> > and allocation failure handling and also for drivers which don't, by=20
-> > eliminating the overhead of storing an unused pointer. It is also more=20
-> > consistent with the other apis that allocate ieee80211_hw and net_devic=
-e.
+> > drivers/leds/led-triggers.c:led_trigger_register:
+> >=20
+> > |        read_lock(&leds_list_lock);
+> > |        list_for_each_entry(led_cdev, &leds_list, node) {
+> > |                down_write(&led_cdev->trigger_lock);
+> >=20
+> > introduced in
+> >=20
+> > commit dc47206e552c0850ad11f7e9a1fca0a3c92f5d65
+> > Author: Richard Purdie <rpurdie@rpsys.net>
+> > Date:   Sat Nov 10 13:29:04 2007 +0000
+> >=20
+> >     leds: Fix led trigger locking bugs
+> >=20
+> > I guess the read_lock needs to be a mutex/rw semaphore.
 >=20
-> Most drivers won't ever need private space, so leaving it to them to
-> allocate is more efficient.
+> Uh, yes. Was this patch tested at all?
 
-Uh, wait, thinko. New patch coming up.
+Not with default triggers, I guess. The code in question only triggers
+when a default is assigned to any LED I think.
 
 johannes
 
---=-C6+QcLilRmcX51SgqYBm
+--=-C4ugSvK+HLKYvO1o2dJU
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR17aqKVg1VMiehFYAQIkJxAAj6ky0Se4UOlkESPPqMYel98q2SJsyX8R
-SONY1HL7UYM+RauRi31xhlK2V2zLB/zWg6WvkMfoShUG8pn536ehqNksujos+gd5
-i0Rf5rSBxw6MrCrOgwSN0MNkC7vvA/bXVck0GIaagxbSh6ZjWAVxgkWTRNUlmW5a
-JAAZpZ83Sgfq3BwvX8uoHr9kQSzv1U1wP7Tl5GaMeYLycfF5lMrKL6lNsqQuQYGG
-yxP6xoz5JOeqwdSv5sK/wO/84cf5Z5vqV79Ph23zqzUUleO+sNaziI76ed+mlXIc
-UC6uAmOapY/sCKZkhYfN76iozhoSIJJkklsFp74yFLjd2jPaoNWfUPYS5U2wrdIb
-BVgK3tcIRnIEhpuZ/M4FE7wsXsNG3lRnTFfLyUEN/RNyJuQzAQKTNX/4irc+5txp
-2tGArax5sxHXnilqFUD9BFKRHzMsDdzE/6cctqCdthwqMCBGl9P3zUZBHrGT3cQt
-cpNJSsD/MM18VDXQUgJG5BbKl8dg1/eZm5IyTG3OpFQ2LxP9cdhREO55sr5ncnSu
-ZKK1FemIqG3qbNi1WXmQeO8vLBf2ccM01j79knOR+0oAuiieDrvcSlYgUwrBCO6L
-S+bF8KpJyQLOwpxJyeQ76KkkOGNJYN12ZuCKRfcuQahYb+SNEvvrWW2KXgO70DVI
-qEsRnxFyBEk=
-=mhkI
+iQIVAwUAR2WMwKVg1VMiehFYAQK67w/9GVmbqd5NMFM53Agj02FA3Mp/hZnoNVcb
+bsvJCnU9Nzi454vDjrRC9cnjxeSB/r6npDC1hjDVO6CiwGs7VH6Ztb2h7iDQNtax
+yk4NgZXWJ6jpG4v+QE1HKY22kY4OuJXjaWkrql0+9QTtZgprlOIXlcmRRX5KSvft
+/klWVhiugwdIQd2zfnKoJcJnYiPUfq6cFISbuMiyAREMtDiTgn4eLAbZY4x1awuA
+2PyVox4yOSHSPiauRWodCv8Usz2kvThMVgiUiCHGQmjS1rpWz1AYubUVxJEBkZ4s
+fhWPDwSUHdufbsV9HKNzR9+Td9Ev84tvyWAeFdFeDnBzVUK6PtXoPovOuxvA945p
+2JgAB3yVwIUrm8yVV08rEGD4jxuWfqMXpSLcsR3+3ktVu3mV3cCrzjYr/Vk2qCEh
+V5rHPxlz6XR+19FTtN3jxGPzpv3wkjK/ZzQ+PRfNP2w80yX2TjPhUl0lwGNbEb6+
+sfk8kfgQTyv+kxD59uWLu0XXWmlTETAWyAgCeQdPxWeU4ejY1bJWUCAbyp3Amxwk
+QGcD2nAXPbMPf5NO1sX+FRgjiWvJ/s1/DSoP3lvBIR7lbbuuYH/76AB9GqTJfpGV
+aob7cn/4VDgd3eqz9OtxITrmp9JfZ+Cxm70sasPVST1QzgEN447xdfvmpVrZJL5p
+kXjWQLv7fAw=
+=Fik9
 -----END PGP SIGNATURE-----
 
---=-C6+QcLilRmcX51SgqYBm--
+--=-C4ugSvK+HLKYvO1o2dJU--
 
