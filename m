@@ -1,52 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51220 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720AbXLGNiY (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50970 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761613AbXLPW6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 08:38:24 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Date: Fri, 7 Dec 2007 14:36:08 +0100
-Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-References: <20071206214341.GA6821@bougret.hpl.hp.com> <200712071235.11969.mb@bu3sch.de> <20071207.043407.72593148.davem@davemloft.net>
-In-Reply-To: <20071207.043407.72593148.davem@davemloft.net>
-MIME-Version: 1.0
-Message-Id: <200712071436.08954.mb@bu3sch.de> (sfid-20071207_133827_181650_4F08DD05)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Sun, 16 Dec 2007 17:58:43 -0500
+Subject: [PATCH 110/48] libertas: store command result in cmdnode instead of priv->cur_cmd_retcode
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J42S9-00038f-Ru@shinybook.infradead.org> (sfid-20071216_232427_757428_005341AB)
+Date: Sun, 16 Dec 2007 17:59:21 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 December 2007 13:34:07 David Miller wrote:
-> From: Michael Buesch <mb@bu3sch.de>
-> Date: Fri, 7 Dec 2007 12:35:11 +0100
-> 
-> > So, how do we handle unaligned data in userspace then?
-> > A _lot_ of applications are broken if that's right what you say.
-> 
-> Applications make sure data is always properly aligned, that's how
-> it's handled.  I don't see what the big mystery is. :-)
+Date: Sat, 15 Dec 2007 04:22:52 -0500
 
-That's not always possible. For example if we are handling
-some kind of wire protocol data.
+... at least for users of __lbs_cmd().
 
-let's give you some real world example: b43-fwcutter
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c     |   12 ++++++------
+ drivers/net/wireless/libertas/hostcmd.h |    1 +
+ drivers/net/wireless/libertas/main.c    |    1 +
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-The wire protocol for the iv files is the following structure:
-
-struct b43_iv {
-	be16 a;
-	union {
-		be16 x;
-		be32 y;
-	} ((attr_packed));
-} ((attr_packed));
-
-How do I handle that in userspace? In kernel space it's simple
-(and we already use get_unaligned() for the 32bit value there).
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index f2e027b..c8f1bd5 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1173,6 +1173,7 @@ void lbs_queue_cmd(struct lbs_private *priv,
+ 		lbs_deb_host("DNLD_CMD: cmd size is zero\n");
+ 		goto done;
+ 	}
++	cmdnode->result = 0;
+ 
+ 	/* Exit_PS command needs to be queued in the header always. */
+ 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
+@@ -1306,6 +1307,7 @@ void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+ 	if (cmd == priv->cur_cmd)
+ 		priv->cur_cmd_retcode = result;
+ 
++	cmd->result = result;
+ 	cmd->cmdwaitqwoken = 1;
+ 	wake_up_interruptible(&cmd->cmdwait_q);
+ 
+@@ -2212,12 +2214,10 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+ 	wait_event_interruptible(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+-	if (priv->cur_cmd_retcode) {
+-		lbs_deb_host("PREP_CMD: command failed with return code %d\n",
+-		       priv->cur_cmd_retcode);
+-		priv->cur_cmd_retcode = 0;
+-		ret = -1;
+-	}
++	ret = cmdnode->result;
++	if (ret)
++		lbs_pr_info("PREP_CMD: command 0x%04x failed: %d\n",
++			    command, ret);
+ 	__lbs_cleanup_and_insert_cmd(priv, cmdnode);
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index 719da73..ea4d484 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -74,6 +74,7 @@ struct cmd_header {
+ 
+ struct cmd_ctrl_node {
+ 	struct list_head list;
++	int result;
+ 	/* command response */
+ 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *);
+ 	unsigned long callback_arg;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 0dc7de6..839ffe8 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1237,6 +1237,7 @@ int lbs_stop_card(struct lbs_private *priv)
+ 	/* Flush pending command nodes */
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
++		cmdnode->result = -ENOENT;
+ 		cmdnode->cmdwaitqwoken = 1;
+ 		wake_up_interruptible(&cmdnode->cmdwait_q);
+ 	}
 -- 
-Greetings Michael.
+1.5.3.4
+
