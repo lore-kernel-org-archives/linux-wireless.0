@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58621 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbXLGLgx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 06:36:53 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Date: Fri, 7 Dec 2007 12:35:11 +0100
-Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-References: <20071206212525.GA6509@bougret.hpl.hp.com> <20071206214341.GA6821@bougret.hpl.hp.com> <20071206.195214.09557695.davem@davemloft.net>
-In-Reply-To: <20071206.195214.09557695.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712071235.11969.mb@bu3sch.de> (sfid-20071207_113706_910393_C8A904DA)
+Received: from mx1.redhat.com ([66.187.233.31]:39629 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752462AbXLPRuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 12:50:15 -0500
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20071215014244.GI5698@jm.kir.nu>
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp>
+	 <1197580418.14270.6.camel@localhost.localdomain>
+	 <20071214134918.275E.MOKUNO@sm.sony.co.jp>
+	 <1197637127.16724.1.camel@localhost.localdomain>
+	 <20071215014244.GI5698@jm.kir.nu>
+Content-Type: text/plain
+Date: Sun, 16 Dec 2007 12:49:14 -0500
+Message-Id: <1197827354.6358.2.camel@localhost.localdomain> (sfid-20071216_175041_203756_866A9485)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 December 2007 04:52:14 David Miller wrote:
-> From: Jean Tourrilhes <jt@hpl.hp.com>
-> Date: Thu, 6 Dec 2007 13:43:41 -0800
+On Fri, 2007-12-14 at 17:42 -0800, Jouni Malinen wrote:
+> On Fri, Dec 14, 2007 at 07:58:47AM -0500, Dan Williams wrote:
+> > On Fri, 2007-12-14 at 14:03 +0900, Masakazu Mokuno wrote:
+> > > The PS3 wireless device does the association and 4way handshake in its
+> > > firmware/hypervisor.  No interventions between them are allowed to the guest
+> > > OSes.  
 > 
-> > On Thu, Dec 06, 2007 at 10:33:18PM +0100, Michael Buesch wrote:
-> > > Userspace handles this transparently through fault traps.
-> > 
-> > 	This is exactly what I was assuming. On the SPARC, in this
-> > instance, it did not (check back earlier in this discussion).
+> > That sort of sucks; but I guess there's not too much you can do about
+> > it.  That probably means that using wpa_supplicant + WPA is completely
+> > out of the picture, which unfortunately makes the PS3 wireless unlike
+> > any other card, which would require special-casing the PS3 in userspace
+> > tools.
 > 
-> Right, you get a SIGBUS, and this is what will happen on
-> MIPS as well.
+> The current wpa_supplicant development branch (0.6.x) supports drivers
+> that want to do 4-way handshake in the driver/firmware (e.g., OSX,
+> iPhone, this PS3 driver). In case of WPA-PSK, this doesn't really mean
+> more than just passing through the passphrase/PSK to the association
+> routine, but still, this allows the driver to be configured through
+> wpa_supplicant, if desired.
 > 
-> It is even defined in the application ABIs for these platforms that
-> all objects must be aligned to their type's natural size.
+> However, there is a part that you are not going to like.. This is likely
+> using a private ioctl for some parts of the association requests, i.e.,
+> no -Dwext.. I would assume that this could be cleaned up, though, if
+> WEXT would be extended a bit to allow one more enc_capa to notify
+> whether the driver wants to take care of 4-way handshake and to allow
+> the PSK to be configured with a new key type.
+
+Yeah, I was going to propose that on Friday but got side-tracked.  What
+would require a new key type?  Are there some firmwares that _only_
+accept the WPA passphrase?  Because if there aren't (PS3 accepts WPA hex
+keys too) then the supplicant could just pass the hex key.  Not quite
+sure what you mean here with "new key type".
+
+Dan
+
 > 
+> PS.
+> 
+> It would be interesting to see whether the driver/firmware/hypervisor
+> could be convinced to allow EAPOL frames to go through between
+> association and 4-way handshake (which would be completed by
+> driver/firmware). This is the way I can support WPA/WPA2-Enterprise with
+> OSX..
 > 
 
-So, how do we handle unaligned data in userspace then?
-A _lot_ of applications are broken if that's right what you say.
-
--- 
-Greetings Michael.
