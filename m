@@ -1,90 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:20420 "HELO
-	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754658AbXLWBbA (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50798 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757955AbXLPW62 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:31:00 -0500
-Date: Sat, 22 Dec 2007 17:30:58 -0800
-From: David Brownell <david-b@pacbell.net>
-To: bjd@jooz.net
-Subject: Re: [PATCH 8/8] [PATCH] Use wlan device name for RNDIS wireless
- devices
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-References: <11983602942818-git-send-email-bjd@jooz.net>
- <11983602952006-git-send-email-bjd@jooz.net>
-In-Reply-To: <11983602952006-git-send-email-bjd@jooz.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223013058.7FCB5166E03@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_013105_629491_43AC185E)
+	Sun, 16 Dec 2007 17:58:28 -0500
+Subject: [PATCH 103/48] libertas: don't use __lbs_cmd() with empty callback in if_usb.c
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J42Rv-000386-40@shinybook.infradead.org> (sfid-20071216_225839_561058_A75D5CEE)
+Date: Sun, 16 Dec 2007 17:59:07 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> Subject: [PATCH 8/8] [PATCH] Use wlan device name for RNDIS wireless devices
-> Date: Sat, 22 Dec 2007 22:51:34 +0100
->
-> From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->
-> Use wlan device name for RNDIS wireless devices.
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+Date: Sat, 15 Dec 2007 01:22:09 -0500
 
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+We're about to change semantics, leaving callers of
+lbs_prepare_and_send_command() with the old broken priv->cur_cmd_retcode
+crap. The existence of the callback command will be the trigger for the
+new semantics when handling the response.
 
-... though it'd be a bit nicer IMO to see this before patch #7,
-and just have one (or two) patches that only add infrastructure
-to the usbnet core code, before the rndis_wext patch which uses
-that new infrastructure.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 396ce67..cf88251 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -109,7 +109,7 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
+ 	b2_cmd.action = 0;
+ 	b2_cmd.version = priv->boot2_version;
+ 
+-	if (lbs_cmd(priv, CMD_SET_BOOT2_VER, &b2_cmd, NULL, 0))
++	if (lbs_cmd_with_response(priv, CMD_SET_BOOT2_VER, &b2_cmd))
+ 		lbs_deb_usb("Setting boot2 version failed\n");
+ }
+ 
+-- 
+1.5.3.4
 
-> ---
->  drivers/net/usb/rndis_wext.c |    2 +-
->  drivers/net/usb/usbnet.c     |    3 +++
->  drivers/net/usb/usbnet.h     |    2 ++
->  3 files changed, 6 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/usb/rndis_wext.c b/drivers/net/usb/rndis_wext.c
-> index a9ce944..1c28b2a 100644
-> --- a/drivers/net/usb/rndis_wext.c
-> +++ b/drivers/net/usb/rndis_wext.c
-> @@ -2166,7 +2166,7 @@ static int rndis_wext_reset(struct usbnet *dev)
->  
->  struct driver_info rndis_wext_info = {
->  	.description =	"Wireless RNDIS device",
-> -	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
-> +	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT,
->  	.bind =		rndis_wext_bind,
->  	.unbind =	rndis_wext_unbind,
->  	.status =	rndis_status,
-> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
-> index 8ed1fc5..a2a2d5e 100644
-> --- a/drivers/net/usb/usbnet.c
-> +++ b/drivers/net/usb/usbnet.c
-> @@ -1204,6 +1204,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
->  		if ((dev->driver_info->flags & FLAG_ETHER) != 0
->  				&& (net->dev_addr [0] & 0x02) == 0)
->  			strcpy (net->name, "eth%d");
-> +		/* WLAN devices should always be named "wlan%d" */
-> +		if ((dev->driver_info->flags & FLAG_WLAN) != 0)
-> +			strcpy(net->name, "wlan%d");
->  
->  		/* maybe the remote can't receive an Ethernet MTU */
->  		if (net->mtu > (dev->hard_mtu - net->hard_header_len))
-> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-> index 83860a0..5c98ddc 100644
-> --- a/drivers/net/usb/usbnet.h
-> +++ b/drivers/net/usb/usbnet.h
-> @@ -88,6 +88,8 @@ struct driver_info {
->  #define FLAG_ETHER	0x0020		/* maybe use "eth%d" names */
->  
->  #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
-> +#define FLAG_WLAN	0x0080		/* use "wlan%d" names */
-> +
->  
->  	/* init device ... can sleep, or cause probe() failure */
->  	int	(*bind)(struct usbnet *, struct usb_interface *);
-> -- 
-> 1.5.2.5
->
