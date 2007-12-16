@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:34896 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbXLISfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 13:35:06 -0500
-Received: from public by ciao.gmane.org with local (Exim 4.43)
-	id 1J1QzJ-000738-8W
-	for linux-wireless@vger.kernel.org; Sun, 09 Dec 2007 18:34:49 +0000
-Message-ID: <475C3538.1070501@gmail.com> (sfid-20071209_183512_285697_129CC7E7)
-Date: Sun, 09 Dec 2007 18:34:32 +0000
+Received: from vs166246.vserver.de ([62.75.166.246]:37097 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbXLPU2x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 15:28:53 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: b43 problem with led trigger registration
+Date: Sun, 16 Dec 2007 21:26:56 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Richard Purdie <rpurdie@openedhand.com>
+References: <1197822019.4138.2.camel@johannes.berg> <200712162036.11084.mb@bu3sch.de> <1197835176.6769.21.camel@johannes.berg>
+In-Reply-To: <1197835176.6769.21.camel@johannes.berg>
 MIME-Version: 1.0
-To: Dan Williams <public-dcbw-H+wXaHxf7aLQT0dZR+AlfA@ciao.gmane.org>
-CC: David Miller <public-davem-fT/PcQaiUtIeIZ0/mPfg9Q@ciao.gmane.org>,
-	public-linville-2XuSBdqkA4R54TAoqtyWWQ@ciao.gmane.org,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@ciao.gmane.org,
-	public-jt-sDzT885Ts8HQT0dZR+AlfA@ciao.gmane.org
-Subject: Re: [PATCH] introduce WEXT scan capabilities
-References: <1197073366.4563.15.camel@localhost.localdomain>	 <20071207.181221.09900510.davem@davemloft.net> <1197221467.9149.31.camel@localhost.localdomain>
-In-Reply-To: <1197221467.9149.31.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712162126.56483.mb@bu3sch.de> (sfid-20071216_202857_142162_714C346E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-Dan Williams wrote:
-> On Fri, 2007-12-07 at 18:12 -0800, David Miller wrote:
->> From: Dan Williams <dcbw-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Date: Fri, 07 Dec 2007 19:22:46 -0500
->>
->>> @@ -1040,6 +1049,16 @@ struct	iw_range
->>>  	 * because each entry contain its channel index */
->>>  
->>>  	__u32		enc_capa;	/* IW_ENC_CAPA_* bit field */
->>> +
->>> +	/* Do *NOT* use those fields, they are just used as padding to get
->>> +	 * proper alignement with user space */
->>> +	__s32		reserved1;
->>> +	__s32		reserved2;
->>> +	__u16		reserved3;
->>> +	__s32		reserved4;
->>> +	__u32		reserved5;
->>> +
->>> +	__u32		scan_capa;	/* IW_SCAN_CAPA_* bit field */
->>>  };
->>>  
->>>  /*
->> Major NACK.  These datastructure usages are complete wrong, and
->> we have to stop spreading this problem instead of continuing on
->> with it as if it's OK.
+On Sunday 16 December 2007 20:59:36 Johannes Berg wrote:
 > 
-> There's not too much we can do here.  We need a better way to support
-> driver/card capabilities in WEXT right _now_, in parallel with
-> cfg80211/nl80211.  The other alternative here is to have a 64-bit
-> generic capabilities field-to-end-all-fields and add more bitfield
-> position constants to that without extending the structure any more.
+> > I have no idea where we enter atomic state.
 > 
-> Is there a better way you'd propose to do this _in_WEXT_?
+> Uh huh...
+> 
+> drivers/leds/led-triggers.c:led_trigger_register:
+> 
+> |        read_lock(&leds_list_lock);
+> |        list_for_each_entry(led_cdev, &leds_list, node) {
+> |                down_write(&led_cdev->trigger_lock);
+> 
+> introduced in
+> 
+> commit dc47206e552c0850ad11f7e9a1fca0a3c92f5d65
+> Author: Richard Purdie <rpurdie@rpsys.net>
+> Date:   Sat Nov 10 13:29:04 2007 +0000
+> 
+>     leds: Fix led trigger locking bugs
+> 
+> I guess the read_lock needs to be a mutex/rw semaphore.
 
-Since iw_range is not packed, there are a few locations where there is some padding. You could quite easily shoehorn an 8 bit bitmask into the existing structure without impacting backward compatibility (unless userspace is using the padding for something). For example:
+Uh, yes. Was this patch tested at all?
 
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -1035,6 +1035,7 @@ struct    iw_range
-        /* Frequency */
-        __u16           num_channels;   /* Number of channels [0; num - 1] */
-        __u8            num_frequency;  /* Number of entry in the list */
-+       __u8            scan_capa;      /* scan capabilities */
-        struct iw_freq  freq[IW_MAX_FREQUENCIES];       /* list */
-        /* Note : this frequency list doesn't need to fit channel numbers,
-         * because each entry contain its channel index */
-
-Other candidate blocks are Old Frequency, Rates, Encoder stuff, Transmit power.
-
-Dave.
-
-> I don't really forsee any more extending of this structure, since I
-> think scan capabilities are the last thing we really need to know about.
-
+-- 
+Greetings Michael.
