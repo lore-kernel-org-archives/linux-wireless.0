@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:54476 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014AbXLCLrj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:47:39 -0500
-Received: by py-out-1112.google.com with SMTP id u77so6166067pyb
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2007 03:47:36 -0800 (PST)
-Message-ID: <f6ca9fed0712030347s3d1fde9cnad9046c83316163b@mail.gmail.com> (sfid-20071203_120601_357766_C800753B)
-Date: Mon, 3 Dec 2007 12:47:36 +0100
-From: dragoran <drago01@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 / iwl3945 + dynamic wep (again)
-Cc: "Jouni Malinen" <j@w1.fi>,
+Received: from 3a.49.1343.static.theplanet.com ([67.19.73.58]:49575 "EHLO
+	pug.o-hand.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757421AbXLPWcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 17:32:42 -0500
+Subject: Re: b43 problem with led trigger registration
+From: Richard Purdie <rpurdie@openedhand.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <1196676895.6060.19.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <47494851.4070504@gmail.com>
-	 <1195987773.4149.214.camel@johannes.berg> <474955E1.30603@gmail.com>
-	 <f6ca9fed0711260650j749de7a3x3edc084ae820d2eb@mail.gmail.com>
-	 <20071127033408.GB5698@jm.kir.nu>
-	 <1196676895.6060.19.camel@johannes.berg>
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1197843464.6769.43.camel@johannes.berg>
+References: <1197822019.4138.2.camel@johannes.berg>
+	 <1197837505.6769.25.camel@johannes.berg>
+	 <1197837799.4653.21.camel@localhost.localdomain>
+	 <200712162157.00759.mb@bu3sch.de>
+	 <1197842962.4653.27.camel@localhost.localdomain>
+	 <1197843464.6769.43.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 16 Dec 2007 22:32:39 +0000
+Message-Id: <1197844359.4653.39.camel@localhost.localdomain> (sfid-20071216_223245_378640_2B2DA91C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems not to happen today (with an updated kernel 2.6.23.9-77.fc8;
-which contains recent wireless updates from #everything).
-I don't know if its fixed or if the I am just not receiving crap right
-now... but will be connected for ~4hours to this ap now..
-will report if it happens or not until then...
+On Sun, 2007-12-16 at 23:17 +0100, Johannes Berg wrote:
+> > Eeek, yes, its the LED core's fault.
+> > dc47206e552c0850ad11f7e9a1fca0a3c92f5d65 is needed for various reasons
+> > but that means the patch below is also needed. Its been compile tested,
+> > once its runtime tested I'll push asap.
+> 
+> Any reason you're using an rw semaphore rather than a simple mutex?
+> Nothing here is a hot-path, is it, and the led registrations are
+> mutually exclusive anyway, no?
+
+With a rw lock, the for loop of the trigger registration can happen in
+parallel with other trigger registrations. This case isn't a hot path as
+such but it keeps consistent style with other parts of the LED core
+where rw locks are used in hot paths.
+
+It could be replaced with a mutex instead though...
+
+Richard
+
+
