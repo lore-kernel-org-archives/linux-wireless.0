@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53174 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756250AbXLLKsw (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50722 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbXLPW6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 05:48:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH RFT] b43: Fix for broken transmission
-Date: Wed, 12 Dec 2007 11:46:48 +0100
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Stefano Brivio <stefano.brivio@polimi.it>
-References: <200712111343.50943.mb@bu3sch.de> <475F926C.2000003@lwfinger.net> <20071212032126.f62e3tx3c408ocgo@webmail.spamcop.net>
-In-Reply-To: <20071212032126.f62e3tx3c408ocgo@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712121146.49198.mb@bu3sch.de> (sfid-20071212_104854_851860_31FCDF1B)
+	Sun, 16 Dec 2007 17:58:16 -0500
+Subject: [PATCH 97/48] libertas: don't exit worker thread until kthread_stop() is called
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J42Ri-00037c-8o@shinybook.infradead.org> (sfid-20071216_225826_727995_841B3CCB)
+Date: Sun, 16 Dec 2007 17:58:54 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 December 2007 09:21:26 Pavel Roskin wrote:
-> Quoting Larry Finger <larry.finger@lwfinger.net>:
-> 
-> > Michael Buesch wrote:
-> >> Here's an updated version that should fix even more bugs:
-> >> http://bu3sch.de/patches/wireless-2.6/20071211-1622/patches/005-b43-fix-init-rewrite-breakage.patch
-> 
-> I had to omit the last part (for tables.c) - it's unrelated, cosmetic  
-> and doesn't apply to wireless-2.6/everything.
+Date: Thu, 13 Dec 2007 21:48:00 -0500
 
-This patch depends on
-[PATCH] b43: Fix ofdmtab write regression
-And that is not just cosmetic.
+The kthread code can't cope with a thread exiting of its own accord and
+then someone calling kthread_stop() for it. When the thread detects that
+it needs to die, make it wait for kthread_stop() to be called.
 
-> > This patch (and its predecessor) seem to make transmission at the   
-> > OFDM rates a bit more reliable on
-> > my BCM4311/2 card.
-> 
-> It's working fine on BCM4318 on PowerPC.  I haven't done any specific  
-> comparisons, but it used to disconnect a lot (at least one an hour)  
-> with a small antenna, so I installed a bigger antenna, but then gave  
-> up and switched to using another wireless device (rtl8185).
-> 
-> Right now, it's been working for over 2 hours with a small antenna  
-> (although it's a different antenna borrowed from rtl8185) and no  
-> disconnects.  Scanning finds 5 APs, which is the most I have seen here.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/main.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-Cool, thanks.
-
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 5d2bf53..b51513f 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -662,8 +662,10 @@ static int lbs_thread(void *data)
+ 		set_current_state(TASK_INTERRUPTIBLE);
+ 		spin_lock_irq(&priv->driver_lock);
+ 
+-		if (priv->surpriseremoved)
++		if (kthread_should_stop())
+ 			shouldsleep = 0;	/* Bye */
++		else if (priv->surpriseremoved)
++			shouldsleep = 1;	/* We need to wait until we're _told_ to die */
+ 		else if (priv->psstate == PS_STATE_SLEEP)
+ 			shouldsleep = 1;	/* Sleep mode. Nothing we can do till it wakes */
+ 		else if (priv->intcounter)
+@@ -699,12 +701,15 @@ static int lbs_thread(void *data)
+ 		lbs_deb_thread("main-thread 333: intcounter=%d currenttxskb=%p dnld_sent=%d\n",
+ 			       priv->intcounter, priv->currenttxskb, priv->dnld_sent);
+ 
+-		if (kthread_should_stop() || priv->surpriseremoved) {
+-			lbs_deb_thread("main-thread: break from main thread: surpriseremoved=0x%x\n",
+-				       priv->surpriseremoved);
++		if (kthread_should_stop()) {
++			lbs_deb_thread("main-thread: break from main thread\n");
+ 			break;
+ 		}
+ 
++		if (priv->surpriseremoved) {
++			lbs_deb_thread("adapter removed; waiting to die...\n");
++			continue;
++		}
+ 
+ 		spin_lock_irq(&priv->driver_lock);
+ 
 -- 
-Greetings Michael.
+1.5.3.4
+
