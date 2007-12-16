@@ -1,98 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44337 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206AbXLDP34 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50165 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755044AbXLPWRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:29:56 -0500
-Subject: Re: [PATCH] less eventcause shifts
-From: David Woodhouse <dwmw2@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20071204152122.GE19911@tuxdriver.com>
-References: <200711280915.11300.hs4233@mail.mn-solutions.de>
-	 <1196704681.21151.13.camel@localhost.localdomain>
-	 <1196714939.13978.171.camel@pmac.infradead.org>
-	 <20071204145437.GC19911@tuxdriver.com>
-	 <1196780866.13978.275.camel@pmac.infradead.org>
-	 <20071204152122.GE19911@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 15:29:30 +0000
-Message-Id: <1196782170.13978.296.camel@pmac.infradead.org> (sfid-20071204_153000_129584_6CC5F541)
+	Sun, 16 Dec 2007 17:17:49 -0500
+Subject: Re: b43 problem with led trigger registration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard Purdie <rpurdie@openedhand.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1197842962.4653.27.camel@localhost.localdomain>
+References: <1197822019.4138.2.camel@johannes.berg>
+	 <1197837505.6769.25.camel@johannes.berg>
+	 <1197837799.4653.21.camel@localhost.localdomain>
+	 <200712162157.00759.mb@bu3sch.de>
+	 <1197842962.4653.27.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dlzgASjMXaYD1KJ5LwUz"
+Date: Sun, 16 Dec 2007 23:17:44 +0100
+Message-Id: <1197843464.6769.43.camel@johannes.berg> (sfid-20071216_221752_911620_ED7307E8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Tue, 2007-12-04 at 10:21 -0500, John W. Linville wrote:
-> On Tue, Dec 04, 2007 at 03:07:46PM +0000, David Woodhouse wrote:
-> > On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
-> > > The result is a nice, rebased set of patches on top of the current
-> > > upstream work.	If you simply did a "commit, pull, commit, pull,
-> > > etc" cycle then you would end-up with a set of patches that might
-> > > no longer apply on top of a clean upstream branch -- been there,
-> > > wireless-dev RIP.
-> > 
-> > Ah, I understand your confusion. It reflects akpm's confusion when he
-> > first started trying to use git-bisect.
-> > 
-> > This thing is, there is no actual need for a 'set of patches'. Git isn't
-> > about patches. It's about commits and pulls. It doesn't _matter_ if you
-> > had to fix up something when you merged from Linus, because when Linus
-> > pulls from your tree, he pulls your manual merge effort too.
-> 
-> Well I'm a bit hemmed-in -- Linus pull's from Dave and Jeff, they
-> pull from me.  Both of them are a bit prone to rebasing as well.
-> Even if I just "let it ride" (i.e. didn't rebase), I would still be
-> prone to some of the merge difficulties I described when I pulled
-> duplicate patches back in from Linus later.
-> 
-> FWIW, I've seen Linus complain about dirty git history on several
-> occassions.  So even if he were pulling directly from me I imagine
-> that there would still be a need for some of this quilt-like use of
-> git to clean-up things from time to time.
+--=-dlzgASjMXaYD1KJ5LwUz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Very occasionally. Never, in my experience, when I'm careful about when
-I actually merge. As I said, daily merges are probably a bad idea. :)
 
-> Still, it is true that I might be able to maintain a more consistent
-> 'everything' branch if I weren't "serving two masters"...alas.
+> Eeek, yes, its the LED core's fault.
+> dc47206e552c0850ad11f7e9a1fca0a3c92f5d65 is needed for various reasons
+> but that means the patch below is also needed. Its been compile tested,
+> once its runtime tested I'll push asap.
 
-Yeah, I don't really mean to tell you how to handle it -- I'm just
-trying to find a way to work that actually allows me to use git
-properly, rather than forcing me in to the old method of stacks of
-patches.
+Any reason you're using an rw semaphore rather than a simple mutex?
+Nothing here is a hot-path, is it, and the led registrations are
+mutually exclusive anyway, no?
 
-Basically, trees which get rebased aren't suitable for git users to base
-their work on. It just doesn't work.
+johannes
 
-> > > [1] If your work does _not_ rely on patches already merged in my tree
-> > > then by all means just use Linus' tree.
-> > 
-> > That was my intention, right up to the point at which a bunch of
-> > libertas patches appeared in your tree :)
-> 
-> It was my understanding that you were working on top of these patches
-> anyway (i.e. not rewriting or replacing them).  Anyway they are all
-> destined for 2.6.25 so your "Linus + libertas patches" just still be
-> just as valid...?
+--=-dlzgASjMXaYD1KJ5LwUz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-The important question is: is the commit sha1sum the same?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-And the answer is no -- the commit corresponding to a given patch may
-have a different sha1sum from day to day, in your tree, and when it
-finally gets to Linus. That's fair enough -- you deal with patches, not
-git. But it sucks for anyone who wants to use git and to base their work
-on stuff you have in those patches.
+iQIVAwUAR2WkB6Vg1VMiehFYAQJwLw/+I6J2F2K84k1N5bCW7E8d6Tsv4rwf3otE
+qbSznxOlcLNBz5v661HZMwDJv7Qpc6evjpVGIhW5W7pMb+AAawO3UlPnGuP8vem5
+vrzruoNM/GR1omahPgI2pzCWmwTJaFDzq2eZifJuPzyVPVg7Gvv16KzAOT7vTHsD
+VSviU7tPp1tDTZhM8ANoGgSziMemXgPpAXLoQ/Hg7FTLrzAsF+isYbt+bldGVa8a
+6cWRakUTaR9yw3hpSM3t9ubtf/dxQAx+5bmnnwo3vBjAZMzzADa7ryjQgCmwa31f
+CasXQAXx/0Bb5A6036zGklxVF2auz0Gs0Pkot1fU2kO4irSKyM/1SuL0zx65UMIr
+1OdrlP32E0Q6u9nY2tYorS0GOBJWaoN255ukMRilMgoGFMXTWetM9OZAdiks9epL
+mS7Z6mR6wFq0d5rOO5hIbqa+QnSvQ39OoeWmOvMtSGb612HhHaVFt6VfixtFtSGL
+RvRY65mAd8VcC+OoJlKA9MGLRtt2dEDaaaV4unWCXISlDLArhILuIz86UdOpN4GV
+Nl8a6xaASUh7NO48+EvUZDENS1cd6tRjp2wTyDXx80XHY9ZkdTlylL/mB4/QH0Zu
+377VolwmPm5wEu1WFYvuyqIISu1sPGK/Ffv651KwidfG9KYL5n0HsmVUXe4RVxDJ
+CM0wRGOWd0c=
+=+dpL
+-----END PGP SIGNATURE-----
 
-Which is why I thought we'd agreed that I'll commit libertas-related
-stuff to libertas-2.6.git for now, where Holger and I can play to our
-hearts' content, then ask you to pull when we're done.
-
-I'm open to better suggestions, as long as they're not "you are not
-allowed to use git, except as a primitive way of storing patches". :)
-
--- 
-dwmw2
+--=-dlzgASjMXaYD1KJ5LwUz--
 
