@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47728 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208AbXLHLXn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 06:23:43 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Date: Sat, 8 Dec 2007 12:21:50 +0100
-Cc: jt@hpl.hp.com, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-References: <200712071235.11969.mb@bu3sch.de> <200712071436.08954.mb@bu3sch.de> <20071207.173544.98612200.davem@davemloft.net>
-In-Reply-To: <20071207.173544.98612200.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712081221.50684.mb@bu3sch.de> (sfid-20071208_112348_038237_9246BAA5)
+Received: from mx1.redhat.com ([66.187.233.31]:34094 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752363AbXLPXLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 18:11:24 -0500
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20071216181159.GP5698@jm.kir.nu>
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp>
+	 <1197580418.14270.6.camel@localhost.localdomain>
+	 <20071214134918.275E.MOKUNO@sm.sony.co.jp>
+	 <1197637127.16724.1.camel@localhost.localdomain>
+	 <20071215014244.GI5698@jm.kir.nu>
+	 <1197827354.6358.2.camel@localhost.localdomain>
+	 <20071216181159.GP5698@jm.kir.nu>
+Content-Type: text/plain
+Date: Sun, 16 Dec 2007 18:10:10 -0500
+Message-Id: <1197846610.7302.1.camel@localhost.localdomain> (sfid-20071216_231128_847494_3452C69D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 08 December 2007 02:35:44 David Miller wrote:
-> From: Michael Buesch <mb@bu3sch.de>
-> Date: Fri, 7 Dec 2007 14:36:08 +0100
+On Sun, 2007-12-16 at 10:11 -0800, Jouni Malinen wrote:
+> On Sun, Dec 16, 2007 at 12:49:14PM -0500, Dan Williams wrote:
 > 
-> > The wire protocol for the iv files is the following structure:
-> > 
-> > struct b43_iv {
-> > 	be16 a;
-> > 	union {
-> > 		be16 x;
-> > 		be32 y;
-> > 	} ((attr_packed));
-> > } ((attr_packed));
-> > 
-> > How do I handle that in userspace? In kernel space it's simple
-> > (and we already use get_unaligned() for the 32bit value there).
+> > Yeah, I was going to propose that on Friday but got side-tracked.  What
+> > would require a new key type?  Are there some firmwares that _only_
+> > accept the WPA passphrase?  Because if there aren't (PS3 accepts WPA hex
+> > keys too) then the supplicant could just pass the hex key.  Not quite
+> > sure what you mean here with "new key type".
 > 
-> If you marked it packed, on platforms like sparc, MIPS, and IA-64, the
-> compiler is only going to use byte loads and stores to objects of this
-> type.
-> 
-> You don't need to use get_unaligned() on members of structures that
-> are marked packed.
-> 
-> If you look at the asm-generic/unaligned.h pure-C implementation,
-> it uses the packed attribute, which really shows how redundant it
-> is to use get_unaligned() on packed structure member access :-)
+> It is a new key type regardless of whether it is PSK or passphrase. The
+> current key types (IW_AUTH_CIPHER_*) are WEP40, TKIP, CCMP, and WEP104..
 
-Uhm, ok.
-But I guess then I'm not the only one who got all this wrong. ;)
+Ah, it's a different key because it's not set _during_ the 4-way
+handshake, but just sent to the fw directly and the fw handles it,
+right?
 
--- 
-Greetings Michael.
+> I don't know whether there are any Linux drivers that would use WPA
+> passphrase, but at least the Mac OS X driver interface seems to only use
+> passphrase for WPA-Personal, so it is apparently possible to design such
+> a architecture ;-). Anyway, I would be fine with just adding
+> IW_AUTH_CIPHER_PMK for now (and the new capability to figure out whether
+> this is needed). That PMK would be PSK for WPA-Personal, but it could
+> also be used as PMK for WPA-Enterprise, so the more generic PMK name.
+
+Sounds good.
+
+Dan
+
+
