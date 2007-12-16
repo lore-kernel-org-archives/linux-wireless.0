@@ -1,108 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:34599 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751138AbXLIU1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 15:27:46 -0500
-Date: Sun, 9 Dec 2007 21:21:33 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Mattias Nissler <mattias.nissler@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC/T][PATCH 2/3] rc80211-pid: introduce PID sharpening factor
-Message-ID: <20071209212133.43030d03@morte> (sfid-20071209_202749_864559_C3582E0C)
-In-Reply-To: <20071209211547.2d7fca32@morte>
-References: <20071209211547.2d7fca32@morte>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:53077 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751527AbXLPRTx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 12:19:53 -0500
+Message-ID: <47655E26.2040309@lwfinger.net> (sfid-20071216_171955_659879_D85B5EF0)
+Date: Sun, 16 Dec 2007 09:19:34 -0800
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: b43 problem with led trigger registration
+References: <1197822019.4138.2.camel@johannes.berg>
+In-Reply-To: <1197822019.4138.2.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a PID sharpening factor for faster response on
-association and interpolation.
+Johannes Berg wrote:
+> Hi,
+> 
+> Just booted into my shiny new #everything and got:
+> 
+> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
+> [   40.220119] in_atomic():1, irqs_disabled():0
+> [   40.230514] Call Trace:
+> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
+> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
+> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
+> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
+> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
+> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
+> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
+> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
+> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
+> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
+> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
+> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
+> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
+> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
+> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
+> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
+> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
+> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
+> 
+> I haven't found yet where the atomic is entered...
 
+Is your system "vanilla" wireless-2.6, or does it include the LED switch patch 
+(http://marc.info/?l=linux-wireless&m=119763729709783&w=2)?
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
----
-
-Index: wireless-2.6/net/mac80211/rc80211_pid.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-+++ wireless-2.6/net/mac80211/rc80211_pid.c
-@@ -23,13 +23,15 @@
-  *
-  * The controller basically computes the following:
-  *
-- * adj = CP * err + CI * err_avg + CD * (err - last_err)
-+ * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
-  *
-  * where
-  * 	adj	adjustment value that is used to switch TX rate (see below)
-  * 	err	current error: target vs. current failed frames percentage
-  * 	last_err	last error
-  * 	err_avg	average (i.e. poor man's integral) of recent errors
-+ *	sharpening	non-zero when fast response is needed (i.e. right after
-+ *			association or interpolation), heading to zero over time
-  * 	CP	Proportional coefficient
-  * 	CI	Integral coefficient
-  * 	CD	Derivative coefficient
-@@ -65,6 +67,11 @@
- #define RC_PID_SMOOTHING_SHIFT 3
- #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
- 
-+/* Sharpening factor (used for D part of PID controller) */
-+#define RATE_CONTROL_SHARPENING_SHIFT 2
-+#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-+#define RATE_CONTROL_SHARPENING_DURATION 1
-+
- /* Fixed point arithmetic shifting amount. */
- #define RC_PID_ARITH_SHIFT 8
- 
-@@ -127,8 +134,11 @@ struct rc_pid_sta_info {
- 	 */
- 	s32 err_avg_sc;
- 
--	/* Last framed failes percentage sample */
-+	/* Last framed failes percentage sample. */
- 	u32 last_pf;
-+
-+	/* Sharpening needed. */
-+	u8 sharp_cnt;
- };
- 
- /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
-@@ -271,10 +281,12 @@ static void rate_control_pid_sample(stru
- 	spinfo->last_sample = jiffies;
- 
- 	/* If no frames were transmitted, we assume the old sample is
--	 * still a good measurement and copy it. */
--	if (spinfo->tx_num_xmit == 0)
-+	 * still a good measurement and copy it, and turn the sharpening factor
-+	 * on. */
-+	if (spinfo->tx_num_xmit == 0) {
- 		pf = spinfo->last_pf;
--	else {
-+		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
-+	} else {
- 		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
- 		pf <<= RC_PID_ARITH_SHIFT;
- 
-@@ -314,8 +326,11 @@ static void rate_control_pid_sample(stru
- 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
- 	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
- 
--	err_der = pf - spinfo->last_pf;
-+	err_der = pf - spinfo->last_pf
-+		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
- 	spinfo->last_pf = pf;
-+	if (spinfo->sharp_cnt)
-+			spinfo->sharp_cnt--;
- 
- 	/* Compute the controller output. */
- 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
-
-
--- 
-Ciao
-Stefano
+Larry
