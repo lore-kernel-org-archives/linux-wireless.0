@@ -1,230 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56602 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393AbXLCLoj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:44:39 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 09/34] iwlwifi: Add comments to some driver data structures
-Date: Mon,  3 Dec 2007 13:43:21 +0200
-Message-Id: <11966822302864-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114444_219250_7EA8566E)
-In-Reply-To: <11966822301152-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
- <11966822301152-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757421AbXLPWj5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 17:39:57 -0500
+Subject: Re: b43 problem with led trigger registration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard Purdie <rpurdie@openedhand.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1197844359.4653.39.camel@localhost.localdomain>
+References: <1197822019.4138.2.camel@johannes.berg>
+	 <1197837505.6769.25.camel@johannes.berg>
+	 <1197837799.4653.21.camel@localhost.localdomain>
+	 <200712162157.00759.mb@bu3sch.de>
+	 <1197842962.4653.27.camel@localhost.localdomain>
+	 <1197843464.6769.43.camel@johannes.berg>
+	 <1197844359.4653.39.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wf+iesmmZYzhUEczWBkF"
+Date: Sun, 16 Dec 2007 23:39:52 +0100
+Message-Id: <1197844792.6769.44.camel@johannes.berg> (sfid-20071216_224001_496941_CC9947D2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
 
-Add comments to some driver data structures
+--=-Wf+iesmmZYzhUEczWBkF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Remove unused "sched_retry" member from struct iwl3945_tx_queue
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h |   35 ++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-4965.h |   53 ++++++++++++++++++++++++++++---
- 2 files changed, 79 insertions(+), 9 deletions(-)
+On Sun, 2007-12-16 at 22:32 +0000, Richard Purdie wrote:
+> On Sun, 2007-12-16 at 23:17 +0100, Johannes Berg wrote:
+> > > Eeek, yes, its the LED core's fault.
+> > > dc47206e552c0850ad11f7e9a1fca0a3c92f5d65 is needed for various reason=
+s
+> > > but that means the patch below is also needed. Its been compile teste=
+d,
+> > > once its runtime tested I'll push asap.
+> >=20
+> > Any reason you're using an rw semaphore rather than a simple mutex?
+> > Nothing here is a hot-path, is it, and the led registrations are
+> > mutually exclusive anyway, no?
+>=20
+> With a rw lock, the for loop of the trigger registration can happen in
+> parallel with other trigger registrations. This case isn't a hot path as
+> such but it keeps consistent style with other parts of the LED core
+> where rw locks are used in hot paths.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 38802ff..cb565a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -131,6 +131,7 @@ struct iwl3945_queue {
- 
- #define MAX_NUM_OF_TBS          (20)
- 
-+/* One for each TFD */
- struct iwl3945_tx_info {
- 	struct ieee80211_tx_status status;
- 	struct sk_buff *skb[MAX_NUM_OF_TBS];
-@@ -138,10 +139,15 @@ struct iwl3945_tx_info {
- 
- /**
-  * struct iwl3945_tx_queue - Tx Queue for DMA
-- * @need_update: need to update read/write index
-- * @shed_retry: queue is HT AGG enabled
-+ * @q: generic Rx/Tx queue descriptor
-+ * @bd: base of circular buffer of TFDs
-+ * @cmd: array of command/Tx buffers
-+ * @dma_addr_cmd: physical address of cmd/tx buffer array
-+ * @txb: array of per-TFD driver data
-+ * @need_update: indicates need to update read/write index
-  *
-- * Queue consists of circular buffer of BD's and required locking structures.
-+ * A Tx queue consists of circular buffer of BDs (a.k.a. TFDs, transmit frame
-+ * descriptors) and required locking structures.
-  */
- struct iwl3945_tx_queue {
- 	struct iwl3945_queue q;
-@@ -150,7 +156,6 @@ struct iwl3945_tx_queue {
- 	dma_addr_t dma_addr_cmd;
- 	struct iwl3945_tx_info *txb;
- 	int need_update;
--	int sched_retry;
- 	int active;
- };
- 
-@@ -326,6 +331,13 @@ struct iwl3945_cmd_meta {
- 
- } __attribute__ ((packed));
- 
-+/**
-+ * struct iwl3945_cmd
-+ *
-+ * For allocation of the command and tx queues, this establishes the overall
-+ * size of the largest command we send to uCode, except for a scan command
-+ * (which is relatively huge; space is allocated separately).
-+ */
- struct iwl3945_cmd {
- 	struct iwl3945_cmd_meta meta;
- 	struct iwl3945_cmd_header hdr;
-@@ -523,6 +535,19 @@ struct iwl3945_ibss_seq {
- 	struct list_head list;
- };
- 
-+/**
-+ * struct iwl4965_driver_hw_info
-+ * @max_txq_num: Max # Tx queues supported
-+ * @ac_queue_count: # Tx queues for EDCA Access Categories (AC)
-+ * @tx_cmd_len: Size of Tx command (but not including frame itself)
-+ * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
-+ * @rx_buffer_size:
-+ * @max_rxq_log: Log-base-2 of max_rxq_size
-+ * @max_stations:
-+ * @bcast_sta_id:
-+ * @shared_virt: Pointer to driver/uCode shared Tx Byte Counts and Rx status
-+ * @shared_phys: Physical Pointer to Tx Byte Counts and Rx status
-+ */
- struct iwl3945_driver_hw_info {
- 	u16 max_txq_num;
- 	u16 ac_queue_count;
-@@ -860,6 +885,8 @@ struct iwl3945_priv {
- 	u16 last_seq_num;
- 	u16 last_frag_num;
- 	unsigned long last_packet_time;
-+
-+	/* Hash table for finding stations in IBSS network */
- 	struct list_head ibss_mac_hash[IWL_IBSS_MAC_HASH_SIZE];
- 
- 	/* eeprom */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 9302125..028c66e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -130,6 +130,7 @@ struct iwl4965_queue {
- 
- #define MAX_NUM_OF_TBS          (20)
- 
-+/* One for each TFD */
- struct iwl4965_tx_info {
- 	struct ieee80211_tx_status status;
- 	struct sk_buff *skb[MAX_NUM_OF_TBS];
-@@ -137,10 +138,16 @@ struct iwl4965_tx_info {
- 
- /**
-  * struct iwl4965_tx_queue - Tx Queue for DMA
-- * @need_update: need to update read/write index
-- * @shed_retry: queue is HT AGG enabled
-+ * @q: generic Rx/Tx queue descriptor
-+ * @bd: base of circular buffer of TFDs
-+ * @cmd: array of command/Tx buffers
-+ * @dma_addr_cmd: physical address of cmd/tx buffer array
-+ * @txb: array of per-TFD driver data
-+ * @need_update: indicates need to update read/write index
-+ * @sched_retry: indicates queue is high-throughput aggregation (HT AGG) enabled
-  *
-- * Queue consists of circular buffer of BD's and required locking structures.
-+ * A Tx queue consists of circular buffer of BDs (a.k.a. TFDs, transmit frame
-+ * descriptors) and required locking structures.
-  */
- struct iwl4965_tx_queue {
- 	struct iwl4965_queue q;
-@@ -333,9 +340,16 @@ struct iwl4965_cmd_meta {
- 
- } __attribute__ ((packed));
- 
-+/**
-+ * struct iwl4965_cmd
-+ *
-+ * For allocation of the command and tx queues, this establishes the overall
-+ * size of the largest command we send to uCode, except for a scan command
-+ * (which is relatively huge; space is allocated separately).
-+ */
- struct iwl4965_cmd {
--	struct iwl4965_cmd_meta meta;
--	struct iwl4965_cmd_header hdr;
-+	struct iwl4965_cmd_meta meta;	/* driver data */
-+	struct iwl4965_cmd_header hdr;	/* uCode API */
- 	union {
- 		struct iwl4965_addsta_cmd addsta;
- 		struct iwl4965_led_cmd led;
-@@ -437,6 +451,20 @@ struct iwl4965_rx_queue {
- 
- #ifdef CONFIG_IWL4965_HT
- #ifdef CONFIG_IWL4965_HT_AGG
-+/**
-+ * struct iwl4965_ht_agg -- aggregation status while waiting for block-ack
-+ * @txq_id: Tx queue used for Tx attempt
-+ * @frame_count: # frames attempted by Tx command
-+ * @wait_for_ba: Expect block-ack before next Tx reply
-+ * @start_idx: Index of 1st Transmit Frame Descriptor (TFD) in Tx window
-+ * @bitmap0: Low order bitmap, one bit for each frame pending ACK in Tx window
-+ * @bitmap1: High order, one bit for each frame pending ACK in Tx window
-+ * @rate_n_flags: Rate at which Tx was attempted
-+ *
-+ * If REPLY_TX indicates that aggregation was attempted, driver must wait
-+ * for block ack (REPLY_COMPRESSED_BA).  This struct stores tx reply info
-+ * until block ack arrives.
-+ */
- struct iwl4965_ht_agg {
- 	u16 txq_id;
- 	u16 frame_count;
-@@ -567,6 +595,19 @@ struct iwl4965_ibss_seq {
- 	struct list_head list;
- };
- 
-+/**
-+ * struct iwl4965_driver_hw_info
-+ * @max_txq_num: Max # Tx queues supported
-+ * @ac_queue_count: # Tx queues for EDCA Access Categories (AC)
-+ * @tx_cmd_len: Size of Tx command (but not including frame itself)
-+ * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
-+ * @rx_buffer_size:
-+ * @max_rxq_log: Log-base-2 of max_rxq_size
-+ * @max_stations:
-+ * @bcast_sta_id:
-+ * @shared_virt: Pointer to driver/uCode shared Tx Byte Counts and Rx status
-+ * @shared_phys: Physical Pointer to Tx Byte Counts and Rx status
-+ */
- struct iwl4965_driver_hw_info {
- 	u16 max_txq_num;
- 	u16 ac_queue_count;
-@@ -1226,6 +1267,8 @@ struct iwl4965_priv {
- 	u16 last_seq_num;
- 	u16 last_frag_num;
- 	unsigned long last_packet_time;
-+
-+	/* Hash table for finding stations in IBSS network */
- 	struct list_head ibss_mac_hash[IWL_IBSS_MAC_HASH_SIZE];
- 
- 	/* eeprom */
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Ok, just curious really, nothing that I really care about :)
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
+
+--=-Wf+iesmmZYzhUEczWBkF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2WpNqVg1VMiehFYAQLflhAAta8ZcPc7CrIq2TlToeEhQJKUVxP0x0oj
+g0TOzVn9jviF8l1d6qlNlrXD0f3o+pemAM3WwwkSAeghBLc8aGtFS4oiX9dJ6Gi8
+jWjTG8w7IakqGZf2SEEuIIoFqF3tHfQXNPzRvPKXZOT54oleIrIKmExwowhKLWau
+yN1cgeylrNTklA+DIadFSyVz3vBjjn7/IYcMan6Yjv+xnrKnM0pPrYXZveLGKIUp
+pK3LMeL4KZD/KsSEQl6Adn98lC83ZRf8hfTUwB2rYy0ulAMJY8A6JLRESV4dMEnu
+WQqiqE6Nj3yowTPE7nzsGnWzHlcRr2KzbS6+KOqBefSY/FOZdua20yeCvagkoAgE
+aNjkR+U8HqmQMB78riBeGnQqZ4jmuppXsQohqrWTFr4YbMLL72QcrHtmVi9/finW
+BpIowDUt/xtCIdtC5ce7VH1nzMkez2ujybVIYST2zKTX1Q1Kg0pucxH0EIj/qwLI
+rVj28/R+u0XEAHC1dQYGSnWzALWQXhQIe+/u3ACqj7Tf7OoRAFtYAHX/ja7YezOA
+PiKgELXCAQeWm8U75OmZlH8Vch4Rkq3x+auuRDjNFxj6XQZqWuGD+/8//Otqt0gs
+LeBOH7ezyILWjOzqvxJI51EWaGOR2q7fJDso8QBOWVgpE4XMLNPioIwD0xvfC7Qs
+VTIPhAEXM6g=
+=kDN7
+-----END PGP SIGNATURE-----
+
+--=-Wf+iesmmZYzhUEczWBkF--
+
