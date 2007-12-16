@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55263 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbXLJPpt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50813 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761533AbXLPW6a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:45:49 -0500
+	Sun, 16 Dec 2007 17:58:30 -0500
+Subject: [PATCH 104/48] libertas: remove some pointless checks for cmdnode buffer being present
+From: David Woodhouse <dwmw2@infradead.org>
 In-Reply-To: <libertas-12345@shinybook.infradead.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 16/48] libertas: Remove SET_BOOT2_VER support from the Big Switch Statement.
-Message-Id: <E1J1kpK-0006lP-Sn@shinybook.infradead.org> (sfid-20071210_154552_639959_BE1BD930)
-Date: Mon, 10 Dec 2007 10:45:50 -0500
+Message-Id: <E1J42Rx-00038B-7V@shinybook.infradead.org> (sfid-20071216_225843_136025_87793516)
+Date: Sun, 16 Dec 2007 17:59:09 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Thu, 6 Dec 2007 14:44:21 +0000
+Date: Sat, 15 Dec 2007 00:41:51 -0500
 
-And the death of libertas_prepare_and_send_command() starts...
+We allocate them all at the same time, at startup. If they go missing,
+we have more serious things to worry about, and the resulting oops will
+be a perfectly acceptable result.
 
 Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
- drivers/net/wireless/libertas/cmd.c |   15 ---------------
- 1 files changed, 0 insertions(+), 15 deletions(-)
+ drivers/net/wireless/libertas/cmd.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 851eb3c..b1ea878 100644
+index 4dc6bbe..4ffb84a 100644
 --- a/drivers/net/wireless/libertas/cmd.c
 +++ b/drivers/net/wireless/libertas/cmd.c
-@@ -974,17 +974,6 @@ static int lbs_cmd_bcn_ctrl(struct lbs_private * priv,
- 	return 0;
+@@ -1166,8 +1166,8 @@ void lbs_queue_cmd(struct lbs_private *priv,
+ 
+ 	lbs_deb_enter(LBS_DEB_HOST);
+ 
+-	if (!cmdnode || !cmdnode->cmdbuf) {
+-		lbs_deb_host("QUEUE_CMD: cmdnode or cmdbuf is NULL\n");
++	if (!cmdnode) {
++		lbs_deb_host("QUEUE_CMD: cmdnode is NULL\n");
+ 		goto done;
+ 	}
+ 	if (!cmdnode->cmdbuf->size) {
+@@ -1195,7 +1195,7 @@ void lbs_queue_cmd(struct lbs_private *priv,
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	lbs_deb_host("QUEUE_CMD: inserted command 0x%04x into cmdpendingq\n",
+-	       le16_to_cpu(cmdnode->cmdbuf->command));
++		     le16_to_cpu(cmdnode->cmdbuf->command));
+ 
+ done:
+ 	lbs_deb_leave(LBS_DEB_HOST);
+@@ -1380,13 +1380,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 
+ 	lbs_deb_host("PREP_CMD: command 0x%04x\n", cmd_no);
+ 
+-	if (!cmdptr) {
+-		lbs_deb_host("PREP_CMD: cmdptr is NULL\n");
+-		lbs_cleanup_and_insert_cmd(priv, cmdnode);
+-		ret = -1;
+-		goto done;
+-	}
+-
+ 	/* Set sequence number, command and INT option */
+ 	priv->seqnum++;
+ 	cmdptr->seqnum = cpu_to_le16(priv->seqnum);
+@@ -1786,8 +1779,7 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
+ 	cmdnode->callback = NULL;
+ 	cmdnode->callback_arg = 0;
+ 
+-	if (cmdnode->cmdbuf != NULL)
+-		memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
++	memset(cmdnode->cmdbuf, 0, LBS_CMD_BUFFER_SIZE);
+ 
+ 	lbs_deb_leave(LBS_DEB_HOST);
  }
- 
--static int lbs_cmd_set_boot2_ver(struct lbs_private *priv,
--				struct cmd_ds_command *cmd,
--				u16 cmd_action, void *pdata_buf)
--{
--	struct cmd_ds_set_boot2_ver *boot2_ver = &cmd->params.boot2_ver;
--	cmd->command = cpu_to_le16(CMD_SET_BOOT2_VER);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_set_boot2_ver) + S_DS_GEN);
--	boot2_ver->version = priv->boot2_version;
--	return 0;
--}
--
- /*
-  * Note: NEVER use lbs_queue_cmd() with addtail==0 other than for
-  * the command timer, because it does not account for queued commands.
-@@ -1470,10 +1459,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_mesh_access(priv, cmdptr, cmd_action, pdata_buf);
- 		break;
- 
--	case CMD_SET_BOOT2_VER:
--		ret = lbs_cmd_set_boot2_ver(priv, cmdptr, cmd_action, pdata_buf);
--		break;
--
- 	case CMD_GET_TSF:
- 		cmdptr->command = cpu_to_le16(CMD_GET_TSF);
- 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_ds_get_tsf) +
 -- 
 1.5.3.4
 
