@@ -1,74 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825AbXLSPsV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:48:21 -0500
-Subject: usefulness of 802.1X control?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iUEA5fE6sTMQZUHPStYv"
-Date: Wed, 19 Dec 2007 16:10:13 +0100
-Message-Id: <1198077014.4747.7.camel@johannes.berg> (sfid-20071219_154831_424109_EDCF7658)
-Mime-Version: 1.0
+Received: from venema.h4ckr.net ([217.24.1.135]:47032 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752539AbXLPAxR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Dec 2007 19:53:17 -0500
+Date: Sun, 16 Dec 2007 02:53:18 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: [PATCH 2/9] ath5k: Fix nic_wakeup for 5210
+Message-ID: <20071216005318.GB5482@makis.domain.invalid> (sfid-20071216_005320_975551_85D6C557)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+* Reset PCI after chip reset for 5210 at nic_wakeup. This fixes the system hang during 5210 attach.
 
---=-iUEA5fE6sTMQZUHPStYv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Hi,
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 83fd241..aea9589 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -294,6 +294,13 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+ 
++	/* Wakeup the device */
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to wakeup the MAC Chip\n");
++		return ret;
++	}
++
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		/*
+ 		 * Get channel mode flags
+@@ -319,7 +326,7 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 				 * CCK headers) operation. We need to test
+ 				 * this, 5211 might support ofdm-only g after
+ 				 * all, there are also initial register values
+-				 * in the code for g mode (see ath5k_hw.h). */
++				 * in the code for g mode (see initvals.c). */
+ 				if (ah->ah_version == AR5K_AR5211)
+ 					mode |= AR5K_PHY_MODE_MOD_OFDM;
+ 				else
+@@ -347,38 +354,12 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 
+ 		if (flags & CHANNEL_TURBO)
+ 			turbo = AR5K_PHY_TURBO_MODE | AR5K_PHY_TURBO_SHORT;
+-	} else { /* Reset and wakeup the device */
+-		if (initial == true) {
+-			/* ...reset hardware */
+-			if (ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCI)) {
+-				ATH5K_ERR(ah->ah_sc,
+-					"failed to reset the PCI chipset\n");
+-				return -EIO;
+-			}
+-
+-			mdelay(1);
+-		}
+-
+-		/* ...wakeup */
+-		ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
+-		if (ret) {
+-			ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
+-			return ret;
+-		}
++	} else { /* Reset the device */
+ 
+ 		/* ...enable Atheros turbo mode if requested */
+ 		if (flags & CHANNEL_TURBO)
+ 			ath5k_hw_reg_write(ah, AR5K_PHY_TURBO_MODE,
+ 					AR5K_PHY_TURBO);
+-
+-		/* ...reset chipset */
+-		if (ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_CHIP)) {
+-			ATH5K_ERR(ah->ah_sc,
+-				"failed to reset the AR5210 chipset\n");
+-			return -EIO;
+-		}
+-
+-		mdelay(1);
+ 	}
+ 
+ 	/* ...reset chipset and PCI device */
+@@ -391,7 +372,7 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 	if (ah->ah_version == AR5K_AR5210)
+ 		udelay(2300);
+ 
+-	/* ...wakeup */
++	/* ...wakeup again!*/
+ 	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
+ 	if (ret) {
+ 		ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
 
-After a bit of rework in my patches, we only have two places left where
-we use the 802.1X flag:
 
-tx.c:
-        if (unlikely(sdata->ieee802_1x_pac &&
-                     !(sta_flags & WLAN_STA_AUTHORIZED) &&
-		[...]
-
-rx.c:
-        if (unlikely(rx->sdata->ieee802_1x_pac &&
-                     (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED)))=
-) {
-		[...]
-
-That has me wondering if the control is actually useful. Instead of
-checking this flag, we could simply require that hostapd sets the
-WLAN_STA_AUTHORIZED flag on all stations if 802.1X is disabled. Do you
-(or anyone else) see any problem with this?
-
-We would of course have to set the WLAN_STA_AUTHORIZED flag on all
-stations we add from within mac80211, i.e. the AP we're associating to,
-other IBSS stations and the WDS peer, but that's trivial.
-
-johannes
-
---=-iUEA5fE6sTMQZUHPStYv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2k0VKVg1VMiehFYAQKhjxAAvEhCp94Lhwu/JlNwEwfIPV5P0N9FfKYE
-GRl62hS6XmMXdstV3nOA7pLmyyto0pY2BIaZ3UA8csvBUn1sRpwI7Tlwk7XpSteV
-OW/WifsMpj0eYlI7pGKwnwK+xEksBib/ku0wOWKw4Oy7NnmgzD2qeKIy0dIxwnF+
-UXevMrU6YiRfecIboqdUQ+sCHHe6PKF7LBMY3jsONkfUP9VgUL1folgnbdBPPb2k
-GWWZoXP2mHVG6iQuDF2199Mw79nVfO35WCoO1CN/s8I7bHZ0RltZB6vcA4MeuiQw
-JRT3ksvLDZD0IR4BSx+yCevGPaQ889GLbqDKG3vN3jZLSEu2fkzOW5Q0EP/CZx7H
-yCMNZrEaugswmntGazYKIAPiAoySTPPM8B/Shmc/IIjSp9JBlOba5MzuloQmUSPM
-7DsavR2Srih+kCkLZ9dwuC1hAf8qP0cCNPkAwfNFPeowzyhYdYPe+GAn5Glrs03z
-9molgJb3n/2LGw7SJ4JLYj/Ngg0avbhUREKlRSFbr2A7pcHlsJMu58BgEDc/K+Be
-Nsw30ohg9+nMmjAn+GnVWTDwUYuQcpyYx7MIF/igInVEV4DvhZWKUfJ0RjejUdHj
-2XvIai5NYV6ZmzEHmUcbNUjA/iMOAMJCg/LyXhrHLeCO76rOeP14RfosL1tfaYsy
-Gvu4453/YMQ=
-=OSJM
------END PGP SIGNATURE-----
-
---=-iUEA5fE6sTMQZUHPStYv--
 
