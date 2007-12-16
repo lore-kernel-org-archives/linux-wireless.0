@@ -1,365 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:31287 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751818AbXLJJ1F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 04:27:05 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH] ath5k: add debugfs entries for registers, tsf, beacon, reset
-Date: Mon, 10 Dec 2007 18:27:11 +0900
-Message-Id: <1197278831-17030-1-git-send-email-bruno@thinktube.com> (sfid-20071210_092709_939299_2F1FEEBC)
-In-Reply-To: <200712101822.43487.bruno@thinktube.com>
-References: <200712101822.43487.bruno@thinktube.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2296 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973AbXLPSaB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 13:30:01 -0500
+Date: Sun, 16 Dec 2007 13:00:06 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: b43 problem with led trigger registration
+Message-ID: <20071216180006.GA3606@tuxdriver.com> (sfid-20071216_183008_827132_40A06B56)
+References: <1197822019.4138.2.camel@johannes.berg> <47655E26.2040309@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47655E26.2040309@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i resend this patch to address jiris comments and with some small improvements.
+On Sun, Dec 16, 2007 at 09:19:34AM -0800, Larry Finger wrote:
+> Johannes Berg wrote:
+>> Hi,
+>>
+>> Just booted into my shiny new #everything and got:
+>>
+>> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
+>> [   40.220119] in_atomic():1, irqs_disabled():0
+>> [   40.230514] Call Trace:
+>> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
+>> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
+>> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
+>> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
+>> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
+>> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
+>> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
+>> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
+>> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
+>> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
+>> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
+>> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
+>> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
+>> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
+>> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
+>> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
+>> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
+>> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
+>>
+>> I haven't found yet where the atomic is entered...
+>
+> Is your system "vanilla" wireless-2.6, or does it include the LED switch 
+> patch (http://marc.info/?l=linux-wireless&m=119763729709783&w=2)?
 
-'registers' prints the name and value of some registers. this should be adapted
-to what we actually need later and is supposed to replace the hwdump facility i
-removed in my earlier debugging changes.
+Not sure what you mean by "vanilla"...that patch is in
+wireless-2.6#everything as of last night.
 
-'tsf' prints the current HW TSF. writing "reset" into the file will reset the
-TSF.
+There are not any new mac80211 patches in there yet -- does your fix
+depend on a pending mac80211 patch?
 
-'beacon' shows beacon relevant registers.  it is good for watching the beacon
-timers with something like "watch -n0 cat /dbg/ath5k/phy0/beacon". writing
-"enable" into the file will try to enable beacons by setting the flag
-AR5K_BEACON_ENABLE, "disable" will disable that bit.
+FWIW, I don't see anything obvious in a quick code inspection.
+I presume that Larry and Michael tested this on the previous iteration
+of wireless-2.6 which was based on 2.6.24-rc3.  Any chance that
+something in the rc3->rc5 difference accounts for this?
 
-'reset' can be used to trigger a HW reset, by writing "reset" into it.
-
-Changes-licensed-under: GPL
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-Acked-by: Luis R. Rodriguez <mgrof@winlab.rutgers.edu>
----
- drivers/net/wireless/ath5k/debug.c |  269 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath5k/debug.h |    4 +
- 2 files changed, 273 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index 7427506..df8c781 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -64,12 +64,258 @@
- static unsigned int ath5k_debug;
- module_param_named(debug, ath5k_debug, uint, 0);
- 
-+
- #if ATH5K_DEBUG
- 
-+#include <linux/seq_file.h>
- #include "reg.h"
- 
- static struct dentry *ath5k_global_debugfs;
- 
-+static int ath5k_debugfs_open(struct inode *inode, struct file *file)
-+{
-+	file->private_data = inode->i_private;
-+	return 0;
-+}
-+
-+
-+/* debugfs: registers */
-+
-+struct reg {
-+	char *name;
-+	int addr;
-+};
-+
-+#define REG_STRUCT_INIT(r) { #r, r }
-+
-+/* just a few random registers, might want to add more */
-+static struct reg regs[] = {
-+	REG_STRUCT_INIT(AR5K_CR),
-+	REG_STRUCT_INIT(AR5K_RXDP),
-+	REG_STRUCT_INIT(AR5K_CFG),
-+	REG_STRUCT_INIT(AR5K_IER),
-+	REG_STRUCT_INIT(AR5K_BCR),
-+	REG_STRUCT_INIT(AR5K_RTSD0),
-+	REG_STRUCT_INIT(AR5K_RTSD1),
-+	REG_STRUCT_INIT(AR5K_TXCFG),
-+	REG_STRUCT_INIT(AR5K_RXCFG),
-+	REG_STRUCT_INIT(AR5K_RXJLA),
-+	REG_STRUCT_INIT(AR5K_MIBC),
-+	REG_STRUCT_INIT(AR5K_TOPS),
-+	REG_STRUCT_INIT(AR5K_RXNOFRM),
-+	REG_STRUCT_INIT(AR5K_TXNOFRM),
-+	REG_STRUCT_INIT(AR5K_RPGTO),
-+	REG_STRUCT_INIT(AR5K_RFCNT),
-+	REG_STRUCT_INIT(AR5K_MISC),
-+	REG_STRUCT_INIT(AR5K_QCUDCU_CLKGT),
-+	REG_STRUCT_INIT(AR5K_ISR),
-+	REG_STRUCT_INIT(AR5K_PISR),
-+	REG_STRUCT_INIT(AR5K_SISR0),
-+	REG_STRUCT_INIT(AR5K_SISR1),
-+	REG_STRUCT_INIT(AR5K_SISR2),
-+	REG_STRUCT_INIT(AR5K_SISR3),
-+	REG_STRUCT_INIT(AR5K_SISR4),
-+	REG_STRUCT_INIT(AR5K_IMR),
-+	REG_STRUCT_INIT(AR5K_PIMR),
-+	REG_STRUCT_INIT(AR5K_SIMR0),
-+	REG_STRUCT_INIT(AR5K_SIMR1),
-+	REG_STRUCT_INIT(AR5K_SIMR2),
-+	REG_STRUCT_INIT(AR5K_SIMR3),
-+	REG_STRUCT_INIT(AR5K_SIMR4),
-+	REG_STRUCT_INIT(AR5K_DCM_ADDR),
-+	REG_STRUCT_INIT(AR5K_DCCFG),
-+	REG_STRUCT_INIT(AR5K_CCFG),
-+	REG_STRUCT_INIT(AR5K_CPC0),
-+	REG_STRUCT_INIT(AR5K_CPC1),
-+	REG_STRUCT_INIT(AR5K_CPC2),
-+	REG_STRUCT_INIT(AR5K_CPC3),
-+	REG_STRUCT_INIT(AR5K_CPCORN),
-+	REG_STRUCT_INIT(AR5K_RESET_CTL),
-+	REG_STRUCT_INIT(AR5K_SLEEP_CTL),
-+	REG_STRUCT_INIT(AR5K_INTPEND),
-+	REG_STRUCT_INIT(AR5K_SFR),
-+	REG_STRUCT_INIT(AR5K_PCICFG),
-+	REG_STRUCT_INIT(AR5K_GPIOCR),
-+	REG_STRUCT_INIT(AR5K_GPIODO),
-+	REG_STRUCT_INIT(AR5K_SREV),
-+};
-+
-+static void *reg_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : 0;
-+}
-+
-+static void reg_stop(struct seq_file *seq, void *p)
-+{
-+	/* nothing to do */
-+}
-+
-+static void *reg_next(struct seq_file *seq, void *p, loff_t *pos)
-+{
-+	++*pos;
-+	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : 0;
-+}
-+
-+static int reg_show(struct seq_file *seq, void *p)
-+{
-+	struct ath5k_softc *sc = seq->private;
-+	struct reg *r = p;
-+	seq_printf(seq, "%-25s0x%08x\n", r->name,
-+		ath5k_hw_reg_read(sc->ah, r->addr));
-+	return 0;
-+}
-+
-+static struct seq_operations register_seq_ops = {
-+	.start = reg_start,
-+	.next  = reg_next,
-+	.stop  = reg_stop,
-+	.show  = reg_show
-+};
-+
-+static int open_file_registers(struct inode *inode, struct file *file)
-+{
-+	struct seq_file *s;
-+	int res;
-+	res = seq_open(file, &register_seq_ops);
-+	if (res == 0) {
-+		s = file->private_data;
-+		s->private = inode->i_private;
-+	}
-+	return res;
-+}
-+
-+static const struct file_operations fops_registers = {
-+	.open = open_file_registers,
-+	.read    = seq_read,
-+	.llseek  = seq_lseek,
-+	.release = seq_release,
-+	.owner = THIS_MODULE,
-+};
-+
-+
-+/* debugfs: TSF */
-+
-+static ssize_t read_file_tsf(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[100];
-+	snprintf(buf, 100, "0x%016llx\n", ath5k_hw_get_tsf64(sc->ah));
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
-+}
-+
-+static ssize_t write_file_tsf(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	if (strncmp(userbuf, "reset", 5) == 0) {
-+		ath5k_hw_reset_tsf(sc->ah);
-+		printk(KERN_INFO "debugfs reset TSF\n");
-+	}
-+	return count;
-+}
-+
-+static const struct file_operations fops_tsf = {
-+	.read = read_file_tsf,
-+	.write = write_file_tsf,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
-+/* debugfs: beacons */
-+
-+static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	struct ath5k_hw *ah = sc->ah;
-+	char buf[1000];
-+	int len = 0;
-+	unsigned int v;
-+	u64 tsf;
-+
-+	v = ath5k_hw_reg_read(sc->ah, AR5K_BEACON);
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+		"%-24s0x%08x\tintval: %d\tTIM: 0x%x\n",
-+		"AR5K_BEACON", v, v & AR5K_BEACON_PERIOD,
-+		(v & AR5K_BEACON_TIM) >> AR5K_BEACON_TIM_S);
-+
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\n",
-+		"AR5K_LAST_TSTP", ath5k_hw_reg_read(sc->ah, AR5K_LAST_TSTP));
-+
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\n\n",
-+		"AR5K_BEACON_CNT", ath5k_hw_reg_read(sc->ah, AR5K_BEACON_CNT));
-+
-+	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER0);
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
-+		"AR5K_TIMER0 (TBTT)", v, v);
-+
-+	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER1);
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
-+		"AR5K_TIMER1 (DMA)", v, v >> 3);
-+
-+	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER2);
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
-+		"AR5K_TIMER2 (SWBA)", v, v >> 3);
-+
-+	v = ath5k_hw_reg_read(sc->ah, AR5K_TIMER3);
-+	len += snprintf(buf+len, sizeof(buf)-len, "%-24s0x%08x\tTU: %08x\n",
-+		"AR5K_TIMER3 (ATIM)", v, v);
-+
-+	tsf = ath5k_hw_get_tsf64(sc->ah);
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+		"TSF\t\t0x%016llx\tTU: %08x\n", tsf, (u32)(tsf >> 10));
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_beacon(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	struct ath5k_hw *ah = sc->ah;
-+
-+	if (strncmp(userbuf, "disable", 7) == 0) {
-+		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
-+		printk(KERN_INFO "debugfs disable beacons\n");
-+	} else if (strncmp(userbuf, "enable", 6) == 0) {
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
-+		printk(KERN_INFO "debugfs enable beacons\n");
-+	}
-+	return count;
-+}
-+
-+static const struct file_operations fops_beacon = {
-+	.read = read_file_beacon,
-+	.write = write_file_beacon,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
-+/* debugfs: reset */
-+
-+static ssize_t write_file_reset(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	tasklet_schedule(&sc->restq);
-+	return count;
-+}
-+
-+static const struct file_operations fops_reset = {
-+	.write = write_file_reset,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
-+/* init */
-+
- void
- ath5k_debug_init(void)
- {
-@@ -84,6 +330,22 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- 			ath5k_global_debugfs);
- 	sc->debug.debugfs_debug = debugfs_create_u32("debug",
- 			0666, sc->debug.debugfs_phydir, &sc->debug.level);
-+
-+	sc->debug.debugfs_registers = debugfs_create_file("registers", 0444,
-+				sc->debug.debugfs_phydir,
-+				sc, &fops_registers);
-+
-+	sc->debug.debugfs_tsf = debugfs_create_file("tsf", 0666,
-+				sc->debug.debugfs_phydir,
-+				sc, &fops_tsf);
-+
-+	sc->debug.debugfs_beacon = debugfs_create_file("beacon", 0666,
-+				sc->debug.debugfs_phydir,
-+				sc, &fops_beacon);
-+
-+	sc->debug.debugfs_reset = debugfs_create_file("reset", 0222,
-+				sc->debug.debugfs_phydir,
-+				sc, &fops_reset);
- }
- 
- void
-@@ -96,9 +358,16 @@ void
- ath5k_debug_finish_device(struct ath5k_softc *sc)
- {
- 	debugfs_remove(sc->debug.debugfs_debug);
-+	debugfs_remove(sc->debug.debugfs_registers);
-+	debugfs_remove(sc->debug.debugfs_tsf);
-+	debugfs_remove(sc->debug.debugfs_beacon);
-+	debugfs_remove(sc->debug.debugfs_reset);
- 	debugfs_remove(sc->debug.debugfs_phydir);
- }
- 
-+
-+/* functions used in other places */
-+
- void
- ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
- {
-diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
-index 115073f..2b491cb 100644
---- a/drivers/net/wireless/ath5k/debug.h
-+++ b/drivers/net/wireless/ath5k/debug.h
-@@ -77,6 +77,10 @@ struct ath5k_dbg_info {
- 	/* debugfs entries */
- 	struct dentry		*debugfs_phydir;
- 	struct dentry		*debugfs_debug;
-+	struct dentry		*debugfs_registers;
-+	struct dentry		*debugfs_tsf;
-+	struct dentry		*debugfs_beacon;
-+	struct dentry		*debugfs_reset;
- };
- 
- /**
+John
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
