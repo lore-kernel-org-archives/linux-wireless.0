@@ -1,105 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3300 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753842AbXLTJmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 04:42:07 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 7/8 v2] mac80211: A-MPDU Rx handling DELBA requests
-Date: Thu, 20 Dec 2007 11:39:11 +0200
-Message-Id: <11981435622807-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094214_308499_54EEB229)
-In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47439 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbXLQSIS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 13:08:18 -0500
+Subject: Re: [PATCH 2/8] mac80211: A-MPDU Rx add MLME structures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11979070782201-git-send-email-ron.rindjunsky@intel.com>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+	 <11979070782201-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mBCrLE+2kEcyJhMwfDXB"
+Date: Mon, 17 Dec 2007 19:08:13 +0100
+Message-Id: <1197914893.4885.76.camel@johannes.berg> (sfid-20071217_180820_861921_5EB27C36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch opens the flow to DELBA management frames, and handles end
-of A-MPDU session produced by this event.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 39 insertions(+), 1 deletions(-)
+--=-mBCrLE+2kEcyJhMwfDXB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 00ffa81..9301a53 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -63,6 +63,8 @@
- #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
- #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
- #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
-+#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
-+#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
- 
- /* next values represent the buffer size for A-MPDU frame.
-  * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2) */
-@@ -1275,6 +1277,36 @@ void ieee80211_sta_stop_rx_BA_session(struct net_device *dev, u8 *ra, u16 tid,
- 	sta_info_put(sta);
- }
- 
-+static void ieee80211_sta_process_delba(struct net_device *dev,
-+			struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+	u16 tid, params;
-+	u16 initiator;
-+	DECLARE_MAC_BUF(mac);
-+
-+	sta = sta_info_get(local, mgmt->sa);
-+	if (!sta)
-+		return;
-+
-+	params = le16_to_cpu(mgmt->u.action.u.delba.params);
-+	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
-+	initiator = (params & IEEE80211_DELBA_PARAM_INITIATOR_MASK) >> 11;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	if (net_ratelimit())
-+		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
-+			print_mac(mac, mgmt->sa), tid,
-+			mgmt->u.action.u.delba.reason_code);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	if (initiator == WLAN_BACK_INITIATOR)
-+		ieee80211_sta_stop_rx_BA_session(dev, sta->addr, tid,
-+						 WLAN_BACK_INITIATOR, 0);
-+	sta_info_put(sta);
-+}
-+
- /*
-  * After receiving Block Ack Request (BAR) we activated a
-  * timer after each frame arrives from the originator.
-@@ -2238,9 +2270,15 @@ void ieee80211_rx_mgmt_action(struct net_device *dev,
- 				break;
- 			ieee80211_sta_process_addba_request(dev, mgmt, len);
- 			break;
-+		case WLAN_ACTION_DELBA:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.delba)))
-+				break;
-+			ieee80211_sta_process_delba(dev, mgmt, len);
-+			break;
- 		default:
- 			if (net_ratelimit())
--			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
-+			   printk(KERN_DEBUG "%s: Rx unknown A-MPDU action\n",
- 					dev->name);
- 			break;
- 		}
--- 
-1.5.3.3
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> +	struct sta_ampdu_mlme ampdu_mlme;
+> +	int timer_to_tid[STA_TID_NUM];  /* convert timer id to tid */
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Since you only use that as an identity mapping it can well be a u8
+array. Not that I like the trick used, but I don't see any good way to
+avoid it either.
+
+johannes
+
+--=-mBCrLE+2kEcyJhMwfDXB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2a7DKVg1VMiehFYAQKtDg/+PyrFlOzJCqb61wAQmsFd1PRXLFN6Lcu8
+cWIUXnQhge/iNTuoEu6QxcQb40HBecs1UxDfLsb3T0F4vt4tbWkv8YzXR85ATBHY
+w3Tx5BEFrf9xMyT3d0UzivBFB9SHpsM2bRpKD7Xw43ZHW1VxV747sUTVWGRDV5+M
+dDE04RL48AbUQ63qyH4bQR46QmKh53yIR1UBF9VPDCgbeLN1UP+ywYn9jzzcUoqG
+47lYBkYG3ufcR35mzAn4LCvbK1VlARCryttP5Ac5eNznNPOV4evHmP4ORbtZLmMg
+n/vXGHybrOqT/rhKFr7q90Z8kQ758PhUm042N5E/5wRu5AIY+6Owqe+NoCKCKPiK
+WToyfg+f3KTDA2TQavN0DCWjIIbKjSAzJOHdEKs++bhcQjtyhx7hQY6lRScZtI8Z
+2HFcl1nGQ59kb/3yi/6OwqxYFDbeilLAjMls9TL+SfuG/PCaIpfg36W6sMFDX7zi
+YEbL8hhlcjPCAf2O6wbxEyB0CcAjnryEz7wxd1X/fBdFtMVSDFyFEu93lOBR1/5z
+b7SvG3xUnWZ20DWHGcP4YEPvNkwehtv2lNJE0/vnzAbmaidpkOiUnDHW/RlUty/g
+lZ7jgKwUGZqFsgL0lMga2z/Gfg+Vt/imOztHTBFi4o/b6q/agIgvxlZtVb+/w0Dm
+0NqXQzSkjXg=
+=7Xqd
+-----END PGP SIGNATURE-----
+
+--=-mBCrLE+2kEcyJhMwfDXB--
 
