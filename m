@@ -1,35 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43238 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755914AbXLLAYX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 19:24:23 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: doug@nostar.net
-Subject: Re: Problems with b43 using BCM4306 r3
-Date: Wed, 12 Dec 2007 01:22:31 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <475DA27F.2040004@nostar.net> <200712102258.29802.mb@bu3sch.de> <50633.68.40.216.125.1197418099.squirrel@webmail.nostar.net>
-In-Reply-To: <50633.68.40.216.125.1197418099.squirrel@webmail.nostar.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:32952 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755707AbXLQVKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 16:10:15 -0500
+Message-ID: <4766E5B5.1080400@garzik.org> (sfid-20071217_211020_540265_B80B0575)
+Date: Mon, 17 Dec 2007 16:10:13 -0500
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712120122.32119.mb@bu3sch.de> (sfid-20071212_002434_589935_E6B8CFFA)
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+References: <20071216043148.GE3096@tuxdriver.com>
+In-Reply-To: <20071216043148.GE3096@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 December 2007 01:08:19 doug@nostar.net wrote:
-> The problems only exist on the planet CCRMA
+John W. Linville wrote:
+> Jeff,
 > 
-> http://ccrma.stanford.edu/planetccrma/software/
+> A few more fixes for 2.6.24...let me know if there are any problems!
 > 
-> low-lat patched kernel that I was using.  I'm now running a stock Fedora 
-> 8 2.6.23.8-63.fc8 kernel and there dont appear to be anymore wifi 
-> problems.  My reasons for using the ccrma kernel werent low latency 
-> performance so much as a working firewire stack (fedora 7 and above uses 
-> a new, broken stack) but I found another method.
+> Thanks,
+> 
+> John
+> 
+> P.S.  The zd1211rw patch is already in netdev-2.6#upstream, but it
+> belongs in 2.6.24 as well.
+> 
+> ---
+> 
+> Individual patches available here:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik
+> 
+> ---
+> 
+> The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
+>   Linus Torvalds (1):
+>         Linux 2.6.24-rc5
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> 
+> Adrian Bunk (1):
+>       wireless/ipw2200.c: add __dev{init,exit} annotations
+> 
+> Andrew Morton (1):
+>       bcm43xx_debugfs sscanf fix
+> 
+> Cyrill Gorcunov (2):
+>       ieee80211_rate: missed unlock
+>       iwlwifi3945/4965: fix rate control algo reference leak
+> 
+> Dan Williams (1):
+>       libertas: select WIRELESS_EXT
+> 
+> Larry Finger (1):
+>       b43: Fix rfkill radio LED
+> 
+> Stefano Brivio (1):
+>       libertas: add Dan Williams as maintainer
+> 
+> Ulrich Kunitz (1):
+>       zd1211rw: Fix alignment problems
+> 
+> Zhu Yi (1):
+>       iwlwifi: fix rf_kill state inconsistent during suspend and resume
+> 
+>  MAINTAINERS                                    |    6 ++++
+>  drivers/net/wireless/Kconfig                   |    1 +
+>  drivers/net/wireless/b43/leds.c                |    4 ++
+>  drivers/net/wireless/b43/main.c                |   22 +++++++-------
+>  drivers/net/wireless/b43/rfkill.c              |   37 ++++++++++++++++++++---
+>  drivers/net/wireless/bcm43xx/bcm43xx_debugfs.c |    2 +-
+>  drivers/net/wireless/ipw2200.c                 |    7 ++--
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c    |    5 ++-
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c    |    5 ++-
+>  drivers/net/wireless/zd1211rw/zd_mac.c         |   10 +++++-
+>  net/mac80211/ieee80211_rate.c                  |    1 +
+>  11 files changed, 76 insertions(+), 24 deletions(-)
 
-Ah, well. The driver is not supposed to work with this kind of stuff.
+pulled
 
--- 
-Greetings Michael.
+
