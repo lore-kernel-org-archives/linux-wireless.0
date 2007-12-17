@@ -1,33 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:40935 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751640AbXLHUvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 15:51:01 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: bcm43xx-dev@lists.berlios.de, "John H." <mistamaila@gmail.com>
-Subject: Re: b43 continues to have issue with APs at times
-Date: Sat, 8 Dec 2007 22:09:56 +0100
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com> <200712082135.11685.mb@bu3sch.de>
-In-Reply-To: <200712082135.11685.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712082209.57069.rjw@sisk.pl> (sfid-20071208_205108_717601_C052B5A7)
+Received: from mail.gmx.net ([213.165.64.20]:59279 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755707AbXLQVJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 16:09:15 -0500
+Subject: Re: [patch 7/9] mac80211: Dump rc80211_pid events to debugfs
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1197892636.4885.25.camel@johannes.berg>
+References: <20071217012517.882216322@gmx.de> >
+	 <20071217012550.464889334@gmx.de> >
+	 (sfid-20071217_012731_162132_E62DF268)  <1197892636.4885.25.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 17 Dec 2007 22:09:11 +0100
+Message-Id: <1197925751.7505.19.camel@localhost> (sfid-20071217_210917_970240_1D42051F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, 8 of December 2007, Michael Buesch wrote:
-> On Saturday 08 December 2007 21:22:37 John H. wrote:
-> > I have this problem at two different locations with two different
-> > access points.  2.6.23.1 kernel, and sometimes until I actually power
-> > down the AP and restart it, wpa_supplicant and such just times out on
-> > the AP.
-> > 
-> > Any ideas?
 
-Have you tried to change the distance from the AP (like moving closer to it
-when the wpa_supplicant is appearing to have problems)?
+On Mon, 2007-12-17 at 12:57 +0100, Johannes Berg wrote:
+> > +#ifdef CONFIG_MAC80211_DEBUGFS
+> > +#include "rc80211_pid_debugfs.h"
+> > +#endif
+> > +#include "rc80211_pid.h"
+> 
+> Don't ifdef includes. Also, I think it's overkill to have two header
+> files for a single rate control algorithm, just use a single combined
+> one.
 
-Rafael
+Will do.
+
+Mattias
+
