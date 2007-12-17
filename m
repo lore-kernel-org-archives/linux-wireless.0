@@ -1,38 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:41803 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825AbXLHUgw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 15:36:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John H." <mistamaila@gmail.com>
-Subject: Re: b43 continues to have issue with APs at times
-Date: Sat, 8 Dec 2007 21:35:11 +0100
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
-In-Reply-To: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712082135.11685.mb@bu3sch.de> (sfid-20071208_203656_434019_C2DB24B8)
+Received: from mga02.intel.com ([134.134.136.20]:3888 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758745AbXLQP6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 10:58:04 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 8/8] iwlwifi: A-MPDU Rx flow enabled
+Date: Mon, 17 Dec 2007 17:57:49 +0200
+Message-Id: <11979070792459-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_155813_916947_31D81038)
+In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 08 December 2007 21:22:37 John H. wrote:
-> I have this problem at two different locations with two different
-> access points.  2.6.23.1 kernel, and sometimes until I actually power
-> down the AP and restart it, wpa_supplicant and such just times out on
-> the AP.
-> 
-> Any ideas?
-> 
-> 
+This patch enables the A-MPDU Rx flow. it contains several
+adjustments to new mac80211 A-MPDU Rx flow.
 
-I think that's rather a mac80211 or supplicant issue.
-I think roaming should handle this.
-Do you see this with other drivers, too?
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   63 +++++++++++++--------------
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    6 +--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +-
+ 3 files changed, 33 insertions(+), 39 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index f65fd6e..38826c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3868,9 +3868,7 @@ static void iwl4965_rx_reply_rx(struct iwl4965_priv *priv,
+ 		.antenna = 0,
+ 		.rate = iwl4965_hw_get_rate(rx_start->rate_n_flags),
+ 		.flag = 0,
+-#ifdef CONFIG_IWL4965_HT_AGG
+ 		.ordered = 0
+-#endif /* CONFIG_IWL4965_HT_AGG */
+ 	};
+ 	u8 network_packet;
+ 
+@@ -4065,7 +4063,7 @@ static void iwl4965_rx_reply_rx(struct iwl4965_priv *priv,
+ 		break;
+ 
+ 	case IEEE80211_FTYPE_CTL:
+-#ifdef CONFIG_IWL4965_HT_AGG
++#ifdef CONFIG_IWL4965_HT
+ 		switch (fc & IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_BACK_REQ:
+ 			IWL_DEBUG_HT("IEEE80211_STYPE_BACK_REQ arrived\n");
+@@ -4076,7 +4074,6 @@ static void iwl4965_rx_reply_rx(struct iwl4965_priv *priv,
+ 			break;
+ 		}
+ #endif
+-
+ 		break;
+ 
+ 	case IEEE80211_FTYPE_DATA: {
+@@ -4663,8 +4660,6 @@ void iwl4965_set_ht_add_station(struct iwl4965_priv *priv, u8 index,
+ 	return;
+ }
+ 
+-#ifdef CONFIG_IWL4965_HT_AGG
+-
+ static void iwl4965_sta_modify_add_ba_tid(struct iwl4965_priv *priv,
+ 					  int sta_id, int tid, u16 ssn)
+ {
+@@ -4696,6 +4691,35 @@ static void iwl4965_sta_modify_del_ba_tid(struct iwl4965_priv *priv,
+ 	iwl4965_send_add_station(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ }
+ 
++int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw, u8 action,
++			     const u8 *addr, u16 tid, u16 ssn)
++{
++	struct iwl4965_priv *priv = hw->priv;
++	int sta_id;
++	DECLARE_MAC_BUF(mac);
++
++	IWL_DEBUG_HT("A-MPDU action on da=%s tid=%d ",
++			print_mac(mac, addr), tid);
++	sta_id = iwl4965_hw_find_station(priv, addr);
++	switch (action) {
++	case IEEE80211_AMPDU_RX_START:
++		IWL_DEBUG_HT("start Rx\n");
++		iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, ssn);
++		break;
++	case IEEE80211_AMPDU_RX_STOP:
++		IWL_DEBUG_HT("stop Rx\n");
++		iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
++		break;
++	default:
++		IWL_DEBUG_HT("unknown\n");
++		return -EINVAL;
++		break;
++	}
++	return 0;
++}
++
++#ifdef CONFIG_IWL4965_HT_AGG
++
+ static const u16 default_tid_to_tx_fifo[] = {
+ 	IWL_TX_FIFO_AC1,
+ 	IWL_TX_FIFO_AC0,
+@@ -4825,33 +4849,6 @@ int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da, u16 tid,
+ 	return 0;
+ }
+ 
+-int iwl4965_mac_ht_rx_agg_start(struct ieee80211_hw *hw, u8 *da,
+-			    u16 tid, u16 start_seq_num)
+-{
+-	struct iwl4965_priv *priv = hw->priv;
+-	int sta_id;
+-	DECLARE_MAC_BUF(mac);
+-
+-	IWL_WARNING("iwl-AGG iwl4965_mac_ht_rx_agg_start on da=%s"
+-		    " tid=%d\n", print_mac(mac, da), tid);
+-	sta_id = iwl4965_hw_find_station(priv, da);
+-	iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, start_seq_num);
+-	return 0;
+-}
+-
+-int iwl4965_mac_ht_rx_agg_stop(struct ieee80211_hw *hw, u8 *da,
+-			   u16 tid, int generator)
+-{
+-	struct iwl4965_priv *priv = hw->priv;
+-	int sta_id;
+-	DECLARE_MAC_BUF(mac);
+-
+-	IWL_WARNING("iwl-AGG iwl4965_mac_ht_rx_agg_stop on da=%s tid=%d\n",
+-		    print_mac(mac, da), tid);
+-	sta_id = iwl4965_hw_find_station(priv, da);
+-	iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
+-	return 0;
+-}
+ 
+ #endif /* CONFIG_IWL4965_HT_AGG */
+ #endif /* CONFIG_IWL4965_HT */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 267ae75..b8fd5d0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -802,13 +802,11 @@ extern void iwl4965_set_rxon_ht(struct iwl4965_priv *priv,
+ 				struct iwl_ht_info *ht_info);
+ extern void iwl4965_set_ht_add_station(struct iwl4965_priv *priv, u8 index,
+ 				struct ieee80211_ht_info *sta_ht_inf);
++extern int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw, u8 action,
++				    const u8 *addr, u16 tid, u16 ssn);
+ #ifdef CONFIG_IWL4965_HT_AGG
+ extern int iwl4965_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da,
+ 				   u16 tid, u16 *start_seq_num);
+-extern int iwl4965_mac_ht_rx_agg_start(struct ieee80211_hw *hw, u8 *da,
+-				   u16 tid, u16 start_seq_num);
+-extern int iwl4965_mac_ht_rx_agg_stop(struct ieee80211_hw *hw, u8 *da,
+-				  u16 tid, int generator);
+ extern int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da,
+ 				  u16 tid, int generator);
+ extern void iwl4965_turn_off_agg(struct iwl4965_priv *priv, u8 tid);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index f14c44a..18c19e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -9051,11 +9051,10 @@ static struct ieee80211_ops iwl4965_hw_ops = {
+ 	.erp_ie_changed = iwl4965_mac_erp_ie_changed,
+ #ifdef CONFIG_IWL4965_HT
+ 	.conf_ht = iwl4965_mac_conf_ht,
++	.ampdu_action = iwl4965_mac_ampdu_action,
+ #ifdef CONFIG_IWL4965_HT_AGG
+ 	.ht_tx_agg_start = iwl4965_mac_ht_tx_agg_start,
+ 	.ht_tx_agg_stop = iwl4965_mac_ht_tx_agg_stop,
+-	.ht_rx_agg_start = iwl4965_mac_ht_rx_agg_start,
+-	.ht_rx_agg_stop = iwl4965_mac_ht_rx_agg_stop,
+ #endif  /* CONFIG_IWL4965_HT_AGG */
+ #endif  /* CONFIG_IWL4965_HT */
+ 	.hw_scan = iwl4965_mac_hw_scan
 -- 
-Greetings Michael.
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
