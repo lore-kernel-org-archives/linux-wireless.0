@@ -1,60 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33319 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbXLTRvB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 12:51:01 -0500
-Subject: Re: [PATCH] make iw usable for mere mortals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Lutomirski <luto@myrealbox.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <cb0375e10712200810n4c12e2dldbf67c17ebcd34d0@mail.gmail.com> (sfid-20071220_161013_069484_4612AA93)
-References: <cb0375e10712200810n4c12e2dldbf67c17ebcd34d0@mail.gmail.com>
-	 (sfid-20071220_161013_069484_4612AA93)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XqaclaucL8/fYuFeLANv"
-Date: Thu, 20 Dec 2007 18:50:57 +0100
-Message-Id: <1198173057.16241.63.camel@johannes.berg> (sfid-20071220_175106_545404_EDA15A22)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2998 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758305AbXLQV2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 16:28:52 -0500
+Date: Mon, 17 Dec 2007 15:54:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6
+Message-ID: <20071217205454.GG3121@tuxdriver.com> (sfid-20071217_212857_436708_485132DA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-XqaclaucL8/fYuFeLANv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+A few more small fixes for 2.6.24.  Let me know if there are any
+problems!
 
+Thanks,
 
+John
 
-> iw currently works, but the error handling is a bit off, many error
-> messages are absent, and the help text is flat-out wrong.  This
-> partially fixes the above and should make it possible for noobs to add
-> and remove interfaces without reading the entire source.
+---
 
-Applied, thanks. Please copy me on iw patches though.
+Individual patches are available here:
 
-johannes
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
 
---=-XqaclaucL8/fYuFeLANv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
+  Linus Torvalds (1):
+        Linux 2.6.24-rc5
 
-iQIVAwUAR2qrgKVg1VMiehFYAQLxkQ//W1yv6zJ0vNqkvg/IxfMKBsjl4RqHbdT3
-ar5WhxYuC1jXuEyb+x6g/A7jPkYAZ9iC4QV1YfyymTJHRjKO4xBaeFV2ql4aX08L
-FkZ/TN3dKTx0y5Y1/sSJnp+LQMpspDFN8IUuKYNP2fKdFdZIFX41YY3MSPoSIN8M
-kjAixnk+kiMDXx39TTTIumxD3XzCuivubTNjAIK+b9Zrtxu7HTMBgYFm9EDNQAj3
-w4RS1Ec6PhVL2RQqPqQ1gttkBLEPDKXs3cZxcyA3PQ1o1EmC9QqjG8jtVL2DIkY8
-4FZtNK8pq7k4RCanyAVYilCxlOAxsduc7jazRw7ucSZJxyyVSKDPvb0mL0j06wcJ
-ZWlss4fEsdZDBjf20RwwJORYa1iFqEA2AVijIhsbi3gGdJMZ8cMV/HdYQGZCk4UL
-WxNOheh9joJPTyn7UB1i+oNDGmEdGgRQ3jpYnENMLlPsLVaYpGBd9z4IpkjplQFE
-zEv/5iw2fqVP8fjzmz/BBnKU9S8C5O4hSh2BB7XJzt5fFK1q/lMM9e+KTaL/aH3V
-gY5xDv9CESlTLy8YbGtpHVeHV+JhpAs6uakHT6qB1QiS9dFtWu2FycA4JQOr0y7t
-zgvGqdVz4Vw+MrmC0WvQgZJtmbIvMxyfZlS+7L7BcmFutB4AA30T8lOb26eR9WKN
-i0inLVgOyJQ=
-=V7l4
------END PGP SIGNATURE-----
+are available in the git repository at:
 
---=-XqaclaucL8/fYuFeLANv--
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
 
+Cyrill Gorcunov (1):
+      NET: mac80211: fix inappropriate memory freeing
+
+Johannes Berg (1):
+      mac80211: fix header ops
+
+Michael Wu (1):
+      mac80211: Drop out of associated state if link is lost
+
+ net/mac80211/ieee80211.c      |    1 -
+ net/mac80211/ieee80211_rate.c |    2 +-
+ net/mac80211/ieee80211_sta.c  |    8 ++------
+ 3 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 505af1f..6378850 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -427,7 +427,6 @@ static const struct header_ops ieee80211_header_ops = {
+ void ieee80211_if_setup(struct net_device *dev)
+ {
+ 	ether_setup(dev);
+-	dev->header_ops = &ieee80211_header_ops;
+ 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
+ 	dev->wireless_handlers = &ieee80211_iw_handler_def;
+ 	dev->set_multicast_list = ieee80211_set_multicast_list;
+diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
+index 7254bd6..9f26a10 100644
+--- a/net/mac80211/ieee80211_rate.c
++++ b/net/mac80211/ieee80211_rate.c
+@@ -59,11 +59,11 @@ void ieee80211_rate_control_unregister(struct rate_control_ops *ops)
+ 	list_for_each_entry(alg, &rate_ctrl_algs, list) {
+ 		if (alg->ops == ops) {
+ 			list_del(&alg->list);
++			kfree(alg);
+ 			break;
+ 		}
+ 	}
+ 	mutex_unlock(&rate_ctrl_mutex);
+-	kfree(alg);
+ }
+ EXPORT_SYMBOL(ieee80211_rate_control_unregister);
+ 
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 16afd24..bee8080 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -808,12 +808,8 @@ static void ieee80211_associated(struct net_device *dev,
+ 		sta_info_put(sta);
+ 	}
+ 	if (disassoc) {
+-		union iwreq_data wrqu;
+-		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
+-		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+-		mod_timer(&ifsta->timer, jiffies +
+-				      IEEE80211_MONITORING_INTERVAL + 30 * HZ);
++		ifsta->state = IEEE80211_DISABLED;
++		ieee80211_set_associated(dev, ifsta, 0);
+ 	} else {
+ 		mod_timer(&ifsta->timer, jiffies +
+ 				      IEEE80211_MONITORING_INTERVAL);
+-- 
+John W. Linville
+linville@tuxdriver.com
