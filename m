@@ -1,71 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:48649 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbXLDPIM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:08:12 -0500
-Subject: Re: [PATCH] less eventcause shifts
-From: David Woodhouse <dwmw2@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20071204145437.GC19911@tuxdriver.com>
-References: <200711280915.11300.hs4233@mail.mn-solutions.de>
-	 <1196704681.21151.13.camel@localhost.localdomain>
-	 <1196714939.13978.171.camel@pmac.infradead.org>
-	 <20071204145437.GC19911@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 15:07:46 +0000
-Message-Id: <1196780866.13978.275.camel@pmac.infradead.org> (sfid-20071204_150817_262417_2AE210B2)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:31951 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933008AbXLQQNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 11:13:33 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 2/8] mac80211: A-MPDU Rx add MLME structures
+Date: Mon, 17 Dec 2007 17:57:43 +0200
+Message-Id: <11979070782201-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_161340_386711_73735AB3)
+In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-12-04 at 09:54 -0500, John W. Linville wrote:
-> The result is a nice, rebased set of patches on top of the current
-> upstream work.	If you simply did a "commit, pull, commit, pull,
-> etc" cycle then you would end-up with a set of patches that might
-> no longer apply on top of a clean upstream branch -- been there,
-> wireless-dev RIP.
+This patch adds the needed structures to describe the Rx aggregation MLME per STA
+new:
+ - struct tid_ampdu_rx: TID aggregation information (Rx)
+ - struct sta_ampdu_mlme: MLME aggregation information for STA
+changed:
+ - struct sta_info: ampdu_mlme added to describe A-MPDU MLME per STA,
+		    and timer_to_tid added to map timer id into TID
 
-Ah, I understand your confusion. It reflects akpm's confusion when he
-first started trying to use git-bisect.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/sta_info.h |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 47 insertions(+), 0 deletions(-)
 
-This thing is, there is no actual need for a 'set of patches'. Git isn't
-about patches. It's about commits and pulls. It doesn't _matter_ if you
-had to fix up something when you merged from Linus, because when Linus
-pulls from your tree, he pulls your manual merge effort too.
-
-That's how git is designed. You're trying to use it as a kind of staging
-post before you send a set of patches to Linus, which is why it looks
-strange to me. That's the kind of thing that quilt does best, I think.
-
-Perhaps you should investigate stgit, which {ab,}uses git for this kind
-of thing and lets you deal with patches that way quite nicely too.
-
-> I really think this is the best methodology for processing patches
-> so that they are ready for merging when posted.
-
-You're probably right.
-
-On the other hand, I think the best methodology for processing code
-changes to the Linux kernel so that they are ready for merging into
-Linus' git tree is probably in a normal git tree :)
-
-Yes, it's useful not to do daily pulls and end up with a ton of 'empty'
-merge commits in the graph -- that gets message. For that reason, I tend
-to pull from upstream only when there's something there which I depend
-on, or when I'll have to do a manual merge. But a reasonable number of
-merges is perfectly normal. That's what git was designed to do, after
-all.
-
-> [1] If your work does _not_ rely on patches already merged in my tree
-> then by all means just use Linus' tree.
-
-That was my intention, right up to the point at which a bunch of
-libertas patches appeared in your tree :)
-
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e1a4ac1..451b761 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -31,6 +31,51 @@
+ #define WLAN_STA_WME BIT(9)
+ #define WLAN_STA_WDS BIT(27)
+ 
++#define STA_TID_NUM 16
++#define ADDBA_RESP_INTERVAL HZ
++
++#define HT_AGG_STATE_INITIATOR_SHIFT	(4)
++
++#define HT_AGG_STATE_REQ_STOP_BA_MSK	BIT(3)
++
++#define HT_AGG_STATE_IDLE		(0x0)
++#define HT_AGG_STATE_OPERATIONAL	(0x7)
++
++/**
++ * struct tid_ampdu_rx - TID aggregation information (Rx).
++ *
++ * @state: TID's state in session state machine.
++ * @dialog_token: dialog token for aggregation session
++ * @ssn: Starting Sequence Number expected to be aggregated.
++ * @buf_size: buffer size for incoming A-MPDUs
++ * @timeout: reset timer value.
++ * @head_seq_num: head sequence number in reordering buffer.
++ * @stored_mpdu_num: number of MPDUs in reordering buffer
++ * @reorder_buf: buffer to reorder incoming aggregated MPDUs
++ * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
++ */
++struct tid_ampdu_rx {
++	u8 state;
++	u8 dialog_token;
++	u16 ssn;
++	u16 buf_size;
++	u16 timeout;
++	u16 head_seq_num;
++	u16 stored_mpdu_num;
++	struct sk_buff **reorder_buf;
++	struct timer_list session_timer;
++};
++
++/**
++ * struct sta_ampdu_mlme - STA aggregation information.
++ *
++ * @tid_agg_info_rx: aggregation info for Rx per TID
++ * @ampdu_rx: for locking sections in aggregation Rx flow
++ */
++struct sta_ampdu_mlme {
++	struct tid_ampdu_rx tid_rx[STA_TID_NUM];
++	spinlock_t ampdu_rx;
++};
+ 
+ struct sta_info {
+ 	struct kref kref;
+@@ -101,6 +146,8 @@ struct sta_info {
+ 
+ 	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
+ 					     of this STA */
++	struct sta_ampdu_mlme ampdu_mlme;
++	int timer_to_tid[STA_TID_NUM];  /* convert timer id to tid */
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
 -- 
-dwmw2
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
