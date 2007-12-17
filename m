@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4177 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2251 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084AbXLDSUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 13:20:38 -0500
-Date: Tue, 4 Dec 2007 13:19:50 -0500
+	id S1753498AbXLQP3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 10:29:48 -0500
+Date: Mon, 17 Dec 2007 09:48:59 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] [try 2] orinoco: more reliable scan handling
-Message-ID: <20071204181950.GA28285@tuxdriver.com> (sfid-20071204_182057_187931_094B9DCB)
-References: <1191946643.20183.2.camel@localhost.localdomain> <20071010183251.GK5962@tuxdriver.com> <1192074985.31110.4.camel@localhost.localdomain> <47489C2D.7030606@gmail.com> <1196790166.14628.2.camel@localhost.localdomain>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
+	default
+Message-ID: <20071217144859.GB3121@tuxdriver.com> (sfid-20071217_152952_593077_593131D2)
+References: <20071217001956.640555983@gmx.de> <20071217002056.351743954@gmx.de> <1197852547.4885.1.camel@johannes.berg> <20071217015004.2400ab33@morte> <1197852873.4885.2.camel@johannes.berg> <20071217015748.5bb3f7fc@morte> <1197853758.4885.4.camel@johannes.berg> <1197885374.7514.6.camel@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1196790166.14628.2.camel@localhost.localdomain>
+In-Reply-To: <1197885374.7514.6.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2007 at 12:42:46PM -0500, Dan Williams wrote:
-> On Sat, 2007-11-24 at 21:48 +0000, Dave wrote:
-> > 
-> > 
-> > Dan Williams wrote:
-> > > Bring scan result handling more in line with drivers like ipw.  Scan
-> > > results are aggregated and a BSS dropped after 15 seconds if no beacon
-> > > is received.  This allows the driver to interact better with userspace
-> > > where more than one process may request scans or results at any time.
-> > 
-> > I've only seen this recently, and am using it as a basis for some other changes. However I've noticed a couple issues:
+On Mon, Dec 17, 2007 at 10:56:14AM +0100, Mattias Nissler wrote:
 > 
-> Will clean up these and submit for 2.6.25 then, thanks.
+> On Mon, 2007-12-17 at 02:09 +0100, Johannes Berg wrote:
+> > > That was my original proposal, but during a recent discussion John
+> > > suggested not to remove rc80211-simple right now, as it's currently
+> > > almost working for a lot of people. John, any suggestions?
+> > 
+> > Those people can fix the bitrate at 1M if the pid algorithm becomes
+> > problematic, that's what simple currently does in practice.
+> 
+> Agreed. So what flavour of this patch do you want? John?
 
-The patch is already queued in Jeff's tree.  Please send any changes
-as new patches on top.
+My "Spidey sense" tells me it would be good to keep the old one around
+for a little while... :-)
+
+Besides, as we have seen recently people often get quite upset when
+you remove a feature that they perceive to be working for them --
+no matter how much better the alternative may be.  It would be better
+to give them some warning.
 
 John
 -- 
