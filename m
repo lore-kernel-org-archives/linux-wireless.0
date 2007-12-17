@@ -1,148 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55298 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474AbXLJPqT (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60957 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755155AbXLQRrE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:46:19 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	Mon, 17 Dec 2007 12:47:04 -0500
+Subject: Re: [patch 0/9] Rate control rework
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mattias.nissler@gmx.de
+Cc: linville@tuxdriver.com, stefano.brivio@polimi.it,
 	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 47/48] libertas: kill lbs_upload_tx_packet()
-Message-Id: <E1J1kpr-0006nu-Ks@shinybook.infradead.org> (sfid-20071210_154641_039839_CFCBDBF5)
-Date: Mon, 10 Dec 2007 10:46:23 -0500
+In-Reply-To: <20071217001956.640555983@gmx.de> (sfid-20071217_003027_842318_90F1A18D)
+References: <20071217001956.640555983@gmx.de>
+	 (sfid-20071217_003027_842318_90F1A18D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q5qGrHWc9KQfVD3InXpW"
+Date: Mon, 17 Dec 2007 15:05:51 +0100
+Message-Id: <1197900351.4885.41.camel@johannes.berg> (sfid-20071217_174709_456116_E01F551A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Mon, 10 Dec 2007 00:49:26 -0500
 
-It replaces two lines of code. And even for those it has to make
-inferences about things (i.e. which device) which the caller would have
-just known.
+--=-Q5qGrHWc9KQfVD3InXpW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/decl.h |    2 --
- drivers/net/wireless/libertas/rx.c   |   32 +++++++++-----------------------
- drivers/net/wireless/libertas/tx.c   |    8 +++++++-
- 3 files changed, 16 insertions(+), 26 deletions(-)
+> * It seems mac80211 fails to clean up the rate control algorithm. This
+>   results in the debugfs entries created by patch 9 not being removed.
 
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index fcb5a85..e8387c7 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -46,8 +46,6 @@ void lbs_get_fwversion(struct lbs_private *priv,
- 	char *fwversion,
- 	int maxlen);
- 
--void lbs_upload_rx_packet(struct lbs_private *priv, struct sk_buff *skb);
--
- /** The proc fs interface */
- int lbs_process_rx_command(struct lbs_private *priv);
- void __lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
-diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-index 141069f..6332fd4 100644
---- a/drivers/net/wireless/libertas/rx.c
-+++ b/drivers/net/wireless/libertas/rx.c
-@@ -131,22 +131,6 @@ static void lbs_compute_rssi(struct lbs_private *priv, struct rxpd *p_rx_pd)
- 	lbs_deb_leave(LBS_DEB_RX);
- }
- 
--void lbs_upload_rx_packet(struct lbs_private *priv, struct sk_buff *skb)
--{
--	lbs_deb_rx("skb->data %p\n", skb->data);
--
--	if (priv->monitormode != LBS_MONITOR_OFF) {
--		skb->protocol = eth_type_trans(skb, priv->rtap_net_dev);
--	} else {
--		if (priv->mesh_dev && IS_MESH_FRAME(skb))
--			skb->protocol = eth_type_trans(skb, priv->mesh_dev);
--		else
--			skb->protocol = eth_type_trans(skb, priv->dev);
--	}
--	skb->ip_summed = CHECKSUM_NONE;
--	netif_rx(skb);
--}
--
- /**
-  *  @brief This function processes received packet and forwards it
-  *  to kernel/upper layer
-@@ -158,7 +142,7 @@ void lbs_upload_rx_packet(struct lbs_private *priv, struct sk_buff *skb)
- int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
- {
- 	int ret = 0;
--
-+	struct net_device *dev = priv->dev;
- 	struct rxpackethdr *p_rx_pkt;
- 	struct rxpd *p_rx_pd;
- 
-@@ -169,15 +153,15 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
- 
- 	lbs_deb_enter(LBS_DEB_RX);
- 
-+	skb->ip_summed = CHECKSUM_NONE;
-+
- 	if (priv->monitormode != LBS_MONITOR_OFF)
- 		return process_rxed_802_11_packet(priv, skb);
- 
- 	p_rx_pkt = (struct rxpackethdr *) skb->data;
- 	p_rx_pd = &p_rx_pkt->rx_pd;
--	if (p_rx_pd->rx_control & RxPD_MESH_FRAME)
--		SET_MESH_FRAME(skb);
--	else
--		UNSET_MESH_FRAME(skb);
-+	if (priv->mesh_dev && (p_rx_pd->rx_control & RxPD_MESH_FRAME))
-+		dev = priv->mesh_dev;
- 
- 	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
- 		 min_t(unsigned int, skb->len, 100));
-@@ -262,7 +246,8 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
- 	priv->stats.rx_bytes += skb->len;
- 	priv->stats.rx_packets++;
- 
--	lbs_upload_rx_packet(priv, skb);
-+	skb->protocol = eth_type_trans(skb, dev);
-+	netif_rx(skb);
- 
- 	ret = 0;
- done:
-@@ -404,7 +389,8 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
- 	priv->stats.rx_bytes += skb->len;
- 	priv->stats.rx_packets++;
- 
--	lbs_upload_rx_packet(priv, skb);
-+	skb->protocol = eth_type_trans(skb, priv->rtap_net_dev);
-+	netif_rx(skb);
- 
- 	ret = 0;
- 
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index e2141f0..8a1a396 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -2,6 +2,7 @@
-   * This file contains the handling of TX in wlan driver.
-   */
- #include <linux/netdevice.h>
-+#include <linux/etherdevice.h>
- 
- #include "hostcmd.h"
- #include "radiotap.h"
-@@ -203,7 +204,12 @@ void lbs_send_tx_feedback(struct lbs_private *priv)
- 	try_count = (status >> 16) & 0xff;
- 	radiotap_hdr->data_retries = (try_count) ?
- 	    (1 + priv->txretrycount - try_count) : 0;
--	lbs_upload_rx_packet(priv, priv->currenttxskb);
-+
-+
-+	priv->currenttxskb->protocol = eth_type_trans(priv->currenttxskb,
-+						      priv->rtap_net_dev);
-+	netif_rx(priv->currenttxskb);
-+
- 	priv->currenttxskb = NULL;
- 
- 	if (priv->connect_status == LBS_CONNECTED)
--- 
-1.5.3.4
+Probably a bug then, though I can't find it right now, the references
+all look balanced and if they weren't then we'd not have been able to
+rmmod rc80211_simple when it was still around. Not sure, can you try to
+see what the problem is and maybe even fix it?
+
+It does, however, look like the whole rate control code needs a revamp.
+Looks like Jiri got busy there with krefs too without giving it too much
+thought... It looks like all that can be converted to RCU just as well
+as all the other stuff I already converted, I don't see a reason to keep
+a reference count of the rate control algorithm for each sta.
+
+If you fix the free problem I'll take a look at fixing the locking/refs
+stuff there later.
+
+johannes
+
+--=-Q5qGrHWc9KQfVD3InXpW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2aCPqVg1VMiehFYAQJqChAArvIBSeTwZhKPPfv85j4dCw3HVKjt5HSU
+fldfZJb3s3d4/dEKMleKkqG7iXH5S80GzsgjA1hCVe/FxjvJMunv13FL999UbEHE
+2+D+t1gh5r52b5uxhOL7FP2oRJajlAjXzcOwBRarvlXvsIihDXPoVAVgrmWpPBzW
+fPxVdhSXVTLo83Ug0Bq7IAVC7E4mcBXy/YvQ8wLnNrEoFSyl40gl84DG9FFs9JFF
+8MzzqWY4R3OsTXfyccw8L32BHt0W+HWwLnRMT5iETN5OTVUR38D/wTPBZtXKuvb1
+VcSU9InoEd3GdP9JSAGwlcEmXdkFZeEhM6QNNUzQM/3Bcc+gxSwE4WLqgkqyCaU5
+3CXYOqbUdQlBybuc+pXHxVqioGNBrBQtoVqBCpavdRQ5gDsVErwZoveK15Ebg7at
+podcd5BfIyIBkrOLP7wztniwh2W8pLD5a7TSZsO9eZvdapOV1DJ4SombtBsTqMiy
+3nzj0aErXd4hucOQgHYVi6KzhRnbC5C8tfK+XtHlat3gvInG/RyouIxy17CeUw9o
+zkh0WGN1R0cmeVtloQRf0aF+qY/Hqw196fXn4dmXMkn4gbhI+M/t4P9Ole1RS8aS
+yVCkdTEzPOBM8/1HF3IFuSXyELebmuQ1kNu/awIVyG5AIaIIbXHkiEicsYNHGFeA
+VMTWfS4aJkw=
+=SlDH
+-----END PGP SIGNATURE-----
+
+--=-Q5qGrHWc9KQfVD3InXpW--
 
