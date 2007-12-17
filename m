@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:1977 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbXL2KVQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59482 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889AbXLQRnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 05:21:16 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2131733fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 02:21:14 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sat, 29 Dec 2007 11:21:30 +0100
-Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <1198922056.4172.25.camel@johannes.berg>
-In-Reply-To: <1198922056.4172.25.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712291121.31120.IvDoorn@gmail.com> (sfid-20071229_102122_535849_9856172A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 17 Dec 2007 12:43:01 -0500
+Subject: Re: [patch 2/9] iwlwifi: Resync rate control code with mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217012550.045470580@gmx.de>> (sfid-20071217_012730_052104_5B10C305)
+References: <20071217012517.882216322@gmx.de> >
+	  <20071217012550.045470580@gmx.de>> (sfid-20071217_012730_052104_5B10C305)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mpT2XLahZzcMilJtvv0z"
+Date: Mon, 17 Dec 2007 12:48:00 +0100
+Message-Id: <1197892081.4885.18.camel@johannes.berg> (sfid-20071217_174307_184386_6CA0F3AE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 December 2007, Johannes Berg wrote:
-> I didn't think that many drivers had this problem... The warning is
-> harmless on machines that are ok with unaligned memory accesses.
-> 
-> > WARNING: at net/mac80211/rx.c:1486 __ieee80211_rx()
-> > Pid: 0, comm: swapper Not tainted 2.6.24-rc6-git5 #11
-> 
-> comes from
->         /*
->          * Drivers are required to align the payload data to a four-byte
->          * boundary, so the last two bits of the address where it starts
->          * may not be set. The header is required to be directly before
->          * the payload data, padding like atheros hardware adds which is
->          * inbetween the 802.11 header and the payload is not supported,
->          * the driver is required to move the 802.11 header further back
->          * in that case.
->          */
->         hdrlen = ieee80211_get_hdrlen(rx.fc);
->         WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
-> 
-> 
-> Although I'm starting to doubt my own sanity here with this sanity check
-> if so many drivers can trigger it.
 
-If it helps as reference, rt2x00 allocates and initializes the data as follows:
+--=-mpT2XLahZzcMilJtvv0z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-		skb_reserve(skb, NET_IP_ALIGN);
-		skb_put(skb, desc.size); /* Always a multiple of 4 bytes */
-		memcpy(skb->data, entry->data_addr, desc.size);
 
-Should there have done more for the aligning of the data?
+On Mon, 2007-12-17 at 02:25 +0100, Mattias Nissler wrote:
+> This brings iwlwifi rate control code back in sync with mac80211.
 
-Ivo
+This, and a patch to fix the "simple" algorithm should be part of the
+first patch to avoid breaking bisection.
+
+johannes
+
+--=-mpT2XLahZzcMilJtvv0z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2Zh76Vg1VMiehFYAQLYLA//cTU4bOelDNQ2PlFCUzFbtGdqDTu1eU1V
+JrAAURDRQ/ifsOdO2j10dwumPHzb5KiJNZseWm1zLnuz6t81GwxUD3kUIZBBgVCO
+ncJ0lZzeDbs63XXLmSCQEOlpETDNAloVUdVF1X8luAPajog9Zug+6KZltWI18Dv0
+NUytJOCqhF0dpGA+wUJI/SwUizjt5eO5t09ccWFHcxsoFVICV9hTvuZcxyQ86hj4
+gHcDiergkpjtgZhL/uQloPL0ASyk/Dt61f5heRL41pBHhmDAoYNUsghbSkweg2Co
+8mqKm/XnYnL2EC2oJ60YJLxIio7EcDC1VFCa1krtNRvN+ZbCPSE8wzugvBwb5Jv+
+XKYmfRvjvLw+tXiak/cyOgDvi8IJr3Olap4BuymevkFUYefWHC4dMxtvepZMrZXC
+vS0UWtFzdeP8VoC3LmTSSxZ7RlsqRWEuK5NX/M0ujHl5F41venBgWf0y67y9kBFc
+rapMgwQQnjWEE0l5aDdn/W09nBEJJ4jHZ7nFZFrBLVqAL4UF0YOghoN6wPuZLsEk
+tyONGRD6+XSieftL/cgg28/of2JMHS2HMgCZOVRNNb6cgqIQNnTtBnotw/bduAtF
+E1ngVpKU386qMw1RUrpCGXH8PFHl4a15qgFya+0ZMPAgg9cHDPAL2+5XkBRdWmCw
+HBP1Dek4KCw=
+=6f5p
+-----END PGP SIGNATURE-----
+
+--=-mpT2XLahZzcMilJtvv0z--
+
