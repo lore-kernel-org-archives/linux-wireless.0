@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37841 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1763797AbXLQJ4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 04:56:17 -0500
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197853758.4885.4.camel@johannes.berg>
-References: <20071217001956.640555983@gmx.de>
-	 <20071217002056.351743954@gmx.de> <1197852547.4885.1.camel@johannes.berg>
-	 <20071217015004.2400ab33@morte> <1197852873.4885.2.camel@johannes.berg>
-	 <20071217015748.5bb3f7fc@morte>  <1197853758.4885.4.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60962 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755233AbXLQRrJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 12:47:09 -0500
+Subject: [PATCH] mac80211: round station cleanup timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 17 Dec 2007 10:56:14 +0100
-Message-Id: <1197885374.7514.6.camel@localhost> (sfid-20071217_095619_209413_B61EEF0A)
+Date: Mon, 17 Dec 2007 15:07:43 +0100
+Message-Id: <1197900463.4885.43.camel@johannes.berg> (sfid-20071217_174713_185527_2654961B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The station cleanup timer runs every ten seconds, the exact
+timing is not relevant at all so it can well run together with
+other things to save power.
 
-On Mon, 2007-12-17 at 02:09 +0100, Johannes Berg wrote:
-> > That was my original proposal, but during a recent discussion John
-> > suggested not to remove rc80211-simple right now, as it's currently
-> > almost working for a lot of people. John, any suggestions?
-> 
-> Those people can fix the bitrate at 1M if the pid algorithm becomes
-> problematic, that's what simple currently does in practice.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/sta_info.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Agreed. So what flavour of this patch do you want? John?
+--- everything.orig/net/mac80211/sta_info.c	2007-12-17 15:03:29.003635524 +0100
++++ everything/net/mac80211/sta_info.c	2007-12-17 15:07:01.303633192 +0100
+@@ -14,6 +14,7 @@
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_arp.h>
++#include <linux/timer.h>
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+@@ -312,7 +313,8 @@ static void sta_info_cleanup(unsigned lo
+ 	}
+ 	read_unlock_bh(&local->sta_lock);
+ 
+-	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
++	local->sta_cleanup.expires =
++		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+ 	add_timer(&local->sta_cleanup);
+ }
+ 
+@@ -351,7 +353,8 @@ void sta_info_init(struct ieee80211_loca
+ 	INIT_LIST_HEAD(&local->sta_list);
+ 
+ 	init_timer(&local->sta_cleanup);
+-	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
++	local->sta_cleanup.expires =
++		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+ 	local->sta_cleanup.data = (unsigned long) local;
+ 	local->sta_cleanup.function = sta_info_cleanup;
+ 
 
-Mattias
 
