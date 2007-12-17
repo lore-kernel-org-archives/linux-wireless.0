@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56264 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1761348AbXLQA3W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 19:29:22 -0500
-Message-Id: <20071217001956.640555983@gmx.de> (sfid-20071217_002925_615355_B5F9EF12)
-Date: Mon, 17 Dec 2007 01:19:56 +0100
-From: mattias.nissler@gmx.de
-To: linville@tuxdriver.com
-Cc: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: [patch 0/9] Rate control rework
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46668 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515AbXLQBJY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 20:09:24 -0500
+Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
+	default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: mattias.nissler@gmx.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217015748.5bb3f7fc@morte>
+References: <20071217001956.640555983@gmx.de>
+	 <20071217002056.351743954@gmx.de> <1197852547.4885.1.camel@johannes.berg>
+	 <20071217015004.2400ab33@morte> <1197852873.4885.2.camel@johannes.berg>
+	 <20071217015748.5bb3f7fc@morte>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+Ay7h8SanTmoOl4lyF8T"
+Date: Mon, 17 Dec 2007 02:09:17 +0100
+Message-Id: <1197853758.4885.4.camel@johannes.berg> (sfid-20071217_010927_788354_A065135B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-this patchset is the result of my recent joint-venture with Stefano. It
-introduces a new rate control algorithm based on a PID controller. First
-tests show it works much better than the old simple rate control
-algorithm.
+--=-+Ay7h8SanTmoOl4lyF8T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We think the current patch set is clean enough so we can push it into
-2.6.25. However, there are some issues that need some more work:
 
-* The algorithm parameters need more tuning. The current defaults are
-  sane, but we hope to get a larger testing audience once this is in the
-  tree. Once there are more test results, tuning should be easier.
+> That was my original proposal, but during a recent discussion John
+> suggested not to remove rc80211-simple right now, as it's currently
+> almost working for a lot of people. John, any suggestions?
 
-* It seems mac80211 fails to clean up the rate control algorithm. This
-  results in the debugfs entries created by patch 9 not being removed.
+Those people can fix the bitrate at 1M if the pid algorithm becomes
+problematic, that's what simple currently does in practice.
 
-* Patch number 8 is actually a change to the debugfs code so I can add
-  files for signed variables. I've sent it to Greg KH and LKML, let's
-  see what happens. If it doesn't make 2.6.25, we could add similar
-  infrastructure locally.
+johannes
 
-Hm, anything I forgot? Stefano?
+--=-+Ay7h8SanTmoOl4lyF8T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Mattias
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUAR2XMPKVg1VMiehFYAQJxZA/9E3vi2Nm+lo63jaLPFrZGi5e6JFl3w/Vu
+4AzCdUJ0nu3HSSpSHHv80FfARzSbBOSpi0A5hzkvSPLe02bgtEwI+2TqWY5hhuIt
+zHbauEyrIbcPFqtVkpUxQDEsveqp7MCUaZUywP7EQvwkzlbRU3j/yYWJICwq/Zoe
+muM3LplK/eR9dH10GCD3/S1PFL6aC1xaHm4TfxF4Rkz2Wk6GgSFSLsr6Id50IjMf
+LtLJca3OZfzAn3EGu/w4ddZ8G2bjJUp1j7a5zK5jzZv4QyOsK8r1JIaGzIphFaq1
+EMi30Mr5xT7bed5tMVxusxhX0ILBn9RKSEeaeYMgYk0/qmjlUZrW0b6ddGt5JUIZ
+TinbwZqLHZ13YIyn9OEjLKZgb3BEr9fYyYEKmDCw7m+sWi87Z0jVkLT2EwR/TdX0
+yYIIIY1i4jkh1W319BAiT9GwmHGt+g7AB84KcsrGUYUputi4u8mQ33KvmrbHHkYW
+FJ/RnCI7exoTv/n9g0cNv6/TAUefgj7A0RvGuC0ipT2dQksfco0mHUU73h+cr1rx
+YEOL+uFxg9P41aSMmfDh1LY+4hxbZioEVS6k2+7J9bRlGwC3z7byLWZ6xLjWGEct
+c6mWQQLeu4n4GNri9N1J95X1Mj28OQE/6+LepaM7LtVYN+aCt7nkEf0waPCjgK36
+GwHGAsMnork=
+=UTeR
+-----END PGP SIGNATURE-----
+
+--=-+Ay7h8SanTmoOl4lyF8T--
 
