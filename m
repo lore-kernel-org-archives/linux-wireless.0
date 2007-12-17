@@ -1,114 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56953 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762715AbXLMG7d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:33 -0500
-Subject: [PATCH 73/48] libertas: make some more functions static
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2v-0005st-KP@shinybook.infradead.org> (sfid-20071213_065958_441033_4523B9B9)
-Date: Thu, 13 Dec 2007 01:59:49 -0500
+Received: from ra.tuxdriver.com ([70.61.120.52]:4992 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936378AbXLQT6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 14:58:33 -0500
+Date: Mon, 17 Dec 2007 14:34:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net
+Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+Message-ID: <20071217193402.GD3121@tuxdriver.com> (sfid-20071217_195904_216029_1AA0E92E)
+References: <20071216043148.GE3096@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071216043148.GE3096@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 17:44:10 -0500
+On Sat, Dec 15, 2007 at 11:31:48PM -0500, John W. Linville wrote:
 
-sparse was getting on my tits.
+> Cyrill Gorcunov (2):
+>       ieee80211_rate: missed unlock
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.c    |   12 ++++++------
- drivers/net/wireless/libertas/if_usb.c |    2 +-
- drivers/net/wireless/libertas/main.c   |    8 ++++----
- 3 files changed, 11 insertions(+), 11 deletions(-)
+>  net/mac80211/ieee80211_rate.c                  |    1 +
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 0f07c2a..2228fec 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -14,8 +14,8 @@
- #include "cmd.h"
- 
- static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode);
--struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
--void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
-+static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
-+static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
- 		    struct cmd_ctrl_node *ptempnode,
- 		    u16 wait_option, void *pdata_buf);
- 
-@@ -1716,7 +1716,7 @@ done:
-  *  @param priv		A pointer to struct lbs_private structure
-  *  @return cmd_ctrl_node A pointer to cmd_ctrl_node structure or NULL
-  */
--struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv)
-+static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv)
- {
- 	struct cmd_ctrl_node *tempnode;
- 	unsigned long flags;
-@@ -1780,9 +1780,9 @@ static void cleanup_cmdnode(struct cmd_ctrl_node *cmdnode)
-  *  @param pdata_buf	A pointer to informaion buffer
-  *  @return 		0 or -1
-  */
--void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
--		    struct cmd_ctrl_node *ptempnode,
--		    u16 wait_option, void *pdata_buf)
-+static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
-+				  struct cmd_ctrl_node *ptempnode,
-+				  u16 wait_option, void *pdata_buf)
- {
- 	lbs_deb_enter(LBS_DEB_HOST);
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index a0866ef..7c57ff4 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -113,7 +113,7 @@ static void if_usb_set_boot2_ver(struct lbs_private *priv)
- 		lbs_deb_usb("Setting boot2 version failed\n");
- }
- 
--void if_usb_fw_timeo(unsigned long priv)
-+static void if_usb_fw_timeo(unsigned long priv)
- {
- 	struct usb_card_rec *cardp = (void *)priv;
- 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 2fe7ad0..c51d3af 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -252,8 +252,8 @@ static ssize_t lbs_anycast_set(struct device *dev,
- 	return strlen(buf);
- }
- 
--int lbs_add_rtap(struct lbs_private *priv);
--void lbs_remove_rtap(struct lbs_private *priv);
-+static int lbs_add_rtap(struct lbs_private *priv);
-+static void lbs_remove_rtap(struct lbs_private *priv);
- 
- /**
-  * Get function for sysfs attribute rtap
-@@ -1423,7 +1423,7 @@ static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
- }
- 
- 
--void lbs_remove_rtap(struct lbs_private *priv)
-+static void lbs_remove_rtap(struct lbs_private *priv)
- {
- 	if (priv->rtap_net_dev == NULL)
- 		return;
-@@ -1432,7 +1432,7 @@ void lbs_remove_rtap(struct lbs_private *priv)
- 	priv->rtap_net_dev = NULL;
- }
- 
--int lbs_add_rtap(struct lbs_private *priv)
-+static int lbs_add_rtap(struct lbs_private *priv)
- {
- 	int rc = 0;
- 	struct net_device *rtap_dev;
+> diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
+> index 7254bd6..3260a4a 100644
+> --- a/net/mac80211/ieee80211_rate.c
+> +++ b/net/mac80211/ieee80211_rate.c
+> @@ -33,6 +33,7 @@ int ieee80211_rate_control_register(struct rate_control_ops *ops)
+>  		if (!strcmp(alg->ops->name, ops->name)) {
+>  			/* don't register an algorithm twice */
+>  			WARN_ON(1);
+> +			mutex_unlock(&rate_ctrl_mutex);
+>  			return -EALREADY;
+>  		}
+>  	}
+
+Crud...there is a one-line fix in here that should have gone to Dave.
+
+Jeff, (assuming Dave ACKs it) would you mind just taking it your
+way along with the other posted patches?  Since this is intended for
+2.6.24, there should be no great maintenance hardship if it goes to
+Linus through your tree instead of Dave's.
+
+Thanks,
+
+John
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
