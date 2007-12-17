@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pmac.infradead.org ([90.155.92.200]:40759 "EHLO
-	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbXLSQJ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:09:57 -0500
-Subject: [PATCH 116/48] libertas: add SLEEP_PERIOD and FW_WAKE_METHOD command definitions
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+Received: from mail.gmx.net ([213.165.64.20]:46320 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757792AbXLQVIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 16:08:54 -0500
+Subject: Re: [patch 3/9] mac80211: Add PID controller based rate control
+	algorithm
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
 	linux-wireless@vger.kernel.org
-Message-Id: <E1J50tp-0001zw-OG@pmac.infradead.org> (sfid-20071219_160959_419318_4129913B)
-Date: Wed, 19 Dec 2007 15:31:57 +0000
+In-Reply-To: <1197892210.4885.21.camel@johannes.berg>
+References: <20071217012517.882216322@gmx.de> >
+	 <20071217012550.127484236@gmx.de> >
+	 (sfid-20071217_012722_935905_F6E718EA)  <1197892210.4885.21.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 17 Dec 2007 22:08:51 +0100
+Message-Id: <1197925731.7505.17.camel@localhost> (sfid-20071217_210857_044353_07A65C5D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sun, 16 Dec 2007 21:43:40 -0500
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/host.h    |    2 ++
- drivers/net/wireless/libertas/hostcmd.h |   14 ++++++++++++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
+On Mon, 2007-12-17 at 12:50 +0100, Johannes Berg wrote:
+> > +	/* We need to do an arithmetic right shift. ISO C says this is
+> > +	 * implementation defined for negative left operands. Hence, be
+> > +	 * careful to get it right, also for negative values. */
+> > +	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
+> > +			  adj >> (2 * RC_PID_ARITH_SHIFT);
+> 
+> That looks... weird.
+> 
+> As far as I know all compilers the kernel can use will do an arithmetic
+> right shift if the data type is signed.
 
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index fe00081..bdf9017 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -84,8 +84,10 @@
- #define CMD_802_11_KEY_MATERIAL			0x005e
- #define CMD_802_11_SLEEP_PARAMS			0x0066
- #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
-+#define CMD_802_11_SLEEP_PERIOD			0x0068
- #define CMD_802_11_TPC_CFG			0x0072
- #define CMD_802_11_PWR_CFG			0x0073
-+#define CMD_802_11_FW_WAKE_METHOD		0x0074
- #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
- #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
- #define CMD_802_11_TX_RATE_QUERY		0x007f
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index ea4d484..b38502f 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -439,6 +439,20 @@ struct cmd_ds_set_boot2_ver {
- 	__le16 version;
- };
- 
-+struct cmd_ds_802_11_fw_wake_method {
-+	struct cmd_header hdr;
-+
-+	__le16 action;
-+	__le16 method;
-+};
-+
-+struct cmd_ds_802_11_sleep_period {
-+	struct cmd_header hdr;
-+
-+	__le16 action;
-+	__le16 period;
-+};
-+
- struct cmd_ds_802_11_ps_mode {
- 	__le16 action;
- 	__le16 nullpktinterval;
--- 
-1.5.3.4
+Where is your information from? I actually had some misbehaviour that
+was fixed after I introduced this. I'll check the assembly gcc produces
+to shed some light on this.
+
+Mattias
 
