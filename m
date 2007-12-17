@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35176 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753611AbXLGSFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 13:05:13 -0500
-Subject: Re: [PATCH] libertas: implement new scanning logic
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200712071547.37944.hs4233@mail.mn-solutions.de>
-References: <200711290927.15915.hs4233@mail.mn-solutions.de>
-	 <1196787130.4772.2.camel@localhost.localdomain>
-	 <200712071547.37944.hs4233@mail.mn-solutions.de>
+Received: from mail.gmx.net ([213.165.64.20]:37841 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1763797AbXLQJ4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 04:56:17 -0500
+Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
+	default
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1197853758.4885.4.camel@johannes.berg>
+References: <20071217001956.640555983@gmx.de>
+	 <20071217002056.351743954@gmx.de> <1197852547.4885.1.camel@johannes.berg>
+	 <20071217015004.2400ab33@morte> <1197852873.4885.2.camel@johannes.berg>
+	 <20071217015748.5bb3f7fc@morte>  <1197853758.4885.4.camel@johannes.berg>
 Content-Type: text/plain
-Date: Fri, 07 Dec 2007 12:57:43 -0500
-Message-Id: <1197050263.30465.7.camel@localhost.localdomain> (sfid-20071207_180519_021917_BCA724D2)
+Date: Mon, 17 Dec 2007 10:56:14 +0100
+Message-Id: <1197885374.7514.6.camel@localhost> (sfid-20071217_095619_209413_B61EEF0A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-12-07 at 15:47 +0100, Holger Schurig wrote:
-> > So I tested this one, not the one from libertas-dev (which was
-> > posted a day earlier).  And this one seems fine.  Ack for
-> > commit to libertas-2.6.
-> >
-> > Would you like me to confirm on SDIO?
+
+On Mon, 2007-12-17 at 02:09 +0100, Johannes Berg wrote:
+> > That was my original proposal, but during a recent discussion John
+> > suggested not to remove rc80211-simple right now, as it's currently
+> > almost working for a lot of people. John, any suggestions?
 > 
-> I now commit that to libertas-2.6, even without your 
-> SDIO-testing.
+> Those people can fix the bitrate at 1M if the pid algorithm becomes
+> problematic, that's what simple currently does in practice.
 
-Yeah, go ahead.  I got distracted because of changes in > 2.6.23 kernels
-that cause the driver not to build there, and haven't chased them down
-yet.
+Agreed. So what flavour of this patch do you want? John?
 
-Dan
-
+Mattias
 
