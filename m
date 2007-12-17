@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:41524 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753966AbXLUUDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 15:03:12 -0500
-Date: Fri, 21 Dec 2007 21:00:17 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	sam <sam@ravnborg.org>, Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: better rate control algorithm selection
-Message-ID: <20071221210017.36f34fe3@morte> (sfid-20071221_200314_528086_7105F300)
-In-Reply-To: <1198253375.16241.76.camel@johannes.berg>
-References: <1198253375.16241.76.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga03.intel.com ([143.182.124.21]:31951 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932659AbXLQQNc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 11:13:32 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+Subject: [PATCH 0/8] mac80211/iwlwifi: integrate IEEE802.11n A-MPDU Rx MLME
+Date: Mon, 17 Dec 2007 17:57:41 +0200
+Message-Id: <11979070692599-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_161337_697425_F35D56D5)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 21 Dec 2007 17:09:35 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+This series of patches contains implementation for the IEEE802.11n 
+aggregated MPDUs (A-MPDU) MLME. The series handles Rx A-MPDU (recipient party).
 
-> Below is the patch, comments welcome. I think this is the way we want
-> it, tristate for all rate control algorithms regardless of whether
-> mac80211 is modular (where =y then means "build algorithm into
-> mac80211") and forcing one of the algorithms to y to do exactly that.
+Please notice:
+===============
+Patch "mac80211: A-MPDU Rx adding BAR handling capability" depends on patch 
+"mac80211: pass in PS_POLL frames" that was already sent as a stand alone patch.
+Further more, the latter patch is needed for this series to function well.
 
-What about avoiding to force any algorithm to y, and instead always build a
-dummy (a few lines of code which would just set the rate to the lowest
-available) rate control algorithm into mac80211?
+Notes to this series:
+======================
+This series of patches splits into:
+ - patches 1-7 add 802.11n Rx A-MPDU MLME support to mac80211.
+ - patch 8 demonstrates the use of the above mac80211's MLME through iwl4965 low level driver
 
-Looks good otherwise.
+The patches in the series should not be treated as stand alone patches,
+but as a complete MLME according to IEEE802.11n spec, although separation
+to patches by subjects was made for ease of handling.
+
+The patches do _not_ break any existing driver.
+Patches were made (and tested to work) with wireless branch 2.6.24-rc3 (#everything)
+
+The MLME framework includes the following:
+- A-MPDU MLME (for aggregated Rx per STA/TID)
+- addBA request support.
+- delBA request support (recipient party).
+- Block Ack Request (BAR) support.
+- A-MPDU reordering.
 
 
---
-Ciao
-Stefano
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
