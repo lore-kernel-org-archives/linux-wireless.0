@@ -1,254 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53147
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752206AbXLVE4t (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60999 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755344AbXLQRsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:56:49 -0500
-Date: Fri, 21 Dec 2007 20:56:48 -0800 (PST)
-Message-Id: <20071221.205648.29936075.davem@davemloft.net> (sfid-20071222_045652_972763_569D5073)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 9/12]: Dispatch and handle compat ioctls entirely in
- net/wireless/wext.c
-From: David Miller <davem@davemloft.net>
+	Mon, 17 Dec 2007 12:48:04 -0500
+Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <1197278205280-git-send-email-ron.rindjunsky@intel.com>
+References: <1197278205280-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OBwKGu49XRmIa8opO27R"
+Date: Mon, 17 Dec 2007 18:46:15 +0100
+Message-Id: <1197913576.4885.57.camel@johannes.berg> (sfid-20071217_174813_405474_7E486BBB)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-[WEXT]: Dispatch and handle compat ioctls entirely in net/wireless/wext.c
+--=-OBwKGu49XRmIa8opO27R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Next we can kill the hacks in fs/compat_ioctl.c and also
-dispatch compat ioctls down into the driver and 80211 protocol
-helper layers in order to handle iw_point objects embedded in
-stream replies which need to be translated.
+Ron, sorry, totally forgot about this patch after asking about the macro
+that doesn't seem to exist after all.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- fs/compat_ioctl.c        |    6 ---
- include/linux/wireless.h |    9 ++++
- include/net/wext.h       |    7 +++
- net/socket.c             |   10 ++++
- net/wireless/wext.c      |  104 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 130 insertions(+), 6 deletions(-)
+On Mon, 2007-12-10 at 11:16 +0200, Ron Rindjunsky wrote:
+> This patch fixes should_drop_frame function to pass in ps poll control
+> frames required for power save functioanlity. Interface types that do not
+> have interest for PS POLL frames now drop it in handler.
 
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index e8b7c3a..e98e950 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -1756,12 +1756,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
- 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
- }
- 
--struct compat_iw_point {
--	compat_caddr_t pointer;
--	__u16 length;
--	__u16 flags;
--};
--
- static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
- {
- 	struct iwreq __user *iwr;
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 0987aa7..2088524 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -76,6 +76,7 @@
- #include <linux/types.h>		/* for "caddr_t" et al		*/
- #include <linux/socket.h>		/* for "struct sockaddr" et al	*/
- #include <linux/if.h>			/* for IFNAMSIZ and co... */
-+#include <linux/compat.h>
- #endif	/* __KERNEL__ */
- 
- /***************************** VERSION *****************************/
-@@ -669,6 +670,14 @@ struct	iw_point
-   __u16		flags;		/* Optional params */
- };
- 
-+#if defined(__KERNEL__) && defined(CONFIG_COMPAT)
-+struct compat_iw_point {
-+	compat_caddr_t pointer;
-+	__u16 length;
-+	__u16 flags;
-+};
-+#endif
-+
- /*
-  *	A frequency
-  *	For numbers lower than 10^9, we encode the number in 'm' and
-diff --git a/include/net/wext.h b/include/net/wext.h
-index 80b31d8..6d76a39 100644
---- a/include/net/wext.h
-+++ b/include/net/wext.h
-@@ -12,6 +12,8 @@ extern int wext_proc_init(struct net *net);
- extern void wext_proc_exit(struct net *net);
- extern int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 			     void __user *arg);
-+extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+				    unsigned long arg);
- #else
- static inline int wext_proc_init(struct net *net)
- {
-@@ -26,6 +28,11 @@ static inline int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned
- {
- 	return -EINVAL;
- }
-+static inline int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+					   unsigned long arg)
-+{
-+	return -EINVAL;
-+}
- #endif
- 
- #endif /* __NET_WEXT_H */
-diff --git a/net/socket.c b/net/socket.c
-index 74784df..475f08f 100644
---- a/net/socket.c
-+++ b/net/socket.c
-@@ -90,6 +90,7 @@
- #include <asm/unistd.h>
- 
- #include <net/compat.h>
-+#include <net/wext.h>
- 
- #include <net/sock.h>
- #include <linux/netfilter.h>
-@@ -2207,10 +2208,19 @@ static long compat_sock_ioctl(struct file *file, unsigned cmd,
- {
- 	struct socket *sock = file->private_data;
- 	int ret = -ENOIOCTLCMD;
-+	struct sock *sk;
-+	struct net *net;
-+
-+	sk = sock->sk;
-+	net = sk->sk_net;
- 
- 	if (sock->ops->compat_ioctl)
- 		ret = sock->ops->compat_ioctl(sock, cmd, arg);
- 
-+	if (ret == -ENOIOCTLCMD &&
-+	    (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST))
-+		ret = compat_wext_handle_ioctl(net, cmd, arg);
-+
- 	return ret;
- }
- #endif
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 03b0051..5869b70 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1144,6 +1144,110 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 	return ret;
- }
- 
-+#ifdef CONFIG_COMPAT
-+static int compat_standard_call(struct net_device *	dev,
-+				struct iwreq *		iwr,
-+				unsigned int		cmd,
-+				iw_handler		handler)
-+{
-+	const struct iw_ioctl_description *descr;
-+	struct compat_iw_point *iwp_compat;
-+	struct iw_request_info info;
-+	struct iw_point iwp;
-+	int err;
-+
-+	descr = standard_ioctl + (cmd - SIOCIWFIRST);
-+
-+	if (descr->header_type != IW_HEADER_TYPE_POINT)
-+		return ioctl_standard_call(dev, iwr, cmd, handler);
-+
-+	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
-+	iwp.pointer = compat_ptr(iwp_compat->pointer);
-+	iwp.length = iwp_compat->length;
-+	iwp.flags = iwp_compat->flags;
-+
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
-+
-+	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
-+	iwp_compat->length = iwp.length;
-+	iwp_compat->flags = iwp.flags;
-+
-+	return err;
-+}
-+
-+static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
-+			       unsigned int cmd, iw_handler handler)
-+{
-+	const struct iw_priv_args *descr;
-+	struct iw_request_info info;
-+	int ret, extra_size;
-+
-+	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
-+
-+	/* Prepare the call */
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	/* Check if we have a pointer to user space data or not. */
-+	if (extra_size == 0) {
-+		/* No extra arguments. Trivial to handle */
-+		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+	} else {
-+		struct compat_iw_point *iwp_compat;
-+		struct iw_point iwp;
-+
-+		iwp_compat = (struct compat_iw_point *) &iwr->u.data;
-+		iwp.pointer = compat_ptr(iwp_compat->pointer);
-+		iwp.length = iwp_compat->length;
-+		iwp.flags = iwp_compat->flags;
-+
-+		ret = ioctl_private_iw_point(&iwp, cmd, descr,
-+					     handler, dev, &info, extra_size);
-+
-+		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
-+		iwp_compat->length = iwp.length;
-+		iwp_compat->flags = iwp.flags;
-+	}
-+
-+	/* Call commit handler if needed and defined */
-+	if (ret == -EIWCOMMIT)
-+		ret = call_commit_handler(dev);
-+
-+	return ret;
-+}
-+
-+int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+			     unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct iwreq iwr;
-+	char *colon;
-+	int ret;
-+
-+	if (copy_from_user(&iwr, argp, sizeof(struct iwreq)))
-+		return -EFAULT;
-+
-+	iwr.ifr_name[IFNAMSIZ-1] = 0;
-+	colon = strchr(iwr.ifr_name, ':');
-+	if (colon)
-+		*colon = 0;
-+
-+	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
-+				  compat_standard_call,
-+				  compat_private_call);
-+
-+	if (ret > 0 &&
-+	    IW_IS_GET(cmd) &&
-+	    copy_to_user(argp, &iwr, sizeof(struct iwreq)))
-+		return -EFAULT;
-+
-+	return ret;
-+}
-+#endif
-+
- /************************* EVENT PROCESSING *************************/
- /*
-  * Process events generated by the wireless layer or the driver.
--- 
-1.5.4.rc1
+Taking a closer look...
+
+> +	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
+> +		return TXRX_DROP;
+
+Should we maybe do the test explicitly for when we want it, i.e.
+AP/VLAN/IBSS cases? Just thinking of the mesh networking stuff etc.
+that's being added...
+
+Other than that, looks fine.
+
+johannes
+
+--=-OBwKGu49XRmIa8opO27R
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2a15qVg1VMiehFYAQKbsQ//bgcTgdRfSfzOhyq2ZPwDvqWv9gM1798b
+OJwryeewtpDTsJtvbWHZzqkPOSlX0K1NpkdoPMTYC61xNg58n32YrbCB3JgpsA25
+YvCowhKT/hsOlD3PTUP0lphIf2PIGyKg2AQBJEEVWs3H7gIM/e+p8NoMO/aRWaQX
+Bdd/chGg9d0FcBrxn3cKWlh5wjQZoy+VPA28rul3Lu3l3wFXtacaBn8UZ6MOhqrz
+YsfwVHaGITQ9i6+AfZ6dwpkdmkF/WCfeyrpo1ib+Qt/5FQ/xgG16VHSM19/6PhVX
+YKRFFZZtffOKZD7OG4MHZSui95Fm5QiARDfM9bxPqgoNZz37hrCPHEG3WSue6qWh
+rRB9drQ5jAILtf5FlldR+TsbXiO3iVllk6aY/H9mgGU3w+YhizCzwGlFpGXECjNZ
+BrYkKd/e5oI1+uDfcGMJU56MOhTQOwqGIKh+DSj81I1tA26qxfcjbDRArDYvLvb8
+O9k91JzrOm5Ash0N20ZVFXFA/11KP+E2c8MmpSbjtfaGN46avAuN69P7P6r6ILrm
+xPH9MBZgqt+h7pkGd69KUpgdhamj96xVpLKTrJA8x5WM2LzdiGLUmQKsZX8IBXI8
+inR+raq3utuHJssQKkhylq4L+OJmTYT7iIAZTTCGeLbtI75V/fdMMxSDVj8uF592
+HOUeHWJlkTc=
+=zjpj
+-----END PGP SIGNATURE-----
+
+--=-OBwKGu49XRmIa8opO27R--
 
