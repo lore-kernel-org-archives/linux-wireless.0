@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39881 "EHLO mx2.suse.de"
+Received: from mga03.intel.com ([143.182.124.21]:31958 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756718AbXLUOML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 09:12:11 -0500
-From: Helmut Schaa <hschaa@suse.de>
+	id S932659AbXLQQNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 11:13:33 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
-Subject: [PATCH] mac80211: Restore rx.fc before every invocation of ieee80211_invoke_rx_handlers
-Date: Fri, 21 Dec 2007 15:16:35 +0100
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712211516.35731.hschaa@suse.de> (sfid-20071221_141215_108356_0F4BE6F7)
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 4/8] mac80211: A-MPDU Rx MLME data initialization
+Date: Mon, 17 Dec 2007 17:57:45 +0200
+Message-Id: <11979070784033-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_161341_806531_EEC387F9)
+In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a problem with rx handling on multiple interfaces. Especially 
-when using hardware-scanning and a wireless driver (i.e. iwlwifi) which is 
-able to receive data while scanning.
+This patch initialize A-MPDU MLME data for Rx sessions.
 
-The rx handlers can modify the skb and the frame control field (see 
-ieee80211_rx_h_remove_qos_control) but since every interface gets its own 
-copy of the skb each should get its own copy of rx.fc too.
-
-In my case the wlan0-interface did not remove the qos-control from the frame 
-because the corresponding flag in rx.fc was already removed while processing 
-the frame on the master interface. Therefore somehow corrupted frames were 
-passed to the userspace.
-
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 362e8e5..08a6905 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1723,6 +1723,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct 
-sk_buff *skb,
- 				       prev->dev->name);
- 			continue;
- 		}
-+		rx.fc = le16_to_cpu(hdr->frame_control);
- 		rx.skb = skb_new;
- 		rx.dev = prev->dev;
- 		rx.sdata = prev;
-@@ -1731,6 +1732,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct 
-sk_buff *skb,
- 		prev = sdata;
- 	}
- 	if (prev) {
-+		rx.fc = le16_to_cpu(hdr->frame_control);
- 		rx.skb = skb;
- 		rx.dev = prev->dev;
- 		rx.sdata = prev;
+ net/mac80211/sta_info.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index e849155..37381f3 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -132,6 +132,7 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
+ 			       struct net_device *dev, u8 *addr, gfp_t gfp)
+ {
+ 	struct sta_info *sta;
++	int i;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	sta = kzalloc(sizeof(*sta), gfp);
+@@ -151,6 +152,16 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
+ 	memcpy(sta->addr, addr, ETH_ALEN);
+ 	sta->local = local;
+ 	sta->dev = dev;
++	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
++	for (i = 0; i < STA_TID_NUM; i++) {
++		sta->timer_to_tid[i] = i;
++		/* rx timers */
++		sta->ampdu_mlme.tid_rx[i].session_timer.function =
++			sta_rx_agg_session_timer_expired;
++		sta->ampdu_mlme.tid_rx[i].session_timer.data =
++			(unsigned long)&sta->timer_to_tid[i];
++		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
++	}
+ 	skb_queue_head_init(&sta->ps_tx_buf);
+ 	skb_queue_head_init(&sta->tx_filtered);
+ 	__sta_info_get(sta);	/* sta used by caller, decremented by
+-- 
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
