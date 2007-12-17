@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45384 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754085AbXLRPv0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 10:51:26 -0500
-Subject: Re: Queries about acx-mac80211 master mode support on the AR7
-	platform
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mark Williamson <mark.williamson@imperial.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4767E141.7080801@imperial.ac.uk> (sfid-20071218_153428_191906_A6890286)
-References: <4767E141.7080801@imperial.ac.uk>
-	 (sfid-20071218_153428_191906_A6890286)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VrO2gEZY/BRdrLtyyTj0"
-Date: Tue, 18 Dec 2007 16:46:05 +0100
-Message-Id: <1197992765.4885.173.camel@johannes.berg> (sfid-20071218_155131_301671_E9DFAF86)
+Received: from mail.gmx.net ([213.165.64.20]:44837 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753763AbXLQVHg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 16:07:36 -0500
+Subject: Re: [patch 1/9] mac80211: Clean up rate selection code
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1197892019.4885.16.camel@johannes.berg>
+References: <20071217012517.882216322@gmx.de> >
+	 <20071217012549.932807027@gmx.de> >
+	 (sfid-20071217_012727_837272_3B5270C7)  <1197892019.4885.16.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 17 Dec 2007 22:07:33 +0100
+Message-Id: <1197925653.7505.13.camel@localhost> (sfid-20071217_210739_000582_761D4603)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-VrO2gEZY/BRdrLtyyTj0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2007-12-17 at 12:46 +0100, Johannes Berg wrote:
+> Looks good, minor comment below.
+> 
+> > +void rate_control_get_rate(struct net_device *dev,
+> > +			   struct ieee80211_hw_mode *mode, struct sk_buff *skb,
+> > +			   struct rate_selection *sel)
+> 
+> > +	fc = le16_to_cpu(hdr->frame_control);
+> > +	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+> > +	    (hdr->addr1[0] & 0x01))
+> 
+> Please use is_multicast_ether_addr()
 
-> But, perhaps the largest sticking point is that the acx-mac80211=20
-> driver, unlike acx, does not support AP (master) mode. I have struggled=20
-> to find out whether this is an issue in the acx-mac80211 driver=20
-> component or in fact the mac80211 does not support master mode at this=20
-> moment in time.
+Sure, we had that before. Seems Stefano gave me an old patch. Sorry
+about this.
 
-Both, I expect, though I don't know about the driver. I'm currently
-working on a large patch series to make mac80211 work in master mode
-again together with hostapd, you may want to search the archives of this
-list for my [FYI] mails on the topic.
+> 
+> > +	/* If a forced rate is in effect, select it. */
+> > +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> > +	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
+> > +		sel->rate = &mode->rates[sdata->bss->force_unicast_rateidx];
+> > +
+> > +	/* If we haven't found the rate yet, ask the rate control algo. */
+> > +	if (!sel->rate)
+> > +		ref->ops->get_rate(ref->priv, dev, mode, skb, sel);
+> 
+> Maybe after this we should insert
+> 
+> 	if (unlikely(!sel->rate)) {
+> 		WARN_ON(1);
+> 		sel->rate = rate_lowest(...);
+> 	}
+> 
+> Not sure though.
 
-johannes
+I don't think we need this. Rate control is supposed to select a rate,
+if it doesn't know it can assign a fallback rate itself.
 
---=-VrO2gEZY/BRdrLtyyTj0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2frPKVg1VMiehFYAQLBQRAAoFFw9xFOiZH77BnYuDiMlMGDNscLYS/p
-cS/xdJ/ytIMnne5aQQhpgUMrpAszG1vpvFA07wRj3lz719380l6kFHCXQVjDHWUr
-n4LonN9FU7XUl6NxKMFephWREgySQfDNk8VgIDIrBc3zp8ks+gq7UPlPZ2Un+PoM
-qdLL53yrO4IihxYPtPgOMS3B91M9RNn7e1ymy0MCO0mF8wiz/abUkW66Tl874qRi
-heFNG+XHWY6rgxnLhvaGV7bO9oKQQMgAZgP+rCMAo30Wu6sDkQn4e3HU/komVLSA
-BqcywHCDmGQwbCL5pW+W3VdpnHhPIzq4xX79MW+J/CCa9sfVBoM3hp2ixeVvKa6I
-sQ2gO1/dMf4RuEQSnVndVY1wRNPYMg/ztnd0qfeYbdKh2YroSxaitUjUbHvHPUhR
-lY8Rf4PM6SFcUlYAOZjXW17In2T34bRRudcg8kYFXmxUSNTTP3yjtZkrN2VR9sqN
-GAWnLqR6TnwkQivioGIaeEFPAmoIXN1hrxMw5A/wvMJxFEMAS7c79a+vBMKrKmMU
-j3bTJY8LgoA9mgedMF+Asqlg5vlMfYY0NeF51IWUu0zL8o5Aa09bH8FJGhh0K71G
-wxdAihOeEGzYCUzC3V9PUybBjdhuybYVv3g+Cgd+HsfLHKwAQDzKbsYIQz/J/A3x
-3Dsp9Tn8kg4=
-=MKoT
------END PGP SIGNATURE-----
-
---=-VrO2gEZY/BRdrLtyyTj0--
+Mattas
 
