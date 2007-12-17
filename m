@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:63856 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbXLGATR (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60945 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753475AbXLQRqy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 19:19:17 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1008431pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 16:19:17 -0800 (PST)
-Message-ID: <43e72e890712061619n6eca015fj9f2e4409c767547d@mail.gmail.com> (sfid-20071207_001921_136626_E6502FC9)
-Date: Thu, 6 Dec 2007 19:19:16 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Automated kerneldoc for all wireless drivers
-In-Reply-To: <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
-	 <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com>
+	Mon, 17 Dec 2007 12:46:54 -0500
+Subject: Re: [patch 7/9] mac80211: Dump rc80211_pid events to debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217012550.464889334@gmx.de>> (sfid-20071217_012731_162132_E62DF268)
+References: <20071217012517.882216322@gmx.de> >
+	  <20071217012550.464889334@gmx.de>> (sfid-20071217_012731_162132_E62DF268)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jjb6VK2QqmTg8Vo75avy"
+Date: Mon, 17 Dec 2007 12:57:16 +0100
+Message-Id: <1197892636.4885.25.camel@johannes.berg> (sfid-20071217_174704_095556_52A9D4E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 6, 2007 6:42 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Dec 6, 2007 6:38 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >   3910 total
->
-> Sorry, I forgot the iwlwifi drivers:
->
->    670 iwlwifiiwl3945-basec-doc.html
->    325 iwlwifiiwl-3945c-doc.html
->    134 iwlwifiiwl-3945-commandsh-doc.html
->      0 iwlwifiiwl-3945-debugh-doc.html
->    121 iwlwifiiwl-3945h-doc.html
->      0 iwlwifiiwl-3945-hwh-doc.html
->      0 iwlwifiiwl-3945-ioh-doc.html
->     78 iwlwifiiwl-3945-rsc-doc.html
->     65 iwlwifiiwl-3945-rsh-doc.html
->    715 iwlwifiiwl4965-basec-doc.html
->    438 iwlwifiiwl-4965c-doc.html
->    422 iwlwifiiwl-4965-commandsh-doc.html
->      0 iwlwifiiwl-4965-debugh-doc.html
->    171 iwlwifiiwl-4965h-doc.html
->    566 iwlwifiiwl-4965-hwh-doc.html
->      0 iwlwifiiwl-4965-ioh-doc.html
->     69 iwlwifiiwl-4965-rsc-doc.html
->     65 iwlwifiiwl-4965-rsh-doc.html
->     54 iwlwifiiwl-helpersh-doc.html
->    119 iwlwifiiwl-prphh-doc.html
->      0 iwlwifiiwl-spectrumh-doc.html
->   4012 total
->
-> For a total of 7922 for us now. Thanks Intel, great job!
->
->   Luis
->
 
+--=-jjb6VK2QqmTg8Vo75avy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Also, forgot to mention, if you want to see your kerneldoc warnings
-you can add page with something like:
+=20
+> +#ifdef CONFIG_MAC80211_DEBUGFS
+> +#include "rc80211_pid_debugfs.h"
+> +#endif
+> +#include "rc80211_pid.h"
 
-If this page is empty it means there are no kerneldoc warnings
+Don't ifdef includes. Also, I think it's overkill to have two header
+files for a single rate control algorithm, just use a single combined
+one.
 
-<<kerneldocwarn(ath5k/ath5k.h)>>
+johannes
+
+--=-jjb6VK2QqmTg8Vo75avy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2ZkG6Vg1VMiehFYAQIDIw//VCDjqAy7RWJbrTesOyBdJFyoBk8LGCK2
+i1AMsP7FUsFgWk/GorJJjf472+CrIlecwOt2J4XGuDfrTBD/yGny0zxPwAgov7rW
+J8MaWLiuyV+fWWuwRP2nOimOeB22R5G12E9veKutkYJtvxpwklVXhg75RuOaYMgi
+KJYJ/JpVca2vO+KTUzDKAUfyLLCYWzEShfbZvda+h70aHJ7qoVI+bEum2UvCY64k
+cdu3bmq1uftuC9Qb2Lly187cUy35hnFILHnaV8HhHRIKp7fF6PNlz+S6CPbtAdgs
+Zca2r8Ull2UzJXZgpVgoc+G8E/OtX/OTbYGMBnkzIs1WbJWr+ADa0oQtK4cZ/tw3
++iVX61etE0uunrbARw0ww94Q5bOrVhas4QXoJyWGeqvrib4bxrD2n13gPh544tHh
+vD3f5I9CRGAkDqcrnOH1WABhMrj3SrH9KwfCmXNWCE4t2R3KClRP00HOOk2dq26U
+g1orHvDWLuyNjEdsOeDLxIdg5TpD3eScMh6CncdI7rVewBqSwYoa8qSzs+vxWMK/
+3TIpUpsCKKPS+K3SHDeEQIf+TWkNH9gJhU+6gHmvnijfOESfVHGw1c1r8hc7oFGS
+4KgidoAv1vMTWi0ECOh2hq/4G/1NV2RRbmc6LlJFMt3E1BFy/y+g9dmF4y7/Wea4
+wD6zuvfEOqA=
+=QScs
+-----END PGP SIGNATURE-----
+
+--=-jjb6VK2QqmTg8Vo75avy--
+
