@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34094 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752363AbXLPXLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 18:11:24 -0500
-Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20071216181159.GP5698@jm.kir.nu>
-References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp>
-	 <1197580418.14270.6.camel@localhost.localdomain>
-	 <20071214134918.275E.MOKUNO@sm.sony.co.jp>
-	 <1197637127.16724.1.camel@localhost.localdomain>
-	 <20071215014244.GI5698@jm.kir.nu>
-	 <1197827354.6358.2.camel@localhost.localdomain>
-	 <20071216181159.GP5698@jm.kir.nu>
-Content-Type: text/plain
-Date: Sun, 16 Dec 2007 18:10:10 -0500
-Message-Id: <1197846610.7302.1.camel@localhost.localdomain> (sfid-20071216_231128_847494_3452C69D)
+Received: from mfe1.polimi.it ([131.175.12.23]:33432 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751864AbXLQAyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Dec 2007 19:54:10 -0500
+Date: Mon, 17 Dec 2007 01:50:04 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: mattias.nissler@gmx.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
+ default
+Message-ID: <20071217015004.2400ab33@morte> (sfid-20071217_005413_648345_538A87E5)
+In-Reply-To: <1197852547.4885.1.camel@johannes.berg>
+References: <20071217001956.640555983@gmx.de>
+	<20071217002056.351743954@gmx.de>
+	<1197852547.4885.1.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-12-16 at 10:11 -0800, Jouni Malinen wrote:
-> On Sun, Dec 16, 2007 at 12:49:14PM -0500, Dan Williams wrote:
+On Mon, 17 Dec 2007 01:49:06 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> > -What:	iee80211 softmac wireless networking component
+> > +What:	ieee80211 softmac wireless networking component
 > 
-> > Yeah, I was going to propose that on Friday but got side-tracked.  What
-> > would require a new key type?  Are there some firmwares that _only_
-> > accept the WPA passphrase?  Because if there aren't (PS3 accepts WPA hex
-> > keys too) then the supplicant could just pass the hex key.  Not quite
-> > sure what you mean here with "new key type".
 > 
-> It is a new key type regardless of whether it is PSK or passphrase. The
-> current key types (IW_AUTH_CIPHER_*) are WEP40, TKIP, CCMP, and WEP104..
+> Unrelated change, please separate.
 
-Ah, it's a different key because it's not set _during_ the 4-way
-handshake, but just sent to the fw directly and the fw handles it,
-right?
+Will do.
+ 
+> > +
+> > +What:	rc80211-simple rate control algorithm for mac80211
+> > +When:	2.6.26
+> > +Files:	net/mac80211/rc80211-simple.c
+> > +Why:	This algorithm was provided for reference but always exhibited bad
+> > +	responsiveness and performance and has some serious flaws. It has been
+> > +	replaced by rc80211-pid.
+> > +Who:	Stefano Brivio <stefano.brivio@polimi.it>
+> 
+> I don't think we really want to do this. We can't even change the
+> algorithm anyway except by recompiling with a different default.
 
-> I don't know whether there are any Linux drivers that would use WPA
-> passphrase, but at least the Mac OS X driver interface seems to only use
-> passphrase for WPA-Personal, so it is apparently possible to design such
-> a architecture ;-). Anyway, I would be fine with just adding
-> IW_AUTH_CIPHER_PMK for now (and the new capability to figure out whether
-> this is needed). That PMK would be PSK for WPA-Personal, but it could
-> also be used as PMK for WPA-Enterprise, so the more generic PMK name.
-
-Sounds good.
-
-Dan
+What do you suggest instead?
 
 
+--
+Ciao
+Stefano
