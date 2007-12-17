@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:60073 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbXLJQJc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 11:09:32 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH 07/48] libertas: make more functions static
-Date: Mon, 10 Dec 2007 17:08:31 +0100
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <E1J1kpB-0006kg-FH@shinybook.infradead.org>
-In-Reply-To: <E1J1kpB-0006kg-FH@shinybook.infradead.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:44705 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937462AbXLQUSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 15:18:40 -0500
+Message-ID: <4766D99D.5090507@garzik.org> (sfid-20071217_201854_773250_D168D2C9)
+Date: Mon, 17 Dec 2007 15:18:37 -0500
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200712101708.32668.arnd@arndb.de> (sfid-20071210_160938_743439_AC465139)
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net
+Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+References: <20071216043148.GE3096@tuxdriver.com> <20071217193402.GD3121@tuxdriver.com>
+In-Reply-To: <20071217193402.GD3121@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 December 2007, David Woodhouse wrote:
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -13,6 +13,11 @@
-> =A0#include "wext.h"
-> =A0
-> =A0static void cleanup_cmdnode(struct cmd_ctrl_node *ptempnode);
-> +struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv=
-);
-> +void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0 =A0struct cmd_ctrl=
-_node *ptempnode,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0 =A0u16 wait_option=
-, void *pdata_buf);
-> +
+John W. Linville wrote:
+> On Sat, Dec 15, 2007 at 11:31:48PM -0500, John W. Linville wrote:
+> 
+>> Cyrill Gorcunov (2):
+>>       ieee80211_rate: missed unlock
+> 
+>>  net/mac80211/ieee80211_rate.c                  |    1 +
+> 
+>> diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
+>> index 7254bd6..3260a4a 100644
+>> --- a/net/mac80211/ieee80211_rate.c
+>> +++ b/net/mac80211/ieee80211_rate.c
+>> @@ -33,6 +33,7 @@ int ieee80211_rate_control_register(struct rate_control_ops *ops)
+>>  		if (!strcmp(alg->ops->name, ops->name)) {
+>>  			/* don't register an algorithm twice */
+>>  			WARN_ON(1);
+>> +			mutex_unlock(&rate_ctrl_mutex);
+>>  			return -EALREADY;
+>>  		}
+>>  	}
+> 
+> Crud...there is a one-line fix in here that should have gone to Dave.
+> 
+> Jeff, (assuming Dave ACKs it) would you mind just taking it your
+> way along with the other posted patches?  Since this is intended for
+> 2.6.24, there should be no great maintenance hardship if it goes to
+> Linus through your tree instead of Dave's.
 
-You should never need forward declarations for global functions in a C =
-file,
-it is error prone in any case:
+Will do...
 
-* if the functions are only used in one file, make them static.
-* Better, avoid forward declarations entirely by ordering the functions=
- in the
-way they are called.
-* If they are used in one file and defined in another, declare them in
-a common header, and only there, in order to avoid the prototypes from =
-diverging.
+	Jeff
 
-	Arnd <><
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
