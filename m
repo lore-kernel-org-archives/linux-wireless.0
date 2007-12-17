@@ -1,178 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22196 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259AbXLSGDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 01:03:01 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] iwlwifi: fix possible priv->mutex deadlock during suspend
-Date: Wed, 19 Dec 2007 13:59:43 +0800
-Message-Id: <1198043983-23807-1-git-send-email-yi.zhu@intel.com> (sfid-20071219_060305_577438_FEFE2AF6)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60931 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755896AbXLQRqh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 12:46:37 -0500
+Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
+	default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217012550.213561122@gmx.de>> (sfid-20071217_012738_361990_F4488E8A)
+References: <20071217012517.882216322@gmx.de> >
+	  <20071217012550.213561122@gmx.de>> (sfid-20071217_012738_361990_F4488E8A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S42x8WIXDFNrBMssxtXG"
+Date: Mon, 17 Dec 2007 12:52:42 +0100
+Message-Id: <1197892362.4885.23.camel@johannes.berg> (sfid-20071217_174641_935501_302300B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves _cancel_deferred_work out of mutex protection and removes
-unnecessary mutex in pci_suspend and pci_resume.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 +++++-------------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   18 +++++-------------
- 2 files changed, 10 insertions(+), 26 deletions(-)
+--=-S42x8WIXDFNrBMssxtXG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 88cf035..f0303e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6355,8 +6355,6 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
- 	/* Unblock any waiting calls */
- 	wake_up_interruptible_all(&priv->wait_command_queue);
- 
--	iwl_cancel_deferred_work(priv);
--
- 	/* Wipe out the EXIT_PENDING status bit if we are not actually
- 	 * exiting the module */
- 	if (!exit_pending)
-@@ -6431,6 +6429,8 @@ static void iwl3945_down(struct iwl3945_priv *priv)
- 	mutex_lock(&priv->mutex);
- 	__iwl_down(priv);
- 	mutex_unlock(&priv->mutex);
-+
-+	iwl_cancel_deferred_work(priv);
- }
- 
- #define MAX_HW_RESTARTS 5
-@@ -8739,10 +8739,9 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
- 
- 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
- 
--	mutex_lock(&priv->mutex);
- 	set_bit(STATUS_EXIT_PENDING, &priv->status);
--	__iwl_down(priv);
--	mutex_unlock(&priv->mutex);
-+
-+	iwl_down(priv);
- 
- 	/* Free MAC hash list for ADHOC */
- 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
-@@ -8801,12 +8800,10 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 
--	mutex_lock(&priv->mutex);
--
- 	set_bit(STATUS_IN_SUSPEND, &priv->status);
- 
- 	/* Take down the device; powers it off, etc. */
--	__iwl_down(priv);
-+	iwl_down(priv);
- 
- 	if (priv->mac80211_registered)
- 		ieee80211_stop_queues(priv->hw);
-@@ -8815,8 +8812,6 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, PCI_D3hot);
- 
--	mutex_unlock(&priv->mutex);
--
- 	return 0;
- }
- 
-@@ -8874,8 +8869,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- 
- 	printk(KERN_INFO "Coming out of suspend...\n");
- 
--	mutex_lock(&priv->mutex);
--
- 	pci_set_power_state(pdev, PCI_D0);
- 	err = pci_enable_device(pdev);
- 	pci_restore_state(pdev);
-@@ -8889,7 +8882,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- 	pci_write_config_byte(pdev, 0x41, 0x00);
- 
- 	iwl_resume(priv);
--	mutex_unlock(&priv->mutex);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index df6f3b1..87cc281 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6767,8 +6767,6 @@ static void __iwl4965_down(struct iwl4965_priv *priv)
- 	/* Unblock any waiting calls */
- 	wake_up_interruptible_all(&priv->wait_command_queue);
- 
--	iwl_cancel_deferred_work(priv);
--
- 	/* Wipe out the EXIT_PENDING status bit if we are not actually
- 	 * exiting the module */
- 	if (!exit_pending)
-@@ -6844,6 +6842,8 @@ static void iwl4965_down(struct iwl4965_priv *priv)
- 	mutex_lock(&priv->mutex);
- 	__iwl_down(priv);
- 	mutex_unlock(&priv->mutex);
-+
-+	iwl_cancel_deferred_work(priv);
- }
- 
- #define MAX_HW_RESTARTS 5
-@@ -9308,10 +9308,9 @@ static void iwl4965_pci_remove(struct pci_dev *pdev)
- 
- 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
- 
--	mutex_lock(&priv->mutex);
- 	set_bit(STATUS_EXIT_PENDING, &priv->status);
--	__iwl_down(priv);
--	mutex_unlock(&priv->mutex);
-+
-+	iwl_down(priv);
- 
- 	/* Free MAC hash list for ADHOC */
- 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
-@@ -9370,12 +9369,10 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 
--	mutex_lock(&priv->mutex);
--
- 	set_bit(STATUS_IN_SUSPEND, &priv->status);
- 
- 	/* Take down the device; powers it off, etc. */
--	__iwl_down(priv);
-+	iwl_down(priv);
- 
- 	if (priv->mac80211_registered)
- 		ieee80211_stop_queues(priv->hw);
-@@ -9384,8 +9381,6 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, PCI_D3hot);
- 
--	mutex_unlock(&priv->mutex);
--
- 	return 0;
- }
- 
-@@ -9443,8 +9438,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
- 
- 	printk(KERN_INFO "Coming out of suspend...\n");
- 
--	mutex_lock(&priv->mutex);
--
- 	pci_set_power_state(pdev, PCI_D0);
- 	err = pci_enable_device(pdev);
- 	pci_restore_state(pdev);
-@@ -9458,7 +9451,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
- 	pci_write_config_byte(pdev, 0x41, 0x00);
- 
- 	iwl_resume(priv);
--	mutex_unlock(&priv->mutex);
- 
- 	return 0;
- }
--- 
-1.5.3.6
+
+> +config MAC80211_RCSIMPLE
+> +	bool "'simple' rate control algorithm (DEPRECATED)"
+> +	default n
+> +	depends on MAC80211
+> +	---help---
+
+I'm pretty sure just "help" is preferred style these days.
+
+And I already said that I'd rather see a single patch that replaces
+_SIMPLE with _PID.
+
+I'd split up the patch series as follows:
+ 1) API cleanup, including all rate control algorithms
+ 2) PID replace SIMPLE
+ 3..N) PID improvements
+
+Although since this is all new code 2..N should probably be collapsed
+into a single patch.
+
+johannes
+
+--=-S42x8WIXDFNrBMssxtXG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2ZjCKVg1VMiehFYAQIRhA/+IuLqPU0d67LwRFk4e52XBYAgr6KNbTeF
+AhHBN1zTcdVG1U5pPOmENPIRLRlJgzOH2xWMNNo6OUqH1as8hqWEXyHxu2G40KO6
+sKvukBvuo9jzMPhVK+6GOrJ1lRj+HUhTgaSc1TK9+4m5ECWf25Y10iBdzkuQLRPA
+m3KabhfwzKOoBVNk+wYmAFBqoFLqI3L9AlELX+wXpfF/F0nCiqIAw8nri2w9BYX8
+quTUbMtT5ulCRosGc5Fn1XaznfwnGzzgDYBJuVbQ0NJTS4pt2Xtju+oRh6ChUphl
+e7spkJv4yRkFiqKKgWJ5FFWgQFVsxfznAcHK/1QA73ggcYvDDBW/W4n00L9EjrXh
+dvdaIqhcPREJaV3vFefMCkigiJjMOOGQEMIOpmc3jTxS1iXkXLTSEwXM2EKgThnH
+cffHt/0TmB7e6LlyaoiuvPrT8YZgT0r1hSl6v1RRhPwV94Ih0r2KPgaK63eqNUKi
+00RyGjdtgjosdWVcVg5liy0DrPbi1QPlsOPTDxaAZLsoluPP1deg+bqrj78+yMBX
+3fBnzq7AWEj9eJmv0n1eCSEHsv8y3OXcfNrsAYojuQ9wNswGbOSPoZK3kRyzyP2i
+YxS1FGsRXR02QvcsNUWRM+4QWzzK9YlQFLhrULVvhjdkCWdFLtNKZGUxds7w1Fn9
+tDr2z+Y+3Fs=
+=Aggv
+-----END PGP SIGNATURE-----
+
+--=-S42x8WIXDFNrBMssxtXG--
 
