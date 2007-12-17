@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:22415 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbXLEHta (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60951 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753475AbXLQRq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 02:49:30 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-Date: Wed, 5 Dec 2007 08:49:46 +0100
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Mattias Nissler" <mattias.nissler@gmx.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <1196622331.7472.4.camel@localhost> <20071204024146.15689ee3@morte> <40f31dec0712041405sb14243dw9ccb7509e6f58d8@mail.gmail.com>
-In-Reply-To: <40f31dec0712041405sb14243dw9ccb7509e6f58d8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200712050849.46760.hs4233@mail.mn-solutions.de> (sfid-20071205_074941_123573_FC7B4EA3)
+	Mon, 17 Dec 2007 12:46:59 -0500
+Subject: Re: [patch 9/9] mac80211: Publish rc80211_pid parameters in debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217012550.634829179@gmx.de>> (sfid-20071217_012738_052213_B631AA79)
+References: <20071217012517.882216322@gmx.de> >
+	  <20071217012550.634829179@gmx.de>> (sfid-20071217_012738_052213_B631AA79)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Az2uBUrj7+AsVM7iG/YL"
+Date: Mon, 17 Dec 2007 13:02:36 +0100
+Message-Id: <1197892956.4885.28.camel@johannes.berg> (sfid-20071217_174706_855471_C2E1E0AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 December 2007 23:05:28 Nick Kossifidis wrote:
-> [  3]  0.0-60.0 sec  29.4 MBytes  4.11 Mbits/sec  3.242 ms
-> [  3]  0.0-60.0 sec  29.4 MBytes  4.11 Mbits/sec  4.439 ms
-> [  3]  0.0-60.0 sec  32.7 MBytes  4.57 Mbits/sec
-...
+
+--=-Az2uBUrj7+AsVM7iG/YL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Could it be the case that if we test the PID controller such way,
-then we optimize for throughtput in a scenario like "laptop sits 
-next the the AP".
+> +	period =3D (HZ / 1000) * pinfo->sampling_period;
 
-Or, in other words: if we put the AP 80m away and then try the 
-test, would the same PID parameters that yielded high MB/s rates 
-now still keep us a sane (for that distance!) connection?
+That isn't going to work correctly with HZ < 1000 because the
+parenthesised expression is going to be zero.
+
+johannes
+
+--=-Az2uBUrj7+AsVM7iG/YL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2ZlWqVg1VMiehFYAQIwMRAAgKhnBbDazsEGw+mXs/rLxz4X/cwP0w8k
+expigkYM1hhgRJMHMWzjv+w+kRJyFjE9eUqLqTCJkNcZCrVakG79BKv+fe+FDbVW
+tvG7OJ085RuGw6BcniMjMRhslK+xLxIiI4jj1xEq9rgv3nrsgIuQiZdGqNKTLkTq
+CxnBLLC+t9gFnJN8VHShQf/mfnS2fOol0AorrO5b42msUPsgecuUT7Zn5SqjO5Ca
+31mzCRuAO6om1thblFBcaIhrC7hB3O0t3kqwA3iWxHXy6/Ocn91hXwOK9L7pd8wR
+6MCnlyQhDcxZGDBQR3omEgASu8gZp+50YzB/PGgRpvJfElxYDhdcIudoEE8fa8AY
+yNy6GGde9VrafmXiHJpwxi8P0VozHJM796VKjH/uUiY5hf9Zy0D4eb+3o7C0sOQ3
+1Y9MlQ6u3KSd5bCYRIGOPrjHsR/1Dc8XvPohTwveZM80TqQfVW8RphKK4XETid3K
+gjQdZzoc9CYeCSq5o9onu6lwpZTzFHGOAj0aHSZjAqYVzkKtDYKrI9iXp7miXpN6
+8Y9ItaWI5zM9NotG3OYI3XNcChBRUzvK3muJVSWjOCg07uAOfQdeVWVI8dSIa8UL
+B6o67IR+3ky7Kr/mb6DgWBsOeEjQOqfuOb+l1mPvljy87tsDHtQjfotERiIBucvt
+mzCqqDSRjys=
+=76uC
+-----END PGP SIGNATURE-----
+
+--=-Az2uBUrj7+AsVM7iG/YL--
+
