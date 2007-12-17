@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:54145 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760229AbXLTOQB (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59500 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754168AbXLQRnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 09:16:01 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so3259364fkz.5
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2007 06:15:59 -0800 (PST)
-Message-ID: <c85cb4470712200615o60132254lebe9d5553ddf2f3d@mail.gmail.com> (sfid-20071220_141614_194860_1513533A)
-Date: Thu, 20 Dec 2007 16:15:55 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1198154463.16241.46.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
-	 <1198145667.16241.23.camel@johannes.berg>
-	 <c85cb4470712200432w3640359dje70f57c86be3497a@mail.gmail.com>
-	 <1198154463.16241.46.camel@johannes.berg>
+	Mon, 17 Dec 2007 12:43:24 -0500
+Subject: Re: [patch 3/9] mac80211: Add PID controller based rate control
+	algorithm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071217012550.127484236@gmx.de>> (sfid-20071217_012722_935905_F6E718EA)
+References: <20071217012517.882216322@gmx.de> >
+	  <20071217012550.127484236@gmx.de>> (sfid-20071217_012722_935905_F6E718EA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bB70v4TUo5Tn+OPb0D1A"
+Date: Mon, 17 Dec 2007 12:50:10 +0100
+Message-Id: <1197892210.4885.21.camel@johannes.berg> (sfid-20071217_174333_619195_57D75E1D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ok, I agree.
-I'll make one patch for seperation only inside __ieee80211_rx, and
-then build the reordering on top of it.
 
-> > > Also, what you're doing means that
-> > > the frame is accounted for channel load twice (yeah, I know, the stats
-> > > there suck... but still...)
-> >
-> > here i am already checking the .ordered field (like i proposed for
-> > monitor), and ignore the in-order frames.
->
-> Ah. You'd need to ignore the out-of-order frames too since they too have
-> gone through __ieee80211_rx already, no? Or do you by out-of-order just
-> mean those that have been queued?
->
-> > so you suggest to remove ieee80211_rx_h_reorder_ampdu in favor of a
-> > function that will call ieee80211_sta_manage_reorder_buf?
->
-> I guess the rx_h_reorder_ampdu pre-handler can stay, but as far as I
-> understood the flow it will cause some frames to be "buffered". And I
-> think frames shouldn't go through the same path twice even if you've
-> annotated that path all over skipping when the frame was injected.
->
-> Basically, it seems to me that you're injecting frames down the same
-> __ieee80211_rx() path when they have already gone through that, and then
-> after the fact annotate pretty much all of that path before the actual
-> rx handlers (after pre-handlers) with "skip if reordered frame". That I
-> don't really like, it means we need to special-case everything we ever
-> put there.
->
-> > 2 - (pro) yet, i'll end up checking the .ordered field in 3 places -
-> > monitor,statistics and reordering buf, which lowers the encapsulation
-> > of work inside ieee80211_rx_h_reorder_ampdu
-> > 3 - (con) i will have to free un-needed sk_buffs in
-> > ieee80211_sta_stop_rx_BA_session without going back to __ieee80211_rx,
-> >  which may confuse othere.
->
-> I don't think it's that confusing because __ieee80211_rx would do the
-> same thing, it would free the frame if requested by the pre-handlers
-> instead of passing it to the rx handlers. What your code does would
-> simply be a diversion through another queue that has the same effect.
-> (If you keep the rx-pre-handler for that you should add a comment that
-> it must be last)
->
-> johannes
->
->
+--=-bB70v4TUo5Tn+OPb0D1A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> +	/* We need to do an arithmetic right shift. ISO C says this is
+> +	 * implementation defined for negative left operands. Hence, be
+> +	 * careful to get it right, also for negative values. */
+> +	adj =3D (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
+> +			  adj >> (2 * RC_PID_ARITH_SHIFT);
+
+That looks... weird.
+
+As far as I know all compilers the kernel can use will do an arithmetic
+right shift if the data type is signed.
+
+johannes
+
+--=-bB70v4TUo5Tn+OPb0D1A
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2ZicaVg1VMiehFYAQLTHxAAtDoMH1bYLor+AbMFDQY8lamcGY6KXpnB
+u+Qn5FSipn7CFEn9W9JZK12k7oWNE2iRCmAf7HWeRLYACw7l/IWH7d7C6pIjUr6k
+dZ5M3OnMRuNzc/imEse462nPfQUtAicFid4I0KLf37W3ayW5mQAsM1uDH8LmLswG
+4alCXjZ3+cAynyU8stQt+rSz7s8ZZh7bBjKda7LBlQKtMKlL9x+7EFIROi3WKc00
+sS6Gf4Vt7Eaq4B8GkV8gxWRTyRMIWg3O7Qmu4rKPi5qrGytO/bidr59BdWjLSc+s
+wJGHf6QfSOAnaJx884ZlL1uDoepBfCelQ+EJ6QjCJ/DLd+UpESRWHcUgWdcq3Yzy
+E4iviRZeODBMgNYVliiU3MBHXr/2qR8YD5jFUozC5B3ynX2vSgG7M8166o8DRiFO
+ChdWF4mOF1sVZMQ7ZPM6qcYFlW8sE64VB9E/0+I2O5l32MxK3zLb0gp8BPOHUCOq
+Ohbgr2/eJcGabJ2G3DvgSogjhRxFEonMosTRR0txi5uWJaJc6bK8z63AHwcGN6X6
+P+maSzyjGOr/XgGkxLDukWO0Mkes7KxSTSvgF+B8kb9bw9PHGgXQ7Vq/SAvJzHZr
+zzjnsliabu/7LwVJheCQta8S2qfhtXYiInQLgaburKyR8xqd0DO6gcg3S5+q0Qhb
+PwZ3T3yeB6c=
+=X5Ge
+-----END PGP SIGNATURE-----
+
+--=-bB70v4TUo5Tn+OPb0D1A--
+
