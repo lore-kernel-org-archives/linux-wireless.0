@@ -1,92 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50970 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761613AbXLPW6n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:43 -0500
-Subject: [PATCH 110/48] libertas: store command result in cmdnode instead of priv->cur_cmd_retcode
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J42S9-00038f-Ru@shinybook.infradead.org> (sfid-20071216_232427_757428_005341AB)
-Date: Sun, 16 Dec 2007 17:59:21 -0500
+Received: from mga02.intel.com ([134.134.136.20]:22912 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756514AbXLRPYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 10:24:07 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: pass in PS_POLL frames
+Date: Tue, 18 Dec 2007 17:23:53 +0200
+Message-Id: <1197991433172-git-send-email-ron.rindjunsky@intel.com> (sfid-20071218_152413_980669_666846C0)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 15 Dec 2007 04:22:52 -0500
+This patch fixes should_drop_frame function to pass in ps poll control
+frames required for power save functioanlity. Interface types that do not
+have interest for PS POLL frames now drop it in handler.
 
-... at least for users of __lbs_cmd().
-
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/libertas/cmd.c     |   12 ++++++------
- drivers/net/wireless/libertas/hostcmd.h |    1 +
- drivers/net/wireless/libertas/main.c    |    1 +
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ net/mac80211/rx.c   |   11 +++++++++--
+ net/mac80211/util.c |    7 ++++++-
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index f2e027b..c8f1bd5 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1173,6 +1173,7 @@ void lbs_queue_cmd(struct lbs_private *priv,
- 		lbs_deb_host("DNLD_CMD: cmd size is zero\n");
- 		goto done;
- 	}
-+	cmdnode->result = 0;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 50f99e7..e94cf30 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -61,8 +61,10 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
+ 		return 1;
+ 	if (unlikely(skb->len < 16 + present_fcs_len + radiotap_len))
+ 		return 1;
+-	if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
+-			cpu_to_le16(IEEE80211_FTYPE_CTL))
++	if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
++			cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
++	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
++			cpu_to_le16(IEEE80211_STYPE_PSPOLL)))
+ 		return 1;
+ 	return 0;
+ }
+@@ -880,6 +882,7 @@ ieee80211_rx_h_defragment(struct ieee80211_txrx_data *rx)
+ static ieee80211_txrx_result
+ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 	struct sk_buff *skb;
+ 	int no_pending_pkts;
+ 	DECLARE_MAC_BUF(mac);
+@@ -890,6 +893,10 @@ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
+ 		   !(rx->flags & IEEE80211_TXRXD_RXRA_MATCH)))
+ 		return TXRX_CONTINUE;
  
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
-@@ -1306,6 +1307,7 @@ void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
- 	if (cmd == priv->cur_cmd)
- 		priv->cur_cmd_retcode = result;
++	if ((sdata->type != IEEE80211_IF_TYPE_AP) &&
++	    (sdata->type != IEEE80211_IF_TYPE_VLAN))
++		return TXRX_DROP;
++
+ 	skb = skb_dequeue(&rx->sta->tx_filtered);
+ 	if (!skb) {
+ 		skb = skb_dequeue(&rx->sta->ps_tx_buf);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7b278e9..fb7fd89 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -135,13 +135,16 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
+ {
+ 	u16 fc;
  
-+	cmd->result = result;
- 	cmd->cmdwaitqwoken = 1;
- 	wake_up_interruptible(&cmd->cmdwait_q);
+-	if (len < 24)
++	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
++	if (len < 16)
+ 		return NULL;
  
-@@ -2212,12 +2214,10 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
- 	wait_event_interruptible(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
+ 	fc = le16_to_cpu(hdr->frame_control);
  
- 	spin_lock_irqsave(&priv->driver_lock, flags);
--	if (priv->cur_cmd_retcode) {
--		lbs_deb_host("PREP_CMD: command failed with return code %d\n",
--		       priv->cur_cmd_retcode);
--		priv->cur_cmd_retcode = 0;
--		ret = -1;
--	}
-+	ret = cmdnode->result;
-+	if (ret)
-+		lbs_pr_info("PREP_CMD: command 0x%04x failed: %d\n",
-+			    command, ret);
- 	__lbs_cleanup_and_insert_cmd(priv, cmdnode);
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 719da73..ea4d484 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -74,6 +74,7 @@ struct cmd_header {
- 
- struct cmd_ctrl_node {
- 	struct list_head list;
-+	int result;
- 	/* command response */
- 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *);
- 	unsigned long callback_arg;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 0dc7de6..839ffe8 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1237,6 +1237,7 @@ int lbs_stop_card(struct lbs_private *priv)
- 	/* Flush pending command nodes */
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
-+		cmdnode->result = -ENOENT;
- 		cmdnode->cmdwaitqwoken = 1;
- 		wake_up_interruptible(&cmdnode->cmdwait_q);
- 	}
+ 	switch (fc & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_DATA:
++		if (len < 24) /* drop incorrect hdr len (data) */
++			return NULL;
+ 		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+ 		case IEEE80211_FCTL_TODS:
+ 			return hdr->addr1;
+@@ -154,6 +157,8 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
+ 		}
+ 		break;
+ 	case IEEE80211_FTYPE_MGMT:
++		if (len < 24) /* drop incorrect hdr len (mgmt) */
++			return NULL;
+ 		return hdr->addr3;
+ 	case IEEE80211_FTYPE_CTL:
+ 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
 -- 
-1.5.3.4
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
