@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60949 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752924AbXLHLgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 06:36:13 -0500
-Subject: Re: [PATCH 1/4] mac80211: Clean up rate selection
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1197113615.7472.56.camel@localhost>
-References: <1197112439.7472.34.camel@localhost>
-	 <1197112909.7472.49.camel@localhost>
-	 (sfid-20071208_112222_400278_02DE29F9)  <1197113375.4171.50.camel@johannes.berg>
-	 <1197113615.7472.56.camel@localhost>
-Content-Type: text/plain
-Date: Sat, 08 Dec 2007 12:36:10 +0100
-Message-Id: <1197113770.7472.59.camel@localhost> (sfid-20071208_113616_056249_E470BECB)
-Mime-Version: 1.0
+Received: from mu-out-0910.google.com ([209.85.134.189]:13953 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957AbXLRNnW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 08:43:22 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so3475148mue.5
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Dec 2007 05:43:21 -0800 (PST)
+Message-ID: <c85cb4470712180543k502e24e3pbecc0a70826e2cad@mail.gmail.com> (sfid-20071218_134330_530606_6EDBC529)
+Date: Tue, 18 Dec 2007 15:43:20 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/8] mac80211: A-MPDU Rx MLME data initialization
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <1197914943.4885.78.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+	 <11979070784033-git-send-email-ron.rindjunsky@intel.com>
+	 <1197914943.4885.78.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>
+> > +     spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
+> > +     for (i = 0; i < STA_TID_NUM; i++) {
+> > +             sta->timer_to_tid[i] = i;
+>
+> Please add a comment here as well that this *must* be initialised to the
+> identity mapping and have the comment mention the user(s).
+>
 
-On Sat, 2007-12-08 at 12:33 +0100, Mattias Nissler wrote:
-> > 
-> > > +	/* If we haven't found the rate yet, ask the rate control algo. */
-> > > +	if (!sel->rate)
-> > > +		ref->ops->get_rate(ref->priv, dev, mode, skb, sel);
-> > 
-> > > +	/* Select a non-ERP backup rate. */
-> > > +	if (!sel->nonerp) {
-> > > +		for (i = 0; i < mode->num_rates - 1; i++) {
-> > > +			struct ieee80211_rate *rate = &mode->rates[i];
-> > > +			if (sel->rate->rate < rate->rate)
-> > > +				break;
-> > > +
-> > > +			if (rate_supported(sta, mode, i) &&
-> > > +			    !(rate->flags & IEEE80211_RATE_ERP))
-> > > +				sel->nonerp = rate;
-> > > +		}
-> > > +	}
-> > 
-> > That I'm not sure about. This is the fallback rate?
-> 
-> Yes. It's after the get_rate() call so the algorithm can override it.
-> But if it doesn't we compute it ourselves.
-
-To be a little more specific, it's the non-extended-rate-set rate. So
-the code falls back to this one e.g. if it's an AP has 80211.g but
-stations that are only 80211.b
-
-Mattias
-
+will add a comment
