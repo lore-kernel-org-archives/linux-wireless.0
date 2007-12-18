@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:33549 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763646AbXLPSNI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49981 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbXLRMmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 13:13:08 -0500
-Date: Sun, 16 Dec 2007 10:11:59 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
-Message-ID: <20071216181159.GP5698@jm.kir.nu> (sfid-20071216_181318_999442_C6780215)
-References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp> <1197580418.14270.6.camel@localhost.localdomain> <20071214134918.275E.MOKUNO@sm.sony.co.jp> <1197637127.16724.1.camel@localhost.localdomain> <20071215014244.GI5698@jm.kir.nu> <1197827354.6358.2.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1197827354.6358.2.camel@localhost.localdomain>
+	Tue, 18 Dec 2007 07:42:10 -0500
+Subject: Re: [RFC] mac80211: clean up frame receive handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <20071218042253.GC5698@jm.kir.nu>
+References: <1197483844.6558.158.camel@johannes.berg>
+	 <20071213204933.GD3083@tuxdriver.com>
+	 <1197634443.16079.36.camel@johannes.berg> <20071218042253.GC5698@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-srbYuINnusWYGVEIPzR6"
+Date: Tue, 18 Dec 2007 13:42:05 +0100
+Message-Id: <1197981725.4885.114.camel@johannes.berg> (sfid-20071218_124215_477863_BA932791)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 16, 2007 at 12:49:14PM -0500, Dan Williams wrote:
 
-> Yeah, I was going to propose that on Friday but got side-tracked.  What
-> would require a new key type?  Are there some firmwares that _only_
-> accept the WPA passphrase?  Because if there aren't (PS3 accepts WPA hex
-> keys too) then the supplicant could just pass the hex key.  Not quite
-> sure what you mean here with "new key type".
+--=-srbYuINnusWYGVEIPzR6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It is a new key type regardless of whether it is PSK or passphrase. The
-current key types (IW_AUTH_CIPHER_*) are WEP40, TKIP, CCMP, and WEP104..
 
-I don't know whether there are any Linux drivers that would use WPA
-passphrase, but at least the Mac OS X driver interface seems to only use
-passphrase for WPA-Personal, so it is apparently possible to design such
-a architecture ;-). Anyway, I would be fine with just adding
-IW_AUTH_CIPHER_PMK for now (and the new capability to figure out whether
-this is needed). That PMK would be PSK for WPA-Personal, but it could
-also be used as PMK for WPA-Enterprise, so the more generic PMK name.
+> > I think in theory all eapol frames are sent to the PAE group address,
+> > but I have no idea which of the checks would be more efficient. It seem=
+s
+> > that the first could be optimised a lot because it's constant too...
+>=20
+> They are not.. PAE group address is used for all EAPOL frames in
+> non-shared media LANs (e.g., wired Ethernet switch), but IEEE 802.11
+> uses the specific MAC address of the PAE since it is a shared media LAN
+> (i.e., the frames are between the unicast MAC address of the non-AP
+> STA/Supplicant and AP/Authenticator).=20
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+If that's how it's specified, ok, but I think it's not strictly
+necessary because the AP is addressed already by the BSSID, no?
+
+> If we end up having to drop the
+> PAE group addressed EAPOL frames in mac80211 anyway due to Linux
+> bridging code not doing this,
+
+No, we don't. We have to drop "unicast to somebody else". Group
+addressed frames are dropped just fine.
+
+johannes
+
+--=-srbYuINnusWYGVEIPzR6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2fAHKVg1VMiehFYAQIwjw/+O1M4aK0D0xHVE5FBpVB1n0PM/KvmAlwg
+gPMF+p/3IdRSxzgrtPc1ZZXxUcpN1eWe2a4an2W/5duAGE3TqAMseV6IDlhnUyLT
+IhGIbfaAaRRRdpZWlamQdV9iZ+SBfZUDgHKAN52SaGbhT9MtvgmkauLhbB7jU96n
+zc2+rasQ2C0RRcMeDEnMsY9rCDwVpUMX1K+/5I8iHuvYMItNREd6MQTFWx5njU2k
+2RQRJkge7oL+zgY7zqYwwMv+pTlMLc6rLy+nQQqDah8o+7ZQgAC686GAXN9MdK9f
+iNc4LCLx0hYKreT0FaWzjDG9baa34V5XTsgc14pOz90TfNldWESioCwJrHFogdG5
+QBAsotafwguSpsdVAmRk1kv//j3l7eYGgfSMaUYOn+xNeo6iHhs+4k61kRTESzL9
+cnNgJZUfJbux32/xjYIb6n/0YKNUOOg+xiEPSFClNpnhBzSy3NKdGeRz2xSZ3Fp0
+fOx82QTs52r3dEueWOy73tcuEr+H1fg38MtKwNhKtQP2X8qyDj0i/qzghZiMXpa5
+UTkfyXjdZb3tCEpnG3TyIgqouwUfPfkHmeWolTnQd3ofqcMwvUtIuuhRnxSfJgM1
+k9y1m/kaD1KBsxGjoQy8/llOy5Pq3hwXJ7MKnIOBCDoVCgqJOqBzDI4m3uPsTRci
+dchplAMwTyo=
+=eKKj
+-----END PGP SIGNATURE-----
+
+--=-srbYuINnusWYGVEIPzR6--
+
