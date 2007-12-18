@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:58594 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760094AbXLTMrU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 07:47:20 -0500
-From: Arnd Bergmann <ARNDB@de.ibm.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH v4 7/8] debugfs: allow access to signed values
-Date: Thu, 20 Dec 2007 13:47:13 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hch@lst.de
-References: <20071219001955.055692620@polimi.it> <1198080034.4747.15.camel@johannes.berg> <20071220131548.1d09cd62@morte>
-In-Reply-To: <20071220131548.1d09cd62@morte>
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:37713 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbXLRETX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 23:19:23 -0500
+Date: Mon, 17 Dec 2007 20:18:10 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>
+Subject: Re: [RFC] mac80211: clean up frame receive handling
+Message-ID: <20071218041810.GB5698@jm.kir.nu> (sfid-20071218_041929_905632_C16A06B8)
+References: <1197483844.6558.158.camel@johannes.berg> <20071214050808.GE5698@jm.kir.nu> <1197634385.16079.34.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712201347.15022.ARNDB@de.ibm.com> (sfid-20071220_124724_651928_D913A568)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1197634385.16079.34.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 December 2007, Stefano Brivio wrote:
-> debugfs: allow access to signed values
+On Fri, Dec 14, 2007 at 01:13:05PM +0100, Johannes Berg wrote:
+> > Is there any way for an user space application to figure out whether a
+> > received EAPOL frame was encrypted? In theory, WPA/WPA2 Authenticators
+> > (e.g., hostapd) should verify that the frame was encrypted if pairwise
+> > keys are set (whereas IEEE 802.1X Authenticator accepts unencrypted
+> > EAPOL frames).
 > 
-> Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
-> a cast in libfs, change the simple_attr_open prototype and thus fix the users as
-> well.
+> Unfortunately not. Does that really matter? It seems that the
+> verification whether the frame was encrypted would either be "always
+> require encryption when pairwise keys in use" (which this patch doesn't
+> do right now but could trivially be done) or simply "don't care since it
+> doesn't really matter".
+
+In theory, yes, this does matter and the implementation does not comply
+with the standard if we do not verify this for WPA/WPA2/IEEE 802.11 RSN.
+However, I do not believe there is any real security issue in not doing
+so and even worse, some client implementations end up using unencrypted
+EAPOL frames when they should really be encrypted..
+
+hostapd has a place in the implementation where this information could
+be processed, but I did not actually ever enable such validation because
+of the potential interoperability issues. Likewise, wpa_supplicant does
+not validate this either.
+
+In other words, this would be kind of nice to have feature in the kernel
+interface, but not really something that would be strictly required from
+security view point.
+
+> > Did you/someone already verify that the Linux bridge code does not
+> > bridge EAPOL frames? The use of a separate interface for this removed
+> > the need for doing such filtering based on ethertype, but with EAPOL
+> > frames using the same netdev with other data frames, the bridge code
+> > should filter these out (mainly the PAE group addressed ones, but if I
+> > remember correctly, IEEE 802.1X specified all frames using EAPOL
+> > ethertype not to be bridged).
 > 
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Mattias Nissler <mattias.nissler@gmx.de>
-> To: Greg Kroah-Hartman <gregkh@suse.de>
-> To: Arnd Bergmann <arndb@de.ibm.com>
-> To: Akinobu Mita <akinobu.mita@gmail.com>
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> Actually, 802.1X doesn't specify that, as I said previously it
+> *recommends* it in C.3.3 (not C.1.1 as the 802.11 specs lead you to
+> believe). Also, a patch to do this was rejected by Stephen Hemminger, so
+> I decided to only pass up EAPOL frames that are either for our own
+> unicast address or the link-local eapol address, both of which won't be
+> bridged.
 
-Have you checked that spufs still builds? I would guess that you need
-to do the same interface changes there.
+It is a "must" requirement, but apparently only in informative clause of
+IEEE 802.1X. However, this is a real issue and if the bridging code
+cannot be changed to do this, so dropping multicast/broadcast EAPOL
+frames in mac80211 (in both RX and TX direction) sounds reasonable
+workaround to prevent cases where wireless clients could otherwise mess
+with other IEEE 802.1X authentications (e.g., for the wired port of an
+AP).
 
-Also, Christoph has recently posted a suggestion for how to improve
-the interface to allow the 'get' operation to return an error:
-http://patchwork.ozlabs.org/cbe-oss-dev/patch?id=14962
 
-I'd suggest consolidating the two changes in order to avoid merge
-conflicts.
+PS.
 
-	Arnd <><
+I added the C.3.3 vs. C.1.1 issue to my pending comments for the next
+IEEE 802.11 maintenance task group (TGmb). Should you find any other
+issues with IEEE Std 802.11-2007, I can add them to that list so that
+they can eventually be fixed.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
