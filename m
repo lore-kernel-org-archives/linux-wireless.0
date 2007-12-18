@@ -1,124 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56602 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753168AbXLCLok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:44:40 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 06/34] iwl-4965-hw.h: clean up unused eeprom structures and definitions
-Date: Mon,  3 Dec 2007 13:43:18 +0200
-Message-Id: <11966822293340-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114446_179221_D89953CF)
-In-Reply-To: <119668222978-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.rutgers.edu ([128.6.72.243]:26651 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753113AbXLRXhV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 18:37:21 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] p54: add Kconfig description
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 18 Dec 2007 18:36:10 -0500
+Message-ID: <20071218233610.15652.21165.stgit@tetra.sourmilk.net> (sfid-20071218_233727_412256_881086ED)
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+Some people would like to know what p54 is.
 
-Clean up unused eeprom structures and definitions in iwl-4965-hw.h.
-
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   58 +---------------------------
- 1 files changed, 1 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 381ca93..fbdc7f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -169,57 +169,6 @@ struct iwl4965_eeprom_channel {
- 	s8 max_power_avg;	/* max power (dBm) on this chnl, limit 31 */
- } __attribute__ ((packed));
- 
--/*
-- * Mapping of a Tx power level, at factory calibration temperature,
-- *   to a radio/DSP gain table index.
-- * One for each of 5 "sample" power levels in each band.
-- * v_det is measured at the factory, using the 3945's built-in power amplifier
-- *   (PA) output voltage detector.  This same detector is used during Tx of
-- *   long packets in normal operation to provide feedback as to proper output
-- *   level.
-- * Data copied from EEPROM.
-- */
--struct iwl4965_eeprom_txpower_sample {
--	u8 gain_index;		/* index into power (gain) setup table ... */
--	s8 power;		/* ... for this pwr level for this chnl group */
--	u16 v_det;		/* PA output voltage */
--} __attribute__ ((packed));
--
--/*
-- * Mappings of Tx power levels -> nominal radio/DSP gain table indexes.
-- * One for each channel group (a.k.a. "band") (1 for BG, 4 for A).
-- * Tx power setup code interpolates between the 5 "sample" power levels
-- *    to determine the nominal setup for a requested power level.
-- * Data copied from EEPROM.
-- * DO NOT ALTER THIS STRUCTURE!!!
-- */
--struct iwl4965_eeprom_txpower_group {
--	struct iwl4965_eeprom_txpower_sample samples[5];	/* 5 power levels */
--	s32 a, b, c, d, e;	/* coefficients for voltage->power
--				 * formula (signed) */
--	s32 Fa, Fb, Fc, Fd, Fe;	/* these modify coeffs based on
--					 * frequency (signed) */
--	s8 saturation_power;	/* highest power possible by h/w in this
--				 * band */
--	u8 group_channel;	/* "representative" channel # in this band */
--	s16 temperature;	/* h/w temperature at factory calib this band
--				 * (signed) */
--} __attribute__ ((packed));
--
--/*
-- * Temperature-based Tx-power compensation data, not band-specific.
-- * These coefficients are use to modify a/b/c/d/e coeffs based on
-- *   difference between current temperature and factory calib temperature.
-- * Data copied from EEPROM.
-- */
--struct iwl4965_eeprom_temperature_corr {
--	u32 Ta;
--	u32 Tb;
--	u32 Tc;
--	u32 Td;
--	u32 Te;
--} __attribute__ ((packed));
--
- /* 4965 has two radio transmitters (and 3 radio receivers) */
- #define EEPROM_TX_POWER_TX_CHAINS      (2)
- 
-@@ -230,8 +179,6 @@ struct iwl4965_eeprom_temperature_corr {
-  * each of 3 target output levels */
- #define EEPROM_TX_POWER_MEASUREMENTS   (3)
- 
--#define EEPROM_TX_POWER_VERSION        (2)
--
- /* 4965 driver does not work with txpower calibration version < 5.
-  * Look for this in calib_version member of struct iwl4965_eeprom. */
- #define EEPROM_TX_POWER_VERSION_NEW    (5)
-@@ -461,10 +408,7 @@ struct iwl4965_eeprom {
- #define EEPROM_CALIB_VERSION_OFFSET            (2*0xB6)	/* 2 bytes */
- 	u16 calib_version;	/* abs.ofs: 364 */
- 	u8 reserved13[2];
--
--#define EEPROM_SATURATION_POWER_OFFSET         (2*0xB8)	/* 2 bytes */
--	u16 satruation_power;	/* abs.ofs: 368 */
--	u8 reserved14[94];
-+	u8 reserved14[96];	/* abs.ofs: 368 */
- 
- /*
-  * 4965 Txpower calibration data.
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+ drivers/net/wireless/Kconfig |   51 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 51 insertions(+), 0 deletions(-)
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 4430b32..e4be4bb 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -600,15 +600,66 @@ config ADM8211
+ config P54_COMMON
+ 	tristate "Softmac Prism54 support"
+ 	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
++	---help---
++	  This is common code for isl38xx based cards.
++	  This module does nothing by itself - the USB/PCI frontends
++	  also need to be enabled in order to support any devices.
++
++	  These devices require softmac firmware which can be found at
++	  http://prism54.org/
++
++	  If you choose to build a module, it'll be called p54common.
+ 
+ config P54_USB
+ 	tristate "Prism54 USB support"
+ 	depends on P54_COMMON && USB
+ 	select CRC32
++	---help---
++	  This driver is for USB isl38xx based wireless cards.
++	  These are USB based adapters found in devices such as:
++
++	  3COM 3CRWE254G72
++	  SMC 2862W-G
++	  Accton 802.11g WN4501 USB
++	  Siemens Gigaset USB
++	  Netgear WG121
++	  Netgear WG111
++	  Medion 40900, Roper Europe
++	  Shuttle PN15, Airvast WM168g, IOGear GWU513
++	  Linksys WUSB54G
++	  Linksys WUSB54G Portable
++	  DLink DWL-G120 Spinnaker
++	  DLink DWL-G122
++	  Belkin F5D7050 ver 1000
++	  Cohiba Proto board
++	  SMC 2862W-G version 2
++	  U.S. Robotics U5 802.11g Adapter
++	  FUJITSU E-5400 USB D1700
++	  Sagem XG703A
++	  DLink DWL-G120 Cohiba
++	  Spinnaker Proto board
++	  Linksys WUSB54AG
++	  Inventel UR054G
++	  Spinnaker DUT
++
++	  These devices require softmac firmware which can be found at
++	  http://prism54.org/
++
++	  If you choose to build a module, it'll be called p54usb.
+ 
+ config P54_PCI
+ 	tristate "Prism54 PCI support"
+ 	depends on P54_COMMON && PCI
++	---help---
++	  This driver is for PCI isl38xx based wireless cards.
++	  This driver supports most devices that are supported by the
++	  fullmac prism54 driver plus many devices which are not
++	  supported by the fullmac driver/firmware.
++
++	  This driver requires softmac firmware which can be found at
++	  http://prism54.org/
++
++	  If you choose to build a module, it'll be called p54pci.
+ 
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+
+
