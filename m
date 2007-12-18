@@ -1,136 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38300 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750971AbXLJG2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 01:28:05 -0500
-Subject: Re: [RFC/T][PATCH v2 2/3] rc80211-pid: introduce PID sharpening
-	factor
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20071210032811.5cea4909@morte>
-References: <20071209211547.2d7fca32@morte> <20071209212133.43030d03@morte>
-	 <1197239361.7543.17.camel@localhost> <20071210003120.0078db1d@morte>
-	 <1197244416.7543.27.camel@localhost>  <20071210032811.5cea4909@morte>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbXLRMko (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 07:40:44 -0500
+Subject: [PATCH] mac80211: allow easier multicast/broadcast buffering in
+	hardware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 10 Dec 2007 07:28:01 +0100
-Message-Id: <1197268081.7490.10.camel@localhost> (sfid-20071210_062822_223084_1FC0B7D8)
+Date: Tue, 18 Dec 2007 12:22:36 +0100
+Message-Id: <1197976956.4885.108.camel@johannes.berg> (sfid-20071218_124047_183641_329DFC26)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There are various decisions influencing the decision whether to buffer
+a frame for after the next DTIM beacon. The "do we have stations in PS
+mode" condition cannot be tested by the driver so mac80211 has to do
+that. To ease driver writing for hardware that can buffer frames until
+after the next DTIM beacon, introduce a new txctl flag telling the
+driver to buffer a specific frame.
 
-On Mon, 2007-12-10 at 03:28 +0100, Stefano Brivio wrote:
-> This patch introduces a PID sharpening factor for faster response after
-> association and low activity events.
-> 
-> 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-> Cc: Mattias Nissler <mattias.nissler@gmx.de>
-> 
-> ---
-> 
-> Ok, this isn't a no-op anymore. :)
-> 
-> ---
-> 
-> Index: wireless-2.6/net/mac80211/rc80211_pid.c
-> ===================================================================
-> --- wireless-2.6.orig/net/mac80211/rc80211_pid.c
-> +++ wireless-2.6/net/mac80211/rc80211_pid.c
-> @@ -23,13 +23,16 @@
->   *
->   * The controller basically computes the following:
->   *
-> - * adj = CP * err + CI * err_avg + CD * (err - last_err)
-> + * adj = CP * err + CI * err_avg + CD * (err - last_err) * (1 + sharpening)
->   *
->   * where
->   * 	adj	adjustment value that is used to switch TX rate (see below)
->   * 	err	current error: target vs. current failed frames percentage
->   * 	last_err	last error
->   * 	err_avg	average (i.e. poor man's integral) of recent errors
-> + *	sharpening	non-zero when fast response is needed (i.e. right after
-> + *			association or no frames sent for a long time), heading
-> + * 			to zero over time
->   * 	CP	Proportional coefficient
->   * 	CI	Integral coefficient
->   * 	CD	Derivative coefficient
-> @@ -65,6 +68,11 @@
->  #define RC_PID_SMOOTHING_SHIFT 3
->  #define RC_PID_SMOOTHING (1 << RC_PID_SMOOTHING_SHIFT)
->  
-> +/* Sharpening factor (used for D part of PID controller) */
-> +#define RATE_CONTROL_SHARPENING_SHIFT 2
-> +#define RATE_CONTROL_SHARPENING (1 << RATE_CONTROL_SHARPENING_SHIFT)
-> +#define RATE_CONTROL_SHARPENING_DURATION 1
-> +
->  /* Fixed point arithmetic shifting amount. */
->  #define RC_PID_ARITH_SHIFT 8
->  
-> @@ -131,8 +139,11 @@ struct rc_pid_sta_info {
->  	 */
->  	s32 err_avg_sc;
->  
-> -	/* Last framed failes percentage sample */
-> +	/* Last framed failes percentage sample. */
->  	u32 last_pf;
-> +
-> +	/* Sharpening needed. */
-> +	u8 sharp_cnt;
->  };
->  
->  /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
-> @@ -282,19 +293,19 @@ static void rate_control_pid_sample(stru
->  
->  	mode = local->oper_hw_mode;
->  	spinfo = sta->rate_ctrl_priv;
-> +
-> +	/* In case nothing happened during the previous control interval, turn
-> +	 * on the sharpening factor. */
-> +	if (jiffies - spinfo->last_sample > RC_PID_INTERVAL)
-> +		spinfo->sharp_cnt = RATE_CONTROL_SHARPENING_DURATION;
-> +
->  	spinfo->last_sample = jiffies;
->  
-> -	/* If no frames were transmitted, we assume the old sample is
-> -	 * still a good measurement and copy it. */
-> -	if (spinfo->tx_num_xmit == 0)
-> -		pf = spinfo->last_pf;
+While at it, restructure and comment the code for multicast buffering
+and remove spurious "inline" directives.
 
-Please don't remove this check. We can never know when anybody starts
-calling rate_control_pid_sample() without packets transmitted. Then it's
-good to have it, else we divide by zero in the next line.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/tx.c      |   32 +++++++++++++++++++++++---------
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
-> -	else {
-> -		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
-> -		pf <<= RC_PID_ARITH_SHIFT;
-> +	pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
-> +	pf <<= RC_PID_ARITH_SHIFT;
->  
-> -		spinfo->tx_num_xmit = 0;
-> -		spinfo->tx_num_failed = 0;
-> -	}
-> +	spinfo->tx_num_xmit = 0;
-> +	spinfo->tx_num_failed = 0;
->  
->  	/* If we just switched rate, update the rate behaviour info. */
->  	if (pinfo->oldrate != sta->txrate) {
-> @@ -321,8 +332,11 @@ static void rate_control_pid_sample(stru
->  	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
->  	err_int = spinfo->err_avg_sc >> RC_PID_SMOOTHING_SHIFT;
->  
-> -	err_der = pf - spinfo->last_pf;
-> +	err_der = pf - spinfo->last_pf
-> +		  * (1 + RATE_CONTROL_SHARPENING * spinfo->sharp_cnt);
->  	spinfo->last_pf = pf;
-> +	if (spinfo->sharp_cnt)
-> +			spinfo->sharp_cnt--;
->  
->  	/* Compute the controller output. */
->  	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
-> 
-> 
+--- everything.orig/include/net/mac80211.h	2007-12-18 12:12:54.499237521 +0100
++++ everything/include/net/mac80211.h	2007-12-18 12:13:14.059236709 +0100
+@@ -307,6 +307,8 @@ struct ieee80211_tx_control {
+ 						  * using the through
+ 						  * set_retry_limit configured
+ 						  * long retry value */
++#define IEEE80211_TXCTL_SEND_AFTER_DTIM	(1<<11) /* send this frame after DTIM
++						 * beacon */
+ 	u32 flags;			       /* tx control flags defined
+ 						* above */
+ 	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
+--- everything.orig/net/mac80211/tx.c	2007-12-18 12:12:52.599237522 +0100
++++ everything/net/mac80211/tx.c	2007-12-18 12:14:40.249236979 +0100
+@@ -337,16 +337,27 @@ static void purge_old_ps_buffers(struct 
+ 	       wiphy_name(local->hw.wiphy), purged);
+ }
+ 
+-static inline ieee80211_txrx_result
++static ieee80211_txrx_result
+ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_txrx_data *tx)
+ {
+-	/* broadcast/multicast frame */
+-	/* If any of the associated stations is in power save mode,
+-	 * the frame is buffered to be sent after DTIM beacon frame */
+-	if ((tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING) &&
+-	    tx->sdata->type != IEEE80211_IF_TYPE_WDS &&
+-	    tx->sdata->bss && atomic_read(&tx->sdata->bss->num_sta_ps) &&
+-	    !(tx->fc & IEEE80211_FCTL_ORDER)) {
++	/*
++	 * broadcast/multicast frame
++	 *
++	 * If any of the associated stations is in power save mode,
++	 * the frame is buffered to be sent after DTIM beacon frame.
++	 * This is done either by the hardware or us.
++	 */
++
++	/* not AP/IBSS or ordered frame */
++	if (!tx->sdata->bss || (tx->fc & IEEE80211_FCTL_ORDER))
++		return TXRX_CONTINUE;
++
++	/* no stations in PS mode */
++	if (!atomic_read(&tx->sdata->bss->num_sta_ps))
++		return TXRX_CONTINUE;
++
++	/* buffered in mac80211 */
++	if (tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING) {
+ 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 			purge_old_ps_buffers(tx->local);
+ 		if (skb_queue_len(&tx->sdata->bss->ps_bc_buf) >=
+@@ -363,10 +374,13 @@ ieee80211_tx_h_multicast_ps_buf(struct i
+ 		return TXRX_QUEUED;
+ 	}
+ 
++	/* buffered in hardware */
++	tx->u.tx.control->flags |= IEEE80211_TXCTL_SEND_AFTER_DTIM;
++
+ 	return TXRX_CONTINUE;
+ }
+ 
+-static inline ieee80211_txrx_result
++static ieee80211_txrx_result
+ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_txrx_data *tx)
+ {
+ 	struct sta_info *sta = tx->sta;
+
 
