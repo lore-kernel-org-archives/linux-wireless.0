@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:57506 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759573AbXLMG7u (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:43102 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753540AbXLRAX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:50 -0500
-Subject: [PATCH 83/48] libertas: add debugging output to lbs_mesh_config()
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i36-0005th-HN@shinybook.infradead.org> (sfid-20071213_070016_580994_14BA0B3F)
-Date: Thu, 13 Dec 2007 02:00:00 -0500
+	Mon, 17 Dec 2007 19:23:56 -0500
+Message-Id: <200712180022.lBI0MqGt010072@imap1.linux-foundation.org> (sfid-20071218_002400_273049_6635726F)
+Subject: [patch (for 2.6.24?) 2/4] iwlwifi3945/4965: fix rate control algo reference leak
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	gorcunov@gmail.com, yi.zhu@intel.com
+From: akpm@linux-foundation.org
+Date: Mon, 17 Dec 2007 16:22:52 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Tue, 11 Dec 2007 22:52:03 -0500
+From: Cyrill Gorcunov <gorcunov@gmail.com>
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Fix rate control algo reference leak in case if network device has been
+failed to register.  In this case special flag priv->mac80211_registered is
+not set and the rate algo reference is not freeing on module unload.  That
+leads to OOPs in further ieee80211 rate register/unregister procedure (by
+any callee).
+
+It should fix the bug #9470
+
+	http://bugzilla.kernel.org/show_bug.cgi?id=9470
+
+[akpm@linux-foundation.org: build fix]
+Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/net/wireless/libertas/cmd.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 01d2349..1cb42dc 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1106,7 +1106,9 @@ int lbs_mesh_config(struct lbs_private *priv, int enable)
- 		cmd.length = cpu_to_le16(priv->mesh_ssid_len);
- 		memcpy(cmd.data, priv->mesh_ssid, priv->mesh_ssid_len);
- 	}
--
-+	lbs_deb_cmd("mesh config channel %d SSID %s\n",
-+		    priv->curbssparams.channel,
-+		    escape_essid(priv->mesh_ssid, priv->mesh_ssid_len));
- 	return lbs_cmd_with_response(priv, CMD_MESH_CONFIG, cmd);
- }
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
+ 2 files changed, 2 insertions(+)
+
+diff -puN drivers/net/wireless/iwlwifi/iwl3945-base.c~iwlwifi3945-4965-fix-rate-control-algo-reference-leak drivers/net/wireless/iwlwifi/iwl3945-base.c
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c~iwlwifi3945-4965-fix-rate-control-algo-reference-leak
++++ a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6171,6 +6171,7 @@ static void iwl_alive_start(struct iwl_p
+ 		mutex_lock(&priv->mutex);
  
--- 
-1.5.3.4
-
+ 		if (rc) {
++			iwl3945_rate_control_unregister(priv->hw);
+ 			IWL_ERROR("Failed to register network "
+ 				  "device (error %d)\n", rc);
+ 			return;
+diff -puN drivers/net/wireless/iwlwifi/iwl4965-base.c~iwlwifi3945-4965-fix-rate-control-algo-reference-leak drivers/net/wireless/iwlwifi/iwl4965-base.c
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c~iwlwifi3945-4965-fix-rate-control-algo-reference-leak
++++ a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6527,6 +6527,7 @@ static void iwl_alive_start(struct iwl_p
+ 		mutex_lock(&priv->mutex);
+ 
+ 		if (rc) {
++			iwl4965_rate_control_unregister(priv->hw);
+ 			IWL_ERROR("Failed to register network "
+ 				  "device (error %d)\n", rc);
+ 			return;
+_
