@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.sea5.speakeasy.net ([69.17.117.4]:52292 "EHLO
-	mail2.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbXLJFAn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 00:00:43 -0500
-Date: Sun, 9 Dec 2007 20:59:55 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com, yi.zhu@intel.com
-Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
-Message-ID: <20071210045955.GN5698@jm.kir.nu> (sfid-20071210_050050_505357_7A755920)
-References: <11972036221022-git-send-email-ron.rindjunsky@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11972036221022-git-send-email-ron.rindjunsky@intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:1034 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751327AbXLRBex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 20:34:53 -0500
+Subject: Re: Please pull 'upstream-jgarzik' branch of wireless-2.6
+From: Zhu Yi <yi.zhu@intel.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <476708EF.10403@garzik.org>
+References: <20071216043419.GF3096@tuxdriver.com>
+	 <47670514.4030204@garzik.org>  <476708EF.10403@garzik.org>
+Content-Type: text/plain; charset=GB2312
+Date: Tue, 18 Dec 2007 09:24:49 +0800
+Message-Id: <1197941089.2857.252.camel@debian.sh.intel.com> (sfid-20071218_013458_199744_78899EC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 09, 2007 at 02:33:42PM +0200, Ron Rindjunsky wrote:
 
-> +/* IEEE 80211.11 minimal headers length */
-> +#define IEEE80211_HDR_MIN_LEN_CTRL 16
+On Mon, 2007-12-17 at 18:40 -0500, Jeff Garzik wrote:
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=20
+> =A1=AEiwl3945_alive_start=A1=AF:
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:6285: error: implicit=20
+> declaration of function =A1=AEiwl_rate_control_unregister=A1=AF
+> make[4]: *** [drivers/net/wireless/iwlwifi/iwl3945-base.o] Error 1
+> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
 
-Where does this value 16 come from? It is likely the shortest length one
-would receive from hardware/firmware in normal mode, but it is not the
-shortest length for a valid IEEE 802.11 control frame. Both CTS and ACK
-frames have only 10 octets in the header (just one address). Having
-IEEE80211_HDR_MIN_LEN_CTRL defined to 16 would be a bit confusing.. CTS
-and ACK frames are received at least in monitor mode, so these frames
-with 10 octet headers will need to be processed in some cases.
+We changed the namespace between 2.6.24 and upstream. So
+iwl_rate_control_unregister should be renamed to
+iwl3945_rate_control_unregister when the patch is merged from
+fix-jgarzik to upstream-jgarzik. The same thing is also for
+iwl4965_rate_control_unregister.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> I'll leave it there and assume that you will send a fix --on top of--=
+=20
+> netdev#upstream ...
+
+I assume John will do it.
+
+Thanks,
+-yi
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
