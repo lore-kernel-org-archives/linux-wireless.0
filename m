@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:46764 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751851AbXLWKV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 05:21:29 -0500
-Date: Sun, 23 Dec 2007 11:18:06 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 7/7] mac80211: fix sta_info locking
-Message-ID: <20071223111806.663f3f4e@morte> (sfid-20071223_102132_485118_E4482322)
-In-Reply-To: <1198395536.6630.13.camel@johannes.berg>
-References: <20071223033633.710907923@polimi.it>
-	<20071223050844.4e6b8c13@morte>
-	<1198395536.6630.13.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:43356 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753540AbXLRAX6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 19:23:58 -0500
+Message-Id: <200712180022.lBI0MpTh010069@imap1.linux-foundation.org> (sfid-20071218_002400_882717_90E820B8)
+Subject: [patch (for 2.6.24?) 1/4] ieee80211_rate: missed unlock
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	gorcunov@gmail.com, flamingice@sourmilk.net
+From: akpm@linux-foundation.org
+Date: Mon, 17 Dec 2007 16:22:51 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 23 Dec 2007 08:38:56 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Cyrill Gorcunov <gorcunov@gmail.com>
 
-> > EIP at delay_tsc+0x22/0x50
-> > [couldn't read the EBX and such, but I guess you won't care]
-> 
-> It'd be good to know actually, along with disassembly.
-> 
-> > So I guessed that locking was lacking somewhere. The following patch fixes
-> > the issue for me, but I'm not sure at all that it's the right fix. Thanks.
-> 
-> Definitely not. If you look at the code in question, it has nothing at
-> all that needs locking. It's not accessing any shared structures at all.
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-I now removed the lock, rebuilt my quilt tree, rebuilt mac80211 and I can't
-reproduce it. I think that could have been my fault, I should have did
-something wrong such as calling sta_info_put() twice or somesuch. Sorry for
-the noise. Will poke you again if I happen to reproduce this.
+ net/mac80211/ieee80211_rate.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-
---
-Ciao
-Stefano
+diff -puN net/mac80211/ieee80211_rate.c~ieee80211_rate-missed-unlock net/mac80211/ieee80211_rate.c
+--- a/net/mac80211/ieee80211_rate.c~ieee80211_rate-missed-unlock
++++ a/net/mac80211/ieee80211_rate.c
+@@ -33,6 +33,7 @@ int ieee80211_rate_control_register(stru
+ 		if (!strcmp(alg->ops->name, ops->name)) {
+ 			/* don't register an algorithm twice */
+ 			WARN_ON(1);
++			mutex_unlock(&rate_ctrl_mutex);
+ 			return -EALREADY;
+ 		}
+ 	}
+_
