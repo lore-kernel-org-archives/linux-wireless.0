@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:53442 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753617AbXLVXBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 18:01:09 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: drago01 <drago01@gmail.com>
-Subject: Re: rt2x00 is sapmming my logs
-Date: Sun, 23 Dec 2007 00:20:31 +0100
-Cc: "Alejandro Riveira =?iso-8859-1?q?Fern=E1ndez?=" <ariveira@gmail.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20071222173153.42f574fd@Varda> <200712230004.42957.rjw@sisk.pl> <f6ca9fed0712221457v78b1672ckd53d3792794d9b94@mail.gmail.com>
-In-Reply-To: <f6ca9fed0712221457v78b1672ckd53d3792794d9b94@mail.gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.191]:15527 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbXLRJYH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 04:24:07 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1952184fkz.5
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Dec 2007 01:24:04 -0800 (PST)
+Message-ID: <c85cb4470712180124l422c04d1g5ab3a8f67e245199@mail.gmail.com> (sfid-20071218_092419_124293_911C6B4B)
+Date: Tue, 18 Dec 2007 11:24:04 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <1197913576.4885.57.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712230020.32089.rjw@sisk.pl> (sfid-20071222_230115_082909_38A80758)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1197278205280-git-send-email-ron.rindjunsky@intel.com>
+	 <1197913576.4885.57.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, 22 of December 2007, drago01 wrote:
-> On Dec 23, 2007 12:04 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >[..]
-> > >  The connection seems top work anyways so i do not think this is critical.
-> > >  Thanks in advance for your time.
-> >
-> > I have created a bugzilla entry for this problem at:
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9622
-> > and added it to the list of reported regressions.
-> 
-> rt2x00 has been merged in 2.6.24 (did not exist in 2.6.23) so its not
-> a regression.
+> > +     if (sdata->type == IEEE80211_IF_TYPE_STA)
+> > +             return TXRX_DROP;
+>
+> Should we maybe do the test explicitly for when we want it, i.e.
+> AP/VLAN/IBSS cases? Just thinking of the mesh networking stuff etc.
+> that's being added...
 
-OK, I'll drop it from the regreesion list, but the issue remains. :-)
+no problem, i'll send it over. currently i see only AP mode as relevant.
 
-Thanks,
-Rafael
+>
+> Other than that, looks fine.
+>
+> johannes
+>
+>
