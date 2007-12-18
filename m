@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:50964 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160AbXLFVfN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48281 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755763AbXLRQw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 16:35:13 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: jt@hpl.hp.com
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Date: Thu, 6 Dec 2007 22:33:18 +0100
-Cc: David Miller <davem@davemloft.net>, shaddy_baddah@hotmail.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	johannes@sipsolutions.net
-References: <20071204000138.GA1363@bougret.hpl.hp.com> <20071205.183628.211180882.davem@davemloft.net> <20071206212525.GA6509@bougret.hpl.hp.com>
-In-Reply-To: <20071206212525.GA6509@bougret.hpl.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712062233.18634.mb@bu3sch.de> (sfid-20071206_213518_097567_2000A724)
+	Tue, 18 Dec 2007 11:52:26 -0500
+Subject: Re: Update cycle of compat-wireless-2.6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joachim Frieben <jfrieben@freesurf.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <62219.89.246.167.112.1197989446.squirrel@jose.freesurf.fr> (sfid-20071218_161550_751316_108EF7D8)
+References: <62219.89.246.167.112.1197989446.squirrel@jose.freesurf.fr>
+	 (sfid-20071218_161550_751316_108EF7D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WO8WxBU3YYMtWQeamcYD"
+Date: Tue, 18 Dec 2007 17:52:23 +0100
+Message-Id: <1197996743.4885.178.camel@johannes.berg> (sfid-20071218_165229_824486_C552B129)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 06 December 2007 22:25:25 Jean Tourrilhes wrote:
-> On Wed, Dec 05, 2007 at 06:36:28PM -0800, David Miller wrote:
-> > From: Jean Tourrilhes <jt@hpl.hp.com>
-> > Date: Wed, 5 Dec 2007 13:56:00 -0800
-> > 
-> > > 	Personally, I was under the impression that in userspace libc
-> > > trap unaligned access and make them work. I mean, this code was tested
-> > > on other 64/32 bit platforms (PPC, AMD-64, PS3) and was working there,
-> > > so this seems to be specific to your platform.
-> > 
-> > None of those listed platforms trap on unaligned accesses like sparc
-> > does.
-> 
 
-> 	Now, I'm wondering how to deal with unaligned access in
-> userspace. If you get data from hardware or the network, you can not
-> guarantee that everything will always be aligned, so we need a way to
-> deal with it.
-> 	In the kernel, we have get_unaligned(). I wonder what's the
-> equivalent in userspace.
+--=-WO8WxBU3YYMtWQeamcYD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Userspace handles this transparently through fault traps.
 
--- 
-Greetings Michael.
+On Tue, 2007-12-18 at 15:50 +0100, Joachim Frieben wrote:
+> It appears that the content of
+> http://linuxwireless.org/download/compat-wireless-2.6 is still labeled
+> 2007-Dec-15 whereas on the download page
+> http://www.linuxwireless.org/en/users/Download
+> a daily update is announced. Any explanation for this discrepancy? ~jf
+
+It is updated daily, but if the compat patch fails to apply the old
+files stay around. I've just arranged for Luis to get mail if that
+happens so he can fix it.
+
+johannes
+
+--=-WO8WxBU3YYMtWQeamcYD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2f6xqVg1VMiehFYAQIuVA/9EB8wRQr+oNFlvmVwAeRqEpdQm1wrTpjA
+ls9OGos4x190ii4AJQSCr5Of/DSLQ/p0ZpcN8fM2U8oia9P0uAW7FLdgttMTXKax
+FRp/dMFiJzdFf2xpoKzJsV3hHqt0qAO92MdbOytFq7rvfc5+5imibNhIoDMp+6vS
+duw3jp33wQBbERAAKyPyMXbCd0PP7r1HAnnu5//uF6lTXQjVThHyXJNs9p8uh3f1
+mxE330zFynGR/0qZBTFvPV+UXMSLi9tXl4rSquDtZvZGsFUb0/bmOpf3pJeb38XK
+vY6CnMPxDHeSh/AJhkwVhSSz7bIMkTux0ArRperaAED+Knu6To242rt50CL5eVYN
+VHx3XduJHIBQnviESJcsAV+EkWw53sXHVXrwy1nSy7cLco4Algzq81+KH9v6xjyy
+NGsjOoqR8NxvdnfpnWXhxyoRKRumNbd+HKz517WWAdboOadK7lzU8gknmrPhOQK5
+oOvNxinQw3AfcpxQJNm1cnesJHPgXHARQ3jdkFmauqInVOkh3lLs97ltNDFPqQJe
+nzCwe8o6a7s/98+hzOR2Rf9ny7Wz//FbeKzgEHt/N3XRzJ0r+yBp33qnwXa1bURE
+84n63qEmi5mSfHoiXIC0Ikv/+gUPmOLTJHt7lkYkXpLscUgOwmwPTuk/kST2TwdQ
+RGPLAErImDQ=
+=VxfP
+-----END PGP SIGNATURE-----
+
+--=-WO8WxBU3YYMtWQeamcYD--
+
