@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60962 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbXLQRrJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 12:47:09 -0500
-Subject: [PATCH] mac80211: round station cleanup timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 17 Dec 2007 15:07:43 +0100
-Message-Id: <1197900463.4885.43.camel@johannes.berg> (sfid-20071217_174713_185527_2654961B)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4478 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751012AbXLRC6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2007 21:58:37 -0500
+Date: Mon, 17 Dec 2007 21:25:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: iwlwifi: fix-up merge fall-out after namespace separation
+Message-ID: <20071218022540.GB3640@tuxdriver.com> (sfid-20071218_025841_403945_FC469D5F)
+References: <20071216043419.GF3096@tuxdriver.com> <47670514.4030204@garzik.org> <476708EF.10403@garzik.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <476708EF.10403@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The station cleanup timer runs every ten seconds, the exact
-timing is not relevant at all so it can well run together with
-other things to save power.
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=20
+> =E2=80=98iwl3945_alive_start=E2=80=99:
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:6285: error: implicit=20
+> declaration of function =E2=80=98iwl_rate_control_unregister=E2=80=99
+> make[4]: *** [drivers/net/wireless/iwlwifi/iwl3945-base.o] Error 1
+> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/sta_info.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
 
---- everything.orig/net/mac80211/sta_info.c	2007-12-17 15:03:29.003635524 +0100
-+++ everything/net/mac80211/sta_info.c	2007-12-17 15:07:01.303633192 +0100
-@@ -14,6 +14,7 @@
- #include <linux/slab.h>
- #include <linux/skbuff.h>
- #include <linux/if_arp.h>
-+#include <linux/timer.h>
- 
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-@@ -312,7 +313,8 @@ static void sta_info_cleanup(unsigned lo
- 	}
- 	read_unlock_bh(&local->sta_lock);
- 
--	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
-+	local->sta_cleanup.expires =
-+		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
- 	add_timer(&local->sta_cleanup);
- }
- 
-@@ -351,7 +353,8 @@ void sta_info_init(struct ieee80211_loca
- 	INIT_LIST_HEAD(&local->sta_list);
- 
- 	init_timer(&local->sta_cleanup);
--	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
-+	local->sta_cleanup.expires =
-+		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
- 	local->sta_cleanup.data = (unsigned long) local;
- 	local->sta_cleanup.function = sta_info_cleanup;
- 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/=
+wireless/iwlwifi/iwl3945-base.c
+index 42f6623..88cf035 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4859,7 +4859,7 @@ static void iwl3945_irq_tasklet(struct iwl3945_pr=
+iv *priv)
+ 		/* Queue restart only if RF_KILL switch was set to "kill"
+ 		 *   when we loaded driver, and is now set to "enable".
+ 		 * After we're Alive, RF_KILL gets handled by
+-		 *   iwl_rx_card_state_notif() */
++		 *   iwl3945_rx_card_state_notif() */
+ 		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
+ 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 			queue_work(priv->workqueue, &priv->restart);
+@@ -6282,7 +6282,7 @@ static void iwl3945_alive_start(struct iwl3945_pr=
+iv *priv)
+ 		mutex_lock(&priv->mutex);
+=20
+ 		if (rc) {
+-			iwl_rate_control_unregister(priv->hw);
++			iwl3945_rate_control_unregister(priv->hw);
+ 			IWL_ERROR("Failed to register network "
+ 				  "device (error %d)\n", rc);
+ 			return;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/=
+wireless/iwlwifi/iwl4965-base.c
+index 0dfc1ac..df6f3b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -5229,7 +5229,7 @@ static void iwl4965_irq_tasklet(struct iwl4965_pr=
+iv *priv)
+ 		/* Queue restart only if RF_KILL switch was set to "kill"
+ 		 *   when we loaded driver, and is now set to "enable".
+ 		 * After we're Alive, RF_KILL gets handled by
+-		 *   iwl_rx_card_state_notif() */
++		 *   iwl4965_rx_card_state_notif() */
+ 		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
+ 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 			queue_work(priv->workqueue, &priv->restart);
+@@ -6695,7 +6695,7 @@ static void iwl4965_alive_start(struct iwl4965_pr=
+iv *priv)
+ 		mutex_lock(&priv->mutex);
+=20
+ 		if (rc) {
+-			iwl_rate_control_unregister(priv->hw);
++			iwl4965_rate_control_unregister(priv->hw);
+ 			IWL_ERROR("Failed to register network "
+ 				  "device (error %d)\n", rc);
+ 			return;
+--=20
+John W. Linville
+linville@tuxdriver.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
