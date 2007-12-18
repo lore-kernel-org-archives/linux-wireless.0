@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:35050 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbXLNOUw (ORCPT
+Received: from smtp2.cc.ic.ac.uk ([155.198.5.156]:43428 "EHLO
+	smtp2.cc.ic.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756487AbXLRPeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2007 09:20:52 -0500
-Received: by py-out-1112.google.com with SMTP id u77so1157187pyb.16
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2007 06:20:51 -0800 (PST)
-Message-ID: <43e72e890712140620h90676b5x831563376ccbc1ec@mail.gmail.com> (sfid-20071214_142059_086225_FC160E50)
-Date: Fri, 14 Dec 2007 09:20:50 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [WIP] cfg80211 infrastructure for channels/bitrates, mac80211 and b43 conversion
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <1197631004.16079.25.camel@johannes.berg>
+	Tue, 18 Dec 2007 10:34:23 -0500
+Received: from 85-211-250-36.dsl.pipex.com ([85.211.250.36] helo=[192.168.0.2])
+	by smtp2.cc.ic.ac.uk with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.67)
+	(envelope-from <mark.williamson@imperial.ac.uk>)
+	id 1J4dye-0003NO-Ki
+	for linux-wireless@vger.kernel.org; Tue, 18 Dec 2007 15:03:24 +0000
+Message-ID: <4767E141.7080801@imperial.ac.uk> (sfid-20071218_153428_191906_A6890286)
+Date: Tue, 18 Dec 2007 15:03:29 +0000
+From: Mark Williamson <mark.williamson@imperial.ac.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1197631004.16079.25.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: Queries about acx-mac80211 master mode support on the AR7 platform
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 14, 2007 6:16 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
-> This patch creates new cfg80211 wiphy API for channel and bitrate
-> registration and converts mac80211 (and, as an example and for testing,
-> b43) to the new API. The old mac80211 API is completely ripped out.
->
-> So far, it has survived all my testing: only active scanning :)
->
-> Note that this has one major regression: with this patch you will have
-> all hardware channels available because I completely ripped out the
-> regulatory "enforcement" code. I believe that is for the better because
-> then we can cleanly add new regulatory enforcement code to cfg80211.
->
-> I've also ripped out all power adjustment and antenna gain fields/code,
-> this too will have to be added back, again I believe part of new
-> regulatory enforcement code.
->
-> Along with the regulatory code I've also ripped out the
-> IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED flag, I believe it to be
-> unnecessary if the hardware simply gives us whatever channels it wants
-> to support and we then enable/disable them as required, which is pretty
-> much required for travelling. Those with varying EEPROMs will obviously
-> have to allocate the array dynamically for each wiphy.
->
-> Here are a few more TODOs:
->  * do ERP stuff again, this is currently pretty broken (even before the
->    patch)
->  * do basic rate handling again, this is probably broken before the
->    patch
->  * do mandatory rate handling again (probably broken as well, partially
->    done)
->  * reimplement channel use calculations... they looked too broken to
->    worry about right now
->
-> Luis, please see the API in include/net/wireless.h. You'll have to add
-> to that for the regulatory stuff.
+Hi,
 
-Looks great, I'm glad I don't have to deal with these changes now :)
-just a few questions and observations:
+I=92m currently following the Openwrt project (http://openwrt.org/) wit=
+h=20
+specific interest to the AR7 port. The hardworking developers on this=20
+project have really brought support for this along: the unit works, the=
+=20
+ADSL component works, but the wireless support is still WIP. Until=20
+recently the acx drivers (http://acx100.sourceforge.net/) were used to=20
+drive the card on the unit; a specific pci-to-vlynq bridge had been=20
+written to enable this to work on the AR7 platform. This worked well,=20
+but there was no WPA support available; WEP was the only encryption=20
+available with this driver.
 
-* I didn't see the definition for ieee80211_channel_to_frequency() and
-its counter part, where are those defined?
-* This patch didn't have b43 changes
-* I'd like to base work on these patches, where can I find them the
-complete series to wget
+Hence to address this, initial work was taken for the acx driver to=20
+utilise the mac80211 stack and a new acx driver called acx-mac80211 was=
+=20
+written (http://acx100.sourceforge.net/wiki/Acx-mac80211).  IMHO this=20
+still very much WIP and is nowhere near as stable as the original acx=20
+driver. But, perhaps the largest sticking point is that the acx-mac8021=
+1=20
+driver, unlike acx, does not support AP (master) mode. I have struggled=
+=20
+to find out whether this is an issue in the acx-mac80211 driver=20
+component or in fact the mac80211 does not support master mode at this=20
+moment in time. Can anyone shed some light on this and help clear up my=
+=20
+ongoing confusion?
 
-  Luis
+Regards,
+
+Mark Williamson
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
