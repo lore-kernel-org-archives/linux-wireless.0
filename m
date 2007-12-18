@@ -1,83 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31951 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932852AbXLQQNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 11:13:33 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/8] mac80211: A-MPDU Rx add low level driver API
-Date: Mon, 17 Dec 2007 17:57:42 +0200
-Message-Id: <1197907078132-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_161337_817126_CF0B10B6)
-In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mailout7.parasun.com ([204.174.16.217]:51484 "EHLO
+	mailout7.parasun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757480AbXLRQGp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 11:06:45 -0500
+Date: Tue, 18 Dec 2007 10:06:13 -0600 (CST)
+From: Jeff Williams <angelbane@ou.edu>
+To: Mark Williamson <mark.williamson@imperial.ac.uk>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Queries about acx-mac80211 master mode support on the AR7 platform
+In-Reply-To: <4767E141.7080801@imperial.ac.uk>
+Message-ID: <Pine.LNX.4.64.0712180958060.12930@dulcinea> (sfid-20071218_160649_953854_98391B60)
+References: <4767E141.7080801@imperial.ac.uk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the API to perform A-MPDU actions between mac80211 and low
-level driver.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0d67b33..f50c28a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -915,6 +915,18 @@ enum ieee80211_erp_change_flags {
- 	IEEE80211_ERP_CHANGE_PREAMBLE	= 1<<1,
- };
- 
-+/**
-+ * enum ieee80211_ampdu_mlme_flags - A-MPDU action flags
-+ *
-+ * These flags are used with the ampdu_action() callback in
-+ * &struct ieee80211_ops to indicate which action is needed.
-+ * @IEEE80211_AMPDU_RX_START: start Rx aggregation
-+ * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
-+ */
-+enum ieee80211_ampdu_mlme_flags {
-+	IEEE80211_AMPDU_RX_START = 1<<0,
-+	IEEE80211_AMPDU_RX_STOP  = 1<<1,
-+};
- 
- /**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-@@ -1043,6 +1055,12 @@ enum ieee80211_erp_change_flags {
-  *	used to determine whether to reply to Probe Requests.
-  *
-  * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
-+ *
-+ * @ampdu_action: Ask low-level driver to perform a certain A-MPDU action
-+ * 	The RA/TID combination determines the destination and TID we want
-+ * 	the ampdu action to be perfoemed for. The action is defined through
-+ * 	ieee80211_ampdu_mlme_flags. starting sequence number (ssn)
-+ * 	is the first frame we expect to perform the action on.
-  */
- struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
-@@ -1089,6 +1107,8 @@ struct ieee80211_ops {
- 			     struct ieee80211_tx_control *control);
- 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
- 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
-+	int (*ampdu_action)(struct ieee80211_hw *hw, u8 action, const u8 *ra,
-+				u16 tid, u16 ssn);
- };
- 
- /**
--- 
-1.5.3.3
+On Tue, 18 Dec 2007, Mark Williamson wrote:
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> Hi,
+Hi Mark,
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+>
+> Hence to address this, initial work was taken for the acx driver to
+> utilise the mac80211 stack and a new acx driver called acx-mac80211 was
+> written (http://acx100.sourceforge.net/wiki/Acx-mac80211).  IMHO this
+> still very much WIP and is nowhere near as stable as the original acx
+> driver. But, perhaps the largest sticking point is that the acx-mac80211
+> driver, unlike acx, does not support AP (master) mode. I have struggled
+> to find out whether this is an issue in the acx-mac80211 driver
+> component or in fact the mac80211 does not support master mode at this
+> moment in time. Can anyone shed some light on this and help clear up my
+> ongoing confusion?
 
+I'm the guy who started the acx-softmac to acx-mac80211 conversion, and my 
+intention was to provide ap support for the card, but I've had other 
+projects come up demanding my attention. So I apologize for its WIP state.
+
+I'll have to defer to those working on nl80211/lib80211 and hostapd to 
+answer whether mac80211 actually supports AP mode, I recall a comment 
+about b43/legacy being the only driver to actively support Master?
+
+Anyway, I spoke with a guy who was interested in continuing work on the 
+acx-mac80211 a couple of months back, he seemed eager but I've not heard 
+anything from him since.
+
+I'm sorry I couldn't help you more,
+Jeff
