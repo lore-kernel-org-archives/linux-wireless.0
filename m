@@ -1,412 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31715 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753572AbXLCLsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:48:55 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 25/34] iwlwifi: document 4965 Tx scheduler
-Date: Mon,  3 Dec 2007 13:43:37 +0200
-Message-Id: <11966822321249-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114902_759611_F2B6EC98)
-In-Reply-To: <11966822323269-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
- <11966822301152-git-send-email-tomas.winkler@intel.com>
- <11966822302864-git-send-email-tomas.winkler@intel.com>
- <1196682230902-git-send-email-tomas.winkler@intel.com>
- <11966822302932-git-send-email-tomas.winkler@intel.com>
- <11966822302681-git-send-email-tomas.winkler@intel.com>
- <11966822301936-git-send-email-tomas.winkler@intel.com>
- <11966822302007-git-send-email-tomas.winkler@intel.com>
- <1196682230754-git-send-email-tomas.winkler@intel.com>
- <1196682231211-git-send-email-tomas.winkler@intel.com>
- <11966822313647-git-send-email-tomas.winkler@intel.com>
- <11966822312049-git-send-email-tomas.winkler@intel.com>
- <11966822311588-git-send-email-tomas.winkler@intel.com>
- <11966822314158-git-send-email-tomas.winkler@intel.com>
- <11966822311498-git-send-email-tomas.winkler@intel.com>
- <11966822311945-git-send-email-tomas.winkler@intel.com>
- <11966822312882-git-send-email-tomas.winkler@intel.com>
- <11966822323269-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39119 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754609AbXLRO2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 09:28:08 -0500
+Subject: [PATCH] mac80211: move tx crypto decision
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 18 Dec 2007 15:27:47 +0100
+Message-Id: <1197988067.4885.162.camel@johannes.berg> (sfid-20071218_142816_842497_85E08ABA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+This patch moves the decision making about whether a frame is encrypted
+with a certain algorithm up into the TX handlers rather than having it
+in the crypto algorithm implementation.
 
-Document 4965 Tx scheduler
+This fixes a problem with the radiotap injection code where injecting
+a non-data packet and requesting encryption could end up asking the
+driver to encrypt a packet without giving it a key.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |  268 ++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-prph.h     |   14 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +
- 3 files changed, 272 insertions(+), 12 deletions(-)
+Also, that will make implementing 802.11w more straight-forward.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 85724e1..8a93ad5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -1555,33 +1555,285 @@ enum {
- /* RSCSR: defs used in normal mode */
- #define FH_RSCSR_CHNL0_RBDCB_WPTR_MASK		(0x00000FFF)	/* bits 0-11 */
- 
-+/********************* START TX SCHEDULER *************************************/
-+
-+/**
-+ * 4965 Tx Scheduler
-+ *
-+ * The Tx Scheduler selects the next frame to be transmitted, chosing TFDs
-+ * (Transmit Frame Descriptors) from up to 16 circular Tx queues resident in
-+ * host DRAM.  It steers each frame's Tx command (which contains the frame
-+ * data) into one of up to 7 prioritized Tx DMA FIFO channels within the
-+ * device.  A queue maps to only one (selectable by driver) Tx DMA channel,
-+ * but one DMA channel may take input from several queues.
-+ *
-+ * Tx DMA channels have dedicated purposes.  For 4965, they are used as follows:
-+ *
-+ * 0 -- EDCA BK (background) frames, lowest priority
-+ * 1 -- EDCA BE (best effort) frames, normal priority
-+ * 2 -- EDCA VI (video) frames, higher priority
-+ * 3 -- EDCA VO (voice) and management frames, highest priority
-+ * 4 -- Commands (e.g. RXON, etc.)
-+ * 5 -- HCCA short frames
-+ * 6 -- HCCA long frames
-+ * 7 -- not used by driver (device-internal only)
-+ *
-+ * Driver should normally map queues 0-6 to Tx DMA/FIFO channels 0-6.
-+ * In addition, driver can map queues 7-15 to Tx DMA/FIFO channels 0-3 to
-+ * support 11n aggregation via EDCA DMA channels.
-+ *
-+ * The driver sets up each queue to work in one of two modes:
-+ *
-+ * 1)  Scheduler-Ack, in which the scheduler automatically supports a
-+ *     block-ack (BA) window of up to 64 TFDs.  In this mode, each queue
-+ *     contains TFDs for a unique combination of Recipient Address (RA)
-+ *     and Traffic Identifier (TID), that is, traffic of a given
-+ *     Quality-Of-Service (QOS) priority, destined for a single station.
-+ *
-+ *     In scheduler-ack mode, the scheduler keeps track of the Tx status of
-+ *     each frame within the BA window, including whether it's been transmitted,
-+ *     and whether it's been acknowledged by the receiving station.  The device
-+ *     automatically processes block-acks received from the receiving STA,
-+ *     and reschedules un-acked frames to be retransmitted (successful
-+ *     Tx completion may end up being out-of-order).
-+ *
-+ *     The driver must maintain the queue's Byte Count table in host DRAM
-+ *     (struct iwl4965_sched_queue_byte_cnt_tbl) for this mode.
-+ *     This mode does not support fragmentation.
-+ *
-+ * 2)  FIFO (a.k.a. non-Scheduler-ACK), in which each TFD is processed in order.
-+ *     The device may automatically retry Tx, but will retry only one frame
-+ *     at a time, until receiving ACK from receiving station, or reaching
-+ *     retry limit and giving up.
-+ *
-+ *     The command queue (#4) must use this mode!
-+ *     This mode does not require use of the Byte Count table in host DRAM.
-+ *
-+ * Driver controls scheduler operation via 3 means:
-+ * 1)  Scheduler registers
-+ * 2)  Shared scheduler data base in internal 4956 SRAM
-+ * 3)  Shared data in host DRAM
-+ *
-+ * Initialization:
-+ *
-+ * When loading, driver should allocate memory for:
-+ * 1)  16 TFD circular buffers, each with space for (typically) 256 TFDs.
-+ * 2)  16 Byte Count circular buffers in 16 KBytes contiguous memory
-+ *     (1024 bytes for each queue).
-+ *
-+ * After receiving "Alive" response from uCode, driver must initialize
-+ * the scheduler (especially for queue #4, the command queue, otherwise
-+ * the driver can't issue commands!):
-+ */
-+
-+/**
-+ * Max Tx window size is the max number of contiguous TFDs that the scheduler
-+ * can keep track of at one time when creating block-ack chains of frames.
-+ * Note that "64" matches the number of ack bits in a block-ack packet.
-+ * Driver should use SCD_WIN_SIZE and SCD_FRAME_LIMIT values to initialize
-+ * SCD_CONTEXT_QUEUE_OFFSET(x) values.
-+ */
- #define SCD_WIN_SIZE				64
- #define SCD_FRAME_LIMIT				64
- 
--/* SRAM structures */
--#define SCD_CONTEXT_DATA_OFFSET			0x380
--#define SCD_TX_STTS_BITMAP_OFFSET		0x400
--#define SCD_TRANSLATE_TBL_OFFSET		0x500
--#define SCD_CONTEXT_QUEUE_OFFSET(x)	(SCD_CONTEXT_DATA_OFFSET + ((x) * 8))
--#define SCD_TRANSLATE_TBL_OFFSET_QUEUE(x) \
--	((SCD_TRANSLATE_TBL_OFFSET + ((x) * 2)) & 0xfffffffc)
-+/* SCD registers are internal, must be accessed via HBUS_TARG_PRPH regs */
-+#define SCD_START_OFFSET		0xa02c00
-+
-+/*
-+ * 4965 tells driver SRAM address for internal scheduler structs via this reg.
-+ * Value is valid only after "Alive" response from uCode.
-+ */
-+#define SCD_SRAM_BASE_ADDR           (SCD_START_OFFSET + 0x0)
- 
-+/*
-+ * Driver may need to update queue-empty bits after changing queue's
-+ * write and read pointers (indexes) during (re-)initialization (i.e. when
-+ * scheduler is not tracking what's happening).
-+ * Bit fields:
-+ * 31-16:  Write mask -- 1: update empty bit, 0: don't change empty bit
-+ * 15-00:  Empty state, one for each queue -- 1: empty, 0: non-empty
-+ * NOTE:  This register is not used by Linux driver.
-+ */
-+#define SCD_EMPTY_BITS               (SCD_START_OFFSET + 0x4)
-+
-+/*
-+ * Physical base address of array of byte count (BC) circular buffers (CBs).
-+ * Each Tx queue has a BC CB in host DRAM to support Scheduler-ACK mode.
-+ * This register points to BC CB for queue 0, must be on 1024-byte boundary.
-+ * Others are spaced by 1024 bytes.
-+ * Each BC CB is 2 bytes * (256 + 64) = 740 bytes, followed by 384 bytes pad.
-+ * (Index into a queue's BC CB) = (index into queue's TFD CB) = (SSN & 0xff).
-+ * Bit fields:
-+ * 25-00:  Byte Count CB physical address [35:10], must be 1024-byte aligned.
-+ */
-+#define SCD_DRAM_BASE_ADDR           (SCD_START_OFFSET + 0x10)
-+
-+/*
-+ * Enables any/all Tx DMA/FIFO channels.
-+ * Scheduler generates requests for only the active channels.
-+ * Set this to 0xff to enable all 8 channels (normal usage).
-+ * Bit fields:
-+ *  7- 0:  Enable (1), disable (0), one bit for each channel 0-7
-+ */
-+#define SCD_TXFACT                   (SCD_START_OFFSET + 0x1c)
-+
-+/* Mask to enable contiguous Tx DMA/FIFO channels between "lo" and "hi". */
- #define SCD_TXFACT_REG_TXFIFO_MASK(lo, hi) \
-        ((1<<(hi))|((1<<(hi))-(1<<(lo))))
- 
-+/*
-+ * Queue (x) Write Pointers (indexes, really!), one for each Tx queue.
-+ * Initialized and updated by driver as new TFDs are added to queue.
-+ * NOTE:  If using Block Ack, index must correspond to frame's
-+ *        Start Sequence Number; index = (SSN & 0xff)
-+ * NOTE:  Alternative to HBUS_TARG_WRPTR, which is what Linux driver uses?
-+ */
-+#define SCD_QUEUE_WRPTR(x)           (SCD_START_OFFSET + 0x24 + (x) * 4)
-+
-+/*
-+ * Queue (x) Read Pointers (indexes, really!), one for each Tx queue.
-+ * For FIFO mode, index indicates next frame to transmit.
-+ * For Scheduler-ACK mode, index indicates first frame in Tx window.
-+ * Initialized by driver, updated by scheduler.
-+ */
-+#define SCD_QUEUE_RDPTR(x)           (SCD_START_OFFSET + 0x64 + (x) * 4)
-+
-+/*
-+ * Select which queues work in chain mode (1) vs. not (0).
-+ * Use chain mode to build chains of aggregated frames.
-+ * Bit fields:
-+ * 31-16:  Reserved
-+ * 15-00:  Mode, one bit for each queue -- 1: Chain mode, 0: one-at-a-time
-+ * NOTE:  If driver sets up queue for chain mode, it should be also set up
-+ *        Scheduler-ACK mode as well, via SCD_QUEUE_STATUS_BITS(x).
-+ */
-+#define SCD_QUEUECHAIN_SEL           (SCD_START_OFFSET + 0xd0)
-+
-+/*
-+ * Select which queues interrupt driver when scheduler increments
-+ * a queue's read pointer (index).
-+ * Bit fields:
-+ * 31-16:  Reserved
-+ * 15-00:  Interrupt enable, one bit for each queue -- 1: enabled, 0: disabled
-+ * NOTE:  This functionality is apparently a no-op; driver relies on interrupts
-+ *        from Rx queue to read Tx command responses and update Tx queues.
-+ */
-+#define SCD_INTERRUPT_MASK           (SCD_START_OFFSET + 0xe4)
-+
-+/*
-+ * Queue search status registers.  One for each queue.
-+ * Sets up queue mode and assigns queue to Tx DMA channel.
-+ * Bit fields:
-+ * 19-10: Write mask/enable bits for bits 0-9
-+ *     9: Driver should init to "0"
-+ *     8: Scheduler-ACK mode (1), non-Scheduler-ACK (i.e. FIFO) mode (0).
-+ *        Driver should init to "1" for aggregation mode, or "0" otherwise.
-+ *   7-6: Driver should init to "0"
-+ *     5: Window Size Left; indicates whether scheduler can request
-+ *        another TFD, based on window size, etc.  Driver should init
-+ *        this bit to "1" for aggregation mode, or "0" for non-agg.
-+ *   4-1: Tx FIFO to use (range 0-7).
-+ *     0: Queue is active (1), not active (0).
-+ * Other bits should be written as "0"
-+ *
-+ * NOTE:  If enabling Scheduler-ACK mode, chain mode should also be enabled
-+ *        via SCD_QUEUECHAIN_SEL.
-+ */
-+#define SCD_QUEUE_STATUS_BITS(x)     (SCD_START_OFFSET + 0x104 + (x) * 4)
-+
-+/* Bit field positions */
- #define SCD_QUEUE_STTS_REG_POS_ACTIVE		(0)
- #define SCD_QUEUE_STTS_REG_POS_TXF		(1)
- #define SCD_QUEUE_STTS_REG_POS_WSL		(5)
- #define SCD_QUEUE_STTS_REG_POS_SCD_ACK		(8)
-+
-+/* Write masks */
- #define SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN	(10)
- #define SCD_QUEUE_STTS_REG_MSK			(0x0007FC00)
- 
-+/**
-+ * 4965 internal SRAM structures for scheduler, shared with driver ...
-+ *
-+ * Driver should clear and initialize the following areas after receiving
-+ * "Alive" response from 4965 uCode, i.e. after initial
-+ * uCode load, or after a uCode load done for error recovery:
-+ *
-+ * SCD_CONTEXT_DATA_OFFSET (size 128 bytes)
-+ * SCD_TX_STTS_BITMAP_OFFSET (size 256 bytes)
-+ * SCD_TRANSLATE_TBL_OFFSET (size 32 bytes)
-+ *
-+ * Driver accesses SRAM via HBUS_TARG_MEM_* registers.
-+ * Driver reads base address of this scheduler area from SCD_SRAM_BASE_ADDR.
-+ * All OFFSET values must be added to this base address.
-+ */
-+
-+/*
-+ * Queue context.  One 8-byte entry for each of 16 queues.
-+ *
-+ * Driver should clear this entire area (size 0x80) to 0 after receiving
-+ * "Alive" notification from uCode.  Additionally, driver should init
-+ * each queue's entry as follows:
-+ *
-+ * LS Dword bit fields:
-+ *  0-06:  Max Tx window size for Scheduler-ACK.  Driver should init to 64.
-+ *
-+ * MS Dword bit fields:
-+ * 16-22:  Frame limit.  Driver should init to 10 (0xa).
-+ *
-+ * Driver should init all other bits to 0.
-+ *
-+ * Init must be done after driver receives "Alive" response from 4965 uCode,
-+ * and when setting up queue for aggregation.
-+ */
-+#define SCD_CONTEXT_DATA_OFFSET			0x380
-+#define SCD_CONTEXT_QUEUE_OFFSET(x)	(SCD_CONTEXT_DATA_OFFSET + ((x) * 8))
-+
- #define SCD_QUEUE_CTX_REG1_WIN_SIZE_POS		(0)
- #define SCD_QUEUE_CTX_REG1_WIN_SIZE_MSK		(0x0000007F)
--
- #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS	(16)
- #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK	(0x007F0000)
- 
-+/*
-+ * Tx Status Bitmap
-+ *
-+ * Driver should clear this entire area (size 0x100) to 0 after receiving
-+ * "Alive" notification from uCode.  Area is used only by device itself;
-+ * no other support (besides clearing) is required from driver.
-+ */
-+#define SCD_TX_STTS_BITMAP_OFFSET		0x400
-+
-+/*
-+ * RAxTID to queue translation mapping.
-+ *
-+ * When queue is in Scheduler-ACK mode, frames placed in a that queue must be
-+ * for only one combination of receiver address (RA) and traffic ID (TID), i.e.
-+ * one QOS priority level destined for one station (for this wireless link,
-+ * not final destination).  The SCD_TRANSLATE_TABLE area provides 16 16-bit
-+ * mappings, one for each of the 16 queues.  If queue is not in Scheduler-ACK
-+ * mode, the device ignores the mapping value.
-+ *
-+ * Bit fields, for each 16-bit map:
-+ * 15-9:  Reserved, set to 0
-+ *  8-4:  Index into device's station table for recipient station
-+ *  3-0:  Traffic ID (tid), range 0-15
-+ *
-+ * Driver should clear this entire area (size 32 bytes) to 0 after receiving
-+ * "Alive" notification from uCode.  To update a 16-bit map value, driver
-+ * must read a dword-aligned value from device SRAM, replace the 16-bit map
-+ * value of interest, and write the dword value back into device SRAM.
-+ */
-+#define SCD_TRANSLATE_TBL_OFFSET		0x500
-+
-+/* Find translation table dword to read/write for given queue */
-+#define SCD_TRANSLATE_TBL_OFFSET_QUEUE(x) \
-+	((SCD_TRANSLATE_TBL_OFFSET + ((x) * 2)) & 0xfffffffc)
-+
-+#define SCD_TXFIFO_POS_TID			(0)
-+#define SCD_TXFIFO_POS_RA			(4)
-+#define SCD_QUEUE_RA_TID_MAP_RATID_MSK		(0x01FF)
-+
-+/*********************** END TX SCHEDULER *************************************/
-+
- static inline u8 iwl4965_hw_get_rate(__le32 rate_n_flags)
+ net/mac80211/tx.c  |   39 ++++++++++++++++++++++-----------------
+ net/mac80211/wep.c |   10 ----------
+ net/mac80211/wpa.c |   14 --------------
+ 3 files changed, 22 insertions(+), 41 deletions(-)
+
+--- everything.orig/net/mac80211/tx.c	2007-12-18 14:36:17.243016004 +0100
++++ everything/net/mac80211/tx.c	2007-12-18 14:48:45.853013509 +0100
+@@ -436,11 +436,7 @@ static ieee80211_txrx_result
+ ieee80211_tx_h_select_key(struct ieee80211_txrx_data *tx)
  {
- 	return le32_to_cpu(rate_n_flags) & 0xFF;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index 137947d..4ba1216 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -63,7 +63,10 @@
- #ifndef	__iwl_prph_h__
- #define __iwl_prph_h__
- 
+ 	struct ieee80211_key *key;
+-	const struct ieee80211_hdr *hdr;
+-	u16 fc;
 -
-+/*
-+ * Registers in this file are internal, not PCI bus memory mapped.
-+ * Driver accesses these via HBUS_TARG_PRPH_* registers.
-+ */
- #define PRPH_BASE	(0x00000)
- #define PRPH_END	(0xFFFFF)
+-	hdr = (const struct ieee80211_hdr *) tx->skb->data;
+-	fc = le16_to_cpu(hdr->frame_control);
++	u16 fc = tx->fc;
  
-@@ -225,8 +228,8 @@
- #define BSM_SRAM_LOWER_BOUND         (PRPH_BASE + 0x3800)
- #define BSM_SRAM_SIZE			(1024) /* bytes */
+ 	if (unlikely(tx->u.tx.control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT))
+ 		tx->key = NULL;
+@@ -453,16 +449,34 @@ ieee80211_tx_h_select_key(struct ieee802
+ 		   ieee80211_is_eapol(tx->skb, ieee80211_get_hdrlen(fc)))) {
+ 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
+ 		return TXRX_DROP;
+-	} else {
++	} else
+ 		tx->key = NULL;
+-		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
+-	}
  
--/* ALM SCD */
--/* SCD (Scheduler) */
+ 	if (tx->key) {
++		u16 ftype, stype;
 +
-+/* 3945 Tx scheduler registers */
- #define ALM_SCD_BASE                        (PRPH_BASE + 0x2E00)
- #define ALM_SCD_MODE_REG                    (ALM_SCD_BASE + 0x000)
- #define ALM_SCD_ARASTAT_REG                 (ALM_SCD_BASE + 0x004)
-@@ -236,7 +239,10 @@
- #define ALM_SCD_SBYP_MODE_1_REG             (ALM_SCD_BASE + 0x02C)
- #define ALM_SCD_SBYP_MODE_2_REG             (ALM_SCD_BASE + 0x030)
+ 		tx->key->tx_rx_count++;
+ 		/* TODO: add threshold stuff again */
++
++		switch (tx->key->conf.alg) {
++		case ALG_WEP:
++			ftype = fc & IEEE80211_FCTL_FTYPE;
++			stype = fc & IEEE80211_FCTL_STYPE;
++
++			if (ftype == IEEE80211_FTYPE_MGMT &&
++			    stype == IEEE80211_STYPE_AUTH)
++				break;
++		case ALG_TKIP:
++		case ALG_CCMP:
++			if (!WLAN_FC_DATA_PRESENT(fc))
++				tx->key = NULL;
++			break;
++		}
+ 	}
  
--/* 4965 SCD memory mapped registers */
-+/*
-+ * 4965 Tx Scheduler registers.
-+ * Details are documented in iwl-4965-hw.h
-+ */
- #define KDR_SCD_BASE		(PRPH_BASE + 0xa02c00)
++	if (!tx->key || !(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
++
+ 	return TXRX_CONTINUE;
+ }
  
- #define KDR_SCD_SRAM_BASE_ADDR         (KDR_SCD_BASE + 0x0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index ddeedf6..1a9dada 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -202,6 +202,8 @@ static void iwl4965_print_hex_dump(int level, void *p, u32 len)
-  * The 4965 operates with up to 17 queues:  One receive queue, one transmit
-  * queue (#4) for sending commands to the device firmware, and 15 other
-  * Tx queues that may be mapped to prioritized Tx DMA/FIFO channels.
-+ *
-+ * See more detailed info in iwl-4965-hw.h.
-  ***************************************************/
+@@ -708,15 +722,6 @@ ieee80211_tx_h_misc(struct ieee80211_txr
+ 		}
+ 	}
  
- static int iwl4965_queue_space(const struct iwl4965_queue *q)
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+-	/*
+-	 * Tell hardware to not encrypt when we had sw crypto.
+-	 * Because we use the same flag to internally indicate that
+-	 * no (software) encryption should be done, we have to set it
+-	 * after all crypto handlers.
+-	 */
+-	if (tx->key && !(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+-		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
+-
+ 	return TXRX_CONTINUE;
+ }
+ 
+--- everything.orig/net/mac80211/wep.c	2007-12-18 14:36:17.263016276 +0100
++++ everything/net/mac80211/wep.c	2007-12-18 14:48:45.863017306 +0100
+@@ -349,16 +349,6 @@ static int wep_encrypt_skb(struct ieee80
+ ieee80211_txrx_result
+ ieee80211_crypto_wep_encrypt(struct ieee80211_txrx_data *tx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+-	u16 fc;
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
+-	     ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
+-	      (fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH)))
+-		return TXRX_CONTINUE;
+-
+ 	tx->u.tx.control->iv_len = WEP_IV_LEN;
+ 	tx->u.tx.control->icv_len = WEP_ICV_LEN;
+ 	ieee80211_tx_set_iswep(tx);
+--- everything.orig/net/mac80211/wpa.c	2007-12-18 14:36:17.303016601 +0100
++++ everything/net/mac80211/wpa.c	2007-12-18 14:48:45.863017306 +0100
+@@ -245,16 +245,9 @@ static int tkip_encrypt_skb(struct ieee8
+ ieee80211_txrx_result
+ ieee80211_crypto_tkip_encrypt(struct ieee80211_txrx_data *tx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+-	u16 fc;
+ 	struct sk_buff *skb = tx->skb;
+ 	int wpa_test = 0, test = 0;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	if (!WLAN_FC_DATA_PRESENT(fc))
+-		return TXRX_CONTINUE;
+-
+ 	tx->u.tx.control->icv_len = TKIP_ICV_LEN;
+ 	tx->u.tx.control->iv_len = TKIP_IV_LEN;
+ 	ieee80211_tx_set_iswep(tx);
+@@ -501,16 +494,9 @@ static int ccmp_encrypt_skb(struct ieee8
+ ieee80211_txrx_result
+ ieee80211_crypto_ccmp_encrypt(struct ieee80211_txrx_data *tx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+-	u16 fc;
+ 	struct sk_buff *skb = tx->skb;
+ 	int test = 0;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	if (!WLAN_FC_DATA_PRESENT(fc))
+-		return TXRX_CONTINUE;
+-
+ 	tx->u.tx.control->icv_len = CCMP_MIC_LEN;
+ 	tx->u.tx.control->iv_len = CCMP_HDR_LEN;
+ 	ieee80211_tx_set_iswep(tx);
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+
