@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34023 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757280AbXLTJse (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 04:48:34 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/8 v2] mac80211: A-MPDU Rx add low level driver API
-Date: Thu, 20 Dec 2007 11:39:05 +0200
-Message-Id: <11981435614092-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094842_754848_B6AA4869)
-In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60717 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbXLSQtb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 11:49:31 -0500
+Subject: Re: [PATCH v3 8/8] rc80211-pid: export tuning parameters through
+	debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071219012751.553e34bc@morte>
+References: <20071219001955.055692620@polimi.it> >
+	  <20071219012751.553e34bc@morte>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z/zZGPgm8smu4Ec2JIpU"
+Date: Wed, 19 Dec 2007 17:49:25 +0100
+Message-Id: <1198082965.4747.27.camel@johannes.berg> (sfid-20071219_164935_060482_198DBA06)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the API to perform A-MPDU actions between mac80211 and low
-level driver.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+--=-Z/zZGPgm8smu4Ec2JIpU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0d67b33..418cd38 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -915,6 +915,18 @@ enum ieee80211_erp_change_flags {
- 	IEEE80211_ERP_CHANGE_PREAMBLE	= 1<<1,
- };
- 
-+/**
-+ * enum ieee80211_ampdu_mlme_action - A-MPDU actions
-+ *
-+ * These flags are used with the ampdu_action() callback in
-+ * &struct ieee80211_ops to indicate which action is needed.
-+ * @IEEE80211_AMPDU_RX_START: start Rx aggregation
-+ * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
-+ */
-+enum ieee80211_ampdu_mlme_action {
-+	IEEE80211_AMPDU_RX_START,
-+	IEEE80211_AMPDU_RX_STOP,
-+};
- 
- /**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-@@ -1043,6 +1055,12 @@ enum ieee80211_erp_change_flags {
-  *	used to determine whether to reply to Probe Requests.
-  *
-  * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
-+ *
-+ * @ampdu_action: Perform a certain A-MPDU action
-+ * 	The RA/TID combination determines the destination and TID we want
-+ * 	the ampdu action to be performed for. The action is defined through
-+ * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
-+ * 	is the first frame we expect to perform the action on.
-  */
- struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
-@@ -1089,6 +1107,9 @@ struct ieee80211_ops {
- 			     struct ieee80211_tx_control *control);
- 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
- 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
-+	int (*ampdu_action)(struct ieee80211_hw *hw,
-+			    enum ieee80211_ampdu_mlme_action action,
-+			    const u8 *ra, u16 tid, u16 ssn);
- };
- 
- /**
--- 
-1.5.3.3
+Ok, I already commented on patch 4 and just on patch 1 as well, other
+than that the series looks fine. I haven't really done a detailed review
+of the new code though, you get to be blamed if it breaks.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+johannes
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+--=-Z/zZGPgm8smu4Ec2JIpU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2lLlKVg1VMiehFYAQLXmhAAixMCH2PhDO/CRfWcBbi6GtYq5QJvnrSY
+Cu/NR/0hkIgdW14VISFWeFG3PgK0H7eWx5/LEWTN1GvuUFDLAt+5X4QOClr36zho
+5dJcX09wL5romREqOudUbC3irIh1XRO4wNp8zIFChwVvz96BNrGcUClBbrm3DUGP
+c+CjZiFI5GkXVRrhcMK7a9S1VfvVhWSjDbb46upIkg2P0qFRXa85lQpOLlkh+477
+ziJYuE4RZuIFkv/XYo19Fsqi5BUCiWOlj58h8fRfsKnKAAd3+oWG6629mSk3v9AO
+IxRgbtalU4vqZaaR84YUGxCz7dH1aQTDwlIW5GuOzaypTc1w5KSA5OQc6DVHxPs3
+6K1sNj0saO5LrrDGIwyi/f8WuKHRwdwfxnyUYyTPSKzdvgX46K9dmg2Ed8Jaa42g
+0Q2M/WwAFZDBcenHDQ6WF8u/ufVSWiUek7ki7JgL0KUts7qeTNN1zlEWXKvNAGcj
+KagyDKBVhzIzgIayXWf/WBw7uLrPpl8Bu95tNibV/G4ebgn+kr3lihR1J4vYgJDV
+1gIM/W6Y3QqBxvbBr29OlVav9qHib2HdLOkpo/CfGECLe08yctjve5dysMejIiAQ
+gPampuFrJ3WZNtjnwQSAqXSAxPChDAKn76j8sCyhnLRoO07TwRZ8FjKo+MhiRHDd
+3rXsh3V0j4A=
+=8bBY
+-----END PGP SIGNATURE-----
+
+--=-Z/zZGPgm8smu4Ec2JIpU--
 
