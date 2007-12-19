@@ -1,344 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50662 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbXLDQmG (ORCPT
+Received: from pmac.infradead.org ([90.155.92.200]:40756 "EHLO
+	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752229AbXLSQJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 11:42:06 -0500
-Subject: [RFC v2] iwl4965: proper monitor support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>, dragoran <drago01@gmail.com>
-In-Reply-To: <1196266230.6058.155.camel@johannes.berg> (sfid-20071128_165025_987022_9FAA5A8E)
-References: <1196266230.6058.155.camel@johannes.berg>
-	 (sfid-20071128_165025_987022_9FAA5A8E)
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 16:30:50 +0100
-Message-Id: <1196782250.10274.2.camel@johannes.berg> (sfid-20071204_164214_253446_677BD03C)
-Mime-Version: 1.0
+	Wed, 19 Dec 2007 11:09:52 -0500
+Subject: [PATCH 127/48] libertas: convert RADIO_CONTROL to a direct command
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J50v8-00021S-92@pmac.infradead.org> (sfid-20071219_160955_849473_BEFA98B1)
+Date: Wed, 19 Dec 2007 15:33:18 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes the iwl4965 driver to properly support
-monitor interfaces after the filter flags change.
+Date: Mon, 17 Dec 2007 22:43:48 -0500
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Tomas Winkler <tomasw@gmail.com<
-Cc: drago01@gmail.com
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 ---
-Somebody needs to port this to iwl3945 too.
+ drivers/net/wireless/libertas/cmd.c     |   76 +++++++++++--------------------
+ drivers/net/wireless/libertas/cmdresp.c |    1 -
+ drivers/net/wireless/libertas/hostcmd.h |    4 +-
+ 3 files changed, 29 insertions(+), 52 deletions(-)
 
-This is just rediffed against the current wireless-2.6#everything tree.
-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |  120 ++++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-4965.h     |   24 -----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   90 ---------------------
- 3 files changed, 115 insertions(+), 119 deletions(-)
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.h	2007-12-04 14:43:48.776410265 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-4965.h	2007-12-04 14:51:57.496408583 +0100
-@@ -87,29 +87,6 @@ struct iwl4965_rx_mem_buffer {
- 	struct list_head list;
- };
- 
--struct iwl4965_rt_rx_hdr {
--	struct ieee80211_radiotap_header rt_hdr;
--	__le64 rt_tsf;		/* TSF */
--	u8 rt_flags;		/* radiotap packet flags */
--	u8 rt_rate;		/* rate in 500kb/s */
--	__le16 rt_channelMHz;	/* channel in MHz */
--	__le16 rt_chbitmask;	/* channel bitfield */
--	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
--	s8 rt_dbmnoise;
--	u8 rt_antenna;		/* antenna number */
--	u8 payload[0];		/* payload... */
--} __attribute__ ((packed));
--
--struct iwl4965_rt_tx_hdr {
--	struct ieee80211_radiotap_header rt_hdr;
--	u8 rt_rate;		/* rate in 500kb/s */
--	__le16 rt_channel;	/* channel in mHz */
--	__le16 rt_chbitmask;	/* channel bitfield */
--	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
--	u8 rt_antenna;		/* antenna number */
--	u8 payload[0];		/* payload... */
--} __attribute__ ((packed));
--
- /*
-  * Generic queue structure
-  *
-@@ -1063,6 +1040,7 @@ struct iwl4965_priv {
- 
- 	u8 phymode;
- 	int alloc_rxb_skb;
-+	bool add_radiotap;
- 
- 	void (*rx_handlers[REPLY_MAX])(struct iwl4965_priv *priv,
- 				       struct iwl4965_rx_mem_buffer *rxb);
---- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-04 14:43:48.816409722 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-04 14:51:57.506409234 +0100
-@@ -51,7 +51,6 @@
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
- 
--#include <net/ieee80211_radiotap.h>
- #include <net/mac80211.h>
- 
- #include <asm/div64.h>
-@@ -3152,93 +3151,6 @@ void iwl4965_set_decrypted_flag(struct i
- 	}
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 0ae9851..3a7b82f 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -603,45 +603,6 @@ static int lbs_cmd_802_11_snmp_mib(struct lbs_private *priv,
+ 	return 0;
  }
  
--void iwl4965_handle_data_packet_monitor(struct iwl4965_priv *priv,
--				    struct iwl4965_rx_mem_buffer *rxb,
--				    void *data, short len,
--				    struct ieee80211_rx_status *stats,
--				    u16 phy_flags)
+-static int lbs_cmd_802_11_radio_control(struct lbs_private *priv,
+-					 struct cmd_ds_command *cmd,
+-					 int cmd_action)
 -{
--	struct iwl4965_rt_rx_hdr *iwl4965_rt;
+-	struct cmd_ds_802_11_radio_control *pradiocontrol = &cmd->params.radio;
 -
--	/* First cache any information we need before we overwrite
--	 * the information provided in the skb from the hardware */
--	s8 signal = stats->ssi;
--	s8 noise = 0;
--	int rate = stats->rate;
--	u64 tsf = stats->mactime;
--	__le16 phy_flags_hw = cpu_to_le16(phy_flags);
+-	lbs_deb_enter(LBS_DEB_CMD);
 -
--	/* We received data from the HW, so stop the watchdog */
--	if (len > priv->hw_setting.rx_buf_size - sizeof(*iwl4965_rt)) {
--		IWL_DEBUG_DROP("Dropping too large packet in monitor\n");
--		return;
+-	cmd->size =
+-	    cpu_to_le16((sizeof(struct cmd_ds_802_11_radio_control)) +
+-			     S_DS_GEN);
+-	cmd->command = cpu_to_le16(CMD_802_11_RADIO_CONTROL);
+-
+-	pradiocontrol->action = cpu_to_le16(cmd_action);
+-
+-	switch (priv->preamble) {
+-	case CMD_TYPE_SHORT_PREAMBLE:
+-		pradiocontrol->control = cpu_to_le16(SET_SHORT_PREAMBLE);
+-		break;
+-
+-	case CMD_TYPE_LONG_PREAMBLE:
+-		pradiocontrol->control = cpu_to_le16(SET_LONG_PREAMBLE);
+-		break;
+-
+-	case CMD_TYPE_AUTO_PREAMBLE:
+-	default:
+-		pradiocontrol->control = cpu_to_le16(SET_AUTO_PREAMBLE);
+-		break;
 -	}
 -
--	/* copy the frame data to write after where the radiotap header goes */
--	iwl4965_rt = (void *)rxb->skb->data;
--	memmove(iwl4965_rt->payload, data, len);
--
--	iwl4965_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
--	iwl4965_rt->rt_hdr.it_pad = 0; /* always good to zero */
--
--	/* total header + data */
--	iwl4965_rt->rt_hdr.it_len = cpu_to_le16(sizeof(*iwl4965_rt));
--
--	/* Set the size of the skb to the size of the frame */
--	skb_put(rxb->skb, sizeof(*iwl4965_rt) + len);
--
--	/* Big bitfield of all the fields we provide in radiotap */
--	iwl4965_rt->rt_hdr.it_present =
--	    cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
--			(1 << IEEE80211_RADIOTAP_FLAGS) |
--			(1 << IEEE80211_RADIOTAP_RATE) |
--			(1 << IEEE80211_RADIOTAP_CHANNEL) |
--			(1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
--			(1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
--			(1 << IEEE80211_RADIOTAP_ANTENNA));
--
--	/* Zero the flags, we'll add to them as we go */
--	iwl4965_rt->rt_flags = 0;
--
--	iwl4965_rt->rt_tsf = cpu_to_le64(tsf);
--
--	/* Convert to dBm */
--	iwl4965_rt->rt_dbmsignal = signal;
--	iwl4965_rt->rt_dbmnoise = noise;
--
--	/* Convert the channel frequency and set the flags */
--	iwl4965_rt->rt_channelMHz = cpu_to_le16(stats->freq);
--	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
--		iwl4965_rt->rt_chbitmask =
--		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
--	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
--		iwl4965_rt->rt_chbitmask =
--		    cpu_to_le16((IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ));
--	else	/* 802.11g */
--		iwl4965_rt->rt_chbitmask =
--		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ));
--
--	rate = iwl4965_rate_index_from_plcp(rate);
--	if (rate == -1)
--		iwl4965_rt->rt_rate = 0;
+-	if (priv->radioon)
+-		pradiocontrol->control |= cpu_to_le16(TURN_ON_RF);
 -	else
--		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
+-		pradiocontrol->control &= cpu_to_le16(~TURN_ON_RF);
 -
--	/* antenna number */
--	iwl4965_rt->rt_antenna =
--		le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
--
--	/* set the preamble flag if we have it */
--	if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
--		iwl4965_rt->rt_flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
--
--	IWL_DEBUG_RX("Rx packet of %d bytes.\n", rxb->skb->len);
--
--	stats->flag |= RX_FLAG_RADIOTAP;
--	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
--	rxb->skb = NULL;
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
 -}
 -
+ static int lbs_cmd_802_11_rf_tx_power(struct lbs_private *priv,
+ 				       struct cmd_ds_command *cmd,
+ 				       u16 cmd_action, void *pdata_buf)
+@@ -1315,16 +1276,37 @@ void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+ int lbs_set_radio_control(struct lbs_private *priv)
+ {
+ 	int ret = 0;
++	struct cmd_ds_802_11_radio_control cmd;
  
- #define IWL_PACKET_RETRY_TIME HZ
+ 	lbs_deb_enter(LBS_DEB_CMD);
  
-@@ -7374,6 +7286,8 @@ static int iwl4965_mac_config(struct iee
- 	mutex_lock(&priv->mutex);
- 	IWL_DEBUG_MAC80211("enter to channel %d\n", conf->channel);
- 
-+	priv->add_radiotap = !!(conf->flags & IEEE80211_CONF_RADIOTAP);
+-	ret = lbs_prepare_and_send_command(priv,
+-				    CMD_802_11_RADIO_CONTROL,
+-				    CMD_ACT_SET,
+-				    CMD_OPTION_WAITFORRSP, 0, NULL);
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(CMD_ACT_SET);
 +
- 	if (!iwl4965_is_ready(priv)) {
- 		IWL_DEBUG_MAC80211("leave - not ready\n");
- 		ret = -EIO;
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-12-04 13:59:55.596411133 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-4965.c	2007-12-04 14:51:57.516409452 +0100
-@@ -36,6 +36,7 @@
- #include <linux/wireless.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
-+#include <asm/unaligned.h>
- 
- #include "iwl-4965.h"
- #include "iwl-helpers.h"
-@@ -3488,6 +3489,114 @@ void iwl4965_hw_rx_statistics(struct iwl
- 		queue_work(priv->workqueue, &priv->txpower_work);
- }
- 
-+static void iwl4965_add_radiotap(struct iwl4965_priv *priv,
-+				 struct sk_buff *skb,
-+				 struct iwl4965_rx_phy_res *rx_start,
-+				 void *data, short len,
-+				 struct ieee80211_rx_status *stats,
-+				 u32 ampdu_status)
-+{
-+	s8 signal = stats->ssi;
-+	s8 noise = 0;
-+	int rate = stats->rate;
-+	u64 tsf = stats->mactime;
-+	__le16 phy_flags_hw = rx_start->phy_flags;
-+	struct iwl4965_rt_rx_hdr {
-+		struct ieee80211_radiotap_header rt_hdr;
-+		__le64 rt_tsf;		/* TSF */
-+		u8 rt_flags;		/* radiotap packet flags */
-+		u8 rt_rate;		/* rate in 500kb/s */
-+		__le16 rt_channelMHz;	/* channel in MHz */
-+		__le16 rt_chbitmask;	/* channel bitfield */
-+		s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
-+		s8 rt_dbmnoise;
-+		u8 rt_antenna;		/* antenna number */
-+	} __attribute__ ((packed)) *iwl4965_rt;
++	switch (priv->preamble) {
++	case CMD_TYPE_SHORT_PREAMBLE:
++		cmd.control = cpu_to_le16(SET_SHORT_PREAMBLE);
++		break;
 +
-+	/*
-+	 * If we receive an 11n frame (non-legacy) do we have enough
-+	 * headroom here? The original code copied all the data which
-+	 * is too expensive. If we don't have enough headroom we need
-+	 * to reserve some headroom in the RX descriptor.
-+	 */
-+	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
-+		printk(KERN_DEBUG "not enough headroom for radiotap\n");
-+		return;
++	case CMD_TYPE_LONG_PREAMBLE:
++		cmd.control = cpu_to_le16(SET_LONG_PREAMBLE);
++		break;
++
++	case CMD_TYPE_AUTO_PREAMBLE:
++	default:
++		cmd.control = cpu_to_le16(SET_AUTO_PREAMBLE);
++		break;
 +	}
-+
-+	/* put radiotap header in front of 802.11 header and data */
-+	iwl4965_rt = (void *)skb_push(skb, sizeof(*iwl4965_rt));
-+
-+	/* initialise radiotap header */
-+	iwl4965_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
-+	iwl4965_rt->rt_hdr.it_pad = 0;
-+
-+	/* total header + data */
-+	put_unaligned(cpu_to_le16(sizeof(*iwl4965_rt)),
-+		      &iwl4965_rt->rt_hdr.it_len);
-+
-+	/* Indicate all the fields we add to the radiotap header */
-+	put_unaligned(cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
-+				  (1 << IEEE80211_RADIOTAP_FLAGS) |
-+				  (1 << IEEE80211_RADIOTAP_RATE) |
-+				  (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+				  (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
-+				  (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
-+				  (1 << IEEE80211_RADIOTAP_ANTENNA)),
-+		      &iwl4965_rt->rt_hdr.it_present);
-+
-+	/* Zero the flags, we'll add to them as we go */
-+	iwl4965_rt->rt_flags = 0;
-+
-+	put_unaligned(cpu_to_le64(tsf), &iwl4965_rt->rt_tsf);
-+
-+	iwl4965_rt->rt_dbmsignal = signal;
-+	iwl4965_rt->rt_dbmnoise = noise;
-+
-+	/* Convert the channel frequency and set the flags */
-+	put_unaligned(cpu_to_le16(stats->freq), &iwl4965_rt->rt_channelMHz);
-+	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
-+		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
-+					  IEEE80211_CHAN_5GHZ),
-+			      &iwl4965_rt->rt_chbitmask);
-+	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
-+		put_unaligned(cpu_to_le16(IEEE80211_CHAN_CCK |
-+					  IEEE80211_CHAN_2GHZ),
-+			      &iwl4965_rt->rt_chbitmask);
-+	else	/* 802.11g */
-+		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
-+					  IEEE80211_CHAN_2GHZ),
-+			      &iwl4965_rt->rt_chbitmask);
-+
-+	rate = iwl4965_rate_index_from_plcp(rate);
-+	if (rate == -1)
-+		iwl4965_rt->rt_rate = 0;
+ 
+-	lbs_deb_cmd("RADIO_SET: radio %d, preamble %d\n",
+-	       priv->radioon, priv->preamble);
++	if (priv->radioon)
++		cmd.control |= cpu_to_le16(TURN_ON_RF);
 +	else
-+		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
++		cmd.control &= cpu_to_le16(~TURN_ON_RF);
 +
-+	/*
-+	 * "antenna number"
-+	 *
-+	 * It seems that the antenna field in the phy flags value
-+	 * is actually a bitfield. This is undefined by radiotap,
-+	 * it wants an actual antenna number but I always get "7"
-+	 * for most legacy frames I receive indicating that the
-+	 * same frame was received on all three RX chains.
-+	 *
-+	 * I think this field should be removed in favour of a
-+	 * new 802.11n radiotap field "RX chains" that is defined
-+	 * as a bitmask.
-+	 */
-+	iwl4965_rt->rt_antenna =
-+		le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
++	lbs_deb_cmd("RADIO_SET: radio %d, preamble %d\n", priv->radioon,
++		    priv->preamble);
 +
-+	/* set the preamble flag if appropriate */
-+	if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
-+		iwl4965_rt->rt_flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
-+
-+	stats->flag |= RX_FLAG_RADIOTAP;
-+}
-+
- static void iwl4965_handle_data_packet(struct iwl4965_priv *priv, int is_data,
- 				       int include_phy,
- 				       struct iwl4965_rx_mem_buffer *rxb,
-@@ -3549,20 +3658,15 @@ static void iwl4965_handle_data_packet(s
- 		return;
- 	}
++	ret = lbs_cmd_with_response(priv, CMD_802_11_RADIO_CONTROL, &cmd);
  
--	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
--		if (iwl4965_param_hwcrypto)
--			iwl4965_set_decrypted_flag(priv, rxb->skb,
--					       ampdu_status, stats);
--		iwl4965_handle_data_packet_monitor(priv, rxb, hdr, len, stats, 0);
--		return;
--	}
+ 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+ 	return ret;
+@@ -1467,10 +1449,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 						  cmd_action, pdata_buf);
+ 		break;
+ 
+-	case CMD_802_11_RADIO_CONTROL:
+-		ret = lbs_cmd_802_11_radio_control(priv, cmdptr, cmd_action);
+-		break;
 -
- 	stats->flag = 0;
- 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
+ 	case CMD_802_11_RATE_ADAPT_RATESET:
+ 		ret = lbs_cmd_802_11_rate_adapt_rateset(priv,
+ 							 cmdptr, cmd_action);
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 0cd9662..7c9ffc5 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -516,7 +516,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
+ 	case CMD_RET(CMD_802_11_SET_WEP):
+ 	case CMD_RET(CMD_802_11_RESET):
+ 	case CMD_RET(CMD_802_11_AUTHENTICATE):
+-	case CMD_RET(CMD_802_11_RADIO_CONTROL):
+ 	case CMD_RET(CMD_802_11_BEACON_STOP):
+ 		break;
  
- 	if (iwl4965_param_hwcrypto)
- 		iwl4965_set_decrypted_flag(priv, rxb->skb, ampdu_status, stats);
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index b38502f..8cc4d77 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -342,6 +342,8 @@ struct cmd_ds_rf_reg_access {
+ };
  
-+	if (priv->add_radiotap)
-+		iwl4965_add_radiotap(priv, rxb->skb, rx_start, hdr, len, stats, ampdu_status);
+ struct cmd_ds_802_11_radio_control {
++	struct cmd_header hdr;
 +
- 	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
- 	priv->alloc_rxb_skb--;
- 	rxb->skb = NULL;
-
+ 	__le16 action;
+ 	__le16 control;
+ };
+@@ -697,8 +699,6 @@ struct cmd_ds_command {
+ 		struct cmd_ds_802_11_rate_adapt_rateset rateset;
+ 		struct cmd_ds_mac_multicast_adr madr;
+ 		struct cmd_ds_802_11_ad_hoc_join adj;
+-		struct cmd_ds_802_11_radio_control radio;
+-		struct cmd_ds_802_11_rf_channel rfchannel;
+ 		struct cmd_ds_802_11_rssi rssi;
+ 		struct cmd_ds_802_11_rssi_rsp rssirsp;
+ 		struct cmd_ds_802_11_disassociate dassociate;
+-- 
+1.5.3.4
 
