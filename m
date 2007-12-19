@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 3a.49.1343.static.theplanet.com ([67.19.73.58]:49575 "EHLO
-	pug.o-hand.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757421AbXLPWcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:32:42 -0500
-Subject: Re: b43 problem with led trigger registration
-From: Richard Purdie <rpurdie@openedhand.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1197843464.6769.43.camel@johannes.berg>
-References: <1197822019.4138.2.camel@johannes.berg>
-	 <1197837505.6769.25.camel@johannes.berg>
-	 <1197837799.4653.21.camel@localhost.localdomain>
-	 <200712162157.00759.mb@bu3sch.de>
-	 <1197842962.4653.27.camel@localhost.localdomain>
-	 <1197843464.6769.43.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sun, 16 Dec 2007 22:32:39 +0000
-Message-Id: <1197844359.4653.39.camel@localhost.localdomain> (sfid-20071216_223245_378640_2B2DA91C)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:62906 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752689AbXLSTAZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 14:00:25 -0500
+MIME-Version: 1.0
+Subject: RE: [PATCH 6/8] mac80211: A-MPDU Rx adding BAR handling capability
+Date: Wed, 19 Dec 2007 20:59:07 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB04313CF7@hasmsx411.ger.corp.intel.com> (sfid-20071219_190027_561001_06492135)
+In-Reply-To: <1198079138.4747.8.camel@johannes.berg>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070783125-git-send-email-ron.rindjunsky@intel.com> <1197915884.4885.93.camel@johannes.berg> <c85cb4470712180545u46dc0a21obdc6d7b6c095b797@mail.gmail.com> (sfid-20071218_134627_418190_29EDCA18) <1197986001.4885.144.camel@johannes.berg> <1879838866982C46A9CB3D56BA49ADEB04313AE5@hasmsx411.ger.corp.intel.com> <1198079138.4747.8.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<flamingice@sourmilk.net>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-12-16 at 23:17 +0100, Johannes Berg wrote:
-> > Eeek, yes, its the LED core's fault.
-> > dc47206e552c0850ad11f7e9a1fca0a3c92f5d65 is needed for various reasons
-> > but that means the patch below is also needed. Its been compile tested,
-> > once its runtime tested I'll push asap.
+
+> > I guess we should just return NULL in all other cases here. But
+please
+> > enumerate the cases explicitly so that people who add new interface
+> > types get warnings, i.e. don't use a default: statement in a switch
+> > (interface type)
 > 
-> Any reason you're using an rw semaphore rather than a simple mutex?
-> Nothing here is a hot-path, is it, and the led registrations are
-> mutually exclusive anyway, no?
+> you sure you want these ugly warnings? I do prefer to put default
+here.
 
-With a rw lock, the for loop of the trigger registration can happen in
-parallel with other trigger registrations. This case isn't a hot path as
-such but it keeps consistent style with other parts of the LED core
-where rw locks are used in hot paths.
+Ok, will do. I will rebase all the patches and resend them.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-It could be replaced with a mutex instead though...
-
-Richard
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
