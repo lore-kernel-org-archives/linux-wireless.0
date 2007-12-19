@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from londo.lunn.ch ([80.238.139.98]:58102 "EHLO londo.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761242AbXLMNOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 08:14:31 -0500
-Date: Thu, 13 Dec 2007 14:07:54 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com
-Cc: Andrew Lunn <andrew@lunn.ch>, flamingice@sourmilk.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH] wirelesstools: More user space validation of
-	channel/frequency
-Message-ID: <20071213130754.GE501@lunn.ch> (sfid-20071213_131446_145631_E8585C71)
-References: <20071212153158.GB16947@lunn.ch> <1197481426.6558.138.camel@johannes.berg> <20071212180204.GP31218@lunn.ch> <1197482969.6558.149.camel@johannes.berg> <1197504975.6558.199.camel@johannes.berg> <20071213120904.GB501@lunn.ch> <1197549025.6558.253.camel@johannes.berg> <20071213125047.GD501@lunn.ch> <1197550398.6558.257.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1197550398.6558.257.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbXLSPuK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 10:50:10 -0500
+Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
+	 <1197915515.4885.86.camel@johannes.berg>
+	 <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com>
+	 (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg>
+	 <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JIpq/jF0NrXxNcHK4kZx"
+Date: Wed, 19 Dec 2007 16:47:00 +0100
+Message-Id: <1198079220.4747.10.camel@johannes.berg> (sfid-20071219_155020_068728_87ADD046)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 13, 2007 at 01:53:18PM +0100, Johannes Berg wrote:
-> 
-> > However this description does not match the implementation. The
-> > implementation is that its a channel if e = 0. My "frequency" is > 1000,  
-> > but it was still interpreted as a channel. Looking at the
-> > implementation of iw_float2freq(), the description should be that a
-> > value less than 1e9 is a channel. 
-> > 
-> > So there should really be a check in the user space tools which says
-> > that values between 1000 and 1e9 are invalid. This would catch errors
-> > like the one i made for both 2.4GHz and 5GHz.
-> 
-> Yeah, well, we all know wext sucks. You are of course right, but I think
-> that nobody's motivated any more to fix things.
 
-Well, here is a patch suggestion. If it got me, it will get others,
-and i think this little patch will help. 
+--=-JIpq/jF0NrXxNcHK4kZx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-    Andrew
 
-Signed-off-by Andrew Lunn <andrew@lunn.ch>
----
---- wireless_tools.30-clean/iwconfig.c	2007-09-18 01:38:08.000000000 +0200
-+++ wireless_tools.30/iwconfig.c	2007-12-13 13:57:16.000000000 +0100
-@@ -791,6 +791,13 @@
- 	      if(unit[0] == 'k') freq *= KILO;
- 	    }
- 
-+	  if (freq >= 1000.0 && freq < 1e9) {
-+	    fprintf(stderr, "Invalid channel/frequency. \n");
-+	    fprintf(stderr, "Channels must be < 1000. \n");
-+	    fprintf(stderr, "Frequencies must be > 1GHz\n");
-+	    return (IWERR_ARG_TYPE);
-+	  }
-+
- 	  iw_float2freq(freq, &(wrq.u.freq));
- 
- 	  wrq.u.freq.flags = IW_FREQ_FIXED;
+> > I'm just not sure why you'd want to. As far as I can the frames
+> already
+> > passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
+>=20
+> No, not passed it yet, they are still queued for reordering, but as
+> aggregation is being tear down I am expected to drop the frames
+> that are still not in order.
 
+But haven't they passed through __ieee80211_rx() as the aggregate frame?
+
+> Again, if you see any performance issue with it, although this may
+> occur only once per session, do tell, if not, I would prefer to
+> leave it that way, as this will 1 - give more accurate statistics
+> of dropped frames, 2 - I don't want to drop frames in places
+> people will have trouble finding, other then the in the handlers.
+
+No I guess it's ok I'm just trying to understand it better.
+
+johannes
+
+--=-JIpq/jF0NrXxNcHK4kZx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2k886Vg1VMiehFYAQLwPg/+ID2o2Nxsee6++OLO8JCY3Bks8JfaByMw
+dRwL0qsCJshnwdusAJsE2jpf9hnaYVzi2KgVmrhYuq4TPdJTHq02VtI3j0TTgF5e
+s59oy3seS+Yz2YlCGaQaQ/mo5r5Q+X/26rGLR7bJfheNIMhBOR2b8zAsaq04bx9U
+F4abCj4tUFs/IVLNXS6w9bAEu64Kmz2gIW3AVgZzIWhAgyMsARWT0izhCRGot8dT
+FPcQg/nvVBio/GcHegfMq18NmdU2uNwU7c57oW+B52yL5kCqMRapKFUB1ibS7v0j
+S0eqgrszo3j9Op3Uq8ycsEfRWKP+SwBTttteJcvcjSFg3VkQOXg/PQ3Gs4esv35j
+WnFJ5WR8aBxk1jJvHOcJKo+NY1gwQwdiVKvRayImdKrxuQqHtvN+xEWpOaiWnvSS
+KDmwDZT+vXDMKYOUnDdiCG87s4r4IIA4c8pDsmEgAD2EkGtLUVzAsVUaPhLeFNBx
+XjHMalcizTmG23RGCs46sTd1IKyRgTdtNPi/xW7vlZ4a3Zw18vInK5NrbuzGLeO7
+Gg/i2Kk6BT7zAZIAeSasbBgTtOfH0N0wC6OlKcHn/YOrGCNGklxccbgx4uT/6N6S
+ul2/v9JmyROoLyUNX7sF9+H5gK7ed9yq5hgbsd4qPs3MUcaccu64KSfShwmNxHhu
+0qcn8ogFyBY=
+=bBI7
+-----END PGP SIGNATURE-----
+
+--=-JIpq/jF0NrXxNcHK4kZx--
 
