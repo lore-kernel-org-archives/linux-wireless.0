@@ -1,305 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53135
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751896AbXLVEyI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753543AbXLSQnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:54:08 -0500
-Date: Fri, 21 Dec 2007 20:54:07 -0800 (PST)
-Message-Id: <20071221.205407.165162566.davem@davemloft.net> (sfid-20071222_045412_628665_F7DC1F7E)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 3/12]: Extract standard call iw_point handling into seperate
- function.
-From: David Miller <davem@davemloft.net>
+	Wed, 19 Dec 2007 11:43:16 -0500
+Subject: Re: [PATCH v3 1/8] mac80211: clean up rate selection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20071219012528.7cb831eb@morte>
+References: <20071219001955.055692620@polimi.it> >
+	  <20071219012528.7cb831eb@morte>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Hd9hnib98A4wZMKq0OV3"
+Date: Wed, 19 Dec 2007 17:42:43 +0100
+Message-Id: <1198082563.4747.25.camel@johannes.berg> (sfid-20071219_164321_994396_F4AF9A96)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-[WEXT]: Extract standard call iw_point handling into seperate function.
+--=-Hd9hnib98A4wZMKq0OV3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |  258 ++++++++++++++++++++++++++------------------------
- 1 files changed, 134 insertions(+), 124 deletions(-)
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 3ca9c3a..a6369f3 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -726,6 +726,138 @@ void wext_proc_exit(struct net *net)
-  */
- 
- /* ---------------------------------------------------------------- */
-+static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
-+				   const struct iw_ioctl_description *descr,
-+				   iw_handler handler, struct net_device *dev,
-+				   struct iw_request_info *info)
-+{
-+	int err, extra_size, user_length = 0, essid_compat = 0;
-+	char *extra;
-+
-+	/* Calculate space needed by arguments. Always allocate
-+	 * for max space.
-+	 */
-+	extra_size = descr->max_tokens * descr->token_size;
-+
-+	/* Check need for ESSID compatibility for WE < 21 */
-+	switch (cmd) {
-+	case SIOCSIWESSID:
-+	case SIOCGIWESSID:
-+	case SIOCSIWNICKN:
-+	case SIOCGIWNICKN:
-+		if (iwp->length == descr->max_tokens + 1)
-+			essid_compat = 1;
-+		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+			char essid[IW_ESSID_MAX_SIZE + 1];
-+
-+			err = copy_from_user(essid, iwp->pointer,
-+					     iwp->length *
-+					     descr->token_size);
-+			if (err)
-+				return -EFAULT;
-+
-+			if (essid[iwp->length - 1] == '\0')
-+				essid_compat = 1;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	iwp->length -= essid_compat;
-+
-+	/* Check what user space is giving us */
-+	if (IW_IS_SET(cmd)) {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer && iwp->length != 0)
-+			return -EFAULT;
-+		/* Check if number of token fits within bounds */
-+		if (iwp->length > descr->max_tokens)
-+			return -E2BIG;
-+		if (iwp->length < descr->min_tokens)
-+			return -EINVAL;
-+	} else {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer)
-+			return -EFAULT;
-+		/* Save user space buffer size for checking */
-+		user_length = iwp->length;
-+
-+		/* Don't check if user_length > max to allow forward
-+		 * compatibility. The test user_length < min is
-+		 * implied by the test at the end.
-+		 */
-+
-+		/* Support for very large requests */
-+		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
-+		    (user_length > descr->max_tokens)) {
-+			/* Allow userspace to GET more than max so
-+			 * we can support any size GET requests.
-+			 * There is still a limit : -ENOMEM.
-+			 */
-+			extra_size = user_length * descr->token_size;
-+
-+			/* Note : user_length is originally a __u16,
-+			 * and token_size is controlled by us,
-+			 * so extra_size won't get negative and
-+			 * won't overflow...
-+			 */
-+		}
-+	}
-+
-+	/* kzalloc() ensures NULL-termination for essid_compat. */
-+	extra = kzalloc(extra_size, GFP_KERNEL);
-+	if (!extra)
-+		return -ENOMEM;
-+
-+	/* If it is a SET, get all the extra data in here */
-+	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+		if (copy_from_user(extra, iwp->pointer,
-+				   iwp->length *
-+				   descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	err = handler(dev, info, (union iwreq_data *) iwp, extra);
-+
-+	iwp->length += essid_compat;
-+
-+	/* If we have something to return to the user */
-+	if (!err && IW_IS_GET(cmd)) {
-+		/* Check if there is enough buffer up there */
-+		if (user_length < iwp->length) {
-+			err = -E2BIG;
-+			goto out;
-+		}
-+
-+		if (copy_to_user(iwp->pointer, extra,
-+				 iwp->length *
-+				 descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	/* Generate an event to notify listeners of the change */
-+	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
-+		union iwreq_data *data = (union iwreq_data *) iwp;
-+
-+		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
-+			/* If the event is restricted, don't
-+			 * export the payload.
-+			 */
-+			wireless_send_event(dev, cmd, data, NULL);
-+		else
-+			wireless_send_event(dev, cmd, data, extra);
-+	}
-+
-+out:
-+	kfree(extra);
-+	return err;
-+}
-+
- /*
-  * Wrapper to call a standard Wireless Extension handler.
-  * We do various checks and also take care of moving data between
-@@ -761,130 +893,8 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		   ((ret == 0) || (ret == -EIWCOMMIT)))
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
- 	} else {
--		char *	extra;
--		int	extra_size;
--		int	user_length = 0;
--		int	err;
--		int	essid_compat = 0;
--
--		/* Calculate space needed by arguments. Always allocate
--		 * for max space. Easier, and won't last long... */
--		extra_size = descr->max_tokens * descr->token_size;
--
--		/* Check need for ESSID compatibility for WE < 21 */
--		switch (cmd) {
--		case SIOCSIWESSID:
--		case SIOCGIWESSID:
--		case SIOCSIWNICKN:
--		case SIOCGIWNICKN:
--			if (iwr->u.data.length == descr->max_tokens + 1)
--				essid_compat = 1;
--			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--				char essid[IW_ESSID_MAX_SIZE + 1];
--
--				err = copy_from_user(essid, iwr->u.data.pointer,
--						     iwr->u.data.length *
--						     descr->token_size);
--				if (err)
--					return -EFAULT;
--
--				if (essid[iwr->u.data.length - 1] == '\0')
--					essid_compat = 1;
--			}
--			break;
--		default:
--			break;
--		}
--
--		iwr->u.data.length -= essid_compat;
--
--		/* Check what user space is giving us */
--		if (IW_IS_SET(cmd)) {
--			/* Check NULL pointer */
--			if ((iwr->u.data.pointer == NULL) &&
--			   (iwr->u.data.length != 0))
--				return -EFAULT;
--			/* Check if number of token fits within bounds */
--			if (iwr->u.data.length > descr->max_tokens)
--				return -E2BIG;
--			if (iwr->u.data.length < descr->min_tokens)
--				return -EINVAL;
--		} else {
--			/* Check NULL pointer */
--			if (iwr->u.data.pointer == NULL)
--				return -EFAULT;
--			/* Save user space buffer size for checking */
--			user_length = iwr->u.data.length;
--
--			/* Don't check if user_length > max to allow forward
--			 * compatibility. The test user_length < min is
--			 * implied by the test at the end. */
--
--			/* Support for very large requests */
--			if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
--			   (user_length > descr->max_tokens)) {
--				/* Allow userspace to GET more than max so
--				 * we can support any size GET requests.
--				 * There is still a limit : -ENOMEM. */
--				extra_size = user_length * descr->token_size;
--				/* Note : user_length is originally a __u16,
--				 * and token_size is controlled by us,
--				 * so extra_size won't get negative and
--				 * won't overflow... */
--			}
--		}
--
--		/* Create the kernel buffer */
--		/*    kzalloc ensures NULL-termination for essid_compat */
--		extra = kzalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL)
--			return -ENOMEM;
--
--		/* If it is a SET, get all the extra data in here */
--		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--			err = copy_from_user(extra, iwr->u.data.pointer,
--					     iwr->u.data.length *
--					     descr->token_size);
--			if (err) {
--				kfree(extra);
--				return -EFAULT;
--			}
--		}
--
--		/* Call the handler */
--		ret = handler(dev, &info, &(iwr->u), extra);
--
--		iwr->u.data.length += essid_compat;
--
--		/* If we have something to return to the user */
--		if (!ret && IW_IS_GET(cmd)) {
--			/* Check if there is enough buffer up there */
--			if (user_length < iwr->u.data.length) {
--				kfree(extra);
--				return -E2BIG;
--			}
--
--			err = copy_to_user(iwr->u.data.pointer, extra,
--					   iwr->u.data.length *
--					   descr->token_size);
--			if (err)
--				ret =  -EFAULT;
--		}
--
--		/* Generate an event to notify listeners of the change */
--		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
--		   ((ret == 0) || (ret == -EIWCOMMIT))) {
--			if (descr->flags & IW_DESCR_FLAG_RESTRICT)
--				/* If the event is restricted, don't
--				 * export the payload */
--				wireless_send_event(dev, cmd, &(iwr->u), NULL);
--			else
--				wireless_send_event(dev, cmd, &(iwr->u),
--						    extra);
--		}
--
--		/* Cleanup - I told you it wasn't that long ;-) */
--		kfree(extra);
-+		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
-+					      handler, dev, &info);
- 	}
- 
- 	/* Call commit handler if needed and defined */
--- 
-1.5.4.rc1
+> +static inline int
+> +rate_lowest_index(struct ieee80211_local *local, struct ieee80211_hw_mod=
+e *mode,
+> +		  struct sta_info *sta)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < mode->num_rates; i++) {
+> +		if (rate_supported(sta, mode, i))
+> +			return i;
+> +	}
+> +
+> +	/* warn when we cannot find a rate. */
+> +	WARN_ON(i =3D=3D 0);
+> +
+> +	return 0;
+> +}
+
+That doesn't look right. Shouldn't it be WARN_ON(1)? Not that it can
+ever happen with proper drivers...
+
+Other than that, looks ok to me.
+
+johannes
+
+--=-Hd9hnib98A4wZMKq0OV3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2lKAaVg1VMiehFYAQIAbQ//aN1cmuiwtZEa1pU10RnNlWL81j/vx5Gh
+YCsprlP/OQtVR+q3WSzBG7kV95l8P1xoOvacyT+viKwdEzqaMDUrb3vy6ngH9NJi
+Z+9quYeAElCNjTr+SFiJm4rXjjwNyghQHg3y+1vT2k3q5ktP8X46/8cwmPgwecaD
+Fis9DqvUoWxYzH3Bvg+9n1V4tXcevC7CJVcsCAxEadU6nA+1wpSDL0xIPbhi1G5T
+ztFsoigd7YXhDT1SWcE36s6H+HGsfKRGZUE0VIEuszVgwXCMZGUygb/EZjAWjev8
+ZchbE+0Icj9geQYy+F61Ve7KSKapJuYp6TeDkcf+R87weJYv875Ugj98Cxn/DMWQ
+zLHEn78cYW/rXZaK5OtCpJpecq8OosG0m6FX58ohoq3SqWphwnH7cTY5FrbqECTT
+79aXy7rUtEBN1gV2CgRJD3FnnxyGQBKEM8LLr4vSPl89zaqm2Wh/5rgGY1BUQNMr
+VkU1WzdNRTUGQ79/sZPFJ6BuTgnmJAth3Q90eFcP2ZJy5tnhoQRI/DPoIF/WI6o/
+Gp/WXJxfoXE2qbINtTnNIBaiEulftemXXBPypMMIOOICSa2+tLx9/oSZAf2Pkix3
+nNWO52tJoz06lC6rby8iX0J3XentRrHG+8prSBX7h7EZwQ5GWKKCt3IXMCYeoBJQ
+LtsnKVRi/U4=
+=i0ON
+-----END PGP SIGNATURE-----
+
+--=-Hd9hnib98A4wZMKq0OV3--
 
