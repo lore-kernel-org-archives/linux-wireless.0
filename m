@@ -1,94 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:30787 "HELO
-	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753988AbXLWBGs (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:6283 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960AbXLSK7e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:06:48 -0500
-Date: Sat, 22 Dec 2007 17:06:46 -0800
-From: David Brownell <david-b@pacbell.net>
-To: bjd@jooz.net
-Subject: Re: [PATCH 5/8] Fix rndis packet filter flags.
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-References: <11983602942818-git-send-email-bjd@jooz.net>
- <1198360295996-git-send-email-bjd@jooz.net>
-In-Reply-To: <1198360295996-git-send-email-bjd@jooz.net>
+	Wed, 19 Dec 2007 05:59:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223010646.83BC3230E0A@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_010655_715742_38549B6C)
+Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
+Date: Wed, 19 Dec 2007 12:57:48 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com> (sfid-20071219_105938_368896_5FCF3AE2)
+In-Reply-To: <1197986248.4885.149.camel@johannes.berg>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070782762-git-send-email-ron.rindjunsky@intel.com> <1197915515.4885.86.camel@johannes.berg> <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com> (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<flamingice@sourmilk.net>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From bjd@jooz.net  Sat Dec 22 13:53:12 2007
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> To: dbrownell@users.sourceforge.net
-> Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-> 	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Subject: [PATCH 5/8] Fix rndis packet filter flags.
-> Date: Sat, 22 Dec 2007 22:51:31 +0100
->
-> From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->
-> RNDIS packet filter flags are not exactly the same as CDC flags
-> so we cannot reuse them.
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
 
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+>>> +     int ordered;
+>>
+>> type int was chosen as it is not a bool type (can be
+>> drop/continue/queue) so it can't be fit to flags.
 
-Hmm, the list seems to have grown since I last looked at it.
-Or maybe it's just that the MSFT documentation was so hard
-to make sense of ... I never could figure out what the RNDIS
-power management messages were supposed to be doing, or what
-the extra seemingly-undocumented messages were there for.
+> No, I was thinking that it's enum txrx_result or whatever that is
+named.
+> But you can't use that type in mac80211.h since it's only defined in
+> ieee80211_i.h... Maybe you should put the declaration into mac80211.h
+> and use it here so that the compiler can error check this ordered
+field
+> better...
 
+I thought about doing it. The txrx_result enum did look to me
+as a very useful one for low level drivers, as the same set
+of actions of drop/continue/queue is relevant there as well.
+As you have the same opinion I'll go ahead with it.
 
-> ---
->  drivers/net/usb/rndis_host.c |   23 ++++++++++++++++++++++-
->  1 files changed, 22 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-> index c686025..3c116f9 100644
-> --- a/drivers/net/usb/rndis_host.c
-> +++ b/drivers/net/usb/rndis_host.c
-> @@ -256,6 +256,27 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
->  #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
->  #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
->  
-> +/* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
-> +#define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
-> +#define RNDIS_PACKET_TYPE_MULTICAST		ccpu2(0x00000002)
-> +#define RNDIS_PACKET_TYPE_ALL_MULTICAST		ccpu2(0x00000004)
-> +#define RNDIS_PACKET_TYPE_BROADCAST		ccpu2(0x00000008)
-> +#define RNDIS_PACKET_TYPE_SOURCE_ROUTING	ccpu2(0x00000010)
-> +#define RNDIS_PACKET_TYPE_PROMISCUOUS		ccpu2(0x00000020)
-> +#define RNDIS_PACKET_TYPE_SMT			ccpu2(0x00000040)
-> +#define RNDIS_PACKET_TYPE_ALL_LOCAL		ccpu2(0x00000080)
-> +#define RNDIS_PACKET_TYPE_GROUP			ccpu2(0x00001000)
-> +#define RNDIS_PACKET_TYPE_ALL_FUNCTIONAL	ccpu2(0x00002000)
-> +#define RNDIS_PACKET_TYPE_FUNCTIONAL		ccpu2(0x00004000)
-> +#define RNDIS_PACKET_TYPE_MAC_FRAME		ccpu2(0x00008000)
-> +
-> +/* default filter used with RNDIS devices */
-> +#define RNDIS_DEFAULT_FILTER ( \
-> +	RNDIS_PACKET_TYPE_DIRECTED | \
-> +	RNDIS_PACKET_TYPE_BROADCAST | \
-> +	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
-> +	RNDIS_PACKET_TYPE_PROMISCUOUS )
-> +
->  /*
->   * RNDIS notifications from device: command completion; "reverse"
->   * keepalives; etc
-> @@ -551,7 +572,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  	u.set->oid = OID_GEN_CURRENT_PACKET_FILTER;
->  	u.set->len = ccpu2(4);
->  	u.set->offset = ccpu2((sizeof *u.set) - 8);
-> -	*(__le32 *)(u.buf + sizeof *u.set) = ccpu2(DEFAULT_FILTER);
-> +	*(__le32 *)(u.buf + sizeof *u.set) = RNDIS_DEFAULT_FILTER;
->  
->  	retval = rndis_command(dev, u.header);
->  	if (unlikely(retval < 0)) {
-> -- 
-> 1.5.2.5
->
+>>> @@ -1252,6 +1254,20 @@ void ieee80211_sta_stop_rx_BA_session(struct 
+>>>               ieee80211_send_delba(dev, ra, tid, 0, reason);
+>>>
+>>>       /* free the reordering buffer */
+>>> +     for (i = 0; i < sta->ampdu_mlme.tid_rx[tid].buf_size; i++) {
+>>> +             if (sta->ampdu_mlme.tid_rx[tid].reorder_buf[i]) {
+>>> +                     /* release the reordered frames to stack,
+>>> +                      * but drop them there */
+>>> +                     memcpy(&status, sta->ampdu_mlme.tid_rx[tid].
+>>> +                             reorder_buf[i]->cb, sizeof(status));
+>>> +                     status.ordered = TXRX_DROP;
+>>> +                     __ieee80211_rx(hw, sta->ampdu_mlme.
+>>> +                                    tid_rx[tid].reorder_buf[i],
+>>> +                                    &status);
+>>>
+>>> This is strange. Why are they even passed to __ieee80211_rx?
+>> 
+>> of course i can get rid from there here, but thought it will be more
+>> systematic and clearer to pass them back to __ieee80211_rx. if you
+>> have any objection to this (efficiency considerations or like) i will
+>> reconsider it.
+
+> I'm just not sure why you'd want to. As far as I can the frames
+already
+> passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
+
+No, not passed it yet, they are still queued for reordering, but as
+aggregation is being tear down I am expected to drop the frames
+that are still not in order.
+Again, if you see any performance issue with it, although this may
+occur only once per session, do tell, if not, I would prefer to
+leave it that way, as this will 1 - give more accurate statistics
+of dropped frames, 2 - I don't want to drop frames in places
+people will have trouble finding, other then the in the handlers.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
