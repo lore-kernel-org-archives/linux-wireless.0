@@ -1,29 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:22306 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbXLMH7g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 02:59:36 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour learning algorithm
-Date: Thu, 13 Dec 2007 09:00:24 +0100
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+Received: from mfe1.polimi.it ([131.175.12.23]:56834 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752623AbXLSJdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 04:33:39 -0500
+Date: Wed, 19 Dec 2007 10:28:24 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20071209211547.2d7fca32@morte> <1197384754.4037.23.camel@johannes.berg> <1197393788.7528.5.camel@localhost>
-In-Reply-To: <1197393788.7528.5.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712130900.25030.hs4233@mail.mn-solutions.de> (sfid-20071213_075939_591869_357FF779)
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 7/8] debugfs: allow access to signed values
+Message-ID: <20071219102824.60b066b4@morte> (sfid-20071219_093353_822081_90C5294E)
+In-Reply-To: <20071219012739.6dcdd150@morte>
+References: <20071219001955.055692620@polimi.it>
+	<20071219012739.6dcdd150@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So let's go back to the original issue: Johannes, can we
-> assume rate control always gets reinitialized when the number
-> of rates or even the hardware mode is changed?
+Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
+a cast in libfs.
 
-Make sure that at least you reinitialize rate control when you 
-re-associate.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ fs/debugfs/file.c       |  166 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/libfs.c              |    4 -
+ include/linux/debugfs.h |   30 ++++++++
+ 3 files changed, 197 insertions(+), 3 deletions(-)
+
+Index: wireless-2.6/fs/debugfs/file.c
+===================================================================
+--- wireless-2.6.orig/fs/debugfs/file.c
++++ wireless-2.6/fs/debugfs/file.c
+@@ -221,6 +221,172 @@ struct dentry *debugfs_create_u64(const
+ }
+ EXPORT_SYMBOL_GPL(debugfs_create_u64);
+
++
++static void debugfs_s8_set(void *data, u64 val)
++{
++	*(s8 *)data = val;
++}
++static u64 debugfs_s8_get(void *data)
++{
++	return *(s8 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s8, debugfs_s8_get, debugfs_s8_set, "%lld\n");
++
++/**
++ * debugfs_create_s8 - create a debugfs file that is used to read and write a signed 8-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++				 struct dentry *parent, s8 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s8);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s8);
++
++static void debugfs_s16_set(void *data, u64 val)
++{
++	*(s16 *)data = val;
++}
++static u64 debugfs_s16_get(void *data)
++{
++	return *(s16 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s16, debugfs_s16_get, debugfs_s16_set, "%lld\n");
++
++/**
++ * debugfs_create_s16 - create a debugfs file that is used to read and write a signed 16-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++				  struct dentry *parent, s16 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s16);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s16);
++
++static void debugfs_s32_set(void *data, u64 val)
++{
++	*(s32 *)data = val;
++}
++static u64 debugfs_s32_get(void *data)
++{
++	return *(s32 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s32, debugfs_s32_get, debugfs_s32_set, "%lld\n");
++
++/**
++ * debugfs_create_s32 - create a debugfs file that is used to read and write a signed 32-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++				 struct dentry *parent, s32 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s32);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s32);
++
++static void debugfs_s64_set(void *data, u64 val)
++{
++	*(s64 *)data = val;
++}
++
++static u64 debugfs_s64_get(void *data)
++{
++	return *(s64 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s64, debugfs_s64_get, debugfs_s64_set, "%lld\n");
++
++/**
++ * debugfs_create_s64 - create a debugfs file that is used to read and write a signed 64-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++				 struct dentry *parent, u64 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s64);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s64);
++
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x8, debugfs_u8_get, debugfs_u8_set, "0x%02llx\n");
+
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x16, debugfs_u16_get, debugfs_u16_set, "0x%04llx\n");
+
+Index: wireless-2.6/fs/libfs.c
+===================================================================
+--- wireless-2.6.orig/fs/libfs.c
++++ wireless-2.6/fs/libfs.c
+@@ -586,7 +586,7 @@ int simple_transaction_release(struct in
+ /* Simple attribute files */
+
+ struct simple_attr {
+-	u64 (*get)(void *);
++	unsigned long long (*get)(void *);
+ 	void (*set)(void *, u64);
+ 	char get_buf[24];	/* enough to store a u64 and "\n\0" */
+ 	char set_buf[24];
+@@ -643,7 +643,7 @@ ssize_t simple_attr_read(struct file *fi
+ 	else	  /* first read */
+ 		size = scnprintf(attr->get_buf, sizeof(attr->get_buf),
+ 				 attr->fmt,
+-				 (unsigned long long)attr->get(attr->data));
++				 attr->get(attr->data));
+
+ 	ret = simple_read_from_buffer(buf, len, ppos, attr->get_buf, size);
+ 	mutex_unlock(&attr->mutex);
+Index: wireless-2.6/include/linux/debugfs.h
+===================================================================
+--- wireless-2.6.orig/include/linux/debugfs.h
++++ wireless-2.6/include/linux/debugfs.h
+@@ -65,7 +65,7 @@ struct dentry *debugfs_create_blob(const
+
+ #include <linux/err.h>
+
+-/*
++/*
+  * We do not return NULL from these functions if CONFIG_DEBUG_FS is not enabled
+  * so users have a chance to detect if there was a real error or not.  We don't
+  * want to duplicate the design decision mistakes of procfs and devfs again.
+@@ -128,6 +128,34 @@ static inline struct dentry *debugfs_cre
+ 	return ERR_PTR(-ENODEV);
+ }
+
++static inline struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       u8 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s16 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s32 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s64 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
+ static inline struct dentry *debugfs_create_x8(const char *name, mode_t mode,
+ 					       struct dentry *parent,
+ 					       u8 *value)
+
+
+-- 
+Ciao
+Stefano
