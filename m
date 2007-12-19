@@ -1,30 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:59985 "EHLO
-	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752775AbXL2Njo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 08:39:44 -0500
-Message-ID: <47764C5A.7060109@gentoo.org> (sfid-20071229_133951_204586_4374CA6E)
-Date: Sat, 29 Dec 2007 13:32:10 +0000
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Strange mac80211 oops
-References: <200712242237.28913.mb@bu3sch.de> <1198532736.4103.44.camel@johannes.berg> <1198533423.4103.46.camel@johannes.berg> <200712242328.56060.mb@bu3sch.de>
-In-Reply-To: <200712242328.56060.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:51072 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751174AbXLSJZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 04:25:27 -0500
+Date: Wed, 19 Dec 2007 10:20:16 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Greg KH <gregkh@suse.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 7/8] debugfs: allow access to signed values
+Message-ID: <20071219102016.7785c4d3@morte> (sfid-20071219_092533_186825_A2B40D8D)
+In-Reply-To: <20071219064510.GA18876@suse.de>
+References: <20071219001955.055692620@polimi.it>
+	<20071219012739.6dcdd150@morte>
+	<20071219064510.GA18876@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> So zd1211rw-mac80211 is pushing some unaligned data up the RX path, hm.
+On Tue, 18 Dec 2007 22:45:10 -0800
+Greg KH <gregkh@suse.de> wrote:
 
-Johannes suggests that this may be due to QoS or WDS frames, which have 
-headers that are 26 or 30 bytes. I don't recall seeing any logic in 
-zd1211rw to correctly realign these.
+> On Wed, Dec 19, 2007 at 01:27:39AM +0100, Stefano Brivio wrote:
+> > Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
+> > a cast in libfs.
+> > 
+> > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > To: Greg Kroah-Hartman <gregkh@suse.de>
+> > Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> > ---
+> > Greg,
+> > 
+> > here comes an implementation of debugfs_create_s{8,16,32,64} which avoids code
+> > duplication, suggested by Johannes Berg. We would need this to be merged to
+> > 2.6.25, as we need those functions to be available for rc80211-pid, the new
+> > mac80211 rate control algorithm.
+> 
+> Looks good to me, do you want me to add this to my tree and send it to
+> Linus when 2.6.25 opens up, or do you want this to go through the
+> wireless tree as you have patches relying on it?
 
-Daniel
+I have one patch (rate control rework, 8/8) relying on it. Let's ask John. John,
+what's the best for you?
 
+> Whatever works the best for you is fine for me.  If the wireless tree,
+> feel free to add:
+> 	Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> to the patch.
+
+Thanks. I'm going to resend the patch to John with your Signed-off-by -- in case.
+
+
+--
+Ciao
+Stefano
