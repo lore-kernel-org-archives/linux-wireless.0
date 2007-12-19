@@ -1,102 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5933 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589AbXLEQ5f (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40645 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755678AbXLSPsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 11:57:35 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 0/5] libertas: allow easier command playing
-Date: Wed, 5 Dec 2007 17:57:51 +0100
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	David Woodhouse <dwmw2@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712051757.52053.hs4233@mail.mn-solutions.de> (sfid-20071205_165739_406299_C6D3D7A8)
+	Wed, 19 Dec 2007 10:48:01 -0500
+Message-Id: <20071219010342.459856000@sipsolutions.net> (sfid-20071219_154807_543735_D2C6DC79)
+References: <20071219010328.762470000@sipsolutions.net>
+Date: Wed, 19 Dec 2007 02:03:35 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 7/9] mac80211: implement cfg80211s station handling
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll want to investigate the behavior of my libertas CF card
-firmware, e.g. to decide if I can use the background scan feature
-of the card or not.
+This implements station handling from userspace via cfg80211
+in mac80211.
 
-Unfortunately, currently the firmware command execution is spread
-over several files, e.g. hostcmd.h, host.h, types.h, cmd.c,
-cmdresp.c and sometimes even other files. Add two very large
-switch() statements, a structure with a union of about 60 structs
-and misc functions at other places (do a "grep -l lbs_cmd_ *.c" to
-find out).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c |  192 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 192 insertions(+)
 
-It's not really easy to just-write-a-test for a specific firmware
-command.
+--- everything.orig/net/mac80211/cfg.c	2007-12-19 00:50:19.363027235 +0100
++++ everything/net/mac80211/cfg.c	2007-12-19 00:50:23.043022894 +0100
+@@ -14,6 +14,7 @@
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+ #include "cfg.h"
++#include "ieee80211_rate.h"
+ 
+ static enum ieee80211_if_types
+ nl80211_type_to_mac80211_type(enum nl80211_iftype type)
+@@ -422,6 +423,194 @@ static int ieee80211_del_beacon(struct w
+ 	return ieee80211_if_config_beacon(dev);
+ }
+ 
++/* Layer 2 Update frame (802.2 Type 1 LLC XID Update response) */
++struct iapp_layer2_update {
++	u8 da[ETH_ALEN];	/* broadcast */
++	u8 sa[ETH_ALEN];	/* STA addr */
++	__be16 len;		/* 6 */
++	u8 dsap;		/* 0 */
++	u8 ssap;		/* 0 */
++	u8 control;
++	u8 xid_info[3];
++} __attribute__ ((packed));
++
++static void ieee80211_send_layer2_update(struct sta_info *sta)
++{
++	struct iapp_layer2_update *msg;
++	struct sk_buff *skb;
++
++	/* Send Level 2 Update Frame to update forwarding tables in layer 2
++	 * bridge devices */
++
++	skb = dev_alloc_skb(sizeof(*msg));
++	if (!skb)
++		return;
++	msg = (struct iapp_layer2_update *)skb_put(skb, sizeof(*msg));
++
++	/* 802.2 Type 1 Logical Link Control (LLC) Exchange Identifier (XID)
++	 * Update response frame; IEEE Std 802.2-1998, 5.4.1.2.1 */
++
++	memset(msg->da, 0xff, ETH_ALEN);
++	memcpy(msg->sa, sta->addr, ETH_ALEN);
++	msg->len = htons(6);
++	msg->dsap = 0;
++	msg->ssap = 0x01;	/* NULL LSAP, CR Bit: Response */
++	msg->control = 0xaf;	/* XID response lsb.1111F101.
++				 * F=0 (no poll command; unsolicited frame) */
++	msg->xid_info[0] = 0x81;	/* XID format identifier */
++	msg->xid_info[1] = 1;	/* LLC types/classes: Type 1 LLC */
++	msg->xid_info[2] = 0;	/* XID sender's receive window size (RW) */
++
++	skb->dev = sta->dev;
++	skb->protocol = eth_type_trans(skb, sta->dev);
++	memset(skb->cb, 0, sizeof(skb->cb));
++	netif_rx(skb);
++}
++
++static void sta_apply_parameters(struct ieee80211_local *local,
++				 struct sta_info *sta,
++				 struct station_parameters *params)
++{
++	u32 rates;
++	int i, j;
++	struct ieee80211_hw_mode *mode;
++
++	if (params->station_flags & STATION_FLAG_CHANGED) {
++		sta->flags &= ~WLAN_STA_AUTHORIZED;
++		if (params->station_flags & STATION_FLAG_AUTHORIZED)
++			sta->flags |= WLAN_STA_AUTHORIZED;
++
++		sta->flags &= ~WLAN_STA_SHORT_PREAMBLE;
++		if (params->station_flags & STATION_FLAG_SHORT_PREAMBLE)
++			sta->flags |= WLAN_STA_SHORT_PREAMBLE;
++
++		sta->flags &= ~WLAN_STA_WME;
++		if (params->station_flags & STATION_FLAG_WME)
++			sta->flags |= WLAN_STA_WME;
++	}
++
++	if (params->aid) {
++		sta->aid = params->aid;
++		if (sta->aid > IEEE80211_MAX_AID)
++			sta->aid = 0; /* XXX: should this be an error? */
++	}
++
++	if (params->listen_interval >= 0)
++		sta->listen_interval = params->listen_interval;
++
++	if (params->supported_rates) {
++		rates = 0;
++		mode = local->oper_hw_mode;
++		for (i = 0; i < params->supported_rates_len; i++) {
++			int rate = (params->supported_rates[i] & 0x7f) * 5;
++			for (j = 0; j < mode->num_rates; j++) {
++				if (mode->rates[j].rate == rate)
++					rates |= BIT(j);
++			}
++		}
++		sta->supp_rates = rates;
++	}
++}
++
++static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
++				 u8 *mac, struct station_parameters *params)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++	struct ieee80211_sub_if_data *sdata;
++
++	/* Prevent a race with changing the rate control algorithm */
++	if (!netif_running(dev))
++		return -ENETDOWN;
++
++	/* XXX: get sta belonging to dev */
++	sta = sta_info_get(local, mac);
++	if (sta) {
++		sta_info_put(sta);
++		return -EEXIST;
++	}
++
++	if (params->vlan) {
++		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
++
++		if (sdata->vif.type != IEEE80211_IF_TYPE_VLAN ||
++		    sdata->vif.type != IEEE80211_IF_TYPE_AP)
++			return -EINVAL;
++	} else
++		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	sta = sta_info_add(local, dev, mac, GFP_KERNEL);
++	if (!sta)
++		return -ENOMEM;
++
++	sta->dev = sdata->dev;
++	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
++	    sdata->vif.type == IEEE80211_IF_TYPE_AP)
++		ieee80211_send_layer2_update(sta);
++
++	sta->flags = WLAN_STA_AUTH | WLAN_STA_ASSOC;
++
++	sta_apply_parameters(local, sta, params);
++
++	rate_control_rate_init(sta, local);
++
++	sta_info_put(sta);
++
++	return 0;
++}
++
++static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
++				 u8 *mac)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++
++	if (mac) {
++		/* XXX: get sta belonging to dev */
++		sta = sta_info_get(local, mac);
++		if (!sta)
++			return -ENOENT;
++
++		sta_info_free(sta);
++		sta_info_put(sta);
++	} else
++		sta_info_flush(local, dev);
++
++	return 0;
++}
++
++static int ieee80211_change_station(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    u8 *mac,
++				    struct station_parameters *params)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++	struct ieee80211_sub_if_data *vlansdata;
++
++	/* XXX: get sta belonging to dev */
++	sta = sta_info_get(local, mac);
++	if (!sta)
++		return -ENOENT;
++
++	if (params->vlan && params->vlan != sta->dev) {
++		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
++
++		if (vlansdata->vif.type != IEEE80211_IF_TYPE_VLAN ||
++		    vlansdata->vif.type != IEEE80211_IF_TYPE_AP)
++			return -EINVAL;
++
++		sta->dev = params->vlan;
++		ieee80211_send_layer2_update(sta);
++	}
++
++	sta_apply_parameters(local, sta, params);
++
++	sta_info_put(sta);
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -433,4 +622,7 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.add_beacon = ieee80211_add_beacon,
+ 	.set_beacon = ieee80211_set_beacon,
+ 	.del_beacon = ieee80211_del_beacon,
++	.add_station = ieee80211_add_station,
++	.del_station = ieee80211_del_station,
++	.change_station = ieee80211_change_station,
+ };
 
-So I made a new function, lbs_cmd(), that is an easier substitute
-for subset of possible lbs_prepare_and_send_command(). I know
-that this might clash with David Woodhouse's cmd-cleanup
-attempt, but it seems that he didn't start yet, as my patches
-still apply to his git tree :-)   I didn't commit them there,
-because I'm confused if my patches go upstream via David or John.
+-- 
 
-
-Usage example
--------------
-When I want to deal with the CMD_802_11_BG_SCAN_QUERY command, I
-can now put all the code at one place to test it:
-
-
-// This is from firmware manual, Appendix A
-#define CMD_802_11_BG_SCAN_QUERY 0x006c
-
-// This is from firmware manual, section 5.7.3:
-struct cmd_scan_query {
-        u8 flush;
-};
-struct cmd_bg_scan_query_rsp {
-        __le32 report_cond;
-        __le16 bss_size;
-        u8 num_sets;
-        u8 bss[0];
-};
-
-// Allocate space for command response
-int rsp_size = sizeof(struct cmd_bg_scan_query_rsp) + 1024;
-struct cmd_bg_scan_query_rsp *rsp = kzalloc(rsp_size, GFP_KERNEL);
-
-// "Allocate" space for the command itself
-struct cmd_bg_scan_query cmd;
-cmd.flush = 0;
-
-// Send command and use result:
-res = lbs_cmd(priv, CMD_802_11_BG_SCAN_QUERY, &cmd, sizeof(cmd), rsp, &rsp_size);
-if (res == 0)
-        printk("num_sets %d, resp_size %d\n", resp->num_sets, resp_size);
-
-
-
-Some notes:
-
-a) the cmd structs no longer need or care for the 4 common
-   fields (command, size, seqnum, result)
-b) resp_size must be a pointer to an int, because some
-   firmware functions return a variable amount of bytes and
-   we need to know how much bytes that might be
-c) however, if you just get a fixed response (or the beginning
-   of your response has fixed fields), you can simply use
-   resp->(whatever field you want> to access it
-d) from 69 calls to lbs_prepare_and_send_command() 56 use
-   CMD_OPTION_WAITFORRSP. So my first stab was using this.
-   However, it would be possible to add a function pointer
-   argument to lbs_cmd(), which could be called asynchronously
-   if the result is there. A lbs_cmd_noop() could the be
-   used for commands where one don't need the callback.
-
-The lbs_cmd() function could not only used while prototyping
-(as I need it), but also to slowly rewrite much of the ugly
-cmd.c / cmdresp.c code into an simpler way.
-
-
-In this patchset are also some cleanup patches. They depend
-on a patch that David Woodhouse has in his tree, but that isn't
-yet in wireless-2.6/everything. I've added this patch to the
-patch series as well.
