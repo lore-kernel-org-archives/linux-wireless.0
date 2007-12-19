@@ -1,77 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53721 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbXLVWKR convert rfc822-to-8bit (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:32879 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751158AbXLSGRQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 17:10:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Only select allowed TX and RX antennas
-Date: Sat, 22 Dec 2007 23:08:05 +0100
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <200712222154.20424.mb@bu3sch.de> <476D87DA.5030908@lwfinger.net>
-In-Reply-To: <476D87DA.5030908@lwfinger.net>
+	Wed, 19 Dec 2007 01:17:16 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 4/6] rtl8180: update BB registers for rtl8225 V1 radio
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Wed, 19 Dec 2007 01:17:36 -0500
+Message-ID: <20071219061735.4885.9679.stgit@tetra.sourmilk.net> (sfid-20071219_061722_365673_E00C8DF4)
+In-Reply-To: <20071219061735.4885.1535.stgit@tetra.sourmilk.net>
+References: <20071219061735.4885.1535.stgit@tetra.sourmilk.net>
 MIME-Version: 1.0
-Message-Id: <200712222308.05818.mb@bu3sch.de> (sfid-20071222_221028_464943_47E2E81B)
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 22 December 2007 22:55:38 Larry Finger wrote:
-> Michael Buesch wrote:
-> > This fixes antenna selection in b43. It adds a sanity check
-> > for the antenna numbers we get from mac80211.
-> >=20
-> > This patch depends on
-> > [PATCH] ssb: Fix extraction of values from SPROM
-> >=20
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
->=20
-> After applying the 4 patches you sent earlier, the compilation fails =
-with
->=20
->   CC [M]  drivers/ssb/main.o
-> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_ieee80211_a=
-ntenna_sanitize=E2=80=99:
-> drivers/net/wireless/b43/main.c:2720: error: =E2=80=98struct ssb_spro=
-m=E2=80=99 has no member named =E2=80=98ant_available_bg=E2=80=99
-> drivers/net/wireless/b43/main.c:2722: error: =E2=80=98struct ssb_spro=
-m=E2=80=99 has no member named =E2=80=98ant_available_a=E2=80=99
->=20
-> These members of ssb_sprom are defined in the patch you sent to Felix=
- Fietkau on Dec. 10, but not in
-> this patch set.
+From: Andrea Merello <andreamrl@tiscali.it>
 
-This patch was included in the series I just sent.
-[PATCH] ssb: Fix extraction of values from SPROM
+This should give performance improvement in OFDM when signal is poor.
 
-> Index: wireless-2.6/include/linux/ssb/ssb.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-2.6.orig/include/linux/ssb/ssb.h   2007-12-14
-> 13:15:42.000000000 +0100 +++ wireless-2.6/include/linux/ssb/ssb.h    =
-  =20
-> 2007-12-20 18:58:49.000000000 +0100 @@ -22,7 +22,12 @@ struct ssb_spr=
-om {
->         u8 et1mac[6];           /* MAC address for 802.11a */
->         u8 et0phyaddr;          /* MII address for enet0 */
->         u8 et1phyaddr;          /* MII address for enet1 */
-> +       u8 et0mdcport;          /* MDIO for enet0 */
-> +       u8 et1mdcport;          /* MDIO for enet1 */
-> +       u8 board_rev;           /* Board revision number from SPROM. =
-*/
->         u8 country_code;        /* Country Code */
-> +       u8 ant_available_a;     /* A-PHY antenna available bits (up t=
-o 4)
-> +       u8 ant_available_bg;    /* B/G-PHY antenna available bits (up=
- to
+Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
---=20
-Greetings Michael.
+ drivers/net/wireless/rtl8180_rtl8225.c |   28 ++++++++++------------------
+ 1 files changed, 10 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
+index 1c4fd33..30c7e5d 100644
+--- a/drivers/net/wireless/rtl8180_rtl8225.c
++++ b/drivers/net/wireless/rtl8180_rtl8225.c
+@@ -288,10 +288,6 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+ 
+-	rtl8225_write_phy_ofdm(dev, 2, 0x42);
+-	rtl8225_write_phy_ofdm(dev, 6, 0x00);
+-	rtl8225_write_phy_ofdm(dev, 8, 0x00);
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
+ 			 rtl8225_tx_gain_cck_ofdm[ofdm_power/6] >> 1);
+ 
+@@ -395,9 +391,9 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
+ 	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x00); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x00); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); msleep(1);
+@@ -405,7 +401,7 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
+ 	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); msleep(1);
+-	rtl8225_write_phy_ofdm(dev, 0x11, 0x06); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x03); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); msleep(1);
+@@ -427,11 +423,6 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
+ 	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);
+ 	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); msleep(1);
+ 
+-	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[1 * 4]);
+-	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[1 * 4 + 2]);
+-	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[1 * 4 + 3]);
+-	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[1 * 4 + 1]);
+-
+ 	rtl8225_write_phy_cck(dev, 0x00, 0x98); msleep(1);
+ 	rtl8225_write_phy_cck(dev, 0x03, 0x20); msleep(1);
+ 	rtl8225_write_phy_cck(dev, 0x04, 0x7e); msleep(1);
+@@ -473,13 +464,14 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite32(priv, (__le32 __iomem *)((void __iomem *)priv->map + 0x94), 0x15c00002);
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
+ 
+-	/* set sensitivity */
+ 	rtl8225_write(dev, 0x0c, 0x50);
+-	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[1 * 4]);
+-	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[1 * 4 + 2]);
+-	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[1 * 4 + 3]);
+-	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[1 * 4 + 1]);
+-	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
++	/* set OFDM initial gain */
++	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[4 * 4]);
++	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[4 * 4 + 1]);
++	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[4 * 4 + 2]);
++	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[4 * 4 + 3]);
++	/* set CCK threshold */
++	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[0]);
+ }
+ 
+ static const u8 rtl8225z2_tx_power_cck_ch14[] = {
+
+
