@@ -1,174 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56586 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762772AbXLMG7U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:20 -0500
-Subject: [PATCH 59/48] libertas: clean up direct command handling
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2b-0005rj-0Q@shinybook.infradead.org> (sfid-20071213_065941_851164_87CEA08A)
-Date: Thu, 13 Dec 2007 01:59:29 -0500
+Received: from mfe1.polimi.it ([131.175.12.23]:37911 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753821AbXLSAbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:31:33 -0500
+Date: Wed, 19 Dec 2007 01:26:34 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH v3 4/8] rc80211-pid: add rate behaviour learning algorithm
+Message-ID: <20071219012634.6a448149@morte> (sfid-20071219_003141_172250_07FB8498)
+In-Reply-To: <20071219001955.055692620@polimi.it>
+References: <20071219001955.055692620@polimi.it>>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Tue, 11 Dec 2007 12:33:30 -0500
+This patch introduces a learning algorithm in order for the PID controller
+to learn how to map adjustment values to rates. This is better described in
+code comments.
 
-Move direct command handling through __lbs_cmd() over to using the
-header as the first member of the command structure, and only define
-the __lbs_cmd() callback in one place rather than 3.  Convert boot2
-version command to new usage.
-
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- drivers/net/wireless/libertas/cmd.c     |   22 ++++++++++++----------
- drivers/net/wireless/libertas/cmd.h     |    8 +++++---
- drivers/net/wireless/libertas/cmdresp.c |    7 ++++---
- drivers/net/wireless/libertas/hostcmd.h |   12 ++++++++++--
- 4 files changed, 31 insertions(+), 18 deletions(-)
+ rc80211_pid.c |  181 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 161 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 2efba57..78870c7 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1988,12 +1988,13 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv, u16 psmode)
-  *                      the result code from the firmware
+Index: wireless-2.6/net/mac80211/rc80211_pid.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid.c
++++ wireless-2.6/net/mac80211/rc80211_pid.c
+@@ -2,6 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
++ * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -39,12 +40,18 @@
+  * an actual sliding window. The advantage is that we don't need to keep an
+  * array of the last N error values and computation is easier.
+  *
+- * Once we have the adj value, we need to map it to a TX rate to be selected.
+- * For now, we depend on the rates to be ordered in a way such that more robust
+- * rates (i.e. such that exhibit a lower framed failed percentage) come first.
+- * E.g. for the 802.11b/g case, we first have the b rates in ascending order,
+- * then the g rates. The adj simply decides the index of the TX rate in the list
+- * to switch to (relative to the current TX rate entry).
++ * Once we have the adj value, we map it to a rate by means of a learning
++ * algorithm. This algorithm keeps the state of the percentual failed frames
++ * difference between rates. The behaviour of the lowest available rate is kept
++ * as a reference value, and every time we switch between two rates, we compute
++ * the difference between the failed frames each rate exhibited. By doing so,
++ * we compare behaviours which different rates exhibited in adjacent timeslices,
++ * thus the comparison is minimally affected by external conditions. This
++ * difference gets propagated to the whole set of measurements, so that the
++ * reference is always the same. Periodically, we normalize this set so that
++ * recent events weigh the most. By comparing the adj value with this set, we
++ * avoid pejorative switches to lower rates and allow for switches to higher
++ * rates if they behaved well.
+  *
+  * Note that for the computations we use a fixed-point representation to avoid
+  * floating point arithmetic. Hence, all values are shifted left by
+@@ -78,6 +85,16 @@
   */
- 
--int __lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_size,
--	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_ds_command *),
-+int __lbs_cmd(struct lbs_private *priv, uint16_t command,
-+	      struct cmd_header *in_cmd, int in_cmd_size,
-+	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
- 	      unsigned long callback_arg)
- {
- 	struct cmd_ctrl_node *cmdnode;
--	struct cmd_ds_gen *cmdptr;
-+	struct cmd_header *send_cmd;
- 	unsigned long flags;
- 	int ret = 0;
- 
-@@ -2012,7 +2013,6 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_siz
- 	}
- 
- 	cmdnode = lbs_get_cmd_ctrl_node(priv);
--
- 	if (cmdnode == NULL) {
- 		lbs_deb_host("PREP_CMD: cmdnode is NULL\n");
- 
-@@ -2022,18 +2022,20 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_siz
- 		goto done;
- 	}
- 
--	cmdptr = (struct cmd_ds_gen *)cmdnode->bufvirtualaddr;
-+	send_cmd = (struct cmd_header *) cmdnode->bufvirtualaddr;
- 	cmdnode->wait_option = CMD_OPTION_WAITFORRSP;
- 	cmdnode->callback = callback;
- 	cmdnode->callback_arg = callback_arg;
- 
-+	/* Copy the incoming command to the buffer */
-+	memcpy(send_cmd, in_cmd, in_cmd_size);
-+
- 	/* Set sequence number, clean result, move to buffer */
- 	priv->seqnum++;
--	cmdptr->command = cpu_to_le16(command);
--	cmdptr->size    = cpu_to_le16(cmd_size + S_DS_GEN);
--	cmdptr->seqnum = cpu_to_le16(priv->seqnum);
--	cmdptr->result = 0;
--	memcpy(cmdptr->cmdresp, cmd, cmd_size);
-+	send_cmd->command = cpu_to_le16(command);
-+	send_cmd->size    = cpu_to_le16(in_cmd_size);
-+	send_cmd->seqnum  = cpu_to_le16(priv->seqnum);
-+	send_cmd->result  = 0;
- 
- 	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
- 
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index 546db49..259d3e8 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -7,10 +7,12 @@
- #include "dev.h"
- 
- #define lbs_cmd(priv, cmdnr, cmd, callback, callback_arg) \
--	__lbs_cmd(priv, cmdnr, &cmd, sizeof(cmd), callback, callback_arg)
-+	__lbs_cmd(priv, cmdnr, (struct cmd_header *) &cmd, sizeof(cmd), \
-+			callback, callback_arg)
- 
--int __lbs_cmd(struct lbs_private *priv, uint16_t command, void *cmd, int cmd_size, 
--	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_ds_command *),
-+int __lbs_cmd(struct lbs_private *priv, uint16_t command,
-+	      struct cmd_header *in_cmd, int in_cmd_size, 
-+	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
- 	      unsigned long callback_arg);
- 
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 7bad257..9113669 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -861,9 +861,10 @@ int lbs_process_rx_command(struct lbs_private *priv)
- 
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
--	if (priv->cur_cmd && priv->cur_cmd->callback)
--		ret = priv->cur_cmd->callback(priv, priv->cur_cmd->callback_arg, resp);
--	else
-+	if (priv->cur_cmd && priv->cur_cmd->callback) {
-+		ret = priv->cur_cmd->callback(priv, priv->cur_cmd->callback_arg,
-+				(struct cmd_header *) resp);
-+	} else
- 		ret = handle_cmd_response(priv, 0, resp);
- 
- 	spin_lock_irqsave(&priv->driver_lock, flags);
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index ed502b7..93ac46a 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -65,13 +65,20 @@ struct rxpd {
- 	u8 reserved[3];
- };
- 
-+struct cmd_header {
-+	__le16 command;
-+	__le16 size;
-+	__le16 seqnum;
-+	__le16 result;
-+} __attribute__ ((packed));
-+
- struct cmd_ctrl_node {
- 	struct list_head list;
- 	/* wait for finish or not */
- 	u16 wait_option;
- 	/* command response */
- 	void *pdata_buf;
--	int (*callback)(struct lbs_private *priv, unsigned long arg, struct cmd_ds_command *resp);
-+	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *);
- 	unsigned long callback_arg;
- 	/* command data */
- 	u8 *bufvirtualaddr;
-@@ -424,6 +431,8 @@ struct cmd_ds_802_11_monitor_mode {
- };
- 
- struct cmd_ds_set_boot2_ver {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
- 	__le16 version;
- };
-@@ -678,7 +687,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_bt_access bt;
- 		struct cmd_ds_fwt_access fwt;
- 		struct cmd_ds_mesh_access mesh;
--		struct cmd_ds_set_boot2_ver boot2_ver;
- 		struct cmd_ds_get_tsf gettsf;
- 		struct cmd_ds_802_11_subscribe_event subscribe_event;
- 		struct cmd_ds_802_11_beacon_control bcn_ctrl;
--- 
-1.5.3.4
+ #define RC_PID_TARGET_PF (11 << RC_PID_ARITH_SHIFT)
 
++/* Rate behaviour normalization quantity over time. */
++#define RC_PID_NORM_OFFSET 3
++
++/* Push high rates right after loading. */
++#define RC_PID_FAST_START 0
++
++/* Arithmetic right shift for positive and negative values for ISO C. */
++#define RC_PID_DO_ARITH_RIGHT_SHIFT(x, y) \
++	(x) < 0 ? -((-(x)) >> (y)) : (x) >> (y)
++
+ struct rc_pid_sta_info {
+ 	unsigned long last_change;
+ 	unsigned long last_sample;
+@@ -121,6 +138,18 @@ struct rc_pid_sta_info {
+ /* Algorithm parameters. We keep them on a per-algorithm approach, so they can
+  * be tuned individually for each interface.
+  */
++struct rc_pid_rateinfo {
++
++	/* Map sorted rates to rates in ieee80211_hw_mode. */
++	int index;
++
++	/* Map rates in ieee80211_hw_mode to sorted rates. */
++	int rev_index;
++
++	/* Comparison with the lowest rate. */
++	int diff;
++};
++
+ struct rc_pid_info {
+
+ 	/* The failed frames percentage target. */
+@@ -130,15 +159,56 @@ struct rc_pid_info {
+ 	s32 coeff_p;
+ 	s32 coeff_i;
+ 	s32 coeff_d;
++
++	/* Rates information. */
++	struct rc_pid_rateinfo *rinfo;
++
++	/* Index of the last used rate. */
++	int oldrate;
+ };
+
++/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
++ * a worse failed frames behaviour and we'll choose the highest rate whose
++ * failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the adjustment is within the ranges. Then,
++ * provide the new rate index. */
++static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
++					 int adj, int cur, int l)
++{
++	int i, j, k, tmp;
++
++	if (cur + adj < 0)
++		return 0;
++	if (cur + adj >= l)
++		return l - 1;
++
++	i = r[cur + adj].rev_index;
++
++	j = r[cur].rev_index;
++
++	if (adj < 0) {
++			tmp = i;
++			for (k = j; k >= i; k--)
++				if (r[k].diff <= r[j].diff)
++					tmp = k;
++			return r[tmp].index;
++	} else if (adj > 0) {
++			tmp = i;
++			for (k = i + 1; k + i < l; k++)
++				if (r[k].diff <= r[i].diff)
++					tmp = k;
++			return r[tmp].index;
++	}
++	return cur + adj;
++}
+
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+-					 struct sta_info *sta, int adj)
++					 struct sta_info *sta, int adj,
++					 struct rc_pid_rateinfo *rinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_hw_mode *mode;
+-	int newidx = sta->txrate + adj;
++	int newidx;
+ 	int maxrate;
+ 	int back = (adj > 0) ? 1 : -1;
+
+@@ -151,10 +221,8 @@ static void rate_control_pid_adjust_rate
+ 	mode = local->oper_hw_mode;
+ 	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
+
+-	if (newidx < 0)
+-		newidx = 0;
+-	else if (newidx >= mode->num_rates)
+-		newidx = mode->num_rates - 1;
++	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
++					       mode->num_rates);
+
+ 	while (newidx != sta->txrate) {
+ 		if (rate_supported(sta, mode, newidx) &&
+@@ -167,18 +235,37 @@ static void rate_control_pid_adjust_rate
+ 	}
+ }
+
++/* Normalize the failed frames per-rate differences. */
++static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
++{
++	int i;
++
++	if (r[0].diff > RC_PID_NORM_OFFSET)
++		r[0].diff -= RC_PID_NORM_OFFSET;
++	else if (r[0].diff < -RC_PID_NORM_OFFSET)
++		r[0].diff += RC_PID_NORM_OFFSET;
++	for (i = 0; i < l - 1; i++)
++		if (r[i + 1].diff > r[i].diff + RC_PID_NORM_OFFSET)
++			r[i + 1].diff -= RC_PID_NORM_OFFSET;
++		else if (r[i + 1].diff <= r[i].diff)
++			r[i + 1].diff += RC_PID_NORM_OFFSET;
++}
++
+ static void rate_control_pid_sample(struct rc_pid_info *pinfo,
+ 				    struct ieee80211_local *local,
+ 				    struct sta_info *sta)
+ {
+ 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
++	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
++	struct ieee80211_hw_mode *mode;
+ 	u32 pf;
+ 	s32 err_avg;
+ 	s32 err_prop;
+ 	s32 err_int;
+ 	s32 err_der;
+-	int adj;
++	int adj, i, j, tmp;
+
++	mode = local->oper_hw_mode;
+ 	spinfo = sta->rate_ctrl_priv;
+ 	spinfo->last_sample = jiffies;
+
+@@ -194,6 +281,20 @@ static void rate_control_pid_sample(stru
+ 		spinfo->tx_num_failed = 0;
+ 	}
+
++	/* If we just switched rate, update the rate behaviour info. */
++	if (pinfo->oldrate != sta->txrate) {
++
++		i = rinfo[pinfo->oldrate].rev_index;
++		j = rinfo[sta->txrate].rev_index;
++
++		tmp = (pf - spinfo->last_pf);
++		tmp = RC_PID_DO_ARITH_RIGHT_SHIFT(tmp, RC_PID_ARITH_SHIFT);
++
++		rinfo[j].diff = rinfo[i].diff + tmp;
++		pinfo->oldrate = sta->txrate;
++	}
++	rate_control_pid_normalize(rinfo, mode->num_rates);
++
+ 	/* Compute the proportional, integral and derivative errors. */
+ 	err_prop = RC_PID_TARGET_PF - pf;
+
+@@ -207,16 +308,11 @@ static void rate_control_pid_sample(stru
+ 	/* Compute the controller output. */
+ 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
+ 	      + err_der * pinfo->coeff_d);
+-
+-	/* We need to do an arithmetic right shift. ISO C says this is
+-	 * implementation defined for negative left operands. Hence, be
+-	 * careful to get it right, also for negative values. */
+-	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
+-			  adj >> (2 * RC_PID_ARITH_SHIFT);
++	adj = RC_PID_DO_ARITH_RIGHT_SHIFT(adj, 2 * RC_PID_ARITH_SHIFT);
+
+ 	/* Change rate. */
+ 	if (adj)
+-		rate_control_pid_adjust_rate(local, sta, adj);
++		rate_control_pid_adjust_rate(local, sta, adj, rinfo);
+ }
+
+ static void rate_control_pid_tx_status(void *priv, struct net_device *dev,
+@@ -316,13 +412,57 @@ static void rate_control_pid_rate_init(v
+ static void *rate_control_pid_alloc(struct ieee80211_local *local)
+ {
+ 	struct rc_pid_info *pinfo;
++	struct rc_pid_rateinfo *rinfo;
++	struct ieee80211_hw_mode *mode;
++	int i, j, tmp;
++	bool s;
+
+ 	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
++	if (!pinfo)
++		return NULL;
++
++	/* We can safely assume that oper_hw_mode won't change unless we get
++	 * reinitialized. */
++	mode = local->oper_hw_mode;
++	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
++	if (!rinfo) {
++		kfree(pinfo);
++		return NULL;
++	}
++
++	/* Sort the rates. This is optimized for the most common case (i.e.
++	 * almost-sorted CCK+OFDM rates). Kind of bubble-sort with reversed
++	 * mapping too. */
++	for (i = 0; i < mode->num_rates; i++) {
++		rinfo[i].index = i;
++		rinfo[i].rev_index = i;
++		if (RC_PID_FAST_START)
++			rinfo[i].diff = 0;
++		else
++			rinfo[i].diff = i * RC_PID_NORM_OFFSET;
++	}
++	for (i = 1; i < mode->num_rates; i++) {
++		s = 0;
++		for (j = 0; j < mode->num_rates - i; j++)
++			if (unlikely(mode->rates[rinfo[j].index].rate >
++				     mode->rates[rinfo[j + 1].index].rate)) {
++				tmp = rinfo[j].index;
++				rinfo[j].index = rinfo[j + 1].index;
++				rinfo[j + 1].index = tmp;
++				rinfo[rinfo[j].index].rev_index = j;
++				rinfo[rinfo[j + 1].index].rev_index = j + 1;
++				s = 1;
++			}
++		if (!s)
++			break;
++	}
+
+ 	pinfo->target = RC_PID_TARGET_PF;
+ 	pinfo->coeff_p = RC_PID_COEFF_P;
+ 	pinfo->coeff_i = RC_PID_COEFF_I;
+ 	pinfo->coeff_d = RC_PID_COEFF_D;
++	pinfo->rinfo = rinfo;
++	pinfo->oldrate = 0;
+
+ 	return pinfo;
+ }
+@@ -330,6 +470,7 @@ static void *rate_control_pid_alloc(stru
+ static void rate_control_pid_free(void *priv)
+ {
+ 	struct rc_pid_info *pinfo = priv;
++	kfree(pinfo->rinfo);
+ 	kfree(pinfo);
+ }
+
+-- 
+Ciao
+Stefano
