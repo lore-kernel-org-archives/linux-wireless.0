@@ -1,37 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2217 "EHLO ra.tuxdriver.com"
+Received: from mga11.intel.com ([192.55.52.93]:22196 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756529AbXLTW6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2007 17:58:33 -0500
-Date: Thu, 20 Dec 2007 17:38:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-Message-ID: <20071220223850.GL3139@tuxdriver.com> (sfid-20071220_225837_745418_5FA95A3F)
-References: <20071220155321.GF3139@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071220155321.GF3139@tuxdriver.com>
+	id S1751259AbXLSGDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 01:03:01 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iwlwifi: fix possible priv->mutex deadlock during suspend
+Date: Wed, 19 Dec 2007 13:59:43 +0800
+Message-Id: <1198043983-23807-1-git-send-email-yi.zhu@intel.com> (sfid-20071219_060305_577438_FEFE2AF6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 20, 2007 at 10:53:21AM -0500, John W. Linville wrote:
+This patch moves _cancel_deferred_work out of mutex protection and removes
+unnecessary mutex in pci_suspend and pci_resume.
 
-> These are destined for 2.6.25.  The patches fall mostly into two
-> categories: a new rate control algorithm for mac80211, and some
-> cfg80211 enhancements (including mac80211 patches to use them).
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 +++++-------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   18 +++++-------------
+ 2 files changed, 10 insertions(+), 26 deletions(-)
 
->       mac80211: make PID rate control algorithm the default
-
-This patch is busted.  I was mistaken about its readiness --
-I apologize.  Don't pull if you haven't already.
-
-We are actively working on fixing/replacing it.
-
-Thanks for your patience!
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 88cf035..f0303e8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6355,8 +6355,6 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+ 
+-	iwl_cancel_deferred_work(priv);
+-
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+@@ -6431,6 +6429,8 @@ static void iwl3945_down(struct iwl3945_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	__iwl_down(priv);
+ 	mutex_unlock(&priv->mutex);
++
++	iwl_cancel_deferred_work(priv);
+ }
+ 
+ #define MAX_HW_RESTARTS 5
+@@ -8739,10 +8739,9 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
+-	mutex_lock(&priv->mutex);
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+-	__iwl_down(priv);
+-	mutex_unlock(&priv->mutex);
++
++	iwl_down(priv);
+ 
+ 	/* Free MAC hash list for ADHOC */
+ 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+@@ -8801,12 +8800,10 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	set_bit(STATUS_IN_SUSPEND, &priv->status);
+ 
+ 	/* Take down the device; powers it off, etc. */
+-	__iwl_down(priv);
++	iwl_down(priv);
+ 
+ 	if (priv->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
+@@ -8815,8 +8812,6 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+-	mutex_unlock(&priv->mutex);
+-
+ 	return 0;
+ }
+ 
+@@ -8874,8 +8869,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 
+ 	printk(KERN_INFO "Coming out of suspend...\n");
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	err = pci_enable_device(pdev);
+ 	pci_restore_state(pdev);
+@@ -8889,7 +8882,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x41, 0x00);
+ 
+ 	iwl_resume(priv);
+-	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index df6f3b1..87cc281 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6767,8 +6767,6 @@ static void __iwl4965_down(struct iwl4965_priv *priv)
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+ 
+-	iwl_cancel_deferred_work(priv);
+-
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+@@ -6844,6 +6842,8 @@ static void iwl4965_down(struct iwl4965_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	__iwl_down(priv);
+ 	mutex_unlock(&priv->mutex);
++
++	iwl_cancel_deferred_work(priv);
+ }
+ 
+ #define MAX_HW_RESTARTS 5
+@@ -9308,10 +9308,9 @@ static void iwl4965_pci_remove(struct pci_dev *pdev)
+ 
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
+-	mutex_lock(&priv->mutex);
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+-	__iwl_down(priv);
+-	mutex_unlock(&priv->mutex);
++
++	iwl_down(priv);
+ 
+ 	/* Free MAC hash list for ADHOC */
+ 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+@@ -9370,12 +9369,10 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	set_bit(STATUS_IN_SUSPEND, &priv->status);
+ 
+ 	/* Take down the device; powers it off, etc. */
+-	__iwl_down(priv);
++	iwl_down(priv);
+ 
+ 	if (priv->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
+@@ -9384,8 +9381,6 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+-	mutex_unlock(&priv->mutex);
+-
+ 	return 0;
+ }
+ 
+@@ -9443,8 +9438,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
+ 
+ 	printk(KERN_INFO "Coming out of suspend...\n");
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	err = pci_enable_device(pdev);
+ 	pci_restore_state(pdev);
+@@ -9458,7 +9451,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x41, 0x00);
+ 
+ 	iwl_resume(priv);
+-	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.6
+
