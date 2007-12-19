@@ -1,71 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53321 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519AbXLETA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 14:00:58 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/3] iwlwifi: remove HT code from iwl-3945.h
-Date: Wed,  5 Dec 2007 20:59:57 +0200
-Message-Id: <1196881199774-git-send-email-tomas.winkler@intel.com> (sfid-20071205_190112_817312_EBA66E8B)
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40653 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755995AbXLSPsG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 10:48:06 -0500
+Message-Id: <20071219010340.750290000@sipsolutions.net> (sfid-20071219_154811_503505_B382F601)
+References: <20071219010328.762470000@sipsolutions.net>
+Date: Wed, 19 Dec 2007 02:03:32 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 4/9] cfg80211/nl80211: add beacon settings
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+This adds the necessary API to cfg80211/nl80211 to allow
+changing beaconing settings.
 
-This pach removes HT code from iwl-3945.h - it is not needed here as 3945
-does not support HT. The code ended up here during the header file split
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.h |   24 ------------------------
- 1 files changed, 0 insertions(+), 24 deletions(-)
+ include/linux/nl80211.h |   24 ++++++++
+ include/net/cfg80211.h  |   33 +++++++++++
+ net/wireless/nl80211.c  |  133 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 190 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 709203a..bfa2606 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -453,30 +453,6 @@ union iwl3945_ht_rate_supp {
- 	};
+--- everything.orig/include/net/cfg80211.h	2007-12-19 00:50:15.363022189 +0100
++++ everything/include/net/cfg80211.h	2007-12-19 00:50:18.013056043 +0100
+@@ -69,6 +69,26 @@ struct key_params {
+ 	u32 cipher;
  };
  
--#ifdef CONFIG_IWL3945_HT
--#define CFG_HT_RX_AMPDU_FACTOR_DEF  (0x3)
--#define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
--#define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
--
--struct sta_ht_info {
--	u8 is_ht;
--	u16 rx_mimo_ps_mode;
--	u16 tx_mimo_ps_mode;
--	u16 control_channel;
--	u8 max_amsdu_size;
--	u8 ampdu_factor;
--	u8 mpdu_density;
--	u8 operating_mode;
--	u8 supported_chan_width;
--	u8 extension_chan_offset;
--	u8 is_green_field;
--	u8 sgf;
--	u8 supp_rates[16];
--	u8 tx_chan_width;
--	u8 chan_width_cap;
--};
--#endif				/*CONFIG_IWL3945_HT */
--
- #ifdef CONFIG_IWL3945_QOS
++/**
++ * struct beacon_parameters - beacon parameters
++ *
++ * Used to configure the beacon for an interface.
++ *
++ * @head: head portion of beacon (before TIM IE)
++ *     or %NULL if not changed
++ * @tail: tail portion of beacon (after TIM IE)
++ *     or %NULL if not changed
++ * @interval: beacon interval or zero if not changed
++ * @dtim_period: DTIM period or zero if not changed
++ * @head_len: length of @head
++ * @tail_len: length of @tail
++ */
++struct beacon_parameters {
++	u8 *head, *tail;
++	int interval, dtim_period;
++	int head_len, tail_len;
++};
++
+ /* from net/wireless.h */
+ struct wiphy;
  
- union iwl3945_qos_capabity {
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+@@ -103,6 +123,13 @@ struct wiphy;
+  *	and @key_index
+  *
+  * @set_default_key: set the default key on an interface
++ *
++ * @add_beacon: Add a beacon with given parameters, @head, @interval
++ *	and @dtim_period will be valid, @tail is optional.
++ * @set_beacon: Change the beacon parameters for an access point mode
++ *	interface. This should reject the call when no beacon has been
++ *	configured.
++ * @del_beacon: Remove beacon configuration and stop sending the beacon.
+  */
+ struct cfg80211_ops {
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+@@ -122,6 +149,12 @@ struct cfg80211_ops {
+ 	int	(*set_default_key)(struct wiphy *wiphy,
+ 				   struct net_device *netdev,
+ 				   u8 key_index);
++
++	int	(*add_beacon)(struct wiphy *wiphy, struct net_device *dev,
++			      struct beacon_parameters *info);
++	int	(*set_beacon)(struct wiphy *wiphy, struct net_device *dev,
++			      struct beacon_parameters *info);
++	int	(*del_beacon)(struct wiphy *wiphy, struct net_device *dev);
+ };
+ 
+ #endif /* __NET_CFG80211_H */
+--- everything.orig/include/linux/nl80211.h	2007-12-19 00:50:15.363022189 +0100
++++ everything/include/linux/nl80211.h	2007-12-19 00:50:18.013056043 +0100
+@@ -47,6 +47,15 @@
+  * @NL80211_CMD_DEL_KEY: delete a key identified by %NL80211_ATTR_KEY_IDX
+  *	or %NL80211_ATTR_MAC.
+  *
++ * @NL80211_CMD_GET_BEACON: retrieve beacon information (returned in a
++ *	%NL80222_CMD_NEW_BEACON message)
++ * @NL80211_CMD_SET_BEACON: set the beacon on an access point interface
++ *	using the %NL80211_ATTR_BEACON_INTERVAL, %NL80211_ATTR_DTIM_PERIOD,
++ *	%NL80211_BEACON_HEAD and %NL80211_BEACON_TAIL attributes.
++ * @NL80211_CMD_NEW_BEACON: add a new beacon to an access point interface,
++ *	parameters are like for %NL80211_CMD_SET_BEACON.
++ * @NL80211_CMD_DEL_BEACON: remove the beacon, stop sending it
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -69,6 +78,11 @@ enum nl80211_commands {
+ 	NL80211_CMD_NEW_KEY,
+ 	NL80211_CMD_DEL_KEY,
+ 
++	NL80211_CMD_GET_BEACON,
++	NL80211_CMD_SET_BEACON,
++	NL80211_CMD_NEW_BEACON,
++	NL80211_CMD_DEL_BEACON,
++
+ 	/* add commands here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -101,6 +115,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_KEY_SEQ: transmit key sequence number (IV/PN) for TKIP and
+  *	CCMP keys, each six bytes in little endian
+  *
++ * @NL80211_ATTR_BEACON_INTERVAL: beacon interval in TU
++ * @NL80211_ATTR_DTIM_PERIOD: DTIM period for beaconing
++ * @NL80211_ATTR_BEACON_HEAD: portion of the beacon before the TIM IE
++ * @NL80211_ATTR_BEACON_TAIL: portion of the beacon after the TIM IE
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -123,6 +142,11 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_KEY_SEQ,
+ 	NL80211_ATTR_KEY_DEFAULT,
+ 
++	NL80211_ATTR_BEACON_INTERVAL,
++	NL80211_ATTR_DTIM_PERIOD,
++	NL80211_ATTR_BEACON_HEAD,
++	NL80211_ATTR_BEACON_TAIL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- everything.orig/net/wireless/nl80211.c	2007-12-19 00:50:15.363022189 +0100
++++ everything/net/wireless/nl80211.c	2007-12-19 00:50:18.023023762 +0100
+@@ -69,6 +69,13 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_KEY_IDX] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_KEY_CIPHER] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_KEY_DEFAULT] = { .type = NLA_FLAG },
++
++	[NL80211_ATTR_BEACON_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_ATTR_DTIM_PERIOD] = { .type = NLA_U32 },
++	[NL80211_ATTR_BEACON_HEAD] = { .type = NLA_BINARY,
++				       .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY,
++				       .len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+ /* message building helper */
+@@ -600,6 +607,114 @@ static int nl80211_del_key(struct sk_buf
+ 	return err;
+ }
+ 
++static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
++{
++        int (*call)(struct wiphy *wiphy, struct net_device *dev,
++		    struct beacon_parameters *info);
++	struct cfg80211_registered_device *drv;
++	int err;
++	struct net_device *dev;
++	struct beacon_parameters params;
++	int haveinfo = 0;
++
++	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
++	if (err)
++		return err;
++
++	switch (info->genlhdr->cmd) {
++	case NL80211_CMD_NEW_BEACON:
++		/* these are required for NEW_BEACON */
++		if (!info->attrs[NL80211_ATTR_BEACON_INTERVAL] ||
++		    !info->attrs[NL80211_ATTR_DTIM_PERIOD] ||
++		    !info->attrs[NL80211_ATTR_BEACON_HEAD]) {
++			err = -EINVAL;
++			goto out;
++		}
++
++		call = drv->ops->add_beacon;
++		break;
++	case NL80211_CMD_SET_BEACON:
++		call = drv->ops->set_beacon;
++		break;
++	default:
++		WARN_ON(1);
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	if (!call) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	memset(&params, 0, sizeof(params));
++
++	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
++		params.interval =
++		    nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
++		haveinfo = 1;
++	}
++
++	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
++		params.dtim_period =
++		    nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
++		haveinfo = 1;
++	}
++
++	if (info->attrs[NL80211_ATTR_BEACON_HEAD]) {
++		params.head = nla_data(info->attrs[NL80211_ATTR_BEACON_HEAD]);
++		params.head_len =
++		    nla_len(info->attrs[NL80211_ATTR_BEACON_HEAD]);
++		haveinfo = 1;
++	}
++
++	if (info->attrs[NL80211_ATTR_BEACON_TAIL]) {
++		params.tail = nla_data(info->attrs[NL80211_ATTR_BEACON_TAIL]);
++		params.tail_len =
++		    nla_len(info->attrs[NL80211_ATTR_BEACON_TAIL]);
++		haveinfo = 1;
++	}
++
++	if (!haveinfo) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	rtnl_lock();
++	err = call(&drv->wiphy, dev, &params);
++	rtnl_unlock();
++
++ out:
++	cfg80211_put_dev(drv);
++	dev_put(dev);
++	return err;
++}
++
++static int nl80211_del_beacon(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *drv;
++	int err;
++	struct net_device *dev;
++
++	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
++	if (err)
++		return err;
++
++	if (!drv->ops->del_beacon) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	rtnl_lock();
++	err = drv->ops->del_beacon(&drv->wiphy, dev);
++	rtnl_unlock();
++
++ out:
++	cfg80211_put_dev(drv);
++	dev_put(dev);
++	return err;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -663,6 +778,24 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_BEACON,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.doit = nl80211_addset_beacon,
++	},
++	{
++		.cmd = NL80211_CMD_NEW_BEACON,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.doit = nl80211_addset_beacon,
++	},
++	{
++		.cmd = NL80211_CMD_DEL_BEACON,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.doit = nl80211_del_beacon,
++	},
+ };
+ 
+ /* multicast groups */
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+-- 
+
