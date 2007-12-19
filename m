@@ -1,394 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51186 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753969AbXLBTFf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 14:05:35 -0500
-Subject: [RFC][PATCH] mac80211: Use PID controller for TX rate control
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain
-Date: Sun, 02 Dec 2007 20:05:31 +0100
-Message-Id: <1196622331.7472.4.camel@localhost> (sfid-20071202_190557_126687_3ADAC58F)
+Received: from mfe1.polimi.it ([131.175.12.23]:48988 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758740AbXLSAct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:32:49 -0500
+Date: Wed, 19 Dec 2007 01:27:39 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH v3 7/8] debugfs: allow access to signed values
+Message-ID: <20071219012739.6dcdd150@morte> (sfid-20071219_003309_142235_6F2FB382)
+In-Reply-To: <20071219001955.055692620@polimi.it>
+References: <20071219001955.055692620@polimi.it>>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
+a cast in libfs.
 
-the patch below is a first attempt on the PID-controller approach for TX
-rate control. It kind of works here, but I haven't spent much time
-tuning the coefficients.
-
-I wanted to share this at this early stage so you can experiment with
-and comment.
-
-Mattias
-
-
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- net/mac80211/ieee80211_rate.h |    3 -
- net/mac80211/rc80211_simple.c |  281 ++++++++++++++++++++++++++++-------------
- 2 files changed, 190 insertions(+), 94 deletions(-)
+Greg,
 
-diff --git a/net/mac80211/ieee80211_rate.h b/net/mac80211/ieee80211_rate.h
-index 2368813..9948d0f 100644
---- a/net/mac80211/ieee80211_rate.h
-+++ b/net/mac80211/ieee80211_rate.h
-@@ -18,9 +18,6 @@
- #include "ieee80211_i.h"
- #include "sta_info.h"
- 
--#define RATE_CONTROL_NUM_DOWN 20
--#define RATE_CONTROL_NUM_UP   15
--
- 
- struct rate_control_extra {
- 	/* values from rate_control_get_rate() to the caller: */
-diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
-index da72737..af6f8ff 100644
---- a/net/mac80211/rc80211_simple.c
-+++ b/net/mac80211/rc80211_simple.c
-@@ -20,52 +20,127 @@
- #include "debugfs.h"
- 
+here comes an implementation of debugfs_create_s{8,16,32,64} which avoids code
+duplication, suggested by Johannes Berg. We would need this to be merged to
+2.6.25, as we need those functions to be available for rc80211-pid, the new
+mac80211 rate control algorithm.
 
--/* This is a minimal implementation of TX rate controlling that can be used
-- * as the default when no improved mechanisms are available. */
-+/* This is an implementation of TX rate control algorithm that uses a PID
-+ * controller. Given a target failed frames rate, the controller decides about
-+ * TX rate changes to meet the target failed frames rate.
-+ *
-+ * The controller basically computes the following:
-+ *
-+ * adj = CP * err + CI * err_avg + CD * (err - last_err)
-+ *
-+ * where
-+ * 	adj	adjustment value that is used to switch TX rate (see below)
-+ * 	err	current error: target vs. current failed frames percentage
-+ * 	last_err	last error
-+ * 	err_avg	average (i.e. poor man's integral) of recent errors
-+ * 	CP	Proportional coefficient
-+ * 	CI	Integral coefficient
-+ * 	CD	Derivative coefficient
-+ *
-+ * CP, CI, CD are subject to careful tuning.
-+ *
-+ * The integral component uses a exponential moving average approach instead of
-+ * an actual sliding window. Advantage is that we don't need to keep an array of
-+ * the last N error values and computation is easier.
-+ *
-+ * Once we have the adj value, we need to map it to a TX rate to be selected.
-+ * For now, we depend on the rates to be ordered in a way such that more robust
-+ * rates (i.e. such that exhibit a lower framed failed percentage) come first.
-+ * E.g. for the 802.11b/g case, we first have the b rates in ascending order,
-+ * then the g rates. The adj simply decides the index of the TX rate in the list
-+ * to switch to (relative to the current TX rate entry).
-+ *
-+ * Note that for the computations we use a fixed-point representation to avoid
-+ * floating point arithmetic. Hence, all values are shifted left by
-+ * RATE_CONTROL_ARITH_SHIFT.
-+ */
- 
-+/* Sampling frequency for measuring percentage of failed frames. */
-+#define RATE_CONTROL_INTERVAL (HZ / 1)
- 
--#define RATE_CONTROL_EMERG_DEC 2
--#define RATE_CONTROL_INTERVAL (HZ / 20)
--#define RATE_CONTROL_MIN_TX 10
-+/* Exponential averaging smoothness (used for I part of PID controller) */
-+#define RATE_CONTROL_SMOOTHING_SHIFT 3
-+#define RATE_CONTROL_SMOOTHING (1 << RATE_CONTROL_SMOOTHING_SHIFT)
- 
--static void rate_control_rate_inc(struct ieee80211_local *local,
--				  struct sta_info *sta)
--{
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_hw_mode *mode;
--	int i = sta->txrate;
--	int maxrate;
-+/* Fixed point arithmetic shifting amount. */
-+#define RATE_CONTROL_ARITH_SHIFT 8
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
--	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1) {
--		/* forced unicast rate - do not change STA rate */
--		return;
--	}
-+/* Fixed point arithmetic factor. */
-+#define RATE_CONTROL_ARITH_FACTOR (1 << RATE_CONTROL_ARITH_SHIFT)
- 
--	mode = local->oper_hw_mode;
--	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
-+/* Proportional PID component coefficient. */
-+#define RATE_CONTROL_COEFF_P 15
-+/* Integral PID component coefficient. */
-+#define RATE_CONTROL_COEFF_I 10
-+/* Derivative PID component coefficient. */
-+#define RATE_CONTROL_COEFF_D 15
- 
--	if (i > mode->num_rates)
--		i = mode->num_rates - 2;
-+/* Target failed frames rate for the PID controller. NB: This effectively gives
-+ * maximum failed frames percentage we're willing to accept. If communication is
-+ * good, the controller will fail to adjust failed frames percentage to the
-+ * target. This is intentional.
-+ */
-+#define RATE_CONTROL_TARGET_PF (20 << RATE_CONTROL_ARITH_SHIFT)
- 
--	while (i + 1 < mode->num_rates) {
--		i++;
--		if (sta->supp_rates & BIT(i) &&
--		    mode->rates[i].flags & IEEE80211_RATE_SUPPORTED &&
--		    (maxrate < 0 || i <= maxrate)) {
--			sta->txrate = i;
--			break;
--		}
--	}
--}
-+struct sta_rate_control {
-+	unsigned long last_change;
-+	unsigned long last_sample;
- 
-+	u32 tx_num_failed;
-+	u32 tx_num_xmit;
- 
--static void rate_control_rate_dec(struct ieee80211_local *local,
--				  struct sta_info *sta)
-+	/*
-+	 * Average failed frames percentage error (i.e. actual vs. target
-+	 * percentage), scaled by RATE_CONTROL_SMOOTHING. This value is a
-+	 * smoothed by using a exponentail weighted average technique:
-+	 *
-+	 *           (SMOOTHING - 1) * err_avg_old + err
-+	 * err_avg = -----------------------------------
-+	 *                       SMOOTHING
-+	 *
-+	 * where err_avg is the new approximation, err_avg_old the previous one
-+	 * and err is the error w.r.t. to the current failed frames percentage
-+	 * sample. Note that the bigger SMOOTHING the more weight is given to
-+	 * the previous estimate, resulting in smoother behavior (i.e.
-+	 * corresponding to a longer integration window).
-+	 *
-+	 * For computation, we actually don't use the above formula, but this
-+	 * one:
-+	 *
-+	 * err_avg_scaled = err_avg_old_scaled - err_avg_old + err
-+	 *
-+	 * where:
-+	 * 	err_avg_scaled = err * SMOOTHING
-+	 * 	err_avg_old_scaled = err_avg_old * SMOOTHING
-+	 *
-+	 * This avoids floating point numbers and the per_failed_old value can
-+	 * easily be obtained by shifting per_failed_old_scaled right by
-+	 * RATE_CONTROL_SMOOTHING_SHIFT.
-+	 */
-+	s32 err_avg_sc;
-+
-+	/* Last framed failes percentage sample */
-+	u32 last_pf;
-+
-+	unsigned long avg_rate_update;
-+	u32 tx_avg_rate_sum;
-+	u32 tx_avg_rate_num;
-+
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	struct dentry *tx_avg_rate_sum_dentry;
-+	struct dentry *tx_avg_rate_num_dentry;
-+#endif
-+};
-+
-+
-+static void rate_control_adjust_rate(struct ieee80211_local *local,
-+				     struct sta_info *sta, int adj)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hw_mode *mode;
--	int i = sta->txrate;
-+	int newidx = sta->txrate + adj;
-+	int maxrate;
-+	int back = (adj > 0) ? 1 : -1;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
- 	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1) {
-@@ -74,20 +149,29 @@ static void rate_control_rate_dec(struct ieee80211_local *local,
- 	}
- 
- 	mode = local->oper_hw_mode;
--	if (i > mode->num_rates)
--		i = mode->num_rates;
-+	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
-+
-+	if (newidx < 0)
-+		newidx = 0;
-+	else if (newidx >= mode->num_rates)
-+		newidx = mode->num_rates - 1;
-+
-+	while (newidx != sta->txrate) {
-+		if (sta->supp_rates & BIT(newidx) &&
-+		    mode->rates[newidx].flags & IEEE80211_RATE_SUPPORTED &&
-+		    (maxrate < 0 || newidx <= maxrate)) {
-+			sta->txrate = newidx;
-+
-+			printk(KERN_DEBUG "rate_control: new tx rate %d\n",
-+			       mode->rates[newidx].rate);
- 
--	while (i > 0) {
--		i--;
--		if (sta->supp_rates & BIT(i) &&
--		    mode->rates[i].flags & IEEE80211_RATE_SUPPORTED) {
--			sta->txrate = i;
- 			break;
- 		}
-+
-+		newidx += back;
- 	}
+---
+ fs/debugfs/file.c       |  166 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/libfs.c              |    4 -
+ include/linux/debugfs.h |   30 ++++++++
+ 3 files changed, 197 insertions(+), 3 deletions(-)
+
+Index: wireless-2.6/fs/debugfs/file.c
+===================================================================
+--- wireless-2.6.orig/fs/debugfs/file.c
++++ wireless-2.6/fs/debugfs/file.c
+@@ -221,6 +221,172 @@ struct dentry *debugfs_create_u64(const
  }
- 
--
- static struct ieee80211_rate *
- rate_control_lowest_rate(struct ieee80211_local *local,
- 			 struct ieee80211_hw_mode *mode)
-@@ -111,22 +195,6 @@ struct global_rate_control {
- 	int dummy;
- };
- 
--struct sta_rate_control {
--	unsigned long last_rate_change;
--	u32 tx_num_failures;
--	u32 tx_num_xmit;
--
--	unsigned long avg_rate_update;
--	u32 tx_avg_rate_sum;
--	u32 tx_avg_rate_num;
--
--#ifdef CONFIG_MAC80211_DEBUGFS
--	struct dentry *tx_avg_rate_sum_dentry;
--	struct dentry *tx_avg_rate_num_dentry;
--#endif
--};
--
--
- static void rate_control_simple_tx_status(void *priv, struct net_device *dev,
- 					  struct sk_buff *skb,
- 					  struct ieee80211_tx_status *status)
-@@ -143,8 +211,20 @@ static void rate_control_simple_tx_status(void *priv, struct net_device *dev,
- 
- 	srctrl = sta->rate_ctrl_priv;
- 	srctrl->tx_num_xmit++;
-+
-+	/* We count frames that totally failed to be transmitted as two bad
-+	 * frames, those that made it out but had some retries as one good and
-+	 * one bad frame.
-+	 */
-+	if (status->excessive_retries) {
-+		srctrl->tx_num_failed += 2;
-+		srctrl->tx_num_xmit++;
-+	} else if (status->retry_count) {
-+		srctrl->tx_num_failed++;
-+		srctrl->tx_num_xmit++;
-+	}
-+
- 	if (status->excessive_retries) {
--		srctrl->tx_num_failures++;
- 		sta->tx_retry_failed++;
- 		sta->tx_num_consecutive_failures++;
- 		sta->tx_num_mpdu_fail++;
-@@ -158,40 +238,59 @@ static void rate_control_simple_tx_status(void *priv, struct net_device *dev,
- 	sta->tx_retry_count += status->retry_count;
- 	sta->tx_num_mpdu_fail += status->retry_count;
- 
--	if (time_after(jiffies,
--		       srctrl->last_rate_change + RATE_CONTROL_INTERVAL) &&
--		srctrl->tx_num_xmit > RATE_CONTROL_MIN_TX) {
--		u32 per_failed;
--		srctrl->last_rate_change = jiffies;
--
--		per_failed = (100 * sta->tx_num_mpdu_fail) /
--			(sta->tx_num_mpdu_fail + sta->tx_num_mpdu_ok);
--		/* TODO: calculate average per_failed to make adjusting
--		 * parameters easier */
--#if 0
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "MPDU fail=%d ok=%d per_failed=%d\n",
--			       sta->tx_num_mpdu_fail, sta->tx_num_mpdu_ok,
--			       per_failed);
--		}
--#endif
--
--		/*
--		 * XXX: Make these configurable once we have an
--		 * interface to the rate control algorithms
-+	/*
-+	 * Update PID controller state.
-+	 */
-+	if (time_after(jiffies, srctrl->last_sample + RATE_CONTROL_INTERVAL)) {
-+		u32 pf;
-+		s32 err_avg;
-+		s32 err_prop;
-+		s32 err_int;
-+		s32 err_der;
-+		int adj;
-+
-+		srctrl->last_sample = jiffies;
-+
-+		/* If no frames were transmitted, we assume the old sample is
-+		 * still a good measurement and copy it.
- 		 */
--		if (per_failed > RATE_CONTROL_NUM_DOWN) {
--			rate_control_rate_dec(local, sta);
--		} else if (per_failed < RATE_CONTROL_NUM_UP) {
--			rate_control_rate_inc(local, sta);
-+		if (srctrl->tx_num_xmit == 0)
-+			pf = srctrl->last_pf;
-+		else {
-+			pf = srctrl->tx_num_failed * 100 / srctrl->tx_num_xmit;
-+			pf <<= RATE_CONTROL_ARITH_SHIFT;
-+
-+			srctrl->tx_num_xmit = 0;
-+			srctrl->tx_num_failed = 0;
- 		}
--		srctrl->tx_avg_rate_sum += status->control.rate->rate;
--		srctrl->tx_avg_rate_num++;
--		srctrl->tx_num_failures = 0;
--		srctrl->tx_num_xmit = 0;
--	} else if (sta->tx_num_consecutive_failures >=
--		   RATE_CONTROL_EMERG_DEC) {
--		rate_control_rate_dec(local, sta);
-+
-+		/* Compute the proportional, integral and derivative errors. */
-+		err_prop = RATE_CONTROL_TARGET_PF - pf;
-+
-+		err_avg = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
-+		srctrl->err_avg_sc = srctrl->err_avg_sc - err_avg + err_prop;
-+		err_int = srctrl->err_avg_sc >> RATE_CONTROL_SMOOTHING_SHIFT;
-+
-+		err_der = pf - srctrl->last_pf;
-+		srctrl->last_pf = pf;
-+
-+		/* Compute the controller output. */
-+		adj = (err_prop * RATE_CONTROL_COEFF_P
-+		      + err_int * RATE_CONTROL_COEFF_I
-+		      + err_der * RATE_CONTROL_COEFF_D)
-+			>> (2 * RATE_CONTROL_ARITH_SHIFT);
-+
-+		printk(KERN_DEBUG "rate_control: sample %d "
-+		       "err_prop %d err_int %d err_der %d adj %d\n",
-+		       pf >> RATE_CONTROL_ARITH_SHIFT,
-+		       err_prop >> RATE_CONTROL_ARITH_SHIFT,
-+		       err_int >> RATE_CONTROL_ARITH_SHIFT,
-+		       err_der >> RATE_CONTROL_ARITH_SHIFT,
-+		       adj);
-+
-+		/* Change rate. */
-+		if (adj)
-+			rate_control_adjust_rate(local, sta, adj);
- 	}
- 
- 	if (srctrl->avg_rate_update + 60 * HZ < jiffies) {
--- 
-1.5.3.4
+ EXPORT_SYMBOL_GPL(debugfs_create_u64);
 
++
++static void debugfs_s8_set(void *data, u64 val)
++{
++	*(s8 *)data = val;
++}
++static u64 debugfs_s8_get(void *data)
++{
++	return *(s8 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s8, debugfs_s8_get, debugfs_s8_set, "%lld\n");
++
++/**
++ * debugfs_create_s8 - create a debugfs file that is used to read and write a signed 8-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++				 struct dentry *parent, s8 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s8);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s8);
++
++static void debugfs_s16_set(void *data, u64 val)
++{
++	*(s16 *)data = val;
++}
++static u64 debugfs_s16_get(void *data)
++{
++	return *(s16 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s16, debugfs_s16_get, debugfs_s16_set, "%lld\n");
++
++/**
++ * debugfs_create_s16 - create a debugfs file that is used to read and write a signed 16-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++				  struct dentry *parent, s16 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s16);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s16);
++
++static void debugfs_s32_set(void *data, u64 val)
++{
++	*(s32 *)data = val;
++}
++static u64 debugfs_s32_get(void *data)
++{
++	return *(s32 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s32, debugfs_s32_get, debugfs_s32_set, "%lld\n");
++
++/**
++ * debugfs_create_s32 - create a debugfs file that is used to read and write a signed 32-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++				 struct dentry *parent, s32 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s32);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s32);
++
++static void debugfs_s64_set(void *data, u64 val)
++{
++	*(s64 *)data = val;
++}
++
++static u64 debugfs_s64_get(void *data)
++{
++	return *(s64 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s64, debugfs_s64_get, debugfs_s64_set, "%lld\n");
++
++/**
++ * debugfs_create_s64 - create a debugfs file that is used to read and write a signed 64-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++				 struct dentry *parent, u64 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s64);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s64);
++
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x8, debugfs_u8_get, debugfs_u8_set, "0x%02llx\n");
+
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x16, debugfs_u16_get, debugfs_u16_set, "0x%04llx\n");
+
+Index: wireless-2.6/fs/libfs.c
+===================================================================
+--- wireless-2.6.orig/fs/libfs.c
++++ wireless-2.6/fs/libfs.c
+@@ -586,7 +586,7 @@ int simple_transaction_release(struct in
+ /* Simple attribute files */
+
+ struct simple_attr {
+-	u64 (*get)(void *);
++	unsigned long long (*get)(void *);
+ 	void (*set)(void *, u64);
+ 	char get_buf[24];	/* enough to store a u64 and "\n\0" */
+ 	char set_buf[24];
+@@ -643,7 +643,7 @@ ssize_t simple_attr_read(struct file *fi
+ 	else	  /* first read */
+ 		size = scnprintf(attr->get_buf, sizeof(attr->get_buf),
+ 				 attr->fmt,
+-				 (unsigned long long)attr->get(attr->data));
++				 attr->get(attr->data));
+
+ 	ret = simple_read_from_buffer(buf, len, ppos, attr->get_buf, size);
+ 	mutex_unlock(&attr->mutex);
+Index: wireless-2.6/include/linux/debugfs.h
+===================================================================
+--- wireless-2.6.orig/include/linux/debugfs.h
++++ wireless-2.6/include/linux/debugfs.h
+@@ -65,7 +65,7 @@ struct dentry *debugfs_create_blob(const
+
+ #include <linux/err.h>
+
+-/*
++/*
+  * We do not return NULL from these functions if CONFIG_DEBUG_FS is not enabled
+  * so users have a chance to detect if there was a real error or not.  We don't
+  * want to duplicate the design decision mistakes of procfs and devfs again.
+@@ -128,6 +128,34 @@ static inline struct dentry *debugfs_cre
+ 	return ERR_PTR(-ENODEV);
+ }
+
++static inline struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       u8 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s16 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s32 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s64 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
+ static inline struct dentry *debugfs_create_x8(const char *name, mode_t mode,
+ 					       struct dentry *parent,
+ 					       u8 *value)
+
+-- 
+Ciao
+Stefano
