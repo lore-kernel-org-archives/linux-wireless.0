@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW2.Sony.CO.JP ([137.153.0.14]:57759 "EHLO mgw2.sony.co.jp"
+Received: from mga01.intel.com ([192.55.52.88]:59443 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbXL0Itu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2007 03:49:50 -0500
-Date: Thu, 27 Dec 2007 17:51:49 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: David Miller <davem@davemloft.net>
-Subject: Re: : Emit event stream compat iw_point objects correctly.
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20071221.205808.213484078.davem@davemloft.net>
-References: <20071221.205808.213484078.davem@davemloft.net>
-Message-Id: <20071227173802.6F56.40F06B3A@sm.sony.co.jp> (sfid-20071227_085053_950285_3A59DA27)
+	id S1750920AbXLSQ3z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 11:29:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
+Date: Wed, 19 Dec 2007 18:29:37 +0200
+Message-ID: <C07C4589BE74A34981C3C3525EE1F8010308C398@hasmsx412.ger.corp.intel.com> (sfid-20071219_163000_905159_C2A2EC80)
+In-Reply-To: <1198079220.4747.10.camel@johannes.berg>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070782762-git-send-email-ron.rindjunsky@intel.com> <1197915515.4885.86.camel@johannes.berg> <c85cb4470712180544m682a93b1v9a7a34d2148a770b@mail.gmail.com> (sfid-20071218_134457_890406_A2932F58) <1197986248.4885.149.camel@johannes.berg> <1879838866982C46A9CB3D56BA49ADEB0431391B@hasmsx411.ger.corp.intel.com> <1198079220.4747.10.camel@johannes.berg>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<flamingice@sourmilk.net>, "Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi
 
-On Fri, 21 Dec 2007 20:58:08 -0800 (PST)
-David Miller <davem@davemloft.net> wrote:
 
-> @@ -520,7 +530,7 @@ iwe_stream_add_point(char *	stream,		/* Stream of events */
->  		memcpy(stream + IW_EV_LCP_LEN,
->  		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
->  		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+>-----Original Message-----
+>From: Johannes Berg [mailto:johannes@sipsolutions.net]
+>Sent: Wednesday, December 19, 2007 5:47 PM
+>To: Rindjunsky, Ron
+>Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org;
+>flamingice@sourmilk.net; Winkler, Tomas; Zhu, Yi
+>Subject: RE: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation
+>reordering
+>
+>
+>> > I'm just not sure why you'd want to. As far as I can the frames
+>> already
+>> > passed __ieee80211_rx(), no? Maybe only as part of the aggregation?
+>>
+>> No, not passed it yet, they are still queued for reordering, but as
+>> aggregation is being tear down I am expected to drop the frames
+>> that are still not in order.
+>
+>But haven't they passed through __ieee80211_rx() as the aggregate
+frame?
 
-As the alignment of 64bit platforms may be defferent from 32bit one,
-should it be like the following?
+AMsDU aggregation is different from AMpDU aggregation. For AMPDU the
+disaggregating is happening let say in PHY level. First one is many
+packets in packed into one. Second one is packets in a row without ACK
+between them. (You answer with Block Ack to them). They appear as
+regular frames to mac80211 but they are not in order. Only ordered
+sequence might be passed to the network stack. So we might drop the
+frames are result of non order.
+So what Ron was concerning about is whether we it's not waste of time to
+pass packets through rx handler before we know the sequence is
+completed.
 
-static inline char *
-iwe_stream_add_point(char *	stream,		/* Stream of events */
-		     char *	ends,		/* End of stream */
-		     struct iw_event *iwe,	/* Payload length + flags */
-		     char *	extra,		/* More payload */
-		     struct iw_request_info *info)
-{
-	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
-	int	point_len = IW_EV_POINT_LEN;
-	int	lcp_len = IW_EV_LCP_LEN;
+Tomas
+>johannes
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-#ifdef CONFIG_COMPAT
-	if (info->flags & IW_REQUEST_FLAG_COMPAT) {
-		event_len = IW_EV_COMPAT_POINT_LEN + iwe->u.data.length;
-		point_len = IW_EV_COMPAT_POINT_LEN;
-		lcp_len = IW_EV_COMPAT_LCP_LEN;
-	}
-#endif
-
-	/* Check if it's possible */
-	if(likely((stream + event_len) < ends)) {
-		iwe->len = event_len;
-		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
-		memcpy(stream + lcp_len,
-		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
-		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
-		memcpy(stream + point_len, extra, iwe->u.data.length);
-		stream += event_len;
-	}
-	return stream;
-}
-
-(Note that IW_EV_COMPAT_LCP_LEN is just a example; not defined anywhere)
-
--- 
-Masakazu MOKUNO
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
