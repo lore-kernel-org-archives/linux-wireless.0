@@ -1,134 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32093 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:51450 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752356AbXLCLpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:45:12 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 20/34] iwlwifi: document temperature calculation
-Date: Mon,  3 Dec 2007 13:43:32 +0200
-Message-Id: <11966822314158-git-send-email-tomas.winkler@intel.com> (sfid-20071203_120558_257561_614D494A)
-In-Reply-To: <11966822311588-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
- <11966822301152-git-send-email-tomas.winkler@intel.com>
- <11966822302864-git-send-email-tomas.winkler@intel.com>
- <1196682230902-git-send-email-tomas.winkler@intel.com>
- <11966822302932-git-send-email-tomas.winkler@intel.com>
- <11966822302681-git-send-email-tomas.winkler@intel.com>
- <11966822301936-git-send-email-tomas.winkler@intel.com>
- <11966822302007-git-send-email-tomas.winkler@intel.com>
- <1196682230754-git-send-email-tomas.winkler@intel.com>
- <1196682231211-git-send-email-tomas.winkler@intel.com>
- <11966822313647-git-send-email-tomas.winkler@intel.com>
- <11966822312049-git-send-email-tomas.winkler@intel.com>
- <11966822311588-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751205AbXLSGIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 01:08:44 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH wireless-2.6] iwlwifi: fix possible priv->mutex deadlock during suspend
+Date: Wed, 19 Dec 2007 14:03:55 +0800
+Message-Id: <1198044235-23889-1-git-send-email-yi.zhu@intel.com> (sfid-20071219_060853_540476_55C23F85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+This patch moves _cancel_deferred_work out of mutex protection and removes
+unnecessary mutex in pci_suspend and pci_resume.
 
-Document temperature calculation
-
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |   57 ++++++++++++++++++++++-----
- 1 files changed, 46 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 +++++-------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   18 +++++-------------
+ 2 files changed, 10 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 439ef64..412becf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -645,21 +645,43 @@ static inline int iwl4965_hw_valid_rtc_data_addr(u32 addr)
- 	       (addr < KDR_RTC_DATA_UPPER_BOUND);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 88cf035..f0303e8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6355,8 +6355,6 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+ 
+-	iwl3945_cancel_deferred_work(priv);
+-
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+@@ -6431,6 +6429,8 @@ static void iwl3945_down(struct iwl3945_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	__iwl3945_down(priv);
+ 	mutex_unlock(&priv->mutex);
++
++	iwl3945_cancel_deferred_work(priv);
  }
  
--/********************* START TXPOWER *****************************************/
+ #define MAX_HW_RESTARTS 5
+@@ -8739,10 +8739,9 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
+-	mutex_lock(&priv->mutex);
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+-	__iwl3945_down(priv);
+-	mutex_unlock(&priv->mutex);
++
++	iwl3945_down(priv);
+ 
+ 	/* Free MAC hash list for ADHOC */
+ 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+@@ -8801,12 +8800,10 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
+ 
+-	mutex_lock(&priv->mutex);
 -
--enum {
--	CALIB_CH_GROUP_1 = 0,
--	CALIB_CH_GROUP_2 = 1,
--	CALIB_CH_GROUP_3 = 2,
--	CALIB_CH_GROUP_4 = 3,
--	CALIB_CH_GROUP_5 = 4,
--	CALIB_CH_GROUP_MAX
--};
-+/********************* START TEMPERATURE *************************************/
+ 	set_bit(STATUS_IN_SUSPEND, &priv->status);
  
--/* Temperature calibration offset is 3% 0C in Kelvin */
-+/*
-+ * 4965 temperature calculation.
-+ *
-+ * The driver must calculate the device temperature before calculating
-+ * a txpower setting (amplifier gain is temperature dependent).  The
-+ * calculation uses 4 measurements, 3 of which (R1, R2, R3) are calibration
-+ * values used for the life of the driver, and one of which (R4) is the
-+ * real-time temperature indicator.
-+ *
-+ * uCode provides all 4 values to the driver via the "initialize alive"
-+ * notification (see struct iwl4965_init_alive_resp).  After the runtime uCode
-+ * image loads, uCode updates the R4 value via statistics notifications
-+ * (see STATISTICS_NOTIFICATION), which occur after each received beacon
-+ * when associated, or can be requested via REPLY_STATISTICS_CMD.
-+ *
-+ * NOTE:  uCode provides the R4 value as a 23-bit signed value.  Driver
-+ *        must sign-extend to 32 bits before applying formula below.
-+ *
-+ * Formula:
-+ *
-+ * degrees Kelvin = ((97 * 259 * (R4 - R2) / (R3 - R1)) / 100) + 8
-+ *
-+ * NOTE:  The basic formula is 259 * (R4-R2) / (R3-R1).  The 97/100 is
-+ * an additional correction, which should be centered around 0 degrees
-+ * Celsius (273 degrees Kelvin).  The 8 (3 percent of 273) compensates for
-+ * centering the 97/100 correction around 0 degrees K.
-+ *
-+ * Add 273 to Kelvin value to find degrees Celsius, for comparing current
-+ * temperature with factory-measured temperatures when calculating txpower
-+ * settings.
-+ */
- #define TEMPERATURE_CALIB_KELVIN_OFFSET 8
- #define TEMPERATURE_CALIB_A_VAL 259
+ 	/* Take down the device; powers it off, etc. */
+-	__iwl3945_down(priv);
++	iwl3945_down(priv);
  
-+/* Limit range of calculated temperature to be between these Kelvin values */
- #define IWL_TX_POWER_TEMPERATURE_MIN  (263)
- #define IWL_TX_POWER_TEMPERATURE_MAX  (410)
+ 	if (priv->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
+@@ -8815,8 +8812,6 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
  
-@@ -667,6 +689,19 @@ enum {
- 	(((t) < IWL_TX_POWER_TEMPERATURE_MIN) || \
- 	 ((t) > IWL_TX_POWER_TEMPERATURE_MAX))
+-	mutex_unlock(&priv->mutex);
+-
+ 	return 0;
+ }
  
-+/********************* END TEMPERATURE ***************************************/
+@@ -8874,8 +8869,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 
+ 	printk(KERN_INFO "Coming out of suspend...\n");
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	err = pci_enable_device(pdev);
+ 	pci_restore_state(pdev);
+@@ -8889,7 +8882,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x41, 0x00);
+ 
+ 	iwl3945_resume(priv);
+-	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index df6f3b1..87cc281 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6767,8 +6767,6 @@ static void __iwl4965_down(struct iwl4965_priv *priv)
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+ 
+-	iwl4965_cancel_deferred_work(priv);
+-
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+@@ -6844,6 +6842,8 @@ static void iwl4965_down(struct iwl4965_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	__iwl4965_down(priv);
+ 	mutex_unlock(&priv->mutex);
 +
-+/********************* START TXPOWER *****************************************/
-+
-+enum {
-+	CALIB_CH_GROUP_1 = 0,
-+	CALIB_CH_GROUP_2 = 1,
-+	CALIB_CH_GROUP_3 = 2,
-+	CALIB_CH_GROUP_4 = 3,
-+	CALIB_CH_GROUP_5 = 4,
-+	CALIB_CH_GROUP_MAX
-+};
-+
- #define IWL_TX_POWER_MIMO_REGULATORY_COMPENSATION (6)
++	iwl4965_cancel_deferred_work(priv);
+ }
  
- #define IWL_TX_POWER_TARGET_POWER_MIN       (0)	/* 0 dBm = 1 milliwatt */
+ #define MAX_HW_RESTARTS 5
+@@ -9308,10 +9308,9 @@ static void iwl4965_pci_remove(struct pci_dev *pdev)
+ 
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
+-	mutex_lock(&priv->mutex);
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+-	__iwl4965_down(priv);
+-	mutex_unlock(&priv->mutex);
++
++	iwl4965_down(priv);
+ 
+ 	/* Free MAC hash list for ADHOC */
+ 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+@@ -9370,12 +9369,10 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct iwl4965_priv *priv = pci_get_drvdata(pdev);
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	set_bit(STATUS_IN_SUSPEND, &priv->status);
+ 
+ 	/* Take down the device; powers it off, etc. */
+-	__iwl4965_down(priv);
++	iwl4965_down(priv);
+ 
+ 	if (priv->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
+@@ -9384,8 +9381,6 @@ static int iwl4965_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+-	mutex_unlock(&priv->mutex);
+-
+ 	return 0;
+ }
+ 
+@@ -9443,8 +9438,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
+ 
+ 	printk(KERN_INFO "Coming out of suspend...\n");
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	err = pci_enable_device(pdev);
+ 	pci_restore_state(pdev);
+@@ -9458,7 +9451,6 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x41, 0x00);
+ 
+ 	iwl4965_resume(priv);
+-	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
 -- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+1.5.3.6
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
