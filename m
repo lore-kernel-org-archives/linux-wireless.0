@@ -1,49 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:24236 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbXLIICh (ORCPT
+Received: from pmac.infradead.org ([90.155.92.200]:40755 "EHLO
+	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbXLSQJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2007 03:02:37 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2567939wah
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Dec 2007 00:02:37 -0800 (PST)
-Message-ID: <5b9417770712090002p6c53a1b8i49259945e4389588@mail.gmail.com> (sfid-20071209_080239_894960_94243526)
-Date: Sun, 9 Dec 2007 02:02:37 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: b43 continues to have issue with APs at times
-Cc: bcm43xx-dev@lists.berlios.de, "Michael Buesch" <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org,
-	"Larry Finger" <larry.finger@lwfinger.net>
-In-Reply-To: <200712082209.57069.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
-	 <200712082135.11685.mb@bu3sch.de> <200712082209.57069.rjw@sisk.pl>
+	Wed, 19 Dec 2007 11:09:50 -0500
+Subject: [PATCH 125/48] libertas: make lbs_submit_command always 'succeed' and set command timer
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J50v4-00021G-3M@pmac.infradead.org> (sfid-20071219_160953_269702_4F7C5D91)
+Date: Wed, 19 Dec 2007 15:33:14 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-yes.  not until i reboot the AP, and this is with two different APs,
-does it resolve.
+Date: Mon, 17 Dec 2007 16:03:58 -0500
 
-My other problem, at least with this AP, is that although it is a G
-device, i cannot get 54mb/s speed or anything close, with iwconfig
-generally reporting 1mb/s.
+Even if it fails, we want to wait a while and try again, with an
+ultimate timeout if it the condition persists. So again, just use the
+standard command timeout behaviour.
 
-In other words, I cannot use mythtv over a network which I was able to
-do with ndiswrapper.
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.c |   42 ++++++++++++++++------------------
+ 1 files changed, 20 insertions(+), 22 deletions(-)
 
-On Dec 8, 2007 3:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Saturday, 8 of December 2007, Michael Buesch wrote:
-> > On Saturday 08 December 2007 21:22:37 John H. wrote:
-> > > I have this problem at two different locations with two different
-> > > access points.  2.6.23.1 kernel, and sometimes until I actually power
-> > > down the AP and restart it, wpa_supplicant and such just times out on
-> > > the AP.
-> > >
-> > > Any ideas?
->
-> Have you tried to change the distance from the AP (like moving closer to it
-> when the wpa_supplicant is appearing to have problems)?
->
-> Rafael
->
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 10c60ba..0ae9851 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1199,14 +1199,15 @@ done:
+ 	lbs_deb_leave(LBS_DEB_HOST);
+ }
+ 
+-static int lbs_submit_command(struct lbs_private *priv,
+-			      struct cmd_ctrl_node *cmdnode)
++static void lbs_submit_command(struct lbs_private *priv,
++			       struct cmd_ctrl_node *cmdnode)
+ {
+ 	unsigned long flags;
+ 	struct cmd_header *cmd;
+-	int ret = -1;
+-	u16 cmdsize;
+-	u16 command;
++	uint16_t cmdsize;
++	uint16_t command;
++	int timeo = 5 * HZ;
++	int ret;
+ 
+ 	lbs_deb_enter(LBS_DEB_HOST);
+ 
+@@ -1220,33 +1221,30 @@ static int lbs_submit_command(struct lbs_private *priv,
+ 	cmdsize = le16_to_cpu(cmd->size);
+ 	command = le16_to_cpu(cmd->command);
+ 
++	/* These commands take longer */
++	if (command == CMD_802_11_SCAN || command == CMD_802_11_ASSOCIATE ||
++	    command == CMD_802_11_AUTHENTICATE)
++		timeo = 10 * HZ;
++
+ 	lbs_deb_host("DNLD_CMD: command 0x%04x, seq %d, size %d, jiffies %lu\n",
+ 		     command, le16_to_cpu(cmd->seqnum), cmdsize, jiffies);
+ 	lbs_deb_hex(LBS_DEB_HOST, "DNLD_CMD", (void *) cmdnode->cmdbuf, cmdsize);
+ 
+ 	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmd, cmdsize);
++
+ 	if (ret) {
+ 		lbs_pr_info("DNLD_CMD: hw_host_to_card failed: %d\n", ret);
+-		spin_lock_irqsave(&priv->driver_lock, flags);
+-		lbs_complete_command(priv, priv->cur_cmd, ret);
+-		spin_unlock_irqrestore(&priv->driver_lock, flags);
+-		goto done;
+-	}
+-
+-	lbs_deb_cmd("DNLD_CMD: sent command 0x%04x, jiffies %lu\n", command, jiffies);
++		/* Let the timer kick in and retry, and potentially reset
++		   the whole thing if the condition persists */
++		timeo = HZ;
++	} else
++		lbs_deb_cmd("DNLD_CMD: sent command 0x%04x, jiffies %lu\n",
++			    command, jiffies);
+ 
+ 	/* Setup the timer after transmit command */
+-	if (command == CMD_802_11_SCAN || command == CMD_802_11_AUTHENTICATE
+-	    || command == CMD_802_11_ASSOCIATE)
+-		mod_timer(&priv->command_timer, jiffies + (10*HZ));
+-	else
+-		mod_timer(&priv->command_timer, jiffies + (5*HZ));
+-
+-	ret = 0;
++	mod_timer(&priv->command_timer, jiffies + timeo);
+ 
+-done:
+-	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
+-	return ret;
++	lbs_deb_leave(LBS_DEB_HOST);
+ }
+ 
+ static int lbs_cmd_mac_control(struct lbs_private *priv,
+-- 
+1.5.3.4
+
