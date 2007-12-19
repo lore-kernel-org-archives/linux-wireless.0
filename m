@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pmac.infradead.org ([90.155.92.200]:40769 "EHLO
-	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbXLSQKQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40636 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414AbXLSPrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 11:10:16 -0500
-Subject: [PATCH 118/48] libertas: don't clear priv->dnld_sent after sending sleep confirm
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
+	Wed, 19 Dec 2007 10:47:48 -0500
+Message-Id: <20071219010328.762470000@sipsolutions.net> (sfid-20071219_155048_843434_EB2FD833)
+Date: Wed, 19 Dec 2007 02:03:28 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+Cc: Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-Message-Id: <E1J50tu-000208-0K@pmac.infradead.org> (sfid-20071219_161020_189646_340053D1)
-Date: Wed, 19 Dec 2007 15:32:02 +0000
+Subject: [PATCH 0/9] nl80211/cfg80211/mac80211 updates for AP mode
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Mon, 17 Dec 2007 12:35:28 -0500
+This is a repost of my previous patch series for some initial
+AP mode support. With this series and the eapol handling patches
+I just sent as well, there are only three ioctls required any   
+more: 802.1X port control, frame bridging and hw features.   
 
-DNLD_RES_RECEIVED is a bit of a misnomer -- we never wait for the result
-to be received; it's purely representing the state of the TX path, and
-in this case the TX path is definitely busy.
+I have for now removed the hw features ioctl from my tree so
+hostapd will not currently work, I need to work on getting code
+done to publish the hw features in nl80211 which would go on   
+top of my cfg80211 bitrate/frequency API.
 
-Of course, that means that we don't actually care about DATA_SENT vs.
-CMD_SENT either, but that's a can of worms for another day...
+In any case, this is the patch series as I think it should be
+merged for 2.6.25. In itself, it will not enable AP mode at all,
+in fact most of the new API will not even be usable without
+further patches, but I don't want to sit on it any longer. I'm   
+hopeful that I've ironed out most issues these patches had when
+I last posted them. 
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 2765b9c..10c60ba 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -2000,7 +2000,6 @@ static int sendconfirmsleep(struct lbs_private *priv, u8 *cmdptr, u16 size)
- 	lbs_deb_hex(LBS_DEB_HOST, "sleep confirm command", cmdptr, size);
- 
- 	ret = priv->hw_host_to_card(priv, MVMS_CMD, cmdptr, size);
--	priv->dnld_sent = DNLD_RES_RECEIVED;
- 
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	if (priv->intcounter || priv->currenttxskb)
--- 
-1.5.3.4
+johannes
 
