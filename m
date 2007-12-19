@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47439 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbXLQSIS (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:50222 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882AbXLSG6C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 13:08:18 -0500
-Subject: Re: [PATCH 2/8] mac80211: A-MPDU Rx add MLME structures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11979070782201-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782201-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mBCrLE+2kEcyJhMwfDXB"
-Date: Mon, 17 Dec 2007 19:08:13 +0100
-Message-Id: <1197914893.4885.76.camel@johannes.berg> (sfid-20071217_180820_861921_5EB27C36)
-Mime-Version: 1.0
+	Wed, 19 Dec 2007 01:58:02 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH] ipw2200: prevent alloc of unspecified size on stack
+Date: Tue, 18 Dec 2007 22:52:11 -0800
+Message-ID: <D936D925018D154694D8A362EEB08920033B497E@orsmsx416.amr.corp.intel.com> (sfid-20071219_065809_229090_4C64FCA0)
+In-Reply-To: <20071219063526.GH8181@ftp.linux.org.uk>
+References: <1198044062-25201-1-git-send-email-reinette.chatre@intel.com> <20071219063526.GH8181@ftp.linux.org.uk>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Al Viro" <viro@ftp.linux.org.uk>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>, <viro@zeniv.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday, December 18, 2007 10:35 PM, Al Viro  wrote:
 
---=-mBCrLE+2kEcyJhMwfDXB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Tue, Dec 18, 2007 at 10:01:02PM -0800, Reinette Chatre wrote:
+>> +	/* not using min() because of its strict type checking */
+>> +	log_size = sizeof(*log) * log_len < PAGE_SIZE ?
+> 
+> 		   PAGE_SIZE / sizeof(*log) > len ?
+> 
+> to be provably safe against wraparounds, if you really want to limit
+> that to PAGE_SIZE...
+
+To cover this I reset log_len after allocating the memory:
+
++	}
++	log_len = log_size / sizeof(*log);
+ 	ipw_capture_event_log(priv, log_len, log);
 
 
-> +	struct sta_ampdu_mlme ampdu_mlme;
-> +	int timer_to_tid[STA_TID_NUM];  /* convert timer id to tid */
+If we use the original length then we are ok and log_len is just what it
+was before. If we use PAGE_SIZE then log_len is reset to fit in the
+amount of memory we allocated (PAGE_SIZE).
 
-Since you only use that as an identity mapping it can well be a u8
-array. Not that I like the trick used, but I don't see any good way to
-avoid it either.
+Is this what you meant?
 
-johannes
-
---=-mBCrLE+2kEcyJhMwfDXB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2a7DKVg1VMiehFYAQKtDg/+PyrFlOzJCqb61wAQmsFd1PRXLFN6Lcu8
-cWIUXnQhge/iNTuoEu6QxcQb40HBecs1UxDfLsb3T0F4vt4tbWkv8YzXR85ATBHY
-w3Tx5BEFrf9xMyT3d0UzivBFB9SHpsM2bRpKD7Xw43ZHW1VxV747sUTVWGRDV5+M
-dDE04RL48AbUQ63qyH4bQR46QmKh53yIR1UBF9VPDCgbeLN1UP+ywYn9jzzcUoqG
-47lYBkYG3ufcR35mzAn4LCvbK1VlARCryttP5Ac5eNznNPOV4evHmP4ORbtZLmMg
-n/vXGHybrOqT/rhKFr7q90Z8kQ758PhUm042N5E/5wRu5AIY+6Owqe+NoCKCKPiK
-WToyfg+f3KTDA2TQavN0DCWjIIbKjSAzJOHdEKs++bhcQjtyhx7hQY6lRScZtI8Z
-2HFcl1nGQ59kb/3yi/6OwqxYFDbeilLAjMls9TL+SfuG/PCaIpfg36W6sMFDX7zi
-YEbL8hhlcjPCAf2O6wbxEyB0CcAjnryEz7wxd1X/fBdFtMVSDFyFEu93lOBR1/5z
-b7SvG3xUnWZ20DWHGcP4YEPvNkwehtv2lNJE0/vnzAbmaidpkOiUnDHW/RlUty/g
-lZ7jgKwUGZqFsgL0lMga2z/Gfg+Vt/imOztHTBFi4o/b6q/agIgvxlZtVb+/w0Dm
-0NqXQzSkjXg=
-=7Xqd
------END PGP SIGNATURE-----
-
---=-mBCrLE+2kEcyJhMwfDXB--
-
+Reinette
