@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.polimi.it ([131.175.12.3]:48042 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757282AbXLLJIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 04:08:38 -0500
-From: stefano.brivio@polimi.it
-Message-ID: <20071212100641.v2o9hosmwwgoo4gk@webmail.polimi.it> (sfid-20071212_090844_261978_0BE14C60)
-Date: Wed, 12 Dec 2007 10:06:41 +0100
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40657 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468AbXLSPsI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 10:48:08 -0500
+Message-Id: <20071219010343.497175000@sipsolutions.net> (sfid-20071219_154812_081105_D71FFC9A)
+References: <20071219010328.762470000@sipsolutions.net>
+Date: Wed, 19 Dec 2007 02:03:37 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFT] b43: Fix for broken transmission
-References: <200712111343.50943.mb@bu3sch.de>
-	<200712111622.54086.mb@bu3sch.de>
-In-Reply-To: <200712111622.54086.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Subject: [PATCH 9/9] mac80211: implement station stats retrieval
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Citando Michael Buesch <mb@bu3sch.de>:
+This implements the required cfg80211 callback in mac80211
+to allow userspace to get station statistics.
 
-> On Tuesday 11 December 2007 13:43:50 Michael Buesch wrote:
->> This patch fixes the transmission problems introduced by
->> commit f04b3787bbce4567e28069a9ec97dcd804626ac7
->>
->> It depends on
->> [PATCH] b43: Fix ofdmtab write regression
->>
->> I'm not sure if the dummy read is really required.
->> The old code does it. I think it can't hurt and can possibly
->> fix some write posting problems (hardware bugs or whatever. Who knows).
->>
->> Please test this.
->>
->> NOT-signed-off-by: Michael Buesch <mb@bu3sch.de>
->
-> Here's an updated version that should fix even more bugs:
-> http://bu3sch.de/patches/wireless-2.6/20071211-1622/patches/005-b43-fix-init-rewrite-breakage.patch
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-It completely fixes my 4309. Thank you for fixing my obnoxious  
-regression. John, I think that this should go into the tree as soon as  
-possible (well, as soon as Michael sign it off).
+--- everything.orig/net/mac80211/cfg.c	2007-12-19 00:50:23.043022894 +0100
++++ everything/net/mac80211/cfg.c	2007-12-19 00:50:26.723022188 +0100
+@@ -611,6 +611,31 @@ static int ieee80211_change_station(stru
+ 	return 0;
+ }
+ 
++static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
++				 u8 *mac, struct station_stats *stats)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++
++	sta = sta_info_get(local, mac);
++	if (!sta)
++		return -ENOENT;
++
++	/* XXX: verify sta->dev == dev */
++
++	stats->filled = STATION_STAT_INACTIVE_TIME |
++			STATION_STAT_RX_BYTES |
++			STATION_STAT_TX_BYTES;
++
++	stats->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
++	stats->rx_bytes = sta->rx_bytes;
++	stats->tx_bytes = sta->tx_bytes;
++
++	sta_info_put(sta);
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -625,4 +650,5 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.add_station = ieee80211_add_station,
+ 	.del_station = ieee80211_del_station,
+ 	.change_station = ieee80211_change_station,
++	.get_station = ieee80211_get_station,
+ };
 
-
---
-Ciao
-Stefano
-
-
+-- 
 
