@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56938 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762791AbXLMG7c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:59:32 -0500
-Subject: [PATCH 69/48] libertas: fix case of FWT_ACCESS_LIST_ROUTE and FWT_ACCESS_LIST_NEIGHBOR commands
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i2r-0005sZ-BD@shinybook.infradead.org> (sfid-20071213_070632_721547_B2F794E9)
-Date: Thu, 13 Dec 2007 01:59:45 -0500
+Received: from mfe1.polimi.it ([131.175.12.23]:53216 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754708AbXLSAqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:46:35 -0500
+Date: Wed, 19 Dec 2007 01:43:33 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: [PATCH] rt2x00: remove unused variable
+Message-ID: <20071219014333.17c66bd1@morte> (sfid-20071219_004639_629712_6D4B418B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Tue, 11 Dec 2007 15:29:10 -0500
+Remove an unused variable. Note that the pipe obtained there isn't used as
+well.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- drivers/net/wireless/libertas/host.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index b23af19..cc5f9bf 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -247,8 +247,8 @@ enum cmd_fwt_access_opts {
- 	CMD_ACT_FWT_ACCESS_DEL,
- 	CMD_ACT_FWT_ACCESS_LOOKUP,
- 	CMD_ACT_FWT_ACCESS_LIST,
--	CMD_ACT_FWT_ACCESS_LIST_route,
--	CMD_ACT_FWT_ACCESS_LIST_neighbor,
-+	CMD_ACT_FWT_ACCESS_LIST_ROUTE,
-+	CMD_ACT_FWT_ACCESS_LIST_NEIGHBOR,
- 	CMD_ACT_FWT_ACCESS_RESET,
- 	CMD_ACT_FWT_ACCESS_CLEANUP,
- 	CMD_ACT_FWT_ACCESS_TIME,
--- 
-1.5.3.4
-
+Index: wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -176,7 +176,6 @@ int rt2x00usb_write_tx_data(struct rt2x0
+ 	struct usb_device *usb_dev =
+ 	    interface_to_usbdev(rt2x00dev_usb(rt2x00dev));
+ 	struct data_entry *entry = rt2x00_get_data_entry(ring);
+-	int pipe = usb_sndbulkpipe(usb_dev, 1);
+ 	struct skb_desc *desc;
+ 	u32 length;
+ 
+ 
+--
+Ciao
+Stefano
