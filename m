@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3883 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:2766 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758665AbXLQP6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 10:58:04 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 7/8] mac80211: A-MPDU Rx handling DELBA requests
-Date: Mon, 17 Dec 2007 17:57:48 +0200
-Message-Id: <11979070791111-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_155808_430342_1644CE29)
-In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+	id S1752277AbXLSTUn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2007 14:20:43 -0500
+MIME-Version: 1.0
+Subject: RE: [PATCH 2/8] mac80211: A-MPDU Rx add MLME structures
+Date: Wed, 19 Dec 2007 20:59:59 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB04313CF8@hasmsx411.ger.corp.intel.com> (sfid-20071219_192047_327571_EBFD1FC6)
+In-Reply-To: <1198012693.4885.180.camel@johannes.berg>
+References: <11979070692599-git-send-email-ron.rindjunsky@intel.com> <11979070782201-git-send-email-ron.rindjunsky@intel.com> <1197914893.4885.76.camel@johannes.berg> <c85cb4470712180541l3427454ek94c66b14bb26cb4f@mail.gmail.com> (sfid-20071218_134145_320212_A4A350F5) <1198012693.4885.180.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<flamingice@sourmilk.net>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch opens the flow to DELBA management frames, and handles end
-of A-MPDU session produced by this event.
+> > > +     struct sta_ampdu_mlme ampdu_mlme;
+> > > +     int timer_to_tid[STA_TID_NUM];  /* convert timer id to tid
+*/
+> >
+> > Since you only use that as an identity mapping it can well be a u8
+> > array. Not that I like the trick used, but I don't see any good way
+to
+> > avoid it either.
+> >
+> 
+> yes... that was quite an irritating issue, had to use this kind of
+> mechanism here.
+> i will check changing type to u8 (need to exmine if it will cause any
+> addresses problems)
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 39 insertions(+), 1 deletions(-)
+> I just checked, it's an unsigned long and not an address so you can
+> really pass anything to it. Therefore, I think using a u8 array would
+be
+> appropriate.
 
-Index: wl2_6_24_rc3_Rx_Agg/net/mac80211/ieee80211_sta.c
-===================================================================
---- wl2_6_24_rc3_Rx_Agg.orig/net/mac80211/ieee80211_sta.c
-+++ wl2_6_24_rc3_Rx_Agg/net/mac80211/ieee80211_sta.c
-@@ -63,6 +63,8 @@
- #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
- #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
- #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
-+#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
-+#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
- 
- #define IEEE80211_MIN_AMPDU_BUF 0x8
- #define IEEE80211_MAX_AMPDU_BUF 0x40
-@@ -1274,6 +1276,36 @@ void ieee80211_sta_stop_rx_BA_session(st
- 	sta_info_put(sta);
- }
- 
-+static void ieee80211_sta_process_delba(struct net_device *dev,
-+			struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+	u16 tid, params;
-+	u16 initiator;
-+	DECLARE_MAC_BUF(mac);
-+
-+	sta = sta_info_get(local, mgmt->sa);
-+	if (!sta)
-+		return;
-+
-+	params = le16_to_cpu(mgmt->u.action.u.delba.params);
-+	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
-+	initiator = (params & IEEE80211_DELBA_PARAM_INITIATOR_MASK) >> 11;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	if (net_ratelimit())
-+		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
-+			print_mac(mac, mgmt->sa), tid,
-+			mgmt->u.action.u.delba.reason_code);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	if (initiator == WLAN_BACK_INITIATOR)
-+		ieee80211_sta_stop_rx_BA_session(dev, sta->addr, tid,
-+						 WLAN_BACK_INITIATOR, 0);
-+	sta_info_put(sta);
-+}
-+
- /*
-  * After receiving Block Ack Request (BAR) we activated a
-  * timer after each frame arrives from the originator.
-@@ -2234,9 +2266,15 @@ void ieee80211_rx_mgmt_action(struct net
- 				break;
- 			ieee80211_sta_process_addba_request(dev, mgmt, len);
- 			break;
-+		case WLAN_ACTION_DELBA:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.delba)))
-+				break;
-+			ieee80211_sta_process_delba(dev, mgmt, len);
-+			break;
- 		default:
- 			if (net_ratelimit())
--			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
-+			   printk(KERN_DEBUG "%s: Rx unknown A-MPDU action\n",
- 					dev->name);
- 			break;
- 		}
+Yes, I also checked and it seems ok.
+
+> johannes
 ---------------------------------------------------------------------
 Intel Israel (74) Limited
 
