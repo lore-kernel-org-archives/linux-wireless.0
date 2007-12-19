@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52144 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40602 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934233AbXLQAyi (ORCPT
+	with ESMTP id S1754821AbXLSPrW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 19:54:38 -0500
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
+	Wed, 19 Dec 2007 10:47:22 -0500
+Subject: [PATCH] iwl4965: fix bogus hardware scan configuration caching
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: mattias.nissler@gmx.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071217015004.2400ab33@morte>
-References: <20071217001956.640555983@gmx.de>
-	 <20071217002056.351743954@gmx.de> <1197852547.4885.1.camel@johannes.berg>
-	 <20071217015004.2400ab33@morte>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hC4d6vV9wCXxjh5wLEeg"
-Date: Mon, 17 Dec 2007 01:54:33 +0100
-Message-Id: <1197852873.4885.2.camel@johannes.berg> (sfid-20071217_005454_438239_76F0D477)
+To: John Linville <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 19 Dec 2007 01:30:23 +0100
+Message-Id: <1198024224.4885.188.camel@johannes.berg> (sfid-20071219_154729_785972_17734D5B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When iwl4965 is scanning, it needs to cache any configuration requests.
+This was implemented but the implementation is buggy: it uses only
+the *first* configuration rather than the *last* that is requested
+during scanning. This patch fixes that and also removes a bogus
+comment related to the issue.
 
---=-hC4d6vV9wCXxjh5wLEeg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+This patch requires porting to iwl3965. For correctness, it
+needs to be applied to 2.6.24 although most likely nobody will
+ask to change channel twice during a single hardware scan. Duh!
 
+Warning: patch is not even compile tested yet because I currently have a
+broken tree. I don't see why it shouldn't work though.
 
-> > > +What:	rc80211-simple rate control algorithm for mac80211
-> > > +When:	2.6.26
-> > > +Files:	net/mac80211/rc80211-simple.c
-> > > +Why:	This algorithm was provided for reference but always exhibited =
-bad
-> > > +	responsiveness and performance and has some serious flaws. It has b=
-een
-> > > +	replaced by rc80211-pid.
-> > > +Who:	Stefano Brivio <stefano.brivio@polimi.it>
-> >=20
-> > I don't think we really want to do this. We can't even change the
-> > algorithm anyway except by recompiling with a different default.
->=20
-> What do you suggest instead?
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
-Just kick it out right away.
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-19 01:17:23.773023329 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2007-12-19 01:20:08.943020887 +0100
+@@ -7471,25 +7471,21 @@ static int iwl4965_mac_config(struct iee
+ 		goto out;
+ 	}
+ 
+-	/* TODO: Figure out how to get ieee80211_local->sta_scanning w/ only
+-	 * what is exposed through include/ declarations */
+ 	if (unlikely(!iwl4965_param_disable_hw_scan &&
+ 		     test_bit(STATUS_SCANNING, &priv->status))) {
++		/*
++		 * Cache the configuration now so that we can
++		 * replay it after the hardware scan is finished.
++		 */
+ 
+-		if (unlikely(priv->cache_conf))
+-			IWL_DEBUG_MAC80211("leave - still scanning\n");
+-		else {
+-			/* Cache the configuration now so that we can
+-			 * replay it after the hardware scan is finished. */
++		if (likely(!priv->cache_conf))
+ 			priv->cache_conf = kmalloc(sizeof(*conf), GFP_KERNEL);
+-			if (priv->cache_conf) {
+-				memcpy(priv->cache_conf, conf, sizeof(*conf));
+-				IWL_DEBUG_MAC80211("leave - scanning\n");
+-			} else {
+-				IWL_DEBUG_MAC80211("leave - no memory\n");
+-				ret = -ENOMEM;
+-			}
+-		}
++
++		if (likely(priv->cache_conf))
++			memcpy(priv->cache_conf, conf, sizeof(*conf));
++		else
++			ret = -ENOMEM;
++
+ 		mutex_unlock(&priv->mutex);
+ 		return ret;
+ 	}
 
-johannes
-
---=-hC4d6vV9wCXxjh5wLEeg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2XIyKVg1VMiehFYAQKQzRAAxYO1AhsA+PoRinUoVnGkZ+/JlUivpwFy
-OMXIk18/SOVK1qNs8TdFZpUrphfIbpy3yxaSHouBuBxn4TSw4G1K0oW+ST2sZIFt
-Lfw6S+2cxV9s7p0LXozs6HGQx8Boa8IubaiT5GpNuYaO0hkALbprJhQeCHl421qE
-+6x2Iye/L9hnVRUqX61dI7melVLuGjDwSVZjC+rY49e6ZaVgY/Ri2qthbvEDFmLb
-TNcW3GgG0OvOueBeshkgJRC+m2rVq2+cqqwi5WJ83/ZTzx8dO8PYFt7uD0i5Wlxc
-Wqu2o98XTVVcijJ/yZ85E7rGTGSTfeG0KUBy09aqQNUWFdhUnaIQmHF3VtOqsw1c
-qvg7cY3wTqdWv/vzHer2wFSO9M8QHkUa204X7QUsjkg3N46qCkZyNbtMvu3C5tpg
-I+tCcqtHVlaICDbw7lD5NOksjSmZur9rH1OBMdLlBUFholpQ5tYCYLvHrS8lB9ED
-p/iD4jTTYjZ4xBENLAsM0oADF92k5Ar/0pMIQss1BwF3ZykZqSPjOaEefg35Jziy
-Qx1WLh3bxf5F6JIYjNyFH3FfKGP4QZJtrurc6l//DBjFVrxznUv19/nZwTPBrIux
-61vaK7tcg7ttDi7kBAhZL9nRBjaIL4VRP0C/wQT/1GHwflT/Yi1uXoyDIUDA8LXl
-SHEuwufowu0=
-=T3DK
------END PGP SIGNATURE-----
-
---=-hC4d6vV9wCXxjh5wLEeg--
 
