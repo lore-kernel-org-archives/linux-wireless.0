@@ -1,26 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:9353 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176AbXLCIQU (ORCPT
+Received: from pmac.infradead.org ([90.155.92.200]:40757 "EHLO
+	pmac.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbXLSQJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 03:16:20 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/5] ath5k: more consistent debugging
-Date: Mon, 3 Dec 2007 09:16:29 +0100
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Bruno Randolf" <bruno@thinktube.com>, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com
-References: <1196389597-23559-1-git-send-email-bruno@thinktube.com> <1196389597-23559-3-git-send-email-bruno@thinktube.com> <40f31dec0711300852u23201dabse051efdc517b4136@mail.gmail.com>
-In-Reply-To: <40f31dec0711300852u23201dabse051efdc517b4136@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200712030916.29354.hs4233@mail.mn-solutions.de> (sfid-20071203_081628_115001_2A4BDEB3)
+	Wed, 19 Dec 2007 11:09:54 -0500
+Subject: [PATCH 132/48] libertas: change inference about buffer size in lbs_cmd()
+From: David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <libertas-12345@shinybook.infradead.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <E1J50vJ-000220-2G@pmac.infradead.org> (sfid-20071219_160956_799362_003F33D1)
+Date: Wed, 19 Dec 2007 15:33:29 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Date: Wed, 19 Dec 2007 13:03:19 +0000
 
-I don't think it is necessary to quote everything in such a 
-case ...
+sizeof(*cmd) is going to give the total size of the data structure that
+we allocated, more often than not. But the size of the command to be
+_sent_ could be a lot smaller, as it is in the KEY_MATERIAL and
+SUBSCRIBE_EVENT commands for example. So swap them round; let the caller
+set the _command_ size explicitly in the header, and infer the
+maximum response size from the data structure.
+
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+---
+ drivers/net/wireless/libertas/cmd.h |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 6efb81e..b9ab85c 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -6,13 +6,15 @@
+ #include "hostcmd.h"
+ #include "dev.h"
+ 
+-#define lbs_cmd(priv, cmdnr, cmd, cb, cb_arg)	\
+-	__lbs_cmd(priv, cmdnr, &(cmd)->hdr, sizeof(*(cmd)), cb, cb_arg)
++/* lbs_cmd() infers the size of the buffer to copy data back into, from
++   the size of the target of the pointer. Since the command to be sent 
++   may often be smaller, that size is set in cmd->size by the caller.*/
++#define lbs_cmd(priv, cmdnr, cmd, cb, cb_arg)	({		\
++	uint16_t __sz = le16_to_cpu((cmd)->hdr.size);		\
++	(cmd)->hdr.size = cpu_to_le16(sizeof(*(cmd)));		\
++	__lbs_cmd(priv, cmdnr, &(cmd)->hdr, __sz, cb, cb_arg);	\
++})
+ 
+-
+-/* lbs_cmd_with_response() infers the size of the command to be _sent_
+-   and requires that the caller sets cmd->size to the (LE) size of
+-   the _response_ buffer. */
+ #define lbs_cmd_with_response(priv, cmdnr, cmd)	\
+ 	lbs_cmd(priv, cmdnr, cmd, lbs_cmd_copyback, (unsigned long) (cmd))
+ 
+-- 
+1.5.3.4
+
