@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.riseup.net ([204.13.164.18]:47325 "EHLO mx1.riseup.net"
+Received: from mga11.intel.com ([192.55.52.93]:64561 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752598AbXLJVfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 16:35:17 -0500
-Date: Mon, 10 Dec 2007 22:31:47 +0100
-From: st3 <st3@riseup.net>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Mattias Nissler <mattias.nissler@gmx.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
- learning algorithm
-Message-ID: <20071210223147.6e56e088@morte> (sfid-20071210_213522_429890_99319F17)
-In-Reply-To: <20071210222213.0cf8ce0d@morte>
-References: <20071209211547.2d7fca32@morte>
-	<20071209211931.26ff42fa@morte>
-	<1197239150.7543.13.camel@localhost>
-	<20071210090853.79ea4645@morte>
-	<1197319867.7493.4.camel@localhost>
-	<20071210222213.0cf8ce0d@morte>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1753037AbXLSAzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:55:32 -0500
+Date: Wed, 19 Dec 2007 08:54:08 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: Miguel Bot??n <mboton.lkml@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix typo in
+	'drivers/net/wireless/iwlwifi/Kconfig'
+Message-ID: <20071219005408.GA21768@mail.intel.com> (sfid-20071219_005538_349692_CE170FA3)
+Reply-To: yi.zhu@intel.com
+References: <200712181736.13130.mboton@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200712181736.13130.mboton@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 10 Dec 2007 22:22:13 +0100
-Stefano Brivio <stefano.brivio@polimi.it> wrote:
+On Tue, Dec 18, 2007 at 05:36:12PM +0100, Miguel Bot??n wrote:
+>  config IWL4965_SPECTRUM_MEASUREMENT
+> -	bool "Enable Spectrum Measurement in iw4965 driver"
+> +	bool "Enable Spectrum Measurement in iwl4965 driver"
+>  	depends on IWL4965
+>  	---help---
+>  	  This option will enable spectrum measurement for the iwl4965 driver.
 
-> 3) let's say that a thunderstorm makes the air CCK-hostile, so we want to
-						 ^^^ OFDM
+Thanks, but there is another one.
 
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
--- 
-Ciao
-Stefano
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index c91e5f9..66ca942 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -31,7 +31,7 @@ config IWL4965_QOS
+ 	depends on IWL4965
+ 	---help---
+ 	  This option will enable wireless quality of service (QoS) for the
+-	  iw4965 driver.
++	  iwl4965 driver.
+ 
+ config IWL4965_HT
+ 	bool "Enable 802.11n HT features in iwl4965 driver"
+@@ -43,7 +43,7 @@ config IWL4965_HT
+ 	  for the iwl4965 driver.
+ 
+ config IWL4965_SPECTRUM_MEASUREMENT
+-	bool "Enable Spectrum Measurement in iw4965 driver"
++	bool "Enable Spectrum Measurement in iwl4965 driver"
+ 	depends on IWL4965
+ 	---help---
+ 	  This option will enable spectrum measurement for the iwl4965 driver.
