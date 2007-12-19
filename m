@@ -1,208 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28918 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751549AbXLYPAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 10:00:51 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 6/8 v3] mac80211: A-MPDU Rx adding BAR handling capability
-Date: Tue, 25 Dec 2007 17:00:36 +0200
-Message-Id: <11985948452300-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150103_039108_F4AEA78A)
-In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mfe1.polimi.it ([131.175.12.23]:38718 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753770AbXLSAIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:08:32 -0500
+Date: Wed, 19 Dec 2007 01:03:31 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/8] rc80211-pid: add rate behaviour learning algorithm
+Message-ID: <20071219010331.00103c9c@morte> (sfid-20071219_000834_538703_3050D36E)
+In-Reply-To: <20071218233749.871878037@polimi.it>
+References: <20071218233749.871878037@polimi.it>>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to handle Block Ack Request
+This patch introduces a learning algorithm in order for the PID controller
+to learn how to map adjustment values to rates. This is better described in
+code comments.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- net/mac80211/ieee80211_i.h |    3 +-
- net/mac80211/rx.c          |   62 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/util.c        |   15 ++++++++++-
- 3 files changed, 74 insertions(+), 6 deletions(-)
+ rc80211_pid.c |  181
++++++++++++++++++++++++++++++++++++++++++++++++++++------- 1 file changed,
+161 insertions(+), 20 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cf2256b..c91087f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -804,7 +804,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb, struct net_device *dev);
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
- extern const unsigned char rfc1042_header[6];
- extern const unsigned char bridge_tunnel_header[6];
--u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len);
-+u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
-+			enum ieee80211_if_types type);
- int ieee80211_is_eapol(const struct sk_buff *skb, int hdrlen);
- int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
- 			     int rate, int erp, int short_preamble);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0661eed..2cdc34b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -24,6 +24,10 @@
- #include "tkip.h"
- #include "wme.h"
- 
-+u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
-+				struct tid_ampdu_rx *tid_agg_rx,
-+				struct sk_buff *skb, u16 mpdu_seq_num,
-+				int bar_req);
- /*
-  * monitor mode reception
+Index: wireless-2.6/net/mac80211/rc80211_pid.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid.c
++++ wireless-2.6/net/mac80211/rc80211_pid.c
+@@ -2,6 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
++ * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
   *
-@@ -64,7 +68,9 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
- 	if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
- 			cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
- 	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
--			cpu_to_le16(IEEE80211_STYPE_PSPOLL)))
-+			cpu_to_le16(IEEE80211_STYPE_PSPOLL)) &&
-+	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
-+			cpu_to_le16(IEEE80211_STYPE_BACK_REQ)))
- 		return 1;
- 	return 0;
- }
-@@ -630,7 +636,8 @@ ieee80211_rx_h_sta_process(struct ieee80211_txrx_data *rx)
- 	 * BSSID to avoid keeping the current IBSS network alive in cases where
- 	 * other STAs are using different BSSID. */
- 	if (rx->sdata->type == IEEE80211_IF_TYPE_IBSS) {
--		u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len);
-+		u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len,
-+						IEEE80211_IF_TYPE_IBSS);
- 		if (compare_ether_addr(bssid, rx->sdata->u.sta.bssid) == 0)
- 			sta->last_rx = jiffies;
- 	} else
-@@ -1358,6 +1365,49 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
- }
- 
- static ieee80211_txrx_result
-+ieee80211_rx_h_ctrl(struct ieee80211_txrx_data *rx)
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -39,12 +40,18 @@
+  * an actual sliding window. The advantage is that we don't need to keep an
+  * array of the last N error values and computation is easier.
+  *
+- * Once we have the adj value, we need to map it to a TX rate to be
+selected.
+- * For now, we depend on the rates to be ordered in a way such that more
+robust
+- * rates (i.e. such that exhibit a lower framed failed percentage) come
+first.
+- * E.g. for the 802.11b/g case, we first have the b rates in ascending
+order,
+- * then the g rates. The adj simply decides the index of the TX rate in
+the list
+- * to switch to (relative to the current TX rate entry).
++ * Once we have the adj value, we map it to a rate by means of a learning
++ * algorithm. This algorithm keeps the state of the percentual failed
+frames
++ * difference between rates. The behaviour of the lowest available rate is
+kept
++ * as a reference value, and every time we switch between two rates, we
+compute
++ * the difference between the failed frames each rate exhibited. By doing
+so,
++ * we compare behaviours which different rates exhibited in adjacent
+timeslices,
++ * thus the comparison is minimally affected by external conditions. This
++ * difference gets propagated to the whole set of measurements, so that the
++ * reference is always the same. Periodically, we normalize this set so
+that
++ * recent events weigh the most. By comparing the adj value with this set,
+we
++ * avoid pejorative switches to lower rates and allow for switches to
+higher
++ * rates if they behaved well.
+  *
+  * Note that for the computations we use a fixed-point representation to
+avoid
+  * floating point arithmetic. Hence, all values are shifted left by
+@@ -78,6 +85,16 @@
+  */
+ #define RC_PID_TARGET_PF (11 << RC_PID_ARITH_SHIFT)
+
++/* Rate behaviour normalization quantity over time. */
++#define RC_PID_NORM_OFFSET 3
++
++/* Push high rates right after loading. */
++#define RC_PID_FAST_START 0
++
++/* Arithmetic right shift for positive and negative values for ISO C. */
++#define RC_PID_DO_ARITH_RIGHT_SHIFT(x, y) \
++	(x) < 0 ? -((-(x)) >> (y)) : (x) >> (y)
++
+ struct rc_pid_sta_info {
+ 	unsigned long last_change;
+ 	unsigned long last_sample;
+@@ -121,6 +138,18 @@ struct rc_pid_sta_info {
+ /* Algorithm parameters. We keep them on a per-algorithm approach, so they
+can
+  * be tuned individually for each interface.
+  */
++struct rc_pid_rateinfo {
++
++	/* Map sorted rates to rates in ieee80211_hw_mode. */
++	int index;
++
++	/* Map rates in ieee80211_hw_mode to sorted rates. */
++	int rev_index;
++
++	/* Comparison with the lowest rate. */
++	int diff;
++};
++
+ struct rc_pid_info {
+
+ 	/* The failed frames percentage target. */
+@@ -130,15 +159,56 @@ struct rc_pid_info {
+ 	s32 coeff_p;
+ 	s32 coeff_i;
+ 	s32 coeff_d;
++
++	/* Rates information. */
++	struct rc_pid_rateinfo *rinfo;
++
++	/* Index of the last used rate. */
++	int oldrate;
+ };
+
++/* Shift the adjustment so that we won't switch to a lower rate if it
+exhibited
++ * a worse failed frames behaviour and we'll choose the highest rate whose
++ * failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the adjustment is within the ranges.
+Then,
++ * provide the new rate index. */
++static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
++					 int adj, int cur, int l)
 +{
-+	struct ieee80211_local *local = rx->local;
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct sk_buff *skb = rx->skb;
-+	struct ieee80211_bar *bar = (struct ieee80211_bar *) skb->data;
-+	struct tid_ampdu_rx *tid_agg_rx;
-+	u16 start_seq_num;
-+	u16 tid;
++	int i, j, k, tmp;
 +
-+	if (likely((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_CTL))
-+		return TXRX_CONTINUE;
++	if (cur + adj < 0)
++		return 0;
++	if (cur + adj >= l)
++		return l - 1;
 +
-+	if ((rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BACK_REQ) {
-+		if (!rx->sta)
-+			return TXRX_CONTINUE;
-+		tid = le16_to_cpu(bar->control) >> 12;
-+		tid_agg_rx = &(rx->sta->ampdu_mlme.tid_rx[tid]);
-+		if (tid_agg_rx->state != HT_AGG_STATE_OPERATIONAL)
-+			return TXRX_CONTINUE;
++	i = r[cur + adj].rev_index;
 +
-+		start_seq_num = le16_to_cpu(bar->start_seq_num) >> 4;
++	j = r[cur].rev_index;
 +
-+		/* reset session timer */
-+		if (tid_agg_rx->timeout) {
-+			unsigned long expires =
-+				jiffies + (tid_agg_rx->timeout / 1000) * HZ;
-+			mod_timer(&tid_agg_rx->session_timer, expires);
-+		}
-+
-+		/* manage reordering buffer according to requested */
-+		/* sequence number */
-+		rcu_read_lock();
-+		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL,
-+						 start_seq_num, 1);
-+		rcu_read_unlock();
-+		return TXRX_DROP;
++	if (adj < 0) {
++			tmp = i;
++			for (k = j; k >= i; k--)
++				if (r[k].diff <= r[j].diff)
++					tmp = k;
++			return r[tmp].index;
++	} else if (adj > 0) {
++			tmp = i;
++			for (k = i + 1; k + i < l; k++)
++				if (r[k].diff <= r[i].diff)
++					tmp = k;
++			return r[tmp].index;
 +	}
-+
-+	return TXRX_CONTINUE;
++	return cur + adj;
 +}
-+
-+static ieee80211_txrx_result
- ieee80211_rx_h_mgmt(struct ieee80211_txrx_data *rx)
+
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+-					 struct sta_info *sta, int adj)
++					 struct sta_info *sta, int adj,
++					 struct rc_pid_rateinfo *rinfo)
  {
  	struct ieee80211_sub_if_data *sdata;
-@@ -1508,6 +1558,7 @@ ieee80211_rx_handler ieee80211_rx_handlers[] =
- 	ieee80211_rx_h_remove_qos_control,
- 	ieee80211_rx_h_amsdu,
- 	ieee80211_rx_h_data,
-+	ieee80211_rx_h_ctrl,
- 	ieee80211_rx_h_mgmt,
- 	NULL
- };
-@@ -1651,8 +1702,6 @@ void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		return;
- 	}
- 
--	bssid = ieee80211_get_bssid(hdr, skb->len);
--
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (!netif_running(sdata->dev))
- 			continue;
-@@ -1660,6 +1709,7 @@ void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		if (sdata->type == IEEE80211_IF_TYPE_MNTR)
- 			continue;
- 
-+		bssid = ieee80211_get_bssid(hdr, skb->len, sdata->type);
- 		rx.flags |= IEEE80211_TXRXD_RXRA_MATCH;
- 		prepares = prepare_for_handlers(sdata, bssid, &rx, hdr);
- 		/* prepare_for_handlers can change sta */
-@@ -1733,6 +1783,10 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
- }
- 
- 
-+/*
-+ * As it function blongs to Rx path it must be called with
-+ * the proper rcu_read_lock protection for its flow.
-+ */
- u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 				struct tid_ampdu_rx *tid_agg_rx,
- 				struct sk_buff *skb, u16 mpdu_seq_num,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index fb7fd89..d567b83 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -131,7 +131,8 @@ void ieee80211_prepare_rates(struct ieee80211_local *local,
+ 	struct ieee80211_hw_mode *mode;
+-	int newidx = sta->txrate + adj;
++	int newidx;
+ 	int maxrate;
+ 	int back = (adj > 0) ? 1 : -1;
+
+@@ -151,10 +221,8 @@ static void rate_control_pid_adjust_rate
+ 	mode = local->oper_hw_mode;
+ 	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
+
+-	if (newidx < 0)
+-		newidx = 0;
+-	else if (newidx >= mode->num_rates)
+-		newidx = mode->num_rates - 1;
++	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
++					       mode->num_rates);
+
+ 	while (newidx != sta->txrate) {
+ 		if (rate_supported(sta, mode, newidx) &&
+@@ -167,18 +235,37 @@ static void rate_control_pid_adjust_rate
  	}
  }
- 
--u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
-+u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
-+			enum ieee80211_if_types type)
+
++/* Normalize the failed frames per-rate differences. */
++static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
++{
++	int i;
++
++	if (r[0].diff > RC_PID_NORM_OFFSET)
++		r[0].diff -= RC_PID_NORM_OFFSET;
++	else if (r[0].diff < -RC_PID_NORM_OFFSET)
++		r[0].diff += RC_PID_NORM_OFFSET;
++	for (i = 0; i < l - 1; i++)
++		if (r[i + 1].diff > r[i].diff + RC_PID_NORM_OFFSET)
++			r[i + 1].diff -= RC_PID_NORM_OFFSET;
++		else if (r[i + 1].diff <= r[i].diff)
++			r[i + 1].diff += RC_PID_NORM_OFFSET;
++}
++
+ static void rate_control_pid_sample(struct rc_pid_info *pinfo,
+ 				    struct ieee80211_local *local,
+ 				    struct sta_info *sta)
  {
- 	u16 fc;
- 
-@@ -163,6 +164,18 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
- 	case IEEE80211_FTYPE_CTL:
- 		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
- 			return hdr->addr1;
-+		else if ((fc & IEEE80211_FCTL_STYPE) ==
-+						IEEE80211_STYPE_BACK_REQ) {
-+			switch (type) {
-+			case IEEE80211_IF_TYPE_STA:
-+				return hdr->addr2;
-+			case IEEE80211_IF_TYPE_AP:
-+			case IEEE80211_IF_TYPE_VLAN:
-+				return hdr->addr1;
-+			default:
-+				return NULL;
-+			}
-+		}
- 		else
- 			return NULL;
+ 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
++	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
++	struct ieee80211_hw_mode *mode;
+ 	u32 pf;
+ 	s32 err_avg;
+ 	s32 err_prop;
+ 	s32 err_int;
+ 	s32 err_der;
+-	int adj;
++	int adj, i, j, tmp;
+
++	mode = local->oper_hw_mode;
+ 	spinfo = sta->rate_ctrl_priv;
+ 	spinfo->last_sample = jiffies;
+
+@@ -194,6 +281,20 @@ static void rate_control_pid_sample(stru
+ 		spinfo->tx_num_failed = 0;
  	}
--- 
-1.5.3.3
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
++	/* If we just switched rate, update the rate behaviour info. */
++	if (pinfo->oldrate != sta->txrate) {
++
++		i = rinfo[pinfo->oldrate].rev_index;
++		j = rinfo[sta->txrate].rev_index;
++
++		tmp = (pf - spinfo->last_pf);
++		tmp = RC_PID_DO_ARITH_RIGHT_SHIFT(tmp, RC_PID_ARITH_SHIFT);
++
++		rinfo[j].diff = rinfo[i].diff + tmp;
++		pinfo->oldrate = sta->txrate;
++	}
++	rate_control_pid_normalize(rinfo, mode->num_rates);
++
+ 	/* Compute the proportional, integral and derivative errors. */
+ 	err_prop = RC_PID_TARGET_PF - pf;
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+@@ -207,16 +308,11 @@ static void rate_control_pid_sample(stru
+ 	/* Compute the controller output. */
+ 	adj = (err_prop * pinfo->coeff_p + err_int * pinfo->coeff_i
+ 	      + err_der * pinfo->coeff_d);
+-
+-	/* We need to do an arithmetic right shift. ISO C says this is
+-	 * implementation defined for negative left operands. Hence, be
+-	 * careful to get it right, also for negative values. */
+-	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
+-			  adj >> (2 * RC_PID_ARITH_SHIFT);
++	adj = RC_PID_DO_ARITH_RIGHT_SHIFT(adj, 2 * RC_PID_ARITH_SHIFT);
 
+ 	/* Change rate. */
+ 	if (adj)
+-		rate_control_pid_adjust_rate(local, sta, adj);
++		rate_control_pid_adjust_rate(local, sta, adj, rinfo);
+ }
+
+ static void rate_control_pid_tx_status(void *priv, struct net_device *dev,
+@@ -316,13 +412,57 @@ static void rate_control_pid_rate_init(v
+ static void *rate_control_pid_alloc(struct ieee80211_local *local)
+ {
+ 	struct rc_pid_info *pinfo;
++	struct rc_pid_rateinfo *rinfo;
++	struct ieee80211_hw_mode *mode;
++	int i, j, tmp;
++	bool s;
+
+ 	pinfo = kmalloc(sizeof(*pinfo), GFP_ATOMIC);
++	if (!pinfo)
++		return NULL;
++
++	/* We can safely assume that oper_hw_mode won't change unless we
+get
++	 * reinitialized. */
++	mode = local->oper_hw_mode;
++	rinfo = kmalloc(sizeof(*rinfo) * mode->num_rates, GFP_ATOMIC);
++	if (!rinfo) {
++		kfree(pinfo);
++		return NULL;
++	}
++
++	/* Sort the rates. This is optimized for the most common case (i.e.
++	 * almost-sorted CCK+OFDM rates). Kind of bubble-sort with reversed
++	 * mapping too. */
++	for (i = 0; i < mode->num_rates; i++) {
++		rinfo[i].index = i;
++		rinfo[i].rev_index = i;
++		if (RC_PID_FAST_START)
++			rinfo[i].diff = 0;
++		else
++			rinfo[i].diff = i * RC_PID_NORM_OFFSET;
++	}
++	for (i = 1; i < mode->num_rates; i++) {
++		s = 0;
++		for (j = 0; j < mode->num_rates - i; j++)
++			if (unlikely(mode->rates[rinfo[j].index].rate >
++				     mode->rates[rinfo[j +
+1].index].rate)) {
++				tmp = rinfo[j].index;
++				rinfo[j].index = rinfo[j + 1].index;
++				rinfo[j + 1].index = tmp;
++				rinfo[rinfo[j].index].rev_index = j;
++				rinfo[rinfo[j + 1].index].rev_index = j +
+1;
++				s = 1;
++			}
++		if (!s)
++			break;
++	}
+
+ 	pinfo->target = RC_PID_TARGET_PF;
+ 	pinfo->coeff_p = RC_PID_COEFF_P;
+ 	pinfo->coeff_i = RC_PID_COEFF_I;
+ 	pinfo->coeff_d = RC_PID_COEFF_D;
++	pinfo->rinfo = rinfo;
++	pinfo->oldrate = 0;
+
+ 	return pinfo;
+ }
+@@ -330,6 +470,7 @@ static void *rate_control_pid_alloc(stru
+ static void rate_control_pid_free(void *priv)
+ {
+ 	struct rc_pid_info *pinfo = priv;
++	kfree(pinfo->rinfo);
+ 	kfree(pinfo);
+ }
+
+--
+Ciao
+Stefano
