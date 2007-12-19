@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:10842 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772AbXLDPyR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:54:17 -0500
-Received: from lin01.mn-solutions.de (pD95F94BA.dip0.t-ipconnect.de [217.95.148.186])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id E266D5E409F
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Dec 2007 16:54:15 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 287151E00FD
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Dec 2007 16:51:22 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: questions regarding removing the depencency on CONFIG_IEEE80211
-Date: Tue, 4 Dec 2007 16:54:31 +0100
-References: <200712041140.07516.hs4233@mail.mn-solutions.de> <20071204152538.GF19911@tuxdriver.com> <1196782188.26155.49.camel@localhost.localdomain>
-In-Reply-To: <1196782188.26155.49.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712041654.31973.hs4233@mail.mn-solutions.de> (sfid-20071204_155421_032388_6E810936)
+Received: from mfe1.polimi.it ([131.175.12.23]:60215 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754591AbXLSAcW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2007 19:32:22 -0500
+Date: Wed, 19 Dec 2007 01:25:09 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v3 0/8] rate control rework
+Message-ID: <20071219012509.721c834e@morte> (sfid-20071219_003224_042024_A61A8A21)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It might mean more memory usage for these drivers because not
-> all of them need all the fields in the common BSS structure. 
-> It may mean slightly more CPU time used to convert the
-> driver's internal BSS representation into the common BSS
-> structure.
+This patchset is the result of my recent joint-venture with Mattias. It
+introduces a new rate control algorithm based on a PID controller. First
+tests show it works much better than the old simple rate control
+algorithm.
 
-I'm mostly doing things for embedded stuff, but actually I like 
-the benefits more than the drawbacks.
+I think that this should really go into 2.6.25, as the current rate control
+algorithm was just written for reference and performs very poorly.
 
-+1 for your whole idea.
+Johannes' and John's concerns have been addressed here.
+This patchset won't (hopefully!) get line-wrapped.
+
+Patches 1 to 3 introduce the PID controller algorithm. Patches 4 and 5 are
+algorithm enhancements, while 6 to 8 are meant for debugging and tuning.
+
+
+--
+Ciao
+Stefano
