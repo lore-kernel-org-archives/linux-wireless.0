@@ -1,297 +1,640 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40653 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755995AbXLSPsG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:48:06 -0500
-Message-Id: <20071219010340.750290000@sipsolutions.net> (sfid-20071219_154811_503505_B382F601)
-References: <20071219010328.762470000@sipsolutions.net>
-Date: Wed, 19 Dec 2007 02:03:32 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
+Received: from mfe1.polimi.it ([131.175.12.23]:53073 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753468AbXLTMzx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 07:55:53 -0500
+Date: Thu, 20 Dec 2007 13:50:07 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 4/9] cfg80211/nl80211: add beacon settings
+Subject: [PATCH v4 1/8] mac80211: clean up rate selection
+Message-ID: <20071220135007.528b16e5@morte> (sfid-20071220_125558_009146_1EC6345A)
+In-Reply-To: <1198082563.4747.25.camel@johannes.berg>
+References: <20071219001955.055692620@polimi.it>
+	<20071219012528.7cb831eb@morte>
+	<1198082563.4747.25.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the necessary API to cfg80211/nl80211 to allow
-changing beaconing settings.
+From: Mattias Nissler <mattias.nissler@gmx.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Move some code out of rc80211_simple since it's probably needed for all rate
+selection algorithms, and fix iwlwifi accordingly. While at it, clean up the
+rate_control_get_rate() interface.
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- include/linux/nl80211.h |   24 ++++++++
- include/net/cfg80211.h  |   33 +++++++++++
- net/wireless/nl80211.c  |  133 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 190 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   44 ++---------------
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   47 +++---------------
+ net/mac80211/ieee80211.c                   |    6 --
+ net/mac80211/ieee80211_rate.c              |   47 ++++++++++++++++++
+ net/mac80211/ieee80211_rate.h              |   73 ++++++++++++++++++-----------
+ net/mac80211/ieee80211_sta.c               |   13 +----
+ net/mac80211/rc80211_simple.c              |   64 ++++---------------------
+ net/mac80211/tx.c                          |   42 +++++++---------
+ 8 files changed, 146 insertions(+), 190 deletions(-)
 
---- everything.orig/include/net/cfg80211.h	2007-12-19 00:50:15.363022189 +0100
-+++ everything/include/net/cfg80211.h	2007-12-19 00:50:18.013056043 +0100
-@@ -69,6 +69,26 @@ struct key_params {
- 	u32 cipher;
- };
+Index: wireless-2.6/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211.c
++++ wireless-2.6/net/mac80211/ieee80211.c
+@@ -860,10 +860,8 @@ void ieee80211_tx_status(struct ieee8021
+ 			sta_info_put(sta);
+ 			return;
+ 		}
+-	} else {
+-		/* FIXME: STUPID to call this with both local and local->mdev */
+-		rate_control_tx_status(local, local->mdev, skb, status);
+-	}
++	} else
++		rate_control_tx_status(local->mdev, skb, status);
  
-+/**
-+ * struct beacon_parameters - beacon parameters
-+ *
-+ * Used to configure the beacon for an interface.
-+ *
-+ * @head: head portion of beacon (before TIM IE)
-+ *     or %NULL if not changed
-+ * @tail: tail portion of beacon (after TIM IE)
-+ *     or %NULL if not changed
-+ * @interval: beacon interval or zero if not changed
-+ * @dtim_period: DTIM period or zero if not changed
-+ * @head_len: length of @head
-+ * @tail_len: length of @tail
-+ */
-+struct beacon_parameters {
-+	u8 *head, *tail;
-+	int interval, dtim_period;
-+	int head_len, tail_len;
-+};
-+
- /* from net/wireless.h */
- struct wiphy;
+ 	ieee80211_led_tx(local, 0);
  
-@@ -103,6 +123,13 @@ struct wiphy;
-  *	and @key_index
-  *
-  * @set_default_key: set the default key on an interface
-+ *
-+ * @add_beacon: Add a beacon with given parameters, @head, @interval
-+ *	and @dtim_period will be valid, @tail is optional.
-+ * @set_beacon: Change the beacon parameters for an access point mode
-+ *	interface. This should reject the call when no beacon has been
-+ *	configured.
-+ * @del_beacon: Remove beacon configuration and stop sending the beacon.
-  */
- struct cfg80211_ops {
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
-@@ -122,6 +149,12 @@ struct cfg80211_ops {
- 	int	(*set_default_key)(struct wiphy *wiphy,
- 				   struct net_device *netdev,
- 				   u8 key_index);
-+
-+	int	(*add_beacon)(struct wiphy *wiphy, struct net_device *dev,
-+			      struct beacon_parameters *info);
-+	int	(*set_beacon)(struct wiphy *wiphy, struct net_device *dev,
-+			      struct beacon_parameters *info);
-+	int	(*del_beacon)(struct wiphy *wiphy, struct net_device *dev);
- };
- 
- #endif /* __NET_CFG80211_H */
---- everything.orig/include/linux/nl80211.h	2007-12-19 00:50:15.363022189 +0100
-+++ everything/include/linux/nl80211.h	2007-12-19 00:50:18.013056043 +0100
-@@ -47,6 +47,15 @@
-  * @NL80211_CMD_DEL_KEY: delete a key identified by %NL80211_ATTR_KEY_IDX
-  *	or %NL80211_ATTR_MAC.
-  *
-+ * @NL80211_CMD_GET_BEACON: retrieve beacon information (returned in a
-+ *	%NL80222_CMD_NEW_BEACON message)
-+ * @NL80211_CMD_SET_BEACON: set the beacon on an access point interface
-+ *	using the %NL80211_ATTR_BEACON_INTERVAL, %NL80211_ATTR_DTIM_PERIOD,
-+ *	%NL80211_BEACON_HEAD and %NL80211_BEACON_TAIL attributes.
-+ * @NL80211_CMD_NEW_BEACON: add a new beacon to an access point interface,
-+ *	parameters are like for %NL80211_CMD_SET_BEACON.
-+ * @NL80211_CMD_DEL_BEACON: remove the beacon, stop sending it
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -69,6 +78,11 @@ enum nl80211_commands {
- 	NL80211_CMD_NEW_KEY,
- 	NL80211_CMD_DEL_KEY,
- 
-+	NL80211_CMD_GET_BEACON,
-+	NL80211_CMD_SET_BEACON,
-+	NL80211_CMD_NEW_BEACON,
-+	NL80211_CMD_DEL_BEACON,
-+
- 	/* add commands here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -101,6 +115,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_KEY_SEQ: transmit key sequence number (IV/PN) for TKIP and
-  *	CCMP keys, each six bytes in little endian
-  *
-+ * @NL80211_ATTR_BEACON_INTERVAL: beacon interval in TU
-+ * @NL80211_ATTR_DTIM_PERIOD: DTIM period for beaconing
-+ * @NL80211_ATTR_BEACON_HEAD: portion of the beacon before the TIM IE
-+ * @NL80211_ATTR_BEACON_TAIL: portion of the beacon after the TIM IE
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -123,6 +142,11 @@ enum nl80211_attrs {
- 	NL80211_ATTR_KEY_SEQ,
- 	NL80211_ATTR_KEY_DEFAULT,
- 
-+	NL80211_ATTR_BEACON_INTERVAL,
-+	NL80211_ATTR_DTIM_PERIOD,
-+	NL80211_ATTR_BEACON_HEAD,
-+	NL80211_ATTR_BEACON_TAIL,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- everything.orig/net/wireless/nl80211.c	2007-12-19 00:50:15.363022189 +0100
-+++ everything/net/wireless/nl80211.c	2007-12-19 00:50:18.023023762 +0100
-@@ -69,6 +69,13 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_KEY_IDX] = { .type = NLA_U8 },
- 	[NL80211_ATTR_KEY_CIPHER] = { .type = NLA_U32 },
- 	[NL80211_ATTR_KEY_DEFAULT] = { .type = NLA_FLAG },
-+
-+	[NL80211_ATTR_BEACON_INTERVAL] = { .type = NLA_U32 },
-+	[NL80211_ATTR_DTIM_PERIOD] = { .type = NLA_U32 },
-+	[NL80211_ATTR_BEACON_HEAD] = { .type = NLA_BINARY,
-+				       .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY,
-+				       .len = IEEE80211_MAX_DATA_LEN },
- };
- 
- /* message building helper */
-@@ -600,6 +607,114 @@ static int nl80211_del_key(struct sk_buf
- 	return err;
+Index: wireless-2.6/net/mac80211/ieee80211_rate.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_rate.c
++++ wireless-2.6/net/mac80211/ieee80211_rate.c
+@@ -147,6 +147,53 @@ static void rate_control_release(struct 
+ 	kfree(ctrl_ref);
  }
  
-+static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
++void rate_control_get_rate(struct net_device *dev,
++			   struct ieee80211_hw_mode *mode, struct sk_buff *skb,
++			   struct rate_selection *sel)
 +{
-+        int (*call)(struct wiphy *wiphy, struct net_device *dev,
-+		    struct beacon_parameters *info);
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	struct beacon_parameters params;
-+	int haveinfo = 0;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct rate_control_ref *ref = local->rate_ctrl;
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct sta_info *sta = sta_info_get(local, hdr->addr1);
++	int i;
++	u16 fc;
 +
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
++	memset(sel, 0, sizeof(struct rate_selection));
 +
-+	switch (info->genlhdr->cmd) {
-+	case NL80211_CMD_NEW_BEACON:
-+		/* these are required for NEW_BEACON */
-+		if (!info->attrs[NL80211_ATTR_BEACON_INTERVAL] ||
-+		    !info->attrs[NL80211_ATTR_DTIM_PERIOD] ||
-+		    !info->attrs[NL80211_ATTR_BEACON_HEAD]) {
-+			err = -EINVAL;
-+			goto out;
++	/* Send management frames and broadcast/multicast data using lowest
++	 * rate. */
++	fc = le16_to_cpu(hdr->frame_control);
++	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
++	    is_multicast_ether_addr(hdr->addr1))
++		sel->rate = rate_lowest(local, mode, sta);
++
++	/* If a forced rate is in effect, select it. */
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
++		sel->rate = &mode->rates[sdata->bss->force_unicast_rateidx];
++
++	/* If we haven't found the rate yet, ask the rate control algo. */
++	if (!sel->rate)
++		ref->ops->get_rate(ref->priv, dev, mode, skb, sel);
++
++	/* Select a non-ERP backup rate. */
++	if (!sel->nonerp) {
++		for (i = 0; i < mode->num_rates - 1; i++) {
++			struct ieee80211_rate *rate = &mode->rates[i];
++			if (sel->rate->rate < rate->rate)
++				break;
++
++			if (rate_supported(sta, mode, i) &&
++			    !(rate->flags & IEEE80211_RATE_ERP))
++				sel->nonerp = rate;
 +		}
-+
-+		call = drv->ops->add_beacon;
-+		break;
-+	case NL80211_CMD_SET_BEACON:
-+		call = drv->ops->set_beacon;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		err = -EOPNOTSUPP;
-+		goto out;
 +	}
 +
-+	if (!call) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	memset(&params, 0, sizeof(params));
-+
-+	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
-+		params.interval =
-+		    nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
-+		haveinfo = 1;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
-+		params.dtim_period =
-+		    nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
-+		haveinfo = 1;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_BEACON_HEAD]) {
-+		params.head = nla_data(info->attrs[NL80211_ATTR_BEACON_HEAD]);
-+		params.head_len =
-+		    nla_len(info->attrs[NL80211_ATTR_BEACON_HEAD]);
-+		haveinfo = 1;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_BEACON_TAIL]) {
-+		params.tail = nla_data(info->attrs[NL80211_ATTR_BEACON_TAIL]);
-+		params.tail_len =
-+		    nla_len(info->attrs[NL80211_ATTR_BEACON_TAIL]);
-+		haveinfo = 1;
-+	}
-+
-+	if (!haveinfo) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	err = call(&drv->wiphy, dev, &params);
-+	rtnl_unlock();
-+
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
++	if (sta)
++		sta_info_put(sta);
 +}
 +
-+static int nl80211_del_beacon(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->del_beacon) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	err = drv->ops->del_beacon(&drv->wiphy, dev);
-+	rtnl_unlock();
-+
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -663,6 +778,24 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_BEACON,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.doit = nl80211_addset_beacon,
-+	},
-+	{
-+		.cmd = NL80211_CMD_NEW_BEACON,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.doit = nl80211_addset_beacon,
-+	},
-+	{
-+		.cmd = NL80211_CMD_DEL_BEACON,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.doit = nl80211_del_beacon,
-+	},
+ struct rate_control_ref *rate_control_get(struct rate_control_ref *ref)
+ {
+ 	kref_get(&ref->kref);
+Index: wireless-2.6/net/mac80211/ieee80211_rate.h
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_rate.h
++++ wireless-2.6/net/mac80211/ieee80211_rate.h
+@@ -18,31 +18,24 @@
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
+ 
+-#define RATE_CONTROL_NUM_DOWN 20
+-#define RATE_CONTROL_NUM_UP   15
+-
+-
+-struct rate_control_extra {
+-	/* values from rate_control_get_rate() to the caller: */
+-	struct ieee80211_rate *probe; /* probe with this rate, or NULL for no
+-				       * probing */
++struct rate_selection {
++	/* Selected transmission rate */
++	struct ieee80211_rate *rate;
++	/* Non-ERP rate to use if mac80211 decides it cannot use an ERP rate */
+ 	struct ieee80211_rate *nonerp;
+-
+-	/* parameters from the caller to rate_control_get_rate(): */
+-	struct ieee80211_hw_mode *mode;
+-	u16 ethertype;
++	/* probe with this rate, or NULL for no probing */
++	struct ieee80211_rate *probe;
  };
  
- /* multicast groups */
+-
+ struct rate_control_ops {
+ 	struct module *module;
+ 	const char *name;
+ 	void (*tx_status)(void *priv, struct net_device *dev,
+ 			  struct sk_buff *skb,
+ 			  struct ieee80211_tx_status *status);
+-	struct ieee80211_rate *(*get_rate)(void *priv, struct net_device *dev,
+-					   struct sk_buff *skb,
+-					   struct rate_control_extra *extra);
++	void (*get_rate)(void *priv, struct net_device *dev,
++			 struct ieee80211_hw_mode *mode, struct sk_buff *skb,
++			 struct rate_selection *sel);
+ 	void (*rate_init)(void *priv, void *priv_sta,
+ 			  struct ieee80211_local *local, struct sta_info *sta);
+ 	void (*clear)(void *priv);
+@@ -75,25 +68,20 @@ void ieee80211_rate_control_unregister(s
+  * first available algorithm. */
+ struct rate_control_ref *rate_control_alloc(const char *name,
+ 					    struct ieee80211_local *local);
++void rate_control_get_rate(struct net_device *dev,
++			   struct ieee80211_hw_mode *mode, struct sk_buff *skb,
++			   struct rate_selection *sel);
+ struct rate_control_ref *rate_control_get(struct rate_control_ref *ref);
+ void rate_control_put(struct rate_control_ref *ref);
+ 
+-static inline void rate_control_tx_status(struct ieee80211_local *local,
+-					  struct net_device *dev,
++static inline void rate_control_tx_status(struct net_device *dev,
+ 					  struct sk_buff *skb,
+ 					  struct ieee80211_tx_status *status)
+ {
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct rate_control_ref *ref = local->rate_ctrl;
+-	ref->ops->tx_status(ref->priv, dev, skb, status);
+-}
+ 
+-
+-static inline struct ieee80211_rate *
+-rate_control_get_rate(struct ieee80211_local *local, struct net_device *dev,
+-		      struct sk_buff *skb, struct rate_control_extra *extra)
+-{
+-	struct rate_control_ref *ref = local->rate_ctrl;
+-	return ref->ops->get_rate(ref->priv, dev, skb, extra);
++	ref->ops->tx_status(ref->priv, dev, skb, status);
+ }
+ 
+ 
+@@ -142,6 +130,37 @@ static inline void rate_control_remove_s
+ #endif
+ }
+ 
++static inline int
++rate_supported(struct sta_info *sta, struct ieee80211_hw_mode *mode, int index)
++{
++	return (sta == NULL || sta->supp_rates & BIT(index)) &&
++	       (mode->rates[index].flags & IEEE80211_RATE_SUPPORTED);
++}
++
++static inline int
++rate_lowest_index(struct ieee80211_local *local, struct ieee80211_hw_mode *mode,
++		  struct sta_info *sta)
++{
++	int i;
++
++	for (i = 0; i < mode->num_rates; i++) {
++		if (rate_supported(sta, mode, i))
++			return i;
++	}
++
++	/* warn when we cannot find a rate. */
++	WARN_ON(1);
++
++	return 0;
++}
++
++static inline struct ieee80211_rate *
++rate_lowest(struct ieee80211_local *local, struct ieee80211_hw_mode *mode,
++	    struct sta_info *sta)
++{
++	return &mode->rates[rate_lowest_index(local, mode, sta)];
++}
++
+ 
+ /* functions for rate control related to a device */
+ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+Index: wireless-2.6/net/mac80211/ieee80211_sta.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/ieee80211_sta.c
++++ wireless-2.6/net/mac80211/ieee80211_sta.c
+@@ -2467,9 +2467,8 @@ static int ieee80211_sta_join_ibss(struc
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+ 	struct ieee80211_tx_control control;
+-	struct ieee80211_rate *rate;
+ 	struct ieee80211_hw_mode *mode;
+-	struct rate_control_extra extra;
++	struct rate_selection ratesel;
+ 	u8 *pos;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -2554,18 +2553,16 @@ static int ieee80211_sta_join_ibss(struc
+ 		}
+ 
+ 		memset(&control, 0, sizeof(control));
+-		memset(&extra, 0, sizeof(extra));
+-		extra.mode = local->oper_hw_mode;
+-		rate = rate_control_get_rate(local, dev, skb, &extra);
+-		if (!rate) {
++		rate_control_get_rate(dev, local->oper_hw_mode, skb, &ratesel);
++		if (!ratesel.rate) {
+ 			printk(KERN_DEBUG "%s: Failed to determine TX rate "
+ 			       "for IBSS beacon\n", dev->name);
+ 			break;
+ 		}
+ 		control.tx_rate =
+ 			((sdata->flags & IEEE80211_SDATA_SHORT_PREAMBLE) &&
+-			(rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
+-			rate->val2 : rate->val;
++			(ratesel.rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
++			ratesel.rate->val2 : ratesel.rate->val;
+ 		control.antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+ 		control.power_level = local->hw.conf.power_level;
+ 		control.flags |= IEEE80211_TXCTL_NO_ACK;
+Index: wireless-2.6/net/mac80211/rc80211_simple.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_simple.c
++++ wireless-2.6/net/mac80211/rc80211_simple.c
+@@ -23,6 +23,8 @@
+ /* This is a minimal implementation of TX rate controlling that can be used
+  * as the default when no improved mechanisms are available. */
+ 
++#define RATE_CONTROL_NUM_DOWN 20
++#define RATE_CONTROL_NUM_UP   15
+ 
+ #define RATE_CONTROL_EMERG_DEC 2
+ #define RATE_CONTROL_INTERVAL (HZ / 20)
+@@ -87,26 +89,6 @@ static void rate_control_rate_dec(struct
+ 	}
+ }
+ 
+-
+-static struct ieee80211_rate *
+-rate_control_lowest_rate(struct ieee80211_local *local,
+-			 struct ieee80211_hw_mode *mode)
+-{
+-	int i;
+-
+-	for (i = 0; i < mode->num_rates; i++) {
+-		struct ieee80211_rate *rate = &mode->rates[i];
+-
+-		if (rate->flags & IEEE80211_RATE_SUPPORTED)
+-			return rate;
+-	}
+-
+-	printk(KERN_DEBUG "rate_control_lowest_rate - no supported rates "
+-	       "found\n");
+-	return &mode->rates[0];
+-}
+-
+-
+ struct global_rate_control {
+ 	int dummy;
+ };
+@@ -216,56 +198,32 @@ static void rate_control_simple_tx_statu
+ }
+ 
+ 
+-static struct ieee80211_rate *
++static void
+ rate_control_simple_get_rate(void *priv, struct net_device *dev,
++			     struct ieee80211_hw_mode *mode,
+ 			     struct sk_buff *skb,
+-			     struct rate_control_extra *extra)
++			     struct rate_selection *sel)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_hw_mode *mode = extra->mode;
+ 	struct sta_info *sta;
+-	int rateidx, nonerp_idx;
+-	u16 fc;
+-
+-	memset(extra, 0, sizeof(*extra));
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+-	    (hdr->addr1[0] & 0x01)) {
+-		/* Send management frames and broadcast/multicast data using
+-		 * lowest rate. */
+-		/* TODO: this could probably be improved.. */
+-		return rate_control_lowest_rate(local, mode);
+-	}
++	int rateidx;
+ 
+ 	sta = sta_info_get(local, hdr->addr1);
+ 
+-	if (!sta)
+-		return rate_control_lowest_rate(local, mode);
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
+-		sta->txrate = sdata->bss->force_unicast_rateidx;
++	if (!sta) {
++		sel->rate = rate_lowest(local, mode, NULL);
++		return;
++	}
+ 
+ 	rateidx = sta->txrate;
+ 
+ 	if (rateidx >= mode->num_rates)
+ 		rateidx = mode->num_rates - 1;
+ 
+-	sta->last_txrate = rateidx;
+-	nonerp_idx = rateidx;
+-	while (nonerp_idx > 0 &&
+-	       ((mode->rates[nonerp_idx].flags & IEEE80211_RATE_ERP) ||
+-		!(mode->rates[nonerp_idx].flags & IEEE80211_RATE_SUPPORTED) ||
+-		!(sta->supp_rates & BIT(nonerp_idx))))
+-		nonerp_idx--;
+-	extra->nonerp = &mode->rates[nonerp_idx];
+-
+ 	sta_info_put(sta);
+ 
+-	return &mode->rates[rateidx];
++	sel->rate = &mode->rates[rateidx];
+ }
+ 
+ 
+Index: wireless-2.6/net/mac80211/tx.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/tx.c
++++ wireless-2.6/net/mac80211/tx.c
+@@ -569,21 +569,17 @@ ieee80211_tx_h_encrypt(struct ieee80211_
+ static ieee80211_txrx_result
+ ieee80211_tx_h_rate_ctrl(struct ieee80211_txrx_data *tx)
+ {
+-	struct rate_control_extra extra;
++	struct rate_selection rsel;
+ 
+ 	if (likely(!tx->u.tx.rate)) {
+-		memset(&extra, 0, sizeof(extra));
+-		extra.mode = tx->u.tx.mode;
+-		extra.ethertype = tx->ethertype;
+-
+-		tx->u.tx.rate = rate_control_get_rate(tx->local, tx->dev,
+-						      tx->skb, &extra);
+-		if (unlikely(extra.probe != NULL)) {
++		rate_control_get_rate(tx->dev, tx->u.tx.mode, tx->skb, &rsel);
++		tx->u.tx.rate = rsel.rate;
++		if (unlikely(rsel.probe != NULL)) {
+ 			tx->u.tx.control->flags |=
+ 				IEEE80211_TXCTL_RATE_CTRL_PROBE;
+ 			tx->flags |= IEEE80211_TXRXD_TXPROBE_LAST_FRAG;
+ 			tx->u.tx.control->alt_retry_rate = tx->u.tx.rate->val;
+-			tx->u.tx.rate = extra.probe;
++			tx->u.tx.rate = rsel.probe;
+ 		} else
+ 			tx->u.tx.control->alt_retry_rate = -1;
+ 
+@@ -594,14 +590,14 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 
+ 	if (tx->u.tx.mode->mode == MODE_IEEE80211G &&
+ 	    (tx->sdata->flags & IEEE80211_SDATA_USE_PROTECTION) &&
+-	    (tx->flags & IEEE80211_TXRXD_FRAGMENTED) && extra.nonerp) {
++	    (tx->flags & IEEE80211_TXRXD_FRAGMENTED) && rsel.nonerp) {
+ 		tx->u.tx.last_frag_rate = tx->u.tx.rate;
+-		if (extra.probe)
++		if (rsel.probe)
+ 			tx->flags &= ~IEEE80211_TXRXD_TXPROBE_LAST_FRAG;
+ 		else
+ 			tx->flags |= IEEE80211_TXRXD_TXPROBE_LAST_FRAG;
+-		tx->u.tx.rate = extra.nonerp;
+-		tx->u.tx.control->rate = extra.nonerp;
++		tx->u.tx.rate = rsel.nonerp;
++		tx->u.tx.control->rate = rsel.nonerp;
+ 		tx->u.tx.control->flags &= ~IEEE80211_TXCTL_RATE_CTRL_PROBE;
+ 	} else {
+ 		tx->u.tx.last_frag_rate = tx->u.tx.rate;
+@@ -1667,8 +1663,7 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	struct net_device *bdev;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+ 	struct ieee80211_if_ap *ap = NULL;
+-	struct ieee80211_rate *rate;
+-	struct rate_control_extra extra;
++	struct rate_selection rsel;
+ 	u8 *b_head, *b_tail;
+ 	int bh_len, bt_len;
+ 
+@@ -1712,14 +1707,13 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	}
+ 
+ 	if (control) {
+-		memset(&extra, 0, sizeof(extra));
+-		extra.mode = local->oper_hw_mode;
+-
+-		rate = rate_control_get_rate(local, local->mdev, skb, &extra);
+-		if (!rate) {
++		rate_control_get_rate(local->mdev, local->oper_hw_mode, skb,
++				      &rsel);
++		if (!rsel.rate) {
+ 			if (net_ratelimit()) {
+-				printk(KERN_DEBUG "%s: ieee80211_beacon_get: no rate "
+-				       "found\n", wiphy_name(local->hw.wiphy));
++				printk(KERN_DEBUG "%s: ieee80211_beacon_get: "
++				       "no rate found\n",
++				       wiphy_name(local->hw.wiphy));
+ 			}
+ 			dev_kfree_skb(skb);
+ 			return NULL;
+@@ -1727,8 +1721,8 @@ struct sk_buff *ieee80211_beacon_get(str
+ 
+ 		control->tx_rate =
+ 			((sdata->flags & IEEE80211_SDATA_SHORT_PREAMBLE) &&
+-			(rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
+-			rate->val2 : rate->val;
++			(rsel.rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
++			rsel.rate->val2 : rsel.rate->val;
+ 		control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+ 		control->power_level = local->hw.conf.power_level;
+ 		control->flags |= IEEE80211_TXCTL_NO_ACK;
+Index: wireless-2.6/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ wireless-2.6/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -560,22 +560,6 @@ static void rs_tx_status(void *priv_rate
+ 	return;
+ }
+ 
+-static struct ieee80211_rate *iwl3945_get_lowest_rate(struct ieee80211_local
+-						  *local)
+-{
+-	struct ieee80211_hw_mode *mode = local->oper_hw_mode;
+-	int i;
+-
+-	for (i = 0; i < mode->num_rates; i++) {
+-		struct ieee80211_rate *rate = &mode->rates[i];
+-
+-		if (rate->flags & IEEE80211_RATE_SUPPORTED)
+-			return rate;
+-	}
+-
+-	return &mode->rates[0];
+-}
+-
+ static u16 iwl3945_get_adjacent_rate(struct iwl3945_rate_scale_priv *rs_priv,
+ 				 u8 index, u16 rate_mask, int phymode)
+ {
+@@ -654,10 +638,9 @@ static u16 iwl3945_get_adjacent_rate(str
+  * rate table and must reference the driver allocated rate table
+  *
+  */
+-static struct ieee80211_rate *rs_get_rate(void *priv_rate,
+-					  struct net_device *dev,
+-					  struct sk_buff *skb,
+-					  struct rate_control_extra *extra)
++static void rs_get_rate(void *priv_rate, struct net_device *dev,
++			struct ieee80211_hw_mode *mode, struct sk_buff *skb,
++			struct rate_selection *sel)
+ {
+ 	u8 low = IWL_RATE_INVALID;
+ 	u8 high = IWL_RATE_INVALID;
+@@ -674,32 +657,19 @@ static struct ieee80211_rate *rs_get_rat
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct sta_info *sta;
+-	u16 fc, rate_mask;
++	u16 rate_mask;
+ 	struct iwl3945_priv *priv = (struct iwl3945_priv *)priv_rate;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	IWL_DEBUG_RATE("enter\n");
+ 
+-	memset(extra, 0, sizeof(*extra));
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    (is_multicast_ether_addr(hdr->addr1))) {
+-		/* Send management frames and broadcast/multicast data using
+-		 * lowest rate. */
+-		/* TODO: this could probably be improved.. */
+-		IWL_DEBUG_RATE("leave: lowest rate (not data or is "
+-			       "multicast)\n");
+-
+-		return iwl3945_get_lowest_rate(local);
+-	}
+-
+ 	sta = sta_info_get(local, hdr->addr1);
+ 	if (!sta || !sta->rate_ctrl_priv) {
+ 		IWL_DEBUG_RATE("leave: No STA priv data to update!\n");
++		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
+ 		if (sta)
+ 			sta_info_put(sta);
+-		return NULL;
++		return;
+ 	}
+ 
+ 	rate_mask = sta->supp_rates;
+@@ -844,7 +814,7 @@ static struct ieee80211_rate *rs_get_rat
+ 
+ 	IWL_DEBUG_RATE("leave: %d\n", index);
+ 
+-	return &priv->ieee_rates[index];
++	sel->rate = &priv->ieee_rates[index];
+ }
+ 
+ static struct rate_control_ops rs_ops = {
+Index: wireless-2.6/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ wireless-2.6/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -2007,56 +2007,27 @@ static void rs_initialize_lq(struct iwl4
+ 	return;
+ }
+ 
+-static struct ieee80211_rate *rs_get_lowest_rate(struct ieee80211_local
+-						 *local)
++static void rs_get_rate(void *priv_rate, struct net_device *dev,
++			struct ieee80211_hw_mode *mode, struct sk_buff *skb,
++			struct rate_selection *sel)
+ {
+-	struct ieee80211_hw_mode *mode = local->oper_hw_mode;
+-	int i;
+-
+-	for (i = 0; i < mode->num_rates; i++) {
+-		struct ieee80211_rate *rate = &mode->rates[i];
+-
+-		if (rate->flags & IEEE80211_RATE_SUPPORTED)
+-			return rate;
+-	}
+-
+-	return &mode->rates[0];
+-}
+-
+-static struct ieee80211_rate *rs_get_rate(void *priv_rate,
+-					       struct net_device *dev,
+-					       struct sk_buff *skb,
+-					       struct rate_control_extra
+-					       *extra)
+-{
+-
+ 	int i;
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct sta_info *sta;
+-	u16 fc;
+ 	struct iwl4965_priv *priv = (struct iwl4965_priv *)priv_rate;
+ 	struct iwl4965_rate_scale_priv *lq;
+ 
+ 	IWL_DEBUG_RATE_LIMIT("rate scale calculate new rate for skb\n");
+ 
+-	memset(extra, 0, sizeof(*extra));
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1)) {
+-		/* Send management frames and broadcast/multicast data using
+-		 * lowest rate. */
+-		/* TODO: this could probably be improved.. */
+-		return rs_get_lowest_rate(local);
+-	}
+-
+ 	sta = sta_info_get(local, hdr->addr1);
+ 
+ 	if (!sta || !sta->rate_ctrl_priv) {
++		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
+ 		if (sta)
+ 			sta_info_put(sta);
+-		return rs_get_lowest_rate(local);
++		return;
+ 	}
+ 
+ 	lq = (struct iwl4965_rate_scale_priv *)sta->rate_ctrl_priv;
+@@ -2083,11 +2054,13 @@ static struct ieee80211_rate *rs_get_rat
+ 	}
+ 
+  done:
++	if ((i < 0) || (i > IWL_RATE_COUNT)) {
++		sel->rate = rate_lowest(local, local->oper_hw_mode, sta);
++		return;
++	}
+ 	sta_info_put(sta);
+-	if ((i < 0) || (i > IWL_RATE_COUNT))
+-		return rs_get_lowest_rate(local);
+ 
+-	return &priv->ieee_rates[i];
++	sel->rate = &priv->ieee_rates[i];
+ }
+ 
+ static void *rs_alloc_sta(void *priv, gfp_t gfp)
+
 
 -- 
-
+Ciao
+Stefano
