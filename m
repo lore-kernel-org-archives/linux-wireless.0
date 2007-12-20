@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:28085 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.178]:10888 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbXLMNnq (ORCPT
+	with ESMTP id S1753393AbXLTDWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 08:43:46 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1090078wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2007 05:43:44 -0800 (PST)
-Message-ID: <1ba2fa240712130543q703137d4o8b895247e4cc914a@mail.gmail.com> (sfid-20071213_134349_566042_64F9B2FA)
-Date: Thu, 13 Dec 2007 15:43:44 +0200
+	Wed, 19 Dec 2007 22:22:08 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so4956613wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2007 19:22:08 -0800 (PST)
+Message-ID: <1ba2fa240712191922x55675878o2ec3258419e1d4df@mail.gmail.com> (sfid-20071220_032212_563166_8652CC4F)
+Date: Thu, 20 Dec 2007 05:22:01 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 ethtool support
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Michael Buesch" <mb@bu3sch.de>, "Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197545930.6558.243.camel@johannes.berg>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH] iwlwifi: proper monitor support
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Sam Leffler" <sam@errno.com>
+In-Reply-To: <1198120544.3065.30.camel@debian.sh.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1197361048.3170.381.camel@debian.sh.intel.com>
-	 <200712111350.25522.mb@bu3sch.de>
-	 <1197421988.3170.405.camel@debian.sh.intel.com>
-	 <200712121148.48716.mb@bu3sch.de>
-	 <1197481520.6558.140.camel@johannes.berg>
-	 <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com>
-	 <20071213002739.GB3139@tuxdriver.com>
-	 <1197545930.6558.243.camel@johannes.berg>
+References: <1198052938-25637-1-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240712191604l1f5343c0s62e66aaf2077cce1@mail.gmail.com>
+	 <1ba2fa240712191608oa7f36e9ma05a04b4797d715a@mail.gmail.com>
+	 <1198120544.3065.30.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 13, 2007 1:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Dec 20, 2007 5:15 AM, Zhu Yi <yi.zhu@intel.com> wrote:
 >
-> > Has anyone taken the trouble to analyze the various ethtool operations
-> > to see which ones even make sense for wireless devices?  That might
-> > make a better starting point for discussing how to implement whatever
-> > remains.
+> On Thu, 2007-12-20 at 02:08 +0200, Tomas Winkler wrote:
+> > I've made a mistake this is not logical but actual rate so it
+> > theoretically we can go up to 600Mbs so it will make it 120 < 256.
 >
-> Most, except very few hardware-specific like the EEPROM under discussion
-> and a few driver-specific (get driver version etc) don't make any sense,
-> like WOL, GSO, pause, UFO, ...
+> Um, should it be 1200 > 255?
 
-I've checked that too and I agree it looks like we need ethool brother
-for wireless some wifitool.  But it looks like
-cfg80211 can provide this functionality
+Hmm I'm too long out of elementary school :)
 
-BTW iwl HW supports WOL  :)
-
-> johannes
+> > But aren't we interested in MSC rate a packet was sent?
+>
+> NetBSD and wireshark support IEEE80211_RADIOTAP_XCHANNEL which does a
+> better job to extend the IEEE80211_RADIOTAP_CHANNEL functions including
+> per-channel power dbm, MCS rates, etc. Linux should catch up when we
+> have 11n fully supported.
+>
+> Thanks,
+> -yi
+>
+>
 >
