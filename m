@@ -1,39 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47087 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbXLMSAo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 13:00:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Fix rfkill radio LED
-Date: Thu, 13 Dec 2007 18:58:46 +0100
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4760c3db.qCB1sy2b6EqODHqS%Larry.Finger@lwfinger.net> <200712131211.47867.mb@bu3sch.de> <47616AD2.8070108@lwfinger.net>
-In-Reply-To: <47616AD2.8070108@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4317 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760966AbXLTQ2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 11:28:55 -0500
+Date: Thu, 20 Dec 2007 10:52:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6
+Message-ID: <20071220155227.GE3139@tuxdriver.com> (sfid-20071220_162906_273751_9AEE81B8)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712131858.46552.mb@bu3sch.de> (sfid-20071213_180049_694598_48A8A113)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 13 December 2007 18:24:34 Larry Finger wrote:
-> If (!built_in && !module)
-> 	warn that the LED will not work.
+Dave,
 
-This can not happen. b43 rfkill support is disabled, as it doesn't
-make any sense without rfkill-input.
+A few more stragglers for 2.6.24...let me know if there are any
+problems!
 
-> In the version I sent you, the logic is:
-> 
-> if (!built_in) {
-> 	load module
-> 	if (err)
-> 		print message that it will not work
-> }
+Thanks,
 
-which is fine.
+John
 
+---
+
+Individual patches available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem
+
+---
+
+The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
+  Linus Torvalds (1):
+        Linux 2.6.24-rc5
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+
+Johannes Berg (2):
+      mac80211: round station cleanup timer
+      mac80211: warn when receiving frames with unaligned data
+
+ net/mac80211/rx.c       |   13 +++++++++++++
+ net/mac80211/sta_info.c |    7 +++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 00f908d..a7263fc 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1443,6 +1443,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+ 	u8 *bssid;
++	int hdrlen;
+ 
+ 	/*
+ 	 * key references and virtual interfaces are protected using RCU
+@@ -1472,6 +1473,18 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	rx.fc = le16_to_cpu(hdr->frame_control);
+ 	type = rx.fc & IEEE80211_FCTL_FTYPE;
+ 
++	/*
++	 * Drivers are required to align the payload data to a four-byte
++	 * boundary, so the last two bits of the address where it starts
++	 * may not be set. The header is required to be directly before
++	 * the payload data, padding like atheros hardware adds which is
++	 * inbetween the 802.11 header and the payload is not supported,
++	 * the driver is required to move the 802.11 header further back
++	 * in that case.
++	 */
++	hdrlen = ieee80211_get_hdrlen(rx.fc);
++	WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
++
+ 	if (type == IEEE80211_FTYPE_DATA || type == IEEE80211_FTYPE_MGMT)
+ 		local->dot11ReceivedFragmentCount++;
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index e849155..cfd8ee9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -14,6 +14,7 @@
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_arp.h>
++#include <linux/timer.h>
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+@@ -306,7 +307,8 @@ static void sta_info_cleanup(unsigned long data)
+ 	}
+ 	read_unlock_bh(&local->sta_lock);
+ 
+-	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
++	local->sta_cleanup.expires =
++		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+ 	add_timer(&local->sta_cleanup);
+ }
+ 
+@@ -345,7 +347,8 @@ void sta_info_init(struct ieee80211_local *local)
+ 	INIT_LIST_HEAD(&local->sta_list);
+ 
+ 	init_timer(&local->sta_cleanup);
+-	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
++	local->sta_cleanup.expires =
++		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+ 	local->sta_cleanup.data = (unsigned long) local;
+ 	local->sta_cleanup.function = sta_info_cleanup;
+ 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
