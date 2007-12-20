@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW4.Sony.CO.JP ([137.153.0.46]:63235 "EHLO mgw4.sony.co.jp"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4351 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbXL0JWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2007 04:22:41 -0500
-Date: Thu, 27 Dec 2007 18:24:40 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: David Miller <davem@davemloft.net>
-Subject: Re: : Emit event stream compat iw_point objects correctly.
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20071227.005725.144782426.davem@davemloft.net>
-References: <20071227173802.6F56.40F06B3A@sm.sony.co.jp> <20071227.005725.144782426.davem@davemloft.net>
-Message-Id: <20071227181439.6F59.40F06B3A@sm.sony.co.jp> (sfid-20071227_092248_539531_5FAF1DCF)
+	id S1753784AbXLTPAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 10:00:09 -0500
+Date: Thu, 20 Dec 2007 09:34:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arnd Bergmann <arndb@de.ibm.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 7/8] debugfs: allow access to signed values
+Message-ID: <20071220143418.GD3139@tuxdriver.com> (sfid-20071220_150015_632536_66B2BE7C)
+References: <20071219001955.055692620@polimi.it> <20071219012739.6dcdd150@morte> <1198080034.4747.15.camel@johannes.berg> <20071220134022.43f39072@morte>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071220134022.43f39072@morte>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Thu, 27 Dec 2007 00:57:25 -0800 (PST)
-David Miller <davem@davemloft.net> wrote:
-
-> From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> Date: Thu, 27 Dec 2007 17:51:49 +0900
+On Thu, Dec 20, 2007 at 01:40:22PM +0100, Stefano Brivio wrote:
+> debugfs: allow access to signed values
 > 
-> > 	Hi
-> > 
-> > On Fri, 21 Dec 2007 20:58:08 -0800 (PST)
-> > David Miller <davem@davemloft.net> wrote:
-> > 
-> > > @@ -520,7 +530,7 @@ iwe_stream_add_point(char *	stream,		/* Stream of events */
-> > >  		memcpy(stream + IW_EV_LCP_LEN,
-> > >  		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
-> > >  		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
-> > 
-> > As the alignment of 64bit platforms may be defferent from 32bit one,
-> > should it be like the following?
-> 
-> IW_EV_LCP_LEN is the same on both 32-bit and 64-bit platforms, it is
-> just the size of the "len" and "cmd" portions of struct iw_event.
-> 
+> Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
+> a cast in libfs, change the simple_attr_open prototype and thus fix the users as
+> well.
 
-IW_EV_LCP_PK_LEN ?
+Looks like Stefano is going to cooperate w/ hch on this, so I'm
+dropping this from wireless-2.6 for now...FYI
 
-#define IW_EV_LCP_PK_LEN        (4)
-
-> Those are both __u16, so IW_EV_LCP_LEN always evaluates to "4",
-> try it if you do not believe me. :-)
-
-Although I believed you, I tried :)
-
-On ppc64 (PS3), IW_EV_LCP_LEN is 8, not 4.
-
-include/linux/wireless.h:
-
-#define IW_EV_LCP_LEN   (sizeof(struct iw_event) - sizeof(union iwreq_data))
-
-where sizeof(struct iw_event) == 24, sizeof(union iwreq_data) == 16 on
-PS3.
-
+John
 -- 
-Masakazu MOKUNO
-
+John W. Linville
+linville@tuxdriver.com
