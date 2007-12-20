@@ -1,273 +1,783 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54962 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751227AbXLRUBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 15:01:33 -0500
-Subject: Re: [patch 4/9] mac80211: Make PID rate control algorithm the
-	default
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197982157.4885.124.camel@johannes.berg>
-References: <20071217012517.882216322@gmx.de>
-	 <20071217012550.213561122@gmx.de> <20071217150202.GC3121@tuxdriver.com>
-	 <20071217210649.370ba385@morte> <20071217204112.GE3121@tuxdriver.com>
-	 <20071217221610.7906f3e2@morte>  <1197982157.4885.124.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 18 Dec 2007 21:01:27 +0100
-Message-Id: <1198008087.7553.9.camel@localhost> (sfid-20071218_200138_269873_1AF5AE72)
+Received: from mfe1.polimi.it ([131.175.12.23]:49199 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759209AbXLTMqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 07:46:45 -0500
+Date: Thu, 20 Dec 2007 13:40:22 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arnd Bergmann <arndb@de.ibm.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 7/8] debugfs: allow access to signed values
+Message-ID: <20071220134022.43f39072@morte> (sfid-20071220_124651_708189_BEB8C876)
+In-Reply-To: <1198080034.4747.15.camel@johannes.berg>
+References: <20071219001955.055692620@polimi.it>
+ <20071219012739.6dcdd150@morte>
+ <1198080034.4747.15.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+debugfs: allow access to signed values
 
-below is a new patch that I'd be ok to go with. It builds both pid and
-simple as modules. A Kconfig choice makes sure one of them is always
-built. Furthermore, there is a modparam that can be used to override the
-default algo to use.
+Add debugfs_create_s{8,16,32,64}. For these to work properly, we need to remove
+a cast in libfs, change the simple_attr_open prototype and thus fix the users as
+well.
 
-The only issue I know about is that if people disable module auto
-loading, they'll end up without rate control algorithm. If you don't
-like this, please comment on how to fix it.
-
-Mattias
-
-
-
-This makes the new PID TX rate control algorithm the default instead of the
-rc80211_simple rate control algorithm. The simple algorithm was flawed in
-several ways: It wasn't responsive at all and didn't age the information it was
-relying on properly. The PID algorithm allows us to tune characteristics such
-as responsiveness by adjusting parameters and was found to generally behave
-better.
-
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+To: Arnd Bergmann <arndb@de.ibm.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>
 Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- net/mac80211/Kconfig          |   12 --
- net/mac80211/Makefile         |    1 -
- net/mac80211/ieee80211.c      |   12 --
- net/mac80211/ieee80211_rate.c |    2 +-
- net/mac80211/ieee80211_rate.h |    3 -
- net/mac80211/rc80211_simple.c |  366 -----------------------------------------
- 6 files changed, 1 insertions(+), 395 deletions(-)
- delete mode 100644 net/mac80211/rc80211_simple.c
 
-Index: rt2x00/net/mac80211/Kconfig
+This version addresses last Johannes' concerns. Please just discard v4.
+
+---
+ arch/powerpc/platforms/cell/spufs/file.c |   48 ++++----
+ fs/debugfs/file.c                        |  186 +++++++++++++++++++++++++++++--
+ fs/libfs.c                               |   21 +--
+ include/linux/debugfs.h                  |   38 ++++++
+ include/linux/fs.h                       |   25 ++--
+ lib/fault-inject.c                       |   11 +
+ 6 files changed, 267 insertions(+), 62 deletions(-)
+
+Index: wireless-2.6/fs/debugfs/file.c
 ===================================================================
---- rt2x00.orig/net/mac80211/Kconfig
-+++ rt2x00/net/mac80211/Kconfig
-@@ -13,20 +13,40 @@ config MAC80211
- 	This option enables the hardware independent IEEE 802.11
- 	networking stack.
- 
--config MAC80211_RCSIMPLE
--	bool "'simple' rate control algorithm" if EMBEDDED
--	default y
-+choice
-+	prompt "Default rate control algorithm"
-+	default MAC80211_RC_DEFAULT_PID
-+	depends on MAC80211
-+	help
-+	This option selects the default rate control algorithm mac80211 will
-+	use. Note that this default can still be overriden by the
-+	ieee80211_default_rc_algo module parameter.
-+
-+config MAC80211_RC_DEFAULT_PID
-+	bool "PID controller based rate control algorithm"
-+	depends on MAC80211
-+	select MAC80211_RC_PID
-+	help
-+	Select the PID controller based rate control as default rate control
-+	algorithm.
-+
-+config MAC80211_RC_DEFAULT_SIMPLE
-+	bool "Simple rate control algorithm"
- 	depends on MAC80211
-+	select MAC80211_RC_SIMPLE
- 	help
--	  This option allows you to turn off the 'simple' rate
--	  control algorithm in mac80211. If you do turn it off,
--	  you absolutely need another rate control algorithm.
-+	Select the simple rate control as default rate control algorithm.
- 
--	  Say Y unless you know you will have another algorithm
--	  available.
-+endchoice
- 
--config MAC80211_RCPID
--	bool "'PID' rate control algorithm" if EMBEDDED
-+config MAC80211_RC_DEFAULT
-+	string
-+	depends on MAC80211
-+	default "pid" if MAC80211_RC_DEFAULT_PID
-+	default "simple" if MAC80211_RC_DEFAULT_SIMPLE
-+
-+config MAC80211_RC_PID
-+	tristate "PID controller based rate control algorithm"
- 	default y
- 	depends on MAC80211
- 	help
-@@ -37,6 +57,18 @@ config MAC80211_RCPID
- 	  Say Y unless you're sure you want to use a different
- 	  rate control algorithm.
- 
-+config MAC80211_RC_SIMPLE
-+	tristate "Simple rate control algorithm (DEPRECATED)"
-+	default n
-+	depends on MAC80211
-+	help
-+	  This option enables a very simple, non-responsive TX
-+	  rate control algorithm. This algorithm is deprecated
-+	  and will be removed from the kernel in near future.
-+	  It has been replaced by the PID algorithm.
-+
-+	  Say N unless you know what you are doing.
-+
- config MAC80211_LEDS
- 	bool "Enable LED triggers"
- 	depends on MAC80211 && LEDS_TRIGGERS
-Index: rt2x00/net/mac80211/Makefile
-===================================================================
---- rt2x00.orig/net/mac80211/Makefile
-+++ rt2x00/net/mac80211/Makefile
-@@ -1,10 +1,10 @@
- obj-$(CONFIG_MAC80211) += mac80211.o
-+obj-$(CONFIG_MAC80211_RC_PID) += rc80211_pid.o
-+obj-$(CONFIG_MAC80211_RC_SIMPLE) += rc80211_simple.o
- 
- mac80211-objs-$(CONFIG_MAC80211_LEDS) += ieee80211_led.o
- mac80211-objs-$(CONFIG_MAC80211_DEBUGFS) += debugfs.o debugfs_sta.o debugfs_netdev.o debugfs_key.o
- mac80211-objs-$(CONFIG_NET_SCHED) += wme.o
--mac80211-objs-$(CONFIG_MAC80211_RCSIMPLE) += rc80211_simple.o
--mac80211-objs-$(CONFIG_MAC80211_RCPID) += rc80211_pid.o
- 
- mac80211-objs := \
- 	ieee80211.o \
-Index: rt2x00/net/mac80211/ieee80211.c
-===================================================================
---- rt2x00.orig/net/mac80211/ieee80211.c
-+++ rt2x00/net/mac80211/ieee80211.c
-@@ -1313,51 +1313,21 @@ static int __init ieee80211_init(void)
- 
- 	BUILD_BUG_ON(sizeof(struct ieee80211_tx_packet_data) > sizeof(skb->cb));
- 
--#ifdef CONFIG_MAC80211_RCSIMPLE
--	ret = ieee80211_rate_control_register(&mac80211_rcsimple);
--	if (ret)
--		goto fail;
--#endif
--
--#ifdef CONFIG_MAC80211_RCPID
--	ret = ieee80211_rate_control_register(&mac80211_rcpid);
--	if (ret)
--		goto fail;
--#endif
--
- 	ret = ieee80211_wme_register();
- 	if (ret) {
- 		printk(KERN_DEBUG "ieee80211_init: failed to "
- 		       "initialize WME (err=%d)\n", ret);
--		goto fail;
-+		return ret;
- 	}
- 
- 	ieee80211_debugfs_netdev_init();
- 	ieee80211_regdomain_init();
- 
- 	return 0;
--
--fail:
--
--#ifdef CONFIG_MAC80211_RCSIMPLE
--	ieee80211_rate_control_unregister(&mac80211_rcsimple);
--#endif
--#ifdef CONFIG_MAC80211_RCPID
--	ieee80211_rate_control_unregister(&mac80211_rcpid);
--#endif
--
--	return ret;
- }
- 
- static void __exit ieee80211_exit(void)
- {
--#ifdef CONFIG_MAC80211_RCSIMPLE
--	ieee80211_rate_control_unregister(&mac80211_rcsimple);
--#endif
--#ifdef CONFIG_MAC80211_RCPID
--	ieee80211_rate_control_unregister(&mac80211_rcpid);
--#endif
--
- 	ieee80211_wme_unregister();
- 	ieee80211_debugfs_netdev_exit();
- }
-Index: rt2x00/net/mac80211/ieee80211_rate.c
-===================================================================
---- rt2x00.orig/net/mac80211/ieee80211_rate.c
-+++ rt2x00/net/mac80211/ieee80211_rate.c
-@@ -21,6 +21,11 @@ struct rate_control_alg {
- static LIST_HEAD(rate_ctrl_algs);
- static DEFINE_MUTEX(rate_ctrl_mutex);
- 
-+static char *ieee80211_default_rc_algo = CONFIG_MAC80211_RC_DEFAULT;
-+module_param(ieee80211_default_rc_algo, charp, 0444);
-+MODULE_PARM_DESC(ieee80211_default_rc_algo,
-+		 "Default rate control algorithm for mac80211 to use");
-+
- int ieee80211_rate_control_register(struct rate_control_ops *ops)
- {
- 	struct rate_control_alg *alg;
-@@ -97,7 +102,7 @@ ieee80211_rate_control_ops_get(const cha
- 	struct rate_control_ops *ops;
- 
- 	if (!name)
--		name = "simple";
-+		name = ieee80211_default_rc_algo;
- 
- 	ops = ieee80211_try_rate_control_ops_get(name);
- 	if (!ops) {
-@@ -244,3 +249,4 @@ void rate_control_deinitialize(struct ie
- 	local->rate_ctrl = NULL;
- 	rate_control_put(ref);
- }
-+
-Index: rt2x00/net/mac80211/ieee80211_rate.h
-===================================================================
---- rt2x00.orig/net/mac80211/ieee80211_rate.h
-+++ rt2x00/net/mac80211/ieee80211_rate.h
-@@ -58,12 +58,6 @@ struct rate_control_ref {
- 	struct kref kref;
+--- wireless-2.6.orig/fs/debugfs/file.c
++++ wireless-2.6/fs/debugfs/file.c
+@@ -56,11 +56,11 @@ const struct inode_operations debugfs_li
+ 	.follow_link    = debugfs_follow_link,
  };
  
--/* default 'simple' algorithm */
--extern struct rate_control_ops mac80211_rcsimple;
--
--/* 'PID' algorithm */
--extern struct rate_control_ops mac80211_rcpid;
--
- int ieee80211_rate_control_register(struct rate_control_ops *ops);
- void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+-static void debugfs_u8_set(void *data, u64 val)
++static void debugfs_u8_set(void *data, unsigned long long val)
+ {
+ 	*(u8 *)data = val;
+ }
+-static u64 debugfs_u8_get(void *data)
++static unsigned long long debugfs_u8_get(void *data)
+ {
+ 	return *(u8 *)data;
+ }
+@@ -97,11 +97,11 @@ struct dentry *debugfs_create_u8(const c
+ }
+ EXPORT_SYMBOL_GPL(debugfs_create_u8);
  
-Index: rt2x00/Documentation/feature-removal-schedule.txt
+-static void debugfs_u16_set(void *data, u64 val)
++static void debugfs_u16_set(void *data, unsigned long long val)
+ {
+ 	*(u16 *)data = val;
+ }
+-static u64 debugfs_u16_get(void *data)
++static unsigned long long debugfs_u16_get(void *data)
+ {
+ 	return *(u16 *)data;
+ }
+@@ -138,11 +138,11 @@ struct dentry *debugfs_create_u16(const 
+ }
+ EXPORT_SYMBOL_GPL(debugfs_create_u16);
+ 
+-static void debugfs_u32_set(void *data, u64 val)
++static void debugfs_u32_set(void *data, unsigned long long val)
+ {
+ 	*(u32 *)data = val;
+ }
+-static u64 debugfs_u32_get(void *data)
++static unsigned long long debugfs_u32_get(void *data)
+ {
+ 	return *(u32 *)data;
+ }
+@@ -179,12 +179,12 @@ struct dentry *debugfs_create_u32(const 
+ }
+ EXPORT_SYMBOL_GPL(debugfs_create_u32);
+ 
+-static void debugfs_u64_set(void *data, u64 val)
++static void debugfs_u64_set(void *data, unsigned long long val)
+ {
+ 	*(u64 *)data = val;
+ }
+ 
+-static u64 debugfs_u64_get(void *data)
++static unsigned long long debugfs_u64_get(void *data)
+ {
+ 	return *(u64 *)data;
+ }
+@@ -221,6 +221,172 @@ struct dentry *debugfs_create_u64(const 
+ }
+ EXPORT_SYMBOL_GPL(debugfs_create_u64);
+ 
++
++static void debugfs_s8_set(void *data, unsigned long long val)
++{
++	*(s8 *)data = val;
++}
++static unsigned long long debugfs_s8_get(void *data)
++{
++	return *(s8 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s8, debugfs_s8_get, debugfs_s8_set, "%lld\n");
++
++/**
++ * debugfs_create_s8 - create a debugfs file that is used to read and write a signed 8-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++				 struct dentry *parent, s8 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s8);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s8);
++
++static void debugfs_s16_set(void *data, unsigned long long val)
++{
++	*(s16 *)data = val;
++}
++static unsigned long long debugfs_s16_get(void *data)
++{
++	return *(s16 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s16, debugfs_s16_get, debugfs_s16_set, "%lld\n");
++
++/**
++ * debugfs_create_s16 - create a debugfs file that is used to read and write a signed 16-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++				  struct dentry *parent, s16 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s16);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s16);
++
++static void debugfs_s32_set(void *data, unsigned long long val)
++{
++	*(s32 *)data = val;
++}
++static unsigned long long debugfs_s32_get(void *data)
++{
++	return *(s32 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s32, debugfs_s32_get, debugfs_s32_set, "%lld\n");
++
++/**
++ * debugfs_create_s32 - create a debugfs file that is used to read and write a signed 32-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++				 struct dentry *parent, s32 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s32);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s32);
++
++static void debugfs_s64_set(void *data, unsigned long long val)
++{
++	*(s64 *)data = val;
++}
++
++static unsigned long long debugfs_s64_get(void *data)
++{
++	return *(s64 *)data;
++}
++DEFINE_SIMPLE_ATTRIBUTE(fops_s64, debugfs_s64_get, debugfs_s64_set, "%lld\n");
++
++/**
++ * debugfs_create_s64 - create a debugfs file that is used to read and write a signed 64-bit value
++ * @name: a pointer to a string containing the name of the file to create.
++ * @mode: the permission that the file should have
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *          directory dentry if set.  If this parameter is %NULL, then the
++ *          file will be created in the root of the debugfs filesystem.
++ * @value: a pointer to the variable that the file should read to and write
++ *         from.
++ *
++ * This function creates a file in debugfs with the given name that
++ * contains the value of the variable @value.  If the @mode variable is so
++ * set, it can be read from, and written to.
++ *
++ * This function will return a pointer to a dentry if it succeeds.  This
++ * pointer must be passed to the debugfs_remove() function when the file is
++ * to be removed (no automatic cleanup happens if your module is unloaded,
++ * you are responsible here.)  If an error occurs, %NULL will be returned.
++ *
++ * If debugfs is not enabled in the kernel, the value -%ENODEV will be
++ * returned.  It is not wise to check for this value, but rather, check for
++ * %NULL or !%NULL instead as to eliminate the need for #ifdef in the calling
++ * code.
++ */
++struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++				 struct dentry *parent, s64 *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &fops_s64);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_s64);
++
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x8, debugfs_u8_get, debugfs_u8_set, "0x%02llx\n");
+ 
+ DEFINE_SIMPLE_ATTRIBUTE(fops_x16, debugfs_u16_get, debugfs_u16_set, "0x%04llx\n");
+@@ -291,7 +457,7 @@ static ssize_t read_file_bool(struct fil
+ {
+ 	char buf[3];
+ 	u32 *val = file->private_data;
+-	
++
+ 	if (*val)
+ 		buf[0] = 'Y';
+ 	else
+@@ -324,7 +490,7 @@ static ssize_t write_file_bool(struct fi
+ 		*val = 0;
+ 		break;
+ 	}
+-	
++
+ 	return count;
+ }
+ 
+Index: wireless-2.6/fs/libfs.c
 ===================================================================
---- rt2x00.orig/Documentation/feature-removal-schedule.txt
-+++ rt2x00/Documentation/feature-removal-schedule.txt
-@@ -350,3 +350,12 @@ Why:	No in-kernel drivers will depend on
- Who:	John W. Linville <linville@tuxdriver.com>
+--- wireless-2.6.orig/fs/libfs.c
++++ wireless-2.6/fs/libfs.c
+@@ -59,7 +59,7 @@ int simple_sync_file(struct file * file,
+ {
+ 	return 0;
+ }
+- 
++
+ int dcache_dir_open(struct inode *inode, struct file *file)
+ {
+ 	static struct qstr cursor_name = {.len = 1, .name = "."};
+@@ -160,9 +160,9 @@ int dcache_readdir(struct file * filp, v
+ 					continue;
  
- ---------------------------
+ 				spin_unlock(&dcache_lock);
+-				if (filldir(dirent, next->d_name.name, 
+-					    next->d_name.len, filp->f_pos, 
+-					    next->d_inode->i_ino, 
++				if (filldir(dirent, next->d_name.name,
++					    next->d_name.len, filp->f_pos,
++					    next->d_inode->i_ino,
+ 					    dt_type(next->d_inode)) < 0)
+ 					return 0;
+ 				spin_lock(&dcache_lock);
+@@ -586,9 +586,9 @@ int simple_transaction_release(struct in
+ /* Simple attribute files */
+ 
+ struct simple_attr {
+-	u64 (*get)(void *);
+-	void (*set)(void *, u64);
+-	char get_buf[24];	/* enough to store a u64 and "\n\0" */
++	unsigned long long (*get)(void *);
++	void (*set)(void *, unsigned long long);
++	char get_buf[24];	/* enough to store an ULL and "\n\0" */
+ 	char set_buf[24];
+ 	void *data;
+ 	const char *fmt;	/* format for read operation */
+@@ -598,7 +598,8 @@ struct simple_attr {
+ /* simple_attr_open is called by an actual attribute open file operation
+  * to set the attribute specific access operations. */
+ int simple_attr_open(struct inode *inode, struct file *file,
+-		     u64 (*get)(void *), void (*set)(void *, u64),
++		     unsigned long long (*get)(void *),
++		     void (*set)(void *, unsigned long long),
+ 		     const char *fmt)
+ {
+ 	struct simple_attr *attr;
+@@ -643,7 +644,7 @@ ssize_t simple_attr_read(struct file *fi
+ 	else	  /* first read */
+ 		size = scnprintf(attr->get_buf, sizeof(attr->get_buf),
+ 				 attr->fmt,
+-				 (unsigned long long)attr->get(attr->data));
++				 attr->get(attr->data));
+ 
+ 	ret = simple_read_from_buffer(buf, len, ppos, attr->get_buf, size);
+ 	mutex_unlock(&attr->mutex);
+@@ -655,7 +656,7 @@ ssize_t simple_attr_write(struct file *f
+ 			  size_t len, loff_t *ppos)
+ {
+ 	struct simple_attr *attr;
+-	u64 val;
++	unsigned long long val;
+ 	size_t size;
+ 	ssize_t ret;
+ 
+Index: wireless-2.6/include/linux/debugfs.h
+===================================================================
+--- wireless-2.6.orig/include/linux/debugfs.h
++++ wireless-2.6/include/linux/debugfs.h
+@@ -49,6 +49,14 @@ struct dentry *debugfs_create_u32(const 
+ 				  struct dentry *parent, u32 *value);
+ struct dentry *debugfs_create_u64(const char *name, mode_t mode,
+ 				  struct dentry *parent, u64 *value);
++struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++				 struct dentry *parent, s8 *value);
++struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++				  struct dentry *parent, s16 *value);
++struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++				  struct dentry *parent, s32 *value);
++struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++				  struct dentry *parent, s64 *value);
+ struct dentry *debugfs_create_x8(const char *name, mode_t mode,
+ 				 struct dentry *parent, u8 *value);
+ struct dentry *debugfs_create_x16(const char *name, mode_t mode,
+@@ -65,7 +73,7 @@ struct dentry *debugfs_create_blob(const
+ 
+ #include <linux/err.h>
+ 
+-/* 
++/*
+  * We do not return NULL from these functions if CONFIG_DEBUG_FS is not enabled
+  * so users have a chance to detect if there was a real error or not.  We don't
+  * want to duplicate the design decision mistakes of procfs and devfs again.
+@@ -128,6 +136,34 @@ static inline struct dentry *debugfs_cre
+ 	return ERR_PTR(-ENODEV);
+ }
+ 
++static inline struct dentry *debugfs_create_s8(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       u8 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
 +
-+What:	rc80211-simple rate control algorithm for mac80211
-+When:	2.6.26
-+Files:	net/mac80211/rc80211-simple.c
-+Why:	This algorithm was provided for reference but always exhibited bad
-+	responsiveness and performance and has some serious flaws. It has been
-+	replaced by rc80211-pid.
-+Who:	Stefano Brivio <stefano.brivio@polimi.it>
++static inline struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s16 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
 +
++static inline struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s32 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++static inline struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++					       struct dentry *parent,
++					       s64 *value)
++{
++	return ERR_PTR(-ENODEV);
++}
++
+ static inline struct dentry *debugfs_create_x8(const char *name, mode_t mode,
+ 					       struct dentry *parent,
+ 					       u8 *value)
+Index: wireless-2.6/arch/powerpc/platforms/cell/spufs/file.c
+===================================================================
+--- wireless-2.6.orig/arch/powerpc/platforms/cell/spufs/file.c
++++ wireless-2.6/arch/powerpc/platforms/cell/spufs/file.c
+@@ -286,10 +286,10 @@ static int spufs_cntl_mmap(struct file *
+ #define spufs_cntl_mmap NULL
+ #endif /* !SPUFS_MMAP_4K */
+ 
+-static u64 spufs_cntl_get(void *data)
++static unsigned long long spufs_cntl_get(void *data)
+ {
+ 	struct spu_context *ctx = data;
+-	u64 val;
++	unsigned long long val;
+ 
+ 	spu_acquire(ctx);
+ 	val = ctx->ops->status_read(ctx);
+@@ -298,7 +298,7 @@ static u64 spufs_cntl_get(void *data)
+ 	return val;
+ }
+ 
+-static void spufs_cntl_set(void *data, u64 val)
++static void spufs_cntl_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 
+@@ -1086,10 +1086,10 @@ static const struct file_operations spuf
+ #define SPU_ATTR_ACQUIRE_SAVED	2
+ 
+ #define DEFINE_SPUFS_ATTRIBUTE(__name, __get, __set, __fmt, __acquire)	\
+-static u64 __##__get(void *data)					\
++static unsigned long long __##__get(void *data)				\
+ {									\
+ 	struct spu_context *ctx = data;					\
+-	u64 ret;							\
++	unsigned long long ret;						\
+ 									\
+ 	if (__acquire == SPU_ATTR_ACQUIRE) {				\
+ 		spu_acquire(ctx);					\
+@@ -1106,7 +1106,7 @@ static u64 __##__get(void *data)					\
+ }									\
+ DEFINE_SIMPLE_ATTRIBUTE(__name, __##__get, __set, __fmt);
+ 
+-static void spufs_signal1_type_set(void *data, u64 val)
++static void spufs_signal1_type_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 
+@@ -1115,7 +1115,7 @@ static void spufs_signal1_type_set(void 
+ 	spu_release(ctx);
+ }
+ 
+-static u64 spufs_signal1_type_get(struct spu_context *ctx)
++static unsigned long long spufs_signal1_type_get(struct spu_context *ctx)
+ {
+ 	return ctx->ops->signal1_type_get(ctx);
+ }
+@@ -1123,7 +1123,7 @@ DEFINE_SPUFS_ATTRIBUTE(spufs_signal1_typ
+ 		       spufs_signal1_type_set, "%llu", SPU_ATTR_ACQUIRE);
+ 
+ 
+-static void spufs_signal2_type_set(void *data, u64 val)
++static void spufs_signal2_type_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 
+@@ -1132,7 +1132,7 @@ static void spufs_signal2_type_set(void 
+ 	spu_release(ctx);
+ }
+ 
+-static u64 spufs_signal2_type_get(struct spu_context *ctx)
++static unsigned long long spufs_signal2_type_get(struct spu_context *ctx)
+ {
+ 	return ctx->ops->signal2_type_get(ctx);
+ }
+@@ -1605,7 +1605,7 @@ static const struct file_operations spuf
+ 	.mmap	 = spufs_mfc_mmap,
+ };
+ 
+-static void spufs_npc_set(void *data, u64 val)
++static void spufs_npc_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 	spu_acquire(ctx);
+@@ -1613,14 +1613,14 @@ static void spufs_npc_set(void *data, u6
+ 	spu_release(ctx);
+ }
+ 
+-static u64 spufs_npc_get(struct spu_context *ctx)
++static unsigned long long spufs_npc_get(struct spu_context *ctx)
+ {
+ 	return ctx->ops->npc_read(ctx);
+ }
+ DEFINE_SPUFS_ATTRIBUTE(spufs_npc_ops, spufs_npc_get, spufs_npc_set,
+ 		       "0x%llx\n", SPU_ATTR_ACQUIRE);
+ 
+-static void spufs_decr_set(void *data, u64 val)
++static void spufs_decr_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+@@ -1629,7 +1629,7 @@ static void spufs_decr_set(void *data, u
+ 	spu_release_saved(ctx);
+ }
+ 
+-static u64 spufs_decr_get(struct spu_context *ctx)
++static unsigned long long spufs_decr_get(struct spu_context *ctx)
+ {
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+ 	return lscsa->decr.slot[0];
+@@ -1637,7 +1637,7 @@ static u64 spufs_decr_get(struct spu_con
+ DEFINE_SPUFS_ATTRIBUTE(spufs_decr_ops, spufs_decr_get, spufs_decr_set,
+ 		       "0x%llx\n", SPU_ATTR_ACQUIRE_SAVED);
+ 
+-static void spufs_decr_status_set(void *data, u64 val)
++static void spufs_decr_status_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 	spu_acquire_saved(ctx);
+@@ -1648,7 +1648,7 @@ static void spufs_decr_status_set(void *
+ 	spu_release_saved(ctx);
+ }
+ 
+-static u64 spufs_decr_status_get(struct spu_context *ctx)
++static unsigned long long spufs_decr_status_get(struct spu_context *ctx)
+ {
+ 	if (ctx->csa.priv2.mfc_control_RW & MFC_CNTL_DECREMENTER_RUNNING)
+ 		return SPU_DECR_STATUS_RUNNING;
+@@ -1659,7 +1659,7 @@ DEFINE_SPUFS_ATTRIBUTE(spufs_decr_status
+ 		       spufs_decr_status_set, "0x%llx\n",
+ 		       SPU_ATTR_ACQUIRE_SAVED);
+ 
+-static void spufs_event_mask_set(void *data, u64 val)
++static void spufs_event_mask_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+@@ -1668,7 +1668,7 @@ static void spufs_event_mask_set(void *d
+ 	spu_release_saved(ctx);
+ }
+ 
+-static u64 spufs_event_mask_get(struct spu_context *ctx)
++static unsigned long long spufs_event_mask_get(struct spu_context *ctx)
+ {
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+ 	return lscsa->event_mask.slot[0];
+@@ -1678,7 +1678,7 @@ DEFINE_SPUFS_ATTRIBUTE(spufs_event_mask_
+ 		       spufs_event_mask_set, "0x%llx\n",
+ 		       SPU_ATTR_ACQUIRE_SAVED);
+ 
+-static u64 spufs_event_status_get(struct spu_context *ctx)
++static unsigned long long spufs_event_status_get(struct spu_context *ctx)
+ {
+ 	struct spu_state *state = &ctx->csa;
+ 	u64 stat;
+@@ -1690,7 +1690,7 @@ static u64 spufs_event_status_get(struct
+ DEFINE_SPUFS_ATTRIBUTE(spufs_event_status_ops, spufs_event_status_get,
+ 		       NULL, "0x%llx\n", SPU_ATTR_ACQUIRE_SAVED)
+ 
+-static void spufs_srr0_set(void *data, u64 val)
++static void spufs_srr0_set(void *data, unsigned long long val)
+ {
+ 	struct spu_context *ctx = data;
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+@@ -1699,7 +1699,7 @@ static void spufs_srr0_set(void *data, u
+ 	spu_release_saved(ctx);
+ }
+ 
+-static u64 spufs_srr0_get(struct spu_context *ctx)
++static unsigned long long spufs_srr0_get(struct spu_context *ctx)
+ {
+ 	struct spu_lscsa *lscsa = ctx->csa.lscsa;
+ 	return lscsa->srr0.slot[0];
+@@ -1707,7 +1707,7 @@ static u64 spufs_srr0_get(struct spu_con
+ DEFINE_SPUFS_ATTRIBUTE(spufs_srr0_ops, spufs_srr0_get, spufs_srr0_set,
+ 		       "0x%llx\n", SPU_ATTR_ACQUIRE_SAVED)
+ 
+-static u64 spufs_id_get(struct spu_context *ctx)
++static unsigned long long spufs_id_get(struct spu_context *ctx)
+ {
+ 	u64 num;
+ 
+@@ -1721,13 +1721,13 @@ static u64 spufs_id_get(struct spu_conte
+ DEFINE_SPUFS_ATTRIBUTE(spufs_id_ops, spufs_id_get, NULL, "0x%llx\n",
+ 		       SPU_ATTR_ACQUIRE)
+ 
+-static u64 spufs_object_id_get(struct spu_context *ctx)
++static unsigned long long spufs_object_id_get(struct spu_context *ctx)
+ {
+ 	/* FIXME: Should there really be no locking here? */
+ 	return ctx->object_id;
+ }
+ 
+-static void spufs_object_id_set(void *data, u64 id)
++static void spufs_object_id_set(void *data, unsigned long long id)
+ {
+ 	struct spu_context *ctx = data;
+ 	ctx->object_id = id;
+@@ -1736,7 +1736,7 @@ static void spufs_object_id_set(void *da
+ DEFINE_SPUFS_ATTRIBUTE(spufs_object_id_ops, spufs_object_id_get,
+ 		       spufs_object_id_set, "0x%llx\n", SPU_ATTR_NOACQUIRE);
+ 
+-static u64 spufs_lslr_get(struct spu_context *ctx)
++static unsigned long long spufs_lslr_get(struct spu_context *ctx)
+ {
+ 	return ctx->csa.priv2.spu_lslr_RW;
+ }
+Index: wireless-2.6/include/linux/fs.h
+===================================================================
+--- wireless-2.6.orig/include/linux/fs.h
++++ wireless-2.6/include/linux/fs.h
+@@ -15,8 +15,8 @@
+  * nr_file rlimit, so it's safe to set up a ridiculously high absolute
+  * upper limit on files-per-process.
+  *
+- * Some programs (notably those using select()) may have to be 
+- * recompiled to take full advantage of the new limits..  
++ * Some programs (notably those using select()) may have to be
++ * recompiled to take full advantage of the new limits..
+  */
+ 
+ /* Fixed constants first: */
+@@ -90,7 +90,7 @@ extern int dir_notify_enable;
+ #define SEL_EX		4
+ 
+ /* public flags for file_system_type */
+-#define FS_REQUIRES_DEV 1 
++#define FS_REQUIRES_DEV 1
+ #define FS_BINARY_MOUNTDATA 2
+ #define FS_HAS_SUBTYPE 4
+ #define FS_REVAL_DOT	16384	/* Check the paths ".", ".." for staleness */
+@@ -365,7 +365,7 @@ struct iattr {
+  */
+ #include <linux/quota.h>
+ 
+-/** 
++/**
+  * enum positive_aop_returns - aop return codes with specific semantics
+  *
+  * @AOP_WRITEPAGE_ACTIVATE: Informs the caller that page writeback has
+@@ -375,7 +375,7 @@ struct iattr {
+  * 			    be a candidate for writeback again in the near
+  * 			    future.  Other callers must be careful to unlock
+  * 			    the page if they get this return.  Returned by
+- * 			    writepage(); 
++ * 			    writepage();
+  *
+  * @AOP_TRUNCATED_PAGE: The AOP method that was handed a locked page has
+  *  			unlocked it and the page might have been truncated.
+@@ -818,10 +818,10 @@ extern spinlock_t files_lock;
+ 
+ #define	MAX_NON_LFS	((1UL<<31) - 1)
+ 
+-/* Page cache limit. The filesystems should put that into their s_maxbytes 
+-   limits, otherwise bad things can happen in VM. */ 
++/* Page cache limit. The filesystems should put that into their s_maxbytes
++   limits, otherwise bad things can happen in VM. */
+ #if BITS_PER_LONG==32
+-#define MAX_LFS_FILESIZE	(((u64)PAGE_CACHE_SIZE << (BITS_PER_LONG-1))-1) 
++#define MAX_LFS_FILESIZE	(((u64)PAGE_CACHE_SIZE << (BITS_PER_LONG-1))-1)
+ #elif BITS_PER_LONG==64
+ #define MAX_LFS_FILESIZE 	0x7fffffffffffffffUL
+ #endif
+@@ -1240,7 +1240,7 @@ struct super_operations {
+ 	void (*destroy_inode)(struct inode *);
+ 
+ 	void (*read_inode) (struct inode *);
+-  
++
+    	void (*dirty_inode) (struct inode *);
+ 	int (*write_inode) (struct inode *, int);
+ 	void (*put_inode) (struct inode *);
+@@ -1719,7 +1719,7 @@ extern int may_open(struct nameidata *, 
+ 
+ extern int kernel_read(struct file *, unsigned long, char *, unsigned long);
+ extern struct file * open_exec(const char *);
+- 
++
+ /* fs/dcache.c -- generic fs support functions */
+ extern int is_subdir(struct dentry *, struct dentry *);
+ extern ino_t find_inode_number(struct dentry *, struct qstr *);
+@@ -1753,7 +1753,7 @@ extern void unlock_new_inode(struct inod
+ static inline struct inode *iget(struct super_block *sb, unsigned long ino)
+ {
+ 	struct inode *inode = iget_locked(sb, ino);
+-	
++
+ 	if (inode && (inode->i_state & I_NEW)) {
+ 		sb->s_op->read_inode(inode);
+ 		unlock_new_inode(inode);
+@@ -2062,7 +2062,8 @@ __simple_attr_check_format(const char *f
+ }
+ 
+ int simple_attr_open(struct inode *inode, struct file *file,
+-		     u64 (*get)(void *), void (*set)(void *, u64),
++		     unsigned long long (*get)(void *),
++		     void (*set)(void *, unsigned long long),
+ 		     const char *fmt);
+ int simple_attr_close(struct inode *inode, struct file *file);
+ ssize_t simple_attr_read(struct file *file, char __user *buf,
+Index: wireless-2.6/lib/fault-inject.c
+===================================================================
+--- wireless-2.6.orig/lib/fault-inject.c
++++ wireless-2.6/lib/fault-inject.c
+@@ -134,13 +134,14 @@ bool should_fail(struct fault_attr *attr
+ 
+ #ifdef CONFIG_FAULT_INJECTION_DEBUG_FS
+ 
+-static void debugfs_ul_set(void *data, u64 val)
++static void debugfs_ul_set(void *data, unsigned long long val)
+ {
+ 	*(unsigned long *)data = val;
+ }
+ 
+ #ifdef CONFIG_FAULT_INJECTION_STACKTRACE_FILTER
+-static void debugfs_ul_set_MAX_STACK_TRACE_DEPTH(void *data, u64 val)
++static void debugfs_ul_set_MAX_STACK_TRACE_DEPTH(void *data,
++						 unsigned long long val)
+ {
+ 	*(unsigned long *)data =
+ 		val < MAX_STACK_TRACE_DEPTH ?
+@@ -148,7 +149,7 @@ static void debugfs_ul_set_MAX_STACK_TRA
+ }
+ #endif /* CONFIG_FAULT_INJECTION_STACKTRACE_FILTER */
+ 
+-static u64 debugfs_ul_get(void *data)
++static unsigned long long debugfs_ul_get(void *data)
+ {
+ 	return *(unsigned long *)data;
+ }
+@@ -174,12 +175,12 @@ static struct dentry *debugfs_create_ul_
+ }
+ #endif /* CONFIG_FAULT_INJECTION_STACKTRACE_FILTER */
+ 
+-static void debugfs_atomic_t_set(void *data, u64 val)
++static void debugfs_atomic_t_set(void *data, unsigned long long val)
+ {
+ 	atomic_set((atomic_t *)data, val);
+ }
+ 
+-static u64 debugfs_atomic_t_get(void *data)
++static unsigned long long debugfs_atomic_t_get(void *data)
+ {
+ 	return atomic_read((atomic_t *)data);
+ }
 
 
 
+-- 
+Ciao
+Stefano
