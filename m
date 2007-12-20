@@ -1,332 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31951 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:34023 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932931AbXLQQNe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 11:13:34 -0500
+	id S1757280AbXLTJse (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 04:48:34 -0500
 From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
 Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
 	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
 	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 3/8] mac80211: A-MPDU Rx adding basic functionality
-Date: Mon, 17 Dec 2007 17:57:44 +0200
-Message-Id: <11979070781347-git-send-email-ron.rindjunsky@intel.com> (sfid-20071217_161343_356729_42633B5C)
-In-Reply-To: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
+Subject: [PATCH 1/8 v2] mac80211: A-MPDU Rx add low level driver API
+Date: Thu, 20 Dec 2007 11:39:05 +0200
+Message-Id: <11981435614092-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094842_754848_B6AA4869)
+In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
+References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the basic needed abilities and functions for A-MPDU Rx session
-changed functions:
- - ieee80211_sta_process_addba_request - Rx A-MPDU initialization enabled
-added functions:
- - ieee80211_send_delba - used for sending out Del BA in A-MPDU sessions
- - ieee80211_sta_stop_rx_BA_session - stopping Rx A-MPDU session
- - sta_rx_agg_session_timer_expired - stops A-MPDU Rx use if load is too low
+This patch adds the API to perform A-MPDU actions between mac80211 and low
+level driver.
 
 Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- include/linux/ieee80211.h    |    7 ++
- net/mac80211/ieee80211_i.h   |    3 +
- net/mac80211/ieee80211_sta.c |  223 ++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 223 insertions(+), 10 deletions(-)
+ include/net/mac80211.h |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 3e64159..c0edd5a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -472,6 +472,13 @@ enum ieee80211_back_actioncode {
- 	WLAN_ACTION_DELBA = 2,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0d67b33..418cd38 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -915,6 +915,18 @@ enum ieee80211_erp_change_flags {
+ 	IEEE80211_ERP_CHANGE_PREAMBLE	= 1<<1,
  };
  
-+/* BACK parties */
-+enum ieee80211_back_parties {
-+	WLAN_BACK_RECIPIENT = 0,
-+	WLAN_BACK_INITIATOR = 1,
-+	WLAN_BACK_TIMER = 2,
-+};
-+
- /* A-MSDU 802.11n */
- #define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b54ed5f..cf2256b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -770,6 +770,9 @@ int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
- int ieee80211_ht_addt_info_ie_to_ht_bss_info(
- 			struct ieee80211_ht_addt_info *ht_add_info_ie,
- 			struct ieee80211_ht_bss_info *bss_info);
-+void ieee80211_sta_stop_rx_BA_session(struct net_device *dev, u8 *da,
-+				u16 tid, u16 initiator, u16 reason);
-+void sta_rx_agg_session_timer_expired(unsigned long data);
- /* ieee80211_iface.c */
- int ieee80211_if_add(struct net_device *dev, const char *name,
- 		     struct net_device **new_dev, int type);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 2e0f861..ca98d06 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -64,6 +64,9 @@
- #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
- #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
- 
-+#define IEEE80211_MIN_AMPDU_BUF 0x8
-+#define IEEE80211_MAX_AMPDU_BUF 0x40
-+
- static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
- 				     u8 *ssid, size_t ssid_len);
- static struct ieee80211_sta_bss *
-@@ -1051,9 +1054,14 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 						size_t len)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct ieee80211_conf *conf = &hw->conf;
- 	struct sta_info *sta;
--	u16 capab, tid, timeout, ba_policy, buf_size, status;
-+	struct tid_ampdu_rx *tid_agg_rx;
-+	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num, status;
- 	u8 dialog_token;
-+	int ret = -EOPNOTSUPP;
-+	DECLARE_MAC_BUF(mac);
- 
- 	sta = sta_info_get(local, mgmt->sa);
- 	if (!sta)
-@@ -1062,28 +1070,223 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 	/* extract session parameters from addba request frame */
- 	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
- 	timeout = le16_to_cpu(mgmt->u.action.u.addba_req.timeout);
-+	start_seq_num =
-+		le16_to_cpu(mgmt->u.action.u.addba_req.start_seq_num) >> 4;
- 
- 	capab = le16_to_cpu(mgmt->u.action.u.addba_req.capab);
- 	ba_policy = (capab & IEEE80211_ADDBA_PARAM_POLICY_MASK) >> 1;
- 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
- 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
- 
--	/* TODO - currently aggregation is declined (A-MPDU add BA request
--	* acceptance is not obligatory by 802.11n draft), but here is
--	* the entry point for dealing with it */
--#ifdef MAC80211_HT_DEBUG
--	if (net_ratelimit())
--		printk(KERN_DEBUG "Add Block Ack request arrived,"
--				   " currently denying it\n");
--#endif /* MAC80211_HT_DEBUG */
--
- 	status = WLAN_STATUS_REQUEST_DECLINED;
- 
-+
-+	/* sanity check for incoming parameters:
-+	 * check if configuration can support the BA policy
-+	 * and if buffer size does not exceeds max value */
-+	if (((ba_policy != 1)
-+		&& (!(conf->ht_conf.cap & IEEE80211_HT_CAP_DELAY_BA)))
-+		|| (buf_size > IEEE80211_MAX_AMPDU_BUF)) {
-+		status = WLAN_STATUS_INVALID_QOS_PARAM;
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "Block Ack Req with bad params from "
-+				"%s on tid %u. policy %d, buffer size %d\n",
-+				print_mac(mac, mgmt->sa), tid, ba_policy,
-+				buf_size);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		goto end_no_lock;
-+	}
-+	/* determine default buffer size */
-+	if (buf_size == 0) {
-+		struct ieee80211_hw_mode *mode = conf->mode;
-+		buf_size = IEEE80211_MIN_AMPDU_BUF;
-+		buf_size = buf_size << mode->ht_info.ampdu_factor;
-+	}
-+
-+	tid_agg_rx = &sta->ampdu_mlme.tid_rx[tid];
-+
-+	/* examine state machine */
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_rx);
-+
-+	if (tid_agg_rx->state != HT_AGG_STATE_IDLE) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "unexpected Block Ack Req from "
-+				"%s on tid %u\n",
-+				print_mac(mac, mgmt->sa), tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		goto end;
-+	}
-+
-+	/* prepare reordering buffer */
-+	tid_agg_rx->reorder_buf =
-+		kmalloc(buf_size * sizeof(struct sk_buf *), GFP_ATOMIC);
-+	if (!tid_agg_rx->reorder_buf) {
-+		printk(KERN_ERR "can not allocate reordering buffer "
-+						"to tid %d\n", tid);
-+		tid_agg_rx->state = HT_AGG_STATE_IDLE;
-+		goto end;
-+	}
-+	memset(tid_agg_rx->reorder_buf, 0,
-+		buf_size * sizeof(struct sk_buf *));
-+
-+	if (local->ops->ampdu_action)
-+		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
-+					       sta->addr, tid, start_seq_num);
-+	if (ret) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "A-MPDU on tid %d result: %s", tid,
-+			(ret == -EOPNOTSUPP)? "Not Supported": "Driver Error");
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		kfree(tid_agg_rx->reorder_buf);
-+		goto end;
-+	}
-+
-+	/* change state and send addba resp */
-+	tid_agg_rx->state = HT_AGG_STATE_OPERATIONAL;
-+	tid_agg_rx->dialog_token = dialog_token;
-+	tid_agg_rx->ssn = start_seq_num;
-+	tid_agg_rx->head_seq_num = start_seq_num;
-+	tid_agg_rx->buf_size = buf_size;
-+	tid_agg_rx->timeout = timeout;
-+	tid_agg_rx->stored_mpdu_num = 0;
-+	status = WLAN_STATUS_SUCCESS;
-+end:
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-+
-+end_no_lock:
- 	ieee80211_send_addba_resp(sta->dev, sta->addr, tid, dialog_token,
- 				status, 1, buf_size, timeout);
- 	sta_info_put(sta);
- }
- 
-+void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
-+				u16 initiator, u16 reason_code)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *mgmt;
-+	u16 params;
-+
-+	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
-+					sizeof(mgmt->u.action.u.delba));
-+
-+	if (!skb) {
-+		printk(KERN_ERR "%s: failed to allocate buffer "
-+					"for delba frame\n", dev->name);
-+		return;
-+	}
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
-+	memset(mgmt, 0, 24);
-+	memcpy(mgmt->da, da, ETH_ALEN);
-+	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
-+	if (sdata->type == IEEE80211_IF_TYPE_AP)
-+		memcpy(mgmt->bssid, dev->dev_addr, ETH_ALEN);
-+	else
-+		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
-+	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
-+					IEEE80211_STYPE_ACTION);
-+
-+	skb_put(skb, 1 + sizeof(mgmt->u.action.u.delba));
-+
-+	mgmt->u.action.category = WLAN_CATEGORY_BACK;
-+	mgmt->u.action.u.delba.action_code = WLAN_ACTION_DELBA;
-+	params = (u16)(initiator << 11); 	/* bit 11 initiator */
-+	params |= (u16)(tid << 12); 		/* bit 15:12 TID number */
-+
-+	mgmt->u.action.u.delba.params = cpu_to_le16(params);
-+	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
-+
-+	ieee80211_sta_tx(dev, skb, 0);
-+}
-+
-+void ieee80211_sta_stop_rx_BA_session(struct net_device *dev, u8 *ra, u16 tid,
-+					u16 initiator, u16 reason)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct sta_info *sta;
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta)
-+		return;
-+
-+	/* check if the TID is in opertional state */
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_rx);
-+	if (sta->ampdu_mlme.tid_rx[tid].state
-+				!= HT_AGG_STATE_OPERATIONAL) {
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "rx BA session requested to stop on "
-+				"unactive tid %d\n", tid);
-+		sta_info_put(sta);
-+		return;
-+	}
-+	sta->ampdu_mlme.tid_rx[tid].state =
-+		HT_AGG_STATE_REQ_STOP_BA_MSK |
-+		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-+
-+	/* stop HW Rx aggregation */
-+	if (local->ops->ampdu_action) {
-+		int ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
-+						   ra, tid, EINVAL);
-+		if (ret)
-+			printk(KERN_DEBUG "HW problem - can not stop rx "
-+				"aggergation for tid %d\n", tid);
-+	}
-+
-+	/* shutdown timer has not expired */
-+	if (initiator != WLAN_BACK_TIMER)
-+		del_timer_sync(&sta->ampdu_mlme.tid_rx[tid].
-+					session_timer);
-+
-+	/* check if this is a self generated aggregation halt */
-+	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
-+		ieee80211_send_delba(dev, ra, tid, 0, reason);
-+
-+	/* free the reordering buffer */
-+	kfree(sta->ampdu_mlme.tid_rx[tid].reorder_buf);
-+
-+	sta->ampdu_mlme.tid_rx[tid].state = HT_AGG_STATE_IDLE;
-+	sta_info_put(sta);
-+}
-+
-+/*
-+ * After receiving Block Ack Request (BAR) we activated a
-+ * timer after each frame arrives from the originator.
-+ * if this timer expires ieee80211_sta_stop_rx_BA_session will be executed.
++/**
++ * enum ieee80211_ampdu_mlme_action - A-MPDU actions
++ *
++ * These flags are used with the ampdu_action() callback in
++ * &struct ieee80211_ops to indicate which action is needed.
++ * @IEEE80211_AMPDU_RX_START: start Rx aggregation
++ * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
 + */
-+void sta_rx_agg_session_timer_expired(unsigned long data)
-+{
-+	/* not an elegant detour, but there is no choice as the timer passes
-+	* only one argument, and ieee80211_local is needed here */
-+	int *ptid = (int *)data;
-+	int *timer_to_id = ptid - *ptid;
-+	struct sta_info *temp_sta = container_of(timer_to_id, struct sta_info,
-+					 timer_to_tid[0]);
-+	struct ieee80211_local *local = temp_sta->local;
-+	struct sta_info *sta;
-+	u16 tid = (u16)*ptid;
-+	sta = sta_info_get(local, temp_sta->addr);
-+
-+	if (!sta)
-+		return;
-+
-+	printk(KERN_DEBUG "rx session timer expired on tid %d\n", tid);
-+	ieee80211_sta_stop_rx_BA_session(sta->dev, sta->addr, tid,
-+					 WLAN_BACK_TIMER,
-+					 WLAN_REASON_QSTA_TIMEOUT);
-+	sta_info_put(sta);
-+}
-+
-+
- static void ieee80211_rx_mgmt_auth(struct net_device *dev,
- 				   struct ieee80211_if_sta *ifsta,
- 				   struct ieee80211_mgmt *mgmt,
++enum ieee80211_ampdu_mlme_action {
++	IEEE80211_AMPDU_RX_START,
++	IEEE80211_AMPDU_RX_STOP,
++};
+ 
+ /**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+@@ -1043,6 +1055,12 @@ enum ieee80211_erp_change_flags {
+  *	used to determine whether to reply to Probe Requests.
+  *
+  * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
++ *
++ * @ampdu_action: Perform a certain A-MPDU action
++ * 	The RA/TID combination determines the destination and TID we want
++ * 	the ampdu action to be performed for. The action is defined through
++ * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
++ * 	is the first frame we expect to perform the action on.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
+@@ -1089,6 +1107,9 @@ struct ieee80211_ops {
+ 			     struct ieee80211_tx_control *control);
+ 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
+ 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
++	int (*ampdu_action)(struct ieee80211_hw *hw,
++			    enum ieee80211_ampdu_mlme_action action,
++			    const u8 *ra, u16 tid, u16 ssn);
+ };
+ 
+ /**
 -- 
 1.5.3.3
 
