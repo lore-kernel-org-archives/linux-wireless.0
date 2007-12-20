@@ -1,49 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50907 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761565AbXLPW6i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:38 -0500
-Subject: [PATCH 108/48] libertas: let __lbs_cmd() free its own cmdnode
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J42S5-00038V-LS@shinybook.infradead.org> (sfid-20071216_232057_677461_CC335605)
-Date: Sun, 16 Dec 2007 17:59:17 -0500
+Received: from mga11.intel.com ([192.55.52.93]:3300 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753842AbXLTJmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 04:42:07 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 7/8 v2] mac80211: A-MPDU Rx handling DELBA requests
+Date: Thu, 20 Dec 2007 11:39:11 +0200
+Message-Id: <11981435622807-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094214_308499_54EEB229)
+In-Reply-To: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
+References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 15 Dec 2007 02:06:16 -0500
+This patch opens the flow to DELBA management frames, and handles end
+of A-MPDU session produced by this event.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/libertas/cmd.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ net/mac80211/ieee80211_sta.c |   40 +++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 4c0bd9f..e7f07c3 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1310,7 +1310,8 @@ void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
- 	cmd->cmdwaitqwoken = 1;
- 	wake_up_interruptible(&cmd->cmdwait_q);
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 00ffa81..9301a53 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -63,6 +63,8 @@
+ #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+ #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+ #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
++#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
++#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
  
--	__lbs_cleanup_and_insert_cmd(priv, cmd);
-+	if (!cmd->callback)
-+		__lbs_cleanup_and_insert_cmd(priv, cmd);
- 	priv->cur_cmd = NULL;
+ /* next values represent the buffer size for A-MPDU frame.
+  * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2) */
+@@ -1275,6 +1277,36 @@ void ieee80211_sta_stop_rx_BA_session(struct net_device *dev, u8 *ra, u16 tid,
+ 	sta_info_put(sta);
  }
  
-@@ -2219,6 +2220,7 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
- 		priv->cur_cmd_retcode = 0;
- 		ret = -1;
- 	}
-+	__lbs_cleanup_and_insert_cmd(priv, cmdnode);
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
- done:
++static void ieee80211_sta_process_delba(struct net_device *dev,
++			struct ieee80211_mgmt *mgmt, size_t len)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++	u16 tid, params;
++	u16 initiator;
++	DECLARE_MAC_BUF(mac);
++
++	sta = sta_info_get(local, mgmt->sa);
++	if (!sta)
++		return;
++
++	params = le16_to_cpu(mgmt->u.action.u.delba.params);
++	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
++	initiator = (params & IEEE80211_DELBA_PARAM_INITIATOR_MASK) >> 11;
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	if (net_ratelimit())
++		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
++			print_mac(mac, mgmt->sa), tid,
++			mgmt->u.action.u.delba.reason_code);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++
++	if (initiator == WLAN_BACK_INITIATOR)
++		ieee80211_sta_stop_rx_BA_session(dev, sta->addr, tid,
++						 WLAN_BACK_INITIATOR, 0);
++	sta_info_put(sta);
++}
++
+ /*
+  * After receiving Block Ack Request (BAR) we activated a
+  * timer after each frame arrives from the originator.
+@@ -2238,9 +2270,15 @@ void ieee80211_rx_mgmt_action(struct net_device *dev,
+ 				break;
+ 			ieee80211_sta_process_addba_request(dev, mgmt, len);
+ 			break;
++		case WLAN_ACTION_DELBA:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.delba)))
++				break;
++			ieee80211_sta_process_delba(dev, mgmt, len);
++			break;
+ 		default:
+ 			if (net_ratelimit())
+-			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
++			   printk(KERN_DEBUG "%s: Rx unknown A-MPDU action\n",
+ 					dev->name);
+ 			break;
+ 		}
 -- 
-1.5.3.4
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
