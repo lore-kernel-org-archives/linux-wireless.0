@@ -1,169 +1,365 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53149
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752233AbXLVE5R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 23:57:17 -0500
-Date: Fri, 21 Dec 2007 20:57:17 -0800 (PST)
-Message-Id: <20071221.205717.179449993.davem@davemloft.net> (sfid-20071222_045722_907372_8371E6DF)
+Received: from ra.tuxdriver.com ([70.61.120.52]:3525 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751142AbXLTT6e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 14:58:34 -0500
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id lBKJwHUD016091
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2007 14:58:22 -0500
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id lBKJkM0Q015942
+	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2007 14:46:24 -0500
+Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
+	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id lBKJfCVZ019968
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2007 14:41:13 -0500
+Received: (from linville@localhost)
+	by linville-t43.mobile (8.14.1/8.14.1/Submit) id lBKJfCZY019967
+	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2007 14:41:12 -0500
+Date: Thu, 20 Dec 2007 14:41:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [WEXT 10/12]: Remove compat handling from fs/compat_ioctl.c
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: [linville@tuxdriver.com: Please pull 'fixes-jgarzik' branch of
+	wireless-2.6]
+Message-ID: <20071220194112.GI3139@tuxdriver.com> (sfid-20071220_195839_739518_053DD385)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sorry, missed sending this to linux-wireless...
 
-[WEXT]: Remove compat handling from fs/compat_ioctl.c
+John
 
-No longer used.
+----- Forwarded message from "John W. Linville" <linville@tuxdriver.com> -----
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- fs/compat_ioctl.c |  107 +----------------------------------------------------
- 1 files changed, 1 insertions(+), 106 deletions(-)
+> Date: Thu, 20 Dec 2007 10:54:02 -0500
+> From: "John W. Linville" <linville@tuxdriver.com>
+> To: jeff@garzik.org
+> Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+> Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
+> User-Agent: Mutt/1.5.17 (2007-11-01)
+> 
+> Jeff,
+> 
+> Here are a few more for 2.6.24...please let me know if there are any
+> problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> P.S.  The rtl8187 USB ID is already in your upstream branch -- I'm sure
+> it would seem like a fix if it was the ID for your wireless stick. :-)
+> 
+> ---
+> 
+> Individual patches are available here:
+> 
+> 	http://www.kernel.org//pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik
+> 
+> ---
+> 
+> The following changes since commit 82d29bf6dc7317aeb0a3a13c2348ca8591965875:
+>   Linus Torvalds (1):
+>         Linux 2.6.24-rc5
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> 
+> Matthias Mueller (1):
+>       rtl8187: Add USB ID for Sitecom WL-168 v1 001
+> 
+> Michael Wu (1):
+>       p54: add Kconfig description
+> 
+> Reinette Chatre (1):
+>       ipw2200: prevent alloc of unspecified size on stack
+> 
+> Zhu Yi (1):
+>       iwlwifi: fix possible priv->mutex deadlock during suspend
+> 
+>  drivers/net/wireless/Kconfig                |   51 +++++++++++++++++++++++++++
+>  drivers/net/wireless/ipw2200.c              |   13 ++++++-
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 +++-------
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   18 +++-------
+>  drivers/net/wireless/rtl8187_dev.c          |    2 +
+>  5 files changed, 75 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index 2b733c5..7bdf9da 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -586,15 +586,66 @@ config ADM8211
+>  config P54_COMMON
+>  	tristate "Softmac Prism54 support"
+>  	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
+> +	---help---
+> +	  This is common code for isl38xx based cards.
+> +	  This module does nothing by itself - the USB/PCI frontends
+> +	  also need to be enabled in order to support any devices.
+> +
+> +	  These devices require softmac firmware which can be found at
+> +	  http://prism54.org/
+> +
+> +	  If you choose to build a module, it'll be called p54common.
+>  
+>  config P54_USB
+>  	tristate "Prism54 USB support"
+>  	depends on P54_COMMON && USB
+>  	select CRC32
+> +	---help---
+> +	  This driver is for USB isl38xx based wireless cards.
+> +	  These are USB based adapters found in devices such as:
+> +
+> +	  3COM 3CRWE254G72
+> +	  SMC 2862W-G
+> +	  Accton 802.11g WN4501 USB
+> +	  Siemens Gigaset USB
+> +	  Netgear WG121
+> +	  Netgear WG111
+> +	  Medion 40900, Roper Europe
+> +	  Shuttle PN15, Airvast WM168g, IOGear GWU513
+> +	  Linksys WUSB54G
+> +	  Linksys WUSB54G Portable
+> +	  DLink DWL-G120 Spinnaker
+> +	  DLink DWL-G122
+> +	  Belkin F5D7050 ver 1000
+> +	  Cohiba Proto board
+> +	  SMC 2862W-G version 2
+> +	  U.S. Robotics U5 802.11g Adapter
+> +	  FUJITSU E-5400 USB D1700
+> +	  Sagem XG703A
+> +	  DLink DWL-G120 Cohiba
+> +	  Spinnaker Proto board
+> +	  Linksys WUSB54AG
+> +	  Inventel UR054G
+> +	  Spinnaker DUT
+> +
+> +	  These devices require softmac firmware which can be found at
+> +	  http://prism54.org/
+> +
+> +	  If you choose to build a module, it'll be called p54usb.
+>  
+>  config P54_PCI
+>  	tristate "Prism54 PCI support"
+>  	depends on P54_COMMON && PCI
+> +	---help---
+> +	  This driver is for PCI isl38xx based wireless cards.
+> +	  This driver supports most devices that are supported by the
+> +	  fullmac prism54 driver plus many devices which are not
+> +	  supported by the fullmac driver/firmware.
+> +
+> +	  This driver requires softmac firmware which can be found at
+> +	  http://prism54.org/
+> +
+> +	  If you choose to build a module, it'll be called p54pci.
+>  
+>  source "drivers/net/wireless/iwlwifi/Kconfig"
+>  source "drivers/net/wireless/hostap/Kconfig"
+> diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+> index 54f44e5..38ce8ee 100644
+> --- a/drivers/net/wireless/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2200.c
+> @@ -1233,9 +1233,19 @@ static ssize_t show_event_log(struct device *d,
+>  {
+>  	struct ipw_priv *priv = dev_get_drvdata(d);
+>  	u32 log_len = ipw_get_event_log_len(priv);
+> -	struct ipw_event log[log_len];
+> +	u32 log_size;
+> +	struct ipw_event *log;
+>  	u32 len = 0, i;
+>  
+> +	/* not using min() because of its strict type checking */
+> +	log_size = PAGE_SIZE / sizeof(*log) > log_len ?
+> +			sizeof(*log) * log_len : PAGE_SIZE;
+> +	log = kzalloc(log_size, GFP_KERNEL);
+> +	if (!log) {
+> +		IPW_ERROR("Unable to allocate memory for log\n");
+> +		return 0;
+> +	}
+> +	log_len = log_size / sizeof(*log);
+>  	ipw_capture_event_log(priv, log_len, log);
+>  
+>  	len += snprintf(buf + len, PAGE_SIZE - len, "%08X", log_len);
+> @@ -1244,6 +1254,7 @@ static ssize_t show_event_log(struct device *d,
+>  				"\n%08X%08X%08X",
+>  				log[i].time, log[i].event, log[i].data);
+>  	len += snprintf(buf + len, PAGE_SIZE - len, "\n");
+> +	kfree(log);
+>  	return len;
+>  }
+>  
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 4bdf237..5c67b5b 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -6243,8 +6243,6 @@ static void __iwl_down(struct iwl_priv *priv)
+>  	/* Unblock any waiting calls */
+>  	wake_up_interruptible_all(&priv->wait_command_queue);
+>  
+> -	iwl_cancel_deferred_work(priv);
+> -
+>  	/* Wipe out the EXIT_PENDING status bit if we are not actually
+>  	 * exiting the module */
+>  	if (!exit_pending)
+> @@ -6319,6 +6317,8 @@ static void iwl_down(struct iwl_priv *priv)
+>  	mutex_lock(&priv->mutex);
+>  	__iwl_down(priv);
+>  	mutex_unlock(&priv->mutex);
+> +
+> +	iwl_cancel_deferred_work(priv);
+>  }
+>  
+>  #define MAX_HW_RESTARTS 5
+> @@ -8577,10 +8577,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+>  
+>  	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+>  
+> -	mutex_lock(&priv->mutex);
+>  	set_bit(STATUS_EXIT_PENDING, &priv->status);
+> -	__iwl_down(priv);
+> -	mutex_unlock(&priv->mutex);
+> +
+> +	iwl_down(priv);
+>  
+>  	/* Free MAC hash list for ADHOC */
+>  	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+> @@ -8639,12 +8638,10 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  {
+>  	struct iwl_priv *priv = pci_get_drvdata(pdev);
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+>  	set_bit(STATUS_IN_SUSPEND, &priv->status);
+>  
+>  	/* Take down the device; powers it off, etc. */
+> -	__iwl_down(priv);
+> +	iwl_down(priv);
+>  
+>  	if (priv->mac80211_registered)
+>  		ieee80211_stop_queues(priv->hw);
+> @@ -8653,8 +8650,6 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	pci_disable_device(pdev);
+>  	pci_set_power_state(pdev, PCI_D3hot);
+>  
+> -	mutex_unlock(&priv->mutex);
+> -
+>  	return 0;
+>  }
+>  
+> @@ -8712,8 +8707,6 @@ static int iwl_pci_resume(struct pci_dev *pdev)
+>  
+>  	printk(KERN_INFO "Coming out of suspend...\n");
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+>  	pci_set_power_state(pdev, PCI_D0);
+>  	err = pci_enable_device(pdev);
+>  	pci_restore_state(pdev);
+> @@ -8727,7 +8720,6 @@ static int iwl_pci_resume(struct pci_dev *pdev)
+>  	pci_write_config_byte(pdev, 0x41, 0x00);
+>  
+>  	iwl_resume(priv);
+> -	mutex_unlock(&priv->mutex);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> index 8f85564..ed148ea 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> @@ -6598,8 +6598,6 @@ static void __iwl_down(struct iwl_priv *priv)
+>  	/* Unblock any waiting calls */
+>  	wake_up_interruptible_all(&priv->wait_command_queue);
+>  
+> -	iwl_cancel_deferred_work(priv);
+> -
+>  	/* Wipe out the EXIT_PENDING status bit if we are not actually
+>  	 * exiting the module */
+>  	if (!exit_pending)
+> @@ -6674,6 +6672,8 @@ static void iwl_down(struct iwl_priv *priv)
+>  	mutex_lock(&priv->mutex);
+>  	__iwl_down(priv);
+>  	mutex_unlock(&priv->mutex);
+> +
+> +	iwl_cancel_deferred_work(priv);
+>  }
+>  
+>  #define MAX_HW_RESTARTS 5
+> @@ -9171,10 +9171,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+>  
+>  	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+>  
+> -	mutex_lock(&priv->mutex);
+>  	set_bit(STATUS_EXIT_PENDING, &priv->status);
+> -	__iwl_down(priv);
+> -	mutex_unlock(&priv->mutex);
+> +
+> +	iwl_down(priv);
+>  
+>  	/* Free MAC hash list for ADHOC */
+>  	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
+> @@ -9233,12 +9232,10 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  {
+>  	struct iwl_priv *priv = pci_get_drvdata(pdev);
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+>  	set_bit(STATUS_IN_SUSPEND, &priv->status);
+>  
+>  	/* Take down the device; powers it off, etc. */
+> -	__iwl_down(priv);
+> +	iwl_down(priv);
+>  
+>  	if (priv->mac80211_registered)
+>  		ieee80211_stop_queues(priv->hw);
+> @@ -9247,8 +9244,6 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	pci_disable_device(pdev);
+>  	pci_set_power_state(pdev, PCI_D3hot);
+>  
+> -	mutex_unlock(&priv->mutex);
+> -
+>  	return 0;
+>  }
+>  
+> @@ -9306,8 +9301,6 @@ static int iwl_pci_resume(struct pci_dev *pdev)
+>  
+>  	printk(KERN_INFO "Coming out of suspend...\n");
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+>  	pci_set_power_state(pdev, PCI_D0);
+>  	err = pci_enable_device(pdev);
+>  	pci_restore_state(pdev);
+> @@ -9321,7 +9314,6 @@ static int iwl_pci_resume(struct pci_dev *pdev)
+>  	pci_write_config_byte(pdev, 0x41, 0x00);
+>  
+>  	iwl_resume(priv);
+> -	mutex_unlock(&priv->mutex);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+> index e454ae8..bd1ab3b 100644
+> --- a/drivers/net/wireless/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl8187_dev.c
+> @@ -38,6 +38,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
+>  	{USB_DEVICE(0x0846, 0x6a00)},
+>  	/* HP */
+>  	{USB_DEVICE(0x03f0, 0xca02)},
+> +	/* Sitecom */
+> +	{USB_DEVICE(0x0df6, 0x000d)},
+>  	{}
+>  };
+>  
+> -- 
+> John W. Linville
+> linville@tuxdriver.com
 
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index e98e950..809dc56 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -56,7 +56,6 @@
- #include <linux/syscalls.h>
- #include <linux/i2c.h>
- #include <linux/i2c-dev.h>
--#include <linux/wireless.h>
- #include <linux/atalk.h>
- #include <linux/loop.h>
- 
-@@ -1756,58 +1755,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
- 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
- }
- 
--static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
--{
--	struct iwreq __user *iwr;
--	struct iwreq __user *iwr_u;
--	struct iw_point __user *iwp;
--	struct compat_iw_point __user *iwp_u;
--	compat_caddr_t pointer_u;
--	void __user *pointer;
--	__u16 length, flags;
--	int ret;
--
--	iwr_u = compat_ptr(arg);
--	iwp_u = (struct compat_iw_point __user *) &iwr_u->u.data;
--	iwr = compat_alloc_user_space(sizeof(*iwr));
--	if (iwr == NULL)
--		return -ENOMEM;
--
--	iwp = &iwr->u.data;
--
--	if (!access_ok(VERIFY_WRITE, iwr, sizeof(*iwr)))
--		return -EFAULT;
--
--	if (__copy_in_user(&iwr->ifr_ifrn.ifrn_name[0],
--			   &iwr_u->ifr_ifrn.ifrn_name[0],
--			   sizeof(iwr->ifr_ifrn.ifrn_name)))
--		return -EFAULT;
--
--	if (__get_user(pointer_u, &iwp_u->pointer) ||
--	    __get_user(length, &iwp_u->length) ||
--	    __get_user(flags, &iwp_u->flags))
--		return -EFAULT;
--
--	if (__put_user(compat_ptr(pointer_u), &iwp->pointer) ||
--	    __put_user(length, &iwp->length) ||
--	    __put_user(flags, &iwp->flags))
--		return -EFAULT;
--
--	ret = sys_ioctl(fd, cmd, (unsigned long) iwr);
--
--	if (__get_user(pointer, &iwp->pointer) ||
--	    __get_user(length, &iwp->length) ||
--	    __get_user(flags, &iwp->flags))
--		return -EFAULT;
--
--	if (__put_user(ptr_to_compat(pointer), &iwp_u->pointer) ||
--	    __put_user(length, &iwp_u->length) ||
--	    __put_user(flags, &iwp_u->flags))
--		return -EFAULT;
--
--	return ret;
--}
--
- /* Since old style bridge ioctl's endup using SIOCDEVPRIVATE
-  * for some operations; this forces use of the newer bridge-utils that
-  * use compatiable ioctls
-@@ -2521,36 +2468,6 @@ COMPATIBLE_IOCTL(I2C_TENBIT)
- COMPATIBLE_IOCTL(I2C_PEC)
- COMPATIBLE_IOCTL(I2C_RETRIES)
- COMPATIBLE_IOCTL(I2C_TIMEOUT)
--/* wireless */
--COMPATIBLE_IOCTL(SIOCSIWCOMMIT)
--COMPATIBLE_IOCTL(SIOCGIWNAME)
--COMPATIBLE_IOCTL(SIOCSIWNWID)
--COMPATIBLE_IOCTL(SIOCGIWNWID)
--COMPATIBLE_IOCTL(SIOCSIWFREQ)
--COMPATIBLE_IOCTL(SIOCGIWFREQ)
--COMPATIBLE_IOCTL(SIOCSIWMODE)
--COMPATIBLE_IOCTL(SIOCGIWMODE)
--COMPATIBLE_IOCTL(SIOCSIWSENS)
--COMPATIBLE_IOCTL(SIOCGIWSENS)
--COMPATIBLE_IOCTL(SIOCSIWRANGE)
--COMPATIBLE_IOCTL(SIOCSIWPRIV)
--COMPATIBLE_IOCTL(SIOCSIWSTATS)
--COMPATIBLE_IOCTL(SIOCSIWAP)
--COMPATIBLE_IOCTL(SIOCGIWAP)
--COMPATIBLE_IOCTL(SIOCSIWRATE)
--COMPATIBLE_IOCTL(SIOCGIWRATE)
--COMPATIBLE_IOCTL(SIOCSIWRTS)
--COMPATIBLE_IOCTL(SIOCGIWRTS)
--COMPATIBLE_IOCTL(SIOCSIWFRAG)
--COMPATIBLE_IOCTL(SIOCGIWFRAG)
--COMPATIBLE_IOCTL(SIOCSIWTXPOW)
--COMPATIBLE_IOCTL(SIOCGIWTXPOW)
--COMPATIBLE_IOCTL(SIOCSIWRETRY)
--COMPATIBLE_IOCTL(SIOCGIWRETRY)
--COMPATIBLE_IOCTL(SIOCSIWPOWER)
--COMPATIBLE_IOCTL(SIOCGIWPOWER)
--COMPATIBLE_IOCTL(SIOCSIWAUTH)
--COMPATIBLE_IOCTL(SIOCGIWAUTH)
- /* hiddev */
- COMPATIBLE_IOCTL(HIDIOCGVERSION)
- COMPATIBLE_IOCTL(HIDIOCAPPLICATION)
-@@ -2775,29 +2692,7 @@ COMPATIBLE_IOCTL(USBDEVFS_IOCTL32)
- HANDLE_IOCTL(I2C_FUNCS, w_long)
- HANDLE_IOCTL(I2C_RDWR, do_i2c_rdwr_ioctl)
- HANDLE_IOCTL(I2C_SMBUS, do_i2c_smbus_ioctl)
--/* wireless */
--HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSTATS, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWMLME, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWSCAN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWGENIE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWGENIE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWENCODEEXT, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWENCODEEXT, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWPMKSA, do_wireless_ioctl)
-+/* bridge */
- HANDLE_IOCTL(SIOCSIFBR, old_bridge_ioctl)
- HANDLE_IOCTL(SIOCGIFBR, old_bridge_ioctl)
- /* Not implemented in the native kernel */
+----- End forwarded message -----
+
 -- 
-1.5.4.rc1
-
+John W. Linville
+linville@tuxdriver.com
