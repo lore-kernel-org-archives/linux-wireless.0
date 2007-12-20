@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40544 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:34023 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbXLCLpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:45:34 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 03/34] iwl3945: re-align 3945 event log data
-Date: Mon,  3 Dec 2007 13:43:15 +0200
-Message-Id: <11966822293932-git-send-email-tomas.winkler@intel.com> (sfid-20071203_120554_742986_D69BFEED)
-In-Reply-To: <1196682229843-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
+	id S1756684AbXLTJsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2007 04:48:32 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+Subject: [PATCH 0/8 v2] mac80211/iwlwifi: integrate IEEE802.11n A-MPDU Rx MLME
+Date: Thu, 20 Dec 2007 11:39:04 +0200
+Message-Id: <11981435524069-git-send-email-ron.rindjunsky@intel.com> (sfid-20071220_094835_634819_68B7791E)
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+This series of patches contains implementation for the IEEE802.11n 
+aggregated MPDUs (A-MPDU) MLME. The series handles Rx A-MPDU (recipient party).
 
-Re-align 3945 event log data.
+Please notice:
+===============
+Patch "mac80211: A-MPDU Rx adding BAR handling capability" depends on patch 
+"mac80211: pass in PS_POLL frames" that was accepted as a stand alone patch.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Notes to this series:
+======================
+This series of patches splits into:
+ - patches 1-7 add 802.11n Rx A-MPDU MLME support to mac80211.
+ - patch 8 demonstrates the use of the above mac80211's MLME through iwl4965 low level driver
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index efeb933..415dbc9 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4494,7 +4494,7 @@ static void iwl3945_dump_nic_error_log(struct iwl3945_priv *priv)
- 
- }
- 
--#define EVENT_START_OFFSET  (4 * sizeof(u32))
-+#define EVENT_START_OFFSET  (6 * sizeof(u32))
- 
- /**
-  * iwl3945_print_event_log - Dump error event log to syslog
--- 
-1.5.2.2
+The patches in the series should not be treated as stand alone patches,
+but as a complete MLME according to IEEE802.11n spec, although separation
+to patches by subjects was made for ease of handling.
+
+The patches do _not_ break any existing driver.
+Patches were made (and tested to work) with wireless branch 2.6.24-rc3 (#everything)
+
+The MLME framework includes the following:
+- A-MPDU MLME (for aggregated Rx per STA/TID)
+- addBA request support.
+- delBA request support (recipient party).
+- Block Ack Request (BAR) support.
+- A-MPDU reordering.
+
+
 ---------------------------------------------------------------------
 Intel Israel (74) Limited
 
@@ -49,3 +50,4 @@ This e-mail and any attachments may contain confidential material for
 the sole use of the intended recipient(s). Any review or distribution
 by others is strictly prohibited. If you are not the intended
 recipient, please contact the sender and delete all copies.
+
