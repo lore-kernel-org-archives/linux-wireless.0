@@ -1,103 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32879 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751158AbXLSGRQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49176 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753648AbXLTRmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 01:17:16 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 4/6] rtl8180: update BB registers for rtl8225 V1 radio
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Wed, 19 Dec 2007 01:17:36 -0500
-Message-ID: <20071219061735.4885.9679.stgit@tetra.sourmilk.net> (sfid-20071219_061722_365673_E00C8DF4)
-In-Reply-To: <20071219061735.4885.1535.stgit@tetra.sourmilk.net>
-References: <20071219061735.4885.1535.stgit@tetra.sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+	Thu, 20 Dec 2007 12:42:54 -0500
+Subject: Re: [PATCH 3/8 v2] mac80211: A-MPDU Rx adding basic functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11981435612196-git-send-email-ron.rindjunsky@intel.com>
+References: <11981435524069-git-send-email-ron.rindjunsky@intel.com>
+	 <11981435612196-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TX0iL6tLJsRYF/wu0wZK"
+Date: Thu, 20 Dec 2007 15:41:15 +0100
+Message-Id: <1198161675.16241.53.camel@johannes.berg> (sfid-20071220_174259_525362_9FE55B0D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
 
-This should give performance improvement in OFDM when signal is poor.
+--=-TX0iL6tLJsRYF/wu0wZK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+A few minor comments, looks good otherwise.
 
- drivers/net/wireless/rtl8180_rtl8225.c |   28 ++++++++++------------------
- 1 files changed, 10 insertions(+), 18 deletions(-)
+>  	status =3D WLAN_STATUS_REQUEST_DECLINED;
+> =20
+> +
 
-diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
-index 1c4fd33..30c7e5d 100644
---- a/drivers/net/wireless/rtl8180_rtl8225.c
-+++ b/drivers/net/wireless/rtl8180_rtl8225.c
-@@ -288,10 +288,6 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
- 
--	rtl8225_write_phy_ofdm(dev, 2, 0x42);
--	rtl8225_write_phy_ofdm(dev, 6, 0x00);
--	rtl8225_write_phy_ofdm(dev, 8, 0x00);
--
- 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
- 			 rtl8225_tx_gain_cck_ofdm[ofdm_power/6] >> 1);
- 
-@@ -395,9 +391,9 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
- 	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); msleep(1);
--	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); msleep(1);
-+	rtl8225_write_phy_ofdm(dev, 0x06, 0x00); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); msleep(1);
--	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); msleep(1);
-+	rtl8225_write_phy_ofdm(dev, 0x08, 0x00); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); msleep(1);
-@@ -405,7 +401,7 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
- 	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); msleep(1);
--	rtl8225_write_phy_ofdm(dev, 0x11, 0x06); msleep(1);
-+	rtl8225_write_phy_ofdm(dev, 0x11, 0x03); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); msleep(1);
-@@ -427,11 +423,6 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
- 	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); msleep(1);
- 	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); msleep(1);
- 
--	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[1 * 4]);
--	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[1 * 4 + 2]);
--	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[1 * 4 + 3]);
--	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[1 * 4 + 1]);
--
- 	rtl8225_write_phy_cck(dev, 0x00, 0x98); msleep(1);
- 	rtl8225_write_phy_cck(dev, 0x03, 0x20); msleep(1);
- 	rtl8225_write_phy_cck(dev, 0x04, 0x7e); msleep(1);
-@@ -473,13 +464,14 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
- 	rtl818x_iowrite32(priv, (__le32 __iomem *)((void __iomem *)priv->map + 0x94), 0x15c00002);
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
- 
--	/* set sensitivity */
- 	rtl8225_write(dev, 0x0c, 0x50);
--	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[1 * 4]);
--	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[1 * 4 + 2]);
--	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[1 * 4 + 3]);
--	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[1 * 4 + 1]);
--	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
-+	/* set OFDM initial gain */
-+	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[4 * 4]);
-+	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[4 * 4 + 1]);
-+	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[4 * 4 + 2]);
-+	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[4 * 4 + 3]);
-+	/* set CCK threshold */
-+	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[0]);
- }
- 
- static const u8 rtl8225z2_tx_power_cck_ch14[] = {
+spurious newline added, I'd think.
 
+> +	/* prepare reordering buffer */
+> +	tid_agg_rx->reorder_buf =3D
+> +		kmalloc(buf_size * sizeof(struct sk_buf *), GFP_ATOMIC);
+> +	if (!tid_agg_rx->reorder_buf) {
+> +		printk(KERN_ERR "can not allocate reordering buffer "
+> +						"to tid %d\n", tid);
+
+Should that be ratelimited just in case somebody is trying over and over
+again while we're under memory pressure?
+
+> +	skb =3D dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
+> +					sizeof(mgmt->u.action.u.delba));
+
+What's "+ 1"?
+
+> +			printk(KERN_DEBUG "rx BA session requested to stop on "
+> +				"unactive tid %d\n", tid);
+
+typo: "inactive"
+
+> +	sta =3D sta_info_get(local, temp_sta->addr);
+> +
+> +	if (!sta)
+> +		return;
+
+Still have that?
+
+Thanks,
+johannes
+
+--=-TX0iL6tLJsRYF/wu0wZK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2p/CqVg1VMiehFYAQIQew//QOMCCOq16UJZluqe9RFBClzWvbCyJlkd
+b9h4pUn+pgF1lit2MWRpvyZCai0E6SW0AWkEjWUcQrbj7gU8irPgOYMkpmr9NrEW
+9SR4+SeREwi/p7SUTgvK9AdGCGAa4f0PCyqFAR4E0Iw/plKMN7GBqKPm8WE9o2+G
+YqJRlVmoWy9qijXbRGwYIfAGc5iWmPep6plcRq/hnwjFUAyHIAK8Jk6/cpAoU6RC
+rKOapNqogpJ0SYWMPzhdgZ7GUQawPu8NIPjpKHxJykTkp3HXem3JB2SfDFpfIcxt
+giyzdp9dI2L2lGQXH/43qcFrhOAUtx/OBmlclbpyiYO5AAjIfJ4KRlN2dcFVYfEG
+V9KwfpRje2dvKY432EGLZxkzjjY6RjmxDKYyWge9o46QP6JxtwcW20fhJkB/T0w1
+EAoZ7xnVfvu0sjGedbsvSXNM/1m3Lr7QGdO2/fSutrnhmxF3mVpM2SKLxUru1I66
+Evh83BKeQcV9ZADbX03FlvtPtdhfOjkR34msW9nBRyMt6kfLC6vwVXiIEDNQB1lL
+HNqneRVKGhRzKMWJMXXLkNtEzk9B+g9Sq43s3nW7NyxYKHCJRHocDlrZz41Le6cF
+qeoBV4Kww5MRXp4jdevw4pdyzuLXLIj8uKYN6DlBd34ukJTQUJdVrUStum0NSMSr
+70107l6W06o=
+=4YKb
+-----END PGP SIGNATURE-----
+
+--=-TX0iL6tLJsRYF/wu0wZK--
 
