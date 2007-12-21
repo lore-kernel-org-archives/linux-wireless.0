@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3179 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288AbXLPC63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2007 21:58:29 -0500
-Date: Sat, 15 Dec 2007 21:24:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP][PATCH] rc80211_pid: Send events to userspace for
-	debugging
-Message-ID: <20071216022402.GD3096@tuxdriver.com> (sfid-20071216_025906_493994_B82C1A38)
-References: <1197414686.7030.27.camel@localhost> <20071214231452.21ece93d@morte> <20071215175656.GB3096@tuxdriver.com> <1197756838.7540.12.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1197756838.7540.12.camel@localhost>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821AbXLUQgg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2007 11:36:36 -0500
+Subject: Re: [PATCH] mac80211: remove useless sdata variable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andreas Schwab <schwab@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20071221141557.GC19874@tuxdriver.com>
+References: <1198195385.16241.68.camel@johannes.berg>
+	 <je63ysp7ua.fsf@sykes.suse.de> <1198240471.16241.70.camel@johannes.berg>
+	 <je1w9gp5ll.fsf@sykes.suse.de>  <20071221141557.GC19874@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LadfsfHyRt4gCnoedOKK"
+Date: Fri, 21 Dec 2007 17:35:48 +0100
+Message-Id: <1198254948.16241.78.camel@johannes.berg> (sfid-20071221_163643_736553_26BA2BA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 15, 2007 at 11:13:58PM +0100, Mattias Nissler wrote:
-> 
-> On Sat, 2007-12-15 at 12:56 -0500, John W. Linville wrote:
-> > On Fri, Dec 14, 2007 at 11:14:52PM +0100, Stefano Brivio wrote:
-> > > Here comes an amended patch which works with my tree and should be more
-> > > mergeable (as it splits the debugfs stuff to another file) just for
-> > > convenience and to save Mattias some hassle. Hope this helps.
-> > 
-> > Speaking of mergeable, we need some "final" patches RSN if we want
-> > to have this available in 2.6.25.  So, are we satisified with it?
-> 
-> I'm still tuning, testing, etc. I hope we can get a polished patch set
-> ready by the end of Sunday.
 
-If it mostly works and the code is reasonable, then let's get it
-merged.  We have plenty of time for final tuning patches, but if the
-rc80211_pid code isn't in before the merge window then it will have
-to wait another whole release cycle.
+--=-LadfsfHyRt4gCnoedOKK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
+> > >> > --- everything.orig/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:=
+11.253160428 +0100
+> > >> > +++ everything/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:32.11=
+3165907 +0100
+> > >> > @@ -458,12 +458,10 @@ static void ieee80211_set_associated(str
+> > >> >  		return;
+> > >> > =20
+> > >> >  	if (assoc) {
+> > >> > -		struct ieee80211_sub_if_data *sdata;
+> > >
+> > > Too little context. There's another one in the surrounding scope that=
+ is
+> > > already initialised exactly the same.
+> >=20
+> > Sorry, but I can't find it.  Was it added in an unmerged patch?
+>=20
+> I think I'm with Andreas here...?
+
+Hmm. I guess it was then.
+
+johannes
+
+--=-LadfsfHyRt4gCnoedOKK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2vrY6Vg1VMiehFYAQJsPA//V50f+7FbqQwEJxDZw4jbSxiFLBnxPYm1
+/kT65wQWVgETCdEaDLllpBWsc7tifGUQSWBFKRzYzw1AOt1mamxeqcyLC2zaCO9M
+wsRdxMMt0F6bTH5aLlgRBCjPiGvZaGX/HPrDJulC+zgVioqK1oGMEKb6+H4puCQd
+U0mNvipvcKBZNPP5s2v45R3TZIJqfnhK1u2hHwU9e+f4ApBFMa5QJ5ou8fL5g6o6
+GMeyd8u2CiYFz22ulRMAcLUsUWdaKRSoB0j92oaTciclUfA9C08Tw5mJfe4NDppv
+HwRrXpDkcdOjyqNONjKYzVXlfbrLKeYZMaojafvy+wShESH5eaN0fb9AGdiBScCn
+a5mF9A5unuw+IXwXl3RLCQ+ZuvH+leSwB6OGrJUp2vOAtObSmrWBMslLf3sh/1DQ
+fFShohqLydp+7w+OQMj6DOMiXfw7cA74WLkb0Pv5OoeHEGzBRtEplXcUoba9Y09r
+2i5RicxRaQN6l3CWF8gGi0sZ3FUNvIK0oB4ijlnS0/MZ6M+ThcqY8/UrVDTJKV0b
+ssULl83zj7qPCNeiuu2zGq35f+4L82CZS6pz4MTRvqBbhjrOmhTr/OiX2lTxGc8f
+Js8qJgTOFhTHasoLK6RDreblwJjaX+Ikw/p2XEzbPb1uAunnww/VqQ/B33qiSaVD
+Lm1SlW22wmA=
+=Rhy8
+-----END PGP SIGNATURE-----
+
+--=-LadfsfHyRt4gCnoedOKK--
+
