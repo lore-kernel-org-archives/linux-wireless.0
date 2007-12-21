@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28918 "EHLO mga02.intel.com"
+Received: from MGW2.Sony.CO.JP ([137.153.0.14]:40694 "EHLO mgw2.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751048AbXLYPAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2007 10:00:50 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 4/8 v3] mac80211: A-MPDU Rx MLME data initialization
-Date: Tue, 25 Dec 2007 17:00:34 +0200
-Message-Id: <11985948451019-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150102_890038_FAA173E8)
-In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1750920AbXLUGRi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2007 01:17:38 -0500
+Date: Fri, 21 Dec 2007 15:17:28 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] PS3: gelic: Add wireless support for PS3
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20071215014244.GI5698@jm.kir.nu>
+References: <1197637127.16724.1.camel@localhost.localdomain> <20071215014244.GI5698@jm.kir.nu>
+Message-Id: <20071221150228.BA41.40F06B3A@sm.sony.co.jp> (sfid-20071221_061744_130389_45F0EA29)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch initialize A-MPDU MLME data for Rx sessions.
+	Hi Jouni,
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/sta_info.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+On Fri, 14 Dec 2007 17:42:44 -0800
+Jouni Malinen <j@w1.fi> wrote:
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index cc28e82..c03a714 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -135,6 +135,7 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 			       struct net_device *dev, u8 *addr, gfp_t gfp)
- {
- 	struct sta_info *sta;
-+	int i;
- 	DECLARE_MAC_BUF(mac);
- 
- 	sta = kzalloc(sizeof(*sta), gfp);
-@@ -154,6 +155,19 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	sta->local = local;
- 	sta->dev = dev;
-+	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-+	for (i = 0; i < STA_TID_NUM; i++) {
-+		/* timer_to_tid must be initialized with identity mapping to
-+		 * enable session_timer's data differentiation. refer to
-+		 * sta_rx_agg_session_timer_expired for useage */
-+		sta->timer_to_tid[i] = i;
-+		/* rx timers */
-+		sta->ampdu_mlme.tid_rx[i].session_timer.function =
-+			sta_rx_agg_session_timer_expired;
-+		sta->ampdu_mlme.tid_rx[i].session_timer.data =
-+			(unsigned long)&sta->timer_to_tid[i];
-+		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
- 	__sta_info_get(sta);	/* sta used by caller, decremented by
+> However, there is a part that you are not going to like.. This is likely
+> using a private ioctl for some parts of the association requests, i.e.,
+> no -Dwext.. I would assume that this could be cleaned up, though, if
+> WEXT would be extended a bit to allow one more enc_capa to notify
+> whether the driver wants to take care of 4-way handshake and to allow
+> the PSK to be configured with a new key type.
+
+Yes, as the current WEXT did not have this feature, I could not but
+design the new PS3 driver in that way.
+
+> It would be interesting to see whether the driver/firmware/hypervisor
+> could be convinced to allow EAPOL frames to go through between
+> association and 4-way handshake (which would be completed by
+> driver/firmware). This is the way I can support WPA/WPA2-Enterprise with
+> OSX..
+
+I had asked the hypervisor guy. Unfortunately all EAPOL frames would be
+dropped by the wireless chip firmware.
+
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Masakazu MOKUNO
 
