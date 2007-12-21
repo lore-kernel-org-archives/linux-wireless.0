@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:23050 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752017AbXLEKL7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 05:11:59 -0500
-Received: by py-out-1112.google.com with SMTP id u77so933016pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2007 02:11:58 -0800 (PST)
-Message-ID: <5b9417770712050211l6bff0376kcad1cc0f9677e605@mail.gmail.com> (sfid-20071205_101203_969615_BD367BDC)
-Date: Wed, 5 Dec 2007 04:11:57 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: b43 seemingly broken with Fedora (2.6.23.8-63.fc8) kernel
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200712051051.13667.mb@bu3sch.de>
+Received: from mx2.suse.de ([195.135.220.15]:55579 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760524AbXLUMJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2007 07:09:51 -0500
+From: Andreas Schwab <schwab@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: remove useless sdata variable
+References: <1198195385.16241.68.camel@johannes.berg>
+Date: Fri, 21 Dec 2007 13:09:49 +0100
+In-Reply-To: <1198195385.16241.68.camel@johannes.berg> (Johannes Berg's
+	message of "Fri\, 21 Dec 2007 01\:03\:05 +0100")
+Message-ID: <je63ysp7ua.fsf@sykes.suse.de> (sfid-20071221_121012_286000_386B63BC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5b9417770712042039v2d7b2cc7l549d0bda2a57888e@mail.gmail.com>
-	 <200712051051.13667.mb@bu3sch.de>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-is there a bug in this kernel as well?
- 2.6.23.1-49.fc8
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I can stand right next to the router and        Bit Rate=1 Mb/s
+> Dunno why I slipped that variable in...
 
-sometimes it goes up a little, but barely.
-It's a g router and this is a g wireless device.
+Perhaps because it is used?
 
-I try to force bitrate change and it does nothing.  I really need it
-at 54mb/s because of streaming local network media.
+> --- everything.orig/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:11.=
+253160428 +0100
+> +++ everything/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:32.11316=
+5907 +0100
+> @@ -458,12 +458,10 @@ static void ieee80211_set_associated(str
+>  		return;
+> =20
+>  	if (assoc) {
+> -		struct ieee80211_sub_if_data *sdata;
+>  		struct ieee80211_sta_bss *bss;
+> =20
+>  		ifsta->flags |=3D IEEE80211_STA_ASSOCIATED;
+> =20
+> -		sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+>  		if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA)
+                    ^^^^^
 
-On Dec 5, 2007 3:51 AM, Michael Buesch <mb@bu3sch.de> wrote:
->
-> On Wednesday 05 December 2007 05:39:02 John H. wrote:
-> > I just upgraded to this kernel but i could never connect to an AP, it
-> > just went on and on and timed out.  I had to go back to
-> > 2.6.23.1-49.fc8
-> >
-> > did something big change?
-> >
-> >
->
-> Yes, a big bug was introduced that breaks it on some devices.
->
-> --
-> Greetings Michael.
->
+Andreas.
+
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
