@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52118 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbXLJKjU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 05:39:20 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: b43 regression
-Date: Mon, 10 Dec 2007 11:36:48 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from cantor2.suse.de ([195.135.220.15]:39881 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756718AbXLUOML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2007 09:12:11 -0500
+From: Helmut Schaa <hschaa@suse.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] mac80211: Restore rx.fc before every invocation of ieee80211_invoke_rx_handlers
+Date: Fri, 21 Dec 2007 15:16:35 +0100
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Message-Id: <200712101136.48669.mb@bu3sch.de> (sfid-20071210_103956_787497_4E9B6807)
 Content-Type: text/plain;
   charset="us-ascii"
+Message-Id: <200712211516.35731.hschaa@suse.de> (sfid-20071221_141215_108356_0F4BE6F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have identified another regression introduced by
-commit f04b3787bbce4567e28069a9ec97dcd804626ac7.
+This patch fixes a problem with rx handling on multiple interfaces. Especially 
+when using hardware-scanning and a wireless driver (i.e. iwlwifi) which is 
+able to receive data while scanning.
 
-On my device it shows up as broken transmission after
-a suspend/resume cycle. The workaround for it is to boot
-a known good driver (in my case the vendor driver in OSX)
-and then reboot (without turning the machine off) into the
-broken driver.
+The rx handlers can modify the skb and the frame control field (see 
+ieee80211_rx_h_remove_qos_control) but since every interface gets its own 
+copy of the skb each should get its own copy of rx.fc too.
 
-It seems like we unintentionally removed some significant
-initialization step in that patch. I could not identify it, yet.
-The patch I sent yesterday did fix two other bugs, but not this one.
+In my case the wlan0-interface did not remove the qos-control from the frame 
+because the corresponding flag in rx.fc was already removed while processing 
+the frame on the master interface. Therefore somehow corrupted frames were 
+passed to the userspace.
 
-I am trying to find the reason for this.
-If someone wants to help searching, the best way would be to look
-at that patch I mentioned above and compare the stuff that it
-removes to the stuff that it adds. There must be some tiny line
-that it removes but does not re-add it at another place.
-Four eyes see more than two.
-
-I have no idea how this bug could be related to the few bugreports
-in the redhat bugzilla. Though, one could test that by trying a
-kernel that does not include the patch.
-
-Sorry for the inconvenience.
-
--- 
-Greetings Michael.
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 362e8e5..08a6905 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1723,6 +1723,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct 
+sk_buff *skb,
+ 				       prev->dev->name);
+ 			continue;
+ 		}
++		rx.fc = le16_to_cpu(hdr->frame_control);
+ 		rx.skb = skb_new;
+ 		rx.dev = prev->dev;
+ 		rx.sdata = prev;
+@@ -1731,6 +1732,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct 
+sk_buff *skb,
+ 		prev = sdata;
+ 	}
+ 	if (prev) {
++		rx.fc = le16_to_cpu(hdr->frame_control);
+ 		rx.skb = skb;
+ 		rx.dev = prev->dev;
+ 		rx.sdata = prev;
