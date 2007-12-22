@@ -1,164 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50938 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761542AbXLPW6l (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53135
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751896AbXLVEyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 17:58:41 -0500
-Subject: [PATCH 109/48] libertas: kill pdata_buf member of struct cmd_ctrl_node
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J42S7-00038a-OL@shinybook.infradead.org> (sfid-20071216_232741_677657_8A78F592)
-Date: Sun, 16 Dec 2007 17:59:19 -0500
+	Fri, 21 Dec 2007 23:54:08 -0500
+Date: Fri, 21 Dec 2007 20:54:07 -0800 (PST)
+Message-Id: <20071221.205407.165162566.davem@davemloft.net> (sfid-20071222_045412_628665_F7DC1F7E)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Subject: [WEXT 3/12]: Extract standard call iw_point handling into seperate
+ function.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sat, 15 Dec 2007 02:38:17 -0500
 
-We can use the callback_arg for it; that's the way we're heading anyway...
+[WEXT]: Extract standard call iw_point handling into seperate function.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/net/wireless/libertas/cmd.c     |    4 +---
- drivers/net/wireless/libertas/cmdresp.c |   26 +++++++++++++-------------
- drivers/net/wireless/libertas/hostcmd.h |    1 -
- 3 files changed, 14 insertions(+), 17 deletions(-)
+ net/wireless/wext.c |  258 ++++++++++++++++++++++++++------------------------
+ 1 files changed, 134 insertions(+), 124 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index e7f07c3..f2e027b 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1280,7 +1280,6 @@ static void __lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
- 	if (!cmdnode)
- 		goto out;
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 3ca9c3a..a6369f3 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -726,6 +726,138 @@ void wext_proc_exit(struct net *net)
+  */
  
--	cmdnode->pdata_buf = NULL;
- 	cmdnode->callback = NULL;
- 	cmdnode->callback_arg = 0;
- 
-@@ -1801,9 +1800,8 @@ static void lbs_set_cmd_ctrl_node(struct lbs_private *priv,
- 	if (!ptempnode)
- 		return;
- 
--	ptempnode->pdata_buf = pdata_buf;
- 	ptempnode->callback = NULL;
--	ptempnode->callback_arg = 0;
-+	ptempnode->callback_arg = (unsigned long)pdata_buf;
- 
- 	lbs_deb_leave(LBS_DEB_HOST);
- }
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 89f8316..4c22e78 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -399,13 +399,13 @@ static int lbs_ret_802_11_enable_rsn(struct lbs_private *priv,
-                                           struct cmd_ds_command *resp)
- {
- 	struct cmd_ds_802_11_enable_rsn *enable_rsn = &resp->params.enbrsn;
--	u32 * pdata_buf = priv->cur_cmd->pdata_buf;
-+	uint32_t * pdata_buf = (uint32_t *)priv->cur_cmd->callback_arg;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
- 	if (enable_rsn->action == cpu_to_le16(CMD_ACT_GET)) {
- 		if (pdata_buf)
--			*pdata_buf = (u32) le16_to_cpu(enable_rsn->enable);
-+			*pdata_buf = (uint32_t) le16_to_cpu(enable_rsn->enable);
+ /* ---------------------------------------------------------------- */
++static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
++				   const struct iw_ioctl_description *descr,
++				   iw_handler handler, struct net_device *dev,
++				   struct iw_request_info *info)
++{
++	int err, extra_size, user_length = 0, essid_compat = 0;
++	char *extra;
++
++	/* Calculate space needed by arguments. Always allocate
++	 * for max space.
++	 */
++	extra_size = descr->max_tokens * descr->token_size;
++
++	/* Check need for ESSID compatibility for WE < 21 */
++	switch (cmd) {
++	case SIOCSIWESSID:
++	case SIOCGIWESSID:
++	case SIOCSIWNICKN:
++	case SIOCGIWNICKN:
++		if (iwp->length == descr->max_tokens + 1)
++			essid_compat = 1;
++		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++			char essid[IW_ESSID_MAX_SIZE + 1];
++
++			err = copy_from_user(essid, iwp->pointer,
++					     iwp->length *
++					     descr->token_size);
++			if (err)
++				return -EFAULT;
++
++			if (essid[iwp->length - 1] == '\0')
++				essid_compat = 1;
++		}
++		break;
++	default:
++		break;
++	}
++
++	iwp->length -= essid_compat;
++
++	/* Check what user space is giving us */
++	if (IW_IS_SET(cmd)) {
++		/* Check NULL pointer */
++		if (!iwp->pointer && iwp->length != 0)
++			return -EFAULT;
++		/* Check if number of token fits within bounds */
++		if (iwp->length > descr->max_tokens)
++			return -E2BIG;
++		if (iwp->length < descr->min_tokens)
++			return -EINVAL;
++	} else {
++		/* Check NULL pointer */
++		if (!iwp->pointer)
++			return -EFAULT;
++		/* Save user space buffer size for checking */
++		user_length = iwp->length;
++
++		/* Don't check if user_length > max to allow forward
++		 * compatibility. The test user_length < min is
++		 * implied by the test at the end.
++		 */
++
++		/* Support for very large requests */
++		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
++		    (user_length > descr->max_tokens)) {
++			/* Allow userspace to GET more than max so
++			 * we can support any size GET requests.
++			 * There is still a limit : -ENOMEM.
++			 */
++			extra_size = user_length * descr->token_size;
++
++			/* Note : user_length is originally a __u16,
++			 * and token_size is controlled by us,
++			 * so extra_size won't get negative and
++			 * won't overflow...
++			 */
++		}
++	}
++
++	/* kzalloc() ensures NULL-termination for essid_compat. */
++	extra = kzalloc(extra_size, GFP_KERNEL);
++	if (!extra)
++		return -ENOMEM;
++
++	/* If it is a SET, get all the extra data in here */
++	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++		if (copy_from_user(extra, iwp->pointer,
++				   iwp->length *
++				   descr->token_size)) {
++			err = -EFAULT;
++			goto out;
++		}
++	}
++
++	err = handler(dev, info, (union iwreq_data *) iwp, extra);
++
++	iwp->length += essid_compat;
++
++	/* If we have something to return to the user */
++	if (!err && IW_IS_GET(cmd)) {
++		/* Check if there is enough buffer up there */
++		if (user_length < iwp->length) {
++			err = -E2BIG;
++			goto out;
++		}
++
++		if (copy_to_user(iwp->pointer, extra,
++				 iwp->length *
++				 descr->token_size)) {
++			err = -EFAULT;
++			goto out;
++		}
++	}
++
++	/* Generate an event to notify listeners of the change */
++	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
++		union iwreq_data *data = (union iwreq_data *) iwp;
++
++		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
++			/* If the event is restricted, don't
++			 * export the payload.
++			 */
++			wireless_send_event(dev, cmd, data, NULL);
++		else
++			wireless_send_event(dev, cmd, data, extra);
++	}
++
++out:
++	kfree(extra);
++	return err;
++}
++
+ /*
+  * Wrapper to call a standard Wireless Extension handler.
+  * We do various checks and also take care of moving data between
+@@ -761,130 +893,8 @@ static int ioctl_standard_call(struct net_device *	dev,
+ 		   ((ret == 0) || (ret == -EIWCOMMIT)))
+ 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
+ 	} else {
+-		char *	extra;
+-		int	extra_size;
+-		int	user_length = 0;
+-		int	err;
+-		int	essid_compat = 0;
+-
+-		/* Calculate space needed by arguments. Always allocate
+-		 * for max space. Easier, and won't last long... */
+-		extra_size = descr->max_tokens * descr->token_size;
+-
+-		/* Check need for ESSID compatibility for WE < 21 */
+-		switch (cmd) {
+-		case SIOCSIWESSID:
+-		case SIOCGIWESSID:
+-		case SIOCSIWNICKN:
+-		case SIOCGIWNICKN:
+-			if (iwr->u.data.length == descr->max_tokens + 1)
+-				essid_compat = 1;
+-			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-				char essid[IW_ESSID_MAX_SIZE + 1];
+-
+-				err = copy_from_user(essid, iwr->u.data.pointer,
+-						     iwr->u.data.length *
+-						     descr->token_size);
+-				if (err)
+-					return -EFAULT;
+-
+-				if (essid[iwr->u.data.length - 1] == '\0')
+-					essid_compat = 1;
+-			}
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		iwr->u.data.length -= essid_compat;
+-
+-		/* Check what user space is giving us */
+-		if (IW_IS_SET(cmd)) {
+-			/* Check NULL pointer */
+-			if ((iwr->u.data.pointer == NULL) &&
+-			   (iwr->u.data.length != 0))
+-				return -EFAULT;
+-			/* Check if number of token fits within bounds */
+-			if (iwr->u.data.length > descr->max_tokens)
+-				return -E2BIG;
+-			if (iwr->u.data.length < descr->min_tokens)
+-				return -EINVAL;
+-		} else {
+-			/* Check NULL pointer */
+-			if (iwr->u.data.pointer == NULL)
+-				return -EFAULT;
+-			/* Save user space buffer size for checking */
+-			user_length = iwr->u.data.length;
+-
+-			/* Don't check if user_length > max to allow forward
+-			 * compatibility. The test user_length < min is
+-			 * implied by the test at the end. */
+-
+-			/* Support for very large requests */
+-			if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
+-			   (user_length > descr->max_tokens)) {
+-				/* Allow userspace to GET more than max so
+-				 * we can support any size GET requests.
+-				 * There is still a limit : -ENOMEM. */
+-				extra_size = user_length * descr->token_size;
+-				/* Note : user_length is originally a __u16,
+-				 * and token_size is controlled by us,
+-				 * so extra_size won't get negative and
+-				 * won't overflow... */
+-			}
+-		}
+-
+-		/* Create the kernel buffer */
+-		/*    kzalloc ensures NULL-termination for essid_compat */
+-		extra = kzalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* If it is a SET, get all the extra data in here */
+-		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-			err = copy_from_user(extra, iwr->u.data.pointer,
+-					     iwr->u.data.length *
+-					     descr->token_size);
+-			if (err) {
+-				kfree(extra);
+-				return -EFAULT;
+-			}
+-		}
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, &(iwr->u), extra);
+-
+-		iwr->u.data.length += essid_compat;
+-
+-		/* If we have something to return to the user */
+-		if (!ret && IW_IS_GET(cmd)) {
+-			/* Check if there is enough buffer up there */
+-			if (user_length < iwr->u.data.length) {
+-				kfree(extra);
+-				return -E2BIG;
+-			}
+-
+-			err = copy_to_user(iwr->u.data.pointer, extra,
+-					   iwr->u.data.length *
+-					   descr->token_size);
+-			if (err)
+-				ret =  -EFAULT;
+-		}
+-
+-		/* Generate an event to notify listeners of the change */
+-		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
+-		   ((ret == 0) || (ret == -EIWCOMMIT))) {
+-			if (descr->flags & IW_DESCR_FLAG_RESTRICT)
+-				/* If the event is restricted, don't
+-				 * export the payload */
+-				wireless_send_event(dev, cmd, &(iwr->u), NULL);
+-			else
+-				wireless_send_event(dev, cmd, &(iwr->u),
+-						    extra);
+-		}
+-
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
++		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
++					      handler, dev, &info);
  	}
  
- 	lbs_deb_leave(LBS_DEB_CMD);
-@@ -435,7 +435,7 @@ static int lbs_ret_802_11_subscribe_event(struct lbs_private *priv,
- 	struct cmd_ds_802_11_subscribe_event *cmd_event =
- 		&resp->params.subscribe_event;
- 	struct cmd_ds_802_11_subscribe_event *dst_event =
--		priv->cur_cmd->pdata_buf;
-+		(void *)priv->cur_cmd->callback_arg;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
-@@ -505,7 +505,7 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 	case CMD_RET(CMD_802_11_SET_AFC):
- 	case CMD_RET(CMD_802_11_GET_AFC):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove(priv->cur_cmd->pdata_buf, &resp->params.afc,
-+		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.afc,
- 			sizeof(struct cmd_ds_802_11_afc));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
-@@ -557,20 +557,20 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 		break;
- 	case CMD_RET(CMD_802_11_INACTIVITY_TIMEOUT):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		*((u16 *) priv->cur_cmd->pdata_buf) =
-+		*((uint16_t *) priv->cur_cmd->callback_arg) =
- 		    le16_to_cpu(resp->params.inactivity_timeout.timeout);
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
- 
- 	case CMD_RET(CMD_802_11_TPC_CFG):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove(priv->cur_cmd->pdata_buf, &resp->params.tpccfg,
-+		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.tpccfg,
- 			sizeof(struct cmd_ds_802_11_tpc_cfg));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
- 	case CMD_RET(CMD_802_11_LED_GPIO_CTRL):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove(priv->cur_cmd->pdata_buf, &resp->params.ledgpio,
-+		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.ledgpio,
- 			sizeof(struct cmd_ds_802_11_led_ctrl));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
-@@ -580,7 +580,7 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 
- 	case CMD_RET(CMD_802_11_PWR_CFG):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove(priv->cur_cmd->pdata_buf, &resp->params.pwrcfg,
-+		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.pwrcfg,
- 			sizeof(struct cmd_ds_802_11_pwr_cfg));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
-@@ -588,21 +588,21 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 
- 	case CMD_RET(CMD_GET_TSF):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		memcpy(priv->cur_cmd->pdata_buf,
-+		memcpy((void *)priv->cur_cmd->callback_arg,
- 		       &resp->params.gettsf.tsfvalue, sizeof(u64));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
- 	case CMD_RET(CMD_BT_ACCESS):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		if (priv->cur_cmd->pdata_buf)
--			memcpy(priv->cur_cmd->pdata_buf,
-+		if (priv->cur_cmd->callback_arg)
-+			memcpy((void *)priv->cur_cmd->callback_arg,
- 			       &resp->params.bt.addr1, 2 * ETH_ALEN);
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
- 	case CMD_RET(CMD_FWT_ACCESS):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		if (priv->cur_cmd->pdata_buf)
--			memcpy(priv->cur_cmd->pdata_buf, &resp->params.fwt,
-+		if (priv->cur_cmd->callback_arg)
-+			memcpy((void *)priv->cur_cmd->callback_arg, &resp->params.fwt,
- 			       sizeof(resp->params.fwt));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 1b31250..719da73 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -75,7 +75,6 @@ struct cmd_header {
- struct cmd_ctrl_node {
- 	struct list_head list;
- 	/* command response */
--	void *pdata_buf;
- 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *);
- 	unsigned long callback_arg;
- 	/* command data */
+ 	/* Call commit handler if needed and defined */
 -- 
-1.5.3.4
+1.5.4.rc1
 
