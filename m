@@ -1,111 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56566 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753393AbXLJUsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 15:48:38 -0500
-Subject: Re: [RFC/T][PATCH 1/3] rc80211-pid: introduce rate behaviour
-	learning algorithm
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20071210090323.47d657e6@morte>
-References: <20071209211547.2d7fca32@morte> <20071209211931.26ff42fa@morte>
-	 <1197239150.7543.13.camel@localhost> <20071210002158.654ed960@morte>
-	 <1197269336.7490.25.camel@localhost>  <20071210090323.47d657e6@morte>
-Content-Type: text/plain
-Date: Mon, 10 Dec 2007 21:48:34 +0100
-Message-Id: <1197319714.7493.0.camel@localhost> (sfid-20071210_204841_639665_42188503)
+Received: from ug-out-1314.google.com ([66.249.92.175]:49494 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195AbXLVW4o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 17:56:44 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so853975ugc.16
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2007 14:56:42 -0800 (PST)
+Date: Sat, 22 Dec 2007 23:54:12 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: rt2x00 is sapmming my logs
+Message-ID: <20071222235412.5438945a@Varda> (sfid-20071222_225655_521149_70E8E9F8)
+In-Reply-To: <200712230004.42957.rjw@sisk.pl>
+References: <20071222173153.42f574fd@Varda>
+	<200712230004.42957.rjw@sisk.pl>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+El Sun, 23 Dec 2007 00:04:42 +0100
+"Rafael J. Wysocki" <rjw@sisk.pl> escribi=C3=B3:
 
-On Mon, 2007-12-10 at 09:03 +0100, Stefano Brivio wrote:
-> On Mon, 10 Dec 2007 07:48:56 +0100
-> Mattias Nissler <mattias.nissler@gmx.de> wrote:
-> 
-> > > > > +/* Normalize the failed frames per-rate differences. */
-> > > > > +static void rate_control_pid_normalize(struct rc_pid_rateinfo *r, int l)
-> > > > > +{
-> > > > > +	int i;
-> > > > > +
-> > > > > +	if (r[0].diff > RC_PID_NORM_FACTOR)
-> > > > > +		r[0].diff -= RC_PID_NORM_FACTOR;
-> > > > > +	else if (r[0].diff < -RC_PID_NORM_FACTOR)
-> > > > > +		r[0].diff += RC_PID_NORM_FACTOR;
-> > > > > +	for (i = 0; i < l - 1; i++)
-> > > > > +		if (likely(r[i + 1].valid)) {
-> > > > > +			if (r[i + 1].diff > r[i].diff + RC_PID_NORM_FACTOR)
-> > > > > +				r[i + 1].diff -= RC_PID_NORM_FACTOR;
-> > > > > +			else if (r[i + 1].diff <= r[i].diff)
-> > > > > +				r[i + 1].diff += RC_PID_NORM_FACTOR;
-> > > > > +		}
-> > > > 
-> > > > If I understand correctly, you apply an offset to all valid entries. So
-> > > > I'd rather call it RC_PID_NORM_OFFSET.
-> > > 
-> > > Well, I don't care that much. I was referring to this definition of factor:
-> > > 
-> > > n., 1. One that actively contributes to an accomplishment, result, or process
-> > > 
-> > > Anyway "offset" may be more clear. Will fix it.
-> > > 
-> > > > Furthermore, what if the diff
-> > > > values are larger than k * RC_PID_NORM_OFFSET (with k an integer)? If
-> > > > you first compute the offset, you can just loop over the array and apply
-> > > > the offset without checking for the condition.
-> > > 
-> > > I frankly don't get your point here. No offsets are computed...
-> > 
-> > Well, let's see, maybe I misunderstood the code. I thought the idea was:
-> > If the diff values grow too large (too small), we substract (add)
-> > RC_PID_NORM_FACTOR from (to) all of them. But now it seems to me you do
-> > this for every diff value individually to achieve something like an
-> > aging effect. Is that correct? The term "normalize" probably confused
-> > me.
-> 
-> I used the "normalize" term as in "process that makes something more
-> normal, which typically means conforming to some regularity or rule, or
-> returning from some state of abnormality" [wikipedia].
-> 
-> What I do here is to assume that lower rates will perform better, in the
-> long term, let's make an example: my card can transmit at three rates, 1,
-> 2, and 3M. But it performs really bad at 3M, so what I can expect to have
-> is:
-> 
-> [rate] [diff]
->   1      0
->   2      10
->   3      105
-> [this means we have used rate 1, then switched to rate 2 and had 10% more
-> fails, then switched to rate 3 and had 95% more fails than rate 2]
-> 
-> But now we don't know if bad performance of rate 3 was due to external
-> conditions or to a somehow broken device. Let's say that we move our
-> laptop to a different environment, which causes the rate 3 to work
-> reasonably well. That 105 doesn't make sense now and we have to make it
-> similar to diff for rate 2. But not equal, as 1) it's unlikely to be equal;
-> 2) if it would be equal we would never use rate 2, which we can
-> theoretically suppose to be a little better than rate 3 (compare with
-> _shift_adjust() here). So in the end, if we don't get any recent events,
-> we should end up with something like:
-> 
-> [rate] [diff]
->   1      0
->   2      3
->   3      6
-> [with norm_offset set to 3]
-> 
-> So what really matters here are recent events. Yes, it's something like an
-> aging effect. Note that norm_offset is meant to tune how fast it's supposed
-> that we move between different environments. A little caveat here: all
-> values can be negative, even the one for rate 1. This doesn't matter,
-> because anyway, as per the definition of the algorithm, all values are
-> referred to the lowest rate behaviour (and not to zero).
+> On Saturday, 22 of December 2007, Alejandro Riveira Fern=C3=A1ndez wr=
+ote:
+>
+>=20
+> I have created a bugzilla entry for this problem at:
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D9622
+> and added it to the list of reported regressions.
 
-Ok, understood now :-)
-
-Mattias
-
+  Thanks!
+>=20
+> Thanks,
+> Rafael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
