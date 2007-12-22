@@ -1,51 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51305 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752974AbXLGBjc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 20:39:32 -0500
-Subject: Re: [PATCH] iwlwifi3945/4965 - fix rate control algo reference leak
-From: Zhu Yi <yi.zhu@intel.com>
-To: Cyrill Gorcunov <gorcunov@gmail.com>,
-	"John W.Linville" <linville@tuxdriver.com>
-Cc: Thomas Tuttle <linux-kernel@ttuttle.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	LWML <linux-wireless@vger.kernel.org>
-In-Reply-To: <20071206093922.GA7356@cvg>
-References: <20071206093922.GA7356@cvg>
-Content-Type: text/plain
-Date: Fri, 07 Dec 2007 09:39:33 +0800
-Message-Id: <1196991573.3170.43.camel@debian.sh.intel.com> (sfid-20071207_013937_263680_EE4114BF)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.242]:25141 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbXLVWxb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 17:53:31 -0500
+Received: by an-out-0708.google.com with SMTP id d31so182839and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2007 14:53:30 -0800 (PST)
+Message-ID: <476D9521.9000401@gmail.com> (sfid-20071222_225411_605403_3B38DE41)
+Date: Sat, 22 Dec 2007 16:52:17 -0600
+From: "Jory A. Pratt" <geekypenguin@gmail.com>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Last 4 patches from Michael
+References: <200712222151.30575.mb@bu3sch.de>
+In-Reply-To: <200712222151.30575.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I have just tested the last four patches from Michael. Compilation is
+fine and no regressions that I have seen as of yet. My 4306 and 4318 are
+working just fine with the changes.
 
-On Thu, 2007-12-06 at 12:39 +0300, Cyrill Gorcunov wrote:
-> From: Cyrill Gorcunov <gorcunov@gmail.com>
-> Subject: [PATCH] iwlwifi3945/4965 - fix rate control algo reference leak
-> 
-> This patch does fix rate control algo reference leak in case
-> if network device has been failed to register. In this case
-> special flag priv->mac80211_registered is not set and the
-> rate algo reference is not freeing on module unload. That leads
-> to OOPs in further ieee80211 rate register/unregister procedure
-> (by any callee).
-> 
-> It should fix the bug #9470
-> 
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=9470
-> 
-> Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
-
-ACK. Thanks for the fix.
-
-John, I think it should be in 2.6.24.
-
-Thanks,
--yi
+-Jory
