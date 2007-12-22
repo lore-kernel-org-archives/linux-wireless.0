@@ -1,41 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53545 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758008AbXLLKug (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53137
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750723AbXLVEya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 05:50:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Subject: Re: mac80211 ethtool support
-Date: Wed, 12 Dec 2007 11:48:46 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <1197361048.3170.381.camel@debian.sh.intel.com> <200712111350.25522.mb@bu3sch.de> <1197421988.3170.405.camel@debian.sh.intel.com>
-In-Reply-To: <1197421988.3170.405.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712121148.48716.mb@bu3sch.de> (sfid-20071212_105038_901676_D5ECF8ED)
+	Fri, 21 Dec 2007 23:54:30 -0500
+Date: Fri, 21 Dec 2007 20:54:29 -0800 (PST)
+Message-Id: <20071221.205429.175484002.davem@davemloft.net> (sfid-20071222_045434_297367_C958F877)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Subject: [WEXT 4/12]: Extract private call iw_point handling into seperate
+ functions.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 December 2007 02:13:08 Zhu Yi wrote:
-> 
-> On Tue, 2007-12-11 at 13:50 +0100, Michael Buesch wrote:
-> > On Tuesday 11 December 2007 09:17:28 Zhu Yi wrote:
-> > > I want to add ethtool .get_eeprom and .get_eeprom_len support for
-> > > iwlwifi. But it seems mac80211 hides the netdev structure from the
-> > > driver. What's the suggested way for doing so (i.e dump EEPROM) for
-> > > mac80211 devices?
-> > 
-> > In ssb we simply create a sysfs file for this.
-> 
-> Yeah, we can do this also. But the users want a standard way, especially
-> when there is already such kernel interface and user space tools ready
-> there. Any chance mac80211 supports ethtool or something similar?
 
-You could write a patch.
-Add a callback to mac80211 that mac80211 uses to register the eeprom
-ethtool interface.
+[WEXT]: Extract private call iw_point handling into seperate functions.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |  141 +++++++++++++++++++++++++++------------------------
+ 1 files changed, 74 insertions(+), 67 deletions(-)
+
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index a6369f3..9c3d83f 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -922,25 +922,22 @@ static int ioctl_standard_call(struct net_device *	dev,
+  * a iw_handler but process it in your ioctl handler (i.e. use the
+  * old driver API).
+  */
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+-			      unsigned int cmd, iw_handler handler)
++static int get_priv_descr_and_size(struct net_device *dev, unsigned int cmd,
++				   const struct iw_priv_args **descrp)
+ {
+-	struct iwreq *			iwr = (struct iwreq *) ifr;
+-	const struct iw_priv_args *	descr = NULL;
+-	struct iw_request_info		info;
+-	int				extra_size = 0;
+-	int				i;
+-	int				ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	int i, extra_size;
+ 
+-	/* Get the description of the IOCTL */
+-	for (i = 0; i < dev->wireless_handlers->num_private_args; i++)
++	descr = NULL;
++	for (i = 0; i < dev->wireless_handlers->num_private_args; i++) {
+ 		if (cmd == dev->wireless_handlers->private_args[i].cmd) {
+-			descr = &(dev->wireless_handlers->private_args[i]);
++			descr = &dev->wireless_handlers->private_args[i];
+ 			break;
+ 		}
++	}
+ 
+-	/* Compute the size of the set/get arguments */
+-	if (descr != NULL) {
++	extra_size = 0;
++	if (descr) {
+ 		if (IW_IS_SET(cmd)) {
+ 			int	offset = 0;	/* For sub-ioctls */
+ 			/* Check for sub-ioctl handler */
+@@ -965,72 +962,82 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 				extra_size = 0;
+ 		}
+ 	}
++	*descrp = descr;
++	return extra_size;
++}
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
++static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
++				  const struct iw_priv_args *descr,
++				  iw_handler handler, struct net_device *dev,
++				  struct iw_request_info *info, int extra_size)
++{
++	char *extra;
++	int err;
+ 
+-	/* Check if we have a pointer to user space data or not. */
+-	if (extra_size == 0) {
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
+-	} else {
+-		char *	extra;
+-		int	err;
++	/* Check what user space is giving us */
++	if (IW_IS_SET(cmd)) {
++		if (!iwp->pointer && iwp->length != 0)
++			return -EFAULT;
+ 
+-		/* Check what user space is giving us */
+-		if (IW_IS_SET(cmd)) {
+-			/* Check NULL pointer */
+-			if ((iwr->u.data.pointer == NULL) &&
+-			   (iwr->u.data.length != 0))
+-				return -EFAULT;
++		if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK))
++			return -E2BIG;
++	} else if (!iwp->pointer)
++		return -EFAULT;
+ 
+-			/* Does it fits within bounds ? */
+-			if (iwr->u.data.length > (descr->set_args &
+-						 IW_PRIV_SIZE_MASK))
+-				return -E2BIG;
+-		} else if (iwr->u.data.pointer == NULL)
+-			return -EFAULT;
++	extra = kmalloc(extra_size, GFP_KERNEL);
++	if (!extra)
++		return -ENOMEM;
+ 
+-		/* Always allocate for max space. Easier, and won't last
+-		 * long... */
+-		extra = kmalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* If it is a SET, get all the extra data in here */
+-		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-			err = copy_from_user(extra, iwr->u.data.pointer,
+-					     extra_size);
+-			if (err) {
+-				kfree(extra);
+-				return -EFAULT;
+-			}
++	/* If it is a SET, get all the extra data in here */
++	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++		if (copy_from_user(extra, iwp->pointer, extra_size)) {
++			err = -EFAULT;
++			goto out;
+ 		}
++	}
+ 
+-		/* Call the handler */
+-		ret = handler(dev, &info, &(iwr->u), extra);
++	/* Call the handler */
++	err = handler(dev, info, (union iwreq_data *) iwp, extra);
+ 
+-		/* If we have something to return to the user */
+-		if (!ret && IW_IS_GET(cmd)) {
++	/* If we have something to return to the user */
++	if (!err && IW_IS_GET(cmd)) {
++		/* Adjust for the actual length if it's variable,
++		 * avoid leaking kernel bits outside.
++		 */
++		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
++			extra_size = adjust_priv_size(descr->get_args, iwp);
+ 
+-			/* Adjust for the actual length if it's variable,
+-			 * avoid leaking kernel bits outside. */
+-			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+-				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u.data));
+-			}
++		if (copy_to_user(iwp->pointer, extra, extra_size))
++			err =  -EFAULT;
++	}
+ 
+-			err = copy_to_user(iwr->u.data.pointer, extra,
+-					   extra_size);
+-			if (err)
+-				ret =  -EFAULT;
+-		}
++out:
++	kfree(extra);
++	return err;
++}
+ 
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
+-	}
++static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++			      unsigned int cmd, iw_handler handler)
++{
++	struct iwreq *iwr = (struct iwreq *) ifr;
++	int extra_size = 0, ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	struct iw_request_info info;
++
++	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
++
++	/* Prepare the call */
++	info.cmd = cmd;
++	info.flags = 0;
+ 
++	/* Check if we have a pointer to user space data or not. */
++	if (extra_size == 0) {
++		/* No extra arguments. Trivial to handle */
++		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++	} else {
++		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
++					     handler, dev, &info, extra_size);
++	}
+ 
+ 	/* Call commit handler if needed and defined */
+ 	if (ret == -EIWCOMMIT)
 -- 
-Greetings Michael.
+1.5.4.rc1
+
