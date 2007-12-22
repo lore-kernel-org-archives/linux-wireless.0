@@ -1,114 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:60717 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751568AbXLFVsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 16:48:12 -0500
-Received: from [195.4.92.18] (helo=8.mx.freenet.de)
-	by mout2.freenet.de with esmtpa (Exim 4.68)
-	(envelope-from <lynx.abraxas@freenet.de>)
-	id 1J0OZl-0001Iz-PF
-	for linux-wireless@vger.kernel.org; Thu, 06 Dec 2007 22:48:09 +0100
-Received: from p508e6f25.dip.t-dialin.net ([80.142.111.37]:60185 helo=localhost)
-	by 8.mx.freenet.de with esmtpsa (ID lynx.abraxas@freenet.de) (TLSv1:AES256-SHA:256) (port 587) (Exim 4.68 #1)
-	id 1J0OZl-0007z4-CW
-	for linux-wireless@vger.kernel.org; Thu, 06 Dec 2007 22:48:09 +0100
-Date: Thu, 6 Dec 2007 22:48:07 +0100
-From: lynx.abraxas@freenet.de
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53147
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752206AbXLVE4t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2007 23:56:49 -0500
+Date: Fri, 21 Dec 2007 20:56:48 -0800 (PST)
+Message-Id: <20071221.205648.29936075.davem@davemloft.net> (sfid-20071222_045652_972763_569D5073)
 To: linux-wireless@vger.kernel.org
-Subject: Re: What's wrong if wlan0 device is not reacting?
-Message-ID: <20071206214807.GB1811@drago> (sfid-20071206_214826_225610_E098E480)
-References: <20071206170858.GA2008@drago> <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e6f94720712061052p105a9e82v290afb011765ba04@mail.gmail.com>
+CC: netdev@vger.kernel.org
+Subject: [WEXT 9/12]: Dispatch and handle compat ioctls entirely in
+ net/wireless/wext.c
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/12/07 13:52:25, Will Dyson wrote:
 
+[WEXT]: Dispatch and handle compat ioctls entirely in net/wireless/wext.c
 
-Thank You very much Will for Your quick answer.
+Next we can kill the hacks in fs/compat_ioctl.c and also
+dispatch compat ioctls down into the driver and 80211 protocol
+helper layers in order to handle iw_point objects embedded in
+stream replies which need to be translated.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ fs/compat_ioctl.c        |    6 ---
+ include/linux/wireless.h |    9 ++++
+ include/net/wext.h       |    7 +++
+ net/socket.c             |   10 ++++
+ net/wireless/wext.c      |  104 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 130 insertions(+), 6 deletions(-)
 
-> On Dec 6, 2007 12:08 PM,  <lynx.abraxas@freenet.de> wrote:
->
->  >  I'm   desperately   trying   to get a micronet SP907GK V5 (USB 1.1 WLAN-
-Stick) to
-> > run under openSuSE 10.3.
-> >
-> > lsusb tells me the  manufacturer  is  Realtek  rtl8187  so   I   compiled,
-installed
-> > and modprobed rtl8187 for the 2.6.22.5 kernel.
->
-> You might want to mention where you got the source for the rtl8187
-> module that you compiled. Git checkout? Tarball from a website?
-
-I    mixed    things   a   bit   up.   I   compiled   rtl8187   from   realtek
-(http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=16&PFid=14&Level=5&Conn=4)
-on SuSE 10.2.
-But I found no source that compiles under SuSE 10.3 which has a kernel > 2.6.19 where there is no config.h any more. So I used rtl8187-kmp-default-20070806_2.6.22.5_31-2.i586.rpm from ftp://ftp5.gwdg.de/pub/opensuse/distribution/10.3/repo/oss/suse/i586/ which was recommended in a thread concerning micronet USB-WLAN as well (which SP907 was'n mentioned). I also installed rt2x00... from the SuSE DVD. compat-wireless-2.6.tar.bz2 did not compile, which I thought would be the best choise. 
-
-
->
-> This driver is included in the 2.6.23 kernel, so you may want to try that.
-
-I'm  not sure if it is possible at all to switch to a different kernel version
-in SuSE but I'll give it a test on my LFS-laptop.
-
->
-> > The module loads and iwconfig lists wlan0 as wireless device. wmaster0  is
-also
->  >  created.  I could not find any info on what wmaster0 is for. Some say it
-is  a
-> > hint  for  malfunction of the driver. I did configure the device with Yast
-and
->  >  also  by  hand  (setting essid and key with iwconfig and using dhcpcd or
-ifconfig
-> > with static local ip) but had no success when pinging the router.
->
-> Fortunately, those who say the presence of the wmaster0 is a problem
-> are wrong. It is completely normal.
-
-What's it for the wmaster0? Do I have to configure it as well?
-
->
-> Your iwconfig output reveals that the device is not associated, so
-> naturally you will not be able to ping the router.
-
-This seems to be the problem. It does not catch the channel  of  my  WLAN  nor
-does it help to set the frequency directly.
-
-
->
-> Also, you seem to imply that your network uses a WEP key (as opposed
-> to WPA), but please make sure.
-
-Yes WEP for the time I'm here at my parents house because (though less secure)
-my good old flashed orinoco card seems not to be able to handel WPA. The Stick
-is supposed to be abled to do both WEP and WPA.
-
->
-> Other thoughts:
->
-> Can you scan with the device? You will need to set the interface up
-> (ifconfig wlan0 up) before scanning.
-
-No,  scanning  doesn't work either. Also "ifconfig wlan0 up" takes a long time
-to finish  compared to other devices I have worked with. It yields the "wlan0:
-link is not ready" message.
-iwlist wlan0 scan gives: wlan0 No scan results
-
->
-> When configuring the device manually with a WEP key, you will need to
-> make sure that setting the essid is the last step. Setting the essid
-> and then the key will not work.
-
-I tried both an none worked.
-Is  it  possible,  though  the  driver  catches the device and I don't get any
-error-messages, that the Stick cannot be used under linux?
-
-
-Thanks for any further help or hints
-Lynx
-
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index e8b7c3a..e98e950 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -1756,12 +1756,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
+ 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
+ }
+ 
+-struct compat_iw_point {
+-	compat_caddr_t pointer;
+-	__u16 length;
+-	__u16 flags;
+-};
+-
+ static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
+ {
+ 	struct iwreq __user *iwr;
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 0987aa7..2088524 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -76,6 +76,7 @@
+ #include <linux/types.h>		/* for "caddr_t" et al		*/
+ #include <linux/socket.h>		/* for "struct sockaddr" et al	*/
+ #include <linux/if.h>			/* for IFNAMSIZ and co... */
++#include <linux/compat.h>
+ #endif	/* __KERNEL__ */
+ 
+ /***************************** VERSION *****************************/
+@@ -669,6 +670,14 @@ struct	iw_point
+   __u16		flags;		/* Optional params */
+ };
+ 
++#if defined(__KERNEL__) && defined(CONFIG_COMPAT)
++struct compat_iw_point {
++	compat_caddr_t pointer;
++	__u16 length;
++	__u16 flags;
++};
++#endif
++
+ /*
+  *	A frequency
+  *	For numbers lower than 10^9, we encode the number in 'm' and
+diff --git a/include/net/wext.h b/include/net/wext.h
+index 80b31d8..6d76a39 100644
+--- a/include/net/wext.h
++++ b/include/net/wext.h
+@@ -12,6 +12,8 @@ extern int wext_proc_init(struct net *net);
+ extern void wext_proc_exit(struct net *net);
+ extern int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 			     void __user *arg);
++extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
++				    unsigned long arg);
+ #else
+ static inline int wext_proc_init(struct net *net)
+ {
+@@ -26,6 +28,11 @@ static inline int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned
+ {
+ 	return -EINVAL;
+ }
++static inline int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
++					   unsigned long arg)
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #endif /* __NET_WEXT_H */
+diff --git a/net/socket.c b/net/socket.c
+index 74784df..475f08f 100644
+--- a/net/socket.c
++++ b/net/socket.c
+@@ -90,6 +90,7 @@
+ #include <asm/unistd.h>
+ 
+ #include <net/compat.h>
++#include <net/wext.h>
+ 
+ #include <net/sock.h>
+ #include <linux/netfilter.h>
+@@ -2207,10 +2208,19 @@ static long compat_sock_ioctl(struct file *file, unsigned cmd,
+ {
+ 	struct socket *sock = file->private_data;
+ 	int ret = -ENOIOCTLCMD;
++	struct sock *sk;
++	struct net *net;
++
++	sk = sock->sk;
++	net = sk->sk_net;
+ 
+ 	if (sock->ops->compat_ioctl)
+ 		ret = sock->ops->compat_ioctl(sock, cmd, arg);
+ 
++	if (ret == -ENOIOCTLCMD &&
++	    (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST))
++		ret = compat_wext_handle_ioctl(net, cmd, arg);
++
+ 	return ret;
+ }
+ #endif
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 03b0051..5869b70 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1144,6 +1144,110 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_COMPAT
++static int compat_standard_call(struct net_device *	dev,
++				struct iwreq *		iwr,
++				unsigned int		cmd,
++				iw_handler		handler)
++{
++	const struct iw_ioctl_description *descr;
++	struct compat_iw_point *iwp_compat;
++	struct iw_request_info info;
++	struct iw_point iwp;
++	int err;
++
++	descr = standard_ioctl + (cmd - SIOCIWFIRST);
++
++	if (descr->header_type != IW_HEADER_TYPE_POINT)
++		return ioctl_standard_call(dev, iwr, cmd, handler);
++
++	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
++	iwp.pointer = compat_ptr(iwp_compat->pointer);
++	iwp.length = iwp_compat->length;
++	iwp.flags = iwp_compat->flags;
++
++	info.cmd = cmd;
++	info.flags = 0;
++
++	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
++
++	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
++	iwp_compat->length = iwp.length;
++	iwp_compat->flags = iwp.flags;
++
++	return err;
++}
++
++static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
++			       unsigned int cmd, iw_handler handler)
++{
++	const struct iw_priv_args *descr;
++	struct iw_request_info info;
++	int ret, extra_size;
++
++	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
++
++	/* Prepare the call */
++	info.cmd = cmd;
++	info.flags = 0;
++
++	/* Check if we have a pointer to user space data or not. */
++	if (extra_size == 0) {
++		/* No extra arguments. Trivial to handle */
++		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++	} else {
++		struct compat_iw_point *iwp_compat;
++		struct iw_point iwp;
++
++		iwp_compat = (struct compat_iw_point *) &iwr->u.data;
++		iwp.pointer = compat_ptr(iwp_compat->pointer);
++		iwp.length = iwp_compat->length;
++		iwp.flags = iwp_compat->flags;
++
++		ret = ioctl_private_iw_point(&iwp, cmd, descr,
++					     handler, dev, &info, extra_size);
++
++		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
++		iwp_compat->length = iwp.length;
++		iwp_compat->flags = iwp.flags;
++	}
++
++	/* Call commit handler if needed and defined */
++	if (ret == -EIWCOMMIT)
++		ret = call_commit_handler(dev);
++
++	return ret;
++}
++
++int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
++			     unsigned long arg)
++{
++	void __user *argp = (void __user *)arg;
++	struct iwreq iwr;
++	char *colon;
++	int ret;
++
++	if (copy_from_user(&iwr, argp, sizeof(struct iwreq)))
++		return -EFAULT;
++
++	iwr.ifr_name[IFNAMSIZ-1] = 0;
++	colon = strchr(iwr.ifr_name, ':');
++	if (colon)
++		*colon = 0;
++
++	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
++				  compat_standard_call,
++				  compat_private_call);
++
++	if (ret > 0 &&
++	    IW_IS_GET(cmd) &&
++	    copy_to_user(argp, &iwr, sizeof(struct iwreq)))
++		return -EFAULT;
++
++	return ret;
++}
++#endif
++
+ /************************* EVENT PROCESSING *************************/
+ /*
+  * Process events generated by the wireless layer or the driver.
+-- 
+1.5.4.rc1
 
