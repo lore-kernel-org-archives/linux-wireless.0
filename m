@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:56674 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854AbXLWVST (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51147 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbXLVKWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 16:18:19 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1129096mue.5
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 13:18:17 -0800 (PST)
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: tx_status reporting of RTS/CTS frames
-Date: Sun, 23 Dec 2007 22:18:42 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-References: <1197412922.7030.11.camel@localhost> <1197545672.6558.238.camel@johannes.berg> <1197572204.7489.7.camel@localhost>
-In-Reply-To: <1197572204.7489.7.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200712232218.42415.IvDoorn@gmail.com> (sfid-20071223_211821_568748_8063DC91)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sat, 22 Dec 2007 05:22:23 -0500
+Subject: Re: drivers supporting AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chuck Tuffli <ctuffli@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <8999a3120712211800l29abd40n66ad9abab56390db@mail.gmail.com> (sfid-20071222_020214_179423_4027F42F)
+References: <8999a3120712211602r43d9c568naa09efcd7f410b2f@mail.gmail.com>
+	 <1198282353.6630.1.camel@johannes.berg>
+	 <8999a3120712211800l29abd40n66ad9abab56390db@mail.gmail.com>
+	 (sfid-20071222_020214_179423_4027F42F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-698BB5yd71+fXRqupudc"
+Date: Sat, 22 Dec 2007 11:22:10 +0100
+Message-Id: <1198318931.6630.3.camel@johannes.berg> (sfid-20071222_102229_869235_CBE9DC97)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 13 December 2007, Mattias Nissler wrote:
-> 
-> On Thu, 2007-12-13 at 12:34 +0100, Johannes Berg wrote:
-> > > rt2x00 devices have some flags in the TX descriptor that basically tell
-> > > the device to send a burst of frames, optionally requesting to wait for
-> > > an ack (i.e. CTS in the case of an RTS frame) for any of them.
-> > 
-> > Interesting. I can't the place where that is set though, can you point
-> > me to it?
-> 
-> For each frame, rt2x00 creates a txdata_entry_desc structure (see
-> rt2x00lib_write_tx_desc()), which holds all the information that is
-> written to the actual tx descriptors (format of these varies among the
-> different devices we support, but the information in the tx descriptors
-> is roughly the same). See rt61pci_write_tx_desc() for an example of how
-> the information is stored into the actual tx descriptor, but that's
-> rather boring.
-> 
-> The bits you're interested in are ENTRY_TXD_ACK and ENTRY_TXD_BURST.
-> BURST tells the device the next frame is part of the same burst (also
-> note that we have to set the correct IFS), i.e. the next frame goes out
-> directly after the current one (respecting the IFS of course). The
-> TXD_ACK bit means the hardware should wait for an ack of some kind (e.g.
-> CTS for RTS frames).
 
-Additionally there is the ENTRY_TXD_RTS_FRAME flag to indicate the frame
-is a rts frame. This is something that at least rt2400pci and rt2500pci required
-for rts frames in the TX queue.
+--=-698BB5yd71+fXRqupudc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+
+> Ok, without hostapd I should still be able to setup an unencrypted AP, ri=
+ght?
+
+No. You need hostapd anyway to manage the stations etc., we're not going
+to put that into the kernel. See my [FYI] mails on the topic.
+
+> With regard to driver choices, it looks like the b43 is the way to go
+> if I wanted to setup something that currently works.
+
+Certainly it'll be the first one to work since I'm actively working on
+that.
+
+johannes
+
+--=-698BB5yd71+fXRqupudc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR2zlUaVg1VMiehFYAQJOxQ//VfaCgQkCt8B7vTuTARm9kqx4IEYo9x7S
+r9JQrjpHSWn5BbOIoLhAOSXpfqPk9++g7yPXLunuooavRoHqHqVTTgBpLrxbKJbt
+wXsleo0JZRc6CT2GUSE6ZJ+duvBQMt54WCkxGf3sDaxT0iZzZFGUaWT4B7NvrgL7
+EqOynPG0ICcs+O6aPQcaKlrwwu+mU0VCQR+Es9YxzCueR+9L5qdk4UuuQb+fUJd6
+nQRc01VoGM5Gbc0g+N4ZLIsy4hIRnakN67/qH4QTZxEYiF+VyotcdlM4fRxXHmYB
+T9OM3SHrJHjhFsxpGPo3TxXf6nmbt3HD+fc6e1n21RdNQJtRK2bw7tyDK5HW9IFB
+Lzwm8jn9dJXkzdQvJi8Og8qVptZ1wBI6k9vgwSzJJSWAZU17/4H6kUBdyn+OcVb6
+f4TcZsdcTHvOurLiA/oFAlKg/SSMtEKrwnR901h3vfFwBJLKf+8s86I6oESPoXh+
+ghBYIGW3KSdpZs/7VDzjqpYp4AGA8P7APhu22pKYMko/+FjtMmejsc++OvQqJopd
+x5FsssJr2ECAjFAZmbhQcWPaEzaE/2h2L8136ATvkxn5Yxx30YsMXJI0XE41NHcs
+zrqgbiRkW/o1BLoTYX5+AfATPFe+sbd1AiCm/Afd9vLxVu2O6jEeLl/KXjCkX2EZ
+LANRA3VyqDA=
+=jIsv
+-----END PGP SIGNATURE-----
+
+--=-698BB5yd71+fXRqupudc--
+
