@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58075 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657AbXLLLQh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 06:16:37 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Randy Cushman <rcushman_linux@roadrunner.com>
-Subject: Re: BCM4306 Questions
-Date: Wed, 12 Dec 2007 12:14:50 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <475F2DAD.4000708@roadrunner.com>
-In-Reply-To: <475F2DAD.4000708@roadrunner.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:53442 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753617AbXLVXBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 18:01:09 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: drago01 <drago01@gmail.com>
+Subject: Re: rt2x00 is sapmming my logs
+Date: Sun, 23 Dec 2007 00:20:31 +0100
+Cc: "Alejandro Riveira =?iso-8859-1?q?Fern=E1ndez?=" <ariveira@gmail.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20071222173153.42f574fd@Varda> <200712230004.42957.rjw@sisk.pl> <f6ca9fed0712221457v78b1672ckd53d3792794d9b94@mail.gmail.com>
+In-Reply-To: <f6ca9fed0712221457v78b1672ckd53d3792794d9b94@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200712121214.50522.mb@bu3sch.de> (sfid-20071212_111644_456258_93F7797A)
+Message-Id: <200712230020.32089.rjw@sisk.pl> (sfid-20071222_230115_082909_38A80758)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 December 2007 01:39:09 Randy Cushman wrote:
-> Recently I retrofitted my older HP laptop with a "Broadcom 802.11b/g 
-> WLAN" miniPCI adapter.  The adapter works well with Windows XP.  Now I 
-> would like to be able to use the adapter with Linux.
+On Saturday, 22 of December 2007, drago01 wrote:
+> On Dec 23, 2007 12:04 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >[..]
+> > >  The connection seems top work anyways so i do not think this is critical.
+> > >  Thanks in advance for your time.
+> >
+> > I have created a bugzilla entry for this problem at:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=9622
+> > and added it to the list of reported regressions.
 > 
-> Question:  Is there any hope of using this adapter with a native driver,
+> rt2x00 has been merged in 2.6.24 (did not exist in 2.6.23) so its not
+> a regression.
 
-Yes.
- 
-> Complication:  Neither bcm43xx-fwcutter nor b43-fwcutter recognizes the 
-> latest driver I found at HP.  I figure it would be best for me to use 
-> this firmware because this is the only driver that I have found to be 
-> stable.
+OK, I'll drop it from the regreesion list, but the issue remains. :-)
 
-The driver stability is not related to the firmware.
-You have to use this firmware:
-http://linuxwireless.org/en/users/Drivers/b43#devicefirmware
-
-> Question:  Could someone instruct a mere applications software engineer 
-> on how to determine the values to insert into fwcutter_list.h to support 
-> this driver (or provide documentation to this effect)?
-
-No. Use the officially supported firmware.
-
--- 
-Greetings Michael.
+Thanks,
+Rafael
