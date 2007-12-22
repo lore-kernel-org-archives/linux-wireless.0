@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60087
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53143
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S936396AbXLQUHu (ORCPT
+	by vger.kernel.org with ESMTP id S1750922AbXLVEzz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 15:07:50 -0500
-Date: Mon, 17 Dec 2007 12:07:48 -0800 (PST)
-Message-Id: <20071217.120748.51571249.davem@davemloft.net> (sfid-20071217_200755_486113_8445E9B8)
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+	Fri, 21 Dec 2007 23:55:55 -0500
+Date: Fri, 21 Dec 2007 20:55:54 -0800 (PST)
+Message-Id: <20071221.205554.40677101.davem@davemloft.net> (sfid-20071222_045557_527470_C228F344)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Subject: [WEXT 7/12]: Pass iwreq pointer down into standard/private
+ handlers.
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <20071217193402.GD3121@tuxdriver.com>
-References: <20071216043148.GE3096@tuxdriver.com>
-	<20071217193402.GD3121@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 17 Dec 2007 14:34:02 -0500
 
-> On Sat, Dec 15, 2007 at 11:31:48PM -0500, John W. Linville wrote:
-> 
-> > Cyrill Gorcunov (2):
-> >       ieee80211_rate: missed unlock
-> 
-> >  net/mac80211/ieee80211_rate.c                  |    1 +
-> 
-> > diff --git a/net/mac80211/ieee80211_rate.c b/net/mac80211/ieee80211_rate.c
-> > index 7254bd6..3260a4a 100644
-> > --- a/net/mac80211/ieee80211_rate.c
-> > +++ b/net/mac80211/ieee80211_rate.c
-> > @@ -33,6 +33,7 @@ int ieee80211_rate_control_register(struct rate_control_ops *ops)
-> >  		if (!strcmp(alg->ops->name, ops->name)) {
-> >  			/* don't register an algorithm twice */
-> >  			WARN_ON(1);
-> > +			mutex_unlock(&rate_ctrl_mutex);
-> >  			return -EALREADY;
-> >  		}
-> >  	}
-> 
-> Crud...there is a one-line fix in here that should have gone to Dave.
-> 
-> Jeff, (assuming Dave ACKs it) would you mind just taking it your
-> way along with the other posted patches?  Since this is intended for
-> 2.6.24, there should be no great maintenance hardship if it goes to
-> Linus through your tree instead of Dave's.
+[WEXT]: Pass iwreq pointer down into standard/private handlers.
 
-It's totally fine if Jeff takes this, don't worry so much about
-it :-)
+They have no need to see the object as an ifreq.
 
-And yes the change looks fine to me too :)
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index ad982c0..18fa13c 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -864,11 +864,10 @@ out:
+  * user space and kernel space.
+  */
+ static int ioctl_standard_call(struct net_device *	dev,
+-			       struct ifreq *		ifr,
++			       struct iwreq *		iwr,
+ 			       unsigned int		cmd,
+ 			       iw_handler		handler)
+ {
+-	struct iwreq *				iwr = (struct iwreq *) ifr;
+ 	const struct iw_ioctl_description *	descr;
+ 	struct iw_request_info			info;
+ 	int					ret = -EINVAL;
+@@ -1016,10 +1015,9 @@ out:
+ 	return err;
+ }
+ 
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+ 			      unsigned int cmd, iw_handler handler)
+ {
+-	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	int extra_size = 0, ret = -EINVAL;
+ 	const struct iw_priv_args *descr;
+ 	struct iw_request_info info;
+@@ -1047,7 +1045,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
+ 
+ /* ---------------------------------------------------------------- */
+-typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+ 			       unsigned int, iw_handler);
+ 
+ /*
+@@ -1059,6 +1057,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
++	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+ 
+@@ -1073,11 +1072,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+@@ -1089,9 +1088,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return standard(dev, ifr, cmd, handler);
++			return standard(dev, iwr, cmd, handler);
+ 		else
+-			return private(dev, ifr, cmd, handler);
++			return private(dev, iwr, cmd, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
+-- 
+1.5.4.rc1
+
