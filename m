@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45591 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407AbXLJRV7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53145
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751167AbXLVE4X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 12:21:59 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 10/48] libertas: Move SET_BOOT2_VER command to if_usb where it belongs
-Message-Id: <E1J1kpE-0006kv-JZ@shinybook.infradead.org> (sfid-20071210_172201_689715_4125EB87)
-Date: Mon, 10 Dec 2007 10:45:44 -0500
+	Fri, 21 Dec 2007 23:56:23 -0500
+Date: Fri, 21 Dec 2007 20:56:23 -0800 (PST)
+Message-Id: <20071221.205623.141035851.davem@davemloft.net> (sfid-20071222_045626_377386_7A7123A7)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Subject: [WEXT 8/12]: Pull top-level ioctl dispatch logic into helper
+ function.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Thu, 6 Dec 2007 14:41:08 +0000
 
-This is meaningless for non-USB devices and unimplemented in their
-firmware. It's somewhat dubious for USB devices too, but that's a
-different story.
+[WEXT]: Pull top-level ioctl dispatch logic into helper function.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/net/wireless/libertas/if_usb.c |    5 +++++
- drivers/net/wireless/libertas/main.c   |    4 ----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ net/wireless/wext.c |   26 ++++++++++++++++++++------
+ 1 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 418dcab..f858928 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -222,6 +222,11 @@ static int if_usb_probe(struct usb_interface *intf,
- 	if (lbs_start_card(priv))
- 		goto err_start_card;
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 18fa13c..03b0051 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1111,8 +1111,10 @@ static int wext_permission_check(unsigned int cmd)
+ }
  
-+	/* Set the boot2 version in firmware, ignoring errors. */
-+	(void)lbs_prepare_and_send_command(priv, CMD_SET_BOOT2_VER,
-+					   0, CMD_OPTION_WAITFORRSP, 0, NULL);
+ /* entry point from dev ioctl */
+-int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+-		      void __user *arg)
++static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
++			       unsigned int cmd,
++			       wext_ioctl_func standard,
++			       wext_ioctl_func private)
+ {
+ 	int ret = wext_permission_check(cmd);
+ 
+@@ -1121,12 +1123,24 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd,
+-				     ioctl_standard_call,
+-				     ioctl_private_call);
++	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
+ 	rtnl_unlock();
+-	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
 +
++	return ret;
++}
 +
- 	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
++int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
++		      void __user *arg)
++{
++	int ret = wext_ioctl_dispatch(net, ifr, cmd,
++				      ioctl_standard_call,
++				      ioctl_private_call);
++
++	if (ret > 0 &&
++	    IW_IS_GET(cmd) &&
++	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
+ 		return -EFAULT;
++
+ 	return ret;
+ }
  
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index ed02c02..a5b573c 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -999,10 +999,6 @@ static int lbs_setup_firmware(struct lbs_private *priv)
- 		priv->mesh_autostart_enabled = 0;
- 	}
- 
--       /* Set the boot2 version in firmware */
--       ret = lbs_prepare_and_send_command(priv, CMD_SET_BOOT2_VER,
--                                   0, CMD_OPTION_WAITFORRSP, 0, NULL);
--
- 	ret = 0;
- done:
- 	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
 -- 
-1.5.3.4
+1.5.4.rc1
 
