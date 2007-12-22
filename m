@@ -1,168 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32093 "EHLO mga11.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:53386 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbXLCLpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:45:14 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 18/34] iwlwifi: move uCode API definitions to iwl-4965-commands.h
-Date: Mon,  3 Dec 2007 13:43:30 +0200
-Message-Id: <11966822312049-git-send-email-tomas.winkler@intel.com> (sfid-20071203_120557_177730_CC4961CF)
-In-Reply-To: <11966822313647-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
- <11966822301152-git-send-email-tomas.winkler@intel.com>
- <11966822302864-git-send-email-tomas.winkler@intel.com>
- <1196682230902-git-send-email-tomas.winkler@intel.com>
- <11966822302932-git-send-email-tomas.winkler@intel.com>
- <11966822302681-git-send-email-tomas.winkler@intel.com>
- <11966822301936-git-send-email-tomas.winkler@intel.com>
- <11966822302007-git-send-email-tomas.winkler@intel.com>
- <1196682230754-git-send-email-tomas.winkler@intel.com>
- <1196682231211-git-send-email-tomas.winkler@intel.com>
- <11966822313647-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752872AbXLVWpX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 17:45:23 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alejandro Riveira =?iso-8859-1?q?Fern=E1ndez?=
+	<ariveira@gmail.com>
+Subject: Re: rt2x00 is sapmming my logs
+Date: Sun, 23 Dec 2007 00:04:42 +0100
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20071222173153.42f574fd@Varda>
+In-Reply-To: <20071222173153.42f574fd@Varda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200712230004.42957.rjw@sisk.pl> (sfid-20071222_224529_625947_71ED16F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+On Saturday, 22 of December 2007, Alejandro Riveira Fern=E1ndez wrote:
+>=20
+>  I have a rt2500pci card on an 64 bit system (Ubuntu) AMD X2 processo=
+r and i'm
+> trying latest vanilla kernels i've used a 2.6.24-rc5 kernel without m=
+ayor issues
+> (except that i have to issue a sudo iwconfig wlan0 rate 54M because i=
+t allways
+> connect at 1Mbit and it is dog slow) but now with v2.6.24-rc6-83-g5b8=
+25ed i
+> have my dmesg spammed with:
+>=20
+>=20
+> [ 1122.323489] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.323491] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.326139] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.326142] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.327508] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.327511] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.329405] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.329409] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.332519] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.332522] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.334444] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.334447] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.336847] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.336850] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.338654] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.338657] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.340844] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.340847] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.343035] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.343038] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.344301] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.344303] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.347146] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+> [ 1122.347148] Please file bug report to http://rt2x00.serialmonkey.c=
+om.
+> [ 1122.349381] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at no=
+n-free entry in the non-full queue 0.
+>=20
+>  The connection seems top work anyways so i do not think this is crit=
+ical.
+>  Thanks in advance for your time.
 
-Move uCode API definitions to iwl-4965-commands.h
+I have created a bugzilla entry for this problem at:
+http://bugzilla.kernel.org/show_bug.cgi?id=3D9622
+and added it to the list of reported regressions.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |   39 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h       |   37 --------------------
- 2 files changed, 39 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index bd55709..49582b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -335,6 +335,21 @@ enum {
- 	RXON_DEV_TYPE_SNIFFER = 6,
- };
- 
-+
-+#define RXON_RX_CHAIN_DRIVER_FORCE_MSK		__constant_cpu_to_le16(0x1<<0)
-+#define RXON_RX_CHAIN_VALID_MSK			__constant_cpu_to_le16(0x7<<1)
-+#define RXON_RX_CHAIN_VALID_POS			(1)
-+#define RXON_RX_CHAIN_FORCE_SEL_MSK		__constant_cpu_to_le16(0x7<<4)
-+#define RXON_RX_CHAIN_FORCE_SEL_POS		(4)
-+#define RXON_RX_CHAIN_FORCE_MIMO_SEL_MSK	__constant_cpu_to_le16(0x7<<7)
-+#define RXON_RX_CHAIN_FORCE_MIMO_SEL_POS	(7)
-+#define RXON_RX_CHAIN_CNT_MSK			__constant_cpu_to_le16(0x3<<10)
-+#define RXON_RX_CHAIN_CNT_POS			(10)
-+#define RXON_RX_CHAIN_MIMO_CNT_MSK		__constant_cpu_to_le16(0x3<<12)
-+#define RXON_RX_CHAIN_MIMO_CNT_POS		(12)
-+#define RXON_RX_CHAIN_MIMO_FORCE_MSK		__constant_cpu_to_le16(0x1<<14)
-+#define RXON_RX_CHAIN_MIMO_FORCE_POS		(14)
-+
- /* rx_config flags */
- /* band & modulation selection */
- #define RXON_FLG_BAND_24G_MSK           __constant_cpu_to_le32(1 << 0)
-@@ -358,6 +373,21 @@ enum {
- * (according to ON_AIR deassertion) */
- #define RXON_FLG_TSF2HOST_MSK           __constant_cpu_to_le32(1 << 15)
- 
-+
-+/* HT flags */
-+#define RXON_FLG_CTRL_CHANNEL_LOC_POS		(22)
-+#define RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK	__constant_cpu_to_le32(0x1<<22)
-+
-+#define RXON_FLG_HT_OPERATING_MODE_POS		(23)
-+
-+#define RXON_FLG_HT_PROT_MSK			__constant_cpu_to_le32(0x1<<23)
-+#define RXON_FLG_FAT_PROT_MSK			__constant_cpu_to_le32(0x2<<23)
-+
-+#define RXON_FLG_CHANNEL_MODE_POS		(25)
-+#define RXON_FLG_CHANNEL_MODE_MSK		__constant_cpu_to_le32(0x3<<25)
-+#define RXON_FLG_CHANNEL_MODE_PURE_40_MSK	__constant_cpu_to_le32(0x1<<25)
-+#define RXON_FLG_CHANNEL_MODE_MIXED_MSK		__constant_cpu_to_le32(0x2<<25)
-+
- /* rx_config filter flags */
- /* accept all data frames */
- #define RXON_FILTER_PROMISC_MSK         __constant_cpu_to_le32(1 << 0)
-@@ -431,6 +461,15 @@ struct iwl4965_tx_power {
- #define POWER_TABLE_NUM_ENTRIES			33
- #define POWER_TABLE_NUM_HT_OFDM_ENTRIES		32
- #define POWER_TABLE_CCK_ENTRY			32
-+
-+union iwl4965_tx_power_dual_stream {
-+	struct {
-+		u8 radio_tx_gain[2];
-+		u8 dsp_predis_atten[2];
-+	} s;
-+	u32 dw;
-+};
-+
- struct tx_power_dual_stream {
- 	__le32 dw;
- } __attribute__ ((packed));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 5a61b84..f4e75d7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -698,45 +698,8 @@ enum {
- #define CALIB_IWL_TX_ATTEN_GR5_FCH 1
- #define CALIB_IWL_TX_ATTEN_GR5_LCH 20
- 
--union iwl4965_tx_power_dual_stream {
--	struct {
--		u8 radio_tx_gain[2];
--		u8 dsp_predis_atten[2];
--	} s;
--	u32 dw;
--};
+Thanks,
+Rafael
 -
- /********************* END TXPOWER *****************************************/
- 
--/* HT flags */
--#define RXON_FLG_CTRL_CHANNEL_LOC_POS		(22)
--#define RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK	__constant_cpu_to_le32(0x1<<22)
--
--#define RXON_FLG_HT_OPERATING_MODE_POS		(23)
--
--#define RXON_FLG_HT_PROT_MSK			__constant_cpu_to_le32(0x1<<23)
--#define RXON_FLG_FAT_PROT_MSK			__constant_cpu_to_le32(0x2<<23)
--
--#define RXON_FLG_CHANNEL_MODE_POS		(25)
--#define RXON_FLG_CHANNEL_MODE_MSK		__constant_cpu_to_le32(0x3<<25)
--#define RXON_FLG_CHANNEL_MODE_PURE_40_MSK	__constant_cpu_to_le32(0x1<<25)
--#define RXON_FLG_CHANNEL_MODE_MIXED_MSK		__constant_cpu_to_le32(0x2<<25)
--
--#define RXON_RX_CHAIN_DRIVER_FORCE_MSK		__constant_cpu_to_le16(0x1<<0)
--#define RXON_RX_CHAIN_VALID_MSK			__constant_cpu_to_le16(0x7<<1)
--#define RXON_RX_CHAIN_VALID_POS			(1)
--#define RXON_RX_CHAIN_FORCE_SEL_MSK		__constant_cpu_to_le16(0x7<<4)
--#define RXON_RX_CHAIN_FORCE_SEL_POS		(4)
--#define RXON_RX_CHAIN_FORCE_MIMO_SEL_MSK	__constant_cpu_to_le16(0x7<<7)
--#define RXON_RX_CHAIN_FORCE_MIMO_SEL_POS	(7)
--#define RXON_RX_CHAIN_CNT_MSK			__constant_cpu_to_le16(0x3<<10)
--#define RXON_RX_CHAIN_CNT_POS			(10)
--#define RXON_RX_CHAIN_MIMO_CNT_MSK		__constant_cpu_to_le16(0x3<<12)
--#define RXON_RX_CHAIN_MIMO_CNT_POS		(12)
--#define RXON_RX_CHAIN_MIMO_FORCE_MSK		__constant_cpu_to_le16(0x1<<14)
--#define RXON_RX_CHAIN_MIMO_FORCE_POS		(14)
--
--
- /* Flow Handler Definitions */
- 
- /**********************/
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
