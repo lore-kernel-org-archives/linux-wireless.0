@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43752 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbXLJWAR (ORCPT
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:21911 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753676AbXLWAvN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 17:00:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Doug McLain <doug@nostar.net>
-Subject: Re: Problems with b43 using BCM4306 r3
-Date: Mon, 10 Dec 2007 22:58:29 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <475DA27F.2040004@nostar.net>
-In-Reply-To: <475DA27F.2040004@nostar.net>
+	Sat, 22 Dec 2007 19:51:13 -0500
+Date: Sat, 22 Dec 2007 16:51:11 -0800
+From: David Brownell <david-b@pacbell.net>
+To: bjd@jooz.net
+Subject: Re: [PATCH 3/8] [PATCH] Use 1KB buffer in rndis_unbind
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jussi.kivilinna@mbnet.fi
+References: <11983602942818-git-send-email-bjd@jooz.net>
+ <11983602953865-git-send-email-bjd@jooz.net>
+In-Reply-To: <11983602953865-git-send-email-bjd@jooz.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712102258.29802.mb@bu3sch.de> (sfid-20071210_220022_297097_2549F283)
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20071223005111.E699A230E0A@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_005117_199366_A0BC966D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 December 2007 21:33:03 Doug McLain wrote:
-> I have an emachines M6805 with the BCM4306 r3 wifi chip.  Using the
-> ndiswrapper driver, all is ok, but using the b43 driver results in
-> constant flow of dmesg output (see link), eventual lockup of wifi under
-> heavy network traffic, and constant xruns when using JACK audio server.
->   Again, when I use the ndiswrapper driver, everything works ok.
-> 
-> http://nostar.net/ardour/dmesg.txt
+> From bjd@jooz.net  Sat Dec 22 13:53:03 2007
+> From: Bjorge Dijkstra <bjd@jooz.net>
+> To: dbrownell@users.sourceforge.net
+> Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+> 	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Subject: [PATCH 3/8] [PATCH] Use 1KB buffer in rndis_unbind
+> Date: Sat, 22 Dec 2007 22:51:29 +0100
+>
+> From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>
+> rndis_command requires the caller to pass in a buffer of at least 1KB.
+>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
 
-That's weird. These messages say that interrupts are not disabled in
-the IRQ handler. Which driver are you using? Please try vanilla
-wireless-2.6.
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
--- 
-Greetings Michael.
+> ---
+>  drivers/net/usb/rndis_host.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+> index 96ef6a9..42b161c 100644
+> --- a/drivers/net/usb/rndis_host.c
+> +++ b/drivers/net/usb/rndis_host.c
+> @@ -577,7 +577,7 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+>  	struct rndis_halt	*halt;
+>  
+>  	/* try to clear any rndis state/activity (no i/o from stack!) */
+> -	halt = kzalloc(sizeof *halt, GFP_KERNEL);
+> +	halt = kzalloc(CONTROL_BUFFER_SIZE, GFP_KERNEL);
+>  	if (halt) {
+>  		halt->msg_type = RNDIS_MSG_HALT;
+>  		halt->msg_len = ccpu2(sizeof *halt);
+> -- 
+> 1.5.2.5
+>
