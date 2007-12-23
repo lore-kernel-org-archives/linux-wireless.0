@@ -1,79 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:38276 "HELO
-	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753402AbXLWBtV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:49:21 -0500
-Date: Sat, 22 Dec 2007 17:49:19 -0800
-From: David Brownell <david-b@pacbell.net>
-To: bjd@jooz.net
-Subject: Re: [PATCH 0/8] RFC: Wireless Extensions for rndis_host
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <11983602942818-git-send-email-bjd@jooz.net>
-In-Reply-To: <11983602942818-git-send-email-bjd@jooz.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223014919.4FFC1166E03@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_014923_615837_4D0A4597)
+Received: from mfe1.polimi.it ([131.175.12.23]:46764 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751851AbXLWKV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 05:21:29 -0500
+Date: Sun, 23 Dec 2007 11:18:06 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 7/7] mac80211: fix sta_info locking
+Message-ID: <20071223111806.663f3f4e@morte> (sfid-20071223_102132_485118_E4482322)
+In-Reply-To: <1198395536.6630.13.camel@johannes.berg>
+References: <20071223033633.710907923@polimi.it>
+	<20071223050844.4e6b8c13@morte>
+	<1198395536.6630.13.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> Subject: [PATCH 0/8] RFC: Wireless Extensions for rndis_host
-> Date: Sat, 22 Dec 2007 22:51:26 +0100
->
-> Hello all,
->
-> I have here a patchset that needs some review.
-> This patchset adds wireless extensions for rndis_host to
-> enable support for RNDIS based USB wireless LAN adapters
-> (e.g. Linksys WUSB54GS, Belkin F05D7051).
+On Sun, 23 Dec 2007 08:38:56 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Cool!  We always like to see support for more USB peripherals.
-Even (especially?) if they'e previously been Windows-only,
-penguin-deprived hardware.  ;)
+> > EIP at delay_tsc+0x22/0x50
+> > [couldn't read the EBX and such, but I guess you won't care]
+> 
+> It'd be good to know actually, along with disassembly.
+> 
+> > So I guessed that locking was lacking somewhere. The following patch fixes
+> > the issue for me, but I'm not sure at all that it's the right fix. Thanks.
+> 
+> Definitely not. If you look at the code in question, it has nothing at
+> all that needs locking. It's not accessing any shared structures at all.
 
-Is all that stuff adequately documented?  What I recall from
-working with RNDIS before is that docs were lacking in some
-critical details, and were sometimes wrong.
-
-
-> In this patchset:
->  1.  Fix sparse warning: returning void valued expression
->  2.  Hardwire CDC descriptors when missing
->  3.  Use 1KB buffer in rndis_unbind
->  4.  Halt device if rndis_bind fails
->  5.  Fix rndis packet filter flags
->  6.  Split up rndis_host.c
->  7.  Add Wireless Extensions for rndis_host
->  8.  Use wlan device name for RNDIS wireless devices
->
-> The first five patches are more generic fixes that I think
-> can be applied as they are. Of these, patch 2 is required
-> to get these wireless devices working. 
-
-I had no problem with those first five.  I take it none of
-those should be prioritized for 2.6.24 integration?
+I now removed the lock, rebuilt my quilt tree, rebuilt mac80211 and I can't
+reproduce it. I think that could have been my fault, I should have did
+something wrong such as calling sta_info_put() twice or somesuch. Sorry for
+the noise. Will poke you again if I happen to reproduce this.
 
 
-> Patches 6-8 introduce some larger changes that may need a
-> closer look.
-
-And you saw my feedback on those.  Minimally, please split
-out the usbnet core extensions, instead of combining them
-with rndis_wext patches ... and on first princples I'd
-think rndis_wext should live in its own module.
-
-I just skimmed patch #7.  There are people far more aware
-of the issues with Linux wireless drivers than me.  :)
-
-- Dave
-
-
-> All these patches should be applied in order.
-> The entire series should apply cleanly to current linux
-> kernel and net-2.6.25 trees.
->
-> regards,
-> Bjorge Dijkstra
->
-
+--
+Ciao
+Stefano
