@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52449 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35310 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbXLWSPQ (ORCPT
+	with ESMTP id S1750964AbXLWNsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2007 13:15:16 -0500
-Subject: Re: [PATCH 5/8] mac80211: A-MPDU Rx handling aggregation reordering
+	Sun, 23 Dec 2007 08:48:38 -0500
+Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
+	ieee80211_invoke_rx_handlers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <rindjon@googlemail.com>
+To: Helmut Schaa <hschaa@suse.de>
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <c85cb4470712230938j7e84d43dx2a85911b54d1b062@mail.gmail.com> (sfid-20071223_173823_938345_7DEB3CB6)
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070782762-git-send-email-ron.rindjunsky@intel.com>
-	 <1198145667.16241.23.camel@johannes.berg>
-	 <c85cb4470712200432w3640359dje70f57c86be3497a@mail.gmail.com>
-	 <1198154463.16241.46.camel@johannes.berg>
-	 <c85cb4470712230815u158cd19fjc1ff58a7e2c83fbc@mail.gmail.com>
-	 <1198430920.4541.11.camel@johannes.berg>
-	 <c85cb4470712230938j7e84d43dx2a85911b54d1b062@mail.gmail.com>
-	 (sfid-20071223_173823_938345_7DEB3CB6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HjOxG9OgvqzHOFTmE8QP"
-Date: Sun, 23 Dec 2007 19:15:01 +0100
-Message-Id: <1198433701.4487.1.camel@johannes.berg> (sfid-20071223_181527_284613_F6310671)
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <20071223123517.17ds9zttxc4goo00@imap.suse.de>
+References: <200712211516.35731.hschaa@suse.de>
+	 (sfid-20071221_141215_108356_0F4BE6F7) <1198401880.4116.6.camel@johannes.berg>
+	 <20071223123517.17ds9zttxc4goo00@imap.suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jT1g7ynL12AtFsWev5oM"
+Date: Sun, 23 Dec 2007 14:48:26 +0100
+Message-Id: <1198417706.4000.1.camel@johannes.berg> (sfid-20071223_134844_803148_2A2083E4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HjOxG9OgvqzHOFTmE8QP
+--=-jT1g7ynL12AtFsWev5oM
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> > tasklet/driver
-> > __ieee80211_rx()
-> >        __rx_pre_monitor()
-> >        __rx_pre_load()
-> >        __rx_pre_qos()
+> >> This patch fixes a problem with rx handling on multiple interfaces. =20
+> >>  Especially
+> >> when using hardware-scanning and a wireless driver (i.e. iwlwifi) whic=
+h is
+> >> able to receive data while scanning.
 > >
-> >        if (agg)
-> >                __rx_handle_reorder()
-> >        else
-> >                __rx_handle_packet()
-> >
-> > and __rx_handle_reorder() calls __rx_handle_packet() which does all the
-> > rest, I guess.
-> >
+> > Can you explain how you even got multiple interfaces with iwlwifi? The
+> > patch looks (superficially) correct, but I'm a bit confused.
 >=20
-> that's the general idea, but __rx_pre_qos() won't be able to be in
-> __ieee80211_rx(), as it handles txrx_data. if it will be there i am
-> back in the original problem - the need to restore txrx_data per
-> frame. i will have to put it inside __rx_handle_packet().
+> I was only referring to wmaster0 and wlan0 as two interfaces. While a sca=
+n
+> is in progress the master interface (wmaster0) processes all frames relat=
+ed
+> to scanning and it happened to me that data-frames got dropped on wmaster=
+0
+> (which is obviously correct) and due to the frame control being modified
+> wlan0 was not able to process the frame correctly anymore.
 
-Ah, ok, I see, sounds good. It can well be there but I guess it should
-be before invoking the RX handlers though; then I'll go and see if
-anything else only needs to be done once per interface.
+Ah, that must be because of the stuff Zhu Yi did wrt. hw scanning. Could
+you take a look too please? The patch looks pretty much ok to me and I
+think it'd be required with say VLAN interfaces as well.
 
 johannes
 
---=-HjOxG9OgvqzHOFTmE8QP
+--=-jT1g7ynL12AtFsWev5oM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR26lo6Vg1VMiehFYAQIULhAAoNI8yPtqrZb+/rYNyvpvpR39I21Tje1/
-YNTGllO/r9X+Bg0Adou66oOBtJbyKURkpZ3aaav6XExYQbostAIquhmaE5SpPBw1
-VQJPpIYyazeNZYjKdxQd/AYd+A7ylY7lyGELCrY+nuRVIck9eZyu1XPlyWErTtmW
-scNkLF81XE5Q2T6+NkqCNgY7Aa37MLwixfCJNcRHXNhWAs+66ITHmBUNxGLd9JIL
-Dx9xMqdQDhwbdt7pRpojm5KeESjnC7ispQZS685k+fgEcnELWl2oZuvSjUPWe7gC
-P+Pdgnf9+fReVDzvIcoTUtFyHrVfC3P8NHBQIR2gGEXQ+ztrlSte0/QigjlSZIVK
-fbkTJCNtKZ8VO/0upKS6iCs7r/SGD5iwHGx8e5kZwipKbqaNOiK/3Y91D9Sl+muW
-bNU+DNABiw7k0qHiKCZkbRr0arTKBo7P+UZxTzqE+AsLLwVXd353T1h9/YWx37QR
-0LpJK+pwl/IyhVBWYIPal9zg4v4I2kkbLZSt0Y43nQbGMkmCgr4DeBwGkV1GWLtE
-IVtVsQ7NY3zmA8S2H6Z8AfIPLbYRe7onagEJc0AWRIwYi8jRMgFDF+ORwtCKyrQt
-h0gtt1/h6vpFHpPw616u+aTDoi5oe2zj2zLsKYv1hXMLkankKlylsnYPVatYzT2q
-T8irN1S0ZY4=
-=zlWV
+iQIVAwUAR25nKaVg1VMiehFYAQJV5BAAvmOX9fIyDHBfG+Fvlxew3ccmmjEEBd8z
+bAwgH6/wSZWg2siV96kNewgOUrtvHuaeGTt8CUhMfqqgm5ljQWIIF7hvZuzQp9+n
+GljGq9j+FDwJoZi/ZC6whK+DVdAG65Tg3TceOQShugr3Xeg+7v2KvPLtCHv8Ciiu
+/C9FWZMhaCL89z4syS8hNy6QSiJTyoVI8sCpOgz6YAbhwmkQNttViiNSGbLVr57A
+fJxTdi/ZfI1IUaGNPx89zOoKoJ1Nn9y/QTB54bQ3JMDoTpS2yERh+6Q1d4N8nlGr
+kzderdNTiwVs10zqWRMfnwiN0cHBgYf2hGLXILgcDGsEAkstT2GBlS5mOnqMMcqy
+VUC9WzqId7cMxs+9MEjdMFXHLoIXbb+j8XxeHXJHbenS2oH7CuzZN3SeaCn5zUrt
+B2Mjfgn4vNE8ztWo+ReMBcIznzYKREsrKmZjiLty8V8+O73ZnwKQnrQ3eqrgIV4G
+3gRSetjiWkUIUXyb8xEKPquwkyMpTrezjhzyyPZZvQOapjQatUfX8fKdTF9wMPfR
+guVPqjrXa4odJrS/ke/wBomcpfKmRW2wqv1nvPuf47BDNb0DkXr7Gn8RI7CgRSAt
+za+2d4FDO29ZDJEl8lUDF75vBrghALpfTw0Xt5ysx78YAK4kK1j4lEfVplJ9OOrM
+/eo/mWrIq/4=
+=NvBH
 -----END PGP SIGNATURE-----
 
---=-HjOxG9OgvqzHOFTmE8QP--
+--=-jT1g7ynL12AtFsWev5oM--
 
