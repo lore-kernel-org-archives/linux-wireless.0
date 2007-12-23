@@ -1,111 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55299 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755212AbXLJPqT (ORCPT
+Received: from ppsw-1.csi.cam.ac.uk ([131.111.8.131]:53067 "EHLO
+	ppsw-1.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754283AbXLWBqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:46:19 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 36/48] libertas: kill lbs_process_tx() by merging it into lbs_hard_start_xmit()
-Message-Id: <E1J1kpg-0006n1-0g@shinybook.infradead.org> (sfid-20071210_154642_119735_EC002395)
-Date: Mon, 10 Dec 2007 10:46:12 -0500
+	Sat, 22 Dec 2007 20:46:05 -0500
+Received: from ssnt2.quns.cam.ac.uk ([131.111.255.37]:46461 helo=neotoaster.lan)
+	by ppsw-1.csi.cam.ac.uk (smtp.hermes.cam.ac.uk [131.111.8.151]:25)
+	with esmtpsa (PLAIN:ssnt2) (TLSv1:DHE-RSA-AES256-SHA:256)
+	id 1J6FTF-0007EB-3t (Exim 4.67) for linux-wireless@vger.kernel.org
+	(return-path <ssnt2@hermes.cam.ac.uk>); Sun, 23 Dec 2007 01:17:37 +0000
+From: Shawn Tan <ssnt2@eng.cam.ac.uk>
+Reply-To: ssnt2@eng.cam.ac.uk
+To: linux-wireless@vger.kernel.org
+Subject: B43 not working
+Date: Sun, 23 Dec 2007 01:17:35 +0000
+MIME-Version: 1.0
+Message-Id: <200712230117.35920.ssnt2@eng.cam.ac.uk> (sfid-20071223_014616_346516_D6422003)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Sun, 9 Dec 2007 12:57:14 -0500
+Hi,
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/tx.c |   45 ++++++++++-------------------------
- 1 files changed, 13 insertions(+), 32 deletions(-)
+B43 still doesn't work for me. Let me know if any additional information from 
+me will help.
 
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index 336544c..7bc2124 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -56,8 +56,9 @@ static u32 convert_radiotap_rate_to_mv(u8 rate)
-  *  @param skb     A pointer to skb which includes TX packet
-  *  @return 	   0 or -1
-  */
--static int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
-+int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
-+	struct lbs_private *priv = dev->priv;
- 	int ret = -1;
- 	struct txpd localtxpd;
- 	struct txpd *plocaltxpd = &localtxpd;
-@@ -70,12 +71,21 @@ static int lbs_process_tx(struct lbs_private *priv, struct sk_buff *skb)
- 
- 	lbs_deb_hex(LBS_DEB_TX, "TX Data", skb->data, min_t(unsigned int, skb->len, 100));
- 
-+	netif_stop_queue(priv->dev);
-+	if (priv->mesh_dev)
-+		netif_stop_queue(priv->mesh_dev);
-+
- 	if (priv->dnld_sent) {
- 		lbs_pr_alert( "TX error: dnld_sent = %d, not sending\n",
- 		       priv->dnld_sent);
- 		goto done;
- 	}
- 
-+	if (priv->currenttxskb) {
-+		lbs_pr_err("%s while TX skb pending\n", __func__);
-+		goto done;
-+	}
-+
- 	if ((priv->psstate == PS_STATE_SLEEP) ||
- 	    (priv->psstate == PS_STATE_PRE_SLEEP)) {
- 		lbs_pr_alert("TX error: packet xmit in %ssleep mode\n",
-@@ -154,6 +164,8 @@ done_tx:
- 	if (!ret) {
- 		priv->stats.tx_packets++;
- 		priv->stats.tx_bytes += skb->len;
-+
-+ 		dev->trans_start = jiffies;
- 	} else {
- 		priv->stats.tx_dropped++;
- 		priv->stats.tx_errors++;
-@@ -179,37 +191,6 @@ done:
- 	return ret;
- }
- 
--int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
--{
--	int ret = 0;
--	struct lbs_private *priv = dev->priv;
--
--	lbs_deb_enter(LBS_DEB_TX);
--
--	/* We could return NETDEV_TX_BUSY here, but I'd actually 
--	   like to get the point where we can BUG() */
--	if (priv->dnld_sent) {
--		lbs_pr_err("%s while dnld_sent\n", __func__);
--		priv->stats.tx_dropped++;
--		goto done;
--	}
--	if (priv->currenttxskb) {
--		lbs_pr_err("%s while TX skb pending\n", __func__);
--		priv->stats.tx_dropped++;
--		goto done;
--	}
--
--	netif_stop_queue(priv->dev);
--	if (priv->mesh_dev)
--		netif_stop_queue(priv->mesh_dev);
--
--	if (lbs_process_tx(priv, skb) == 0)
--		dev->trans_start = jiffies;
--done:
--	lbs_deb_leave_args(LBS_DEB_TX, "ret %d", ret);
--	return ret;
--}
--
- /**
-  *  @brief This function sends to the host the last transmitted packet,
-  *  filling the radiotap headers with transmission information.
+dmesg:
+
+[40699.800000] PCI: Setting latency timer of device 0000:30:00.0 to 64
+[40699.840000] ssb: SPROM revision 3 detected.
+[40699.860000] ssb: Sonics Silicon Backplane found on PCI device 0000:30:00.0
+[40699.876000] b43-phy0: Broadcom 4311 WLAN found
+[40700.044000] phy0: Failed to select rate control algorithm
+[40700.044000] phy0: Failed to initialize rate control algorithm
+[40700.080000] b43: probe of ssb0:0 failed with error -2
+
+lspci -vvn:
+
+30:00.0 0280: 14e4:4312 (rev 02)
+        Subsystem: 103c:1371
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 11
+        Region 0: Memory at c8000000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+        Capabilities: [58] Vendor Specific Information
+        Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ 
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [d0] Express Endpoint IRQ 0
+                Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag+
+                Device: Latency L0s <4us, L1 unlimited
+                Device: AtnBtn+ AtnInd+ PwrInd-
+                Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                Device: RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
+                Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s, Port 0
+                Link: Latency L0s <4us, L1 <64us
+                Link: ASPM L0s L1 Enabled RCB 64 bytes CommClk- ExtSynch-
+                Link: Speed 2.5Gb/s, Width x
+
 -- 
-1.5.3.4
+with metta,
+Shawn Tan
 
+Centre for Advanced Photonics and Electronics
+Department of Engineering, University of Cambridge
+9 JJ Thomson Avenue, Cambridge CB3 0FA, UK.
