@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from londo.lunn.ch ([80.238.139.98]:42443 "EHLO londo.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757151AbXLMMJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 07:09:42 -0500
-Date: Thu, 13 Dec 2007 13:09:04 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, flamingice@sourmilk.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] try 2: mac80211: Fix swapped parameters to
-	ieee80211_set_channel()
-Message-ID: <20071213120904.GB501@lunn.ch> (sfid-20071213_121011_714452_D27A5E0C)
-References: <20071212153158.GB16947@lunn.ch> <1197481426.6558.138.camel@johannes.berg> <20071212180204.GP31218@lunn.ch> <1197482969.6558.149.camel@johannes.berg> <1197504975.6558.199.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1197504975.6558.199.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:53392 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753395AbXLWEPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 23:15:08 -0500
+Date: Sun, 23 Dec 2007 05:14:05 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: ssnt2@eng.cam.ac.uk
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: B43 not working
+Message-ID: <20071223051405.4f3ceedd@morte> (sfid-20071223_041513_799544_42699045)
+In-Reply-To: <200712230408.37562.ssnt2@eng.cam.ac.uk>
+References: <200712230117.35920.ssnt2@eng.cam.ac.uk>
+	<20071223041739.1f9e82cb@morte>
+	<200712230408.37562.ssnt2@eng.cam.ac.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 13, 2007 at 01:16:14AM +0100, Johannes Berg wrote:
-> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+On Sun, 23 Dec 2007 04:08:37 +0000
+Shawn Tan <ssnt2@eng.cam.ac.uk> wrote:
+
+> Yup, that's what I did. I downloaded the compat-wireless package and compiled 
+> it. However, it seems like there's a compatibility problem with the package 
+> modules and the default Ubuntu ones.
 > 
-> Actually, I take that back.
-> 
-> The code is correct, as per the comment above it. Stupid wext :/
-> 
->         /* freq->e == 0: freq->m = channel; otherwise freq = m * 10^e */
->         if (freq->e == 0) {
->                 if (freq->m < 0) {
->                         if (sdata->type == IEEE80211_IF_TYPE_STA)
->                                 sdata->u.sta.flags |=
->                                         IEEE80211_STA_AUTO_CHANNEL_SEL;
->                         return 0;
->                 } else  
->                         return ieee80211_set_channel(local, freq->m, -1);
-> 
+> When I try to load rc80211_simple, it loads the ubuntu one. The compat package 
+> doesn't build a rc80211_simple. So, if I load the ubuntu rate controller, it 
+> loads the ubuntu mac80211, which has similar symbol problems with the b43 
+> module.
 
-Probably a stupid question, but are you sure the comment is correct?
+You shouldn't need to load the rc80211_simple module which came with
+Ubuntu. I think that the compat package comes with a rate control algorithm
+built into mac80211 itself, so please just try to unload the Ubuntu
+mac80211 and load the compat one. For sure Luis (the compat maintainer) has
+more clues on this, anyway.
 
-I added a printk for freq->e and freq->m. When i do
 
-iwconfig wlan0 freq 5240
-
-i see that e = 0, m = 5240 and that with my patch in place everything
-is happy. Without the patch, it passes 5240 as a channel, not a
-frequency and i get an EINVAL. 
-
-So either the comment is wrong, or the comment is correct but
-something is filling in freq wrongly. 
-
-Any ideas?
-
-    Thanks
-        Andrew
-
+--
+Ciao
+Stefano
