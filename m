@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:36570 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755803AbXLPBLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2007 20:11:48 -0500
-Date: Sun, 16 Dec 2007 03:11:48 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 9/9] ath5k: Minor cleanups
-Message-ID: <20071216011148.GI5482@makis.domain.invalid> (sfid-20071216_011150_636198_296A6DB8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41485 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbXLWVyN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 16:54:13 -0500
+Subject: Re: tx_status reporting of RTS/CTS frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <200712232250.12962.IvDoorn@gmail.com> (sfid-20071223_214951_081999_3FC5E533)
+References: <1197412922.7030.11.camel@localhost>
+	 <200712232217.18941.IvDoorn@gmail.com>
+	 <1198445352.4103.0.camel@johannes.berg>
+	 <200712232250.12962.IvDoorn@gmail.com>
+	 (sfid-20071223_214951_081999_3FC5E533)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-smj3Arrif7WkZIdWpTVh"
+Date: Sun, 23 Dec 2007 22:54:04 +0100
+Message-Id: <1198446844.4103.3.camel@johannes.berg> (sfid-20071223_215420_282025_D032B217)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Call set_txpower_limit directly
-* Remove "partialy supported" mesage
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+--=-smj3Arrif7WkZIdWpTVh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index c874a5e..b58b153 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -285,7 +285,6 @@ static int 	ath5k_stop_locked(struct ath5k_softc *sc);
- static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
--static inline void ath5k_update_txpow(struct ath5k_softc *sc);
- static void 	ath5k_calibrate(unsigned long data);
- /* LED functions */
- static void 	ath5k_led_off(unsigned long data);
-@@ -1014,7 +1013,7 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 			return ret;
- 		}
- 		sc->curchan = chan;
--		ath5k_update_txpow(sc);
-+		ath5k_hw_set_txpower_limit(sc->ah, 0);
- 
- 		/*
- 		 * Re-enable rx framework.
-@@ -2098,7 +2097,7 @@ ath5k_init(struct ath5k_softc *sc)
- 	 * This is needed only to setup initial state
- 	 * but it's best done after a reset.
- 	 */
--	ath5k_update_txpow(sc);
-+	ath5k_hw_set_txpower_limit(sc->ah, 0);
- 
- 	/*
- 	 * Setup the hardware after reset: the key cache
-@@ -2297,12 +2296,6 @@ ath5k_tasklet_reset(unsigned long data)
- 	ath5k_reset(sc->hw);
- }
- 
--static inline void
--ath5k_update_txpow(struct ath5k_softc *sc)
--{
--	ath5k_hw_set_txpower_limit(sc->ah, 0);
--}
--
- /*
-  * Periodically recalibrate the PHY to account
-  * for temperature/environment changes.
-@@ -2478,7 +2471,7 @@ ath5k_reset(struct ieee80211_hw *hw)
- 		ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
- 		goto err;
- 	}
--	ath5k_update_txpow(sc);
-+	ath5k_hw_set_txpower_limit(sc->ah, 0);
- 
- 	ret = ath5k_rx_start(sc);
- 	if (unlikely(ret)) {
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index ea5960e..fc43778 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -209,11 +209,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		goto err_free;
- 	}
- 
--	/* Warn for partially supported chips (unsupported phy etc) */
--	if(srev >= AR5K_SREV_VER_AR2424){
--		ATH5K_WARN(sc, "Device only partially supported.\n");
--	}
--
- 	/* Identify single chip solutions */
- 	if((srev <= AR5K_SREV_VER_AR5414) &&
- 	(srev >= AR5K_SREV_VER_AR2424)) {
+Hi Ivo,
 
+> I just checked, only rt2x00 and b43 call the rts/cts functions for ieee80=
+211.
+> For b43 seems to report the tx status for the rts/cts frames as well.
 
+b43 definitely doesn't, it embeds the rts/cts frame in the TX descriptor
+of the data packet and only gets a tx status notification for the data
+packet from the hardware.
+
+> I have found the 2 emails that introduced and later reverted the behavior=
+ from rt2x00:
+> [PATCH 16/26] rt2x00: Correctly handle RTS frames
+> [PATCH 7/24] RT2x00: Add RTS frame creation
+> They are dated from July 2006, so they were quite old actually :S
+
+:)
+
+> Anyway, I have no objects against not report those frames to mac80211,
+> so if mac80211 doesn't want those frames reported rt2x00 can filter them =
+out. :)
+
+I think it'd be best since most hw is not even capable of doing it, rate
+control algorithms don't care and we don't really want to have them
+anyway.
+
+johannes
+
+--=-smj3Arrif7WkZIdWpTVh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR27Y+6Vg1VMiehFYAQIzAxAAk6VuF1CN7jLrp99UhwD9QfsrHa+R1ZXA
+IquSuCkTCkSgjhB/cWVRSRwZk9XgdyXflXrYL8BkxqyYldnPLxqsyJ47O6VLOBkp
+MNBfOTpxHq2qAlA3PmSkPX7v0w67aRdWBMFlxhE04/mZNRAiZEYNzKh39ShfmR9Y
+tbDDRvcXkHgtWSOiyII2ufDD1qFPF8a1pnGs1jxPRee3fHwAGmP9BCrr5LBN98nc
+G7Ju2/CcqS6lC6FLDOQBC+uTCua6B12jMgzqkk/+za1sFrBiDpjRhvZYak2tBCb9
+ZR+uo7gaB+cp+pxpDX9AHPmFtAHCB2JhVjvMCnisHpHsl8wWn4loyYqvZq7SUBlW
+7zfd4Bh0B6bQMkA/aMfSIob9gfK9twfXHllX5XvYvLXaF6muG4/ZspnBC0rGYhLa
+gZM7y9Y99WjFztBZQo63Z8ljb7gn9KcDvDaFzYWxeQbAQFXSbtde8YJ48mOEc6gl
+HVy4GzSjIypT6kKxAf42RA2UyJPp4lwhEkGF+PDqocpZ/bfQkB5fJI6lK/bdbrVL
+YbW1nevvcCSjK59MkjTYMLi2jWzxGVCCDVj+KL5QEW6MQOLmRpalYs5par4XZl+a
+JHQKevV/XzqL0bDptvRvEXhIF6+LI3T5rBTWjFDcWCuLIgkxD1XQe9UFW+gGsqX+
+Ak5AIG2PjlY=
+=+1LY
+-----END PGP SIGNATURE-----
+
+--=-smj3Arrif7WkZIdWpTVh--
 
