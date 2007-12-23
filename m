@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:53906 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751652AbXLHLdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 06:33:38 -0500
-Subject: Re: [PATCH 1/4] mac80211: Clean up rate selection
-From: Mattias Nissler <mattias.nissler@gmx.de>
+Received: from mu-out-0910.google.com ([209.85.134.190]:18013 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbXLWWKP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 17:10:15 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so1143223mue.5
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 14:10:13 -0800 (PST)
 To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: add unified BSS configuration
+Date: Sun, 23 Dec 2007 23:10:36 +0100
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1197113375.4171.50.camel@johannes.berg>
-References: <1197112439.7472.34.camel@localhost>
-	 <1197112909.7472.49.camel@localhost>
-	 (sfid-20071208_112222_400278_02DE29F9)  <1197113375.4171.50.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 08 Dec 2007 12:33:35 +0100
-Message-Id: <1197113615.7472.56.camel@localhost> (sfid-20071208_113342_706705_D04BD8B9)
-Mime-Version: 1.0
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Tomas Winkler <tomasw@gmail.com>
+References: <1198109817.16241.7.camel@johannes.berg>
+In-Reply-To: <1198109817.16241.7.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712232310.36974.IvDoorn@gmail.com> (sfid-20071223_221026_659169_9F9DCB95)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Sat, 2007-12-08 at 12:29 +0100, Johannes Berg wrote:
-> > +	/* Send management frames and broadcast/multicast data using lowest
-> > +	 * rate. */
-> > +	fc = le16_to_cpu(hdr->frame_control);
-> > +	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
-> > +	    (hdr->addr1[0] & 0x01))
-> > +		sel->rate = rate_lowest(local, mode, sta);
+On Thursday 20 December 2007, Johannes Berg wrote:
+> This patch (based on Ron Rindjunsky's) creates a framework for
+> a unified way to pass BSS configuration to drivers that require
+> the information, e.g. for implementing power save mode.
 > 
-> I'm not sure but I don't think we want this. And you should use
-> is_multicast_addr() or whatever it's called.
-
-This piece comes directly from the old "simple" algo. You're right about
-is_multicast_addr. I agree this is something we might to get rid of, but
-I leave that decision to you.
-
+> A new ieee80211_bss_conf structure is embedded into each virtual
+> interface structure to allow the driver to access the BSS
+> configuration at any time, changes in the structure are passed
+> to the driver via the new bss_info_changed() callback.
 > 
-> > +	/* If a forced rate is in effect, select it. */
-> > +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> > +	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
-> > +		sel->rate = &mode->rates[sdata->bss->force_unicast_rateidx];
+> This new BSS configuration infrastructure adds the following
+> new features:
+>  * drivers are notified of their association AID
+>  * drivers are notified of association status
 > 
-> That's good.
+> and replaces the erp_ie_changed() callback. The patch also does
+> the relevant driver updates for the latter change.
 > 
-> > +	/* If we haven't found the rate yet, ask the rate control algo. */
-> > +	if (!sel->rate)
-> > +		ref->ops->get_rate(ref->priv, dev, mode, skb, sel);
-> 
-> > +	/* Select a non-ERP backup rate. */
-> > +	if (!sel->nonerp) {
-> > +		for (i = 0; i < mode->num_rates - 1; i++) {
-> > +			struct ieee80211_rate *rate = &mode->rates[i];
-> > +			if (sel->rate->rate < rate->rate)
-> > +				break;
-> > +
-> > +			if (rate_supported(sta, mode, i) &&
-> > +			    !(rate->flags & IEEE80211_RATE_ERP))
-> > +				sel->nonerp = rate;
-> > +		}
-> > +	}
-> 
-> That I'm not sure about. This is the fallback rate?
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Ivo, can you see if you can address the FIXME item in the rt2x00 driver?
+> It is probably very easy but I don't know how you'd want to handle it.
 
-Yes. It's after the get_rate() call so the algorithm can override it.
-But if it doesn't we compute it ourselves.
+Sure, I'll look into it. I also have to lookup what parts of the rt2x00 can
+now be optimized because the assocation state is known as well. :)
+Patch will follow soon. :)
 
-Mattias
-
+Ivo
