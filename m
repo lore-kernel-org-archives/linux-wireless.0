@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32844 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754654AbXLRMuk (ORCPT
+Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:38276 "HELO
+	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753402AbXLWBtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 07:50:40 -0500
-Subject: Re: [patch 3/9] mac80211: Add PID controller based rate control
-	algorithm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197925731.7505.17.camel@localhost> (sfid-20071217_210923_640348_00234834)
-References: <20071217012517.882216322@gmx.de> >
-	 <20071217012550.127484236@gmx.de> >
-	 (sfid-20071217_012722_935905_F6E718EA)  <1197892210.4885.21.camel@johannes.berg>
-	 <1197925731.7505.17.camel@localhost> (sfid-20071217_210923_640348_00234834)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4JAXPKhVi+bM5Aysw/ut"
-Date: Tue, 18 Dec 2007 13:50:29 +0100
-Message-Id: <1197982229.4885.126.camel@johannes.berg> (sfid-20071218_125043_933470_57EB3107)
-Mime-Version: 1.0
+	Sat, 22 Dec 2007 20:49:21 -0500
+Date: Sat, 22 Dec 2007 17:49:19 -0800
+From: David Brownell <david-b@pacbell.net>
+To: bjd@jooz.net
+Subject: Re: [PATCH 0/8] RFC: Wireless Extensions for rndis_host
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <11983602942818-git-send-email-bjd@jooz.net>
+In-Reply-To: <11983602942818-git-send-email-bjd@jooz.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20071223014919.4FFC1166E03@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_014923_615837_4D0A4597)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> From: Bjorge Dijkstra <bjd@jooz.net>
+> Subject: [PATCH 0/8] RFC: Wireless Extensions for rndis_host
+> Date: Sat, 22 Dec 2007 22:51:26 +0100
+>
+> Hello all,
+>
+> I have here a patchset that needs some review.
+> This patchset adds wireless extensions for rndis_host to
+> enable support for RNDIS based USB wireless LAN adapters
+> (e.g. Linksys WUSB54GS, Belkin F05D7051).
 
---=-4JAXPKhVi+bM5Aysw/ut
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cool!  We always like to see support for more USB peripherals.
+Even (especially?) if they'e previously been Windows-only,
+penguin-deprived hardware.  ;)
+
+Is all that stuff adequately documented?  What I recall from
+working with RNDIS before is that docs were lacking in some
+critical details, and were sometimes wrong.
 
 
-> > As far as I know all compilers the kernel can use will do an arithmetic
-> > right shift if the data type is signed.
->=20
-> Where is your information from?=20
+> In this patchset:
+>  1.  Fix sparse warning: returning void valued expression
+>  2.  Hardwire CDC descriptors when missing
+>  3.  Use 1KB buffer in rndis_unbind
+>  4.  Halt device if rndis_bind fails
+>  5.  Fix rndis packet filter flags
+>  6.  Split up rndis_host.c
+>  7.  Add Wireless Extensions for rndis_host
+>  8.  Use wlan device name for RNDIS wireless devices
+>
+> The first five patches are more generic fixes that I think
+> can be applied as they are. Of these, patch 2 is required
+> to get these wireless devices working. 
 
-Just empirically :)
+I had no problem with those first five.  I take it none of
+those should be prioritized for 2.6.24 integration?
 
-> I actually had some misbehaviour that
-> was fixed after I introduced this. I'll check the assembly gcc produces
-> to shed some light on this.
 
-Ok. I like the macro that stefano introduced better than inlining this
-code and I can live with that. I know gcc can emit arithmetic right
-shifts.
+> Patches 6-8 introduce some larger changes that may need a
+> closer look.
 
-johannes
+And you saw my feedback on those.  Minimally, please split
+out the usbnet core extensions, instead of combining them
+with rndis_wext patches ... and on first princples I'd
+think rndis_wext should live in its own module.
 
---=-4JAXPKhVi+bM5Aysw/ut
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I just skimmed patch #7.  There are people far more aware
+of the issues with Linux wireless drivers than me.  :)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+- Dave
 
-iQIVAwUAR2fCFKVg1VMiehFYAQJNGxAAlnH23JiVSeCey0vO5tyl3cyeCrraWMRg
-fbpd3EXdrJ7uahcwARPyDIz0BG0mkkL7SOJ8MD4AiSxFWtn/14HOd7ct9AgHQ5hw
-BaCl1lYM/tjBxdJpOmmms6OPPsofWy+H+oXY1RpVInG346PzSSA3r4k1ve3HpRcq
-VOFwyWkHcUjYR25gYsBZfQzvXGv3Rj791WCUhnxdmdwM0VEREIlBLr7K0zYtm8B5
-XHrBTyyFg8+N4V8IqWAAuQN+pYMBgah/t6yOPF1f7Wdti+toSi83/AXlrQNU7WoX
-0e+TTpkyWymM/bRv2K2Iix7QVsYPr4drptQVAuas6ji+82Xq4cqf8SIMnsXwVz02
-ncaxDOZj040CtiRla0xndllDLDP1bWfNu6yfXEoIsreI8l2Y7gwTK2vmzzxDJ7wr
-sahOLMsOGGCL5sPX6+d/jtVmQdXLFRjPiX04L3hLZQ6q56OCx49uUrPJjTvh1QPe
-eyqGtk6dprwlzeRaxlsdmGujgUoW/W8WKPsVTmQMMqwvlqxOs151oL9mraOerpd8
-fdYgV4JujoOCJJiZQeRkWobDjXEz76AspkDm47UYTaOuwjZ7SBJKEo5uN4SHW0Eq
-t8LMbCWbhNNhK/Ot2z2PYUCuqSLt0edY0Q/yKUb/0JU0bMjLZhhtiY5fM9TyYNWn
-YR1kOWEH7E8=
-=iSwz
------END PGP SIGNATURE-----
 
---=-4JAXPKhVi+bM5Aysw/ut--
+> All these patches should be applied in order.
+> The entire series should apply cleanly to current linux
+> kernel and net-2.6.25 trees.
+>
+> regards,
+> Bjorge Dijkstra
+>
 
