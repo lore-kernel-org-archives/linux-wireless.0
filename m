@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334AbXLQRmX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 12:42:23 -0500
-Subject: Re: [patch 1/9] mac80211: Clean up rate selection code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071217012549.932807027@gmx.de>> (sfid-20071217_012727_837272_3B5270C7)
-References: <20071217012517.882216322@gmx.de> >
-	  <20071217012549.932807027@gmx.de>> (sfid-20071217_012727_837272_3B5270C7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c0pkfmUcx+IgRNuI8wcT"
-Date: Mon, 17 Dec 2007 12:46:59 +0100
-Message-Id: <1197892019.4885.16.camel@johannes.berg> (sfid-20071217_174227_605508_076C74EB)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:56680 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750959AbXLWMTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 07:19:54 -0500
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 23 Dec 2007 13:19:51 +0100
+From: "Mattias Nissler" <Mattias.Nissler@gmx.de>
+In-Reply-To: <20071223131135.391cc0bb@morte>
+Message-ID: <20071223121951.39030@gmx.net> (sfid-20071223_121957_800643_0F46084B)
+MIME-Version: 1.0
+References: <20071223033633.710907923@polimi.it>
+	<20071223043917.7ec437e9@morte>	<20071223120124.39050@gmx.net>
+ <20071223131135.391cc0bb@morte>
+To: Stefano Brivio <stefano.brivio@polimi.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hey,
 
---=-c0pkfmUcx+IgRNuI8wcT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm a little late on this and away from my development machine anyway, =
+but when reading my email, I noticed the following and thought this is =
+important enough to point out, even though I only have that crappy webm=
+ailer and the only kernel tree I can look at is wireless-2.6/everything=
+ on git.kernel.org
 
-Looks good, minor comment below.
+In rc80211_pid.h, you have the following (this from the wireless-2.6 tr=
+ee):
 
-> +void rate_control_get_rate(struct net_device *dev,
-> +			   struct ieee80211_hw_mode *mode, struct sk_buff *skb,
-> +			   struct rate_selection *sel)
+        /* Sampling period for measuring percentage of failed frames. *=
+/
+        #define RC_PID_INTERVAL (HZ / 8)
 
-> +	fc =3D le16_to_cpu(hdr->frame_control);
-> +	if ((fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA ||
-> +	    (hdr->addr1[0] & 0x01))
+But rc80211_pid_algo.c says:
 
-Please use is_multicast_ether_addr()
+        period =3D (HZ * pinfo->sampling_period + 500) / 1000;
+        if (!period)
+                period =3D 1;
 
-> +	/* If a forced rate is in effect, select it. */
-> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
-> +		sel->rate =3D &mode->rates[sdata->bss->force_unicast_rateidx];
-> +
-> +	/* If we haven't found the rate yet, ask the rate control algo. */
-> +	if (!sel->rate)
-> +		ref->ops->get_rate(ref->priv, dev, mode, skb, sel);
+You see this is completely bogus. My original patch had:
 
-Maybe after this we should insert
+        /* Sampling period for measuring percentage of failed frames in=
+ 0.001s. */
+        #define RC_PID_INTERVAL 1000
 
-	if (unlikely(!sel->rate)) {
-		WARN_ON(1);
-		sel->rate =3D rate_lowest(...);
-	}
+You see why what you posted and John commited is bogus?
 
-Not sure though.
+I'm getting a little fed up with this, you keep screwing up the code wi=
+th my name on it *sigh*
 
-johannes
+And again, I still don't think guarding against period =3D=3D 0 is the =
+right thing to do. As I explained privately in IRC, we should make sure=
+ the sample_interval is larger than HZ when setting the sample_interval=
+ variable  (once nl80211 is done). It doesn't make sense to do this che=
+ck every time we execute the code when we can do it once in advance.
 
---=-c0pkfmUcx+IgRNuI8wcT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Sigh.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2ZhsqVg1VMiehFYAQIPNA/+KeTX1TQXSuq5Hb5Ds5Ltn4NEShfDXRbb
-vyQe+uqdpsBlhhcBz4c0yfuabQOrz6ThW99UfwjPexhS6llRElHmTDmw+aWd9Mnm
-MwK/NVFPruqMSOEzrJ4uuzpq6J9YxTLpBtCn7Wt4VylBrGyR1pZ0GALhC+DLZWmF
-EKjIt0dPUbrghyLgteQteM4sFljas8iC7924G/ZHnud+PhAzB0o21XYQBmFQChm5
-5mRNLzC4lDzQdYRwTWO+4SRXCYUFDiN0jF8MuKJKhKKw/K1g0YUwRH5y49eCfPyF
-BuafVqJvuh5N/WbidSZYr6LfO6q92mIcm4O3dioYLB7h/XTmHJJvMd1kbleN6j4M
-ZVijlhI7qTFbIXCliVXlHHX3giYJTEJhecG3Ve5p90s/l/a8/3sjPh0Psgc3JkKK
-yuyS68xTlN9la51/SJv1UZGTvHOFv9+G5ojztDxmVfmzGT1+HkbydTh6fdXGtGF1
-WsHFbDtlVF/MEdUOOk/jrZiW3MDjfYbOgv9WZQXE1raATOq5cgFqYu8LWSjxXfjj
-XRg6zWv46aBBSHTuZZ17EbIlPQD/R7mktFc6Q4vR/befeKxIVPN2tugmNPGqjDac
-DM5gfeilORzUgRZpHSyP+vPquscZDMLUBQAn1S5l4MoRi/5Vmq5eLHskTHVSgIkl
-I0gkhbFohm0=
-=IdjD
------END PGP SIGNATURE-----
-
---=-c0pkfmUcx+IgRNuI8wcT--
-
+Mattias
+--=20
+Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!=20
+Ideal f=FCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
