@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:53216 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754708AbXLSAqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 19:46:35 -0500
-Date: Wed, 19 Dec 2007 01:43:33 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: [PATCH] rt2x00: remove unused variable
-Message-ID: <20071219014333.17c66bd1@morte> (sfid-20071219_004639_629712_6D4B418B)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbXLWVFa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 16:05:30 -0500
+Subject: [PATCH] mac80211: make rc_pid_fop_events static
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Content-Type: text/plain
+Date: Sun, 23 Dec 2007 22:05:25 +0100
+Message-Id: <1198443925.4487.5.camel@johannes.berg> (sfid-20071223_210536_832279_6AF4D675)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove an unused variable. Note that the pipe obtained there isn't used as
-well.
+No need to not be.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-Index: wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -176,7 +176,6 @@ int rt2x00usb_write_tx_data(struct rt2x0
- 	struct usb_device *usb_dev =
- 	    interface_to_usbdev(rt2x00dev_usb(rt2x00dev));
- 	struct data_entry *entry = rt2x00_get_data_entry(ring);
--	int pipe = usb_sndbulkpipe(usb_dev, 1);
- 	struct skb_desc *desc;
- 	u32 length;
+ net/mac80211/rc80211_pid_debugfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- everything.orig/net/mac80211/rc80211_pid_debugfs.c	2007-12-23 22:02:37.659083062 +0100
++++ everything/net/mac80211/rc80211_pid_debugfs.c	2007-12-23 22:02:40.109086697 +0100
+@@ -197,7 +197,7 @@ static ssize_t rate_control_pid_events_r
  
+ #undef RC_PID_PRINT_BUF_SIZE
  
---
-Ciao
-Stefano
+-struct file_operations rc_pid_fop_events = {
++static struct file_operations rc_pid_fop_events = {
+ 	.owner = THIS_MODULE,
+ 	.read = rate_control_pid_events_read,
+ 	.poll = rate_control_pid_events_poll,
+
+
