@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51605 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751549AbXLGAFT (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbXLWJYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 19:05:19 -0500
-Message-ID: <47588E37.4080400@lwfinger.net> (sfid-20071207_000525_834046_2A525D26)
-Date: Thu, 06 Dec 2007 17:05:11 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Fix radio LED problem
-References: <474dfe58.85Rcj/BwOPxQm8eE%Larry.Finger@lwfinger.net> <200711291958.45631.mb@bu3sch.de>
-In-Reply-To: <200711291958.45631.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 23 Dec 2007 04:24:44 -0500
+Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
+	ieee80211_invoke_rx_handlers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <hschaa@suse.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200712211516.35731.hschaa@suse.de> (sfid-20071221_141215_108356_0F4BE6F7)
+References: <200712211516.35731.hschaa@suse.de>
+	 (sfid-20071221_141215_108356_0F4BE6F7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wkS4exTXjKr42FiHpEV8"
+Date: Sun, 23 Dec 2007 10:24:39 +0100
+Message-Id: <1198401880.4116.6.camel@johannes.berg> (sfid-20071223_092448_478279_A706C9CE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry it has taken so long to answer, but I am traveling.
 
-Michael Buesch wrote:
-> On Thursday 29 November 2007 00:48:40 Larry Finger wrote:
-> 
->> @@ -2802,6 +2800,13 @@ static int b43_op_config(struct ieee8021
->>        out_unlock_mutex:
->>  	mutex_unlock(&wl->mutex);
->>  
->> +	/* if a LED is devoted to the radio and the switch is on, send
->> +	 * KEY_WLAN press/release keystrokes */
->> +	if (!err && dev->radio_hw_enable && &dev->led_radio) {
->                                             ^^^^^^^^^^^^^^^
-> This condition is always true.
-
-It looks to me that the code uses the contents of the LED section of the SPROM to initialize
-dev->led_radio. Can we be certain that the initialization will always be done?
-> 
->> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 1);
->> +		input_report_key(rfk->poll_dev->input, KEY_WLAN, 0);
->> +	}
->> +
-> 
-> Anyway, sending a key event here seems pretty bogus. The comment
-> doesn't really say anything useful why this is needed.
-
-If a key event (down/up) is not sent, the LED remains off. This location may not be the best place,
-but it is needed someplace, otherwise the switch must be cycled off/on to get the LED on.
+--=-wkS4exTXjKr42FiHpEV8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Larry
+On Fri, 2007-12-21 at 15:16 +0100, Helmut Schaa wrote:
+> This patch fixes a problem with rx handling on multiple interfaces. Espec=
+ially=20
+> when using hardware-scanning and a wireless driver (i.e. iwlwifi) which i=
+s=20
+> able to receive data while scanning.
 
+Can you explain how you even got multiple interfaces with iwlwifi? The
+patch looks (superficially) correct, but I'm a bit confused.
+
+johannes
+
+--=-wkS4exTXjKr42FiHpEV8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR24pVqVg1VMiehFYAQKRVg/+OB3vkBN/xwIxwE5QGr9b4/AI4ks2z01i
+g5uXe24/Prs+SnQBK5GktBHgfCOgXM3iXuj/eINXnkr6SuVU3UmPQDWc9dzwT3ZP
+mMLQ6QWEGpzFCjmX4ogXImo2+XMkxIErkr5DsV8gfgcP6B12/J/aNDTNGo4MH2hF
+N0J5wkNUp8L5kzGepPZ46zrPmTsIS2j31SMPzERdKJtdOCEDY4t9y8r6BN//I5Rp
+A2+XUY8P9q2AiYIjL/CTiMtF8k8AEoxY3Ji/en07+WgkAd4tnIWUbytc8E/fhbRD
+YqBVy8Q6iUHyfWF+45Tp4dzaOTLmbqcYY/p6pVbL7lZs6vEwc6XWJ5P1hsfACZRs
+4siNJ+pOW3KR/HYmiS0e6eHHTtQe43zCw+dLa3YGlE0ZJy2VfnbHrQd/N5QmfCY+
+RDZWl9EUlqdfrxRlaE24TYMv0szeqjWlciF+fph+RVuxtEXy5bksETgXicna/45y
+/7QQWD1lnb4UMNA3uXZtwcPehbqcdf7TMpunxlLkJlUx03yoScn49gwD4NdQiQo+
+G4Nqrz2OdYEzVz0I3XCBFY8aHzJp6obtawCuH/oPA3BVmbM9Fh68GST+1pSUCB4Y
+Hf5RXEj4nRnBsgh5cFd2C9LCjVlXGgId4/hw1b3SYBUya7e1bkDo3lJ9Cvc1gIb6
+e/4twNV6R+8=
+=/cfg
+-----END PGP SIGNATURE-----
+
+--=-wkS4exTXjKr42FiHpEV8--
 
