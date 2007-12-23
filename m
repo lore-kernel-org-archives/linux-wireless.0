@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45794
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754539AbXLKALp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 19:11:45 -0500
-Date: Mon, 10 Dec 2007 16:11:44 -0800 (PST)
-Message-Id: <20071210.161144.190139513.davem@davemloft.net> (sfid-20071211_001158_369998_2FC7030F)
-To: dcbw@redhat.com
-Cc: jt@hpl.hp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1197307403.18585.10.camel@localhost.localdomain>
-References: <1197223174.9149.60.camel@localhost.localdomain>
-	<20071209.221048.187424680.davem@davemloft.net>
-	<1197307403.18585.10.camel@localhost.localdomain>
+Received: from mfe1.polimi.it ([131.175.12.23]:32783 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752309AbXLWDsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 22:48:19 -0500
+Date: Sun, 23 Dec 2007 04:46:27 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: [PATCH 6/7] rc80211-pid: add MAINTAINERS entry
+Message-ID: <20071223044627.16ec7048@morte> (sfid-20071223_034821_482338_88389188)
+In-Reply-To: <20071223033633.710907923@polimi.it>
+References: <20071223033633.710907923@polimi.it>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Mon, 10 Dec 2007 12:23:23 -0500
+Add an entry in MAINTAINERS for rc80211-pid.
 
-> Is this an unconditional NAK for any changes to WEXT?
+Cc: Mattias Nissler <mattias.nissler@gmx.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+ MAINTAINERS |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Well, it is at least completely proven that you cannot
-extend the structures without crapping all over random
-areas of the stack space of the user application.
+Index: wireless-2.6/MAINTAINERS
+===================================================================
+--- wireless-2.6.orig/MAINTAINERS
++++ wireless-2.6/MAINTAINERS
+@@ -2495,6 +2495,16 @@ W:	http://linuxwireless.org/
+ T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+ S:	Maintained
 
-So at a minimum you're going to get NAKs for any patch
-that does things that way.
++MAC80211 PID RATE CONTROL
++P:	Stefano Brivio
++M:	stefano.brivio@polimi.it
++P:	Mattias Nissler
++M:	mattias.nissler@gmx.de
++L:	linux-wireless@vger.kernel.org
++W:	http://linuxwireless.org/en/developers/Documentation/mac80211/RateControl/PID
++T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
++S:	Maintained
++
+ MACVLAN DRIVER
+ P:	Patrick McHardy
+ M:	kaber@trash.net
+
+-- 
+Ciao
+Stefano
