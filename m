@@ -1,51 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.241]:50338 "EHLO
-	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751604AbXLNONs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2007 09:13:48 -0500
-Received: by hs-out-2122.google.com with SMTP id 54so1117803hsz.5
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2007 06:13:46 -0800 (PST)
-Message-ID: <1ba2fa240712140613p59e1d9fsf214310d8d9a66fd@mail.gmail.com> (sfid-20071214_141352_381698_5E77E584)
-Date: Fri, 14 Dec 2007 16:13:45 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [FYI] hostapd with mac80211 progress
-Cc: linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>, "Jouni Malinen" <j@w1.fi>,
-	hostap <hostap@shmoo.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1197631052.16079.26.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1197512614.6558.224.camel@johannes.berg>
-	 <1197631052.16079.26.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:54977 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755602AbXLWELx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 23:11:53 -0500
+Date: Sun, 23 Dec 2007 05:08:44 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 7/7] mac80211: fix sta_info locking
+Message-ID: <20071223050844.4e6b8c13@morte> (sfid-20071223_041209_428557_3362934C)
+In-Reply-To: <20071223033633.710907923@polimi.it>
+References: <20071223033633.710907923@polimi.it>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 14, 2007 1:17 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >  * set_tx_queue_params
->
-> Actually, I wonder if any of that should be implemented in the wireless
-> classifier. Well, what I'm thinking is that we should make mac80211
-> provide multiqueue netdevs with four queues and then write a new 802.11
-> classifier that is attached in the sch_fifo qdisc. Then, the queue
-> parameters could be configured with the 802.11 qdisc.
->
-> Tomas, you said you might look into the QoS stuff, any ideas?
->
-This is a bit more complicated then that
- In HT aggregation we have more then 4 queues. In theory you have TID
-X receiving address queues. Number of TIDs is 16 yet for the
-aggregation on 8 are relevant.Let say your AP supports 32 connected
-stations so you need 256 queues for to keep packets in order. Of
-course in HW you keep smaller number..etc.
-Ron will send RX AMSDU aggregation patches at the beginning of the
-next week, then he will work on TX side. I suggest that in that
-context we can open the discussion how to solve the QoS queues and
-Qdisc cleanly.
+While tinkering with a sta_info refcounting bug in rc80211-pid algorithm, I
+discovered that calling sta_info_get() and then sta_info_put() right after
+would cause a kernel panic on my uniprocessor, preemptible kernel. I
+couldn't set up netconsole, however, most of the trace is reported below
+(my camera did its best, as the trace wouldn't fit on the screen and I
+couldn't scroll, so wasn't able to see the first part with naked eyes :).
 
-Tomas
+EIP at delay_tsc+0x22/0x50
+[couldn't read the EBX and such, but I guess you won't care]
+panic+0xf9/0x100
+die+0x1e0/0x1f0
+do_page_fault+0x357/0x640
+autoremove_wake_function+0x1b/0x50
+__wake_up_common+0x3e/0x70
+do_page_fault+0x0/0x640
+error_code+0x6a/0x70
+sta_info_get+0x3a/0x60 [mac80211]
+__ieee80211_rx+0x290/0x1830 [mac80211]
+skb_queue_tail+0x3b/0x70
+ieee80211_rx_irqsafe+0x30/0x80 [mac80211]
+ssb_pci_write32+0x22/0x70 [ssb]
+ieee80211_tasklet_handler+0xaf/0xe0 [mac80211]
+hrtimer_run_queues+0xf6/0x1a0
+process_timeout+0x0/0x10
+tasklet_action+0x27/0x60
+__do_softirq+0x54/0xb0
+do_softirq+0x7b/0xe0
+handle_level_irq+0x0/0x110
+irq_exit+0x30/0x40
+do_IRQ+0x83/0xd0
+common_interrupt+0x23/0x20
+[...]
 
-> johannes
->
+So I guessed that locking was lacking somewhere. The following patch fixes
+the issue for me, but I'm not sure at all that it's the right fix. Thanks.
+
+NOT-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: wireless-2.6/net/mac80211/sta_info.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/sta_info.c
++++ wireless-2.6/net/mac80211/sta_info.c
+@@ -105,6 +105,7 @@ static void sta_info_release(struct kref
+ 	struct ieee80211_local *local = sta->local;
+ 	struct sk_buff *skb;
+
++	write_lock_bh(&local->sta_lock);
+ 	/* free sta structure; it has already been removed from
+ 	 * hash table etc. external structures. Make sure that all
+ 	 * buffered frames are release (one might have been added
+@@ -118,6 +119,8 @@ static void sta_info_release(struct kref
+ 	}
+ 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
+ 	rate_control_put(sta->rate_ctrl);
++	write_unlock_bh(&local->sta_lock);
++
+ 	kfree(sta);
+ }
+
+-- 
+Ciao
+Stefano
