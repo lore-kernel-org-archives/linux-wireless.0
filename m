@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45938 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbXLKVVA (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:7791 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842AbXLWVQz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 16:21:00 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "mohamed salim abbas" <mabbaswireless@gmail.com>
-Subject: Re: [PATCH 2/4] iwlwifi: Update to changed mac80211 rate control interface
-Date: Tue, 11 Dec 2007 22:19:08 +0100
-Cc: "Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	Sun, 23 Dec 2007 16:16:55 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1494877fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2007 13:16:53 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: tx_status reporting of RTS/CTS frames
+Date: Sun, 23 Dec 2007 22:17:18 +0100
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <1197112439.7472.34.camel@localhost> <20071208141953.1233aa30@morte> <b3153e950712111310r7f527068j7997bdceaee3488@mail.gmail.com>
-In-Reply-To: <b3153e950712111310r7f527068j7997bdceaee3488@mail.gmail.com>
+	Stefano Brivio <stefano.brivio@polimi.it>
+References: <1197412922.7030.11.camel@localhost> <1197479702.6558.125.camel@johannes.berg>
+In-Reply-To: <1197479702.6558.125.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712112219.09079.mb@bu3sch.de> (sfid-20071211_212108_561425_B88F6364)
+  charset="iso-8859-15"
+Message-Id: <200712232217.18941.IvDoorn@gmail.com> (sfid-20071223_211659_208987_F1E71D47)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 December 2007 22:10:38 mohamed salim abbas wrote:
-> for any non data frame we should use the lowest rate. the firmware
-> might not like it if higher rate been used.
+Hi,
 
-Why not fix the firmware?
+> > rt2x00 devices can't generate rts/cts frames themselves, but rely on the
+> > driver to generate them. Also, the hardware reports tx status back for
+> > those frames. Now the question is whether these frames should be
+> > reported back to mac80211 using ieee80211_tx_status[_irqsafe]. AFAIK,
+> > this has some subtle effects, e.g. they won't show up on monitor
+> > interfaces if we don't report them.
+> 
+> They never show up on monitor interfaces for all other hardware because
+> there the hardware handles them. How is it that rt2x00 cannot handle
+> rts? It has to at least know that an RTS was sent and to send the frame
+> only after the CTS, and that needs to be a MAC function and cannot be
+> implemented in host software.
+> 
+> So, I'd think they shouldn't be reported at all.
 
--- 
-Greetings Michael.
+Than this is a problem in multiple mac80211 drivers, since rt2x00 previously
+did filter out rts and cts frames when reporting txdone events to mac80211
+and upon request on the linux-wireless list that filter was disabled, because
+the other drivers didn't filter the RTS/CTS frames so for consistent behavior
+the filter was removed from rt2x00.
+
+Ivo
+
