@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52911.mail.re2.yahoo.com ([206.190.49.21]:44834 "HELO
-	web52911.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750789AbXLHSqB (ORCPT
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:44059 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753038AbXLWAtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2007 13:46:01 -0500
-Date: Sat, 8 Dec 2007 18:39:20 +0000 (GMT)
-From: Chris Rankin <rankincj@yahoo.com>
-Subject: Re: [2.6.23.1] PCI device locking up the computer when its module loads
-To: Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Chris Rankin <rankincj@yahoo.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1193657365.19938.17.camel@localhost.localdomain>
+	Sat, 22 Dec 2007 19:49:47 -0500
+Date: Sat, 22 Dec 2007 16:49:46 -0800
+From: David Brownell <david-b@pacbell.net>
+To: bjd@jooz.net
+Subject: Re: [PATCH 2/8] [PATCH] Hardwire CDC descriptors when missing
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <11983602942818-git-send-email-bjd@jooz.net>
+ <11983602953487-git-send-email-bjd@jooz.net>
+In-Reply-To: <11983602953487-git-send-email-bjd@jooz.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <624437.35639.qm@web52911.mail.re2.yahoo.com> (sfid-20071208_184612_747632_14238F69)
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20071223004946.55D0822313C@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_004952_349585_E11AD221)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > On Mon, 22 Oct 2007 13:43:16 +0100 (BST) Chris Rankin <rankincj@yahoo.com> wrote:
-> > > I have a Netgear MA301 PLX wireless networking adapter which wants to use the hostap_plx
-> > > driver in Linux 2.6.23.1. This very same piece of hardware works fine in an old(!) P120
-> > > machine running 2.4.33, but makes the 2.6.23.1 kernel freeze as soon as the
-> > > pci_enable_device() function is called in prism2_plx_probe.
+> From bjd@jooz.net  Sat Dec 22 13:53:00 2007
+> X-SourceIP: 213.93.131.145
+> From: Bjorge Dijkstra <bjd@jooz.net>
+> To: dbrownell@users.sourceforge.net
+> Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+> Subject: [PATCH 2/8] [PATCH] Hardwire CDC descriptors when missing
+> Date: Sat, 22 Dec 2007 22:51:28 +0100
+>
+> Just as ActiveSync devices, some regular RNDIS devices also lack
+> the CDC descriptors (e.g. devices based on BCM4320 WLAN chip).
+> This patch hardwires the CDC descriptors for all RNDIS style devices
+> when they are missing.
+>
+> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
 
-Interestingly, I have just discovered that I can do the following on this machine *without*
-locking it up (on Linux 2.6.23.9):
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
-# cat /sys/bus/pci/devices/0000:00:0e.0/enable
-0
-# echo 1 > /sys/bus/pci/devices/0000:00:0e.0/enable
-# cat /sys/bus/pci/devices/0000:00:0e.0/enable
-1
-
-where according to lspci:
-
-00:0e.0 Network controller: Netgear MA301 802.11b Wireless PCI Adapter (rev 02)
-
-Doesn't writing to this sysfs file also call pci_enable_device()? Loading the hostap_plx module is
-still instantly lethal.
-
-Cheers,
-Chris
+Note what this tells us about how little Microsoft cares about
+the interoperability specs they claim to conform to.  Having
+those descriptors is *NOT* optional in their (incomplete and
+in adequate) RNDIS specification.  (I've not seen ActiveSync
+specs, so that support is pure guesswork.)
 
 
-
-      __________________________________________________________
-Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
+> ---
+>  drivers/net/usb/cdc_ether.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
+> index a42acc3..97c17bb 100644
+> --- a/drivers/net/usb/cdc_ether.c
+> +++ b/drivers/net/usb/cdc_ether.c
+> @@ -228,15 +228,16 @@ next_desc:
+>  		buf += buf [0];
+>  	}
+>  
+> -	/* Microsoft ActiveSync based RNDIS devices lack the CDC descriptors,
+> -	 * so we'll hard-wire the interfaces and not check for descriptors.
+> +	/* Microsoft ActiveSync based and some regular RNDIS devices lack the
+> +	 * CDC descriptors, so we'll hard-wire the interfaces and not check
+> +	 * for descriptors.
+>  	 */
+> -	if (is_activesync(&intf->cur_altsetting->desc) && !info->u) {
+> +	if (rndis && !info->u) {
+>  		info->control = usb_ifnum_to_if(dev->udev, 0);
+>  		info->data = usb_ifnum_to_if(dev->udev, 1);
+>  		if (!info->control || !info->data) {
+>  			dev_dbg(&intf->dev,
+> -				"activesync: master #0/%p slave #1/%p\n",
+> +				"rndis: master #0/%p slave #1/%p\n",
+>  				info->control,
+>  				info->data);
+>  			goto bad_desc;
+> @@ -316,7 +317,6 @@ void usbnet_cdc_unbind(struct usbnet *dev, struct usb_interface *intf)
+>  }
+>  EXPORT_SYMBOL_GPL(usbnet_cdc_unbind);
+>  
+> -?
+>  /*-------------------------------------------------------------------------
+>   *
+>   * Communications Device Class, Ethernet Control model
+> -- 
+> 1.5.2.5
+>
