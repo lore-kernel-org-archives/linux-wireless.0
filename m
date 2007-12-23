@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28090 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750728AbXLSGXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 01:23:30 -0500
-Subject: Re: [PATCH] ipw2200: prevent alloc of unspecified size on stack
-From: Zhu Yi <yi.zhu@intel.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	viro@zeniv.linux.org.uk
-In-Reply-To: <1198044062-25201-1-git-send-email-reinette.chatre@intel.com>
-References: <1198044062-25201-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Wed, 19 Dec 2007 14:20:40 +0800
-Message-Id: <1198045240.2857.320.camel@debian.sh.intel.com> (sfid-20071219_062333_413256_396067A1)
-Mime-Version: 1.0
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:22440 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754438AbXLWB1e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2007 20:27:34 -0500
+Date: Sat, 22 Dec 2007 17:27:32 -0800
+From: David Brownell <david-b@pacbell.net>
+To: dbrownell@users.sourceforge.net, bjd@jooz.net
+Subject: Re: [PATCH 7/8] Add Wireless Extensions to rndis_host
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <11983602942818-git-send-email-bjd@jooz.net>
+ <11983602951628-git-send-email-bjd@jooz.net>
+In-Reply-To: <11983602951628-git-send-email-bjd@jooz.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20071223012732.B547F166E03@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_012746_573411_4DEFC7C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> From: Bjorge Dijkstra <bjd@jooz.net>
+> Subject: [PATCH 7/8] Add Wireless Extensions to rndis_host
+> Date: Sat, 22 Dec 2007 22:51:33 +0100
+>
+> The bulk of this patch is the addition of a new file that
+> implements the wireless extensions for RNDIS devices.
+> The rest are some smaller changes to usbnet and rndis_host
+> to hook the wireless extensions into them:
+> * a private data pointer is added to usbnet.
+> * a callback is added to driver_info to signal link state changes.
+> * a physical medium type check is added to rndis_bind to check for
+>   wireless lan devices and turn on the wireless extensions.
+> * and finally a Kconfig option to enable/disable this all.
+>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
 
-On Tue, 2007-12-18 at 22:01 -0800, Reinette Chatre wrote:
-> if log_len is larger than 4K then we are killing the stack.
-> allocate on heap instead and limit size to what practically can
-> be used (PAGE_SIZE)
-> 
-> Is it possible for this to get into 2.6.24?
-> 
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+I'm basically fine with this, but I'll hold off any ack until the
+issue with the preceding patch (6/8) is resolved.  That would boil
+down to making this a standalone module, or knowing why that's not
+such a good idea.
 
-ACK.
+I'd prefer to see the usbnet core extension packaged separately
+instead of buried in this patch.  :)
+
+And I think a MAINTAINERS update for rndis_wext would be appropriate.
+No way can I take care of that code!
+
+(In fact, would you feel comfortable taking over rndis_host too?)
+
+- Dave
+
 
 > ---
-> +       /* not using min() because of its strict type checking */
-> +       log_size = sizeof(*log) * log_len < PAGE_SIZE ?
-> +                       sizeof(*log) * log_len : PAGE_SIZE;
-
-A (u32) cast should work. But I don't think it's a big issue.
-
-Thanks,
--yi
-
+>  drivers/net/usb/Kconfig      |    7 +
+>  drivers/net/usb/Makefile     |    4 +
+>  drivers/net/usb/rndis_base.c |   50 +-
+>  drivers/net/usb/rndis_host.h |   18 +
+>  drivers/net/usb/rndis_wext.c | 2177 ++++++++++++++++++++++++++++++++++++++++++
+>  drivers/net/usb/usbnet.h     |    4 +
+>  6 files changed, 2255 insertions(+), 5 deletions(-)
+>  create mode 100644 drivers/net/usb/rndis_wext.c
