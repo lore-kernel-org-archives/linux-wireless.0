@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:46533 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbXLLXYB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2007 18:24:01 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so692989wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2007 15:23:56 -0800 (PST)
-Message-ID: <1ba2fa240712121523h59d919f8k42fe54b992618432@mail.gmail.com> (sfid-20071212_232407_342301_26E8757C)
-Date: Thu, 13 Dec 2007 01:23:55 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 ethtool support
-Cc: "Michael Buesch" <mb@bu3sch.de>, "Zhu Yi" <yi.zhu@intel.com>,
+Received: from mga01.intel.com ([192.55.52.88]:42573 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752061AbXLXDew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2007 22:34:52 -0500
+Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
+	ieee80211_invoke_rx_handlers
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Helmut Schaa <hschaa@suse.de>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1197481520.6558.140.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1197361048.3170.381.camel@debian.sh.intel.com>
-	 <200712111350.25522.mb@bu3sch.de>
-	 <1197421988.3170.405.camel@debian.sh.intel.com>
-	 <200712121148.48716.mb@bu3sch.de>
-	 <1197481520.6558.140.camel@johannes.berg>
+In-Reply-To: <1198417706.4000.1.camel@johannes.berg>
+References: <200712211516.35731.hschaa@suse.de>
+	 (sfid-20071221_141215_108356_0F4BE6F7) <1198401880.4116.6.camel@johannes.berg>
+	 <20071223123517.17ds9zttxc4goo00@imap.suse.de>
+	 <1198417706.4000.1.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 24 Dec 2007 11:34:54 +0800
+Message-Id: <1198467294.3065.180.camel@debian.sh.intel.com> (sfid-20071224_033500_476146_C2FA1472)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 12, 2007 7:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> > > Yeah, we can do this also. But the users want a standard way, especially
-> > > when there is already such kernel interface and user space tools ready
-> > > there. Any chance mac80211 supports ethtool or something similar?
-> >
-> > You could write a patch.
-> > Add a callback to mac80211 that mac80211 uses to register the eeprom
-> > ethtool interface.
->
-> NACK. Which virtual interface should get this? wmaster sounds like the
-> "obvious" candidate but we want to get rid of it ASAP. And the others
-> ones are pretty wrong because you can, technically, have a wiphy without
-> any virtual interfaces on it.
->
-Just a thought. What if all virtual interfaces will quasi implements
-it. It doesn't matter if all the interfaces answers the same. Since
-these are get only operations the mutual exclusion shouldn't be so
-hard. All interfaces will support equally the handlers.  But I'm not
-sure about other ethool handlers.
-If wmaster goes will be all virtual interfaces equal citizens ?
 
-> Maybe it should live in cfg80211's sysfs...
+On Sun, 2007-12-23 at 14:48 +0100, Johannes Berg wrote:
+> Ah, that must be because of the stuff Zhu Yi did wrt. hw scanning.
+> Could you take a look too please? The patch looks pretty much ok to me
+> and I think it'd be required with say VLAN interfaces as well.
 
-This is also a viable option
+The patch looks fine to me. Hardware scanning is a trigger that makes
+the condition more likely to happen, the patch itself fixes the more
+general problem for multiple interfaces.
 
->
-> johannes
->
+An off-topic question: should wmaster0 continue to execute more rx
+handlers (i.e ieee80211_rx_h_remove_qos_control) even if it knows it
+will drop them finially?
+
+Thanks,
+-yi
+
