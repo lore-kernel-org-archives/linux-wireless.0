@@ -1,80 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54198 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754007AbXLPQU2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 11:20:28 -0500
-Subject: b43 problem with led trigger registration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ojFo9ckH9yDRTE3QmLR/"
-Date: Sun, 16 Dec 2007 17:20:19 +0100
-Message-Id: <1197822019.4138.2.camel@johannes.berg> (sfid-20071216_162034_993766_A796FCED)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:21761 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751931AbXLXLgr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Dec 2007 06:36:47 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: restructure __ieee80211_rx
+Date: Mon, 24 Dec 2007 13:36:39 +0200
+Message-Id: <11984961994110-git-send-email-ron.rindjunsky@intel.com> (sfid-20071224_113702_900332_4CF2358A)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch makes a separation between Rx frame pre-handling which stays in
+__ieee80211_rx and Rx frame handlers, moving to __ieee80211_rx_handle_packet.
+Although this separation has no affect in regular mode of operation, this kind
+of mechanism will be used in A-MPDU frames reordering as it allows accumulation
+of frames during pre-handling, dispatching them to later handling when necessary.
 
---=-ojFo9ckH9yDRTE3QmLR/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/rx.c |   86 ++++++++++++++++++++++++++++++----------------------
+ 1 files changed, 50 insertions(+), 36 deletions(-)
 
-Hi,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e94cf30..bcc232c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -272,11 +272,11 @@ ieee80211_rx_h_parse_qos(struct ieee80211_txrx_data *rx)
+ 	return TXRX_CONTINUE;
+ }
+ 
+-static ieee80211_txrx_result
+-ieee80211_rx_h_load_stats(struct ieee80211_txrx_data *rx)
++
++u32 ieee80211_rx_load_stats(struct ieee80211_local *local,
++			      struct sk_buff *skb,
++			      struct ieee80211_rx_status *status)
+ {
+-	struct ieee80211_local *local = rx->local;
+-	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	u32 load = 0, hdrtime;
+ 	struct ieee80211_rate *rate;
+@@ -290,7 +290,7 @@ ieee80211_rx_h_load_stats(struct ieee80211_txrx_data *rx)
+ 
+ 	rate = &mode->rates[0];
+ 	for (i = 0; i < mode->num_rates; i++) {
+-		if (mode->rates[i].val == rx->u.rx.status->rate) {
++		if (mode->rates[i].val == status->rate) {
+ 			rate = &mode->rates[i];
+ 			break;
+ 		}
+@@ -315,15 +315,13 @@ ieee80211_rx_h_load_stats(struct ieee80211_txrx_data *rx)
+ 	/* Divide channel_use by 8 to avoid wrapping around the counter */
+ 	load >>= CHAN_UTIL_SHIFT;
+ 	local->channel_use_raw += load;
+-	rx->u.rx.load = load;
+ 
+-	return TXRX_CONTINUE;
++	return load;
+ }
+ 
+ ieee80211_rx_handler ieee80211_rx_pre_handlers[] =
+ {
+ 	ieee80211_rx_h_parse_qos,
+-	ieee80211_rx_h_load_stats,
+ 	NULL
+ };
+ 
+@@ -1594,11 +1592,11 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ /*
+- * This is the receive path handler. It is called by a low level driver when an
+- * 802.11 MPDU is received from the hardware.
++ * This is the actual Rx frames handler. as it blongs to Rx path it must
++ * be called with rcu_read_lock protection.
+  */
+-void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+-		    struct ieee80211_rx_status *status)
++void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw, struct sk_buff *skb,
++			    struct ieee80211_rx_status *status, u32 load)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1606,36 +1604,18 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_txrx_data rx;
+ 	u16 type;
+-	int prepres;
++	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+ 	u8 *bssid;
+ 
+-	/*
+-	 * key references and virtual interfaces are protected using RCU
+-	 * and this requires that we are in a read-side RCU section during
+-	 * receive processing
+-	 */
+-	rcu_read_lock();
+-
+-	/*
+-	 * Frames with failed FCS/PLCP checksum are not returned,
+-	 * all other frames are returned without radiotap header
+-	 * if it was previously present.
+-	 * Also, frames with less than 16 bytes are dropped.
+-	 */
+-	skb = ieee80211_rx_monitor(local, skb, status);
+-	if (!skb) {
+-		rcu_read_unlock();
+-		return;
+-	}
+-
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+ 	rx.local = local;
+ 
+ 	rx.u.rx.status = status;
++	rx.u.rx.load = load;
+ 	rx.fc = le16_to_cpu(hdr->frame_control);
+ 	type = rx.fc & IEEE80211_FCTL_FTYPE;
+ 
+@@ -1682,11 +1662,11 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			continue;
+ 
+ 		rx.flags |= IEEE80211_TXRXD_RXRA_MATCH;
+-		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
++		prepares = prepare_for_handlers(sdata, bssid, &rx, hdr);
+ 		/* prepare_for_handlers can change sta */
+ 		sta = rx.sta;
+ 
+-		if (!prepres)
++		if (!prepares)
+ 			continue;
+ 
+ 		/*
+@@ -1731,11 +1711,45 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		dev_kfree_skb(skb);
+ 
+  end:
+-	rcu_read_unlock();
+-
+ 	if (sta)
+ 		sta_info_put(sta);
+ }
++
++/*
++ * This is the receive path handler. It is called by a low level driver when an
++ * 802.11 MPDU is received from the hardware.
++ */
++void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
++		    struct ieee80211_rx_status *status)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	u32 pkt_load;
++
++	/*
++	 * key references and virtual interfaces are protected using RCU
++	 * and this requires that we are in a read-side RCU section during
++	 * receive processing
++	 */
++	rcu_read_lock();
++
++	/*
++	 * Frames with failed FCS/PLCP checksum are not returned,
++	 * all other frames are returned without radiotap header
++	 * if it was previously present.
++	 * Also, frames with less than 16 bytes are dropped.
++	 */
++	skb = ieee80211_rx_monitor(local, skb, status);
++	if (!skb) {
++		rcu_read_unlock();
++		return;
++	}
++
++	pkt_load = ieee80211_rx_load_stats(local, skb, status);
++
++	__ieee80211_rx_handle_packet(hw, skb, status, pkt_load);
++
++	rcu_read_unlock();
++}
+ EXPORT_SYMBOL(__ieee80211_rx);
+ 
+ /* This is a version of the rx handler that can be called from hard irq
+-- 
+1.5.3.3
 
-Just booted into my shiny new #everything and got:
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-[   40.209739] BUG: sleeping function called from invalid context at kernel=
-/rwsem.c:47
-[   40.220119] in_atomic():1, irqs_disabled():0
-[   40.230514] Call Trace:
-[   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
-[   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
-[   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
-[   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
-[   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac8021=
-1]
-[   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac=
-80211]
-[   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
-[   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
-[   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
-[   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
-[   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
-[   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
-[   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
-[   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
-[   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
-[   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
-[   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
-[   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
-
-I haven't found yet where the atomic is entered...
-
-johannes
-
---=-ojFo9ckH9yDRTE3QmLR/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2VQQqVg1VMiehFYAQJQXw/+ND2curkPRACRiuq8ALH2Zjb5kQuq/lTJ
-ewEmyDvYOuAz6qk6umEhlkxgV0kljEo10nz8v8mjmSsOpM7tccDcBJcwIVA6Eg/K
-5ykY4zF4FY7/Xeko6Fzq6EexS9yVQ54PhhRPAnCy9kEN2rNXSIJl0U5ruZGkd9y1
-HWUIIRp740zvQHj9EC5D0JqU1DxBaJC7XFoQka6mxm+U7hfN/sOHVYr+7ZJQ9q7L
-TPDjSRVsjN6A9YjDJMTjN8AU5BuI0XJjLd++824y+GGCZRliC3VtyfCJrnj6rbia
-d1iiK5E8wsmT4JN+8dcdr3V1It5w/9WZcO0tc1bxc2v8kP5VDVhbBvxtNvC1YT/K
-rzyVRvD9BKocASyJ9Fw1OsMLQG15/z6vU0QXww1yMV8Ol+Mcx23NnzLf01OQMqQh
-ST1zW5ju5xSuxOwKJKncEpZ/OqO4kDgeKGzgdFteNo4BEEKet1xj4gueZzgLlj27
-vn3uw6W2VAuXz4gKwk4B4Y2pL53nNG4Oy3bDjP5EPqN5NXoMDwHfcGwQGXYADmML
-51UMBjAcC6fTzkl9VSt5cBBCN+WJPvFjRlniqucTVvoDBjUOxCsw/4+F2XXlatNa
-bQDJ4vUF/fNaxW4U6zktbMU3+4Cp6dN6qly4sju0OZu5pTMN474/wECmAY6a+oEN
-VRGqCiT9JmY=
-=C1t6
------END PGP SIGNATURE-----
-
---=-ojFo9ckH9yDRTE3QmLR/--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
