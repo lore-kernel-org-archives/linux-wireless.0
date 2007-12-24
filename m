@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59729 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbXLUMej (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2007 07:34:39 -0500
-Subject: Re: [PATCH] mac80211: remove useless sdata variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Schwab <schwab@suse.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <je63ysp7ua.fsf@sykes.suse.de>
-References: <1198195385.16241.68.camel@johannes.berg>
-	 <je63ysp7ua.fsf@sykes.suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AYbynet+1/A7zmgnbk39"
-Date: Fri, 21 Dec 2007 13:34:31 +0100
-Message-Id: <1198240471.16241.70.camel@johannes.berg> (sfid-20071221_123443_223952_87CD6BF4)
-Mime-Version: 1.0
+Received: from ns.suse.de ([195.135.220.2]:51196 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751432AbXLXLtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Dec 2007 06:49:55 -0500
+Message-ID: <20071224124952.mg253hxu888ocw4s@imap.suse.de> (sfid-20071224_115016_858975_14B84139)
+Date: Mon, 24 Dec 2007 12:49:52 +0100
+From: Helmut Schaa <hschaa@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Restore rx.fc before every invocation of
+	ieee80211_invoke_rx_handlers
+References: <200712211516.35731.hschaa@suse.de>
+	(sfid-20071221_141215_108356_0F4BE6F7)
+	<1198401880.4116.6.camel@johannes.berg>
+	<20071223123517.17ds9zttxc4goo00@imap.suse.de>
+	<1198417706.4000.1.camel@johannes.berg>
+	<1198467294.3065.180.camel@debian.sh.intel.com>
+	<1198491831.4103.17.camel@johannes.berg>
+In-Reply-To: <1198491831.4103.17.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Mo 24 Dez 2007 11:23:51 CET schrieb Johannes Berg  
+<johannes@sipsolutions.net>:
 
---=-AYbynet+1/A7zmgnbk39
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>
+>> The patch looks fine to me. Hardware scanning is a trigger that makes
+>> the condition more likely to happen, the patch itself fixes the more
+>> general problem for multiple interfaces.
+>
+> Yeah, I think so too.
+>
+>> An off-topic question: should wmaster0 continue to execute more rx
+>> handlers (i.e ieee80211_rx_h_remove_qos_control) even if it knows it
+>> will drop them finially?
+>
+> I don't think it does, does it? In prepare_for_handlers frames aren't
+> sent to the master device while not scanning.
 
+It does so only during a scan. In that case the frame gets first
+dropped in ieee80211_rx_h_data on the master device.
 
-
-> Perhaps because it is used?
->=20
-> > --- everything.orig/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:11.25=
-3160428 +0100
-> > +++ everything/net/mac80211/ieee80211_sta.c	2007-12-21 01:02:32.1131659=
-07 +0100
-> > @@ -458,12 +458,10 @@ static void ieee80211_set_associated(str
-> >  		return;
-> > =20
-> >  	if (assoc) {
-> > -		struct ieee80211_sub_if_data *sdata;
-
-Too little context. There's another one in the surrounding scope that is
-already initialised exactly the same.
-
-johannes
-
---=-AYbynet+1/A7zmgnbk39
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2uy1qVg1VMiehFYAQLNQhAAqdBz078U2yVo9wGTAUo5yDtAL4KSoejc
-ijvyJ20JAtsQaluNQB/8g7vU7/kvEpy5aY1nM1J1XnFQQlbFCM+N+Ni6wUV9sRkt
-AQnnJBmMWgoFm3zszrGW4ZfjrSR6AfCUEdfSMmIzHalAO8NlvOYChG/bwG/v5Zf/
-rPcT0OUVIGfzHMNnpuNvw05Z+eIWyrgGXrzbNW6pb1IShMRBHgV8bRp6YXL/S8fu
-rauuS7u8bCud4ZPbMMHkIdgo/nwZK8zx7TtJ+M1QBKIu/qudyzq82GcWUAeDCfrJ
-3fo0QemWHYDMLbqcrWKOXx/hT5mTNDzUVzijBcbAq9fRiMr0y0ZFh0eevFVnir87
-sWzBzMFhSH2O1tmID2y+l/gr2KBF3n0BtqXRdm9jh3KDKXMrJ5qWwPvxtp30AUZB
-KqcW4Ad6268/maVb5ffMpTOakNtF8ylLLQf3aj6zs7yXxglRDPp0zeqrB4QdwCeL
-kpIgXeovodgMhNxBCy03rKOoT8WesLcUc/63r0+kaRruWhuKHwRYzgjeyc5P6wSM
-K0vcvyAXFEmImCtZJ/AiVC2jhRrXj6jzt+7hx0r1xvdC/wLxeRktbvn8LFdqeaa/
-g6MgGsNndVkVdAWNdMajed1xKFmGPQCHviHlrf4acQFmOFhwfrm0nwrw/HfVCqLJ
-xj0v94yeU7E=
-=4d3n
------END PGP SIGNATURE-----
-
---=-AYbynet+1/A7zmgnbk39--
-
+Helmut
