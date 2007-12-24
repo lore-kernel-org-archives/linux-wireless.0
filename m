@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:56170 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbXLDADN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 19:03:13 -0500
-Date: Mon, 3 Dec 2007 16:01:38 -0800
-To: Shaddy Baddah <shaddy_baddah@hotmail.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Subject: Re: zd1211rw (2.6.22 sparc64): unaligned access (do_rx)
-Message-ID: <20071204000138.GA1363@bougret.hpl.hp.com> (sfid-20071204_000316_304090_82EDA755)
-Reply-To: jt@hpl.hp.com
-References: <4740DF47.4040206@hotmail.com> <20071119.002755.77617097.davem@davemloft.net> <1195484582.8642.18.camel@johannes.berg> <20071119180423.GA19250@bougret.hpl.hp.com> <47443035.1070702@hotmail.com> <20071121184459.GA17199@bougret.hpl.hp.com> <474F86AD.4040403@hotmail.com> <20071130202115.GA32444@bougret.hpl.hp.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:33064 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751746AbXLXW3g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Dec 2007 17:29:36 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Daniel Drake <dsd@gentoo.org>
+Subject: Re: Strange mac80211 oops
+Date: Mon, 24 Dec 2007 23:28:55 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <200712242237.28913.mb@bu3sch.de> <1198532736.4103.44.camel@johannes.berg> <1198533423.4103.46.camel@johannes.berg>
+In-Reply-To: <1198533423.4103.46.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20071130202115.GA32444@bougret.hpl.hp.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Message-Id: <200712242328.56060.mb@bu3sch.de> (sfid-20071224_222952_123781_68587F36)
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 30, 2007 at 12:21:15PM -0800, jt wrote:
-> On Fri, Nov 30, 2007 at 02:42:37PM +1100, Shaddy Baddah wrote:
+On Monday 24 December 2007 22:57:03 Johannes Berg wrote:
+> On Mon, 2007-12-24 at 22:45 +0100, Johannes Berg wrote:
+> > > [   98.415423] ------------[ cut here ]------------
+> > > [   98.415627] Badness at e221c924 [verbose debug info unavailable]
 > > 
-> > No, it does not seem to have. An iwlist eth2 scanning command still 
-> > lists a single access point, then fails with a bus error.
+> > > [   98.416905] NIP [e221c924] __ieee80211_rx+0x48c/0xd44 [mac80211]
+> > 
+> > ieee80211_rx_monitor() is inlined into __ieee80211_rx() and that +0x48c
+> > is quite a high number, so I'm guessing it's this:
+> > 
+> >         /*
+> >          * Drivers are required to align the payload data to a four-byte
+> >          * boundary, so the last two bits of the address where it starts
+> >          * may not be set. The header is required to be directly before
+> >          * the payload data, padding like atheros hardware adds which is
+> >          * inbetween the 802.11 header and the payload is not supported,
+> >          * the driver is required to move the 802.11 header further back
+> >          * in that case.
+> >          */
+> >         hdrlen = ieee80211_get_hdrlen(rx.fc);
+> >         WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
 > 
-> 	Hmm... That's strange as I was seeing my code behaving as
-> expected.
-> 	I will ask you to compile a version of wireless tools with
-> debugging enabled and run it with gdb. See my other e-mail.
+> Yup, that's what it is, Michael sent me the assembly, __ieee80211_rx
+> starts at 0x1990 and we find at 0x1990+0x48c == 0x1e1c
+> 
+> 
+>     1df8:       48 00 00 01     bl      1df8 <__ieee80211_rx+0x468>
+>                         1df8: R_PPC_REL24       ieee80211_get_hdrlen
+>     1dfc:       80 18 00 a0     lwz     r0,160(r24)
+>     1e00:       7c 00 1a 14     add     r0,r0,r3
+>     1e04:       70 09 00 03     andi.   r9,r0,3
+>     1e08:       41 a2 00 2c     beq+    1e34 <__ieee80211_rx+0x4a4>
+>     1e0c:       3d 20 00 00     lis     r9,0
+>                         1e0e: R_PPC_ADDR16_HA   .sbss
+>     1e10:       80 09 00 00     lwz     r0,0(r9)
+>                         1e12: R_PPC_ADDR16_LO   .sbss
+>     1e14:       7c 00 00 34     cntlzw  r0,r0
+>     1e18:       54 00 d9 7e     rlwinm  r0,r0,27,5,31
+>     1e1c:       0f 00 00 00     twnei   r0,0
+> 
+> which is exactly the WARN_ON_ONCE above.
 
-	Hi,
+So zd1211rw-mac80211 is pushing some unaligned data up the RX path, hm.
 
-	Sorry to bother you again. Next week I will go on vacation,
-and may not be able to continue working on that bug. Your best bet for
-a fix is this week.
-
-	Now, this is what you will do :
-	1) Get wireless_tools.30.pre3-debug2.tar.gz I sent you a while
-ago. I know you have it, as you sent me debug log from it.
-	2) Go in the wireless_tools.30 directory.
-        3) edit Makefile. Go to line defining CFLAGS, replace "-Os"
-with "-g". It should look like :
----------------------------------------
-CFLAGS=-g -W -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow \
-	-Wpointer-arith -Wcast-qual -Winline -I.
----------------------------------------
-        4) Recompile : make clean ; make
-        5) Start the debugger : gdb --args iwlist eth0 scan
-        6) Run the program : run
-        7) Get a stack trace : bt
-
-	If you have properly enabled debug, the stack trace will show
-the precise line number where it crashes. That's mostly what I'm
-after.
-	I would also like to have the debugging output of iwlist. The
-function where it seems to crash is called many time, I want to know
-in which context it is called. Feel free to send it private.
-
-	Thanks in advance...
-
-	Jean
+-- 
+Greetings Michael.
