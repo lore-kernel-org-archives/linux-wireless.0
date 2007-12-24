@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32811 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbXLJQvQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 11:51:16 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 12/48] libertas: Byteswap cmdptr->size in lbs_cmd()
-Message-Id: <E1J1kpG-0006l5-Mo@shinybook.infradead.org> (sfid-20071210_165118_686669_2CDD857F)
-Date: Mon, 10 Dec 2007 10:45:46 -0500
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49565 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbXLXQ1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Dec 2007 11:27:46 -0500
+Message-ID: <476FD6F0.4010605@hauke-m.de> (sfid-20071224_162755_556893_4EFD280C)
+Date: Mon, 24 Dec 2007 16:57:36 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: rtl8187 Failed to select rate control algorithm 2.6.24-rc6
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Thu, 6 Dec 2007 12:38:31 +0000
+Hi
 
-Bad Holger. Always test on big-endian machines, if it's little-endian
-you need to be swapping to/from.
+The compat-wireless-2.6 package is compiling on Kernel 2.6.24-rc6.
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/cmd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Now I have the next problem. I want to load the rtl8187 module out of
+the compat-wireless-2.6 package into kernel 2.6.24-rc6, but I get the
+following message:
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 4fc3e4b..7097dcf 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -2072,7 +2072,7 @@ int lbs_cmd(struct lbs_private *priv,
- 	/* Set sequence number, clean result, move to buffer */
- 	adapter->seqnum++;
- 	cmdptr->command = cpu_to_le16(command);
--	cmdptr->size    = cmd_size + S_DS_GEN;
-+	cmdptr->size    = cpu_to_le16(cmd_size + S_DS_GEN);
- 	cmdptr->seqnum = cpu_to_le16(adapter->seqnum);
- 	cmdptr->result = 0;
- 	memcpy(cmdptr->cmdresp, cmd, cmd_size);
+phy0: Failed to select rate control algorithm
+phy0: Failed to initialize rate control algorithm
+rtl8187: Cannot register device
+rtl8187: probe of 6-3:1.0 failed with error -2
+usbcore: registered new interface driver rtl8187
+
+And no wireless device is created at iwconfig
+
+
+When loading the module from vanilla kernel 2.6.24-rc6 it prints out the
+following messages:
+
+phy0: Selected rate control algorithm 'simple'
+phy0: hwaddr 00:15:af:03:ab:79, rtl8187 V1 + rtl8225z2
+usbcore: registered new interface driver rtl8187
+
+And a wireless device is created at iwconfig and everything is working
+as it should.
+
+I downloaded the compat-wireless-2.6 package 1 hour ago.
+
+I have got the same problem on kernel 2.6.22.
+I loaded the following modules:
+cfg80211.ko ; mac80211.ko ; eeprom_93cx6.ko ; rtl8187.ko
+
 -- 
-1.5.3.4
+Merry Christmas
 
+Hauke Mehrtens
