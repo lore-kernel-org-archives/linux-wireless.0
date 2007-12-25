@@ -1,90 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53631 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755152AbXLRNx1 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:6634 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbXLYDG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 08:53:27 -0500
-Subject: Re: [PATCH 6/8] mac80211: A-MPDU Rx adding BAR handling capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <c85cb4470712180545u46dc0a21obdc6d7b6c095b797@mail.gmail.com> (sfid-20071218_134627_418190_29EDCA18)
-References: <11979070692599-git-send-email-ron.rindjunsky@intel.com>
-	 <11979070783125-git-send-email-ron.rindjunsky@intel.com>
-	 <1197915884.4885.93.camel@johannes.berg>
-	 <c85cb4470712180545u46dc0a21obdc6d7b6c095b797@mail.gmail.com>
-	 (sfid-20071218_134627_418190_29EDCA18)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dJHCvPH566lYD0fDyE6y"
-Date: Tue, 18 Dec 2007 14:53:21 +0100
-Message-Id: <1197986001.4885.144.camel@johannes.berg> (sfid-20071218_135332_726534_5F8F5470)
-Mime-Version: 1.0
+	Mon, 24 Dec 2007 22:06:26 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3097528wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Dec 2007 19:06:25 -0800 (PST)
+Message-ID: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com> (sfid-20071225_030635_964364_290EF08C)
+Date: Mon, 24 Dec 2007 22:06:25 -0500
+From: "Andrew Lutomirski" <luto@myrealbox.com>
+To: linux-wireless@vger.kernel.org
+Subject: ath5k oops (recent regression, I think)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm getting oopses in ath5k, which is either:
+1. A recent regression (past few days in wireless-2.6 everything branch.
+2. A less-recent regression that I think is recent because I don't
+really know how to use git.
 
---=-dJHCvPH566lYD0fDyE6y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+A slightly older version didn't oops but couldn't associate.  madwifi
+works fine.
 
+I'm running 2d0811f5ed506397d85792abfd8ef0983f4e8b7c, I think.
 
-> (lets put aside the AP that bombed me with 749 BARs over 30
-> seconds ;-) i really think it was a buggy functionality of the AP
-> there)
+I can try to bisect in the next few days or provide any other useful
+debugging, but I figured I'd let you all know first.
 
-Heh. Fun.
+Relevant pieces of dmesg are:
 
-> > > +             else if ((fc & IEEE80211_FCTL_STYPE) =3D=3D
-> > > +                                             IEEE80211_STYPE_BACK_RE=
-Q) {
-> > > +                     switch (type) {
-> > > +                     case IEEE80211_IF_TYPE_STA:
-> > > +                             return hdr->addr2;
-> > > +                     case IEEE80211_IF_TYPE_AP:
-> > > +                             return hdr->addr1;
-> > > +                     }
-> >
-> > Doesn't that result in a compiler warning? And what does happen if we
-> > receive a BACK_REQ when we're an IBSS/MESH?
+[   15.097097] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+[   15.097107] ath5k phy0: RF5112A multiband radio found (0x36)
 
-I was obviously wrong here, it doesn't result in a compiler warning
-since you didn't use the enum type. It will once you use the enum type.
+...
 
-> IBSS is not supporting 802.11n currently (spec decision)
-
-Ok.
-
-> MESH i am not familier enough yet to answer. are you sure it supports 11n=
-?
-
-I guess we should just return NULL in all other cases here. But please
-enumerate the cases explicitly so that people who add new interface
-types get warnings, i.e. don't use a default: statement in a switch
-(interface type)
-
-johannes
-
---=-dJHCvPH566lYD0fDyE6y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR2fQ0KVg1VMiehFYAQJFihAAkyXToZq1A4N1p+VrRxzlig8q+VFrLqcz
-s/ngB9OSIczpCXLVr6JHqSlSIh647VwqCY9N6uMpsQddLRmUtBt8wJWGn+Q4zMYb
-oijzX87FuEL85j6A9G40bFbb7Bf9Evxj5r5R0+VjOdUAx25hTfg7PtK0jZpxkTPP
-t+6+S1Nmp8DLhJSyQVjUX2l4OWeFIn+8tv6NcsLnmo/LsnpvIDkfPzDAYPrCaL/f
-BKziHmeq7eADAottBXS6wdpaLg1J/HOVUrFiXjxE8GEaT1XcbThyLvBJfkJMQG+p
-/m77tEnuorvf3SvSi3KbmR8wRJeXp6Gk+QSG2lNP3b+8qu3II7uSphFqOlLUhOdW
-JURX7oxDKYUHSY0uhvsIkOg4Z7wIJqDUABG9F/AbPC3+PqUf2TVz+UUAACrLK960
-jkVZRW16T8vIyiAoZRBwSC49gjJtuFEc2YQRmRY/SYqA0E2icC+6G6Mfb9BJuVXJ
-jF21B1ZczRSK0AWjm01YlO80rRB7qVFFF/B9w/U6wsG8dAwIWiSRqo9+1LLJtqrn
-I45ZaWQb7qJEHDMS5Fo3mZTyaCf0iV8QlTg51o6osbNU9Q0cKtYcRRJsEHLYK+I0
-nXH9qm93lEWIykSq7QOjUK6IWEwe4shYa0zvVdHOqRhOXjLy28ncJS1aHNZuWP6F
-plTb+QhXqFE=
-=mqGQ
------END PGP SIGNATURE-----
-
---=-dJHCvPH566lYD0fDyE6y--
-
+[  149.641321] BUG: unable to handle kernel paging request at virtual
+address fffffd88
+[  149.641329] printing eip: b0335b41 *pde = 00490027 *pte = 00000000
+[  149.641336] Oops: 0000 [#1] PREEMPT
+[  149.641339] Modules linked in: ipv6 binfmt_misc cpufreq_stats
+cpufreq_ondemand cpufreq_powersave cpufreq_userspace bay container sbs
+sbshc dock sbp2 joydev pcmcia snd_intel8x0 snd_ac97_codec ac97_bus
+snd_pcm_oss snd_mixer_oss snd_pcm psmouse serio_raw snd_seq_dummy
+snd_seq_oss pcspkr snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq
+snd_timer snd_seq_device snd soundcore snd_page_alloc yenta_socket
+rsrc_nonstatic pcmcia_core iTCO_wdt iTCO_vendor_support intel_agp
+agpgart evdev ext3 jbd mbcache sg sr_mod cdrom sd_mod ata_generic
+ata_piix ohci1394 ieee1394 libata scsi_mod ehci_hcd uhci_hcd usbcore
+fan fuse
+[  149.641379]
+[  149.641382] Pid: 5808, comm: NetworkManager Not tainted (2.6.24-rc5 #4)
+[  149.641386] EIP: 0060:[<b0335b41>] EFLAGS: 00210246 CPU: 0
+[  149.641395] EIP is at ieee80211_generic_frame_duration+0x21/0x70
+[  149.641398] EAX: cdb28160 EBX: cdb28160 ECX: 0000000a EDX: 00000000
+[  149.641400] ESI: 00000000 EDI: 0000000a EBP: 000003e8 ESP: cd833b08
+[  149.641403]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+[  149.641407] Process NetworkManager (pid: 5808, ti=cd832000
+task=cdd7cc80 task.ti=cd832000)
+[  149.641409] Stack: b028ec3b 0016ba51 0000876c 00000000 cdb52000
+b028b4ed 0000000a 4fa14d63
+[  149.641416]        00000034 cdb28160 00000000 b0359aa4 cdb28f0c
+00000000 00000000 00000003
+[  149.641423]        00000002 00000002 00000014 00000000 b0359a80
+cdb28e00 00000000 00000000
+[  149.641429] Call Trace:
+[  149.641431]  [<b028ec3b>] ath5k_hw_rfgain+0x4b/0x80
+[  149.641441]  [<b028b4ed>] ath5k_hw_reset+0xa9d/0xeb0
+[  149.641453]  [<b0283e76>] ath5k_init+0x46/0x110
+[  149.641462]  [<b03231cc>] ieee80211_open+0x19c/0x4e0
+[  149.641468]  [<b011a4be>] set_next_entity+0xae/0xd0
+[  149.641479]  [<b02afdec>] dev_open+0x4c/0x80
+[  149.641486]  [<b02aee62>] dev_change_flags+0x82/0x1b0
+[  149.641492]  [<b02b7d46>] do_setlink+0x2d6/0x3b0
+[  149.641497]  [<b015d5d6>] __alloc_pages+0x56/0x360
+[  149.641506]  [<b02b914b>] rtnl_setlink+0xdb/0x130
+[  149.641517]  [<b015d500>] __free_pages+0x20/0x30
+[  149.641522]  [<b02b9070>] rtnl_setlink+0x0/0x130
+[  149.641526]  [<b02b8d6c>] rtnetlink_rcv_msg+0x1cc/0x200
+[  149.641532]  [<b02b8ba0>] rtnetlink_rcv_msg+0x0/0x200
+[  149.641536]  [<b02c6550>] netlink_rcv_skb+0x70/0xa0
+[  149.641542]  [<b02b8b94>] rtnetlink_rcv+0x14/0x20
+[  149.641546]  [<b02c62e3>] netlink_unicast+0x203/0x230
+[  149.641553]  [<b02c6b00>] netlink_sendmsg+0x200/0x2f0
+[  149.641563]  [<b02a2a01>] sock_sendmsg+0x101/0x120
+[  149.641575]  [<b0136310>] autoremove_wake_function+0x0/0x50
+[  149.641585]  [<b0136310>] autoremove_wake_function+0x0/0x50
+[  149.641590]  [<b0314b27>] unix_stream_recvmsg+0x3c7/0x630
+[  149.641600]  [<b02a1f48>] sock_aio_write+0x118/0x140
+[  149.641608]  [<b02a2b84>] sys_sendmsg+0x164/0x280
+[  149.641620]  [<b02c5a16>] netlink_insert+0xe6/0x170
+[  149.641625]  [<b017c5ed>] fget_light+0x9d/0xc0
+[  149.641631]  [<b02a370f>] move_addr_to_user+0x5f/0x70
+[  149.641637]  [<b02a3cc7>] sys_getsockname+0xd7/0xe0
+[  149.641642]  [<b02a4cb5>] lock_sock_nested+0xd5/0xf0
+[  149.641647]  [<b012762e>] local_bh_enable+0x2e/0xb0
+[  149.641654]  [<b02a6449>] sock_setsockopt+0x149/0x5e0
+[  149.641658]  [<b018e281>] d_alloc+0x131/0x1a0
+[  149.641665]  [<b018e125>] d_instantiate+0x45/0x70
+[  149.641670]  [<b017c5ed>] fget_light+0x9d/0xc0
+[  149.641674]  [<b02a20d2>] sockfd_lookup_light+0x32/0x60
+[  149.641683]  [<b02a414f>] sys_socketcall+0x24f/0x280
+[  149.641691]  [<b0126faa>] sys_time+0xa/0x30
+[  149.641695]  [<b010421e>] sysenter_past_esp+0x5f/0x85
+[  149.641706]  =======================
+[  149.641707] Code: 5d c3 90 8d b4 26 00 00 00 00 83 ec 14 89 5c 24
+08 89 c3 89 74 24 0c 89 d6 89 7c 24 10 89 cf 8b 4c 24 18 83 78 0c 02
+74 31 31 d2 <8b> 86 88 fd ff ff 89 14 24 89 fa 83 e0 08 89 44 24 04 89
+d8 e8
+[  149.641740] EIP: [<b0335b41>]
+ieee80211_generic_frame_duration+0x21/0x70 SS:ESP 0068:cd833b08
