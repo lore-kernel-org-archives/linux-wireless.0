@@ -1,58 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55996 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762840AbXLMHAA (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39457
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751434AbXLYE5V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 02:00:00 -0500
-Subject: [PATCH 89/48] libertas: make worker thread not freezable
-From: David Woodhouse <dwmw2@infradead.org>
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Message-Id: <E1J2i3E-0005uI-Uz@shinybook.infradead.org> (sfid-20071213_070018_541016_26D7CACA)
-Date: Thu, 13 Dec 2007 02:00:08 -0500
+	Mon, 24 Dec 2007 23:57:21 -0500
+Date: Mon, 24 Dec 2007 20:57:12 -0800 (PST)
+Message-Id: <20071224.205712.66730805.davem@davemloft.net> (sfid-20071225_045726_142339_39D681B0)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: (2nd attempt) Please pull 'upstream-davem' branch of
+ wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20071221140527.GA19874@tuxdriver.com>
+References: <20071220223850.GL3139@tuxdriver.com>
+	<20071220.200429.242105762.davem@davemloft.net>
+	<20071221140527.GA19874@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Wed, 12 Dec 2007 16:04:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 21 Dec 2007 09:05:27 -0500
 
-We want it to send the HOST_SLEEP_ACTIVATE command on the way down...
+> These are destined for 2.6.25.  The patches fall mostly into two
+> categories: a new rate control algorithm for mac80211, and some
+> cfg80211 enhancements (including mac80211 patches to use them).
+> 
+> Also there are some small hits in the iwlwifi drivers related to
+> rate control.  I'll CC Jeff since his tree has a lot of iwlwifi symbol
+> renames and those patches will conflict (or break the build, or both)
+> when your tree and his finally come together.
+> 
+> Let me know if there are any problems!
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/main.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index f9bdd12..dd432ea 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -6,7 +6,6 @@
- 
- #include <linux/moduleparam.h>
- #include <linux/delay.h>
--#include <linux/freezer.h>
- #include <linux/etherdevice.h>
- #include <linux/netdevice.h>
- #include <linux/if_arp.h>
-@@ -653,8 +652,6 @@ static int lbs_thread(void *data)
- 
- 	init_waitqueue_entry(&wait, current);
- 
--	set_freezable();
--
- 	for (;;) {
- 		int shouldsleep;
- 
-@@ -698,7 +695,6 @@ static int lbs_thread(void *data)
- 
- 		set_current_state(TASK_RUNNING);
- 		remove_wait_queue(&priv->waitq, &wait);
--		try_to_freeze();
- 
- 		lbs_deb_thread("main-thread 333: intcounter=%d currenttxskb=%p dnld_sent=%d\n",
- 			       priv->intcounter, priv->currenttxskb, priv->dnld_sent);
--- 
-1.5.3.4
-
+Pulled, thanks a lot!
