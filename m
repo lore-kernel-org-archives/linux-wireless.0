@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:30325 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917AbXLMOjl (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43691
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750943AbXLYFSq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 09:39:41 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1114497wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2007 06:35:27 -0800 (PST)
-Message-ID: <1ba2fa240712130635n44838ac4s5bb606e5dc27fdeb@mail.gmail.com> (sfid-20071213_143945_092983_8749E8B7)
-Date: Thu, 13 Dec 2007 16:35:27 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [FYI] hostapd with mac80211 progress
-Cc: linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>, hostap <hostap@shmoo.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1197512614.6558.224.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1197512614.6558.224.camel@johannes.berg>
+	Tue, 25 Dec 2007 00:18:46 -0500
+Date: Mon, 24 Dec 2007 21:18:45 -0800 (PST)
+Message-Id: <20071224.211845.192499191.davem@davemloft.net> (sfid-20071225_051853_201789_A772A2E4)
+To: joe@perches.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [WEXT 3/12]: Extract standard call iw_point handling into
+ seperate function.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1198308172.4895.11.camel@localhost>
+References: <20071221.205407.165162566.davem@davemloft.net>
+	<1198308172.4895.11.camel@localhost>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Ron, have you started working on traffic flows for hostapd yet? If so, I
-> guess I should set up a git tree or simply push all my hostapd patches
-> to Jouni (and send fixes as I find the bugs) because otherwise we're
-> going to produce many conflicts, most of my changes are quite large.
-> OTOH, I guess the only thing you need to do in the nl80211 driver stuff
-> is add support for flows to the station management. Let me know how you
-> want to proceed.
->
+From: Joe Perches <joe@perches.com>
+Date: Fri, 21 Dec 2007 23:22:52 -0800
 
-I take this question instead of Ron.
-We have mostly configuration patches - (enhanced hostap_ioctls.h)  and
-some minor changes in hostapd flows that we would like to rebase over
-your changes to nl80211/mac80211 and hostap respectively. We can start
-with 11n Association flows patches.
-It would be great if you can setup git repository. Unfortunately it's
-rather complicated to export one from Intel.
-Thanks
-Tomas
+> On Fri, 2007-12-21 at 20:54 -0800, David Miller wrote:
+> > [WEXT]: Extract standard call iw_point handling into seperate function.
+> 
+> This potentially does copy_from_user twice,
+> first to the stack, second to a kmalloc'ed area.
+> Perhaps it's better to kmalloc first and copy once?
 
-
-> All, any help with hostapd would be much appreciated. In case I forget
-> to publish my hostapd patches though, ping me rather than working from
-> older ones. Any patches older than this mail are too old.
->
-> johannes
->
-> _______________________________________________
-> HostAP mailing list
-> HostAP@shmoo.com
-> http://lists.shmoo.com/mailman/listinfo/hostap
->
->
+I'm preserving existing behavior in these changes,
+feel free to make these kinds of improvements as
+a follow-on changeset.
