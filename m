@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37600 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:51479 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750858AbXLCVXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 16:23:35 -0500
-Subject: Re: [PATCH] less eventcause shifts
-From: Dan Williams <dcbw@redhat.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1196714939.13978.171.camel@pmac.infradead.org>
-References: <200711280915.11300.hs4233@mail.mn-solutions.de>
-	 <1196704681.21151.13.camel@localhost.localdomain>
-	 <1196714939.13978.171.camel@pmac.infradead.org>
-Content-Type: text/plain
-Date: Mon, 03 Dec 2007 16:17:19 -0500
-Message-Id: <1196716639.31607.11.camel@localhost.localdomain> (sfid-20071203_212342_092025_DA3B1A80)
-Mime-Version: 1.0
+	id S1751909AbXLYPAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Dec 2007 10:00:52 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+Subject: [PATCH 0/8 v3] mac80211/iwlwifi: integrate IEEE802.11n A-MPDU Rx MLME
+Date: Tue, 25 Dec 2007 17:00:30 +0200
+Message-Id: <11985948383801-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150109_202900_41BB3DF1)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-12-03 at 20:48 +0000, David Woodhouse wrote:
-> On Mon, 2007-12-03 at 12:58 -0500, Dan Williams wrote:
-> > I'm sort of sitting on these patches until you and Woodhouse start using
-> > the same git tree until he's done with the command rework...  It's going
-> > to be near impossible to handle both of your patches with any certainty.
-> > Any progress on whether you've both been able to work in the same repo?
-> 
-> http://git.infradead.org/?p=libertas-2.6.git
-> 
-> It's based on Linus' tree -- we've abandoned John's wireless-dev tree
-> altogether. He rebases it and uses branches -- it's just an exercise in
-> making git hard.
+This series of patches contains implementation for the IEEE802.11n 
+aggregated MPDUs (A-MPDU) MLME. The series handles Rx A-MPDU (recipient party).
 
-Then you of course understand that you may have a bitch of a time
-getting it back to John.  Because you can't just go to Linus, you need
-to go through John when you want to upstream stuff.  That's how it
-works.
+Patches needed:
+===============
+"mac80211: pass in PS_POLL frames"
+"mac80211: restructure _ieee80211_rx"
+both accepted as stand alone patches.
 
-However, since Libertas is fullmac-ish, the merge probably won't be
-horrible.
+Notes to this series:
+======================
+This series of patches splits into:
+ - patches 1-7 add 802.11n Rx A-MPDU MLME support to mac80211.
+ - patch 8 demonstrates the use of the above mac80211's MLME through iwl4965 low level driver
 
-Dan
+The patches in the series should not be treated as stand alone patches,
+but as a complete MLME according to IEEE802.11n spec, although separation
+to patches by subjects was made for ease of handling.
 
+The patches do _not_ break any existing driver.
+Patches were made (and tested to work) with wireless branch 2.6.24-rc5 (#everything)
+
+The MLME framework includes the following:
+- A-MPDU MLME (for aggregated Rx per STA/TID)
+- addBA request support.
+- delBA request support (recipient party).
+- Block Ack Request (BAR) support.
+- A-MPDU reordering.
+
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
