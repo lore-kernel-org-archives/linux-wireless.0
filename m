@@ -1,41 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:20417 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753988AbXLWBRL (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:15701 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750932AbXLYGlh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 20:17:11 -0500
-Date: Sat, 22 Dec 2007 17:17:07 -0800
-From: David Brownell <david-b@pacbell.net>
-To: bjd@jooz.net
-Subject: Re: [PATCH 6/8] [PATCH] Split up rndis_host.c
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <11983602942818-git-send-email-bjd@jooz.net>
- <11983602953056-git-send-email-bjd@jooz.net>
-In-Reply-To: <11983602953056-git-send-email-bjd@jooz.net>
+	Tue, 25 Dec 2007 01:41:37 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] rtl8180: Update Kconfig
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Tue, 25 Dec 2007 01:42:29 -0500
+Message-ID: <20071225064229.23919.18483.stgit@tetra.sourmilk.net> (sfid-20071225_064153_558362_35BF3C4A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20071223011707.1798C2360C6@adsl-69-226-248-13.dsl.pltn13.pacbell.net> (sfid-20071223_011720_162491_44AB674F)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Bjorge Dijkstra <bjd@jooz.net>
-> Subject: [PATCH 6/8] [PATCH] Split up rndis_host.c
-> Date: Sat, 22 Dec 2007 22:51:32 +0100
->
-> Split up rndis_host.c into rndis_host.h and rndis_base.c and
-> change Makefile accordingly. This is done so we can add extra
-> source files to the rndis_host module later on.
+We should let people know what this is.
 
-I'm fine with splitting out a header file and the EXPORT_SYMBOL_GPL.
-But why not just have a separate "rndis_wext" module?
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+
+ drivers/net/wireless/Kconfig |   53 +++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 52 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index e4be4bb..f3b8122 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -554,9 +554,60 @@ config USB_ZD1201
+ 	  module will be called zd1201.
+ 
+ config RTL8180
+-	tristate "Realtek 8185 PCI support"
++	tristate "Realtek 8180/8185 PCI support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+ 	select EEPROM_93CX6
++	---help---
++	  This is a driver for RTL8180 and RTL8185 based cards.
++	  These are PCI based chips found in cards such as:
++
++	  (RTL8185 802.11g)
++	  A-Link WL54PC
++
++	  (RTL8180 802.11b)
++	  Belkin F5D6020 v3
++	  Belkin F5D6020 v3
++	  Dlink DWL-610
++	  Dlink DWL-510
++	  Netgear MA521
++	  Level-One WPC-0101
++	  Acer Aspire 1357 LMi
++	  VCTnet PC-11B1
++	  Ovislink AirLive WL-1120PCM
++	  Mentor WL-PCI
++	  Linksys WPC11 v4
++	  TrendNET TEW-288PI
++	  D-Link DWL-520 Rev D
++	  Repotec RP-WP7126
++	  TP-Link TL-WN250/251
++	  Zonet ZEW1000
++	  Longshine LCS-8031-R
++	  HomeLine HLW-PCC200
++	  GigaFast WF721-AEX
++	  Planet WL-3553
++	  Encore ENLWI-PCI1-NT
++	  TrendNET TEW-266PC
++	  Gigabyte GN-WLMR101
++	  Siemens-fujitsu Amilo D1840W
++	  Edimax EW-7126
++	  PheeNet WL-11PCIR
++	  Tonze PC-2100T
++	  Planet WL-8303
++	  Dlink DWL-650 v M1
++	  Edimax EW-7106
++	  Q-Tec 770WC
++	  Topcom Skyr@cer 4011b
++	  Roper FreeLan 802.11b (edition 2004)
++	  Wistron Neweb Corp CB-200B
++	  Pentagram HorNET
++	  QTec 775WC
++	  TwinMOS Booming B Series
++	  Micronet SP906BB
++	  Sweex LC700010
++	  Surecom EP-9428
++	  Safecom SWLCR-1100
++
++	  Thanks to Realtek for their support!
+ 
+ config RTL8187
+ 	tristate "Realtek 8187 USB support"
 
 
-> ---
->  drivers/net/usb/Makefile     |    1 +
->  drivers/net/usb/rndis_base.c |  548 ++++++++++++++++++++++++++++++
->  drivers/net/usb/rndis_host.c |  763 ------------------------------------------
->  drivers/net/usb/rndis_host.h |  256 ++++++++++++++
->  4 files changed, 805 insertions(+), 763 deletions(-)
->  create mode 100644 drivers/net/usb/rndis_base.c
->  delete mode 100644 drivers/net/usb/rndis_host.c
->  create mode 100644 drivers/net/usb/rndis_host.h
