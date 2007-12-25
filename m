@@ -1,36 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40636 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755414AbXLSPrs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 10:47:48 -0500
-Message-Id: <20071219010328.762470000@sipsolutions.net> (sfid-20071219_155048_843434_EB2FD833)
-Date: Wed, 19 Dec 2007 02:03:28 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/9] nl80211/cfg80211/mac80211 updates for AP mode
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:51479 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751951AbXLYPAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Dec 2007 10:00:52 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 7/8 v3] mac80211: A-MPDU Rx handling DELBA requests
+Date: Tue, 25 Dec 2007 17:00:37 +0200
+Message-Id: <11985948452195-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150104_838642_81DA9BA5)
+In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a repost of my previous patch series for some initial
-AP mode support. With this series and the eapol handling patches
-I just sent as well, there are only three ioctls required any   
-more: 802.1X port control, frame bridging and hw features.   
+This patch opens the flow to DELBA management frames, and handles end
+of A-MPDU session produced by this event.
 
-I have for now removed the hw features ioctl from my tree so
-hostapd will not currently work, I need to work on getting code
-done to publish the hw features in nl80211 which would go on   
-top of my cfg80211 bitrate/frequency API.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/ieee80211_sta.c |   40 +++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
-In any case, this is the patch series as I think it should be
-merged for 2.6.25. In itself, it will not enable AP mode at all,
-in fact most of the new API will not even be usable without
-further patches, but I don't want to sit on it any longer. I'm   
-hopeful that I've ironed out most issues these patches had when
-I last posted them. 
+Index: wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
+===================================================================
+--- wl2_6_24_rc5.orig/net/mac80211/ieee80211_sta.c
++++ wl2_6_24_rc5/net/mac80211/ieee80211_sta.c
+@@ -63,6 +63,8 @@
+ #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+ #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+ #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
++#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
++#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
+ 
+ /* next values represent the buffer size for A-MPDU frame.
+  * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2) */
+@@ -1268,6 +1270,36 @@ void ieee80211_sta_stop_rx_ba_session(st
+ 	sta_info_put(sta);
+ }
+ 
++static void ieee80211_sta_process_delba(struct net_device *dev,
++			struct ieee80211_mgmt *mgmt, size_t len)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sta_info *sta;
++	u16 tid, params;
++	u16 initiator;
++	DECLARE_MAC_BUF(mac);
++
++	sta = sta_info_get(local, mgmt->sa);
++	if (!sta)
++		return;
++
++	params = le16_to_cpu(mgmt->u.action.u.delba.params);
++	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
++	initiator = (params & IEEE80211_DELBA_PARAM_INITIATOR_MASK) >> 11;
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	if (net_ratelimit())
++		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
++			print_mac(mac, mgmt->sa), tid,
++			mgmt->u.action.u.delba.reason_code);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++
++	if (initiator == WLAN_BACK_INITIATOR)
++		ieee80211_sta_stop_rx_ba_session(dev, sta->addr, tid,
++						 WLAN_BACK_INITIATOR, 0);
++	sta_info_put(sta);
++}
++
+ /*
+  * After receiving Block Ack Request (BAR) we activated a
+  * timer after each frame arrives from the originator.
+@@ -2222,9 +2254,15 @@ void ieee80211_rx_mgmt_action(struct net
+ 				break;
+ 			ieee80211_sta_process_addba_request(dev, mgmt, len);
+ 			break;
++		case WLAN_ACTION_DELBA:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.delba)))
++				break;
++			ieee80211_sta_process_delba(dev, mgmt, len);
++			break;
+ 		default:
+ 			if (net_ratelimit())
+-			   printk(KERN_DEBUG "%s: received unsupported BACK\n",
++			   printk(KERN_DEBUG "%s: Rx unknown A-MPDU action\n",
+ 					dev->name);
+ 			break;
+ 		}
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-johannes
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
