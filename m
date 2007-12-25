@@ -1,43 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32805 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752357AbXLJQu1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 11:50:27 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 17/48] libertas: Fix endianness in boot2_version handling.
-Message-Id: <E1J1kpL-0006lU-Ud@shinybook.infradead.org> (sfid-20071210_165031_076906_E89751B9)
-Date: Mon, 10 Dec 2007 10:45:51 -0500
+Received: from mga02.intel.com ([134.134.136.20]:28918 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751396AbXLYPAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Dec 2007 10:00:50 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/8 v3] mac80211: A-MPDU Rx add low level driver API
+Date: Tue, 25 Dec 2007 17:00:31 +0200
+Message-Id: <11985948452941-git-send-email-ron.rindjunsky@intel.com> (sfid-20071225_150102_888724_92807C8D)
+In-Reply-To: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Fri, 7 Dec 2007 12:56:45 +0000
+This patch adds the API to perform A-MPDU actions between mac80211 and low
+level driver.
 
-We read it from the card. We byte-swap it. We write it back to the card.
-D'oh.
-
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/libertas/if_usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 4d89fd0..d5fc7d7 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -227,7 +227,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 	priv->hw_host_to_card = if_usb_host_to_card;
- 	priv->hw_get_int_status = if_usb_get_int_status;
- 	priv->hw_read_event_cause = if_usb_read_event_cause;
--	priv->boot2_version = udev->descriptor.bcdDevice;
-+	priv->boot2_version = le16_to_cpu(udev->descriptor.bcdDevice);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0d67b33..418cd38 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -915,6 +915,18 @@ enum ieee80211_erp_change_flags {
+ 	IEEE80211_ERP_CHANGE_PREAMBLE	= 1<<1,
+ };
  
- 	/* Delay 200 ms to waiting for the FW ready */
- 	if_usb_submit_rx_urb(cardp);
++/**
++ * enum ieee80211_ampdu_mlme_action - A-MPDU actions
++ *
++ * These flags are used with the ampdu_action() callback in
++ * &struct ieee80211_ops to indicate which action is needed.
++ * @IEEE80211_AMPDU_RX_START: start Rx aggregation
++ * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
++ */
++enum ieee80211_ampdu_mlme_action {
++	IEEE80211_AMPDU_RX_START,
++	IEEE80211_AMPDU_RX_STOP,
++};
+ 
+ /**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+@@ -1043,6 +1055,12 @@ enum ieee80211_erp_change_flags {
+  *	used to determine whether to reply to Probe Requests.
+  *
+  * @conf_ht: Configures low level driver with 802.11n HT data. Must be atomic.
++ *
++ * @ampdu_action: Perform a certain A-MPDU action
++ * 	The RA/TID combination determines the destination and TID we want
++ * 	the ampdu action to be performed for. The action is defined through
++ * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
++ * 	is the first frame we expect to perform the action on.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
+@@ -1089,6 +1107,9 @@ struct ieee80211_ops {
+ 			     struct ieee80211_tx_control *control);
+ 	int (*tx_last_beacon)(struct ieee80211_hw *hw);
+ 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
++	int (*ampdu_action)(struct ieee80211_hw *hw,
++			    enum ieee80211_ampdu_mlme_action action,
++			    const u8 *ra, u16 tid, u16 ssn);
+ };
+ 
+ /**
 -- 
-1.5.3.4
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
