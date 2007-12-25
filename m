@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:35064 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755668AbXL2WPn (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:33335 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbXLYOXD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2007 17:15:43 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: rc80211_pid fails to remove debugfs files
-Date: Sat, 29 Dec 2007 23:14:56 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Mattias Nissler <mattias.nissler@gmx.de>
+	Tue, 25 Dec 2007 09:23:03 -0500
+Received: by an-out-0708.google.com with SMTP id d31so368119and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2007 06:23:02 -0800 (PST)
+Message-ID: <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com> (sfid-20071225_142316_095631_B61A6F6A)
+Date: Tue, 25 Dec 2007 16:23:02 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "bruno randolf" <bruno@thinktube.com>
+Subject: Re: ath5k oops (recent regression, I think)
+Cc: "Andrew Lutomirski" <luto@myrealbox.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+In-Reply-To: <200712251804.13693.bruno@thinktube.com>
 MIME-Version: 1.0
-Message-Id: <200712292314.56620.mb@bu3sch.de> (sfid-20071229_221600_235896_2666134B)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+References: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com>
+	 <200712251804.13693.bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rc80211_pid fails to remove the debugfs files properly.
-In debugfs I see phyX directories for PHYs that are long gone.
-The only content is the rc80211_pid directory with its files.
+2007/12/25, bruno randolf <bruno@thinktube.com>:
+> hello!
+>
+> i'm seeing the same oops, it seems to be a regression from
+>
+> commit fd640775bd16e1df50c867cc547af0787f9bd4ab
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Wed Dec 19 01:31:26 2007 +0100
+>
+>     mac80211: dont use interface indices in drivers
+>
+> seems ath5k likes to write some rate registers before vif is set up. i used
+> the following as a stopgap fix. johannes, do you have any advice how to
+> properly fix that?
+>
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index f4478f6..2e9f5c5 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -510,6 +510,11 @@ static inline void ath5k_hw_write_rate_duration(struct
+> ath5k_hw *ah,
+>         const struct ath5k_rate_table *rt;
+>         unsigned int i;
+>
+> +       if (sc->vif == NULL) {
+> +               printk("*** sc->vif NULL\n");
+> +               return;
+> +       }
+> +
+>         /* Get rate table for the current operating mode */
+>         rt = ath5k_hw_get_rate_table(ah,
+>                 driver_mode);
+>
+> bruno
+>
 
-Last time I looked through the PID code I saw that it does not
-do proper error checking for the creation of debugfs files.
-But error checking is important, as it _will_ otherwise result
-in unpredicted behaviour. Debugfs is pretty nasty. :)
-For example if creation of the root directory failed, it will
-put the files all into the debugfs root. And yes, this _does_
-happen. We had similiar problems and bugreports from people
-in b43.
+Seems right as it doesn't break reset, i was just thinking maybe we
+should pass an "initial" argument on ath5k_hw_reset to also skip some
+other step (eg. saving/restoring tsf/seqnum etc). What do you think ?
 
-So please add errorchecking.
 
 -- 
-Greetings Michael.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
