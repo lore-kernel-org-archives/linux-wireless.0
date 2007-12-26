@@ -1,31 +1,401 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38626 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750779AbXLVNWx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 08:22:53 -0500
-Message-ID: <476D0F87.4040505@gmx.net> (sfid-20071222_132259_468041_B57F92C5)
-Date: Sat, 22 Dec 2007 14:22:15 +0100
-From: Tobias Stegmann <tobias_stegmann@gmx.net>
+Received: from vs166246.vserver.de ([62.75.166.246]:55241 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985AbXLZR2E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Dec 2007 12:28:04 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Put multicast frames on the mcast queue
+Date: Wed, 26 Dec 2007 18:26:17 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: BCM4328 wireless support - when?
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Message-Id: <200712261826.18164.mb@bu3sch.de> (sfid-20071226_172817_485697_D8FA1D31)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This queues frames flagged as "send after DTIM" by mac80211
+on the special multicast queue. The firmware will take care
+to send the packet after the DTIM.
 
-first I want to thank you for your efforts to make wireless adapters 
-supported out of the box under linux.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On your web presentation you say there is no support for Broadcom 
-Corporation BCM4328 802.11a/b/g/n wireless chipsets. Do you have any 
-information, when the b43 wireless driver module will be able to use 
-this wireless chipset?
+---
 
+John, this is 2.6.25 stuff.
 
-Thanks,
-
-Tobias
-
-
+Index: wireless-2.6/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/b43.h	2007-12-26 18:04:52.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/b43.h	2007-12-26 18:07:11.000000000 +0100
+@@ -171,14 +171,17 @@ enum {
+ #define B43_SHM_SH_SLOTT		0x0010	/* Slot time */
+ #define B43_SHM_SH_DTIMPER		0x0012	/* DTIM period */
+ #define B43_SHM_SH_NOSLPZNATDTIM	0x004C	/* NOSLPZNAT DTIM */
+-/* SHM_SHARED beacon variables */
++/* SHM_SHARED beacon/AP variables */
+ #define B43_SHM_SH_BTL0			0x0018	/* Beacon template length 0 */
+ #define B43_SHM_SH_BTL1			0x001A	/* Beacon template length 1 */
+ #define B43_SHM_SH_BTSFOFF		0x001C	/* Beacon TSF offset */
+ #define B43_SHM_SH_TIMBPOS		0x001E	/* TIM B position in beacon */
++#define B43_SHM_SH_DTIMP		0x0012	/* DTIP period */
++#define B43_SHM_SH_MCASTCOOKIE		0x00A8	/* Last bcast/mcast frame ID */
+ #define B43_SHM_SH_SFFBLIM		0x0044	/* Short frame fallback retry limit */
+ #define B43_SHM_SH_LFFBLIM		0x0046	/* Long frame fallback retry limit */
+ #define B43_SHM_SH_BEACPHYCTL		0x0054	/* Beacon PHY TX control word (see PHY TX control) */
++#define B43_SHM_SH_EXTNPHYCTL		0x00B0	/* Extended bytes for beacon PHY control (N) */
+ /* SHM_SHARED ACK/CTS control */
+ #define B43_SHM_SH_ACKCTSPHYCTL		0x0022	/* ACK/CTS PHY control word (see PHY TX control) */
+ /* SHM_SHARED probe response variables */
+@@ -612,9 +615,12 @@ struct b43_wl {
+ 	/* Pointer to the ieee80211 hardware data structure */
+ 	struct ieee80211_hw *hw;
+ 
+-	spinlock_t irq_lock;
+ 	struct mutex mutex;
++	spinlock_t irq_lock;
++	/* Lock for LEDs access. */
+ 	spinlock_t leds_lock;
++	/* Lock for SHM access. */
++	spinlock_t shm_lock;
+ 
+ 	/* We can only have one operating interface (802.11 core)
+ 	 * at a time. General information about this interface follows.
+Index: wireless-2.6/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/dma.c	2007-12-26 17:57:08.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/dma.c	2007-12-26 18:14:15.000000000 +0100
+@@ -37,6 +37,8 @@
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
++#include <linux/etherdevice.h>
++
+ 
+ /* 32bit DMA ops. */
+ static
+@@ -315,26 +317,24 @@ static struct b43_dmaring *priority_to_t
+ 	case 3:
+ 		ring = dev->dma.tx_ring0;
+ 		break;
+-	case 4:
+-		ring = dev->dma.tx_ring4;
+-		break;
+-	case 5:
+-		ring = dev->dma.tx_ring5;
+-		break;
+ 	}
+ 
+ 	return ring;
+ }
+ 
+-/* Bcm43xx-ring to mac80211-queue mapping */
++/* b43-ring to mac80211-queue mapping */
+ static inline int txring_to_priority(struct b43_dmaring *ring)
+ {
+-	static const u8 idx_to_prio[] = { 3, 2, 1, 0, 4, 5, };
++	static const u8 idx_to_prio[] = { 3, 2, 1, 0, };
++	unsigned int index;
+ 
+ /*FIXME: have only one queue, for now */
+ 	return 0;
+ 
+-	return idx_to_prio[ring->index];
++	index = ring->index;
++	if (B43_WARN_ON(index >= ARRAY_SIZE(idx_to_prio)))
++		index = 0;
++	return idx_to_prio[index];
+ }
+ 
+ u16 b43_dmacontroller_base(int dma64bit, int controller_idx)
+@@ -1043,26 +1043,30 @@ static u16 generate_cookie(struct b43_dm
+ 	 * in the lower 12 bits.
+ 	 * Note that the cookie must never be 0, as this
+ 	 * is a special value used in RX path.
++	 * It can also not be 0xFFFF because that is special
++	 * for multicast frames.
+ 	 */
+ 	switch (ring->index) {
+ 	case 0:
+-		cookie = 0xA000;
++		cookie = 0x1000;
+ 		break;
+ 	case 1:
+-		cookie = 0xB000;
++		cookie = 0x2000;
+ 		break;
+ 	case 2:
+-		cookie = 0xC000;
++		cookie = 0x3000;
+ 		break;
+ 	case 3:
+-		cookie = 0xD000;
++		cookie = 0x4000;
+ 		break;
+ 	case 4:
+-		cookie = 0xE000;
++		cookie = 0x5000;
+ 		break;
+ 	case 5:
+-		cookie = 0xF000;
++		cookie = 0x6000;
+ 		break;
++	default:
++		B43_WARN_ON(1);
+ 	}
+ 	B43_WARN_ON(slot & ~0x0FFF);
+ 	cookie |= (u16) slot;
+@@ -1078,22 +1082,22 @@ struct b43_dmaring *parse_cookie(struct 
+ 	struct b43_dmaring *ring = NULL;
+ 
+ 	switch (cookie & 0xF000) {
+-	case 0xA000:
++	case 0x1000:
+ 		ring = dma->tx_ring0;
+ 		break;
+-	case 0xB000:
++	case 0x2000:
+ 		ring = dma->tx_ring1;
+ 		break;
+-	case 0xC000:
++	case 0x3000:
+ 		ring = dma->tx_ring2;
+ 		break;
+-	case 0xD000:
++	case 0x4000:
+ 		ring = dma->tx_ring3;
+ 		break;
+-	case 0xE000:
++	case 0x5000:
+ 		ring = dma->tx_ring4;
+ 		break;
+-	case 0xF000:
++	case 0x6000:
+ 		ring = dma->tx_ring5;
+ 		break;
+ 	default:
+@@ -1117,6 +1121,7 @@ static int dma_tx_fragment(struct b43_dm
+ 	struct b43_dmadesc_meta *meta;
+ 	struct b43_dmadesc_meta *meta_hdr;
+ 	struct sk_buff *bounce_skb;
++	u16 cookie;
+ 
+ #define SLOTS_PER_PACKET  2
+ 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
+@@ -1127,9 +1132,9 @@ static int dma_tx_fragment(struct b43_dm
+ 	memset(meta_hdr, 0, sizeof(*meta_hdr));
+ 
+ 	header = &(ring->txhdr_cache[slot * sizeof(struct b43_txhdr_fw4)]);
++	cookie = generate_cookie(ring, slot);
+ 	b43_generate_txhdr(ring->dev, header,
+-			   skb->data, skb->len, ctl,
+-			   generate_cookie(ring, slot));
++			   skb->data, skb->len, ctl, cookie);
+ 
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 					   sizeof(struct b43_txhdr_fw4), 1);
+@@ -1169,14 +1174,20 @@ static int dma_tx_fragment(struct b43_dm
+ 
+ 	ops->fill_descriptor(ring, desc, meta->dmaaddr, skb->len, 0, 1, 1);
+ 
++	if (ctl->flags & IEEE80211_TXCTL_SEND_AFTER_DTIM) {
++		/* Tell the firmware about the cookie of the last
++		 * mcast frame, so it can clear the more-data bit in it. */
++		b43_shm_write16(ring->dev, B43_SHM_SHARED,
++				B43_SHM_SH_MCASTCOOKIE, cookie);
++	}
+ 	/* Now transfer the whole frame. */
+ 	wmb();
+ 	ops->poke_tx(ring, next_slot(ring, slot));
+ 	return 0;
+ 
+-      out_free_bounce:
++out_free_bounce:
+ 	dev_kfree_skb_any(skb);
+-      out_unmap_hdr:
++out_unmap_hdr:
+ 	unmap_descbuffer(ring, meta_hdr->dmaaddr,
+ 			 sizeof(struct b43_txhdr_fw4), 1);
+ 	return err;
+@@ -1207,10 +1218,27 @@ int b43_dma_tx(struct b43_wldev *dev,
+ 	       struct sk_buff *skb, struct ieee80211_tx_control *ctl)
+ {
+ 	struct b43_dmaring *ring;
++	struct ieee80211_hdr *hdr;
+ 	int err = 0;
+ 	unsigned long flags;
+ 
+-	ring = priority_to_txring(dev, ctl->queue);
++	if (unlikely(skb->len < 2 + 2 + 6)) {
++		/* Too short, this can't be a valid frame. */
++		return -EINVAL;
++	}
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++	if (ctl->flags & IEEE80211_TXCTL_SEND_AFTER_DTIM) {
++		/* The multicast ring will be sent after the DTIM */
++		ring = dev->dma.tx_ring4;
++		/* Set the more-data bit. Ucode will clear it on
++		 * the last frame for us. */
++		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++	} else {
++		/* Decide by priority where to put this frame. */
++		ring = priority_to_txring(dev, ctl->queue);
++	}
++
+ 	spin_lock_irqsave(&ring->lock, flags);
+ 	B43_WARN_ON(!ring->tx);
+ 	if (unlikely(free_slots(ring) < SLOTS_PER_PACKET)) {
+@@ -1238,7 +1266,7 @@ int b43_dma_tx(struct b43_wldev *dev,
+ 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+ 		}
+ 	}
+-      out_unlock:
++out_unlock:
+ 	spin_unlock_irqrestore(&ring->lock, flags);
+ 
+ 	return err;
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-12-26 18:04:53.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-12-26 18:20:38.000000000 +0100
+@@ -250,13 +250,12 @@ static void b43_ram_write(struct b43_wld
+ 	b43_write32(dev, B43_MMIO_RAM_DATA, val);
+ }
+ 
+-static inline
+-    void b43_shm_control_word(struct b43_wldev *dev, u16 routing, u16 offset)
++static inline void b43_shm_control_word(struct b43_wldev *dev,
++					u16 routing, u16 offset)
+ {
+ 	u32 control;
+ 
+ 	/* "offset" is the WORD offset. */
+-
+ 	control = routing;
+ 	control <<= 16;
+ 	control |= offset;
+@@ -265,8 +264,11 @@ static inline
+ 
+ u32 b43_shm_read32(struct b43_wldev *dev, u16 routing, u16 offset)
+ {
++	struct b43_wl *wl = dev->wl;
++	unsigned long flags;
+ 	u32 ret;
+ 
++	spin_lock_irqsave(&wl->shm_lock, flags);
+ 	if (routing == B43_SHM_SHARED) {
+ 		B43_WARN_ON(offset & 0x0001);
+ 		if (offset & 0x0003) {
+@@ -277,20 +279,25 @@ u32 b43_shm_read32(struct b43_wldev *dev
+ 			b43_shm_control_word(dev, routing, (offset >> 2) + 1);
+ 			ret |= b43_read16(dev, B43_MMIO_SHM_DATA);
+ 
+-			return ret;
++			goto out;
+ 		}
+ 		offset >>= 2;
+ 	}
+ 	b43_shm_control_word(dev, routing, offset);
+ 	ret = b43_read32(dev, B43_MMIO_SHM_DATA);
++out:
++	spin_unlock_irqrestore(&wl->shm_lock, flags);
+ 
+ 	return ret;
+ }
+ 
+ u16 b43_shm_read16(struct b43_wldev * dev, u16 routing, u16 offset)
+ {
++	struct b43_wl *wl = dev->wl;
++	unsigned long flags;
+ 	u16 ret;
+ 
++	spin_lock_irqsave(&wl->shm_lock, flags);
+ 	if (routing == B43_SHM_SHARED) {
+ 		B43_WARN_ON(offset & 0x0001);
+ 		if (offset & 0x0003) {
+@@ -298,55 +305,63 @@ u16 b43_shm_read16(struct b43_wldev * de
+ 			b43_shm_control_word(dev, routing, offset >> 2);
+ 			ret = b43_read16(dev, B43_MMIO_SHM_DATA_UNALIGNED);
+ 
+-			return ret;
++			goto out;
+ 		}
+ 		offset >>= 2;
+ 	}
+ 	b43_shm_control_word(dev, routing, offset);
+ 	ret = b43_read16(dev, B43_MMIO_SHM_DATA);
++out:
++	spin_unlock_irqrestore(&wl->shm_lock, flags);
+ 
+ 	return ret;
+ }
+ 
+ void b43_shm_write32(struct b43_wldev *dev, u16 routing, u16 offset, u32 value)
+ {
++	struct b43_wl *wl = dev->wl;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wl->shm_lock, flags);
+ 	if (routing == B43_SHM_SHARED) {
+ 		B43_WARN_ON(offset & 0x0001);
+ 		if (offset & 0x0003) {
+ 			/* Unaligned access */
+ 			b43_shm_control_word(dev, routing, offset >> 2);
+-			mmiowb();
+ 			b43_write16(dev, B43_MMIO_SHM_DATA_UNALIGNED,
+ 				    (value >> 16) & 0xffff);
+-			mmiowb();
+ 			b43_shm_control_word(dev, routing, (offset >> 2) + 1);
+-			mmiowb();
+ 			b43_write16(dev, B43_MMIO_SHM_DATA, value & 0xffff);
+-			return;
++			goto out;
+ 		}
+ 		offset >>= 2;
+ 	}
+ 	b43_shm_control_word(dev, routing, offset);
+-	mmiowb();
+ 	b43_write32(dev, B43_MMIO_SHM_DATA, value);
++out:
++	spin_unlock_irqrestore(&wl->shm_lock, flags);
+ }
+ 
+ void b43_shm_write16(struct b43_wldev *dev, u16 routing, u16 offset, u16 value)
+ {
++	struct b43_wl *wl = dev->wl;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wl->shm_lock, flags);
+ 	if (routing == B43_SHM_SHARED) {
+ 		B43_WARN_ON(offset & 0x0001);
+ 		if (offset & 0x0003) {
+ 			/* Unaligned access */
+ 			b43_shm_control_word(dev, routing, offset >> 2);
+-			mmiowb();
+ 			b43_write16(dev, B43_MMIO_SHM_DATA_UNALIGNED, value);
+-			return;
++			goto out;
+ 		}
+ 		offset >>= 2;
+ 	}
+ 	b43_shm_control_word(dev, routing, offset);
+-	mmiowb();
+ 	b43_write16(dev, B43_MMIO_SHM_DATA, value);
++out:
++	spin_unlock_irqrestore(&wl->shm_lock, flags);
+ }
+ 
+ /* Read HostFlags */
+@@ -3964,6 +3979,7 @@ static int b43_wireless_init(struct ssb_
+ 	wl->hw = hw;
+ 	spin_lock_init(&wl->irq_lock);
+ 	spin_lock_init(&wl->leds_lock);
++	spin_lock_init(&wl->shm_lock);
+ 	mutex_init(&wl->mutex);
+ 	INIT_LIST_HEAD(&wl->devlist);
+ 
