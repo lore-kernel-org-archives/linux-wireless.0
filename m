@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:10888 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753393AbXLTDWI (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:59614 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751819AbXL0BQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2007 22:22:08 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so4956613wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2007 19:22:08 -0800 (PST)
-Message-ID: <1ba2fa240712191922x55675878o2ec3258419e1d4df@mail.gmail.com> (sfid-20071220_032212_563166_8652CC4F)
-Date: Thu, 20 Dec 2007 05:22:01 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH] iwlwifi: proper monitor support
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Sam Leffler" <sam@errno.com>
-In-Reply-To: <1198120544.3065.30.camel@debian.sh.intel.com>
+	Wed, 26 Dec 2007 20:16:05 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 2/2] rtl8180: remove calibration error message for rtl8225z2
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Date: Wed, 26 Dec 2007 20:16:37 -0500
+Message-ID: <20071227011637.10445.99776.stgit@tetra.sourmilk.net> (sfid-20071227_011608_454639_A97414BE)
+In-Reply-To: <20071227011637.10445.89261.stgit@tetra.sourmilk.net>
+References: <20071227011637.10445.89261.stgit@tetra.sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1198052938-25637-1-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240712191604l1f5343c0s62e66aaf2077cce1@mail.gmail.com>
-	 <1ba2fa240712191608oa7f36e9ma05a04b4797d715a@mail.gmail.com>
-	 <1198120544.3065.30.camel@debian.sh.intel.com>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 20, 2007 5:15 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->
-> On Thu, 2007-12-20 at 02:08 +0200, Tomas Winkler wrote:
-> > I've made a mistake this is not logical but actual rate so it
-> > theoretically we can go up to 600Mbs so it will make it 120 < 256.
->
-> Um, should it be 1200 > 255?
+The radio seems to work fine despite this message. Remove it for now.
 
-Hmm I'm too long out of elementary school :)
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-> > But aren't we interested in MSC rate a packet was sent?
->
-> NetBSD and wireshark support IEEE80211_RADIOTAP_XCHANNEL which does a
-> better job to extend the IEEE80211_RADIOTAP_CHANNEL functions including
-> per-channel power dbm, MCS rates, etc. Linux should catch up when we
-> have 11n fully supported.
->
-> Thanks,
-> -yi
->
->
->
+ drivers/net/wireless/rtl8180_rtl8225.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
+index 9dab126..ef3832b 100644
+--- a/drivers/net/wireless/rtl8180_rtl8225.c
++++ b/drivers/net/wireless/rtl8180_rtl8225.c
+@@ -578,9 +578,8 @@ static void rtl8225z2_rf_init(struct ieee80211_hw *dev)
+ 		msleep(200);
+ 		rtl8225_write(dev, 0x02, 0x044D);
+ 		msleep(100);
+-		if (!(rtl8225_read(dev, 6) & (1 << 7)))
+-			printk(KERN_WARNING "%s: RF Calibration Failed! %x\n",
+-			       wiphy_name(dev->wiphy), rtl8225_read(dev, 6));
++		/* TODO: readd calibration failure message when the calibration
++		   check works */
+ 	}
+ 
+ 	rtl8225_write(dev, 0x0, 0x1B7);
+
+
