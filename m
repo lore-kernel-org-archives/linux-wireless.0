@@ -1,105 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.231]:35371 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757470AbXLQPBA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 10:01:00 -0500
-Received: by hu-out-0506.google.com with SMTP id 19so765702hue.21
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Dec 2007 07:00:58 -0800 (PST)
-Message-ID: <c85cb4470712170700q3ce34320wcc00e15a23abebab@mail.gmail.com> (sfid-20071217_150105_439379_3A8D5359)
-Date: Mon, 17 Dec 2007 17:00:56 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, tomas.winkler@intel.com
-Subject: Re: [PATCH 1/1] mac80211: pass in PS_POLL frames
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1197278205280-git-send-email-ron.rindjunsky@intel.com>
+Received: from MGW2.Sony.CO.JP ([137.153.0.14]:57759 "EHLO mgw2.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949AbXL0Itu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Dec 2007 03:49:50 -0500
+Date: Thu, 27 Dec 2007 17:51:49 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: David Miller <davem@davemloft.net>
+Subject: Re: : Emit event stream compat iw_point objects correctly.
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20071221.205808.213484078.davem@davemloft.net>
+References: <20071221.205808.213484078.davem@davemloft.net>
+Message-Id: <20071227173802.6F56.40F06B3A@sm.sony.co.jp> (sfid-20071227_085053_950285_3A59DA27)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1197278205280-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks, this patch is a V2 with fixes, and i haven't received any
-new comments nor Ack for it. I have another patch that depends on this
-one so i need to know the status for it.
-thanks
-ron
+	Hi
 
-> This patch fixes should_drop_frame function to pass in ps poll control
-> frames required for power save functioanlity. Interface types that do not
-> have interest for PS POLL frames now drop it in handler.
->
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> ---
->  net/mac80211/rx.c   |   10 ++++++++--
->  net/mac80211/util.c |    7 ++++++-
->  2 files changed, 14 insertions(+), 3 deletions(-)
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 50f99e7..5dbf5d6 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -61,8 +61,10 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
->                return 1;
->        if (unlikely(skb->len < 16 + present_fcs_len + radiotap_len))
->                return 1;
-> -       if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
-> -                       cpu_to_le16(IEEE80211_FTYPE_CTL))
-> +       if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
-> +                       cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
-> +           ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
-> +                       cpu_to_le16(IEEE80211_STYPE_PSPOLL)))
->                return 1;
->        return 0;
->  }
-> @@ -880,6 +882,7 @@ ieee80211_rx_h_defragment(struct ieee80211_txrx_data *rx)
->  static ieee80211_txrx_result
->  ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
->  {
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
->        struct sk_buff *skb;
->        int no_pending_pkts;
->        DECLARE_MAC_BUF(mac);
-> @@ -890,6 +893,9 @@ ieee80211_rx_h_ps_poll(struct ieee80211_txrx_data *rx)
->                   !(rx->flags & IEEE80211_TXRXD_RXRA_MATCH)))
->                return TXRX_CONTINUE;
->
-> +       if (sdata->type == IEEE80211_IF_TYPE_STA)
-> +               return TXRX_DROP;
-> +
->        skb = skb_dequeue(&rx->sta->tx_filtered);
->        if (!skb) {
->                skb = skb_dequeue(&rx->sta->ps_tx_buf);
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 7b278e9..fb7fd89 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -135,13 +135,16 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
->  {
->        u16 fc;
->
-> -       if (len < 24)
-> +        /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
-> +       if (len < 16)
->                return NULL;
->
->        fc = le16_to_cpu(hdr->frame_control);
->
->        switch (fc & IEEE80211_FCTL_FTYPE) {
->        case IEEE80211_FTYPE_DATA:
-> +               if (len < 24) /* drop incorrect hdr len (data) */
-> +                       return NULL;
->                switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
->                case IEEE80211_FCTL_TODS:
->                        return hdr->addr1;
-> @@ -154,6 +157,8 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
->                }
->                break;
->        case IEEE80211_FTYPE_MGMT:
-> +               if (len < 24) /* drop incorrect hdr len (mgmt) */
-> +                       return NULL;
->                return hdr->addr3;
->        case IEEE80211_FTYPE_CTL:
->                if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
+On Fri, 21 Dec 2007 20:58:08 -0800 (PST)
+David Miller <davem@davemloft.net> wrote:
+
+> @@ -520,7 +530,7 @@ iwe_stream_add_point(char *	stream,		/* Stream of events */
+>  		memcpy(stream + IW_EV_LCP_LEN,
+>  		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
+>  		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+
+As the alignment of 64bit platforms may be defferent from 32bit one,
+should it be like the following?
+
+static inline char *
+iwe_stream_add_point(char *	stream,		/* Stream of events */
+		     char *	ends,		/* End of stream */
+		     struct iw_event *iwe,	/* Payload length + flags */
+		     char *	extra,		/* More payload */
+		     struct iw_request_info *info)
+{
+	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
+	int	point_len = IW_EV_POINT_LEN;
+	int	lcp_len = IW_EV_LCP_LEN;
+
+#ifdef CONFIG_COMPAT
+	if (info->flags & IW_REQUEST_FLAG_COMPAT) {
+		event_len = IW_EV_COMPAT_POINT_LEN + iwe->u.data.length;
+		point_len = IW_EV_COMPAT_POINT_LEN;
+		lcp_len = IW_EV_COMPAT_LCP_LEN;
+	}
+#endif
+
+	/* Check if it's possible */
+	if(likely((stream + event_len) < ends)) {
+		iwe->len = event_len;
+		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
+		memcpy(stream + lcp_len,
+		       ((char *) iwe) + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
+		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+		memcpy(stream + point_len, extra, iwe->u.data.length);
+		stream += event_len;
+	}
+	return stream;
+}
+
+(Note that IW_EV_COMPAT_LCP_LEN is just a example; not defined anywhere)
+
+-- 
+Masakazu MOKUNO
+
