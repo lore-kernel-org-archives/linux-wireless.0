@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46320 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757792AbXLQVIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2007 16:08:54 -0500
-Subject: Re: [patch 3/9] mac80211: Add PID controller based rate control
-	algorithm
-From: Mattias Nissler <mattias.nissler@gmx.de>
+Received: from mx1.riseup.net ([204.13.164.18]:33688 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751955AbXL1UFr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Dec 2007 15:05:47 -0500
+Date: Fri, 28 Dec 2007 21:06:06 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1197892210.4885.21.camel@johannes.berg>
-References: <20071217012517.882216322@gmx.de> >
-	 <20071217012550.127484236@gmx.de> >
-	 (sfid-20071217_012722_935905_F6E718EA)  <1197892210.4885.21.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 17 Dec 2007 22:08:51 +0100
-Message-Id: <1197925731.7505.17.camel@localhost> (sfid-20071217_210857_044353_07A65C5D)
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: [PATCH] mac80211: make rc_pid_fop_events static
+Message-ID: <20071228210606.2671e642@morte> (sfid-20071228_200551_589166_8AA54A80)
+In-Reply-To: <1198443925.4487.5.camel@johannes.berg>
+References: <1198443925.4487.5.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 23 Dec 2007 22:05:25 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-On Mon, 2007-12-17 at 12:50 +0100, Johannes Berg wrote:
-> > +	/* We need to do an arithmetic right shift. ISO C says this is
-> > +	 * implementation defined for negative left operands. Hence, be
-> > +	 * careful to get it right, also for negative values. */
-> > +	adj = (adj < 0) ? -((-adj) >> (2 * RC_PID_ARITH_SHIFT)) :
-> > +			  adj >> (2 * RC_PID_ARITH_SHIFT);
+> No need to not be.
 > 
-> That looks... weird.
-> 
-> As far as I know all compilers the kernel can use will do an arithmetic
-> right shift if the data type is signed.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Where is your information from? I actually had some misbehaviour that
-was fixed after I introduced this. I'll check the assembly gcc produces
-to shed some light on this.
+Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-Mattias
 
+-- 
+Ciao
+Stefano
