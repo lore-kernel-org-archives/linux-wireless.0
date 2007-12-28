@@ -1,256 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32747 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751174AbXLBWLO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41718 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277AbXL1Vus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:14 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 7/8] rtl8180: Add support for max2820 radio
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.90406.stgit@tetra.sourmilk.net> (sfid-20071202_221128_388700_1B9D987D)
-In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+	Fri, 28 Dec 2007 16:50:48 -0500
+Received: from [91.5.69.40] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.68)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1J8N6L-000262-JH
+	for linux-wireless@vger.kernel.org; Fri, 28 Dec 2007 21:50:45 +0000
+Subject: cfg80211 API for channels/bitrates, mac80211 and driver conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5/iDVZTHeS1s3V0isCBT"
+Date: Fri, 28 Dec 2007 22:50:33 +0100
+Message-Id: <1198878633.4172.19.camel@johannes.berg> (sfid-20071228_215055_809084_279B51F7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
 
-This adds support for rtl8180+max2820.
+--=-5/iDVZTHeS1s3V0isCBT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
+This patch creates new cfg80211 wiphy API for channel and bitrate
+registration and converts mac80211 and drivers to the new API. The
+old mac80211 API is completely ripped out.
+
+Along with the regulatory code I've also ripped out the
+IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED flag, I believe it to be
+unnecessary if the hardware simply gives us whatever channels it wants
+to support and we then enable/disable them as required, which is pretty
+much required for travelling.
+
+Additionally, the patch adds proper "basic" rate handling for STA
+mode interface, AP mode interface will have to have new API added
+to allow userspace to set the basic rate set, currently it'll be
+empty... However, the basic rate handling will need to be moved to
+the BSS conf stuff.
+
 ---
+ drivers/net/wireless/adm8211.c               |   80 ++--
+ drivers/net/wireless/adm8211.h               |   65 ---
+ drivers/net/wireless/b43/b43.h               |    5=20
+ drivers/net/wireless/b43/main.c              |  162 ++++-----
+ drivers/net/wireless/b43/sysfs.c             |   89 -----
+ drivers/net/wireless/b43/xmit.c              |   73 ++--
+ drivers/net/wireless/b43legacy/b43legacy.h   |    4=20
+ drivers/net/wireless/b43legacy/main.c        |  159 ++++-----
+ drivers/net/wireless/b43legacy/xmit.c        |   64 +--=20
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c   |   79 ++--
+ drivers/net/wireless/iwlwifi/iwl-3945.c      |   35 --
+ drivers/net/wireless/iwlwifi/iwl-3945.h      |   13=20
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c   |   82 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c      |   35 --
+ drivers/net/wireless/iwlwifi/iwl-4965.h      |   13=20
+ drivers/net/wireless/iwlwifi/iwl3945-base.c  |  445 +++++++---------------=
+-----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c  |  438 ++++++----------------=
+----
+ drivers/net/wireless/p54.h                   |    4=20
+ drivers/net/wireless/p54common.c             |   74 ++--
+ drivers/net/wireless/p54common.h             |   75 ----
+ drivers/net/wireless/rt2x00/rt2400pci.c      |    2  =20
+ drivers/net/wireless/rt2x00/rt2500pci.c      |    4  =20
+ drivers/net/wireless/rt2x00/rt2500usb.c      |    4  =20
+ drivers/net/wireless/rt2x00/rt2x00.h         |   11  =20
+ drivers/net/wireless/rt2x00/rt2x00config.c   |   37 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c      |  151 +++------
+ drivers/net/wireless/rt2x00/rt61pci.c        |   27 -
+ drivers/net/wireless/rt2x00/rt73usb.c        |   27 -
+ drivers/net/wireless/rtl8180.h               |    2 =20
+ drivers/net/wireless/rtl8180_dev.c           |   93 +++--
+ drivers/net/wireless/rtl8180_grf5101.c       |    3=20
+ drivers/net/wireless/rtl8180_max2820.c       |    5=20
+ drivers/net/wireless/rtl8180_rtl8225.c       |   15=20
+ drivers/net/wireless/rtl8180_sa2400.c        |    5=20
+ drivers/net/wireless/rtl8187.h               |    2=20
+ drivers/net/wireless/rtl8187_dev.c           |   84 +++--
+ drivers/net/wireless/rtl8187_rtl8225.c       |    8=20
+ drivers/net/wireless/rtl818x.h               |   70 ----
+ drivers/net/wireless/zd1211rw/zd_chip.c      |   15=20
+ drivers/net/wireless/zd1211rw/zd_ieee80211.c |   11=20
+ drivers/net/wireless/zd1211rw/zd_mac.c       |  168 ++++------
+ drivers/net/wireless/zd1211rw/zd_mac.h       |    2=20
+ include/net/mac80211.h                       |  197 ++---------
+ include/net/wireless.h                       |  168 ++++++++++=20
+ net/mac80211/Makefile                        |    1=20
+ net/mac80211/cfg.c                           |   11=20
+ net/mac80211/debugfs.c                       |   47 --
+ net/mac80211/debugfs_sta.c                   |   18 -=20
+ net/mac80211/ieee80211.c                     |  112 ++----
+ net/mac80211/ieee80211_i.h                   |   65 ---  =20
+ net/mac80211/ieee80211_iface.c               |    2      =20
+ net/mac80211/ieee80211_ioctl.c               |  131 ++++---
+ net/mac80211/ieee80211_rate.c                |   20 -
+ net/mac80211/ieee80211_rate.h                |   28 -
+ net/mac80211/ieee80211_sta.c                 |  380 ++++++++++++----------=
+-
+ net/mac80211/rc80211_pid_algo.c              |   70 ++--
+ net/mac80211/rc80211_simple.c                |   62 +--=20
+ net/mac80211/regdomain.c                     |  152 ---------
+ net/mac80211/rx.c                            |   56 +--
+ net/mac80211/sta_info.c                      |   24 - =20
+ net/mac80211/sta_info.h                      |   10   =20
+ net/mac80211/tx.c                            |  162 ++++++---
+ net/mac80211/util.c                          |  142 +-------=20
+ net/wireless/Makefile                        |    2=20
+ net/wireless/core.c                          |   41 ++
+ net/wireless/core.h                          |    3  =20
+ net/wireless/reg.c                           |  153 +++++++++
+ net/wireless/util.c                          |   98 +++++
+ 68 files changed, 2102 insertions(+), 2793 deletions(-) =20
 
- drivers/net/wireless/Makefile          |    2 
- drivers/net/wireless/rtl8180_dev.c     |    4 +
- drivers/net/wireless/rtl8180_max2820.c |  142 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtl8180_max2820.h |   30 +++++++
- 4 files changed, 177 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index e295d1e..75f8262 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -50,7 +50,7 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
- obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
- obj-$(CONFIG_LIBERTAS)		+= libertas/
- 
--rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o
-+rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
- 
- obj-$(CONFIG_RTL8180)	+= rtl8180.o
-diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
-index e1ea198..db70604 100644
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -25,6 +25,7 @@
- #include "rtl8180.h"
- #include "rtl8180_rtl8225.h"
- #include "rtl8180_sa2400.h"
-+#include "rtl8180_max2820.h"
- 
- MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
- MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
-@@ -896,6 +897,9 @@ static int __devinit rtl8180_probe(struct pci_dev *pdev,
- 		break;
- 	case 4:
- 		rf_name = "Maxim";
-+		priv->rf_init = max2820_rf_init;
-+		priv->rf_stop = max2820_rf_stop;
-+		priv->rf_set_chan = max2820_rf_set_channel;
- 		break;
- 	case 5:
- 		rf_name = "GCT";
-diff --git a/drivers/net/wireless/rtl8180_max2820.c b/drivers/net/wireless/rtl8180_max2820.c
-new file mode 100644
-index 0000000..c3e125f
---- /dev/null
-+++ b/drivers/net/wireless/rtl8180_max2820.c
-@@ -0,0 +1,142 @@
-+/*
-+ * Radio tuning for Maxim max2820 on RTL8180
-+ *
-+ * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
-+ *
-+ * Code from the BSD driver and the rtl8181 project have been
-+ * very useful to understand certain things
-+ *
-+ * I want to thanks the Authors of such projects and the Ndiswrapper
-+ * project Authors.
-+ *
-+ * A special Big Thanks also is for all people who donated me cards,
-+ * making possible the creation of the original rtl8180 driver
-+ * from which this code is derived!
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/pci.h>
-+#include <linux/delay.h>
-+#include <net/mac80211.h>
-+
-+#include "rtl8180.h"
-+#include "rtl8180_max2820.h"
-+
-+u32 max2820_chan[] = {
-+	12, /* CH 1 */
-+	17,
-+	22,
-+	27,
-+	32,
-+	37,
-+	42,
-+	47,
-+	52,
-+	57,
-+	62,
-+	67,
-+	72,
-+	84, /* CH 14 */
-+};
-+
-+static void write_max2820(struct ieee80211_hw *dev, u8 addr, u32 data)
-+{
-+	struct rtl8180_priv *priv = dev->priv;
-+	u32 phy_config;
-+
-+	phy_config = 0x90 + (data & 0xf);
-+	phy_config <<= 16;
-+	phy_config += addr;
-+	phy_config <<= 8;
-+	phy_config += (data >> 4) & 0xff;
-+
-+	rtl818x_iowrite32(priv,
-+		(__le32 __iomem *) &priv->map->RFPinsOutput, phy_config);
-+
-+	msleep(1);
-+}
-+
-+static void max2820_write_phy_antenna(struct ieee80211_hw *dev, short chan)
-+{
-+	struct rtl8180_priv *priv = dev->priv;
-+	u8 ant;
-+
-+	ant = MAXIM_ANTENNA;
-+	if (priv->rfparam & RF_PARAM_ANTBDEFAULT)
-+		ant |= BB_ANTENNA_B;
-+	if (chan == 14)
-+		ant |= BB_ANTATTEN_CHAN14;
-+
-+	rtl8180_write_phy(dev, 0x10, ant);
-+}
-+
-+void max2820_rf_set_channel(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
-+{
-+	struct rtl8180_priv *priv = dev->priv;
-+	unsigned int chan_idx = conf ? conf->channel - 1 : 0;
-+	u32 txpw = priv->channels[chan_idx].val & 0xFF;
-+	u32 chan = max2820_chan[chan_idx];
-+
-+	/* While philips SA2400 drive the PA bias from
-+	 * sa2400, for MAXIM we do this directly from BB */
-+	rtl8180_write_phy(dev, 3, txpw);
-+
-+	max2820_write_phy_antenna(dev, chan);
-+	write_max2820(dev, 3, chan);
-+}
-+
-+void max2820_rf_stop(struct ieee80211_hw *dev)
-+{
-+	rtl8180_write_phy(dev, 3, 0x8);
-+	write_max2820(dev, 1, 0);
-+}
-+
-+
-+void max2820_rf_init(struct ieee80211_hw *dev)
-+{
-+	struct rtl8180_priv *priv = dev->priv;
-+
-+	/* MAXIM from netbsd driver */
-+	write_max2820(dev, 0, 0x007); /* test mode as indicated in datasheet */
-+	write_max2820(dev, 1, 0x01e); /* enable register */
-+	write_max2820(dev, 2, 0x001); /* synt register */
-+
-+	max2820_rf_set_channel(dev, NULL);
-+
-+	write_max2820(dev, 4, 0x313); /* rx register */
-+
-+	/* PA is driven directly by the BB, we keep the MAXIM bias
-+	 * at the highest value in case that setting it to lower
-+	 * values may introduce some further attenuation somewhere..
-+	 */
-+	write_max2820(dev, 5, 0x00f);
-+
-+	/* baseband configuration */
-+	rtl8180_write_phy(dev, 0, 0x88); /* sys1       */
-+	rtl8180_write_phy(dev, 3, 0x08); /* txagc      */
-+	rtl8180_write_phy(dev, 4, 0xf8); /* lnadet     */
-+	rtl8180_write_phy(dev, 5, 0x90); /* ifagcinit  */
-+	rtl8180_write_phy(dev, 6, 0x1a); /* ifagclimit */
-+	rtl8180_write_phy(dev, 7, 0x64); /* ifagcdet   */
-+
-+	max2820_write_phy_antenna(dev, 1);
-+
-+	rtl8180_write_phy(dev, 0x11, 0x88); /* trl */
-+
-+	if (rtl818x_ioread8(priv, &priv->map->CONFIG2) &
-+	    RTL818X_CONFIG2_ANTENNA_DIV)
-+		rtl8180_write_phy(dev, 0x12, 0xc7);
-+	else
-+		rtl8180_write_phy(dev, 0x12, 0x47);
-+
-+	rtl8180_write_phy(dev, 0x13, 0x9b);
-+
-+	rtl8180_write_phy(dev, 0x19, 0x0);  /* CHESTLIM */
-+	rtl8180_write_phy(dev, 0x1a, 0x9f); /* CHSQLIM  */
-+
-+	max2820_rf_set_channel(dev, NULL);
-+}
-diff --git a/drivers/net/wireless/rtl8180_max2820.h b/drivers/net/wireless/rtl8180_max2820.h
-new file mode 100644
-index 0000000..8e27292
---- /dev/null
-+++ b/drivers/net/wireless/rtl8180_max2820.h
-@@ -0,0 +1,30 @@
-+#ifndef RTL8180_MAX2820_H
-+#define RTL8180_MAX2820_H
-+
-+/*
-+ * Radio tuning for Maxim max2820 on RTL8180
-+ *
-+ * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
-+ *
-+ * Code from the BSD driver and the rtl8181 project have been
-+ * very useful to understand certain things
-+ *
-+ * I want to thanks the Authors of such projects and the Ndiswrapper
-+ * project Authors.
-+ *
-+ * A special Big Thanks also is for all people who donated me cards,
-+ * making possible the creation of the original rtl8180 driver
-+ * from which this code is derived!
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#define MAXIM_ANTENNA 0xb3
-+
-+void max2820_rf_init(struct ieee80211_hw *);
-+void max2820_rf_stop(struct ieee80211_hw *);
-+void max2820_rf_set_channel(struct ieee80211_hw *, struct ieee80211_conf *);
-+
-+#endif /* RTL8180_MAX2820_H */
+patch too large, please see
 
+http://johannes.sipsolutions.net/patches/kernel/all/2007-12-28-21%3a44/023-=
+cfg80211-channel-and-bitrate-api.patch
+
+
+
+--=-5/iDVZTHeS1s3V0isCBT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR3VvqKVg1VMiehFYAQKj8w//SgLWaeq3Uxhzc9mzSCrcsoIAEG2dDoL8
+7RkbHKXBar33p1osxwC6LIy0zfvq2frxXjtnUO9sZmQ+Nz054FhfU6t0C61cZuol
+6jtyAa3kYMqhvk43abR8cbpSY/YGCRXf7HbmXuFhAS7GJEwxsfG7RgKKbQKSIsVu
+lif/PGsy71ERZ6ArLYjW0UEHTRub/5Xtug/CJl9+dyfg656MyfzepZ+UtCzZBWhR
+QneWRwOzHmJTwlFC9vJOlLixT3YYxPQ3KCyXp8DHNUr1DUtt9ZhqD3z6WPqE/5Ob
+s3azrB4SN7oZ3Mnh2+g026gXmAx5xiszK51q4usekzGGrD9ebfGui9RQXkWQuWL5
+/SMu4Bt2Js0CCYnDD8xjQHYUZ1giyo9vLSHzH1ek4SloTN+OzD8rhnSqM0Khwkrl
+YW65yI96/AdH2xpR5T1ecy4o3xLz6EsPg5ZHTEV7vHB54NzbdmaeT2gmGLXFDd8P
+62TX8zxaME+9w7w9sVFUdmM87CdLSPwB2Nm+kLZUF9uqAiPv65FwE+K2iAKe2oYj
+UuO1P3W8QAXdgsDWO5XP686+7D8hRBk5nXR5TmLND6HIPrL6aT403zxMW5JpauC5
+6Q9fiYYvWxrjqRzRfD47TAbsTYZQdJJLbEr9/5ZHIKNVDUkci91LAqOh8aZq+EjS
+bW/L1jcKaXs=
+=9onq
+-----END PGP SIGNATURE-----
+
+--=-5/iDVZTHeS1s3V0isCBT--
 
