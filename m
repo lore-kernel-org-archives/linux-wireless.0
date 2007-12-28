@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:62450 "EHLO
-	viefep11-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753515AbXLVVvg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 16:51:36 -0500
-From: Bjorge Dijkstra <bjd@jooz.net>
-To: dbrownell@users.sourceforge.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 3/8] [PATCH] Use 1KB buffer in rndis_unbind
-Date: Sat, 22 Dec 2007 22:51:29 +0100
-Message-Id: <11983602953865-git-send-email-bjd@jooz.net> (sfid-20071222_215203_115555_444425F4)
-In-Reply-To: <11983602942818-git-send-email-bjd@jooz.net>
-References: <11983602942818-git-send-email-bjd@jooz.net>
+Received: from verein.lst.de ([213.95.11.210]:38933 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751287AbXL1S7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Dec 2007 13:59:46 -0500
+Date: Fri, 28 Dec 2007 19:58:32 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Arnd Bergmann <ARNDB@de.ibm.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH v4 7/8] debugfs: allow access to signed values
+Message-ID: <20071228185832.GA4462@lst.de> (sfid-20071228_185955_765323_9702EDF1)
+References: <20071219001955.055692620@polimi.it> <1198080034.4747.15.camel@johannes.berg> <20071220131548.1d09cd62@morte> <200712201347.15022.ARNDB@de.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200712201347.15022.ARNDB@de.ibm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+On Thu, Dec 20, 2007 at 01:47:13PM +0100, Arnd Bergmann wrote:
+> Also, Christoph has recently posted a suggestion for how to improve
+> the interface to allow the 'get' operation to return an error:
+> http://patchwork.ozlabs.org/cbe-oss-dev/patch?id=14962
+> 
+> I'd suggest consolidating the two changes in order to avoid merge
+> conflicts.
 
-rndis_command requires the caller to pass in a buffer of at least 1KB.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
----
- drivers/net/usb/rndis_host.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 96ef6a9..42b161c 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -577,7 +577,7 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
- 	struct rndis_halt	*halt;
- 
- 	/* try to clear any rndis state/activity (no i/o from stack!) */
--	halt = kzalloc(sizeof *halt, GFP_KERNEL);
-+	halt = kzalloc(CONTROL_BUFFER_SIZE, GFP_KERNEL);
- 	if (halt) {
- 		halt->msg_type = RNDIS_MSG_HALT;
- 		halt->msg_len = ccpu2(sizeof *halt);
--- 
-1.5.2.5
-
+Stefano, I couldn't find your complete patch series.  Where are the
+other 7 patches for that series?   Anyway, I'll post my series with
+the simple attribute chanegs ASAP and I'll Cc you.  If you send me the
+latest version of your patches I'll port it ontop of my patches.
