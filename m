@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53321 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751592AbXLETA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2007 14:00:58 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 3/3] iwlwifi: add missing comments
-Date: Wed,  5 Dec 2007 20:59:59 +0200
-Message-Id: <1196881200841-git-send-email-tomas.winkler@intel.com> (sfid-20071205_190111_567417_C2A8180C)
-In-Reply-To: <1196881200305-git-send-email-tomas.winkler@intel.com>
-References: <1196881199774-git-send-email-tomas.winkler@intel.com>
- <1196881200305-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55501 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742AbXL1NZy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Dec 2007 08:25:54 -0500
+Subject: Re: [PATCH 3/8 v3] mac80211: A-MPDU Rx adding basic functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11985948451654-git-send-email-ron.rindjunsky@intel.com>
+References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+	 <11985948451654-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AB9DhvAHuIM/9DfQFXzq"
+Date: Fri, 28 Dec 2007 14:25:40 +0100
+Message-Id: <1198848340.4103.111.camel@johannes.berg> (sfid-20071228_132557_285192_8B310E8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add comments that escaped from the previous merge
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+--=-AB9DhvAHuIM/9DfQFXzq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 5a410e2..267ae75 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -516,7 +516,7 @@ struct iwl_ht_info {
- 	u8 supported_chan_width;
- 	u16 tx_mimo_ps_mode;
- 	u8 is_green_field;
--	u8 sgf;
-+	u8 sgf;			/* HT_SHORT_GI_* short guard interval */
- 	u8 max_amsdu_size;
- 	u8 ampdu_factor;
- 	u8 mpdu_density;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 14fccd6..f14c44a 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -350,7 +350,7 @@ int iwl4965_tx_queue_init(struct iwl4965_priv *priv,
- 	 * For the command queue (#4), allocate command space + one big
- 	 * command for scan, since scan command is very huge; the system will
- 	 * not have two scans at the same time, so only one is needed.
--	 * For data Tx queues (all other queues), no super-size command
-+	 * For normal Tx queues (all other queues), no super-size command
- 	 * space is needed.
- 	 */
- 	len = sizeof(struct iwl4965_cmd) * slots_num;
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> +	list_for_each_entry(sta, &local->sta_list, list) {
+> +		for (i =3D 0; i <  STA_TID_NUM; i++)
+> +			ieee80211_sta_stop_rx_ba_session(sta->dev, sta->addr,
+> +						i, WLAN_BACK_RECIPIENT,
+> +						WLAN_REASON_QSTA_LEAVE_QBSS);
+> +	}
+
+This needs something like
+
+if (sta->dev =3D=3D dev)
+
+but I don't really care whether it's in this or a subsequent patch since
+we don't have drivers supporting multi-STA operation.
+
+johannes
+
+--=-AB9DhvAHuIM/9DfQFXzq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR3T5U6Vg1VMiehFYAQIlUw//Um/2sv3UIXaxcrB7C6jXRONFXUoo7AWa
+M99DCLBJ1OGMTwxF8kHfYtaRTkLk1ZJfECuVZpKHxyGc3n9mNbSZ4Y6hPCpnGABq
+KdZFzDYSX2ZCJxhg345YgEahQsp7Q8kkiqoHVxK04Tmnz3XOjIHt3sPKV+vYIVee
+3+9PcI49w9m9lc3SMUA5bf/YhyvlH1TOgJY2bOAtKFRdTApkjDmarcsXAaCLXKim
+1/O2Rg/y0FS2ldft2P1UUjoNsg8NvKEVeIRZCsNLpzuuPOHU3VnC3Qw9probhzPq
+s+JDNbFq6hNzdLoF8QZ/zu1ScJFeTruk9YwHtCp6cT+ovPZHP8S1uFWT0uE85H2l
+XQGktb+Jxw2PRRcF2aW6roiVMSu6W0kVlyYhZNTk2gxoYb7BJ9dm11g/GEDCybsR
+JcIEtIjo02iBdMhZcvu3MgjvVx9+JNX0nfnghj9HgWXAYkMbh2P7mlDMIoQw8a+m
+Wg1KUETOOhAejCX1Zw5wvqQ/JnzZdIKkonGnF2QrAnOoYjc0hHbZSXsB1kbp4Uyn
+t2qqAIafJ0FCyzSjvPFodvhS8tI9A0LW1BBkAa46JPKi22K4I0/3BW3R3iyK22n2
+OWnGQSCeIogJFcZ0m7qSQxAhBp4Wil+QJd7XT8J+3x0/mlzfTi9piu77DWonD9AA
+zEsyL6hiY8o=
+=KC3k
+-----END PGP SIGNATURE-----
+
+--=-AB9DhvAHuIM/9DfQFXzq--
+
