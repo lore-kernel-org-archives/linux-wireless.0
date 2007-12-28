@@ -1,325 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59154 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029AbXLVUxT (ORCPT
+Received: from fmmailgate07.web.de ([217.72.192.248]:55139 "EHLO
+	fmmailgate07.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752990AbXL1N44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:53:19 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Fix extraction of values from SPROM
-Date: Sat, 22 Dec 2007 21:51:30 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Fri, 28 Dec 2007 08:56:56 -0500
+Received: from web.de
+	by fmmailgate07.web.de (Postfix) with SMTP id 8A17C2D20
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2007 14:35:14 +0100 (CET)
+Date: Fri, 28 Dec 2007 14:35:14 +0100
+Message-Id: <54984095@web.de> (sfid-20071228_135702_356145_B747D92C)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712222151.30575.mb@bu3sch.de> (sfid-20071222_205324_499065_84608ECE)
+From: =?iso-8859-15?Q?Marco_H=F6fle?= <Marco.Hoefle@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: =?iso-8859-15?Q?Bug_or_am_I_too_stupid_for_installing_the_Intel_Wirels?=
+ =?iso-8859-15?Q?s_drivers_for_Linux=3F?=
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes extraction of some values from the SPROM.
-It mainly fixes extraction of antenna related values, which
-is needed for another b43 fix sent later.
+Hello,
+I am trying to get the Intel PRO wireless 3945 adapter running on RedHat Linux Enterprise 5. I think there might be a bug or something in the HOW-TO is missing.
+(http://intellinuxwireless.org/?p=mac80211&n=HOWTO-mac80211)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I am stuck in installing the MAC80211 subsystem, these are the steps I am doing (according to HOW-TO). The errors I get are:
 
-Index: wireless-2.6/drivers/ssb/pci.c
-===================================================================
---- wireless-2.6.orig/drivers/ssb/pci.c	2007-12-14 13:15:42.000000000 +0100
-+++ wireless-2.6/drivers/ssb/pci.c	2007-12-20 18:58:49.000000000 +0100
-@@ -247,7 +247,7 @@ static void sprom_do_read(struct ssb_bus
- 	int i;
+[root@localhost build]# make moules modules_install
+scripts/kconfig/conf -s arch/i386/Kconfig
+net/mac80211/Kconfig:5:warning: 'select' used by config symbol 'MAC80211' refer to undefined symbol 'CRYPTO_ECB'
+net/mac80211/Kconfig:11:warning: 'select' used by config symbol 'MAC80211' refer to undefined symbol 'NET_SCH_FIFO'
+make: *** No rule to make target `moules'.  Stop.
+[root@localhost build]# 
+
+[root@localhost build]# make all
+  CHK     include/linux/version.h
+  CHK     include/linux/utsrelease.h
+make[1]: *** No rule to make target `init/main.o', needed by `init/built-in.o'.  Stop.
+make: *** [init] Error 2
+[root@localhost build]# 
+
+
+
+
+These are all steps I did:
+
+[root@localhost ~]# ls /lib/modules/$(uname -r)/build/Makefile
+/lib/modules/2.6.18-8.el5/build/Makefile
+[root@localhost ~]# uname -r
+2.6.18-8.el5
+[root@localhost ~]# 
+
+
+Then I opened a terminal in the /home/downloads/drivers/mac80211-10.0.3 directory and issued the make command, this is the terminal output:
+
+
+[root@localhost mac80211-10.0.3]# make
+Building modified version in 'modified/' directory:
+Copying modified/ from origin/...done
+Applying patches and scripts from pending/.
+ + Applying: pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch
+        From 26e77a5fef845edcb5c27db52f413e7558db0e20 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0002-mac80211-add-IEEE802.11e-WMM-structures.patch
+        From f5af9c4fdfbcc2b8ecb60d9d93657a3e2437c909 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0003-mac80211-IEEE802.11e-WMM-TS-management-and-DLS-supp.patch
+        From 78e5e6d438cb6ec7ba929293b112b12cf0d9042c Mon Sep 17 00:00:00 2001
+ + Applying: pending/0004-mac80211-debugfs-support-for-TSM-and-DLS.patch
+        From 88b531cc1ce8bd1f9681a4cbcd11bb61de3c6ca1 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0005-mac80211-IEEE802.11e-WMM-misc-fix-and-cleanup.patch
+        From 503a88f99457be47979874f2a9a5c3454104519e Mon Sep 17 00:00:00 2001
+ + Applying: pending/0006-mac80211-add-WE-nick-power-and-txpower-capabilitie.patch
+        From 37515341129948f6f8391cd0c8bb0028f7929c98 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0007-mac80211-Fix-user-specified-TXPOWER-from-being-over.patch
+        From aa958786201069f0a857251a777f687fc9d42219 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0008-mac80211-HT-IEEE_802.11n_TX_AMPDU-send-actframes.patch
+        From 70fb3487d26d431401e4b659e520177eb434e343 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0009-mac80211-HT-add-IEEE-802.11n-TX_AMPDU-API.patch
+        From fc5dcdadd03063981268f4df8ef7ffd9519e25f9 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0010-mac80211-HT-add-TX-AMPDU-MLME-data.patch
+        From 51bc2c9e296a5f6ec210eee04c882fdb4997c130 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0011-mac80211-HT-IEEE-802.11n-TX-AMPDU-MLME-implementa.patch
+        From a2c09ed2b5cc19d3fdee0b4d3a25ac82c973cd77 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0012-mac80211-HT-IEEE-802.11n-debugfs-support.patch
+        From 915fb0b275fae6748a38ece9a67a99129fcf3cc8 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0013-mac80211-HT-IEEE-802.11n-block-ack-support.patch
+        From 0d1fde009eb108f3f379e0868b600c12f7cd943d Mon Sep 17 00:00:00 2001
+ + Applying: pending/0014-mac80211-HT-IEEE-802.11n-block-ack-debugfs-suppor.patch
+        From 18fcded749fc76222844afc055128da88dbc03d8 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0015-mac80211-HT-add-IEEE-802.11n-qos-queues.patch
+        From 1fa8243b4711e74d3158e396f3f3971ed103d482 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0016-mac80211-HT-IEEE-802.11n-RX-aggregation-BAR-supor.patch
+        From e410f6580a9462480cbf3a8f3ecc601e1d8b5fb5 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0017-mac80211-HT-IEEE-802.11n-RX-aggregation-API-and-M.patch
+        From 428ee27143824bc868a301bb46d9cc34e76a17b6 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0018-mac80211-HT-add-addtional-type-parameter-for-ieee.patch
+        From 454d6bf4ab1a52a73fe9d5c7940588c84e7fbf5b Mon Sep 17 00:00:00 2001
+ + Applying: pending/0019-mac80211-HT-fix-ieee80211_send_addba_resp-interfa.patch
+        From 26c1abde043c8186b483fd29715d2a03e864ac4e Mon Sep 17 00:00:00 2001
+ + Applying: pending/0020-mac80211-HT-fix-master-mode-net-type.patch
+        From 0081fcc92918c45b914158219d255454e0c3bc4a Mon Sep 17 00:00:00 2001
+ + Applying: pending/0021-mac80211-HT-IEEE-802.11n-RX-aggregation-MLME-supp.patch
+        From 8f997ba42d5da45841bb8178f5f8978c48ef2c0e Mon Sep 17 00:00:00 2001
+ + Applying: pending/0022-mac80211-HT-IEEE-802.11n-RX-aggregation-debugfs-s.patch
+        From 657427a497a5fd912251740ec4ee9c3b3bad0f49 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0023-mac80211-HT-AP-mode-block-ack-MLME-support.patch
+        From 8aff6ff750cb985bafa982b4b1ffc37029e8f013 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0024-mac80211-HT-fix-wrong-param-used-for-ieee80211_ht.patch
+        From 55d47cff2f5944f3f70fbee5f2b41beccbed2762 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0025-mac80211-HT-use-KERN_DEBUG-for-HT-debugging-messa.patch
+        From f597c02bc8814aa0ba5b3b9fd1aa14d521b284b8 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0026-mac80211-rssi-averaging-filter.patch
+        From 4f10cf6269ce9a96d21dd220bf8991716d1be24f Mon Sep 17 00:00:00 2001
+ + Applying: pending/0027-mac80211-add-802.11h-channel-switch-packet-handling.patch
+        From 534b03cd79f6de5cb3c364289cb5fa158bef6632 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0028-mac80211-fix-compile-error-if-CONFIG_NET_SCHED-unde.patch
+        From 16d350730af21442636dc3ab822a8ae230fecffa Mon Sep 17 00:00:00 2001
+ + Applying: pending/0029-mac80211-add-rate-scaling-algorithm-selection-capab.patch
+        From 0f936737d9f8cc3a8886f4590c73b20918df213c Mon Sep 17 00:00:00 2001
+ + Applying: pending/0030-mac80211-fix-monitor-mode.patch
+        From c334da6f6fe935e278ad5fde78e192d16d3c1603 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0031-mac80211-fix-an-printk-warning-for-size_t.patch
+        From 465d7fb3ee021c8fe50a49432dfc461a4e4595d9 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0032-mac80211-fix-kernel-panic-during-shutdown-time.patch
+        From a8f8bdd27fbac5f91aabe206f829592facb486a3 Mon Sep 17 00:00:00 2001
+ + Applying: pending/0033-mac80211-fix-a-msdu-header.patch
  
- 	for (i = 0; i < bus->sprom_size; i++)
--		sprom[i] = readw(bus->mmio + SSB_SPROM_BASE + (i * 2));
-+		sprom[i] = ioread16(bus->mmio + SSB_SPROM_BASE + (i * 2));
- }
- 
- static int sprom_do_write(struct ssb_bus *bus, const u16 *sprom)
-@@ -297,10 +297,32 @@ err_ctlreg:
- 	return err;
- }
- 
-+static s8 r123_extract_antgain(u8 sprom_revision, const u16 *in,
-+			       u16 mask, u16 shift)
-+{
-+	u16 v;
-+	u8 gain;
-+
-+	v = in[SPOFF(SSB_SPROM1_AGAIN)];
-+	gain = (v & mask) >> shift;
-+	if (gain == 0xFF)
-+		gain = 2; /* If unset use 2dBm */
-+	if (sprom_revision == 1) {
-+		/* Convert to Q5.2 */
-+		gain <<= 2;
-+	} else {
-+		/* Q5.2 Fractional part is stored in 0xC0 */
-+		gain = ((gain & 0xC0) >> 6) | ((gain & 0x3F) << 2);
-+	}
-+
-+	return (s8)gain;
-+}
-+
- static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- {
- 	int i;
- 	u16 v;
-+	s8 gain;
- 	u16 loc[3];
- 
- 	if (out->revision == 3) {			/* rev 3 moved MAC */
-@@ -327,8 +349,15 @@ static void sprom_extract_r123(struct ss
- 	SPEX(et0phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0A, 0);
- 	SPEX(et1phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1A,
- 	     SSB_SPROM1_ETHPHY_ET1A_SHIFT);
-+	SPEX(et0mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0M, 14);
-+	SPEX(et1mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1M, 15);
-+	SPEX(board_rev, SSB_SPROM1_BINF, SSB_SPROM1_BINF_BREV, 0);
- 	SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
- 	     SSB_SPROM1_BINF_CCODE_SHIFT);
-+	SPEX(ant_available_a, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTA,
-+	     SSB_SPROM1_BINF_ANTA_SHIFT);
-+	SPEX(ant_available_bg, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTBG,
-+	     SSB_SPROM1_BINF_ANTBG_SHIFT);
- 	SPEX(pa0b0, SSB_SPROM1_PA0B0, 0xFFFF, 0);
- 	SPEX(pa0b1, SSB_SPROM1_PA0B1, 0xFFFF, 0);
- 	SPEX(pa0b2, SSB_SPROM1_PA0B2, 0xFFFF, 0);
-@@ -348,9 +377,22 @@ static void sprom_extract_r123(struct ss
- 	     SSB_SPROM1_ITSSI_A_SHIFT);
- 	SPEX(itssi_bg, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_BG, 0);
- 	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
--	SPEX(antenna_gain_a, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_A, 0);
--	SPEX(antenna_gain_bg, SSB_SPROM1_AGAIN, SSB_SPROM1_AGAIN_BG,
--	     SSB_SPROM1_AGAIN_BG_SHIFT);
-+
-+	/* Extract the antenna gain values. */
-+	gain = r123_extract_antgain(out->revision, in,
-+				    SSB_SPROM1_AGAIN_BG,
-+				    SSB_SPROM1_AGAIN_BG_SHIFT);
-+	out->antenna_gain.ghz24.a0 = gain;
-+	out->antenna_gain.ghz24.a1 = gain;
-+	out->antenna_gain.ghz24.a2 = gain;
-+	out->antenna_gain.ghz24.a3 = gain;
-+	gain = r123_extract_antgain(out->revision, in,
-+				    SSB_SPROM1_AGAIN_A,
-+				    SSB_SPROM1_AGAIN_A_SHIFT);
-+	out->antenna_gain.ghz5.a0 = gain;
-+	out->antenna_gain.ghz5.a1 = gain;
-+	out->antenna_gain.ghz5.a2 = gain;
-+	out->antenna_gain.ghz5.a3 = gain;
- }
- 
- static void sprom_extract_r4(struct ssb_sprom *out, const u16 *in)
-@@ -376,9 +418,10 @@ static void sprom_extract_r4(struct ssb_
- 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
- 	SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
- 	SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
--	SPEX(antenna_gain_a, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_0, 0);
--	SPEX(antenna_gain_bg, SSB_SPROM4_AGAIN, SSB_SPROM4_AGAIN_1,
--	     SSB_SPROM4_AGAIN_1_SHIFT);
-+	SPEX(ant_available_a, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_A,
-+	     SSB_SPROM4_ANTAVAIL_A_SHIFT);
-+	SPEX(ant_available_bg, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_BG,
-+	     SSB_SPROM4_ANTAVAIL_BG_SHIFT);
- 	SPEX(maxpwr_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_MAXP_BG_MASK, 0);
- 	SPEX(itssi_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_ITSSI_BG,
- 	     SSB_SPROM4_ITSSI_BG_SHIFT);
-@@ -391,6 +434,19 @@ static void sprom_extract_r4(struct ssb_
- 	SPEX(gpio2, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P2, 0);
- 	SPEX(gpio3, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P3,
- 	     SSB_SPROM4_GPIOB_P3_SHIFT);
-+
-+	/* Extract the antenna gain values. */
-+	SPEX(antenna_gain.ghz24.a0, SSB_SPROM4_AGAIN01,
-+	     SSB_SPROM4_AGAIN0, SSB_SPROM4_AGAIN0_SHIFT);
-+	SPEX(antenna_gain.ghz24.a1, SSB_SPROM4_AGAIN01,
-+	     SSB_SPROM4_AGAIN1, SSB_SPROM4_AGAIN1_SHIFT);
-+	SPEX(antenna_gain.ghz24.a2, SSB_SPROM4_AGAIN23,
-+	     SSB_SPROM4_AGAIN2, SSB_SPROM4_AGAIN2_SHIFT);
-+	SPEX(antenna_gain.ghz24.a3, SSB_SPROM4_AGAIN23,
-+	     SSB_SPROM4_AGAIN3, SSB_SPROM4_AGAIN3_SHIFT);
-+	memcpy(&out->antenna_gain.ghz5, &out->antenna_gain.ghz24,
-+	       sizeof(out->antenna_gain.ghz5));
-+
- 	/* TODO - get remaining rev 4 stuff needed */
- }
- 
-@@ -400,7 +456,7 @@ static int sprom_extract(struct ssb_bus 
- 	memset(out, 0, sizeof(*out));
- 
- 	out->revision = in[size - 1] & 0x00FF;
--	ssb_printk(KERN_INFO PFX "SPROM revision %d detected.\n", out->revision);
-+	ssb_dprintk(KERN_DEBUG PFX "SPROM revision %d detected.\n", out->revision);
- 	if ((bus->chip_id & 0xFF00) == 0x4400) {
- 		/* Workaround: The BCM44XX chip has a stupid revision
- 		 * number stored in the SPROM.
-@@ -445,9 +501,7 @@ static int ssb_pci_sprom_get(struct ssb_
- 	err = sprom_check_crc(buf, bus->sprom_size);
- 	if (err) {
- 		/* check for rev 4 sprom - has special signature */
--		if (buf [32] == 0x5372) {
--			ssb_printk(KERN_WARNING PFX "Extracting a rev 4"
--				   " SPROM\n");
-+		if (buf[32] == 0x5372) {
- 			kfree(buf);
- 			buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
- 				      GFP_KERNEL);
-Index: wireless-2.6/include/linux/ssb/ssb_regs.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb_regs.h	2007-12-14 13:15:42.000000000 +0100
-+++ wireless-2.6/include/linux/ssb/ssb_regs.h	2007-12-20 18:58:49.000000000 +0100
-@@ -193,10 +193,10 @@
- #define  SSB_SPROM1_BINF_BREV		0x00FF	/* Board Revision */
- #define  SSB_SPROM1_BINF_CCODE		0x0F00	/* Country Code */
- #define  SSB_SPROM1_BINF_CCODE_SHIFT	8
--#define  SSB_SPROM1_BINF_ANTA		0x3000	/* Available A-PHY antennas */
--#define  SSB_SPROM1_BINF_ANTA_SHIFT	12
--#define  SSB_SPROM1_BINF_ANTBG		0xC000	/* Available B-PHY antennas */
--#define  SSB_SPROM1_BINF_ANTBG_SHIFT	14
-+#define  SSB_SPROM1_BINF_ANTBG		0x3000	/* Available B-PHY and G-PHY antennas */
-+#define  SSB_SPROM1_BINF_ANTBG_SHIFT	12
-+#define  SSB_SPROM1_BINF_ANTA		0xC000	/* Available A-PHY antennas */
-+#define  SSB_SPROM1_BINF_ANTA_SHIFT	14
- #define SSB_SPROM1_PA0B0		0x105E
- #define SSB_SPROM1_PA0B1		0x1060
- #define SSB_SPROM1_PA0B2		0x1062
-@@ -221,9 +221,10 @@
- #define  SSB_SPROM1_ITSSI_A_SHIFT	8
- #define SSB_SPROM1_BFLLO		0x1072	/* Boardflags (low 16 bits) */
- #define SSB_SPROM1_AGAIN		0x1074	/* Antenna Gain (in dBm Q5.2) */
--#define  SSB_SPROM1_AGAIN_A		0x00FF	/* A-PHY */
--#define  SSB_SPROM1_AGAIN_BG		0xFF00	/* B-PHY and G-PHY */
--#define  SSB_SPROM1_AGAIN_BG_SHIFT	8
-+#define  SSB_SPROM1_AGAIN_BG		0x00FF	/* B-PHY and G-PHY */
-+#define  SSB_SPROM1_AGAIN_BG_SHIFT	0
-+#define  SSB_SPROM1_AGAIN_A		0xFF00	/* A-PHY */
-+#define  SSB_SPROM1_AGAIN_A_SHIFT	8
- 
- /* SPROM Revision 2 (inherits from rev 1) */
- #define SSB_SPROM2_BFLHI		0x1038	/* Boardflags (high 16 bits) */
-@@ -264,7 +265,7 @@
- #define  SSB_SPROM3_CCKPO_11M_SHIFT	12
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
- 
--/* SPROM Revision 4 		entries with ?? in comment are unknown */
-+/* SPROM Revision 4 */
- #define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for a/b/g/n */
- #define SSB_SPROM4_ET0MAC		0x1018	/* 6 bytes MAC address for Ethernet ?? */
- #define SSB_SPROM4_ET1MAC		0x1018	/* 6 bytes MAC address for 802.11a ?? */
-@@ -275,13 +276,22 @@
- #define  SSB_SPROM4_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
- #define  SSB_SPROM4_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
- #define SSB_SPROM4_CCODE		0x1052	/* Country Code (2 bytes) */
--#define SSB_SPROM4_ANT_A		0x105D  /* A Antennas */
--#define SSB_SPROM4_ANT_BG		0x105C  /* B/G Antennas */
-+#define SSB_SPROM4_ANTAVAIL		0x105D  /* Antenna available bitfields */
-+#define SSB_SPROM4_ANTAVAIL_A		0x00FF	/* A-PHY bitfield */
-+#define SSB_SPROM4_ANTAVAIL_A_SHIFT	0
-+#define SSB_SPROM4_ANTAVAIL_BG		0xFF00	/* B-PHY and G-PHY bitfield */
-+#define SSB_SPROM4_ANTAVAIL_BG_SHIFT	8
- #define SSB_SPROM4_BFLLO		0x1044	/* Boardflags (low 16 bits) */
--#define SSB_SPROM4_AGAIN		0x105E	/* Antenna Gain (in dBm Q5.2) */
--#define  SSB_SPROM4_AGAIN_0		0x00FF	/* Antenna 0 */
--#define  SSB_SPROM4_AGAIN_1		0xFF00	/* Antenna 1 */
--#define  SSB_SPROM4_AGAIN_1_SHIFT	8
-+#define SSB_SPROM4_AGAIN01		0x105E	/* Antenna Gain (in dBm Q5.2) */
-+#define  SSB_SPROM4_AGAIN0		0x00FF	/* Antenna 0 */
-+#define  SSB_SPROM4_AGAIN0_SHIFT	0
-+#define  SSB_SPROM4_AGAIN1		0xFF00	/* Antenna 1 */
-+#define  SSB_SPROM4_AGAIN1_SHIFT	8
-+#define SSB_SPROM4_AGAIN23		0x1060
-+#define  SSB_SPROM4_AGAIN2		0x00FF	/* Antenna 2 */
-+#define  SSB_SPROM4_AGAIN2_SHIFT	0
-+#define  SSB_SPROM4_AGAIN3		0xFF00	/* Antenna 3 */
-+#define  SSB_SPROM4_AGAIN3_SHIFT	8
- #define SSB_SPROM4_BFLHI		0x1046  /* Board Flags Hi */
- #define SSB_SPROM4_MAXP_BG		0x1080  /* Max Power BG in path 1 */
- #define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-12-20 18:53:57.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-12-20 18:58:49.000000000 +0100
-@@ -3885,16 +3885,6 @@ static void b43_sprom_fixup(struct ssb_b
- 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
- 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
- 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
--
--	/* Handle case when gain is not set in sprom */
--	if (bus->sprom.antenna_gain_a == 0xFF)
--		bus->sprom.antenna_gain_a = 2;
--	if (bus->sprom.antenna_gain_bg == 0xFF)
--		bus->sprom.antenna_gain_bg = 2;
--
--	/* Convert Antennagain values to Q5.2 */
--	bus->sprom.antenna_gain_a <<= 2;
--	bus->sprom.antenna_gain_bg <<= 2;
- }
- 
- static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c	2007-12-20 18:53:57.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c	2007-12-20 18:58:49.000000000 +0100
-@@ -3573,11 +3573,6 @@ static void b43legacy_sprom_fixup(struct
- 	    bus->boardinfo.type == 0x4E &&
- 	    bus->boardinfo.rev > 0x40)
- 		bus->sprom.boardflags_lo |= B43legacy_BFL_PACTRL;
--
--	/* Convert Antennagain values to Q5.2 */
--	if (bus->sprom.antenna_gain_bg == 0xFF)
--		bus->sprom.antenna_gain_bg = 2; /* if unset, use 2 dBm */
--	bus->sprom.antenna_gain_bg <<= 2;
- }
- 
- static void b43legacy_wireless_exit(struct ssb_device *dev,
-Index: wireless-2.6/drivers/net/wireless/b43legacy/phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/phy.c	2007-12-14 13:15:42.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43legacy/phy.c	2007-12-20 18:58:49.000000000 +0100
-@@ -1859,7 +1859,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 	 * which accounts for the factor of 4 */
- #define REG_MAX_PWR 20
- 	max_pwr = min(REG_MAX_PWR * 4
--		      - dev->dev->bus->sprom.antenna_gain_bg
-+		      - dev->dev->bus->sprom.antenna_gain.ghz24.a0
- 		      - 0x6, max_pwr);
- 
- 	/* find the desired power in Q5.2 - power_level is in dBm
-Index: wireless-2.6/include/linux/ssb/ssb.h
-===================================================================
---- wireless-2.6.orig/include/linux/ssb/ssb.h	2007-12-14 13:15:42.000000000 +0100
-+++ wireless-2.6/include/linux/ssb/ssb.h	2007-12-20 18:58:49.000000000 +0100
-@@ -22,7 +22,12 @@ struct ssb_sprom {
- 	u8 et1mac[6];		/* MAC address for 802.11a */
- 	u8 et0phyaddr;		/* MII address for enet0 */
- 	u8 et1phyaddr;		/* MII address for enet1 */
-+	u8 et0mdcport;		/* MDIO for enet0 */
-+	u8 et1mdcport;		/* MDIO for enet1 */
-+	u8 board_rev;		/* Board revision number from SPROM. */
- 	u8 country_code;	/* Country Code */
-+	u8 ant_available_a;	/* A-PHY antenna available bits (up to 4) */
-+	u8 ant_available_bg;	/* B/G-PHY antenna available bits (up to 4) */
- 	u16 pa0b0;
- 	u16 pa0b1;
- 	u16 pa0b2;
-@@ -38,8 +43,18 @@ struct ssb_sprom {
- 	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
- 	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
- 	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
--	u8 antenna_gain_a;	/* A-PHY Antenna gain (in dBm Q5.2) */
--	u8 antenna_gain_bg;	/* B/G-PHY Antenna gain (in dBm Q5.2) */
-+
-+	/* Antenna gain values for up to 4 antennas
-+	 * on each band. Values in dBm/4 (Q5.2). Negative gain means the
-+	 * loss in the connectors is bigger than the gain. */
-+	struct {
-+		struct {
-+			s8 a0, a1, a2, a3;
-+		} ghz24;	/* 2.4GHz band */
-+		struct {
-+			s8 a0, a1, a2, a3;
-+		} ghz5;		/* 5GHz band */
-+	} antenna_gain;
- 
- 	/* TODO - add any parameters needed from rev 2, 3, or 4 SPROMs */
- };
+ + Applying: pending/0090-mac80211-IPv6-fix.patch
+        The patch below seems to work for me w/ an otherwise stock F-7 kernel
+ + Applying: pending/0091-mac80211-fix-hidden-ssid.patch
+        diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+ + Applying: pending/0092-mac80211-sta-hw-scanning.patch
+        diff -urp mac80211/ieee80211.c /home/chuyee/mac80211/ieee80211.c
+ + Applying: pending/0093-mac80211-clean-extra-ie.patch
+        --- a/net/mac80211/ieee80211.c  2007-11-15 19:49:57.000000000 +0800
+ + Applying: pending/0094-mac80211-hw-scan-fix-1.patch
+        diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+ + Applying: pending/0095-mac80211-hw-scan-fix-2.patch
+        diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+ + Applying: pending/0096-mac80211-workaround-wpa-reassoc.patch
+        diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+ + Applying: pending/0097-mac80211-ht-agg-teardown-fix.patch
+        diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+ + Applying: pending/0098-mac80211-tasklet_enable-fix.patch
+        diff -urp origin/net/mac80211/ieee80211.c new/net/mac80211/ieee80211.c
+Checking kernel compatibility in:
+        /lib/modules/2.6.18-8.el5/source//
+grep: /lib/modules/2.6.18-8.el5/source//drivers/base/core.c: No such file or directory
+grep: /lib/modules/2.6.18-8.el5/source//fs/debugfs/inode.c: No such file or directory
+ * Kernel requires compatibility version:
+   - Requires qdisc API compat
+   - Requires non-block crypto compat
+   - Requires debugfs_create_symlink compat
+   - Requires delayed_work compat
+   - Requires rtnl_notify API compat
+   - Requires class_dev -> dev API compat
+   - Requires to_net_dev API compat
+   - Requires dev_release API compat
+   - Requires genetlink removal compat
+   - Requires device_rename compat
+   - Requires net_sch_fifo compat
+   - Requires skb_{mac,transport,network}_header compat
+   - Requires ilog2 compat
+   - Requires seq_open() const parameter compat
+   - Requires tcf_destroy_chain() compat
+   - Requires debugfs_rename() compat
+Building compatibility version in 'compatible/' directory:
+Copying compatible/ from modified/...done
+ + Applying: patches/qdisc-api.patch
+        Use older qdisc API for qdisc_create_dflt
+ + Applying: patches/block-cipher.patch
+        Switch crypto system to older non-block cipher algorithms.
+ + Applying: patches/debugfs_create_symlink.patch
+        diff -upr pre/net/mac80211/debugfs_key.c post/net/mac80211/debugfs_key.c
+ + Applying: patches/delayed_work.patch
+        Add delayed_work structure compatibility.
+ + Running: delayed_work.sh
+        Use compat_ delayed_work functions to fix argument issues.
+ + Applying: patches/rtnl_notify.patch
+        Use netlink_broadcast vs. rtnl_notify
+ + Applying: patches/class_dev_to_dev-wireless.patch
+        Reverse class_dev to dev changes
+ + Applying: patches/dev_release.patch
+        Legacy device.h API (dev_uevent, dev_release, dev_attrs)
+ + Applying: patches/net_sch_fifo.patch
+        Add pfifo_qdisc if kernel doesn't support explicit CONFIG_NET_SCHED_FIFO
+ + Applying: patches/skb_mac_header.patch
+        diff -upr origin/net/mac80211/ieee80211.c update/net/mac80211/ieee80211.c
+ + Running: ilog2.sh
+        IEEE80211_STYPE_QOS_DATA's mask is 0x0080
+ + Applying: patches/seq_open_const.patch
+        diff -upr linux-2.6.18-gentoo-r6/net/wireless/wext.c linux-2.6.18-gentoo-r6-building/net/wireless/wext.c
+ + Applying: patches/tcf_destroy_chain.patch
+        Add tcf_destroy_chain to mac80211's wme.c
+ + Applying: patches/debugfs_rename.patch
+        diff -urp origin/net/mac80211/debugfs_netdev.c new/net/mac80211/debugfs_netdev.c
+[root@localhost mac80211-10.0.3]# 
+
+Afterwards I configured the Kernel ans saved the new configuration:
+
+Linux Kernel v2.6.18-8.el5 Configuration
+ &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472; Networking &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+  &#9474;  Arrow keys navigate the menu.  <Enter> selects submenus --->.          &#9474;  
+  &#9474;  Highlighted letters are hotkeys.  Pressing <Y> includes, <N> excludes, &#9474;  
+  &#9474;  <M> modularizes features.  Press <Esc><Esc> to exit, <?> for Help, </> &#9474;  
+  &#9474;  for Search.  Legend: [*] built-in  [ ] excluded  <M> module  < >       &#9474;  
+  &#9474; &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488; &#9474;  
+  &#9474; &#9474;--- Networking support                                               &#9474; &#9474;  
+  &#9474; &#9474;      Networking options  --->                                       &#9474; &#9474;  
+  &#9474; &#9474;[ ]   Amateur Radio support  --->                                    &#9474; &#9474;  
+  &#9474; &#9474;< >   IrDA (infrared) subsystem support  --->                        &#9474; &#9474;  
+  &#9474; &#9474;<M>   Bluetooth subsystem support  --->                              &#9474; &#9474;  
+  &#9474; &#9474;<M>   Improved wireless configuration API                            &#9474; &#9474;  
+  &#9474; &#9474;---   Wireless extensions                                            &#9474; &#9474;  
+  &#9474; &#9474;<M>   Generic IEEE 802.11 Networking Stack (mac80211)                &#9474; &#9474;  
+  &#9474; &#9474;[ ]     Enable LED triggers                                          &#9474; &#9474;  
+  &#9474; &#9474;[ ]     Export mac80211 internals in DebugFS                         &#9474; &#9474;  
+  &#9474; &#9474;[ ]     Enable debugging output                                      &#9474; &#9474;  
+  &#9474; &#9474;<M>   Generic IEEE 802.11 Networking Stack                           &#9474; &#9474;  
+  &#9474; &#9474;[ ]     Enable full debugging output                                 &#9474; &#9474;  
+  &#9474; &#9474;---     IEEE 802.11 WEP encryption (802.1x)                          &#9474; &#9474;  
+  &#9474; &#9474;<M>     IEEE 802.11i CCMP support                                    &#9474; &#9474;  
+  &#9474; &#9474;<M>     IEEE 802.11i TKIP encryption                                 &#9474; &#9474;  
+  &#9474; &#9474;<M>     Software MAC add-on to the IEEE 802.11 networking stack      &#9474; &#9474;  
+  &#9474; &#9474;[*]       Enable full debugging output                               &#9474; &#9474;  
+  &#9474; &#9474;<M>   TUX: Threaded linUX application protocol accelerator layer     &#9474; &#9474;  
+  &#9474; &#9474;        TUX options  --->                                            &#9474; &#9474;  
+  &#9474; &#9474;[*]   NetLabel subsystem support                                     &#9474; &#9474;  
+  &#9474; &#9474;                                                                     &#9474; &#9474;  
+  &#9474; &#9474;                                                                     &#9474; &#9474;  
+  &#9474; &#9474;                                                                     &#9474; &#9474;  
+  &#9474; &#9474;                                                                     &#9474; &#9474;  
+  &#9474; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9474;  
+  &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;  
+  &#9474;                    <Select>    < Exit >    < Help >                     &#9474;  
+  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;  
+    
+
+[root@localhost build]# make moules modules_install
+scripts/kconfig/conf -s arch/i386/Kconfig
+net/mac80211/Kconfig:5:warning: 'select' used by config symbol 'MAC80211' refer to undefined symbol 'CRYPTO_ECB'
+net/mac80211/Kconfig:11:warning: 'select' used by config symbol 'MAC80211' refer to undefined symbol 'NET_SCH_FIFO'
+make: *** No rule to make target `moules'.  Stop.
+[root@localhost build]# 
+
+[root@localhost build]# make all
+  CHK     include/linux/version.h
+  CHK     include/linux/utsrelease.h
+make[1]: *** No rule to make target `init/main.o', needed by `init/built-in.o'.  Stop.
+make: *** [init] Error 2
+[root@localhost build]# 
+
+
+
+
+
+
+
+
+
