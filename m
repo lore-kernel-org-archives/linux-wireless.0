@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dreamhostlb1.dreamhost.com ([208.97.187.133]:43666 "EHLO
-	webmail5.dreamhost.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753919AbXLLAPb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 19:15:31 -0500
-Message-ID: <50633.68.40.216.125.1197418099.squirrel@webmail.nostar.net> (sfid-20071212_001534_960262_6F3499B8)
-Date: Tue, 11 Dec 2007 16:08:19 -0800 (PST)
-Subject: Re: Problems with b43 using BCM4306 r3
-From: doug@nostar.net
-To: "Michael Buesch" <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
+Received: from mx1.riseup.net ([204.13.164.18]:36075 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753879AbXL2SUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Dec 2007 13:20:09 -0500
+Date: Sat, 29 Dec 2007 19:20:05 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Arnd Bergmann <ARNDB@de.ibm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 7/8] debugfs: allow access to signed values
+Message-ID: <20071229192005.10518d4c@morte> (sfid-20071229_182036_085950_4F33957A)
+In-Reply-To: <20071228185832.GA4462@lst.de>
+References: <20071219001955.055692620@polimi.it>
+	<1198080034.4747.15.camel@johannes.berg>
+	<20071220131548.1d09cd62@morte>
+	<200712201347.15022.ARNDB@de.ibm.com>
+	<20071228185832.GA4462@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-References: <475DA27F.2040004@nostar.net> <200712102258.29802.mb@bu3sch.de>
-In-Reply-To: <200712102258.29802.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The problems only exist on the planet CCRMA
+On Fri, 28 Dec 2007 19:58:32 +0100
+Christoph Hellwig <hch@lst.de> wrote:
 
-http://ccrma.stanford.edu/planetccrma/software/
+> On Thu, Dec 20, 2007 at 01:47:13PM +0100, Arnd Bergmann wrote:
+> > Also, Christoph has recently posted a suggestion for how to improve
+> > the interface to allow the 'get' operation to return an error:
+> > http://patchwork.ozlabs.org/cbe-oss-dev/patch?id=14962
+> > 
+> > I'd suggest consolidating the two changes in order to avoid merge
+> > conflicts.
+> 
+> Stefano, I couldn't find your complete patch series.  Where are the
+> other 7 patches for that series?   Anyway, I'll post my series with
+> the simple attribute chanegs ASAP and I'll Cc you.  If you send me the
+> latest version of your patches I'll port it ontop of my patches.
 
-low-lat patched kernel that I was using.  I'm now running a stock Fedora 
-8 2.6.23.8-63.fc8 kernel and there dont appear to be anymore wifi 
-problems.  My reasons for using the ccrma kernel werent low latency 
-performance so much as a working firewire stack (fedora 7 and above uses 
-a new, broken stack) but I found another method.
+Sorry for the late reply. As Johannes said, the other patches have nothing
+to do with this anyway. I had to put this patch within my patchset because I
+originally wanted to send a patch which would export signed values to
+debugfs, but then I solved the issue in a different fashion, and I'm not
+that interested in it at the moment.
 
-Michael Buesch wrote:
-> On Monday 10 December 2007 21:33:03 Doug McLain wrote:
->> I have an emachines M6805 with the BCM4306 r3 wifi chip.  Using the
-ndiswrapper driver, all is ok, but using the b43 driver results in
-constant flow of dmesg output (see link), eventual lockup of wifi under
-heavy network traffic, and constant xruns when using JACK audio server.
->>   Again, when I use the ndiswrapper driver, everything works ok.
->> http://nostar.net/ardour/dmesg.txt
->
-> That's weird. These messages say that interrupts are not disabled in the
-IRQ handler. Which driver are you using? Please try vanilla
-> wireless-2.6.
->
+BTW, the patch I sent was just meant to allow exporting signed values
+through debugfs, but in order to do that I had to change some users as well.
+And being spufs an user, I don't feel that much like sending a patch
+without testing on ppc64 in advance.
 
 
-
-
-
+-- 
+Ciao
+Stefano
