@@ -1,128 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32739 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750774AbXLBWLO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35732 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbXL2MBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:11:14 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 4/8] rtl8180: Add rtl8180_set_anaparam
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>
-Date: Sun, 02 Dec 2007 17:17:51 -0500
-Message-ID: <20071202221751.7347.75840.stgit@tetra.sourmilk.net> (sfid-20071202_221125_988675_13043851)
-In-Reply-To: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-References: <20071202221751.7347.54891.stgit@tetra.sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+	Sat, 29 Dec 2007 07:01:19 -0500
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1198929568.4172.37.camel@johannes.berg> (sfid-20071229_115956_865583_DD21EB42)
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <200712291121.31120.IvDoorn@gmail.com>
+	 <1198924603.4172.34.camel@johannes.berg>
+	 <200712291247.54258.IvDoorn@gmail.com>
+	 (sfid-20071229_114741_608186_9052827A)  <1198929568.4172.37.camel@johannes.berg>
+	 (sfid-20071229_115956_865583_DD21EB42)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9K+BOQr2hT+5B+7H13sY"
+Date: Sat, 29 Dec 2007 13:01:07 +0100
+Message-Id: <1198929667.4172.39.camel@johannes.berg> (sfid-20071229_120125_097403_869EC8EE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrea Merello <andreamrl@tiscali.it>
 
-This piece of code is used everywhere, so pull it into a function.
+--=-9K+BOQr2hT+5B+7H13sY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Andrea Merello <andreamrl@tiscali.it>
----
 
- drivers/net/wireless/rtl8180.h         |    1 +
- drivers/net/wireless/rtl8180_dev.c     |   26 ++++++++++++++++----------
- drivers/net/wireless/rtl8180_rtl8225.c |   16 ++--------------
- 3 files changed, 19 insertions(+), 24 deletions(-)
+On Sat, 2007-12-29 at 12:59 +0100, Johannes Berg wrote:
+> > but since the payload should be aligned to a 4 byte boundrary anyway
+>=20
+> That's not true. The "payload" in terms of "802.11 frame" shouldn't be
+> aligned on a four-byte boundary for QoS or 4-addr frames.
 
-diff --git a/drivers/net/wireless/rtl8180.h b/drivers/net/wireless/rtl8180.h
-index 4a5b44b..28431ac 100644
---- a/drivers/net/wireless/rtl8180.h
-+++ b/drivers/net/wireless/rtl8180.h
-@@ -101,6 +101,7 @@ struct rtl8180_priv {
- };
- 
- void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-+void rtl8180_set_anaparam(struct rtl8180_priv *priv, u32 anaparam);
- 
- static inline u8 rtl818x_ioread8(struct rtl8180_priv *priv, u8 __iomem *addr)
- {
-diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
-index a2a6791..54f9c31 100644
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -243,6 +243,20 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
- 	return 0;
- }
- 
-+void rtl8180_set_anaparam(struct rtl8180_priv *priv, u32 anaparam)
-+{
-+	u8 reg;
-+
-+	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-+	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-+	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
-+		 reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-+	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, anaparam);
-+	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
-+		 reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-+	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-+}
-+
- static int rtl8180_init_hw(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
-@@ -285,16 +299,8 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
- 
- 	rtl818x_iowrite8(priv, &priv->map->MSR, 0);
- 
--	if (!priv->r8185) {
--		rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
--		reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
--		rtl818x_iowrite8(priv, &priv->map->CONFIG3,
--				 reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
--		rtl818x_iowrite32(priv, &priv->map->ANAPARAM, priv->anaparam);
--		rtl818x_iowrite8(priv, &priv->map->CONFIG3,
--				 reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
--		rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
--	}
-+	if (!priv->r8185)
-+		rtl8180_set_anaparam(priv, priv->anaparam);
- 
- 	rtl818x_iowrite32(priv, &priv->map->RDSAR, priv->rx_ring_dma);
- 	rtl818x_iowrite32(priv, &priv->map->TBDA, priv->tx_ring[3].dma);
-diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
-index 6fb0659..3bcdb9e 100644
---- a/drivers/net/wireless/rtl8180_rtl8225.c
-+++ b/drivers/net/wireless/rtl8180_rtl8225.c
-@@ -322,14 +322,8 @@ void rtl8225_rf_init(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
- 	int i;
--	u8 reg;
- 
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
--	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
--	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
--	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
--	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-+	rtl8180_set_anaparam(priv, RTL8225_ANAPARAM_ON);
- 
- 	/* host_pci_init */
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
-@@ -561,14 +555,8 @@ void rtl8225z2_rf_init(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
- 	int i;
--	u8 reg;
- 
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
--	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
--	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
--	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
--	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-+	rtl8180_set_anaparam(priv, RTL8225_ANAPARAM_ON);
- 
- 	/* host_pci_init */
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
+Eh, sorry. The start of the 802.11 header must be aligned on a four-byte
+boundary for non-QoS/non-WDS/QoS+WDS frames and on +2 mod 4 for QoS/WDS
+frames.
 
+johannes
+
+--=-9K+BOQr2hT+5B+7H13sY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR3Y3AqVg1VMiehFYAQJSkQ/+NoyqawH46q53ApZ7dlal+jI6NViv2LIo
+kXzBJi996U3i8HW9VXuqzxIBmYcLDLE0Gr6NZzzfrru0AVW0nGMp1u3n7BLKQHnW
+NHO/f8dgF+UoTfppy3nI1Hd9LW/wLFD9kPgq5JUCSe/tbApxtjIUSw9cAWT2bEH/
+2YjJo1J/jBWrICoWC9boi60zOWYz5SutwDV+AP1hUWiEDwIbSalqWbju53b7y+Pb
+6LNi5UYtooc1OEHDO/U8LbNNW2elzlCmSOFQz1GhOsBf9OviNz+6kCbusrfuJYxS
+1wyEqnlI5KQj2dshxQKx/5RYwSXpzItbizTlCBOobC4oL+Evpybdr8b8KTzy8xUs
+CurXOxq0iyvNkH08NJ4ravorBhk0Dueujzboxc0uQPSCkJn8cqO1dLMAwAhDjiQe
+r0KjrhPDU6QHL2p1Yzn2kJl54LQ121P6/m2iTNit8quYuG89KTAsDDxuzqnbKyCs
+aVYU1LhoCNShxrk/OBXg4uQ6PQmR1xfvJGLSpm/775v8YLjMPlQWr8weymvGCsgA
+iezfUGaH22T6webw8fXS7TL/5SWq3RWRtIE2r9VHgUAameWOoFVFT1eFMK5idM/b
+moOBqbtW5LmC7mT0dr+Z1atKtEOh5e5/VdTtC6ck4Vynfg5/CzZzwUHc8ON2lBi/
+qbCCRbZl3xE=
+=6/wz
+-----END PGP SIGNATURE-----
+
+--=-9K+BOQr2hT+5B+7H13sY--
 
