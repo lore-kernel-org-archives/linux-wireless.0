@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:22045 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189AbXLFXm1 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:1977 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674AbXL2KVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2007 18:42:27 -0500
-Received: by py-out-1112.google.com with SMTP id u77so986662pyb
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2007 15:42:21 -0800 (PST)
-Message-ID: <43e72e890712061542g7ff7d2adl399eb3c977041120@mail.gmail.com> (sfid-20071206_234231_028114_BEF3C89D)
-Date: Thu, 6 Dec 2007 18:42:15 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Automated kerneldoc for all wireless drivers
-In-Reply-To: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
+	Sat, 29 Dec 2007 05:21:16 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2131733fga.17
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 02:21:14 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sat, 29 Dec 2007 11:21:30 +0100
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <1198922056.4172.25.camel@johannes.berg>
+In-Reply-To: <1198922056.4172.25.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890712061538k10d806f8xbb7148b0de3f66ce@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712291121.31120.IvDoorn@gmail.com> (sfid-20071229_102122_535849_9856172A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 6, 2007 6:38 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->   3910 total
+On Saturday 29 December 2007, Johannes Berg wrote:
+> I didn't think that many drivers had this problem... The warning is
+> harmless on machines that are ok with unaligned memory accesses.
+> 
+> > WARNING: at net/mac80211/rx.c:1486 __ieee80211_rx()
+> > Pid: 0, comm: swapper Not tainted 2.6.24-rc6-git5 #11
+> 
+> comes from
+>         /*
+>          * Drivers are required to align the payload data to a four-byte
+>          * boundary, so the last two bits of the address where it starts
+>          * may not be set. The header is required to be directly before
+>          * the payload data, padding like atheros hardware adds which is
+>          * inbetween the 802.11 header and the payload is not supported,
+>          * the driver is required to move the 802.11 header further back
+>          * in that case.
+>          */
+>         hdrlen = ieee80211_get_hdrlen(rx.fc);
+>         WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+> 
+> 
+> Although I'm starting to doubt my own sanity here with this sanity check
+> if so many drivers can trigger it.
 
-Sorry, I forgot the iwlwifi drivers:
+If it helps as reference, rt2x00 allocates and initializes the data as follows:
 
-   670 iwlwifiiwl3945-basec-doc.html
-   325 iwlwifiiwl-3945c-doc.html
-   134 iwlwifiiwl-3945-commandsh-doc.html
-     0 iwlwifiiwl-3945-debugh-doc.html
-   121 iwlwifiiwl-3945h-doc.html
-     0 iwlwifiiwl-3945-hwh-doc.html
-     0 iwlwifiiwl-3945-ioh-doc.html
-    78 iwlwifiiwl-3945-rsc-doc.html
-    65 iwlwifiiwl-3945-rsh-doc.html
-   715 iwlwifiiwl4965-basec-doc.html
-   438 iwlwifiiwl-4965c-doc.html
-   422 iwlwifiiwl-4965-commandsh-doc.html
-     0 iwlwifiiwl-4965-debugh-doc.html
-   171 iwlwifiiwl-4965h-doc.html
-   566 iwlwifiiwl-4965-hwh-doc.html
-     0 iwlwifiiwl-4965-ioh-doc.html
-    69 iwlwifiiwl-4965-rsc-doc.html
-    65 iwlwifiiwl-4965-rsh-doc.html
-    54 iwlwifiiwl-helpersh-doc.html
-   119 iwlwifiiwl-prphh-doc.html
-     0 iwlwifiiwl-spectrumh-doc.html
-  4012 total
+		skb_reserve(skb, NET_IP_ALIGN);
+		skb_put(skb, desc.size); /* Always a multiple of 4 bytes */
+		memcpy(skb->data, entry->data_addr, desc.size);
 
-For a total of 7922 for us now. Thanks Intel, great job!
+Should there have done more for the aligning of the data?
 
-  Luis
+Ivo
