@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:55275 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbXLPTis (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.189]:11304 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274AbXL2POk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2007 14:38:48 -0500
-From: Michael Buesch <mb@bu3sch.de>
+	Sat, 29 Dec 2007 10:14:40 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4413384fkz.5
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 07:14:38 -0800 (PST)
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: b43 problem with led trigger registration
-Date: Sun, 16 Dec 2007 20:36:10 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <1197822019.4138.2.camel@johannes.berg>
-In-Reply-To: <1197822019.4138.2.camel@johannes.berg>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sat, 29 Dec 2007 16:14:55 +0100
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <200712291529.10357.IvDoorn@gmail.com> <1198939208.4172.46.camel@johannes.berg>
+In-Reply-To: <1198939208.4172.46.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200712162036.11084.mb@bu3sch.de> (sfid-20071216_193853_032514_3571F981)
 Content-Type: text/plain;
   charset="iso-8859-15"
+Message-Id: <200712291614.55732.IvDoorn@gmail.com> (sfid-20071229_151454_868370_598533EF)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 16 December 2007 17:20:19 Johannes Berg wrote:
-> Hi,
+On Saturday 29 December 2007, Johannes Berg wrote:
 > 
-> Just booted into my shiny new #everything and got:
+> > Well Ralink doesn't seem to add this padding since this bug appeared,
+> > remember all bytes from the DMA was copied to the skb buffer so if there
+> > was any padding included it would have been copied as well. ;)
 > 
-> [   40.209739] BUG: sleeping function called from invalid context at kernel/rwsem.c:47
-> [   40.220119] in_atomic():1, irqs_disabled():0
-> [   40.230514] Call Trace:
-> [   40.240799] [eec2fc90] [c0009198] show_stack+0x4c/0x1ac (unreliable)
-> [   40.251247] [eec2fcd0] [c0027a3c] __might_sleep+0xd0/0xf0
-> [   40.261620] [eec2fce0] [c004c1d0] down_write+0x24/0x64
-> [   40.271974] [eec2fcf0] [c026347c] led_trigger_register+0xbc/0x118
-> [   40.282273] [eec2fd10] [f250246c] ieee80211_led_init+0x68/0x160 [mac80211]
-> [   40.292837] [eec2fd30] [f24eceb0] ieee80211_register_hw+0x200/0x324 [mac80211]
-> [   40.303295] [eec2fd40] [f2523234] b43_probe+0x9a8/0xa04 [b43]
-> [   40.313766] [eec2fda0] [f20b06e8] ssb_device_probe+0x50/0xac [ssb]
-> [   40.324152] [eec2fdb0] [c0214518] driver_probe_device+0xb8/0x1e8
-> [   40.334541] [eec2fdd0] [c021487c] __driver_attach+0xf8/0x124
-> [   40.344833] [eec2fdf0] [c0213674] bus_for_each_dev+0x58/0x94
-> [   40.355100] [eec2fe20] [c0214328] driver_attach+0x24/0x34
-> [   40.365321] [eec2fe30] [c0213af4] bus_add_driver+0x98/0x208
-> [   40.375513] [eec2fe50] [c0214b44] driver_register+0x58/0xa0
-> [   40.385771] [eec2fe60] [f20aff58] __ssb_driver_register+0x2c/0x3c [ssb]
-> [   40.396017] [eec2fe70] [f103e034] b43_init+0x34/0xe8 [b43]
-> [   40.406253] [eec2fe80] [c00587e4] sys_init_module+0x154/0x176c
-> [   40.416498] [eec2ff40] [c0012054] ret_from_syscall+0x0/0x38
+> Not necessarily, Broadcom hardware adds the padding in front of the
+> 802.11 header so if you'd start copying with the 802.11 header you'd run
+> into the same thing. A quick look at the rt2x00pci.c file doesn't
+> suggest that there's anything variable about the RX header though so I
+> guess that indeed this may be a problem.
 > 
-> I haven't found yet where the atomic is entered...
+> > Anyway, I have worked on a fix for the padding and I'll commit it to
+> > rt2x00.git first to see if anybody reports any problems with it before
+> > sending it to wireless-dev.
 > 
-> johannes
-> 
+> Great. I just posted a similar fix in the other thread for zd1211, does
+> that look similar to yours as well? Should we have a static inline with
+> this code "ieee80211_needs_padding()" or something?
 
-I have no idea where we enter atomic state.
-I am using a slightly older kernel but also with the patch Larry
-mentioned applied. This doesn't happen here.
-Could you please try putting an WARN_ON(in_atomic()) assertion into
-b43_probe? Though, I'm pretty sure it won't trigger.
-I'd rather say mac80211 is aquireing some spinlock in the
-register_hw codepath.
+My code looks more like:
 
-Larry, note that this is not related to the b43 LEDs code.
-This assertion triggers at the place where we register the
-mac80211 TX, RX and radio LED triggers. The place where b43
-initialized rfkill and leds is not in the b43_probe stage.
+	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
+	if (header_size % 4 == 2) {
+		/*
+		 * Move entire frame 2 bytes to the front.
+		 */
+		skb_push(entry->skb, 2);
+		memmove(entry->skb->data, entry->skb->data + 2,
+			entry->skb->len - 2);
+	}
 
--- 
-Greetings Michael.
+Ivo
