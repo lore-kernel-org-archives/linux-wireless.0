@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:42268 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbXLRNPn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34896 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbXL2Jya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2007 08:15:43 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: Operation "wpa_driver_wext_set_countermeasures" not supported
-Date: Tue, 18 Dec 2007 14:13:29 +0100
-Cc: Robert Allerstorfer <linux-ra@anet.at>,
-	linux-wireless@vger.kernel.org
-References: <1942722038.20071212234810@anet.at> <200712171514.48013.mb@bu3sch.de> <345588434.20071218123602@anet.at>
-In-Reply-To: <345588434.20071218123602@anet.at>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200712181413.29569.mb@bu3sch.de> (sfid-20071218_131547_730164_1C2D4792)
+	Sat, 29 Dec 2007 04:54:30 -0500
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+From: Johannes Berg <johannes@sipsolutions.net>
+To: chris2553@googlemail.com
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200712290942.37396.chris2553@googlemail.com> (sfid-20071229_094310_096852_2D0A533D)
+References: <200712290942.37396.chris2553@googlemail.com>
+	 (sfid-20071229_094310_096852_2D0A533D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dnUugocE6vYYHK6CwkSZ"
+Date: Sat, 29 Dec 2007 10:54:15 +0100
+Message-Id: <1198922056.4172.25.camel@johannes.berg> (sfid-20071229_095433_023070_500F7D75)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 18 December 2007 12:36:02 Robert Allerstorfer wrote:
-> On Mon, 17 Dec 2007, 15:14 GMT+01 Michael Buesch wrote:
-> 
-> > Please test what I suggested.
-> 
-> done. I have recompiled and replaced the original b43.ko from
-> 'kernel-2.6.23.9-90.fc8.src.rpm', with the modified 'phy.c' ["if
-> (B43_DEBUG)" changed to "if (0)" on line 741]. Using Fedora's build
-> mechanism, I had to built the entire (baseonly) kernel which took over
-> 2 hours. 
-> 
-> Of course, there is now no more "Disabling TX power adjustment"
-> warning in dmesg, but I can't see any other different behavior. I
-> still can't connect to the WPA2 access point. dmesg still says
-> 
-> wlan0: RX ReassocResp from 00:11:22:33:44:55 (capab=0x431 status=0 aid=1)
-> wlan0: associated
-> wlan0: switched to short barker preamble (BSSID=00:11:22:33:44:55)
-> wlan0: disassociate(reason=3) 
 
-Uhm, that seems to be some mac80211 problem.
-The driver is obviously able to transmit and receive data properly.
-Otherwise it would not be able to associate.
+--=-dnUugocE6vYYHK6CwkSZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> and the debug output of wpa_supplicant still contains
-> 
-> wpa_driver_wext_set_countermeasures
-> ioctl[SIOCSIWAUTH]: Operation not supported
-> 
-> What can I do to get it working one day?
-> 
-> rob.
+I didn't think that many drivers had this problem... The warning is
+harmless on machines that are ok with unaligned memory accesses.
 
--- 
-Greetings Michael.
+> WARNING: at net/mac80211/rx.c:1486 __ieee80211_rx()
+> Pid: 0, comm: swapper Not tainted 2.6.24-rc6-git5 #11
+
+comes from
+        /*
+         * Drivers are required to align the payload data to a four-byte
+         * boundary, so the last two bits of the address where it starts
+         * may not be set. The header is required to be directly before
+         * the payload data, padding like atheros hardware adds which is
+         * inbetween the 802.11 header and the payload is not supported,
+         * the driver is required to move the 802.11 header further back
+         * in that case.
+         */
+        hdrlen =3D ieee80211_get_hdrlen(rx.fc);
+        WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+
+
+Although I'm starting to doubt my own sanity here with this sanity check
+if so many drivers can trigger it.
+
+johannes
+
+--=-dnUugocE6vYYHK6CwkSZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR3YZRqVg1VMiehFYAQIKYhAAlBolpHw1S8Lub/Yciouc3goWXFqUHwIP
+tcdX0/lcGuY5NAVSOO8+oAnf2drlhvpNBUZ04M1UIULsLUNiZ2b5sKS4w33rB9HR
+yPuBeQdM38Lhb3ycqJZ97Dh2NJjYs2nDC5OTAl+UYBOqWi7ZA1dj8r4KJd47IIoB
+PKjwuz2S3VDdumfT8+ea8Tb9Q1cX0sy28UATGh+79QWhhs7qSdreXpFQGNH9VLPJ
+z1GpGeFZqyrMgKWp6EF4KjLNgsDTdoAX6ehxVz33zAy8cKibsxukIbeaH201IXoS
+6O8Jouq9UmtBkYjeLr7PFBUflWeLrcnFA7aWLggGEc+yc0Vf5anexoNAXZJAWERi
+p1J6VxkaHCFBIP5u/XRLjgQjSzCddCf/4MbKkmDV9qJgscqVC9XiNQ7kMHHLRdJJ
+QAUoWmNYGc0om7P6g62fDx90BMRBqA4jpnu2GfCHBJAyt/SbYziMjNogOC/yke/H
+8g+2nvPBdv6EO6wCvA26I/7Jd9v4/ghEXSbaSXYIfKJB/Ybhi27wT+VSJRcVpz3s
+jSuRIIwFj0+KIeVYvX+X2Lhi/2dUKFFZ9IZEqNPzTxkoHxFix85w580+rx+CkqSZ
+WvIXZBj0rZb1OMloeL9lStHrbKS2Ap6rtFg0esYtoXKB07hcsOl/IV1/BzlbcC8t
+yJf/UBHOhns=
+=vic+
+-----END PGP SIGNATURE-----
+
+--=-dnUugocE6vYYHK6CwkSZ--
+
