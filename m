@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:36523 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbXLKVlv (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:24095 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbXL2O25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2007 16:41:51 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so1908250wra
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2007 13:41:51 -0800 (PST)
-Message-ID: <5b9417770712111341t746920c4jee69ef8b498c0f94@mail.gmail.com> (sfid-20071211_214154_218761_25913602)
-Date: Tue, 11 Dec 2007 15:41:49 -0600
-From: "John H." <mistamaila@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: b43 continues to have issue with APs at times
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200712091240.06060.mb@bu3sch.de>
+	Sat, 29 Dec 2007 09:28:57 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so307994nfb.21
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 06:28:55 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sat, 29 Dec 2007 15:29:09 +0100
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <200712291247.54258.IvDoorn@gmail.com> <1198929568.4172.37.camel@johannes.berg>
+In-Reply-To: <1198929568.4172.37.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5b9417770712081222y4f0ab1va51910faf16fb068@mail.gmail.com>
-	 <200712091157.22000.mb@bu3sch.de>
-	 <5b9417770712090337q48381adbt8a670fd5fd153563@mail.gmail.com>
-	 <200712091240.06060.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712291529.10357.IvDoorn@gmail.com> (sfid-20071229_142904_886582_157B4102)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is that a question?
+On Saturday 29 December 2007, Johannes Berg wrote:
+> 
+> > but since the payload should be aligned to a 4 byte boundrary anyway
+> 
+> That's not true. The "payload" in terms of "802.11 frame" shouldn't be
+> aligned on a four-byte boundary for QoS or 4-addr frames.
+> 
+> > can't predict what header length the frame will contain. :(
+> 
+> Well, good hardware inserts padding, cf.
+> http://bcm-v4.sipsolutions.net/802.11/RX
+> 
+> > Although it would safe the initial allocation of the DMA buffer...
+> > I'll look into it to see if it would be useful.
+> 
+> More importantly, it'd save you the copy if your hardware is decent and
+> inserts two bytes padding for QoS/WDS frames.
 
-this is with 2.6.23.1
+Well Ralink doesn't seem to add this padding since this bug appeared,
+remember all bytes from the DMA was copied to the skb buffer so if there
+was any padding included it would have been copied as well. ;)
 
-On Dec 9, 2007 5:40 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Sunday 09 December 2007 12:37:27 John H. wrote:
-> > i dont know what other ones i would have used.  bcm43xx never worked
-> > right, really, and had bandwidth limitations.
-> >
-> > Right now I am downloading over a wireless lan and getting 1mb/s.
-> > Why?  That just makes no sense.
->
-> Because it's broken?
->
->
-> --
-> Greetings Michael.
->
+Anyway, I have worked on a fix for the padding and I'll commit it to
+rt2x00.git first to see if anybody reports any problems with it before
+sending it to wireless-dev.
+
+Same goes for letting the device copy the data into the skb buffer directly. :)
+
+Ivo
