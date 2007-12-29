@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40972 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753123AbXLVW3u (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:10833 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516AbXL2CpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 17:29:50 -0500
-Message-ID: <476D8FDC.8050309@lwfinger.net> (sfid-20071222_222953_629383_51813354)
-Date: Sat, 22 Dec 2007 14:29:48 -0800
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 28 Dec 2007 21:45:06 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so5922409wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2007 18:45:05 -0800 (PST)
+Message-ID: <cb0375e10712281845j472b2161vfd9815428b01dd32@mail.gmail.com> (sfid-20071229_024512_012588_1C377DBB)
+Date: Fri, 28 Dec 2007 18:45:05 -0800
+From: "Andrew Lutomirski" <luto@myrealbox.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: ath5k oops (recent regression, I think)
+Cc: "bruno randolf" <bruno@thinktube.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+In-Reply-To: <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Only select allowed TX and RX antennas
-References: <200712222154.20424.mb@bu3sch.de> <476D87DA.5030908@lwfinger.net>
-In-Reply-To: <476D87DA.5030908@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com>
+	 <200712251804.13693.bruno@thinktube.com>
+	 <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Michael Buesch wrote:
->> This fixes antenna selection in b43. It adds a sanity check
->> for the antenna numbers we get from mac80211.
->>
->> This patch depends on
->> [PATCH] ssb: Fix extraction of values from SPROM
->>
->> Signed-off-by: Michael Buesch <mb@bu3sch.de>
->=20
-> After applying the 4 patches you sent earlier, the compilation fails =
-with
->=20
->   CC [M]  drivers/ssb/main.o
-> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_ieee80211_a=
-ntenna_sanitize=E2=80=99:
-> drivers/net/wireless/b43/main.c:2720: error: =E2=80=98struct ssb_spro=
-m=E2=80=99 has no member named =E2=80=98ant_available_bg=E2=80=99
-> drivers/net/wireless/b43/main.c:2722: error: =E2=80=98struct ssb_spro=
-m=E2=80=99 has no member named =E2=80=98ant_available_a=E2=80=99
->=20
-> These members of ssb_sprom are defined in the patch you sent to Felix=
- Fietkau on Dec. 10, but not in
-> this patch set.
->=20
-> Larry
+On Dec 25, 2007 6:23 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2007/12/25, bruno randolf <bruno@thinktube.com>:
+> > seems ath5k likes to write some rate registers before vif is set up. i used
+> > the following as a stopgap fix. johannes, do you have any advice how to
+> > properly fix that?
+> >
+> > diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> > index f4478f6..2e9f5c5 100644
+> > --- a/drivers/net/wireless/ath5k/hw.c
+> > +++ b/drivers/net/wireless/ath5k/hw.c
+> > @@ -510,6 +510,11 @@ static inline void ath5k_hw_write_rate_duration(struct
+> > ath5k_hw *ah,
+> >         const struct ath5k_rate_table *rt;
+> >         unsigned int i;
+> >
+> > +       if (sc->vif == NULL) {
+> > +               printk("*** sc->vif NULL\n");
+> > +               return;
+> > +       }
+> > +
+> >         /* Get rate table for the current operating mode */
+> >         rt = ath5k_hw_get_rate_table(ah,
+> >                 driver_mode);
+> >
 
-Please ignore the noise in this message. I had mangled the first patch =
-in the series of four. It now
-compiles and I am about to start testing.
+Works for me.  This patch is ugly, but:
 
-Larry
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tested-By: Andy Lutomirski <luto@myrealbox.com>
