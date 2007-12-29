@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34467 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880AbXLDSAY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2007 13:00:24 -0500
-Subject: Re: [RFC PATCH] [try 2] orinoco: more reliable scan handling
-From: Dan Williams <dcbw@redhat.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47489C2D.7030606@gmail.com>
-References: <1191946643.20183.2.camel@localhost.localdomain>
-	 <20071010183251.GK5962@tuxdriver.com>
-	 <1192074985.31110.4.camel@localhost.localdomain>
-	 <47489C2D.7030606@gmail.com>
-Content-Type: text/plain
-Date: Tue, 04 Dec 2007 12:55:11 -0500
-Message-Id: <1196790911.14982.4.camel@localhost.localdomain> (sfid-20071204_180027_197996_B6AB5D15)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.158]:64862 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbXL2Lrj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Dec 2007 06:47:39 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2144711fga.17
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2007 03:47:37 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sat, 29 Dec 2007 12:47:53 +0100
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <200712291121.31120.IvDoorn@gmail.com> <1198924603.4172.34.camel@johannes.berg>
+In-Reply-To: <1198924603.4172.34.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712291247.54258.IvDoorn@gmail.com> (sfid-20071229_114742_952160_05D678BD)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-11-24 at 21:48 +0000, Dave wrote:
+On Saturday 29 December 2007, Johannes Berg wrote:
 > 
+> > If it helps as reference, rt2x00 allocates and initializes the data as follows:
+> > 
+> > 		skb_reserve(skb, NET_IP_ALIGN);
+> > 		skb_put(skb, desc.size); /* Always a multiple of 4 bytes */
+> > 		memcpy(skb->data, entry->data_addr, desc.size);
 > 
-> Dan Williams wrote:
-> > Bring scan result handling more in line with drivers like ipw.  Scan
-> > results are aggregated and a BSS dropped after 15 seconds if no beacon
-> > is received.  This allows the driver to interact better with userspace
-> > where more than one process may request scans or results at any time.
-> 
-> I've only seen this recently, and am using it as a basis for some other changes. However I've noticed a couple issues:
-> 
-> > +static int orinoco_process_scan_results(struct net_device *dev,
-> > +					unsigned char *buf,
-> > +					int len)
-> > +{
->  <snip>
-> > +		/* Try to update an existing bss first */
-> > +		list_for_each_entry(bss, &priv->bss_list, list) {
-> > +			if (compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
->                         if (!compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
-> 
-> So that we proceed to the next bss when ether_addr doesn't match. Otherwise this loop never matches.
+> So why do you copy all the data anyway? You have DMA queues and no need
+> to not have the hardware dump the data into the frame to start with, no?
 
-compare_ether_addr(), like memcmp, returns 0 when the two arguments
-match.  So I think this is OK.  What the loop should be doing is trying
-to find a BSSID + ESSID match and just update the last_seen value, which
-from my reread is what it's doing here...  Perhaps I should put in a !=
-0 there to make the matching behavior more explicit?
+True, if no further aligning would be required that would be true,
+but since the payload should be aligned to a 4 byte boundrary anyway
+this would mean we must use memcpy() in all cases anyway since we
+can't predict what header length the frame will contain. :(
 
-Dan
+Although it would safe the initial allocation of the DMA buffer...
+I'll look into it to see if it would be useful.
 
-> > +				continue;
-> > +			if (le16_to_cpu(bss->bss.a.essid_len) !=
-> > +			      le16_to_cpu(atom->a.essid_len))
-> > +				continue;
-> > +			if (memcmp(bss->bss.a.essid, atom->a.essid,
-> > +			      le16_to_cpu(atom->a.essid_len)))
-> > +				continue;
->                         memcpy(&bss->bss, atom, sizeof(bss->bss);
-> 
-> So we actually update the scan results when we find an older set.
-> 
-> 
-> HTH,
-> 
-> Dave.
-> 
-> PS. I couldn't figure how I could get a copy of this message to reply to, so this is going through gmane. Apologies if this confuses things, or doesn't come out right.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In any case, with wireless NET_IP_ALIGN is pretty useless unless you
+> want to add two to it and then align the result. Maybe the mac80211
+> warning should be relaxed to take NET_IP_ALIGN into account.
 
+Ok, I'll look into better aligning of the skb buffer then.
+
+Ivo
