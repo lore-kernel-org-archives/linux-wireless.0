@@ -1,110 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:60371 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbXLVU5b (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181AbXL2NtF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:57:31 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix chip access validation for new devices
-Date: Sat, 22 Dec 2007 21:56:30 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200712222156.31112.mb@bu3sch.de> (sfid-20071222_205733_935990_6FA6B0D1)
+	Sat, 29 Dec 2007 08:49:05 -0500
+Subject: Re: Strange mac80211 oops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <47764C5A.7060109@gentoo.org>
+References: <200712242237.28913.mb@bu3sch.de>
+	 <1198532736.4103.44.camel@johannes.berg>
+	 <1198533423.4103.46.camel@johannes.berg> <200712242328.56060.mb@bu3sch.de>
+	 <47764C5A.7060109@gentoo.org>
+Content-Type: text/plain
+Date: Sat, 29 Dec 2007 14:48:47 +0100
+Message-Id: <1198936128.4172.41.camel@johannes.berg> (sfid-20071229_134909_131605_E59385E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes chip access validation for newer devices
-(4318 and up, I think)
+This might help. Totally untested.
 
-This patch fixes probing of a PCMCIA based 4318 device.
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 14:42:18.292833767 +0100
++++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 14:47:34.022831923 +0100
+@@ -612,6 +612,8 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
+ 	int bad_frame = 0;
+ 	int i;
+ 	u8 rate;
++	u16 fc;
++	int is_qos, is_4addr;
+ 
+ 	if (length < ZD_PLCP_HEADER_SIZE + 10 /* IEEE80211_1ADDR_LEN */ +
+ 	             FCS_LEN + sizeof(struct rx_status))
+@@ -671,6 +673,16 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
+ 	skb = dev_alloc_skb(length);
+ 	if (skb == NULL)
+ 		return -ENOMEM;
++
++	fc = le16_to_cpu(*((__le16 *) buffer));
++
++	is_qos = !!(fc & IEEE80211_STYPE_QOS_DATA);
++	is_4addr = (fc & (IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS)) ==
++			(IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS);
++
++	if (is_qos ^ is_4addr)
++		skb_reserve(skb, 2);
++
+ 	memcpy(skb_put(skb, length), buffer, length);
+ 
+ 	ieee80211_rx_irqsafe(hw, skb, &stats);
 
-Index: wireless-2.6/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/b43.h	2007-12-12 19:54:27.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/b43.h	2007-12-12 19:55:57.000000000 +0100
-@@ -50,6 +50,9 @@
- #define B43_MMIO_XMITSTAT_1		0x174
- #define B43_MMIO_REV3PLUS_TSF_LOW	0x180	/* core rev >= 3 only */
- #define B43_MMIO_REV3PLUS_TSF_HIGH	0x184	/* core rev >= 3 only */
-+#define B43_MMIO_TSF_CFP_REP		0x188
-+#define B43_MMIO_TSF_CFP_START		0x18C
-+#define B43_MMIO_TSF_CFP_MAXDUR		0x190
- 
- /* 32-bit DMA */
- #define B43_MMIO_DMA32_BASE0		0x200
-@@ -88,6 +91,8 @@
- #define B43_MMIO_RADIO_HWENABLED_LO	0x49A
- #define B43_MMIO_GPIO_CONTROL		0x49C
- #define B43_MMIO_GPIO_MASK		0x49E
-+#define B43_MMIO_TSF_CFP_START_LOW	0x604
-+#define B43_MMIO_TSF_CFP_START_HIGH	0x606
- #define B43_MMIO_TSF_0			0x632	/* core rev < 3 only */
- #define B43_MMIO_TSF_1			0x634	/* core rev < 3 only */
- #define B43_MMIO_TSF_2			0x636	/* core rev < 3 only */
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2007-12-12 19:55:53.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2007-12-12 19:55:57.000000000 +0100
-@@ -2408,32 +2408,42 @@ static void b43_periodic_tasks_setup(str
- 	queue_delayed_work(dev->wl->hw->workqueue, work, 0);
- }
- 
--/* Validate access to the chip (SHM) */
-+/* Check if communication with the device works correctly. */
- static int b43_validate_chipaccess(struct b43_wldev *dev)
- {
--	u32 value;
--	u32 shm_backup;
-+	u32 v, backup;
- 
--	shm_backup = b43_shm_read32(dev, B43_SHM_SHARED, 0);
--	b43_shm_write32(dev, B43_SHM_SHARED, 0, 0xAA5555AA);
--	if (b43_shm_read32(dev, B43_SHM_SHARED, 0) != 0xAA5555AA)
--		goto error;
-+	backup = b43_shm_read32(dev, B43_SHM_SHARED, 0);
-+
-+	/* Check for read/write and endianness problems. */
- 	b43_shm_write32(dev, B43_SHM_SHARED, 0, 0x55AAAA55);
- 	if (b43_shm_read32(dev, B43_SHM_SHARED, 0) != 0x55AAAA55)
- 		goto error;
--	b43_shm_write32(dev, B43_SHM_SHARED, 0, shm_backup);
--
--	value = b43_read32(dev, B43_MMIO_MACCTL);
--	if ((value | B43_MACCTL_GMODE) !=
--	    (B43_MACCTL_GMODE | B43_MACCTL_IHR_ENABLED))
-+	b43_shm_write32(dev, B43_SHM_SHARED, 0, 0xAA5555AA);
-+	if (b43_shm_read32(dev, B43_SHM_SHARED, 0) != 0xAA5555AA)
- 		goto error;
- 
--	value = b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
--	if (value)
-+	b43_shm_write32(dev, B43_SHM_SHARED, 0, backup);
-+
-+	if ((dev->dev->id.revision >= 3) && (dev->dev->id.revision <= 10)) {
-+		/* The 32bit register shadows the two 16bit registers
-+		 * with update sideeffects. Validate this. */
-+		b43_write16(dev, B43_MMIO_TSF_CFP_START, 0xAAAA);
-+		b43_write32(dev, B43_MMIO_TSF_CFP_START, 0xCCCCBBBB);
-+		if (b43_read16(dev, B43_MMIO_TSF_CFP_START_LOW) != 0xBBBB)
-+			goto error;
-+		if (b43_read16(dev, B43_MMIO_TSF_CFP_START_HIGH) != 0xCCCC)
-+			goto error;
-+	}
-+	b43_write32(dev, B43_MMIO_TSF_CFP_START, 0);
-+
-+	v = b43_read32(dev, B43_MMIO_MACCTL);
-+	v |= B43_MACCTL_GMODE;
-+	if (v != (B43_MACCTL_GMODE | B43_MACCTL_IHR_ENABLED))
- 		goto error;
- 
- 	return 0;
--      error:
-+error:
- 	b43err(dev->wl, "Failed to validate the chipaccess\n");
- 	return -ENODEV;
- }
+
