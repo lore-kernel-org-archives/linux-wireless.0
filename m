@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48998 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35680 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754260AbXLGVix (ORCPT
+	with ESMTP id S1752614AbXL2L7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2007 16:38:53 -0500
-Subject: Re: [RFC PATCH] introduce WEXT scan capabilities
+	Sat, 29 Dec 2007 06:59:44 -0500
+Subject: Re: Warning emited by 2.6.24-rc6-git5
 From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20071207192756.GA15864@bougret.hpl.hp.com> (sfid-20071207_192851_749770_5C5B444C)
-References: <1196940519.3980.51.camel@localhost.localdomain>
-	 <20071206191150.GC5237@bougret.hpl.hp.com>
-	 <1197022818.2603.20.camel@localhost.localdomain>
-	 <20071207192756.GA15864@bougret.hpl.hp.com>
-	 (sfid-20071207_192851_749770_5C5B444C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7Kc5bc2WxLil3+7PWJBH"
-Date: Fri, 07 Dec 2007 22:38:06 +0100
-Message-Id: <1197063487.4171.26.camel@johannes.berg> (sfid-20071207_213910_942927_B9FB01E7)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200712291247.54258.IvDoorn@gmail.com> (sfid-20071229_114741_608186_9052827A)
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <200712291121.31120.IvDoorn@gmail.com>
+	 <1198924603.4172.34.camel@johannes.berg>
+	 <200712291247.54258.IvDoorn@gmail.com>
+	 (sfid-20071229_114741_608186_9052827A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jhWWtJw60xh/wxDiabPR"
+Date: Sat, 29 Dec 2007 12:59:28 +0100
+Message-Id: <1198929568.4172.37.camel@johannes.berg> (sfid-20071229_115956_865583_DD21EB42)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-7Kc5bc2WxLil3+7PWJBH
+--=-jhWWtJw60xh/wxDiabPR
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> > >         __u32           enc_capa;       /* IW_ENC_CAPA_* bit field */
-> > > +
-> > > +       /* Do *NOT* use those fields, they are just used as padding t=
-o get
-> > > +        * proper alignement with user space */
-> > > +       __s32           min_pms;
-> > > +       __s32           max_pms;
-> > > +       __u16           pms_flags;
-> > > +       __s32           modul_capa;
-> > > +       __u32           bitrate_capa;
-> > > +
-> > > +       __u32           scan_capa;      /* IW_SCAN_CAPA_* bit field *=
-/
+> but since the payload should be aligned to a 4 byte boundrary anyway
 
-> 	Those fields are defined and used in userspace, please check
-> wireless.21.h in Wireless Tools.
+That's not true. The "payload" in terms of "802.11 frame" shouldn't be
+aligned on a four-byte boundary for QoS or 4-addr frames.
 
-Eww. That's absolutely tasteless.
+> can't predict what header length the frame will contain. :(
+
+Well, good hardware inserts padding, cf.
+http://bcm-v4.sipsolutions.net/802.11/RX
+
+> Although it would safe the initial allocation of the DMA buffer...
+> I'll look into it to see if it would be useful.
+
+More importantly, it'd save you the copy if your hardware is decent and
+inserts two bytes padding for QoS/WDS frames.
 
 johannes
 
---=-7Kc5bc2WxLil3+7PWJBH
+--=-jhWWtJw60xh/wxDiabPR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR1m9PaVg1VMiehFYAQLieA//WHKPfJgaug0W8/UTrZ544339eUeYH8/y
-84Kpa46D3vu5FV5SyUdgKHQ/XPJN79Sh+6WNEWTgUpB8hPR2AGjbTmwjMFY38ZeF
-vi1wkw01yxjbbPKZWeQLPcr/4LHNJxeMIXf6sqAVmY2gDb8p6Ew+JXxLXmw2aZHR
-l7euM+N3SVAxKVo+5FsZeKZEbrGicOcBxbvPMeXOgnBcF2+9cnr/qEOL8Fcoz6Id
-NlD5fqIRmGbbSAmbK8f3s84pfYoA2nyGGTBOyxX9GY1hKg1nNzLuiiTAX+cMVTJ5
-MIoukqRbl3NXUBr3Eh/VnolJrIn7AxpF9wiJ/IKJimw1lDF4D6l9tax6l3aCe7b6
-FRpbtyITq/D7NR2UldpjWRtnASOVSsvBAhc+Jh7KUQa8q3NztOkKUFpweIh9TORs
-Fju7Ykk3BMhVSo7pqvPUSvZrBBPb1bGebgVFNtQ+wbahPQdNMtnfKxtTx2uHy7Zt
-hGqREkzes+eWorcQv0RBfz0b0P7n4cr4JLQkXi6qqzBuy87SgY/mOq7Yrpq8w0+i
-FYBvTUfoYpn35f2rImAE1khnfYu6H/nZnvbrMqKTr18kqOeNEFwGi/rMMwLceI5G
-qn4JPwa+AVFAGJMLMXEfgX76EwS+A/SBuRm/OZCPGoH20OAfL7JoxzdNeImXbhbj
-XBK8nNWJRiQ=
-=4Ax8
+iQIVAwUAR3Y2n6Vg1VMiehFYAQJ2gw//XVIQyvAs3Xni8YmIhpdknQd7w5CyU0cu
+yEXPUVT4+ZKKs8naMSkvsti9d39p4xHaQFqWFOmhd1bBkATeqK8BOGurKYoAhv6B
+4QrfV2eNlekRutonb1q4rJoKY1eklBveLmwHzbB8e71DVNN4lWLxLFk5PwCRxctf
+HEtf8sLHuLw3RjrULJSaY/HhgcA6ONKrMT53ArHdapmmisXQxBDL6d1zFNsysk0P
+qSZZplDgK0gxkki/uEPD43c0CyDNnzqi3uj1mVhSVjDi2AXBcbe67vQDp/R8Lc57
+DKxIz4ERUNJZUTmamaHQoS6nVYRITt2zZq9yVZfrnspJhyA6dWiEK+oFxWoXPvkD
+1cSLBwkkYb/L8GzpSzmd8gWMjmdKEvEUk1EQbCK0YVES7UTOSMXRbIID3RmpFe1X
+5Kqstfu69iJCGenHt1JAsUekrEo221BWOFDLKYa7lnYF21MytgKma6CXvwaJlvYA
+iBURARSBLsNa/5rpcUKaQiIdYI/+ln3fztVpPN1WFTTo4ClvgteVYL/ugJV/YOmp
+Ucf3xp+fw+989HkyIRDlOU+nZnkToHYKNT0uhgEoF2kQ8O9F9v6yVbxjW/DGVEKo
+udJf/tt194kRFIgCbjd2FrHLeVIJKDmVE9Pof9ZhYzK351OfMQ+KfzCZY16jO9Hx
+4MUCu0kr5ng=
+=7ppD
 -----END PGP SIGNATURE-----
 
---=-7Kc5bc2WxLil3+7PWJBH--
+--=-jhWWtJw60xh/wxDiabPR--
 
