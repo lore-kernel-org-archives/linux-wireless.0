@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:39712 "EHLO
-	viefep16-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761552AbXLMWFx (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:36279 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbXL3LuB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2007 17:05:53 -0500
-Message-ID: <4761ACC7.9050108@jooz.net> (sfid-20071213_220559_479160_9CD2A73A)
-Date: Thu, 13 Dec 2007 23:05:59 +0100
-From: Bjorge Dijkstra <bjd@jooz.net>
+	Sun, 30 Dec 2007 06:50:01 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2385439fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2007 03:50:00 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sun, 30 Dec 2007 11:49:39 +0000
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <1198939208.4172.46.camel@johannes.berg> <200712291614.55732.IvDoorn@gmail.com>
+In-Reply-To: <200712291614.55732.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: status wireless extensions API for new drivers
-References: <4761A108.2080005@jooz.net> <1197581585.14270.26.camel@localhost.localdomain>
-In-Reply-To: <1197581585.14270.26.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712301149.39388.chris2553@googlemail.com> (sfid-20071230_115007_700156_77B6A02D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> 
-> Quick question about these; does the firmware on the wireless device
-> itself talk RNDIS directly?  i.e., is RNDIS intended to replace all the
-> manufacturer-specific proprietary host<->adapter protocols?
+On Saturday 29 December 2007, Ivo van Doorn wrote:
+> On Saturday 29 December 2007, Johannes Berg wrote:
+> > > Well Ralink doesn't seem to add this padding since this bug appeared,
+> > > remember all bytes from the DMA was copied to the skb buffer so if
+> > > there was any padding included it would have been copied as well. ;)
+> >
+> > Not necessarily, Broadcom hardware adds the padding in front of the
+> > 802.11 header so if you'd start copying with the 802.11 header you'd run
+> > into the same thing. A quick look at the rt2x00pci.c file doesn't
+> > suggest that there's anything variable about the RX header though so I
+> > guess that indeed this may be a problem.
+> >
+> > > Anyway, I have worked on a fix for the padding and I'll commit it to
+> > > rt2x00.git first to see if anybody reports any problems with it before
+> > > sending it to wireless-dev.
+> >
 
-Yes, the devices themselves talk RNDIS. It's basically Windows NDIS
-driver API calls over a USB transport. What I have created is not much
-more than a layer that translates the WEXT calls to appropriate RNDIS
-messages to allow the device to be configured. The actual networking
-part is handled by rndis_host and usbnet.
+If it would help, I'd be happy to test your fix, but I'm not a git user, so 
+you would need to post a patch that I could use...
 
-> How common
-> are the devices these days?  I trawled through CDW this weekend and
-> could only find one or two adapters (out of 30 or so) that were RNDIS.
-> I assume it's the wave of the Windows future though.
-> 
+> > Great. I just posted a similar fix in the other thread for zd1211, does
+> > that look similar to yours as well? Should we have a static inline with
+> > this code "ieee80211_needs_padding()" or something?
+>
+> My code looks more like:
+>
+> 	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
+> 	if (header_size % 4 == 2) {
+> 		/*
+> 		 * Move entire frame 2 bytes to the front.
+> 		 */
+> 		skb_push(entry->skb, 2);
+> 		memmove(entry->skb->data, entry->skb->data + 2,
+> 			entry->skb->len - 2);
+> 	}
+>
+> Ivo
 
-I know of about 5 or 6 different devices and none of them are new, but
-they seem to be fairly popular. AFAIK all are based on the same
-broadcom 4320 chipset.
+Chris
 
-> 
-> Well, if you want to allow your driver to be backported at all, you'll
-> pretty much have to support WEXT.
-> 
-> _But_, since your driver doesn't have any need for backwards
-> compatibility requirements since it's not already upstream, you might
-> want to be the guinea pig for cfg80211/nl80211 :)  If you decided to
-> only support cfg80211, you'd get WEXT support since cfg80211 provides a
-> backwards compat solution for WEXT.  Plus you'd be helping out a great
-> deal by finding and fixing bugs in cfg80211/nl80211 and proving the
-> framework, which would be a great help.
-
-Well, regular WEXT is already more or less done, so I'd prefer to not
-throw that away :)  I was just wondering about the current state of the
-wireless api's.
-
-> 
-> Dan
-> 
-
-regards,
-Bjorge
-
+-- 
+Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
