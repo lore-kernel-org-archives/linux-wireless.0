@@ -1,163 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56602 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753284AbXLCLol (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2007 06:44:41 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, yi.zhu@intel.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ben Cahill <ben.m.cahill@intel.com>
-Subject: [PATCH 13/34] iwlwifi: clean up some unused definitions in iwl-4965.h and iwl-3945.h
-Date: Mon,  3 Dec 2007 13:43:25 +0200
-Message-Id: <11966822301936-git-send-email-tomas.winkler@intel.com> (sfid-20071203_114451_159361_90884255)
-In-Reply-To: <11966822302681-git-send-email-tomas.winkler@intel.com>
-References: <11966822261109-git-send-email-tomas.winkler@intel.com>
- <11966822291406-git-send-email-tomas.winkler@intel.com>
- <1196682229843-git-send-email-tomas.winkler@intel.com>
- <11966822293932-git-send-email-tomas.winkler@intel.com>
- <11966822291956-git-send-email-tomas.winkler@intel.com>
- <119668222978-git-send-email-tomas.winkler@intel.com>
- <11966822293340-git-send-email-tomas.winkler@intel.com>
- <11966822291143-git-send-email-tomas.winkler@intel.com>
- <11966822301152-git-send-email-tomas.winkler@intel.com>
- <11966822302864-git-send-email-tomas.winkler@intel.com>
- <1196682230902-git-send-email-tomas.winkler@intel.com>
- <11966822302932-git-send-email-tomas.winkler@intel.com>
- <11966822302681-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from v813.rev.tld.pl ([195.149.226.213]:59005 "EHLO
+	smtp.host4.kei.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107AbXL3PBF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Dec 2007 10:01:05 -0500
+From: Marcin Juszkiewicz <openembedded@haerwu.biz>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Add Linksys WCF11 to hostap driver
+Date: Sun, 30 Dec 2007 16:00:41 +0100
+Cc: Pavel Roskin <proski@gnu.org>, Jouni Malinen <j@w1.fi>,
+	netdev@vger.kernel.org
+References: <200712281416.59079.openembedded@haerwu.biz> <1198901689.2221.3.camel@dv>
+In-Reply-To: <1198901689.2221.3.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200712301600.46342.openembedded@haerwu.biz> (sfid-20071230_150110_184360_03B6BAB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+Dnia sobota, 29 grudnia 2007, Pavel Roskin napisa=C5=82:
+> Hello!
+>
+> On Fri, 2007-12-28 at 14:16 +0100, Marcin Juszkiewicz wrote:
+> > +       PCMCIA_DEVICE_PROD_ID1234(
+> > +               "The Linksys Group, Inc.", "Wireless Network CF
+> > Card", "ISL37300P", +               "RevA",
+> > +               0xa5f472c2, 0x9c05598d, 0xc9049a39, 0x57a66194),
+>
+> I would prefer that revisions are not used for card identification in
+> presence of the chip name.  It's not like RevB would need another
+> driver as long as "ISL37300P" is still a part of the PCMCIA ID.
+> PCMCIA_DEVICE_PROD_ID123 should be enough.
 
-Clean up some unused definitions in iwl-4965.h and iwl-3945.h
+OK - updated patch below:
 
-Move STA_FLG_ definitions to iwl-4965-commands.h
+=46rom: Marcin Juszkiewicz <openembedded@haerwu.biz>
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Linksys WCF11 submitted by =C3=85ngstr=C3=B6m user.
+
+"The Linksys Group, Inc.", "Wireless Network CF Card", "ISL37300P", "Re=
+vA",
+0xa5f472c2, 0x9c05598d, 0xc9049a39, 0x57a66194=20
+manfid: 0x0274, 0x3301
+
+Signed-off-by: Marcin Juszkiewicz <openembedded@haerwu.biz>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.h          |   21 -----------------
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    8 ++++++
- drivers/net/wireless/iwlwifi/iwl-4965.h          |   26 ----------------------
- 3 files changed, 8 insertions(+), 47 deletions(-)
+=C2=A0drivers/net/wireless/hostap/hostap_cs.c | =C2=A0 =C2=A03 +++
+=C2=A01 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index cb565a9..e4a9ad1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -192,14 +192,6 @@ struct iwl3945_scan_power_info {
- 	s8 requested_power;	/* scan pwr (dBm) requested for chnl/rate */
- };
- 
--/* Channel unlock period is 15 seconds. If no beacon or probe response
-- * has been received within 15 seconds on a locked channel then the channel
-- * remains locked. */
--#define TX_UNLOCK_PERIOD 15
--
--/* CSA lock period is 15 seconds.  If a CSA has been received on a channel in
-- * the last 15 seconds, the channel is locked */
--#define CSA_LOCK_PERIOD 15
- /*
-  * One for each channel, holds all channel setup data
-  * Some of the fields (e.g. eeprom and flags/max_power_avg) are redundant
-@@ -562,19 +554,6 @@ struct iwl3945_driver_hw_info {
- 	dma_addr_t shared_phys;
- };
- 
--
--#define STA_FLG_RTS_MIMO_PROT_MSK	__constant_cpu_to_le32(1 << 17)
--#define STA_FLG_AGG_MPDU_8US_MSK	__constant_cpu_to_le32(1 << 18)
--#define STA_FLG_MAX_AGG_SIZE_POS	(19)
--#define STA_FLG_MAX_AGG_SIZE_MSK	__constant_cpu_to_le32(3 << 19)
--#define STA_FLG_FAT_EN_MSK		__constant_cpu_to_le32(1 << 21)
--#define STA_FLG_MIMO_DIS_MSK		__constant_cpu_to_le32(1 << 22)
--#define STA_FLG_AGG_MPDU_DENSITY_POS	(23)
--#define STA_FLG_AGG_MPDU_DENSITY_MSK	__constant_cpu_to_le32(7 << 23)
--#define HT_SHORT_GI_20MHZ_ONLY          (1 << 0)
--#define HT_SHORT_GI_40MHZ_ONLY          (1 << 1)
--
--
- #define IWL_RX_HDR(x) ((struct iwl3945_rx_frame_hdr *)(\
- 		       x->u.rx_frame.stats.payload + \
- 		       x->u.rx_frame.stats.phy_count))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index 575a065..bd55709 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -515,6 +515,14 @@ struct iwl4965_qosparam_cmd {
- #define	IWL_INVALID_STATION 	255
- 
- #define STA_FLG_PWR_SAVE_MSK		__constant_cpu_to_le32(1<<8);
-+#define STA_FLG_RTS_MIMO_PROT_MSK	__constant_cpu_to_le32(1 << 17)
-+#define STA_FLG_AGG_MPDU_8US_MSK	__constant_cpu_to_le32(1 << 18)
-+#define STA_FLG_MAX_AGG_SIZE_POS	(19)
-+#define STA_FLG_MAX_AGG_SIZE_MSK	__constant_cpu_to_le32(3 << 19)
-+#define STA_FLG_FAT_EN_MSK		__constant_cpu_to_le32(1 << 21)
-+#define STA_FLG_MIMO_DIS_MSK		__constant_cpu_to_le32(1 << 22)
-+#define STA_FLG_AGG_MPDU_DENSITY_POS	(23)
-+#define STA_FLG_AGG_MPDU_DENSITY_MSK	__constant_cpu_to_le32(7 << 23)
- 
- #define STA_CONTROL_MODIFY_MSK		0x01
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 33eca96..d297f1d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -193,14 +193,6 @@ struct iwl4965_scan_power_info {
- 	s8 requested_power;	/* scan pwr (dBm) requested for chnl/rate */
- };
- 
--/* Channel unlock period is 15 seconds. If no beacon or probe response
-- * has been received within 15 seconds on a locked channel then the channel
-- * remains locked. */
--#define TX_UNLOCK_PERIOD 15
--
--/* CSA lock period is 15 seconds.  If a CSA has been received on a channel in
-- * the last 15 seconds, the channel is locked */
--#define CSA_LOCK_PERIOD 15
- /*
-  * One for each channel, holds all channel setup data
-  * Some of the fields (e.g. eeprom and flags/max_power_avg) are redundant
-@@ -622,15 +614,6 @@ struct iwl4965_driver_hw_info {
- 	dma_addr_t shared_phys;
- };
- 
--
--#define STA_FLG_RTS_MIMO_PROT_MSK	__constant_cpu_to_le32(1 << 17)
--#define STA_FLG_AGG_MPDU_8US_MSK	__constant_cpu_to_le32(1 << 18)
--#define STA_FLG_MAX_AGG_SIZE_POS	(19)
--#define STA_FLG_MAX_AGG_SIZE_MSK	__constant_cpu_to_le32(3 << 19)
--#define STA_FLG_FAT_EN_MSK		__constant_cpu_to_le32(1 << 21)
--#define STA_FLG_MIMO_DIS_MSK		__constant_cpu_to_le32(1 << 22)
--#define STA_FLG_AGG_MPDU_DENSITY_POS	(23)
--#define STA_FLG_AGG_MPDU_DENSITY_MSK	__constant_cpu_to_le32(7 << 23)
- #define HT_SHORT_GI_20MHZ_ONLY          (1 << 0)
- #define HT_SHORT_GI_40MHZ_ONLY          (1 << 1)
- 
-@@ -862,17 +845,8 @@ struct iwl4965_kw {
- #define NRG_NUM_PREV_STAT_L     20
- #define NUM_RX_CHAINS           (3)
- 
--#define TX_POWER_IWL_ILLEGAL_VDET    -100000
- #define TX_POWER_IWL_ILLEGAL_VOLTAGE -10000
--#define TX_POWER_IWL_CLOSED_LOOP_MIN_POWER 18
--#define TX_POWER_IWL_CLOSED_LOOP_MAX_POWER 34
--#define TX_POWER_IWL_VDET_SLOPE_BELOW_NOMINAL 17
--#define TX_POWER_IWL_VDET_SLOPE_ABOVE_NOMINAL 20
--#define TX_POWER_IWL_NOMINAL_POWER            26
--#define TX_POWER_IWL_CLOSED_LOOP_ITERATION_LIMIT 1
- #define TX_POWER_IWL_VOLTAGE_CODES_PER_03V       7
--#define TX_POWER_IWL_DEGREES_PER_VDET_CODE       11
--#define IWL_TX_POWER_MAX_NUM_PA_MEASUREMENTS 1
- #define IWL_TX_POWER_CCK_COMPENSATION_B_STEP (9)
- #define IWL_TX_POWER_CCK_COMPENSATION_C_STEP (5)
- 
--- 
-1.5.2.2
----------------------------------------------------------------------
-Intel Israel (74) Limited
+--- linux-2.6.23.orig/drivers/net/wireless/hostap/hostap_cs.c
++++ linux-2.6.23/drivers/net/wireless/hostap/hostap_cs.c
+@@ -887,10 +887,13 @@ static struct pcmcia_device_id hostap_cs
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 "Ver. 1.00",
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0x5cd01705, 0x4=
+271660f, 0x9d08ee12),
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 PCMCIA_DEVICE_PROD_ID123(
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 "corega", "WL P=
+CCL-11", "ISL37300P",
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0xa21501a, 0x59=
+868926, 0xc9049a39),
++ =C2=A0 =C2=A0 =C2=A0 PCMCIA_DEVICE_PROD_ID1233(
++ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 "The Linksys Group, =
+Inc.", "Wireless Network CF Card", "ISL37300P",
++ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0xa5f472c2, 0x9c0559=
+8d, 0xc9049a39),
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 PCMCIA_DEVICE_NULL
+=C2=A0};
+=C2=A0MODULE_DEVICE_TABLE(pcmcia, hostap_cs_ids);
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+
+--=20
+JID: hrw-jabber.org
+OpenEmbedded developer/consultant
+
+Zemsta jest rozkosz=C4=85 umys=C5=82=C3=B3w miernych, s=C5=82abych i ma=
+=C5=82ostkowych. Ale jednak
+rozkosz=C4=85 by=C4=87 nie przestaje
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
