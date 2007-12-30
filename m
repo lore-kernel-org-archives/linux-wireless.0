@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55240 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbXLJPpd (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:63172 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756903AbXL3WBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:45:33 -0500
-In-Reply-To: <libertas-12345@shinybook.infradead.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	Sun, 30 Dec 2007 17:01:44 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so5002916fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2007 14:01:43 -0800 (PST)
+To: chris2553@googlemail.com
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Sun, 30 Dec 2007 23:01:40 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 01/48] libertas: Fix memory leak of RX skbs
-Message-Id: <E1J1kp5-0006kC-4J@shinybook.infradead.org> (sfid-20071210_154539_009743_B623E83F)
-Date: Mon, 10 Dec 2007 10:45:35 -0500
+References: <200712290942.37396.chris2553@googlemail.com> <200712301311.42895.IvDoorn@gmail.com> <200712301926.45380.chris2553@googlemail.com>
+In-Reply-To: <200712301926.45380.chris2553@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200712302301.40526.IvDoorn@gmail.com> (sfid-20071230_220153_215073_B5617DD1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Wed, 28 Nov 2007 16:20:51 +0000
+Hi,
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
- drivers/net/wireless/libertas/if_usb.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+> > Here is the patch against the latest vanilla kernel,
+> > the previous piece of code was bugged since the header size check was
+> > incorrect, but that is fixed in this one.
+> >
+> 
+> Thanks. You'll be pleased to here that with this patch, the warning has gone 
+> away and laptop's connection to my wireless network is still fine. I'll be 
+> using it over the New Year holiday. If anything negative happens I'll let you 
+> know.
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 4fce0ba..c27ffcf 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -460,6 +460,8 @@ static int __if_usb_submit_rx_urb(struct usb_card_rec *cardp,
- 	if ((ret = usb_submit_urb(cardp->rx_urb, GFP_ATOMIC))) {
- 		/* handle failure conditions */
- 		lbs_deb_usbd(&cardp->udev->dev, "Submit Rx URB failed\n");
-+		kfree_skb(skb);
-+		rinfo->skb = NULL;
- 		ret = -1;
- 	} else {
- 		/* lbs_deb_usbd(&cardp->udev->dev, "Submit Rx URB success\n"); */
-@@ -667,8 +669,10 @@ static void if_usb_receive(struct urb *urb)
- 		lbs_deb_usbd(&cardp->udev->dev,
- 			    "Recv length = 0x%x, Recv type = 0x%X\n",
- 			    recvlength, recvtype);
--	} else if (urb->status)
-+	} else if (urb->status) {
-+		kfree_skb(skb);
- 		goto rx_exit;
-+	}
- 
- 	switch (recvtype) {
- 	case CMD_TYPE_DATA:
--- 
-1.5.3.4
+excellent news, I have a few other patches currently under testing,
+and if no big problems are reported with them rt2x00 2.6.14 will be
+released at the end of this week.
 
+Ivo
