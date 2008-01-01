@@ -1,101 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53283 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756536AbYAGU57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:57:59 -0500
-Subject: Re: VT6656 driver source available from VIA
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Forest Bond <forest@alittletooquiet.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com>
-References: <20070919193743.GA14127@storm.local.network>
-	 <20071101185900.GD14943@tuxdriver.com>
-	 <20071101190711.GB17825@storm.local.network>
-	 <20071101191250.GE14943@tuxdriver.com>
-	 <20071105020730.GA4414@storm.local.network>
-	 <20071114170051.GD23778@storm.local.network>
-	 <20071114170634.GC6226@tuxdriver.com>
-	 <20080107184949.GI18550@storm.local.network>
-	 <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com>
-	 <20080107203101.GA4599@storm.local.network>
-	 <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 07 Jan 2008 15:54:56 -0500
-Message-Id: <1199739296.21366.1.camel@localhost.localdomain> (sfid-20080107_205801_333295_85CC09EC)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.172]:1349 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbYAAASR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Dec 2007 19:18:17 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so2349171ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2007 16:18:17 -0800 (PST)
+To: linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] b44: power down PHY when interface down
+Date: Tue, 1 Jan 2008 01:17:54 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mb@bu3sch.de
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200801010117.54411.mboton@gmail.com> (sfid-20080101_001837_170889_C20CE6DD)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-01-07 at 15:47 -0500, Luis R. Rodriguez wrote:
-> On Jan 7, 2008 3:31 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> >
-> > On Mon, Jan 07, 2008 at 03:20:02PM -0500, Luis R. Rodriguez wrote:
-> > > On Jan 7, 2008 1:49 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> > > > Hi,
-> > > >
-> > > > On Wed, Nov 14, 2007 at 12:06:34PM -0500, John W. Linville wrote:
-> > > > > On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
-> > > > >> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
-> > > > >>> The post is here:
-> > > > >>>
-> > > > >>> http://forums.viaarena.com/messageview.aspx?catid=28&threadid=78745
-> > > > >>>
-> > > > >>> Any noise that can be contributed is welcome and appreciated.  You'll need
-> > > > >>> to create an account to post, though.
-> > > > >
-> > > > >> I also added these.  Perhaps having plenty of content/links regarding this
-> > > > >> issue will help to increase visibility:
-> > > > >>
-> > > > >> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-linux-driver/
-> > > > >> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
-> > > > >
-> > > > > Excellent...I appreciate your efforts as an agitator! :-)
-> > > >
-> > > > At this point I am not anticipating positive results WRT this endeavor, and am
-> > > > unable to pursue further assistance from VIA.  Further, I've seen that the
-> > > > driver in question likely exhibits some interesting quirks that makes it
-> > > > difficult to use.  It is also bit-rotting out of relevance.
-> > >
-> > > This is unfortunate to hear...
-> > >
-> > > > Can the driver be used as a reference for a fresh implementation?  I've not
-> > > > written a driver before, but would be open to the possibility.
-> > >
-> > > IANAL but I believe It basically depends on the license the vendor
-> > > issued the driver under and its sources under. If no license was used
-> > > then I believe the standard copyright license terms should be assumed.
-> > > What license was used throughout the driver files?
-> > >
-> > > > What are the legal ramifications of a driver author having access to
-> > > > proprietary source code?
-> > >
-> > > Again, I believe it depends on the license/NDA/terms under which the
-> > > driver author obtained access to such proprietary source code. The
-> > > more details you provide the better.
-> >
-> > The license was omitted.  This was presumably an oversight, but intentions are
-> > always hard to know when the other party isn't saying anything :)
-> 
-> I'm calling their offices now, we should be able to just talk to
-> someone from their dev team...
-> 
-> > There's little doubt in my mind that we get nothing more than fair use out of
-> > this package, though.  The question is "is that enough?".  Code copying is
-> > obviously not allowed, but is a new (and sufficiently different) implementation
-> > allowed?
-> 
-> I think so but IANAL so not too sure, we can then ask SFLC to verify
-> in the end what's possible or not.
+This is just this patch (http://lkml.org/lkml/2007/7/1/51) but adapted
+to the 'b44' ssb driver.
 
-That would be good; the issue is that there is _no_ license at all with
-the code, but that the code contains MODULE_LICENSE("GPL") as the sole
-indicator of license intent, if you can even interpret that as license
-intent.  There isn't really any copyright indication anywhere in the
-sources either ISTR.  Maybe query the SFLC about what is possible given
-these limitations?
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
 
-Dan
+diff --git a/drivers/net/b44.c b/drivers/net/b44.c
+index 49e9172..ea2a2b5 100644
+--- a/drivers/net/b44.c
++++ b/drivers/net/b44.c
+@@ -128,6 +128,8 @@ static void b44_init_rings(struct b44 *);
+ #define B44_FULL_RESET		1
+ #define B44_FULL_RESET_SKIP_PHY	2
+ #define B44_PARTIAL_RESET	3
++#define B44_CHIP_RESET_FULL	4
++#define B44_CHIP_RESET_PARTIAL	5
+=20
+ static void b44_init_hw(struct b44 *, int);
+=20
+@@ -1259,7 +1261,7 @@ static void b44_clear_stats(struct b44 *bp)
+ }
+=20
+ /* bp->lock is held. */
+-static void b44_chip_reset(struct b44 *bp)
++static void b44_chip_reset(struct b44 *bp, int reset_kind)
+ {
+ 	struct ssb_device *sdev =3D bp->sdev;
+=20
+@@ -1281,6 +1283,13 @@ static void b44_chip_reset(struct b44 *bp)
+ 	ssb_device_enable(bp->sdev, 0);
+ 	b44_clear_stats(bp);
+=20
++	/*
++	 * Don't enable PHY if we are doing a partial reset
++	 * we are probably going to power down
++	 */
++	if (reset_kind =3D=3D B44_CHIP_RESET_PARTIAL)
++		return;
++
+ 	switch (sdev->bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+ 		bw32(bp, B44_MDIO_CTRL, (MDIO_CTRL_PREAMBLE |
+@@ -1316,7 +1325,14 @@ static void b44_chip_reset(struct b44 *bp)
+ static void b44_halt(struct b44 *bp)
+ {
+ 	b44_disable_ints(bp);
+-	b44_chip_reset(bp);
++	/* reset PHY */
++	b44_phy_reset(bp);
++	/* power down PHY */
++	printk(KERN_INFO PFX "%s: powering down PHY\n", bp->dev->name);
++	bw32(bp, B44_MAC_CTRL, MAC_CTRL_PHY_PDOWN);
++	/* now reset the chip, but without enabling the MAC&PHY
++	 * part of it. This has to be done _after_ we shut down the PHY */
++	b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
+ }
+=20
+ /* bp->lock is held. */
+@@ -1365,7 +1381,7 @@ static void b44_init_hw(struct b44 *bp, int reset=
+_kind)
+ {
+ 	u32 val;
+=20
+-	b44_chip_reset(bp);
++	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
+ 	if (reset_kind =3D=3D B44_FULL_RESET) {
+ 		b44_phy_reset(bp);
+ 		b44_setup_phy(bp);
+@@ -1422,7 +1438,7 @@ static int b44_open(struct net_device *dev)
+ 	err =3D request_irq(dev->irq, b44_interrupt, IRQF_SHARED, dev->name, =
+dev);
+ 	if (unlikely(err < 0)) {
+ 		napi_disable(&bp->napi);
+-		b44_chip_reset(bp);
++		b44_chip_reset(bp, B44_CHIP_RESET_PARTIAL);
+ 		b44_free_rings(bp);
+ 		b44_free_consistent(bp);
+ 		goto out;
+@@ -2188,7 +2204,7 @@ static int __devinit b44_init_one(struct ssb_devi=
+ce *sdev,
+ 	/* Chip reset provides power to the b44 MAC & PCI cores, which
+ 	 * is necessary for MAC register access.
+ 	 */
+-	b44_chip_reset(bp);
++	b44_chip_reset(bp, B44_CHIP_RESET_FULL);
+=20
+ 	printk(KERN_INFO "%s: Broadcom 44xx/47xx 10/100BaseT Ethernet %s\n",
+ 	       dev->name, print_mac(mac, dev->dev_addr));
+@@ -2212,6 +2228,7 @@ static void __devexit b44_remove_one(struct ssb_d=
+evice *sdev)
+ 	unregister_netdev(dev);
+ 	ssb_bus_may_powerdown(sdev->bus);
+ 	free_netdev(dev);
++	ssb_pcihost_set_power_state(sdev, PCI_D3hot);
+ 	ssb_set_drvdata(sdev, NULL);
+ }
+=20
+@@ -2240,6 +2257,7 @@ static int b44_suspend(struct ssb_device *sdev, p=
+m_message_t state)
+ 		b44_setup_wol(bp);
+ 	}
+=20
++	ssb_pcihost_set_power_state(sdev, PCI_D3hot);
+ 	return 0;
+ }
+=20
 
-
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
