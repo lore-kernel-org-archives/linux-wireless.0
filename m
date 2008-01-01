@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49553 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754041AbYAYPvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 10:51:40 -0500
-Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200801251415.00942.hs4233@mail.mn-solutions.de>
-References: <200801251415.00942.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 25 Jan 2008 10:46:57 -0500
-Message-Id: <1201276017.1163.3.camel@localhost.localdomain> (sfid-20080125_155203_698636_8C1A5352)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.172]:1349 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbYAAASP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Dec 2007 19:18:15 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so2349171ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2007 16:18:14 -0800 (PST)
+To: linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] ssb: add 'ssb_pcihost_set_power_state' function
+Date: Tue, 1 Jan 2008 01:16:46 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mb@bu3sch.de
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200801010116.46190.mboton@gmail.com> (sfid-20080101_001837_027675_541C4672)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-01-25 at 14:15 +0100, Holger Schurig wrote:
-> From: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
-> 
-> Fixing unaligned memory access on the blackfin architecture (maybe on the 
-> ARM also).
-> 
-> Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+This patch adds the 'ssb_pcihost_set_power_state' function.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+This function allows us to set the power state of a PCI device
+(for example b44 ethernet device).=20
 
-> 
-> Index: wireless-2.6/drivers/net/wireless/libertas/dev.h
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/dev.h	2008-01-25 10:03:29.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/dev.h	2008-01-25 14:03:00.000000000 +0100
-> @@ -349,7 +349,7 @@ struct assoc_request {
->  	u8 channel;
->  	u8 band;
->  	u8 mode;
-> -	u8 bssid[ETH_ALEN];
-> +	u8 bssid[ETH_ALEN] __attribute__ ((aligned (2)));
->  
->  	/** WEP keys */
->  	struct enc_key wep_keys[4];
-> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2008-01-25 14:03:14.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2008-01-25 14:03:33.000000000 +0100
-> @@ -12,8 +12,10 @@
->  #include "cmd.h"
->  
-> 
-> -static const u8 bssid_any[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-> -static const u8 bssid_off[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-> +static const u8 bssid_any[ETH_ALEN]  __attribute__ ((aligned (2))) =
-> +	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-> +static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
-> +	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
->  
-> 
->  static int assoc_helper_essid(struct lbs_private *priv,
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
 
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index a21ab29..aa70fd0 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -349,6 +349,13 @@ static inline void ssb_pcihost_unregister(struct p=
+ci_driver *driver)
+ {
+ 	pci_unregister_driver(driver);
+ }
++
++static inline
++void ssb_pcihost_set_power_state(struct ssb_device *sdev, pci_power_t =
+state)
++{
++	if (sdev->bus->bustype =3D=3D SSB_BUSTYPE_PCI)
++		pci_set_power_state(sdev->bus->host_pci, state);
++}
+ #endif /* CONFIG_SSB_PCIHOST */
+=20
+=20
+
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
