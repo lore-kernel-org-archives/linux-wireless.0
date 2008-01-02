@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2353 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761152AbYAYXDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 18:03:46 -0500
-Date: Fri, 25 Jan 2008 17:46:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Michael Buesch <mb@bu3sch.de>, Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Received: from fk-out-0910.google.com ([209.85.128.190]:65512 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375AbYABTCn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2008 14:02:43 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so6268196fkz.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2008 11:02:41 -0800 (PST)
+To: chris2553@googlemail.com
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Wed, 2 Jan 2008 20:02:29 +0100
+Cc: "Kalle Valo" <kalle.valo@nokia.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-Message-ID: <20080125224631.GH14687@tuxdriver.com> (sfid-20080125_230350_972499_7B4D6EEF)
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org> <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org> <200801251930.27022.mb@bu3sch.de> <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org> <20080125194807.GD14687@tuxdriver.com> <20080125195037.GE14687@tuxdriver.com> <20080125211815.GF14687@tuxdriver.com> <alpine.LFD.1.00.0801251354350.5056@hp.linux-foundation.org>
+References: <200712290942.37396.chris2553@googlemail.com> <a32f33a40712302356m46dfce7fu852636f8bc37b41f@mail.gmail.com> <200801020632.31361.chris2553@googlemail.com>
+In-Reply-To: <200801020632.31361.chris2553@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.1.00.0801251354350.5056@hp.linux-foundation.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801022002.29262.IvDoorn@gmail.com> (sfid-20080102_190247_657821_3C0A728B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2008 at 01:56:15PM -0800, Linus Torvalds wrote:
+On Wednesday 02 January 2008, Chris Clayton wrote:
+> On Monday 31 December 2007, Ivo Van Doorn wrote:
+> > On Dec 31, 2007 8:27 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> > > Ivo van Doorn <ivdoorn@gmail.com> writes:
+> > > > +             /*
+> > > > +              * Move entire frame 2 bytes to the front.
+> > > > +              */
+> > > > +             skb_push(skb, 2);
+> > > > +             memmove(skb->data, skb->data + 2, skb->len - 2);
+> > >
+> > > No skb_trim()? Shoudn't there be skb_trim(skb, 2) after memmove()?
+> >
+> > Good point, I completely forgot about that. :S
+> > Thanks. :)
+> >
+> > Ivo
 > 
-> 
-> On Fri, 25 Jan 2008, John W. Linville wrote:
-> > 
-> > Anyway, this is mostly just so we can scope the driver change required
-> > in absence of a firmware change.  Persumably the changes required if
-> > we were to put such code in mac80211 would be similar.
-> 
-> Make this conditional on archictures that need it, please.
-> 
-> And why is it suddenly smart to do this in three drivers rather than one 
-> upper layer?
+> Ah, does the patch I have applied and am running need enhancement, please?
 
-Two drivers, FWIW... :-)
+---
 
-Given that we don't have a CONFIG_MUST_ALIGN at present, I'm not sure
-it is worth adding one for either an iwlwifi fix or a mac80211 one.
-Or are there other issues that might be resolved or aided by such
-a definition?  It doesn't seem to have been needed so far.
-
-Maybe it would be easier to add a CONFIG_MAC80211_ALIGN_PAYLOAD option
-around some code in mac80211 to fix-up alignments?  Then users of
-alignment-sensitive arches could turn-on that option, and the rest
-of us would leave it off.  Another (non-exclusive) option would be
-to put CONFIG_MAC80211_DEBUG around the alignment warning so that
-most people would never see it.
-
-Thoughts?  I'm just looking for a resolution... :-)
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index ff399f8..3c10a68 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -386,6 +386,7 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
+ 	struct ieee80211_rx_status *rx_status = &rt2x00dev->rx_status;
+ 	struct ieee80211_hw_mode *mode;
+ 	struct ieee80211_rate *rate;
++	unsigned int header_size;
+ 	unsigned int i;
+ 	int val = 0;
+ 
+@@ -412,6 +413,27 @@ void rt2x00lib_rxdone(struct data_entry *entry, struct sk_buff *skb,
+ 		}
+ 	}
+ 
++	/*
++	 * Properly align the ieee80211 frame and make sure the
++	 * data behind the ieee80211 header is on a 4 byte boundrary.
++	 */
++	header_size = ieee80211_get_hdrlen_from_skb(skb);
++	if (!header_size) {
++		/*
++		 * Frame is too short to contain a valid header,
++		 * drop the entire frame since it is useless.
++		 */
++		kfree_skb(skb);
++		return;
++	} else if (header_size % 4 == 0) {
++		/*
++		 * Move entire frame 2 bytes to the front.
++		 */
++		skb_push(skb, 2);
++		memmove(skb->data, skb->data + 2, skb->len - 2);
++		skb_trim(skb, skb->len - 2);
++	}
++
+ 	rt2x00_update_link_rssi(&rt2x00dev->link, desc->rssi);
+ 	rt2x00dev->link.rx_success++;
+ 	rx_status->rate = val;
