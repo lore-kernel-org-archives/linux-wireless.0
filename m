@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2193 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751702AbYAXTCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 14:02:03 -0500
-Date: Thu, 24 Jan 2008 13:53:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
-Message-ID: <20080124185321.GB3200@tuxdriver.com> (sfid-20080124_190312_222237_247E24EC)
-References: <20080120001342.25718.83669.stgit@fate.lan> <1201094475.7733.1.camel@localhost> <20080123145243.GA3129@tuxdriver.com> <1201110286.8696.10.camel@localhost>
+Received: from vs166246.vserver.de ([62.75.166.246]:58968 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989AbYABP3z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2008 10:29:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: better rate control algorithm selection
+Date: Wed, 2 Jan 2008 16:29:15 +0100
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+References: <1198253375.16241.76.camel@johannes.berg> <200801021623.36089.mb@bu3sch.de> <1199287652.4172.90.camel@johannes.berg>
+In-Reply-To: <1199287652.4172.90.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1201110286.8696.10.camel@localhost>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200801021629.15594.mb@bu3sch.de> (sfid-20080102_152957_588817_83C8261D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 23, 2008 at 07:44:46PM +0200, Jussi Kivilinna wrote:
-> On Wed, 2008-01-23 at 09:52 -0500, John W. Linville wrote:
-> > I would like to have this driver soon, and FWIW I just put it in the
-> > Fedora Rawhide kernel last night.
-> > 
-> > However, I find that it does not seem to associate with WEP networks
-> > on my USR5421.  I haven't had a chance to try it on open or WPA
-> > networks, nor have I had a chance to debug it.  It does scan and see
-> > the networks.
-> > 
-> > Have you tested the driver as posted?  What device(s) are you using?
-> > Have you used it on encrypted networks?
+On Wednesday 02 January 2008 16:27:32 Johannes Berg wrote:
 > 
-> I guess I should start testing more if I'm going to be maintainer,
-> you're right WEP doesn't work. Unencrypted and WPA/WPA2 networks do work
-> for me but not WEP. Ad-Hoc and hidden WPA networks do not work either. I
-> have Buffalo WLI-U2-KG125S which should have same hardware/firmware as
-> USR5421.
+> > What about simply _not_ failing the initialization of mac80211, if no
+> > rc algo is available? I mean, we can just use a fixed rate we get through
+> > WEXT and stuff. Simply start at 1M on init in that case and stay at a fixed
+> > 1M until the user sets a different fixed rate through WEXT.
+> 
+> Not sure. I think I'd prefer not to have all special cases all over, I'd
+> much prefer a new rc80211_none or so then.
 
-Overall this looks fine to me for initial merge.  I have a couple
-of comments:
+That's fine with me, too. It's just a different implementation of the same idea.
 
-	-- I'm not too excited about the "Ndis_802_*" naming scheme for
-	data structures, although I know you copied it from elsewhere.
-	I'd like to see it changed, but I don't consider that a
-	merge blocker.
-
-	-- I foresee this driver surviving a conversion to use the
-	new cfg80211 configuraiton API.  So the "rndis_wext" name may
-	not be the best long-term choice.  I might suggest something
-	like "rndis_wlan".  I don't see why we couldn't change that
-	post-merge, although I would prefer to do that before the
-	final 2.6.25 release.
-
-So, I intend to push this upstream for 2.6.25.  Please consider making
-the changes cited above, especially the name change.
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
