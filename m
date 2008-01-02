@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:62284 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754579AbYADWF5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 17:05:57 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so511314nfb.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jan 2008 14:05:56 -0800 (PST)
-To: linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
-Date: Fri, 4 Jan 2008 23:05:54 +0100
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200801042305.55188.mboton@gmail.com> (sfid-20080104_220606_832873_45A8E776)
-From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:43754 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751763AbYABSCO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2008 13:02:14 -0500
+Date: Wed, 2 Jan 2008 19:02:09 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH v2] mac80211: better rate control algorithm selection
+Message-ID: <20080102180209.GA10837@uranus.ravnborg.org> (sfid-20080102_180216_778858_909F2C65)
+References: <1199283424.4172.88.camel@johannes.berg> <20080102172505.GA9772@uranus.ravnborg.org> <1199295901.4172.111.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1199295901.4172.111.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a compilation warning in 'iwl-4965.c'.
+On Wed, Jan 02, 2008 at 06:45:01PM +0100, Johannes Berg wrote:
+> 
+> > > +# objects for PID algorithm
+> > > +rc80211_pid-y := rc80211_pid_algo.o
+> > > +rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
+> 
+> > > +# build helper for PID algorithm
+> > > +rc-pid-y := $(rc80211_pid-y)
+> > 
+> > Is this extra indirection ( rc80211_pid-y ) a preparation
+> > for future rate algorithms or was it just coped from my proposal?
+> > It is not needed and it does not help readability.
+> 
+> As far as I can tell rc80211_pid-y is needed to build rc80211_pid.o from
+> rc80211_pid_algo.o and rc80211_pid_debugfs.o for the modular case, no?
 
-Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
+Correct - I just missed that when reading your patch.
+And I guess this was one of the things I got wrong in my first proposal too.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wire=
-less/iwlwifi/iwl-4965.c
-index 74999af..92237cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3616,7 +3616,7 @@ static void iwl4965_add_radiotap(struct iwl4965_p=
-riv *priv,
- 	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
- 		if (net_ratelimit())
- 			printk(KERN_ERR "not enough headroom [%d] for "
--			       "radiotap head [%d]\n",
-+			       "radiotap head [%ld]\n",
- 			       skb_headroom(skb), sizeof(*iwl4965_rt));
- 		return;
- 	}
+Looks good then.
 
---=20
-	Miguel Bot=C3=B3n
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hence, I just wanted to keep it symmetric for the non-modular case.
+> 
+> > A second note - but more as a personal taste..
+> > I prefer += assignment in preference of continued lines.
+> > So 
+> > +mac80211-y := \
+> >  	ieee80211.o \
+> >   	ieee80211_ioctl.o \
+> >  	sta_info.o \
+> > 
+> > would become:
+> > +mac80211-y := ieee80211.o ieee80211_ioctl.o
+> > +mac80211-y += sta_info.o
+> 
+> Yeah, I was hoping the diff would be smaller this way because it was
+> already this way before.
+
+Understood.
+
+	Sam
