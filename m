@@ -1,61 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:14693 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446AbYAPQhU (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:11103 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbYABTND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 11:37:20 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so333875fga.17
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2008 08:37:18 -0800 (PST)
+	Wed, 2 Jan 2008 14:13:03 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so6272658fkz.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2008 11:13:01 -0800 (PST)
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: proper short-slot handling
-Date: Wed, 16 Jan 2008 17:37:00 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	bruno randolf <br1@einfach.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Yanbo Li <dreamfly281@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Daniel Drake <dsd@gentoo.org>
-References: <1199974496.3861.80.camel@johannes.berg> <200801102000.44722.IvDoorn@gmail.com> <1200490221.5887.170.camel@johannes.berg>
-In-Reply-To: <1200490221.5887.170.camel@johannes.berg>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Wed, 2 Jan 2008 20:12:52 +0100
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <200712291614.55732.IvDoorn@gmail.com> <1199261473.4172.58.camel@johannes.berg>
+In-Reply-To: <1199261473.4172.58.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200801161737.00682.IvDoorn@gmail.com> (sfid-20080116_163724_317095_0BE13226)
+Message-Id: <200801022012.52287.IvDoorn@gmail.com> (sfid-20080102_191310_144395_8FAB4448)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 January 2008, Johannes Berg wrote:
-> Ivo,
+Hi,
+
+> Happy New Year!
+
+You too. :)
+
+> I was out since Saturday just before you sent your 
+> message, sorry for the late reply.
 > 
-> > > If you think it is the right approach, maybe try converting your driver
-> > > and see if that results in any problems, if not, send me the patch and
-> > > I'll integrate it.
-> > 
-> > The convertion was very easy, and like I said cleaned up some hacks. :)
+> > 	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
+> > 	if (header_size % 4 == 2) {
+> > 		/*
+> > 		 * Move entire frame 2 bytes to the front.
+> > 		 */
+> > 		skb_push(entry->skb, 2);
+> > 		memmove(entry->skb->data, entry->skb->data + 2,
+> > 			entry->skb->len - 2);
+> > 	}
 > 
-> Thanks. What is this diffed on? I tried importing it into my current
-> patch but it failed, do I have to wait for John to pull in your recent
-> pull request?
+> That doesn't really look right, I'd think the skb will be two bytes too
+> long after this.
 
-John already merged the 2.0.14 release into the everything branch,
-so no need to wait on that. The remaining patches which have been send
-but not yet merged are bugfixes which won't cause a collision with the
-short-slot patch.
+Yeah, fixed this in rt2x00.git :)
 
-Not sure where I diffed it against, I probably have to rebase it anyway
-since I currently have a few major patches pending for the 2.1.0 release
-which will drastically change the entire interface handling in rt2x00.
+> It's probably more efficient to decide where to copy 
+> the frame and do the realignment while you're copying it anyway rather
+> than doing a copy and then a memmove.
+>
+> I guess you should also try talk to Ralink to get firmware to do it
+> (where possible), it's probably not too hard to insert padding before
+> the frame.
 
-When do you plan to send the patch for inclusion? I can rebase the patch
-and make it part of the 2.1.0 release of this weekend or release 2.1.0
-and rebase the patch against that.
+Well the problem is a bit bigger than this, the bug is reported very rarely,
+so I can't say for sure which drivers are affected by this. But since most
+Ralink chipsets look alike, I think the safest assumption is that all are
+affected.
+
+rt2400pci, rt2500pci and rt2500usb don't have firmware, for rt61pci and
+rt73usb there is, but looking at how the TX and RX registers are working
+I *assume* the firmware isn't doing much in this area. (My personal
+guess for the firmware is that it only handles the hardware encryption
+and perhaps beaconing & virtual interfaces)
+Additionally firmware for rt61 and rt73 have been discontinued,
+all their work is currently going to rt2860 and rt2870. (Porting these to
+rt2x00 has already begun, but I haven't arrived at the header alignment yet)
+
+For PCI drivers I could indeed optimize the code by making the memcpy
+perform the operation on the 4 byte aligned code. But for this I need
+to check what is better, RX directly into a skbuff and use memmove
+or RX into DMA and use memcpy to a skbuff.
+But for USB this is not possible, since it directly performs the RX into
+the skbuff already, so I either have to change that or perform memmove anyway.
+
+> If you absolutely can't get the hardware to do it and would otherwise do
+> DMA right into the skb we should try to evaluate the performance hit on
+> platforms where unaligned access *is* possible to be able to balance it
+> against the performance hit caused by the memmove(). Ultimately, though,
+> I value correctness on all platforms over performance on some, hence the
+> warning when unaligned packets are handed up to mac80211.
+
+Overall correctness sounds as the best solution to me too.
 
 Ivo
+
