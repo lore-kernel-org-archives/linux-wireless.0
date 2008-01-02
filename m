@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:40524 "EHLO
-	ccerelbas01.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072AbYAVSer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 13:34:47 -0500
-Date: Tue, 22 Jan 2008 10:16:26 -0800
-To: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to user-space in standard GET WE ioctls.
-Message-ID: <20080122181626.GC11873@bougret.hpl.hp.com> (sfid-20080122_183454_239934_37EDD1A3)
-Reply-To: jt@hpl.hp.com
-References: <4793935F.2000102@gmail.com> <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com> <4794C341.2020300@gmail.com>
-MIME-Version: 1.0
+Received: from pasmtpb.tele.dk ([80.160.77.98]:41210 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750899AbYABRZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2008 12:25:11 -0500
+Date: Wed, 2 Jan 2008 18:25:05 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH v2] mac80211: better rate control algorithm selection
+Message-ID: <20080102172505.GA9772@uranus.ravnborg.org> (sfid-20080102_172526_264986_6F1A706B)
+References: <1199283424.4172.88.camel@johannes.berg>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4794C341.2020300@gmail.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1199283424.4172.88.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 21, 2008 at 06:07:29PM +0200, Volodymyr G. Lukiianyk wrote:
-> 
-> Please, ignore this patch. I didn't notice that the driver's handler should set
-> iwr->u.data.length appropriately. But is there any possibility for compiler to
-> temporarily save the value of this field in the register and not re-read it after
-> handler call?
-> 
+Hi Johannes.
 
-	If the kernel is compiled without -fno-strict-aliasing, I've
-seen similar things happening. But, I thought that using
--fno-strict-aliasing would cure that issue.
+Lo much better. One small comment.
 
-	Good luck...
+>  
+>  config MAC80211_LEDS
+>  	bool "Enable LED triggers"
+> --- everything.orig/net/mac80211/Makefile	2007-12-23 10:12:08.658937771 +0100
+> +++ everything/net/mac80211/Makefile	2008-01-02 15:07:52.568414117 +0100
+> @@ -1,19 +1,15 @@
+>  obj-$(CONFIG_MAC80211) += mac80211.o
+>  
+> -mac80211-objs-$(CONFIG_MAC80211_LEDS) += ieee80211_led.o
+> -mac80211-objs-$(CONFIG_NET_SCHED) += wme.o
+> -mac80211-objs-$(CONFIG_MAC80211_RC_SIMPLE) += rc80211_simple.o
+> -mac80211-objs-$(CONFIG_MAC80211_RC_PID) += rc80211_pid_algo.o
 
-	Jean
+> +# objects for PID algorithm
+> +rc80211_pid-y := rc80211_pid_algo.o
+> +rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
+>  
+> -mac80211-debugfs-objs-$(CONFIG_MAC80211_RC_PID) += rc80211_pid_debugfs.o
+> -mac80211-objs-$(CONFIG_MAC80211_DEBUGFS) += \
+> -	debugfs.o \
+> -	debugfs_sta.o \
+> -	debugfs_netdev.o \
+> -	debugfs_key.o \
+> -	$(mac80211-debugfs-objs-y)
+> +# build helper for PID algorithm
+> +rc-pid-y := $(rc80211_pid-y)
+
+Is this extra indirection ( rc80211_pid-y ) a preparation
+for future rate algorithms or was it just coped from my proposal?
+It is not needed and it does not help readability.
+
+A second note - but more as a personal taste..
+I prefer += assignment in preference of continued lines.
+So 
++mac80211-y := \
+ 	ieee80211.o \
+  	ieee80211_ioctl.o \
+ 	sta_info.o \
+
+would become:
++mac80211-y := ieee80211.o ieee80211_ioctl.o
++mac80211-y += sta_info.o
+etc.
+
+	Sam
