@@ -1,94 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:48429 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbYAYLWz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35567 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbYABIw2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 06:22:55 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable 3/3] b43: Fix dma-slot resource leakage
-Date: Fri, 25 Jan 2008 12:20:20 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801251220.20332.mb@bu3sch.de> (sfid-20080125_112300_967875_84954419)
+	Wed, 2 Jan 2008 03:52:28 -0500
+Subject: Re: [PATCH] mac80211: better rate control algorithm selection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sam Ravnborg <sam@ravnborg.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <20080102084532.GA17960@infradead.org>
+References: <1198253375.16241.76.camel@johannes.berg>
+	 <20071230231120.GB16557@uranus.ravnborg.org>
+	 <20071231074536.GA26874@infradead.org>
+	 <1199263275.4172.60.camel@johannes.berg>
+	 <20080102084532.GA17960@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x7oOuyTc/pH/WBEnUCD9"
+Date: Wed, 02 Jan 2008 09:52:14 +0100
+Message-Id: <1199263934.4172.69.camel@johannes.berg> (sfid-20080102_085230_916053_EB7C9A9E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes four resource leakages.
-In any error path we must deallocate the DMA frame slots we
-previously allocated by request_slot().
-This is done by storing the ring pointers before doing any ring
-allocation and restoring the old pointers in case of an error.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-This patch is upstream inside of the netdev tree.
+--=-x7oOuyTc/pH/WBEnUCD9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Index: linux-2.6.24/drivers/net/wireless/b43/dma.c
-===================================================================
---- linux-2.6.24.orig/drivers/net/wireless/b43/dma.c	2008-01-25 11:48:31.000000000 +0100
-+++ linux-2.6.24/drivers/net/wireless/b43/dma.c	2008-01-25 11:48:34.000000000 +0100
-@@ -1106,7 +1106,7 @@ static int dma_tx_fragment(struct b43_dm
- {
- 	const struct b43_dma_ops *ops = ring->ops;
- 	u8 *header;
--	int slot;
-+	int slot, old_top_slot, old_used_slots;
- 	int err;
- 	struct b43_dmadesc_generic *desc;
- 	struct b43_dmadesc_meta *meta;
-@@ -1116,6 +1116,9 @@ static int dma_tx_fragment(struct b43_dm
- #define SLOTS_PER_PACKET  2
- 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
- 
-+	old_top_slot = ring->current_slot;
-+	old_used_slots = ring->used_slots;
-+
- 	/* Get a slot for the header. */
- 	slot = request_slot(ring);
- 	desc = ops->idx2desc(ring, slot, &meta_hdr);
-@@ -1125,13 +1128,19 @@ static int dma_tx_fragment(struct b43_dm
- 	err = b43_generate_txhdr(ring->dev, header,
- 			   skb->data, skb->len, ctl,
- 			   generate_cookie(ring, slot));
--	if (unlikely(err))
-+	if (unlikely(err)) {
-+		ring->current_slot = old_top_slot;
-+		ring->used_slots = old_used_slots;
- 		return err;
-+	}
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 					   sizeof(struct b43_txhdr_fw4), 1);
--	if (dma_mapping_error(meta_hdr->dmaaddr))
-+	if (dma_mapping_error(meta_hdr->dmaaddr)) {
-+		ring->current_slot = old_top_slot;
-+		ring->used_slots = old_used_slots;
- 		return -EIO;
-+	}
- 	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
- 			     sizeof(struct b43_txhdr_fw4), 1, 0, 0);
- 
-@@ -1149,6 +1158,8 @@ static int dma_tx_fragment(struct b43_dm
- 	if (dma_mapping_error(meta->dmaaddr)) {
- 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
- 		if (!bounce_skb) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -ENOMEM;
- 			goto out_unmap_hdr;
- 		}
-@@ -1159,6 +1170,8 @@ static int dma_tx_fragment(struct b43_dm
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 		if (dma_mapping_error(meta->dmaaddr)) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -EIO;
- 			goto out_free_bounce;
- 		}
+> Building an algorithm optionally into mac80211 seems rather odd.  In
+> case mac80211 the algorithms should be their own modules and you should
+> use request_module to make sure at least one is loaded.
+
+We actually do that but people still manage to mess it up because they
+don't install the modules properly or whatever.
+
+> Or if you
+> really want to make sure one is alway avaiabable always build the
+> simplest one directly and unconditionally into mac80211.ko.
+
+That'd be an alternative too, I think we have something like that now. I
+don't really like it that much though because for 99% of people it's
+just dead code. Anyway, I'll look into Sam's mail and do a new patch
+depending on that.
+
+johannes
+
+--=-x7oOuyTc/pH/WBEnUCD9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR3tQvaVg1VMiehFYAQL3Yg/+KnXTtJZVia+X2jHcBkDoKPxbQdM5b7Wr
+SpfwKI7hlAw3AnFU+bxakNwwpHYMFzP0rOe55c4/ZLZPnueqlPS/gufX7dYpUBVn
+D0e1O1H0OzVVZLTBnsBDK4rvljBiHq9BhaCK1v6yG1D7T2gGaWulDuQihhT6kNdn
+tQoNsZw+pIKN3+FBXHJhxFTW6Epth3rWbHCMKyTiKbD3GhsfQt3SRY0BYOh+HHwW
+4x3zRdbBHtY/j2oJepkAHZTA2cZaSvckH2nuXk9tyB9b6V0QvKLWeywqEMtPMNSm
+eM55UXE1INl0KoNSbq75quAbrKe/rUmABiYsTZdz3Af/BN7R59zvEEDWc0c76tCH
+rM0Fv9Q29Cp2FxS7Udop0hHEcDwcmFoGQOfOpJ0MGJRvTHhg7rzGp4aUnfVH74Pj
+uPvBkb+3zNpbInPxP1HrZ9vQCIyouqvURLhO+3DCgEdrvXgvzTv3Q0claS+WnHeD
+P+iSE9eTAO5NSh0KpNtCch4QOToW+9QM8SlNk4U/QxL7InsoHlP6ohMq91Q+UgwN
+JGOGnFPZEVz568790sELkuBkwPEi2t3mptmNEi8H7dUF0dtt4VL6xFbtsNIzIx2w
+w0o05WBqQF9/WkWkk4G5EY7EyBnwFCBYjzVhjOqJRJDxYvmdi7CnyelJDI2qlWTJ
+33lSiUC14KE=
+=AFrp
+-----END PGP SIGNATURE-----
+
+--=-x7oOuyTc/pH/WBEnUCD9--
+
