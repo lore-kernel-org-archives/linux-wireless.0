@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ag-out-0708.google.com ([72.14.246.243]:58516 "EHLO
-	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759472AbYAKQ4Z (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:65106 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751831AbYABSwO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 11:56:25 -0500
-Received: by ag-out-0708.google.com with SMTP id 23so819483agd.10
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 08:56:23 -0800 (PST)
-Message-ID: <40f31dec0801110856r1d0e04f3i284afb2a3f64f8c1@mail.gmail.com> (sfid-20080111_165630_351019_7BE3D42B)
-Date: Fri, 11 Jan 2008 18:56:23 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Romano Giannetti" <romanol@upcomillas.es>
-Subject: Re: Testing ath5k driver
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1200049360.12702.14.camel@rukbat>
+	Wed, 2 Jan 2008 13:52:14 -0500
+Message-ID: <477BDD58.9050702@lwfinger.net> (sfid-20080102_185218_549996_8C7C6CAF)
+Date: Wed, 02 Jan 2008 10:52:08 -0800
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1200049360.12702.14.camel@rukbat>
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Fix rxheader channel parsing
+References: <200801021855.53410.mb@bu3sch.de>
+In-Reply-To: <200801021855.53410.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
->
-> Hi all,
->
-> I stumbled yesterday on the compat- package and I could not resist to
-> test the new drivers on my laptop. (BTW, the link to the download page
-> on http://linuxwireless.org/en/users/Drivers/ath5k is wrong).
->
-> I have a toshiba U305 with a Atheros chipset, marked as AR5BXB63 or
-> AR5007EG.
->
-> 06:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG 802.11 b/g Wireless PCI Express Adapter (rev 01)
->         Subsystem: Askey Computer Corp. Unknown device 7128
->         Flags: fast devsel, IRQ 19
->         Memory at 88200000 (64-bit, non-prefetchable) [size=64K]
->         Capabilities: [40] Power Management version 2
->         Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
->         Capabilities: [60] Express Legacy Endpoint IRQ 0
->         Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [140] Virtual Channel
-> 00: 8c 16 1c 00 42 01 10 00 01 00 00 02 10 00 00 00
-> 10: 04 00 20 88 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 01 50 00 00 4f 14 28 71
-> 30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 00 00
->
-> I have built the yesterday  compat-wireless-2.6.tar.bz2 and after all
-> the step I have:
->
-> [  312.999107] ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 19 (level, low) -> IRQ 19
-> [  312.999141] PCI: Setting latency timer of device 0000:06:00.0 to 64
-> [  312.999351] ath5k_pci 0000:06:00.0: registered as 'phy0'
-> [  314.048568] ath5k phy0: failed to resume the MAC Chip
-> [  314.048652] ACPI: PCI interrupt for device 0000:06:00.0 disabled
-> [  314.048674] ath5k_pci: probe of 0000:06:00.0 failed with error -5
->
-> So... just to give you a data point. I am available to test things. The
-> wireless works ok[*] with ndiswrapper and XP drivers for AR5008.
->
-> Romano
->
-> [*] Well, if I do not try to load ath5k modules. After that, and after
-> unload it and all of the dependent modules, trying to load ndiswrapper
-> again put the laptop in brick mode. But that's another story, I know.
->
+Michael Buesch wrote:
+> This patch fixes the parsing of the RX data header channel field.
+> 
+> The current code parses the header incorrectly and passes a wrong
+> channel number and frequency for each frame to mac80211.
+> The FIXMEs added by this patch don't matter for now as the code
+> where they live won't get executed anyway. They will be fixed later.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
+> 
+> John, as this is a bugfix, it should go into 2.6.24 if still possible.
+> 
+> Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c	2007-12-30 20:30:03.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/b43/xmit.c	2008-01-02 18:13:15.000000000 +0100
+> @@ -549,21 +549,32 @@ void b43_rx(struct b43_wldev *dev, struc
+>  	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
+>  	case B43_PHYTYPE_A:
+>  		status.phymode = MODE_IEEE80211A;
+> -		status.freq = chanid;
+> -		status.channel = b43_freq_to_channel_a(chanid);
+> -		break;
+> -	case B43_PHYTYPE_B:
+> -		status.phymode = MODE_IEEE80211B;
+> -		status.freq = chanid + 2400;
+> -		status.channel = b43_freq_to_channel_bg(chanid + 2400);
+> +		B43_WARN_ON(1);
+> +		/* FIXME: We don't really know which value the "chanid" contains.
+> +		 *        So the following assignment might be wrong. */
+> +		status.channel = chanid;
+> +		status.freq = b43_channel_to_freq_5ghz(status.channel);
+>  		break;
 
-It's a known bug in nic_wakeup, i've fixed it but patch is pending due
-to testing. Problem is that even with that fix RF2425 doesn't tx/rx,
-we are currently working with users to fix 2413/2414 support (radio
-revision 0x56) so it'll take a while (tests etc) before we make this
-work.
+Shouldn't you just drop this case? No B PHY devices will ever use b43 and the default branch will
+issue the WARN_ON anyway.
 
+Larry
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
