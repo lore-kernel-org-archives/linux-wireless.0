@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:60238 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750915AbYAPXpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 18:45:55 -0500
-Date: Thu, 17 Jan 2008 00:38:29 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	linux-wireless@vger.kernel.org
-Subject: rc80211-pid: fix last_sample initialization
-Message-ID: <20080117003829.6d1c15cc@morte> (sfid-20080116_234603_943915_85DD4A0B)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from vs166246.vserver.de ([62.75.166.246]:55646 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752620AbYABTxX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2008 14:53:23 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ehud Gavron <gavron@wetwork.net>
+Subject: Re: [PATCH] b43: Fix rxheader channel parsing
+Date: Wed, 2 Jan 2008 20:52:39 +0100
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200801021855.53410.mb@bu3sch.de> <200801022002.58434.mb@bu3sch.de> <477BE805.9020500@wetwork.net>
+In-Reply-To: <477BE805.9020500@wetwork.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801022052.40138.mb@bu3sch.de> (sfid-20080102_195326_619642_65F33504)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix last_sample initialization. kzalloc'ing the per-STA data wasn't enough,
-as jiffies can assume negative values as well. This fixes a bug which
-prevented correct PID operation for a while after booting.
+On Wednesday 02 January 2008 20:37:41 Ehud Gavron wrote:
+> Happy New Year, Michael!
+> 
+> :)
 
-Thanks to Michael Buesch for reporting this.
+Yeah, thanks. :)
 
-Reported-and-tested-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
-@@ -496,6 +496,8 @@ static void *rate_control_pid_alloc_sta(
- 	if (spinfo == NULL)
- 		return NULL;
- 
-+	spinfo->last_sample = jiffies;
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	spin_lock_init(&spinfo->events.lock);
- 	init_waitqueue_head(&spinfo->events.waitqueue);
-
+Happy New Year to everyone on the list.
+Let's work on making The Linux Wireless Year (tm) out of it.
 
 -- 
-Ciao
-Stefano
+Greetings Michael.
