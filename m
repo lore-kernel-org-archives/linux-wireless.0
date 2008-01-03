@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:35586 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755982AbYAaPN0 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:63121 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbYACXck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 10:13:26 -0500
-Received: by rn-out-0910.google.com with SMTP id i24so619953rng.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 07:13:23 -0800 (PST)
-Message-ID: <43e72e890801310713i56e012e7jbe957f11cfc2b0dd@mail.gmail.com> (sfid-20080131_151337_927472_87B3C70C)
-Date: Thu, 31 Jan 2008 10:13:22 -0500
+	Thu, 3 Jan 2008 18:32:40 -0500
+Received: by py-out-1112.google.com with SMTP id u52so10753755pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2008 15:32:39 -0800 (PST)
+Message-ID: <43e72e890801031532g6eb57af2g18bd9491c53ad2f1@mail.gmail.com> (sfid-20080103_233245_671722_2C739444)
+Date: Thu, 3 Jan 2008 18:32:37 -0500
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: should we revert the cfg80211 API patches?
-Cc: "Jory A. Pratt" <geekypenguin@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Michael Buesch" <mb@bu3sch.de>
-In-Reply-To: <1ba2fa240801300825ye9cc0f1re9880b57bb48c95@mail.gmail.com>
+To: "Rafael Remy" <rafi@theater-kgr.com>
+Subject: Re: what kernel modules are nessecary for compact wireless
+Cc: linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <loom.20071231T052528-182@post.gmane.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1201708352.4149.21.camel@johannes.berg>
-	 <47A0A2F9.3020400@gmail.com>
-	 <1ba2fa240801300825ye9cc0f1re9880b57bb48c95@mail.gmail.com>
+References: <loom.20071231T052528-182@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 30, 2008 11:25 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+On Dec 31, 2007 12:28 AM, Rafael Remy <rafi@theater-kgr.com> wrote:
+> hello
 >
-> On Jan 30, 2008 6:16 PM, Jory A. Pratt <geekypenguin@gmail.com> wrote:
-> >
-> > Johannes Berg wrote:
-> > > John,
-> > >
-> > > It appears that there's more trouble caused by my cfg80211 band API
-> > > patch than people are willing to put up with. Tomas has already asked
-> > > for it to be reverted, and neither Michael (Buesch) nor Stefano want to
-> > > maintain two driver branches (one "stable" 2.6.25 branch and one
-> > > "development" "for the future" branch).
-> > >
-> > > FWIW, I support your decision to not push this particular patch for
-> > > 2.6.25, it really doesn't fall into the "tested well enough to merge
-> > > during merge window" category.
-> > >
-> > > Additionally, since Michael Wu has (privately) announced to stop working
-> > > on wireless, a number of drivers are effectively unmaintained now and
-> > > I'm not sure I can quickly fix the breakage that my patch probably
-> > > caused in those drivers, especially since Michael Wu is the only
-> > > developer with access to all that hardware.
-> > >
-> > > To ease the short term pain, we can remove/revert the commits in
-> > > question (those being 51c4c94e89a2042e8b20d640b49b6b605d71420d,
-> > > 6854a5291cce341751a7e2e195cc3e97d95afeec and
-> > > d0776155b288c20cc936bfd87d9a76255f244ed8).
-> > >
-> > > Maybe I should have waited longer or posted the patches earlier. I
-> > > didn't post them earlier because I had not wanted to disrupt Intel's
-> > > iwlwifi work too much knowing that there were patches, and then those
-> > > patches caused bad breakage with my patch so I had to wait for another
-> > > Intel patchset fixing a number of bugs they introduced... I'll admit
-> > > that timing was horrible.
-> > >
-> > > But, I'll be frank, if the patches are removed/revert I probably won't
-> > > continue maintaining them. I can't do much with these patches but
-> > > continually forward port them on top of new driver changes which is
-> > > boring and useless work. Experience has shown that hardly anybody but me
-> > > [1] actually tests my patches until I push them into your tree, so
-> > > continuing to forward port these patches won't actually help them become
-> > > better but can only make sure they don't completely bitrot into
-> > > oblivion.
-> > >
-> > > The only way forward I see if these patches are reverted is that we
-> > > announce with the reversion that we'll merge them again in N weeks (with
-> > > N being a reasonably small number, say 4-6) and until then people can
-> > > test the patches and send me driver updates that I'll incorporate. But I
-> > > don't see how useful that is vs. just leaving the patches in place and
-> > > you managing the required driver updates.
-> > >
-> > > johannes
-> > >
-> > > [1] the only other people who test it seem to be mostly clueless people
-> > > who want to get AP mode working and then ask me stupid questions in
-> > > private... there are exceptions of course
-> > >
-> > Reverting the patch is not the answer. Everyone just needs to step up
-> > and fix what they can. If maintainers are needed a call needs to be put
-> > out to find one.
-> > The work is in the direction that moves wireless in linux toward that of
-> > a windows machine that the users want and need.
+> i use a small holded 2.6.23-12 kernel with debian.
 >
-> Agree.
-> Just, the timing was unfortunate.
+> what modules i have to put into the kernel for wireless working?
+>
+> i installed the kernel modules, the fwcutter and the firmware.
+>
+> PrinzIP:/lib/modules/2.6.23.12/updates/drivers/net/wireless/b43# modprobe b43
+> WARNING: Error inserting ssb
+> (/lib/modules/2.6.23.12/updates/drivers/ssb/ssb.ko): Unknown symbol in module,
+> or unknown parameter (see dmesg)
+> FATAL: Error inserting b43
+> (/lib/modules/2.6.23.12/updates/drivers/net/wireless/b43/b43.ko): Unknown symbol
+> in module, or unknown parameter (see dmesg)
+>
+> dmesg:
+>
+> ssb: Unknown symbol pcmcia_access_configuration_register
 
-Please keep. The question then becomes if we should push for the merge window.
+This is the problem. pcmcia_access_configuration_register() is a
+routine exported by drivers/pcmcia/pcmcia_resource.c. This is built as
+part of the pcmcia kernel module so you need pcmcia module built. Do
+you have CONFIG_PCMCIA=m ?
+
+Then since pcmcia was not loaded ssb couldn't be loaded, and since ssb
+couldn't be loaded b43 couldn't be loaded.
 
   Luis
