@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38806 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754820AbYAGQDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 11:03:06 -0500
-Message-ID: <47824D25.5090005@hauke-m.de> (sfid-20080107_160328_142889_DD9356B7)
-Date: Mon, 07 Jan 2008 17:02:45 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from py-out-1112.google.com ([64.233.166.176]:32640 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745AbYACXLi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jan 2008 18:11:38 -0500
+Received: by py-out-1112.google.com with SMTP id u52so10742526pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2008 15:11:36 -0800 (PST)
+Message-ID: <43e72e890801031511g1db178a0v90f7b3ed8e866e9e@mail.gmail.com> (sfid-20080103_231145_402745_571765B9)
+Date: Thu, 3 Jan 2008 18:11:35 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+Subject: Re: rtl8187 Failed to select rate control algorithm 2.6.24-rc6
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <476FD6F0.4010605@hauke-m.de>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-CC: Michael Wu <flamingice@sourmilk.net>, linux-kernel@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187 rate control doesn't work
-References: <477F9890.5050107@hauke-m.de> <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
-In-Reply-To: <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
+References: <476FD6F0.4010605@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is an other Problem.
+Apologies for the delay, this should be fixed now.
 
-iwconfig shows me "Bit Rate=1 Mb/s" the hole time, but I'm able to
-download with an average of 440K/s as wget says.
+  Luis
 
-It's with PID rate control algorithm.
-
---
-
-Hauke Mehrtens
-
-Luis R. Rodriguez wrote:
-> On Jan 5, 2008 9:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> Hi
->>
->> Now the compat-wireless-2.6 package is working and I get an Internet
->> connection with my rtl8187 based card. (It's on an ASUS P5B Deluxe)
->>
->> I used the compat-wireless-2.6 package for this log, but I have the same
->> problem with the version integrated in kernel 2.6.24-rc6
->>
->> The Access Point is some rooms away so the signal is not the best at my
->> location. When starting the device with no fixed rate it wants to
->> connect with 54MBit/s and as iwconfig says it was successful but I can't
->> ping any device in the wireless LAN. (it's the first part of the log)
->> The rate will not be slowed down it stays fixed at 54MBit/s.
->>
->> After starting the device with rate fixed to 11M I get a connection to
->> the Access Point and iwconfig's output looks the same as without fixed
->> rate, but I'm able to ping the all devices in the network. (second part
->> of the log)
->> Now it slows down the rate to 1MBit/s
-> 
-> Seems to be the new PID rate control algorithm. I believe Stephano
-> (CC'd) was sending some patches for this. Please try changing in
-> config.mk
-> 
-> From this value:
-> 
-> CONFIG_MAC80211_RC_DEFAULT=pid
-> 
-> To this:
-> 
-> CONFIG_MAC80211_RC_DEFAULT=simple
-> 
-> and let us know how that goes. Oh and linux-kernel is the wrong list
-> to use, please just use linux-wireless for future e-mails.
-> 
->   Luis
+On Dec 24, 2007 10:57 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Hi
+>
+> The compat-wireless-2.6 package is compiling on Kernel 2.6.24-rc6.
+>
+> Now I have the next problem. I want to load the rtl8187 module out of
+> the compat-wireless-2.6 package into kernel 2.6.24-rc6, but I get the
+> following message:
+>
+> phy0: Failed to select rate control algorithm
+> phy0: Failed to initialize rate control algorithm
+> rtl8187: Cannot register device
+> rtl8187: probe of 6-3:1.0 failed with error -2
+> usbcore: registered new interface driver rtl8187
+>
+> And no wireless device is created at iwconfig
+>
+>
+> When loading the module from vanilla kernel 2.6.24-rc6 it prints out the
+> following messages:
+>
+> phy0: Selected rate control algorithm 'simple'
+> phy0: hwaddr 00:15:af:03:ab:79, rtl8187 V1 + rtl8225z2
+> usbcore: registered new interface driver rtl8187
+>
+> And a wireless device is created at iwconfig and everything is working
+> as it should.
+>
+> I downloaded the compat-wireless-2.6 package 1 hour ago.
+>
+> I have got the same problem on kernel 2.6.22.
+> I loaded the following modules:
+> cfg80211.ko ; mac80211.ko ; eeprom_93cx6.ko ; rtl8187.ko
+>
+> --
+> Merry Christmas
+>
+> Hauke Mehrtens
+>
