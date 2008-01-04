@@ -1,65 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57200 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362AbYAMNOj (ORCPT
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:8358 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029AbYADWNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 08:14:39 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix radio ID register reading
-Date: Sun, 13 Jan 2008 14:12:44 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Fri, 4 Jan 2008 17:13:14 -0500
+To: Miguel =?iso-8859-1?Q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	yi.zhu@intel.com, linville@tuxdriver.com
+Subject: Re: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
+References: <200801042305.55188.mboton@gmail.com>
+From: Roland Dreier <rdreier@cisco.com>
+Date: Fri, 04 Jan 2008 14:13:12 -0800
+In-Reply-To: <200801042305.55188.mboton@gmail.com> (Miguel
+ =?iso-8859-1?Q?Bot=C3=B3n's?= message of "Fri, 4 Jan 2008 23:05:54 +0100")
+Message-ID: <adaabnlme87.fsf@cisco.com> (sfid-20080104_221318_806972_FA792F1B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801131412.44830.mb@bu3sch.de> (sfid-20080113_131441_967894_42E6C8C7)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes reading of the high 16 bits of the radio ID
-on new devices. 2055 radios want lo16 to be read first.
+ > -			       "radiotap head [%d]\n",
+ > +			       "radiotap head [%ld]\n",
+ >  			       skb_headroom(skb), sizeof(*iwl4965_rt));
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Actually I think the correct printf format for printing a size_t
+(coming here from sizeof foo) is "%zd".  Otherwise you'll fix the
+warning on 64-bit targets but add a new warning on 32-bit targets.
 
----
-
-For 2.6.25
-
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-01-13 13:26:18.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-01-13 13:59:27.000000000 +0100
-@@ -3136,16 +3136,15 @@ static int b43_phy_versioning(struct b43
- 		else if (dev->dev->bus->chip_rev == 1)
- 			tmp = 0x4205017F;
- 		else
- 			tmp = 0x5205017F;
- 	} else {
- 		b43_write16(dev, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
--		tmp = b43_read16(dev, B43_MMIO_RADIO_DATA_HIGH);
--		tmp <<= 16;
-+		tmp = b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
- 		b43_write16(dev, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
--		tmp |= b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
-+		tmp |= (u32)b43_read16(dev, B43_MMIO_RADIO_DATA_HIGH) << 16;
- 	}
- 	radio_manuf = (tmp & 0x00000FFF);
- 	radio_ver = (tmp & 0x0FFFF000) >> 12;
- 	radio_rev = (tmp & 0xF0000000) >> 28;
- 	if (radio_manuf != 0x17F /* Broadcom */)
- 		unsupported = 1;
-@@ -3164,13 +3163,13 @@ static int b43_phy_versioning(struct b43
- 		break;
- 	case B43_PHYTYPE_G:
- 		if (radio_ver != 0x2050)
- 			unsupported = 1;
- 		break;
- 	case B43_PHYTYPE_N:
--		if (radio_ver != 5)
-+		if (radio_ver != 0x2055)
- 			unsupported = 1;
- 		break;
- 	default:
- 		B43_WARN_ON(1);
- 	}
- 	if (unsupported) {
+ - R.
