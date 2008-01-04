@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:24758 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750928AbYAXFv5 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:2597 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbYADFDV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 00:51:57 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Thu, 24 Jan 2008 14:51:49 +0900
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>,
-	Adam Baker <linux@baker-net.org.uk>
-References: <20080118125252.6455.41047.stgit@one> <200801201143.09488.IvDoorn@gmail.com> <1201099791.3454.19.camel@johannes.berg>
-In-Reply-To: <1201099791.3454.19.camel@johannes.berg>
+	Fri, 4 Jan 2008 00:03:21 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so10211029wah.23
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2008 21:03:20 -0800 (PST)
+Message-ID: <cb0375e10801032103j2af2acd4heff9ad0adc1038d1@mail.gmail.com> (sfid-20080104_050332_003980_6860FAC4)
+Date: Thu, 3 Jan 2008 21:03:19 -0800
+From: "Andrew Lutomirski" <andy@luto.us>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] Return an error when SIWRATE doesn't match any rate
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801241451.49586.bruno@thinktube.com> (sfid-20080124_055201_815281_4C62A22F)
+Content-Type: multipart/mixed;
+	boundary="----=_Part_4147_33370190.1199422999884"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 January 2008 23:49:51 Johannes Berg wrote:
-> > Then there is a problem for rt2x00. Since the mactime isn't known.
-> > rt2400pci is the _only_ device which has a RX_END_TIME field in the
-> > RX descriptor.
->
-> I don't think it's required for IBSS to function, only for this from my
-> POV dubious "merge" functionality.
+------=_Part_4147_33370190.1199422999884
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-also you might want to check if your hard- or firmware (if you have any) 
-handles IBSS merges already, especially with USB devices. i can't imagine how 
-a device driver without access to that information is supposed to merge IBSS.
+[Attached b/c my mailer will screw it up]
 
-bruno
+Currently mac80211 fails silently when trying to set a nonexistent
+rate.  Return an error instead.
+
+Signed-Off-By: Andy Lutomirski <luto@myrealbox.com>
+
+------=_Part_4147_33370190.1199422999884
+Content-Type: text/x-patch; name=mac80211_rate_1.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fb09hafb0
+Content-Disposition: attachment; filename=mac80211_rate_1.patch
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9pZWVlODAyMTFfaW9jdGwuYyBiL25ldC9tYWM4MDIx
+MS9pZWVlODAyMTFfaW9jdGwuYwppbmRleCBiZTgwZjQ0Li44NDkwZGNhIDEwMDY0NAotLS0gYS9u
+ZXQvbWFjODAyMTEvaWVlZTgwMjExX2lvY3RsLmMKKysrIGIvbmV0L21hYzgwMjExL2llZWU4MDIx
+MV9pb2N0bC5jCkBAIC01ODEsNyArNTgxLDcgQEAgc3RhdGljIGludCBpZWVlODAyMTFfaW9jdGxf
+c2l3cmF0ZShzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LAogCXNkYXRhLT5ic3MtPmZvcmNlX3VuaWNh
+c3RfcmF0ZWlkeCA9IC0xOwogCWlmIChyYXRlLT52YWx1ZSA8IDApCiAJCXJldHVybiAwOwotCWZv
+ciAoaT0wOyBpPCBtb2RlLT5udW1fcmF0ZXM7IGkrKykgeworCWZvciAoaT0wOyBpIDwgbW9kZS0+
+bnVtX3JhdGVzOyBpKyspIHsKIAkJc3RydWN0IGllZWU4MDIxMV9yYXRlICpyYXRlcyA9ICZtb2Rl
+LT5yYXRlc1tpXTsKIAkJaW50IHRoaXNfcmF0ZSA9IHJhdGVzLT5yYXRlOwogCkBAIC01ODksMTAg
+KzU4OSwxMCBAQCBzdGF0aWMgaW50IGllZWU4MDIxMV9pb2N0bF9zaXdyYXRlKHN0cnVjdCBuZXRf
+ZGV2aWNlICpkZXYsCiAJCQlzZGF0YS0+YnNzLT5tYXhfcmF0ZWN0cmxfcmF0ZWlkeCA9IGk7CiAJ
+CQlpZiAocmF0ZS0+Zml4ZWQpCiAJCQkJc2RhdGEtPmJzcy0+Zm9yY2VfdW5pY2FzdF9yYXRlaWR4
+ID0gaTsKLQkJCWJyZWFrOworCQkJcmV0dXJuIDA7CiAJCX0KIAl9Ci0JcmV0dXJuIDA7CisJcmV0
+dXJuIC1FSU5WQUw7CiB9CiAKIHN0YXRpYyBpbnQgaWVlZTgwMjExX2lvY3RsX2dpd3JhdGUoc3Ry
+dWN0IG5ldF9kZXZpY2UgKmRldiwK
+------=_Part_4147_33370190.1199422999884--
