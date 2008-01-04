@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:20526 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671AbYAYNO7 (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.191]:8104 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709AbYADWeh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 08:14:59 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: fix memory alignment problems on the blackfin
-Date: Fri, 25 Jan 2008 14:15:00 +0100
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+	Fri, 4 Jan 2008 17:34:37 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so5547392mue.5
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jan 2008 14:34:36 -0800 (PST)
+To: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
+Date: Fri, 4 Jan 2008 23:34:35 +0100
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	linville@tuxdriver.com
+References: <200801042305.55188.mboton@gmail.com>
+In-Reply-To: <200801042305.55188.mboton@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801251415.00942.hs4233@mail.mn-solutions.de> (sfid-20080125_131509_287156_F3A20381)
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200801042334.36177.mboton@gmail.com> (sfid-20080104_223441_564756_B21C18C2)
+From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+Ok, there's a new patch.
 
-Fixing unaligned memory access on the blackfin architecture (maybe on the 
-ARM also).
+This patch fixes a compilation warning in 'iwl-4965.c'.
 
-Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+"warning: format =E2=80=98%d=E2=80=99 expects type =E2=80=98int=E2=80=99=
+, but argument 3 has type =E2=80=98long unsigned int=E2=80=99"
 
-Index: wireless-2.6/drivers/net/wireless/libertas/dev.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/dev.h	2008-01-25 10:03:29.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/dev.h	2008-01-25 14:03:00.000000000 +0100
-@@ -349,7 +349,7 @@ struct assoc_request {
- 	u8 channel;
- 	u8 band;
- 	u8 mode;
--	u8 bssid[ETH_ALEN];
-+	u8 bssid[ETH_ALEN] __attribute__ ((aligned (2)));
- 
- 	/** WEP keys */
- 	struct enc_key wep_keys[4];
-Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2008-01-25 14:03:14.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2008-01-25 14:03:33.000000000 +0100
-@@ -12,8 +12,10 @@
- #include "cmd.h"
- 
- 
--static const u8 bssid_any[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--static const u8 bssid_off[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-+static const u8 bssid_any[ETH_ALEN]  __attribute__ ((aligned (2))) =
-+	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-+static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
-+	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
- 
- 
- static int assoc_helper_essid(struct lbs_private *priv,
+Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wire=
+less/iwlwifi/iwl-4965.c
+index 74999af..92237cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3616,7 +3616,7 @@ static void iwl4965_add_radiotap(struct iwl4965_p=
+riv *priv,
+ 	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
+ 		if (net_ratelimit())
+ 			printk(KERN_ERR "not enough headroom [%d] for "
+-			       "radiotap head [%d]\n",
++			       "radiotap head [%zd]\n",
+ 			       skb_headroom(skb), sizeof(*iwl4965_rt));
+ 		return;
+ 	}
+
+--=20
+	Miguel Bot=C3=B3n
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
