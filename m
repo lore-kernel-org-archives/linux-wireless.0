@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:51930 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884AbYADHn6 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:28092 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758958AbYAFWjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 02:43:58 -0500
-Date: Fri, 4 Jan 2008 02:21:05 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+	Sun, 6 Jan 2008 17:39:51 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3071048ugc.16
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 14:39:49 -0800 (PST)
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	bruno randolf <bruno@thinktube.com>,
-	Andrew Lutomirski <luto@myrealbox.com>
-Subject: [PATCH] ath5k: Fix frame duration oops
-Message-ID: <20080104072105.GC28995@ruslug.rutgers.edu> (sfid-20080104_074403_728048_437257B8)
+Subject: [PATCH 01/12] rt2x00: Fix chipset debugfs file
+Date: Sun, 6 Jan 2008 23:38:10 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200801062337.35904.IvDoorn@gmail.com>
+In-Reply-To: <200801062337.35904.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801062338.11124.IvDoorn@gmail.com> (sfid-20080106_224004_907943_88691AE1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an oops which was introduced as a regression by 
-commit fd640775bd16e1df50c867cc547af0, on the patch titled,
-"mac80211: dont use interface indices in drivers".
+Initialize blob->data before moving the data pointer
+Initialize blob->size based on blob->data size
 
-ieee80211_generic_frame_duration() now relies on sdata->flags which
-itself gets set upon bringing the interface up. We check for the
-virtual interface now before setting the rate duration registers.
+This fixes the empty chipset file in debugfs.
 
-After the mode changes are introduced onto mac80211 we should revisit
-these changes.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-This patch was tested on the following cards:
-
-1) BG card:
-
-Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-RF2112A 2GHz radio found (0x46)
-
-2) ABG card:
-
-Atheros AR5213A chip found (MAC: 0x59,PHY: 0x43)
-RF5112A multiband radio found (0x36)
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-
---- a/drivers/net/wireless/ath5k/hw.c	2008-01-04 02:04:20.000000000 -0500
-+++ b/drivers/net/wireless/ath5k/hw.c	2008-01-04 01:58:12.000000000 -0500
-@@ -734,8 +734,12 @@
- 		if (ret)
- 			return ret;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index e72c981..c55bf0e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -417,6 +417,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	if (!data)
+ 		return NULL;
  
--		/* Write rate duration table */
--		if (ah->ah_version == AR5K_AR5212)
-+		/* Write rate duration table only on AR5212 and if 
-+		 * virtual interface has already been brought up
-+		 * XXX: rethink this after new mode changes to
-+		 * mac80211 are integrated */
-+		if (ah->ah_version == AR5K_AR5212 &&
-+			ah->ah_sc->vif != NULL)
- 			ath5k_hw_write_rate_duration(ah, driver_mode);
++	blob->data = data;
+ 	data += sprintf(data, "rt chip: %04x\n", intf->rt2x00dev->chip.rt);
+ 	data += sprintf(data, "rf chip: %04x\n", intf->rt2x00dev->chip.rf);
+ 	data += sprintf(data, "revision:%08x\n", intf->rt2x00dev->chip.rev);
+@@ -425,9 +426,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	data += sprintf(data, "eeprom length: %d\n", debug->eeprom.word_count);
+ 	data += sprintf(data, "bbp length: %d\n", debug->bbp.word_count);
+ 	data += sprintf(data, "rf length: %d\n", debug->rf.word_count);
+-
+-	blob->data = data;
+-	blob->size = strlen(data);
++	blob->size = strlen(blob->data);
  
- 		/*
+ 	return debugfs_create_blob(name, S_IRUGO, intf->driver_folder, blob);
+ }
+-- 
+1.5.3.7
+
