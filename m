@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4644 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756193AbYAaQcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 11:32:09 -0500
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id m0VGVpOc003284
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 11:31:57 -0500
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id m0VGUjR2003281
-	for linux-wireless@vger.kernel.org; Thu, 31 Jan 2008 11:30:46 -0500
-Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
-	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id m0VGPE75012849
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 11:25:15 -0500
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.14.1/8.14.1/Submit) id m0VGPE6T012848
-	for linux-wireless@vger.kernel.org; Thu, 31 Jan 2008 11:25:14 -0500
-Date: Thu, 31 Jan 2008 11:25:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless mini-summit agenda proposals?
-Message-ID: <20080131162514.GC6413@tuxdriver.com> (sfid-20080131_163214_826363_7C4127E3)
+Received: from vs166246.vserver.de ([62.75.166.246]:50111 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754388AbYAFVjz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jan 2008 16:39:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 will need a firmware upgrade soon
+Date: Sun, 6 Jan 2008 22:38:14 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200801061802.38297.mb@bu3sch.de> <20080106203435.GA18833@tuxdriver.com>
+In-Reply-To: <20080106203435.GA18833@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801062238.14472.mb@bu3sch.de> (sfid-20080106_213958_500644_591CEFFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+On Sunday 06 January 2008 21:34:35 John W. Linville wrote:
+> On Sun, Jan 06, 2008 at 06:02:38PM +0100, Michael Buesch wrote:
+> 
+> > This is needed in order to add support for new devices (N-PHY).
+> > Broadcom changed the ABI of the firmware, so we are forced to also
+> > change the ABI of the driver.
+> 
+> Do we have reasonable confidence that the newer firmware will run
+> on all the devices currently supported by b43?  Or are we looking at
+> another b43legacy type of situation?
 
-It looks as if we have a few venue options for a third wireless summit.
-While this may seem like a luxury, none of the options are perfect
-for everyone and each has it's own potential drawbacks.  So rather
-than move blindly forward with any given venue, I think it would be
-good to discuss some potential agenda points.
+We need to check this.
+Maybe we can support both firmware images in the driver. Not sure yet.
 
-This will serve both to determine who is most interested in attending
-a summit and who might most need to be there.  This will also serve
-to justify the trouble of having a summit at all.  So, I'd like to
-open the 'floor' to discussion proposals.
-
-What discussions pertinent to Linux wireless development do
-you want to see?  What can you contribute to those discussions?
-How would a face-to-face discussion of that issue be better than an
-online discussion?
-
-If pressed I could make some suggestions.  But for now I would like
-to see what is on the minds of the wireless development community.
-So, what would do you suggest?
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
