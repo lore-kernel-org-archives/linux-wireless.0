@@ -1,190 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22822 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4919 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754869AbYA1MHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 07:07:37 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 06/12 v2] mac80211: A-MPDU add debugfs support
-Date: Mon, 28 Jan 2008 14:07:20 +0200
-Message-Id: <12015220543379-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120745_053686_D9EE1B03)
-In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
-References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+	id S1753536AbYAFVge (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jan 2008 16:36:34 -0500
+Date: Sun, 6 Jan 2008 16:21:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ralph Spitzner <rasp@spitzner.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Atheros driver
+Message-ID: <20080106212155.GA3149@tuxdriver.com> (sfid-20080106_213639_640461_F7781157)
+References: <47813432.2010208@spitzner.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47813432.2010208@spitzner.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds A-MPDU status report per STA to the debugfs.
-The option to de/activate A-MPDU through debugfs is also present.
+On Sun, Jan 06, 2008 at 09:04:02PM +0100, Ralph Spitzner wrote:
+> With Kernel 2.6.23.12 && ath5k I get this:
+> ------------------------------------------------------------------
+>
+> Jan  6 20:42:44 meepmeep kernel: CPU:    0
+> Jan  6 20:42:44 meepmeep kernel: EIP:    0060:[<d0d98e61>]    Not tainted 
+> VLI
+> Jan  6 20:42:44 meepmeep kernel: EFLAGS: 00010246   (2.6.23.12 #1)
+> Jan  6 20:42:44 meepmeep kernel: EIP is at 
+> ieee80211_generic_frame_duration+0x21/0x70 [mac80211]
+> Jan  6 20:42:44 meepmeep kernel: eax: c2c68180   ebx: c2c68180   ecx: 
+> 0000000a   edx: 00000000
+> Jan  6 20:42:44 meepmeep kernel: esi: 00000000   edi: 0000000a   ebp: 
+> 000003e8   esp: c3a03dd8
+> Jan  6 20:42:44 meepmeep kernel: ds: 007b   es: 007b   fs: 0000  gs: 0033  
+> ss: 0068
+> Jan  6 20:42:44 meepmeep kernel: Process ifconfig (pid: 5119, ti=c3a02000 
+> task=c363c570 task.ti=c3a02000)
+> Jan  6 20:42:44 meepmeep kernel: Stack: d0e7539b 00000002 0000876c 00000000 
+> c4555000 d0e71c67 0000000a 1fb748ed
+> Jan  6 20:42:44 meepmeep kernel:        0000006b c2c68180 00000000 d0e76e44 
+> c2c68eec 00000000 00000000 00000003
+> Jan  6 20:42:44 meepmeep kernel:        00000002 00000002 00000014 00000000 
+> d0e76e20 c2c68de0 00000001 00000003
+> Jan  6 20:42:44 meepmeep kernel: Call Trace:
+> Jan  6 20:42:44 meepmeep kernel:  [<d0e7539b>] ath5k_hw_rfgain+0x4b/0x80 
+> [ath5k]
+> Jan  6 20:42:44 meepmeep kernel:  [<d0e71c67>] ath5k_hw_reset+0xaa7/0xeb0 
+> [ath5k]
+> Jan  6 20:42:44 meepmeep kernel:  [<d0e6a766>] ath5k_init+0x46/0x110 [ath5k]
+> Jan  6 20:42:44 meepmeep kernel:  [<d0d86b7c>] ieee80211_open+0x19c/0x4c0 
+> [mac80211]
+> Jan  6 20:42:44 meepmeep kernel:  [<c0142235>] filemap_fault+0x1c5/0x3e0
+> Jan  6 20:42:44 meepmeep kernel:  [<c06a1353>] dev_open+0x33/0x80
+> Jan  6 20:42:44 meepmeep kernel:  [<c069f1a9>] dev_change_flags+0x149/0x1c0
+> Jan  6 20:42:44 meepmeep kernel:  [<c06e7261>] devinet_ioctl+0x521/0x6c0
+> Jan  6 20:42:44 meepmeep kernel:  [<c069efbf>] __dev_get_by_name+0x6f/0x90
+> Jan  6 20:42:44 meepmeep kernel:  [<c0693f4f>] sock_ioctl+0xbf/0x230
+> Jan  6 20:42:44 meepmeep kernel:  [<c0113b2b>] do_page_fault+0x18b/0x6d0
+> Jan  6 20:42:44 meepmeep kernel:  [<c0693e90>] sock_ioctl+0x0/0x230
+> Jan  6 20:42:44 meepmeep kernel:  [<c01682cf>] do_ioctl+0x1f/0x70
+> Jan  6 20:42:44 meepmeep kernel:  [<c016837c>] vfs_ioctl+0x5c/0x260
+> Jan  6 20:42:44 meepmeep kernel:  [<c01685f2>] sys_ioctl+0x72/0x90
+> Jan  6 20:42:44 meepmeep kernel:  [<c0104012>] syscall_call+0x7/0xb
+> Jan  6 20:42:44 meepmeep kernel:  [<c0710000>] __svc_create+0x1c0/0x1d0
+> Jan  6 20:42:44 meepmeep kernel:  =======================
+> Jan  6 20:42:44 meepmeep kernel: Code: 5d c3 90 8d b4 26 00 00 00 00 83 ec 
+> 14 89 5c 24 08 89 c3 89 74 24 0c 89 d6 89 7c 24 10
+> 89 cf 8b 4c 24 18 83 78 0c 02 74 31 31 d2 <8b> 86 d0 fd ff ff 89 14 24 89 
+> fa 83 e0 08 89 44 24 04 89 d8 e8
+> Jan  6 20:42:44 meepmeep kernel: EIP: [<d0d98e61>] 
+> ieee80211_generic_frame_duration+0x21/0x70 [mac80211] SS:ESP 0068:c3a03dd8
+> Jan  6 20:47:27 meepmeep kernel: ACPI: RTC can wake from S4
+>
+> ------------------------------------------------------------------
+>
+>
+> Just in case someone is interested in this......
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/debugfs_sta.c |  116 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h    |    1 +
- 2 files changed, 117 insertions(+), 0 deletions(-)
+I'm sure someone is interested, although you might have slightly
+better luck on linux-wireless@vger.kernel.org.
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 8f5944c..df25abf 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -55,6 +55,13 @@ static const struct file_operations sta_ ##name## _ops = {		\
- 	.open = mac80211_open_file_generic,				\
- }
- 
-+#define STA_OPS_WR(name)						\
-+static const struct file_operations sta_ ##name## _ops = {		\
-+	.read = sta_##name##_read,					\
-+	.write = sta_##name##_write,					\
-+	.open = mac80211_open_file_generic,				\
-+}
-+
- #define STA_FILE(name, field, format)					\
- 		STA_READ_##format(name, field)				\
- 		STA_OPS(name)
-@@ -191,6 +198,113 @@ static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
- STA_OPS(wme_tx_queue);
- #endif
- 
-+static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	char buf[768], *p = buf;
-+	int i;
-+	struct sta_info *sta = file->private_data;
-+	p += scnprintf(p, sizeof(buf)+buf-p, "Agg state for STA is:\n");
-+	p += scnprintf(p, sizeof(buf)+buf-p, " STA next dialog_token is %d \n "
-+			"TIDs info is: \n TID :",
-+			(sta->ampdu_mlme.dialog_token_allocator + 1));
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d", i);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n RX  :");
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
-+	sta->ampdu_mlme.tid_rx[i].state);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
-+			sta->ampdu_mlme.tid_rx[i].dialog_token);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n TX  :");
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
-+			sta->ampdu_mlme.tid_tx[i].state);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
-+			sta->ampdu_mlme.tid_tx[i].dialog_token);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n SSN :");
-+	for (i = 0; i < STA_TID_NUM; i++)
-+		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
-+			sta->ampdu_mlme.tid_tx[i].ssn);
-+
-+	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
-+
-+	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
-+}
-+
-+static ssize_t sta_agg_status_write(struct file *file,
-+		const char __user *user_buf, size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct net_device *dev = sta->dev;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_hw *hw = &local->hw;
-+	u8 *da = sta->addr;
-+	static int tid_static_tx[16] = {0, 0, 0, 0, 0, 0, 0, 0,
-+					0, 0, 0, 0, 0, 0, 0, 0};
-+	static int tid_static_rx[16] = {1, 1, 1, 1, 1, 1, 1, 1,
-+					1, 1, 1, 1, 1, 1, 1, 1};
-+	char *endp;
-+	char buf[32];
-+	int buf_size, rs;
-+	unsigned int tid_num;
-+	char state[4];
-+
-+	memset(buf, 0x00, sizeof(buf));
-+	buf_size = min(count, (sizeof(buf)-1));
-+	if (copy_from_user(buf, user_buf, buf_size))
-+		return -EFAULT;
-+
-+	tid_num = simple_strtoul(buf, &endp, 0);
-+	if (endp == buf)
-+		return -EINVAL;
-+
-+	if ((tid_num >= 100) && (tid_num <= 115)) {
-+		/* toggle Rx aggregation command */
-+		tid_num = tid_num - 100;
-+		if (tid_static_rx[tid_num] == 1) {
-+			strcpy(state, "off ");
-+			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
-+					WLAN_REASON_QSTA_REQUIRE_SETUP);
-+			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
-+			tid_static_rx[tid_num] = 0;
-+		} else {
-+			strcpy(state, "on ");
-+			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
-+			tid_static_rx[tid_num] = 1;
-+		}
-+		printk(KERN_DEBUG "debugfs - try switching tid %u %s\n",
-+				tid_num, state);
-+	} else if ((tid_num >= 0) && (tid_num <= 15)) {
-+		/* toggle Tx aggregation command */
-+		if (tid_static_tx[tid_num] == 0) {
-+			strcpy(state, "on ");
-+			rs =  ieee80211_start_tx_ba_session(hw, da, tid_num);
-+			if (rs == 0)
-+				tid_static_tx[tid_num] = 1;
-+		} else {
-+			strcpy(state, "off");
-+			rs =  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
-+			if (rs == 0)
-+				tid_static_tx[tid_num] = 0;
-+		}
-+		printk(KERN_DEBUG "debugfs - switching tid %u %s, return=%d\n",
-+				tid_num, state, rs);
-+	}
-+
-+	return count;
-+}
-+STA_OPS_WR(agg_status);
-+
- #define DEBUGFS_ADD(name) \
- 	sta->debugfs.name = debugfs_create_file(#name, 0444, \
- 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
-@@ -224,6 +338,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(wme_rx_queue);
- 	DEBUGFS_ADD(wme_tx_queue);
- #endif
-+	DEBUGFS_ADD(agg_status);
- }
- 
- void ieee80211_sta_debugfs_remove(struct sta_info *sta)
-@@ -238,6 +353,7 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
- 	DEBUGFS_DEL(wme_rx_queue);
- 	DEBUGFS_DEL(wme_tx_queue);
- #endif
-+	DEBUGFS_DEL(agg_status);
- 
- 	debugfs_remove(sta->debugfs.dir);
- 	sta->debugfs.dir = NULL;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 48a620a..75573dc 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -192,6 +192,7 @@ struct sta_info {
- 		struct dentry *wme_rx_queue;
- 		struct dentry *wme_tx_queue;
- #endif
-+		struct dentry *agg_status;
- 	} debugfs;
- #endif
- };
+Also, I'm curious how you are running ath5k on 2.6.23.anything,
+since the driver has not been merged upstream even now.  Is this a
+distro kernel?  Your own hacking?  Or...?  It might be helpful to
+know the exact origins of the kernel in use.
+
+Thanks,
+
+John
 -- 
-1.5.3.3
-
+John W. Linville
+linville@tuxdriver.com
