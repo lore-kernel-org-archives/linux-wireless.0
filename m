@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33294 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757888AbYA2OFg (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:28480 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756083AbYAFWju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 09:05:36 -0500
-Subject: Re: [PATCH 1/2] cfg80211 API for channels/bitrates, mac80211 and
-	driver conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com> (sfid-20080128_004913_561560_8A630ACA)
-References: <20080124183837.577631000@sipsolutions.net>
-	 <20080124184357.839387000@sipsolutions.net>
-	 <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com>
-	 (sfid-20080128_004913_561560_8A630ACA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EV0tNNXvQS+Y8YXwmlf0"
-Date: Tue, 29 Jan 2008 15:05:17 +0100
-Message-Id: <1201615517.4394.2.camel@johannes.berg> (sfid-20080129_140542_626730_651204D3)
-Mime-Version: 1.0
+	Sun, 6 Jan 2008 17:39:50 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3071045ugc.16
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 14:39:48 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Sun, 6 Jan 2008 23:37:35 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801062337.35904.IvDoorn@gmail.com> (sfid-20080106_224003_091189_B1D7D470)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
---=-EV0tNNXvQS+Y8YXwmlf0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here is the 2.0.14 release of rt2x00. Again lots of bugfixes,
+and unfortunately we are still not there yet. I am afraid
+rt2500usb and rt61pci are lost causes for the 2.6.24 release,
+they are both broken, and I haven't figured out what is causing
+this.
 
+Next release will contain more interesting stuff, most of those
+patches are already done, but due to testing and fine tuning I
+have kept those patches back for this release. They primarily
+cover basic support for virtual interfaces, led triggers, and some
+first patches to make rt2x00lib support rt2800 (Yes, work on those
+drivers has begun).
 
-> Also inserting few, actually drawing it unusable. You are lucky we
-> like you here :)
-> The question is how we handle this?. Do you want  to resubmit this
-> huge patch or we fix it somehow over it...
+All indivual patches can also be found here:
+http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.0.14/
 
-Can you point out any bugs? It works with my iwl4965 card (and the fix
-for the unfortunate bug for the scanning problem).
+Ivo
 
-johannes
+---
+The following changes since commit 2d0811f5ed506397d85792abfd8ef0983f4e8b7c:
+  John W. Linville (1):
+        fixup 'everything' after 'upstream-davem' rebase and patch modification
 
---=-EV0tNNXvQS+Y8YXwmlf0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+are available in the git repository at:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
 
-iQIVAwUAR58ym6Vg1VMiehFYAQLywBAAqt7lJnRCy8F/nxhkjyJ5atMJsq9SJIoD
-eJk/Mq5HjX+fHQ4OknvMUK2jMUL+xhS909Q9pbeQ3+vXBSWiT5HP0mkPF4E06yWe
-SDuLl4XSkchrDbpxs71BHLFvM0cqU8dFKWpzz0geSeep3FSJv+twPI24SFIwcNHO
-uzLTsP2WhRxTZhGZion0xryBaMLkNglJ5W4fFI9a6C4V5bvMzEDFsNHRunjZP4hC
-SFZ92NyXV8ckbbq9D3cqVd7Z0HuoaL7nygFxIV4eE0ZVvToYftV8C3r3B74nLx4F
-t+sd3uamGNokTGXA9RgRyFgmYd6DS2dEkgNnP+Rttfs7EhdQLuWRF5CKx5dP163V
-1SrpZYRDYNS4JZymQTy4594XzTgzbEXDjE5D5fxjmVJfKvly0lc7+RvHdhCRYJDi
-OXTWaA5IzvxG026/IlTm6eJXpHzsWDCgPqrm4X8YodgYZTpfeSBCvGxixF1Fb+pH
-YlLBYmAt1DO30PccQGm6HQw21R8PKPkvd2g7kSHo2KCF3vBkbe4zMcwAiff2kADc
-UlM+zyzR47zXnr9wYdc9jhcNsBs5geYMiptAt5dH4htOjU8CkEZrCQBL3VLEkd+6
-geqmIJ2wO7Go7DIBkrBJO9qxsXEfRT8mBE8ij+CQfbTWJ9At6iVxLghqvLv/YdH+
-TBA7YaTdIfI=
-=Bsgy
------END PGP SIGNATURE-----
+Ivo van Doorn (12):
+      rt2x00: Fix chipset debugfs file
+      rt2x00: Always call ieee80211_stop_queue() when return NETDEV_TX_BUSY
+      rt2x00: Only set the TBCN flag when the interface is configured to send beacons.
+      rt2x00: Store queue idx and entry idx in data_ring and data_entry
+      rt2x00: Move start() and stop() handlers into rt2x00lib.c
+      rt2x00: Put 802.11 data on 4 byte boundary
+      rt2x00: Move packet filter flags
+      rt2x00: Cleanup write_tx_desc() arguments
+      rt2x00: Determine MY_BSS from descriptor
+      rt2x00: Move init_txring and init_rxring into rt2x00lib
+      rt2x00: Correctly initialize data and desc pointer
+      rt2x00: Release rt2x00 2.0.14
 
---=-EV0tNNXvQS+Y8YXwmlf0--
-
+ drivers/net/wireless/rt2x00/rt2400pci.c   |  102 +++++++--------------
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   88 ++++++------------
+ drivers/net/wireless/rt2x00/rt2500usb.c   |   36 +++++---
+ drivers/net/wireless/rt2x00/rt2x00.h      |   32 ++++---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   13 +--
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |  142 ++++++++++++++++++++++++-----
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c   |   59 +++---------
+ drivers/net/wireless/rt2x00/rt2x00pci.c   |   28 ++++--
+ drivers/net/wireless/rt2x00/rt2x00ring.h  |   13 +++
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   87 ++++++++----------
+ drivers/net/wireless/rt2x00/rt2x00usb.h   |    5 +-
+ drivers/net/wireless/rt2x00/rt61pci.c     |  114 +++++++++---------------
+ drivers/net/wireless/rt2x00/rt73usb.c     |   35 ++++---
+ 14 files changed, 378 insertions(+), 380 deletions(-)
