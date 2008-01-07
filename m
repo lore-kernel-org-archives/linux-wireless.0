@@ -1,84 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57820 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758633AbYAULwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 06:52:25 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 07/12] mac80211: A-MPDU Tx change tx_status to support Block Ack data
-Date: Mon, 21 Jan 2008 13:52:07 +0200
-Message-Id: <1200916339638-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115405_121156_4B44DAC3)
-In-Reply-To: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+Received: from wr-out-0506.google.com ([64.233.184.232]:26942 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756520AbYAGUrl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2008 15:47:41 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so452988wra.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2008 12:47:40 -0800 (PST)
+Message-ID: <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com> (sfid-20080107_204744_235805_9C07255A)
+Date: Mon, 7 Jan 2008 15:47:40 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Forest Bond" <forest@alittletooquiet.net>
+Subject: Re: VT6656 driver source available from VIA
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080107203101.GA4599@storm.local.network>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20070919193743.GA14127@storm.local.network>
+	 <20071101185900.GD14943@tuxdriver.com>
+	 <20071101190711.GB17825@storm.local.network>
+	 <20071101191250.GE14943@tuxdriver.com>
+	 <20071105020730.GA4414@storm.local.network>
+	 <20071114170051.GD23778@storm.local.network>
+	 <20071114170634.GC6226@tuxdriver.com>
+	 <20080107184949.GI18550@storm.local.network>
+	 <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com>
+	 <20080107203101.GA4599@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds fields to ieee80211_tx_status in order to allow block ack
-information exchange between low-level driver,mac80211 and rate scaling
-module.
+On Jan 7, 2008 3:31 PM, Forest Bond <forest@alittletooquiet.net> wrote:
+>
+> On Mon, Jan 07, 2008 at 03:20:02PM -0500, Luis R. Rodriguez wrote:
+> > On Jan 7, 2008 1:49 PM, Forest Bond <forest@alittletooquiet.net> wrote:
+> > > Hi,
+> > >
+> > > On Wed, Nov 14, 2007 at 12:06:34PM -0500, John W. Linville wrote:
+> > > > On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
+> > > >> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
+> > > >>> The post is here:
+> > > >>>
+> > > >>> http://forums.viaarena.com/messageview.aspx?catid=28&threadid=78745
+> > > >>>
+> > > >>> Any noise that can be contributed is welcome and appreciated.  You'll need
+> > > >>> to create an account to post, though.
+> > > >
+> > > >> I also added these.  Perhaps having plenty of content/links regarding this
+> > > >> issue will help to increase visibility:
+> > > >>
+> > > >> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-linux-driver/
+> > > >> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
+> > > >
+> > > > Excellent...I appreciate your efforts as an agitator! :-)
+> > >
+> > > At this point I am not anticipating positive results WRT this endeavor, and am
+> > > unable to pursue further assistance from VIA.  Further, I've seen that the
+> > > driver in question likely exhibits some interesting quirks that makes it
+> > > difficult to use.  It is also bit-rotting out of relevance.
+> >
+> > This is unfortunate to hear...
+> >
+> > > Can the driver be used as a reference for a fresh implementation?  I've not
+> > > written a driver before, but would be open to the possibility.
+> >
+> > IANAL but I believe It basically depends on the license the vendor
+> > issued the driver under and its sources under. If no license was used
+> > then I believe the standard copyright license terms should be assumed.
+> > What license was used throughout the driver files?
+> >
+> > > What are the legal ramifications of a driver author having access to
+> > > proprietary source code?
+> >
+> > Again, I believe it depends on the license/NDA/terms under which the
+> > driver author obtained access to such proprietary source code. The
+> > more details you provide the better.
+>
+> The license was omitted.  This was presumably an oversight, but intentions are
+> always hard to know when the other party isn't saying anything :)
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+I'm calling their offices now, we should be able to just talk to
+someone from their dev team...
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e9d6425..37fb3c3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -445,12 +445,14 @@ struct ieee80211_rx_status {
-  *
-  * @IEEE80211_TX_STATUS_TX_FILTERED: The frame was not transmitted
-  *	because the destination STA was in powersave mode.
-- *
-  * @IEEE80211_TX_STATUS_ACK: Frame was acknowledged
-+ * @IEEE80211_TX_STATUS_AMPDU: The frame was aggregated, so status
-+ * 	is for the whole aggregation.
-  */
- enum ieee80211_tx_status_flags {
- 	IEEE80211_TX_STATUS_TX_FILTERED	= 1<<0,
- 	IEEE80211_TX_STATUS_ACK		= 1<<1,
-+	IEEE80211_TX_STATUS_AMPDU	= 1<<2,
- };
- 
- /**
-@@ -461,24 +463,25 @@ enum ieee80211_tx_status_flags {
-  *
-  * @control: a copy of the &struct ieee80211_tx_control passed to the driver
-  *	in the tx() callback.
-- *
-  * @flags: transmit status flags, defined above
-- *
-- * @ack_signal: signal strength of the ACK frame
-- *
-+ * @retry_count: number of retries
-  * @excessive_retries: set to 1 if the frame was retried many times
-  *	but not acknowledged
-- *
-- * @retry_count: number of retries
-- *
-+ * @ampdu_ack_len: number of aggregated frames.
-+ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-+ * @ampdu_ack_map: block ack bit map for the aggregation.
-+ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-+ * @ack_signal: signal strength of the ACK frame
-  * @queue_length: ?? REMOVE
-  * @queue_number: ?? REMOVE
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_tx_control control;
- 	u8 flags;
--	bool excessive_retries;
- 	u8 retry_count;
-+	bool excessive_retries;
-+	u8 ampdu_ack_len;
-+	u64 ampdu_ack_map;
- 	int ack_signal;
- 	int queue_length;
- 	int queue_number;
--- 
-1.5.3.7
+> There's little doubt in my mind that we get nothing more than fair use out of
+> this package, though.  The question is "is that enough?".  Code copying is
+> obviously not allowed, but is a new (and sufficiently different) implementation
+> allowed?
 
+I think so but IANAL so not too sure, we can then ask SFLC to verify
+in the end what's possible or not.
+
+  Luis
