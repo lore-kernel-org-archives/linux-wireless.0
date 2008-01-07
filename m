@@ -1,143 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
-	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755071AbYATAPA (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:43519 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755580AbYAGVH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 19:15:00 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 13/14] [rndis_host] blacklist known wireless RNDIS devices
-To: linux-wireless@vger.kernel.org
-Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
-	netdev@vger.kernel.org
-Date: Sun, 20 Jan 2008 02:14:55 +0200
-Message-ID: <20080120001455.25718.75424.stgit@fate.lan> (sfid-20080120_001508_065633_4DCE146B)
+	Mon, 7 Jan 2008 16:07:58 -0500
+Date: Mon, 7 Jan 2008 16:06:56 -0500
+From: Forest Bond <forest@alittletooquiet.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: VT6656 driver source available from VIA
+Message-ID: <20080107210656.GC4599@storm.local.network> (sfid-20080107_210803_270112_71782642)
+References: <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com> <20071105020730.GA4414@storm.local.network> <20071114170051.GD23778@storm.local.network> <20071114170634.GC6226@tuxdriver.com> <20080107184949.GI18550@storm.local.network> <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com> <20080107203101.GA4599@storm.local.network> <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com> <43e72e890801071254o49f16885ubce452e5687f915c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5G06lTa6Jq83wMTw"
+In-Reply-To: <43e72e890801071254o49f16885ubce452e5687f915c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Blacklist known wireless RNDIS devices that will be handled by
-rndis_wext module.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+--5G06lTa6Jq83wMTw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/usb/rndis_host.c |  104 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 104 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 1ffbbb3..cd1f953 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -530,6 +530,110 @@ static const struct driver_info	rndis_info = {
- /*-------------------------------------------------------------------------*/
- 
- static const struct usb_device_id	products [] = {
-+/*
-+ * BLACKLIST !!
-+ *
-+ * Blacklist RNDIS devices that are handled in separate RNDIS modules.
-+ */
-+
-+#define	RNDIS_MASTER_INTERFACE \
-+	.bInterfaceClass	= USB_CLASS_COMM, \
-+	.bInterfaceSubClass	= 2 /* ACM */, \
-+	.bInterfaceProtocol	= 0x0ff
-+
-+/* Wireless RNDIS devices, rndis_wext module */
-+{
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0411,
-+	.idProduct		= 0x00bc,	/* Buffalo WLI-U2-KG125S */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0baf,
-+	.idProduct		= 0x011b,	/* U.S. Robotics USR5421 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x050d,
-+	.idProduct		= 0x011b,	/* Belkin F5D7051 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x1799,	/* Belkin has two vendor ids */
-+	.idProduct		= 0x011b,	/* Belkin F5D7051 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x13b1,
-+	.idProduct		= 0x0014,	/* Linksys WUSB54GSv2 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x13b1,
-+	.idProduct		= 0x0026,	/* Linksys WUSB54GSC */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0b05,
-+	.idProduct		= 0x1717,	/* Asus WL169gE */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0a5c,
-+	.idProduct		= 0xd11b,	/* Eminent EM4045 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x1690,
-+	.idProduct		= 0x0715,	/* BT Voyager 1055 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x13b1,
-+	.idProduct		= 0x000e,	/* Linksys WUSB54GSv1 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0baf,
-+	.idProduct		= 0x0111,	/* U.S. Robotics USR5420 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+}, {
-+	.match_flags	=   USB_DEVICE_ID_MATCH_INT_INFO
-+			  | USB_DEVICE_ID_MATCH_DEVICE,
-+	.idVendor		= 0x0411,
-+	.idProduct		= 0x004b,	/* BUFFALO WLI-USB-G54 */
-+	RNDIS_MASTER_INTERFACE,
-+	.driver_info		= 0,
-+},
-+
-+/*
-+ * WHITELIST!!!
-+ *
-+ * All other RNDIS devices that do not need special OID handling in order
-+ * to work.
-+ */
- {
- 	/* RNDIS is MSFT's un-official variant of CDC ACM */
- 	USB_INTERFACE_INFO(USB_CLASS_COMM, 2 /* ACM */, 0x0ff),
+On Mon, Jan 07, 2008 at 03:54:49PM -0500, Luis R. Rodriguez wrote:
+> Well this sucks... just FYI,
+>=20
+> http://forums.viaarena.com/messageview.aspx?catid=3D28&threadid=3D78745
+>=20
+> this is the page you started on viaarena for this. It is no longer up.
+> I now get a "Page not found"
 
+Looks like they just launched a new forum that replaces the old one.  The o=
+ld
+message may be there somewhere, but DNS delays are causing issues right now=
+, I
+think.  I'll look again later.
+
+-Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+
+--5G06lTa6Jq83wMTw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHgpRwRO4fQQdv5AwRApdDAKDBBaaIs+38weFPYSsatPfk1G/wtQCgvefU
+UjzYcqF3XiHf1dygXvoBaj8=
+=WF8L
+-----END PGP SIGNATURE-----
+
+--5G06lTa6Jq83wMTw--
