@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:57835 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbYAZWLp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 17:11:45 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1943596wah.23
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2008 14:11:45 -0800 (PST)
-Message-ID: <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com> (sfid-20080126_221153_452460_7208AE67)
-Date: Sun, 27 Jan 2008 00:11:45 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38806 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754820AbYAGQDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2008 11:03:06 -0500
+Message-ID: <47824D25.5090005@hauke-m.de> (sfid-20080107_160328_142889_DD9356B7)
+Date: Mon, 07 Jan 2008 17:02:45 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
-	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: Michael Wu <flamingice@sourmilk.net>, linux-kernel@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8187 rate control doesn't work
+References: <477F9890.5050107@hauke-m.de> <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
+In-Reply-To: <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 26, 2008 9:00 PM, drago01 <drago01@gmail.com> wrote:
-> On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
-> > On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
-> > >
-> > >
-> > > >-----Original Message-----
-> > > >From: drago01 [mailto:drago01@gmail.com]
-> > > >Sent: Tuesday, January 22, 2008 10:12 PM
-> > > >To: Winkler, Tomas
-> > >
-> > > >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
-> > > >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-> > > >
-> > > >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
-> > > wrote:
-> > > >>
-> > > >> I believe it's delaying uCode load to mac_start - still need to be
-> > > >> polished.
-> > > >
-> > > >ok, thx for the quick reply.
-> > > >If you have any potential fixes I would be happy to test them ;)
-> > >
-> > > Can you get me the sequence it is happening? RF kill switch is off
-> > > before you power up the laptop or after, during association or in
-> > > unassociated state..etc
-> > > Thanks
-> >
-> > I boot with rf kill off = device on
-> > acciotate using NM
-> > kill the card by pressing the rfkill (ie. setting it to on)
-> > card is dead (like described in my first mail), until I relaod the module
-> > the rfkill switch  does not have any effect at this time.
-> >
->
-> OK, I investigated a bit and it seems to be the "disable interrupt
-> when device goes down" is the problem.
-> In my case NetworkManager detected the rfkill and brought the device
-> down, which caused the interrupt to be disabled. Now after pressing
-> the rfkill again nothing happend. But if I bring the device back up
-> the interrupt is enabled again and rfkill and the card is back to
-> live.
-> So in short disabling the interrupt in mac_stop breaks the hw rfkill
-> while the interface is down.
->
+There is an other Problem.
 
-Thanks for investigating this, still didn't have to time to dig into it.
-Tomas
+iwconfig shows me "Bit Rate=1 Mb/s" the hole time, but I'm able to
+download with an average of 440K/s as wget says.
+
+It's with PID rate control algorithm.
+
+--
+
+Hauke Mehrtens
+
+Luis R. Rodriguez wrote:
+> On Jan 5, 2008 9:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> Hi
+>>
+>> Now the compat-wireless-2.6 package is working and I get an Internet
+>> connection with my rtl8187 based card. (It's on an ASUS P5B Deluxe)
+>>
+>> I used the compat-wireless-2.6 package for this log, but I have the same
+>> problem with the version integrated in kernel 2.6.24-rc6
+>>
+>> The Access Point is some rooms away so the signal is not the best at my
+>> location. When starting the device with no fixed rate it wants to
+>> connect with 54MBit/s and as iwconfig says it was successful but I can't
+>> ping any device in the wireless LAN. (it's the first part of the log)
+>> The rate will not be slowed down it stays fixed at 54MBit/s.
+>>
+>> After starting the device with rate fixed to 11M I get a connection to
+>> the Access Point and iwconfig's output looks the same as without fixed
+>> rate, but I'm able to ping the all devices in the network. (second part
+>> of the log)
+>> Now it slows down the rate to 1MBit/s
+> 
+> Seems to be the new PID rate control algorithm. I believe Stephano
+> (CC'd) was sending some patches for this. Please try changing in
+> config.mk
+> 
+> From this value:
+> 
+> CONFIG_MAC80211_RC_DEFAULT=pid
+> 
+> To this:
+> 
+> CONFIG_MAC80211_RC_DEFAULT=simple
+> 
+> and let us know how that goes. Oh and linux-kernel is the wrong list
+> to use, please just use linux-wireless for future e-mails.
+> 
+>   Luis
