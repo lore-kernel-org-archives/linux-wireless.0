@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:1066 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbYAQRwp (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36458 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755356AbYAHRSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2008 12:52:45 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1060888pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2008 09:52:44 -0800 (PST)
-Message-ID: <43e72e890801170952q23ff6550s7214bee32a2860f7@mail.gmail.com> (sfid-20080117_175249_756642_CF62C408)
-Date: Thu, 17 Jan 2008 12:52:43 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [FYI] hostapd status
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Bas Hulsken" <bhulsken@zonnet.nl>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	"Jouni Malinen" <j@w1.fi>
-In-Reply-To: <1200520735.8007.20.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1200520735.8007.20.camel@johannes.berg>
+	Tue, 8 Jan 2008 12:18:41 -0500
+Subject: Re: [RFC] cfg80211 API for channels/bitrates, mac80211 and driver
+	conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890801071527t4125cfbfr77ec2fb47ccffd08@mail.gmail.com> (sfid-20080107_232727_444141_AA835167)
+References: <1198448108.4103.6.camel@johannes.berg>
+	 <200712231850.37136.flamingice@sourmilk.net>
+	 <1199484080.4172.173.camel@johannes.berg>
+	 <43e72e890801071527t4125cfbfr77ec2fb47ccffd08@mail.gmail.com>
+	 (sfid-20080107_232727_444141_AA835167)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UIL61pDNHgsYtRbilt5w"
+Date: Tue, 08 Jan 2008 18:17:07 +0100
+Message-Id: <1199812627.6762.3.camel@johannes.berg> (sfid-20080108_171845_034342_5BED84A4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 16, 2008 4:58 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
-> I just took the time to adjust hostapd to the new nl80211-based hardware
-> capabilities exporting (patch I recently posted) and it "works" again.
->
-> The todo list now pretty much is:
->
->  * bring Michael Wu's "cooked" monitor patches to a suitable shape for
->    merging and write iw(1) support for monitor flags; the cooked monitor
->    hook shouldn't be in the RX handlers to allow seeing frames that
->    other handlers dropped
->  * remove 802.1X setting, 802.1X need never be disabled on an AP because
->    it can be completely managed by hostapd
->  * allow hostapd to set the 'basic' and 'supported' rate sets
->  * allow hostapd to set QoS queue parameters
->  * allow hostapd to set ERP parameters:
->    - RTS/CTS protection
->    - preamble
->    - slot time
->  * make kernel send events via nl80211 (TKIP MMIC, key threshold, ...)
->  * make hostapd deal with such kernel events by using libnl properly
->    with an ops list
->  * implement regulatory domain control kernel/userspace API
->  * make hostapd use that API, it wants to be in control of regulatory
->    compliance rather than relying on an external daemon
 
-Well we need regulatory daemon of some sort for non-AP hosts. I was
-considering throwing this as part of wpa_supplicant/hostapd code. I
-guess we'll see.
+--=-UIL61pDNHgsYtRbilt5w
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I hope Luis will work on the last two items, and I personally want to
-> handle only the first two items. All others on the list are up for
-> grabs.
 
-ACK -- I will.
+On Mon, 2008-01-07 at 18:27 -0500, Luis R. Rodriguez wrote:
+> On Jan 4, 2008 5:01 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>=20
+> > Will repost later.
+>=20
+> Poke
 
-  Luis
+Sorry. The only thing I really did was a few cleanups, but I found a few
+problems with it too, namely a NULL pointer deref when receiving packets
+w/o STA (so w/o sdata)
+
+johannes
+
+--=-UIL61pDNHgsYtRbilt5w
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4OwEqVg1VMiehFYAQK4fhAAtc3io9WTvaStvCZAkCwL1FqFf8KpYHSV
+skO22OCQ08uTiaWlr4ynAl5E9jt/TpYVov0rFxle6JVvOLa5SG6ypxRFm1do9ONx
+Ps/pSeKPTgNaa+q4Xqcx+WxIS/OyBWyZlj0NawqWLpmfIAp+TZtrfFTDg6RN9Lgm
+MYelLB2V4MbPq6R8DE5GTQvasjzP/oGFMJQbhEr8Lse6ap6ZkfPgbvUJO3kTbMff
+Khba1gWiRck0geq4gbe9tC992NjtJ/iKgtQ2merql8QdILH7TLThY44S1fn98iIN
+ZgBiIgUVlCDzSxrtb4IJG6O/Byishwu0sjXgvp9o4uU/HbGHcyDS4ba0OTQobvIL
+KqTCFugE96PFmIJ0zcUHHJntfv6Qf4KxOkek001dNBRyRGSO2riihKen7Rbt+RJv
+BRowtZAcDoOJywA8FQFDsQWuBO/oM81OALEL3QhTy6hUBThpTHoL1CVKY2BxZpAX
+ca/0yd8AOBFy8uRUmG/IgpDyWMy5QVwCUY6V0JB6yOYcmrOE2YNI5ORp6Nlz8cjG
+LkOqsiuxNJaeAMWO6ravoEUqi8+LCzym64g8UopP66lYI2G1sXBMCje44FVepEmi
+/7IcE5ITQqbNoXtu7A5neKvTcxg9rsqG04zMFDTL+oO1yabWNTyBbk8lxA2WEUF0
+4ZLQqQbkD1Q=
+=+zSB
+-----END PGP SIGNATURE-----
+
+--=-UIL61pDNHgsYtRbilt5w--
+
