@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51489 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4513 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753430AbYA1Qko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 11:40:44 -0500
-Subject: Re: [PATCH] libertas: misc cleanups in compact-flash code
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200801281724.21321.hs4233@mail.mn-solutions.de>
-References: <200801281724.21321.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 28 Jan 2008 11:36:34 -0500
-Message-Id: <1201538194.14441.2.camel@localhost.localdomain> (sfid-20080128_164049_127298_FD847F00)
-Mime-Version: 1.0
+	id S1751622AbYAHVup (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2008 16:50:45 -0500
+Date: Tue, 8 Jan 2008 16:29:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Marcin Juszkiewicz <openembedded@haerwu.biz>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] Add Linksys WCF11 to hostap driver
+Message-ID: <20080108212928.GC3086@tuxdriver.com> (sfid-20080108_215049_853974_164D60DE)
+References: <200712281416.59079.openembedded@haerwu.biz> <1198901689.2221.3.camel@dv> <200712301600.46342.openembedded@haerwu.biz> <20071230113931.d96ytsjusgos48oo@webmail.spamcop.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20071230113931.d96ytsjusgos48oo@webmail.spamcop.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-01-28 at 17:24 +0100, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
-> Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2008-01-25 13:57:44.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2008-01-25 13:58:30.000000000 +0100
-> @@ -396,11 +396,9 @@ static struct sk_buff *if_cs_receive_dat
->  	if (len == 0 || len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
->  		lbs_pr_err("card data buffer has invalid # of bytes (%d)\n", len);
->  		priv->stats.rx_dropped++;
-> -		printk(KERN_INFO "##HS %s:%d TODO\n", __FUNCTION__, __LINE__);
->  		goto dat_err;
->  	}
->  
-> -	//TODO: skb = dev_alloc_skb(len+ETH_FRAME_LEN+MRVDRV_SNAP_HEADER_LEN+EXTRA_LEN);
->  	skb = dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE + 2);
->  	if (!skb)
->  		goto out;
-> @@ -912,6 +910,7 @@ static void if_cs_detach(struct pcmcia_d
->  	if_cs_disable_ints(card);
->  	if_cs_release(p_dev);
->  	kfree(card);
-> +	card = NULL;
+On Sun, Dec 30, 2007 at 11:39:31AM -0500, Pavel Roskin wrote:
+> Quoting Marcin Juszkiewicz <openembedded@haerwu.biz>:
+>
+>> +       PCMCIA_DEVICE_PROD_ID1233(
+>> +               "The Linksys Group, Inc.", "Wireless Network CF  Card", 
+>> "ISL37300P",
+>> +               0xa5f472c2, 0x9c05598d, 0xc9049a39),
+>
+> Acked-by: Pavel Roskin <proski@gnu.org>
 
-This seems kind of pointless; card is a local variable and isn't used
-anywhere after this.
+The ID1234 version of this patch is already in Linus' tree.  Feel free
+to submit a patch that redacts it to the ID123 form.
 
-Dan
- 
->  	lbs_deb_leave(LBS_DEB_CS);
->  }
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
