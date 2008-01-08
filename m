@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4041 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753423AbYAWNCs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 08:02:48 -0500
-Date: Wed, 23 Jan 2008 07:46:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>, davem@davemloft.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 'upstream' 2008-01-22
-Message-ID: <20080123124639.GB3157@tuxdriver.com> (sfid-20080123_130252_375088_B98F6ED5)
-References: <20080123014521.GG3206@tuxdriver.com> <20080123121551.4586e706@morte> <200801231230.07734.mb@bu3sch.de>
+Received: from wa-out-1112.google.com ([209.85.146.177]:35854 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750743AbYAHXSV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2008 18:18:21 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so16078wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 15:18:20 -0800 (PST)
+Message-ID: <1ba2fa240801081518h2ec5f43exe3878d532456348a@mail.gmail.com> (sfid-20080108_231837_866028_621B5623)
+Date: Wed, 9 Jan 2008 01:18:19 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200801082102.16682.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200801231230.07734.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <1199812976.6762.7.camel@johannes.berg>
+	 <1ba2fa240801081143y52e92c62o8ee2c3e701df7919@mail.gmail.com>
+	 <200801082102.16682.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 23, 2008 at 12:30:07PM +0100, Michael Buesch wrote:
-> On Wednesday 23 January 2008 12:15:51 Stefano Brivio wrote:
-> > On Tue, 22 Jan 2008 20:45:21 -0500
-> > "John W. Linville" <linville@tuxdriver.com> wrote:
-> > 
-> > >       b43legacy: Remove the PHY spinlock
-> > 
-> > I hope you tested this. I still haven't been able to (I received the
-> > needed hardware yesterday), and Michael said that the patch has been
-> > compile-tested only.
-> 
-> John, if we use subject lines such as:
-> 
-> [PATCH RFT] foobar: bizbaz
-> 
-> That means the patch is _not_ submitted for inclusion, yet.
-> The RFT means Request-For-Testing. Ususally, if I send out such
+On Jan 8, 2008 10:02 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Tuesday 08 January 2008 20:43:53 Tomas Winkler wrote:
+> > On Jan 8, 2008 7:22 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > >
+> > > On Tue, 2008-01-08 at 18:09 +0100, Johannes Berg wrote:
+> > > > > I didn't test the copy solution yet but in 11n rates I see as a show
+> > > > > stopper. All 11n packets are QoS packets.
+> > > >
+> > > > Really, go fix your firmware.
+> > >
+> >
+> > I don't think it is really broken.  The packet it self is aligned. I'm
+> > not sure who has to be responsible for payload alignment you may have
+> > 10 other protocols packed into it,  each with variable length
+> > unaligned header.
+>
+> Yeah sure. You can move data around in the kernel and waste CPU,
+> or you can be clever and let the NIC firmware do it. Whatever you want
+> at intel. It's up to you. ;)
 
-Thanks, I'm well aware.
+You are twisting my answer please read it again.
+Frankly  I will try to fix it in FW but if not I rather fail on 2
+platforms  then making 11n useless on 4 others.
+Maybe we should ask some company to fix ther CPU to support unaligned
+access. Or ask the guys that 'saved' two bytes in QoS field to change
+the spec. Same goes for designers of 4965 that never dreamed someone
+will stick it to SPARC machine. And I can bet the same goes for other
+wireless HW companies.
 
-Larry said he tested it, two weeks ago.  No one contradicted it.
-And time is short for new development for 2.6.25 -- but there is
-plenty of time for fixes. :-)
+Cheers, please don't replay to me  I''m really going to try fix it :)
 
-> For this particular patch, please leave it in now. I'm pretty
-> sure it is correct. So actual testing will be done upstream now. ;)
+Tomas
 
-Exactly.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> --
+> Greetings Michael.
+>
