@@ -1,68 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:55046 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:36852 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140AbYAYWRc (ORCPT
+	with ESMTP id S1752535AbYAHPbb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:17:32 -0500
+	Tue, 8 Jan 2008 10:31:31 -0500
 From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
+To: Alejandro Riveira =?utf-8?q?Fern=C3=A1ndez?= <ariveira@gmail.com>
 Subject: Re: Linux 2.6.24-rc7
-Date: Fri, 25 Jan 2008 23:15:09 +0100
-Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Date: Tue, 8 Jan 2008 16:30:30 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801252221.07558.mb@bu3sch.de> <20080125214626.GG14687@tuxdriver.com>
-In-Reply-To: <20080125214626.GG14687@tuxdriver.com>
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071830.51895.mb@bu3sch.de> <20080107212344.1372cc47@Varda>
+In-Reply-To: <20080107212344.1372cc47@Varda>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801252315.10112.mb@bu3sch.de> (sfid-20080125_221743_584512_DEF8AADC)
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200801081630.31110.mb@bu3sch.de> (sfid-20080108_153150_694996_30850297)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 25 January 2008 22:46:26 John W. Linville wrote:
-> On Fri, Jan 25, 2008 at 10:21:07PM +0100, Michael Buesch wrote:
-> > On Friday 25 January 2008 22:11:44 Inaky Perez-Gonzalez wrote:
-> > > On Friday 25 January 2008, Michael Buesch wrote:
-> > > > On Friday 25 January 2008 19:34:46 Linus Torvalds wrote:
-> > > > > My attitude is: CPU's that do unaligned accesses right are the *good* 
-> > > > > CPU's. We should encourage them, and put the onus of being crap on the 
-> > > > > ones that are crap, rather than penalizing the ones that aren't.
-> > > > 
-> > > > I absolutely agree. But as this can get fixed with _no_ performance loss
-> > > > at all inside of the firmware (and who if not intel can change stuff
-> > > > in their firmware?), I think this warning is in fact valid.
-> > > 
-> > > Well, you forgot the point that maybe it is not that simple to get such
-> > > a seemingly simple change into the firmware for a long list of reasons.
-> > 
-> > The reasons being?
-> 
-> Firmware certification is expensive.
-> 
-> Plus it is a bit unfair to ask for firmware changes just because the
-> vendor is actually engaged with us.  If this were Broadcom or Zydas
-> firmware we would have little recourse other than to accept it or
-> fix it in the driver or stack.
+On Monday 07 January 2008 21:23:44 Alejandro Riveira Fern=C3=A1ndez wro=
+te:
+> > > [   37.043990] WARNING: at /home/alex/kernel/linux-2.6/net/mac802=
+11/rx.c:1486 __ieee80211_rx()=20
+> > > [   37.043996] Pid: 0, comm: swapper Not tainted 2.6.24-rc7 #3   =
+                                                           =20
+> > > [   37.043998]                                                   =
+                                                           =20
+> > > [   37.043999] Call Trace:                                       =
+                                                           =20
+> > > [   37.044001]  <IRQ>  [<ffffffff80227fe3>] enqueue_task+0x13/0x3=
+0                                                          =20
+> > > [   37.044040]  [<ffffffff88178cbe>] :mac80211:__ieee80211_rx+0xc=
+7e/0xd30                                                   =20
+> > > [   37.044044]  [<ffffffff80228062>] activate_task+0x32/0x50     =
+                                                           =20
+> > > [   37.044073]  [<ffffffff8816a28b>] :mac80211:ieee80211_tasklet_=
+handler+0xbb/0x120                                         =20
+> > > [   37.044086]  [<ffffffff80238d08>] tasklet_action+0x48/0xb0    =
+                                                           =20
+> > > [   37.044091]  [<ffffffff80238c09>] __do_softirq+0x69/0xe0      =
+                                                           =20
+> > > [   37.044097]  [<ffffffff8020ce2c>] call_softirq+0x1c/0x30      =
+                                                           =20
+> > > [   37.044101]  [<ffffffff8020efe5>] do_softirq+0x35/0x90        =
+                                                           =20
+> > > [   37.044105]  [<ffffffff80238aa5>] irq_exit+0x95/0xa0          =
+                                                           =20
+> > > [   37.044108]  [<ffffffff8020f0c0>] do_IRQ+0x80/0x100           =
+                                                           =20
+> > > [   37.044111]  [<ffffffff8020a840>] default_idle+0x0/0x40       =
+                                                           =20
+> > > [   37.044115]  [<ffffffff8020c181>] ret_from_intr+0x0/0xa       =
+                                                           =20
+> > > [   37.044117]  <EOI>  [<ffffffff8020a869>] default_idle+0x29/0x4=
+0                                                          =20
+> > > [   37.044130]  [<ffffffff8020a8f5>] cpu_idle+0x75/0xc0          =
+                                                           =20
+> > > [   37.044146]                                                   =
+                                                           =20
+> >=20
+> >=20
+> > Can you check if that is the
+> > WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+> > in rx.c line 1486?
+> =20
+>  How can I check? The source code I build does indeed have the line
+>  you quoted on net/mac80211/rx.c:1486 Is that what you are asking for=
+?
+> =20
+>  WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
 
-Well, we could patch broadcom's firmware ;)
+Yes fine.
+Patches are on their way. Ignore the warning for now. It is harmless.
 
-But anyway.
-So what about removing the WARN_ON() and replacing it by
-a conditional memmove then?
-I mean, the wireless hardware I care about already is sane or fixed.
-So if intel doesn't want to support this kind of machines, I'd say in
-the end it is OK and we should not care about it at all. I mean, nobody
-is forced to buy an intel card to use on such a machine.
-
-I must say I don't care much about intel's customers that want to run
-intel wireless in a machine that can't do unaligned access, if intel itself
-doesn't care at all about them. In the end it is _intel's_ performance
-problem and not ours.
-
-The problem with that is that the warning goes away and _future_ drivers
-will probably run into this performance problem and don't know about.
-
--- 
+--=20
 Greetings Michael.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
