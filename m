@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.LOGIN.COM ([192.195.240.2]:2071 "EHLO login.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752850AbYABTo2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 14:44:28 -0500
-Message-ID: <477BE805.9020500@wetwork.net> (sfid-20080102_194432_626455_D0976830)
-Date: Wed, 02 Jan 2008 12:37:41 -0700
-From: Ehud Gavron <gavron@wetwork.net>
+Received: from fg-out-1718.google.com ([72.14.220.153]:8296 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488AbYAHGDl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2008 01:03:41 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so4427502fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2008 22:03:38 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Date: Tue, 8 Jan 2008 06:03:14 +0000
+Cc: "Kalle Valo" <kalle.valo@nokia.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <200712290942.37396.chris2553@googlemail.com> <200801022002.29262.IvDoorn@gmail.com> <200801041709.12043.chris2553@googlemail.com>
+In-Reply-To: <200801041709.12043.chris2553@googlemail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <larry.finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Fix rxheader channel parsing
-References: <200801021855.53410.mb@bu3sch.de> <477BDD58.9050702@lwfinger.net> <200801022002.58434.mb@bu3sch.de>
-In-Reply-To: <200801022002.58434.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801080603.14619.chris2553@googlemail.com> (sfid-20080108_060343_906479_572B358A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Happy New Year, Michael!
-
-:)
-
-Ehud
-
-Michael Buesch wrote:
-> On Wednesday 02 January 2008 19:52:08 Larry Finger wrote:
->   
->> Michael Buesch wrote:
->>     
->>> This patch fixes the parsing of the RX data header channel field.
->>>
->>> The current code parses the header incorrectly and passes a wrong
->>> channel number and frequency for each frame to mac80211.
->>> The FIXMEs added by this patch don't matter for now as the code
->>> where they live won't get executed anyway. They will be fixed later.
->>>
->>> Signed-off-by: Michael Buesch <mb@bu3sch.de>
->>>
->>> ---
->>>
->>> John, as this is a bugfix, it should go into 2.6.24 if still possible.
->>>
->>> Index: wireless-2.6/drivers/net/wireless/b43/xmit.c
->>> ===================================================================
->>> --- wireless-2.6.orig/drivers/net/wireless/b43/xmit.c	2007-12-30 20:30:03.000000000 +0100
->>> +++ wireless-2.6/drivers/net/wireless/b43/xmit.c	2008-01-02 18:13:15.000000000 +0100
->>> @@ -549,21 +549,32 @@ void b43_rx(struct b43_wldev *dev, struc
->>>  	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
->>>  	case B43_PHYTYPE_A:
->>>  		status.phymode = MODE_IEEE80211A;
->>> -		status.freq = chanid;
->>> -		status.channel = b43_freq_to_channel_a(chanid);
->>> -		break;
->>> -	case B43_PHYTYPE_B:
->>> -		status.phymode = MODE_IEEE80211B;
->>> -		status.freq = chanid + 2400;
->>> -		status.channel = b43_freq_to_channel_bg(chanid + 2400);
->>> +		B43_WARN_ON(1);
->>> +		/* FIXME: We don't really know which value the "chanid" contains.
->>> +		 *        So the following assignment might be wrong. */
->>> +		status.channel = chanid;
->>> +		status.freq = b43_channel_to_freq_5ghz(status.channel);
->>>  		break;
->>>       
->> Shouldn't you just drop this case? No B PHY devices will ever use b43 and the default branch will
->> issue the WARN_ON anyway.
->>     
+On Friday 04 January 2008, Chris Clayton wrote:
+> On Wednesday 02 January 2008, Ivo van Doorn wrote:
 >
-> I guess you misread the patch.
+> <snip>
 >
->   
+> > On Wednesday 02 January 2008, Chris Clayton wrote:
+> > > Ah, does the patch I have applied and am running need enhancement,
+> > > please?
+>
+> Thanks, I'll run 2.6.24-rc6-git10 with this patch over the weekend and let
+> you know if there are any problems
+
+OK, I've been running 2.6.24-rc6-git kernels (rc7 last night) with the patch 
+applied and my wireless connection has been fine. So here's my
+
+Tested-by: Chris Clayton <chris2553@googlemail.com>
+
+Thanks
+
+>
+> Chris
+>
+> > ---
+> >
+> > diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> > b/drivers/net/wireless/rt2x00/rt2x00dev.c index ff399f8..3c10a68 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+>
+> <snip>
+
+
+
+-- 
+Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
