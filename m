@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29625 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751243AbYAPQhT convert rfc822-to-8bit (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.239]:16214 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbYAHTny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 11:37:19 -0500
+	Tue, 8 Jan 2008 14:43:54 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1909793nze.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 11:43:53 -0800 (PST)
+Message-ID: <1ba2fa240801081143y52e92c62o8ee2c3e701df7919@mail.gmail.com> (sfid-20080108_194400_675104_3D42F021)
+Date: Tue, 8 Jan 2008 21:43:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1199812976.6762.7.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] [PATCH 2/5] iwlwifi: iwl3945 synchronize interruptand tasklet for down iwlwifi
-Date: Wed, 16 Jan 2008 08:37:10 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003684665@orsmsx416.amr.corp.intel.com> (sfid-20080116_163723_757122_603BA559)
-In-Reply-To: <b25c3fa70801152015x482aa4cfle9ed3504f40fd18e@mail.gmail.com>
-References: <11998765481610-git-send-email-joonwpark81@gmail.com> <D936D925018D154694D8A362EEB08920035CCD70@orsmsx416.amr.corp.intel.com> <b25c3fa70801101724he91d934y9db6636c68a32486@mail.gmail.com> <D936D925018D154694D8A362EEB0892003602E2D@orsmsx416.amr.corp.intel.com> <b25c3fa70801101838o7a71cc60h1c8b8a71624aeff9@mail.gmail.com> <478B1EBF.8030701@gmail.com> <478B2E92.5090901@gmail.com> <D936D925018D154694D8A362EEB0892003683D89@orsmsx416.amr.corp.intel.com> <b25c3fa70801152015x482aa4cfle9ed3504f40fd18e@mail.gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Joonwoo Park" <joonwpark81@gmail.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <200712291614.55732.IvDoorn@gmail.com>
+	 <1199261473.4172.58.camel@johannes.berg>
+	 <200801022012.52287.IvDoorn@gmail.com>
+	 <1ba2fa240801080744u5a076202n91f11b0de87384f8@mail.gmail.com>
+	 <1199812167.6762.1.camel@johannes.berg>
+	 <1199812976.6762.7.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 15, 2008 8:15 PM, Joonwoo Park  wrote:
+On Jan 8, 2008 7:22 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2008-01-08 at 18:09 +0100, Johannes Berg wrote:
+> > > I didn't test the copy solution yet but in 11n rates I see as a show
+> > > stopper. All 11n packets are QoS packets.
+> >
+> > Really, go fix your firmware.
+>
 
-> Thank you for your advice, it seems recent base code's commit inserted
-> iwl_disable_interrupts() into iwl_pci_probe.
-> As like you said, for base code __iwl_disable_interrupts() should
-> better than iwl_disable_interrupts for iwl_pci_probe.
+I don't think it is really broken.  The packet it self is aligned. I'm
+not sure who has to be responsible for payload alignment you may have
+10 other protocols packed into it,  each with variable length
+unaligned header.
 
-I've modified the patch to include this.
+> I meant to write more here but accidentally deleted parts when
+> restructuring. The firmware should insert padding to make sure the
+> payload is aligned on a four-byte boundary at all times when the start
+> of the DMA area is aligned that way.
+>
+I understand that  I'll see what can be done, yet I don't like it
 
-> Do you want version of patch for base code?
-> Can you ACK for this patch?
+Tomas
 
-Your patch looks good and is currently being tested. 
 
-Thanks!
-
-Reinette
+> johannes
+>
