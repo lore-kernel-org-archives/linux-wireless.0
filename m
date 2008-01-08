@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn1.fre.skanova.net ([81.228.11.168]:63009 "EHLO
-	pne-smtpout4-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751508AbYA0TLL (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:48856 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbYAHP4d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2008 14:11:11 -0500
-Subject: Re: [PATCH 10/14] [rndis_host] Add early_init function pointer to
-	'struct rndis_data'.
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: David Brownell <david-b@pacbell.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bjd@jooz.net
-In-Reply-To: <200801270814.43760.david-b@pacbell.net>
-References: <20080125225032.11716.77713.stgit@fate.lan>
-	 <20080125225128.11716.59998.stgit@fate.lan>
-	 <200801270814.43760.david-b@pacbell.net>
-Content-Type: text/plain
-Date: Sun, 27 Jan 2008 21:11:03 +0200
-Message-Id: <1201461063.3663.24.camel@localhost> (sfid-20080127_191120_210098_F86D3D66)
+	Tue, 8 Jan 2008 10:56:33 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3309108ugc.16
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 07:56:32 -0800 (PST)
+Date: Tue, 8 Jan 2008 16:55:30 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+Message-ID: <20080108165530.19b2d03a@Varda> (sfid-20080108_155637_207764_1E53F629)
+In-Reply-To: <200801081630.31110.mb@bu3sch.de>
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
+	<200801071830.51895.mb@bu3sch.de>
+	<20080107212344.1372cc47@Varda>
+	<200801081630.31110.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-01-27 at 08:14 -0800, David Brownell wrote:
-> On Friday 25 January 2008, Jussi Kivilinna wrote:
-> > Function pointer is for 'subminidrivers' that need to do work on device 
-> > right after minidriver has initialized hardware.
-> > 
-> > For example, rndis_wlan setting device specific configuration parameters
-> > with OID_GEN_RNDIS_CONFIG_PARAMETER right after rndis_host has 
-> > initialized hardware with RNDIS_INIT.
-> > 
-> > Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> 
-> Acked-by: David Brownell <dbrownell@users.sourceforge.net>
-> 
-> ... though I'm not sure I'd coin a term like "subminidriver".  ;)
+El Tue, 8 Jan 2008 16:30:30 +0100
+Michael Buesch <mb@bu3sch.de> escribi=C3=B3:
 
-Hm.. sure there could have been better ways of explaining that but with
-my inadequate english skills that's what came out first :)
+> On Monday 07 January 2008 21:23:44 Alejandro Riveira Fern=C3=A1ndez w=
+rote:
+>
+> > =20
+> >  How can I check? The source code I build does indeed have the line
+> >  you quoted on net/mac80211/rx.c:1486 Is that what you are asking f=
+or?
+> > =20
+> >  WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+>=20
+> Yes fine.
+> Patches are on their way. Ignore the warning for now. It is harmless.
+>=20
 
+  Thank you very much for your time. Keep on the good work :)
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
