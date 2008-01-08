@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:39474 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106AbYAILCI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60203 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbYAHRXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 06:02:08 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so189004rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 03:02:06 -0800 (PST)
-From: Joonwoo Park <joonwpark81@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>, netdev@vger.kernel.org
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Joonwoo Park <joonwpark81@gmail.com>
-Subject: [PATCH 0/5] iwlwifi: iwl3945 fix races, getting rid of sleep from context
-Date: Wed,  9 Jan 2008 20:01:51 +0900
-Message-Id: <11998765114113-git-send-email-joonwpark81@gmail.com> (sfid-20080109_110214_104855_15DB1C0A)
+	Tue, 8 Jan 2008 12:23:11 -0500
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1199812167.6762.1.camel@johannes.berg> (sfid-20080108_171433_924622_7CA175B9)
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <200712291614.55732.IvDoorn@gmail.com>
+	 <1199261473.4172.58.camel@johannes.berg>
+	 <200801022012.52287.IvDoorn@gmail.com>
+	 <1ba2fa240801080744u5a076202n91f11b0de87384f8@mail.gmail.com>
+	 (sfid-20080108_154444_241831_C6355BE0)  <1199812167.6762.1.camel@johannes.berg>
+	 (sfid-20080108_171433_924622_7CA175B9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cRDTn0D4IXje+syNfRZR"
+Date: Tue, 08 Jan 2008 18:22:56 +0100
+Message-Id: <1199812976.6762.7.camel@johannes.berg> (sfid-20080108_172314_951196_BA4903A2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-This patchset does fix iwl3945's races and some other stuff.
-For now it works for just iwl3945 but if some of them is needed for iwl4965, I would work for it.
 
-patch against 2.6.24-rc7
+--=-cRDTn0D4IXje+syNfRZR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[PATCH 1/5] iwlwifi: iwl3945 flush interrupt mask
-[PATCH 2/5] iwlwifi: iwl3945 synchronize interrupt and tasklet for down iwlwifi
-[PATCH 3/5] iwlwifi: iwl3945 fix oops while pci remove
-[PATCH 4/5] iwlwifi: iwl3945 eliminate sleepable task queue from context
-[PATCH 5/5] iwlwifi: iwl3945 switch private workqueue to ieee80211->workqueue
 
-Thanks,
-Joonwoo
+On Tue, 2008-01-08 at 18:09 +0100, Johannes Berg wrote:
+> > I didn't test the copy solution yet but in 11n rates I see as a show
+> > stopper. All 11n packets are QoS packets.
+>=20
+> Really, go fix your firmware.
+
+I meant to write more here but accidentally deleted parts when
+restructuring. The firmware should insert padding to make sure the
+payload is aligned on a four-byte boundary at all times when the start
+of the DMA area is aligned that way.
+
+johannes
+
+--=-cRDTn0D4IXje+syNfRZR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4Oxb6Vg1VMiehFYAQJOMxAAqxdY/YvNLXhLN0i9BQ3QLpKKkvN+yEUl
+lfBvYRADVMQLzn2LT/ZZHRXUUWNt+FLvCvEWvJwxHv9x8ZfwSFTasGZXuw/ldlCK
+jOkD7XoDtvdVHxf+41j5IBjgV9ZFpNabKj0Kx+A6LJFlGcDt6VMcVtVx5bsDl5NI
+4Saayp1oJnAmnUce7Xo9dhURPrR3AyvRXN+G5ZKJwzoyUjHQBRQTIi4mshEyjMhq
+sYnwLydjxpT5I8Xp2jDVZZvW/EAtXcs+nUylUv1SQzqSWwUd4oiXbGbzR/y+c02t
+xXYuJJupkuptOPOIwJHYEl1uGuLmFhFHvn13/zb5KHe88H/eQYqoEA8agwoTe9Bi
+zUIE6qmWOOUV21ofiliqggWLklOZ/+FnpNjqoOgP25GRLwoQP7Ya2T7ZXVQGZc3a
+hoIcZ3vYAJ60sW1/Sx2tE9mPSnCy0vrD+RduM8q5K7ogDrnSQX2GdBhqxnPSxvqQ
+jta7+yL/YU3fNIPW23ZCXmXEKG4mtBP4ETS8ZppVN1+84C1bGrdEVkhQqdjHLvbF
+D0JoL4jQNuz5327HuhUEldU3vfI2b3JJ9rQbOivK8qHiya4FRythWfmAZcDxupE6
+DcBV0cB4QcxCElnXiLC85mZ24inov64MM76LGAclgfhGqB4LEBUSc+DLAeaRkzXA
+4780Fy0ahEU=
+=PiRv
+-----END PGP SIGNATURE-----
+
+--=-cRDTn0D4IXje+syNfRZR--
+
