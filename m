@@ -1,166 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:57255 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752583AbYA0TsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2008 14:48:08 -0500
-Date: Sun, 27 Jan 2008 20:46:06 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFT] [PATCH] rc80211-pid: fix rate adjusting
-Message-ID: <20080127204606.63fbbaf7@morte> (sfid-20080127_194812_900990_8DAFF0C8)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:22635 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753570AbYAHD0Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2008 22:26:25 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] cfg80211 API for channels/bitrates, mac80211 and driver conversion
+Date: Mon, 7 Jan 2008 22:27:20 -0500
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1198448108.4103.6.camel@johannes.berg> <200712231850.37136.flamingice@sourmilk.net> <1199484080.4172.173.camel@johannes.berg>
+In-Reply-To: <1199484080.4172.173.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1436108.fnELgt7Bek";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200801072227.27222.flamingice@sourmilk.net> (sfid-20080108_032630_817461_49A0DB68)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
-in order to make the learning algorithm aware of constraints on rates. Also
-add some comments and rename variables.
+--nextPart1436108.fnELgt7Bek
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This fixes a bug which prevented 802.11b/g non-AP STAs from working with
-802.11b only AP STAs.
+On Friday 04 January 2008 17:01:20 Johannes Berg wrote:
+> > > + * @IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE:
+> > > + *	Hardware is not capable of receiving frames with short preamble on
+> > > + *	the 2.4 GHz band.
+> >
+> > Let's add it when we actually find hardware that needs it.
+>
+> I disagree. It's literally two lines of code (one defining it and one
+> using it) and makes things more easy to discover when writing a driver.
+>
+Yeah but it's never ever going to get used. Bet you 10 us pesos on it. So=20
+what's the point? If you feel this makes mac80211 better fit the theory,=20
+well.. whatever..
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-John, this should supersede the previously posted patches 1/2 and 2/2. This
-needs further testing anyway.
+> > > +	strcpy(name, "mac80211");
+> > >
+> > >  	return 0;
+> > >  }
+> >
+> > It's simple, sure, but no. Let's not change userspace facing behavior if
+> > we can. If you really need to, use "IEEE 802.11".
+>
+> It's pretty dumb to indicate the mode that way, but I changed it to just
+> "IEEE 802.11" now.
+>
+I'm not even sure what the intention of this ioctl is suppose to be (verify=
+=20
+presence of WE? there are WE implemented ioctls that can be used for that=20
+trick..) but it does indicate it's not for saying what the name of the driv=
+er=20
+is and I don't think driver subsystem names count either.=20
 
-Larry, Lars, please test this. It works for me, both with 802.11b only and
-802.11b/g settings on my AP.
+Indicating mode this way is dumb for sure but it fits with the examples giv=
+en=20
+for the ioctl. Doubt anyone is counting on that though since this ioctl has=
+=20
+been abused already (eg. association status in ipw2200) so "IEEE 802.11"=20
+should be fine.
 
-Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
-+++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
-@@ -2,7 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
-- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
-+ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -64,71 +64,66 @@
-  */
- 
- 
--/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
-- * a worse failed frames behaviour and we'll choose the highest rate whose
-- * failed frames behaviour is not worse than the one of the original rate
-- * target. While at it, check that the adjustment is within the ranges. Then,
-- * provide the new rate index. */
--static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
--					 int adj, int cur, int l)
--{
--	int i, j, k, tmp;
--
--	j = r[cur].rev_index;
--	i = j + adj;
--
--	if (i < 0)
--		return r[0].index;
--	if (i >= l - 1)
--		return r[l - 1].index;
--
--	tmp = i;
--
--	if (adj < 0) {
--		for (k = j; k >= i; k--)
--			if (r[k].diff <= r[j].diff)
--				tmp = k;
--	} else {
--		for (k = i + 1; k + i < l; k++)
--			if (r[k].diff <= r[i].diff)
--				tmp = k;
--	}
--
--	return r[tmp].index;
--}
--
-+/* Adjust the rate while ensuring that we won't switch to a lower rate if it
-+ * exhibited a worse failed frames behaviour and we'll choose the highest rate
-+ * whose failed frames behaviour is not worse than the one of the original rate
-+ * target. While at it, check that the new rate is valid. */
- static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
- 					 struct sta_info *sta, int adj,
- 					 struct rc_pid_rateinfo *rinfo)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_supported_band *sband;
--	int newidx;
--	int maxrate;
--	int back = (adj > 0) ? 1 : -1;
-+	int cur_sorted, new_sorted, probe, tmp, n_bitrates, band;
-+	int cur = sta->txrate_idx;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
--
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
-+	band = sband->band;
-+	n_bitrates = sband->n_bitrates;
- 
--	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate_idx,
--					       sband->n_bitrates);
-+	/* Map passed arguments to sorted values. */
-+	cur_sorted = rinfo[cur].rev_index;
-+	new_sorted = cur_sorted + adj;
-+
-+	/* Check limits. */
-+	if (new_sorted < 0)
-+		new_sorted = rinfo[0].rev_index;
-+	else if (new_sorted >= n_bitrates)
-+		new_sorted = rinfo[n_bitrates - 1].rev_index;
- 
--	while (newidx != sta->txrate_idx) {
--		if (rate_supported(sta, sband->band, newidx) &&
--		    (maxrate < 0 || newidx <= maxrate)) {
--			sta->txrate_idx = newidx;
--			break;
--		}
-+	tmp = new_sorted;
- 
--		newidx += back;
-+	if (adj < 0) {
-+		/* Ensure that the rate decrease isn't disadvantageous. */
-+		for (probe = cur_sorted; probe >= new_sorted; probe--)
-+			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
-+			    rate_supported(sta, band, rinfo[probe].index))
-+				tmp = probe;
-+	} else {
-+		/* Look for rate increase with zero (or below) cost. */
-+		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
-+			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
-+			    rate_supported(sta, band, rinfo[probe].index))
-+				tmp = probe;
- 	}
- 
-+	/* Fit the rate found to the nearest supported rate. */
-+	do {
-+		if (rate_supported(sta, band, rinfo[tmp].index)) {
-+			sta->txrate_idx = rinfo[tmp].index;
-+			break;
-+		}
-+		if (adj < 0)
-+			tmp--;
-+		else
-+			tmp++;
-+	} while (tmp < n_bitrates && tmp >= 0);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	rate_control_pid_event_rate_change(
- 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
--		newidx, sband->bitrates[newidx].bitrate);
-+		cur, sband->bitrates[cur].bitrate);
- #endif
- }
- 
+Thanks,
+=2DMichael Wu
 
+--nextPart1436108.fnELgt7Bek
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
---
-Ciao
-Stefano
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHgu2fT3Oqt9AH4aERApKZAKDFXtPdvFQ+RNZEI2ueN2mFWmyIYACgowiV
+dODWmXFeRGgML1QpHYiV8z0=
+=sbrA
+-----END PGP SIGNATURE-----
+
+--nextPart1436108.fnELgt7Bek--
