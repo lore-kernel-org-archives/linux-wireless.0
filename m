@@ -1,68 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:58395 "EHLO
-	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756316AbYAYWvh (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.190]:39474 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755120AbYAILCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:51:37 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 10/14] [rndis_host] Add early_init function pointer to 'struct
-	rndis_data'.
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
-Date: Sat, 26 Jan 2008 00:51:28 +0200
-Message-ID: <20080125225128.11716.59998.stgit@fate.lan> (sfid-20080125_225147_002625_D0C9028C)
-In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
-References: <20080125225032.11716.77713.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 9 Jan 2008 06:02:48 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so189004rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 03:02:48 -0800 (PST)
+From: Joonwoo Park <joonwpark81@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>, netdev@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Joonwoo Park <joonwpark81@gmail.com>
+Subject: [PATCH 3/5] iwlwifi: iwl3945 fix oops while pci remove
+Date: Wed,  9 Jan 2008 20:02:42 +0900
+Message-Id: <1199876562379-git-send-email-joonwpark81@gmail.com> (sfid-20080109_110258_444916_A87B208D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function pointer is for 'subminidrivers' that need to do work on device 
-right after minidriver has initialized hardware.
+The nic controller's clock on/off irq (CSR_INT_BIT_MAC_CLK_ACTV) is generated when device goes on/off
+Unlikely turning on the device, irq by off the device may cause oops because iwl_pci_remove already freed required resources
+The irq_tasklet should not be invoked at that condition
 
-For example, rndis_wlan setting device specific configuration parameters
-with OID_GEN_RNDIS_CONFIG_PARAMETER right after rndis_host has 
-initialized hardware with RNDIS_INIT.
+$sudo modprobe -r iwl3945
+ BUG: unable to handle kernel paging request at virtual address f8864008
+ printing eip: f8b633bd *pdpt = 0000000000003001 *pde = 0000000037c12067 *pte = 0000000000000000
+ Oops: 0000 [#1] SMP
+ Modules linked in: netconsole iwl3945 e1000
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+ EIP is at iwl_irq_tasklet+0x82d/0x1010 [iwl3945]
+ ...
+
+ Call Trace:
+  [<c40053ba>] show_trace_log_lvl+0x1a/0x30
+  [<c4005479>] show_stack_log_lvl+0xa9/0xd0
+  [<c400556a>] show_registers+0xca/0x1c0
+  [<c4005776>] die+0x116/0x230
+  [<c4020cbb>] do_page_fault+0x35b/0x7f0
+  [<c43eeeda>] error_code+0x72/0x78
+  [<c4032ceb>] tasklet_action+0x4b/0xc0
+  [<c4032687>] __do_softirq+0x87/0x100
+  [<c4032757>] do_softirq+0x57/0x60
+  ...
+ EIP: [<f8b633bd>] iwl_irq_tasklet+0x82d/0x1010 [iwl3945] SS:ESP 0068:f7c4ff1c
+ Kernel panic - not syncing: Fatal exception in interrupt
+
+Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
- drivers/net/usb/rndis_host.c |    6 ++++++
- drivers/net/usb/usbnet.h     |    5 +++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 1d6bf0a..0813903 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -336,6 +336,12 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 		dev->hard_mtu, tmp, dev->rx_urb_size,
- 		1 << le32_to_cpu(u.init_c->packet_alignment));
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3986aaf..f95f226 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4867,8 +4867,11 @@ static irqreturn_t iwl_isr(int irq, void *data)
+ 	IWL_DEBUG_ISR("ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
+ 		      inta, inta_mask, inta_fh);
  
-+	/* module has some device initialization code needs to be done right
-+	 * after RNDIS_INIT */
-+	if (dev->driver_info->early_init &&
-+			dev->driver_info->early_init(dev) != 0)
-+		goto halt_fail_and_release;
++	inta &= ~CSR_INT_BIT_MAC_CLK_ACTV;
 +
- 	/* Get designated host ethernet address */
- 	reply_len = ETH_ALEN;
- 	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
-diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-index 0b4bf09..25b63d3 100644
---- a/drivers/net/usb/usbnet.h
-+++ b/drivers/net/usb/usbnet.h
-@@ -116,6 +116,11 @@ struct driver_info {
- 	struct sk_buff	*(*tx_fixup)(struct usbnet *dev,
- 				struct sk_buff *skb, gfp_t flags);
+ 	/* iwl_irq_tasklet() will service interrupts and re-enable them */
+-	tasklet_schedule(&priv->irq_tasklet);
++	if (likely(inta || inta_fh))
++		tasklet_schedule(&priv->irq_tasklet);
+ unplugged:
+ 	spin_unlock(&priv->lock);
  
-+	/* early initialization code, can sleep. This is for minidrivers
-+	 * having 'subminidrivers' that need to do extra initialization
-+	 * right after minidriver have initialized hardware. */
-+	int	(*early_init)(struct usbnet *dev);
-+
- 	/* for new devices, use the descriptor-reading code instead */
- 	int		in;		/* rx endpoint */
- 	int		out;		/* tx endpoint */
+-- 
+1.5.3.rc5
 
