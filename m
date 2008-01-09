@@ -1,73 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:48532 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752434AbYAXFnt (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754042AbYAIMuM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 00:43:49 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Thu, 24 Jan 2008 14:43:39 +0900
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ivo van Doorn <ivdoorn@gmail.com>
-References: <20080118125252.6455.41047.stgit@one> <1201099729.3454.17.camel@johannes.berg>
-In-Reply-To: <1201099729.3454.17.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801241443.40067.bruno@thinktube.com> (sfid-20080124_054352_257425_5261E97C)
+	Wed, 9 Jan 2008 07:50:12 -0500
+Subject: Re: Warning emited by 2.6.24-rc6-git5
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240801081143y52e92c62o8ee2c3e701df7919@mail.gmail.com> (sfid-20080108_194357_125232_32C2E168)
+References: <200712290942.37396.chris2553@googlemail.com>
+	 <200712291614.55732.IvDoorn@gmail.com>
+	 <1199261473.4172.58.camel@johannes.berg>
+	 <200801022012.52287.IvDoorn@gmail.com>
+	 <1ba2fa240801080744u5a076202n91f11b0de87384f8@mail.gmail.com>
+	 <1199812167.6762.1.camel@johannes.berg>
+	 <1199812976.6762.7.camel@johannes.berg>
+	 <1ba2fa240801081143y52e92c62o8ee2c3e701df7919@mail.gmail.com>
+	 (sfid-20080108_194357_125232_32C2E168)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6/LCFKB/sU/KnhNbx2vs"
+Date: Wed, 09 Jan 2008 13:49:53 +0100
+Message-Id: <1199882994.6762.23.camel@johannes.berg> (sfid-20080109_125019_713506_8DE6C77F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello johannes!
 
-i appreciate your feedback, but on a second thought, let me question this:
+--=-6/LCFKB/sU/KnhNbx2vs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wednesday 23 January 2008 23:48:49 Johannes Berg wrote:
-> Comments on the code now.
->
-> > --- a/net/mac80211/ieee80211_sta.c
-> > +++ b/net/mac80211/ieee80211_sta.c
-> > @@ -80,6 +80,9 @@ static void ieee80211_rx_bss_put(struct net_device
-> > *dev, struct ieee80211_sta_bss *bss); static int
-> > ieee80211_sta_find_ibss(struct net_device *dev,
-> >                                    struct ieee80211_if_sta *ifsta);
-> > +static int ieee80211_sta_join_ibss(struct net_device *dev,
-> > +                                  struct ieee80211_if_sta *ifsta,
-> > +                                  struct ieee80211_sta_bss *bss);
->
-> No way, order the code properly, this mess needs to be cleaned up not
-> added to.
 
-do you care to explain what's so bad about function declarations?
+> I don't think it is really broken.  The packet it self is aligned. I'm
+> not sure who has to be responsible for payload alignment you may have
+> 10 other protocols packed into it,  each with variable length
+> unaligned header.
 
-> > +	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
-> > +	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
-> > +	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
-> > +	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0)
-> > {
->
-> I think that needs a check "&& ssid_len" or something. Someone's bound
-> to try making an IBSS with a hidden SSID and we really don't want that
-> to work.
+That doesn't actually happen though, or it becomes the responsibility of
+the unwrapper to handle it. The only thing 802.11 really wraps into the
+payload is the protocol, with possibly an 8-byte rfc1042 header (that
+doesn't break 4-byte alignment). If there's something like VPN
+encapsulated it obviously becomes the responsibility of the VPN code to
+align the packet properly before passing it off to the IP stack. But
+where we do have IP right in our packet we need to make sure we give it
+properly aligned packets.
 
-why? i know, hidden SSIDs are pretty useless but if somedody wants them... why 
-would you want to make extra effort so it does not work?
+> I understand that  I'll see what can be done, yet I don't like it
 
-> > +			printk(KERN_DEBUG "%s: beacon TSF higher than local TSF"
-> > +				" -> IBSS merge with BSSID %s\n",
-> > +				dev->name, print_mac(mac, mgmt->bssid));
->
-> No way. At the very least you need to ratelimit this.
+Not sure what there is to like about. I know Intel and powerpc hardware
+handles unaligned loads (though at a price), but I also know that there
+will be somebody sticking cards into a sparc64 or arm machine where it
+fails. Aligning the packets in firmware, before they're DMA'ed into
+memory, is simply the cheapest option.
 
-well, it should not happen very often, and for debugging i would like to see 
-this case. would
+johannes
 
- 			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
-				printk(KERN_DEBUG "%s: beacon TSF higher than "
+--=-6/LCFKB/sU/KnhNbx2vs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-be ok with you?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-regards,
-bruno
+iQIVAwUAR4TC8KVg1VMiehFYAQInxRAAm9jeDq+USsWTZZR2p7EKvZkSIk5dBgCX
+xjYCpjq4M7xMbUJzVJ2rhwWUZoPBBsB4x4E0PCGle3jZLMNo16V/hylMoo9DlxcX
+eIHn4fjRkI9tx/YIEGeWhQZmLeiLEWG2kh0mlD+UmHtlyiS6s19JCkC1L97XR1TQ
+TlBu0ihExCYraw82eB96gFNqoyYXl0gssElGaSY0Bn5uMx1/HckA/Tk7c5eS/8O0
+lEF72cPIJADhzgIQo7DCw/z8C11/I449u/f7pcguDbZq/oOiWVP9D936v4UQbsqj
+wKhmxxtf4AJOcH/n0VVPdFT95uL6pItS6HYi3YDb8jIeLDBfHlF926u56U4K5kmA
+6LKdO6FuxGP3cKFY9NteP9NGN4fwZzbUV02b2CWS8X4I9kCy2cN5Ux2ygPMWrvST
+dOsjfidCbjplgqf8RTG+0rE5aoC1GhiUfjS61GSVHLltZhfSGm5rtUlnpD40hBeX
+vkE6GqeCyNMiHh93L6JDk+ZsPgpvUbkEjuwoxaIGyImio9+m5IZNRvPnpY0XVdXU
+WEt43tclO/D/U2+gr59nJBMFQwP/2MdWestv5e5Tuz0YK+Qetsgalo2t+/eAkOIm
+GStaXIkcMzJ8N2a5LTmLMyaQuywjlzNgHpC6e22sPOaIvsfPQnrkjjrukL5whyp8
+Z83febhCrxI=
+=/qcA
+-----END PGP SIGNATURE-----
+
+--=-6/LCFKB/sU/KnhNbx2vs--
+
