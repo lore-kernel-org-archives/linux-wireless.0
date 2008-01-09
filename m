@@ -1,71 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42420 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755157AbYA1MHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 07:07:40 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 05/12 v2] mac80211: A-MPDU Tx MLME data initialization
-Date: Mon, 28 Jan 2008 14:07:19 +0200
-Message-Id: <12015220542293-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120750_433593_156FCFD4)
-In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
-References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:39474 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106AbYAILCI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2008 06:02:08 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so189004rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 03:02:06 -0800 (PST)
+From: Joonwoo Park <joonwpark81@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>, netdev@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Joonwoo Park <joonwpark81@gmail.com>
+Subject: [PATCH 0/5] iwlwifi: iwl3945 fix races, getting rid of sleep from context
+Date: Wed,  9 Jan 2008 20:01:51 +0900
+Message-Id: <11998765114113-git-send-email-joonwpark81@gmail.com> (sfid-20080109_110214_104855_15DB1C0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch initialize A-MPDU MLME data for Tx sessions.
+Hello,
+This patchset does fix iwl3945's races and some other stuff.
+For now it works for just iwl3945 but if some of them is needed for iwl4965, I would work for it.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/sta_info.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+patch against 2.6.24-rc7
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c964082..7c65849 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -117,8 +117,10 @@ static void sta_info_release(struct kref *kref)
- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
- 		dev_kfree_skb_any(skb);
- 	}
--	for (i = 0; i <  STA_TID_NUM; i++)
-+	for (i = 0; i <  STA_TID_NUM; i++) {
- 		del_timer_sync(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+		del_timer_sync(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
-+	}
- 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
- 	rate_control_put(sta->rate_ctrl);
- 	kfree(sta);
-@@ -157,17 +159,26 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 	sta->local = local;
- 	sta->dev = dev;
- 	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-+	spin_lock_init(&sta->ampdu_mlme.ampdu_tx);
- 	for (i = 0; i < STA_TID_NUM; i++) {
- 		/* timer_to_tid must be initialized with identity mapping to
- 		 * enable session_timer's data differentiation. refer to
- 		 * sta_rx_agg_session_timer_expired for useage */
- 		sta->timer_to_tid[i] = i;
-+		/* tid to tx queue: initialize according to HW (0 is valid) */
-+		sta->tid_to_tx_q[i] = local->hw.queues;
- 		/* rx timers */
- 		sta->ampdu_mlme.tid_rx[i].session_timer.function =
- 			sta_rx_agg_session_timer_expired;
- 		sta->ampdu_mlme.tid_rx[i].session_timer.data =
- 			(unsigned long)&sta->timer_to_tid[i];
- 		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+		/* tx timers */
-+		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.function =
-+			sta_addba_resp_timer_expired;
-+		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.data =
-+			(unsigned long)&sta->timer_to_tid[i];
-+		init_timer(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
- 	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
--- 
-1.5.3.3
+[PATCH 1/5] iwlwifi: iwl3945 flush interrupt mask
+[PATCH 2/5] iwlwifi: iwl3945 synchronize interrupt and tasklet for down iwlwifi
+[PATCH 3/5] iwlwifi: iwl3945 fix oops while pci remove
+[PATCH 4/5] iwlwifi: iwl3945 eliminate sleepable task queue from context
+[PATCH 5/5] iwlwifi: iwl3945 switch private workqueue to ieee80211->workqueue
 
+Thanks,
+Joonwoo
