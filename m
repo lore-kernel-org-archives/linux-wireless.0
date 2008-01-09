@@ -1,26 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s28.bay0.hotmail.com ([65.54.246.228]:33374 "EHLO
-	bay0-omc3-s28.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750943AbYANQVp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 11:21:45 -0500
-Message-ID: <BAY137-W56510E55AB7D51DDDABF1D5460@phx.gbl> (sfid-20080114_162149_513720_C5FE094F)
-From: Mike Moreton <mjvm06@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: ath5k 2425 Support
-Date: Mon, 14 Jan 2008 16:21:45 +0000
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from rv-out-0910.google.com ([209.85.198.191]:38505 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754810AbYAILDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2008 06:03:05 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so189005rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 03:03:05 -0800 (PST)
+From: Joonwoo Park <joonwpark81@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>, netdev@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Joonwoo Park <joonwpark81@gmail.com>
+Subject: [PATCH 4/5] iwlwifi: iwl3945 eliminate sleepable task queue from context
+Date: Wed,  9 Jan 2008 20:02:58 +0900
+Message-Id: <11998765783953-git-send-email-joonwpark81@gmail.com> (sfid-20080109_110337_125365_69C65EE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Eleminiate task queuing of iwl_pci_probe, register hw to ieee80211 immediately
 
-Is anyone working on support for the AR2425 in ath5k yet?
+Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   66 +++++++++++++++++---------
+ 1 files changed, 43 insertions(+), 23 deletions(-)
 
-I have one in my laptop which works just fine with the updated HAL and madwifi, but I'd like to try out ath5k.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index f95f226..7e8d8b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6171,27 +6171,9 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 	if (iwl_is_rfkill(priv))
+ 		return;
+ 
+-	if (!priv->mac80211_registered) {
+-		/* Unlock so any user space entry points can call back into
+-		 * the driver without a deadlock... */
+-		mutex_unlock(&priv->mutex);
+-		iwl_rate_control_register(priv->hw);
+-		rc = ieee80211_register_hw(priv->hw);
+-		priv->hw->conf.beacon_int = 100;
+-		mutex_lock(&priv->mutex);
+-
+-		if (rc) {
+-			iwl_rate_control_unregister(priv->hw);
+-			IWL_ERROR("Failed to register network "
+-				  "device (error %d)\n", rc);
+-			return;
+-		}
+-
+-		priv->mac80211_registered = 1;
++	iwl_reset_channel_flag(priv);
+ 
+-		iwl_reset_channel_flag(priv);
+-	} else
+-		ieee80211_start_queues(priv->hw);
++	ieee80211_start_queues(priv->hw);
+ 
+ 	priv->active_rate = priv->rates_mask;
+ 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
+@@ -6369,7 +6351,8 @@ static int __iwl_up(struct iwl_priv *priv)
+ 
+ 	/* clear (again), then enable host interrupts */
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+-	iwl_enable_interrupts(priv);
++	if (priv->mac80211_registered)
++		iwl_enable_interrupts(priv);
+ 
+ 	/* really make sure rfkill handshake bits are cleared */
+ 	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+@@ -6887,10 +6870,21 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ static int iwl_mac_start(struct ieee80211_hw *hw)
+ {
++	int ret;
+ 	struct iwl_priv *priv = hw->priv;
+ 
+ 	IWL_DEBUG_MAC80211("enter\n");
+ 
++	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
++			iwl_is_ready(priv), HOST_COMPLETE_TIMEOUT);
++
++	if (ret == -ERESTARTSYS)
++		return ret;
++	else if (ret == 0 && !iwl_is_ready(priv)) {
++		IWL_ERROR("IWL ready timeout\n");
++		return -ETIMEDOUT;
++	}
++
+ 	/* we should be verifying the device is ready to be opened */
+ 	mutex_lock(&priv->mutex);
+ 
+@@ -8299,6 +8293,19 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_work_sync(&priv->beacon_update);
+ }
+ 
++static int iwl_register_hw(struct iwl_priv *priv)
++{
++	int err;
++	IWL_DEBUG_INFO("register_hw\n");
++	iwl_rate_control_register(priv->hw);
++	err = ieee80211_register_hw(priv->hw);
++	if (!err) {
++		priv->hw->conf.beacon_int = 100;
++		priv->mac80211_registered = 1;
++	}
++	return err;
++}
++
+ static struct attribute *iwl_sysfs_entries[] = {
+ 	&dev_attr_antenna.attr,
+ 	&dev_attr_channels.attr,
+@@ -8546,11 +8553,24 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_pci_alloc;
+ 	}
+ 
++	err = __iwl_up(priv);
++	if (err) {
++		IWL_ERROR("Could not make up interface : %d\n", err);
++		mutex_unlock(&priv->mutex);
++		goto out_pci_alloc;
++	}
++
+ 	mutex_unlock(&priv->mutex);
+ 
+-	IWL_DEBUG_INFO("Queing UP work.\n");
++	err = iwl_register_hw(priv);
++	if (err) {
++		iwl_rate_control_unregister(priv->hw);
++		IWL_ERROR("Failed to register network "
++			  "device (error %d)\n", err);
++		goto out_pci_alloc;
++	}
+ 
+-	queue_work(priv->workqueue, &priv->up);
++	iwl_enable_interrupts(priv);
+ 
+ 	return 0;
+ 
+-- 
+1.5.3.rc5
 
-Mike.
-
-_________________________________________________________________
-Who's friends with who and co-starred in what?
-http://www.searchgamesbox.com/celebrityseparation.shtml
