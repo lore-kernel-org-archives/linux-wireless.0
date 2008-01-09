@@ -1,63 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53852 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753466AbYAJMPO (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:34005 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752691AbYAIBnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 07:15:14 -0500
-Subject: Re: WMM QoS classification with local bridging (bridge_packets=1)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Guy Cohen <guy.cohen@intel.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <247d6d340801090503k289902afwd9fc22dbb4a1e70b@mail.gmail.com> (sfid-20080109_130401_569599_6C500E5B)
-References: <247d6d340801090503k289902afwd9fc22dbb4a1e70b@mail.gmail.com>
-	 (sfid-20080109_130401_569599_6C500E5B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-giL98lmn3zFk8dh8UceM"
-Date: Thu, 10 Jan 2008 00:58:48 +0100
-Message-Id: <1199923128.3861.45.camel@johannes.berg> (sfid-20080110_121525_639954_90D85932)
-Mime-Version: 1.0
+	Tue, 8 Jan 2008 20:43:11 -0500
+Received: from vs30f.wh2.ocn.ne.jp (60.43.129.4)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0495672982
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Jan 2008 10:43:08 +0900 (JST)
+From: bruno randolf <bruno@thinktube.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: merge errors on 'everything'
+Date: Wed, 9 Jan 2008 10:43:01 +0900
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801091043.02204.bruno@thinktube.com> (sfid-20080109_014315_331178_2F98CBEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+hi!
 
---=-giL98lmn3zFk8dh8UceM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+many times when i do a 'git pull' to update the wireless-2.6 'everything' 
+branch i run into unexplicable merge errors.
 
-Hi,
+i created the branch with 'git co --track -b everything origin/everything' and 
+i don't work on this branch so all files are un-modified.
 
-> What do you think is the right way to fix this? Parse the frame in
-> deliver_skb and set the protocol to be IP (when IP frame), or leave
-> that as is and in classify_1d parse the frame instead of testing the
-> protocol field?
+what am i doing wrong?
 
-Can you explain the spec requirements? I'm mostly ignorant of the
-11e/11n specs. It seems like if the TID should be preserved we should do
-that regardless of whether the packet is IP/non-IP so neither of these
-solutions would work. But maybe that's not what is required?
-
-johannes
-
---=-giL98lmn3zFk8dh8UceM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4Vft6Vg1VMiehFYAQJ4ARAAkOc4JdmEHhuQ3f/pjy4fdIM9ww45MUQO
-QzstfBYsoEkUGntvEdM5Zx4KMUvJGlR4YSGwhda5/IqbO/ZupkCqs+0sOW6Feh+D
-GPQIhQ/GNbFEm3MMFXj8DnaqB4IVcY61Ae3d7lXbO8/TDCp376NSSMjanjsr6ZIM
-4UuClAFrXZj7FA7ORmsZBq5ssKF9/R4Oj1bb1QyuItWGpW377AzI4+k17kBlOXrG
-oCae6lWS1Ph9EiFObQJkhTu8sl/3NWsrt5dIiylYtwljK1dZed+GC1Xl64zyr6xb
-RbWhLxDxQ28gqwR0CCspHVIN0p8sA2D2nIvbC4z2x/MkDT3LaLeLppLHEwzG1dA3
-o4LrEAyBgKM/neAmykJSDKyGnBcbUz+XkWu/IkHvLVbhmCxUS2hlwu1W6NAE+bBP
-3aDuu21o+lLYpy90Ld5rVKNEpGtEDbKmca5WexlZHVOGwvZlNb1igY2kZUfRFpGE
-lSvV0aEmFyLa6t1J45qPQRhwgMPxihfonygEq7B+UXgJrZuT5wSiuejaM7jmGJhi
-RexvOHN/U6trx4AHCCfPpsBfWHse6oqyfzHto36IE9d0Fu40Y7SstdTaUazwO+1T
-ZcVisbv0oIF0UvABdA532tv2WIvZO09P5gEwNMMvOoUl4nA+CohADlDM+Q9hYf+j
-4QX/A5wO+50=
-=uvms
------END PGP SIGNATURE-----
-
---=-giL98lmn3zFk8dh8UceM--
-
+bruno
