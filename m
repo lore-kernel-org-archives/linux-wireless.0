@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:53580 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753014AbYAXJDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 04:03:50 -0500
-Subject: Re: Silent crash witk 2-6.24-rc8-git4
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: chris2553@googlemail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <200801240003.31666.chris2553@googlemail.com>
-References: <200801220603.02986.chris2553@googlemail.com>
-	 <200801231642.58782.chris2553@googlemail.com>
-	 <20080123190207.GB3129@tuxdriver.com>
-	 <200801240003.31666.chris2553@googlemail.com>
-Content-Type: text/plain
-Date: Thu, 24 Jan 2008 10:03:42 +0100
-Message-Id: <1201165422.7472.8.camel@localhost> (sfid-20080124_090433_242923_C7BC1BC0)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39024 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753419AbYAJMD2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 07:03:28 -0500
+Subject: Re: [PATCH] b43: Remove PIO support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200712261441.30437.mb@bu3sch.de> (sfid-20071226_134936_351777_3A34487A)
+References: <200712261441.30437.mb@bu3sch.de>
+	 (sfid-20071226_134936_351777_3A34487A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rQr3dF8pntTshB25wgvL"
+Date: Wed, 09 Jan 2008 18:58:12 +0100
+Message-Id: <1199901493.6762.32.camel@johannes.berg> (sfid-20080110_120331_950043_2CDADCDF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Thu, 2008-01-24 at 00:03 +0000, Chris Clayton wrote:
-> Thanks for the reply, John.
-> 
-> On Wednesday 23 January 2008, John W. Linville wrote:
-> > On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
-> > > On Wednesday 23 January 2008, Chris Clayton wrote:
-> > > > Hi again.
-> > > > 
-> > > > On Tuesday 22 January 2008, Chris Clayton wrote:
-> > > > > Hi,
-> > > 
-> > > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
-> > > (the none I sent earlier was from -git4, by the way)
-> > > 
-> > > Call Trace:
-> > > [<c011440a>] __update_rq_clock+0x1a/0xf0
-> > > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
-> > > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
-> > > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
-> > 
-> > I suspect this could relate to this commit:
-> > 
-> > commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
-> > Author: Mattias Nissler <mattias.nissler@gmx.de>
-> > Date:   Mon Nov 12 15:03:12 2007 +0100
-> > 
-> >     rt2x00: Allow rt61 to catch up after a missing tx report
-> > 
-> > Could you revert that patch, rebuild, and try to recreate the problem?
-> > 
-> 
-> I've reverted the patch by hand - the original patch on linux-wireless doesn't match the present state of the code
-> in rt61pci.c and I'm not a git user. I'm pretty sure I've got it right, however.
-> 
-> Problem now is that we are back where we were a few weeks ago because my wireless connection dies
-> almost immediately after I start the download and from dmesg I see:
-> 
-> phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 2.
-> Please file bug report to http://rt2x00.serialmonkey.com.
+--=-rQr3dF8pntTshB25wgvL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-As the patches author, I'm not very surprised :-) The patch just adds
-additional processing that should have happened in a different call of
-the interrupt handler. I don't think it can be related at all to the
-trouble you're seeing.
+John,
 
-When I find time, I'll try the Linus tree on my rt61 to see what
-happens.
+On Wed, 2007-12-26 at 14:41 +0100, Michael Buesch wrote:
+> Remove b43 PIO support.
+> DMA works well on all supported devices. There's no reason to use PIO.
+> Additionally, new devices don't support PIO in hardware anymore.
+> b43 PIO support is dead and unused code.
 
-Mattias
+You merged this patch, but
+
+> After applying this patch please do
+> git rm drivers/net/wireless/b43/pio.h
+> git rm drivers/net/wireless/b43/pio.c
+> to remove the main PIO support code.
+
+forgot this.
+
+johannes
+
+--=-rQr3dF8pntTshB25wgvL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4ULM6Vg1VMiehFYAQIJHw/+NzziX1D9jjFYx/Fsw6PFY1AmOi7nalgW
+scM/hk7uQGApkJdSOvoROfVKRL2TgCfFozrV8btZaNKePW+16dnYbjY8rTlSbQ+k
+Y5hMucDWLcOcl9pzTcblBsRCrTmBLnbHe8sLXieF41HoBGZhD4jb4NkavYpE8FE4
+UmUKl45aFx7andcZiSZWzpm6vpOQkZ72VsrQs5oRIiezb3Hcw6l7waMY/+i7MpQ1
+V5DXg2fQRjAiFTugIEGPRU19qInIem9xijWKNPcfZ9HJzgPg4SllOAGBw0zWIh6N
+yPUd5kATbW3nt1eGH8rFgmeYkrHwQuoGHwIIOcclcXKtswuUsMXnpjW+b9o7ulV/
+RXnm61svNCQQocNrhafQAEjCT/onxyvN2G41KYvUb9tnwd5HrKRnB2o1Y3BH/xWq
+3//kcKp7OKpZ1lIzabDoWMupXa1qVlzvlmN6RzHQ0hV4lfRL4keBH5wkgnJFY5IA
+3wz/iQPiHgqKVE1dDiMCbP/z2F7+kV7VDzMm53CBbAR9FtvlfuhIFje2wruyQEsV
+o0mXblcOoIFWsRC1hybsB0eG38OhXgMCYdWPCIZeUaoc6FLeckxN4qLq8PXcU5+3
+26Oor7RaJEg7GeZjTt6MUMS0PcofQo64RGUlT6MlrOJGDRqOGJWb+cR1TFt1H3gC
+VkpM20cgWGY=
+=LEqR
+-----END PGP SIGNATURE-----
+
+--=-rQr3dF8pntTshB25wgvL--
 
