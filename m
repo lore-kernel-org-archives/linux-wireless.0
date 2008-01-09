@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36428 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754490AbYAYBUZ (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:54362 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbYAIQvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 20:20:25 -0500
-From: David Brownell <david-b@pacbell.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH 09/14] [usbnet] add driver_priv pointer to 'struct usbnet'
-Date: Thu, 24 Jan 2008 16:59:36 -0800
-Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
-	netdev@vger.kernel.org
-References: <20080120001432.25718.30378.stgit@fate.lan>
-In-Reply-To: <20080120001432.25718.30378.stgit@fate.lan>
+	Wed, 9 Jan 2008 11:51:11 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so187983fkz.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 08:51:10 -0800 (PST)
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH v2] mac80211: Add radio led trigger
+Date: Wed, 9 Jan 2008 17:50:47 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200801061410.12862.IvDoorn@gmail.com> <200801071945.24793.IvDoorn@gmail.com> <1ba2fa240801081618u1ba01720rbd89a4c4b8d80a8c@mail.gmail.com>
+In-Reply-To: <1ba2fa240801081618u1ba01720rbd89a4c4b8d80a8c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801241659.36850.david-b@pacbell.net> (sfid-20080125_012046_965708_0B54759A)
+  charset="iso-8859-1"
+Message-Id: <200801091750.47672.IvDoorn@gmail.com> (sfid-20080109_165120_067486_9DEA958A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 19 January 2008, Jussi Kivilinna wrote:
-> Add a private data pointer to usbnet for rndis_wext module to use.
-> 
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Hi,
 
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
-
-> ---
+> > @@ -651,6 +652,7 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+> >         if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+> >                 local->hw.conf.radio_enabled = !(data->txpower.disabled);
+> >                 need_reconfig = 1;
+> > +               ieee80211_led_radio(local, local->hw.conf.radio_enabled);
 > 
->  drivers/net/usb/usbnet.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-> index 29ab92e..0b4bf09 100644
-> --- a/drivers/net/usb/usbnet.h
-> +++ b/drivers/net/usb/usbnet.h
-> @@ -31,6 +31,7 @@ struct usbnet {
->  	struct usb_interface	*intf;
->  	struct driver_info	*driver_info;
->  	const char		*driver_name;
-> +	void			*driver_priv;
->  	wait_queue_head_t	*wait;
->  	struct mutex		phy_mutex;
->  	unsigned char		suspend_count;
-> 
+> Not sure but isn't it cleaner to push it to ieee80211_hw_config().
+> This will cover also ieee80211_open and maybe in the future also
+> cfg80211
+> Will it be so bad to call led_radio even the led is already lit?
 
+Well that means it will be called quite often, and although it would perhaps
+not matter that much, I don't consider it a clean solution.
 
+We could move it to ieee80211_hw_config() eventually, but I think we should
+first implement some kind of "what config option changed" handling. That
+would benefit drivers as well since they should now handle that to prevent
+configuring _everything_ when hw_config() is called.
+
+Ivo
