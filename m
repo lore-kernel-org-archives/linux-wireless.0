@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267AbYAXO5E (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:59581 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647AbYAIASM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:57:04 -0500
-Subject: Re: [PATCH 05/12] mac80211: A-MPDU add debugfs support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12009163391538-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115442_600581_DD9FB5B9)
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163391538-git-send-email-ron.rindjunsky@intel.com>
-	 (sfid-20080121_115442_600581_DD9FB5B9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WIXByM0ZRCI1mmEvFt1M"
-Date: Thu, 24 Jan 2008 10:45:52 +0100
-Message-Id: <1201167952.3454.79.camel@johannes.berg> (sfid-20080124_145714_053028_2BE14770)
-Mime-Version: 1.0
+	Tue, 8 Jan 2008 19:18:12 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so43262wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 16:18:11 -0800 (PST)
+Message-ID: <1ba2fa240801081618u1ba01720rbd89a4c4b8d80a8c@mail.gmail.com> (sfid-20080109_001818_446102_E7A066A6)
+Date: Wed, 9 Jan 2008 02:18:11 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2] mac80211: Add radio led trigger
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200801071945.24793.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200801061410.12862.IvDoorn@gmail.com>
+	 <200801071945.24793.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Jan 7, 2008 8:45 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> Some devices have a seperate LED which indicates if the radio is
+> enabled or not. This adds a LED trigger to mac80211 where drivers
+> can hook into when they are interested in radio status changes.
+>
+> v2: Check hw.conf.radio_enabled when calling start().
+>
+>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+>
+> ---
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 1d3d4f3..42499f6 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1173,6 +1173,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw);
+>  extern char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw);
+>  extern char *__ieee80211_get_rx_led_name(struct ieee80211_hw *hw);
+>  extern char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw);
+> +extern char *__ieee80211_get_radio_led_name(struct ieee80211_hw *hw);
+>  #endif
+>  /**
+>   * ieee80211_get_tx_led_name - get name of TX LED
+> @@ -1212,6 +1213,16 @@ static inline char *ieee80211_get_rx_led_name(struct ieee80211_hw *hw)
+>  #endif
+>  }
+>
+> @@ -651,6 +652,7 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+>         if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+>                 local->hw.conf.radio_enabled = !(data->txpower.disabled);
+>                 need_reconfig = 1;
+> +               ieee80211_led_radio(local, local->hw.conf.radio_enabled);
 
---=-WIXByM0ZRCI1mmEvFt1M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not sure but isn't it cleaner to push it to ieee80211_hw_config().
+This will cover also ieee80211_open and maybe in the future also
+cfg80211
+Will it be so bad to call led_radio even the led is already lit?
 
-
-> +	if ((tid_num >=3D 100) && (tid_num <=3D 115)) {
-> +		/* toggle Rx aggregation command */
-
-I think that's a bit odd, but I guess everything else is more work.
-
-> +		printk(KERN_ERR "%s tried switching tid=3D%u %s\n", __func__,
-> +				tid_num, state);
-
-> +		printk(KERN_ERR "%s tried switching tid=3D%u %s, return=3D%d\n",
-> +				__func__, tid_num, state, rs);
-
-KERN_ERR is a bit excessive, don't you think?
-
-johannes
-
---=-WIXByM0ZRCI1mmEvFt1M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5heT6Vg1VMiehFYAQIJqBAAwaqjdD3t+RjZ3EPPu1gpgq/BMhzCs2Iu
-x0MN6IXoai7+roobm38CfI2Ije92eoH8dlC50JJFS81kHFHBZXQj6HGtMIijM5zB
-5bYLuWz2WNZB4SPMTuTiuZdqV9aaQ5TCWHdVHnB+FmevzKI4NNa47KLQEVdUjF6y
-1jVlKdJvkogL2TMAfav8yGdZNEwm/SFlLkP98EycZZRgXJaCT+HOmFRh4s5IYH5M
-hVwQnJvma8/NSBx8ryrcvdspYCPLGYaa+ukZwsYfnzBBclpyN2AtwMT5t6gD8zIw
-B01NxQyt5IB0EpEih808oFhyNxfXBdzQEdHENmVglNsDwX18S0jUds6VpMkvaGAS
-1eIjzIOY7D4QQJvui2bCwQ1jk64DJmHoSnbZRZGwJlgfbp4rYfrvjCYeaLrvxHzO
-NwY2dbKh4eN1NRavfMTQEsU8OLAefrdlbC/IzYNhqVWDUA6B8SzhjB9rhh0MHQ4j
-l8TwBlryPpK5NMzrR3yckkHvALGDjq7LkDtX192elLgJBBNsoUC0Nn9v7YQuq+b4
-bgGm5luZ4ZQbqFL0+5govWBhJoH/fTgir45GwS/QvfaBPUifQauSP0sEQUsApSjY
-+4MhxQ2N43rFgCjnzY6wFiux9Z5hnpTy/420cE53wF4eqkxzUg2t8+ctEUtbsZw5
-CyjoBTCDrz8=
-=te9l
------END PGP SIGNATURE-----
-
---=-WIXByM0ZRCI1mmEvFt1M--
-
+Thanks
+Tomas
