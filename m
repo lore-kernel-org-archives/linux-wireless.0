@@ -1,43 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out3.tiscali.nl ([195.241.79.178]:40848 "EHLO
-	smtp-out3.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbYAJToi (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:28729 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752926AbYAIJht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 14:44:38 -0500
-Message-ID: <47866EE9.80003@tiscali.nl> (sfid-20080110_194446_530350_8D372329)
-Date: Thu, 10 Jan 2008 20:15:53 +0100
-From: Roel Kluin <12o3l@tiscali.nl>
+	Wed, 9 Jan 2008 04:37:49 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 6/6] ath5k: simplify beacon configuration
+Date: Wed, 9 Jan 2008 18:37:40 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <1199870169-10476-1-git-send-email-bruno@thinktube.com> <1199870169-10476-7-git-send-email-bruno@thinktube.com> <47849498.5070605@gmail.com>
+In-Reply-To: <47849498.5070605@gmail.com>
 MIME-Version: 1.0
-To: linville@tuxdriver.com, lkml <linux-kernel@vger.kernel.org>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless/arlan] Replace logical- by bit-and
-References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl>
-In-Reply-To: <472248AC.7080201@tiscali.nl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801091837.41102.bruno@thinktube.com> (sfid-20080109_093756_324762_C4277392)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Totally untested patch below from linus' git tree. The && is incorrect, right?
+On Wednesday 09 January 2008 18:32:08 Jiri Slaby wrote:
+> checkpatch doesn't like this, please put the else path next time on the
+> same line as } is.
 
-from drivers/net/wireless/arlan.h:390:
-#define ARLAN_POWER             0x40
-#define ARLAN_ACCESS            0x80
+oh, sorry i forgot checkpatch this time. i will resend.
 
-Replace logical and by bit-and
-
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/arlan.h b/drivers/net/wireless/arlan.h
-index 3ed1df7..7b7498f 100644
---- a/drivers/net/wireless/arlan.h
-+++ b/drivers/net/wireless/arlan.h
-@@ -485,7 +485,7 @@ struct arlan_private {
- #define clearClearInterrupt(dev){\
-    writeControlRegister(dev,readControlRegister(dev) & ~ARLAN_CLEAR_INTERRUPT);}
- #define setPowerOff(dev){\
--   writeControlRegister(dev,readControlRegister(dev) | (ARLAN_POWER && ARLAN_ACCESS));\
-+   writeControlRegister(dev, readControlRegister(dev) | (ARLAN_POWER & ARLAN_ACCESS));\
-    writeControlRegister(dev,readControlRegister(dev) & ~ARLAN_ACCESS);}
- #define setPowerOn(dev){\
-    writeControlRegister(dev,readControlRegister(dev) & ~(ARLAN_POWER));   }
-
+bruno
