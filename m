@@ -1,106 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29258 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754914AbYA1MHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 07:07:38 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 02/12 v2] mac80211: A-MPDU Tx add MLME structures
-Date: Mon, 28 Jan 2008 14:07:16 +0200
-Message-Id: <12015220531581-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120745_055267_8F4626B7)
-In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
-References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:39474 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752993AbYAILCU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2008 06:02:20 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so189004rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 03:02:20 -0800 (PST)
+From: Joonwoo Park <joonwpark81@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>, netdev@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Joonwoo Park <joonwpark81@gmail.com>
+Subject: [PATCH 1/5] iwlwifi: iwl3945 flush interrupt mask
+Date: Wed,  9 Jan 2008 20:02:14 +0900
+Message-Id: <11998765342443-git-send-email-joonwpark81@gmail.com> (sfid-20080109_110228_785103_ED099E25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the needed structures to describe the Tx aggregation MLME
-per STA
-new:
- - struct tid_ampdu_tx: TID aggregation information (Tx)
-changed:
- - struct sta_ampdu_mlme: Tx aggregation information per TID and
-			  dialog token creator were added
- - struct sta_info: tid_to_tx_q added for tid<->tx queue mapping
+After enabling/disabling interrupts flushing is required
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
 ---
- net/mac80211/sta_info.h |   36 +++++++++++++++++++++++++++++++++---
- 1 files changed, 33 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-io.h       |    2 ++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 96fe3ed..48a620a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -33,13 +33,36 @@
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 8a8b96f..f2bc30e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -87,6 +87,8 @@ static inline u32 __iwl_read32(char *f, u32 l, struct iwl_priv *iwl, u32 ofs)
+ #define iwl_read32(p, o) _iwl_read32(p, o)
+ #endif
  
- #define STA_TID_NUM 16
- #define ADDBA_RESP_INTERVAL HZ
-+#define HT_AGG_MAX_RETRIES		(0x3)
- 
- #define HT_AGG_STATE_INITIATOR_SHIFT	(4)
- 
-+#define HT_ADDBA_REQUESTED_MSK		BIT(0)
-+#define HT_ADDBA_DRV_READY_MSK		BIT(1)
-+#define HT_ADDBA_RECEIVED_MSK		BIT(2)
- #define HT_AGG_STATE_REQ_STOP_BA_MSK	BIT(3)
--
-+#define HT_AGG_STATE_INITIATOR_MSK      BIT(HT_AGG_STATE_INITIATOR_SHIFT)
- #define HT_AGG_STATE_IDLE		(0x0)
--#define HT_AGG_STATE_OPERATIONAL	(0x7)
-+#define HT_AGG_STATE_OPERATIONAL	(HT_ADDBA_REQUESTED_MSK |	\
-+					 HT_ADDBA_DRV_READY_MSK |	\
-+					 HT_ADDBA_RECEIVED_MSK)
++#define iwl_flush32(iwl, ofs) iwl_read32(iwl, ofs)
 +
-+/**
-+ * struct tid_ampdu_tx - TID aggregation information (Tx).
-+ *
-+ * @state: TID's state in session state machine.
-+ * @dialog_token: dialog token for aggregation session
-+ * @ssn: Starting Sequence Number expected to be aggregated.
-+ * @addba_resp_timer: timer for peer's response to addba request
-+ * @addba_req_num: number of times addBA request has been sent.
-+ */
-+struct tid_ampdu_tx {
-+	u8 state;
-+	u8 dialog_token;
-+	u16 ssn;
-+	struct timer_list addba_resp_timer;
-+	u8 addba_req_num;
-+};
+ static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
+ 				u32 bits, u32 mask, int timeout)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8ed898d..85f1112 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4410,6 +4410,7 @@ static void iwl_enable_interrupts(struct iwl_priv *priv)
+ 	IWL_DEBUG_ISR("Enabling interrupts\n");
+ 	set_bit(STATUS_INT_ENABLED, &priv->status);
+ 	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
++	iwl_flush32(priv, CSR_INT_MASK);
+ }
  
- /**
-  * struct tid_ampdu_rx - TID aggregation information (Rx).
-@@ -69,12 +92,18 @@ struct tid_ampdu_rx {
- /**
-  * struct sta_ampdu_mlme - STA aggregation information.
-  *
-- * @tid_agg_info_rx: aggregation info for Rx per TID
-+ * @tid_rx: aggregation info for Rx per TID
-+ * @tid_tx: aggregation info for Tx per TID
-  * @ampdu_rx: for locking sections in aggregation Rx flow
-+ * @ampdu_tx: for locking sectionsi in aggregation Tx flow
-+ * @dialog_token_allocator: dialog token enumerator for each new session;
-  */
- struct sta_ampdu_mlme {
- 	struct tid_ampdu_rx tid_rx[STA_TID_NUM];
-+	struct tid_ampdu_tx tid_tx[STA_TID_NUM];
- 	spinlock_t ampdu_rx;
-+	spinlock_t ampdu_tx;
-+	u8 dialog_token_allocator;
- };
+ static inline void iwl_disable_interrupts(struct iwl_priv *priv)
+@@ -4418,11 +4419,15 @@ static inline void iwl_disable_interrupts(struct iwl_priv *priv)
  
- struct sta_info {
-@@ -148,6 +177,7 @@ struct sta_info {
- 					     of this STA */
- 	struct sta_ampdu_mlme ampdu_mlme;
- 	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
-+	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
+ 	/* disable interrupts from uCode/NIC to host */
+ 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
++	iwl_flush32(priv, CSR_INT_MASK);
  
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
+ 	/* acknowledge/clear/reset any interrupts still pending
+ 	 * from uCode or flow handler (Rx/Tx DMA) */
+ 	iwl_write32(priv, CSR_INT, 0xffffffff);
++	iwl_flush32(priv, CSR_INT);
+ 	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
++	iwl_flush32(priv, CSR_FH_INT_STATUS);
++
+ 	IWL_DEBUG_ISR("Disabled interrupts\n");
+ }
+ 
+@@ -4840,6 +4845,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
+ 	 * If we *don't* have something, we'll re-enable before leaving here. */
+ 	inta_mask = iwl_read32(priv, CSR_INT_MASK);  /* just for debug */
+ 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
++	iwl_flush32(priv, CSR_INT_MASK);
+ 
+ 	/* Discover which interrupts are active/pending */
+ 	inta = iwl_read32(priv, CSR_INT);
 -- 
-1.5.3.3
+1.5.3.rc5
 
