@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:26413 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740AbYAZUOe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 15:14:34 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1888391wah.23
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2008 12:14:32 -0800 (PST)
-Message-ID: <1ba2fa240801261214p42d53602o5be2a2cdbcc0d796@mail.gmail.com> (sfid-20080126_201502_075785_D7B8DF4B)
-Date: Sat, 26 Jan 2008 22:14:29 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Cyrill Gorcunov" <gorcunov@gmail.com>
-Subject: Re: [PATCH] wireless: iwlwifi3945/4965 - fix incorrect counting of memory
-Cc: "Thomas Tuttle" <linux-kernel@ttuttle.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	LWML <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080126160936.GB6738@cvg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080126160936.GB6738@cvg>
+Received: from mga11.intel.com ([192.55.52.93]:23889 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752204AbYAIRPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2008 12:15:34 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	Guy Cohen <guy.cohen@intel.com>
+Subject: [RFC][PATCH] mac80211: Assign correct TID for local bridged packets
+Date: Wed,  9 Jan 2008 19:12:48 +0200
+Message-Id: <11998987683864-git-send-email-tomas.winkler@intel.com> (sfid-20080109_171537_663652_CCF8C6E5)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 26, 2008 6:09 PM, Cyrill Gorcunov <gorcunov@gmail.com> wrote:
-> This patch does fix incorrect counting of memory allocated by kmalloc.
-> It seems that could lead to allocated memory overrun and corrupt
-> nearlaid memory area.
->
-> Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
->
-> ---
->
->  iwl3945-base.c |    2 +-
->  iwl4965-base.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> Index: linux-2.6.git/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> ===================================================================
-> --- linux-2.6.git.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c      2008-01-24 18:26:11.000000000 +0300
-> +++ linux-2.6.git/drivers/net/wireless/iwlwifi/iwl3945-base.c   2008-01-26 18:45:03.000000000 +0300
-> @@ -6631,7 +6631,7 @@ static void iwl_bg_request_scan(struct w
->          * that based on the direct_mask added to each channel entry */
->         scan->tx_cmd.len = cpu_to_le16(
->                 iwl_fill_probe_req(priv, (struct ieee80211_mgmt *)scan->data,
-> -                       IWL_MAX_SCAN_SIZE - sizeof(scan), 0));
-> +                       IWL_MAX_SCAN_SIZE - sizeof(*scan), 0));
->         scan->tx_cmd.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK;
->         scan->tx_cmd.sta_id = priv->hw_setting.bcast_sta_id;
->         scan->tx_cmd.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
->
-> Index: linux-2.6.git/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> ===================================================================
-> --- linux-2.6.git.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c      2008-01-26 18:45:38.000000000 +0300
-> +++ linux-2.6.git/drivers/net/wireless/iwlwifi/iwl4965-base.c   2008-01-26 18:46:06.000000000 +0300
-> @@ -6992,7 +6992,7 @@ static void iwl_bg_request_scan(struct w
->          * that based on the direct_mask added to each channel entry */
->         scan->tx_cmd.len = cpu_to_le16(
->                 iwl_fill_probe_req(priv, (struct ieee80211_mgmt *)scan->data,
-> -                       IWL_MAX_SCAN_SIZE - sizeof(scan), 0));
-> +                       IWL_MAX_SCAN_SIZE - sizeof(*scan), 0));
->         scan->tx_cmd.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK;
->         scan->tx_cmd.sta_id = priv->hw_setting.bcast_sta_id;
->         scan->tx_cmd.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+From: Guy Cohen <guy.cohen@intel.com>
 
-Thanks.
+This patch assigns correct TID to frames transmitted between
+two stations in the same BSS in AP mode.
+The problem is that skb->protocol is not set to ETH_P_IP and it is wrong
+to use that field at this stage.
+The fix compares the LLC/Protocol headers explicitly to check if the
+encapsulated frame is IP frame
 
-ACK
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+---
+ net/mac80211/wme.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 5b8a157..451929e 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -28,6 +28,7 @@ struct ieee80211_sched_data
+ 	struct sk_buff_head requeued[TC_80211_MAX_QUEUES];
+ };
+ 
++static const char llc_ip_hdr[8] = {0xAA, 0xAA, 0x3, 0, 0, 0, 0x08, 0};
+ 
+ /* given a data frame determine the 802.1p/1d tag to use */
+ static inline unsigned classify_1d(struct sk_buff *skb, struct Qdisc *qd)
+@@ -54,12 +55,12 @@ static inline unsigned classify_1d(struct sk_buff *skb, struct Qdisc *qd)
+ 		return skb->priority - 256;
+ 
+ 	/* check there is a valid IP header present */
+-	offset = ieee80211_get_hdrlen_from_skb(skb) + 8 /* LLC + proto */;
+-	if (skb->protocol != __constant_htons(ETH_P_IP) ||
+-	    skb->len < offset + sizeof(*ip))
++	offset = ieee80211_get_hdrlen_from_skb(skb);
++	if (skb->len < offset + sizeof(llc_ip_hdr) + sizeof(*ip) ||
++	    memcmp(skb->data + offset, llc_ip_hdr, sizeof(llc_ip_hdr)))
+ 		return 0;
+ 
+-	ip = (struct iphdr *) (skb->data + offset);
++	ip = (struct iphdr *) (skb->data + offset + sizeof(llc_ip_hdr));
+ 
+ 	dscp = ip->tos & 0xfc;
+ 	if (dscp & 0x1c)
+-- 
+1.5.2.2
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
