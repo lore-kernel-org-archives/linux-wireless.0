@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:39341 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751569AbYAVMCt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 07:02:49 -0500
-Date: Tue, 22 Jan 2008 12:54:00 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
- (2008-01-21)
-Message-ID: <20080122125400.596ccbeb@morte> (sfid-20080122_120255_695630_4D9B2C6A)
-In-Reply-To: <200801220856.55024.hs4233@mail.mn-solutions.de>
-References: <20080121202835.GA3065@tuxdriver.com>
-	<200801220856.55024.hs4233@mail.mn-solutions.de>
+Received: from c60.cesmail.net ([216.154.195.49]:50009 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757937AbYAICc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2008 21:32:59 -0500
+Subject: Re: merge errors on 'everything'
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: bruno randolf <bruno@thinktube.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080109015102.GB3048@tuxdriver.com>
+References: <200801091043.02204.bruno@thinktube.com>
+	 <20080109015102.GB3048@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 08 Jan 2008 21:32:48 -0500
+Message-Id: <1199845968.3697.22.camel@dv> (sfid-20080109_023305_099149_DCF84648)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 22 Jan 2008 08:56:54 +0100
-Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-
-> > Holger Schurig (5):
-> >       libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08'
+On Tue, 2008-01-08 at 20:51 -0500, John W. Linville wrote:
+> On Wed, Jan 09, 2008 at 10:43:01AM +0900, bruno randolf wrote:
+> > hi!
+> > 
+> > many times when i do a 'git pull' to update the wireless-2.6 'everything' 
+> > branch i run into unexplicable merge errors.
+> > 
+> > i created the branch with 'git co --track -b everything origin/everything' and 
+> > i don't work on this branch so all files are un-modified.
+> > 
+> > what am i doing wrong?
 > 
-> This patch was originally from Marc Pignat <marc.pignat@hevs.ch>. 
-> Should I have made an "Author: " line into the patch then I 
-> re-wrote the patch for wireless-2.6/everything ?
+> You'll need to get a fresh clone of the repository -- sorry.
 
-In that case, you should add a "From:" line.
+While it's reassuring to see that I'm not missing some elegant solution,
+I think cloning the repository is a major overkill.
 
+"git-reset --hard origin/everything" does the trick for me, while using
+much less bandwidth and time.  It even works with StGIT because it
+unapplies the patches before pulling and doesn't apply them in case of
+conflicts.  I can apply the StGIT patches after "git-reset".
 
 -- 
-Ciao
-Stefano
+Regards,
+Pavel Roskin
