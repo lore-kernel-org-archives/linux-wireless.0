@@ -1,75 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:6040 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754277AbYAVBfy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 20:35:54 -0500
-Received: by an-out-0708.google.com with SMTP id d31so489421and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 17:35:53 -0800 (PST)
-Message-ID: <40f31dec0801211735j5d528c97w8ba46ac2ac5f659f@mail.gmail.com> (sfid-20080122_013557_902289_B6240889)
-Date: Tue, 22 Jan 2008 03:35:53 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 2/2] ath5k: always extend rx timestamp with tsf
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20080121020945.3818.74270.stgit@one>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080121020924.3818.46553.stgit@one>
-	 <20080121020945.3818.74270.stgit@one>
+Received: from mga01.intel.com ([192.55.52.88]:12000 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755410AbYAJRGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 12:06:18 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 04/11] mac80211: A-MPDU Tx MLME data initialization
+Date: Thu, 10 Jan 2008 19:02:19 +0200
+Message-Id: <11999845533541-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_170622_132039_36B7470D)
+In-Reply-To: <1199984547375-git-send-email-ron.rindjunsky@intel.com>
+References: <1199984547375-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/1/21, Bruno Randolf <bruno@thinktube.com>:
-> always extend the rx timestamp with the local TSF, since this information is
-> also needed for proper IBSS merging. this is done in the tasklet for now, maybe
-> has to be moved to the interrupt handler like in madwifi.
->
-> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
->
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-> ---
->
->  drivers/net/wireless/ath5k/base.c |   17 ++++++++++++-----
->  1 files changed, 12 insertions(+), 5 deletions(-)
->
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 6bbee64..d7d274f 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1725,11 +1725,18 @@ accept:
->                         skb_pull(skb, pad);
->                 }
->
-> -               if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
-> -                       rxs.mactime = ath5k_extend_tsf(sc->ah,
-> -                                       ds->ds_rxstat.rs_tstamp);
-> -               else
-> -                       rxs.mactime = ds->ds_rxstat.rs_tstamp;
-> +               /*
-> +                * always extend the mac timestamp, since this information is
-> +                * also needed for proper IBSS merging.
-> +                *
-> +                * XXX: it might be too late to do it here, since rs_tstamp is
-> +                * 15bit only. that means TSF extension has to be done within
-> +                * 32768usec (about 32ms). it might be necessary to move this to
-> +                * the interrupt handler, like it is done in madwifi.
-> +                */
-> +               rxs.mactime = ath5k_extend_tsf(sc->ah, ds->ds_rxstat.rs_tstamp);
-> +               rxs.flag |= RX_FLAG_TSFT;
-> +
->                 rxs.freq = sc->curchan->freq;
->                 rxs.channel = sc->curchan->chan;
->                 rxs.phymode = sc->curmode;
->
->
+This patch initialize A-MPDU MLME data for Tx sessions.
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/sta_info.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index c964082..7c65849 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -117,8 +117,10 @@ static void sta_info_release(struct kref *kref)
+ 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
+ 		dev_kfree_skb_any(skb);
+ 	}
+-	for (i = 0; i <  STA_TID_NUM; i++)
++	for (i = 0; i <  STA_TID_NUM; i++) {
+ 		del_timer_sync(&sta->ampdu_mlme.tid_rx[i].session_timer);
++		del_timer_sync(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
++	}
+ 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
+ 	rate_control_put(sta->rate_ctrl);
+ 	kfree(sta);
+@@ -157,17 +159,26 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
+ 	sta->local = local;
+ 	sta->dev = dev;
+ 	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
++	spin_lock_init(&sta->ampdu_mlme.ampdu_tx);
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+ 		/* timer_to_tid must be initialized with identity mapping to
+ 		 * enable session_timer's data differentiation. refer to
+ 		 * sta_rx_agg_session_timer_expired for useage */
+ 		sta->timer_to_tid[i] = i;
++		/* tid to tx queue: initialize according to HW (0 is valid) */
++		sta->tid_to_tx_q[i] = local->hw.queues;
+ 		/* rx timers */
+ 		sta->ampdu_mlme.tid_rx[i].session_timer.function =
+ 			sta_rx_agg_session_timer_expired;
+ 		sta->ampdu_mlme.tid_rx[i].session_timer.data =
+ 			(unsigned long)&sta->timer_to_tid[i];
+ 		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
++		/* tx timers */
++		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.function =
++			sta_addba_resp_timer_expired;
++		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.data =
++			(unsigned long)&sta->timer_to_tid[i];
++		init_timer(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
+ 	}
+ 	skb_queue_head_init(&sta->ps_tx_buf);
+ 	skb_queue_head_init(&sta->tx_filtered);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
