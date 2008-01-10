@@ -1,83 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49030 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:33616 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752654AbYAOC0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 21:26:55 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+	id S1754718AbYAJRY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 12:24:27 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 02/12] iwlwifi: move iwl4965_get_dma_hi_address function to iwl-helpers.h
-Date: Mon, 14 Jan 2008 17:46:15 -0800
-Message-Id: <1200361585-31801-3-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022702_947693_40BF6916)
-In-Reply-To: <1200361585-31801-2-git-send-email-reinette.chatre@intel.com>
-References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
- <1200361585-31801-2-git-send-email-reinette.chatre@intel.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 05/10] mac80211: A-MPDU add debugfs support
+Date: Thu, 10 Jan 2008 19:22:17 +0200
+Message-Id: <1199985749128-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172455_816459_73BBC9CB)
+In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+This patch adds A-MPDU status report per STA to the debugfs.
+Remark:
+=======
+The option to activate A-MPDU through debugfs is temporary, only
+until A-MPDU manager will be added to the code, and for RFC purposes.
 
-This patch moves iwl4965_get_dma_hi_address function to iwl-headers.h
-as iwl_get_dma_hi_address. This function will be used in more chipsets
-than only 4965.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c    |    9 ++-------
- drivers/net/wireless/iwlwifi/iwl-helpers.h |    5 +++++
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ net/mac80211/debugfs_sta.c |  116 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h    |    1 +
+ 2 files changed, 117 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b913c6b..a945788 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2797,11 +2797,6 @@ int iwl4965_hw_tx_queue_init(struct iwl4965_priv *priv, struct iwl4965_tx_queue
- 	return 0;
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 8f5944c..0878146 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -55,6 +55,13 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.open = mac80211_open_file_generic,				\
  }
  
--static inline u8 iwl4965_get_dma_hi_address(dma_addr_t addr)
--{
--	return sizeof(addr) > sizeof(u32) ? (addr >> 16) >> 16 : 0;
--}
--
- int iwl4965_hw_txq_attach_buf_to_tfd(struct iwl4965_priv *priv, void *ptr,
- 				 dma_addr_t addr, u16 len)
- {
-@@ -2822,7 +2817,7 @@ int iwl4965_hw_txq_attach_buf_to_tfd(struct iwl4965_priv *priv, void *ptr,
- 	if (!is_odd) {
- 		tfd->pa[index].tb1_addr = cpu_to_le32(addr);
- 		IWL_SET_BITS(tfd->pa[index], tb1_addr_hi,
--			     iwl4965_get_dma_hi_address(addr));
-+			     iwl_get_dma_hi_address(addr));
- 		IWL_SET_BITS(tfd->pa[index], tb1_len, len);
- 	} else {
- 		IWL_SET_BITS(tfd->pa[index], tb2_addr_lo16,
-@@ -3289,7 +3284,7 @@ int iwl4965_tx_cmd(struct iwl4965_priv *priv, struct iwl4965_cmd *out_cmd,
- 	scratch_phys = txcmd_phys + sizeof(struct iwl4965_cmd_header) +
- 	    offsetof(struct iwl4965_tx_cmd, scratch);
- 	tx->dram_lsb_ptr = cpu_to_le32(scratch_phys);
--	tx->dram_msb_ptr = iwl4965_get_dma_hi_address(scratch_phys);
-+	tx->dram_msb_ptr = iwl_get_dma_hi_address(scratch_phys);
- 
- 	/* Hard coded to start at the highest retry fallback position
- 	 * until the 4965 specific rate control algorithm is tied in */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index e2a8d95..5228834 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -252,4 +252,9 @@ static inline unsigned long elapsed_jiffies(unsigned long start,
- 	return end + (MAX_JIFFY_OFFSET - start);
- }
- 
-+static inline u8 iwl_get_dma_hi_address(dma_addr_t addr)
-+{
-+	return sizeof(addr) > sizeof(u32) ? (addr >> 16) >> 16 : 0;
++#define STA_OPS_WR(name)						\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.write = sta_##name##_write,					\
++	.open = mac80211_open_file_generic,				\
 +}
 +
- #endif				/* __iwl_helpers_h__ */
+ #define STA_FILE(name, field, format)					\
+ 		STA_READ_##format(name, field)				\
+ 		STA_OPS(name)
+@@ -191,6 +198,113 @@ static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
+ STA_OPS(wme_tx_queue);
+ #endif
+ 
++static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	char buf[768], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	p += scnprintf(p, sizeof(buf)+buf-p, "Agg state for STA is:\n");
++	p += scnprintf(p, sizeof(buf)+buf-p, " STA next dialog_token is %d \n "
++			"TIDs info is: \n TID :",
++			(sta->ampdu_mlme.dialog_token_allocator + 1));
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d", i);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n RX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++	sta->ampdu_mlme.tid_rx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_rx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n TX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n SSN :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].ssn);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++
++static ssize_t sta_agg_status_write(struct file *file,
++		const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct net_device *dev = sta->dev;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw *hw = &local->hw;
++	u8 *da = sta->addr;
++	static int tid_static_tx[16] = {0, 0, 0, 0, 0, 0, 0, 0,
++					0, 0, 0, 0, 0, 0, 0, 0};
++	static int tid_static_rx[16] = {1, 1, 1, 1, 1, 1, 1, 1,
++					1, 1, 1, 1, 1, 1, 1, 1};
++	char *endp;
++	char buf[32];
++	int buf_size, rs;
++	unsigned int tid_num;
++	char state[4];
++
++	memset(buf, 0x00, sizeof(buf));
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tid_num = simple_strtoul(buf, &endp, 0);
++	if (endp == buf)
++		return -EINVAL;
++
++	if ((tid_num >= 100) && (tid_num <= 115)) {
++		/* toggle Rx aggregation command */
++		tid_num = tid_num - 100;
++		if (tid_static_rx[tid_num] == 1) {
++			strcpy(state, "off ");
++			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
++					WLAN_REASON_QSTA_REQUIRE_SETUP);
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
++			tid_static_rx[tid_num] = 0;
++		} else {
++			strcpy(state, "on ");
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
++			tid_static_rx[tid_num] = 1;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s\n", __func__,
++				tid_num, state);
++	} else if ((tid_num >= 0) && (tid_num <= 15)) {
++		/* toggle Tx aggregation command */
++		if (tid_static_tx[tid_num] == 0) {
++			strcpy(state, "on ");
++			rs =  ieee80211_start_tx_ba_session(hw, da, tid_num);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 1;
++		} else {
++			strcpy(state, "off");
++			rs =  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 0;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s, return=%d\n",
++				__func__, tid_num, state, rs);
++	}
++
++	return count;
++}
++STA_OPS_WR(agg_status);
++
+ #define DEBUGFS_ADD(name) \
+ 	sta->debugfs.name = debugfs_create_file(#name, 0444, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -224,6 +338,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(wme_rx_queue);
+ 	DEBUGFS_ADD(wme_tx_queue);
+ #endif
++	DEBUGFS_ADD(agg_status);
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -238,6 +353,7 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ 	DEBUGFS_DEL(wme_rx_queue);
+ 	DEBUGFS_DEL(wme_tx_queue);
+ #endif
++	DEBUGFS_DEL(agg_status);
+ 
+ 	debugfs_remove(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 48f25f2..1e4410f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -190,6 +190,7 @@ struct sta_info {
+ 		struct dentry *wme_rx_queue;
+ 		struct dentry *wme_tx_queue;
+ #endif
++		struct dentry *agg_status;
+ 	} debugfs;
+ #endif
+ };
 -- 
-1.5.3.4
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
