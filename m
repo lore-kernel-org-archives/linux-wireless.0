@@ -1,54 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:53395 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754101AbYADWSJ convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757560AbYAKLhn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 17:18:09 -0500
-Date: Fri, 4 Jan 2008 14:15:10 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Miguel =?ISO-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com, linville@tuxdriver.com
-Subject: Re: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
-Message-Id: <20080104141510.c7e80964.randy.dunlap@oracle.com> (sfid-20080104_221819_495514_0B1DADE7)
-In-Reply-To: <200801042305.55188.mboton@gmail.com>
-References: <200801042305.55188.mboton@gmail.com>
+	Fri, 11 Jan 2008 06:37:43 -0500
+Subject: Re: [PATCH 3/8 v3] mac80211: A-MPDU Rx adding basic functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11985948451654-git-send-email-ron.rindjunsky@intel.com>
+References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
+	 <11985948451654-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-52r+x5Oqe5LWmNXHIeVN"
+Date: Thu, 10 Jan 2008 15:56:20 +0100
+Message-Id: <1199976980.3861.87.camel@johannes.berg> (sfid-20080111_113748_615870_6EA59E89)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 4 Jan 2008 23:05:54 +0100 Miguel Bot=F3n wrote:
 
-> This patch fixes a compilation warning in 'iwl-4965.c'.
+--=-52r+x5Oqe5LWmNXHIeVN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It would be helpful to have the warning message right here.<---
 
-> Signed-off-by: Miguel Bot=F3n <mboton@gmail.com>
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wi=
-reless/iwlwifi/iwl-4965.c
-> index 74999af..92237cd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -3616,7 +3616,7 @@ static void iwl4965_add_radiotap(struct iwl4965=
-_priv *priv,
->  	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
->  		if (net_ratelimit())
->  			printk(KERN_ERR "not enough headroom [%d] for "
-> -			       "radiotap head [%d]\n",
-> +			       "radiotap head [%ld]\n",
->  			       skb_headroom(skb), sizeof(*iwl4965_rt));
->  		return;
->  	}
+> @@ -292,9 +292,18 @@ static int ieee80211_stop(struct net_dev
+>  	struct ieee80211_sub_if_data *sdata;
+>  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+>  	struct ieee80211_if_init_conf conf;
+> +	struct sta_info *sta;
+> +	int i;
+> =20
+>  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+> =20
+> +	list_for_each_entry(sta, &local->sta_list, list) {
+> +		for (i =3D 0; i <  STA_TID_NUM; i++)
+> +			ieee80211_sta_stop_rx_ba_session(sta->dev, sta->addr,
+> +						i, WLAN_BACK_RECIPIENT,
+> +						WLAN_REASON_QSTA_LEAVE_QBSS);
+> +	}
+> +
 
-sizeof() (or size_t) normally needs %zd.
+Hmm. Didn't think of this earlier, but when setting an interface down I
+now always get the messages
 
----
-~Randy
-desserts:  http://www.xenotime.net/linux/recipes/
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[32566.907283] rx BA session requested to stop on inactive tid 0
+[32566.907290] rx BA session requested to stop on inactive tid 1
+[...]
+
+I suppose the message isn't really necessary except from
+ieee80211_sta_process_delba(), or something. Either way, we should get
+rid of it in the regular case.
+
+johannes
+
+--=-52r+x5Oqe5LWmNXHIeVN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4YyE6Vg1VMiehFYAQLTAQ//cUEld/ALKC2m6ecdCe6r3gWyo+Zm5uFl
+v/SDFjQDDLvTqvL7hKGk6rvk7g8K0Qo/cgYkiX4XUWCqr2E+c0paCa2DzWFX1PEe
+Yz7I6ZDPcTVcIWgkhDda7H8BKNpS+Se+SAm7wP3bdcSQrxgg5Sm1sIhIJUA/t9rU
+mbCUYK2pRjjrw4hhBtPB5BGxpFpmHKk+g7JktZyj2L9x5BoheDs5yJAueZWzTIli
+cXo/t7nW7NbaMTX8Z1lMEIfrxPCJHnzAECKvQfnA3QlZF/6j19PfGAnzngtVFjz7
+8JW3xAcOOQPPVGOiO5yOWpNkPHtDUUPjjhYrt6gDkbmQvUm2vEz2GqgcQtq1HWuF
+EtSP2bzC8X9345SXVvsplyGAqyP4nKO0GkuhvyvywihALnzVOqBxUxD/6M7yKmef
+xP7PLl6yE9gNRYDRbY6yGrtMByrsAyLZS8fqjhtRXsnbTfXNCgCq6kzO8ocvm2hd
+YJeaMsJbl9iyUUZmWUTXaVpC22huy9KtN2K5Z1m3ptR772QrGhwHaaKtWxOikVfu
+KaMBHZf6i2+3i5yLvoOP0Njt1K/MkqO3bE7wRzhnzc33aGjJOSfYeFs2el7CI3yP
+1Mtt0HHUZdcCnr2yfVtiB4ISUeXz5GiS9Ri2d53a1eASZ/Sod+mOkmo8AV3q4rcr
+00OHIBM0XOE=
+=eeaz
+-----END PGP SIGNATURE-----
+
+--=-52r+x5Oqe5LWmNXHIeVN--
+
