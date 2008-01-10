@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:42798 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752449AbYA0Tjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2008 14:39:41 -0500
-Date: Sun, 27 Jan 2008 20:37:35 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: [PATCH 1/2] rc80211-pid: fix adjusted index check
-Message-ID: <20080127203735.3b32a1ce@morte> (sfid-20080127_193948_103472_618B129B)
-In-Reply-To: <20080126040217.7c5d2928@morte>
-References: <20080126040217.7c5d2928@morte>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ra.tuxdriver.com ([70.61.120.52]:3097 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755982AbYAJQVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 11:21:33 -0500
+Date: Thu, 10 Jan 2008 10:46:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Will Dyson <will.dyson@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
+Message-ID: <20080110154654.GC3109@tuxdriver.com> (sfid-20080110_162137_528267_F9180828)
+References: <200801062337.35904.IvDoorn@gmail.com> <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 26 Jan 2008 04:02:17 +0100
-Stefano Brivio <stefano.brivio@polimi.it> wrote:
+On Thu, Jan 10, 2008 at 06:52:40AM -0500, Will Dyson wrote:
 
-> Compare adjusted indices with real mac80211 indices instead of internal ones
-> while checking them.
+> Hmm. Looking at Linus's tree, I can see that rt61pci is missing at
+> least 1 critical fix from Mattias Nissler that has been in
+> wireless-2.6 for a long time now.
 > 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-> ---
-> John, not sure if this fixes the bug Larry reported, but should applied
-> anyway.
+> rt2x00: Allow rt61 to catch up after a missing tx report
+> 
+> I'd be pretty disappointed if we released 2.6.24 without this. It is a
+> simple fix for a really obnoxious problem (although one that triggers
+> rarely on my hardware).
 
-John, please discard this as well.
+This one can be cherry-picked fairly easily for 2.6.24.  Ivo, any
+reason not to do that?
+ 
+> There are also a bunch of antenna selection fixes that never went
+> upstream. These are required for my card to operate well at rates
+> greater than 1Mbit, even when fairly close to the AP.
 
+Can you identify specific patches?  If so I can evaluate whether they
+apply easily to 2.6.24 or if they need significant rework.
 
+Thanks,
+
+John
 -- 
-Ciao
-Stefano
+John W. Linville
+linville@tuxdriver.com
