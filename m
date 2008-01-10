@@ -1,51 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4280 "EHLO ra.tuxdriver.com"
+Received: from mga11.intel.com ([192.55.52.93]:33616 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751747AbYA1PdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 10:33:22 -0500
-Date: Mon, 28 Jan 2008 10:10:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] cfg80211 API for channels/bitrates, mac80211 and
-	driver conversion
-Message-ID: <20080128151032.GB5835@tuxdriver.com> (sfid-20080128_153325_388388_FCF6921E)
-References: <20080124183837.577631000@sipsolutions.net> <20080124184357.839387000@sipsolutions.net> <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com>
+	id S1753956AbYAJRY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 12:24:28 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 02/10] mac80211: A-MPDU Tx add MLME structures
+Date: Thu, 10 Jan 2008 19:22:14 +0200
+Message-Id: <11999857492094-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172500_326391_F2C9A2AC)
+In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 28, 2008 at 02:49:06AM +0200, Tomas Winkler wrote:
-> On Jan 24, 2008 8:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > This patch creates new cfg80211 wiphy API for channel and bitrate
-> > registration and converts mac80211 and drivers to the new API. The
+This patch adds the needed structures to describe the Tx aggregation MLME per STA
+new:
+ - struct tid_ampdu_tx: TID aggregation information (Tx)
+changed:
+ - struct sta_ampdu_mlme: Tx aggregation information per TID and
+			  dialog token creator were added
+ - struct sta_info: tid_to_tx_q added for tid<->tx queue mapping
 
-<snip>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/sta_info.h |   32 ++++++++++++++++++++++++++++++--
+ 1 files changed, 30 insertions(+), 2 deletions(-)
 
-> > I do expect there to be bugs in this, especially wrt. transmit
-> > power handling where I'm basically clueless about how it should work.
-> 
-> True, total havoc
-> 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > Changes:
-> > v1..v3: <untracked>
-> > v4:     fix bugs in iwl4965
-> 
-> Also inserting few, actually drawing it unusable. You are lucky we
-> like you here :)
-> The question is how we handle this?. Do you want  to resubmit this
-> huge patch or we fix it somehow over it...
-
-I think I'm going to hold this back from Dave for 2.6.25.  It might
-be better if we can fix any known problems with this patch before
-re-merging it for pre-2.6.26 development.
-
-John
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 96fe3ed..48f25f2 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -33,15 +33,36 @@
+ 
+ #define STA_TID_NUM 16
+ #define ADDBA_RESP_INTERVAL HZ
++#define HT_AGG_MAX_RETRIES		(0x3)
+ 
+ #define HT_AGG_STATE_INITIATOR_SHIFT	(4)
+ 
++#define HT_ADDBA_REQUESTED_MSK		BIT(0)
++#define HT_ADDBA_DRV_READY_MSK		BIT(1)
++#define HT_ADDBA_RECEIVED_MSK		BIT(2)
+ #define HT_AGG_STATE_REQ_STOP_BA_MSK	BIT(3)
+-
++#define HT_AGG_STATE_INITIATOR_MSK      BIT(HT_AGG_STATE_INITIATOR_SHIFT)
+ #define HT_AGG_STATE_IDLE		(0x0)
+ #define HT_AGG_STATE_OPERATIONAL	(0x7)
+ 
+ /**
++ * struct tid_ampdu_tx - TID aggregation information (Tx).
++ *
++ * @state: TID's state in session state machine.
++ * @dialog_token: dialog token for aggregation session
++ * @ssn: Starting Sequence Number expected to be aggregated.
++ * @addba_resp_timer: timer for peer's response to addba request
++ * @addba_req_num: number of times addBA request has been sent.
++ */
++struct tid_ampdu_tx {
++	u8 state;
++	u8 dialog_token;
++	u16 ssn;
++	struct timer_list addba_resp_timer;
++	u8 addba_req_num;
++};
++
++/**
+  * struct tid_ampdu_rx - TID aggregation information (Rx).
+  *
+  * @state: TID's state in session state machine.
+@@ -69,12 +90,18 @@ struct tid_ampdu_rx {
+ /**
+  * struct sta_ampdu_mlme - STA aggregation information.
+  *
+- * @tid_agg_info_rx: aggregation info for Rx per TID
++ * @tid_rx: aggregation info for Rx per TID
++ * @tid_tx: aggregation info for Tx per TID
+  * @ampdu_rx: for locking sections in aggregation Rx flow
++ * @ampdu_tx: for locking sectionsi in aggregation Tx flow
++ * @dialog_token_allocator: dialog token enumerator for each new session;
+  */
+ struct sta_ampdu_mlme {
+ 	struct tid_ampdu_rx tid_rx[STA_TID_NUM];
++	struct tid_ampdu_tx tid_tx[STA_TID_NUM];
+ 	spinlock_t ampdu_rx;
++	spinlock_t ampdu_tx;
++	u8 dialog_token_allocator;
+ };
+ 
+ struct sta_info {
+@@ -148,6 +175,7 @@ struct sta_info {
+ 					     of this STA */
+ 	struct sta_ampdu_mlme ampdu_mlme;
+ 	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
++	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
