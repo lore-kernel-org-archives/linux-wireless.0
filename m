@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:13860 "EHLO
-	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbYA3JXZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 04:23:25 -0500
-Date: Wed, 30 Jan 2008 10:07:03 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: jirislaby@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
-Subject: ath5k Kconfig / lspci / pci_device_id consistency
-Message-ID: <20080130090703.GA9218@basil.nowhere.org> (sfid-20080130_092331_116838_618C207A)
+Received: from ra.tuxdriver.com ([70.61.120.52]:4660 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421AbYAJVv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 16:51:26 -0500
+Date: Thu, 10 Jan 2008 16:28:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Roel Kluin <12o3l@tiscali.nl>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless/arlan] Replace logical- by bit-and
+Message-ID: <20080110212853.GH3109@tuxdriver.com> (sfid-20080110_215130_034384_C724E604)
+References: <4722453E.2090801@tiscali.nl> <472248AC.7080201@tiscali.nl> <47866EE9.80003@tiscali.nl> <20080110122859.569b3774.randy.dunlap@oracle.com> <4786849D.4010504@redhat.com> <47868B31.1000705@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47868B31.1000705@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 10, 2008 at 01:16:33PM -0800, Randy Dunlap wrote:
+> Chuck Ebbert wrote:
+>> On 01/10/2008 03:28 PM, Randy Dunlap wrote:
+>
+>>>
+>>> 0x80 && 0x40 -> 0
+>>
+>> 1
+>
+> duh.  ack.
 
-Hallo,
+Well it still seems wrong, changing from an "| 1" to an "| 0".
+Anyone still using Arlan that can verify the proper fix (which I'd
+guess is changing "&&" to "|")?
 
-I was pleasantly surprised at first that ath5k has finally made it into mainline.
-That is because my laptop has an atheros chipset and in tree support makes
-things much easier for me.
-
-Then I noticed that the chips it claims to support in Kconfig
-
-   Currently the following chip versions are supported:
-
-          MAC: AR5211 AR5212
-          PHY: RF5111/2111 RF5112/2112 RF5413/2413
-
-did not include the chip on my laptop; an AR5006X according to lspci.
-
-But when I actually look at the driver's pci_device_id table it seems
-to be supported. I have
-
-08:0a.0 Class 0200: 168c:001b (rev 01)
-
-which seems to match ath5k/base.c
-
-        { PCI_VDEVICE(ATHEROS, 0x001b), .driver_data = AR5K_AR5212 }, /* 5413 Eagle */
-
-But the name in the comment does not agree with what lspci reports:
-
-08:0a.0 Ethernet controller: Atheros Communications, Inc. AR5006X 802.11abg NIC (rev 01)
-
-So who has the correct name? The comments in the driver or lspci? Or are there
-valid aliases?  And can Kconfig be fixed up to include all chips supported by
-the driver, preferably with the same names as lspci reports please?
-
-I have not actually tested yet if it really works.
-
-Thanks,
--Andi
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
