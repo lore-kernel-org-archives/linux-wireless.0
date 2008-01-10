@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43372 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42076 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672AbYANKfk (ORCPT
+	with ESMTP id S1757365AbYAKLiE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 05:35:40 -0500
-Subject: Re: [RFC PATCH 03/10] mac80211: A-MPDU Tx adding basic
-	functionality
+	Fri, 11 Jan 2008 06:38:04 -0500
+Received: from [131.234.198.2]
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.68)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1JDID3-0005eW-Fj
+	for linux-wireless@vger.kernel.org; Fri, 11 Jan 2008 11:38:01 +0000
+Subject: Re: [RFC v3] cfg80211 API for channels/bitrates, mac80211 and
+	driver conversion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <rindjon@googlemail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <c85cb4470801140126g3e32cfebjacfe4c7d3ef22032@mail.gmail.com> (sfid-20080114_092608_303300_4AB6CAEF)
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-	 <11999857493027-git-send-email-ron.rindjunsky@intel.com>
-	 <1200070308.3861.203.camel@johannes.berg>
-	 <c85cb4470801130718x8069c4fi2eff95a21a11a2f3@mail.gmail.com>
-	 <1200261102.5887.19.camel@johannes.berg>
-	 <c85cb4470801140126g3e32cfebjacfe4c7d3ef22032@mail.gmail.com>
-	 (sfid-20080114_092608_303300_4AB6CAEF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o1BU9E8IRoPcfU8ba7O8"
-Date: Mon, 14 Jan 2008 11:35:12 +0100
-Message-Id: <1200306912.5887.40.camel@johannes.berg> (sfid-20080114_103545_100425_D64E71F6)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1199967423.3861.51.camel@johannes.berg> (sfid-20080110_121725_060148_B022943A)
+References: <1199967423.3861.51.camel@johannes.berg>
+	 (sfid-20080110_121725_060148_B022943A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dSfj5IfJA733iDcpn1cm"
+Date: Thu, 10 Jan 2008 18:31:27 +0100
+Message-Id: <1199986287.3861.91.camel@johannes.berg> (sfid-20080111_113807_327773_C6F8A143)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-o1BU9E8IRoPcfU8ba7O8
+--=-dSfj5IfJA733iDcpn1cm
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2008-01-10 at 13:17 +0100, Johannes Berg wrote:
+> This patch creates new cfg80211 wiphy API for channel and bitrate
+> registration and converts mac80211 and drivers to the new API. The
+> old mac80211 API is completely ripped out. All drivers (except ath5k)
+> are updated to the new API, in many cases I expect that optimisations
+> can be done.
 
-> to go into A-MPDU active state we need 3 conditions:
-> - addBA request was sent (HT_ADDBA_REQUESTED_MSK)
-> - addBA response arrived (HT_ADDBA_RECEIVED_MSK)
-> - all legacy frames drained up to ssn (HT_ADDBA_DRV_READY_MSK)
->=20
-> their combination gives us HT_AGG_STATE_OPERATIONAL. so when we go to
-> HT_AGG_STATE_IDLE automatically we reset all the above.
-
-Ah, I see, sorry. I was looking for a flag unsetting.
+Tested with iwl4965 and found two bugs, will repost.
 
 johannes
 
---=-o1BU9E8IRoPcfU8ba7O8
+--=-dSfj5IfJA733iDcpn1cm
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR4s636Vg1VMiehFYAQJJQhAAwyuSeKP2vBzzE6wzF8cZYMN69oHFRv2Q
-UTx5RaPQKXwIoZmFNwwmo+rDD+4PFIjNXBun6qmzGOW/QW68XKOKz0n1J+d92kXj
-RkKErwdu8ma7ziwXbLgALq4KaIhpENG9acX2iXauQj9CNzgNrpeaXfo8IPgdcMfa
-AfKPAEuY2WOFPSvQFa1JVZaiTLfe/2GOCUjkxejzULTCTcpsF/uZkmvbFlTjBog0
-DCYGa87L88/vo94wZM7kbjjI4TcloQ7DUKRlz3naDUfRoxfUatC/zhd1GdNMY/T4
-fpWTbH5/rph/ctrEIZE5fKbamLt69BjjNxuQ9DV9pu+qdu22Rrbsm/nbufa1pMQD
-IF77WnNK+DxLJ/8Z9gXlSd6PME33+kjuMcdsDlVSjNaqQdzE3mxk2sNEfITbSCtA
-E4CKrc47elXksx6rU7uBvSa6tnOsA+pwvS/c8ruoFArqqgckN68SxkExpD/M30HE
-lpKW4I9QIngGOpvNsjOCHhj4uX8nT+Esz3N/jpkMi39HT8uXcsVfGxyUI+ksQHT3
-U5aRoc/efFl4HdcFZ355gpJ1toiyT0YNlrd6lc/8+4tmQmGUBIduZrAvrs7kZGLu
-h49Py+cZwlRk5OWNvURRdy3w1Ky8Q280yucz34MJ1//zcKKGAZDVEPKYdfZ2HM5d
-e5+dgvWnd5w=
-=4Qeq
+iQIVAwUAR4ZWbqVg1VMiehFYAQJUDRAAjvPpAvtSNzO4URoWoWJJ+YnFkSxaXhKW
+gZl1PNv+cgff8Rdiqgcnwld9k4xIIgSZqt+KVJJZSnWUIqhO+ctZLPvA6CtPidl/
+mxRJuRH1usZLVwyI7vRNcD/9LtCPwCYaYXN0D+OsmZ9U7P9l0v28K1hRKNGN4JIc
+8banSmAGvVTCABIy7WWNfukA+unwJG8dC1nyNO/dtlwS0BuwaVlA/m80d3CJXbd6
+w2Y1BE84+BJm6jeDcpiyxNs8U82rtLa60VuYDHS4gqea3e67kGcGPkUpxfhNgxmv
+WGlMbV8miuFq0yNmkTBPrteEtb8FkIwe/TXaQeesPT+O4AwkNuviFYZNyRMxGE1G
+HBYxW50nV2BPCVUDpAgEvvzOfHY5odpcsK5WKCwXDeDP+0ynWf0JBm9QJib+0t+D
+zNsofZmLt9xELVsibl6rfS8l94yA1wCkHKdfcEx0lKCrLWLK1JwtzB6pkW4C0SL8
+ZADmirRUL/h+2YUTQv42aTwtj2A1llXyh3ujVlR6cDF+Fhd7OyC0pz1nhLhxxUWs
+qxyfns/zO5hCQUxDO0tWjwOoYlUwrS3zCXcsix62rv0/UpfLUYxlqVKa0k1rQ4cI
+/R0J8rEzNj7CJWeUxYEQAjw4FDTMZ3tNEHxfQw+j7NG0EndEqoyfn1DYz7pCJyuO
+TW7f8vcjbhI=
+=e1eo
 -----END PGP SIGNATURE-----
 
---=-o1BU9E8IRoPcfU8ba7O8--
+--=-dSfj5IfJA733iDcpn1cm--
 
