@@ -1,32 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:49298 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755746AbYARX0k (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:51062 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720AbYAJUbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 18:26:40 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1776522pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 15:26:39 -0800 (PST)
-Message-ID: <43e72e890801181526gaf5960fr5c66b97155e8bfda@mail.gmail.com> (sfid-20080118_232647_708108_1794F5DA)
-Date: Fri, 18 Jan 2008 18:26:38 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 1/4] ath5k: debug level improvements
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20080118125018.6342.94435.stgit@one>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125018.6342.94435.stgit@one>
+	Thu, 10 Jan 2008 15:31:08 -0500
+Date: Thu, 10 Jan 2008 12:28:59 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: linville@tuxdriver.com, lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless/arlan] Replace logical- by bit-and
+Message-Id: <20080110122859.569b3774.randy.dunlap@oracle.com> (sfid-20080110_203113_882273_0EBE555D)
+In-Reply-To: <47866EE9.80003@tiscali.nl>
+References: <4722453E.2090801@tiscali.nl>
+	<472248AC.7080201@tiscali.nl>
+	<47866EE9.80003@tiscali.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 18, 2008 7:50 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+On Thu, 10 Jan 2008 20:15:53 +0100 Roel Kluin wrote:
 
-> +       { ATH5K_DEBUG_ANY,      "any",          "show any debug level" },
+> Totally untested patch below from linus' git tree. The && is incorrect, right?
+> 
+> from drivers/net/wireless/arlan.h:390:
+> #define ARLAN_POWER             0x40
+> #define ARLAN_ACCESS            0x80
+> 
+> Replace logical and by bit-and
+> 
+> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+> ---
+> diff --git a/drivers/net/wireless/arlan.h b/drivers/net/wireless/arlan.h
+> index 3ed1df7..7b7498f 100644
+> --- a/drivers/net/wireless/arlan.h
+> +++ b/drivers/net/wireless/arlan.h
+> @@ -485,7 +485,7 @@ struct arlan_private {
+>  #define clearClearInterrupt(dev){\
+>     writeControlRegister(dev,readControlRegister(dev) & ~ARLAN_CLEAR_INTERRUPT);}
+>  #define setPowerOff(dev){\
+> -   writeControlRegister(dev,readControlRegister(dev) | (ARLAN_POWER && ARLAN_ACCESS));\
+> +   writeControlRegister(dev, readControlRegister(dev) | (ARLAN_POWER & ARLAN_ACCESS));\
 
-Very cool, can we call this "all" instead though, and "show all debug levels" ?
+eh?  How does that help?
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+0x80 && 0x40 -> 0
+0x80 & 0x40  -> 0
 
-  Luis
+so readControlRegister() | (0)
+??
+
+Maybe it should be (ARLAN_POWER | ARLAN_ACCESS), but some
+arlan developer or someone with specs should help here...
+
+
+>     writeControlRegister(dev,readControlRegister(dev) & ~ARLAN_ACCESS);}
+>  #define setPowerOn(dev){\
+>     writeControlRegister(dev,readControlRegister(dev) & ~(ARLAN_POWER));   }
+
+or am I sleeping()?
+---
+~Randy
