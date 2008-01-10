@@ -1,50 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppsw-8.csi.cam.ac.uk ([131.111.8.138]:42155 "EHLO
-	ppsw-8.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896AbYANNdZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 08:33:25 -0500
-Received: from ssnt2.quns.cam.ac.uk ([131.111.255.37]:50888 helo=neotoaster.lan)
-	by ppsw-8.csi.cam.ac.uk (smtp.hermes.cam.ac.uk [131.111.8.158]:25)
-	with esmtpsa (PLAIN:ssnt2) (TLSv1:DHE-RSA-AES256-SHA:256)
-	id 1JEPRE-0006lt-Se (Exim 4.67) for linux-wireless@vger.kernel.org
-	(return-path <ssnt2@hermes.cam.ac.uk>); Mon, 14 Jan 2008 13:33:16 +0000
-From: Shawn Tan <ssnt2@eng.cam.ac.uk>
-Reply-To: ssnt2@eng.cam.ac.uk
-To: linux-wireless@vger.kernel.org
-Subject: Re: B43 problems
-Date: Mon, 14 Jan 2008 13:33:15 +0000
-References: <200801112059.45467.ssnt2@eng.cam.ac.uk>
-In-Reply-To: <200801112059.45467.ssnt2@eng.cam.ac.uk>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3200 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754503AbYAJPvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 10:51:45 -0500
+Date: Thu, 10 Jan 2008 10:34:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: bruno randolf <bruno@thinktube.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: merge errors on 'everything'
+Message-ID: <20080110153435.GB3109@tuxdriver.com> (sfid-20080110_155148_884329_C0B06337)
+References: <200801091043.02204.bruno@thinktube.com> <1199845968.3697.22.camel@dv> <87myrf74ix.fsf@nokia.com> <200801101029.44985.bruno@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801141333.15740.ssnt2@eng.cam.ac.uk> (sfid-20080114_133329_673362_B31FC531)
+Content-Type: multipart/mixed; boundary="ReaqsoxgOBHFXBhH"
+In-Reply-To: <200801101029.44985.bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 11 January 2008 20:59:45 Shawn Tan wrote:
-> I've just successfully downloaded compat-wireless, compiled and loaded the
-> latest B43 module. I can do iwlist scan and get an IP from my router. I can
-> ping my router. However, the connection only lasts for a few seconds. Then,
-> I need to re-associate again.
 
-Hi,
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Following my previous email, I changed some settings on my OpenWRT router and 
-it seems to work flawlessly now. The error messages are all gone!!
+On Thu, Jan 10, 2008 at 10:29:44AM +0900, bruno randolf wrote:
+> On Wednesday 09 January 2008 18:05:26 Kalle Valo wrote:
+> > Pavel Roskin <proski@gnu.org> writes:
+> > >> You'll need to get a fresh clone of the repository -- sorry.
+> > >
+> > > While it's reassuring to see that I'm not missing some elegant solution,
+> > > I think cloning the repository is a major overkill.
+> >
+> > I agree.
+> >
+> > > "git-reset --hard origin/everything" does the trick for me, while using
+> > > much less bandwidth and time.
+> >
+> > I do the same and it has worked for me, at least.
+> 
+> thanks for that hint, but still, that sucks if you want to rebase your local 
+> work against an updated 'everything'...
+> 
+> how do you guys manage your pending patches and local work then?
 
-I had to disable the "G-mode protection" in my router. Hope this information 
-helps.
+What I recommend is that you start with your own branch from
+'everything':
 
-Thanks for the great job in bringing broadcom support to Linux!
+	git checkout -b work everything
 
-cheers.
+And for convenience, create another branch representing where you
+started:
 
+	git branch work-start
+
+Now do whatever work you want to do on that branch.  You can continue
+to pull into everything as you like (remember to 'git checkout
+everything' first) -- I generally try to preserve a continuous
+everything branch between -rc releases.  So long as the pull is clean,
+you can rebase your work branch quite easily:
+
+	git checkout work
+	git rebase everything
+
+	# don't forget to move work-start as well
+	git branch -D work-start
+	git branch work-start everything
+
+After a rebase of wireless-2.6#everything, you won't have a clean pull
+(as you have observed).  In that case you can reclone (be sure to
+save the old clone!) or use git-reset as described above.  Then you
+can use some simple commands to rebase the patches:
+
+	git checkout -b new-work everything
+	git branch new-work-start
+
+	git format-patch --stdout work-start..work > work.mbox
+	git am work.mbox
+
+An alternative to the git-format-patch/git-am combination would be
+to use the attached 'rangepick' script.
+
+Hth!
+
+John
+
+P.S.  I have no experience with StGit -- some have said it is
+functionaly similar to what I describe above yet perhaps simpler
+to use...YMMV.
 -- 
-with metta,
-Shawn Tan
+John W. Linville
+linville@tuxdriver.com
 
-Centre for Advanced Photonics and Electronics
-Department of Engineering, University of Cambridge
-9 JJ Thomson Avenue, Cambridge CB3 0FA, UK.
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=rangepick
+
+#!/bin/sh
+
+git log --no-merges $1 | grep ^commit | awk '{ print $2 }' | tac | \
+while read commit
+do
+	if ! git cherry-pick $commit
+	then
+		echo Failed to cherry-pick commit ${commit}!
+		break
+	fi
+done
+
+--ReaqsoxgOBHFXBhH--
