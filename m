@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:60466 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754183AbYAMV3r (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:63601 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbYAJXiI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 16:29:47 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Eric Paris <eparis@redhat.com>
-Subject: Re: [PATCH] b43: rfkill use after free
-Date: Sun, 13 Jan 2008 22:28:27 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <1200259252.4393.22.camel@localhost.localdomain>
-In-Reply-To: <1200259252.4393.22.camel@localhost.localdomain>
+	Thu, 10 Jan 2008 18:38:08 -0500
+Received: by py-out-1112.google.com with SMTP id u52so1298178pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2008 15:38:07 -0800 (PST)
+Message-ID: <43e72e890801101538r674e7891p5ace9593e819e5e3@mail.gmail.com> (sfid-20080110_233812_533158_E8368591)
+Date: Thu, 10 Jan 2008 18:38:06 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/1] ath5k: remove duplicate bssid variable
+Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <1199945189-22180-1-git-send-email-bruno@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801132228.28234.mb@bu3sch.de> (sfid-20080113_213011_363169_4CC115F7)
+Content-Type: text/plain; charset=UTF-8
+References: <1199945189-22180-1-git-send-email-bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 13 January 2008 22:20:52 Eric Paris wrote:
-> inside b43_rfkill_exit() we call rfkill_unregister() which puts the last
-> reference and frees the rfkill struct.  Then just 3 lines later the code
-> explicitly calls rfkill_free() on the struct we already freed.  This
-> showed up as slub corruption (what should have been 6b was showing up as
-> 6a) since the rfkill_free had dec'ed the are that should have been the
-> use counter.
-> 
-> stop using the already freed rfkill struct.
-> 
-> =============================================================================
-> BUG kmalloc-1024 (Not tainted): Poison overwritten
-> -----------------------------------------------------------------------------
-> 
-> INFO: 0xf40b89e8-0xf40b89e8. First byte 0x6a instead of 0x6b
-> INFO: Allocated in rfkill_allocate+0x1b/0x8b [rfkill] age=231032011 cpu=0 pid=2403
-> INFO: Freed in rfkill_release+0xd/0x19 [rfkill] age=366 cpu=0 pid=2403
-> INFO: Slab 0xc1b62840 used=6 fp=0xf40b8860 flags=0x400040c3
-> INFO: Object 0xf40b8860 @offset=2144 fp=0x00000000
-> 
-> Signed-off-by: Eric Paris <eparis@redhat.com>
-> 
-> ---
-> 
->  drivers/net/wireless/b43/rfkill.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> index 98cf70c..a19be53 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -195,6 +195,5 @@ void b43_rfkill_exit(struct b43_wldev *dev)
->  	rfkill_unregister(rfk->rfkill);
->  	input_free_polled_device(rfk->poll_dev);
->  	rfk->poll_dev = NULL;
-> -	rfkill_free(rfk->rfkill);
->  	rfk->rfkill = NULL;
->  }
-> 
-> 
-> 
-> 
+On Jan 10, 2008 1:06 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+> struct ath5k_hw included two different variables for caching the bssid. remove
+> one of them.
+>
+> drivers/net/wireless/ath5k/ath5k.h:     Changes-licensed-under: ISC
+> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
+> drivers/net/wireless/ath5k/hw.c:        Changes-licensed-under: ISC
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 
-NACK.
-Better patch available from Stefano.
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
--- 
-Greetings Michael.
+  Luis
