@@ -1,130 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:1205 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbYA1Q1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 11:27:53 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: rename/document scan_channel
-Date: Mon, 28 Jan 2008 17:28:05 +0100
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801281728.05763.hs4233@mail.mn-solutions.de> (sfid-20080128_162808_600120_05337603)
+Received: from mga11.intel.com ([192.55.52.93]:17873 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755515AbYAJRY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2008 12:24:29 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 10/10] iwlwifi: A-MPDU Tx conform block Ack rate scaling to mac80211
+Date: Thu, 10 Jan 2008 19:22:22 +0200
+Message-Id: <11999857503301-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172503_747116_F18AD13E)
+In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename last_scanned_channel to scan_channel, just so that a
-grep for struct bss_descriptor's last_scanned element doesn't
-show up so many positives.
+This patch uses the changes in ieee80211_tx_status to pass Block Ack data
+to rate scaling module, and uses this data in rate scaling calculations
 
-Also documented the variable and moved it to other scan related
-entries in lbs_private.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   85 +++++++++++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    9 +--
+ 2 files changed, 60 insertions(+), 34 deletions(-)
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
+Index: wl2_6_24_rc5_upstream/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
 ===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2008-01-28 17:44:57.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2008-01-28 17:46:05.000000000 +0100
-@@ -314,7 +314,7 @@ static ssize_t lbs_setuserscan(struct fi
+--- wl2_6_24_rc5_upstream.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ wl2_6_24_rc5_upstream/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -277,7 +277,8 @@ static void rs_rate_scale_clear_window(s
+  * packets.
+  */
+ static int rs_collect_tx_data(struct iwl4965_rate_scale_data *windows,
+-			      int scale_index, s32 tpt, u32 status)
++			      int scale_index, s32 tpt, int retries,
++			      int successes)
+ {
+ 	struct iwl4965_rate_scale_data *window = NULL;
+ 	u64 mask;
+@@ -298,26 +299,33 @@ static int rs_collect_tx_data(struct iwl
+ 	 * subtract "1" from the success counter (this is the main reason
+ 	 * we keep these bitmaps!).
+ 	 */
+-	if (window->counter >= win_size) {
+-		window->counter = win_size - 1;
+-		mask = 1;
+-		mask = (mask << (win_size - 1));
+-		if ((window->data & mask)) {
+-			window->data &= ~mask;
+-			window->success_counter = window->success_counter - 1;
++	while (retries > 0) {
++		if (window->counter >= win_size) {
++			window->counter = win_size - 1;
++			mask = 1;
++			mask = (mask << (win_size - 1));
++			if (window->data & mask) {
++				window->data &= ~mask;
++				window->success_counter =
++					window->success_counter - 1;
++			}
++		}
++
++		/* Increment frames-attempted counter */
++		window->counter++;
++
++		/* Shift bitmap by one frame (throw away oldest history),
++		 * OR in "1", and increment "success" if this
++		 * frame was successful. */
++		mask = window->data;
++		window->data = (mask << 1);
++		if (successes > 0) {
++			window->success_counter = window->success_counter + 1;
++			window->data |= 0x1;
++			successes--;
+ 		}
+-	}
  
- 	lbs_scan_networks(priv, scan_cfg, 1);
- 	wait_event_interruptible(priv->cmd_pending,
--				 priv->surpriseremoved || !priv->last_scanned_channel);
-+				 priv->surpriseremoved || !priv->scan_channel);
- 
- 	if (priv->surpriseremoved)
- 		goto out_scan_cfg;
-Index: wireless-2.6/drivers/net/wireless/libertas/dev.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/dev.h	2008-01-28 17:45:29.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/dev.h	2008-01-28 17:46:05.000000000 +0100
-@@ -143,9 +143,12 @@ struct lbs_private {
- 	wait_queue_head_t waitq;
- 	struct workqueue_struct *work_thread;
- 
-+	/** Scanning */
- 	struct delayed_work scan_work;
- 	struct delayed_work assoc_work;
- 	struct work_struct sync_channel;
-+	/* remember which channel was scanned last, != 0 if currently scanning */
-+	int scan_channel;
- 
- 	/** Hardware access */
- 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
-@@ -321,7 +324,6 @@ struct lbs_private {
- 	struct cmd_ds_802_11_get_log logmsg;
- 
- 	u32 monitormode;
--	int last_scanned_channel;
- 	u8 fw_ready;
- };
- 
-Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2008-01-28 17:45:29.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2008-01-28 17:46:05.000000000 +0100
-@@ -612,13 +612,13 @@ int lbs_scan_networks(struct lbs_private
+-	/* Increment frames-attempted counter */
+-	window->counter = window->counter + 1;
+-
+-	/* Shift bitmap by one frame (throw away oldest history),
+-	 * OR in "1", and increment "success" if this frame was successful. */
+-	mask = window->data;
+-	window->data = (mask << 1);
+-	if (status != 0) {
+-		window->success_counter = window->success_counter + 1;
+-		window->data |= 0x1;
++		retries--;
  	}
  
- 	/* Prepare to continue an interrupted scan */
--	lbs_deb_scan("chan_count %d, last_scanned_channel %d\n",
--		     chan_count, priv->last_scanned_channel);
-+	lbs_deb_scan("chan_count %d, scan_channel %d\n",
-+		     chan_count, priv->scan_channel);
- 	curr_chans = chan_list;
- 	/* advance channel list by already-scanned-channels */
--	if (priv->last_scanned_channel > 0) {
--		curr_chans += priv->last_scanned_channel;
--		chan_count -= priv->last_scanned_channel;
-+	if (priv->scan_channel > 0) {
-+		curr_chans += priv->scan_channel;
-+		chan_count -= priv->scan_channel;
- 	}
+ 	/* Calculate current success ratio, avoid divide-by-0! */
+@@ -677,6 +685,11 @@ static void rs_tx_status(void *priv_rate
+ 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
+ 		return;
  
- 	/* Send scan command(s)
-@@ -644,10 +644,10 @@ int lbs_scan_networks(struct lbs_private
- 		    !full_scan &&
- 		    !priv->surpriseremoved) {
- 			/* -1 marks just that we're currently scanning */
--			if (priv->last_scanned_channel < 0)
--				priv->last_scanned_channel = to_scan;
-+			if (priv->scan_channel < 0)
-+				priv->scan_channel = to_scan;
++	/* This packet was aggregated but doesn't carry rate scale info */
++	if ((tx_resp->control.flags & IEEE80211_TXCTL_AMPDU) &&
++	    !(tx_resp->flags & IEEE80211_TX_STATUS_AMPDU))
++		return;
++
+ 	retries = tx_resp->retry_count;
+ 
+ 	if (retries > 15)
+@@ -766,7 +779,7 @@ static void rs_tx_status(void *priv_rate
+ 				tpt = search_tbl->expected_tpt[rs_index];
  			else
--				priv->last_scanned_channel += to_scan;
-+				priv->scan_channel += to_scan;
- 			cancel_delayed_work(&priv->scan_work);
- 			queue_delayed_work(priv->work_thread, &priv->scan_work,
- 				msecs_to_jiffies(300));
-@@ -671,7 +671,7 @@ int lbs_scan_networks(struct lbs_private
- #endif
+ 				tpt = 0;
+-			rs_collect_tx_data(search_win, rs_index, tpt, 0);
++			rs_collect_tx_data(search_win, rs_index, tpt, 1, 0);
  
- out2:
--	priv->last_scanned_channel = 0;
-+	priv->scan_channel = 0;
+ 		/* Else if type matches "current/active" table,
+ 		 * add failure to "current/active" history */
+@@ -777,7 +790,7 @@ static void rs_tx_status(void *priv_rate
+ 				tpt = curr_tbl->expected_tpt[rs_index];
+ 			else
+ 				tpt = 0;
+-			rs_collect_tx_data(window, rs_index, tpt, 0);
++			rs_collect_tx_data(window, rs_index, tpt, 1, 0);
+ 		}
  
- out:
- 	if (priv->connect_status == LBS_CONNECTED) {
-@@ -1393,7 +1393,7 @@ int lbs_set_scan(struct net_device *dev,
- 		queue_delayed_work(priv->work_thread, &priv->scan_work,
- 			msecs_to_jiffies(50));
- 	/* set marker that currently a scan is taking place */
--	priv->last_scanned_channel = -1;
-+	priv->scan_channel = -1;
+ 		/* If not searching for a new mode, increment failed counter
+@@ -818,9 +831,13 @@ static void rs_tx_status(void *priv_rate
+ 			tpt = search_tbl->expected_tpt[rs_index];
+ 		else
+ 			tpt = 0;
+-		rs_collect_tx_data(search_win,
+-				    rs_index, tpt, status);
+-
++		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU)
++			rs_collect_tx_data(search_win, rs_index, tpt,
++					   tx_resp->ampdu_ack_len,
++					   tx_resp->ampdu_ack_map);
++		else
++			rs_collect_tx_data(search_win, rs_index, tpt,
++					   1, status);
+ 	/* Else if type matches "current/active" table,
+ 	 * add final tx status to "current/active" history */
+ 	} else if ((tbl_type.lq_type == curr_tbl->lq_type) &&
+@@ -830,16 +847,28 @@ static void rs_tx_status(void *priv_rate
+ 			tpt = curr_tbl->expected_tpt[rs_index];
+ 		else
+ 			tpt = 0;
+-		rs_collect_tx_data(window, rs_index, tpt, status);
++		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU)
++			rs_collect_tx_data(window, rs_index, tpt,
++					   tx_resp->ampdu_ack_len,
++					   tx_resp->ampdu_ack_map);
++		else
++			rs_collect_tx_data(window, rs_index, tpt,
++					   1, status);
+ 	}
  
- 	if (priv->surpriseremoved)
- 		return -EIO;
-@@ -1427,7 +1427,7 @@ int lbs_get_scan(struct net_device *dev,
- 	lbs_deb_enter(LBS_DEB_SCAN);
+ 	/* If not searching for new mode, increment success/failed counter
+ 	 * ... these help determine when to start searching again */
+ 	if (lq_sta->stay_in_tbl) {
+-		if (status)
+-			lq_sta->total_success++;
+-		else
+-			lq_sta->total_failed++;
++		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU) {
++			lq_sta->total_success += tx_resp->ampdu_ack_map;
++			lq_sta->total_failed +=
++			     (tx_resp->ampdu_ack_len - tx_resp->ampdu_ack_map);
++		} else {
++			if (status)
++				lq_sta->total_success++;
++			else
++				lq_sta->total_failed++;
++		}
+ 	}
  
- 	/* iwlist should wait until the current scan is finished */
--	if (priv->last_scanned_channel)
-+	if (priv->scan_channel)
- 		return -EAGAIN;
+ 	/* See if there's a better rate or modulation mode to try. */
+Index: wl2_6_24_rc5_upstream/drivers/net/wireless/iwlwifi/iwl-4965.c
+===================================================================
+--- wl2_6_24_rc5_upstream.orig/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ wl2_6_24_rc5_upstream/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4288,12 +4288,9 @@ static int iwl4965_tx_status_reply_compr
  
- 	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
+ 	tx_status = &priv->txq[scd_flow].txb[agg->start_idx].status;
+ 	tx_status->flags = IEEE80211_TX_STATUS_ACK;
+-	tx_status->retry_count++;
+-#ifdef CONFIG_IWL4965_HT_AGG
+-	tx_status->flags |= IEEE80211_TX_STATUS_AGG_STATS;
+-	tx_status->successes = successes;
+-	tx_status->frame_count = agg->frame_count;
+-#endif	/* CONFIG_IWL4965_HT_AGG */
++	tx_status->flags |= IEEE80211_TX_STATUS_AMPDU;
++	tx_status->ampdu_ack_map = successes;
++	tx_status->ampdu_ack_len = agg->frame_count;
+ 	tx_status->control.tx_rate = agg->rate_n_flags;
+ 
+ 	IWL_DEBUG_TX_REPLY("Bitmap %llx\n", bitmap);
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
