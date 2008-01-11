@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43868 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbYAGL5J (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759947AbYAKV2T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 06:57:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add N-PHY related initvals firmware filenames.
-Date: Mon, 7 Jan 2008 12:55:14 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200801071255.15036.mb@bu3sch.de> (sfid-20080107_115716_461434_37DF187F)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Fri, 11 Jan 2008 16:28:19 -0500
+Subject: Re: [RFC PATCH 06/10] mac80211: A-MPDU Tx adding qdisc support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11999857503421-git-send-email-ron.rindjunsky@intel.com>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+	 <11999857503421-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MSI2no1wXX4lEq78XT3R"
+Date: Fri, 11 Jan 2008 17:55:23 +0100
+Message-Id: <1200070523.3861.206.camel@johannes.berg> (sfid-20080111_212823_291439_C4D318BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the initval filenames for the N-PHY firmware.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-MSI2no1wXX4lEq78XT3R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
 
-Stuff for 2.6.25
+On Thu, 2008-01-10 at 19:22 +0200, Ron Rindjunsky wrote:
+> This patch allows qdisc support in A-MPDU Tx. This is not a complete
+> solution, but a general direction to handle QoS <-> TID switches
 
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-01-06 00:12:08.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-01-06 00:12:08.000000000 +0100
-@@ -1671,12 +1671,18 @@ static int b43_request_firmware(struct b
- 				filename = "b0g0initvals5";
- 			else if (rev >= 13)
- 				filename = "lp0initvals13";
- 			else
- 				goto err_no_initvals;
- 			break;
-+		case B43_PHYTYPE_N:
-+			if ((rev >= 11) && (rev <= 12))
-+				filename = "n0initvals11";
-+			else
-+				goto err_no_initvals;
-+			break;
- 		default:
- 			goto err_no_initvals;
- 		}
- 		err = do_request_fw(dev, filename, &fw->initvals);
- 		if (err)
- 			goto err_load;
-@@ -1699,12 +1705,18 @@ static int b43_request_firmware(struct b
- 				filename = "b0g0bsinitvals5";
- 			else if (rev >= 11)
- 				filename = NULL;
- 			else
- 				goto err_no_initvals;
- 			break;
-+		case B43_PHYTYPE_N:
-+			if ((rev >= 11) && (rev <= 12))
-+				filename = "n0bsinitvals11";
-+			else
-+				goto err_no_initvals;
-+			break;
- 		default:
- 			goto err_no_initvals;
- 		}
- 		err = do_request_fw(dev, filename, &fw->initvals_band);
- 		if (err)
- 			goto err_load;
+Ok, I'll have to think a lot more about this, my train is about to
+arrive :)
+
+johannes
+
+--=-MSI2no1wXX4lEq78XT3R
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4efeqVg1VMiehFYAQJF1A/+MeJf3SSZ7ZFck/quki82+pmyrhT4Q32p
+EY+Ywv5meHAPw6RkGgG5oF0PPduSXPg4IAozrroh9JRD0RU0EILQa55Fmh0g8J72
+9pR9ZI1EhyyD9ZiQFzvi1aJyIYKAXnAEpT2CarkCTcw7viXtWZ39qAnACEfR+x+4
+6czc+WR86cgTmtN3LI1OqLRMSOl62oBOuvgCZgASh46v9qSRzktyYxgDGS/uUfls
+GYISLgzHPnbo2M+9QJoN7ikrvpf1Jlm4Zv2meT9ID8rQG85pc69xWiXgVRkHL15p
+Ilyc0U7lpdioW+1KWfCDS0kAWfJfF3E1MTapC7Ek4Kvr1UeDbjUnccJBEt3qOjL3
+fTDr7qtaxYmGvxA3vwCyIGJn4BiLrGGPwsELQ4pVPe0p0mOYKBxO9QsHa4AZO/TZ
+5oTP3hVKQCpoIqXUyezwjfh5q7hk49WYzC32IMFNHR+0KzaB1a16eh87NBKnLh0d
+KLD1NkTiPBHsqOMzQ+D2dv9TZzSh00HxeJIolMDEh24RMcR4hFPgFEcSZrNtihkk
+XM1XbodJMWvTaEpf8VVIsL8ynWY0OT8f1V2afzGeGgYtnerBFir1jOyVIeF4mPPy
+MhZxGeuAQzp7kOyt3KT0HtChdo4CA+vOh57STCoQ4fOkz0nqOcWrUfw/KQdzx6VU
+NJx8ZEoWFGA=
+=sLEd
+-----END PGP SIGNATURE-----
+
+--=-MSI2no1wXX4lEq78XT3R--
+
