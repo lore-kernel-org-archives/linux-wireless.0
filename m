@@ -1,30 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:8358 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029AbYADWNO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58491 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761910AbYAKW6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 17:13:14 -0500
-To: Miguel =?iso-8859-1?Q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com, linville@tuxdriver.com
-Subject: Re: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
-References: <200801042305.55188.mboton@gmail.com>
-From: Roland Dreier <rdreier@cisco.com>
-Date: Fri, 04 Jan 2008 14:13:12 -0800
-In-Reply-To: <200801042305.55188.mboton@gmail.com> (Miguel
- =?iso-8859-1?Q?Bot=C3=B3n's?= message of "Fri, 4 Jan 2008 23:05:54 +0100")
-Message-ID: <adaabnlme87.fsf@cisco.com> (sfid-20080104_221318_806972_FA792F1B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 11 Jan 2008 17:58:24 -0500
+Subject: Re: handing cloned frames to netif_rx()?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: netdev@vger.kernel.org, ron.rindjunsky@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <E1JDSPG-0008Of-00@gondolin.me.apana.org.au>
+References: <E1JDSPG-0008Of-00@gondolin.me.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yn/WtPvleIHPA8AvKlNi"
+Date: Fri, 11 Jan 2008 23:58:05 +0100
+Message-Id: <1200092285.3528.5.camel@johannes.berg> (sfid-20080111_225828_814264_821BD68E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > -			       "radiotap head [%d]\n",
- > +			       "radiotap head [%ld]\n",
- >  			       skb_headroom(skb), sizeof(*iwl4965_rt));
 
-Actually I think the correct printf format for printing a size_t
-(coming here from sizeof foo) is "%zd".  Otherwise you'll fix the
-warning on 64-bit targets but add a new warning on 32-bit targets.
+--=-Yn/WtPvleIHPA8AvKlNi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- - R.
+
+On Sat, 2008-01-12 at 09:31 +1100, Herbert Xu wrote:
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> >
+> > Is it ok to do this? Will something freak out if we pass a cloned skb t=
+o
+> > netif_rx()?
+>=20
+> Sounds OK as long as you stick to the rules of cloned skb's, e.g., not
+> writing to them unless you've copied it.
+
+Ok. Yes, we will of course adhere to that, but I was wondering whether
+maybe the net stack assumes somewhere that a packet it got from the
+driver can be written to w/o copying.
+
+johannes
+
+--=-Yn/WtPvleIHPA8AvKlNi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4f0e6Vg1VMiehFYAQJWjg/8CnYI616TIYhuaUvZSim2EJTG3ucufT8Q
+3ykFGabqdJsa2nI6aasPyJ0wFu95qslhHMiyT3hA1bYtWhg9aL/SlyD+my+o4Fem
+3UcZ2gI9BbwGYJlKgdLSmd5NQ4yj/S6w5eqdYE4Vdzzl4w/xfW/iJUHRqvFYYgAm
+7hte9vZPBE0xO8n+T3mP4sJaexEpqTeMSuY4PIO44rtqBmYDBWveQ8A7+G+jbAfW
+7jwxqb3zIkOodaBAUZXxP60GiQ0DWrYcwtj7D2qJEbtZaeoGqc7muy5g+k9vHhM6
+ImnwNKnB2NdngHTcp+K5q4bEgjEAEK8xit0OcQaMWWH/cokmIBz650yzIf1Zfi+y
+lbuLMOzoBZERtzQ+UgWta/PAlVP+N+4lX9BQ9EkUBAvwrvRIVf2klQ8DggDQD4Vp
+KxJW3nj4wqtg+z5Nm9dgS4hKaYEaQ8C0E/IYn2aZQ9/1np9StSl0obcP01v+Z9Rh
+k9hu+bFQ8zf4Iv+lcY4Qdgoqm0qwKAsY+sN+/sO1LnV0SS8Q6yOb1LzAeesAZqmr
+RGjWXpMDlRvStn7evBIHRwCUPjo3YOiADPz/X8N6MxlpCoR6dQdAcK/iTSFHxoJ2
+wLih4zZXmRLUlUtuXLjJ6lozjMsrTF9rtjBMqE7xots9Q+HaM1/xrWMtwLDIIQIH
+Df+pYxPwCVY=
+=DFvb
+-----END PGP SIGNATURE-----
+
+--=-Yn/WtPvleIHPA8AvKlNi--
+
