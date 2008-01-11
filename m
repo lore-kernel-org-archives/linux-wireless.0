@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36971 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756001AbYAaRwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 12:52:41 -0500
-Subject: Re: wireless mini-summit agenda proposals?
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from ic0245.upco.es ([130.206.70.245]:44435 "EHLO
+	antispam.upcomillas.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759283AbYAKRqZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jan 2008 12:46:25 -0500
+Subject: Re: Testing ath5k driver
+From: Romano Giannetti <romanol@upcomillas.es>
+To: Nick Kossifidis <mickflemm@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080131162514.GC6413@tuxdriver.com>
-References: <20080131162514.GC6413@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 31 Jan 2008 12:52:03 -0500
-Message-Id: <1201801923.3000.13.camel@localhost.localdomain> (sfid-20080131_175252_912444_0BC17431)
+In-Reply-To: <40f31dec0801110856r1d0e04f3i284afb2a3f64f8c1@mail.gmail.com>
+References: <1200049360.12702.14.camel@rukbat>
+	 <40f31dec0801110856r1d0e04f3i284afb2a3f64f8c1@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Fri, 11 Jan 2008 18:46:22 +0100
+Message-Id: <1200073582.18380.1.camel@rukbat> (sfid-20080111_174627_851945_0B80BEB4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-01-31 at 11:25 -0500, John W. Linville wrote:
-> Greetings,
-> 
-> It looks as if we have a few venue options for a third wireless summit.
-> While this may seem like a luxury, none of the options are perfect
-> for everyone and each has it's own potential drawbacks.  So rather
-> than move blindly forward with any given venue, I think it would be
-> good to discuss some potential agenda points.
-> 
-> This will serve both to determine who is most interested in attending
-> a summit and who might most need to be there.  This will also serve
-> to justify the trouble of having a summit at all.  So, I'd like to
-> open the 'floor' to discussion proposals.
-> 
-> What discussions pertinent to Linux wireless development do
-> you want to see?  What can you contribute to those discussions?
-> How would a face-to-face discussion of that issue be better than an
-> online discussion?
-
-cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
-because email isn't optimal for this.  I haven't had enough time to jump
-into it yet, but the fact that Johannes is the vast majority of the
-effort here is worrisome.  Having a reference implementation (airo,
-atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
-probably be very useful, even just to get a sense of how the API works.
-
-rfkill - how to clean up the mess, including how it's all supposed to
-work from userspace with kernel bits, ACPI bits, vendor modules like
-asus_acpi and dellWirelessCtl, input-only buttons, etc
-
-WiMAX - what hardware is coming, what the APIs should look like (OMA-DM
-is likely to be part of Sprint's stack for XOHM), what the driver
-situation is, and how to fend off a repeat of the 802.11 regulatory
-situation for WiMAX (most parts are apparently fullmac right now, but
-softmac will surely come).
-
-802.11s - nail down issues that Javier/Luis/others might have and try to
-push the 802.11s mesh stack forward (driver issues, API issues, etc)
-
-802.11n - do we need any discussion here or is it just a question of
-executing on the current plan?
-
-Userspace MLME - what's going on here?  Noise around this seems to be
-quieter these days.  Is stuff going according to plan/schedule or are
-there roadblocks?
-
-lib80211/fullmac - maybe this just needs to be picked up and done by
-somebody and doesn't need any discussion or whatever
-
-Dan
 
 
+On Fri, 2008-01-11 at 18:56 +0200, Nick Kossifidis wrote:
+> 2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
+> >
+> >
+> > [  312.999107] ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 19 (level=
+, low) -> IRQ 19
+> > [  312.999141] PCI: Setting latency timer of device 0000:06:00.0 to=
+ 64
+> > [  312.999351] ath5k_pci 0000:06:00.0: registered as 'phy0'
+> > [  314.048568] ath5k phy0: failed to resume the MAC Chip
+> > [  314.048652] ACPI: PCI interrupt for device 0000:06:00.0 disabled
+> > [  314.048674] ath5k_pci: probe of 0000:06:00.0 failed with error -=
+5
+> >
+>=20
+> It's a known bug in nic_wakeup, i've fixed it but patch is pending du=
+e
+> to testing. Problem is that even with that fix RF2425 doesn't tx/rx,
+> we are currently working with users to fix 2413/2414 support (radio
+> revision 0x56) so it'll take a while (tests etc) before we make this
+> work.
+
+Ok, understood. Please feel free to ping me if some change goes in and
+need testing.=20
+
+Thanks,
+	Romano=20
+
+--=20
+Sorry for the disclaimer --- =A1I cannot stop it!
+
+
+
+--
+La presente comunicaci=F3n tiene car=E1cter confidencial y es para el e=
+xclusivo uso del destinatario indicado en la misma. Si Ud. no es el des=
+tinatario indicado, le informamos que cualquier forma de distribuci=F3n=
+, reproducci=F3n o uso de esta comunicaci=F3n y/o de la informaci=F3n c=
+ontenida en la misma est=E1n estrictamente prohibidos por la ley. Si Ud=
+=2E ha recibido esta comunicaci=F3n por error, por favor, notif=EDquelo=
+ inmediatamente al remitente contestando a este mensaje y proceda a con=
+tinuaci=F3n a destruirlo. Gracias por su colaboraci=F3n.
+
+This communication contains confidential information. It is for the exc=
+lusive use of the intended addressee. If you are not the intended addre=
+ssee, please note that any form of distribution, copying or use of this=
+ communication or the information in it is strictly prohibited by law. =
+If you have received this communication in error, please immediately no=
+tify the sender by reply e-mail and destroy this message. Thank you for=
+ your cooperation.=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
