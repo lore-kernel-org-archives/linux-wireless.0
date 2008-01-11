@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:58374 "EHLO
-	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757179AbYAYWvE (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39693 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752577AbYAKQkd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:51:04 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 04/14] [rndis_host] Halt device if rndis_bind fails.
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
-Date: Sat, 26 Jan 2008 00:50:55 +0200
-Message-ID: <20080125225055.11716.51265.stgit@fate.lan> (sfid-20080125_225124_932837_997D9364)
-In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
-References: <20080125225032.11716.77713.stgit@fate.lan>
+	Fri, 11 Jan 2008 11:40:33 -0500
+Message-ID: <47879BE4.7040108@lwfinger.net> (sfid-20080111_164042_599754_D904213A)
+Date: Fri, 11 Jan 2008 09:40:04 -0700
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFT] b43: Add support for new firmware
+References: <200801102046.56979.mb@bu3sch.de>
+In-Reply-To: <200801102046.56979.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When bind fails after device was initialized, shutdown device properly
-by sending RNDIS_MSG_HALT.
+Michael Buesch wrote:
+> This patch adds support for new firmware.
+> Please test this on old and new firmware.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
----
+I have tested this patch with old firmware. It seems to work; however my testing is not complete as
+my computer has started hanging with the "Caps Lock" light flashing. The crash is not caused by this
+patch as it happened with 2.6.24-rc5, which has run for many days. I do have a suggestion for
+changing the patch (see below).
 
- drivers/net/usb/rndis_host.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+> +static inline
+> +size_t b43_txhdr_size(struct b43_wldev *dev)
+> +{
+> +	if (b43_is_old_txhdr_format(dev))
+> +		return 100 + sizeof(struct b43_plcp_hdr6);
+> +	return 104 + sizeof(struct b43_plcp_hdr6);
+> +}
 
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 42b161c..c686025 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -467,6 +467,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 		struct rndis_query_c	*get_c;
- 		struct rndis_set	*set;
- 		struct rndis_set_c	*set_c;
-+		struct rndis_halt	*halt;
- 	} u;
- 	u32			tmp;
- 	int			reply_len;
-@@ -517,7 +518,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 				"dev can't take %u byte packets (max %u)\n",
- 				dev->hard_mtu, tmp);
- 			retval = -EINVAL;
--			goto fail_and_release;
-+			goto halt_fail_and_release;
- 		}
- 		dev->hard_mtu = tmp;
- 		net->mtu = dev->hard_mtu - net->hard_header_len;
-@@ -539,7 +540,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 			48, (void **) &bp, &reply_len);
- 	if (unlikely(retval< 0)) {
- 		dev_err(&intf->dev, "rndis get ethaddr, %d\n", retval);
--		goto fail_and_release;
-+		goto halt_fail_and_release;
- 	}
- 	memcpy(net->dev_addr, bp, ETH_ALEN);
- 
-@@ -555,7 +556,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 	retval = rndis_command(dev, u.header);
- 	if (unlikely(retval < 0)) {
- 		dev_err(&intf->dev, "rndis set packet filter, %d\n", retval);
--		goto fail_and_release;
-+		goto halt_fail_and_release;
- 	}
- 
- 	retval = 0;
-@@ -563,6 +564,11 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- 	kfree(u.buf);
- 	return retval;
- 
-+halt_fail_and_release:
-+	memset(u.halt, 0, sizeof *u.halt);
-+	u.halt->msg_type = RNDIS_MSG_HALT;
-+	u.halt->msg_len = ccpu2(sizeof *u.halt);
-+	(void) rndis_command(dev, (void *)u.halt);
- fail_and_release:
- 	usb_set_intfdata(info->data, NULL);
- 	usb_driver_release_interface(driver_of(intf), info->data);
+Why not eliminate most of the magic numbers in this part with
 
+size_t b43_txhdr_size(struct b43_wldev *dev)
+{
+	if (b43_is_old_txhdr_format(dev))
+		return sizeof(struct b43_txhdr) - 4;
+	return sizeof(struct b43_txhdr);
+}
+
+Larry
