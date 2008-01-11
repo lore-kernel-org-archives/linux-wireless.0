@@ -1,83 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:54863 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbYAXIuD (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757522AbYAKLj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 03:50:03 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so159719fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2008 00:50:02 -0800 (PST)
-From: Chris Clayton <chris2553@googlemail.com>
-Reply-To: chris2553@googlemail.com
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Silent crash witk 2-6.24-rc8-git4
-Date: Thu, 24 Jan 2008 08:49:28 +0000
-Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-References: <200801220603.02986.chris2553@googlemail.com> <20080123190207.GB3129@tuxdriver.com> <200801240003.31666.chris2553@googlemail.com>
-In-Reply-To: <200801240003.31666.chris2553@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801240849.28284.chris2553@googlemail.com> (sfid-20080124_085009_966015_852E05E3)
+	Fri, 11 Jan 2008 06:39:27 -0500
+Subject: A-MSDU reception vs. IP alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aNdZoE93N5fpRURtpx2A"
+Date: Fri, 11 Jan 2008 02:12:20 +0100
+Message-Id: <1200013940.3861.142.camel@johannes.berg> (sfid-20080111_113932_178890_124DBB8D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 24 January 2008, Chris Clayton wrote:
-> Thanks for the reply, John.
-> 
-> On Wednesday 23 January 2008, John W. Linville wrote:
-> > On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
-> > > On Wednesday 23 January 2008, Chris Clayton wrote:
-> > > > Hi again.
-> > > > 
-> > > > On Tuesday 22 January 2008, Chris Clayton wrote:
-> > > > > Hi,
-> > > 
-> > > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
-> > > (the none I sent earlier was from -git4, by the way)
-> > > 
-> > > Call Trace:
-> > > [<c011440a>] __update_rq_clock+0x1a/0xf0
-> > > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
-> > > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
-> > > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
-> > 
-> > I suspect this could relate to this commit:
-> > 
-> > commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
-> > Author: Mattias Nissler <mattias.nissler@gmx.de>
-> > Date:   Mon Nov 12 15:03:12 2007 +0100
-> > 
-> >     rt2x00: Allow rt61 to catch up after a missing tx report
-> > 
-> > Could you revert that patch, rebuild, and try to recreate the problem?
-> > 
-> 
-> I've reverted the patch by hand - the original patch on linux-wireless doesn't match the present state of the code
-> in rt61pci.c and I'm not a git user. I'm pretty sure I've got it right, however.
-> 
-> Problem now is that we are back where we were a few weeks ago because my wireless connection dies
-> almost immediately after I start the download and from dmesg I see:
-> 
 
-Doh! Of course, I can get the patch that needs to be reverted from Linus' git repository, so just
-to be certain my reversion-by-hand was, in fact, OK and not the source of the problem, I've done
-just that, and...
+--=-aNdZoE93N5fpRURtpx2A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 2.
-> Please file bug report to http://rt2x00.serialmonkey.com.
-> 
-... this "non-free entry" still appears within a few seconds on any non-trivial network activity starting.
+Hi Ron,
 
-> Chris
-> 
-> > Thanks!
-> > 
-> > John
-> 
-> 
-> 
+Even when we align the packet as indicated in the patch I just sent, we
+can still copy the payload of an A-MSDU packet to a badly aligned place.
 
+Could you maybe look into fixing that? Basically, I think all we need is
+change
 
+                        skb_reserve(frame, local->hw.extra_tx_headroom +
+                                    sizeof(struct ethhdr));
 
--- 
-Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
+to something like
+
+		resv =3D ETH_HLEN + extra_tx_headroom;
+		if (resv % 4 !=3D 2)
+			resv +=3D 2 + (resv % 2);
+		skb_reserve(frame, resv);
+
+(allocating an appropriately sized skb of course)
+
+On the other hand, I also wrote in a note with that warn-on patch that
+we can probably save the copying completely by simply doing a clone and
+adjusting the length/offset properly. We already make a copy of the
+frame in ieee80211_deliver_skb() when we pass it back for sending to the
+wireless medium so that should be safe. And it'd be much more efficient
+than copying all frames. I'd appreciate if you could look into it.
+
+Thanks,
+johannes
+
+--=-aNdZoE93N5fpRURtpx2A
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4bCc6Vg1VMiehFYAQIC6RAArFTVXFwQpWscPUlOBnO9lrmSm+s9v/MR
+dcGV446awxy3Mdk4ksQTtrJINft0xSjY8RSBkY+/VASl40HwXgZqFWSn5OCrVYrU
+K6mzvr6zAsxi40jvvQXslQ9Xoeu0TN3RLek1TTotb2nOYjtWuHhdoEqOjB22npvW
+EFLhvzllKrp27oQd5Fc2nShvKuEKjbk2VOY1zrNgflUaMkfE0Nc9Nrcjo02W8DW7
+orFR5ld/3cI6X8mG1EHME9QotSrLflrg3fiLi25bSNCpDTdZuT9HP4sF/cs9nhAx
+QtgiE2jTLS7AespHlAxIF7Hve4P5JAa8o5RUHSYNTQZWufcdDmkAbG2ha+PCwS7Q
+qyYgth1AzS3PFeHD6Nw7zmhjJrdT2M6BMKN+qDm7N0Toy1UzTDwB9LSaBT+dW7wG
+uQgvwHaZ5ipkQUhJmpqE5Efj6QZ7MpbwZpWz0eP5tLJrCEhYnz50C4IUkcNejO6P
+eRc+XcmAAX7RwlaRURIjqKkJnkfSQrc4rQXEPeoUPDSdl/u3hia6HjJJjrv4r/6Z
+bs9WuGa1odosj6vo79nVL21l9T9rgFUmA9yvJobkyri7fgegSE3HmDFzywrwzhJv
+kFifn7d797HtwmfWYgFp665rfhMRxji2/mVlPXtLfVHgExVbZ6Ih/sxQPdiWFJHp
+dmgSc71ROv4=
+=7tfl
+-----END PGP SIGNATURE-----
+
+--=-aNdZoE93N5fpRURtpx2A--
+
