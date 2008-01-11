@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44306 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754222AbYAZDUb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 22:20:31 -0500
-Message-ID: <479AA6E9.1020403@lwfinger.net> (sfid-20080126_032103_014071_62EF922E)
-Date: Fri, 25 Jan 2008 20:20:09 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45158 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762579AbYAKWkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jan 2008 17:40:13 -0500
+Message-ID: <4787F03E.6080605@hauke-m.de> (sfid-20080111_224021_639371_DFEC3AF2)
+Date: Fri, 11 Jan 2008 23:39:58 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
-References: <20080126040534.005e6736@morte>
-In-Reply-To: <20080126040534.005e6736@morte>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: Michael Wu <flamingice@sourmilk.net>, linux-kernel@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8187 rate control doesn't work
+References: <477F9890.5050107@hauke-m.de>	 <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>	 <47824D25.5090005@hauke-m.de> <43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
+In-Reply-To: <43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefano Brivio wrote:
-> From: Larry Finger <larry.finger@lwfinger.net>
+Luis R. Rodriguez wrote:
+> On Jan 7, 2008 11:02 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 > 
-> Add a sanity check in rate_control_pid_adjust_rate(). Thanks to Larry Finger
-> for suggesting this and reporting a related bug.
-> 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-> NOT-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
+> Thanks for reporting this, how'd it go with simple rate control
+> algorithm instead?
 
+How do I change from pid to simple rate control algorithm? I have tried
+to set the CONFIG_MAC80211_RC_DEFAULT variable but it doesn't change the
+ dmesg output. On kernel 2.6.22 simple rate control algorithm is used as
+default but on 2.6.24 pid is the default on.
 
+Can you please send me a config.mk
+
+On kernel 2.4.24 with pid the rate shown by iwconfig stays at the
+starting on, also if I change it with "sudo iwconfig wlan0 rate 11M", on
+kernel 2.6.22 with simple rate control algorithm it shows the right rate.
+
+If I change the rate to something smaller than 11M I am able to ping the
+Access Point and if it is bigger that 11M I can't ping it. If no fixed
+rate is entered it stays at 54MBit/s and I can't ping the AP. The
+network speed is at ~1MBit/s and "Link Quality=53/64  Signal level=25/65"
+
+I have a AMD64 System and I am using the compat-wireless-2.6 of today.
+
+Hauke Mehrtens
