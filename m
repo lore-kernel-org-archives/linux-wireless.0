@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web57907.mail.re3.yahoo.com ([68.142.236.100]:40201 "HELO
-	web57907.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752571AbYAYGQd (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51372 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbYAKMAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 01:16:33 -0500
-Date: Thu, 24 Jan 2008 22:16:32 -0800 (PST)
-From: hong zhang <henryzhang62@yahoo.com>
-Subject: Re: does any wifi driver supports 802.11n for access point?
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <40f31dec0801242047u326772b4t66078a0edb052d2a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <785147.24297.qm@web57907.mail.re3.yahoo.com> (sfid-20080125_061635_776405_4DD13EBE)
+	Fri, 11 Jan 2008 07:00:12 -0500
+Received: from [131.234.198.2]
+	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.68)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1JDIYT-0005qy-TR
+	for linux-wireless@vger.kernel.org; Fri, 11 Jan 2008 12:00:10 +0000
+Subject: Re: [RFC v3] cfg80211 API for channels/bitrates, mac80211 and
+	driver conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1199986287.3861.91.camel@johannes.berg> (sfid-20080111_113807_327773_C6F8A143)
+References: <1199967423.3861.51.camel@johannes.berg>
+	 (sfid-20080110_121725_060148_B022943A)  <1199986287.3861.91.camel@johannes.berg>
+	 (sfid-20080111_113807_327773_C6F8A143)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-a3A/ermP6dJHMRZRRiyz"
+Date: Fri, 11 Jan 2008 12:59:51 +0100
+Message-Id: <1200052791.3861.165.camel@johannes.berg> (sfid-20080111_120025_585318_DBBBD10E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How about iwl4965?
-is iwl4965 based on which wifi chip?
 
---- Nick Kossifidis <mickflemm@gmail.com> wrote:
-
-> > 3. Does mac80211 run on atheros chip for access
-> point?
-> > It seems that mac80211 package only supports
-> station.
-> >
-> 
-> Not yet, we 're working on fixing several issues
-> right now.
-> 
-> As for Atheros's 802.11n parts, we still have lot of
-> work to do, even
-> madwifi/binary HAL doesn't support n right now.
-> 
-> 
-> -- 
-> GPG ID: 0xD21DB2DB
-> As you read this post global entropy rises. Have Fun
-> ;-)
-> Nick
-> 
+--=-a3A/ermP6dJHMRZRRiyz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+On Thu, 2008-01-10 at 18:31 +0100, Johannes Berg wrote:
+> On Thu, 2008-01-10 at 13:17 +0100, Johannes Berg wrote:
+> > This patch creates new cfg80211 wiphy API for channel and bitrate
+> > registration and converts mac80211 and drivers to the new API. The
+> > old mac80211 API is completely ripped out. All drivers (except ath5k)
+> > are updated to the new API, in many cases I expect that optimisations
+> > can be done.
+>=20
+> Tested with iwl4965 and found two bugs, will repost.
 
-      ____________________________________________________________________________________
-Be a better friend, newshound, and 
-know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ 
+http://johannes.sipsolutions.net/patches/kernel/all/2008-01-11-11%3a59/017-=
+cfg80211-channel-and-bitrate-api.patch
+
+johannes
+
+--=-a3A/ermP6dJHMRZRRiyz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4daNqVg1VMiehFYAQJLmA/8C6/SzNh2CP/wKtestqQik3CZ8YfxoZzi
+/n9PoKyDEvaRkyxRxHcaY+2hTNpr2TnJ2b1l1qu9fZpS3fF5jgvkj+CpYklAfTPe
+7tbqRqJ1L3YL8DDWXAP8xqSJGEbZfVaY0VUeJJKhxUavJsJSGUfeV+wakvCN3R5Z
+qKv/ucHb5nN5GW0hXB62e/aIjO3PMU3umLpxnB4Z+vcoQ4GsjB4gffWL4XPNtY+8
+PilFV95O+JJ2hW0QmxzaJITMHqH4IB/x/tRCP/KuHPUnoInSzvUW0Ak+qJT4YWo8
+j3xRKoBoBgP2bYh0HvrcHlZjFiNmPcskz6QXxZ4L8b6C6fO565fMFz4RzfylYYhQ
++y99fU8cAsZiBxcnUHo2KLYLaxbHTNc3vowmiQw3d8DVfpvqVAebE3VA2LptLVD0
+k7LdccGrs5IbTgFOxRrVZoo4EIDPE+cPDyvl42k5t7eqI+J0UVsnbi4wh7Uz1tCt
+6WxwWI9FrYsRI/gwYeKXaKpbGNxs4tmQqaeLgOsk60OCo2iaOy8hbVarIZhCMY56
+SWjSX1K4PItH8hDjzqCM2jYNgkKFUs29qseR2C3r0n2foHTsrIi13rSUwQFs/Yag
+opYXtAiItkr5OmiWf0D/eX9czXOaejHYts0zP1zAmNPTpryr1OCRcQhpXGVU5tdz
+Jn/4sjUVaZc=
+=Yc8E
+-----END PGP SIGNATURE-----
+
+--=-a3A/ermP6dJHMRZRRiyz--
 
