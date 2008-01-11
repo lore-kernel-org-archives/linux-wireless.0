@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:9081 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435AbYAHPIF (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:55108 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757363AbYAKP30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 10:08:05 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so7497011rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 07:08:04 -0800 (PST)
-Message-ID: <c85cb4470801080708l3b0811e4pb74f33b48bb0c3e5@mail.gmail.com> (sfid-20080108_150811_909425_6BF8DF07)
-Date: Tue, 8 Jan 2008 17:08:04 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Subject: Re: [PATCH 0/8 v3] mac80211/iwlwifi: integrate IEEE802.11n A-MPDU Rx MLME
-Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	tomas.winkler@intel.com, yi.zhu@intel.com,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1198848559.4103.112.camel@johannes.berg>
+	Fri, 11 Jan 2008 10:29:26 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: ronald645@gmail.com
+Subject: Re: Bcm4311 shuts down on closing lid (intended?)
+Date: Fri, 11 Jan 2008 16:28:25 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <47866FE6.4010100@gmail.com> <200801102028.43222.mb@bu3sch.de> <4787021F.4020803@gmail.com>
+In-Reply-To: <4787021F.4020803@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-	 <1198848559.4103.112.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801111628.26119.mb@bu3sch.de> (sfid-20080111_152930_640647_3925F390)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > This series of patches contains implementation for the IEEE802.11n
-> > aggregated MPDUs (A-MPDU) MLME. The series handles Rx A-MPDU
->
-> Looks fine to me. John, we could probably merge 1-7 as a single patch, I
-> don't see much point in splitting it up in the final tree. It was good
-> for reviewing but I don't see why we want that in the tree later. Don't
-> care much though.
-> johannes
+On Friday 11 January 2008 06:43:59 Ronald wrote:
+> >> On Thursday 10 January 2008 20:20:06 Ronald wrote:
+> >>> Hi,
+> >>>
+> >>> The b43 driver in the linux kernel 2.6.24-rc7 works really good :) . 
+> >>> Keep it up! However, one thing is bugging me: Why does the card stop 
+> >>> sending/receiving packets when I close the lid? Is this behaviour 
+> >>> intended in the new driver? If yes, can I disable it?
+> >> 
+> >> I guess the machine goes to suspend, right?
+> >> You obviously can't use the machine when it's suspended.
+> >> 
+>  >Nope, it doesn't go into suspend. With the old driver, I could close 
+>  >the lid and for example SSH into it. Now, that is not possible. I 
+> tried >it with a radio station. It stops playing after a while once I 
+> close >the lid.... . The only thing that changes is that the screen 
+> light >shuts down (but not the card! it worked before when closing the 
+>  >screen!)
 
-Hi John, what is the status for this merge? It blocks me on the Tx as
-i need this basic MLME framework series, along with the preliminary
-"mac80211: restructure __ieee80211_rx" patch that was Acked as well.
-thanks
-ron
-BTW - i already rebased them to rc7, if you prefer i can send them over.
+I'm pretty sure there are no lid related routines in the wireless
+driver, though. ;) So the problem must be somewhere else.
+
+
+-- 
+Greetings Michael.
