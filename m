@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:38699 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758901AbYAUQK5 (ORCPT
+Received: from ag-out-0708.google.com ([72.14.246.247]:19585 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757575AbYAKSFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 11:10:57 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so898404ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 08:10:55 -0800 (PST)
-Message-ID: <4794C341.2020300@gmail.com> (sfid-20080121_161106_933556_2130F70A)
-Date: Mon, 21 Jan 2008 18:07:29 +0200
-From: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
+	Fri, 11 Jan 2008 13:05:36 -0500
+Received: by ag-out-0708.google.com with SMTP id 23so834570agd.10
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 10:05:35 -0800 (PST)
+Message-ID: <40f31dec0801111005r3beb4b4k3a4a5c17cef01298@mail.gmail.com> (sfid-20080111_180541_695742_5AD05CD7)
+Date: Fri, 11 Jan 2008 20:05:35 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Romano Giannetti" <romanol@upcomillas.es>
+Subject: Re: Testing ath5k driver
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1200073582.18380.1.camel@rukbat>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org, Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to
- user-space in standard GET WE ioctls.
-References: <4793935F.2000102@gmail.com> <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com>
-In-Reply-To: <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
+References: <1200049360.12702.14.camel@rukbat>
+	 <40f31dec0801110856r1d0e04f3i284afb2a3f64f8c1@mail.gmail.com>
+	 <1200073582.18380.1.camel@rukbat>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> Adding Jean.
-> 
->   Luis
-> 
-> On Jan 20, 2008 1:30 PM, Volodymyr G. Lukiianyk <volodymyrgl@gmail.com> wrote:
->> For the most of standard WE GET ioctls the size of the buffer to store driver's
->> response is calculated on base of the call's descriptor (.token_size and
->> .max_tokens fields) without taking into consideration the size of the buffer
->> provided by application in struct iwreq. But when the response is being copied to
->> userspace, its size is calculated from the length provided by application. This
->> can lead to kernel internal data leak into userspace, and oopses when the buffer
->> is located near the end of the available memory. To prevent these situations the
->> size used during copying is set to the same one used during allocation.
->>
->>
->> Signed-off-by: Volodymyr G Lukiianyk <volodymyrgl@gmail.com>
->> ---
->>
->> I've actually seen those oopses on the system with 32MB of memory, when 1k
->> object at address c1fffc00 was returned by the SLAB while handling request for
->> allocating 568 bytes buffer (struct iw_range). Later, copy_to_user() (instructed
->> to copy 1136 bytes, since iwlist uses 2x buffer) crashed trying to access
->> c2000000, which is beyond the bounds of available 32MB.
->>
->> The patch attached is against the Linus's tree.
->>
->>
->> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
->> index 47e80cc..c6ce59b 100644
->> --- a/net/wireless/wext.c
->> +++ b/net/wireless/wext.c
->> @@ -866,8 +866,7 @@ static int ioctl_standard_call(struct net_device *  dev,
->>                         }
->>
->>                         err = copy_to_user(iwr->u.data.pointer, extra,
->> -                                          iwr->u.data.length *
->> -                                          descr->token_size);
->> +                                          extra_size);
->>                         if (err)
->>                                 ret =  -EFAULT;
->>                 }
->>
->>
-> 
+2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
+>
+>
+> On Fri, 2008-01-11 at 18:56 +0200, Nick Kossifidis wrote:
+> > 2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
+> > >
+> > >
+> > > [  312.999107] ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 19 (level, low) -> IRQ 19
+> > > [  312.999141] PCI: Setting latency timer of device 0000:06:00.0 to 64
+> > > [  312.999351] ath5k_pci 0000:06:00.0: registered as 'phy0'
+> > > [  314.048568] ath5k phy0: failed to resume the MAC Chip
+> > > [  314.048652] ACPI: PCI interrupt for device 0000:06:00.0 disabled
+> > > [  314.048674] ath5k_pci: probe of 0000:06:00.0 failed with error -5
+> > >
+> >
+> > It's a known bug in nic_wakeup, i've fixed it but patch is pending due
+> > to testing. Problem is that even with that fix RF2425 doesn't tx/rx,
+> > we are currently working with users to fix 2413/2414 support (radio
+> > revision 0x56) so it'll take a while (tests etc) before we make this
+> > work.
+>
+> Ok, understood. Please feel free to ping me if some change goes in and
+> need testing.
+>
+> Thanks,
+>         Romano
+>
 
+ACK, thanx for the report ;-)
 
-Please, ignore this patch. I didn't notice that the driver's handler should set
-iwr->u.data.length appropriately. But is there any possibility for compiler to
-temporarily save the value of this field in the register and not re-read it after
-handler call?
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
