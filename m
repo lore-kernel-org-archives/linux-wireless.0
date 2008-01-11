@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:14127 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbYAFXOE (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56764 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760409AbYAKRSE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 18:14:04 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so12118250wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 15:14:04 -0800 (PST)
-Message-ID: <1ba2fa240801061514m9c58b15g1ed1455e807a28b6@mail.gmail.com> (sfid-20080106_231412_417901_9E5169AD)
-Date: Mon, 7 Jan 2008 01:14:04 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH] mac80211: Add radio led trigger
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200801061925.44484.IvDoorn@gmail.com>
+	Fri, 11 Jan 2008 12:18:04 -0500
+Message-ID: <4787A4AB.5060601@lwfinger.net> (sfid-20080111_171813_368010_DD6E1D3C)
+Date: Fri, 11 Jan 2008 10:17:31 -0700
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
+To: Martin Marques <martin@marquesminen.com.ar>
+CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH RFT] b43: Add support for new firmware
+References: <200801102046.56979.mb@bu3sch.de> <47879BE4.7040108@lwfinger.net> <47879CBD.8080403@marquesminen.com.ar>
+In-Reply-To: <47879CBD.8080403@marquesminen.com.ar>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <200801061410.12862.IvDoorn@gmail.com>
-	 <1ba2fa240801061019w2cc28082s9084c00a5d14f810@mail.gmail.com>
-	 <200801061925.44484.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 6, 2008 8:25 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
->
-> On Sunday 06 January 2008, Tomas Winkler wrote:
-> > On Jan 6, 2008 3:10 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > Some devices have a seperate LED which indicates if the radio is
-> > > enabled or not. This adds a LED trigger to mac80211 where drivers
-> > > can hook into when they are interested in radio status changes.
-> > >
-> > >
-> > I wonder how this go together with RF KILL led?
->
-> They would be competing I fear, but not all devices have a rfkill button,
-> which makes the mac80211 radio led trigger more usefull I think.
->
-What inquires me is  in the following snippet is  would you lit the
-led if even if rfkill HW switch is on?
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -219,6 +219,7 @@ static int ieee80211_open(struct net_device *dev)
-               if (res)
-                       return res;
-               ieee80211_hw_config(local);
-+               ieee80211_led_radio(local, 1);
-       }
+Martin Marques wrote:
+> 
+> Sorry if it's a change of subject, but what does the flashing caps hang
+> mean? It has happend to me a lot when trying to run 3D apps.
 
+AFAIK, it indicates an error so severe that the kernel has no chance to recover. Examples might be
+stack underflow or a page fault while accessing the stack.
 
-Thanks
-Tomas
-> Ivo
->
+Your crashes when running 3D apps is likely a bug in the driver for your graphics adapter. Are you
+using a binary-only driver? If so, complain to the manufacturer. If it is an open-source driver,
+then a note to the Linux Kernel Mailing List would be appropriate. You should describe your kernel,
+configuration, etc. and list the 3D app that causes the problem.
+
+Larry
