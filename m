@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:22635 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753570AbYAHD0Z (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59349 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760222AbYAKV3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 22:26:25 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] cfg80211 API for channels/bitrates, mac80211 and driver conversion
-Date: Mon, 7 Jan 2008 22:27:20 -0500
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1198448108.4103.6.camel@johannes.berg> <200712231850.37136.flamingice@sourmilk.net> <1199484080.4172.173.camel@johannes.berg>
-In-Reply-To: <1199484080.4172.173.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1436108.fnELgt7Bek";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200801072227.27222.flamingice@sourmilk.net> (sfid-20080108_032630_817461_49A0DB68)
+	Fri, 11 Jan 2008 16:29:23 -0500
+Subject: Re: [RFC PATCH 07/10] mac80211: A-MPDU Tx change tx_status to
+	support Block Ack data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <11999857502772-git-send-email-ron.rindjunsky@intel.com>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+	 <11999857502772-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WqGDdJFm8SaIbiqonL0Q"
+Date: Fri, 11 Jan 2008 17:56:49 +0100
+Message-Id: <1200070609.3861.208.camel@johannes.berg> (sfid-20080111_212936_407723_B90881D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1436108.fnELgt7Bek
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-WqGDdJFm8SaIbiqonL0Q
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Friday 04 January 2008 17:01:20 Johannes Berg wrote:
-> > > + * @IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE:
-> > > + *	Hardware is not capable of receiving frames with short preamble on
-> > > + *	the 2.4 GHz band.
-> >
-> > Let's add it when we actually find hardware that needs it.
->
-> I disagree. It's literally two lines of code (one defining it and one
-> using it) and makes things more easy to discover when writing a driver.
->
-Yeah but it's never ever going to get used. Bet you 10 us pesos on it. So=20
-what's the point? If you feel this makes mac80211 better fit the theory,=20
-well.. whatever..
 
-> > > +	strcpy(name, "mac80211");
-> > >
-> > >  	return 0;
-> > >  }
-> >
-> > It's simple, sure, but no. Let's not change userspace facing behavior if
-> > we can. If you really need to, use "IEEE 802.11".
->
-> It's pretty dumb to indicate the mode that way, but I changed it to just
-> "IEEE 802.11" now.
->
-I'm not even sure what the intention of this ioctl is suppose to be (verify=
-=20
-presence of WE? there are WE implemented ioctls that can be used for that=20
-trick..) but it does indicate it's not for saying what the name of the driv=
-er=20
-is and I don't think driver subsystem names count either.=20
+> + * @ampdu_ack_len: number of aggregated frames.
+> + * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
+> + * @ampdu_ack_map: block ack bit map for the aggregation.
+> + * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
 
-Indicating mode this way is dumb for sure but it fits with the examples giv=
-en=20
-for the ioctl. Doubt anyone is counting on that though since this ioctl has=
-=20
-been abused already (eg. association status in ipw2200) so "IEEE 802.11"=20
-should be fine.
+Can you explain what that bitmap contains?
 
-Thanks,
-=2DMichael Wu
+Broadcom hardware is able to give intermediate status notifications,
+would there be any use in those?
 
---nextPart1436108.fnELgt7Bek
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+johannes
+
+--=-WqGDdJFm8SaIbiqonL0Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBHgu2fT3Oqt9AH4aERApKZAKDFXtPdvFQ+RNZEI2ueN2mFWmyIYACgowiV
-dODWmXFeRGgML1QpHYiV8z0=
-=sbrA
+iQIVAwUAR4efz6Vg1VMiehFYAQIMsxAAhFxiLIy4LiAzOXcvw4qAA66MzdhvxC7H
+IFrrmvv5QT0wCAmdxIl6BTFECLfe+QKmlYX9RdMKXPB2fpvo12ozd469QN1XgVJ8
+e6aiQyOcRDZ1Pn+w4B8Ru1EOxTcMM4yCW7S4gwt4Ok/ThQNU3fXS5Vta6byPJftB
+wCbScfVpsjtoSzVS0YBzrwAoz2o86AJ0n+fKhAWBUiUyQfeyM+qNzMCe3GMFO7Ym
+mnCd4ZQmimUl3uWYTwd/B3+60fv9g9AEBOVtAv/Fja22MoubA6uswh+9hv7VmzQa
+horyl3CzYhO6a8zzW7PAckXoH7+LCrLzFv8joqA4TxLqe9SpuXIcCmC6F/kjg/43
+UG6FBCLH7g4ISfe9P71EREXJriHC4SnpURq5TQnNa+yJ9hRkeivcVpNVCN7yynMl
+Ax9rys4RpJN00McZCXX32fBuzdMgo8a7UQP8ibrqKwyYnpE+gmT8cMTWdunH8jZ3
+4eXk11jRuWM5xwhfkjmdtZs9vRJZnSazT6qCo5k6I/L3TN5qiyvUSXBq+lv+XaOU
+3ZwqFYJqP9AUEmCkT6Nrq3HS76vrEfjT5WsUkdjALE+7Y5NhVDDG6qEVFHEW51gj
+LtxpOmOsFjIQV+8dEgnmw4wKKshEKHxYiVla5q22yP1NRD/Z4oJGnR9W6oqQkdhV
+1nFErmG8SH8=
+=5NOK
 -----END PGP SIGNATURE-----
 
---nextPart1436108.fnELgt7Bek--
+--=-WqGDdJFm8SaIbiqonL0Q--
+
