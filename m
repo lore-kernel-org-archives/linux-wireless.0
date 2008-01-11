@@ -1,113 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:15122 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbYAYBA4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757365AbYAKLi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 20:00:56 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so725214wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2008 17:00:55 -0800 (PST)
-Message-ID: <479934C5.3060401@gmail.com> (sfid-20080125_010110_318254_B0D01E7D)
-Date: Thu, 24 Jan 2008 17:00:53 -0800
-From: John Daiker <daikerjohn@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath5k: 5212 / 5213A / 2413 identity crisis?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 11 Jan 2008 06:38:27 -0500
+Subject: Re: [PATCH 06/12] rt2x00: Put 802.11 data on 4 byte boundary
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200801062340.27509.IvDoorn@gmail.com> (sfid-20080106_224252_417933_91E2D3B0)
+References: <200801062337.35904.IvDoorn@gmail.com>
+	 <200801062340.27509.IvDoorn@gmail.com>
+	 (sfid-20080106_224252_417933_91E2D3B0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NbZArqq6VfpoBXTexRfG"
+Date: Fri, 11 Jan 2008 01:32:10 +0100
+Message-Id: <1200011531.3861.118.camel@johannes.berg> (sfid-20080111_113829_928399_1CCFA127)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All,
 
-I've been using MadWifi since I picked up a PCMCIA card a few months 
-ago.  I've tried out the ath5k driver, but can't get the card to 'iwlist 
-wlan0 scan' AP's, or even connect to an unsecured AP through 'iwconfig' 
-commands.
+--=-NbZArqq6VfpoBXTexRfG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've pasted an output of my dmesg output from both MadWifi and ath5k, as 
-well as lspci -v.
+Sorry I'm late in noticing this :\
 
-'sudo modprobe ath_pci'
-[ 2537.326216] ath_hal: 0.9.18.0 (AR5210, AR5211, AR5212, RF5111, 
-RF5112, RF2413, RF5413)
-[ 2537.348389] wlan: 0.8.4.2 (0.9.3.3)
-[ 2537.353061] ath_pci: 0.9.4.5 (0.9.3.3)
-[ 2537.354583] ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 20 (level, 
-low) -> IRQ 20
-[ 2537.620439] ath_rate_sample: 1.2 (0.9.3.3)
-[ 2537.636510] wifi0: 11b rates: 1Mbps 2Mbps 5.5Mbps 11Mbps
-[ 2537.636704] wifi0: 11g rates: 1Mbps 2Mbps 5.5Mbps 11Mbps 6Mbps 9Mbps 
-12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-[ 2537.636947] wifi0: H/W encryption support: WEP AES AES_CCM TKIP
-[ 2537.637108] wifi0: mac 7.8 phy 4.5 radio 5.6
-[ 2537.637240] wifi0: Use hw queue 1 for WME_AC_BE traffic
-[ 2537.637370] wifi0: Use hw queue 0 for WME_AC_BK traffic
-[ 2537.637554] wifi0: Use hw queue 2 for WME_AC_VI traffic
-[ 2537.637685] wifi0: Use hw queue 3 for WME_AC_VO traffic
-[ 2537.637816] wifi0: Use hw queue 8 for CAB traffic
-[ 2537.637952] wifi0: Use hw queue 9 for beacons
-[ 2537.643490] wifi0: Atheros 5212: mem=0x54000000, irq=20
-[ 2537.647060] net wlan0: device_rename: sysfs_create_symlink failed (-17)
+> +		/*
+> +		 * The data behind the ieee80211 header must be
+> +		 * aligned on a 4 byte boundary.
+> +		 */
+> +		align =3D NET_IP_ALIGN + (2 * (header_size % 4 =3D=3D 0));
 
-'sudo modprobe ath5k'
-[ 2590.373989] ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 20 (level, 
-low) -> IRQ 20
-[ 2590.374333] ath5k_pci 0000:07:00.0: registered as 'phy7'
-[ 2590.446657] phy7: Selected rate control algorithm 'simple'
-[ 2590.471263] ath5k phy7: Atheros AR5213A chip found (MAC: 0x78, PHY: 0x45)
-[ 2590.471450] ath5k phy7: RF2112A 2GHz radio found (0x56)
-[ 2590.485529] HW CONFIG: channel=1 freq=2412 phymode=2
-[ 2590.523213] HW CONFIG: channel=1 freq=2412 phymode=2
-[ 2590.538549] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.550964] HW CONFIG: channel=2 freq=2417 phymode=2
-[ 2590.579394] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.591820] HW CONFIG: channel=3 freq=2422 phymode=2
-[ 2590.620239] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.632661] HW CONFIG: channel=4 freq=2427 phymode=2
-[ 2590.661093] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.673503] HW CONFIG: channel=5 freq=2432 phymode=2
-[ 2590.701934] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.714368] HW CONFIG: channel=6 freq=2437 phymode=2
-[ 2590.742785] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.755208] HW CONFIG: channel=7 freq=2442 phymode=2
-[ 2590.783636] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.796057] HW CONFIG: channel=8 freq=2447 phymode=2
-[ 2590.826261] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.838685] HW CONFIG: channel=9 freq=2452 phymode=2
-[ 2590.867125] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.879533] HW CONFIG: channel=10 freq=2457 phymode=2
-[ 2590.907962] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.920383] HW CONFIG: channel=11 freq=2462 phymode=2
-[ 2590.950586] phy7: TX to low-level driver (len=40) FC=0x0040 
-DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-[ 2590.963012] HW CONFIG: channel=1 freq=2412 phymode=2
+I don't think you should be using NET_IP_ALIGN at all, I think the code
+should be just
 
-'lspci -v'
-07:00.0 Ethernet controller: Atheros Communications, Inc. AR2413 
-802.11bg NIC (rev 01)
-        Subsystem: D-Link System Inc AirPlus G DWL-G630
-        Flags: bus master, medium devsel, latency 168, IRQ 20
-        Memory at 54000000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: <access denied>
+		align =3D header_size % 4;
 
+(which will evaluate to two or four).
 
-Seems as if there is a discrepancy between:
-    MadWifi    (reporting an Atheros 5212)
-    ath5k      (reporting an Atheros AR5213A chip with a RF2112A radio)
-    lspci -v   (reporting an Atheros AR2413 chip)
+See, NET_IP_ALIGN is 2 because ethernet headers are 14 bytes long, and 2
+plus 14 gives 16 which is divisible by four.
 
+I have, so far, in mac80211 forced you to align the 802.11 data payload
+to a four-byte boundary *even on powerpc* which is the only platform
+where NET_IP_ALIGN is not two (it is zero because DMA sucks when done to
+unaligned addresses on some powerpc machines).
 
-I can help debug any possible solution to this.
+We are, however, not concerned with ethernet frames here at all! Hence,
+NET_IP_ALIGN is pretty much useless because it's designed for the
+ethernet case.
 
-John Daiker
+I think Broadcom hardware really represents the ideal case here: The sum
+of the lengths of all headers including hardware/firmware receive
+header, plcp information and 802.11 header is always a multiple of four,
+if necessary the hardware/firmware header is padded (by two bytes) to
+achieve this. This means we can always do "perfect" DMA right to the
+beginning of the buffer and always get the right IP header alignment.
 
-PS> Sorry for the verbosity... just wanted all the info out there.
+Once you deviate from that ideal case, performance suffers. Either
+because you need to move around data or because you have to do unaligned
+loads. The latter I have currently disallowed in mac80211 (via that
+WARN_ON_ONCE) because most drivers got it wrong and hence won't function
+on machines that require or force alignment.
+
+In any case, NET_IP_ALIGN is really designed for ethernet and DMA. Since
+we're not doing ethernet, it's not important. Since you're not doing DMA
+here, it's even less important. If it becomes possible for you to do
+DMA, you should probably do it right into the start of a buffer and
+memmove() the data a bit when necessary to achieve 4-byte alignment.
+
+Once you have done that, we can talk about possibly relaxing the
+WARN_ON_ONCE() in mac80211 a bit so you don't have to memmove() the data
+on machines where unaligned loads are possible. Then we can investigate
+which hurts performance more, but I guess it'll be machine-dependent (I
+would guess that enough cache means a memmove is fast or at least
+amortized later when we load the data anyway, unaligned loads on the
+other hand hurt every time the IP stack needs a field)
+
+Now, I can see one case where you could again use NET_IP_ALIGN, but it
+has a bunch of preconditions:
+ - you do DMA right into the skb
+ - you have a RX header that is divisible by four
+ - you decide that QoS frames are going to be more common than non-QoS
+
+Initially, these conditions mean that you'd ask the machine to do DMA
+into the start of the skb + 2, because you want to have the IP data
+aligned properly in the QoS case. Then, however, you should use
+NET_IP_ALIGN instead of the two and not do any memmove at all. But
+seeing that's only relevant for some powerpc machines and wireless
+hardware isn't fast enough yet to matter, I don't think it makes a
+difference.
+
+We should, however, reach out to vendors and ask them to do the required
+padding in firmware/hardware.
+
+This leads me to an interesting question for A-MSDU packets, but I'll
+write another mail about that.
+
+johannes
+
+--=-NbZArqq6VfpoBXTexRfG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4a5CaVg1VMiehFYAQLJPxAAgJKlYJrfE22Ne/5rwAnqXniMWBgP6Apg
+FZ2n/LdPB+Yk/T60v16vo4kwZg0aQywQ6FEn385U2mJNnsugJvYH+mNQqrKYl3vo
+1+UbRmo0jPvx+sXktuyj8wx/2jaKJEertJJhrWOz1V42oMpLURIfbhxj1zk+z200
+/ykbYkOf/FBxHiYw/X8kk1MgrCfP7V7ct1C1IeJ5TcAx3tccW2Zu0xKhmXWD7Avx
+8Q2QWnvEHU96MbILhSiU8lHMlUP1fk5iVacQEsVPqw5E1h9uAyze2W2p6VxNqwZY
+X5FoWwTsjwVLKtp17mNJxzxoV0rqeGL03hAdwSFD4g8ViZKD+p/r9eYuNVrWVDFy
+FLlOlSBCEaVPdwbxprORfwYyEy2y1zKblyQjWyJFqlvdFPQprg3rkvknjhOIfGTE
+eundpQk2FZxEe493DqGDpHD16G20P5CDKTUW3Q47c7aA4TdLmpErK28P23b06MDG
+rHa5o0c399bvBjBDJ/K/lRdj3pfluGvzjeCovYDclzZtIfMSSqN7Q9JzcFpIyEtE
+77SL420l1xzG4YyQP+0lzJgBX06O7g4oD5mKpCHYnitxq9aRiLL8JNDIkd0lkG8w
+/gJTasyTpmGSr+D9jI50NnJHgIes0UM8fqpFmj4tcEbemL1z6FE+ktMp/4RSYQtE
+HCfWg4Zpo9o=
+=MWNb
+-----END PGP SIGNATURE-----
+
+--=-NbZArqq6VfpoBXTexRfG--
+
