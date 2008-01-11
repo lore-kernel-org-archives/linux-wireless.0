@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51354 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbYA1RJX (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53666 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762956AbYAKXEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 12:09:23 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211 crash in ieee80211_sta_scan_work
-Date: Mon, 28 Jan 2008 18:07:25 +0100
-Cc: Tomas Winkler <tomasw@gmail.com>, stefano.brivio@polimi.it,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <479D9B5F.5000304@lwfinger.net> <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com> <20080128151200.GC5835@tuxdriver.com>
-In-Reply-To: <20080128151200.GC5835@tuxdriver.com>
-MIME-Version: 1.0
-Message-Id: <200801281807.26267.mb@bu3sch.de> (sfid-20080128_170927_441504_6399BAFB)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Fri, 11 Jan 2008 18:04:36 -0500
+Subject: Re: handing cloned frames to netif_rx()?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: netdev@vger.kernel.org, ron.rindjunsky@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080111230105.GA32656@gondor.apana.org.au>
+References: <E1JDSPG-0008Of-00@gondolin.me.apana.org.au>
+	 <1200092285.3528.5.camel@johannes.berg>
+	 <20080111230105.GA32656@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I+N28rWhA5od6jajIGrF"
+Date: Sat, 12 Jan 2008 00:04:17 +0100
+Message-Id: <1200092657.3528.7.camel@johannes.berg> (sfid-20080111_230503_120734_726C42D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 January 2008 16:12:00 John W. Linville wrote:
-> On Mon, Jan 28, 2008 at 11:48:51AM +0200, Tomas Winkler wrote:
-> > On Jan 28, 2008 11:37 AM,  <stefano.brivio@polimi.it> wrote:
-> > > Quoting Tomas Winkler <tomasw@gmail.com>:
-> > >
-> > > > There are too many issues with API change patch. I think it is a good
-> > > > direction but it's really unstable I think we need to give another
-> > > > round before it can be applied.
-> > >
-> > > That has already been applied. I suggest that you point out the
-> > > iwl4965 bugs you generically reported so that they can be fixed as well.
-> > >
-> > We've seen already patches to be un-applied, reverted.
-> > I'll fix the bugs that's not problem but it takes time. I'm just
-> > worried about the other users that find driver unusable.
-> 
-> I'm going to hold it back from 2.6.25.  We can work on it for 2.6.26.
 
-The new band API is really really needed. I already have dozens of FIXMEs
-in b43 that will automatically go away once the mac80211 API is changed.
-Lots of FIXMEs will be added if this is not merged.
+--=-I+N28rWhA5od6jajIGrF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Please apply this patch and apply fixes inside of the 2.6.25 development
-cycle. We are in a _development_ kernel. Kernels _do_ break in development
-stages. That is the whole reason why development kernels exist.
 
-So if we push this patch to 2.6.26 another bug appears. Should we push
-it to 2.6.27 then instead of simply fixing it in the development cycle?
+On Sat, 2008-01-12 at 10:01 +1100, Herbert Xu wrote:
+> On Fri, Jan 11, 2008 at 11:58:05PM +0100, Johannes Berg wrote:
+> >
+> > Ok. Yes, we will of course adhere to that, but I was wondering whether
+> > maybe the net stack assumes somewhere that a packet it got from the
+> > driver can be written to w/o copying.
+>=20
+> All parts of the rx stack support clone handling because they can always
+> run after another handler (e.g., AF_PACKET) which may have cloned the
+> packet.
 
-Besides that, _nobody_ will test the patch, if it's not applied to your
-tree. So the situation will not be better when you apply it in the
-next development cycle.
+Great, thanks for confirming, we'll do that then.
 
-And for users complaining about a development kernel being unusable, well,
-what to say about them? I'd say the right answer would be: Go and use
-a stable kernel!
+johannes
 
-Please realize that delaying this patch means increasing the pain for
-driver developers that need this patch for another 80-100 days.
+--=-I+N28rWhA5od6jajIGrF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Greetings Michael.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4f18KVg1VMiehFYAQIrTg/7BPUVTEbN4vPoi4zNHuuZLgyRWx/vsn3I
+1A1lsXs37rtmxtD2QLZ8oXR+B+rlJZ4yJolBLKT5hRCNVBrRANKCcgVUgf1PnkVB
+YuucoYR5ZHZhEUpmdHVDWgUsm3bNo6RXsw1mv6WhAN4G16hSexp6unfl5kNKT6V8
+7Gk+a50Pa2uBXLrJ8W2uoftMjpb3giouLFSVwC9bEuoOjrNdnCd++eTUWv+9WUy8
+BWXaWdFLlnFI6qNfLzOTmkmJd3+zK8jrNMUIK3yiTBAz2k/vAn8JXqJiUHOuJDUL
+X1p4xscmsj29sSN/oT1koEHiw1pfXPHz5GoUDLiSsUgak1k/dLliPVgVSG8Reh2m
+ltHsyLQkwI5dQ1cJ1/S0y0IADH1bzW+eQYdvo8ljvrXoHnfHhbW1oTw4sQ22VlI6
+jpiN9hFRIgIreeB6BXnE0kwmeVJITv4/uE6GRvwV++KRB6qgfTS62zCsEcL5LeQV
+OUMEwWjHeGYJZdNXL1rZnjjeyACCZwp1rS0oHz3DfIk5uLrZAWHq4QvA4iKPIfoJ
+jWMti1urdYdQMsaprhmZbhWL0frQD8ABzTRlqw1CjaeQUNTTGR9jKKPw5qDIqqB0
+/g1XltVm2f+VYFB3go3IXhL+9kvqQmppV6o5zOABxo7DmL60mNWjykcL1u7XFN9+
+5DmFJvQe7Xs=
+=XK/5
+-----END PGP SIGNATURE-----
+
+--=-I+N28rWhA5od6jajIGrF--
+
