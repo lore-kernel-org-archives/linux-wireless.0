@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43929 "EHLO ciao.gmane.org"
+Received: from mga03.intel.com ([143.182.124.21]:20947 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205AbYAMIpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 03:45:47 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JDyTQ-0002Wj-TC
-	for linux-wireless@vger.kernel.org; Sun, 13 Jan 2008 08:45:44 +0000
-Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 08:45:44 +0000
-Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 08:45:44 +0000
-To: linux-wireless@vger.kernel.org
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: [rt2x00] rt2500pci massive speed problems
-Date: Sun, 13 Jan 2008 09:45:38 +0100
-Message-ID: <fmcj3j$88a$1@ger.gmane.org> (sfid-20080113_084550_621628_56D8BEC6)
-References: <fma7v9$cn7$1@ger.gmane.org> <200801121305.16205.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-In-Reply-To: <200801121305.16205.IvDoorn@gmail.com>
+	id S1758612AbYALMww convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2008 07:52:52 -0500
+MIME-Version: 1.0
+Subject: RE: [RFC PATCH 07/10] mac80211: A-MPDU Tx change tx_status to      support Block Ack data
+Date: Sat, 12 Jan 2008 14:37:22 +0200
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB0450EA38@hasmsx411.ger.corp.intel.com> (sfid-20080112_125300_637471_E1628CF7)
+In-Reply-To: <49299.::ffff:91.5.126.126.1200138845.squirrel@secure.sipsolutions.net>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>    <11999857502772-git-send-email-ron.rindjunsky@intel.com>    <1200070609.3861.208.camel@johannes.berg>    <1ba2fa240801120343v2e60acc8kc56469106cf56df1@mail.gmail.com> <49299.::ffff:91.5.126.126.1200138845.squirrel@secure.sipsolutions.net>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Tomas Winkler" <tomasw@gmail.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<flamingice@sourmilk.net>, "Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn schrieb:
->> Linux 2.6.24-rc7 (pulled from linux-2.6 git today):
->> The speed is about 20KB/s, which is obviously _much_ slower than the
->> older version above.
->
-> Set the rate to 54Mbs instead of auto, other people reported that that should help.
 
-I tested the 2.6.24 case again.
 
-It seems that the rate detection is indeed a problem, as "auto" sets the
-rate down to 1Mbs sometimes. Setting it to 54 improves it slightly, but
-I still only get about 150KB/s download, as opposed to over 1MB/s with
-the legacy driver.
+>>> Broadcom hardware is able to give intermediate status notifications,
+>>> would there be any use in those?
+>>
+>> Can you explain?
+
+> Actually, I don't really know what the microcode there provides. I
+guess
+> it tells you something like "I sent this frame, no TX errors occurred"
+or
+> so...
+
+> Johannes
+
+>From what you wrote, I would also guess that these notifications
+indicate that the Tx itself was OK, as we have the same mechanism. Yet,
+Block Ack handling is a must if we want good rate scaling during A-MPDU,
+so the driver will have to communicate this data to the rate scaling
+module with no connection to HW conformations.
+
+Ron
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
