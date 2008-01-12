@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:35604 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559AbYA0RZs (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:56976 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874AbYALMrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2008 12:25:48 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1428003rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jan 2008 09:25:47 -0800 (PST)
-Message-ID: <c85cb4470801270925g49203959l7fd7b35f472d9e73@mail.gmail.com> (sfid-20080127_172550_566081_C9EA53C5)
-Date: Sun, 27 Jan 2008 19:25:47 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
+	Sat, 12 Jan 2008 07:47:31 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2390414wah.23
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2008 04:47:30 -0800 (PST)
+Message-ID: <1ba2fa240801120447l6b8475c3secff77ccb203852a@mail.gmail.com> (sfid-20080112_124734_087491_31B2F665)
+Date: Sat, 12 Jan 2008 14:47:29 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 03/12] mac80211: A-MPDU Tx adding basic functionality
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1201167281.3454.65.camel@johannes.berg>
+Subject: Re: [RFC PATCH 07/10] mac80211: A-MPDU Tx change tx_status to support Block Ack data
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, yi.zhu@intel.com
+In-Reply-To: <-2543242200241674408@unknownmsgid>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163393182-git-send-email-ron.rindjunsky@intel.com>
-	 <1201167281.3454.65.camel@johannes.berg>
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+	 <11999857502772-git-send-email-ron.rindjunsky@intel.com>
+	 <1200070609.3861.208.camel@johannes.berg>
+	 <1ba2fa240801120343v2e60acc8kc56469106cf56df1@mail.gmail.com>
+	 <-2543242200241674408@unknownmsgid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +     /* Will put all the packets in the new SW queue */
-> > +     /* ieee80211_requeue(local, ieee802_1d_to_ac[tid]); */
-> > +     spin_unlock_bh(&local->mdev->queue_lock);
-> > +
-> > +     /* We have most probably almost emptied the legacy queue */
-> > +     /* ieee80211_wake_queue(local_to_hw(local), ieee802_1d_to_ac[tid]); */
+> > This actually represents Block Ack frame. This is bitmap of received
+> > and failed frames in the aggregation.
 >
->
-> Can't you re-order the patches instead? Or, if it simply doesn't work,
-> I'd much prefer them to go into the tree as a single patch. (You also
-> introduced leading whitespace in the patches removing the comment marks)
->
+> Ok so each bit just represents "this frame of the block ack was received"?
 
-No problems, i'll make patches 0003 and 0006 consequent, but i think
-it is better they will stay a part for better reading, as they touch
-different parts in the code, and patch 0003 is big enough as it is.
-I'll remove the whitespaces.
+I would rather word it as  'the 'frame of this aggregation was received/acked.'
 
-> johannes
+> Might be worth elaborating the comment a bit.
+
+Absolutely
+
+> >> Broadcom hardware is able to give intermediate status notifications,
+> >> would there be any use in those?
+> >
+> > Can you explain?
 >
->
+> Actually, I don't really know what the microcode there provides. I guess
+> it tells you something like "I sent this frame, no TX errors occurred" or
+> so...
+
+Is this response to aggregation or just general response to TX?
+
+Thanks
+Tomas
