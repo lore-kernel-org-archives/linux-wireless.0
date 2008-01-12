@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3727 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752543AbYA1SdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 13:33:11 -0500
-Date: Mon, 28 Jan 2008 13:06:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: Advice regarding mac80211 bug
-Message-ID: <20080128180612.GE5835@tuxdriver.com> (sfid-20080128_183316_316583_1C1A3B2A)
-References: <479A858F.9030601@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48016 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756255AbYALSYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2008 13:24:09 -0500
+Message-ID: <478905B9.3080004@hauke-m.de> (sfid-20080112_182431_151424_5CA8C021)
+Date: Sat, 12 Jan 2008 19:23:53 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <479A858F.9030601@lwfinger.net>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8187 rate control doesn't work
+References: <477F9890.5050107@hauke-m.de>	<43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>	<47824D25.5090005@hauke-m.de>	<43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>	<4787F03E.6080605@hauke-m.de>	<4788D24E.30805@hauke-m.de> <20080112162121.2fc2f507@morte>
+In-Reply-To: <20080112162121.2fc2f507@morte>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2008 at 05:57:51PM -0700, Larry Finger wrote:
+I have tried wireless-2.6 and I have the same problem. If the rate goes
+over 11M no TCP/IP traffic goes through the wireless connecting. If rate
+is set to auto and the rate control algorithm changes it to something
+less than 11M TCP/IP traffic goes through, but if it is more than 11M no
+TCP/IP traffic goes through the wireless link.
 
-> Now that 2.6.24 has been released, this bug will be propagating into mainline in 2.6.25-rcX and many
-> more systems may crash as a result. My question is as follows: Should I submit the band-aid patch
-> now while still looking for a better solution, or wait?
+with "iwconfig wlan0 rate 11M" everything works.
 
-Sorry I didn't get back to you sooner.  I think you handled it fine.
+--
+Hauke Mehrtens
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Stefano Brivio wrote:
+> On Sat, 12 Jan 2008 15:44:30 +0100
+> Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> 
+>> I have tested kernel 2.6.24-rc7-git4 with the build in rtl8187 module
+>> and I have the same problem.
+> 
+> Could you please try the wireless-2.6 kernel tree? I think it's fixed
+> there. Details on how to download that can be found here:
+> http://linuxwireless.org/en/developers/Documentation/git-guide
+> 
+> 
+> --
+> Ciao
+> Stefano
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
