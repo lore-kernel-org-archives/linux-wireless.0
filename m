@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37650 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbYAXOsQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:48:16 -0500
-Subject: Re: [PATCH 2/3] ath5k: use SWBA to detect IBSS HW merges
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <bruno@thinktube.com>
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20080119091821.31251.5098.stgit@one> (sfid-20080119_091818_265508_ECFA4777)
-References: <20080119091759.31251.60264.stgit@one>
-	 <20080119091821.31251.5098.stgit@one>
-	 (sfid-20080119_091818_265508_ECFA4777)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fUQxh0pV+3mfFWnglchq"
-Date: Thu, 24 Jan 2008 10:18:15 +0100
-Message-Id: <1201166295.3454.52.camel@johannes.berg> (sfid-20080124_144840_153383_29049144)
+Received: from mfe1.polimi.it ([131.175.12.23]:40811 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754755AbYALTdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2008 14:33:36 -0500
+Date: Sat, 12 Jan 2008 20:28:54 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8187 rate control doesn't work
+Message-ID: <20080112202854.2c24ba19@morte> (sfid-20080112_193343_297057_27A1905C)
+In-Reply-To: <478905B9.3080004@hauke-m.de>
+References: <477F9890.5050107@hauke-m.de>
+	<43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
+	<47824D25.5090005@hauke-m.de>
+	<43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
+	<4787F03E.6080605@hauke-m.de>
+	<4788D24E.30805@hauke-m.de>
+	<20080112162121.2fc2f507@morte>
+	<478905B9.3080004@hauke-m.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 12 Jan 2008 19:23:53 +0100
+Hauke Mehrtens <hauke@hauke-m.de> wrote:
 
---=-fUQxh0pV+3mfFWnglchq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I have tried wireless-2.6 and I have the same problem. If the rate goes
+> over 11M no TCP/IP traffic goes through the wireless connecting. If rate
+> is set to auto and the rate control algorithm changes it to something
+> less than 11M TCP/IP traffic goes through, but if it is more than 11M no
+> TCP/IP traffic goes through the wireless link.
+
+And this is a problem if the rate control algorithm often sets the rate to
+more than 11M even if connection is unreliable at that rate. Does this
+actually happen? Are you currently using 'pid'?
+
+Also, it would be fine to have a dump of the PID events. In order to get
+this, you need to:
+- build a kernel with debugfs enabled;
+- mount debugfs (mount -t debugfs foo /mnt/debug)
+
+Then, before testing:
+cat /mnt/debug/ieee80211/phy0/stations/*/rc_pid_events > events_dump
+
+You can even make a graph out of that, with a python script which Mattias
+posted on this list some time ago, but a dump would be just fine.
 
 
-On Sat, 2008-01-19 at 18:18 +0900, Bruno Randolf wrote:
-
-> time und check if a HW merge (automatic TSF update) has happened on every
-> received beacon with the same BSSID.
-
-I don't know who is smoking what (I suspect Atheros folks...), but
-calling a TSF adoption a "merge" is pretty out of line IMHO when you
-also describe some non-standard BSSID changes as "merge".
-
-johannes
-
---=-fUQxh0pV+3mfFWnglchq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5hX1qVg1VMiehFYAQJ1RxAArfOIrTSbV9ol/4NKFSAzvPkTh7Ha44pA
-R31tEbqR2fKMvgOTdLZtZot+YRyNVvv1KnqXMl6/w6hPOWHg2aDfLgFhu5kClG69
-FIhCKwnDqrES4j+zP0blRWuj1KbqiQ2JaGtcvwC8VhGuORuLLEMx5ygtWiqA2MIK
-WE7MWfZnrHAhPjGh57rX5Ww+GPRSUvB81uOPBxIeUs7oCQ4hJ1R4drBBjKXNlB5e
-9d6rYrT+cffA5IHyK7+zqMLxTI7M/ns+YTocsxouAiXhvuJfN6G2JCJJm7w5ADvE
-O0ho5jpZP5TSDfmH/TY/pO6yAeBRLwfYYhYKl7rU6gcOh6UZYGEBgAdHP+QrybjY
-B/+gOdx0ozMZ5aQ2UfJJkoC2lcGkqe7RwWgGPNrjJVwWw502lSbgfWjIHAYNg70g
-+i8FSyVep7oQwjf4gwbBEWA8lPw/GR8syIIMvqfjSJfXyzqywnEwZ3Ed3/7B7Ll9
-E/0+S3I+7AcgQymGeBHppINYlzk1nY5xke/njlAbQgrV7BscWXl0OEKLoUdNwgeL
-Q3KYvZwNqlhe8/NK9S1JPuiNySJW8ok93Ldsm++8Ie2R1KND6lqbfc4YzoXYu9uj
-0AMS0IvDg5hKsvJiwASmKVTlA3wTddMSkZSyqoIs4hf2dvy3SN538+cj9etJ9XH4
-vhc1Iy0PiBQ=
-=pdB/
------END PGP SIGNATURE-----
-
---=-fUQxh0pV+3mfFWnglchq--
-
+--
+Ciao
+Stefano
