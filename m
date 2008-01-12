@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:35854 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750743AbYAHXSV (ORCPT
+Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:55397 "EHLO
+	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbYALCpV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 18:18:21 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so16078wah.23
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2008 15:18:20 -0800 (PST)
-Message-ID: <1ba2fa240801081518h2ec5f43exe3878d532456348a@mail.gmail.com> (sfid-20080108_231837_866028_621B5623)
-Date: Wed, 9 Jan 2008 01:18:19 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200801082102.16682.mb@bu3sch.de>
+	Fri, 11 Jan 2008 21:45:21 -0500
+Date: Fri, 11 Jan 2008 18:44:00 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: channel utilisation short/long hdr?
+Message-ID: <20080112024400.GC12245@jm.kir.nu> (sfid-20080112_024528_430822_67790986)
+References: <1199922658.3861.40.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200712290942.37396.chris2553@googlemail.com>
-	 <1199812976.6762.7.camel@johannes.berg>
-	 <1ba2fa240801081143y52e92c62o8ee2c3e701df7919@mail.gmail.com>
-	 <200801082102.16682.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1199922658.3861.40.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 8, 2008 10:02 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 08 January 2008 20:43:53 Tomas Winkler wrote:
-> > On Jan 8, 2008 7:22 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > >
-> > > On Tue, 2008-01-08 at 18:09 +0100, Johannes Berg wrote:
-> > > > > I didn't test the copy solution yet but in 11n rates I see as a show
-> > > > > stopper. All 11n packets are QoS packets.
-> > > >
-> > > > Really, go fix your firmware.
-> > >
-> >
-> > I don't think it is really broken.  The packet it self is aligned. I'm
-> > not sure who has to be responsible for payload alignment you may have
-> > 10 other protocols packed into it,  each with variable length
-> > unaligned header.
->
-> Yeah sure. You can move data around in the kernel and waste CPU,
-> or you can be clever and let the NIC firmware do it. Whatever you want
-> at intel. It's up to you. ;)
+On Thu, Jan 10, 2008 at 12:50:58AM +0100, Johannes Berg wrote:
+> What's the meaning of these defines?
+> 
+> #define CHAN_UTIL_HDR_LONG (202 * CHAN_UTIL_PER_USEC)
+> #define CHAN_UTIL_HDR_SHORT (40 * CHAN_UTIL_PER_USEC)
+> 
+> I can't figure out what the values 202 and 40 are.
 
-You are twisting my answer please read it again.
-Frankly  I will try to fix it in FW but if not I rather fail on 2
-platforms  then making 11n useless on 4 others.
-Maybe we should ask some company to fix ther CPU to support unaligned
-access. Or ask the guys that 'saved' two bytes in QoS field to change
-the spec. Same goes for designers of 4965 that never dreamed someone
-will stick it to SPARC machine. And I can bet the same goes for other
-wireless HW companies.
+Hmm.. I thought I had filtered out the channel use estimation code from
+the original release since I did not see much use for this and the
+values were not exactly valid in many cases.. ;-). 
 
-Cheers, please don't replay to me  I''m really going to try fix it :)
+This code is almost five years old and maybe not so surprisingly, I
+don't remember the exact details anymore.. Since these are use as
+"hdrtime", I would assume they were derived using following calculation:
 
-Tomas
+CHAN_UTIL_HDR_LONG: assume 802.11b with long preamble:
+aSIFSTime (10 usec) + aPreambleLength (144 usec) + aPLCPHeaderLength (48
+usec) = 202 usec
 
+CHAN_UTIL_HDR_SHORT: assume OFDM:
 
-> --
-> Greetings Michael.
->
+aSIFSTime (+ signal ext in case of 802.11g; 16 usec) + preamble (16
+usec) + signal (4 usec) = 36 usec; add one symbol time (4 usec) for
+some reason (or a sign of someone not knowing how to add small
+numbers together.. ;-), I don't remember anymore and cannot figure out
+this without wasting way too much time..)
+
+> And probably related, what does it mean for a bitrate to be an "ERP
+> rate"? Does that just mean it's an OFDM bitrate?
+
+That would be any rate using Extended Rate PHY (ERP; 802.11 Clause 19).
+This is not necessarily OFDM (it could also be using PBCC modulation).
+In practice, I would expect the kernel side implementation to use this
+in anything PHY related as ERP-OFDM (i.e., it may not support optional
+PBCC rates). The association and beacon/probe processing may be more
+generic to any ERP rate. I don't think ERP-PBCC is very commonly used,
+so this may be more on the theoretical side..
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
