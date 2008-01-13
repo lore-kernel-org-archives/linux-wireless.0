@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:41021 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125AbYAGSoY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 13:44:24 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so8659518fkz.5
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2008 10:44:22 -0800 (PST)
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] mac80211: Add radio led trigger
-Date: Mon, 7 Jan 2008 19:44:04 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from mx1.redhat.com ([66.187.233.31]:38563 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753946AbYAMVVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 16:21:52 -0500
+Subject: [PATCH] b43: rfkill use after free
+From: Eric Paris <eparis@redhat.com>
+To: bcm43xx-dev@lists.berlios.de
+Cc: mb@bu3sch.de, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-References: <200801061410.12862.IvDoorn@gmail.com> <200801061925.44484.IvDoorn@gmail.com> <1ba2fa240801061514m9c58b15g1ed1455e807a28b6@mail.gmail.com>
-In-Reply-To: <1ba2fa240801061514m9c58b15g1ed1455e807a28b6@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801071944.05063.IvDoorn@gmail.com> (sfid-20080107_184431_851609_9A25911D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain
+Date: Sun, 13 Jan 2008 16:20:52 -0500
+Message-Id: <1200259252.4393.22.camel@localhost.localdomain> (sfid-20080113_212156_076915_549D9CA7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 January 2008, Tomas Winkler wrote:
-> On Jan 6, 2008 8:25 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> >
-> > On Sunday 06 January 2008, Tomas Winkler wrote:
-> > > On Jan 6, 2008 3:10 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > > > Some devices have a seperate LED which indicates if the radio is
-> > > > enabled or not. This adds a LED trigger to mac80211 where drivers
-> > > > can hook into when they are interested in radio status changes.
-> > > >
-> > > >
-> > > I wonder how this go together with RF KILL led?
-> >
-> > They would be competing I fear, but not all devices have a rfkill button,
-> > which makes the mac80211 radio led trigger more usefull I think.
-> >
-> What inquires me is  in the following snippet is  would you lit the
-> led if even if rfkill HW switch is on?
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -219,6 +219,7 @@ static int ieee80211_open(struct net_device *dev)
->                if (res)
->                        return res;
->                ieee80211_hw_config(local);
-> +               ieee80211_led_radio(local, 1);
->        }
-> 
+inside b43_rfkill_exit() we call rfkill_unregister() which puts the last
+reference and frees the rfkill struct.  Then just 3 lines later the code
+explicitly calls rfkill_free() on the struct we already freed.  This
+showed up as slub corruption (what should have been 6b was showing up as
+6a) since the rfkill_free had dec'ed the are that should have been the
+use counter.
 
-Good point. I have updated the patch to make it check the radio_enabled
-configuration parameter.
+stop using the already freed rfkill struct.
 
-Ivo
+=============================================================================
+BUG kmalloc-1024 (Not tainted): Poison overwritten
+-----------------------------------------------------------------------------
+
+INFO: 0xf40b89e8-0xf40b89e8. First byte 0x6a instead of 0x6b
+INFO: Allocated in rfkill_allocate+0x1b/0x8b [rfkill] age=231032011 cpu=0 pid=2403
+INFO: Freed in rfkill_release+0xd/0x19 [rfkill] age=366 cpu=0 pid=2403
+INFO: Slab 0xc1b62840 used=6 fp=0xf40b8860 flags=0x400040c3
+INFO: Object 0xf40b8860 @offset=2144 fp=0x00000000
+
+Signed-off-by: Eric Paris <eparis@redhat.com>
+
+---
+
+ drivers/net/wireless/b43/rfkill.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index 98cf70c..a19be53 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -195,6 +195,5 @@ void b43_rfkill_exit(struct b43_wldev *dev)
+ 	rfkill_unregister(rfk->rfkill);
+ 	input_free_polled_device(rfk->poll_dev);
+ 	rfk->poll_dev = NULL;
+-	rfkill_free(rfk->rfkill);
+ 	rfk->rfkill = NULL;
+ }
+
+
