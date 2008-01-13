@@ -1,70 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3845 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751110AbYAPVwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 16:52:45 -0500
-Date: Wed, 16 Jan 2008 16:26:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20080116212645.GD3164@tuxdriver.com> (sfid-20080116_215248_188983_FDFE1759)
+Received: from ug-out-1314.google.com ([66.249.92.169]:36054 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585AbYAMTPE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 14:15:04 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so746687ugc.16
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 11:15:01 -0800 (PST)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: remove unused variable
+Date: Sun, 13 Jan 2008 20:14:53 +0100
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20080113194834.677af663@morte>
+In-Reply-To: <20080113194834.677af663@morte>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801132014.53522.IvDoorn@gmail.com> (sfid-20080113_191509_977686_BBF875C2)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Hi,
 
-One more fix for rfkill in 2.6.24...note that this branch is based
-on 2.6.24-rc8.
+> Remove an unused variable that caused a warning while building. Please note
+> that the pipe obtained there isn't used anywhere else.
 
-Thanks,
+This patch is in wireless-2.6 already...
 
-John
-
----
-
-Individual patches available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
-
----
-
-The following changes since commit cbd9c883696da72b2b1f03f909dbacc04bbf8b58:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc8
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
-
-Eric Paris (1):
-      rfkill: call rfkill_led_trigger_unregister() on error
-
- net/rfkill/rfkill.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 4469a7b..d06d338 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -392,11 +392,14 @@ int rfkill_register(struct rfkill *rfkill)
- 	rfkill_led_trigger_register(rfkill);
- 
- 	error = rfkill_add_switch(rfkill);
--	if (error)
-+	if (error) {
-+		rfkill_led_trigger_unregister(rfkill);
- 		return error;
-+	}
- 
- 	error = device_add(dev);
- 	if (error) {
-+		rfkill_led_trigger_unregister(rfkill);
- 		rfkill_remove_switch(rfkill);
- 		return error;
- 	}
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
