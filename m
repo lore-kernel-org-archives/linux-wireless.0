@@ -1,109 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:19746 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbYAPVuj (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.179]:53684 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298AbYAMPFw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 16:50:39 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so173758wra.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2008 13:50:38 -0800 (PST)
-Message-ID: <43e72e890801161350v3cb44068p15a32b71af26a8d2@mail.gmail.com> (sfid-20080116_215047_869076_382E0E44)
-Date: Wed, 16 Jan 2008 16:50:37 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] nl80211: export frequencies/bitrates
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1200439921.5887.148.camel@johannes.berg>
+	Sun, 13 Jan 2008 10:05:52 -0500
+Date: Sun, 13 Jan 2008 16:05:36 +0100
+From: Mario Guenterberg <mg@havelsoft.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: iwlwifi 1.2.23 vs. kernel 2.6.23.13
+Message-ID: <20080113150536.GA27544@/bin/dnsdomainname> (sfid-20080113_150601_227732_E3F34D28)
+Reply-To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1200439921.5887.148.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 15, 2008 6:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> This is the user-space complement of the cfg80211 frequency/bitrate
-> patch and exports all the information via nl80211.
->
-> It obviously depends on the cfg80211 patch I've posted previously. I've
-> also committed support for printing this information to my 'iw' tool (I
-> still hope somebody will rewrite it some day and I don't have to
-> maintain it... the netlink code in it is really quite wrong too...).
-> Yell at me if I forget to push that changeset
-> (79f99b9ad89494fc81d5c966a32dcebe9742f12c "add wiphy dump capability")
-> to the git tree on git.sipsolutions.net (i.e. you don't see it shortly
-> after this mail.)
->
-> Luis, can you work with these attributes?
 
-I can definitely make use of band and freq. Some comments about bit
-rates below though.
+--sm4nu43k4a2Rpi4c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I think they should be
-> sufficient for SET support as well for the regulatory daemon.
+Hi...
 
-If you mean by "SET support" as for SET support for the regulatory
-domain struct then no, I need a few more. Here's a list of some:
+I has tried to compile the latest stable kernel (2.6.23.13) with the
+iwlwifi-1.2.23 driver and the mac80211-10.0.4 framework. I has
+patched the kernel source tree and when I start menuconfig, it was fine.
+If I started to run make, nothing seems to be wrong, but the iwl3945
+module was not build.
 
-* Power (EIRP, IR and for PtP or PtMP)
-* Antenna gain
-* Environment capabilities (Indoor/outdoor)
-* Modulation capabilities
+I don't know why this module doesn't build anymore!
 
-Of these we can use to export more wiphy capabilities:  power (just
-IR), modulation capabilities, and antenna gain (we could assume ~dBi
-for antenna gain, and let user configure this).
+On kernel 2.6.23.12 with iwlwifi-1.1.19 and mac80211-9.0.3 I has no
+problems like above.
 
-> @@ -280,4 +285,63 @@ enum nl80211_sta_stats {
->         NL80211_STA_STAT_MAX = __NL80211_STA_STAT_AFTER_LAST - 1
->  };
->
-> +/**
-> + * enum nl80211_band_attr - band attributes
-> + * @__NL80211_BAND_ATTR_INVALID: attribute number 0 is reserved
-> + * @NL80211_BAND_ATTR_FREQS: supported frequencies in this band,
-> + *     an array of nested frequency attributes
-> + * @NL80211_BAND_ATTR_RATES: supported bitrates in this band,
-> + *     an array of nested bitrate attributes
-> + */
-> +enum nl80211_band_attr {
-> +       __NL80211_BAND_ATTR_INVALID,
-> +       NL80211_BAND_ATTR_FREQS,
-> +       NL80211_BAND_ATTR_RATES,
+regards
+Mario
 
-Hmm -- not sure if rates should be an attribute of the band. In terms
-of IEEE-802.11 I would think we could add to the band IEEE-802.11
-"modes" (a, b, g or n), and each mode can have a set of modulations
-and each modulation a set of rates. This is from the wiphy device
-capability point of view. From the regulatory point of view I broke
-things down a bit differently -- a band can have set of subbands and a
-subband can have a set of possible modulations (flags). This is
-because regulatory laws usually speak about frequency ranges and on
-these ranges you usually have the same set of power/antenna
-restrictions. One thing we'll have to think about later is channel
-usage for 802.11n, haven't started toying with that yet in terms of
-regulatory restrictions but I think it may just be the list of
-channels (center of freqs) which can be used at the same time.
+--=20
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS/CM d- s++: a+ C++++>$ UBL*++++$ P++ L+++ E--- W+++ N+ o-- K- w O- M-
+V-- PS++ PE++ Y PGP+++ t--- 5 X++++ R++ tv- b+++ DI D++++  G++ e* h----
+r+++ y++++
+------END GEEK CODE BLOCK------
 
-Should we have an nl80211_wiphy_band_attr and an
-nl80211_reg_band_attr? Or should we try to come up with just one which
-would work and make sense for both device capability and regulatory
-structure definition?
+--sm4nu43k4a2Rpi4c
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Just for reference my old patch which dealt with the regulatory
-structure definition can be found here:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-http://kernel.org/pub/linux/kernel/people/mcgrof/v2-regdomain-patches/0003-PATCH-Wireless-add-IEEE-802.11-regualtory-domain.patch
+iQIVAwUBR4oovzUZahlMISn3AQJTQw//Q0GeS2NI1Y9DrZWTiaQP7i3cr9mNyGoI
+ZBYSBNqPsDT2Tz4Kai3YNbmcXrXvK+YTlGmJIWAWttCFCT+Zv+W1J01NmSGz1gGn
+nI/uOaRjs2xkcxGsHDp16L0bm4q0Te1KuA0uXpEgPjpkXsIVr8VoGjmyFpBNmkTk
+9Iic/39jMVd3EvlUenP8SbfxFjZVyC7eFNk8krE8ryyQw82t9I6RXKYu40zGHVYF
+NF/hPbJ4HsKI7PPFmPDPSg++txwsnGcJsPmqmr1ZwNCxb7wkLf8I65SPRcdEuHC8
+P2Mgwj12ghM/1NoByx6tbkwrFxXn2d4fXw9hyryo+NucEMr9e8LpqW4Aa2kpThMy
+29lTS49JBERHznLqbOUnBjN1Ex0FTp/bY/IxhUionzam/wjA+5577KducQQRl4jg
+kW9mOWcrPTVEWJS9jTyWekQuFI7okRztKniOcc/MiMwCsrHNluCvjJsovGFoorli
+ysrGchP4NPc6H8iSNd01QoOlm6bM5T18f4Ij8+YReawcUpnUCwWyF0SaaFpF06Uu
+dQn/YHn21pcOFHLq+ew6Xovs+BcH1UEEq2c8vjkHBKfnlrvhr6cR+GQLwrsPY12g
+eDbbJ6Uxmcq3ufx0EMltuToFxCwZuGDNlepD6lzrdM+It4vQvZBKlo6hH1y5Bqcm
+g3UM0vugIiI=
+=+8BK
+-----END PGP SIGNATURE-----
 
-> +
-> +       /* keep last */
-> +       __NL80211_BAND_ATTR_AFTER_LAST,
-> +       NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
-> +};
-> +
-> +/**
-> + * enum nl80211_frequency_attr - frequency attributes
-> + * @NL80211_FREQUENCY_ATTR_FREQ: Frequency in MHz
-
-Is @NL80211_FREQUENCY_ATTR_CENTER_FREQ too long? If so then can we
-specify that its used for the center of freq in the kdoc comment?
-
-  Luis
+--sm4nu43k4a2Rpi4c--
