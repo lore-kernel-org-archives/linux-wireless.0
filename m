@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:11103 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbYABTND (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:60466 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754183AbYAMV3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 14:13:03 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so6272658fkz.5
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2008 11:13:01 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Wed, 2 Jan 2008 20:12:52 +0100
-Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org
-References: <200712290942.37396.chris2553@googlemail.com> <200712291614.55732.IvDoorn@gmail.com> <1199261473.4172.58.camel@johannes.berg>
-In-Reply-To: <1199261473.4172.58.camel@johannes.berg>
+	Sun, 13 Jan 2008 16:29:47 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Eric Paris <eparis@redhat.com>
+Subject: Re: [PATCH] b43: rfkill use after free
+Date: Sun, 13 Jan 2008 22:28:27 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <1200259252.4393.22.camel@localhost.localdomain>
+In-Reply-To: <1200259252.4393.22.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200801022012.52287.IvDoorn@gmail.com> (sfid-20080102_191310_144395_8FAB4448)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200801132228.28234.mb@bu3sch.de> (sfid-20080113_213011_363169_4CC115F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> Happy New Year!
-
-You too. :)
-
-> I was out since Saturday just before you sent your 
-> message, sorry for the late reply.
+On Sunday 13 January 2008 22:20:52 Eric Paris wrote:
+> inside b43_rfkill_exit() we call rfkill_unregister() which puts the last
+> reference and frees the rfkill struct.  Then just 3 lines later the code
+> explicitly calls rfkill_free() on the struct we already freed.  This
+> showed up as slub corruption (what should have been 6b was showing up as
+> 6a) since the rfkill_free had dec'ed the are that should have been the
+> use counter.
 > 
-> > 	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
-> > 	if (header_size % 4 == 2) {
-> > 		/*
-> > 		 * Move entire frame 2 bytes to the front.
-> > 		 */
-> > 		skb_push(entry->skb, 2);
-> > 		memmove(entry->skb->data, entry->skb->data + 2,
-> > 			entry->skb->len - 2);
-> > 	}
+> stop using the already freed rfkill struct.
 > 
-> That doesn't really look right, I'd think the skb will be two bytes too
-> long after this.
+> =============================================================================
+> BUG kmalloc-1024 (Not tainted): Poison overwritten
+> -----------------------------------------------------------------------------
+> 
+> INFO: 0xf40b89e8-0xf40b89e8. First byte 0x6a instead of 0x6b
+> INFO: Allocated in rfkill_allocate+0x1b/0x8b [rfkill] age=231032011 cpu=0 pid=2403
+> INFO: Freed in rfkill_release+0xd/0x19 [rfkill] age=366 cpu=0 pid=2403
+> INFO: Slab 0xc1b62840 used=6 fp=0xf40b8860 flags=0x400040c3
+> INFO: Object 0xf40b8860 @offset=2144 fp=0x00000000
+> 
+> Signed-off-by: Eric Paris <eparis@redhat.com>
+> 
+> ---
+> 
+>  drivers/net/wireless/b43/rfkill.c |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+> index 98cf70c..a19be53 100644
+> --- a/drivers/net/wireless/b43/rfkill.c
+> +++ b/drivers/net/wireless/b43/rfkill.c
+> @@ -195,6 +195,5 @@ void b43_rfkill_exit(struct b43_wldev *dev)
+>  	rfkill_unregister(rfk->rfkill);
+>  	input_free_polled_device(rfk->poll_dev);
+>  	rfk->poll_dev = NULL;
+> -	rfkill_free(rfk->rfkill);
+>  	rfk->rfkill = NULL;
+>  }
+> 
+> 
+> 
+> 
 
-Yeah, fixed this in rt2x00.git :)
+NACK.
+Better patch available from Stefano.
 
-> It's probably more efficient to decide where to copy 
-> the frame and do the realignment while you're copying it anyway rather
-> than doing a copy and then a memmove.
->
-> I guess you should also try talk to Ralink to get firmware to do it
-> (where possible), it's probably not too hard to insert padding before
-> the frame.
-
-Well the problem is a bit bigger than this, the bug is reported very rarely,
-so I can't say for sure which drivers are affected by this. But since most
-Ralink chipsets look alike, I think the safest assumption is that all are
-affected.
-
-rt2400pci, rt2500pci and rt2500usb don't have firmware, for rt61pci and
-rt73usb there is, but looking at how the TX and RX registers are working
-I *assume* the firmware isn't doing much in this area. (My personal
-guess for the firmware is that it only handles the hardware encryption
-and perhaps beaconing & virtual interfaces)
-Additionally firmware for rt61 and rt73 have been discontinued,
-all their work is currently going to rt2860 and rt2870. (Porting these to
-rt2x00 has already begun, but I haven't arrived at the header alignment yet)
-
-For PCI drivers I could indeed optimize the code by making the memcpy
-perform the operation on the 4 byte aligned code. But for this I need
-to check what is better, RX directly into a skbuff and use memmove
-or RX into DMA and use memcpy to a skbuff.
-But for USB this is not possible, since it directly performs the RX into
-the skbuff already, so I either have to change that or perform memmove anyway.
-
-> If you absolutely can't get the hardware to do it and would otherwise do
-> DMA right into the skb we should try to evaluate the performance hit on
-> platforms where unaligned access *is* possible to be able to balance it
-> against the performance hit caused by the memmove(). Ultimately, though,
-> I value correctness on all platforms over performance on some, hence the
-> warning when unaligned packets are handed up to mac80211.
-
-Overall correctness sounds as the best solution to me too.
-
-Ivo
-
+-- 
+Greetings Michael.
