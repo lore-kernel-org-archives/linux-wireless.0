@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:43633 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbYAMNNn (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:42831 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbYAMUKB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 08:13:43 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1857356fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 05:13:41 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Initialize vif pointer
-Date: Sun, 13 Jan 2008 14:13:33 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200801131402.26165.IvDoorn@gmail.com> <1200229679.5887.3.camel@johannes.berg>
-In-Reply-To: <1200229679.5887.3.camel@johannes.berg>
+	Sun, 13 Jan 2008 15:10:01 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Add boardflags_hi field to the sprom data structure
+Date: Sun, 13 Jan 2008 21:08:24 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801131413.33372.IvDoorn@gmail.com> (sfid-20080113_131347_167284_52C9B2C0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200801132108.24556.mb@bu3sch.de> (sfid-20080113_201014_858733_8DD11795)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 13 January 2008, Johannes Berg wrote:
-> 
-> On Sun, 2008-01-13 at 14:02 +0100, Ivo van Doorn wrote:
-> > Before calling update_beacon() mac80211 must
-> > initialize the control.vif pointer so it can
-> > be used by the driver to determine which
-> > interface is trying to send the beacon.
-> 
-> Good catch, thanks Ivo. I'd prefer if it was set a few lines lower
-> though where all the other control members are initialised. Mind
-> respinning? Feel free to add
+Add boardflags-high.
 
-Not a problem, I just discovered a second location where the
-vif is uninitialized for beaconing so I was preparing a second patch already. :)
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> 
-> > ---
-> > 
-> > diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> > index 4f5d5c6..8a35fed 100644
-> > --- a/net/mac80211/ieee80211_sta.c
-> > +++ b/net/mac80211/ieee80211_sta.c
-> > @@ -2536,6 +2536,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
-> >  		}
-> >  
-> >  		memset(&control, 0, sizeof(control));
-> > +		control.vif = &sdata->vif;
-> >  		rate_control_get_rate(dev, local->oper_hw_mode, skb, &ratesel);
-> >  		if (!ratesel.rate) {
-> >  			printk(KERN_DEBUG "%s: Failed to determine TX rate "
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+---
 
+For 2.6.25
 
+Index: wireless-2.6/drivers/ssb/pci.c
+===================================================================
+--- wireless-2.6.orig/drivers/ssb/pci.c	2008-01-09 16:59:33.000000000 +0100
++++ wireless-2.6/drivers/ssb/pci.c	2008-01-13 21:01:14.000000000 +0100
+@@ -374,12 +374,14 @@ static void sprom_extract_r123(struct ss
+ 	     SSB_SPROM1_MAXPWR_A_SHIFT);
+ 	SPEX(maxpwr_bg, SSB_SPROM1_MAXPWR, SSB_SPROM1_MAXPWR_BG, 0);
+ 	SPEX(itssi_a, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_A,
+ 	     SSB_SPROM1_ITSSI_A_SHIFT);
+ 	SPEX(itssi_bg, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_BG, 0);
+ 	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
++	if (out->revision >= 2)
++		SPEX(boardflags_hi, SSB_SPROM2_BFLHI, 0xFFFF, 0);
+ 
+ 	/* Extract the antenna gain values. */
+ 	gain = r123_extract_antgain(out->revision, in,
+ 				    SSB_SPROM1_AGAIN_BG,
+ 				    SSB_SPROM1_AGAIN_BG_SHIFT);
+ 	out->antenna_gain.ghz24.a0 = gain;
+@@ -415,12 +417,13 @@ static void sprom_extract_r4(struct ssb_
+ 	}
+ 	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
+ 	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
+ 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
+ 	SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
+ 	SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
++	SPEX(boardflags_hi, SSB_SPROM4_BFLHI, 0xFFFF, 0);
+ 	SPEX(ant_available_a, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_A,
+ 	     SSB_SPROM4_ANTAVAIL_A_SHIFT);
+ 	SPEX(ant_available_bg, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_BG,
+ 	     SSB_SPROM4_ANTAVAIL_BG_SHIFT);
+ 	SPEX(maxpwr_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_MAXP_BG_MASK, 0);
+ 	SPEX(itssi_bg, SSB_SPROM4_MAXP_BG, SSB_SPROM4_ITSSI_BG,
+Index: wireless-2.6/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-2.6.orig/include/linux/ssb/ssb.h	2008-01-09 16:59:33.000000000 +0100
++++ wireless-2.6/include/linux/ssb/ssb.h	2008-01-13 21:00:39.000000000 +0100
+@@ -40,12 +40,13 @@ struct ssb_sprom {
+ 	u8 gpio3;		/* GPIO pin 3 */
+ 	u16 maxpwr_a;		/* A-PHY Amplifier Max Power (in dBm Q5.2) */
+ 	u16 maxpwr_bg;		/* B/G-PHY Amplifier Max Power (in dBm Q5.2) */
+ 	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
+ 	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
+ 	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
++	u16 boardflags_hi;	/* Boardflags (high 16 bits) */
+ 
+ 	/* Antenna gain values for up to 4 antennas
+ 	 * on each band. Values in dBm/4 (Q5.2). Negative gain means the
+ 	 * loss in the connectors is bigger than the gain. */
+ 	struct {
+ 		struct {
