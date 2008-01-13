@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3203 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752297AbYAVPCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 10:02:00 -0500
-Date: Tue, 22 Jan 2008 09:54:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-	(2008-01-21)
-Message-ID: <20080122145432.GB3206@tuxdriver.com> (sfid-20080122_150205_025841_B98D790A)
-References: <20080121202835.GA3065@tuxdriver.com> <200801220856.55024.hs4233@mail.mn-solutions.de> <20080122125400.596ccbeb@morte> <20080122145126.GA3206@tuxdriver.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:22788 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbYAMNCf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 08:02:35 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1854425fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 05:02:33 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: Initialize vif pointer
+Date: Sun, 13 Jan 2008 14:02:26 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sf.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080122145126.GA3206@tuxdriver.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801131402.26165.IvDoorn@gmail.com> (sfid-20080113_130244_390201_5373C434)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 22, 2008 at 09:51:26AM -0500, John W. Linville wrote:
-> On Tue, Jan 22, 2008 at 12:54:00PM +0100, Stefano Brivio wrote:
-> > On Tue, 22 Jan 2008 08:56:54 +0100
-> > Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-> > 
-> > > > Holger Schurig (5):
-> > > >       libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08'
-> > > 
-> > > This patch was originally from Marc Pignat <marc.pignat@hevs.ch>. 
-> > > Should I have made an "Author: " line into the patch then I 
-> > > re-wrote the patch for wireless-2.6/everything ?
-> > 
-> > In that case, you should add a "From:" line.
-> 
-> Yes, sorry for any mixup.  If forwarding a patch authored by someone
-> else then please add:
-> 
-> From: Patch Author <patch.author@email.net>
-> 
-> ...as the first line of the message.  Or state that someone else is
-> the author clearly in the email.
+Before calling update_beacon() mac80211 must
+initialize the control.vif pointer so it can
+be used by the driver to determine which
+interface is trying to send the beacon.
 
-I found the original patch in my records.  Looking at it now I can
-see what was intended, but I guess it wasn't clear enough for me to
-see then.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
 
-If you'll try to follow the "From: " convention above I'll try to
-watch more carefully for anomalies like this...deal? :-)
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 4f5d5c6..8a35fed 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2536,6 +2536,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 		}
+ 
+ 		memset(&control, 0, sizeof(control));
++		control.vif = &sdata->vif;
+ 		rate_control_get_rate(dev, local->oper_hw_mode, skb, &ratesel);
+ 		if (!ratesel.rate) {
+ 			printk(KERN_DEBUG "%s: Failed to determine TX rate "
