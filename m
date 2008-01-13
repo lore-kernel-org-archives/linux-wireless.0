@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25896 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:38564 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751804AbYAUSIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 13:08:32 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: fix possible read attempt on ucode that is not available
-Date: Mon, 21 Jan 2008 10:08:31 -0800
-Message-Id: <1200938911-31332-1-git-send-email-reinette.chatre@intel.com> (sfid-20080121_180838_268809_55562B81)
+	id S1753967AbYAMVVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 16:21:53 -0500
+Subject: [PATCH] rfkill - rfkill_register() doesn't call
+	rfkill_led_trigger_unregister() on error
+From: Eric Paris <eparis@redhat.com>
+To: bcm43xx-dev@lists.berlios.de
+Cc: mb@bu3sch.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Sun, 13 Jan 2008 16:20:56 -0500
+Message-Id: <1200259256.4393.24.camel@localhost.localdomain> (sfid-20080113_212157_066027_DBF7EFE5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a NULL pointer dereference that can occur when the
-ucode is not loaded at the time __iwl_up is called.
+Code inspection turned up that error cases in rfkill_register() do not
+call rfkill_led_trigger_unregister() even though we have already
+registered.
 
-The problem was reported at http://kerneloops.org/raw.php?rawid=2765&msgid=
+Signed-off-by: Eric Paris <eparis@redhat.com>
 
-The patch is against 2.6.24-rc8. Is it possible to get this fix into
-2.6.24?
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++++
- 2 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1a6b0e0..0b3ec7e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6342,6 +6342,11 @@ static int __iwl_up(struct iwl_priv *priv)
- 		return 0;
- 	}
+ net/rfkill/rfkill.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/fs/ext3/inode.c b/fs/ext3/inode.c
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 4469a7b..d06d338 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -392,11 +392,14 @@ int rfkill_register(struct rfkill *rfkill)
+ 	rfkill_led_trigger_register(rfkill);
  
-+	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
-+		IWL_ERROR("ucode not available for device bringup\n");
-+		return -EIO;
+ 	error = rfkill_add_switch(rfkill);
+-	if (error)
++	if (error) {
++		rfkill_led_trigger_unregister(rfkill);
+ 		return error;
 +	}
-+
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
  
- 	rc = iwl_hw_nic_init(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 6cd57c2..15a45f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6698,6 +6698,11 @@ static int __iwl_up(struct iwl_priv *priv)
- 		return 0;
+ 	error = device_add(dev);
+ 	if (error) {
++		rfkill_led_trigger_unregister(rfkill);
+ 		rfkill_remove_switch(rfkill);
+ 		return error;
  	}
- 
-+	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
-+		IWL_ERROR("ucode not available for device bringup\n");
-+		return -EIO;
-+	}
-+
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
- 
- 	rc = iwl_hw_nic_init(priv);
--- 
-1.5.3.4
+
 
