@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out0.tiscali.nl ([195.241.79.175]:51432 "EHLO
-	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754356AbYA3ATp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 19:19:45 -0500
-Message-ID: <479FC29C.103@tiscali.nl> (sfid-20080130_001952_434169_7ED3509E)
-Date: Wed, 30 Jan 2008 01:19:40 +0100
-From: Roel Kluin <12o3l@tiscali.nl>
-MIME-Version: 1.0
-To: flamingice@sourmilk.net
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] [wireless/adm8211.h] logical/bitor typo
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:4198 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752443AbYAMQ3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 11:29:39 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 2/2] mac80211: A-MPDU Rx remove stop_rx_ba_session warning print
+Date: Sun, 13 Jan 2008 18:25:43 +0200
+Message-Id: <12002415431203-git-send-email-ron.rindjunsky@intel.com> (sfid-20080113_162942_952574_3BDB212B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-logical/bitor typo
+This patch removes a warning print from ieee80211_sta_stop_rx_ba_session
+in case the tid is inactive when interface goes down.
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
-diff --git a/drivers/net/wireless/adm8211.h b/drivers/net/wireless/adm8211.h
-index ef326fe..55ac768 100644
---- a/drivers/net/wireless/adm8211.h
-+++ b/drivers/net/wireless/adm8211.h
-@@ -266,7 +266,7 @@ do {								\
- #define ADM8211_SYNCTL_CS1	(1 << 28)
- #define ADM8211_SYNCTL_CAL	(1 << 27)
- #define ADM8211_SYNCTL_SELCAL	(1 << 26)
--#define ADM8211_SYNCTL_RFtype	((1 << 24) || (1 << 23) || (1 << 22))
-+#define ADM8211_SYNCTL_RFtype	((1 << 24) | (1 << 23) | (1 << 22))
- #define ADM8211_SYNCTL_RFMD	(1 << 22)
- #define ADM8211_SYNCTL_GENERAL	(0x7 << 22)
- /* SYNCTL 21:0 Data (Si4126: 18-bit data, 4-bit address) */
+ net/mac80211/ieee80211_sta.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 866eb80..bb73aac 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1215,9 +1215,6 @@ void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *ra, u16 tid,
+ 	if (sta->ampdu_mlme.tid_rx[tid].state
+ 				!= HT_AGG_STATE_OPERATIONAL) {
+ 		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
+-		if (net_ratelimit())
+-			printk(KERN_DEBUG "rx BA session requested to stop on "
+-				"inactive tid %d\n", tid);
+ 		sta_info_put(sta);
+ 		return;
+ 	}
+-- 
+1.5.3.7
+
