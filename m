@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:46168 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991AbYATKRG (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:2770 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbYAMXE3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2008 05:17:06 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2329547pyb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 02:17:05 -0800 (PST)
-Message-ID: <43e72e890801200217i7a7e5349uebf56d42c63cf48e@mail.gmail.com> (sfid-20080120_101711_327215_5879C925)
-Date: Sun, 20 Jan 2008 05:17:04 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Michael Wu" <flamingice@sourmilk.net>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Ulrich Kunitz" <kune@deine-taler.de>,
-	"Daniel Drake" <dsd@gentoo.org>
-In-Reply-To: <20080118125252.6455.41047.stgit@one>
+	Sun, 13 Jan 2008 18:04:29 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2028601fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 15:04:28 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Subject: Antenna software diversity
+Date: Mon, 14 Jan 2008 00:04:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125252.6455.41047.stgit@one>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801140004.21251.IvDoorn@gmail.com> (sfid-20080113_230434_465886_74A40A41)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Johill and Michael as they are maintainers of mac80211 and they
-need to review this. Please add them on further mac80211 patches.
+Hi,
 
-Note to driver authors: zd1211rw, rt2x00 drivers and adm8211 will need
-to set mactime if they want IBSS merge to work as this functionality
-would be added with this. I believe all other drivers set it, but
-didn't do a thorough grep.
+In rt2x00 I have made an implementation for antenna software diversity
+since not all Ralink hardware supports hardware diversity (aka, almost
+all Ralink hardware which set the default antenna to diversity imply
+software diversity).
 
-On Jan 18, 2008 7:52 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+However I would like to know if this is something should remain inside
+the driver, or if it should be moved into mac80211. Possibly integrated
+into the rate selection module, or otherwise as a seperate module which
+could allow the user to select a prefered antenna selection method similar
+as to how he can select the prefered rate algorithm.
 
-> +
-> +       /* check if we need to merge IBSS */
-> +       if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
-> +           !local->sta_sw_scanning && !local->sta_hw_scanning &&
-> +           mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
-> +           memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0) {
-> +#ifdef CONFIG_MAC80211_IBSS_DEBUG
-> +               static unsigned long last_tsf_debug;
-> +#endif
-> +               if (rx_status->flag & RX_FLAG_TSFT)
-> +                       mactime = rx_status->mactime;
-> +               else {
-> +                       mactime = -1LLU;
-> +                       printk(KERN_WARNING "%s: IBSS mode needs mactime for "
-> +                               "beacons\n", dev->name);
+The current implementation in rt2x00 looks a bit like this:
 
-Does this merit a WARN_ON() ? This essentially will prevent IBSS
-merges for drivers that haven't set mactime yet.
+Once per second the link tuner will run.
+The link tuner checks if software diversity is active for either TX or RX
+or both antennas.
+Determine the current average rssi, and the rssi from the previous period.
+If the difference between the old and new average rssi is greater than 5
+configure device to swap antenna. And raise the rssi sample flag.
+After another link tuning period, evaluate sample results and determine
+if the antennas should be swapped or not.
 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 6cc1e7e..5617e17 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1609,7 +1609,10 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
->         case IEEE80211_IF_TYPE_IBSS:
->                 if (!bssid)
->                         return 0;
-> -               if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
-> +               if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT &&
-> +                   (rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
+The actions don't really sound hardware dependant, based on the rssi
+mac80211 should be able to determine if the antenna's should be swapped
+or not. All that is required is the driver indicating to mac80211 that it should
+perform software diversity when required...
 
-Since we are letting all beacons through how about adding a check for
-ssid on ieee80211_rx_bss_info()?
+In mac80211 this would mean that the antenna_sel should probably become
+an enum looking like this:
 
-(memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0)
+enum antenna_sel {
+	ANTENNA_SEL_DEFAULT,
+	ANTENNA_SEL_A,
+	ANTENNA_SEL_B,
+	ANTENNA_SEL_DIVERSITY,
+};
 
-Just not sure exactly we'd check for it yet.
+I am not really a fan of the ANTENNA_SEL_DEFAULT, but this is already present
+in the current mac80211 implementation. So to remove that, we could use some
+method for the driver to let the default antenna known to mac80211, probably
+through an extra field in ieee80211_hw perhaps.
 
-> +                       return 1;
-> +               else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
->                         if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
->                                 return 0;
->                         rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
->
->
+The ANTENNA_SEL_DIVERSITY would in this case be hardware diversity unless
+the driver has indicated that software diversity is in action, through a flag in
+ieee80211_hw.
 
-  Luis
+Ivo
