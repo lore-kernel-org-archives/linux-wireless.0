@@ -1,73 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58870 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38454 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762249AbYARUvn (ORCPT
+	with ESMTP id S1754236AbYAMXNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 15:51:43 -0500
-Subject: RE: [PATCH 04/12] iwlwifi: document scan command
+	Sun, 13 Jan 2008 18:13:52 -0500
+Subject: Re: Antenna software diversity
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF001746541@orsmsx413.amr.corp.intel.com>
-References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
-	 <1200361585-31801-2-git-send-email-reinette.chatre@intel.com>
-	 <1200361585-31801-3-git-send-email-reinette.chatre@intel.com>
-	 <1200361585-31801-4-git-send-email-reinette.chatre@intel.com>
-	 <1200361585-31801-5-git-send-email-reinette.chatre@intel.com>
-	 (sfid-20080115_022705_457944_D9860755) <1200441772.5887.167.camel@johannes.berg>
-	 <4220499A1B034C4FA93B547BA01E1FF001746541@orsmsx413.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YayrZdR++bU8INBQgSzU"
-Date: Fri, 18 Jan 2008 21:39:42 +0100
-Message-Id: <1200688782.5716.38.camel@johannes.berg> (sfid-20080118_205147_469540_2E600DEB)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200801140004.21251.IvDoorn@gmail.com> (sfid-20080113_230434_465886_74A40A41)
+References: <200801140004.21251.IvDoorn@gmail.com>
+	 (sfid-20080113_230434_465886_74A40A41)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KH60t6lTLD8iG4APbds7"
+Date: Mon, 14 Jan 2008 00:13:33 +0100
+Message-Id: <1200266014.5887.33.camel@johannes.berg> (sfid-20080113_231355_943495_95F83C5D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-YayrZdR++bU8INBQgSzU
+--=-KH60t6lTLD8iG4APbds7
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+Hi Ivo,
 
-> > iwl4965 will transmit a probe request and go to the next=20
-> > channel before hostapd sends the probe response, iwl4965=20
-> > still sees the response, but the b43 card never sees the ACK=20
-> > because it's receiver isn't quite as good as the iwl4965 receiver.
+> However I would like to know if this is something should remain inside
+> the driver, or if it should be moved into mac80211. Possibly integrated
+> into the rate selection module, or otherwise as a seperate module which
+> could allow the user to select a prefered antenna selection method simila=
+r
+> as to how he can select the prefered rate algorithm.
+
+I guess it would be useful for other drivers inside mac80211. Not sure
+whether it should be in the rate control algorithm or not.
+
+If it is in the rate control algorithm it could keep track of antenna
+per-station to optimise the link to the station (obviously the station
+still has to be in range for both antennae when it sends a frame, but
+one could in theory achieve better data rates to the station with the
+better antenna). On the other hand, I guess nobody would want to
+implement such a thing anyway.
+
+I think a basic implementation within mac80211 would be sufficient if
+any other drivers need it.
+
+> In mac80211 this would mean that the antenna_sel should probably become
+> an enum looking like this:
 >=20
-> I'm not sure of the history of the dwell time values, but it's an
-> attempt to balance reliability of scan vs. speed of scan.  The active
-> dwell times are, of course, more speed-aggressive than the passive ones.
-> Would you be willing to experiment with your setup, and try some
-> different values?
+> enum antenna_sel {
+> 	ANTENNA_SEL_DEFAULT,
+> 	ANTENNA_SEL_A,
+> 	ANTENNA_SEL_B,
+> 	ANTENNA_SEL_DIVERSITY,
+> };
+>=20
+> I am not really a fan of the ANTENNA_SEL_DEFAULT, but this is already pre=
+sent
+> in the current mac80211 implementation. So to remove that, we could use s=
+ome
+> method for the driver to let the default antenna known to mac80211, proba=
+bly
+> through an extra field in ieee80211_hw perhaps.
 
-Sure, can do that next week, do I just change the defines at the top of
-the file?
+Sounds like a good plan, that way we could maybe even report what
+antenna is used to userland.
+
+> The ANTENNA_SEL_DIVERSITY would in this case be hardware diversity unless
+> the driver has indicated that software diversity is in action, through a =
+flag in
+> ieee80211_hw.
+
+Of course, with 11n all that is moot. Or does 11n hw use diversity for
+legacy frames?
 
 johannes
 
---=-YayrZdR++bU8INBQgSzU
+--=-KH60t6lTLD8iG4APbds7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR5EOjaVg1VMiehFYAQLekg/+KYYi4wJZMDrKGGkz3dhlyW+FeQrylACg
-aFFxl/LHXUHHuyM85RnMtXsTN8octr5zHTQNEfoz+0cNqDe0qSnuxKz8oC+s+4qt
-8p519VrYkWjNHy7McMmHMYuuXWA4BGDWJNsbqTJpXnps4aC6r+WHdkKkpOHg9SHC
-juhAxG3cWVjYcHxVVaSY2gfEnxeo5CixnvseZo5Ot3Cna/ZqXoejb7+CFBvQOSEB
-xv05ttgSN7Cg7Bik/2qa1G79gyL82b1NlG4dqIvwLJ2yUT9n70Dg3bKTO3CT52Bk
-KPmyHbGqIwUKfc9MYxSMc8/Lyo7AwQnN9jIlvoMmPxnGIqHUFBVIcz3dNPrVHS31
-q3eDwQWYelhtjfYWJvogsANSMsnb719INZmrt2P58cD2L4Dy0hAmoJD2dzhU+R0V
-9dvJ6aiq4NIs5oMiaT8k/4xfnncg+dRH0OxyEx+1pVffXdXsO+xmedXdZiBR7bwb
-MXMhpmJ0M4RZDoM2pUZWhHLGVNdilEuSEJacgXuiS+YpSxCYhRTO6fzIkIIMGmpk
-cVhoPDVcutjhWrEYpcG8G1boTHQ2+6zCccMNOfuBHhT6paaA+UHd0lX96ocbwtge
-0vinta2tsb3kMLUrw8q33ZZLW9ozfvDHHsRa9AmpGEhpS+c+0FDq8qU04IuhQn8q
-5GfU4dtFwOE=
-=uOh8
+iQIVAwUAR4qbHKVg1VMiehFYAQIuzA/+MB6ALWqqZyY3uEgFIaJGIR0Tucyddruq
+GMIFI4/a++f1m0RZli0dC6D3gIIus1z7eyC0kSmN/qzdAFHZSTgk8SD07TNuNKD/
+jUJ81F0XYrFTVe0+d00OohFnsXzzR9BNmX4Ywc/+Fe4GHerbk/DFTi3UwiKZwqw3
+6KSx9MwPJaifjfBGyAt4+PQ1i9CRhVXmWbh3cg4e+MWYqc7qH/+UzEQF1dOQ41wc
+VgjCZp4o1HhBWZdZcZrsYJC4dFMDXaYIDvFCsfA4904TxMFeqVqalEwdLDcdL2jY
+LcimM0+1cQbf44xteRVMMeePc2Zj6MQ5keEOzI0g8X6L6GuQ+64oWsxqzNT/OZxe
+UcqHJjga6go7XYxODRt90WO6bPfrNxOGxy+0Ie3mcenofh5+vtUd2YHZgiibiEat
+gHBXmGLwsDezgz3GctzuhE5x4r7dEEP8lauRT0+p6Te9Wx+r+LmPB/lNOZ2hfCxO
+k+Y+++mdqFUs7FynGJYoDzDN2sHou2b2T9de789AxoFZ+dbOkehGpovtj90No7W0
+/WoBptSxVtmO/yWXYb+PEYqbX0yiWtFZzq+naJ3K8ON7aSwhDnekd+1J5YF7CJae
+RjBie5gTsGFWPw9JojNhehAf9qDVkEDUWtjlM+frhdDXru1F6HafXhEvsopRaXqY
+kV+/H1IFRX4=
+=VA5F
 -----END PGP SIGNATURE-----
 
---=-YayrZdR++bU8INBQgSzU--
+--=-KH60t6lTLD8iG4APbds7--
 
