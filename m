@@ -1,110 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from antispam.upcomillas.es ([130.206.70.245]:36810 "EHLO
-	antispam.upcomillas.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752962AbYAKLCn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52212 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754023AbYAMVoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 06:02:43 -0500
-Received: from antispam.upcomillas.es (kurosawa [127.0.0.1])
-	by localhost.upcomillas.es (Postfix) with ESMTP id 64E1D224C71
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 12:02:41 +0100 (CET)
-Received: from mail1.upco.es (loghost [130.206.70.227])
-	by antispam.upcomillas.es (Postfix) with ESMTP id 4040C224C4F
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 12:02:41 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by mail1.upco.es (Postfix) with ESMTP id 358A843C79
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 12:02:41 +0100 (CET)
-Received: from mail1.upco.es ([127.0.0.1])
-	by localhost (mail1 [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
-	id 22860-05 for <linux-wireless@vger.kernel.org>;
-	Fri, 11 Jan 2008 12:02:41 +0100 (CET)
-Received: from [130.206.69.194] (ic9194.upco.es [130.206.69.194])
-	(using SSLv3 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by mail1.upco.es (smtps) with ESMTP id 1B3C743C71
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 12:02:41 +0100 (CET)
-Subject: Testing ath5k driver
-From: Romano Giannetti <romanol@upcomillas.es>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Date: Fri, 11 Jan 2008 12:02:40 +0100
-Message-Id: <1200049360.12702.14.camel@rukbat> (sfid-20080111_110254_805885_9FB5CAAD)
+	Sun, 13 Jan 2008 16:44:08 -0500
+Subject: Re: [PATCH 2/2] mac80211: A-MPDU Rx remove stop_rx_ba_session
+	warning print
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <12002415431203-git-send-email-ron.rindjunsky@intel.com>
+References: <12002415431203-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Uzd2AXGIC9ZNiuCMViZK"
+Date: Sun, 13 Jan 2008 22:43:41 +0100
+Message-Id: <1200260621.5887.10.camel@johannes.berg> (sfid-20080113_214411_599887_22B817BC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hi all,
-
-I stumbled yesterday on the compat- package and I could not resist to
-test the new drivers on my laptop. (BTW, the link to the download page
-on http://linuxwireless.org/en/users/Drivers/ath5k is wrong).=20
-
-I have a toshiba U305 with a Atheros chipset, marked as AR5BXB63 or
-AR5007EG.
-
-06:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG 802.=
-11 b/g Wireless PCI Express Adapter (rev 01)
-        Subsystem: Askey Computer Corp. Unknown device 7128
-        Flags: fast devsel, IRQ 19
-        Memory at 88200000 (64-bit, non-prefetchable) [size=3D64K]
-        Capabilities: [40] Power Management version 2
-        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Q=
-ueue=3D0/0 Enable-
-        Capabilities: [60] Express Legacy Endpoint IRQ 0
-        Capabilities: [90] MSI-X: Enable- Mask- TabSize=3D1
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-00: 8c 16 1c 00 42 01 10 00 01 00 00 02 10 00 00 00
-10: 04 00 20 88 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 01 50 00 00 4f 14 28 71
-30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 00 00
-
-I have built the yesterday  compat-wireless-2.6.tar.bz2 and after all
-the step I have:=20
-
-[  312.999107] ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 19 (level, lo=
-w) -> IRQ 19
-[  312.999141] PCI: Setting latency timer of device 0000:06:00.0 to 64
-[  312.999351] ath5k_pci 0000:06:00.0: registered as 'phy0'
-[  314.048568] ath5k phy0: failed to resume the MAC Chip
-[  314.048652] ACPI: PCI interrupt for device 0000:06:00.0 disabled
-[  314.048674] ath5k_pci: probe of 0000:06:00.0 failed with error -5
-
-So... just to give you a data point. I am available to test things. The
-wireless works ok[*] with ndiswrapper and XP drivers for AR5008.
-
-Romano
-
-[*] Well, if I do not try to load ath5k modules. After that, and after
-unload it and all of the dependent modules, trying to load ndiswrapper
-again put the laptop in brick mode. But that's another story, I know.=20
+--=-Uzd2AXGIC9ZNiuCMViZK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+On Sun, 2008-01-13 at 18:25 +0200, Ron Rindjunsky wrote:
+> This patch removes a warning print from ieee80211_sta_stop_rx_ba_session
+> in case the tid is inactive when interface goes down.
 
---=20
-Sorry for the disclaimer --- =A1I cannot stop it!
+Thanks.
 
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
---
-La presente comunicaci=F3n tiene car=E1cter confidencial y es para el e=
-xclusivo uso del destinatario indicado en la misma. Si Ud. no es el des=
-tinatario indicado, le informamos que cualquier forma de distribuci=F3n=
-, reproducci=F3n o uso de esta comunicaci=F3n y/o de la informaci=F3n c=
-ontenida en la misma est=E1n estrictamente prohibidos por la ley. Si Ud=
-=2E ha recibido esta comunicaci=F3n por error, por favor, notif=EDquelo=
- inmediatamente al remitente contestando a este mensaje y proceda a con=
-tinuaci=F3n a destruirlo. Gracias por su colaboraci=F3n.
+> ---
+>  net/mac80211/ieee80211_sta.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> index 866eb80..bb73aac 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -1215,9 +1215,6 @@ void ieee80211_sta_stop_rx_ba_session(struct net_de=
+vice *dev, u8 *ra, u16 tid,
+>  	if (sta->ampdu_mlme.tid_rx[tid].state
+>  				!=3D HT_AGG_STATE_OPERATIONAL) {
+>  		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
+> -		if (net_ratelimit())
+> -			printk(KERN_DEBUG "rx BA session requested to stop on "
+> -				"inactive tid %d\n", tid);
+>  		sta_info_put(sta);
+>  		return;
+>  	}
 
-This communication contains confidential information. It is for the exc=
-lusive use of the intended addressee. If you are not the intended addre=
-ssee, please note that any form of distribution, copying or use of this=
- communication or the information in it is strictly prohibited by law. =
-If you have received this communication in error, please immediately no=
-tify the sender by reply e-mail and destroy this message. Thank you for=
- your cooperation.=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-Uzd2AXGIC9ZNiuCMViZK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4qGDKVg1VMiehFYAQLInw/+NmxL8dDmzRnSTgnv1FJB7lqkSQzePOue
+LgKidHm7g8nQNVeD674As1QhqBXeQ4AJAuJH0cHfosW9LIqEPR+E5Oci4aUF1JzW
+DDSp9zjF4aq8hgrpk47Qar2onL9PsvcDGFPLmJjc0wfwO3B73hSnyD/X/lzIxQR/
+Ya+4jiXN+sWWpJ6VeP9JCX14MsG9awXCzqgHAnikSsrjI0pjL4adKw8PE4xnD+4J
+2dUM7xrOKvUl0L1A8JD8MOsUfErD9MirzACkwHe4Ki1uQezksTHZHsYKgWxIZdhL
+jXDW3RO5ynAxwGfVBPuz6nHJn5MKPrhuuDxihY9X+pQzmDtByKjNmCEcz/87zbSQ
+dy1Hf0lF43MbJJVV7iaoTS3U4dZjt2+F6+6JiadduKG5HhpN/sfROXpy7RORm2dC
+MOXu22wVvPAterx/1UW0CpeGxLUfppH/ruXrx7FCn9kqzpS4MqpIGewPGjsiw9UA
+1LFPssCqJjj+PDMwS6bDHifP3ZbZ89qcVlf6BiwIhqo/EXJac3H7o8EOo3eBEgUo
+qxTvdJ9i5t0Yrrqa7ae81MvKFx2Ip5F09vvf1KHRZZw+gIUinSA28lNm4Oej/fn0
+R+XsrgLS13QV0Soo0VbGMM+j/i204SQ8T3Hc2A/fWbEA0c/xIuRpSfMr4dffrtBW
+iKZr+Jg/2qI=
+=HwRe
+-----END PGP SIGNATURE-----
+
+--=-Uzd2AXGIC9ZNiuCMViZK--
+
