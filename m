@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757862AbYAKLjr (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:43633 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbYAMNNn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 06:39:47 -0500
-Subject: Re: [PATCH] mac80211: fix alignment warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1200013371.3861.132.camel@johannes.berg>
-References: <1200013371.3861.132.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PGSD/Hb545RzNtyzZu/i"
-Date: Fri, 11 Jan 2008 02:18:36 +0100
-Message-Id: <1200014316.3861.149.camel@johannes.berg> (sfid-20080111_113955_508476_55003308)
-Mime-Version: 1.0
+	Sun, 13 Jan 2008 08:13:43 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1857356fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 05:13:41 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Initialize vif pointer
+Date: Sun, 13 Jan 2008 14:13:33 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200801131402.26165.IvDoorn@gmail.com> <1200229679.5887.3.camel@johannes.berg>
+In-Reply-To: <1200229679.5887.3.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200801131413.33372.IvDoorn@gmail.com> (sfid-20080113_131347_167284_52C9B2C0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 13 January 2008, Johannes Berg wrote:
+> 
+> On Sun, 2008-01-13 at 14:02 +0100, Ivo van Doorn wrote:
+> > Before calling update_beacon() mac80211 must
+> > initialize the control.vif pointer so it can
+> > be used by the driver to determine which
+> > interface is trying to send the beacon.
+> 
+> Good catch, thanks Ivo. I'd prefer if it was set a few lines lower
+> though where all the other control members are initialised. Mind
+> respinning? Feel free to add
 
---=-PGSD/Hb545RzNtyzZu/i
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not a problem, I just discovered a second location where the
+vif is uninitialized for beaconing so I was preparing a second patch already. :)
 
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> 
+> > ---
+> > 
+> > diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> > index 4f5d5c6..8a35fed 100644
+> > --- a/net/mac80211/ieee80211_sta.c
+> > +++ b/net/mac80211/ieee80211_sta.c
+> > @@ -2536,6 +2536,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+> >  		}
+> >  
+> >  		memset(&control, 0, sizeof(control));
+> > +		control.vif = &sdata->vif;
+> >  		rate_control_get_rate(dev, local->oper_hw_mode, skb, &ratesel);
+> >  		if (!ratesel.rate) {
+> >  			printk(KERN_DEBUG "%s: Failed to determine TX rate "
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
 
-> Hmm. This alignment isn't strictly necessary because we actually copy
-> all the payload within an A-MSDU frame. I think we can get rid of that
-> though if we're a bit more careful what we do with the frame, i.e. if we
-> copy it before passing it back to mac80211 for multicast frames we can
-> optimise the common non-multicast case by using only a clone.
-
-In fact, I'm not sure we can do this. Asking on netdev, I guess we
-shouldn't merge this patch until we know. If we can't give a cloned skb
-to netif_rx() then we don't care at all and don't need to align A-MSDU
-packets at all...
-
-johannes
-
---=-PGSD/Hb545RzNtyzZu/i
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4bD6qVg1VMiehFYAQLWbBAAokEo6SumcPTUpC+whJROs9NU7v8t42TX
-ybNq6vFGU+1fex3TfKfU8IM/huFWj0jodu0k/iMs7RoZ+QuFw4+K/nACKrGa1B0O
-ssADWzcbJMXnHSix2RWHmCLn3Ar0+4Lim+WdbIf5KLXf66kG2V6tXPvDELkmPy2c
-XMVzESvo1ullPevTR0mOm0GA9akyhxzpzlREREEEtKSEV8iFmLdrsn4xmQ8Bq7Rx
-qS7p929ZyU7V8d+4bsRqR7+8BXY+4nvTcg/dtzYvbSckw+SOVIpEO7VtRWMkUIbh
-+IqkdF3nMtC06TCF75+o4PnCS0n0iqOADycSjXMPu7Db2109ZZuDof+wBIzMJjm0
-F7s/q4nNsoDkdzrjA5csFbqPch0eWizOU5X6oW0rJhSspau/PcWfRwsq0WFP2FJe
-kCjFYlz0SS46AnneUKD5ZTvVIq9RUbFd25s6p7X2lTdZ8SFCrK5AQC7wouxatFyM
-YE6UTd85MdEcNIf5963LvJj/sgaJK933hL7pk+/ZeK1KFyhvXoW/jaH+SQ6lzCQt
-YTCZh1FM6WFW/sawZTw6pVQ/UP6RNgvA+78rlZpqt4VOpcsbyfeHHe4DLqsIuF8q
-IVW1d19LavSpzeQvgsl/4xEpu4hcgdvuoO42bZ0gVEDgdQ9eN14Zdb2vgLyt5ttV
-7Xs5hobMN4w=
-=kCJl
------END PGP SIGNATURE-----
-
---=-PGSD/Hb545RzNtyzZu/i--
 
