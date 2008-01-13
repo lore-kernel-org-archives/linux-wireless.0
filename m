@@ -1,36 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21917 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbYA3HyU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 02:54:20 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH, take 3] libertas: clean up association debug messages
-Date: Wed, 30 Jan 2008 08:54:38 +0100
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
-References: <200710151255.56358.hs4233@mail.mn-solutions.de> <1201665912.28377.38.camel@shinybook.infradead.org>
-In-Reply-To: <1201665912.28377.38.camel@shinybook.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801300854.38715.hs4233@mail.mn-solutions.de> (sfid-20080130_075425_071959_2DA1C13D)
+Received: from mfe1.polimi.it ([131.175.12.23]:49827 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753069AbYAMRmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2008 12:42:01 -0500
+Date: Sun, 13 Jan 2008 18:35:52 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH] b43legacy: fix use-after-free rfkill bug
+Message-ID: <20080113183552.17885131@morte> (sfid-20080113_174205_804708_AFE2C853)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm still working through cleanups in the driver; I see you're
-> sending changes directly upstream. Since upstream doesn't use
-> git normally, I suspect that's going to cause lots of pain
-> when it comes to merging. Any chance we could stick to the
-> libertas-2.6.git tree?
+Fix rfkill code which caused a use-after-free bug. Thanks to David
+Woodhouse for spotting this out.
 
-I could.
+Cc: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/rfkill.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/rfkill.c
+@@ -141,8 +141,11 @@ void b43legacy_rfkill_init(struct b43leg
+ 	rfk->rfkill->user_claim_unsupported = 1;
+ 
+ 	rfk->poll_dev = input_allocate_polled_device();
+-	if (!rfk->poll_dev)
+-		goto err_free_rfk;
++	if (!rfk->poll_dev) {
++		rfkill_free(rfk->rfkill);
++		goto err_freed_rfk;
++	}
++
+ 	rfk->poll_dev->private = dev;
+ 	rfk->poll_dev->poll = b43legacy_rfkill_poll;
+ 	rfk->poll_dev->poll_interval = 1000; /* msecs */
+@@ -178,8 +181,7 @@ err_unreg_rfk:
+ err_free_polldev:
+ 	input_free_polled_device(rfk->poll_dev);
+ 	rfk->poll_dev = NULL;
+-err_free_rfk:
+-	rfkill_free(rfk->rfkill);
++err_freed_rfk:
+ 	rfk->rfkill = NULL;
+ out_error:
+ 	rfk->registered = 0;
+@@ -198,7 +200,6 @@ void b43legacy_rfkill_exit(struct b43leg
+ 	rfkill_unregister(rfk->rfkill);
+ 	input_free_polled_device(rfk->poll_dev);
+ 	rfk->poll_dev = NULL;
+-	rfkill_free(rfk->rfkill);
+ 	rfk->rfkill = NULL;
+ }
 
-I suddenly saw no activity anymore in libertas-2.6, just later I 
-heard that you were in Mongolia. So I posted my stuff as before.
 
-John, I saw that you pushed one bugfix patch upstream, but not 
-the others. Please don't apply them, I'll put all ACKed patches 
-into the libertas-2.6 tree instead.
+--
+Ciao
+Stefano
