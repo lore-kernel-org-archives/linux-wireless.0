@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59964 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbYAAAwY convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43372 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672AbYANKfk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2007 19:52:24 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-Subject: Re: [PATCH 1/2] ssb: add 'ssb_pcihost_set_power_state' function
-Date: Tue, 1 Jan 2008 01:50:47 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <200801010116.46190.mboton@gmail.com>
-In-Reply-To: <200801010116.46190.mboton@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200801010150.47787.mb@bu3sch.de> (sfid-20080101_005230_189848_622FCCDF)
+	Mon, 14 Jan 2008 05:35:40 -0500
+Subject: Re: [RFC PATCH 03/10] mac80211: A-MPDU Tx adding basic
+	functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <rindjon@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <c85cb4470801140126g3e32cfebjacfe4c7d3ef22032@mail.gmail.com> (sfid-20080114_092608_303300_4AB6CAEF)
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+	 <11999857493027-git-send-email-ron.rindjunsky@intel.com>
+	 <1200070308.3861.203.camel@johannes.berg>
+	 <c85cb4470801130718x8069c4fi2eff95a21a11a2f3@mail.gmail.com>
+	 <1200261102.5887.19.camel@johannes.berg>
+	 <c85cb4470801140126g3e32cfebjacfe4c7d3ef22032@mail.gmail.com>
+	 (sfid-20080114_092608_303300_4AB6CAEF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o1BU9E8IRoPcfU8ba7O8"
+Date: Mon, 14 Jan 2008 11:35:12 +0100
+Message-Id: <1200306912.5887.40.camel@johannes.berg> (sfid-20080114_103545_100425_D64E71F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 January 2008 01:16:46 Miguel Bot=C3=B3n wrote:
-> This patch adds the 'ssb_pcihost_set_power_state' function.
+
+--=-o1BU9E8IRoPcfU8ba7O8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> to go into A-MPDU active state we need 3 conditions:
+> - addBA request was sent (HT_ADDBA_REQUESTED_MSK)
+> - addBA response arrived (HT_ADDBA_RECEIVED_MSK)
+> - all legacy frames drained up to ssn (HT_ADDBA_DRV_READY_MSK)
 >=20
-> This function allows us to set the power state of a PCI device
-> (for example b44 ethernet device).=20
->=20
-> Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
+> their combination gives us HT_AGG_STATE_OPERATIONAL. so when we go to
+> HT_AGG_STATE_IDLE automatically we reset all the above.
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Ah, I see, sorry. I was looking for a flag unsetting.
 
->=20
-> diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-> index a21ab29..aa70fd0 100644
-> --- a/include/linux/ssb/ssb.h
-> +++ b/include/linux/ssb/ssb.h
-> @@ -349,6 +349,13 @@ static inline void ssb_pcihost_unregister(struct=
- pci_driver *driver)
->  {
->  	pci_unregister_driver(driver);
->  }
-> +
-> +static inline
-> +void ssb_pcihost_set_power_state(struct ssb_device *sdev, pci_power_=
-t state)
-> +{
-> +	if (sdev->bus->bustype =3D=3D SSB_BUSTYPE_PCI)
-> +		pci_set_power_state(sdev->bus->host_pci, state);
-> +}
->  #endif /* CONFIG_SSB_PCIHOST */
-> =20
-> =20
->=20
+johannes
 
+--=-o1BU9E8IRoPcfU8ba7O8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUAR4s636Vg1VMiehFYAQJJQhAAwyuSeKP2vBzzE6wzF8cZYMN69oHFRv2Q
+UTx5RaPQKXwIoZmFNwwmo+rDD+4PFIjNXBun6qmzGOW/QW68XKOKz0n1J+d92kXj
+RkKErwdu8ma7ziwXbLgALq4KaIhpENG9acX2iXauQj9CNzgNrpeaXfo8IPgdcMfa
+AfKPAEuY2WOFPSvQFa1JVZaiTLfe/2GOCUjkxejzULTCTcpsF/uZkmvbFlTjBog0
+DCYGa87L88/vo94wZM7kbjjI4TcloQ7DUKRlz3naDUfRoxfUatC/zhd1GdNMY/T4
+fpWTbH5/rph/ctrEIZE5fKbamLt69BjjNxuQ9DV9pu+qdu22Rrbsm/nbufa1pMQD
+IF77WnNK+DxLJ/8Z9gXlSd6PME33+kjuMcdsDlVSjNaqQdzE3mxk2sNEfITbSCtA
+E4CKrc47elXksx6rU7uBvSa6tnOsA+pwvS/c8ruoFArqqgckN68SxkExpD/M30HE
+lpKW4I9QIngGOpvNsjOCHhj4uX8nT+Esz3N/jpkMi39HT8uXcsVfGxyUI+ksQHT3
+U5aRoc/efFl4HdcFZ355gpJ1toiyT0YNlrd6lc/8+4tmQmGUBIduZrAvrs7kZGLu
+h49Py+cZwlRk5OWNvURRdy3w1Ky8Q280yucz34MJ1//zcKKGAZDVEPKYdfZ2HM5d
+e5+dgvWnd5w=
+=4Qeq
+-----END PGP SIGNATURE-----
+
+--=-o1BU9E8IRoPcfU8ba7O8--
+
