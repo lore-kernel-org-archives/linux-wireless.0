@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960AbYAXOuk (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:18329 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755296AbYANJZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:50:40 -0500
-Subject: Re: [PATCH 03/12] mac80211: A-MPDU Tx adding basic functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+	Mon, 14 Jan 2008 04:25:47 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2990180pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2008 01:25:46 -0800 (PST)
+Message-ID: <c85cb4470801140125x169067e2v456a4511bee437fb@mail.gmail.com> (sfid-20080114_092601_833374_F3ACEDD1)
+Date: Mon, 14 Jan 2008 11:25:40 +0200
+From: "Ron Rindjunsky" <rindjon@googlemail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH 01/10] mac80211: A-MPDU Tx add session's and low level driver's API
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
 	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12009163393182-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115439_500829_54AD44A6)
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163393182-git-send-email-ron.rindjunsky@intel.com>
-	 (sfid-20080121_115439_500829_54AD44A6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OLkbjUB1VXDrxvqe1EM3"
-Date: Thu, 24 Jan 2008 10:34:40 +0100
-Message-Id: <1201167281.3454.65.camel@johannes.berg> (sfid-20080124_145058_906100_2DC6AA56)
-Mime-Version: 1.0
+In-Reply-To: <1200261492.5887.25.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
+	 <11999857491583-git-send-email-ron.rindjunsky@intel.com>
+	 <1200068953.3861.180.camel@johannes.berg>
+	 <c85cb4470801130717l7b455ea7pa4de50b5be2c0502@mail.gmail.com>
+	 <1200261492.5887.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > > It seems to me that this should be per-virtual interface instead of
+> > > per-hardware? I guess ultimately it won't make a difference because the
+> > > RA will be unique but I think we should still keep it per-vif where it
+> > > makes sense.
+> > >
+> > I can pass only vif in all the API i give, and that's something that i
+> > am not sure about since you introduced vif - generally all functions
+> > can get hw just from having the vif, but still there are plenty of
+> > places in the code that i see hw being passed back and forth. is it
+> > just because API compatibility or because something else i need to
+> > consider?
+>
+> Basically I'm thinking that everything that could in theory be
+> per-interface should be getting a vif. Say you have a multi-BSS AP. I
+> don't think it's really legal for a STA to associate to multiple APs at
+> the same time but want to avoid the code falling over when a STA
+> actually does associate to multiple of our virtual BSSes... Maybe that's
+> just unnecessary.
+>
 
---=-OLkbjUB1VXDrxvqe1EM3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> +	/* Will put all the packets in the new SW queue */
-> +	/* ieee80211_requeue(local, ieee802_1d_to_ac[tid]); */
-> +	spin_unlock_bh(&local->mdev->queue_lock);
-> +
-> +	/* We have most probably almost emptied the legacy queue */
-> +	/* ieee80211_wake_queue(local_to_hw(local), ieee802_1d_to_ac[tid]); */
-
-
-Can't you re-order the patches instead? Or, if it simply doesn't work,
-I'd much prefer them to go into the tree as a single patch. (You also
-introduced leading whitespace in the patches removing the comment marks)
-
-johannes
-
---=-OLkbjUB1VXDrxvqe1EM3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5hbr6Vg1VMiehFYAQJH5A/+JXr64PVSNaVUBFU946gWgSHWDEHNyRSL
-QNNcqtntc7Fty8qxKx2GOD3PJ1yHiLrV2+3uPHdKZmjVpANajNosk4k7RVzZ5LDZ
-OvlnXG4eEbSW5I6RUI1orGi7dOu0q0jYEMJW8H8q1PFzI/5MYCpEOhqT4I9/EWaK
-pfizwHR8OtoZ2SbhTgErdx0Lglhjs8tDoDwMf9Nu0uQLh8/6Ayx0u0ibhby0A87k
-OjuvnEifVT6Gyt1Cbrw9D4c93WhTwv88Rhn3oXFOO7Z8xR7Yxg3MZ8LAcoBT8ifj
-mtn0bSgIe31CzwxcFypZRVTHb0vKXZTIzsHNvpPzMz0BHdzsvX06U9JXSKWUcTnB
-TnhjFybzcApO77mK5v+vE3qMV/ERTveJ/U73a+bTQiEMthlSOmDW8H2s6v5WDz7G
-Rht0trnHUUOZbIX1E+USu/kXCR4Y3tzt/X3Trl66etCTz/Pu3LxwdoLivD78/SjY
-Jrf/+Y38VzATE0biRJJ0Q2523vEKErRBe1JuwB8JkV5XPF5Kx7A30EbLce2RuAw8
-a2dcSDmM9vx4oP5y4HBa+aRX9lIPLDLlKZQTT+9WKF3gVslIVwbTacF9MIdwUxc4
-k0uuQnAkWkR3kzqheHbWZwfCNcSBC37Nlk32njvuq8e4lcq7aa/vXpXE9kUvs/E4
-//G77o1zZyw=
-=Gumj
------END PGP SIGNATURE-----
-
---=-OLkbjUB1VXDrxvqe1EM3--
-
+I am not sure about the necessity of it myself, as once A-MPDU is
+active all traffic for the RA/TID (no matter what interface usese it)
+should be aggregated.
+I will currently leave it this way, and if you see any problem  please
+describe it specifically and i will change it either on this patch or
+on top of it.
