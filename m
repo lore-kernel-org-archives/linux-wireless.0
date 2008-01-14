@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:47341 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbYA1J3B (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:38954 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754560AbYANT0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 04:29:01 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2873154wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2008 01:29:00 -0800 (PST)
-Message-ID: <1ba2fa240801280129g5c9c7b73pdfdb2eb80944ce32@mail.gmail.com> (sfid-20080128_092908_236949_AAEFFC46)
-Date: Mon, 28 Jan 2008 11:29:00 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: mac80211 crash in ieee80211_sta_scan_work
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <479D9B5F.5000304@lwfinger.net>
+	Mon, 14 Jan 2008 14:26:44 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3233455pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2008 11:26:43 -0800 (PST)
+Message-ID: <43e72e890801141126t21480e69wc024c2fdc236af52@mail.gmail.com> (sfid-20080114_192710_025697_BECBEE0E)
+Date: Mon, 14 Jan 2008 14:26:42 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+Subject: Re: rtl8187 rate control doesn't work
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	linux-kernel@vger.kernel.org,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4787F03E.6080605@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <479D9B5F.5000304@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
+References: <477F9890.5050107@hauke-m.de>
+	 <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
+	 <47824D25.5090005@hauke-m.de>
+	 <43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
+	 <4787F03E.6080605@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 28, 2008 11:07 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Johannes,
+On Jan 11, 2008 5:39 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Luis R. Rodriguez wrote:
+> > On Jan 7, 2008 11:02 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> >
+> > Thanks for reporting this, how'd it go with simple rate control
+> > algorithm instead?
 >
-> With the latest wireless-2.6 git tree on my x86_64 system, I am getting a GPF in
-> ieee80211_sta_scan_work. I tracked it down to the following astatement:
->
->                 if (!sband ||
->                     (local->scan_channel_idx >= sband->n_channels &&
->                      local->scan_band >= IEEE80211_NUM_BANDS)) {
->
-> Specifically, it is the "local->scan_channel_idx >= sband->n_channels" part of the if test. When I
-> added test prints of local->scan_channel_idx, local->scan_band, and sband, I got the following:
->
-> mac80211: scan_channel_idx = 0, scan_band = 0, sband = ffffffff882c2f10
-> mac80211: scan_channel_idx = 1, scan_band = 0, sband = ffffffff882c2f10
-> ...
-> ...
-> mac80211: scan_channel_idx = 13, scan_band = 0, sband = ffffffff882c2f10
-> mac80211: scan_channel_idx = 0, scan_band = 2, sband = dead4ead00000001
-> general protection fault: 0000 [1] SMP
->
-> As can be seen, "sband" is some kind of magic number and is an invalid pointer when scan_band is
-> larger than IEEE80211_NUM_BANDS, which causes the GPF.
->
-> With the following patch, it works:
->
-> Index: wireless-2.6/net/mac80211/ieee80211_sta.c
-> ===================================================================
-> --- wireless-2.6.orig/net/mac80211/ieee80211_sta.c
-> +++ wireless-2.6/net/mac80211/ieee80211_sta.c
-> @@ -3237,8 +3237,7 @@ void ieee80211_sta_scan_work(struct work
->                 }
->
->                 if (!sband ||
-> -                   (local->scan_channel_idx >= sband->n_channels &&
-> -                    local->scan_band >= IEEE80211_NUM_BANDS)) {
-> +                    local->scan_band >= IEEE80211_NUM_BANDS) {
->                         ieee80211_scan_completed(local_to_hw(local));
->                         return;
->                 }
->
-> It seems to me that it should be OK to skip the scan_chan_idx >= sband->n_channels part of the test
-> as scan_band won't get to be >= to IEEE80211_NUM_BANDS until all the channels have been tested in
-> the legal bands.
->
-> Larry
+> How do I change from pid to simple rate control algorithm?
 
-There are too many issues with API change patch. I think it is a good
-direction but it's really unstable I think we need to give another
-round before it can be applied.
-Thanks
-Tomas
+In config.mk replace this line:
 
->
+CONFIG_MAC80211_RC_DEFAULT=pid
+
+with:
+
+CONFIG_MAC80211_RC_DEFAULT=simple
+
+although I am planning on changing the config stuff soon.
+
+  Luis
