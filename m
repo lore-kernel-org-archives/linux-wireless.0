@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:1349 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703AbYAAASP convert rfc822-to-8bit (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:52164 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720AbYANSyL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2007 19:18:15 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so2349171ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2007 16:18:14 -0800 (PST)
-To: linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] ssb: add 'ssb_pcihost_set_power_state' function
-Date: Tue, 1 Jan 2008 01:16:46 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mb@bu3sch.de
+	Mon, 14 Jan 2008 13:54:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200801010116.46190.mboton@gmail.com> (sfid-20080101_001837_027675_541C4672)
-From: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: iwlwifi 1.2.23 vs. kernel 2.6.23.13
+Date: Mon, 14 Jan 2008 10:54:09 -0800
+Message-ID: <D936D925018D154694D8A362EEB089200364DE52@orsmsx416.amr.corp.intel.com> (sfid-20080114_185413_302845_D7A796CB)
+In-Reply-To: <20080113150536.GA27544@/bin/dnsdomainname>
+References: <20080113150536.GA27544@/bin/dnsdomainname>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Mario Guenterberg" <mg@havelsoft.com>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the 'ssb_pcihost_set_power_state' function.
+On , Mario Guenterberg [mg@havelsoft.com]  wrote:
 
-This function allows us to set the power state of a PCI device
-(for example b44 ethernet device).=20
+> I has tried to compile the latest stable kernel (2.6.23.13) with the
+> iwlwifi-1.2.23 driver and the mac80211-10.0.4 framework. I has
+> patched the kernel source tree and when I start menuconfig, it
+> was fine.
+> If I started to run make, nothing seems to be wrong, but the iwl3945
+> module was not build. 
 
-Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
+At this point the new mac80211 module should be built. There is no
+iwl3945 in the 2.6.23 kernel so it will not be built as part of this
+(the kernel build) step. After you built mac80211 in the kernel you need
+to follow the installation instructions of iwl3945 to built it as a
+separate module outside the kernel. Details can be found in the INSTALL
+file that came with iwlwifi-1.2.23.
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index a21ab29..aa70fd0 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -349,6 +349,13 @@ static inline void ssb_pcihost_unregister(struct p=
-ci_driver *driver)
- {
- 	pci_unregister_driver(driver);
- }
-+
-+static inline
-+void ssb_pcihost_set_power_state(struct ssb_device *sdev, pci_power_t =
-state)
-+{
-+	if (sdev->bus->bustype =3D=3D SSB_BUSTYPE_PCI)
-+		pci_set_power_state(sdev->bus->host_pci, state);
-+}
- #endif /* CONFIG_SSB_PCIHOST */
-=20
-=20
-
---=20
-	Miguel Bot=C3=B3n
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reinette
