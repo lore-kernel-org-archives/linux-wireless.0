@@ -1,113 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33616 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753956AbYAJRY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:24:28 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 02/10] mac80211: A-MPDU Tx add MLME structures
-Date: Thu, 10 Jan 2008 19:22:14 +0200
-Message-Id: <11999857492094-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172500_326391_F2C9A2AC)
-In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from ic0245.upco.es ([130.206.70.245]:38043 "EHLO
+	antispam.upcomillas.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199AbYANRm5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2008 12:42:57 -0500
+Subject: Re: ath5k 2425 Support
+From: Romano Giannetti <romanol@upcomillas.es>
+To: Mike Moreton <mjvm06@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BAY137-W56510E55AB7D51DDDABF1D5460@phx.gbl>
+References: <BAY137-W56510E55AB7D51DDDABF1D5460@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-15
+Date: Mon, 14 Jan 2008 18:42:52 +0100
+Message-Id: <1200332572.27402.2.camel@pern> (sfid-20080114_174303_727568_C96AD416)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the needed structures to describe the Tx aggregation MLME per STA
-new:
- - struct tid_ampdu_tx: TID aggregation information (Tx)
-changed:
- - struct sta_ampdu_mlme: Tx aggregation information per TID and
-			  dialog token creator were added
- - struct sta_info: tid_to_tx_q added for tid<->tx queue mapping
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/sta_info.h |   32 ++++++++++++++++++++++++++++++--
- 1 files changed, 30 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 96fe3ed..48f25f2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -33,15 +33,36 @@
- 
- #define STA_TID_NUM 16
- #define ADDBA_RESP_INTERVAL HZ
-+#define HT_AGG_MAX_RETRIES		(0x3)
- 
- #define HT_AGG_STATE_INITIATOR_SHIFT	(4)
- 
-+#define HT_ADDBA_REQUESTED_MSK		BIT(0)
-+#define HT_ADDBA_DRV_READY_MSK		BIT(1)
-+#define HT_ADDBA_RECEIVED_MSK		BIT(2)
- #define HT_AGG_STATE_REQ_STOP_BA_MSK	BIT(3)
+On Mon, 2008-01-14 at 16:21 +0000, Mike Moreton wrote:
+> Is anyone working on support for the AR2425 in ath5k yet?
+
+See the thread started by me with subject: Testing ath5k driver on
+=46riday, 11. ;-)=20
+
+HTH
+	Romano=20
+
+--=20
+Sorry for the disclaimer --- =A1I cannot stop it!
+
+
+
+--
+La presente comunicaci=F3n tiene car=E1cter confidencial y es para el e=
+xclusivo uso del destinatario indicado en la misma. Si Ud. no es el des=
+tinatario indicado, le informamos que cualquier forma de distribuci=F3n=
+, reproducci=F3n o uso de esta comunicaci=F3n y/o de la informaci=F3n c=
+ontenida en la misma est=E1n estrictamente prohibidos por la ley. Si Ud=
+=2E ha recibido esta comunicaci=F3n por error, por favor, notif=EDquelo=
+ inmediatamente al remitente contestando a este mensaje y proceda a con=
+tinuaci=F3n a destruirlo. Gracias por su colaboraci=F3n.
+
+This communication contains confidential information. It is for the exc=
+lusive use of the intended addressee. If you are not the intended addre=
+ssee, please note that any form of distribution, copying or use of this=
+ communication or the information in it is strictly prohibited by law. =
+If you have received this communication in error, please immediately no=
+tify the sender by reply e-mail and destroy this message. Thank you for=
+ your cooperation.=20
 -
-+#define HT_AGG_STATE_INITIATOR_MSK      BIT(HT_AGG_STATE_INITIATOR_SHIFT)
- #define HT_AGG_STATE_IDLE		(0x0)
- #define HT_AGG_STATE_OPERATIONAL	(0x7)
- 
- /**
-+ * struct tid_ampdu_tx - TID aggregation information (Tx).
-+ *
-+ * @state: TID's state in session state machine.
-+ * @dialog_token: dialog token for aggregation session
-+ * @ssn: Starting Sequence Number expected to be aggregated.
-+ * @addba_resp_timer: timer for peer's response to addba request
-+ * @addba_req_num: number of times addBA request has been sent.
-+ */
-+struct tid_ampdu_tx {
-+	u8 state;
-+	u8 dialog_token;
-+	u16 ssn;
-+	struct timer_list addba_resp_timer;
-+	u8 addba_req_num;
-+};
-+
-+/**
-  * struct tid_ampdu_rx - TID aggregation information (Rx).
-  *
-  * @state: TID's state in session state machine.
-@@ -69,12 +90,18 @@ struct tid_ampdu_rx {
- /**
-  * struct sta_ampdu_mlme - STA aggregation information.
-  *
-- * @tid_agg_info_rx: aggregation info for Rx per TID
-+ * @tid_rx: aggregation info for Rx per TID
-+ * @tid_tx: aggregation info for Tx per TID
-  * @ampdu_rx: for locking sections in aggregation Rx flow
-+ * @ampdu_tx: for locking sectionsi in aggregation Tx flow
-+ * @dialog_token_allocator: dialog token enumerator for each new session;
-  */
- struct sta_ampdu_mlme {
- 	struct tid_ampdu_rx tid_rx[STA_TID_NUM];
-+	struct tid_ampdu_tx tid_tx[STA_TID_NUM];
- 	spinlock_t ampdu_rx;
-+	spinlock_t ampdu_tx;
-+	u8 dialog_token_allocator;
- };
- 
- struct sta_info {
-@@ -148,6 +175,7 @@ struct sta_info {
- 					     of this STA */
- 	struct sta_ampdu_mlme ampdu_mlme;
- 	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
-+	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
--- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
