@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:15610 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbYAPOqr (ORCPT
+Received: from ppsw-8.csi.cam.ac.uk ([131.111.8.138]:42155 "EHLO
+	ppsw-8.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbYANNdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 09:46:47 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08' message
-Date: Wed, 16 Jan 2008 15:48:44 +0100
-Cc: Marc Pignat <marc.pignat@hevs.ch>, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200801161334.13623.marc.pignat@hevs.ch>
-In-Reply-To: <200801161334.13623.marc.pignat@hevs.ch>
+	Mon, 14 Jan 2008 08:33:25 -0500
+Received: from ssnt2.quns.cam.ac.uk ([131.111.255.37]:50888 helo=neotoaster.lan)
+	by ppsw-8.csi.cam.ac.uk (smtp.hermes.cam.ac.uk [131.111.8.158]:25)
+	with esmtpsa (PLAIN:ssnt2) (TLSv1:DHE-RSA-AES256-SHA:256)
+	id 1JEPRE-0006lt-Se (Exim 4.67) for linux-wireless@vger.kernel.org
+	(return-path <ssnt2@hermes.cam.ac.uk>); Mon, 14 Jan 2008 13:33:16 +0000
+From: Shawn Tan <ssnt2@eng.cam.ac.uk>
+Reply-To: ssnt2@eng.cam.ac.uk
+To: linux-wireless@vger.kernel.org
+Subject: Re: B43 problems
+Date: Mon, 14 Jan 2008 13:33:15 +0000
+References: <200801112059.45467.ssnt2@eng.cam.ac.uk>
+In-Reply-To: <200801112059.45467.ssnt2@eng.cam.ac.uk>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200801161548.44341.hs4233@mail.mn-solutions.de> (sfid-20080116_144652_355376_20D21A4B)
+Message-Id: <200801141333.15740.ssnt2@eng.cam.ac.uk> (sfid-20080114_133329_673362_B31FC531)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Friday 11 January 2008 20:59:45 Shawn Tan wrote:
+> I've just successfully downloaded compat-wireless, compiled and loaded the
+> latest B43 module. I can do iwlist scan and get an IP from my router. I can
+> ping my router. However, the connection only lasts for a few seconds. Then,
+> I need to re-associate again.
 
-> This patch is against 2.6.24-rc8 and has only been tested with
-> the sdio interface, please test it with usb.
+Hi,
 
-The patch should be against wireless-2.6, branch everything. I'm
-adding a revised version:
+Following my previous email, I changed some settings on my OpenWRT router and 
+it seems to work flawlessly now. The error messages are all gone!!
 
+I had to disable the "G-mode protection" in my router. Hope this information 
+helps.
 
-----
+Thanks for the great job in bringing broadcom support to Linux!
 
-netif_rx should be called only from interrupt context. if_cs and if_sdio receive
-packets from other contexts, and thus should call netif_rx_ni.
+cheers.
 
-Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
+-- 
+with metta,
+Shawn Tan
 
-Index: wireless-2.6/drivers/net/wireless/libertas/rx.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/rx.c	2008-01-16 16:45:12.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/rx.c	2008-01-16 16:45:42.000000000 +0100
-@@ -247,7 +247,10 @@ int lbs_process_rxed_packet(struct lbs_p
- 	priv->stats.rx_packets++;
- 
- 	skb->protocol = eth_type_trans(skb, dev);
--	netif_rx(skb);
-+	if (in_interrupt())
-+		netif_rx(skb);
-+	else
-+		netif_rx_ni(skb);
- 
- 	ret = 0;
- done:
+Centre for Advanced Photonics and Electronics
+Department of Engineering, University of Cambridge
+9 JJ Thomson Avenue, Cambridge CB3 0FA, UK.
