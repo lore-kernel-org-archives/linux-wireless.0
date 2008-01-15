@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:48536 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753393AbYAZVrN (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:43402 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247AbYAOT53 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 16:47:13 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH] use is_valid_ether_addr() macro in wireless drivers
-Date: Sat, 26 Jan 2008 22:45:39 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200801262238.18719.deller@gmx.de>
-In-Reply-To: <200801262238.18719.deller@gmx.de>
+	Tue, 15 Jan 2008 14:57:29 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801262245.40184.mb@bu3sch.de> (sfid-20080126_214718_457259_F00214D0)
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] [PATCH 2/5] iwlwifi: iwl3945 synchronize interruptand tasklet for down iwlwifi
+Date: Tue, 15 Jan 2008 11:21:12 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003683D89@orsmsx416.amr.corp.intel.com> (sfid-20080115_195734_480159_43EA732D)
+In-Reply-To: <478B2E92.5090901@gmail.com>
+References: <11998765481610-git-send-email-joonwpark81@gmail.com>	 <D936D925018D154694D8A362EEB08920035CCD70@orsmsx416.amr.corp.intel.com>	 <b25c3fa70801101724he91d934y9db6636c68a32486@mail.gmail.com>	 <D936D925018D154694D8A362EEB0892003602E2D@orsmsx416.amr.corp.intel.com> <b25c3fa70801101838o7a71cc60h1c8b8a71624aeff9@mail.gmail.com> <478B1EBF.8030701@gmail.com> <478B2E92.5090901@gmail.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Joonwoo Park" <joonwpark81@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 January 2008 22:38:18 Helge Deller wrote:
-> use is_valid_ether_addr() macro instead of hand-coded checks for 
-> valid IP address.
-> 
+On Monday, January 14, 2008 1:43 AM, Joonwoo Park  wrote:
 
-> diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-> index 42a36b3..7251e71 100644
-> --- a/drivers/net/wireless/wl3501_cs.c
-> +++ b/drivers/net/wireless/wl3501_cs.c
-> @@ -1577,13 +1577,12 @@ static int wl3501_set_wap(struct net_device *dev, struct iw_request_info *info,
->  			  union iwreq_data *wrqu, char *extra)
->  {
->  	struct wl3501_card *this = netdev_priv(dev);
-> -	static const u8 bcast[ETH_ALEN] = { 255, 255, 255, 255, 255, 255 };
->  	int rc = -EINVAL;
->  
->  	/* FIXME: we support other ARPHRDs...*/
->  	if (wrqu->ap_addr.sa_family != ARPHRD_ETHER)
->  		goto out;
-> -	if (!memcmp(bcast, wrqu->ap_addr.sa_data, ETH_ALEN)) {
-> +	if (!is_valid_ether_addr(wrqu->ap_addr.sa_data)) {
->  		/* FIXME: rescan? */
->  	} else
->  		memcpy(this->bssid, wrqu->ap_addr.sa_data, ETH_ALEN);
+> -static inline void iwl_disable_interrupts(struct iwl_priv *priv)
+> +static inline void __iwl_disable_interrupts(struct iwl_priv *priv) {
+> 	clear_bit(STATUS_INT_ENABLED, &priv->status);
 
-This is a semantical change.
-If the original code is correct, this should be is_broadcast_ether_addr()
+Could the call to iwl_disable_interrupts in iwl_pci_probe be changed to
+__iwl_disable_interrupts? The isr is only activated when the interface
+is brought up so we do not need to do the extra steps (eg.
+synchronize_irq()) during device probe.
 
--- 
-Greetings Michael.
+Reinette
