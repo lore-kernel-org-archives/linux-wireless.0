@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:51760 "EHLO smtp4.pp.htv.fi"
+Received: from mga03.intel.com ([143.182.124.21]:60992 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759584AbYA3UCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 15:02:13 -0500
-Date: Wed, 30 Jan 2008 22:02:47 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	stefano.brivio@polimi.it
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [2.6 patch] make b43_mac_{enable,suspend}() static
-Message-ID: <20080130200247.GA29368@does.not.exist> (sfid-20080130_200235_570200_68B23396)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1754793AbYAOC1A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2008 21:27:00 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 10/12] iwlwifi: Update iwlwifi version stamp to 1.2.23
+Date: Mon, 14 Jan 2008 17:46:23 -0800
+Message-Id: <1200361585-31801-11-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022717_547874_5551DCA4)
+In-Reply-To: <1200361585-31801-10-git-send-email-reinette.chatre@intel.com>
+References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-2-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-3-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-4-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-5-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-6-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-7-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-8-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-9-git-send-email-reinette.chatre@intel.com>
+ <1200361585-31801-10-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43_mac_{enable,suspend}() can now become static.
+From: Zhu Yi <yi.zhu@intel.com>
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/b43/main.c |    4 ++--
- drivers/net/wireless/b43/main.h |    3 ---
- 2 files changed, 2 insertions(+), 5 deletions(-)
-
-e2a91b00d125ed4b60bdf9e37f550aed23d84747 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 88d2c15..360515c 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2042,7 +2042,7 @@ static void b43_gpio_cleanup(struct b43_wldev *dev)
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c834e69..d35c0bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -91,7 +91,7 @@ int iwl3945_param_queues_num = IWL_MAX_NUM_QUEUES; /* def: 8 Tx queues */
+ #define VS
+ #endif
  
- /* http://bcm-specs.sipsolutions.net/EnableMac */
--void b43_mac_enable(struct b43_wldev *dev)
-+static void b43_mac_enable(struct b43_wldev *dev)
- {
- 	dev->mac_suspended--;
- 	B43_WARN_ON(dev->mac_suspended < 0);
-@@ -2066,7 +2066,7 @@ void b43_mac_enable(struct b43_wldev *dev)
- }
+-#define IWLWIFI_VERSION "1.2.22k" VD VS
++#define IWLWIFI_VERSION "1.2.23k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
  
- /* http://bcm-specs.sipsolutions.net/SuspendMAC */
--void b43_mac_suspend(struct b43_wldev *dev)
-+static void b43_mac_suspend(struct b43_wldev *dev)
- {
- 	int i;
- 	u32 tmp;
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index 2d52d9d..4397f49 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -102,9 +102,6 @@ void b43_dummy_transmission(struct b43_wldev *dev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index ca7a175..b300e61 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -90,7 +90,7 @@ int iwl4965_param_amsdu_size_8K;   /* def: enable 8K amsdu size */
+ #define VS
+ #endif
  
- void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
+-#define IWLWIFI_VERSION "1.2.22k" VD VS
++#define IWLWIFI_VERSION "1.2.23k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
  
--void b43_mac_suspend(struct b43_wldev *dev);
--void b43_mac_enable(struct b43_wldev *dev);
--
- void b43_controller_restart(struct b43_wldev *dev, const char *reason);
- 
- #define B43_PS_ENABLED	(1 << 0)	/* Force enable hardware power saving */
+-- 
+1.5.3.4
 
