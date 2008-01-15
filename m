@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web57911.mail.re3.yahoo.com ([68.142.236.104]:48089 "HELO
-	web57911.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752159AbYAYDXj (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:51651 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbYAOAoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 22:23:39 -0500
-Date: Thu, 24 Jan 2008 19:23:38 -0800 (PST)
-From: hong zhang <henryzhang62@yahoo.com>
-Subject: Re: does any wifi driver supports 802.11n for access point?
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1201226946.15917.12.camel@localhost.localdomain>
+	Mon, 14 Jan 2008 19:44:54 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3356462pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2008 16:44:53 -0800 (PST)
+Message-ID: <8e6f94720801141644t5542e676n4cd0a23c4bb30baf@mail.gmail.com> (sfid-20080115_004459_430375_170AEE7C)
+Date: Mon, 14 Jan 2008 19:44:52 -0500
+From: "Will Dyson" <will.dyson@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <20080110154654.GC3109@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-ID: <146972.90137.qm@web57911.mail.re3.yahoo.com> (sfid-20080125_032342_526338_083EEEA0)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200801062337.35904.IvDoorn@gmail.com>
+	 <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com>
+	 <20080110154654.GC3109@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan,
+On Jan 10, 2008 10:46 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Jan 10, 2008 at 06:52:40AM -0500, Will Dyson wrote:
+> > There are also a bunch of antenna selection fixes that never went
+> > upstream. These are required for my card to operate well at rates
+> > greater than 1Mbit, even when fairly close to the AP.
+>
+> Can you identify specific patches?  If so I can evaluate whether they
+> apply easily to 2.6.24 or if they need significant rework.
 
-1. I was told that only iwl4965 and b43 attempt to
-support 802.11n, of which only iwl4965 is functional.
+rt2x00: Rework rt61 antenna selection
+(ca9aaeec2d36dd4a00fea6443c53e935cbfa59ef)
 
-2. Any schedule for 802.11n on mac80211?
-3. Does mac80211 run on atheros chip for access point?
-It seems that mac80211 package only supports station.
+However, it definitely depends on
 
----henry
+rt2x00: Split rt61/rt73 antenna selection into RX and TX antenna
+(9da4cdaefb5e8e2e3be813d94ce7b401e60ff391)
 
---- Dan Williams <dcbw@redhat.com> wrote:
+This patch itself has further dependencies:
+[PATCH] rt2x00: Correctly translate mac80211 antenna setup to rt2x00
+[PATCH] rt2x00: Move quality statistics into seperate structure).
 
-> On Thu, 2008-01-24 at 17:53 -0800, hong zhang wrote:
-> > List,
-> > 
-> > Could anyone please tell me which wifi driver
-> supports
-> > 802.11n for access point?
-> 
-> None yet.  802.11n support is just being added to
-> the mac80211 stack,
-> and driver support will follow.
-> 
-> Dan
-> 
-> 
-> 
+It looks fairly easy to merge around that last quality statistics
+patch. But I am uncertain if it is a good idea. I can try it and post
+the result if you are interested.
 
-
-
-      ____________________________________________________________________________________
-Never miss a thing.  Make Yahoo your home page. 
-http://www.yahoo.com/r/hs
+-- 
+Will Dyson
