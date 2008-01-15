@@ -1,145 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:28480 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756464AbYAFWjw (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44253 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbYAOMPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 17:39:52 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so3071045ugc.16
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 14:39:51 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/12] rt2x00: Always call ieee80211_stop_queue() when return NETDEV_TX_BUSY
-Date: Sun, 6 Jan 2008 23:38:34 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200801062337.35904.IvDoorn@gmail.com>
-In-Reply-To: <200801062337.35904.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801062338.34687.IvDoorn@gmail.com> (sfid-20080106_224007_168817_5412784C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 15 Jan 2008 07:15:08 -0500
+Subject: RE: [PATCH] iwlwifi: fix bad unlock balance
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <D936D925018D154694D8A362EEB089200364DDED@orsmsx416.amr.corp.intel.com>
+References: <1200046964.3861.157.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB089200364DDED@orsmsx416.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/YZP4vNSlZtGuVU4Dk4H"
+Date: Tue, 15 Jan 2008 13:14:39 +0100
+Message-Id: <1200399279.5887.120.camel@johannes.berg> (sfid-20080115_121520_716964_6290219D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently it was possible that ieee80211_stop_queue() was not full while
-NETDEV_TX_BUSY was being reported back. I think that is what causing the WARN_ON().
-This moves all calls to ieee80211_stop_queue() in rt2x00mac.c where it is easier
-to determine if the queue should be halted.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |   17 +++++++++++++----
- drivers/net/wireless/rt2x00/rt2x00pci.c |    8 +-------
- drivers/net/wireless/rt2x00/rt2x00usb.c |    8 +-------
- 3 files changed, 15 insertions(+), 18 deletions(-)
+--=-/YZP4vNSlZtGuVU4Dk4H
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 86b6a33..978cffb 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -84,7 +84,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 */
- 	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags)) {
- 		ieee80211_stop_queues(hw);
--		return 0;
-+		return NETDEV_TX_OK;
- 	}
- 
- 	/*
-@@ -110,15 +110,24 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (!is_rts_frame(frame_control) && !is_cts_frame(frame_control) &&
- 	    (control->flags & (IEEE80211_TXCTL_USE_RTS_CTS |
- 			       IEEE80211_TXCTL_USE_CTS_PROTECT))) {
--		if (rt2x00_ring_free(ring) <= 1)
-+		if (rt2x00_ring_free(ring) <= 1) {
-+			ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 			return NETDEV_TX_BUSY;
-+		}
- 
--		if (rt2x00mac_tx_rts_cts(rt2x00dev, ring, skb, control))
-+		if (rt2x00mac_tx_rts_cts(rt2x00dev, ring, skb, control)) {
-+			ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 			return NETDEV_TX_BUSY;
-+		}
- 	}
- 
--	if (rt2x00dev->ops->lib->write_tx_data(rt2x00dev, ring, skb, control))
-+	if (rt2x00dev->ops->lib->write_tx_data(rt2x00dev, ring, skb, control)) {
-+		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 		return NETDEV_TX_BUSY;
-+	}
-+
-+	if (rt2x00_ring_full(ring))
-+		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 
- 	if (rt2x00dev->ops->lib->kick_tx_queue)
- 		rt2x00dev->ops->lib->kick_tx_queue(rt2x00dev, control->queue);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index abeffdb..70cb81c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -86,10 +86,8 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 	struct skb_desc *desc;
- 	u32 word;
- 
--	if (rt2x00_ring_full(ring)) {
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
-+	if (rt2x00_ring_full(ring))
- 		return -EINVAL;
--	}
- 
- 	rt2x00_desc_read(txd, 0, &word);
- 
-@@ -99,7 +97,6 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 		      "Arrived at non-free entry in the non-full queue %d.\n"
- 		      "Please file bug report to %s.\n",
- 		      control->queue, DRV_PROJECT);
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 		return -EINVAL;
- 	}
- 
-@@ -119,9 +116,6 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00_ring_index_inc(ring);
- 
--	if (rt2x00_ring_full(ring))
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00pci_write_tx_data);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 82e95b9..7aba357 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -179,17 +179,14 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 	struct skb_desc *desc;
- 	u32 length;
- 
--	if (rt2x00_ring_full(ring)) {
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
-+	if (rt2x00_ring_full(ring))
- 		return -EINVAL;
--	}
- 
- 	if (test_bit(ENTRY_OWNER_NIC, &entry->flags)) {
- 		ERROR(rt2x00dev,
- 		      "Arrived at non-free entry in the non-full queue %d.\n"
- 		      "Please file bug report to %s.\n",
- 		      control->queue, DRV_PROJECT);
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
- 		return -EINVAL;
- 	}
- 
-@@ -229,9 +226,6 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00_ring_index_inc(ring);
- 
--	if (rt2x00_ring_full(ring))
--		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_write_tx_data);
--- 
-1.5.3.7
+
+On Mon, 2008-01-14 at 10:38 -0800, Chatre, Reinette wrote:
+> On , Johannes Berg wrote:
+>=20
+> >=20
+> >        iwl4965_resume(priv);
+> >        mutex_unlock(&priv->mutex);                  /*** not
+> > locked!! ***/
+> >=20
+> >        return 0;
+> > }
+>=20
+> This was fixed in 5b9264550dc190b7330a4bde615083883c1cde11 ("iwlwifi:
+> fix-up damage from rebase of namespace separation patches")
+
+Huh ok, somehow that wasn't in my tree at the time I tested then. Sorry
+about the noise.
+
+johannes
+
+--=-/YZP4vNSlZtGuVU4Dk4H
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4yjrqVg1VMiehFYAQLLhRAAtJdXZAWyr6cKIve5wgKxSIu0qJEbkzWq
+jwE5ufEGUOitgySTh4si+uc51+66cRNiUmEKlYzcs8iG3t7dy42RT1w6cA5j54hj
+5f78tDChjfhxvzbZ0d9Pr3xZsXtIZV0F3t7HnYn5b4xsHt0EMS+M66kYBVJPpOil
+3s7+C+V6MPKkA7XOVHQSsxs2ezmZEp3f4wIHO0KExW9FxnmHxIbpdGe43M+SLmKN
+fRHj8aTeSPUS4ubDyavZ/Eh/+g+9xPb+V5dAh0cxQkvzPR8TF8f5YZ+9anVVBoJm
+aGQx6sA2ATrYUFpQsksaIDdJ5HwKiTyJ76mTAEwPzc/c/45JCH+18l6tEsrW+9aB
+LuZu02Sbo2Vg+/d5qCnNd4C6RNnBgTk0h4P794zp22WtGSjrfkwWlqABHavgwJYl
+VinFGtosv2QKBbsuwBni2glrER5gn19hGz5QVId1YrF35IqUnbcX1sO/NfrRq5nS
+baczLi7Elp4Zb3+ldIOZvlEZcNfLGvpCerpuCRs2zzl5Y4FYtYd8A6QTzltXA5U4
+PF0oTjJAumwcB+JKp8IQlp+0pgYjfuIxx2KBYuvhGcW4bdeGfi0lN56wItSfU08H
+8Wme+ipnnbcctTY9WmLCn1QHvj8ixzhYqrQ2u/2TA7A/j1Hmfs+zBA5po859ukPC
+ZLROgKelFos=
+=SiE1
+-----END PGP SIGNATURE-----
+
+--=-/YZP4vNSlZtGuVU4Dk4H--
 
