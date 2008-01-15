@@ -1,85 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbYABRpl (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:39117 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752294AbYAOWWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 12:45:41 -0500
-Subject: Re: [PATCH v2] mac80211: better rate control algorithm selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20080102172505.GA9772@uranus.ravnborg.org>
-References: <1199283424.4172.88.camel@johannes.berg>
-	 <20080102172505.GA9772@uranus.ravnborg.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rp94jLPlDm7gNZXis5Sc"
-Date: Wed, 02 Jan 2008 18:45:01 +0100
-Message-Id: <1199295901.4172.111.camel@johannes.berg> (sfid-20080102_174544_140233_E11E3E61)
-Mime-Version: 1.0
+	Tue, 15 Jan 2008 17:22:52 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH] b43: Add support for new firmware
+Date: Tue, 15 Jan 2008 23:21:40 +0100
+Cc: Pavel Roskin <proski@gnu.org>,
+	John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200801131420.52995.mb@bu3sch.de> <1200421662.17542.32.camel@dv> <20080115201538.5e4347f9@morte>
+In-Reply-To: <20080115201538.5e4347f9@morte>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801152321.41073.mb@bu3sch.de> (sfid-20080115_222255_937924_4D14BC40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 15 January 2008 20:15:38 Stefano Brivio wrote:
+> On Tue, 15 Jan 2008 13:27:42 -0500
+> Pavel Roskin <proski@gnu.org> wrote:
+> 
+> > I have finally found some time and hardware to test it, but the tarball
+> > is overwhelming at its 186M.  And the worst thing, the server
+> > disconnected after 30M and appears to be down right now.  P.S. It's up,
+> > ETA is 48 minutes.
+> > 
+> > There were two files there.  I hope either is fine.  I'm trying to
+> > download WRT150NV11_v1.51.3_ETSI.tgz
+> > 
+> > Cannot we petition Linksys to put wl_ap.o outside the tarball?  Or maybe
+> > Broadcom could do it?
+> 
+> Good luck. ;) The only long-term lasting solution I see is to put more
+> effort on an open firmware. The instruction set has been figured out, we
+> just lack people and time there.
 
---=-rp94jLPlDm7gNZXis5Sc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We already have a better file on an openwrt server that will be the
+officially supported one soon.
+I just have to create a new fwcutter tarball and link from linuxwireless.org
+to it. I already added support for the file to fwcutter git.
+See Stefano's comment below.
 
+> > Do you know that the Subversion repository of fwcutter has no files at
+> > all?  I mean svn://svn.berlios.de/bcm43xx/trunk
+> > 
+> > Yes, I will try --unsupported, with version 009.
+> 
+> fwcutter development now happens here:
+> http://bu3sch.de/gitweb?p=b43-tools.git;a=summary
 
-> > +# objects for PID algorithm
-> > +rc80211_pid-y :=3D rc80211_pid_algo.o
-> > +rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) +=3D rc80211_pid_debugfs.o
+Yep, the berlios stuff is dropped completely, except the download
+section for the fwcutter tarballs. But that may also change in future.
+We will announce that on linuxwireless.org.
 
-> > +# build helper for PID algorithm
-> > +rc-pid-y :=3D $(rc80211_pid-y)
->=20
-> Is this extra indirection ( rc80211_pid-y ) a preparation
-> for future rate algorithms or was it just coped from my proposal?
-> It is not needed and it does not help readability.
+> Maybe we should add this along with git URLs on linuxwireless.org.
 
-As far as I can tell rc80211_pid-y is needed to build rc80211_pid.o from
-rc80211_pid_algo.o and rc80211_pid_debugfs.o for the modular case, no?
-Hence, I just wanted to keep it symmetric for the non-modular case.
+Please do it, if you feel so.
 
-> A second note - but more as a personal taste..
-> I prefer +=3D assignment in preference of continued lines.
-> So=20
-> +mac80211-y :=3D \
->  	ieee80211.o \
->   	ieee80211_ioctl.o \
->  	sta_info.o \
->=20
-> would become:
-> +mac80211-y :=3D ieee80211.o ieee80211_ioctl.o
-> +mac80211-y +=3D sta_info.o
-
-Yeah, I was hoping the diff would be smaller this way because it was
-already this way before.
-
-johannes
-
---=-rp94jLPlDm7gNZXis5Sc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR3vNnKVg1VMiehFYAQLp3Q//fzx7wVOEWGkgs+b3b1tZxRa94ffXvZHY
-iEG6ST+DLD3RP5gK9hiGkvEYH6qgPtCyEX7VC8jjPFZ2S1LeHIPajQqT/1/6787a
-vLj74pLol1J0V5ehWy8b2nJq5eQB3qFqfL2KOtMyNYSLEbKk4RQedsoREkrCIrPu
-B8A32f6XPzvwEBFF/iKWFZJruPP2Dk+q3LoRSOiZaFMKV/LlgYtOEQEUQFQexEQW
-ORTevssqwSli8mIJynJPtMoDWduc3KThTPCBGZezSvxVutgkwxTH5f1glEf9T2it
-S+siTLUKZRifTEiG5i3FD8aP9kgQMbckyUzMjVv3r4m4Ij/p0dUsT3QAUomeO+k2
-tOPCZjOk0790OXjFaTvCu8ahwegt9+camvTF44pAV7Mz5KSh38AjqG6kgYMZwj5Y
-P4EttNk1lhC413hoJV9YkZGNjDfl/TXu0aphp69vZvQCVEuQ/q9248SIWgTdlNCV
-UywteygcdpN/BNGZQNmigmeSn0gV68bA6val45/X9NpcTJz42Tn503w/eYN2HVRE
-XUVakP54evkLPe+heE2k+sKlW/hn6b//h1goYPuYuJIw1qgUg0IU82t6C/kjRHOI
-BluyHYi+zunoVIzsZlY6H84JFoUS0Ph/WAzorbN6AF5V8UvW++wgp5008/NAp0/u
-stmpJe4txoY=
-=UAKm
------END PGP SIGNATURE-----
-
---=-rp94jLPlDm7gNZXis5Sc--
-
+-- 
+Greetings Michael.
