@@ -1,93 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754343AbYADWBg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 17:01:36 -0500
-Subject: Re: [RFC] cfg80211 API for channels/bitrates, mac80211 and driver
-	conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200712231850.37136.flamingice@sourmilk.net>
-References: <1198448108.4103.6.camel@johannes.berg>
-	 <200712231850.37136.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QGh3GDkmW0jymcRexlQo"
-Date: Fri, 04 Jan 2008 23:01:20 +0100
-Message-Id: <1199484080.4172.173.camel@johannes.berg> (sfid-20080104_220144_319723_37095265)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:60992 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752322AbYAOC0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2008 21:26:55 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/12] iwl4965: Remove redundant code in iwl4965_tx_cmd
+Date: Mon, 14 Jan 2008 17:46:14 -0800
+Message-Id: <1200361585-31801-2-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022701_718505_AB653D21)
+In-Reply-To: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
+References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-QGh3GDkmW0jymcRexlQo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This function removes redundant code in iwl4965_tx_cmd
+function, leftovers of previous design.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   23 +----------------------
+ 1 files changed, 1 insertions(+), 22 deletions(-)
 
-> > + * @power_dBm: requested transmit power
-> > + * @max_antenna_gain_dBi: maximum antenna gain
-> Mixed case is bad.
-
-changed.
-
-> > + * @IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE:
-> > + *	Hardware is not capable of receiving frames with short preamble on
-> > + *	the 2.4 GHz band.
-> Let's add it when we actually find hardware that needs it.
-
-I disagree. It's literally two lines of code (one defining it and one
-using it) and makes things more easy to discover when writing a driver.
-
-> > + * @max_antenna_gain_dBi: maximum antenna gain in dBi
-> > + * @max_power_dBm: maximum transmission power
-> Again, no mixed case.
-
-changed too
-
-> > +extern int ieee80211_frequency_to_channel(int freqMhz);
-> Mixed case again. Do you really need to add units to these names? They sh=
-ould=20
-> just be all the same throughout the code.
-
-Ok, changed.
-
-> > +	strcpy(name, "mac80211");
-> >
-> >  	return 0;
-> >  }
-> It's simple, sure, but no. Let's not change userspace facing behavior if =
-we=20
-> can. If you really need to, use "IEEE 802.11".
-
-It's pretty dumb to indicate the mode that way, but I changed it to just
-"IEEE 802.11" now.
-
-Will repost later.
-
-johannes
-
---=-QGh3GDkmW0jymcRexlQo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR36srqVg1VMiehFYAQKqLg//WdC0G48AR2oEuy3/CuDC0UGBxKd1JYYn
-8SOv6wpOu2DWvokYERmwnW7LKv8Ofo0kX0AOHfg9uhR6jNhFK34I3qvjjAqngtew
-ENhjMLaOTVFR3sPfT5OjHpmN6P8i7DiuzZ4vcwGZfTRP0ONN6HamyvvDsghI8OFK
-iS8CD+2W+/eoSlsUUdzza6lI0cieJyl4QgjjiF3MSQSEBhh3H1cBPfJYHKaW4oJk
-G+fGEBo+GBNyeku2pcddrqM+lcd/0Fo4LTdR1kHmUu89CBE/E0Qcqyv5w6bteZ1T
-tGC7AQ8fsHhGseiSVIYQhLNtVban71w8155f3eflXKCJT8FJ+CQ9lKzbK4azJKRM
-HQMVE++yQrIbPsQH7VDzBCLeywyMDjcl26LYEMWbbg0B1ffIamXsP/o6+rNIUb7j
-HmliP83B44aiG+N5G7YyugDeZTFJ6+r/WuvTVCXkjp4kNVClC9E1RQ5LMPKY+NcV
-K5q8rB5lvOzXmOSLx3tWF5C5TI2I20rVE+7Imgi+De0L+8qPUyTXIX61jfFyE0T+
-VCXZepgswzqJiEnoXoKn07Q68dBKQPB4+CiCf+YrWwvDY0RUKm4+O8tL0baBbnhQ
-N7UNtczcI2fxT5U6Nw3nk6KnzTolTlbIBRqJjG8G96KQ1H8Uxewww7cdcKBVLTyA
-drkM+1FuLnY=
-=SXfd
------END PGP SIGNATURE-----
-
---=-QGh3GDkmW0jymcRexlQo--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index ed3f119..b913c6b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3267,8 +3267,7 @@ int iwl4965_tx_cmd(struct iwl4965_priv *priv, struct iwl4965_cmd *out_cmd,
+ 		   struct ieee80211_hdr *hdr, u8 hdr_len,
+ 		   struct ieee80211_tx_control *ctrl, void *sta_in)
+ {
+-	struct iwl4965_tx_cmd cmd;
+-	struct iwl4965_tx_cmd *tx = (struct iwl4965_tx_cmd *)&out_cmd->cmd.payload[0];
++	struct iwl4965_tx_cmd *tx = &out_cmd->cmd.tx;
+ 	dma_addr_t scratch_phys;
+ 	u8 unicast = 0;
+ 	u8 is_data = 1;
+@@ -3287,26 +3286,6 @@ int iwl4965_tx_cmd(struct iwl4965_priv *priv, struct iwl4965_cmd *out_cmd,
+ 	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		is_data = 0;
+ 
+-	memcpy(&cmd, &(out_cmd->cmd.tx), sizeof(struct iwl4965_tx_cmd));
+-	memset(tx, 0, sizeof(struct iwl4965_tx_cmd));
+-	memcpy(tx->hdr, hdr, hdr_len);
+-
+-	tx->len = cmd.len;
+-	tx->driver_txop = cmd.driver_txop;
+-	tx->stop_time.life_time = cmd.stop_time.life_time;
+-	tx->tx_flags = cmd.tx_flags;
+-	tx->sta_id = cmd.sta_id;
+-	tx->tid_tspec = cmd.tid_tspec;
+-	tx->timeout.pm_frame_timeout = cmd.timeout.pm_frame_timeout;
+-	tx->next_frame_len = cmd.next_frame_len;
+-
+-	tx->sec_ctl = cmd.sec_ctl;
+-	memcpy(&(tx->key[0]), &(cmd.key[0]), 16);
+-	tx->tx_flags = cmd.tx_flags;
+-
+-	tx->rts_retry_limit = cmd.rts_retry_limit;
+-	tx->data_retry_limit = cmd.data_retry_limit;
+-
+ 	scratch_phys = txcmd_phys + sizeof(struct iwl4965_cmd_header) +
+ 	    offsetof(struct iwl4965_tx_cmd, scratch);
+ 	tx->dram_lsb_ptr = cpu_to_le32(scratch_phys);
+-- 
+1.5.3.4
 
