@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:15187 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755367AbYAUCQt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2008 21:16:49 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3394084wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 18:16:46 -0800 (PST)
-Message-ID: <43e72e890801201816n3609aaa2s2debaf609bed4fb@mail.gmail.com> (sfid-20080121_021707_787671_C58194AE)
-Date: Sun, 20 Jan 2008 21:16:46 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 2/2] ath5k: always extend rx timestamp with tsf
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20080121020945.3818.74270.stgit@one>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080121020924.3818.46553.stgit@one>
-	 <20080121020945.3818.74270.stgit@one>
+Received: from mga03.intel.com ([143.182.124.21]:60992 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024AbYAOC0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2008 21:26:54 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/12] iwlwifi driver updates
+Date: Mon, 14 Jan 2008 17:46:13 -0800
+Message-Id: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022701_714642_C2C68B14)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 20, 2008 9:09 PM, Bruno Randolf <bruno@thinktube.com> wrote:
-> always extend the rx timestamp with the local TSF, since this information is
-> also needed for proper IBSS merging. this is done in the tasklet for now, maybe
-> has to be moved to the interrupt handler like in madwifi.
->
-> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
->
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+This series contains various fixes and improvements to the iwlwifi driver.
+It applies to wireless-2.6#everything.
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+[PATCH 01/12] iwl4965: Remove redundant code in iwl4965_tx_cmd
+[PATCH 02/12] iwlwifi: move iwl4965_get_dma_hi_address function to iwl-helpers.h
+[PATCH 03/12] iwlwifi: remove iwl4965_tx_cmd
+[PATCH 04/12] iwlwifi: document scan command
+[PATCH 05/12] iwlwifi: delay firmware loading from pci_probe to network interface open
+[PATCH 06/12] iwlwifi: fix problem when rf_killswitch change during suspend/resume
+[PATCH 07/12] iwlwifi: move uCode helper functions to iwl-helpers.h
+[PATCH 08/12] iwlwifi: 4965 unify rate scale variable names for station data
+[PATCH 09/12] iwlwifi: 3954 renames iwl3945_rate_scale_priv to iwl3945_rs_sta
+[PATCH 10/12] iwlwifi: Update iwlwifi version stamp to 1.2.23
+[PATCH 11/12] iwlwifi: remove reference to non-existent documentation
+[PATCH 12/12] iwlwifi: style fixes to usage of << and >> operators
 
-  Luis
+
+Thank you
+
+Reinette
+
