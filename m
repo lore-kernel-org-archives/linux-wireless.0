@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:39138 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587AbYAJWTt (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:29625 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751243AbYAPQhT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 17:19:49 -0500
-Message-ID: <478699F0.9070306@tiscali.nl> (sfid-20080110_221954_728307_44A95276)
-Date: Thu, 10 Jan 2008 23:19:28 +0100
-From: Roel Kluin <12o3l@tiscali.nl>
+	Wed, 16 Jan 2008 11:37:19 -0500
 MIME-Version: 1.0
-To: Randy Dunlap <randy.dunlap@oracle.com>
-CC: linville@tuxdriver.com, lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Elmer.Joandi@ut.ee,
-	c.jennings@ieee.org
-Subject: Re: [PATCH wireless/arlan] Replace logical- by bit-and
-References: <4722453E.2090801@tiscali.nl>	<472248AC.7080201@tiscali.nl>	<47866EE9.80003@tiscali.nl> <20080110122859.569b3774.randy.dunlap@oracle.com>
-In-Reply-To: <20080110122859.569b3774.randy.dunlap@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] [PATCH 2/5] iwlwifi: iwl3945 synchronize interruptand tasklet for down iwlwifi
+Date: Wed, 16 Jan 2008 08:37:10 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003684665@orsmsx416.amr.corp.intel.com> (sfid-20080116_163723_757122_603BA559)
+In-Reply-To: <b25c3fa70801152015x482aa4cfle9ed3504f40fd18e@mail.gmail.com>
+References: <11998765481610-git-send-email-joonwpark81@gmail.com> <D936D925018D154694D8A362EEB08920035CCD70@orsmsx416.amr.corp.intel.com> <b25c3fa70801101724he91d934y9db6636c68a32486@mail.gmail.com> <D936D925018D154694D8A362EEB0892003602E2D@orsmsx416.amr.corp.intel.com> <b25c3fa70801101838o7a71cc60h1c8b8a71624aeff9@mail.gmail.com> <478B1EBF.8030701@gmail.com> <478B2E92.5090901@gmail.com> <D936D925018D154694D8A362EEB0892003683D89@orsmsx416.amr.corp.intel.com> <b25c3fa70801152015x482aa4cfle9ed3504f40fd18e@mail.gmail.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Joonwoo Park" <joonwpark81@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap wrote:
-> On Thu, 10 Jan 2008 20:15:53 +0100 Roel Kluin wrote:
-> 
->> diff --git a/drivers/net/wireless/arlan.h b/drivers/net/wireless/arlan.h
->> index 3ed1df7..7b7498f 100644
->> --- a/drivers/net/wireless/arlan.h
->> +++ b/drivers/net/wireless/arlan.h
->> @@ -485,7 +485,7 @@ struct arlan_private {
->>  #define clearClearInterrupt(dev){\
->>     writeControlRegister(dev,readControlRegister(dev) & ~ARLAN_CLEAR_INTERRUPT);}
->>  #define setPowerOff(dev){\
->> -   writeControlRegister(dev,readControlRegister(dev) | (ARLAN_POWER && ARLAN_ACCESS));\
->> +   writeControlRegister(dev, readControlRegister(dev) | (ARLAN_POWER & ARLAN_ACCESS));\
-> 
-> eh?  How does that help?
+On Tuesday, January 15, 2008 8:15 PM, Joonwoo Park  wrote:
 
-Right, sorry, please ignore my patch.
+> Thank you for your advice, it seems recent base code's commit inserted
+> iwl_disable_interrupts() into iwl_pci_probe.
+> As like you said, for base code __iwl_disable_interrupts() should
+> better than iwl_disable_interrupts for iwl_pci_probe.
 
-> Maybe it should be (ARLAN_POWER | ARLAN_ACCESS), but some
-> arlan developer or someone with specs should help here...
+I've modified the patch to include this.
 
-I have CC'd the previous maintainers
+> Do you want version of patch for base code?
+> Can you ACK for this patch?
+
+Your patch looks good and is currently being tested. 
+
+Thanks!
+
+Reinette
