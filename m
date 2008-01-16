@@ -1,105 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.hammerl-bau.at ([213.235.197.82]:52773 "EHLO
-	ns2.hammerl-bau.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315AbYATGP1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2008 01:15:27 -0500
-Message-ID: <46274.61.115.136.26.1200807429.squirrel@webmail.einfach.org> (sfid-20080120_061536_875137_3F7005F7)
-Date: Sun, 20 Jan 2008 15:37:09 +1000 (EST)
-Subject: Re: [ath5k-devel] [PATCH 2/4] ath5k: always extend rx timestamp
-     with tsf
-From: "bruno randolf" <br1@einfach.org>
-To: "Derek Smithies" <derek@indranet.co.nz>
-Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	jirislaby@gmail.com, "Michael Wu" <flamingice@sourmilk.net>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, "Johannes Berg" <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:5536 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752227AbYAPSlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2008 13:41:10 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 07/12 v2] mac80211: A-MPDU Tx change tx_status to support Block Ack data
+Date: Wed, 16 Jan 2008 20:40:55 +0200
+Message-Id: <12005088641444-git-send-email-ron.rindjunsky@intel.com> (sfid-20080116_184121_412588_33602BEC)
+In-Reply-To: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 20 January 2008 11:12:11 Derek Smithies wrote:
-> On Sat, 19 Jan 2008, Luis R. Rodriguez wrote:
-> > On Jan 18, 2008 7:50 AM, Bruno Randolf <bruno@thinktube.com> wrote:
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* always extend the mac timestam=
-p, since this
-> > > information is + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* also needed for=
- proper IBSS merging.
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* XXX: it might be too late to d=
-o it here, since
-> > > rs_tstamp is + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* 15bit only. that =
-means TSF extension
-> > > has to be done within + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* 32.768us=
-ec =3D 32ms. it might be
-> > > necessary to move this to the + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =
-interrupt handler,
-> > > like it is done in madwifi. + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> >
-> > I'm trying to understand this a bit more and am confused. The TSF
-> > timer is based on 1MHz clock so it has a resolution of 1 microsecon=
-d
-> > (us). For 15 bits that would mean 32768 us so don't you mean it sho=
-uld
-> > be done within 32.768 ms instead of usec (or us)?
->
-> Hi,
-> =A0it is a typo.
+This patch adds fields to ieee80211_tx_status in order to allow block ack
+information exchange between low-level driver,mac80211 and rate scaling
+module.
 
-it's just a different way to use a "." to denote 1000. americans might
-write 32,768usec, im not sure, different styles worldwide... what i mea=
-n
-is 32768us equals about 32ms. i'll remove that dot to make it unambigou=
-s.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ include/net/mac80211.h |   21 ++++++++++++---------
+ 1 files changed, 12 insertions(+), 9 deletions(-)
 
-> You are correct. It should be done within 32.768 ms. On a high end la=
-ptop,
-> it is almost guaranteed that the bottom half will process the packet
-> within 32 ms. However, on an embedded box (low spec cpu) that has a
-> temporarily high load, 32 ms is a short time, and the timestamp may h=
-ave
-> wrapped around. this is unfortunate.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 79ad66d..3d051d4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -408,12 +408,14 @@ struct ieee80211_rx_status {
+  *
+  * @IEEE80211_TX_STATUS_TX_FILTERED: The frame was not transmitted
+  *	because the destination STA was in powersave mode.
+- *
+  * @IEEE80211_TX_STATUS_ACK: Frame was acknowledged
++ * @IEEE80211_TX_STATUS_AMPDU: The frame was aggregated, so status
++ * 	is for the whole aggregation.
+  */
+ enum ieee80211_tx_status_flags {
+ 	IEEE80211_TX_STATUS_TX_FILTERED	= 1<<0,
+ 	IEEE80211_TX_STATUS_ACK		= 1<<1,
++	IEEE80211_TX_STATUS_AMPDU	= 1<<2,
+ };
+ 
+ /**
+@@ -424,24 +426,25 @@ enum ieee80211_tx_status_flags {
+  *
+  * @control: a copy of the &struct ieee80211_tx_control passed to the driver
+  *	in the tx() callback.
+- *
+  * @flags: transmit status flags, defined above
+- *
+- * @ack_signal: signal strength of the ACK frame
+- *
++ * @retry_count: number of retries
+  * @excessive_retries: set to 1 if the frame was retried many times
+  *	but not acknowledged
+- *
+- * @retry_count: number of retries
+- *
++ * @ampdu_ack_len: number of aggregated frames.
++ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
++ * @ampdu_ack_map: block ack bit map for the aggregation.
++ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
++ * @ack_signal: signal strength of the ACK frame
+  * @queue_length: ?? REMOVE
+  * @queue_number: ?? REMOVE
+  */
+ struct ieee80211_tx_status {
+ 	struct ieee80211_tx_control control;
+ 	u8 flags;
+-	bool excessive_retries;
+ 	u8 retry_count;
++	bool excessive_retries;
++	u8 ampdu_ack_len;
++	u64 ampdu_ack_map;
+ 	int ack_signal;
+ 	int queue_length;
+ 	int queue_number;
+-- 
+1.5.3.3
 
-i know that this might happen, and that's why i included this comment. =
-i
-was just too lazy to make the same act as is done in madwifi (lopping t=
-hru
-all rx descriptors in the interrupt handler). the current code is
-sufficient for IBSS testing right now.
-
-also even if we move TSF extension into the interrupt handler this will
-not help in all cases. there are situations in IBSS mode - when a HW me=
-rge
-(=3D automatic HW TSF update upon receipt of a beacon with a higherr TS=
-=46 and
-the same BSSID) happens - where the rx timestamp is apparently based on
-the old TSF, before the HW TSF is updated. in that case we cannot exten=
-d
-the timestamp in any meaningful way. i'm not sure how we should handle
-this.
-
-> On Sat, 19 Jan 2008, Luis R. Rodriguez wrote:
-> Right now we only use mactime and even RX_FLAG_TSFT within mac80211 i=
-n
-> rx.c on ieee80211_rx_monitor() for IEEE80211_RADIOTAP_TSFT so right
-> now these changes would seem to do nothing. Should we be using this
-> for something else -- if so what is it?
-
-see my "[PATCH] mac80211: enable IBSS merging". it is used there to dec=
-ide
-wether we have to merge IBSS on receipt of a beacon. strictly speaking =
-it
-would be sufficient to extend the rxstamp only for beacons and in monit=
-or
-mode, but i thought checking for these cases is more overhead, so why n=
-ot
-extend TSF all the time...
-
-bruno
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
