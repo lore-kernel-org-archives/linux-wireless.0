@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:2770 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885AbYAMXE3 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:35482 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752105AbYAPLFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 18:04:29 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2028601fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 15:04:28 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: Antenna software diversity
-Date: Mon, 14 Jan 2008 00:04:21 +0100
+	Wed, 16 Jan 2008 06:05:00 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 2.6.24] b43: Reject new firmware early
+Date: Wed, 16 Jan 2008 12:02:08 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801140004.21251.IvDoorn@gmail.com> (sfid-20080113_230434_465886_74A40A41)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200801161202.09122.mb@bu3sch.de> (sfid-20080116_110506_433928_CA1A87D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+We must reject new incompatible firmware early to avoid
+running into strange transmission failures.
 
-In rt2x00 I have made an implementation for antenna software diversity
-since not all Ralink hardware supports hardware diversity (aka, almost
-all Ralink hardware which set the default antenna to diversity imply
-software diversity).
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-However I would like to know if this is something should remain inside
-the driver, or if it should be moved into mac80211. Possibly integrated
-into the rate selection module, or otherwise as a seperate module which
-could allow the user to select a prefered antenna selection method similar
-as to how he can select the prefered rate algorithm.
+---
 
-The current implementation in rt2x00 looks a bit like this:
+John, this must _only_ be applied to 2.6.24.
+2.6.25 does have actual support for the new firmware.
 
-Once per second the link tuner will run.
-The link tuner checks if software diversity is active for either TX or RX
-or both antennas.
-Determine the current average rssi, and the rssi from the previous period.
-If the difference between the old and new average rssi is greater than 5
-configure device to swap antenna. And raise the rssi sample flag.
-After another link tuning period, evaluate sample results and determine
-if the antennas should be swapped or not.
 
-The actions don't really sound hardware dependant, based on the rssi
-mac80211 should be able to determine if the antenna's should be swapped
-or not. All that is required is the driver indicating to mac80211 that it should
-perform software diversity when required...
 
-In mac80211 this would mean that the antenna_sel should probably become
-an enum looking like this:
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-01-16 11:33:55.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-01-16 11:44:06.000000000 +0100
+@@ -1800,6 +1800,18 @@ static int b43_upload_microcode(struct b
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
++	if (fwrev > 351) {
++		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Please downgrade your "
++		       "firmware.\n");
++		b43err(dev->wl, "Use this firmware tarball: "
++		       "http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2\n");
++		b43err(dev->wl, "Use this b43-fwcutter tarball: "
++		       "http://bu3sch.de/b43/fwcutter/b43-fwcutter-009.tar.bz2\n");
++		b43err(dev->wl, "Read, understand and _do_ what this message says, please.\n");
++		b43_write32(dev, B43_MMIO_MACCTL, 0);
++		err = -EOPNOTSUPP;
++		goto out;
++	}
+ 	b43dbg(dev->wl, "Loading firmware version %u.%u "
+ 	       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
+ 	       fwrev, fwpatch,
 
-enum antenna_sel {
-	ANTENNA_SEL_DEFAULT,
-	ANTENNA_SEL_A,
-	ANTENNA_SEL_B,
-	ANTENNA_SEL_DIVERSITY,
-};
-
-I am not really a fan of the ANTENNA_SEL_DEFAULT, but this is already present
-in the current mac80211 implementation. So to remove that, we could use some
-method for the driver to let the default antenna known to mac80211, probably
-through an extra field in ieee80211_hw perhaps.
-
-The ANTENNA_SEL_DIVERSITY would in this case be hardware diversity unless
-the driver has indicated that software diversity is in action, through a flag in
-ieee80211_hw.
-
-Ivo
+-- 
+Greetings Michael.
