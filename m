@@ -1,87 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:40675 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444AbYADAC1 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:19746 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbYAPVuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2008 19:02:27 -0500
-Received: by py-out-1112.google.com with SMTP id u52so10767880pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2008 16:02:26 -0800 (PST)
-Message-ID: <43e72e890801031602q38a8f57fv3ba56a0f44e7e2c6@mail.gmail.com> (sfid-20080104_000234_131558_01DA3730)
-Date: Thu, 3 Jan 2008 19:02:26 -0500
+	Wed, 16 Jan 2008 16:50:39 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so173758wra.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2008 13:50:38 -0800 (PST)
+Message-ID: <43e72e890801161350v3cb44068p15a32b71af26a8d2@mail.gmail.com> (sfid-20080116_215047_869076_382E0E44)
+Date: Wed, 16 Jan 2008 16:50:37 -0500
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: ath5k oops (recent regression, I think)
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Andrew Lutomirski" <luto@myrealbox.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-In-Reply-To: <200712261117.33992.bruno@thinktube.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] nl80211: export frequencies/bitrates
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1200439921.5887.148.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <cb0375e10712241906u198c695br1e2120e6cfee3b0d@mail.gmail.com>
-	 <200712251804.13693.bruno@thinktube.com>
-	 <40f31dec0712250623yb2bfeahfa1b7024e1fb67f3@mail.gmail.com>
-	 <200712261117.33992.bruno@thinktube.com>
+References: <1200439921.5887.148.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 25, 2007 9:17 PM, bruno randolf <bruno@thinktube.com> wrote:
+On Jan 15, 2008 6:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This is the user-space complement of the cfg80211 frequency/bitrate
+> patch and exports all the information via nl80211.
 >
-> On Tuesday 25 December 2007 23:23:02 Nick Kossifidis wrote:
-> > 2007/12/25, bruno randolf <bruno@thinktube.com>:
-> > > hello!
-> > >
-> > > i'm seeing the same oops, it seems to be a regression from
-> > >
-> > > commit fd640775bd16e1df50c867cc547af0787f9bd4ab
-> > > Author: Johannes Berg <johannes@sipsolutions.net>
-> > > Date:   Wed Dec 19 01:31:26 2007 +0100
-> > >
-> > >     mac80211: dont use interface indices in drivers
-> > >
-> > > seems ath5k likes to write some rate registers before vif is set up. i
-> > > used the following as a stopgap fix. johannes, do you have any advice how
-> > > to properly fix that?
-> > >
-> > > diff --git a/drivers/net/wireless/ath5k/hw.c
-> > > b/drivers/net/wireless/ath5k/hw.c index f4478f6..2e9f5c5 100644
-> > > --- a/drivers/net/wireless/ath5k/hw.c
-> > > +++ b/drivers/net/wireless/ath5k/hw.c
-> > > @@ -510,6 +510,11 @@ static inline void
-> > > ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
-> > >         const struct ath5k_rate_table *rt;
-> > >         unsigned int i;
-> > >
-> > > +       if (sc->vif == NULL) {
-> > > +               printk("*** sc->vif NULL\n");
-> > > +               return;
-> > > +       }
-> > > +
-> > >         /* Get rate table for the current operating mode */
-> > >         rt = ath5k_hw_get_rate_table(ah,
-> > >                 driver_mode);
-> > >
-> > > bruno
-> >
-> > Seems right as it doesn't break reset, i was just thinking maybe we
-> > should pass an "initial" argument on ath5k_hw_reset to also skip some
-> > other step (eg. saving/restoring tsf/seqnum etc). What do you think ?
+> It obviously depends on the cfg80211 patch I've posted previously. I've
+> also committed support for printing this information to my 'iw' tool (I
+> still hope somebody will rewrite it some day and I don't have to
+> maintain it... the netlink code in it is really quite wrong too...).
+> Yell at me if I forget to push that changeset
+> (79f99b9ad89494fc81d5c966a32dcebe9742f12c "add wiphy dump capability")
+> to the git tree on git.sipsolutions.net (i.e. you don't see it shortly
+> after this mail.)
 >
-> sounds like a good idea.
-> or/and maybe we can defer the first reset until the first interface is
-> assigned? would that be possible?
+> Luis, can you work with these attributes?
 
-NACK for that patch
+I can definitely make use of band and freq. Some comments about bit
+rates below though.
 
-Although it fixes the oops I do not think its the right solution.
+> I think they should be
+> sufficient for SET support as well for the regulatory daemon.
 
-We use ieee80211_generic_frame_duration() to compute what we believe
-is the ACK timeout and set it on the rate duration registers, and we
-need this value set during reset, as we up the interface. The *real*
-problem here is we need mac80211 to provide an exported routine which
-drivers can use even if they don't have an up'd interface yet IMHO.
-This can be easily fixed by making ieee80211_generic_frame_duration()
-not rely on sdata and letting the user pass manually if short preamble
-is desired in the calculation as an arg. I have to go now but will try
-to address this as soon as I have time unless someone beats me.
+If you mean by "SET support" as for SET support for the regulatory
+domain struct then no, I need a few more. Here's a list of some:
+
+* Power (EIRP, IR and for PtP or PtMP)
+* Antenna gain
+* Environment capabilities (Indoor/outdoor)
+* Modulation capabilities
+
+Of these we can use to export more wiphy capabilities:  power (just
+IR), modulation capabilities, and antenna gain (we could assume ~dBi
+for antenna gain, and let user configure this).
+
+> @@ -280,4 +285,63 @@ enum nl80211_sta_stats {
+>         NL80211_STA_STAT_MAX = __NL80211_STA_STAT_AFTER_LAST - 1
+>  };
+>
+> +/**
+> + * enum nl80211_band_attr - band attributes
+> + * @__NL80211_BAND_ATTR_INVALID: attribute number 0 is reserved
+> + * @NL80211_BAND_ATTR_FREQS: supported frequencies in this band,
+> + *     an array of nested frequency attributes
+> + * @NL80211_BAND_ATTR_RATES: supported bitrates in this band,
+> + *     an array of nested bitrate attributes
+> + */
+> +enum nl80211_band_attr {
+> +       __NL80211_BAND_ATTR_INVALID,
+> +       NL80211_BAND_ATTR_FREQS,
+> +       NL80211_BAND_ATTR_RATES,
+
+Hmm -- not sure if rates should be an attribute of the band. In terms
+of IEEE-802.11 I would think we could add to the band IEEE-802.11
+"modes" (a, b, g or n), and each mode can have a set of modulations
+and each modulation a set of rates. This is from the wiphy device
+capability point of view. From the regulatory point of view I broke
+things down a bit differently -- a band can have set of subbands and a
+subband can have a set of possible modulations (flags). This is
+because regulatory laws usually speak about frequency ranges and on
+these ranges you usually have the same set of power/antenna
+restrictions. One thing we'll have to think about later is channel
+usage for 802.11n, haven't started toying with that yet in terms of
+regulatory restrictions but I think it may just be the list of
+channels (center of freqs) which can be used at the same time.
+
+Should we have an nl80211_wiphy_band_attr and an
+nl80211_reg_band_attr? Or should we try to come up with just one which
+would work and make sense for both device capability and regulatory
+structure definition?
+
+Just for reference my old patch which dealt with the regulatory
+structure definition can be found here:
+
+http://kernel.org/pub/linux/kernel/people/mcgrof/v2-regdomain-patches/0003-PATCH-Wireless-add-IEEE-802.11-regualtory-domain.patch
+
+> +
+> +       /* keep last */
+> +       __NL80211_BAND_ATTR_AFTER_LAST,
+> +       NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
+> +};
+> +
+> +/**
+> + * enum nl80211_frequency_attr - frequency attributes
+> + * @NL80211_FREQUENCY_ATTR_FREQ: Frequency in MHz
+
+Is @NL80211_FREQUENCY_ATTR_CENTER_FREQ too long? If so then can we
+specify that its used for the center of freq in the kdoc comment?
 
   Luis
