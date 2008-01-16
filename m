@@ -1,172 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:13541 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752675AbYAIJQM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 04:16:12 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 6/6] ath5k: simplify beacon configuration
-Date: Wed,  9 Jan 2008 18:16:09 +0900
-Message-Id: <1199870169-10476-7-git-send-email-bruno@thinktube.com> (sfid-20080109_091628_393902_E169A01C)
-In-Reply-To: <1199870169-10476-6-git-send-email-bruno@thinktube.com>
-References: <1199870169-10476-1-git-send-email-bruno@thinktube.com>
- <1199870169-10476-2-git-send-email-bruno@thinktube.com>
- <1199870169-10476-3-git-send-email-bruno@thinktube.com>
- <1199870169-10476-4-git-send-email-bruno@thinktube.com>
- <1199870169-10476-5-git-send-email-bruno@thinktube.com>
- <1199870169-10476-6-git-send-email-bruno@thinktube.com>
+Received: from mga01.intel.com ([192.55.52.88]:26324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752070AbYAPSlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2008 13:41:10 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC PATCH 05/12 v2] mac80211: A-MPDU add debugfs support
+Date: Wed, 16 Jan 2008 20:40:53 +0200
+Message-Id: <12005088642058-git-send-email-ron.rindjunsky@intel.com> (sfid-20080116_184119_292562_5421CDD8)
+In-Reply-To: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-make ath5k_beacon_config() clearer and move timer configuration into a seperate
-function. it will be needed later when we can detect HW merges.
+This patch adds A-MPDU status report per STA to the debugfs.
+Remark:
+=======
+The option to activate A-MPDU through debugfs is temporary, only
+until A-MPDU manager will be added to the code, and for RFC purposes.
 
-Changes-licensed-under: 3-clause-BSD
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
- drivers/net/wireless/ath5k/base.c |  105 +++++++++++++++++-------------------
- 1 files changed, 50 insertions(+), 55 deletions(-)
+ net/mac80211/debugfs_sta.c |  116 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h    |    1 +
+ 2 files changed, 117 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 92361df..4f1ff1a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1972,23 +1972,9 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	sc->bsent++;
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 8f5944c..0878146 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -55,6 +55,13 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.open = mac80211_open_file_generic,				\
  }
  
--/*
-- * Configure the beacon and sleep timers.
-- *
-- * When operating as an AP this resets the TSF and sets
-- * up the hardware to notify us when we need to issue beacons.
-- *
-- * When operating in station mode this sets up the beacon
-- * timers according to the timestamp of the last received
-- * beacon and the current TSF, configures PCF and DTIM
-- * handling, programs the sleep registers so the hardware
-- * will wakeup in time to receive beacons, and configures
-- * the beacon miss handling so we'll receive a BMISS
-- * interrupt when we stop seeing beacons from the AP
-- * we've associated with.
-- */
-+
- static void
--ath5k_beacon_config(struct ath5k_softc *sc)
-+ath5k_beacon_update_timers(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 uninitialized_var(nexttbtt), intval, tsftu;
-@@ -2002,57 +1988,66 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 	tsf = ath5k_hw_get_tsf64(ah);
- 	tsftu = TSF_TO_TU(tsf);
- 
--	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "intval %u hw tsftu %u\n",
--		intval, tsftu);
-+	/*
-+	 * Pull nexttbtt forward to reflect the current
-+	 * TSF. Add one intval otherwise the timespan
-+	 * can be too short for ibss merges.
-+	 */
-+	nexttbtt = tsftu + 2 * intval;
- 
--	if (sc->opmode == IEEE80211_IF_TYPE_STA ||
--			(sc->opmode == IEEE80211_IF_TYPE_IBSS &&
--				!sc->bbuf->skb)) {
--		ath5k_hw_set_intr(ah, 0);
--		sc->imask |= AR5K_INT_BMISS;
--		sc->bmisscount = 0;
--		ath5k_hw_set_intr(ah, sc->imask);
--	} else if (sc->opmode == IEEE80211_IF_TYPE_IBSS /* TODO || AP */) {
--		ath5k_hw_set_intr(ah, 0);
--		if (sc->opmode == IEEE80211_IF_TYPE_IBSS) {
--			/*
--			 * Pull nexttbtt forward to reflect the current
--			 * TSF. Add one intval otherwise the timespan
--			 * can be too short for ibss merges.
--			 */
--			nexttbtt = tsftu + 2 * intval;
-+	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
-+		"hw tsftu %u nexttbtt %u intval %u\n", tsftu, nexttbtt, intval);
- 
--			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "nexttbtt %u "
--				"intval %u\n", nexttbtt, intval);
-+	intval |= AR5K_BEACON_ENA;
- 
--			/*
--			 * In IBSS mode enable the beacon timers but only
--			 * enable SWBA interrupts if we need to manually
--			 * prepare beacon frames.  Otherwise we use a
--			 * self-linked tx descriptor and let the hardware
--			 * deal with things.
--			 */
--			if (!ath5k_hw_hasveol(ah))
--				sc->imask |= AR5K_INT_SWBA;
--		} /* TODO else AP */
-+	ath5k_hw_init_beacon(ah, nexttbtt, intval);
++#define STA_OPS_WR(name)						\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.write = sta_##name##_write,					\
++	.open = mac80211_open_file_generic,				\
 +}
++
+ #define STA_FILE(name, field, format)					\
+ 		STA_READ_##format(name, field)				\
+ 		STA_OPS(name)
+@@ -191,6 +198,113 @@ static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
+ STA_OPS(wme_tx_queue);
+ #endif
  
--		intval |= AR5K_BEACON_ENA;
- 
--		ath5k_beaconq_config(sc);
--		ath5k_hw_init_beacon(ah, nexttbtt, intval);
-+/*
-+ * Configure the beacon timers and interrupts based on the operating mode
-+ *
-+ * When operating in station mode we want to receive a BMISS interrupt when we
-+ * stop seeing beacons from the AP we've associated with so we can look for
-+ * another AP to associate with.
-+ *
-+ * In IBSS mode we need to configure the beacon timers and use a self-linked tx
-+ * descriptor if possible. If the hardware cannot deal with that we enable SWBA
-+ * interrupts to send the beacons from the interrupt handler.
-+ */
-+static void
-+ath5k_beacon_config(struct ath5k_softc *sc)
++static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
++					size_t count, loff_t *ppos)
 +{
-+	struct ath5k_hw *ah = sc->ah;
- 
--		sc->bmisscount = 0;
--		ath5k_hw_set_intr(ah, sc->imask);
-+	ath5k_hw_set_intr(ah, 0);
-+	sc->bmisscount = 0;
++	char buf[768], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	p += scnprintf(p, sizeof(buf)+buf-p, "Agg state for STA is:\n");
++	p += scnprintf(p, sizeof(buf)+buf-p, " STA next dialog_token is %d \n "
++			"TIDs info is: \n TID :",
++			(sta->ampdu_mlme.dialog_token_allocator + 1));
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d", i);
 +
-+	if (sc->opmode == IEEE80211_IF_TYPE_STA) {
-+		sc->imask |= AR5K_INT_BMISS;
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n RX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++	sta->ampdu_mlme.tid_rx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_rx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n TX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n SSN :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].ssn);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++
++static ssize_t sta_agg_status_write(struct file *file,
++		const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct net_device *dev = sta->dev;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw *hw = &local->hw;
++	u8 *da = sta->addr;
++	static int tid_static_tx[16] = {0, 0, 0, 0, 0, 0, 0, 0,
++					0, 0, 0, 0, 0, 0, 0, 0};
++	static int tid_static_rx[16] = {1, 1, 1, 1, 1, 1, 1, 1,
++					1, 1, 1, 1, 1, 1, 1, 1};
++	char *endp;
++	char buf[32];
++	int buf_size, rs;
++	unsigned int tid_num;
++	char state[4];
++
++	memset(buf, 0x00, sizeof(buf));
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tid_num = simple_strtoul(buf, &endp, 0);
++	if (endp == buf)
++		return -EINVAL;
++
++	if ((tid_num >= 100) && (tid_num <= 115)) {
++		/* toggle Rx aggregation command */
++		tid_num = tid_num - 100;
++		if (tid_static_rx[tid_num] == 1) {
++			strcpy(state, "off ");
++			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
++					WLAN_REASON_QSTA_REQUIRE_SETUP);
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
++			tid_static_rx[tid_num] = 0;
++		} else {
++			strcpy(state, "on ");
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
++			tid_static_rx[tid_num] = 1;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s\n", __func__,
++				tid_num, state);
++	} else if ((tid_num >= 0) && (tid_num <= 15)) {
++		/* toggle Tx aggregation command */
++		if (tid_static_tx[tid_num] == 0) {
++			strcpy(state, "on ");
++			rs =  ieee80211_start_tx_ba_session(hw, da, tid_num);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 1;
++		} else {
++			strcpy(state, "off");
++			rs =  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 0;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s, return=%d\n",
++				__func__, tid_num, state, rs);
 +	}
-+	else if (sc->opmode == IEEE80211_IF_TYPE_IBSS) {
- 		/*
--		 * When using a self-linked beacon descriptor in
--		 * ibss mode load it once here.
-+		 * In IBSS mode enable the beacon timers but only enable SWBA
-+		 * interrupts if we need to manually prepare beacon frames.
-+		 * Otherwise we use a self-linked tx descriptor and let the
-+		 * hardware deal with things. In that case we have to load it
-+		 * only once here.
- 		 */
--		if (sc->opmode == IEEE80211_IF_TYPE_IBSS &&
--				ath5k_hw_hasveol(ah))
-+		ath5k_beaconq_config(sc);
-+		ath5k_beacon_update_timers(sc);
 +
-+		if (!ath5k_hw_hasveol(ah))
-+			sc->imask |= AR5K_INT_SWBA;
-+		else
- 			ath5k_beacon_send(sc);
- 	}
-+	/* TODO else AP */
++	return count;
++}
++STA_OPS_WR(agg_status);
 +
-+	ath5k_hw_set_intr(ah, sc->imask);
+ #define DEBUGFS_ADD(name) \
+ 	sta->debugfs.name = debugfs_create_file(#name, 0444, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -224,6 +338,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(wme_rx_queue);
+ 	DEBUGFS_ADD(wme_tx_queue);
+ #endif
++	DEBUGFS_ADD(agg_status);
  }
  
-+
- /********************\
- * Interrupt handling *
- \********************/
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -238,6 +353,7 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ 	DEBUGFS_DEL(wme_rx_queue);
+ 	DEBUGFS_DEL(wme_tx_queue);
+ #endif
++	DEBUGFS_DEL(agg_status);
+ 
+ 	debugfs_remove(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 48f25f2..1e4410f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -190,6 +190,7 @@ struct sta_info {
+ 		struct dentry *wme_rx_queue;
+ 		struct dentry *wme_tx_queue;
+ #endif
++		struct dentry *agg_status;
+ 	} debugfs;
+ #endif
+ };
 -- 
-1.5.3.4
+1.5.3.3
 
