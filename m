@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:55459 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbYAYSX3 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:15610 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbYAPOqr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 13:23:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Linux 2.6.24-rc7
-Date: Fri, 25 Jan 2008 19:21:48 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 16 Jan 2008 09:46:47 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08' message
+Date: Wed, 16 Jan 2008 15:48:44 +0100
+Cc: Marc Pignat <marc.pignat@hevs.ch>, Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251723.58891.mb@bu3sch.de> <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
-In-Reply-To: <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200801161334.13623.marc.pignat@hevs.ch>
+In-Reply-To: <200801161334.13623.marc.pignat@hevs.ch>
 MIME-Version: 1.0
-Message-Id: <200801251921.48862.mb@bu3sch.de> (sfid-20080125_182332_613640_CC361FC0)
 Content-Type: text/plain;
   charset="iso-8859-1"
+Message-Id: <200801161548.44341.hs4233@mail.mn-solutions.de> (sfid-20080116_144652_355376_20D21A4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 25 January 2008 17:43:09 Linus Torvalds wrote:
-> 
-> On Fri, 25 Jan 2008, Michael Buesch wrote:
-> > 
-> > If we are talking about what's sane or not...
-> > It's trivial to fix this in the firmware, like sane vendors like
-> > Broadcom do.
-> 
-> You just showed your total disregard for any sanity by calling broadcom 
-> "sane".
+Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-The Broadcom firmware _is_ mostly sane. That's what I am saying.
-I wasn't talking about Broadcom's support or anything else.
+> This patch is against 2.6.24-rc8 and has only been tested with
+> the sdio interface, please test it with usb.
 
-> > Architectures that can't do unaligned access are heavily used in
-> > wireless embedded routers. So we are not going to pay a huge
-> > price there so just one vendor doesn't have to fix his firmware.
-> 
-> .. and you also showed that you didn't even read my email and the options 
-> I outlined. The fact is, the Intel wireless chipset only works with x86 
-> CPU's. There is absolutely zero "price" on crap CPU's, because they are 
-> simply not relevant to this driver.
+The patch should be against wireless-2.6, branch everything. I'm
+adding a revised version:
 
-I'm not sure what's so hard about adding this trivial fix to the firmware.
-The _fact_ that this warning triggered for lots of drivers means that
-developers are not aware of the problem. So why should we go on hiding bugs
-that are _trivial_ to fix?
 
-I absolutely hate the attitude "The problem does not happen on most
-of the stuff intel uses, so they don't need to fix this". So, I also don't
-need to fix bugs in code I wrote, just because I don't have such use
-scenario? That would be great. I'd know thousands of lines of b43 code
-that I'd like to immediately remove then.
-That's just not how it works in the real world.
+----
 
-We should write the kernel and drivers as portable as possible. We left the
-old days when linux only ran on an i386. ;)
+netif_rx should be called only from interrupt context. if_cs and if_sdio receive
+packets from other contexts, and thus should call netif_rx_ni.
 
-And to say it again, this is really really trivial to fix. So why remove
-a sanity check that tells you about bugs in other drivers where it does
-matter (because they are used on such weird architectures), just because one
-vendor says "hey, doesn't matter for me"?
+Signed-off-by: Marc Pignat <marc.pignat@hevs.ch>
 
-Adding the check to the driver is not an option, because most driver developers
-are not aware of the issue. So they would not add this. They would just run
-into weird issues and waste time debugging it.
-
-If this was a hard to fix problem which would require changing lots of things,
-ok. That would be OK to remove the sanity check then. But that's not the case.
-
--- 
-Greetings Michael.
+Index: wireless-2.6/drivers/net/wireless/libertas/rx.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/rx.c	2008-01-16 16:45:12.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/rx.c	2008-01-16 16:45:42.000000000 +0100
+@@ -247,7 +247,10 @@ int lbs_process_rxed_packet(struct lbs_p
+ 	priv->stats.rx_packets++;
+ 
+ 	skb->protocol = eth_type_trans(skb, dev);
+-	netif_rx(skb);
++	if (in_interrupt())
++		netif_rx(skb);
++	else
++		netif_rx_ni(skb);
+ 
+ 	ret = 0;
+ done:
