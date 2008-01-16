@@ -1,270 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:21045 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756263AbYASCtR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 21:49:17 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH] ath5k: debug level improvements
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Sat, 19 Jan 2008 11:49:26 +0900
-Message-ID: <20080119024926.12055.9695.stgit@one> (sfid-20080119_024920_322795_D857BCD5)
-In-Reply-To: <200801191147.04877.bruno@thinktube.com>
-References: <200801191147.04877.bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.gmx.net ([213.165.64.20]:43564 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751022AbYAPXtg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2008 18:49:36 -0500
+Subject: Re: rc80211-pid: fix last_sample initialization
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080117003829.6d1c15cc@morte>
+References: <20080117003829.6d1c15cc@morte>
+Content-Type: text/plain
+Date: Thu, 17 Jan 2008 00:49:33 +0100
+Message-Id: <1200527373.7499.5.camel@localhost> (sfid-20080116_234941_179837_A60C0FA8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* use only one debug level for beacon debugging: unify ATH5K_DEBUG_BEACON and
-ATH5K_DEBUG_BEACON_PROC
 
-* remove debug level ATH5K_DEBUG_FATAL. doesn't make sense as a debug level -
-if it's fatal it should be logged as an error.
+On Thu, 2008-01-17 at 00:38 +0100, Stefano Brivio wrote:
+> Fix last_sample initialization. kzalloc'ing the per-STA data wasn't enough,
+> as jiffies can assume negative values as well. This fixes a bug which
+> prevented correct PID operation for a while after booting.
+> 
+> Thanks to Michael Buesch for reporting this.
+> 
+> Reported-and-tested-by: Michael Buesch <mb@bu3sch.de>
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-* fancier printing of debug levels. cat /debugfs/ath5k/phy0/debug
+Ack.
 
-* allow debug levels to be changed by echoing their name into
-/debugfs/ath5k/phy0/debug. this will toggle the state, when it was off it will
-be turned on and vice versa.
-
-drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
-drivers/net/wireless/ath5k/debug.c:     Changes-licensed-under: GPL
-drivers/net/wireless/ath5k/debug.h:     Changes-licensed-under: GPL
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
----
-
- drivers/net/wireless/ath5k/base.c  |   10 ++--
- drivers/net/wireless/ath5k/debug.c |   95 +++++++++++++++++++++++++++++++-----
- drivers/net/wireless/ath5k/debug.h |   18 +++----
- 3 files changed, 93 insertions(+), 30 deletions(-)
-
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 742616a..6bbee64 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1919,7 +1919,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	struct ath5k_buf *bf = sc->bbuf;
- 	struct ath5k_hw *ah = sc->ah;
- 
--	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC, "in beacon_send\n");
-+	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
- 
- 	if (unlikely(bf->skb == NULL || sc->opmode == IEEE80211_IF_TYPE_STA ||
- 			sc->opmode == IEEE80211_IF_TYPE_MNTR)) {
-@@ -1935,10 +1935,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	 */
- 	if (unlikely(ath5k_hw_num_tx_pending(ah, sc->bhalq) != 0)) {
- 		sc->bmisscount++;
--		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
-+		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
- 			"missed %u consecutive beacons\n", sc->bmisscount);
- 		if (sc->bmisscount > 3) {		/* NB: 3 is a guess */
--			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
-+			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
- 				"stuck beacon time (%u missed)\n",
- 				sc->bmisscount);
- 			tasklet_schedule(&sc->restq);
-@@ -1946,7 +1946,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 		return;
- 	}
- 	if (unlikely(sc->bmisscount != 0)) {
--		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
-+		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
- 			"resume beacon xmit after %u misses\n",
- 			sc->bmisscount);
- 		sc->bmisscount = 0;
-@@ -1966,7 +1966,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 
- 	ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
- 	ath5k_hw_tx_start(ah, sc->bhalq);
--	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC, "TXDP[%u] = %llx (%p)\n",
-+	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "TXDP[%u] = %llx (%p)\n",
- 		sc->bhalq, (unsigned long long)bf->daddr, bf->desc);
- 
- 	sc->bsent++;
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index 4ba649e..63e39f9 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -314,6 +314,76 @@ static const struct file_operations fops_reset = {
- };
- 
- 
-+/* debugfs: debug level */
-+
-+static struct {
-+	enum ath5k_debug_level level;
-+	const char *name;
-+	const char *desc;
-+} dbg_info[] = {
-+	{ ATH5K_DEBUG_RESET,	"reset",	"reset and initialization" },
-+	{ ATH5K_DEBUG_INTR,	"intr",		"interrupt handling" },
-+	{ ATH5K_DEBUG_MODE,	"mode",		"mode init/setup" },
-+	{ ATH5K_DEBUG_XMIT,	"xmit",		"basic xmit operation" },
-+	{ ATH5K_DEBUG_BEACON,	"beacon",	"beacon handling" },
-+	{ ATH5K_DEBUG_CALIBRATE, "calib",	"periodic calibration" },
-+	{ ATH5K_DEBUG_TXPOWER,	"txpower",	"transmit power setting" },
-+	{ ATH5K_DEBUG_LED,	"led",		"LED mamagement" },
-+	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
-+	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
-+	{ ATH5K_DEBUG_DUMPMODES, "dumpmodes",	"dump modes" },
-+	{ ATH5K_DEBUG_TRACE,	"trace",	"trace function calls" },
-+	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
-+};
-+
-+static ssize_t read_file_debug(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[1000];
-+	int len = 0;
-+	int i;
-+
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+		"DEBUG LEVEL: 0x%08x\n\n", sc->debug.level);
-+
-+	for (i = 0; i < ARRAY_SIZE(dbg_info) - 1; i++) {
-+		len += snprintf(buf+len, sizeof(buf)-len,
-+			"%10s %c 0x%08x - %s\n", dbg_info[i].name,
-+			sc->debug.level & dbg_info[i].level ? '+' : ' ',
-+			dbg_info[i].level, dbg_info[i].desc);
-+	}
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+		"%10s %c 0x%08x - %s\n", dbg_info[i].name,
-+		sc->debug.level == dbg_info[i].level ? '+' : ' ',
-+		dbg_info[i].level, dbg_info[i].desc);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_debug(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(dbg_info); i++) {
-+		if (strncmp(userbuf, dbg_info[i].name,
-+					strlen(dbg_info[i].name)) == 0)
-+			sc->debug.level ^= dbg_info[i].level; /* toggle bit */
-+	}
-+	return count;
-+}
-+
-+static const struct file_operations fops_debug = {
-+	.read = read_file_debug,
-+	.write = write_file_debug,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
- /* init */
- 
- void
-@@ -326,26 +396,24 @@ void
- ath5k_debug_init_device(struct ath5k_softc *sc)
- {
- 	sc->debug.level = ath5k_debug;
-+
- 	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
--			ath5k_global_debugfs);
--	sc->debug.debugfs_debug = debugfs_create_u32("debug",
--			0666, sc->debug.debugfs_phydir, &sc->debug.level);
-+				ath5k_global_debugfs);
-+
-+	sc->debug.debugfs_debug = debugfs_create_file("debug", 0666,
-+				sc->debug.debugfs_phydir, sc, &fops_debug);
- 
- 	sc->debug.debugfs_registers = debugfs_create_file("registers", 0444,
--				sc->debug.debugfs_phydir,
--				sc, &fops_registers);
-+				sc->debug.debugfs_phydir, sc, &fops_registers);
- 
- 	sc->debug.debugfs_tsf = debugfs_create_file("tsf", 0666,
--				sc->debug.debugfs_phydir,
--				sc, &fops_tsf);
-+				sc->debug.debugfs_phydir, sc, &fops_tsf);
- 
- 	sc->debug.debugfs_beacon = debugfs_create_file("beacon", 0666,
--				sc->debug.debugfs_phydir,
--				sc, &fops_beacon);
-+				sc->debug.debugfs_phydir, sc, &fops_beacon);
- 
- 	sc->debug.debugfs_reset = debugfs_create_file("reset", 0222,
--				sc->debug.debugfs_phydir,
--				sc, &fops_reset);
-+				sc->debug.debugfs_phydir, sc, &fops_reset);
- }
- 
- void
-@@ -415,8 +483,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
- 	struct ath5k_buf *bf;
- 	int status;
- 
--	if (likely(!(sc->debug.level &
--	    (ATH5K_DEBUG_RESET | ATH5K_DEBUG_FATAL))))
-+	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
- 		return;
- 
- 	printk(KERN_DEBUG "rx queue %x, link %p\n",
-@@ -426,7 +493,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
- 	list_for_each_entry(bf, &sc->rxbuf, list) {
- 		ds = bf->desc;
- 		status = ah->ah_proc_rx_desc(ah, ds);
--		if (!status || (sc->debug.level & ATH5K_DEBUG_FATAL))
-+		if (!status)
- 			ath5k_debug_printrxbuf(bf, status == 0);
- 	}
- 	spin_unlock_bh(&sc->rxbuflock);
-diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
-index 2b491cb..c4fd8c4 100644
---- a/drivers/net/wireless/ath5k/debug.h
-+++ b/drivers/net/wireless/ath5k/debug.h
-@@ -91,7 +91,6 @@ struct ath5k_dbg_info {
-  * @ATH5K_DEBUG_MODE: mode init/setup
-  * @ATH5K_DEBUG_XMIT: basic xmit operation
-  * @ATH5K_DEBUG_BEACON: beacon handling
-- * @ATH5K_DEBUG_BEACON_PROC: beacon ISR proc
-  * @ATH5K_DEBUG_CALIBRATE: periodic calibration
-  * @ATH5K_DEBUG_TXPOWER: transmit power setting
-  * @ATH5K_DEBUG_LED: led management
-@@ -99,7 +98,6 @@ struct ath5k_dbg_info {
-  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
-  * @ATH5K_DEBUG_DUMPMODES: dump modes
-  * @ATH5K_DEBUG_TRACE: trace function calls
-- * @ATH5K_DEBUG_FATAL: fatal errors
-  * @ATH5K_DEBUG_ANY: show at any debug level
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -115,15 +113,13 @@ enum ath5k_debug_level {
- 	ATH5K_DEBUG_MODE	= 0x00000004,
- 	ATH5K_DEBUG_XMIT	= 0x00000008,
- 	ATH5K_DEBUG_BEACON	= 0x00000010,
--	ATH5K_DEBUG_BEACON_PROC	= 0x00000020,
--	ATH5K_DEBUG_CALIBRATE	= 0x00000100,
--	ATH5K_DEBUG_TXPOWER	= 0x00000200,
--	ATH5K_DEBUG_LED		= 0x00000400,
--	ATH5K_DEBUG_DUMP_RX	= 0x00001000,
--	ATH5K_DEBUG_DUMP_TX	= 0x00002000,
--	ATH5K_DEBUG_DUMPMODES	= 0x00004000,
--	ATH5K_DEBUG_TRACE	= 0x00010000,
--	ATH5K_DEBUG_FATAL	= 0x80000000,
-+	ATH5K_DEBUG_CALIBRATE	= 0x00000020,
-+	ATH5K_DEBUG_TXPOWER	= 0x00000040,
-+	ATH5K_DEBUG_LED		= 0x00000080,
-+	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
-+	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
-+	ATH5K_DEBUG_DUMPMODES	= 0x00000400,
-+	ATH5K_DEBUG_TRACE	= 0x00001000,
- 	ATH5K_DEBUG_ANY		= 0xffffffff
- };
- 
+> ---
+> Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> ===================================================================
+> --- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
+> +++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> @@ -496,6 +496,8 @@ static void *rate_control_pid_alloc_sta(
+>  	if (spinfo == NULL)
+>  		return NULL;
+>  
+> +	spinfo->last_sample = jiffies;
+> +
+>  #ifdef CONFIG_MAC80211_DEBUGFS
+>  	spin_lock_init(&spinfo->events.lock);
+>  	init_waitqueue_head(&spinfo->events.waitqueue);
+> 
+> 
 
