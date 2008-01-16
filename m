@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61737 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750791AbYAOS1o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jan 2008 13:27:44 -0500
-Subject: Re: [PATCH] b43: Add support for new firmware
-From: Pavel Roskin <proski@gnu.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200801131420.52995.mb@bu3sch.de>
-References: <200801131420.52995.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 15 Jan 2008 13:27:42 -0500
-Message-Id: <1200421662.17542.32.camel@dv> (sfid-20080115_182747_452841_CFD952BA)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.152]:14693 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbYAPQhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2008 11:37:20 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so333875fga.17
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2008 08:37:18 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: proper short-slot handling
+Date: Wed, 16 Jan 2008 17:37:00 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	bruno randolf <br1@einfach.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Yanbo Li <dreamfly281@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Daniel Drake <dsd@gentoo.org>
+References: <1199974496.3861.80.camel@johannes.berg> <200801102000.44722.IvDoorn@gmail.com> <1200490221.5887.170.camel@johannes.berg>
+In-Reply-To: <1200490221.5887.170.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200801161737.00682.IvDoorn@gmail.com> (sfid-20080116_163724_317095_0BE13226)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Sun, 2008-01-13 at 14:20 +0100, Michael Buesch wrote:
-> This patch adds support for new firmware.
-> Old firmware is still supported until July 2008.
+On Wednesday 16 January 2008, Johannes Berg wrote:
+> Ivo,
 > 
-> To get new firmware, go to
-> ftp://ftp.linksys.com/opensourcecode/wrt150nv11/1.51.3/
-> and download the tarball. We don't have a smaller tarball, yet.
-> That will be fixed later.
+> > > If you think it is the right approach, maybe try converting your driver
+> > > and see if that results in any problems, if not, send me the patch and
+> > > I'll integrate it.
+> > 
+> > The convertion was very easy, and like I said cleaned up some hacks. :)
+> 
+> Thanks. What is this diffed on? I tried importing it into my current
+> patch but it failed, do I have to wait for John to pull in your recent
+> pull request?
 
-I have finally found some time and hardware to test it, but the tarball
-is overwhelming at its 186M.  And the worst thing, the server
-disconnected after 30M and appears to be down right now.  P.S. It's up,
-ETA is 48 minutes.
+John already merged the 2.0.14 release into the everything branch,
+so no need to wait on that. The remaining patches which have been send
+but not yet merged are bugfixes which won't cause a collision with the
+short-slot patch.
 
-There were two files there.  I hope either is fine.  I'm trying to
-download WRT150NV11_v1.51.3_ETSI.tgz
+Not sure where I diffed it against, I probably have to rebase it anyway
+since I currently have a few major patches pending for the 2.1.0 release
+which will drastically change the entire interface handling in rt2x00.
 
-Cannot we petition Linksys to put wl_ap.o outside the tarball?  Or maybe
-Broadcom could do it?
+When do you plan to send the patch for inclusion? I can rebase the patch
+and make it part of the 2.1.0 release of this weekend or release 2.1.0
+and rebase the patch against that.
 
-Even a zip file would be better.  It's possible to cut a part of the zip
-file and uncompress it with gzip.
-
-It's really a travesty of open source.  The file is "available", but you
-have do download 186M of useless (for me at least) mips compilers and
-other stuff.  And I have a relatively good connection.
-
-> You can extract firmware out of the "wl_ap.o" file contained
-> in this tarball using latest fwcutter. You must pass the option
-> --unsupported to fwcutter.
-> Fwcutter-010 with official support for a new firmware image will
-> be released soon.
-
-Do you know that the Subversion repository of fwcutter has no files at
-all?  I mean svn://svn.berlios.de/bcm43xx/trunk
-
-Yes, I will try --unsupported, with version 009.
-
--- 
-Regards,
-Pavel Roskin
+Ivo
