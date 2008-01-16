@@ -1,88 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:10116 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755648AbYA1QZj (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:63434 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbYAPVwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 11:25:39 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: make association debug output nicer
-Date: Mon, 28 Jan 2008 17:25:53 +0100
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Dan Williams <dcbw@redhat.com>
+	Wed, 16 Jan 2008 16:52:21 -0500
+Received: by py-out-1112.google.com with SMTP id u52so597826pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2008 13:52:21 -0800 (PST)
+Message-ID: <43e72e890801161352u4c76b855n202a68b39e0d8fd5@mail.gmail.com> (sfid-20080116_215226_299075_93D4D0E2)
+Date: Wed, 16 Jan 2008 16:52:20 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] nl80211: export frequencies/bitrates
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890801161350v3cb44068p15a32b71af26a8d2@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801281725.53260.hs4233@mail.mn-solutions.de> (sfid-20080128_162607_602471_A8353531)
+Content-Type: text/plain; charset=UTF-8
+References: <1200439921.5887.148.camel@johannes.berg>
+	 <43e72e890801161350v3cb44068p15a32b71af26a8d2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This also fixes a bug where should_deauth_infrastructure() always
-returned 0.
+On Jan 16, 2008 4:50 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> IR), modulation capabilities, and antenna gain (we could assume ~dBi
 
-Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2008-01-16 14:15:07.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2008-01-16 15:19:16.000000000 +0100
-@@ -403,11 +403,10 @@ static int should_deauth_infrastructure(
- {
- 	int ret = 0;
- 
--	lbs_deb_enter(LBS_DEB_ASSOC);
--
- 	if (priv->connect_status != LBS_CONNECTED)
- 		return 0;
- 
-+	lbs_deb_enter(LBS_DEB_ASSOC);
- 	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
- 		lbs_deb_assoc("Deauthenticating due to new SSID\n");
- 		ret = 1;
-@@ -446,7 +445,7 @@ static int should_deauth_infrastructure(
- 
- out:
- 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
--	return 0;
-+	return ret;
- }
- 
- 
-@@ -633,9 +642,7 @@ void lbs_association_worker(struct work_
- 		}
- 
- 		if (success) {
--			lbs_deb_assoc("ASSOC: associated to '%s', %s\n",
--				escape_essid(priv->curbssparams.ssid,
--				             priv->curbssparams.ssid_len),
-+			lbs_deb_assoc("associated to %s\n",
- 				print_mac(mac, priv->curbssparams.bssid));
- 			lbs_prepare_and_send_command(priv,
- 				CMD_802_11_RSSI,
-Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2008-01-16 14:37:41.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2008-01-16 14:37:47.000000000 +0100
-@@ -74,7 +74,7 @@ void lbs_mac_event_disconnected(struct l
- 		lbs_deb_cmd("disconnected, so exit PS mode\n");
- 		lbs_ps_wakeup(priv, 0);
- 	}
--	lbs_deb_leave(LBS_DEB_CMD);
-+	lbs_deb_leave(LBS_DEB_ASSOC);
- }
- 
- /**
-Index: wireless-2.6/drivers/net/wireless/libertas/join.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/join.c	2008-01-16 15:19:49.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/join.c	2008-01-16 15:19:54.000000000 +0100
-@@ -769,9 +769,6 @@ int lbs_ret_80211_associate(struct lbs_p
- 	priv->curbssparams.ssid_len = bss->ssid_len;
- 	memcpy(priv->curbssparams.bssid, bss->bssid, ETH_ALEN);
- 
--	lbs_deb_assoc("ASSOC_RESP: currentpacketfilter is 0x%x\n",
--		priv->currentpacketfilter);
--
- 	priv->SNR[TYPE_RXPD][TYPE_AVG] = 0;
- 	priv->NF[TYPE_RXPD][TYPE_AVG] = 0;
- 
+I meant to type ~2dBi here.
+
+  Luis
