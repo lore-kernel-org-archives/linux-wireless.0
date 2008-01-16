@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:55397 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754101AbYALCpV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 21:45:21 -0500
-Date: Fri, 11 Jan 2008 18:44:00 -0800
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: channel utilisation short/long hdr?
-Message-ID: <20080112024400.GC12245@jm.kir.nu> (sfid-20080112_024528_430822_67790986)
-References: <1199922658.3861.40.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1199922658.3861.40.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:60238 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750915AbYAPXpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2008 18:45:55 -0500
+Date: Thu, 17 Jan 2008 00:38:29 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org
+Subject: rc80211-pid: fix last_sample initialization
+Message-ID: <20080117003829.6d1c15cc@morte> (sfid-20080116_234603_943915_85DD4A0B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 10, 2008 at 12:50:58AM +0100, Johannes Berg wrote:
-> What's the meaning of these defines?
-> 
-> #define CHAN_UTIL_HDR_LONG (202 * CHAN_UTIL_PER_USEC)
-> #define CHAN_UTIL_HDR_SHORT (40 * CHAN_UTIL_PER_USEC)
-> 
-> I can't figure out what the values 202 and 40 are.
+Fix last_sample initialization. kzalloc'ing the per-STA data wasn't enough,
+as jiffies can assume negative values as well. This fixes a bug which
+prevented correct PID operation for a while after booting.
 
-Hmm.. I thought I had filtered out the channel use estimation code from
-the original release since I did not see much use for this and the
-values were not exactly valid in many cases.. ;-). 
+Thanks to Michael Buesch for reporting this.
 
-This code is almost five years old and maybe not so surprisingly, I
-don't remember the exact details anymore.. Since these are use as
-"hdrtime", I would assume they were derived using following calculation:
+Reported-and-tested-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
++++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+@@ -496,6 +496,8 @@ static void *rate_control_pid_alloc_sta(
+ 	if (spinfo == NULL)
+ 		return NULL;
+ 
++	spinfo->last_sample = jiffies;
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	spin_lock_init(&spinfo->events.lock);
+ 	init_waitqueue_head(&spinfo->events.waitqueue);
 
-CHAN_UTIL_HDR_LONG: assume 802.11b with long preamble:
-aSIFSTime (10 usec) + aPreambleLength (144 usec) + aPLCPHeaderLength (48
-usec) = 202 usec
-
-CHAN_UTIL_HDR_SHORT: assume OFDM:
-
-aSIFSTime (+ signal ext in case of 802.11g; 16 usec) + preamble (16
-usec) + signal (4 usec) = 36 usec; add one symbol time (4 usec) for
-some reason (or a sign of someone not knowing how to add small
-numbers together.. ;-), I don't remember anymore and cannot figure out
-this without wasting way too much time..)
-
-> And probably related, what does it mean for a bitrate to be an "ERP
-> rate"? Does that just mean it's an OFDM bitrate?
-
-That would be any rate using Extended Rate PHY (ERP; 802.11 Clause 19).
-This is not necessarily OFDM (it could also be using PBCC modulation).
-In practice, I would expect the kernel side implementation to use this
-in anything PHY related as ERP-OFDM (i.e., it may not support optional
-PBCC rates). The association and beacon/probe processing may be more
-generic to any ERP rate. I don't think ERP-PBCC is very commonly used,
-so this may be more on the theoretical side..
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Ciao
+Stefano
