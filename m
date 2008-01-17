@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59551
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751787AbYAaGUt (ORCPT
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:46908 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754229AbYAQUko (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 01:20:49 -0500
-Date: Wed, 30 Jan 2008 22:21:09 -0800 (PST)
-Message-Id: <20080130.222109.52073562.davem@davemloft.net> (sfid-20080131_062056_424375_49C22577)
-To: jeff@garzik.org
-Cc: dlezcano@fr.ibm.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: net-2.6.25 is no more...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <47A16611.3000602@garzik.org>
-References: <47A03D4D.5090301@fr.ibm.com>
-	<20080130.054807.182676684.davem@davemloft.net>
-	<47A16611.3000602@garzik.org>
+	Thu, 17 Jan 2008 15:40:44 -0500
+Subject: Re: [PATCH 6/8] [PATCH] Split up rndis_host.c
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: David Brownell <david-b@pacbell.net>
+Cc: bjd@jooz.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200801080319.23299.david-b@pacbell.net>
+References: <11983602942818-git-send-email-bjd@jooz.net>
+	 <20071223011707.1798C2360C6@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
+	 <1199304827.8532.31.camel@localhost>
+	 <200801080319.23299.david-b@pacbell.net>
+Content-Type: text/plain
+Date: Thu, 17 Jan 2008 22:40:30 +0200
+Message-Id: <1200602430.16510.0.camel@localhost> (sfid-20080117_204050_863870_9AC0CF0A)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Thu, 31 Jan 2008 01:09:21 -0500
-
-> David Miller wrote:
-> > The latter.
+On Tue, 2008-01-08 at 03:19 -0800, David Brownell wrote:
+> > Our 
+> > module version checks OID_GEN_PHYSICAL_MEDIUM in generic_rndis_bind,
+> > with rndis_host bind fails if OID is supported and wireless media
+type
+> > is returned, with rndis_wext if OID isn't supported or type isn't
+> > wireless. Should this be ok?
 > 
-> So...  what to do about changes which are not bug fixes?  Such changes 
-> should not go upstream immediately, because that's the standard rule for 
-> merge windows.
+> Sounds like if you can go the different-modules route, then
+rndis_bind()
+> should maybe accept a parameter giving it that option.  Then
 > 
-> And queueing them on our side just re-creates the same old situation we 
-> just changed away from, after all.
+>       rndis_wlan_bind(...) == rndis_bind(..., check_wlan_media)
+>       rndis_generic_bind(...) == rndis_bind(..., non_wlan_media)
+> 
+> That would be getting pretty complicated, since as you say the same
+> USB-level binding (hence hotplugging) would need to kick in ... but
+> having different modules for different RNDIS flavors would need a 
+> new hotplug mechanism keying on media type.  Ugh.
 
-I'm saying that everything should go to the net-2.6 tree right now.
+Different modules works with rndis_generic_bind(..., media type option).
+dmesg shows following:
 
-When the merge window closes, net-2.6 will be for bug fixes only and
-I'll hold off on creating net-2.6.26 for about a week so that people
-concentrate on regression fixes.
+[11214.496773] usb 3-3: new high speed USB device using ehci_hcd and
+address 7
+[11214.622861] usb 3-3: configuration #1 chosen from 1 choice
+[11214.784874] usbcore: registered new interface driver cdc_ether
+[11214.805700] rndis_host 3-3:1.0: driver requires wired physical
+medium, but device is wireless.
+[11214.806823] usbcore: registered new interface driver rndis_host
+[11215.190824] wlan0: register 'rndis_wext' at usb-0000:00:10.3-3,
+Wireless RNDIS device, 00:xx:xx:xx:xx:xx
+[11215.190853] usbcore: registered new interface driver rndis_wext
+[11215.398850] rndis_wext 3-3:1.0: rndis media disconnect
 
-Yes, things will pile up but I think it's appropriate to hold off on
-merging features into the 2.6.26 queue for just one week.
+I assume that rndis_host gets always bind first as it's first in
+alphabetic, so rndis_wext is only loaded if RNDIS device has wireless
+media type.
+
+I have new patchset that prepares rndis_host/usbnet for separate
+rndis_wext but not sure should I submit (I haven't managed to get into
+contact with Bjorge Dijkstra for 3,5 weeks now to have him decide how to
+proceed). 
+
+ - Jussi Kivilinna
+
