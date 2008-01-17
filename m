@@ -1,100 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3807 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751552AbYAJUUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 15:20:10 -0500
-Date: Thu, 10 Jan 2008 14:49:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
-Message-ID: <20080110194922.GF3109@tuxdriver.com> (sfid-20080110_202015_901093_35AA5ADE)
+Received: from wa-out-1112.google.com ([209.85.146.179]:51710 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbYAQQkf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2008 11:40:35 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1171475wah.23
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2008 08:40:34 -0800 (PST)
+Message-ID: <1ba2fa240801170840i10c6bc9fp24eebbe1110df93@mail.gmail.com> (sfid-20080117_165334_779439_CF003333)
+Date: Thu, 17 Jan 2008 18:40:34 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: led support in mac80211 and drivers
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Tomas Carnecky" <tom@dbservice.com>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1200584782.8007.59.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <478DF297.9020904@dbservice.com>
+	 <1ba2fa240801160832g611d5763gcb3d681353019d4f@mail.gmail.com>
+	 <478E465A.2030003@dbservice.com>
+	 <1ba2fa240801161038t235f9ae4m3b1f7e1963b592ef@mail.gmail.com>
+	 <20080116200126.GA3164@tuxdriver.com>
+	 <1200584782.8007.59.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff,
+On Jan 17, 2008 5:46 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 
-A couple more fixes for 2.6.24.  The one from Mattias Nissler is already
-in your upstream tree...FYI.
+> I'm wondering if this shouldn't simply be a driver decision and mac80211
+> exports an RXon LED that is always "on" for as long as receive is
+> running (whatever that means, please specify!)
 
-Let me know if there are problems!
+What we do is translate throughputs  - to  8 patterns if I remember correctly.
+Only when the throughput  cross threshold level NIC is disturbed with
+changing blinking pattern.
 
-Thanks,
+> Or you need to define blink patterns with the core LED framework.
 
-John
+Not for traffic but for example some laptops vendors wants slow blink
+in unassociated state some wants led to be off.
 
----
+The problem is that led behavior in clean design would be defined by
+trigger. So I would prefer to put flexibility of LED behavior in that
+level.
 
-Individual patches available here:
+> > > > >  - Mapping to what led is this behavior mapped
+>
+> That's trivially specified in sysfs. b43 (since it was mentioned
+> already) has some special logic to set up defaults coming from EEPROM.
+>
+> > > > >     - One behavior might be mapped to single led. Then we need to know
+> > > > > what trigger take precedences.
+>
+> That (multiple behaviours on a single LED) is impossible in the current
+> LED framework.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik/
+Most of todays laptop has only one led for Wifi that's a problem.
 
----
+> > > > I thought about having an 'ieee80211_activity_listener' that could
+> > > > subscribe to activity events of a ieee80211_hw device. One single
+> > > > callback that would be called when there's activity or if the state of
+> > > > the device has changed. Maybe something like this:
+> > > >
+> > > > int (*callback)(... *hw, u8 state, u8 type);
+> > > >
+> > > > where 'state' would be a bitmap of scanning/associated/etc and type the
+> > > > 'type' of activity (transmitting/receiving a frame). The callback then
+> > > > would decide which leds to activate and how (blinking or not etc). Does
+> > > > that sound better? At least it would be better than having to register
+> > > > three leds in each low-level driver ;)
+>
+> No, that sounds like a bad idea. We actually want the flexibility here,
+> I could for example use the front LED on my powerbook as a wireless
+> association LED if I wanted. We want to use the LED framework and if
+> that means three LEDs in your driver then so be it.
 
-The following changes since commit 3ce54450461bad18bbe1f9f5aa3ecd2f8e8d1235:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc7
+I agree it  has a lot of benefits to use LED framework, but it can be
+pushed to driver or some module. Unfortunately I'm not sure myself
 
-are available in the git repository at:
+Tomas
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-
-Ivo van Doorn (1):
-      rt2x00: Corectly initialize rt2500usb MAC
-
-Mattias Nissler (1):
-      rt2x00: Allow rt61 to catch up after a missing tx report
-
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- drivers/net/wireless/rt2x00/rt61pci.c   |   13 +++++++++++++
- 2 files changed, 14 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 50775f9..18b1f91 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -257,7 +257,7 @@ static const struct rt2x00debug rt2500usb_rt2x00debug = {
- static void rt2500usb_config_mac_addr(struct rt2x00_dev *rt2x00dev,
- 				      __le32 *mac)
- {
--	rt2500usb_register_multiwrite(rt2x00dev, MAC_CSR2, &mac,
-+	rt2500usb_register_multiwrite(rt2x00dev, MAC_CSR2, mac,
- 				      (3 * sizeof(__le16)));
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 01dbef1..0d9436d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1738,6 +1738,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_ring *ring;
- 	struct data_entry *entry;
-+	struct data_entry *entry_done;
- 	struct data_desc *txd;
- 	u32 word;
- 	u32 reg;
-@@ -1791,6 +1792,18 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 		    !rt2x00_get_field32(word, TXD_W0_VALID))
- 			return;
- 
-+		entry_done = rt2x00_get_data_entry_done(ring);
-+		while (entry != entry_done) {
-+			/* Catch up. Just report any entries we missed as
-+			 * failed. */
-+			WARNING(rt2x00dev,
-+				"TX status report missed for entry %p\n",
-+				entry_done);
-+			rt2x00pci_txdone(rt2x00dev, entry_done, TX_FAIL_OTHER,
-+					 0);
-+			entry_done = rt2x00_get_data_entry_done(ring);
-+		}
-+
- 		/*
- 		 * Obtain the status about this packet.
- 		 */
--- 
-John W. Linville
-linville@tuxdriver.com
+> johannes
+>
