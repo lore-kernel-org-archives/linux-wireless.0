@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27490 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760020AbYARQen convert rfc822-to-8bit (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.190]:42389 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754575AbYAQWAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 11:34:43 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 04/12] iwlwifi: document scan command
-Date: Fri, 18 Jan 2008 08:34:25 -0800
-Message-ID: <4220499A1B034C4FA93B547BA01E1FF001746541@orsmsx413.amr.corp.intel.com> (sfid-20080118_163448_520903_C8749F5C)
-In-reply-to: <1200441772.5887.167.camel@johannes.berg>
-References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com> <1200361585-31801-2-git-send-email-reinette.chatre@intel.com> <1200361585-31801-3-git-send-email-reinette.chatre@intel.com> <1200361585-31801-4-git-send-email-reinette.chatre@intel.com> <1200361585-31801-5-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022705_457944_D9860755) <1200441772.5887.167.camel@johannes.berg>
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
+	Thu, 17 Jan 2008 17:00:07 -0500
+Received: by mu-out-0910.google.com with SMTP id w8so756803mue.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2008 14:00:03 -0800 (PST)
+Date: Thu, 17 Jan 2008 22:57:44 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: rt2400-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	IvDoorn@gmail.com
+Subject: Spammed logs again rt2500pci 2.6.24-rc8
+Message-ID: <20080117225744.29aa214c@Varda> (sfid-20080117_220017_544910_83B7178A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-> Sent: Tuesday, January 15, 2008 7:03 PM
-> To: Chatre, Reinette
-> Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; 
-> Cahill, Ben M; Zhu, Yi
-> Subject: Re: [PATCH 04/12] iwlwifi: document scan command
-> 
-> 
-> > +/**
-> > + * struct iwl3945_scan_channel - entry in REPLY_SCAN_CMD channel 
-> > +table
-> > + *
-> > + * One for each channel in the scan list.
-> > + * Each channel can independently select:
-> > + * 1)  SSID for directed active scans
-> > + * 2)  Txpower setting (for rate specified within Tx command)
-> > + * 3)  How long to stay on-channel (behavior may be 
-> modified by quiet_time,
-> > + *     quiet_plcp_th, good_CRC_th)
-> 
-> This reminds me. How did you arrive at the dwell time? With 
-> hostapd running on b43 I've frequently seen the dwell time 
-> being too low:
-> 
-> iwl4965 will transmit a probe request and go to the next 
-> channel before hostapd sends the probe response, iwl4965 
-> still sees the response, but the b43 card never sees the ACK 
-> because it's receiver isn't quite as good as the iwl4965 receiver.
+Running
 
-I'm not sure of the history of the dwell time values, but it's an
-attempt to balance reliability of scan vs. speed of scan.  The active
-dwell times are, of course, more speed-aggressive than the passive ones.
-Would you be willing to experiment with your setup, and try some
-different values?
+Linux Varda 2.6.24-rc8 #1 SMP PREEMPT Wed Jan 16 15:09:43 CET 2008 x86_64 GNU/Linux
 
--- Ben --
+my logs are spmmed with:
 
-> johannes
-> 
+
+[20126.343240] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.343242] Please file bug report to http://rt2x00.serialmonkey.com.
+[20126.848277] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.848280] Please file bug report to http://rt2x00.serialmonkey.com.
+[20126.851693] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.851696] Please file bug report to http://rt2x00.serialmonkey.com.
+[20126.851854] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.851856] Please file bug report to http://rt2x00.serialmonkey.com.
+[20126.852082] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.852084] Please file bug report to http://rt2x00.serialmonkey.com.
+[20126.852224] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20126.852226] Please file bug report to http://rt2x00.serialmonkey.com.
+[20127.349691] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20127.349694] Please file bug report to http://rt2x00.serialmonkey.com.
+[20127.352425] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20127.352428] Please file bug report to http://rt2x00.serialmonkey.com.
+[20127.853345] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20127.853348] Please file bug report to http://rt2x00.serialmonkey.com.
+[20127.853699] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20127.853701] Please file bug report to http://rt2x00.serialmonkey.com.
+[20128.858569] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20128.858572] Please file bug report to http://rt2x00.serialmonkey.com.
+[20131.875550] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20131.875554] Please file bug report to http://rt2x00.serialmonkey.com.
+[20154.693853] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20154.693856] Please file bug report to http://rt2x00.serialmonkey.com.
+[20185.527974] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20185.527977] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.812334] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.812337] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.812374] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.812376] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.812507] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.812509] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.813100] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.813102] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.813474] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.813476] Please file bug report to http://rt2x00.serialmonkey.com.
+[20189.813909] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20189.813911] Please file bug report to http://rt2x00.serialmonkey.com.
+[20212.242858] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20212.242861] Please file bug report to http://rt2x00.serialmonkey.com.
+[20212.243587] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[20212.243589] Please file bug report to http://rt2x00.serialmonkey.com.
+
+
+As the last time the thing is triggered with a p2p app making a lot of connections (this time not bt but mldonkey)
+Back to top 	
+View user's profile Send private message 	
