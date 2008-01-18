@@ -1,133 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2664 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751290AbYAPUYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 15:24:22 -0500
-Date: Wed, 16 Jan 2008 15:01:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Tomas Carnecky <tom@dbservice.com>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757403AbYARMii (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2008 07:38:38 -0500
 Subject: Re: led support in mac80211 and drivers
-Message-ID: <20080116200126.GA3164@tuxdriver.com> (sfid-20080116_202428_768975_7B04F6BA)
-References: <478DF297.9020904@dbservice.com> <1ba2fa240801160832g611d5763gcb3d681353019d4f@mail.gmail.com> <478E465A.2030003@dbservice.com> <1ba2fa240801161038t235f9ae4m3b1f7e1963b592ef@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240801161038t235f9ae4m3b1f7e1963b592ef@mail.gmail.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tomas Carnecky <tom@dbservice.com>,
+	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240801170840i10c6bc9fp24eebbe1110df93@mail.gmail.com> (sfid-20080117_165305_003743_0FF9C237)
+References: <478DF297.9020904@dbservice.com>
+	 <1ba2fa240801160832g611d5763gcb3d681353019d4f@mail.gmail.com>
+	 <478E465A.2030003@dbservice.com>
+	 <1ba2fa240801161038t235f9ae4m3b1f7e1963b592ef@mail.gmail.com>
+	 <20080116200126.GA3164@tuxdriver.com>
+	 <1200584782.8007.59.camel@johannes.berg>
+	 <1ba2fa240801170840i10c6bc9fp24eebbe1110df93@mail.gmail.com>
+	 (sfid-20080117_165305_003743_0FF9C237)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aIXi1pV/E6Pj9CPTN3kW"
+Date: Fri, 18 Jan 2008 02:01:08 +0100
+Message-Id: <1200618068.5716.22.camel@johannes.berg> (sfid-20080118_123842_594719_09298D9E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I appreciate that this topic started with discussion of the (long
-overdue) support for LEDs in the iwlwifi drivers.  However at
-this point I think it has strayed sufficiently into the mac80211
-realm that it should be moved to the home of mac80211 development,
-linux-wireless@vger.kernel.org
 
-Thanks,
+--=-aIXi1pV/E6Pj9CPTN3kW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
 
-On Wed, Jan 16, 2008 at 08:38:48PM +0200, Tomas Winkler wrote:
-> > > Currently we recognize 4 or 5 pasterns that are implemented and
-> > > switching between them according laptop vendor.
-> >
-> > We = who?
-> 
-> Intel
-> 
-> Greping through the kernel source revealed only a single user
-> > of ieee80211_get_*_led_name(), the broadcom B43 wireless driver.
-> 
-> Correct
-> 
-> That
-> > driver switches between different modes based on bus->boardinfo.vendor.
-> > But where are the other modules needing this flexibility? Are they being
-> > developed in private by the companies that make the access points?
-> >
-> 
-> Different Laptop vendor and AP vendors. This information might be
-> written in many places, PCI subvendor, in EEROM etc sometimes it has
-> to be supplied from outside.
-> 
-> 
-> > > So what is needed for led implementation are 3 decision chain
-> > >  - Activity Trigger (RX, TX, Association, Radio State/RF Kill)
-> > >  - Behavior Decision -  What is done on each trigger
-> > >     - Behavior is easy to model - ON, OFF, BLINK(pattern)
-> > >  - Mapping to what led is this behavior mapped
-> > >     - One behavior might be mapped to single led. Then we need to know
-> > > what trigger take precedences.
-> >
-> > Actually, the second and third point can be merged.
-> >
-> 
-> Agree Implementation wise might be simpler.
-> 
-> > > Actually the major problem I have currently with mac80211 trigger
-> > > implementation RX/TX trigger since Intel's led doesn't have to be
-> > > triggered ON/OFF on each packet, led is capable of blinking itself.,
-> > > therefore I would like to see your patch very much. We probably would
-> > > have to work on flexibility of blinking patterns
-> >
-> > I thought about having an 'ieee80211_activity_listener' that could
-> > subscribe to activity events of a ieee80211_hw device. One single
-> > callback that would be called when there's activity or if the state of
-> > the device has changed. Maybe something like this:
-> >
-> > int (*callback)(... *hw, u8 state, u8 type);
-> >
-> > where 'state' would be a bitmap of scanning/associated/etc and type the
-> > 'type' of activity (transmitting/receiving a frame). The callback then
-> > would decide which leds to activate and how (blinking or not etc). Does
-> > that sound better? At least it would be better than having to register
-> > three leds in each low-level driver ;)
-> 
-> I'm not sure it's such big deal to subscribe to led more problem is
-> that I cannot subscribe same led to different triggers
-> so need another level
-> mac80211     | driver
-> Led Trigger ->| Logical Led -> (LED LOGIC/MAPPING) ->  HW LED
->                     |
-> 
-> The problem here is that logic is already defined in Led pattern is
-> already defined int Led Trigger
-> 
-> Problem with your approach I cannot reach LEDs that are not connected
-> to NIC's PCIe pins.
-> 
-> Other options that uses your idea is
-> mac80211        |  driver
-> mac callback ->| (LED LOGIC) - Led Trigger - > Led
-> 
-> 
-> > Btw, is there a function that lists all 'struct ieee80211_hw *'? How
-> > does the led driver (external driver, where the leds are on a different
-> > bus and the driver implemented in a different kernel module) get the led
-> > triggers?
-> 
-> by name - "wlan0:rx"  for example
-> 
-> > Oh, and I read (in the intel driver source) that there is no callback
-> > from the low-level driver into the mac subsystem that would inform it
-> > that rfkill is active... that limitation would be bad in case of the
-> > external led drivers.
-> >
-> That's a gap.
-> 
-> > tom
-> >
-> >
-> 
-> -------------------------------------------------------------------------
-> This SF.net email is sponsored by: Microsoft
-> Defy all challenges. Microsoft(R) Visual Studio 2008.
-> http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+> What we do is translate throughputs  - to  8 patterns if I remember corre=
+ctly.
+> Only when the throughput  cross threshold level NIC is disturbed with
+> changing blinking pattern.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+Huh ok. I suppose you want a throughput notification from mac80211 for
+that. And you want to define blinking within the LED framework, rather
+than just intensity.
+
+> Not for traffic but for example some laptops vendors wants slow blink
+> in unassociated state some wants led to be off.
+>=20
+> The problem is that led behavior in clean design would be defined by
+> trigger. So I would prefer to put flexibility of LED behavior in that
+> level.
+
+I'm not so sure. I think it'd make more sense to define state triggers
+(associated) and do whatever behaviour based on the state. Dunno.
+
+> Most of todays laptop has only one led for Wifi that's a problem.
+
+> I agree it  has a lot of benefits to use LED framework, but it can be
+> pushed to driver or some module. Unfortunately I'm not sure myself
+
+Maybe an intermediate level in the LED framework could be written,
+something that itself has multiple LED "inputs" (LED devices) and takes
+multiple triggers, translating it into a new trigger that the single
+laptop wifi LED can be bound to. Sounds like too much complexity
+though...
+
+I don't really care much, but I definitely don't want to add new
+callbacks for LEDs to mac80211. If you need something special please do
+it within the LED framework.
+
+johannes
+
+--=-aIXi1pV/E6Pj9CPTN3kW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR4/6U6Vg1VMiehFYAQIm3w/+PeKGs0VB6E7qgsnvYBjYq+uHkcud83ph
+aByc5R8VcalrGBBBfTtoAb2xa5hV5mu69YO4HtzHanDhluoLywpb2jE2p3KTKLWR
+/vy69N9s9mlXbtjeIWrIyui03Sqwg9+bVvsL4pUmw4JRq2vDUp/2ZypUwmi6WbHk
+h0MczcCYONGQnMq4Fo3Z+u4ZDWsPw170UQukvGmztBdVPS9IKqFDIKePHAq4K8KG
+/sNp9co53Pg/szhsIjIS6+ByoJysyBBGhm3dWoYo7PT+jD62yeeA2sJeVw3kLQaW
+m2MEASk3PkBthR0xY/jda9EODFTb0g+dR9J4+0A13E1nlMkmzzf5TyQJ+RjqHgYG
+zkJkuJwWBami4QUA3S5tzdtWPoRmAGWZ0yBMTRFnULrkvC3FlSvnZ3igfnFD+B8k
+HsRqFx5lOKUDbMaeiHfLWeyRt66QE2x2H/w8chUh60oIUEWfTqM3wXvQaPnqF3VR
+xklk5SIqmNfW0DWKXVtUDwCMrQTLNoTHo1MxARc1DcQzhggcX6IBwpR6mkF7XIhC
+Y/VAZl/cCroDXjWOljuAhlPxaS5bYSKSt3p8KuYfQ/qIt/NX5fHjLVKxNHwISFhn
+RI1uLVNSFsdxy5jFaafsALypiyreUlEnMDPAo+IgBqi/qX6YnQBMkqv3fEPVfo2e
+mgJpBWycGSY=
+=KYFf
+-----END PGP SIGNATURE-----
+
+--=-aIXi1pV/E6Pj9CPTN3kW--
+
