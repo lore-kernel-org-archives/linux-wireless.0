@@ -1,88 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:38362 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbYAGRbq convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:11393 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754673AbYARL2u convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 12:31:46 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Alejandro Riveira =?utf-8?q?Fern=C3=A1ndez?= <ariveira@gmail.com>
-Subject: Re: Linux 2.6.24-rc7
-Date: Mon, 7 Jan 2008 18:30:51 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071724.03936.mb@bu3sch.de> <20080107175248.7b0e143f@Varda>
-In-Reply-To: <20080107175248.7b0e143f@Varda>
-MIME-Version: 1.0
-Message-Id: <200801071830.51895.mb@bu3sch.de> (sfid-20080107_173152_521010_3247091A)
-Content-Type: text/plain; charset=utf-8
+	Fri, 18 Jan 2008 06:28:50 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1005876fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 03:28:48 -0800 (PST)
+Date: Fri, 18 Jan 2008 12:26:23 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org, IvDoorn@gmail.com
+Subject: Re: Spammed logs again rt2500pci 2.6.24-rc8
+Message-ID: <20080118122623.3561b3ed@Varda> (sfid-20080118_112857_178596_4DB7D2DB)
+In-Reply-To: <1200653765.7492.10.camel@localhost>
+References: <20080117225744.29aa214c@Varda>
+	<1200653765.7492.10.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 January 2008 17:52:48 Alejandro Riveira Fern=C3=A1ndez wro=
-te:
-> El Mon, 7 Jan 2008 17:24:03 +0100
-> Michael Buesch <mb@bu3sch.de> escribi=C3=B3:
+El Fri, 18 Jan 2008 11:56:05 +0100
+Mattias Nissler <mattias.nissler@gmx.de> escribi=C3=B3:
+
+> Hi,
 >=20
->                                                                      =
-               =20
+> we currently think this is due to a race condition in the packet queu=
+e
+> code. Ivo is currently reworking the packet queues, which I hope will
+> resolve this situation.
+
+ Thanks for the quick answer.=20
+
+>=20
+> Mattias
+
+ Regards;
+ Alejandro
+
+>=20
+> On Thu, 2008-01-17 at 22:57 +0100, Alejandro Riveira Fern=C3=A1ndez w=
+rote:
+> > Running
 > >=20
-> > Can you post the lines above this?
-> > This might be a WARN_ON_ONCE() triggering, for which fixes are on t=
-heir way into
-> > the wireless-2.6 tree.
+> > Linux Varda 2.6.24-rc8 #1 SMP PREEMPT Wed Jan 16 15:09:43 CET 2008 =
+x86_64 GNU/Linux
+> >=20
+> > my logs are spmmed with:
+> >=20
+> >=20
+> > [20126.343240] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at =
+non-free entry in the non-full queue 1.
+> > [20126.343242] Please file bug report to http://rt2x00.serialmonkey=
+=2Ecom.
+> > [20126.848277] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at =
+non-free entry in the non-full queue 1.
+>
 >=20
->  This?
->=20
->=20
-> [   37.043990] WARNING: at /home/alex/kernel/linux-2.6/net/mac80211/r=
-x.c:1486 __ieee80211_rx()=20
-> [   37.043996] Pid: 0, comm: swapper Not tainted 2.6.24-rc7 #3       =
-                                                       =20
-> [   37.043998]                                                       =
-                                                       =20
-> [   37.043999] Call Trace:                                           =
-                                                       =20
-> [   37.044001]  <IRQ>  [<ffffffff80227fe3>] enqueue_task+0x13/0x30   =
-                                                       =20
-> [   37.044040]  [<ffffffff88178cbe>] :mac80211:__ieee80211_rx+0xc7e/0=
-xd30                                                   =20
-> [   37.044044]  [<ffffffff80228062>] activate_task+0x32/0x50         =
-                                                       =20
-> [   37.044073]  [<ffffffff8816a28b>] :mac80211:ieee80211_tasklet_hand=
-ler+0xbb/0x120                                         =20
-> [   37.044086]  [<ffffffff80238d08>] tasklet_action+0x48/0xb0        =
-                                                       =20
-> [   37.044091]  [<ffffffff80238c09>] __do_softirq+0x69/0xe0          =
-                                                       =20
-> [   37.044097]  [<ffffffff8020ce2c>] call_softirq+0x1c/0x30          =
-                                                       =20
-> [   37.044101]  [<ffffffff8020efe5>] do_softirq+0x35/0x90            =
-                                                       =20
-> [   37.044105]  [<ffffffff80238aa5>] irq_exit+0x95/0xa0              =
-                                                       =20
-> [   37.044108]  [<ffffffff8020f0c0>] do_IRQ+0x80/0x100               =
-                                                       =20
-> [   37.044111]  [<ffffffff8020a840>] default_idle+0x0/0x40           =
-                                                       =20
-> [   37.044115]  [<ffffffff8020c181>] ret_from_intr+0x0/0xa           =
-                                                       =20
-> [   37.044117]  <EOI>  [<ffffffff8020a869>] default_idle+0x29/0x40   =
-                                                       =20
-> [   37.044130]  [<ffffffff8020a8f5>] cpu_idle+0x75/0xc0              =
-                                                       =20
-> [   37.044146]                                                       =
-                                                       =20
-
-
-Can you check if that is the
-WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
-in rx.c line 1486?
-If that is the one, then fixes are already on their way upstream.
-Ignore the harmless warning for now.
-
---=20
-Greetings Michael.
 -
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
