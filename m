@@ -1,64 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn1.fre.skanova.net ([81.228.11.168]:36476 "EHLO
-	pne-smtpout4-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751837AbYABUN5 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:49298 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755746AbYARX0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 15:13:57 -0500
-Subject: Re: [PATCH 6/8] [PATCH] Split up rndis_host.c
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: David Brownell <david-b@pacbell.net>
-Cc: bjd@jooz.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20071223011707.1798C2360C6@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
-References: <11983602942818-git-send-email-bjd@jooz.net>
-	 <11983602953056-git-send-email-bjd@jooz.net>
-	 <20071223011707.1798C2360C6@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
-Content-Type: text/plain
-Date: Wed, 02 Jan 2008 22:13:47 +0200
-Message-Id: <1199304827.8532.31.camel@localhost> (sfid-20080102_201402_157561_BA0001EB)
-Mime-Version: 1.0
+	Fri, 18 Jan 2008 18:26:40 -0500
+Received: by py-out-1112.google.com with SMTP id u52so1776522pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 15:26:39 -0800 (PST)
+Message-ID: <43e72e890801181526gaf5960fr5c66b97155e8bfda@mail.gmail.com> (sfid-20080118_232647_708108_1794F5DA)
+Date: Fri, 18 Jan 2008 18:26:38 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 1/4] ath5k: debug level improvements
+Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <20080118125018.6342.94435.stgit@one>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080118125018.6342.94435.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Jan 18, 2008 7:50 AM, Bruno Randolf <bruno@thinktube.com> wrote:
 
-Bjorge was not comfortable with double probing rndis_wext requires,
-wireless RNDIS devices have same device id as the rest of RNDIS. Our
-module version checks OID_GEN_PHYSICAL_MEDIUM in generic_rndis_bind,
-with rndis_host bind fails if OID is supported and wireless media type
-is returned, with rndis_wext if OID isn't supported or type isn't
-wireless. Should this be ok?
+> +       { ATH5K_DEBUG_ANY,      "any",          "show any debug level" },
 
-Should separate rndis_wext be located in drivers/net/wireless instead of
-drivers/net/usb?
+Very cool, can we call this "all" instead though, and "show all debug levels" ?
 
- - Jussi Kivilinna
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-On Sat, 2007-12-22 at 17:17 -0800, David Brownell wrote:
-> > From: Bjorge Dijkstra <bjd@jooz.net>
-> > Subject: [PATCH 6/8] [PATCH] Split up rndis_host.c
-> > Date: Sat, 22 Dec 2007 22:51:32 +0100
-> >
-> > Split up rndis_host.c into rndis_host.h and rndis_base.c and
-> > change Makefile accordingly. This is done so we can add extra
-> > source files to the rndis_host module later on.
-> 
-> I'm fine with splitting out a header file and the EXPORT_SYMBOL_GPL.
-> But why not just have a separate "rndis_wext" module?
-> 
-> 
-> > ---
-> >  drivers/net/usb/Makefile     |    1 +
-> >  drivers/net/usb/rndis_base.c |  548 ++++++++++++++++++++++++++++++
-> >  drivers/net/usb/rndis_host.c |  763 ------------------------------------------
-> >  drivers/net/usb/rndis_host.h |  256 ++++++++++++++
-> >  4 files changed, 805 insertions(+), 763 deletions(-)
-> >  create mode 100644 drivers/net/usb/rndis_base.c
-> >  delete mode 100644 drivers/net/usb/rndis_host.c
-> >  create mode 100644 drivers/net/usb/rndis_host.h
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+  Luis
