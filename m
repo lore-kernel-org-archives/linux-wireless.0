@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:43519 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755580AbYAGVH6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759227AbYARMiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 16:07:58 -0500
-Date: Mon, 7 Jan 2008 16:06:56 -0500
-From: Forest Bond <forest@alittletooquiet.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20080107210656.GC4599@storm.local.network> (sfid-20080107_210803_270112_71782642)
-References: <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com> <20071105020730.GA4414@storm.local.network> <20071114170051.GD23778@storm.local.network> <20071114170634.GC6226@tuxdriver.com> <20080107184949.GI18550@storm.local.network> <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com> <20080107203101.GA4599@storm.local.network> <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com> <43e72e890801071254o49f16885ubce452e5687f915c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5G06lTa6Jq83wMTw"
-In-Reply-To: <43e72e890801071254o49f16885ubce452e5687f915c@mail.gmail.com>
+	Fri, 18 Jan 2008 07:38:50 -0500
+Subject: Re: [PATCH 05/12] iwlwifi: delay firmware loading from pci_probe
+	to network interface open
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>, Ian Schram <ischram@telenet.be>
+In-Reply-To: <1200361585-31801-6-git-send-email-reinette.chatre@intel.com> (sfid-20080115_022710_198103_7FE5555D)
+References: <1200361585-31801-1-git-send-email-reinette.chatre@intel.com>
+	 <1200361585-31801-2-git-send-email-reinette.chatre@intel.com>
+	 <1200361585-31801-3-git-send-email-reinette.chatre@intel.com>
+	 <1200361585-31801-4-git-send-email-reinette.chatre@intel.com>
+	 <1200361585-31801-5-git-send-email-reinette.chatre@intel.com>
+	 <1200361585-31801-6-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20080115_022710_198103_7FE5555D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FiXiXF/N5X/Ww1xgPLcq"
+Date: Fri, 18 Jan 2008 13:35:20 +0100
+Message-Id: <1200659720.5716.24.camel@johannes.berg> (sfid-20080118_123853_454568_DE2741B7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---5G06lTa6Jq83wMTw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-FiXiXF/N5X/Ww1xgPLcq
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+> This patch moves the firmware loading (read firmware from disk and load
+> it into the device SRAM) from pci_probe time to the first network
+> interface open time. There are two reasons for doing this:
 
-On Mon, Jan 07, 2008 at 03:54:49PM -0500, Luis R. Rodriguez wrote:
-> Well this sucks... just FYI,
->=20
-> http://forums.viaarena.com/messageview.aspx?catid=3D28&threadid=3D78745
->=20
-> this is the page you started on viaarena for this. It is no longer up.
-> I now get a "Page not found"
+I have a bit of a problem with this patch...
 
-Looks like they just launched a new forum that replaces the old one.  The o=
-ld
-message may be there somewhere, but DNS delays are causing issues right now=
-, I
-think.  I'll look again later.
+You're supposed to register your hw modes before registering the hw,
+that is no longer the case after this patch!
 
--Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
+That's actually totally killing my cfg80211 rate API patch because that
+complains if the bands in the registered hw/wiphy aren't assigned
+properly.
 
---5G06lTa6Jq83wMTw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Can you call *_init_geos() before registering the hw, i.e. before
+initialising the firmware?
+
+johannes
+
+--=-FiXiXF/N5X/Ww1xgPLcq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFHgpRwRO4fQQdv5AwRApdDAKDBBaaIs+38weFPYSsatPfk1G/wtQCgvefU
-UjzYcqF3XiHf1dygXvoBaj8=
-=WF8L
+iQIVAwUAR5CdBqVg1VMiehFYAQKLWQ//acup0Ao5BPyyvzYULp+8oowVbn215KU0
+8DTNkzdf8M6zF0BRkL6uLRbXxPm5ZreqjokYEQOFyeKPzA+0MFObQTO1CkXx7LuX
+CJNhhVGcF4OPrXwJC4eO4h/H9yV3lHpLou4iqRAGuWaQ4keHuWCsrrakIY5yogcv
+5iM7wG99Q2tonrTgoe5fMQDSUx2ktKDOyCfWhiCS0x+7L5zRQ65uKn7JUJTqDBWl
+yDK2hNk1ZXdEXfIxIpvrwJPXfdPORBw5806I3XMiNNCOdXQ8ZQqLb1WB73KEgVgM
+n8LC0RtxE77sSIjSlqx+aK6z3nI/yEasQ9gyQwNLPoPvkeM6ThgyighWyQOPNnfZ
+5z433LFfRb+/NS3Q49hDJbHT6VQ7uNpndb61sn/GKeL9JerkkCU8DUcyS2a8z9+Q
+dVJNGPf7pDbLifpL2MVDJf+i3GBe0ikvBfi5EdupEwnjL2idurpQ0DF8IU4DWA6s
+fvwe+KnL6y3CdO/7QCW7Gof4JzPLITW0UMDQ9MJgv/vz6k40TswebKVoP3y0Qhri
+ryzBV9aiouP8m6JgUF043fv+rHd8TRSRiy6UgCBAP+7bRdgTvUZytruI54okBIho
+MfFWU4Q3i10JGhESR+9MO+oqX8YPaqkhNzMcXJBAlXotym416pijA7Ki775O2QN4
+4/VRoYx+yms=
+=MqN8
 -----END PGP SIGNATURE-----
 
---5G06lTa6Jq83wMTw--
+--=-FiXiXF/N5X/Ww1xgPLcq--
+
