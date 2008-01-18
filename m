@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55124
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755607AbYAHGEl (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:27532 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762664AbYARQfK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 01:04:41 -0500
-Date: Mon, 07 Jan 2008 22:04:40 -0800 (PST)
-Message-Id: <20080107.220440.243100958.davem@davemloft.net> (sfid-20080108_060443_986578_AA7F9B1F)
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080108051523.GB3125@tuxdriver.com>
-References: <20080108051523.GB3125@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 18 Jan 2008 11:35:10 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: more iwlwifi merge fallout?
+Date: Fri, 18 Jan 2008 08:35:09 -0800
+Message-ID: <D936D925018D154694D8A362EEB08920036F28DD@orsmsx416.amr.corp.intel.com> (sfid-20080118_163531_670868_0F29C102)
+In-Reply-To: <1200615744.5716.5.camel@johannes.berg>
+References: <1200615744.5716.5.camel@johannes.berg>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 8 Jan 2008 00:15:23 -0500
+On Thursday, January 17, 2008 4:22 PM, Johannes Berg  wrote:
 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> Declaring
+> 
+> inline int iwl3945_eeprom_acquire_semaphore(...)
+> 
+> is a bit weird for a function that is actually declared in a header
+> file and not static.
 
-Since Jeff is busy and asked me to take in driver fixes
-I'll pulled this into my net-2.6 tree.
+This is not merge fallout, but has been this way since the driver was
+merged the first time. I do not know why it was done this way and I am
+not familiar enough with gcc optimization to know the implications of
+this (or what the better way should be). What do you suggest?
 
-Thanks!
+Thanks
+
+Reinette
