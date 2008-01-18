@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57024 "EHLO mail.dvmed.net"
+Received: from mga02.intel.com ([134.134.136.20]:36547 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758922AbYALWos (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 17:44:48 -0500
-Message-ID: <478942DE.8060107@garzik.org> (sfid-20080112_224452_033966_DC6406E5)
-Date: Sat, 12 Jan 2008 17:44:46 -0500
-From: Jeff Garzik <jeff@garzik.org>
+	id S1759708AbYARVJp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2008 16:09:45 -0500
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6 (use this
- one)
-References: <20080110213034.GI3109@tuxdriver.com>
-In-Reply-To: <20080110213034.GI3109@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Subject: RE: iwl3945 driver is still unusable!
+Date: Fri, 18 Jan 2008 13:09:37 -0800
+Message-ID: <D936D925018D154694D8A362EEB08920036F2DBF@orsmsx416.amr.corp.intel.com> (sfid-20080118_210949_978458_5043B6EB)
+In-Reply-To: <47910F33.2090505@archlinux.org>
+References: <fmclu6$dvl$1@ger.gmane.org> <fmpigk$c57$1@ger.gmane.org> <D936D925018D154694D8A362EEB08920036F286F@orsmsx416.amr.corp.intel.com> <47910F33.2090505@archlinux.org>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: =?iso-8859-1?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Cc: <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> [2nd try -- turns-out the Mattis Nissler patch needed an extra tweak.
-> It will probably also cause build breakage when you rebase since
-> rt2x00lib_txdone(...) becomes rt2x00pci_txdone(rt2x00dev,...) in 2.6.25,
-> so FYI... :-)
-> 
-> This also includes another patch (the "4 byte boundary" one) which
-> is already in your upstream branch.  So, beware of that one too. :-)]
-> 
-> Jeff,
-> 
-> Three more fixes for 2.6.24.  The one from Mattias Nissler is already
-> in your upstream tree...FYI.
-> 
-> Let me know if there are problems!
-> 
-> Thanks,
-> 
-> John
-> 
-> ---
-> 
-> Individual patches available here:
-> 
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik/
-> 
-> ---
-> 
-> The following changes since commit 3ce54450461bad18bbe1f9f5aa3ecd2f8e8d1235:
->   Linus Torvalds (1):
->         Linux 2.6.24-rc7
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-> 
-> Ivo van Doorn (2):
->       rt2x00: Corectly initialize rt2500usb MAC
->       rt2x00: Put 802.11 data on 4 byte boundary
-> 
-> Mattias Nissler (1):
->       rt2x00: Allow rt61 to catch up after a missing tx report
-> 
->  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
->  drivers/net/wireless/rt2x00/rt2x00pci.c |   20 ++++++++++++++++----
->  drivers/net/wireless/rt2x00/rt2x00usb.c |   17 +++++++++++++++--
->  drivers/net/wireless/rt2x00/rt61pci.c   |   12 ++++++++++++
->  4 files changed, 44 insertions(+), 7 deletions(-)
+On Friday, January 18, 2008 12:42 PM, Thomas B=E4chler  wrote:
 
-pulled
+>> ipw3945 is deprecated - we focus our effort on iwlwifi at this time.
+>=20
+> Which doesn't help anyone if it does not work. ipw3945 may be
+> deprecated in your eyes, but for me it is the only way to make my
+> wireless NIC work
+> reliably. From my point of view ipw3945 is stable and iwl3945
+> is _alpha_
+> software.
 
+Please understand that we need to focus limited resources. ipw3945 is d=
+eprecated and we focus on iwlwifi, which supports both 3945 and 4965. U=
+nfortunately we have been unable to reproduce your problem.=20
 
+> It is, but if you read my E-Mail, you will notice that the driver
+> included in 2.6.24 is unusable, thus my request to use a newer driver
+> with a _stable_ kernel. The wireless-dev is based on the latest
+> linux-2.6 git, which is not always stable.
+
+=46or this purpose I suggest that you consider the compat-wireless proj=
+ect. See http://www.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-w=
+ireless-2.6.git and http://linuxwireless.org/download/compat-wireless-2=
+=2E6/.
+
+Reinette
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
