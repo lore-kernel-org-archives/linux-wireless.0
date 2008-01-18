@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:40895 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991AbYA3T2r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 14:28:47 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so326405fga.17
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2008 11:28:46 -0800 (PST)
-Message-ID: <47A0CFEB.2080702@gmail.com> (sfid-20080130_192907_145433_CD81D510)
-Date: Wed, 30 Jan 2008 20:28:43 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com, johannes@sipsolutions.net
-Subject: Re: [PATCH] ath5k: Port to new bitrate/channel API
-References: <20080130183824.GA7676@makis.domain.invalid>
-In-Reply-To: <20080130183824.GA7676@makis.domain.invalid>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:51750 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756733AbYARUd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2008 15:33:27 -0500
+Date: Fri, 18 Jan 2008 21:26:12 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Andrea Merello <andreamrl@tiscali.it>,
+	Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 rate control doesn't work
+Message-ID: <20080118212612.4e86d1f1@morte> (sfid-20080118_203337_101264_A86DF17D)
+In-Reply-To: <479109B7.5030808@hauke-m.de>
+References: <477F9890.5050107@hauke-m.de>
+	<43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
+	<47824D25.5090005@hauke-m.de>
+	<43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
+	<4787F03E.6080605@hauke-m.de>
+	<4788D24E.30805@hauke-m.de>
+	<20080112162121.2fc2f507@morte>
+	<478905B9.3080004@hauke-m.de>
+	<20080112202854.2c24ba19@morte>
+	<478F8CFF.2060105@hauke-m.de>
+	<20080118210452.50c84d13@morte>
+	<479109B7.5030808@hauke-m.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2008 07:38 PM, Nick Kossifidis wrote:
-> Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
-> 
-> Also i figured out a way to process rate vallue found on status descriptors,
-> it's still buggy but we are getting closer (i think it improved stability a little).
-> 
-> Changes-licensed-under: 3-clause-BSD
-> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> 
-> ---
-> @@ -898,25 +879,26 @@ ath5k_copy_channels(struct ath5k_hw *ah,
->  	}
->  
->  	for (i = 0, count = 0; i < size && max > 0; i++) {
-> -		ch = all ? i + 1 : chans[i].chan;
-> -		f = ath5k_ieee2mhz(ch);
-> -		/* Check if channel is supported by the chipset */
-> -		if (!ath5k_channel_ok(ah, f, chfreq))
-> -			continue;
-> +		ch = i + 1 ;
-> +		freq = ath5k_ieee2mhz(ch);
-[...]
-> -		if (!all && (chans[i].mode & map[mode].mask) != map[mode].mode)
-> -			continue;
-> +		/* Write channel info and increment counter */
-> +		channels[count].center_freq = freq;
-> +
-> +		if((mode == AR5K_MODE_11A) ||
-> +		(mode == AR5K_MODE_11G)){
-> +			channels[count].hw_value = chfreq|CHANNEL_OFDM;
-> +		} else if((mode == AR5K_MODE_11A_TURBO) ||
-> +		(mode == AR5K_MODE_11G_TURBO)){
-> +			channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
-> +		}if(mode == AR5K_MODE_11B) {
-> +			channels[count].hw_value = CHANNEL_B;
-> +		}
+[CC'ing rtl8187 maintainers again - please don't strip CC's off]
 
-Please run with this patch through Lindent (use checkpatch), some parts are not 
-much readable.
+On Fri, 18 Jan 2008 21:19:03 +0100
+Hauke Mehrtens <hauke@hauke-m.de> wrote:
 
-Otherwise seems pretty well.
+> Stefano Brivio wrote:
+> > Are you using an 802.11b only access point, or an access point configured
+> > to support 802.11b only?
+> 
+> My Access Point is using 802.11g and 802.11b in mixed mode. With my
+> notebook (b43 driver) I am getting a good connection to the Access Point.
+
+Should I assume that this happens with the same kernel setup?
+
+> If the Access Point is configured to support 802.11b only I have no
+> problems with the rtl8187 card, because the card doesn't try to set the
+> rate above 11M.
+
+Then it looks like for some reason frames sent with rtl8187 using OFDM rates
+silently fail, no errors are reported even if they aren't getting ACKed.
+Andrea, Michael, any clue?
+
+
+--
+Ciao
+Stefano
