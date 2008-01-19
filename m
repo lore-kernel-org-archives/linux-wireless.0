@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:36881 "EHLO
-	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752115AbYAYNO6 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:3954 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbYASTdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 08:14:58 -0500
-Subject: Re: [PATCH 10/14] [rndis_host] Add rndis_early_init function
-	pointer to 'struct rndis_data'.
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: David Brownell <david-b@pacbell.net>
-Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
-	netdev@vger.kernel.org
-In-Reply-To: <200801241710.35528.david-b@pacbell.net>
-References: <20080120001438.25718.96722.stgit@fate.lan>
-	 <200801241710.35528.david-b@pacbell.net>
-Content-Type: text/plain
-Date: Fri, 25 Jan 2008 15:14:50 +0200
-Message-Id: <1201266890.7266.0.camel@localhost> (sfid-20080125_131504_150586_94C56742)
-Mime-Version: 1.0
+	Sat, 19 Jan 2008 14:33:22 -0500
+Received: by an-out-0708.google.com with SMTP id d31so312240and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 11:33:20 -0800 (PST)
+Message-ID: <40f31dec0801191133o73e91fd0g97bd726c9f2bd7a7@mail.gmail.com> (sfid-20080119_193328_791279_00A188C4)
+Date: Sat, 19 Jan 2008 21:33:20 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 3/3] ath5k: configure backoff for IBSS beacon queue
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20080119091841.31251.16946.stgit@one>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080119091759.31251.60264.stgit@one>
+	 <20080119091841.31251.16946.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-01-24 at 17:10 -0800, David Brownell wrote:
-> Could this -- and #11/14 -- instead be generalized a bit,
-> so they're not RNDIS-specific?  At least in name; the
-> only user for now would be the rndis_host code.
-> 
-> The generalization would presumably be "early_init" and
-> "link_change", paired with doc comments reflecting that
-> they're usable by any driver stack built over the usbnet
-> framework core.
-> 
-> There's no point IMO to having generalizable hooks be
-> restricted this way.
+> +               qi.tqi_cw_max = 2 * ah->ah_cw_min;
 
-Sure.
+Have you checked ath5k_hw_reset_tx_queue ? cw_min/cw_max is
+recalculated there, maybe we are doing something wrong there...
 
+
+
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
