@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756931AbYARMgK (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:47494 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292AbYASWU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 07:36:10 -0500
-Subject: Re: [FYI] hostapd status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bas Hulsken <bhulsken@zonnet.nl>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <43e72e890801170952q23ff6550s7214bee32a2860f7@mail.gmail.com> (sfid-20080117_175254_072993_FD6A6603)
-References: <1200520735.8007.20.camel@johannes.berg>
-	 <43e72e890801170952q23ff6550s7214bee32a2860f7@mail.gmail.com>
-	 (sfid-20080117_175254_072993_FD6A6603)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-peCg4hKgJCzljpnJYZOX"
-Date: Fri, 18 Jan 2008 00:18:39 +0100
-Message-Id: <1200611920.8007.73.camel@johannes.berg> (sfid-20080118_123618_954923_B971EE40)
-Mime-Version: 1.0
+	Sat, 19 Jan 2008 17:20:58 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2187111pyb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 14:20:56 -0800 (PST)
+Message-ID: <43e72e890801191420p5c25e32aid790748a982bd54d@mail.gmail.com> (sfid-20080119_222103_009243_0B2215FA)
+Date: Sat, 19 Jan 2008 17:20:56 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 2/4] ath5k: always extend rx timestamp with tsf
+Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <20080118125059.6342.18514.stgit@one>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080118125018.6342.94435.stgit@one>
+	 <20080118125059.6342.18514.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Jan 18, 2008 7:50 AM, Bruno Randolf <bruno@thinktube.com> wrote:
+> always extend the rx timestamp with the local TSF, since this information is
+> also needed for proper IBSS merging. this is done in the tasklet for now, maybe
+> has to be moved to the interrupt handler like in madwifi.
+>
+> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>
+>  drivers/net/wireless/ath5k/base.c |   17 ++++++++++++-----
+>  1 files changed, 12 insertions(+), 5 deletions(-)
+>
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 6bbee64..bb1745f 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1725,11 +1725,18 @@ accept:
+>                         skb_pull(skb, pad);
+>                 }
+>
+> -               if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+> -                       rxs.mactime = ath5k_extend_tsf(sc->ah,
+> -                                       ds->ds_rxstat.rs_tstamp);
+> -               else
+> -                       rxs.mactime = ds->ds_rxstat.rs_tstamp;
+> +               /*
+> +                * always extend the mac timestamp, since this information is
+> +                * also needed for proper IBSS merging.
+> +                *
+> +                * XXX: it might be too late to do it here, since rs_tstamp is
+> +                * 15bit only. that means TSF extension has to be done within
+> +                * 32.768usec = 32ms. it might be necessary to move this to the
+> +                * interrupt handler, like it is done in madwifi.
+> +                */
 
---=-peCg4hKgJCzljpnJYZOX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm trying to understand this a bit more and am confused. The TSF
+timer is based on 1MHz clock so it has a resolution of 1 microsecond
+(us). For 15 bits that would mean 32768 us so don't you mean it should
+be done within 32.768 ms instead of usec (or us)?
 
+> +               rxs.mactime = ath5k_extend_tsf(sc->ah, ds->ds_rxstat.rs_tstamp);
+> +               rxs.flag |= RX_FLAG_TSFT;
+> +
+>                 rxs.freq = sc->curchan->freq;
+>                 rxs.channel = sc->curchan->chan;
+>                 rxs.phymode = sc->curmode;
+>
+>
 
-> Well we need regulatory daemon of some sort for non-AP hosts. I was
-> considering throwing this as part of wpa_supplicant/hostapd code. I
-> guess we'll see.
+Right now we only use mactime and even RX_FLAG_TSFT within mac80211 in
+rx.c on ieee80211_rx_monitor() for IEEE80211_RADIOTAP_TSFT so right
+now these changes would seem to do nothing. Should we be using this
+for something else -- if so what is it?
 
-That'd be doable, but sort of leaves people who don't want to use
-wpa_supplicant out. I guess it's only a matter of time though until we
-require use of a supplicant daemon (userspace mlme and all that...) so I
-guess it doesn't matter whether we start requiring it now or later...
-
-> > I hope Luis will work on the last two items, and I personally want to
-> > handle only the first two items. All others on the list are up for
-> > grabs.
->=20
-> ACK -- I will.
-
-Thanks!
-
-johannes
-
---=-peCg4hKgJCzljpnJYZOX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4/iT6Vg1VMiehFYAQJVDRAAkXzbzm8UnlALr2N3JdnIKqCYs1sN8dUW
-cjlx3fnlM50fewN3dCECWAqA4H0EMSPK3NPEL7EIVANDM1oflJTHQRMnbwmk9lri
-Vpe6SO5bP/HAKueoWeEJy71BkeK1HKyyVCi6MbYeOLJVHNmw4c2TNhEd4FAa6mbb
-UEU2olvxxBYlGN/o83RNcH79EOGa+haf7SUSM7mv1oodRTTM/yS72JV32BYqeqDH
-qdpyXA+LMdPAZfI3c3vfB21qLhOFguj27FOUmE9vsQBniAqV60vgJs5fE7EDfz1e
-+EKPsXjEJV+H91OZjportTJbHvldI0/XfMcBB+j5euFF9dsArWasmj14iJVhGEYb
-1gIUrUw65VLUKrS52C4V77XMAa5how0YzpoT/baXMjt9182ALXTQR4moS4rUzf4G
-XOEouyOROKW3N0oFO/UwN0CkYn5bqHt9lFYZWZnNEjfd48iQ4+P7hYtUrL9mRWIz
-6QPpET2WfYqsWZdFkj56EO2hX+TFAYShB9TvgZgFgqq1+LkcVxoG/cnN8IBF2kZV
-vrzFUPT5pp0Dj9OJW2YKwgxquX+/Wd5xLl/npByby8RC85wr6IQSjsvucGrTCUjS
-O9xK7jWBUbIuN+y8ovZNN/KxmT4Ow2yDv/SxBaJMPSvIZaHPape7iBCD8fjBS1rD
-o/oJ/cP7O2E=
-=zLkB
------END PGP SIGNATURE-----
-
---=-peCg4hKgJCzljpnJYZOX--
-
+  Luis
