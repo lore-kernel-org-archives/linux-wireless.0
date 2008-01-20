@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:54944 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbYA2Cqr convert rfc822-to-8bit (ORCPT
+Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:45248 "EHLO
+	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753782AbYATAOF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 21:46:47 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1887616rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2008 18:46:41 -0800 (PST)
-Reply-To: <cs010101@gmail.com>
-From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: it's problem : ath5k - 3com 3CRDAG675B
-Date: Tue, 29 Jan 2008 11:46:37 +0900
-Message-ID: <001501c86221$2c98bfb0$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080129_024650_097572_CCE384CB)
+	Sat, 19 Jan 2008 19:14:05 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 03/14] [rndis_host] Use 1KB buffer in rndis_unbind
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:13:59 +0200
+Message-ID: <20080120001359.25718.20460.stgit@fate.lan> (sfid-20080120_001409_315777_E825F5C7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello~ everyone~ I'm new here. nice to meet you. :-)
+rndis_command requires the caller to pass in a buffer of at least 1KB.
 
-I bought some of NICs supporting 802.11a (3com : 3CRDAG675B PCI adapter=
-) to
-test 802.11a ad-hoc. It uses ath5k driver.
-recently, to test about 802.11a ad-hoc I compiled combat-wireless-2.6
-driver and did 'make load'.
-Ath5k Driver is loaded successfully. But, when I made a wireless
-configuration (iwconfig essid ath5k mode ad-hoc channel 44), after that=
- it
-takes long time for making a connection between two NICs.
-So, I tried to switch to 802.11b or 802.11g. But also long time.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+---
 
-and after connecting between two NICs, I tested ping-request. In MS win=
-dows
-command line, ping-request is time out so often and in linux, it's not =
-time
-out but rtt is very slow and irregular.
+ drivers/net/usb/rndis_host.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-if somebody know why, please help me~~
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 96ef6a9..42b161c 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -577,7 +577,7 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ 	struct rndis_halt	*halt;
+ 
+ 	/* try to clear any rndis state/activity (no i/o from stack!) */
+-	halt = kzalloc(sizeof *halt, GFP_KERNEL);
++	halt = kzalloc(CONTROL_BUFFER_SIZE, GFP_KERNEL);
+ 	if (halt) {
+ 		halt->msg_type = RNDIS_MSG_HALT;
+ 		halt->msg_len = ccpu2(sizeof *halt);
 
-thanks.
-
-
-p.s of course, kernel version is higher than 2.6.22.
-
---
---
-Have a Wonderful Day~~!!
-=B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
-yhkim@corebell.co.kr
-cs010101@gmail.com
-+82-42-863-0340
-+82-10-6753-0987
-HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu, Daejon,  Republic of K=
-orea
-305-701
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
