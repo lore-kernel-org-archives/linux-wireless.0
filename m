@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbYABIw2 (ORCPT
+Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:45268 "EHLO
+	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753761AbYATAOn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 03:52:28 -0500
-Subject: Re: [PATCH] mac80211: better rate control algorithm selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Sam Ravnborg <sam@ravnborg.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <20080102084532.GA17960@infradead.org>
-References: <1198253375.16241.76.camel@johannes.berg>
-	 <20071230231120.GB16557@uranus.ravnborg.org>
-	 <20071231074536.GA26874@infradead.org>
-	 <1199263275.4172.60.camel@johannes.berg>
-	 <20080102084532.GA17960@infradead.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x7oOuyTc/pH/WBEnUCD9"
-Date: Wed, 02 Jan 2008 09:52:14 +0100
-Message-Id: <1199263934.4172.69.camel@johannes.berg> (sfid-20080102_085230_916053_EB7C9A9E)
-Mime-Version: 1.0
+	Sat, 19 Jan 2008 19:14:43 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 10/14] [rndis_host] Add rndis_early_init function pointer to
+	'struct rndis_data'.
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:14:38 +0200
+Message-ID: <20080120001438.25718.96722.stgit@fate.lan> (sfid-20080120_001446_645651_05E72294)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Function pointer is for rndis minidrivers that need to do work on device right
+after RNDIS_INIT. For example setting device specific configuration parameters
+with OID_GEN_RNDIS_CONFIG_PARAMETER.
 
---=-x7oOuyTc/pH/WBEnUCD9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
+ drivers/net/usb/rndis_host.c |    6 ++++++
+ drivers/net/usb/usbnet.h     |    3 +++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-> Building an algorithm optionally into mac80211 seems rather odd.  In
-> case mac80211 the algorithms should be their own modules and you should
-> use request_module to make sure at least one is loaded.
-
-We actually do that but people still manage to mess it up because they
-don't install the modules properly or whatever.
-
-> Or if you
-> really want to make sure one is alway avaiabable always build the
-> simplest one directly and unconditionally into mac80211.ko.
-
-That'd be an alternative too, I think we have something like that now. I
-don't really like it that much though because for 99% of people it's
-just dead code. Anyway, I'll look into Sam's mail and do a new patch
-depending on that.
-
-johannes
-
---=-x7oOuyTc/pH/WBEnUCD9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR3tQvaVg1VMiehFYAQL3Yg/+KnXTtJZVia+X2jHcBkDoKPxbQdM5b7Wr
-SpfwKI7hlAw3AnFU+bxakNwwpHYMFzP0rOe55c4/ZLZPnueqlPS/gufX7dYpUBVn
-D0e1O1H0OzVVZLTBnsBDK4rvljBiHq9BhaCK1v6yG1D7T2gGaWulDuQihhT6kNdn
-tQoNsZw+pIKN3+FBXHJhxFTW6Epth3rWbHCMKyTiKbD3GhsfQt3SRY0BYOh+HHwW
-4x3zRdbBHtY/j2oJepkAHZTA2cZaSvckH2nuXk9tyB9b6V0QvKLWeywqEMtPMNSm
-eM55UXE1INl0KoNSbq75quAbrKe/rUmABiYsTZdz3Af/BN7R59zvEEDWc0c76tCH
-rM0Fv9Q29Cp2FxS7Udop0hHEcDwcmFoGQOfOpJ0MGJRvTHhg7rzGp4aUnfVH74Pj
-uPvBkb+3zNpbInPxP1HrZ9vQCIyouqvURLhO+3DCgEdrvXgvzTv3Q0claS+WnHeD
-P+iSE9eTAO5NSh0KpNtCch4QOToW+9QM8SlNk4U/QxL7InsoHlP6ohMq91Q+UgwN
-JGOGnFPZEVz568790sELkuBkwPEi2t3mptmNEi8H7dUF0dtt4VL6xFbtsNIzIx2w
-w0o05WBqQF9/WkWkk4G5EY7EyBnwFCBYjzVhjOqJRJDxYvmdi7CnyelJDI2qlWTJ
-33lSiUC14KE=
-=AFrp
------END PGP SIGNATURE-----
-
---=-x7oOuyTc/pH/WBEnUCD9--
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 1d6bf0a..22e5ca1 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -336,6 +336,12 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 		dev->hard_mtu, tmp, dev->rx_urb_size,
+ 		1 << le32_to_cpu(u.init_c->packet_alignment));
+ 
++	/* module has some device initialization code needs to be done right
++	 * after RNDIS_INIT */
++	if (dev->driver_info->rndis_early_init &&
++			dev->driver_info->rndis_early_init(dev) != 0)
++		goto halt_fail_and_release;
++
+ 	/* Get designated host ethernet address */
+ 	reply_len = ETH_ALEN;
+ 	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
+diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+index 0b4bf09..2bc5f76 100644
+--- a/drivers/net/usb/usbnet.h
++++ b/drivers/net/usb/usbnet.h
+@@ -116,6 +116,9 @@ struct driver_info {
+ 	struct sk_buff	*(*tx_fixup)(struct usbnet *dev,
+ 				struct sk_buff *skb, gfp_t flags);
+ 
++	/* rndis minidriver early initialization code, can sleep */
++	int	(*rndis_early_init)(struct usbnet *dev);
++
+ 	/* for new devices, use the descriptor-reading code instead */
+ 	int		in;		/* rx endpoint */
+ 	int		out;		/* tx endpoint */
 
