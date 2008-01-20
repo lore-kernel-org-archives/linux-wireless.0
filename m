@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:32878 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbYAKCig (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:58583 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755492AbYATSeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 21:38:36 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so779003rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2008 18:38:36 -0800 (PST)
-Message-ID: <b25c3fa70801101838o7a71cc60h1c8b8a71624aeff9@mail.gmail.com> (sfid-20080111_023841_812038_56B6DFFC)
-Date: Fri, 11 Jan 2008 11:38:36 +0900
-From: "Joonwoo Park" <joonwpark81@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] [PATCH 2/5] iwlwifi: iwl3945 synchronize interruptand tasklet for down iwlwifi
-Cc: "Zhu, Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <D936D925018D154694D8A362EEB0892003602E2D@orsmsx416.amr.corp.intel.com>
+	Sun, 20 Jan 2008 13:34:10 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1122442fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 10:34:06 -0800 (PST)
+Message-ID: <4793935F.2000102@gmail.com> (sfid-20080120_183429_961619_E602F024)
+Date: Sun, 20 Jan 2008 20:30:55 +0200
+From: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <11998765481610-git-send-email-joonwpark81@gmail.com>
-	 <D936D925018D154694D8A362EEB08920035CCD70@orsmsx416.amr.corp.intel.com>
-	 <b25c3fa70801101724he91d934y9db6636c68a32486@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003602E2D@orsmsx416.amr.corp.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] WEXT: Correct the size of the buffer to be copied to user-space
+ in standard GET WE ioctls.
+Content-Type: multipart/mixed;
+ boundary="------------050604070809070509040500"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/1/11, Chatre, Reinette <reinette.chatre@intel.com>:
->
-> On Thursday, January 10, 2008 5:25 PM, Joonwoo Park  wrote:
->
-> > 2008/1/11, Chatre, Reinette <reinette.chatre@intel.com>:
-> >>
-> >> Could synchronize_irq() be moved into iwl_disable_interrupts() ? I am
-> >
-> > At this time, iwl_disable_interrupts() can be called with irq
-> > disabled, so for do that I think additional modification would be
-> > needed.
->
-> If this is the case where iwl_disable_interrupts() is called while in
-> the ISR (where interrupts are disabled), then this behavior may be what
-> we want as synchronize_irq() (as I understand) waits for the handler to
-> complete irrespective of irq enable/disable.
+This is a multi-part message in MIME format.
+--------------050604070809070509040500
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-I agree with you and it's what I want. the meaning 'irq disabled' was local irq.
-I'm sorry for confusing.
-
->
-> What modification are you considering?
-
-Roughly, I'm considering make synchronize_irq() be moved into
-iwl_disable_interrupts() and fix iwl_irq_tasket not to call
-iwl_disable_interrupts with irq disabled.
-For now iwl_irq_tasklet calls iwl_disable_interrupts() with local irq disabled.
-like this:
-
-static void iwl_irq_tasklet(struct iwl_priv *priv)
-{
-        ...
-        spin_lock_irqsave(&priv->lock, flags);
-
-        ...
-        /* Now service all interrupt bits discovered above. */
-        if (inta & CSR_INT_BIT_HW_ERR) {
-                IWL_ERROR("Microcode HW error detected.  Restarting.\n");
-
-                /* Tell the device to stop sending interrupts */
-                iwl_disable_interrupts(priv);
-                ...
-                spin_unlock_irqrestore(&priv->lock, flags);
-                return;
-        }
+For the most of standard WE GET ioctls the size of the buffer to store driver's
+response is calculated on base of the call's descriptor (.token_size and
+.max_tokens fields) without taking into consideration the size of the buffer
+provided by application in struct iwreq. But when the response is being copied to
+userspace, its size is calculated from the length provided by application. This
+can lead to kernel internal data leak into userspace, and oopses when the buffer
+is located near the end of the available memory. To prevent these situations the
+size used during copying is set to the same one used during allocation.
 
 
->
-> >> also wondering if we cannot call tasklet_kill() before
-> >> iwl_disable_interrupts() ... thus preventing it from being scheduled
-> >> when we are going down.
-> >
-> > Thanks for your catch, it seems tasklet can re-enable interrupts.
-> > I'll handle and make an another patch for them at this weekend :)
->
-> Please think it through also as I am exploring with you ...
+Signed-off-by: Volodymyr G Lukiianyk <volodymyrgl@gmail.com>
+---
 
-Thanks again your comments.
+I've actually seen those oopses on the system with 32MB of memory, when 1k
+object at address c1fffc00 was returned by the SLAB while handling request for
+allocating 568 bytes buffer (struct iw_range). Later, copy_to_user() (instructed
+to copy 1136 bytes, since iwlist uses 2x buffer) crashed trying to access
+c2000000, which is beyond the bounds of available 32MB.
 
-Thanks,
-Joonwoo
+The patch attached is against the Linus's tree.
+
+
+--------------050604070809070509040500
+Content-Type: text/plain;
+ name="fix_copied_buffer_size.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="fix_copied_buffer_size.diff"
+
+ZGlmZiAtLWdpdCBhL25ldC93aXJlbGVzcy93ZXh0LmMgYi9uZXQvd2lyZWxlc3Mvd2V4dC5j
+CmluZGV4IDQ3ZTgwY2MuLmM2Y2U1OWIgMTAwNjQ0Ci0tLSBhL25ldC93aXJlbGVzcy93ZXh0
+LmMKKysrIGIvbmV0L3dpcmVsZXNzL3dleHQuYwpAQCAtODY2LDggKzg2Niw3IEBAIHN0YXRp
+YyBpbnQgaW9jdGxfc3RhbmRhcmRfY2FsbChzdHJ1Y3QgbmV0X2RldmljZSAqCWRldiwKIAkJ
+CX0KIAogCQkJZXJyID0gY29weV90b191c2VyKGl3ci0+dS5kYXRhLnBvaW50ZXIsIGV4dHJh
+LAotCQkJCQkgICBpd3ItPnUuZGF0YS5sZW5ndGggKgotCQkJCQkgICBkZXNjci0+dG9rZW5f
+c2l6ZSk7CisJCQkJCSAgIGV4dHJhX3NpemUpOwogCQkJaWYgKGVycikKIAkJCQlyZXQgPSAg
+LUVGQVVMVDsKIAkJfQo=
+--------------050604070809070509040500--
