@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40647 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034AbYARMfw (ORCPT
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754037AbYATAOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 07:35:52 -0500
-Subject: Re: led support in mac80211 and drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Tomas Carnecky <tom@dbservice.com>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <200801172313.00246.mb@bu3sch.de> (sfid-20080117_221504_214449_91B1F006)
-References: <478DF297.9020904@dbservice.com>
-	 <20080116200126.GA3164@tuxdriver.com>
-	 <1200584782.8007.59.camel@johannes.berg>  <200801172313.00246.mb@bu3sch.de>
-	 (sfid-20080117_221504_214449_91B1F006)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-w0n5gsNSRzcGs0B1ge98"
-Date: Fri, 18 Jan 2008 00:14:45 +0100
-Message-Id: <1200611685.8007.69.camel@johannes.berg> (sfid-20080118_123556_504759_58EE555D)
-Mime-Version: 1.0
+	Sat, 19 Jan 2008 19:14:21 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 06/14] [usbnet] Use wlan device name for RNDIS wireless devices
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:14:15 +0200
+Message-ID: <20080120001415.25718.1762.stgit@fate.lan> (sfid-20080120_001424_715940_75418ADA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use wlan device name for RNDIS wireless devices.
 
---=-w0n5gsNSRzcGs0B1ge98
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+---
 
+ drivers/net/usb/usbnet.c |    3 +++
+ drivers/net/usb/usbnet.h |    2 ++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-> I read this thread multiple times, but I don't get where the problem is.
-> Why don't you simply implement this in the driver:
-> When LED didn't change software state for X jiffies, switch the auto-blin=
-king
-> LED in the hardware off. Switch it on if it's off in hardware and there's
-> a software state transition.
-> Where's the problem? This is trivial to implement.
-
-I think the point is that the software LED changes all the time but
-that's not necessary for the hardware LED because the firmware will
-blink it. Or something like that anyway.
-
-johannes
-
---=-w0n5gsNSRzcGs0B1ge98
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4/hZKVg1VMiehFYAQJR3Q/8DAOXslJzeVRQm2/tRNQwP5MnP7UfX0le
-yo4yBzwI3m3pcMrVp6fGbdlKOC/SzNCom6nQf+8TVabHiGCRPxBa/Ja4FXtNs2Gb
-94GAEHQeHdDdvuwymN1pN++3CGi5rAW1grXOHEyhzhwaODjxJjf6+abttcwAq3XT
-P2dr4nb/j/vi/EInAd/9QyE0XTBGh0om+0OElS7MhkWC/MNyMr6remOBBhTyg9qQ
-OdXwr4fVMknKyhqdNX8uRBGqGhRXzf/q8mLYrJXC6bOU104jrBk8BlVBIs2xsO3a
-khHnXW1wZvTKjRCTyKciSq3mRbzzl26V4RNPBpQ566f9dbWOtkyab1lu6g81C+Vh
-wvx/yt5+cJ5ZFLZDmCr6bW69P/WtU7RmSsOyBhT8Ezz6Vipe8g7no3taXMmYzNIy
-3HC3UWQzCZ2M6cKL4QGo3ZgQukOlLY+W+y349T/0mEJcPADMYzjVr41vrAi+mVXX
-i1Pc5XYDz6c0dgJpf1BLo8KLkme3HqOyD9zqcsoAsAqC8yiJ8e0bNMwNDDkMLaxo
-c34YG1sP9CtKWFOD4ztDyiAfgYKy5hnJ+QRj/RDznvfAyV/5bWH5jgB7vbVGCgbI
-clPJreFg1YRV9UWhr3OtD+d/Ea1hlMfyFTfuZuHe1FDGt749BPCw1FQZiNZMQPll
-qA9oyCWZ75I=
-=am9n
------END PGP SIGNATURE-----
-
---=-w0n5gsNSRzcGs0B1ge98--
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index 8ed1fc5..a2a2d5e 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -1204,6 +1204,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+ 		if ((dev->driver_info->flags & FLAG_ETHER) != 0
+ 				&& (net->dev_addr [0] & 0x02) == 0)
+ 			strcpy (net->name, "eth%d");
++		/* WLAN devices should always be named "wlan%d" */
++		if ((dev->driver_info->flags & FLAG_WLAN) != 0)
++			strcpy(net->name, "wlan%d");
+ 
+ 		/* maybe the remote can't receive an Ethernet MTU */
+ 		if (net->mtu > (dev->hard_mtu - net->hard_header_len))
+diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+index 1fae434..29ab92e 100644
+--- a/drivers/net/usb/usbnet.h
++++ b/drivers/net/usb/usbnet.h
+@@ -87,6 +87,8 @@ struct driver_info {
+ #define FLAG_ETHER	0x0020		/* maybe use "eth%d" names */
+ 
+ #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
++#define FLAG_WLAN	0x0080		/* use "wlan%d" names */
++
+ 
+ 	/* init device ... can sleep, or cause probe() failure */
+ 	int	(*bind)(struct usbnet *, struct usb_interface *);
 
