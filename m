@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:47311 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbYATTEE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2008 14:04:04 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2493888pyb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 11:04:03 -0800 (PST)
-Message-ID: <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com> (sfid-20080120_190410_516717_0B012CF5)
-Date: Sun, 20 Jan 2008 14:04:02 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
-Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to user-space in standard GET WE ioctls.
-Cc: linux-wireless@vger.kernel.org, "Jean Tourrilhes" <jt@hpl.hp.com>
-In-Reply-To: <4793935F.2000102@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:59311 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755060AbYATTXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2008 14:23:19 -0500
+Message-ID: <47939FA3.5040401@garzik.org> (sfid-20080120_192324_359186_211BB609)
+Date: Sun, 20 Jan 2008 14:23:15 -0500
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4793935F.2000102@gmail.com>
+To: Ian Brown <ianbrn@gmail.com>
+CC: netdev@vger.kernel.org, John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: net 2.6.25 is broken when building with wireless/iwlwifi
+References: <d0383f90801200601y71472ae6ha638c1567d4abde4@mail.gmail.com>
+In-Reply-To: <d0383f90801200601y71472ae6ha638c1567d4abde4@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Jean.
+Ian Brown wrote:
+> Hello,
+> net 2.6.25 is broken when building with the wireless/iwlwifi
+> subtree;  we get the following errors (we noticed that iwl_down() and
+> iwl_resume()
+> implementation do exist in garzik tree, but there are more differences
+> so a simple
+> patch with only adding these two methods might be risky)
+> 
+> ...
+> ...
+> 
+>   CHK     include/linux/version.h
+>   CHK     include/linux/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CHK     include/linux/compile.h
+>   CC [M]  drivers/net/wireless/iwlwifi/iwl3945-base.o
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function 'iwl3945_pci_remove':
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:8639: error: implicit
+> declaration of function 'iwl_down'
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function 'iwl3945_pci_resume':
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:8779: error: implicit
+> declaration of function 'iwl_resume'
+> make[4]: *** [drivers/net/wireless/iwlwifi/iwl3945-base.o] Error 1
+> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
 
-  Luis
+hrm, that sounds like a potential mis-merge on my part (though 
+ultimately linville should be re-syncing with net-2.6.25 soon anyway)
 
-On Jan 20, 2008 1:30 PM, Volodymyr G. Lukiianyk <volodymyrgl@gmail.com> wrote:
-> For the most of standard WE GET ioctls the size of the buffer to store driver's
-> response is calculated on base of the call's descriptor (.token_size and
-> .max_tokens fields) without taking into consideration the size of the buffer
-> provided by application in struct iwreq. But when the response is being copied to
-> userspace, its size is calculated from the length provided by application. This
-> can lead to kernel internal data leak into userspace, and oopses when the buffer
-> is located near the end of the available memory. To prevent these situations the
-> size used during copying is set to the same one used during allocation.
->
->
-> Signed-off-by: Volodymyr G Lukiianyk <volodymyrgl@gmail.com>
-> ---
->
-> I've actually seen those oopses on the system with 32MB of memory, when 1k
-> object at address c1fffc00 was returned by the SLAB while handling request for
-> allocating 568 bytes buffer (struct iw_range). Later, copy_to_user() (instructed
-> to copy 1136 bytes, since iwlist uses 2x buffer) crashed trying to access
-> c2000000, which is beyond the bounds of available 32MB.
->
-> The patch attached is against the Linus's tree.
->
->
-> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-> index 47e80cc..c6ce59b 100644
-> --- a/net/wireless/wext.c
-> +++ b/net/wireless/wext.c
-> @@ -866,8 +866,7 @@ static int ioctl_standard_call(struct net_device *  dev,
->                         }
->
->                         err = copy_to_user(iwr->u.data.pointer, extra,
-> -                                          iwr->u.data.length *
-> -                                          descr->token_size);
-> +                                          extra_size);
->                         if (err)
->                                 ret =  -EFAULT;
->                 }
->
->
+	Jeff
+
+
