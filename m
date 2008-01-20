@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:22788 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbYAMNCf (ORCPT
+Received: from hpsmtp-eml16.kpnxchange.com ([213.75.38.116]:37618 "EHLO
+	hpsmtp-eml16.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756098AbYATXmM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 08:02:35 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1854425fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 05:02:33 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Initialize vif pointer
-Date: Sun, 13 Jan 2008 14:02:26 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sf.net
+	Sun, 20 Jan 2008 18:42:12 -0500
+From: Frans Pop <elendil@planet.nl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [ath5k] Help needed for Trust Speedshare Turbo Pro (PCMCIA)
+Date: Mon, 21 Jan 2008 00:42:10 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200710211316.06772.elendil@planet.nl> <43e72e890710221011p2b2f66d8w3f341bec068e49f1@mail.gmail.com> <200801210012.41021.elendil@planet.nl>
+In-Reply-To: <200801210012.41021.elendil@planet.nl>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200801131402.26165.IvDoorn@gmail.com> (sfid-20080113_130244_390201_5373C434)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200801210042.10559.elendil@planet.nl> (sfid-20080120_234217_057037_9D20525E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before calling update_beacon() mac80211 must
-initialize the control.vif pointer so it can
-be used by the driver to determine which
-interface is trying to send the beacon.
+On Monday 21 January 2008, Frans Pop wrote:
+> As I don't have a wireless router at home (and no neighbors with open
+> ones), I cannot try an actual connection.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
+Turns out I _do_ have a friendly neighbor at the back of the house :-)
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 4f5d5c6..8a35fed 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2536,6 +2536,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
- 		}
- 
- 		memset(&control, 0, sizeof(control));
-+		control.vif = &sdata->vif;
- 		rate_control_get_rate(dev, local->oper_hw_mode, skb, &ratesel);
- 		if (!ratesel.rate) {
- 			printk(KERN_DEBUG "%s: Failed to determine TX rate "
+I managed to associate with his AP and get an IP address using DHCP, but 
+could not get any real Internet traffic (tried website and ping). Could 
+possibly be a problem on his side though.
+
+ath0: Initial auth_alg=0
+ath0: authenticate with AP 00:18:39:d4:75:9e
+ath0: RX authentication from 00:18:39:d4:75:9e (alg=0 transaction=2 
+status=0)
+ath0: authenticated
+ath0: associate with AP 00:18:39:d4:75:9e
+ath0: RX AssocResp from 00:18:39:d4:75:9e (capab=0x401 status=0 aid=2)
+ath0: associated
+ADDRCONF(NETDEV_CHANGE): ath0: link becomes ready
+ath0: no IPv6 routers present
