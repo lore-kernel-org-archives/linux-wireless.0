@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:11393 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754673AbYARL2u convert rfc822-to-8bit (ORCPT
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754009AbYATAOP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 06:28:50 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1005876fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 03:28:48 -0800 (PST)
-Date: Fri, 18 Jan 2008 12:26:23 +0100
-From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
-	<ariveira@gmail.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linux-kernel@vger.kernel.org, IvDoorn@gmail.com
-Subject: Re: Spammed logs again rt2500pci 2.6.24-rc8
-Message-ID: <20080118122623.3561b3ed@Varda> (sfid-20080118_112857_178596_4DB7D2DB)
-In-Reply-To: <1200653765.7492.10.camel@localhost>
-References: <20080117225744.29aa214c@Varda>
-	<1200653765.7492.10.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 19 Jan 2008 19:14:15 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 05/14] [rndis_host] Fix rndis packet filter flags.
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:14:10 +0200
+Message-ID: <20080120001410.25718.70147.stgit@fate.lan> (sfid-20080120_001420_315773_59FBECED)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Fri, 18 Jan 2008 11:56:05 +0100
-Mattias Nissler <mattias.nissler@gmx.de> escribi=C3=B3:
+RNDIS packet filter flags are not exactly the same as CDC flags
+so we cannot reuse them.
 
-> Hi,
->=20
-> we currently think this is due to a race condition in the packet queu=
-e
-> code. Ivo is currently reworking the packet queues, which I hope will
-> resolve this situation.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+---
 
- Thanks for the quick answer.=20
+ drivers/net/usb/rndis_host.c |   23 ++++++++++++++++++++++-
+ 1 files changed, 22 insertions(+), 1 deletions(-)
 
->=20
-> Mattias
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index c686025..12daf9c 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -256,6 +256,27 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+ #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
+ #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
+ 
++/* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
++#define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
++#define RNDIS_PACKET_TYPE_MULTICAST		ccpu2(0x00000002)
++#define RNDIS_PACKET_TYPE_ALL_MULTICAST		ccpu2(0x00000004)
++#define RNDIS_PACKET_TYPE_BROADCAST		ccpu2(0x00000008)
++#define RNDIS_PACKET_TYPE_SOURCE_ROUTING	ccpu2(0x00000010)
++#define RNDIS_PACKET_TYPE_PROMISCUOUS		ccpu2(0x00000020)
++#define RNDIS_PACKET_TYPE_SMT			ccpu2(0x00000040)
++#define RNDIS_PACKET_TYPE_ALL_LOCAL		ccpu2(0x00000080)
++#define RNDIS_PACKET_TYPE_GROUP			ccpu2(0x00001000)
++#define RNDIS_PACKET_TYPE_ALL_FUNCTIONAL	ccpu2(0x00002000)
++#define RNDIS_PACKET_TYPE_FUNCTIONAL		ccpu2(0x00004000)
++#define RNDIS_PACKET_TYPE_MAC_FRAME		ccpu2(0x00008000)
++
++/* default filter used with RNDIS devices */
++#define RNDIS_DEFAULT_FILTER ( \
++	RNDIS_PACKET_TYPE_DIRECTED | \
++	RNDIS_PACKET_TYPE_BROADCAST | \
++	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
++	RNDIS_PACKET_TYPE_PROMISCUOUS)
++
+ /*
+  * RNDIS notifications from device: command completion; "reverse"
+  * keepalives; etc
+@@ -551,7 +572,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 	u.set->oid = OID_GEN_CURRENT_PACKET_FILTER;
+ 	u.set->len = ccpu2(4);
+ 	u.set->offset = ccpu2((sizeof *u.set) - 8);
+-	*(__le32 *)(u.buf + sizeof *u.set) = ccpu2(DEFAULT_FILTER);
++	*(__le32 *)(u.buf + sizeof *u.set) = RNDIS_DEFAULT_FILTER;
+ 
+ 	retval = rndis_command(dev, u.header);
+ 	if (unlikely(retval < 0)) {
 
- Regards;
- Alejandro
-
->=20
-> On Thu, 2008-01-17 at 22:57 +0100, Alejandro Riveira Fern=C3=A1ndez w=
-rote:
-> > Running
-> >=20
-> > Linux Varda 2.6.24-rc8 #1 SMP PREEMPT Wed Jan 16 15:09:43 CET 2008 =
-x86_64 GNU/Linux
-> >=20
-> > my logs are spmmed with:
-> >=20
-> >=20
-> > [20126.343240] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at =
-non-free entry in the non-full queue 1.
-> > [20126.343242] Please file bug report to http://rt2x00.serialmonkey=
-=2Ecom.
-> > [20126.848277] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at =
-non-free entry in the non-full queue 1.
->
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
