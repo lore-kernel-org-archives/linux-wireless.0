@@ -1,256 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61291 "EHLO mga02.intel.com"
+Received: from a.mail.sonic.net ([64.142.16.245]:34619 "EHLO a.mail.sonic.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753635AbYAWSPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 13:15:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: initialize geo/channel information during probe
-Date: Wed, 23 Jan 2008 10:15:18 -0800
-Message-Id: <1201112121-22340-4-git-send-email-reinette.chatre@intel.com> (sfid-20080123_181531_112741_57EC1093)
-In-Reply-To: <1201112121-22340-3-git-send-email-reinette.chatre@intel.com>
-References: <1201112121-22340-1-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-2-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-3-git-send-email-reinette.chatre@intel.com>
+	id S1754208AbYATNmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2008 08:42:00 -0500
+Date: Sun, 20 Jan 2008 05:09:06 -0800
+Message-Id: <200801201309.m0KD96QV022222@bolt.sonic.net> (sfid-20080120_134208_377496_DCED4EB3)
+To: linux-wireless@vger.kernel.org
+from: Brad Allen <ulmo+linux-wireless@sonic.net>
+reply-to: ulmo+linux-wireless@sonic.net
+Subject: bug in compat-wireless-2.6/net/ieee80211/ieee80211_module.c
+         in release kernels
+cc: ulmo+linux-wireless@sonic.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The geo/channel information is obtained from the EEPROM, which is read
-during probe. We can thus set up channel information at this time. This
-helps us to support ioctl commands that rely on this before the interface
-is brought up.
+I'm running latest release kernel (2.6.23.14, not mm, not rc, not
+anything weird), and got latest compat-wireless-2.6 (couldn't figure
+out how to build git quickly enough), and ran into only one compile
+problem:
 
-Clearly matches _init_channel_map with _free_channel_map and _init_geos
-with _free_geos to ensure functions calling these routines can also call
-their cleanup routines.
+compat-wireless-2.6:8354$0 make
+make -C /lib/modules/2.6.23.14ulmo-i/build M=/w/src/broadcom/wireless-dev/compat-wireless-2.6 modules
+make[1]: Entering directory `/mnt/src/linux-2.6.23.14'
+  CC [M]  /w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.o
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c: In function 'ieee80211_init':
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c:270: error: 'init_net' undeclared (first use in this function)
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c:270: error: (Each undeclared identifier is reported only once
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c:270: error: for each function it appears in.)
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c: In function 'ieee80211_exit':
+/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.c:299: error: 'init_net' undeclared (first use in this function)
+make[3]: *** [/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211/ieee80211_module.o] Error 1
+make[2]: *** [/w/src/broadcom/wireless-dev/compat-wireless-2.6/net/ieee80211] Error 2
+make[1]: *** [_module_/w/src/broadcom/wireless-dev/compat-wireless-2.6] Error 2
+make[1]: Leaving directory `/mnt/src/linux-2.6.23.14'
+make: *** [modules] Error 2
+compat-wireless-2.6:8355$2 
 
-Fixes a few bugs:
-- if channel information is not available when ioctl commands are
-  issued then we get a NULL pointer oops. Having channel information
-  set up during probe we can deal with ioctl commands without requiring
-  interface to be brought up.
-  This fixes bug: http://www.bughost.org/bugzilla/show_bug.cgi?id=1552
-- Fix potential problem if user triggers probe/remove/probe sequence. The
-  value of priv->channel_count was used to determine if channel map is
-  set up. This value was never reset when channel map was removed.
-- Fix memory leak: priv->modes need to be freed when device removed.
+I noticed it is defined in the latest GIT thing, so I figured it is a
+too-new item.  Here's a small patch that worked around that, since it
+was just debugging anyway:
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   54 ++++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   54 ++++++++++++++++++++-------
- 2 files changed, 80 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c9f2ce5..5afc578 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5146,6 +5146,15 @@ static int iwl3945_init_channel_map(struct iwl3945_priv *priv)
- 	return 0;
- }
+--- compat-wireless-2.6/net/ieee80211/ieee80211_module.c.~1~	2008-01-19 21:10:45.000000000 -0800
++++ compat-wireless-2.6/net/ieee80211/ieee80211_module.c	2008-01-20 05:02:07.000000000 -0800
+@@ -264,6 +264,7 @@
+ static int __init ieee80211_init(void)
+ {
+ #ifdef CONFIG_IEEE80211_DEBUG
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ 	struct proc_dir_entry *e;
  
-+/*
-+ * iwl3945_free_channel_map - undo allocations in iwl3945_init_channel_map
-+ */
-+static void iwl3945_free_channel_map(struct iwl3945_priv *priv)
-+{
-+	kfree(priv->channel_info);
-+	priv->channel_count = 0;
-+}
-+
- /* For active scan, listen ACTIVE_DWELL_TIME (msec) on each channel after
-  * sending probe req.  This should be set long enough to hear probe responses
-  * from more than one AP.  */
-@@ -5471,6 +5480,17 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
- 	return 0;
- }
+ 	ieee80211_debug_level = debug;
+@@ -283,6 +284,7 @@
+ 	e->read_proc = show_debug_level;
+ 	e->write_proc = store_debug_level;
+ 	e->data = NULL;
++#endif				/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)) */
+ #endif				/* CONFIG_IEEE80211_DEBUG */
  
-+/*
-+ * iwl3945_free_geos - undo allocations in iwl3945_init_geos
-+ */
-+static void iwl3945_free_geos(struct iwl3945_priv *priv)
-+{
-+	kfree(priv->modes);
-+	kfree(priv->ieee_channels);
-+	kfree(priv->ieee_rates);
-+	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
-+}
-+
- /******************************************************************************
-  *
-  * uCode download functions
-@@ -6130,15 +6150,6 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
- 	/* Clear out the uCode error bit if it is set */
- 	clear_bit(STATUS_FW_ERROR, &priv->status);
- 
--	rc = iwl3945_init_channel_map(priv);
--	if (rc) {
--		IWL_ERROR("initializing regulatory failed: %d\n", rc);
--		return;
--	}
--
--	iwl3945_init_geos(priv);
--	iwl3945_reset_channel_flag(priv);
--
- 	if (iwl3945_is_rfkill(priv))
- 		return;
- 
-@@ -8614,11 +8625,24 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	IWL_DEBUG_INFO("MAC address: %s\n", print_mac(mac, priv->mac_addr));
- 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
- 
-+	err = iwl3945_init_channel_map(priv);
-+	if (err) {
-+		IWL_ERROR("initializing regulatory failed: %d\n", err);
-+		goto out_remove_sysfs;
-+	}
-+
-+	err = iwl3945_init_geos(priv);
-+	if (err) {
-+		IWL_ERROR("initializing geos failed: %d\n", err);
-+		goto out_free_channel_map;
-+	}
-+	iwl3945_reset_channel_flag(priv);
-+
- 	iwl3945_rate_control_register(priv->hw);
- 	err = ieee80211_register_hw(priv->hw);
- 	if (err) {
- 		IWL_ERROR("Failed to register network device (error %d)\n", err);
--		goto out_remove_sysfs;
-+		goto out_free_geos;
+ 	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
+@@ -294,11 +296,13 @@
+ static void __exit ieee80211_exit(void)
+ {
+ #ifdef CONFIG_IEEE80211_DEBUG
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ 	if (ieee80211_proc) {
+ 		remove_proc_entry("debug_level", ieee80211_proc);
+ 		remove_proc_entry(DRV_NAME, init_net.proc_net);
+ 		ieee80211_proc = NULL;
  	}
- 
- 	priv->hw->conf.beacon_int = 100;
-@@ -8628,6 +8652,10 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 
- 	return 0;
- 
-+ out_free_geos:
-+	iwl3945_free_geos(priv);
-+ out_free_channel_map:
-+	iwl3945_free_channel_map(priv);
-  out_remove_sysfs:
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
- 
-@@ -8702,10 +8730,8 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
- 
--	kfree(priv->channel_info);
--
--	kfree(priv->ieee_channels);
--	kfree(priv->ieee_rates);
-+	iwl3945_free_channel_map(priv);
-+	iwl3945_free_geos(priv);
- 
- 	if (priv->ibss_beacon)
- 		dev_kfree_skb(priv->ibss_beacon);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 13fe5a1..bb2d4f5 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5576,6 +5576,15 @@ static int iwl4965_init_channel_map(struct iwl4965_priv *priv)
- 	return 0;
++#endif				/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)) */
+ #endif				/* CONFIG_IEEE80211_DEBUG */
  }
  
-+/*
-+ * iwl4965_free_channel_map - undo allocations in iwl4965_init_channel_map
-+ */
-+static void iwl4965_free_channel_map(struct iwl4965_priv *priv)
-+{
-+	kfree(priv->channel_info);
-+	priv->channel_count = 0;
-+}
-+
- /* For active scan, listen ACTIVE_DWELL_TIME (msec) on each channel after
-  * sending probe req.  This should be set long enough to hear probe responses
-  * from more than one AP.  */
-@@ -5909,6 +5918,17 @@ static int iwl4965_init_geos(struct iwl4965_priv *priv)
- 	return 0;
- }
- 
-+/*
-+ * iwl4965_free_geos - undo allocations in iwl4965_init_geos
-+ */
-+static void iwl4965_free_geos(struct iwl4965_priv *priv)
-+{
-+	kfree(priv->modes);
-+	kfree(priv->ieee_channels);
-+	kfree(priv->ieee_rates);
-+	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
-+}
-+
- /******************************************************************************
-  *
-  * uCode download functions
-@@ -6560,15 +6580,6 @@ static void iwl4965_alive_start(struct iwl4965_priv *priv)
- 	/* Clear out the uCode error bit if it is set */
- 	clear_bit(STATUS_FW_ERROR, &priv->status);
- 
--	rc = iwl4965_init_channel_map(priv);
--	if (rc) {
--		IWL_ERROR("initializing regulatory failed: %d\n", rc);
--		return;
--	}
--
--	iwl4965_init_geos(priv);
--	iwl4965_reset_channel_flag(priv);
--
- 	if (iwl4965_is_rfkill(priv))
- 		return;
- 
-@@ -9198,11 +9209,24 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	IWL_DEBUG_INFO("MAC address: %s\n", print_mac(mac, priv->mac_addr));
- 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
- 
-+	err = iwl4965_init_channel_map(priv);
-+	if (err) {
-+		IWL_ERROR("initializing regulatory failed: %d\n", err);
-+		goto out_remove_sysfs;
-+	}
-+
-+	err = iwl4965_init_geos(priv);
-+	if (err) {
-+		IWL_ERROR("initializing geos failed: %d\n", err);
-+		goto out_free_channel_map;
-+	}
-+	iwl4965_reset_channel_flag(priv);
-+
- 	iwl4965_rate_control_register(priv->hw);
- 	err = ieee80211_register_hw(priv->hw);
- 	if (err) {
- 		IWL_ERROR("Failed to register network device (error %d)\n", err);
--		goto out_remove_sysfs;
-+		goto out_free_geos;
- 	}
- 
- 	priv->hw->conf.beacon_int = 100;
-@@ -9212,6 +9236,10 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 
- 	return 0;
- 
-+ out_free_geos:
-+	iwl4965_free_geos(priv);
-+ out_free_channel_map:
-+	iwl4965_free_channel_map(priv);
-  out_remove_sysfs:
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl4965_attribute_group);
- 
-@@ -9286,10 +9314,8 @@ static void iwl4965_pci_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
- 
--	kfree(priv->channel_info);
--
--	kfree(priv->ieee_channels);
--	kfree(priv->ieee_rates);
-+	iwl4965_free_channel_map(priv);
-+	iwl4965_free_geos(priv);
- 
- 	if (priv->ibss_beacon)
- 		dev_kfree_skb(priv->ibss_beacon);
--- 
-1.5.3.4
-
