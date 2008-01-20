@@ -1,60 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:44764 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760053AbYAKQtK (ORCPT
+Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:45268 "EHLO
+	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754543AbYATAOd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 11:49:10 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH RFT] b43: Add support for new firmware
-Date: Fri, 11 Jan 2008 17:47:18 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200801102046.56979.mb@bu3sch.de> <47879BE4.7040108@lwfinger.net>
-In-Reply-To: <47879BE4.7040108@lwfinger.net>
+	Sat, 19 Jan 2008 19:14:33 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 08/14] [rndis_host] export functions
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:14:27 +0200
+Message-ID: <20080120001427.25718.45322.stgit@fate.lan> (sfid-20080120_001436_395744_530B90C6)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801111747.18797.mb@bu3sch.de> (sfid-20080111_164913_110951_2B4FAA4B)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 11 January 2008 17:40:04 Larry Finger wrote:
-> Michael Buesch wrote:
-> > This patch adds support for new firmware.
-> > Please test this on old and new firmware.
-> 
-> I have tested this patch with old firmware. It seems to work; however my testing is not complete as
-> my computer has started hanging with the "Caps Lock" light flashing. The crash is not caused by this
-> patch as it happened with 2.6.24-rc5, which has run for many days. I do have a suggestion for
-> changing the patch (see below).
-> 
-> > +static inline
-> > +size_t b43_txhdr_size(struct b43_wldev *dev)
-> > +{
-> > +	if (b43_is_old_txhdr_format(dev))
-> > +		return 100 + sizeof(struct b43_plcp_hdr6);
-> > +	return 104 + sizeof(struct b43_plcp_hdr6);
-> > +}
-> 
-> Why not eliminate most of the magic numbers in this part with
-> 
-> size_t b43_txhdr_size(struct b43_wldev *dev)
-> {
-> 	if (b43_is_old_txhdr_format(dev))
-> 		return sizeof(struct b43_txhdr) - 4;
-> 	return sizeof(struct b43_txhdr);
-> }
+Export rndis_host functions and also rename rndis_bind() to
+generic_rndis_bind() for modules using rndis_host as base.
 
-Because this is IMO as magic as the above.
-The struct b43_txhdr is _not_ meant to be used as an object anymore,
-as it now contains this union magic stuff. So we must only use it
-as a pointer type. The sizeof, however, uses it as an object.
-I'm perfectly fine with the hardcoded constants. And they really
-are constants, as they are defined by the hard(firm)ware.
-I think this all leads to the same issue as "Should we use
-#defines for the PCI IDs in PCI ID tables?".
-However, this code will go away in summer anyway. So it doesn't
-really matter. It really is just a hack.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
--- 
-Greetings Michael.
+ drivers/net/usb/rndis_host.c |   20 +++++++++++++-------
+ drivers/net/usb/rndis_host.h |    9 +++++++++
+ 2 files changed, 22 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 29d7e3b..1d6bf0a 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -60,13 +60,14 @@
+  * RNDIS notifications from device: command completion; "reverse"
+  * keepalives; etc
+  */
+-static void rndis_status(struct usbnet *dev, struct urb *urb)
++void rndis_status(struct usbnet *dev, struct urb *urb)
+ {
+ 	devdbg(dev, "rndis status urb, len %d stat %d",
+ 		urb->actual_length, urb->status);
+ 	// FIXME for keepalives, respond immediately (asynchronously)
+ 	// if not an RNDIS status, do like cdc_status(dev,urb) does
+ }
++EXPORT_SYMBOL_GPL(rndis_status);
+ 
+ /*
+  * RPC done RNDIS-style.  Caller guarantees:
+@@ -78,7 +79,7 @@ static void rndis_status(struct usbnet *dev, struct urb *urb)
+  * Call context is likely probe(), before interface name is known,
+  * which is why we won't try to use it in the diagnostics.
+  */
+-static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
++int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
+ {
+ 	struct cdc_state	*info = (void *) &dev->data;
+ 	int			master_ifnum;
+@@ -187,6 +188,7 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
+ 	dev_dbg(&info->control->dev, "rndis response timeout\n");
+ 	return -ETIMEDOUT;
+ }
++EXPORT_SYMBOL_GPL(rndis_command);
+ 
+ /*
+  * rndis_query:
+@@ -253,7 +255,7 @@ response_error:
+ 	return -EDOM;
+ }
+ 
+-static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
++int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	int			retval;
+ 	struct net_device	*net = dev->net;
+@@ -377,8 +379,9 @@ fail:
+ 	kfree(u.buf);
+ 	return retval;
+ }
++EXPORT_SYMBOL_GPL(generic_rndis_bind);
+ 
+-static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
++void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	struct rndis_halt	*halt;
+ 
+@@ -393,11 +396,12 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ 
+ 	usbnet_cdc_unbind(dev, intf);
+ }
++EXPORT_SYMBOL_GPL(rndis_unbind);
+ 
+ /*
+  * DATA -- host must not write zlps
+  */
+-static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
++int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
+ {
+ 	/* peripheral may have batched packets to us... */
+ 	while (likely(skb->len)) {
+@@ -439,8 +443,9 @@ static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
+ 	/* caller will usbnet_skb_return the remaining packet */
+ 	return 1;
+ }
++EXPORT_SYMBOL_GPL(rndis_rx_fixup);
+ 
+-static struct sk_buff *
++struct sk_buff *
+ rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
+ {
+ 	struct rndis_data_hdr	*hdr;
+@@ -485,12 +490,13 @@ fill:
+ 	/* FIXME make the last packet always be short ... */
+ 	return skb;
+ }
++EXPORT_SYMBOL_GPL(rndis_tx_fixup);
+ 
+ 
+ static const struct driver_info	rndis_info = {
+ 	.description =	"RNDIS device",
+ 	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
+-	.bind =		rndis_bind,
++	.bind =		generic_rndis_bind,
+ 	.unbind =	rndis_unbind,
+ 	.status =	rndis_status,
+ 	.rx_fixup =	rndis_rx_fixup,
+diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
+index 1386a17..61f1fd8 100644
+--- a/drivers/net/usb/rndis_host.h
++++ b/drivers/net/usb/rndis_host.h
+@@ -244,5 +244,14 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+ 	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
+ 	RNDIS_PACKET_TYPE_PROMISCUOUS)
+ 
++
++extern void rndis_status(struct usbnet *dev, struct urb *urb);
++extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
++extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
++extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
++extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
++extern struct sk_buff *
++rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags);
++
+ #endif	/* __RNDIS_HOST_H */
+ 
+
