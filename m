@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3728 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752505AbYA1SdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 13:33:11 -0500
-Date: Mon, 28 Jan 2008 13:23:47 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] cfg80211 API for channels/bitrates, mac80211 and
-	driver conversion
-Message-ID: <20080128182347.GG5835@tuxdriver.com> (sfid-20080128_183316_886637_BC8502DB)
-References: <20080124183837.577631000@sipsolutions.net> <20080124184357.839387000@sipsolutions.net> <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com> <20080128151032.GB5835@tuxdriver.com> <1ba2fa240801280823t7a591564pa9129d4799690caf@mail.gmail.com>
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754590AbYATAOi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jan 2008 19:14:38 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 09/14] [usbnet] add driver_priv pointer to 'struct usbnet'
+To: linux-wireless@vger.kernel.org
+Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
+	netdev@vger.kernel.org
+Date: Sun, 20 Jan 2008 02:14:32 +0200
+Message-ID: <20080120001432.25718.30378.stgit@fate.lan> (sfid-20080120_001443_415981_9213E503)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240801280823t7a591564pa9129d4799690caf@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 28, 2008 at 06:23:53PM +0200, Tomas Winkler wrote:
-> On Jan 28, 2008 5:10 PM, John W. Linville <linville@tuxdriver.com> wrote:
+Add a private data pointer to usbnet for rndis_wext module to use.
 
-> > I think I'm going to hold this back from Dave for 2.6.25.  It might
-> > be better if we can fix any known problems with this patch before
-> > re-merging it for pre-2.6.26 development.
-> >
-> 
-> So will you branch it publicly in wireless-2.6 or  we do it on mailing
-> list?  I have some patches for iwl4965 to make HT compile again but
-> after Pandora's box has opened so I stopped to try? I will send them
-> out.
-> What is the window left for 2.6.25? I'm just worried about cfg80211
-> general progress.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-The development window for 2.6.25 is closed.
+ drivers/net/usb/usbnet.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-The API change will remaind in wireless-2.6 throughout the 2.6.26
-development cycle.  Please send any fixes for breakage caused by this
-patch ASAP.
+diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+index 29ab92e..0b4bf09 100644
+--- a/drivers/net/usb/usbnet.h
++++ b/drivers/net/usb/usbnet.h
+@@ -31,6 +31,7 @@ struct usbnet {
+ 	struct usb_interface	*intf;
+ 	struct driver_info	*driver_info;
+ 	const char		*driver_name;
++	void			*driver_priv;
+ 	wait_queue_head_t	*wait;
+ 	struct mutex		phy_mutex;
+ 	unsigned char		suspend_count;
 
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
