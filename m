@@ -1,73 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.179]:53684 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbYAMPFw (ORCPT
+Received: from ns2.hammerl-bau.at ([213.235.197.82]:53393 "EHLO
+	ns2.hammerl-bau.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752089AbYATJyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 10:05:52 -0500
-Date: Sun, 13 Jan 2008 16:05:36 +0100
-From: Mario Guenterberg <mg@havelsoft.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: iwlwifi 1.2.23 vs. kernel 2.6.23.13
-Message-ID: <20080113150536.GA27544@/bin/dnsdomainname> (sfid-20080113_150601_227732_E3F34D28)
-Reply-To: linux-wireless@vger.kernel.org
+	Sun, 20 Jan 2008 04:54:01 -0500
+Message-ID: <45504.61.115.136.26.1200822830.squirrel@webmail.einfach.org> (sfid-20080120_095407_823292_71F6D37B)
+Date: Sun, 20 Jan 2008 19:53:50 +1000 (EST)
+Subject: Re: [ath5k-devel] [PATCH 2/4] ath5k: always extend rx timestamp
+     with tsf
+From: "bruno randolf" <br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: "" Derek Smithies "" <derek@indranet.co.nz>, jirislaby@gmail.com,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, "Johannes Berg" <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 20 January 2008 17:46:05 Luis R. Rodriguez wrote:
+> Yeah thanks, might be more clear for those of us not used to that
+> convention, I didn't even know it existed. Where is this "." for 1000
+> notation convention used, just so I know :) ?
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+in german speaking countries at least (i am austrian), don't really know
+where else...
 
-Hi...
+> > > You are correct. It should be done within 32.768 ms. On a high end
+> > > laptop, it is almost guaranteed that the bottom half will process the
+> > > packet within 32 ms. However, on an embedded box (low spec cpu) that
+> > > has a temporarily high load, 32 ms is a short time, and the timestamp
+> > > may have wrapped around. this is unfortunate.
+> >
+> > i know that this might happen, and that's why i included this comment. i
+> > was just too lazy to make the same act as is done in madwifi (lopping
+> > thru all rx descriptors in the interrupt handler). the current code is
+> > sufficient for IBSS testing right now.
+>
+> Thanks for the explanation.
+>
+> BTW while on the topic of TSF extension, anyone get why we do the tsf
+> -= 0x8000 if the hw's tsf's 15 bits value is < the rx descriptor's
+> rstamp? This is what ath5k_extend_tsf() does right before the (tsf &
+> ~0x7fff) | rstamp.
 
-I has tried to compile the latest stable kernel (2.6.23.13) with the
-iwlwifi-1.2.23 driver and the mac80211-10.0.4 framework. I has
-patched the kernel source tree and when I start menuconfig, it was fine.
-If I started to run make, nothing seems to be wrong, but the iwl3945
-module was not build.
+this is in order to account for situations where the last 15 bit of the
+TSF have wrapped around in the mean time, since the rstamp was recorded
+with the packet. it is not possible that we received the packet *after*
+the current TSF (in the interrupt handler or in the tasklet), so we assume
+that the 15bit value has overflown and therefore the time at packet
+reception must have been - 0x8000.
 
-I don't know why this module doesn't build anymore!
+> > also even if we move TSF extension into the interrupt handler this will
+> > not help in all cases. there are situations in IBSS mode - when a HW
+> > merge (= automatic HW TSF update upon receipt of a beacon with a higherr
+> > TSF and the same BSSID) happens - where the rx timestamp is apparently
+> > based on the old TSF, before the HW TSF is updated. in that case we
+> > cannot extend the timestamp in any meaningful way. i'm not sure how we
+> > should handle this.
+>
+> Hmm.. have you seen this with madwifi driver? What do you think is the
+> cause? If we don't do proper locking I can see this being an issue on
+> the driver side unless this is specifically a hardware issue.
 
-On kernel 2.6.23.12 with iwlwifi-1.1.19 and mac80211-9.0.3 I has no
-problems like above.
+i have seen this in ath5k and other people have seen it in madwifi.
+therefore i'm pretty sure it's a HW issue. unfortunately this happens with
+ad-hoc beacons where it's most critical to get a correct TSF.
 
-regards
-Mario
+bruno
 
---=20
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS/CM d- s++: a+ C++++>$ UBL*++++$ P++ L+++ E--- W+++ N+ o-- K- w O- M-
-V-- PS++ PE++ Y PGP+++ t--- 5 X++++ R++ tv- b+++ DI D++++  G++ e* h----
-r+++ y++++
-------END GEEK CODE BLOCK------
 
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iQIVAwUBR4oovzUZahlMISn3AQJTQw//Q0GeS2NI1Y9DrZWTiaQP7i3cr9mNyGoI
-ZBYSBNqPsDT2Tz4Kai3YNbmcXrXvK+YTlGmJIWAWttCFCT+Zv+W1J01NmSGz1gGn
-nI/uOaRjs2xkcxGsHDp16L0bm4q0Te1KuA0uXpEgPjpkXsIVr8VoGjmyFpBNmkTk
-9Iic/39jMVd3EvlUenP8SbfxFjZVyC7eFNk8krE8ryyQw82t9I6RXKYu40zGHVYF
-NF/hPbJ4HsKI7PPFmPDPSg++txwsnGcJsPmqmr1ZwNCxb7wkLf8I65SPRcdEuHC8
-P2Mgwj12ghM/1NoByx6tbkwrFxXn2d4fXw9hyryo+NucEMr9e8LpqW4Aa2kpThMy
-29lTS49JBERHznLqbOUnBjN1Ex0FTp/bY/IxhUionzam/wjA+5577KducQQRl4jg
-kW9mOWcrPTVEWJS9jTyWekQuFI7okRztKniOcc/MiMwCsrHNluCvjJsovGFoorli
-ysrGchP4NPc6H8iSNd01QoOlm6bM5T18f4Ij8+YReawcUpnUCwWyF0SaaFpF06Uu
-dQn/YHn21pcOFHLq+ew6Xovs+BcH1UEEq2c8vjkHBKfnlrvhr6cR+GQLwrsPY12g
-eDbbJ6Uxmcq3ufx0EMltuToFxCwZuGDNlepD6lzrdM+It4vQvZBKlo6hH1y5Bqcm
-g3UM0vugIiI=
-=+8BK
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
