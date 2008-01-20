@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52461 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755204AbYA3QPa (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.190]:8223 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753930AbYATPfK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 11:15:30 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: should we revert the cfg80211 API patches?
-Date: Wed, 30 Jan 2008 17:13:15 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-References: <1201708352.4149.21.camel@johannes.berg>
-In-Reply-To: <1201708352.4149.21.camel@johannes.berg>
+	Sun, 20 Jan 2008 10:35:10 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1473486rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 07:35:09 -0800 (PST)
+Message-ID: <c85cb4470801200735v6cdc4642k7b500b6202e9b346@mail.gmail.com> (sfid-20080120_153514_067134_2396209F)
+Date: Sun, 20 Jan 2008 17:35:09 +0200
+From: "Ron Rindjunsky" <rindjon@googlemail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH 09/12 v2] iwlwifi: A-MPDU Tx conform API to mac80211
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <1200616570.5716.8.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200801301713.15962.mb@bu3sch.de> (sfid-20080130_161535_396697_C2B583A8)
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+	 <12005088643404-git-send-email-ron.rindjunsky@intel.com>
+	 <1200616570.5716.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 January 2008 16:52:31 Johannes Berg wrote:
-> John,
-> 
-> It appears that there's more trouble caused by my cfg80211 band API
-> patch than people are willing to put up with. Tomas has already asked
-> for it to be reverted, and neither Michael (Buesch) nor Stefano want to
-> maintain two driver branches (one "stable" 2.6.25 branch and one
-> "development" "for the future" branch).
+> >  int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
+> >                            enum ieee80211_ampdu_mlme_action action,
+> > -                          const u8 *addr, u16 tid, u16 ssn)
+> > +                          u8 *addr, u16 tid, u16 *ssn)
+> >  {
+> >       struct iwl4965_priv *priv = hw->priv;
+> >       int sta_id;
+> > @@ -4733,12 +4733,18 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
+> >       switch (action) {
+> >       case IEEE80211_AMPDU_RX_START:
+> >               IWL_DEBUG_HT("start Rx\n");
+> > -             iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, ssn);
+> > +             iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, *ssn);
+> >               break;
+> >       case IEEE80211_AMPDU_RX_STOP:
+> >               IWL_DEBUG_HT("stop Rx\n");
+> >               iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
+> >               break;
+>
+>
+> >  extern int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
+> >                                   enum ieee80211_ampdu_mlme_action action,
+> > -                                 const u8 *addr, u16 tid, u16 ssn);
+> > +                                 u8 *addr, u16 tid, u16 *ssn);
+> >  #ifdef CONFIG_IWL4965_HT_AGG
+>
+> These changes need to be in patch 1 so that has a chance of compiling.
+>
 
-No wait. I always supported that and will support that in the future.
+ok. I usually prefer not to mix mac80211 and iwlwifi changes on the
+same patch, this is why i didn't put them in patch #1, but as this
+code is already inside the tree i'll put them together.
 
-But the problem I see with not merging this patch is that I think
-it is _just_ wasted time in the end. If we simply merge it now we
-can easily fix bugs in the huge merge window.
-If we don't merge it, we are creating a branch of the driver. So
-far no problem, really. But, if a bug appears that has to be fixed
-differently for the old API and the new API, I'm not going to make
-two patches. Simply because this could have beed avoided as a whole
-by simply merging that patch _now_. I wish I had unlimited time to
-port patches back. But I simply don't. So I am going to port patches
-back that are needed, but not those for which we artificially created
-the problems.
-
-To say it again. I do support the concept of "stable" and "development"
-branches. But I do not support artificial branching that is not needed
-at all and can easily be avoided by simply applying that patch.
-
-Just my 2ct.
-
--- 
-Greetings Michael.
+> johannes
+>
+>
