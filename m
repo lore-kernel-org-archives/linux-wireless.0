@@ -1,87 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:42437 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752526AbYAIJQL (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:47311 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449AbYATTEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 04:16:11 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 3/6] ath5k: comment out unused beacon functions and structures
-Date: Wed,  9 Jan 2008 18:16:06 +0900
-Message-Id: <1199870169-10476-4-git-send-email-bruno@thinktube.com> (sfid-20080109_091623_054080_57EFC043)
-In-Reply-To: <1199870169-10476-3-git-send-email-bruno@thinktube.com>
-References: <1199870169-10476-1-git-send-email-bruno@thinktube.com>
- <1199870169-10476-2-git-send-email-bruno@thinktube.com>
- <1199870169-10476-3-git-send-email-bruno@thinktube.com>
+	Sun, 20 Jan 2008 14:04:04 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2493888pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2008 11:04:03 -0800 (PST)
+Message-ID: <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com> (sfid-20080120_190410_516717_0B012CF5)
+Date: Sun, 20 Jan 2008 14:04:02 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
+Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to user-space in standard GET WE ioctls.
+Cc: linux-wireless@vger.kernel.org, "Jean Tourrilhes" <jt@hpl.hp.com>
+In-Reply-To: <4793935F.2000102@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <4793935F.2000102@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use '#if 0' to comment out unused functions and structures wrt beacons. we
-might need that info later but right now they are useless and probably need to
-be rewritten.
+Adding Jean.
 
-Changes-licensed-under: ISC
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
- drivers/net/wireless/ath5k/ath5k.h |    4 ++++
- drivers/net/wireless/ath5k/hw.c    |    2 ++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+  Luis
 
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index 8af2545..0b6694b 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -459,6 +459,7 @@ struct ath5k_mib_stats {
- #define AR5K_BEACON_ENA		0x00800000 /*enable beacon xmit*/
- #define AR5K_BEACON_RESET_TSF	0x01000000 /*force a TSF reset*/
- 
-+#if 0
- /**
-  * struct ath5k_beacon_state - Per-station beacon timer state.
-  * @bs_interval: in TU's, can also include the above flags
-@@ -478,6 +479,7 @@ struct ath5k_beacon_state {
- 	u16	bs_bmiss_threshold;
- 	u32  	bs_cfp_next;
- };
-+#endif
- 
- 
- 
-@@ -1082,9 +1084,11 @@ extern u32 ath5k_hw_get_tsf32(struct ath5k_hw *ah);
- extern u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah);
- extern void ath5k_hw_reset_tsf(struct ath5k_hw *ah);
- extern void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval);
-+#if 0
- extern int ath5k_hw_set_beacon_timers(struct ath5k_hw *ah, const struct ath5k_beacon_state *state);
- extern void ath5k_hw_reset_beacon(struct ath5k_hw *ah);
- extern int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr);
-+#endif
- extern void ath5k_hw_update_mib_counters(struct ath5k_hw *ah, struct ath5k_mib_stats *statistics);
- /* ACK bit rate */
- void ath5k_hw_set_ack_bitrate_high(struct ath5k_hw *ah, bool high);
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 5ca2563..64ab950 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -2628,6 +2628,7 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- 		AR5K_BEACON);
- }
- 
-+#if 0
- /*
-  * Set beacon timers
-  */
-@@ -2822,6 +2823,7 @@ int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr)
- 
- 	return ret;
- }
-+#endif
- 
- /*
-  * Update mib counters (statistics)
--- 
-1.5.3.4
-
+On Jan 20, 2008 1:30 PM, Volodymyr G. Lukiianyk <volodymyrgl@gmail.com> wrote:
+> For the most of standard WE GET ioctls the size of the buffer to store driver's
+> response is calculated on base of the call's descriptor (.token_size and
+> .max_tokens fields) without taking into consideration the size of the buffer
+> provided by application in struct iwreq. But when the response is being copied to
+> userspace, its size is calculated from the length provided by application. This
+> can lead to kernel internal data leak into userspace, and oopses when the buffer
+> is located near the end of the available memory. To prevent these situations the
+> size used during copying is set to the same one used during allocation.
+>
+>
+> Signed-off-by: Volodymyr G Lukiianyk <volodymyrgl@gmail.com>
+> ---
+>
+> I've actually seen those oopses on the system with 32MB of memory, when 1k
+> object at address c1fffc00 was returned by the SLAB while handling request for
+> allocating 568 bytes buffer (struct iw_range). Later, copy_to_user() (instructed
+> to copy 1136 bytes, since iwlist uses 2x buffer) crashed trying to access
+> c2000000, which is beyond the bounds of available 32MB.
+>
+> The patch attached is against the Linus's tree.
+>
+>
+> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+> index 47e80cc..c6ce59b 100644
+> --- a/net/wireless/wext.c
+> +++ b/net/wireless/wext.c
+> @@ -866,8 +866,7 @@ static int ioctl_standard_call(struct net_device *  dev,
+>                         }
+>
+>                         err = copy_to_user(iwr->u.data.pointer, extra,
+> -                                          iwr->u.data.length *
+> -                                          descr->token_size);
+> +                                          extra_size);
+>                         if (err)
+>                                 ret =  -EFAULT;
+>                 }
+>
+>
