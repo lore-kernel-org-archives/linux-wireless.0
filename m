@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:34466 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbYAGAGN (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:38699 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758901AbYAUQK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 19:06:13 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 will need a firmware upgrade soon
-Date: Mon, 7 Jan 2008 01:05:16 +0100
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Hendrik Sattler <post@hendrik-sattler.de>,
-	linux-wireless@vger.kernel.org
-References: <200801061802.38297.mb@bu3sch.de> <200801070027.54717.mb@bu3sch.de> <200801070051.55678.rjw@sisk.pl>
-In-Reply-To: <200801070051.55678.rjw@sisk.pl>
+	Mon, 21 Jan 2008 11:10:57 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so898404ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 08:10:55 -0800 (PST)
+Message-ID: <4794C341.2020300@gmail.com> (sfid-20080121_161106_933556_2130F70A)
+Date: Mon, 21 Jan 2008 18:07:29 +0200
+From: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
 MIME-Version: 1.0
-Message-Id: <200801070105.17070.mb@bu3sch.de> (sfid-20080107_000623_859865_9A0135E0)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org, Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to
+ user-space in standard GET WE ioctls.
+References: <4793935F.2000102@gmail.com> <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com>
+In-Reply-To: <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 January 2008 00:51:55 Rafael J. Wysocki wrote:
-> On Monday, 7 of January 2008, Michael Buesch wrote:
-> > On Monday 07 January 2008 00:28:15 Rafael J. Wysocki wrote:
-> > > On Monday, 7 of January 2008, Michael Buesch wrote:
-> > > > On Sunday 06 January 2008 23:01:00 John W. Linville wrote:
-> > > > > On Sun, Jan 06, 2008 at 10:38:43PM +0100, Michael Buesch wrote:
-> > > > > > On Sunday 06 January 2008 22:35:51 Pavel Roskin wrote:
-> > > > > > > Quoting Michael Buesch <mb@bu3sch.de>:
-> > > > > > > 
-> > > > > > > > see "fwpostfix" module parameter
-> > > > > > > 
-> > > > > > > Can we please avoid this annoyance this time?
-> > > > > > 
-> > > > > > Go and complain at Broadcom please.
-> > > > > 
-> > > > > Broadcom doesn't really have this problem, since they are free to
-> > > > > include the binary firmware in their Windows/Mac/whatever drivers.
-> > > > > 
-> > > > > If the driver needs different firmware, why not have it ask for
-> > > > > different filenames?  As I suggested elsewhere, this could be as
-> > > > > simple as setting a default value for fwpostfix...
-> > > > 
-> > > > I'm not sure why people are complaining about stuff that's not
-> > > > done, yet. I just said that we need an update to an incompatible
-> > > > firmware soon. HOW that happens is an entirely different question.
-> > > > It seems like we _might_ be able to support both fw versions for some
-> > > > limited time. If that is not possible for whatever reason, I will
-> > > > change the fw filenames, of course. (And people will complain about
-> > > > that, too. Because the rule for broadcom firmware is: Always complain
-> > > > about whatever you do. ;) )
-> > > > The _just_ wanted to tell people about a serious change _before_ it
-> > > > happens. I'm not sure why this results in all kinds of complaints.
-> > > 
-> > > Most probably, because the people don't want that to happen. ;-)
-> > 
-> > People don't want N-PHY support?
+Luis R. Rodriguez wrote:
+> Adding Jean.
 > 
-> Well, as it sometimes is said "the better is an enemy of the good".  If they
-> feel comfortable without the N-PHY, why would they want it?
+>   Luis
 > 
-> Still, if you can add the support for it as a feature that doesn't affect the
-> people's working configurations, no one will complain.
+> On Jan 20, 2008 1:30 PM, Volodymyr G. Lukiianyk <volodymyrgl@gmail.com> wrote:
+>> For the most of standard WE GET ioctls the size of the buffer to store driver's
+>> response is calculated on base of the call's descriptor (.token_size and
+>> .max_tokens fields) without taking into consideration the size of the buffer
+>> provided by application in struct iwreq. But when the response is being copied to
+>> userspace, its size is calculated from the length provided by application. This
+>> can lead to kernel internal data leak into userspace, and oopses when the buffer
+>> is located near the end of the available memory. To prevent these situations the
+>> size used during copying is set to the same one used during allocation.
+>>
+>>
+>> Signed-off-by: Volodymyr G Lukiianyk <volodymyrgl@gmail.com>
+>> ---
+>>
+>> I've actually seen those oopses on the system with 32MB of memory, when 1k
+>> object at address c1fffc00 was returned by the SLAB while handling request for
+>> allocating 568 bytes buffer (struct iw_range). Later, copy_to_user() (instructed
+>> to copy 1136 bytes, since iwlist uses 2x buffer) crashed trying to access
+>> c2000000, which is beyond the bounds of available 32MB.
+>>
+>> The patch attached is against the Linus's tree.
+>>
+>>
+>> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+>> index 47e80cc..c6ce59b 100644
+>> --- a/net/wireless/wext.c
+>> +++ b/net/wireless/wext.c
+>> @@ -866,8 +866,7 @@ static int ioctl_standard_call(struct net_device *  dev,
+>>                         }
+>>
+>>                         err = copy_to_user(iwr->u.data.pointer, extra,
+>> -                                          iwr->u.data.length *
+>> -                                          descr->token_size);
+>> +                                          extra_size);
+>>                         if (err)
+>>                                 ret =  -EFAULT;
+>>                 }
+>>
+>>
+> 
 
-Impossible, sorry.
-We are going to add support for new firmware, which will be needed for N-PHY,
-or we don't.
-And I think it's clear which way we are going.
-What's the problem with all of this? Other drivers change firmware to incompatible
-versions on a regular basis. Look at ipw2200. There was a time when they changed
-the firmware basically on every kernel release.
-That wasn't a problem. Why would it be a problem here?
 
-How the technical implementation of all that stuff works in the end
-is not up to this discussion. Maybe we can support both firmware in one driver
-for some limited time. Maybe we rename the firmware files once again.
-I think it's likely to end up with a driver supporting 2 fw versions for a few
-release cycles. But I simply can not tell you, yet.
+Please, ignore this patch. I didn't notice that the driver's handler should set
+iwr->u.data.length appropriately. But is there any possibility for compiler to
+temporarily save the value of this field in the register and not re-read it after
+handler call?
 
-I just wanted to tell people that a firmware change is going to happen soon.
-Just informational stuff. Nothing people need to complain, suggest or argue about.
-
--- 
-Greetings Michael.
