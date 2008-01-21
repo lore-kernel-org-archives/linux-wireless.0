@@ -1,69 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbYAHRO3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 12:14:29 -0500
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240801080744u5a076202n91f11b0de87384f8@mail.gmail.com> (sfid-20080108_154444_241831_C6355BE0)
-References: <200712290942.37396.chris2553@googlemail.com>
-	 <200712291614.55732.IvDoorn@gmail.com>
-	 <1199261473.4172.58.camel@johannes.berg>
-	 <200801022012.52287.IvDoorn@gmail.com>
-	 <1ba2fa240801080744u5a076202n91f11b0de87384f8@mail.gmail.com>
-	 (sfid-20080108_154444_241831_C6355BE0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mdOooBOUVBR0C5cbsLsW"
-Date: Tue, 08 Jan 2008 18:09:27 +0100
-Message-Id: <1199812167.6762.1.camel@johannes.berg> (sfid-20080108_171433_924622_7CA175B9)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:10984 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758238AbYAULwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2008 06:52:23 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 02/12] mac80211: A-MPDU Tx add MLME structures
+Date: Mon, 21 Jan 2008 13:52:02 +0200
+Message-Id: <12009163392459-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115237_871039_1F231EB4)
+In-Reply-To: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds the needed structures to describe the Tx aggregation MLME
+per STA
+new:
+ - struct tid_ampdu_tx: TID aggregation information (Tx)
+changed:
+ - struct sta_ampdu_mlme: Tx aggregation information per TID and
+			  dialog token creator were added
+ - struct sta_info: tid_to_tx_q added for tid<->tx queue mapping
 
---=-mdOooBOUVBR0C5cbsLsW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/sta_info.h |   32 ++++++++++++++++++++++++++++++--
+ 1 files changed, 30 insertions(+), 2 deletions(-)
 
-
-> I didn't test the copy solution yet but in 11n rates I see as a show
-> stopper. All 11n packets are QoS packets.
-
-Really, go fix your firmware.
-
-> I haven't encounter a problems in net stack yet so I think this
-> solution is a bit drastic.
-
-You're not running on arm or sparc I guess. But the fact that pretty
-much *nobody* was aware of this problem until now tells me that I did
-the right thing and this solution is not "a bit drastic" *at all*.
-
-johannes
-
---=-mdOooBOUVBR0C5cbsLsW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4OuRqVg1VMiehFYAQJSVRAAiEBrr1Xw7DLuL5u/KOFnWcIIhJU1ftm3
-CQ9I4PAnZjMyhD8Hk2pj03VTy9t2C28KFyAiwqqXkb9IRwE78+rpB8keJRr57IWk
-C3DrUybp1cdc3A3QXH/vXgii6L0NKl7L5cH8xAtm4seft/RBAo/kYNDfE4VxSxsT
-ZYE4Wo1wnpRsLWKHYcvzLWbXgBK0lCHW5q7Djp/vXrB5uMqnywa2sQ55iLQALv+P
-U4IL8WFgDNf2YYX6UZhASaJ7uIFe/NRk5XFPd5YfWHYxP8Mp/932dNIqo4tw6dRH
-qZZ+6VODbM7PPrqz7Pe66G6zdMm6Biuz6VEbfYXHwKw2c8EErlVEziu1Z/rx7gjk
-G1nTkGWQO4YJJiNgt0XTUHGO9m64n5RPKrddAFGwT2y64JeLWf/Diq3nfSHno5xC
-B3R5b7RY1gOVq1Ptfb1IKZm8nsaf6dZW4CrxVxZmMeh8ojw+KqqnlhQoa+pmBHrX
-vIkAgYhbnJYvNMbi/u90gbf9Ywv/j8+zpRNc8Qaxws+JCHC4KsSglUFcUG8Fn8Fa
-EXpXApzTJcw/I63a4WGqYpt/ul0tL8VEFensFgeIBhBKVQ2dDMjGoETs61lxCmra
-ojs5fnenXyhzH20ph6azWXvz6LCOB/0QQDZpz1obRCwseK8Q5MYR4bhI0GxrQw9Q
-lO3lJG2s28w=
-=QCZ0
------END PGP SIGNATURE-----
-
---=-mdOooBOUVBR0C5cbsLsW--
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 96fe3ed..48f25f2 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -33,15 +33,36 @@
+ 
+ #define STA_TID_NUM 16
+ #define ADDBA_RESP_INTERVAL HZ
++#define HT_AGG_MAX_RETRIES		(0x3)
+ 
+ #define HT_AGG_STATE_INITIATOR_SHIFT	(4)
+ 
++#define HT_ADDBA_REQUESTED_MSK		BIT(0)
++#define HT_ADDBA_DRV_READY_MSK		BIT(1)
++#define HT_ADDBA_RECEIVED_MSK		BIT(2)
+ #define HT_AGG_STATE_REQ_STOP_BA_MSK	BIT(3)
+-
++#define HT_AGG_STATE_INITIATOR_MSK      BIT(HT_AGG_STATE_INITIATOR_SHIFT)
+ #define HT_AGG_STATE_IDLE		(0x0)
+ #define HT_AGG_STATE_OPERATIONAL	(0x7)
+ 
+ /**
++ * struct tid_ampdu_tx - TID aggregation information (Tx).
++ *
++ * @state: TID's state in session state machine.
++ * @dialog_token: dialog token for aggregation session
++ * @ssn: Starting Sequence Number expected to be aggregated.
++ * @addba_resp_timer: timer for peer's response to addba request
++ * @addba_req_num: number of times addBA request has been sent.
++ */
++struct tid_ampdu_tx {
++	u8 state;
++	u8 dialog_token;
++	u16 ssn;
++	struct timer_list addba_resp_timer;
++	u8 addba_req_num;
++};
++
++/**
+  * struct tid_ampdu_rx - TID aggregation information (Rx).
+  *
+  * @state: TID's state in session state machine.
+@@ -69,12 +90,18 @@ struct tid_ampdu_rx {
+ /**
+  * struct sta_ampdu_mlme - STA aggregation information.
+  *
+- * @tid_agg_info_rx: aggregation info for Rx per TID
++ * @tid_rx: aggregation info for Rx per TID
++ * @tid_tx: aggregation info for Tx per TID
+  * @ampdu_rx: for locking sections in aggregation Rx flow
++ * @ampdu_tx: for locking sectionsi in aggregation Tx flow
++ * @dialog_token_allocator: dialog token enumerator for each new session;
+  */
+ struct sta_ampdu_mlme {
+ 	struct tid_ampdu_rx tid_rx[STA_TID_NUM];
++	struct tid_ampdu_tx tid_tx[STA_TID_NUM];
+ 	spinlock_t ampdu_rx;
++	spinlock_t ampdu_tx;
++	u8 dialog_token_allocator;
+ };
+ 
+ struct sta_info {
+@@ -148,6 +175,7 @@ struct sta_info {
+ 					     of this STA */
+ 	struct sta_ampdu_mlme ampdu_mlme;
+ 	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
++	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
+-- 
+1.5.3.7
 
