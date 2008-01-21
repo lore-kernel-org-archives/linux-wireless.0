@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:3566 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755256AbYAJR3J (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:20795 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756464AbYAUCJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:29:09 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so542993fkz.5
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2008 09:29:07 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-Date: Thu, 10 Jan 2008 18:29:02 +0100
-Cc: Will Dyson <will.dyson@gmail.com>, linux-wireless@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-References: <200801062337.35904.IvDoorn@gmail.com> <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com> <20080110154654.GC3109@tuxdriver.com>
-In-Reply-To: <20080110154654.GC3109@tuxdriver.com>
+	Sun, 20 Jan 2008 21:09:59 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 2/2] ath5k: always extend rx timestamp with tsf
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Mon, 21 Jan 2008 11:09:46 +0900
+Message-ID: <20080121020945.3818.74270.stgit@one> (sfid-20080121_021006_068308_36C84F67)
+In-Reply-To: <20080121020924.3818.46553.stgit@one>
+References: <20080121020924.3818.46553.stgit@one>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801101829.02438.IvDoorn@gmail.com> (sfid-20080110_172913_016501_24F05794)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 10 January 2008, John W. Linville wrote:
-> On Thu, Jan 10, 2008 at 06:52:40AM -0500, Will Dyson wrote:
-> 
-> > Hmm. Looking at Linus's tree, I can see that rt61pci is missing at
-> > least 1 critical fix from Mattias Nissler that has been in
-> > wireless-2.6 for a long time now.
-> > 
-> > rt2x00: Allow rt61 to catch up after a missing tx report
-> > 
-> > I'd be pretty disappointed if we released 2.6.24 without this. It is a
-> > simple fix for a really obnoxious problem (although one that triggers
-> > rarely on my hardware).
-> 
-> This one can be cherry-picked fairly easily for 2.6.24.  Ivo, any
-> reason not to do that?
+always extend the rx timestamp with the local TSF, since this information is
+also needed for proper IBSS merging. this is done in the tasklet for now, maybe
+has to be moved to the interrupt handler like in madwifi.
 
-Nope, if it can be merged into 2.6.24 easily it should indeed go upstream.
+drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
 
-> > There are also a bunch of antenna selection fixes that never went
-> > upstream. These are required for my card to operate well at rates
-> > greater than 1Mbit, even when fairly close to the AP.
-> 
-> Can you identify specific patches?  If so I can evaluate whether they
-> apply easily to 2.6.24 or if they need significant rework.
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+---
 
-I'm afraid the antenna code concerns the antenna diversity which is quite
-a lot of code. I'm not sure how easily it can be merged, but I expect it to
-be somewhat troublesome.
+ drivers/net/wireless/ath5k/base.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-Ivo
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 6bbee64..d7d274f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1725,11 +1725,18 @@ accept:
+ 			skb_pull(skb, pad);
+ 		}
+ 
+-		if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+-			rxs.mactime = ath5k_extend_tsf(sc->ah,
+-					ds->ds_rxstat.rs_tstamp);
+-		else
+-			rxs.mactime = ds->ds_rxstat.rs_tstamp;
++		/*
++		 * always extend the mac timestamp, since this information is
++		 * also needed for proper IBSS merging.
++		 *
++		 * XXX: it might be too late to do it here, since rs_tstamp is
++		 * 15bit only. that means TSF extension has to be done within
++		 * 32768usec (about 32ms). it might be necessary to move this to
++		 * the interrupt handler, like it is done in madwifi.
++		 */
++		rxs.mactime = ath5k_extend_tsf(sc->ah, ds->ds_rxstat.rs_tstamp);
++		rxs.flag |= RX_FLAG_TSFT;
++
+ 		rxs.freq = sc->curchan->freq;
+ 		rxs.channel = sc->curchan->chan;
+ 		rxs.phymode = sc->curmode;
 
