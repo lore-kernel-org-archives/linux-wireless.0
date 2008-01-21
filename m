@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:48493 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1761798AbYA1VRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 16:17:54 -0500
-Date: Mon, 28 Jan 2008 22:15:29 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "Lars Ericsson" <Lars_Ericsson@telia.com>
-Cc: "'John W. Linville'" <linville@tuxdriver.com>,
-	"'Larry Finger'" <larry.finger@lwfinger.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] [PATCH] rc80211-pid: fix rate adjusting
-Message-ID: <20080128221529.1e46c4f6@morte> (sfid-20080128_211824_781961_D9B25687)
-In-Reply-To: <00db01c861e4$abc2fea0$0b3ca8c0@gotws1589>
-References: <20080127204606.63fbbaf7@morte>
-	<00db01c861e4$abc2fea0$0b3ca8c0@gotws1589>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:25896 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751804AbYAUSIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2008 13:08:32 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] iwlwifi: fix possible read attempt on ucode that is not available
+Date: Mon, 21 Jan 2008 10:08:31 -0800
+Message-Id: <1200938911-31332-1-git-send-email-reinette.chatre@intel.com> (sfid-20080121_180838_268809_55562B81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 28 Jan 2008 20:33:33 +0100
-"Lars Ericsson" <Lars_Ericsson@telia.com> wrote:
+This fixes a NULL pointer dereference that can occur when the
+ucode is not loaded at the time __iwl_up is called.
 
-> Hi,
-> 
-> Sorry, it took me some time to start testing.
-> I was using a rt2x00 kernel, which did not compile the patch.
-> Am using a RT61 minPCI as the STA.
-> 
-> Have build a new wireless kernel and made some initial test.
-> 
-> Findings so far:
-> 1) It does not select 11g speeds on 11b AP, fine.
-> 2) It does not use 11g speeds on 11g AP, not so good.
+The problem was reported at http://kerneloops.org/raw.php?rawid=2765&msgid=
 
-What happens if you force an 802.11g rate?
+The patch is against 2.6.24-rc8. Is it possible to get this fix into
+2.6.24?
 
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
---
-Ciao
-Stefano
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1a6b0e0..0b3ec7e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6342,6 +6342,11 @@ static int __iwl_up(struct iwl_priv *priv)
+ 		return 0;
+ 	}
+ 
++	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
++		IWL_ERROR("ucode not available for device bringup\n");
++		return -EIO;
++	}
++
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+ 
+ 	rc = iwl_hw_nic_init(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 6cd57c2..15a45f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6698,6 +6698,11 @@ static int __iwl_up(struct iwl_priv *priv)
+ 		return 0;
+ 	}
+ 
++	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
++		IWL_ERROR("ucode not available for device bringup\n");
++		return -EIO;
++	}
++
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+ 
+ 	rc = iwl_hw_nic_init(priv);
+-- 
+1.5.3.4
+
