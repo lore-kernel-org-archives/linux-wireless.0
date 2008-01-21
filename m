@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53666 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762956AbYAKXEg (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:11213 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753934AbYAUHHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 18:04:36 -0500
-Subject: Re: handing cloned frames to netif_rx()?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: netdev@vger.kernel.org, ron.rindjunsky@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080111230105.GA32656@gondor.apana.org.au>
-References: <E1JDSPG-0008Of-00@gondolin.me.apana.org.au>
-	 <1200092285.3528.5.camel@johannes.berg>
-	 <20080111230105.GA32656@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I+N28rWhA5od6jajIGrF"
-Date: Sat, 12 Jan 2008 00:04:17 +0100
-Message-Id: <1200092657.3528.7.camel@johannes.berg> (sfid-20080111_230503_120734_726C42D4)
-Mime-Version: 1.0
+	Mon, 21 Jan 2008 02:07:38 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Subject: Re: [PATCH 1/2] ath5k: debug level improvements
+Date: Mon, 21 Jan 2008 16:07:25 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <20080121020924.3818.46553.stgit@one> <87prvvfzj5.fsf@nokia.com>
+In-Reply-To: <87prvvfzj5.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801211607.25360.bruno@thinktube.com> (sfid-20080121_070743_418342_5966D623)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 21 January 2008 15:44:46 Kalle Valo wrote:
+> > +	char buf[20];
+> > +
+> > +	if (copy_from_user(buf, userbuf, min_t(size_t, count, 20)))
+> > +		return -EFAULT;
+>
+> How about let the compiler count the size of buf? Like this:
+>
+> if (copy_from_user(buf, userbuf, min_t(size_t, count, sizeof(buf))))
+>
+> That way the size of buf is only in one place, and we might avoid a
+> bug whenever someone changes the size of buf.
 
---=-I+N28rWhA5od6jajIGrF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+good idea. that way i can also get rid of min_t(size_t,...) and use min().
 
+> > +static ssize_t read_file_debug(struct file *file, char __user *user_buf,
+> > +				   size_t count, loff_t *ppos)
+> > +{
+> > +	struct ath5k_softc *sc = file->private_data;
+> > +	char buf[1000];
+>
+> To my eyes allocating 1000 bytes from stack is too large.
 
-On Sat, 2008-01-12 at 10:01 +1100, Herbert Xu wrote:
-> On Fri, Jan 11, 2008 at 11:58:05PM +0100, Johannes Berg wrote:
-> >
-> > Ok. Yes, we will of course adhere to that, but I was wondering whether
-> > maybe the net stack assumes somewhere that a packet it got from the
-> > driver can be written to w/o copying.
->=20
-> All parts of the rx stack support clone handling because they can always
-> run after another handler (e.g., AF_PACKET) which may have cloned the
-> packet.
+what about 700? ;)
+the output currently is 626 byte.
 
-Great, thanks for confirming, we'll do that then.
-
-johannes
-
---=-I+N28rWhA5od6jajIGrF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4f18KVg1VMiehFYAQIrTg/7BPUVTEbN4vPoi4zNHuuZLgyRWx/vsn3I
-1A1lsXs37rtmxtD2QLZ8oXR+B+rlJZ4yJolBLKT5hRCNVBrRANKCcgVUgf1PnkVB
-YuucoYR5ZHZhEUpmdHVDWgUsm3bNo6RXsw1mv6WhAN4G16hSexp6unfl5kNKT6V8
-7Gk+a50Pa2uBXLrJ8W2uoftMjpb3giouLFSVwC9bEuoOjrNdnCd++eTUWv+9WUy8
-BWXaWdFLlnFI6qNfLzOTmkmJd3+zK8jrNMUIK3yiTBAz2k/vAn8JXqJiUHOuJDUL
-X1p4xscmsj29sSN/oT1koEHiw1pfXPHz5GoUDLiSsUgak1k/dLliPVgVSG8Reh2m
-ltHsyLQkwI5dQ1cJ1/S0y0IADH1bzW+eQYdvo8ljvrXoHnfHhbW1oTw4sQ22VlI6
-jpiN9hFRIgIreeB6BXnE0kwmeVJITv4/uE6GRvwV++KRB6qgfTS62zCsEcL5LeQV
-OUMEwWjHeGYJZdNXL1rZnjjeyACCZwp1rS0oHz3DfIk5uLrZAWHq4QvA4iKPIfoJ
-jWMti1urdYdQMsaprhmZbhWL0frQD8ABzTRlqw1CjaeQUNTTGR9jKKPw5qDIqqB0
-/g1XltVm2f+VYFB3go3IXhL+9kvqQmppV6o5zOABxo7DmL60mNWjykcL1u7XFN9+
-5DmFJvQe7Xs=
-=XK/5
------END PGP SIGNATURE-----
-
---=-I+N28rWhA5od6jajIGrF--
-
+thanks,
+bruno
