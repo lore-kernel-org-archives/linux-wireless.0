@@ -1,209 +1,326 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45323 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbYAVTZy (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:15942 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755556AbYAUCJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 14:25:54 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix MAC control and microcode init
-Date: Tue, 22 Jan 2008 20:23:34 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
+	Sun, 20 Jan 2008 21:09:38 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 1/2] ath5k: debug level improvements
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Mon, 21 Jan 2008 11:09:24 +0900
+Message-ID: <20080121020924.3818.46553.stgit@one> (sfid-20080121_020952_662219_E69F5676)
 MIME-Version: 1.0
-Message-Id: <200801222023.35131.mb@bu3sch.de> (sfid-20080122_192602_244741_E21941C1)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This zeros out all microcode related memory before loading
-the microcode.
+* use only one debug level for beacon debugging: unify ATH5K_DEBUG_BEACON and
+ATH5K_DEBUG_BEACON_PROC.
 
-This also fixes initialization of the MAC control register.
-The _only_ place where we overwrite the contents of the MAC control
-register is at the beginning of b43_chip_init().
-All other places must do read() -> mask/set -> write() to not
-overwrite existing bits.
+* remove debug level ATH5K_DEBUG_FATAL. doesn't make sense as a debug level -
+if it's fatal it should be logged as an error.
 
-This also adds a longer delay for waiting for the microcode
-to initialize itself. It seems that the current timeout is sufficient
-on all available devices, but there's no real reason why we shouldn't
-wait for up to one second. Slow embedded devices might exist.
-Better safe than sorry.
+* fancier printing of debug levels. cat /debugfs/ath5k/phy0/debug.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+* allow debug levels to be changed by echoing their name into
+/debugfs/ath5k/phy0/debug. this will toggle the state, when it was off it will
+be turned on and vice versa.
 
+* use copy_from_user() when reading from the debug files. use unsigned int for
+better optimization.
+
+drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
+drivers/net/wireless/ath5k/debug.c:     Changes-licensed-under: GPL
+drivers/net/wireless/ath5k/debug.h:     Changes-licensed-under: GPL
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
 ---
 
-John, this bugfix should go into 2.6.24.
-Stefano, this must be ported to b43legacy.
+ drivers/net/wireless/ath5k/base.c  |   10 ++-
+ drivers/net/wireless/ath5k/debug.c |  120 ++++++++++++++++++++++++++++++------
+ drivers/net/wireless/ath5k/debug.h |   18 ++---
+ 3 files changed, 113 insertions(+), 35 deletions(-)
 
 
-
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-01-22 19:23:50.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-01-22 20:00:00.000000000 +0100
-@@ -1775,15 +1775,26 @@ error:
- static int b43_upload_microcode(struct b43_wldev *dev)
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 742616a..6bbee64 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1919,7 +1919,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	struct ath5k_buf *bf = sc->bbuf;
+ 	struct ath5k_hw *ah = sc->ah;
+ 
+-	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC, "in beacon_send\n");
++	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
+ 
+ 	if (unlikely(bf->skb == NULL || sc->opmode == IEEE80211_IF_TYPE_STA ||
+ 			sc->opmode == IEEE80211_IF_TYPE_MNTR)) {
+@@ -1935,10 +1935,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	 */
+ 	if (unlikely(ath5k_hw_num_tx_pending(ah, sc->bhalq) != 0)) {
+ 		sc->bmisscount++;
+-		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
++		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+ 			"missed %u consecutive beacons\n", sc->bmisscount);
+ 		if (sc->bmisscount > 3) {		/* NB: 3 is a guess */
+-			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
++			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+ 				"stuck beacon time (%u missed)\n",
+ 				sc->bmisscount);
+ 			tasklet_schedule(&sc->restq);
+@@ -1946,7 +1946,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		return;
+ 	}
+ 	if (unlikely(sc->bmisscount != 0)) {
+-		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC,
++		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+ 			"resume beacon xmit after %u misses\n",
+ 			sc->bmisscount);
+ 		sc->bmisscount = 0;
+@@ -1966,7 +1966,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 
+ 	ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
+ 	ath5k_hw_tx_start(ah, sc->bhalq);
+-	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON_PROC, "TXDP[%u] = %llx (%p)\n",
++	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "TXDP[%u] = %llx (%p)\n",
+ 		sc->bhalq, (unsigned long long)bf->daddr, bf->desc);
+ 
+ 	sc->bsent++;
+diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+index 4ba649e..6a3424a 100644
+--- a/drivers/net/wireless/ath5k/debug.c
++++ b/drivers/net/wireless/ath5k/debug.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2007 Bruno Randolf <bruno@thinktube.com>
++ * Copyright (c) 2007-2008 Bruno Randolf <bruno@thinktube.com>
+  *
+  *  This file is free software: you may copy, redistribute and/or modify it
+  *  under the terms of the GNU General Public License as published by the
+@@ -209,7 +209,12 @@ static ssize_t write_file_tsf(struct file *file,
+ 				 size_t count, loff_t *ppos)
  {
- 	const size_t hdr_len = sizeof(struct b43_fw_header);
- 	const __be32 *data;
- 	unsigned int i, len;
- 	u16 fwrev, fwpatch, fwdate, fwtime;
--	u32 tmp;
-+	u32 tmp, macctl;
- 	int err = 0;
- 
-+	/* Jump the microcode PSM to offset 0 */
-+	macctl = b43_read32(dev, B43_MMIO_MACCTL);
-+	B43_WARN_ON(macctl & B43_MACCTL_PSM_RUN);
-+	macctl |= B43_MACCTL_PSM_JMP0;
-+	b43_write32(dev, B43_MMIO_MACCTL, macctl);
-+	/* Zero out all microcode PSM registers and shared memory. */
-+	for (i = 0; i < 64; i++)
-+		b43_shm_write16(dev, B43_SHM_SCRATCH, i, 0);
-+	for (i = 0; i < 4096; i += 2)
-+		b43_shm_write16(dev, B43_SHM_SHARED, i, 0);
+ 	struct ath5k_softc *sc = file->private_data;
+-	if (strncmp(userbuf, "reset", 5) == 0) {
++	char buf[20];
 +
- 	/* Upload Microcode. */
- 	data = (__be32 *) (dev->fw.ucode.data->data + hdr_len);
- 	len = (dev->fw.ucode.data->size - hdr_len) / sizeof(__be32);
- 	b43_shm_control_word(dev, B43_SHM_UCODE | B43_SHM_AUTOINC_W, 0x0000);
- 	for (i = 0; i < len; i++) {
- 		b43_write32(dev, B43_MMIO_SHM_DATA, be32_to_cpu(data[i]));
-@@ -1802,30 +1813,37 @@ static int b43_upload_microcode(struct b
- 			b43_write32(dev, B43_MMIO_SHM_DATA, be32_to_cpu(data[i]));
- 			udelay(10);
- 		}
++	if (copy_from_user(buf, userbuf, min_t(size_t, count, 20)))
++		return -EFAULT;
++
++	if (strncmp(buf, "reset", 5) == 0) {
+ 		ath5k_hw_reset_tsf(sc->ah);
+ 		printk(KERN_INFO "debugfs reset TSF\n");
  	}
+@@ -232,7 +237,7 @@ static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
+ 	struct ath5k_softc *sc = file->private_data;
+ 	struct ath5k_hw *ah = sc->ah;
+ 	char buf[1000];
+-	int len = 0;
++	unsigned int len = 0;
+ 	unsigned int v;
+ 	u64 tsf;
  
- 	b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_ALL);
--	b43_write32(dev, B43_MMIO_MACCTL,
--		    B43_MACCTL_PSM_RUN |
--		    B43_MACCTL_IHR_ENABLED | B43_MACCTL_INFRA);
+@@ -277,11 +282,15 @@ static ssize_t write_file_beacon(struct file *file,
+ {
+ 	struct ath5k_softc *sc = file->private_data;
+ 	struct ath5k_hw *ah = sc->ah;
++	char buf[20];
 +
-+	/* Start the microcode PSM */
-+	macctl = b43_read32(dev, B43_MMIO_MACCTL);
-+	macctl &= ~B43_MACCTL_PSM_JMP0;
-+	macctl |= B43_MACCTL_PSM_RUN;
-+	b43_write32(dev, B43_MMIO_MACCTL, macctl);
++	if (copy_from_user(buf, userbuf, min_t(size_t, count, 20)))
++		return -EFAULT;
  
- 	/* Wait for the microcode to load and respond */
- 	i = 0;
- 	while (1) {
- 		tmp = b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
- 		if (tmp == B43_IRQ_MAC_SUSPENDED)
- 			break;
- 		i++;
--		if (i >= 50) {
-+		if (i >= 20) {
- 			b43err(dev->wl, "Microcode not responding\n");
- 			b43_print_fw_helptext(dev->wl, 1);
- 			err = -ENODEV;
--			goto out;
-+			goto error;
+-	if (strncmp(userbuf, "disable", 7) == 0) {
++	if (strncmp(buf, "disable", 7) == 0) {
+ 		AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+ 		printk(KERN_INFO "debugfs disable beacons\n");
+-	} else if (strncmp(userbuf, "enable", 6) == 0) {
++	} else if (strncmp(buf, "enable", 6) == 0) {
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
+ 		printk(KERN_INFO "debugfs enable beacons\n");
+ 	}
+@@ -314,6 +323,82 @@ static const struct file_operations fops_reset = {
+ };
+ 
+ 
++/* debugfs: debug level */
++
++static struct {
++	enum ath5k_debug_level level;
++	const char *name;
++	const char *desc;
++} dbg_info[] = {
++	{ ATH5K_DEBUG_RESET,	"reset",	"reset and initialization" },
++	{ ATH5K_DEBUG_INTR,	"intr",		"interrupt handling" },
++	{ ATH5K_DEBUG_MODE,	"mode",		"mode init/setup" },
++	{ ATH5K_DEBUG_XMIT,	"xmit",		"basic xmit operation" },
++	{ ATH5K_DEBUG_BEACON,	"beacon",	"beacon handling" },
++	{ ATH5K_DEBUG_CALIBRATE, "calib",	"periodic calibration" },
++	{ ATH5K_DEBUG_TXPOWER,	"txpower",	"transmit power setting" },
++	{ ATH5K_DEBUG_LED,	"led",		"LED mamagement" },
++	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
++	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
++	{ ATH5K_DEBUG_DUMPMODES, "dumpmodes",	"dump modes" },
++	{ ATH5K_DEBUG_TRACE,	"trace",	"trace function calls" },
++	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
++};
++
++static ssize_t read_file_debug(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	char buf[1000];
++	unsigned int len = 0;
++	unsigned int i;
++
++	len += snprintf(buf+len, sizeof(buf)-len,
++		"DEBUG LEVEL: 0x%08x\n\n", sc->debug.level);
++
++	for (i = 0; i < ARRAY_SIZE(dbg_info) - 1; i++) {
++		len += snprintf(buf+len, sizeof(buf)-len,
++			"%10s %c 0x%08x - %s\n", dbg_info[i].name,
++			sc->debug.level & dbg_info[i].level ? '+' : ' ',
++			dbg_info[i].level, dbg_info[i].desc);
++	}
++	len += snprintf(buf+len, sizeof(buf)-len,
++		"%10s %c 0x%08x - %s\n", dbg_info[i].name,
++		sc->debug.level == dbg_info[i].level ? '+' : ' ',
++		dbg_info[i].level, dbg_info[i].desc);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_debug(struct file *file,
++				 const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	unsigned int i;
++	char buf[20];
++
++	if (copy_from_user(buf, userbuf, min_t(size_t, count, 20)))
++		return -EFAULT;
++
++	for (i = 0; i < ARRAY_SIZE(dbg_info); i++) {
++		if (strncmp(buf, dbg_info[i].name,
++					strlen(dbg_info[i].name)) == 0) {
++			sc->debug.level ^= dbg_info[i].level; /* toggle bit */
++			break;
 +		}
-+		msleep_interruptible(50);
-+		if (signal_pending(current)) {
-+			err = -EINTR;
-+			goto error;
- 		}
--		udelay(10);
- 	}
- 	b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);	/* dummy read */
- 
- 	/* Get and check the revisions. */
- 	fwrev = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_UCODEREV);
- 	fwpatch = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_UCODEPATCH);
-@@ -1834,15 +1852,14 @@ static int b43_upload_microcode(struct b
- 
- 	if (fwrev <= 0x128) {
- 		b43err(dev->wl, "YOUR FIRMWARE IS TOO OLD. Firmware from "
- 		       "binary drivers older than version 4.x is unsupported. "
- 		       "You must upgrade your firmware files.\n");
- 		b43_print_fw_helptext(dev->wl, 1);
--		b43_write32(dev, B43_MMIO_MACCTL, 0);
- 		err = -EOPNOTSUPP;
--		goto out;
-+		goto error;
- 	}
- 	b43dbg(dev->wl, "Loading firmware version %u.%u "
- 	       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
- 	       fwrev, fwpatch,
- 	       (fwdate >> 12) & 0xF, (fwdate >> 8) & 0xF, fwdate & 0xFF,
- 	       (fwtime >> 11) & 0x1F, (fwtime >> 5) & 0x3F, fwtime & 0x1F);
-@@ -1853,13 +1870,20 @@ static int b43_upload_microcode(struct b
- 	if (b43_is_old_txhdr_format(dev)) {
- 		b43warn(dev->wl, "You are using an old firmware image. "
- 			"Support for old firmware will be removed in July 2008.\n");
- 		b43_print_fw_helptext(dev->wl, 0);
- 	}
- 
--out:
-+	return 0;
++	}
++	return count;
++}
 +
-+error:
-+	macctl = b43_read32(dev, B43_MMIO_MACCTL);
-+	macctl &= ~B43_MACCTL_PSM_RUN;
-+	macctl |= B43_MACCTL_PSM_JMP0;
-+	b43_write32(dev, B43_MMIO_MACCTL, macctl);
++static const struct file_operations fops_debug = {
++	.read = read_file_debug,
++	.write = write_file_debug,
++	.open = ath5k_debugfs_open,
++	.owner = THIS_MODULE,
++};
 +
- 	return err;
++
+ /* init */
+ 
+ void
+@@ -326,26 +411,24 @@ void
+ ath5k_debug_init_device(struct ath5k_softc *sc)
+ {
+ 	sc->debug.level = ath5k_debug;
++
+ 	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
+-			ath5k_global_debugfs);
+-	sc->debug.debugfs_debug = debugfs_create_u32("debug",
+-			0666, sc->debug.debugfs_phydir, &sc->debug.level);
++				ath5k_global_debugfs);
++
++	sc->debug.debugfs_debug = debugfs_create_file("debug", 0666,
++				sc->debug.debugfs_phydir, sc, &fops_debug);
+ 
+ 	sc->debug.debugfs_registers = debugfs_create_file("registers", 0444,
+-				sc->debug.debugfs_phydir,
+-				sc, &fops_registers);
++				sc->debug.debugfs_phydir, sc, &fops_registers);
+ 
+ 	sc->debug.debugfs_tsf = debugfs_create_file("tsf", 0666,
+-				sc->debug.debugfs_phydir,
+-				sc, &fops_tsf);
++				sc->debug.debugfs_phydir, sc, &fops_tsf);
+ 
+ 	sc->debug.debugfs_beacon = debugfs_create_file("beacon", 0666,
+-				sc->debug.debugfs_phydir,
+-				sc, &fops_beacon);
++				sc->debug.debugfs_phydir, sc, &fops_beacon);
+ 
+ 	sc->debug.debugfs_reset = debugfs_create_file("reset", 0222,
+-				sc->debug.debugfs_phydir,
+-				sc, &fops_reset);
++				sc->debug.debugfs_phydir, sc, &fops_reset);
  }
  
- static int b43_write_initvals(struct b43_wldev *dev,
- 			      const struct b43_iv *ivals,
- 			      size_t count,
-@@ -2225,17 +2249,21 @@ static void b43_chip_exit(struct b43_wld
-  * http://bcm-specs.sipsolutions.net/ChipInit
-  */
- static int b43_chip_init(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	int err, tmp;
--	u32 value32;
-+	u32 value32, macctl;
- 	u16 value16;
+ void
+@@ -415,8 +498,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+ 	struct ath5k_buf *bf;
+ 	int status;
  
--	b43_write32(dev, B43_MMIO_MACCTL,
--		    B43_MACCTL_PSM_JMP0 | B43_MACCTL_IHR_ENABLED);
-+	/* Initialize the MAC control */
-+	macctl = B43_MACCTL_IHR_ENABLED | B43_MACCTL_SHM_ENABLED;
-+	if (dev->phy.gmode)
-+		macctl |= B43_MACCTL_GMODE;
-+	macctl |= B43_MACCTL_INFRA;
-+	b43_write32(dev, B43_MMIO_MACCTL, macctl);
- 
- 	err = b43_request_firmware(dev);
- 	if (err)
- 		goto out;
- 	err = b43_upload_microcode(dev);
- 	if (err)
-@@ -3373,18 +3401,25 @@ static void b43_set_retry_limits(struct 
- 
- /* Shutdown a wireless core */
- /* Locking: wl->mutex */
- static void b43_wireless_core_exit(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-+	u32 macctl;
- 
- 	B43_WARN_ON(b43_status(dev) > B43_STAT_INITIALIZED);
- 	if (b43_status(dev) != B43_STAT_INITIALIZED)
+-	if (likely(!(sc->debug.level &
+-	    (ATH5K_DEBUG_RESET | ATH5K_DEBUG_FATAL))))
++	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
  		return;
- 	b43_set_status(dev, B43_STAT_UNINIT);
  
-+	/* Stop the microcode PSM. */
-+	macctl = b43_read32(dev, B43_MMIO_MACCTL);
-+	macctl &= ~B43_MACCTL_PSM_RUN;
-+	macctl |= B43_MACCTL_PSM_JMP0;
-+	b43_write32(dev, B43_MMIO_MACCTL, macctl);
-+
- 	b43_leds_exit(dev);
- 	b43_rng_exit(dev->wl);
- 	b43_dma_free(dev);
- 	b43_chip_exit(dev);
- 	b43_radio_turn_off(dev, 1);
- 	b43_switch_analog(dev, 0);
+ 	printk(KERN_DEBUG "rx queue %x, link %p\n",
+@@ -426,7 +508,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+ 	list_for_each_entry(bf, &sc->rxbuf, list) {
+ 		ds = bf->desc;
+ 		status = ah->ah_proc_rx_desc(ah, ds);
+-		if (!status || (sc->debug.level & ATH5K_DEBUG_FATAL))
++		if (!status)
+ 			ath5k_debug_printrxbuf(bf, status == 0);
+ 	}
+ 	spin_unlock_bh(&sc->rxbuflock);
+diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
+index 2b491cb..c4fd8c4 100644
+--- a/drivers/net/wireless/ath5k/debug.h
++++ b/drivers/net/wireless/ath5k/debug.h
+@@ -91,7 +91,6 @@ struct ath5k_dbg_info {
+  * @ATH5K_DEBUG_MODE: mode init/setup
+  * @ATH5K_DEBUG_XMIT: basic xmit operation
+  * @ATH5K_DEBUG_BEACON: beacon handling
+- * @ATH5K_DEBUG_BEACON_PROC: beacon ISR proc
+  * @ATH5K_DEBUG_CALIBRATE: periodic calibration
+  * @ATH5K_DEBUG_TXPOWER: transmit power setting
+  * @ATH5K_DEBUG_LED: led management
+@@ -99,7 +98,6 @@ struct ath5k_dbg_info {
+  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
+  * @ATH5K_DEBUG_DUMPMODES: dump modes
+  * @ATH5K_DEBUG_TRACE: trace function calls
+- * @ATH5K_DEBUG_FATAL: fatal errors
+  * @ATH5K_DEBUG_ANY: show at any debug level
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -115,15 +113,13 @@ enum ath5k_debug_level {
+ 	ATH5K_DEBUG_MODE	= 0x00000004,
+ 	ATH5K_DEBUG_XMIT	= 0x00000008,
+ 	ATH5K_DEBUG_BEACON	= 0x00000010,
+-	ATH5K_DEBUG_BEACON_PROC	= 0x00000020,
+-	ATH5K_DEBUG_CALIBRATE	= 0x00000100,
+-	ATH5K_DEBUG_TXPOWER	= 0x00000200,
+-	ATH5K_DEBUG_LED		= 0x00000400,
+-	ATH5K_DEBUG_DUMP_RX	= 0x00001000,
+-	ATH5K_DEBUG_DUMP_TX	= 0x00002000,
+-	ATH5K_DEBUG_DUMPMODES	= 0x00004000,
+-	ATH5K_DEBUG_TRACE	= 0x00010000,
+-	ATH5K_DEBUG_FATAL	= 0x80000000,
++	ATH5K_DEBUG_CALIBRATE	= 0x00000020,
++	ATH5K_DEBUG_TXPOWER	= 0x00000040,
++	ATH5K_DEBUG_LED		= 0x00000080,
++	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
++	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
++	ATH5K_DEBUG_DUMPMODES	= 0x00000400,
++	ATH5K_DEBUG_TRACE	= 0x00001000,
+ 	ATH5K_DEBUG_ANY		= 0xffffffff
+ };
+ 
+
