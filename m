@@ -1,51 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:20947 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:10984 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758612AbYALMww convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 07:52:52 -0500
-MIME-Version: 1.0
-Subject: RE: [RFC PATCH 07/10] mac80211: A-MPDU Tx change tx_status to      support Block Ack data
-Date: Sat, 12 Jan 2008 14:37:22 +0200
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB0450EA38@hasmsx411.ger.corp.intel.com> (sfid-20080112_125300_637471_E1628CF7)
-In-Reply-To: <49299.::ffff:91.5.126.126.1200138845.squirrel@secure.sipsolutions.net>
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>    <11999857502772-git-send-email-ron.rindjunsky@intel.com>    <1200070609.3861.208.camel@johannes.berg>    <1ba2fa240801120343v2e60acc8kc56469106cf56df1@mail.gmail.com> <49299.::ffff:91.5.126.126.1200138845.squirrel@secure.sipsolutions.net>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Tomas Winkler" <tomasw@gmail.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<flamingice@sourmilk.net>, "Zhu, Yi" <yi.zhu@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1758412AbYAULwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2008 06:52:24 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 05/12] mac80211: A-MPDU add debugfs support
+Date: Mon, 21 Jan 2008 13:52:05 +0200
+Message-Id: <12009163391538-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115248_850702_B74FB871)
+In-Reply-To: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds A-MPDU status report per STA to the debugfs.
+The option to de/activate A-MPDU through debugfs is also present.
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/debugfs_sta.c |  116 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h    |    1 +
+ 2 files changed, 117 insertions(+), 0 deletions(-)
 
->>> Broadcom hardware is able to give intermediate status notifications,
->>> would there be any use in those?
->>
->> Can you explain?
-
-> Actually, I don't really know what the microcode there provides. I
-guess
-> it tells you something like "I sent this frame, no TX errors occurred"
-or
-> so...
-
-> Johannes
-
->From what you wrote, I would also guess that these notifications
-indicate that the Tx itself was OK, as we have the same mechanism. Yet,
-Block Ack handling is a must if we want good rate scaling during A-MPDU,
-so the driver will have to communicate this data to the rate scaling
-module with no connection to HW conformations.
-
-Ron
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 8f5944c..0878146 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -55,6 +55,13 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.open = mac80211_open_file_generic,				\
+ }
+ 
++#define STA_OPS_WR(name)						\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.write = sta_##name##_write,					\
++	.open = mac80211_open_file_generic,				\
++}
++
+ #define STA_FILE(name, field, format)					\
+ 		STA_READ_##format(name, field)				\
+ 		STA_OPS(name)
+@@ -191,6 +198,113 @@ static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
+ STA_OPS(wme_tx_queue);
+ #endif
+ 
++static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	char buf[768], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	p += scnprintf(p, sizeof(buf)+buf-p, "Agg state for STA is:\n");
++	p += scnprintf(p, sizeof(buf)+buf-p, " STA next dialog_token is %d \n "
++			"TIDs info is: \n TID :",
++			(sta->ampdu_mlme.dialog_token_allocator + 1));
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d", i);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n RX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++	sta->ampdu_mlme.tid_rx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_rx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n TX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n SSN :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].ssn);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++
++static ssize_t sta_agg_status_write(struct file *file,
++		const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct net_device *dev = sta->dev;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw *hw = &local->hw;
++	u8 *da = sta->addr;
++	static int tid_static_tx[16] = {0, 0, 0, 0, 0, 0, 0, 0,
++					0, 0, 0, 0, 0, 0, 0, 0};
++	static int tid_static_rx[16] = {1, 1, 1, 1, 1, 1, 1, 1,
++					1, 1, 1, 1, 1, 1, 1, 1};
++	char *endp;
++	char buf[32];
++	int buf_size, rs;
++	unsigned int tid_num;
++	char state[4];
++
++	memset(buf, 0x00, sizeof(buf));
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tid_num = simple_strtoul(buf, &endp, 0);
++	if (endp == buf)
++		return -EINVAL;
++
++	if ((tid_num >= 100) && (tid_num <= 115)) {
++		/* toggle Rx aggregation command */
++		tid_num = tid_num - 100;
++		if (tid_static_rx[tid_num] == 1) {
++			strcpy(state, "off ");
++			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
++					WLAN_REASON_QSTA_REQUIRE_SETUP);
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
++			tid_static_rx[tid_num] = 0;
++		} else {
++			strcpy(state, "on ");
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
++			tid_static_rx[tid_num] = 1;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s\n", __func__,
++				tid_num, state);
++	} else if ((tid_num >= 0) && (tid_num <= 15)) {
++		/* toggle Tx aggregation command */
++		if (tid_static_tx[tid_num] == 0) {
++			strcpy(state, "on ");
++			rs =  ieee80211_start_tx_ba_session(hw, da, tid_num);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 1;
++		} else {
++			strcpy(state, "off");
++			rs =  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 0;
++		}
++		printk(KERN_ERR "%s tried switching tid=%u %s, return=%d\n",
++				__func__, tid_num, state, rs);
++	}
++
++	return count;
++}
++STA_OPS_WR(agg_status);
++
+ #define DEBUGFS_ADD(name) \
+ 	sta->debugfs.name = debugfs_create_file(#name, 0444, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -224,6 +338,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(wme_rx_queue);
+ 	DEBUGFS_ADD(wme_tx_queue);
+ #endif
++	DEBUGFS_ADD(agg_status);
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -238,6 +353,7 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ 	DEBUGFS_DEL(wme_rx_queue);
+ 	DEBUGFS_DEL(wme_tx_queue);
+ #endif
++	DEBUGFS_DEL(agg_status);
+ 
+ 	debugfs_remove(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 48f25f2..1e4410f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -190,6 +190,7 @@ struct sta_info {
+ 		struct dentry *wme_rx_queue;
+ 		struct dentry *wme_tx_queue;
+ #endif
++		struct dentry *agg_status;
+ 	} debugfs;
+ #endif
+ };
+-- 
+1.5.3.7
 
