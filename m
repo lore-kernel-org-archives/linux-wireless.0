@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:9495 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756799AbYAEVya (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jan 2008 16:54:30 -0500
-Received: by py-out-1112.google.com with SMTP id u52so11786358pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jan 2008 13:54:30 -0800 (PST)
-Message-ID: <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com> (sfid-20080105_215436_065864_54944967)
-Date: Sat, 5 Jan 2008 16:54:29 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-Subject: Re: rtl8187 rate control doesn't work
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	linux-kernel@vger.kernel.org,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <477F9890.5050107@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <477F9890.5050107@hauke-m.de>
+Received: from mga02.intel.com ([134.134.136.20]:8986 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758929AbYAUKjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2008 05:39:24 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 2/2] mac80211: fix rx flow sparse errors, make functions static
+Date: Mon, 21 Jan 2008 12:39:12 +0200
+Message-Id: <1200911960850-git-send-email-tomas.winkler@intel.com> (sfid-20080121_103930_968244_AB02CB23)
+In-Reply-To: <12009119602588-git-send-email-tomas.winkler@intel.com>
+References: <12009119522429-git-send-email-tomas.winkler@intel.com>
+ <12009119602588-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 5, 2008 9:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Hi
->
-> Now the compat-wireless-2.6 package is working and I get an Internet
-> connection with my rtl8187 based card. (It's on an ASUS P5B Deluxe)
->
-> I used the compat-wireless-2.6 package for this log, but I have the same
-> problem with the version integrated in kernel 2.6.24-rc6
->
-> The Access Point is some rooms away so the signal is not the best at my
-> location. When starting the device with no fixed rate it wants to
-> connect with 54MBit/s and as iwconfig says it was successful but I can't
-> ping any device in the wireless LAN. (it's the first part of the log)
-> The rate will not be slowed down it stays fixed at 54MBit/s.
->
-> After starting the device with rate fixed to 11M I get a connection to
-> the Access Point and iwconfig's output looks the same as without fixed
-> rate, but I'm able to ping the all devices in the network. (second part
-> of the log)
-> Now it slows down the rate to 1MBit/s
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Seems to be the new PID rate control algorithm. I believe Stephano
-(CC'd) was sending some patches for this. Please try changing in
-config.mk
+This patch adds static declarations to functions in the Rx flow in order to
+eliminate sparse errors
 
->From this value:
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/ieee80211_sta.c |    4 ++--
+ net/mac80211/rx.c            |   12 +++++++-----
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-CONFIG_MAC80211_RC_DEFAULT=pid
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index e7da1cd..2019b4f 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1154,8 +1154,8 @@ end_no_lock:
+ 	sta_info_put(sta);
+ }
+ 
+-void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
+-				u16 initiator, u16 reason_code)
++static void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
++				 u16 initiator, u16 reason_code)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6cc1e7e..d19f79e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -295,7 +295,7 @@ ieee80211_rx_h_parse_qos(struct ieee80211_txrx_data *rx)
+ }
+ 
+ 
+-u32 ieee80211_rx_load_stats(struct ieee80211_local *local,
++static u32 ieee80211_rx_load_stats(struct ieee80211_local *local,
+ 			      struct sk_buff *skb,
+ 			      struct ieee80211_rx_status *status)
+ {
+@@ -1664,8 +1664,10 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+  * This is the actual Rx frames handler. as it blongs to Rx path it must
+  * be called with rcu_read_lock protection.
+  */
+-void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw, struct sk_buff *skb,
+-			    struct ieee80211_rx_status *status, u32 load)
++static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
++					 struct sk_buff *skb,
++					 struct ieee80211_rx_status *status,
++					 u32 load)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1920,8 +1922,8 @@ u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 	return 1;
+ }
+ 
+-u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+-			      struct sk_buff *skb)
++static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
++				     struct sk_buff *skb)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-- 
+1.5.2.2
 
-To this:
-
-CONFIG_MAC80211_RC_DEFAULT=simple
-
-and let us know how that goes. Oh and linux-kernel is the wrong list
-to use, please just use linux-wireless for future e-mails.
-
-  Luis
