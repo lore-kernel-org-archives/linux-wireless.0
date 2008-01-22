@@ -1,107 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34511 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbYAPSlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 13:41:09 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 09/12 v2] iwlwifi: A-MPDU Tx conform API to mac80211
-Date: Wed, 16 Jan 2008 20:40:57 +0200
-Message-Id: <12005088643404-git-send-email-ron.rindjunsky@intel.com> (sfid-20080116_184118_692498_D997849D)
-In-Reply-To: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
-References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+Received: from an-out-0708.google.com ([209.85.132.248]:6040 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754277AbYAVBfy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2008 20:35:54 -0500
+Received: by an-out-0708.google.com with SMTP id d31so489421and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 17:35:53 -0800 (PST)
+Message-ID: <40f31dec0801211735j5d528c97w8ba46ac2ac5f659f@mail.gmail.com> (sfid-20080122_013557_902289_B6240889)
+Date: Tue, 22 Jan 2008 03:35:53 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 2/2] ath5k: always extend rx timestamp with tsf
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20080121020945.3818.74270.stgit@one>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080121020924.3818.46553.stgit@one>
+	 <20080121020945.3818.74270.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch alters the current API in order to fit the new
-API mac80211 gives for A-MPDU Tx
+2008/1/21, Bruno Randolf <bruno@thinktube.com>:
+> always extend the rx timestamp with the local TSF, since this information is
+> also needed for proper IBSS merging. this is done in the tasklet for now, maybe
+> has to be moved to the interrupt handler like in madwifi.
+>
+> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>
+>  drivers/net/wireless/ath5k/base.c |   17 ++++++++++++-----
+>  1 files changed, 12 insertions(+), 5 deletions(-)
+>
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 6bbee64..d7d274f 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1725,11 +1725,18 @@ accept:
+>                         skb_pull(skb, pad);
+>                 }
+>
+> -               if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
+> -                       rxs.mactime = ath5k_extend_tsf(sc->ah,
+> -                                       ds->ds_rxstat.rs_tstamp);
+> -               else
+> -                       rxs.mactime = ds->ds_rxstat.rs_tstamp;
+> +               /*
+> +                * always extend the mac timestamp, since this information is
+> +                * also needed for proper IBSS merging.
+> +                *
+> +                * XXX: it might be too late to do it here, since rs_tstamp is
+> +                * 15bit only. that means TSF extension has to be done within
+> +                * 32768usec (about 32ms). it might be necessary to move this to
+> +                * the interrupt handler, like it is done in madwifi.
+> +                */
+> +               rxs.mactime = ath5k_extend_tsf(sc->ah, ds->ds_rxstat.rs_tstamp);
+> +               rxs.flag |= RX_FLAG_TSFT;
+> +
+>                 rxs.freq = sc->curchan->freq;
+>                 rxs.channel = sc->curchan->chan;
+>                 rxs.phymode = sc->curmode;
+>
+>
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   13 +++++++++----
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    6 +-----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ----
- 3 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 7aab60a..4f262a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4721,7 +4721,7 @@ static void iwl4965_sta_modify_del_ba_tid(struct iwl4965_priv *priv,
- 
- int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 			     enum ieee80211_ampdu_mlme_action action,
--			     const u8 *addr, u16 tid, u16 ssn)
-+			     u8 *addr, u16 tid, u16 *ssn)
- {
- 	struct iwl4965_priv *priv = hw->priv;
- 	int sta_id;
-@@ -4733,12 +4733,18 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		IWL_DEBUG_HT("start Rx\n");
--		iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, ssn);
-+		iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, *ssn);
- 		break;
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT("stop Rx\n");
- 		iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
- 		break;
-+	case IEEE80211_AMPDU_TX_START:
-+		IWL_DEBUG_HT("start Tx\n");
-+		return iwl4965_mac_ht_tx_agg_start(hw, addr, tid, ssn);
-+	case IEEE80211_AMPDU_TX_STOP:
-+		IWL_DEBUG_HT("stop Tx\n");
-+		return iwl4965_mac_ht_tx_agg_stop(hw, addr, tid);
- 	default:
- 		IWL_DEBUG_HT("unknown\n");
- 		return -EINVAL;
-@@ -4837,8 +4843,7 @@ int iwl4965_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da, u16 tid,
- }
- 
- 
--int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da, u16 tid,
--			   int generator)
-+int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da, u16 tid)
- {
- 
- 	struct iwl4965_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 78bc148..8e9f756 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -778,12 +778,8 @@ extern void iwl4965_set_ht_add_station(struct iwl4965_priv *priv, u8 index,
- 				struct ieee80211_ht_info *sta_ht_inf);
- extern int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 				    enum ieee80211_ampdu_mlme_action action,
--				    const u8 *addr, u16 tid, u16 ssn);
-+				    u8 *addr, u16 tid, u16 *ssn);
- #ifdef CONFIG_IWL4965_HT_AGG
--extern int iwl4965_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da,
--				   u16 tid, u16 *start_seq_num);
--extern int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da,
--				  u16 tid, int generator);
- extern void iwl4965_turn_off_agg(struct iwl4965_priv *priv, u8 tid);
- extern void iwl4965_tl_get_stats(struct iwl4965_priv *priv,
- 				struct ieee80211_hdr *hdr);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 25001df..728271e 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -8973,10 +8973,6 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- #ifdef CONFIG_IWL4965_HT
- 	.conf_ht = iwl4965_mac_conf_ht,
- 	.ampdu_action = iwl4965_mac_ampdu_action,
--#ifdef CONFIG_IWL4965_HT_AGG
--	.ht_tx_agg_start = iwl4965_mac_ht_tx_agg_start,
--	.ht_tx_agg_stop = iwl4965_mac_ht_tx_agg_stop,
--#endif  /* CONFIG_IWL4965_HT_AGG */
- #endif  /* CONFIG_IWL4965_HT */
- 	.hw_scan = iwl4965_mac_hw_scan
- };
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
 -- 
-1.5.3.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
