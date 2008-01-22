@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36394 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754282AbYAYBUW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 20:20:22 -0500
-From: David Brownell <david-b@pacbell.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH 05/14] [rndis_host] Fix rndis packet filter flags.
-Date: Thu, 24 Jan 2008 16:55:20 -0800
-Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
-	netdev@vger.kernel.org
-References: <20080120001410.25718.70147.stgit@fate.lan>
-In-Reply-To: <20080120001410.25718.70147.stgit@fate.lan>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3203 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752297AbYAVPCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2008 10:02:00 -0500
+Date: Tue, 22 Jan 2008 09:54:32 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+	(2008-01-21)
+Message-ID: <20080122145432.GB3206@tuxdriver.com> (sfid-20080122_150205_025841_B98D790A)
+References: <20080121202835.GA3065@tuxdriver.com> <200801220856.55024.hs4233@mail.mn-solutions.de> <20080122125400.596ccbeb@morte> <20080122145126.GA3206@tuxdriver.com>
 MIME-Version: 1.0
-Message-Id: <200801241655.20350.david-b@pacbell.net> (sfid-20080125_012103_646261_B5B68437)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080122145126.GA3206@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 19 January 2008, Jussi Kivilinna wrote:
-> RNDIS packet filter flags are not exactly the same as CDC flags
-> so we cannot reuse them.
+On Tue, Jan 22, 2008 at 09:51:26AM -0500, John W. Linville wrote:
+> On Tue, Jan 22, 2008 at 12:54:00PM +0100, Stefano Brivio wrote:
+> > On Tue, 22 Jan 2008 08:56:54 +0100
+> > Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
+> > 
+> > > > Holger Schurig (5):
+> > > >       libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08'
+> > > 
+> > > This patch was originally from Marc Pignat <marc.pignat@hevs.ch>. 
+> > > Should I have made an "Author: " line into the patch then I 
+> > > re-wrote the patch for wireless-2.6/everything ?
+> > 
+> > In that case, you should add a "From:" line.
 > 
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
-
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
-
-
-> ---
+> Yes, sorry for any mixup.  If forwarding a patch authored by someone
+> else then please add:
 > 
->  drivers/net/usb/rndis_host.c |   23 ++++++++++++++++++++++-
->  1 files changed, 22 insertions(+), 1 deletions(-)
+> From: Patch Author <patch.author@email.net>
 > 
-> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-> index c686025..12daf9c 100644
-> --- a/drivers/net/usb/rndis_host.c
-> +++ b/drivers/net/usb/rndis_host.c
-> @@ -256,6 +256,27 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
->  #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
->  #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
->  
-> +/* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
-> +#define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
-> +#define RNDIS_PACKET_TYPE_MULTICAST		ccpu2(0x00000002)
-> +#define RNDIS_PACKET_TYPE_ALL_MULTICAST		ccpu2(0x00000004)
-> +#define RNDIS_PACKET_TYPE_BROADCAST		ccpu2(0x00000008)
-> +#define RNDIS_PACKET_TYPE_SOURCE_ROUTING	ccpu2(0x00000010)
-> +#define RNDIS_PACKET_TYPE_PROMISCUOUS		ccpu2(0x00000020)
-> +#define RNDIS_PACKET_TYPE_SMT			ccpu2(0x00000040)
-> +#define RNDIS_PACKET_TYPE_ALL_LOCAL		ccpu2(0x00000080)
-> +#define RNDIS_PACKET_TYPE_GROUP			ccpu2(0x00001000)
-> +#define RNDIS_PACKET_TYPE_ALL_FUNCTIONAL	ccpu2(0x00002000)
-> +#define RNDIS_PACKET_TYPE_FUNCTIONAL		ccpu2(0x00004000)
-> +#define RNDIS_PACKET_TYPE_MAC_FRAME		ccpu2(0x00008000)
-> +
-> +/* default filter used with RNDIS devices */
-> +#define RNDIS_DEFAULT_FILTER ( \
-> +	RNDIS_PACKET_TYPE_DIRECTED | \
-> +	RNDIS_PACKET_TYPE_BROADCAST | \
-> +	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
-> +	RNDIS_PACKET_TYPE_PROMISCUOUS)
-> +
->  /*
->   * RNDIS notifications from device: command completion; "reverse"
->   * keepalives; etc
-> @@ -551,7 +572,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  	u.set->oid = OID_GEN_CURRENT_PACKET_FILTER;
->  	u.set->len = ccpu2(4);
->  	u.set->offset = ccpu2((sizeof *u.set) - 8);
-> -	*(__le32 *)(u.buf + sizeof *u.set) = ccpu2(DEFAULT_FILTER);
-> +	*(__le32 *)(u.buf + sizeof *u.set) = RNDIS_DEFAULT_FILTER;
->  
->  	retval = rndis_command(dev, u.header);
->  	if (unlikely(retval < 0)) {
-> 
+> ...as the first line of the message.  Or state that someone else is
+> the author clearly in the email.
 
+I found the original patch in my records.  Looking at it now I can
+see what was intended, but I guess it wasn't clear enough for me to
+see then.
 
+If you'll try to follow the "From: " convention above I'll try to
+watch more carefully for anomalies like this...deal? :-)
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
