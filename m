@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:32972 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753659AbYAYSYx (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:48417 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481AbYAVU00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 13:24:53 -0500
-Date: Fri, 25 Jan 2008 10:22:13 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Dan Williams <dcbw@redhat.com>
-cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-In-Reply-To: <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
-Message-ID: <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org> (sfid-20080125_182456_473440_6835E9B5)
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>  <1201264166.12870.16.camel@johannes.berg>  <alpine.LFD.1.00.0801250753240.14161@hp.linux-foundation.org>  <200801251723.58891.mb@bu3sch.de>  <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
- <1201282027.3422.15.camel@localhost.localdomain> <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
+	Tue, 22 Jan 2008 15:26:26 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so4587149wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:26:25 -0800 (PST)
+Message-ID: <1ba2fa240801221226ra00fd76x8724b51023717b5e@mail.gmail.com> (sfid-20080122_202629_912340_33C7B3BD)
+Date: Tue, 22 Jan 2008 22:26:25 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [RFC] mac80211: proper short-slot handling
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"bruno randolf" <br1@einfach.org>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Yanbo Li" <dreamfly281@gmail.com>,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	"Daniel Drake" <dsd@gentoo.org>
+In-Reply-To: <200801161751.58244.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1199974496.3861.80.camel@johannes.berg>
+	 <200801161737.00682.IvDoorn@gmail.com>
+	 <1200501699.8708.9.camel@johannes.berg>
+	 <200801161751.58244.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Jan 16, 2008 6:51 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Wednesday 16 January 2008, Johannes Berg wrote:
+> >
+>
+> > > John already merged the 2.0.14 release into the everything branch,
+> > > so no need to wait on that. The remaining patches which have been send
+> > > but not yet merged are bugfixes which won't cause a collision with the
+> > > short-slot patch.
+> > >
+> > > Not sure where I diffed it against, I probably have to rebase it anyway
+> > > since I currently have a few major patches pending for the 2.1.0 release
+> > > which will drastically change the entire interface handling in rt2x00.
+> >
+> > Ok.
+> >
+> > > When do you plan to send the patch for inclusion? I can rebase the patch
+> > > and make it part of the 2.1.0 release of this weekend or release 2.1.0
+> > > and rebase the patch against that.
+> >
+> > I don't know. I haven't seen anybody but You and Tomas agree with this
+> > patch. I can try to convert the other drivers but I'm not sure when I'll
+> > manage to do that.
+>
+> Ok, I'll release 2.1.0 this weekend and update the slot time patch. I'll also
+> keep the patch and your slottime patch in rt2x00.git so at least rt2x00 can
+> start using your patch. :)
+>
+> Ivo
+>
 
+Finally I got to test this but somehow I'm not getting any changed bit
+set except
+association one. I'm still not sure if this is problem of iwl driver or mac80211
+If anybody tested please let me know
 
-On Fri, 25 Jan 2008, Linus Torvalds wrote:
-> 
-> But complaining about a vendor who does a good job technically, for 
-> non-technical reasons, I really don't see that as being fine.
-
-Side note: I also think the wireless parts here are doing things wrong. 
-
-Why _would_ you care about alignment? We used to have issues like that in 
-the normal networking code, and it was a mistake there too. Why isn't the 
-wireless stack just extracting the header explicitly, or using 
-"get_unaligned()" like regular networking?
-
-With ethernet, there were chips that could only do DMA at certain 
-alignments etc, together with various other headers being involved, making 
-it impossible to require alignment without memcpy(), and I don't think 
-we've had any issues there.
-
-People have to add in the proper "get_unaligned()" calls that they forgot 
-or didn't think about to various pieces every once in a while, but on most 
-platforms you get a nice warning when something isn't doing the right 
-thing (I think some borken ARM cores are the exception and will just 
-silently do the wrong thing entirely).
-
-So it's not like this is a new issue, and I can't recall us ever before 
-having ended up requiring alignment when it hit us.
-
-			Linus
+Thanks
+Tomas
