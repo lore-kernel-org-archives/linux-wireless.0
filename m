@@ -1,59 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39542 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220AbYAPSlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 13:41:10 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 08/12 v2] mac80211: A-MPDU Tx add delBA from recipient support
-Date: Wed, 16 Jan 2008 20:40:56 +0200
-Message-Id: <12005088641272-git-send-email-ron.rindjunsky@intel.com> (sfid-20080116_184120_113042_C242193B)
-In-Reply-To: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
-References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:26400 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbYAVH45 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2008 02:56:57 -0500
+Received: from lin01.mn-solutions.de (pD95F9308.dip0.t-ipconnect.de [217.95.147.8])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 541705E4115
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 08:56:56 +0100 (CET)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id DA18C1E000E
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 08:54:03 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6 (2008-01-21)
+Date: Tue, 22 Jan 2008 08:56:54 +0100
+References: <20080121202835.GA3065@tuxdriver.com>
+In-Reply-To: <20080121202835.GA3065@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801220856.55024.hs4233@mail.mn-solutions.de> (sfid-20080122_075701_187829_B1BE5B35)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to handle delBA from recipient to initiator
-during an A-MPDU session
+> Holger Schurig (5):
+>       libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08'
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index ab548f1..2e1ef9d 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1410,14 +1410,23 @@ static void ieee80211_sta_process_delba(struct net_device *dev,
- 
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	if (net_ratelimit())
--		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
--			print_mac(mac, mgmt->sa), tid,
-+		printk(KERN_DEBUG "delba from %s (%s) tid %d reason code %d\n",
-+			print_mac(mac, mgmt->sa),
-+			initiator ? "recipient" : "initiator", tid,
- 			mgmt->u.action.u.delba.reason_code);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
- 	if (initiator == WLAN_BACK_INITIATOR)
- 		ieee80211_sta_stop_rx_ba_session(dev, sta->addr, tid,
- 						 WLAN_BACK_INITIATOR, 0);
-+	else { /* WLAN_BACK_RECIPIENT */
-+		spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		sta->ampdu_mlme.tid_tx[tid].state =
-+				HT_AGG_STATE_OPERATIONAL;
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		ieee80211_stop_tx_ba_session(&local->hw, sta->addr, tid,
-+					     WLAN_BACK_RECIPIENT);
-+	}
- 	sta_info_put(sta);
- }
- 
--- 
-1.5.3.3
-
+This patch was originally from Marc Pignat <marc.pignat@hevs.ch>. 
+Should I have made an "Author: " line into the patch then I 
+re-wrote the patch for wireless-2.6/everything ?
