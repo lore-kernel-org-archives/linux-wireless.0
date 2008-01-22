@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3468 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756471AbYA3QcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 11:32:16 -0500
-Date: Wed, 30 Jan 2008 11:11:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jan Engelhardt <jengelh@computergmbh.de>, netdev@vger.kernel.org,
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:40524 "EHLO
+	ccerelbas01.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbYAVSer (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2008 13:34:47 -0500
+Date: Tue, 22 Jan 2008 10:16:26 -0800
+To: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] NET: constify data and function pointer tables
-Message-ID: <20080130161113.GB3317@tuxdriver.com> (sfid-20080130_163220_283761_0928A2BC)
-References: <54038cd4f87a03884e4f59f8f3697889dfb63c54.1201030614.git.jengelh@computergmbh.de> <Pine.LNX.4.64.0801222046170.5722@fbirervta.pbzchgretzou.qr> <47A0427D.7040301@garzik.org>
+Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to user-space in standard GET WE ioctls.
+Message-ID: <20080122181626.GC11873@bougret.hpl.hp.com> (sfid-20080122_183454_239934_37EDD1A3)
+Reply-To: jt@hpl.hp.com
+References: <4793935F.2000102@gmail.com> <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com> <4794C341.2020300@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47A0427D.7040301@garzik.org>
+In-Reply-To: <4794C341.2020300@gmail.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 30, 2008 at 04:25:17AM -0500, Jeff Garzik wrote:
-> Jan Engelhardt wrote:
->> Signed-off-by: Jan Engelhardt <jengelh@computergmbh.de>
->> ---
->>  drivers/net/bonding/bond_main.c         |    2 +-
->>  drivers/net/hamradio/bpqether.c         |    2 +-
->>  drivers/net/hamradio/scc.c              |    2 +-
->>  drivers/net/hamradio/yam.c              |    2 +-
->>  drivers/net/ibmveth.c                   |    2 +-
->>  drivers/net/pppoe.c                     |    2 +-
->>  drivers/net/pppol2tp.c                  |    4 ++--
->>  drivers/net/wireless/libertas/debugfs.c |   14 +++++++-------
->>  drivers/net/wireless/strip.c            |    2 +-
->>  9 files changed, 16 insertions(+), 16 deletions(-)
->
-> ACK -- but you should collect linville's ack of the wireless stuff too 
-> (even though the patch is simple and obvious)
+On Mon, Jan 21, 2008 at 06:07:29PM +0200, Volodymyr G. Lukiianyk wrote:
+> 
+> Please, ignore this patch. I didn't notice that the driver's handler should set
+> iwr->u.data.length appropriately. But is there any possibility for compiler to
+> temporarily save the value of this field in the register and not re-read it after
+> handler call?
+> 
 
-Looks fine to me...ACK
+	If the kernel is compiled without -fno-strict-aliasing, I've
+seen similar things happening. But, I thought that using
+-fno-strict-aliasing would cure that issue.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+	Good luck...
+
+	Jean
