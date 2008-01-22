@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46268 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756807AbYA3Ox7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47529
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755844AbYAVBF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 09:53:59 -0500
-Subject: Re: [PATCH, take 3] libertas: clean up association debug messages
-From: David Woodhouse <dwmw2@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1201704683.26842.2.camel@localhost.localdomain>
-References: <200710151255.56358.hs4233@mail.mn-solutions.de>
-	 <1201665912.28377.38.camel@shinybook.infradead.org>
-	 <200801300854.38715.hs4233@mail.mn-solutions.de>
-	 <1201704165.28377.56.camel@shinybook.infradead.org>
-	 <1201704683.26842.2.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 31 Jan 2008 01:53:50 +1100
-Message-Id: <1201704830.28377.60.camel@shinybook.infradead.org> (sfid-20080130_145406_758039_5719FEEB)
+	Mon, 21 Jan 2008 20:05:28 -0500
+Date: Mon, 21 Jan 2008 17:05:34 -0800 (PST)
+Message-Id: <20080121.170534.00262240.davem@davemloft.net> (sfid-20080122_010536_726269_673F5B27)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+ (2008-01-21)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080121202835.GA3065@tuxdriver.com>
+References: <20080121202835.GA3065@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 21 Jan 2008 15:28:35 -0500
 
-On Wed, 2008-01-30 at 09:51 -0500, Dan Williams wrote:
-> Um, wtf?  Wireless patches still go through Linville.  Not to Linus.
-> I'm not sure why Libertas is special here.  Just because people aren't
-> using git the way you like to use git isn't an excuse.
+> A slew of patches intended for 2.6.25...  Included are some big updates to
+> b43, iwlwifi, libertas, and rt2x00.  Also included are some sizeable
+> mac80211 updates and a bunch of cleanup work from Al Viro, as well as a
+> smattering of other patches.
+> 
+> More notable are two new drivers: ath5k and rtl8180.  Both of these
+> drivers have seen a lot of development during this cycle, and both have
+> been serving commendably in Fedora 8 for some time.  I think we are better
+> off with them in the upstream tree now.
+> 
+> Please let me know if there are problems!
 
-If I can make that work, I will. I'm just not sure how right now. We'll
-see. 
-
--- 
-dwmw2
-
+Pulled and pushed back out to net-2.6.25, thanks John!
