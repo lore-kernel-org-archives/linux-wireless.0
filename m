@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32799 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbYALKPR (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:7348 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649AbYAVBgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 05:15:17 -0500
-Subject: Re: channel utilisation short/long hdr?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20080112024400.GC12245@jm.kir.nu>
-References: <1199922658.3861.40.camel@johannes.berg>
-	 <20080112024400.GC12245@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3eBLVJbIIV5jWaWCWLh9"
-Date: Sat, 12 Jan 2008 11:15:00 +0100
-Message-Id: <1200132900.3528.22.camel@johannes.berg> (sfid-20080112_101527_157595_21B1F386)
-Mime-Version: 1.0
+	Mon, 21 Jan 2008 20:36:51 -0500
+Received: by an-out-0708.google.com with SMTP id d31so489469and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 17:36:50 -0800 (PST)
+Message-ID: <40f31dec0801211736l211c59cbx72844326115af643@mail.gmail.com> (sfid-20080122_013656_992402_0E594FD6)
+Date: Tue, 22 Jan 2008 03:36:50 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 3/4] ath5k: use 3 instead of 0x00000003
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20080118125119.6342.99381.stgit@one>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080118125018.6342.94435.stgit@one>
+	 <20080118125119.6342.99381.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/1/18, Bruno Randolf <bruno@thinktube.com>:
+> reviewed beacon timer initialization with register traces from madwifi: what we
+> are doing is correct :). one minor fix: use 3 instead of 0x00000003 - it's more
+> readable.
+>
+> drivers/net/wireless/ath5k/hw.c:        Changes-licensed-under: ISC
+>
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+> ---
+>
+>  drivers/net/wireless/ath5k/hw.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+>
+>
+> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+> index eb00818..3a4bf40 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -2605,10 +2605,8 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
+>                 break;
+>
+>         default:
+> -               timer1 = (next_beacon - AR5K_TUNE_DMA_BEACON_RESP) <<
+> -                   0x00000003;
+> -               timer2 = (next_beacon - AR5K_TUNE_SW_BEACON_RESP) <<
+> -                   0x00000003;
+> +               timer1 = (next_beacon - AR5K_TUNE_DMA_BEACON_RESP) << 3;
+> +               timer2 = (next_beacon - AR5K_TUNE_SW_BEACON_RESP) << 3;
+>         }
+>
+>         timer3 = next_beacon + (ah->ah_atim_window ? ah->ah_atim_window : 1);
+>
+>
 
---=-3eBLVJbIIV5jWaWCWLh9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-> Hmm.. I thought I had filtered out the channel use estimation code from
-> the original release since I did not see much use for this and the
-> values were not exactly valid in many cases.. ;-).=20
-
-Heh.
-
-> This code is almost five years old and maybe not so surprisingly, I
-> don't remember the exact details anymore.. Since these are use as
-> "hdrtime", I would assume they were derived using following calculation:
-
-Right. Thanks for the values, I guess that if we really wanted to keep
-that stuff maintainable we should rewrite it and take into account
-preamble length too etc. I'm not too keen on that though, would anybody
-object if we'd just kill it?
-
-> That would be any rate using Extended Rate PHY (ERP; 802.11 Clause 19).
-> This is not necessarily OFDM (it could also be using PBCC modulation).
-> In practice, I would expect the kernel side implementation to use this
-> in anything PHY related as ERP-OFDM (i.e., it may not support optional
-> PBCC rates). The association and beacon/probe processing may be more
-> generic to any ERP rate. I don't think ERP-PBCC is very commonly used,
-> so this may be more on the theoretical side..
-
-Oh, right, I keep forgetting about the optional rates.
-
-Thanks,
-johannes
-
---=-3eBLVJbIIV5jWaWCWLh9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4iTI6Vg1VMiehFYAQIZkxAAgK9qBrFFARvNzXS6a15XxUALGZohfeWm
-UiZxVEzjNQNPLPx7OM1DjzdUSMyWHOOTJ+4fMqdWMlrjGojHS0Js7IElHY3ORfqk
-kJ95P2BmseUMVhMrSPI03/FpJz4l39U+ea3N+CG3I8HLstxTrUee2Fneb0zkqiWP
-1MxUVyHSoWs03T23/aOMpcC9vYMhiRpiN0vxMY1mNddGET3oLG8aLHu6M1My/C+W
-wZZl2pvdO0nrQN13sjKJJH1I55o3LnMHw5nG+IX3diHoUfv2mIxve/KnsDd8ncrF
-oK3Z7zzWTqIRq9KdXFE0wz/2tTBpbm59TQKVqSyHjPQrBw07PvaO1sq3sqUt11hz
-8a5tZ7UMViYw5T/eaKT1uJgQXoa5jn61g2VSz6ECBNQY30hqmCO+80Tm/FAomKFw
-9nCPXqa0oQgLPFa78HM6ADaWWctznkuUoYZWxsgbLltYur8i1h9QxuDCCQ9K2vET
-7N1zmMDJ+2+81HGM8Z4Ml2QTJYyaYq+Zt2gkO2z3r8flt5VRLvN/9B4EqTvladxy
-1J/M1d1jhMk8/tSQVaaQ10N9JO4iLdv+137zIAIm5ZUPrnPM/aecDvLbgZ1hm1Qb
-l6x7BRopBVwWP2plh83m64iWifunhD/KpCsAaSW1wI6LBIBWdW197GmEulNcLnvh
-s2V6U/BJ8yw=
-=RG8K
------END PGP SIGNATURE-----
-
---=-3eBLVJbIIV5jWaWCWLh9--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
