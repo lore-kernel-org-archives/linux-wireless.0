@@ -1,96 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33688 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175AbYA2L2X (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:52362 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767AbYAVUY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 06:28:23 -0500
-Subject: [PATCH] mac80211: fix scan band off-by-one error
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bas Hulsken <bhulsken@zonnet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Content-Type: text/plain
-Date: Mon, 28 Jan 2008 17:08:56 +0100
-Message-Id: <1201536536.9397.12.camel@johannes.berg> (sfid-20080129_112827_401515_76E8ECEA)
-Mime-Version: 1.0
+	Tue, 22 Jan 2008 15:24:29 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2031703fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:24:27 -0800 (PST)
+Message-ID: <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com> (sfid-20080122_202431_782104_8DC48297)
+Date: Tue, 22 Jan 2008 21:24:27 +0100
+From: drago01 <drago01@gmail.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
+	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When checking for the next band to advance to, there
-was an off-by-one error that could lead to an access
-to an invalid array index. Additionally, the later
-check for scan_band >= IEEE80211_NUM_BANDS is not
-required since that will never be true.
+On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
+>
+>
+> >-----Original Message-----
+> >From: drago01 [mailto:drago01@gmail.com]
+> >Sent: Tuesday, January 22, 2008 10:12 PM
+> >To: Winkler, Tomas
+>
+> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
+> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+> >
+> >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
+> wrote:
+> >>
+> >> I believe it's delaying uCode load to mac_start - still need to be
+> >> polished.
+> >
+> >ok, thx for the quick reply.
+> >If you have any potential fixes I would be happy to test them ;)
+>
+> Can you get me the sequence it is happening? RF kill switch is off
+> before you power up the laptop or after, during association or in
+> unassociated state..etc
+> Thanks
 
-This also improves the comments related to that code.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This should fix the problem with the sband pointer access
-crashing later. The next item right after the bands[]
-array is a spinlock in "struct device" which happens to
-be unlocked and hence, on powerpc, initialised to zero
-which meant sband was NULL for me, while it's *one* on
-x86 so sband is non-NULL leading to the crash.
-
-Sorry about the mess.
-
- net/mac80211/ieee80211_sta.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
-
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-01-28 16:42:03.754363986 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-01-28 17:04:57.654297255 +0100
-@@ -3223,22 +3223,28 @@ void ieee80211_sta_scan_work(struct work
- 
- 	switch (local->scan_state) {
- 	case SCAN_SET_CHANNEL:
--		/* get current scan band */
-+		/*
-+		 * Get current scan band. scan_band may be IEEE80211_NUM_BANDS
-+		 * after we successfully scanned the last channel of the last
-+		 * band (and the last band is supported by the hw)
-+		 */
- 		if (local->scan_band < IEEE80211_NUM_BANDS)
- 			sband = local->hw.wiphy->bands[local->scan_band];
- 		else
- 			sband = NULL;
- 
--		/* if we started at an unsupported one, advance */
--		while (!sband && local->scan_band < IEEE80211_NUM_BANDS) {
-+		/*
-+		 * If we are at an unsupported band and have more bands
-+		 * left to scan, advance to the next supported one.
-+		 */
-+		while (!sband && local->scan_band < IEEE80211_NUM_BANDS - 1) {
- 			local->scan_band++;
- 			sband = local->hw.wiphy->bands[local->scan_band];
- 			local->scan_channel_idx = 0;
- 		}
- 
--		if (!sband ||
--		    (local->scan_channel_idx >= sband->n_channels &&
--		     local->scan_band >= IEEE80211_NUM_BANDS)) {
-+		/* if no more bands/channels left, complete scan */
-+		if (!sband || local->scan_channel_idx >= sband->n_channels) {
- 			ieee80211_scan_completed(local_to_hw(local));
- 			return;
- 		}
-@@ -3260,8 +3266,14 @@ void ieee80211_sta_scan_work(struct work
- 			}
- 		}
- 
-+		/* advance state machine to next channel/band */
- 		local->scan_channel_idx++;
- 		if (local->scan_channel_idx >= sband->n_channels) {
-+			/*
-+			 * scan_band may end up == IEEE80211_NUM_BANDS, but
-+			 * we'll catch that case above and complete the scan
-+			 * if that is the case.
-+			 */
- 			local->scan_band++;
- 			local->scan_channel_idx = 0;
- 		}
-
-
+I boot with rf kill off = device on
+acciotate using NM
+kill the card by pressing the rfkill (ie. setting it to on)
+card is dead (like described in my first mail), until I relaod the module
+the rfkill switch  does not have any effect at this time.
