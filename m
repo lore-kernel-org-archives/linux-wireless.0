@@ -1,172 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp105.sbc.mail.mud.yahoo.com ([68.142.198.204]:45947 "HELO
-	smtp105.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751116AbYA1Gtq (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:45323 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767AbYAVTZy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 01:49:46 -0500
-From: David Brownell <david-b@pacbell.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH 12/14 v2] [rndis_host] Add RNDIS physical medium checking into generic_rndis_bind()
-Date: Sun, 27 Jan 2008 22:49:42 -0800
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bjd@jooz.net
-References: <20080127213358.7278.32005.stgit@fate.lan>
-In-Reply-To: <20080127213358.7278.32005.stgit@fate.lan>
+	Tue, 22 Jan 2008 14:25:54 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix MAC control and microcode init
+Date: Tue, 22 Jan 2008 20:23:34 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
 MIME-Version: 1.0
+Message-Id: <200801222023.35131.mb@bu3sch.de> (sfid-20080122_192602_244741_E21941C1)
 Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <200801272249.43094.david-b@pacbell.net> (sfid-20080128_064953_795412_4ABC9879)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 27 January 2008, Jussi Kivilinna wrote:
-> Add RNDIS physical medium checking into generic_rndis_bind() and also make
-> rndis_host to be only bind on every medium except wireless.
-> 
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+This zeros out all microcode related memory before loading
+the microcode.
 
-Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+This also fixes initialization of the MAC control register.
+The _only_ place where we overwrite the contents of the MAC control
+register is at the beginning of b43_chip_init().
+All other places must do read() -> mask/set -> write() to not
+overwrite existing bits.
 
-I think that means the whole series is fair to merge into
-the network drivers queue, assuming nobody has any issues
-with the last patch (adding the actual rndis_wlan support).
+This also adds a longer delay for waiting for the microcode
+to initialize itself. It seems that the current timeout is sufficient
+on all available devices, but there's no real reason why we shouldn't
+wait for up to one second. Slow embedded devices might exist.
+Better safe than sorry.
 
-Thanks for doing this ... it's nice to see folk successfully
-building on top of this rndis_host code, since it started
-without any "real" RNDIS devices to test against!  (Just the
-Linux-USB "g_ether" peripheral code.)
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-- Dave
+---
 
-
-> ---
-> 
->  drivers/net/usb/rndis_host.c |   36 +++++++++++++++++++++++++++++++++---
->  drivers/net/usb/rndis_host.h |   19 ++++++++++++++++++-
->  2 files changed, 51 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-> index 800c9d0..0606e11 100644
-> --- a/drivers/net/usb/rndis_host.c
-> +++ b/drivers/net/usb/rndis_host.c
-> @@ -271,7 +271,8 @@ response_error:
->  	return -EDOM;
->  }
->  
-> -int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
-> +int
-> +generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags)
->  {
->  	int			retval;
->  	struct net_device	*net = dev->net;
-> @@ -287,7 +288,7 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  		struct rndis_set_c	*set_c;
->  		struct rndis_halt	*halt;
->  	} u;
-> -	u32			tmp;
-> +	u32			tmp, *phym;
->  	int			reply_len;
->  	unsigned char		*bp;
->  
-> @@ -358,6 +359,30 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
->  			dev->driver_info->early_init(dev) != 0)
->  		goto halt_fail_and_release;
->  
-> +	/* Check physical medium */
-> +	reply_len = sizeof *phym;
-> +	retval = rndis_query(dev, intf, u.buf, OID_GEN_PHYSICAL_MEDIUM,
-> +			0, (void **) &phym, &reply_len);
-> +	if (retval != 0)
-> +		/* OID is optional so don't fail here. */
-> +		*phym = RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED;
-> +	if ((flags & FLAG_RNDIS_PHYM_WIRELESS) &&
-> +			*phym != RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
-> +		if (netif_msg_probe(dev))
-> +			dev_dbg(&intf->dev, "driver requires wireless "
-> +				"physical medium, but device is not.\n");
-> +		retval = -ENODEV;
-> +		goto halt_fail_and_release;
-> +	}
-> +	if ((flags & FLAG_RNDIS_PHYM_NOT_WIRELESS) &&
-> +			*phym == RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
-> +		if (netif_msg_probe(dev))
-> +			dev_dbg(&intf->dev, "driver requires non-wireless "
-> +				"physical medium, but device is wireless.\n");
-> +		retval = -ENODEV;
-> +		goto halt_fail_and_release;
-> +	}
-> +
->  	/* Get designated host ethernet address */
->  	reply_len = ETH_ALEN;
->  	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
-> @@ -403,6 +428,11 @@ fail:
->  }
->  EXPORT_SYMBOL_GPL(generic_rndis_bind);
->  
-> +static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
-> +{
-> +	return generic_rndis_bind(dev, intf, FLAG_RNDIS_PHYM_NOT_WIRELESS);
-> +}
-> +
->  void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
->  {
->  	struct rndis_halt	*halt;
-> @@ -518,7 +548,7 @@ EXPORT_SYMBOL_GPL(rndis_tx_fixup);
->  static const struct driver_info	rndis_info = {
->  	.description =	"RNDIS device",
->  	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
-> -	.bind =		generic_rndis_bind,
-> +	.bind =		rndis_bind,
->  	.unbind =	rndis_unbind,
->  	.status =	rndis_status,
->  	.rx_fixup =	rndis_rx_fixup,
-> diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
-> index 61f1fd8..edc1d4a 100644
-> --- a/drivers/net/usb/rndis_host.h
-> +++ b/drivers/net/usb/rndis_host.h
-> @@ -82,6 +82,17 @@ struct rndis_msg_hdr {
->  #define	RNDIS_STATUS_MEDIA_CONNECT	ccpu2(0x4001000b)
->  #define	RNDIS_STATUS_MEDIA_DISCONNECT	ccpu2(0x4001000c)
->  
-> +/* codes for OID_GEN_PHYSICAL_MEDIUM */
-> +#define	RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED	ccpu2(0x00000000)
-> +#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN	ccpu2(0x00000001)
-> +#define	RNDIS_PHYSICAL_MEDIUM_CABLE_MODEM	ccpu2(0x00000002)
-> +#define	RNDIS_PHYSICAL_MEDIUM_PHONE_LINE	ccpu2(0x00000003)
-> +#define	RNDIS_PHYSICAL_MEDIUM_POWER_LINE	ccpu2(0x00000004)
-> +#define	RNDIS_PHYSICAL_MEDIUM_DSL		ccpu2(0x00000005)
-> +#define	RNDIS_PHYSICAL_MEDIUM_FIBRE_CHANNEL	ccpu2(0x00000006)
-> +#define	RNDIS_PHYSICAL_MEDIUM_1394		ccpu2(0x00000007)
-> +#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_WAN	ccpu2(0x00000008)
-> +#define	RNDIS_PHYSICAL_MEDIUM_MAX		ccpu2(0x00000009)
->  
->  struct rndis_data_hdr {
->  	__le32	msg_type;		/* RNDIS_MSG_PACKET */
-> @@ -222,6 +233,7 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
->  #define OID_802_3_PERMANENT_ADDRESS	ccpu2(0x01010101)
->  #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
->  #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
-> +#define OID_GEN_PHYSICAL_MEDIUM		ccpu2(0x00010202)
->  
->  /* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
->  #define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
-> @@ -244,10 +256,15 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
->  	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
->  	RNDIS_PACKET_TYPE_PROMISCUOUS)
->  
-> +/* Flags to require specific physical medium type for generic_rndis_bind() */
-> +#define FLAG_RNDIS_PHYM_NOT_WIRELESS	0x0001
-> +#define FLAG_RNDIS_PHYM_WIRELESS	0x0002
-> +
->  
->  extern void rndis_status(struct usbnet *dev, struct urb *urb);
->  extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
-> -extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
-> +extern int
-> +generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags);
->  extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
->  extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
->  extern struct sk_buff *
-> 
+John, this bugfix should go into 2.6.24.
+Stefano, this must be ported to b43legacy.
 
 
+
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-01-22 19:23:50.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-01-22 20:00:00.000000000 +0100
+@@ -1775,15 +1775,26 @@ error:
+ static int b43_upload_microcode(struct b43_wldev *dev)
+ {
+ 	const size_t hdr_len = sizeof(struct b43_fw_header);
+ 	const __be32 *data;
+ 	unsigned int i, len;
+ 	u16 fwrev, fwpatch, fwdate, fwtime;
+-	u32 tmp;
++	u32 tmp, macctl;
+ 	int err = 0;
+ 
++	/* Jump the microcode PSM to offset 0 */
++	macctl = b43_read32(dev, B43_MMIO_MACCTL);
++	B43_WARN_ON(macctl & B43_MACCTL_PSM_RUN);
++	macctl |= B43_MACCTL_PSM_JMP0;
++	b43_write32(dev, B43_MMIO_MACCTL, macctl);
++	/* Zero out all microcode PSM registers and shared memory. */
++	for (i = 0; i < 64; i++)
++		b43_shm_write16(dev, B43_SHM_SCRATCH, i, 0);
++	for (i = 0; i < 4096; i += 2)
++		b43_shm_write16(dev, B43_SHM_SHARED, i, 0);
++
+ 	/* Upload Microcode. */
+ 	data = (__be32 *) (dev->fw.ucode.data->data + hdr_len);
+ 	len = (dev->fw.ucode.data->size - hdr_len) / sizeof(__be32);
+ 	b43_shm_control_word(dev, B43_SHM_UCODE | B43_SHM_AUTOINC_W, 0x0000);
+ 	for (i = 0; i < len; i++) {
+ 		b43_write32(dev, B43_MMIO_SHM_DATA, be32_to_cpu(data[i]));
+@@ -1802,30 +1813,37 @@ static int b43_upload_microcode(struct b
+ 			b43_write32(dev, B43_MMIO_SHM_DATA, be32_to_cpu(data[i]));
+ 			udelay(10);
+ 		}
+ 	}
+ 
+ 	b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_ALL);
+-	b43_write32(dev, B43_MMIO_MACCTL,
+-		    B43_MACCTL_PSM_RUN |
+-		    B43_MACCTL_IHR_ENABLED | B43_MACCTL_INFRA);
++
++	/* Start the microcode PSM */
++	macctl = b43_read32(dev, B43_MMIO_MACCTL);
++	macctl &= ~B43_MACCTL_PSM_JMP0;
++	macctl |= B43_MACCTL_PSM_RUN;
++	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+ 
+ 	/* Wait for the microcode to load and respond */
+ 	i = 0;
+ 	while (1) {
+ 		tmp = b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
+ 		if (tmp == B43_IRQ_MAC_SUSPENDED)
+ 			break;
+ 		i++;
+-		if (i >= 50) {
++		if (i >= 20) {
+ 			b43err(dev->wl, "Microcode not responding\n");
+ 			b43_print_fw_helptext(dev->wl, 1);
+ 			err = -ENODEV;
+-			goto out;
++			goto error;
++		}
++		msleep_interruptible(50);
++		if (signal_pending(current)) {
++			err = -EINTR;
++			goto error;
+ 		}
+-		udelay(10);
+ 	}
+ 	b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);	/* dummy read */
+ 
+ 	/* Get and check the revisions. */
+ 	fwrev = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_UCODEREV);
+ 	fwpatch = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_UCODEPATCH);
+@@ -1834,15 +1852,14 @@ static int b43_upload_microcode(struct b
+ 
+ 	if (fwrev <= 0x128) {
+ 		b43err(dev->wl, "YOUR FIRMWARE IS TOO OLD. Firmware from "
+ 		       "binary drivers older than version 4.x is unsupported. "
+ 		       "You must upgrade your firmware files.\n");
+ 		b43_print_fw_helptext(dev->wl, 1);
+-		b43_write32(dev, B43_MMIO_MACCTL, 0);
+ 		err = -EOPNOTSUPP;
+-		goto out;
++		goto error;
+ 	}
+ 	b43dbg(dev->wl, "Loading firmware version %u.%u "
+ 	       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
+ 	       fwrev, fwpatch,
+ 	       (fwdate >> 12) & 0xF, (fwdate >> 8) & 0xF, fwdate & 0xFF,
+ 	       (fwtime >> 11) & 0x1F, (fwtime >> 5) & 0x3F, fwtime & 0x1F);
+@@ -1853,13 +1870,20 @@ static int b43_upload_microcode(struct b
+ 	if (b43_is_old_txhdr_format(dev)) {
+ 		b43warn(dev->wl, "You are using an old firmware image. "
+ 			"Support for old firmware will be removed in July 2008.\n");
+ 		b43_print_fw_helptext(dev->wl, 0);
+ 	}
+ 
+-out:
++	return 0;
++
++error:
++	macctl = b43_read32(dev, B43_MMIO_MACCTL);
++	macctl &= ~B43_MACCTL_PSM_RUN;
++	macctl |= B43_MACCTL_PSM_JMP0;
++	b43_write32(dev, B43_MMIO_MACCTL, macctl);
++
+ 	return err;
+ }
+ 
+ static int b43_write_initvals(struct b43_wldev *dev,
+ 			      const struct b43_iv *ivals,
+ 			      size_t count,
+@@ -2225,17 +2249,21 @@ static void b43_chip_exit(struct b43_wld
+  * http://bcm-specs.sipsolutions.net/ChipInit
+  */
+ static int b43_chip_init(struct b43_wldev *dev)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	int err, tmp;
+-	u32 value32;
++	u32 value32, macctl;
+ 	u16 value16;
+ 
+-	b43_write32(dev, B43_MMIO_MACCTL,
+-		    B43_MACCTL_PSM_JMP0 | B43_MACCTL_IHR_ENABLED);
++	/* Initialize the MAC control */
++	macctl = B43_MACCTL_IHR_ENABLED | B43_MACCTL_SHM_ENABLED;
++	if (dev->phy.gmode)
++		macctl |= B43_MACCTL_GMODE;
++	macctl |= B43_MACCTL_INFRA;
++	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+ 
+ 	err = b43_request_firmware(dev);
+ 	if (err)
+ 		goto out;
+ 	err = b43_upload_microcode(dev);
+ 	if (err)
+@@ -3373,18 +3401,25 @@ static void b43_set_retry_limits(struct 
+ 
+ /* Shutdown a wireless core */
+ /* Locking: wl->mutex */
+ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ {
+ 	struct b43_phy *phy = &dev->phy;
++	u32 macctl;
+ 
+ 	B43_WARN_ON(b43_status(dev) > B43_STAT_INITIALIZED);
+ 	if (b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
++	/* Stop the microcode PSM. */
++	macctl = b43_read32(dev, B43_MMIO_MACCTL);
++	macctl &= ~B43_MACCTL_PSM_RUN;
++	macctl |= B43_MACCTL_PSM_JMP0;
++	b43_write32(dev, B43_MMIO_MACCTL, macctl);
++
+ 	b43_leds_exit(dev);
+ 	b43_rng_exit(dev->wl);
+ 	b43_dma_free(dev);
+ 	b43_chip_exit(dev);
+ 	b43_radio_turn_off(dev, 1);
+ 	b43_switch_analog(dev, 0);
