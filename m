@@ -1,65 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39117 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294AbYAOWWw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:33097 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbYAVUMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jan 2008 17:22:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] b43: Add support for new firmware
-Date: Tue, 15 Jan 2008 23:21:40 +0100
-Cc: Pavel Roskin <proski@gnu.org>,
-	John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200801131420.52995.mb@bu3sch.de> <1200421662.17542.32.camel@dv> <20080115201538.5e4347f9@morte>
-In-Reply-To: <20080115201538.5e4347f9@morte>
+	Tue, 22 Jan 2008 15:12:22 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so2029837fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:12:20 -0800 (PST)
+Message-ID: <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com> (sfid-20080122_201225_225825_FDC40C15)
+Date: Tue, 22 Jan 2008 21:12:20 +0100
+From: drago01 <drago01@gmail.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801152321.41073.mb@bu3sch.de> (sfid-20080115_222255_937924_4D14BC40)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 15 January 2008 20:15:38 Stefano Brivio wrote:
-> On Tue, 15 Jan 2008 13:27:42 -0500
-> Pavel Roskin <proski@gnu.org> wrote:
-> 
-> > I have finally found some time and hardware to test it, but the tarball
-> > is overwhelming at its 186M.  And the worst thing, the server
-> > disconnected after 30M and appears to be down right now.  P.S. It's up,
-> > ETA is 48 minutes.
-> > 
-> > There were two files there.  I hope either is fine.  I'm trying to
-> > download WRT150NV11_v1.51.3_ETSI.tgz
-> > 
-> > Cannot we petition Linksys to put wl_ap.o outside the tarball?  Or maybe
-> > Broadcom could do it?
-> 
-> Good luck. ;) The only long-term lasting solution I see is to put more
-> effort on an open firmware. The instruction set has been figured out, we
-> just lack people and time there.
+On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
+>
+> I believe it's delaying uCode load to mac_start - still need to be
+> polished.
 
-We already have a better file on an openwrt server that will be the
-officially supported one soon.
-I just have to create a new fwcutter tarball and link from linuxwireless.org
-to it. I already added support for the file to fwcutter git.
-See Stefano's comment below.
-
-> > Do you know that the Subversion repository of fwcutter has no files at
-> > all?  I mean svn://svn.berlios.de/bcm43xx/trunk
-> > 
-> > Yes, I will try --unsupported, with version 009.
-> 
-> fwcutter development now happens here:
-> http://bu3sch.de/gitweb?p=b43-tools.git;a=summary
-
-Yep, the berlios stuff is dropped completely, except the download
-section for the fwcutter tarballs. But that may also change in future.
-We will announce that on linuxwireless.org.
-
-> Maybe we should add this along with git URLs on linuxwireless.org.
-
-Please do it, if you feel so.
-
--- 
-Greetings Michael.
+ok, thx for the quick reply.
+If you have any potential fixes I would be happy to test them ;)
