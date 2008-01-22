@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33874 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277AbYABIpk (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:65376 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbYAVBc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 03:45:40 -0500
-Date: Wed, 2 Jan 2008 08:45:32 +0000
-From: Christoph Hellwig <hch@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: better rate control algorithm selection
-Message-ID: <20080102084532.GA17960@infradead.org> (sfid-20080102_084542_269490_05F66B95)
-References: <1198253375.16241.76.camel@johannes.berg> <20071230231120.GB16557@uranus.ravnborg.org> <20071231074536.GA26874@infradead.org> <1199263275.4172.60.camel@johannes.berg>
+	Mon, 21 Jan 2008 20:32:28 -0500
+Received: by an-out-0708.google.com with SMTP id d31so489214and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2008 17:32:27 -0800 (PST)
+Message-ID: <40f31dec0801211732g6c73c47aw121cdc6054a5fbbc@mail.gmail.com> (sfid-20080122_013231_072067_5E8AB7EA)
+Date: Tue, 22 Jan 2008 03:32:27 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bruno Randolf" <bruno@thinktube.com>
+Subject: Re: [PATCH 2/3] ath5k: use SWBA to detect IBSS HW merges
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20080119091821.31251.5098.stgit@one>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1199263275.4172.60.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20080119091759.31251.60264.stgit@one>
+	 <20080119091821.31251.5098.stgit@one>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 02, 2008 at 09:41:15AM +0100, Johannes Berg wrote:
-> 
-> > Why don't we just build the rate control algorithms entirely separate
-> > useing obj-$(FOO) ?  If they're modular that lets them be their own
-> > module, and if they're built-in they'll still go into built-in.o.
-> 
-> Yeah. Except that they can't be built-in if mac80211 isn't, and we've
-> repeatedly had users f' up their installations and bitterly report to us
-> that mac80211 doesn't work because no rate control algorithm is
-> available so we wanted to force having one built into mac80211.ko unless
-> specifically turned off (only with EMBEDDED).
+> +                                        /* XXX: only if VEOL suppported */
 
-Building an algorithm optionally into mac80211 seems rather odd.  In
-case mac80211 the algorithms should be their own modules and you should
-use request_module to make sure at least one is loaded.  Or if you
-really want to make sure one is alway avaiabable always build the
-simplest one directly and unconditionally into mac80211.ko.
+Hmm, seems we have to fix this in hw.c, veol seems to be supported on
+5211 and above but i'm not sure (i'll check madwifi's capability bits
+for each of my cards and implement get_capability better)...
 
-> 
-> johannes
-
-
----end quoted text---
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
