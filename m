@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:3954 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbYASTdW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 14:33:22 -0500
-Received: by an-out-0708.google.com with SMTP id d31so312240and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 11:33:20 -0800 (PST)
-Message-ID: <40f31dec0801191133o73e91fd0g97bd726c9f2bd7a7@mail.gmail.com> (sfid-20080119_193328_791279_00A188C4)
-Date: Sat, 19 Jan 2008 21:33:20 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 3/3] ath5k: configure backoff for IBSS beacon queue
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20080119091841.31251.16946.stgit@one>
+Received: from laas.laas.fr ([140.93.0.15]:51179 "EHLO laas.laas.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751483AbYAVREh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2008 12:04:37 -0500
+Received: from [140.93.3.20] (degas [140.93.3.20])
+	(authenticated bits=0)
+	by laas.laas.fr (8.13.8/8.13.8) with ESMTP id m0MH4VQA028751
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 18:04:35 +0100 (MET)
+Message-ID: <47962227.9080601@laas.fr> (sfid-20080122_170444_517168_3F033F97)
+Date: Tue, 22 Jan 2008 18:04:39 +0100
+From: =?windows-1252?Q?Ga=EBtan_S=E9verac?= <gseverac@laas.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080119091759.31251.60264.stgit@one>
-	 <20080119091841.31251.16946.stgit@one>
+To: linux-wireless@vger.kernel.org
+Subject: [solve]Re: Ad-Hoc mode is it comming soon ?
+References: <4795B2B6.7060701@laas.fr>
+In-Reply-To: <4795B2B6.7060701@laas.fr>
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +               qi.tqi_cw_max = 2 * ah->ah_cw_min;
+It's all right, whit the driver from VENDOR the ad-hoc mode works
 
-Have you checked ath5k_hw_reset_tx_queue ? cw_min/cw_max is
-recalculated there, maybe we are doing something wrong there...
-
+thx
 
 
 
+Ga=EBtan S=E9verac a =E9crit :
+> Hello,
+>
+> I=92m student in the French laboratory =93LAAS=94=20
+> (http://www2.laas.fr/laas/2-4257-Home.php) and we are working on Wi-F=
+i=20
+> networks.
+> We use Wi-Fi USB keys with Zidas chipset (ZD1211) and we=92ll need to=
+=20
+> work in Ad-Hoc mode.
+> The driver does not support this mode at the moment, but you speak=20
+> about implement it.
+> Have you got an idea about the date of such implementation?
+>
+> Thanks you very much
+>
+> Regards
+>
+> Ga=EBtan
+>
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--=20
+
+Ga=EBtan SEVERAC
+LAAS-CNRS
+7 avenue du Colonel Roche
+31077 Toulouse cedex 04
+Tel : 05 61 33 63 14
+Mail : gaetan.severac@laas.fr
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
