@@ -1,73 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39899 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138AbYAEQn5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jan 2008 11:43:57 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: mac80211 "failed to clone multicast frame" crash
-Date: Sat, 5 Jan 2008 17:42:32 +0100
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200801051742.32865.mb@bu3sch.de> (sfid-20080105_164403_716884_CDE7CD91)
-Content-Type: text/plain; charset=utf-8
+Received: from mga02.intel.com ([134.134.136.20]:61297 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754557AbYAWSPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2008 13:15:24 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iwlwifi: cleanup usage of inline functions
+Date: Wed, 23 Jan 2008 10:15:19 -0800
+Message-Id: <1201112121-22340-5-git-send-email-reinette.chatre@intel.com> (sfid-20080123_181531_742600_C11DC337)
+In-Reply-To: <1201112121-22340-4-git-send-email-reinette.chatre@intel.com>
+References: <1201112121-22340-1-git-send-email-reinette.chatre@intel.com>
+ <1201112121-22340-2-git-send-email-reinette.chatre@intel.com>
+ <1201112121-22340-3-git-send-email-reinette.chatre@intel.com>
+ <1201112121-22340-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems that after allocation of the skb in ieee80211_deliver_skb() fa=
-iled, somebody
-dereferenced it.
+Be consistent when using inline functions. If the function only used
+once we move it to where it is used - no need for externs.
 
-Note the crap characters before the ": failed to clone multicast frame"=
- message.
-There should be the device name "dev->name". This might be a use-after-=
-free bug.
-Maybe we don't wait for the workqueue to finish on rmmod?
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   14 --------------
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   14 ++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 ++++++
+ 6 files changed, 20 insertions(+), 23 deletions(-)
 
-This happened while doing a rmmod, modprobe sequence. I'm not sure if i=
-t happened
-on rmmod or modprobe.
-
-[ 4245.070779] =DD=8B : failed to clone multicast frame
-[ 4245.070802] Unable to handle kernel paging request for data at addre=
-ss 0x00000000
-[ 4245.071996] Faulting instruction address: 0xc0351cd4
-[ 4245.073068] Oops: Kernel access of bad area, sig: 11 [#1]
-[ 4245.074117] PREEMPT PowerMac
-[ 4245.075132] Modules linked in: ssb mac80211 rfkill_input appletouch =
-af_packet rfkill led_class input_polldev ohci_hcd pcmcia unix
-[ 4245.076705] NIP: c0351cd4 LR: e2250288 CTR: c0351c8c
-[ 4245.077783] REGS: dd895eb0 TRAP: 0300   Not tainted  (2.6.24-rc5-wl2=
-6)
-[ 4245.078897] MSR: 00009032 <EE,ME,IR,DR>  CR: 24000088  XER: 00000000
-[ 4245.080132] DAR: 00000000, DSISR: 40000000
-[ 4245.081095] TASK =3D de64ac80[2960] 'ipolldevd' THREAD: dd894000
-[ 4245.081296] GPR00: 00000000 dd895f60 de64ac80 dd9a73d4 dd9a73c0 0000=
-0000 00000000 00000032=20
-[ 4245.082659] GPR08: 00000000 00000001 dd9a73d4 c0351c8c 00321068 0000=
-0000 00000000 00000000=20
-[ 4245.084008] GPR16: 00000000 00000000 00000000 00000000 00000000 0000=
-0000 00d8e5c0 00d8fec4=20
-[ 4245.085383] GPR24: 00000000 005c3000 c0587d4c dd9a73d4 e2087130 dd9a=
-73c0 dd9a73d4 dd9a73d8=20
-[ 4245.087594] NIP [c0351cd4] eth_type_trans+0x48/0x114
-[ 4245.088652] LR [e2250288] ieee80211_deliver_skb+0xec/0x154 [mac80211=
-]
-[ 4245.089777] Call Trace:
-[ 4245.090681] [dd895f60] [e2250228] ieee80211_deliver_skb+0x8c/0x154 [=
-mac80211] (unreliable)
-[ 4245.091857] [dd895f80] [c0041004] run_workqueue+0xa8/0x138
-[ 4245.092904] [dd895fa0] [c0041478] worker_thread+0xdc/0xf8
-[ 4245.093948] [dd895fd0] [c00458f4] kthread+0x4c/0x88
-[ 4245.094976] [dd895ff0] [c0013d08] kernel_thread+0x44/0x60
-[ 4245.096022] Instruction dump:
-[ 4245.096952] 409d002c 80030058 3929fff2 91230054 7c004810 7c000110 7c=
-0000d0 0f000000=20
-[ 4245.098248] 812300a0 3929000e 912300a0 810a0090 <88080000> a0e80000 =
-70090001 a0c80002=20
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 76c4ed1..4fdeb53 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2369,18 +2369,4 @@ struct pci_device_id iwl3945_hw_card_ids[] = {
+ 	{0}
+ };
+ 
+-/*
+- * Clear the OWNER_MSK, to establish driver (instead of uCode running on
+- * embedded controller) as EEPROM reader; each read is a series of pulses
+- * to/from the EEPROM chip, not a single event, so even reads could conflict
+- * if they weren't arbitrated by some ownership mechanism.  Here, the driver
+- * simply claims ownership, which should be safe when this function is called
+- * (i.e. before loading uCode!).
+- */
+-inline int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv)
+-{
+-	_iwl3945_clear_bit(priv, CSR_EEPROM_GP, CSR_EEPROM_GP_IF_OWNER_MSK);
+-	return 0;
+-}
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ MODULE_DEVICE_TABLE(pci, iwl3945_hw_card_ids);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 20b925f..4b07db9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -671,7 +671,6 @@ extern int iwl3945_hw_channel_switch(struct iwl3945_priv *priv, u16 channel);
+ /*
+  * Forward declare iwl-3945.c functions for iwl-base.c
+  */
+-extern int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv);
+ extern __le32 iwl3945_get_antenna_flags(const struct iwl3945_priv *priv);
+ extern int iwl3945_init_hw_rate_table(struct iwl3945_priv *priv);
+ extern void iwl3945_reg_txpower_periodic(struct iwl3945_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 04db34b..569347f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4961,11 +4961,4 @@ int iwl4965_eeprom_acquire_semaphore(struct iwl4965_priv *priv)
+ 	return rc;
+ }
+ 
+-inline void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv)
+-{
+-	iwl4965_clear_bit(priv, CSR_HW_IF_CONFIG_REG,
+-		CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
+-}
+-
+-
+ MODULE_DEVICE_TABLE(pci, iwl4965_hw_card_ids);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 78bc148..9cb82be 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -750,7 +750,6 @@ struct iwl4965_priv;
+  * Forward declare iwl-4965.c functions for iwl-base.c
+  */
+ extern int iwl4965_eeprom_acquire_semaphore(struct iwl4965_priv *priv);
+-extern void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv);
+ 
+ extern int iwl4965_tx_queue_update_wr_ptr(struct iwl4965_priv *priv,
+ 					  struct iwl4965_tx_queue *txq,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5afc578..1e9e953 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1557,6 +1557,20 @@ static void get_eeprom_mac(struct iwl3945_priv *priv, u8 *mac)
+ 	memcpy(mac, priv->eeprom.mac_address, 6);
+ }
+ 
++/*
++ * Clear the OWNER_MSK, to establish driver (instead of uCode running on
++ * embedded controller) as EEPROM reader; each read is a series of pulses
++ * to/from the EEPROM chip, not a single event, so even reads could conflict
++ * if they weren't arbitrated by some ownership mechanism.  Here, the driver
++ * simply claims ownership, which should be safe when this function is called
++ * (i.e. before loading uCode!).
++ */
++static inline int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv)
++{
++	_iwl3945_clear_bit(priv, CSR_EEPROM_GP, CSR_EEPROM_GP_IF_OWNER_MSK);
++	return 0;
++}
++
+ /**
+  * iwl3945_eeprom_init - read EEPROM contents
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index bb2d4f5..9f23c3f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1639,6 +1639,12 @@ static void get_eeprom_mac(struct iwl4965_priv *priv, u8 *mac)
+ 	memcpy(mac, priv->eeprom.mac_address, 6);
+ }
+ 
++static inline void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv)
++{
++	iwl4965_clear_bit(priv, CSR_HW_IF_CONFIG_REG,
++		CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
++}
++
+ /**
+  * iwl4965_eeprom_init - read EEPROM contents
+  *
+-- 
+1.5.3.4
+
