@@ -1,197 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3846 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310AbYAPVwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 16:52:49 -0500
-Date: Wed, 16 Jan 2008 16:27:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull 'fixes-jgarzik' branch of wireless-2.6
-Message-ID: <20080116212752.GE3164@tuxdriver.com> (sfid-20080116_215252_778946_26AA544C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:60471 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750767AbYAWNVU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2008 08:21:20 -0500
+Received: from [10.0.0.10] (80.220.119.243) by pne-smtpout3-sn1.fre.skanova.net (7.3.129)
+        id 478149BD000F38BE for linux-wireless@vger.kernel.org; Wed, 23 Jan 2008 14:20:11 +0100
+Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080120001342.25718.83669.stgit@fate.lan>
+References: <20080120001342.25718.83669.stgit@fate.lan>
+Content-Type: text/plain
+Date: Wed, 23 Jan 2008 15:21:15 +0200
+Message-Id: <1201094475.7733.1.camel@localhost> (sfid-20080123_132124_359813_3B040B12)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff,
+Hi,
 
-A few more fixes for 2.6.24...note that this branch is based
-on 2.6.24-rc8.
+Any change of getting driver merged in 2.6.25?
 
-Thanks,
+ - Jussi
 
-John
+On Sun, 2008-01-20 at 02:13 +0200, Jussi Kivilinna wrote:
+> Hello,
+> 
+> This is second try on wireless RNDIS patchset started by Bjorge Dijkstra. Since
+> Bjorge has disappeared, I claim maintainership of rndis_wext and this patchset
+> until he returns.
+> 
+> This patchset adds support for various 802.11 USB devices based on Broadcom
+> 4320 chip. Chip uses RNDIS to communicate with the host, so module depend
+> heavily on rndis_host/cdc_ether/usbnet and needs some changes on these 
+> modules in order to work.
+> 
+> Patches 1-6 are from first patchset:
+>  1. Fix sparse warning: returning void valued expression
+>  2. [cdc_ether] Hardwire CDC descriptors when missing
+>  3. [rndis_host] Use 1KB buffer in rndis_unbind
+>  4. [rndis_host] Halt device if rndis_bind fails
+>  5. [rndis_host] Fix rndis packet filter flags
+>  6. [usbnet] Use wlan device name for RNDIS wireless devices
+> 
+> Of these 1, 3 and 4 are not required for this version of rndis_wext to work.
+> 
+> Actual wireless part is changed from extension on rndis_host to separate 
+> driver. Different devices are detected by device specific USB vendor/product 
+> IDs as the way done with Windows drivers instead of detecting RNDIS media type 
+> like in first patchset.
+> 
+> New patches 7-14:
+>  7. [rndis_host] Split up rndis_host.c
+>  8. [rndis_host] export functions
+>  9. [usbnet] add driver_priv pointer to 'struct usbnet'
+> 10. [rndis_host] Add rndis_early_init function pointer to 'struct rndis_data'.
+> 11. [rndis_host] Add rndis_link_change function pointer to 'struct rndis_data'.
+> 12. Move usbnet.h and rndis_host.h to include/linux/usb
+> 13. [rndis_host] blacklist known wireless RNDIS devices
+> 14. Add new driver 'rndis_wext' for wireless RNDIS devices.
+> 
+> Patches should be applied in order, series apply cleanly to 2.6.24-rc8.
+> 
+>  - Jussi Kivilinna
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
----
-
-Individual patches available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-jgarzik/
-
----
-
-The following changes since commit cbd9c883696da72b2b1f03f909dbacc04bbf8b58:
-  Linus Torvalds (1):
-        Linux 2.6.24-rc8
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-
-Ivo van Doorn (1):
-      rt2x00: Fix ieee80211 payload alignment
-
-Marc Pignat (1):
-      wireless/libertas support for 88w8385 sdio older revision
-
-Randy Dunlap (1):
-      hostap: section mismatch warning
-
-Stefano Brivio (2):
-      ipw2200: fix typo in kerneldoc
-      b43: fix use-after-free rfkill bug
-
- drivers/net/wireless/b43/rfkill.c        |   11 ++++++-----
- drivers/net/wireless/hostap/hostap_plx.c |    6 +++---
- drivers/net/wireless/ipw2200.c           |    2 +-
- drivers/net/wireless/libertas/if_sdio.c  |    4 ++++
- drivers/net/wireless/rt2x00/rt2x00pci.c  |    2 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c  |   11 +++++++++--
- 6 files changed, 24 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index 98cf70c..11f53cb 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -138,8 +138,11 @@ void b43_rfkill_init(struct b43_wldev *dev)
- 	rfk->rfkill->user_claim_unsupported = 1;
- 
- 	rfk->poll_dev = input_allocate_polled_device();
--	if (!rfk->poll_dev)
--		goto err_free_rfk;
-+	if (!rfk->poll_dev) {
-+		rfkill_free(rfk->rfkill);
-+		goto err_freed_rfk;
-+	}
-+
- 	rfk->poll_dev->private = dev;
- 	rfk->poll_dev->poll = b43_rfkill_poll;
- 	rfk->poll_dev->poll_interval = 1000; /* msecs */
-@@ -175,8 +178,7 @@ err_unreg_rfk:
- err_free_polldev:
- 	input_free_polled_device(rfk->poll_dev);
- 	rfk->poll_dev = NULL;
--err_free_rfk:
--	rfkill_free(rfk->rfkill);
-+err_freed_rfk:
- 	rfk->rfkill = NULL;
- out_error:
- 	rfk->registered = 0;
-@@ -195,6 +197,5 @@ void b43_rfkill_exit(struct b43_wldev *dev)
- 	rfkill_unregister(rfk->rfkill);
- 	input_free_polled_device(rfk->poll_dev);
- 	rfk->poll_dev = NULL;
--	rfkill_free(rfk->rfkill);
- 	rfk->rfkill = NULL;
- }
-diff --git a/drivers/net/wireless/hostap/hostap_plx.c b/drivers/net/wireless/hostap/hostap_plx.c
-index 040dc3e..cbf15d7 100644
---- a/drivers/net/wireless/hostap/hostap_plx.c
-+++ b/drivers/net/wireless/hostap/hostap_plx.c
-@@ -608,7 +608,7 @@ static void prism2_plx_remove(struct pci_dev *pdev)
- 
- MODULE_DEVICE_TABLE(pci, prism2_plx_id_table);
- 
--static struct pci_driver prism2_plx_drv_id = {
-+static struct pci_driver prism2_plx_driver = {
- 	.name		= "hostap_plx",
- 	.id_table	= prism2_plx_id_table,
- 	.probe		= prism2_plx_probe,
-@@ -618,13 +618,13 @@ static struct pci_driver prism2_plx_drv_id = {
- 
- static int __init init_prism2_plx(void)
- {
--	return pci_register_driver(&prism2_plx_drv_id);
-+	return pci_register_driver(&prism2_plx_driver);
- }
- 
- 
- static void __exit exit_prism2_plx(void)
- {
--	pci_unregister_driver(&prism2_plx_drv_id);
-+	pci_unregister_driver(&prism2_plx_driver);
- }
- 
- 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 88062c1..003f73f 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -4935,7 +4935,7 @@ static int ipw_queue_reset(struct ipw_priv *priv)
- /**
-  * Reclaim Tx queue entries no more used by NIC.
-  *
-- * When FW adwances 'R' index, all entries between old and
-+ * When FW advances 'R' index, all entries between old and
-  * new 'R' index need to be reclaimed. As result, some free space
-  * forms. If there is enough free space (> low mark), wake Tx queue.
-  *
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index b24425f..4f1efb1 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -871,6 +871,10 @@ static int if_sdio_probe(struct sdio_func *func,
- 		if (sscanf(func->card->info[i],
- 				"ID: %x", &model) == 1)
- 			break;
-+               if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
-+                       model = 4;
-+                       break;
-+               }
- 	}
- 
- 	if (i == func->card->num_info) {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 6d5d9ab..04663eb 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -149,7 +149,7 @@ void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
- 		 * The data behind the ieee80211 header must be
- 		 * aligned on a 4 byte boundary.
- 		 */
--		align = NET_IP_ALIGN + (2 * (header_size % 4 == 0));
-+		align = header_size % 4;
- 
- 		/*
- 		 * Allocate the sk_buffer, initialize it and copy
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index ab4797e..568d738 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -245,13 +245,20 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	 * Allocate a new sk buffer to replace the current one.
- 	 * If allocation fails, we should drop the current frame
- 	 * so we can recycle the existing sk buffer for the new frame.
-+	 * As alignment we use 2 and not NET_IP_ALIGN because we need
-+	 * to be sure we have 2 bytes room in the head. (NET_IP_ALIGN
-+	 * can be 0 on some hardware). We use these 2 bytes for frame
-+	 * alignment later, we assume that the chance that
-+	 * header_size % 4 == 2 is bigger then header_size % 2 == 0
-+	 * and thus optimize alignment by reserving the 2 bytes in
-+	 * advance.
- 	 */
- 	frame_size = entry->ring->data_size + entry->ring->desc_size;
--	skb = dev_alloc_skb(frame_size + NET_IP_ALIGN);
-+	skb = dev_alloc_skb(frame_size + 2);
- 	if (!skb)
- 		goto skip_entry;
- 
--	skb_reserve(skb, NET_IP_ALIGN);
-+	skb_reserve(skb, 2);
- 	skb_put(skb, frame_size);
- 
- 	/*
--- 
-John W. Linville
-linville@tuxdriver.com
