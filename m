@@ -1,63 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbYAXOpp (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:10841 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbYAWQnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:45:45 -0500
-Subject: Re: [PATCH] b43: Fix MAC control and microcode init
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <200801222023.35131.mb@bu3sch.de> (sfid-20080122_192602_244741_E21941C1)
-References: <200801222023.35131.mb@bu3sch.de>
-	 (sfid-20080122_192602_244741_E21941C1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d+lLzmfDKTMDuDjRWaig"
-Date: Thu, 24 Jan 2008 10:13:01 +0100
-Message-Id: <1201165981.3454.49.camel@johannes.berg> (sfid-20080124_144831_286456_2F9F0BF5)
-Mime-Version: 1.0
+	Wed, 23 Jan 2008 11:43:35 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so566813nfb.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2008 08:43:33 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: linux-wireless@vger.kernel.org
+Subject: Re: Silent crash witk 2-6.24-rc8-git4
+Date: Wed, 23 Jan 2008 16:42:58 +0000
+References: <200801220603.02986.chris2553@googlemail.com> <200801231521.36968.chris2553@googlemail.com>
+In-Reply-To: <200801231521.36968.chris2553@googlemail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801231642.58782.chris2553@googlemail.com> (sfid-20080123_164343_833191_5B62C84B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 23 January 2008, Chris Clayton wrote:
+> Hi again.
+> 
+> On Tuesday 22 January 2008, Chris Clayton wrote:
+> > Hi,
 
---=-d+lLzmfDKTMDuDjRWaig
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
+(the none I sent earlier was from -git4, by the way)
+
+Call Trace:
+[<c011440a>] __update_rq_clock+0x1a/0xf0
+[<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
+[<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
+[<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
+[<c0140dc7>] handle_IRQ_event+0x27/0x60
+[<c0141fbb>] handle_level_irq+0x6b/0x100
+[<c014if50>] handle_level_irq+0x0/0x100
+[<c0105db8>] do_IRQ+0x68/0xc0
+[<c011440a>] __update_rq_clock+0x1a/0xf0
+[<c01042f3>] common_interrupt+0x23/0x28
+[<c014007b>] encode_comp2_t+0x4b/0x80
+[<c011007b>] acpi_copy_wakeup_routine+0x2b/0x9c
+[<c02161fb>] acpi_processor_idle+0x25b/0x36e
+[<c01020dc>] cpu_idle+0x5c/0x80
+[<c040381b>] start_kernel+0x18b/0x1d0
+[<c0403360>] unknown_bootoption+0x0/0x150
+========================
+Code: 00 00 00 e9 6c ff ff ff 8d b6 00 00 00 00 8d bf 00 00 00 00 55 89 cd 57 56
+ 53 83 ec 10 89 d3 89 44 24 08 ba 20 00 00 00 8b 40 58 <89> 43 14 a1 10 66 3e c0
+ e8 6c f9 82 df 89 44 24 0c 85 c0 89 c7
+EIP: [<e0930eb7>] ieee80211_tx_status_irqsafe+0x17/0x120 [mac80211] SS:ESP 0068:
+c042ff4c
+Kernel panic - not syncing: Fatal exception in interrupt
 
 
-> This also adds a longer delay for waiting for the microcode
-> to initialize itself. It seems that the current timeout is sufficient
-> on all available devices, but there's no real reason why we shouldn't
-> wait for up to one second. Slow embedded devices might exist.
+I'll stop crashing my laptop now :)
 
-Your decision, but I very much doubt you can make the MAC any slower
-than on the old devices, in fact, on new chips it runs considerably
-faster I think.
+Hope this too helps.
+> 
+> I've now got the part of the panic message that doesn't scroll off-screen:
+> 
+> [<c01f870e>] acpi_ds_exec_end_op+0xc1/0x387
+> [<c020757d>] acpi_ps_get_arguments+0xa9+0x12d
+> [<c0207b3a>] acpi_ps_parse_loop+0x259/0x2b7
+> [<c0207052>] acpi_ps_parse_aml_walk+0xb3/0x10e
+> [<c02080e3>] acpi_ds_init_aml_walk+0xb3/0c10e
+> [<c02080e3>] acpi_ps_execute_method+0xaf/0xe5
+> [<c020530b>] acpi_ns_evaluate+0x97/0xec
+> [<c0204c66>] acpi_evaluate_object+0x136/0x1da
+> [<c01f6ebd>] acpi_evaluate_integer+0x7a/0xb8
+> [<c0217a81>] acpi_thermal_get_temprature+0x29/0x3d
+> [<c0218498>] acpi_thermal_temp_seq_show+0x15/0x58
+> [<c017d27a>] seq_read+0xda/0x2a0
+> [<c017d1a0>] seq_read+0x0/0x2a0
+> [<c01943ac>] proc_reg_read+0x9c/0xb0
+> [<c016359c>] vfs_read+0x9c/0xd0
+> [<c01637e7>] sys_read+0x47/0x80
+> [<c010414a>] syscall_call+0x7/0xb
+> =======================
+> Code: 00 00 00 e9 6c ff ff ff 8d b6 00 00 00 00 8d bf 00 00 00 00 55 89 cd 57 56
+>  53 83 ec 10 89 d3 89 44 24 08 ba 20 00 00 00 8b 40 58 <89> 42 14 a1 10 66 3e c0
+>  e8 bc 89 83 df 89 44 24 0c 85 c0 89 c7
+> EIP: [<e0927eb7>] ieee80211_tx_status_irqsafe+0x17/0x120 [mac80211] SS:ESP 0068:
+> c042ff4c
+> Kernel panic - not syncing: fatal exception in interrupt
+> 
+> Hope this helps. Feel free to send me any patches that might fix or help diagnose.
+> 
+> Chris
+> > 
+> > Firstly, I'm not subscribed, so please cc me into any reply.
+> > 
+> > I've found that I can cause my laptop (DEll Latitude C610) to crash silently 
+> > (other than blinking LEDs) with stock 2.6.24-rc8{,-git2,-git3,-git4} kernels. 
+> > I suspect the problem is related to the rt61pci driver, so I've cc'd 
+> > linux-wireless.
+> > 
+> > All I have to do to cause the crash is run the following script on the laptop
+> > 
+> > #!/bin/sh
+> > for i in `seq 1 100`; do
+> >     echo $i > itercount
+> >     rm -f linux-2.6.23.tar.bz2
+> >     wget ftp://192.168.1.10/pub/linux-2.6.23.tar.bz2
+> > done
+> > 
+> > The crash will occur usually during the first iteration (and often in the 
+> > first 12 megabytes), but never later than the second.
+> > 
+> > I suspect the rt61pci driver because if I down wlan0 and connect to my network 
+> > via eth0, the laptop never crashes (and I've let it run for 50 or so 
+> > iterations). Similarly, if I build and install -git4 without the in-tree 
+> > rt61pci driver and build and install the out-of-tree rt61 driver from 
+> > serialmonkey.com (20071117 snapshot), the script runs fine, although I admit 
+> > that I stopped it after eight iterations.
+> > 
+> > My config, the output, from lspci -vv and the contents of syslog from a crash 
+> > are attached. The wireless adapter is a Belkin F5D7010.
+> > 
+> > Other than maybe a little later on tonight, I won't have much time to give 
+> > this further attention over the next couple of days, but I thought it best to 
+> > give a heads-up now.
+> > 
+> > Thanks in advance
+> > 
+> > Chris
+> > 
+> 
 
-johannes
 
---=-d+lLzmfDKTMDuDjRWaig
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5hWnKVg1VMiehFYAQKBahAAh/S10iuKae/F7Gk2ey90BaEnbgO8oGdx
-BTSbwmEYkhn6pMmeWAsbgxkAB5X8v2PnRMkmD/ii731UK625aewhh3ITL5kJxYb3
-PQjQYxiira9nTdRiH4xGfbFd/K/fBv7vEVEYjlIzcu+pdKe2Cz/8nz7+savoXfOr
-A2Lh8GA759liFRdnZ2RmagKe++U31cJGMG/gVcaTcWWIBjYu+SpTmnYnslTpH+NB
-/Xeelrgqg9b1dIuXky6RCLi5H9hC8AAadrbPlqZAT81bX8agxDoXfcp8j5TBqzbh
-3knSyyb0FnDU3r0mUgZk/+up1MiyYySwQP6S+MTwYhTtXBrZ6kJxQR7+YYm5huHQ
-Y3nPQd8zTFe/WwM2diNsf9DydcMjDdo+/PT7JsZkJ07HSS1kAkd8/0UYU3hTU/eU
-VYnsvLYWn8qOwjMcWX0bQ5Qn+rcjrdYFbF6jETPuql8Otepzl0GCBweANmQVbqe0
-iVo11c+VCFm+pBmrhotFS4v6uwh2wf61kr77IGnuhYRvI7T/XL1j4AKY/IUsoqcu
-LqM7hujhygidEvGLADAgSg75SSnR0Sh8g7ce+JUg2gQu3KzhIlU0vUulk7mAj0Qx
-l2EKZvKoeT51x/gXkDvPuZwKA56dsR8grvDMCrDQ0/XV0VnNcoJy/mjFhRcyhji+
-fA8Ujpb+6K0=
-=EhkU
------END PGP SIGNATURE-----
-
---=-d+lLzmfDKTMDuDjRWaig--
-
+-- 
+Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
