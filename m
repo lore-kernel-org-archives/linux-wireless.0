@@ -1,39 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout07.sul.t-online.de ([194.25.134.83]:52459 "EHLO
-	mailout07.sul.t-online.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750776AbYAZOyt (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:32557 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753585AbYAWSuL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 09:54:49 -0500
-Message-ID: <479B49A6.1020902@t-online.de> (sfid-20080126_145455_659803_F8D16AF3)
-Date: Sat, 26 Jan 2008 15:54:30 +0100
-From: Harald Dunkel <harald.dunkel@t-online.de>
+	Wed, 23 Jan 2008 13:50:11 -0500
 MIME-Version: 1.0
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	dhazelton@enter.net, "Cahill, Ben M" <ben.m.cahill@intel.com>
-Subject: Re: 2.6.24-rc8: iwl3945 gets stuck
-References: <4797994C.1090900@t-online.de> <D936D925018D154694D8A362EEB08920037FFC19@orsmsx416.amr.corp.intel.com>
-In-Reply-To: <D936D925018D154694D8A362EEB08920037FFC19@orsmsx416.amr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] [PATCH 1/5] iwlwifi: iwl3945 flush interrupt mask
+Date: Wed, 23 Jan 2008 10:50:05 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003780156@orsmsx416.amr.corp.intel.com> (sfid-20080123_185019_485640_60AA1105)
+In-Reply-To: <11998765342443-git-send-email-joonwpark81@gmail.com>
+References: <11998765342443-git-send-email-joonwpark81@gmail.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Joonwoo Park" <joonwpark81@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, <netdev@vger.kernel.org>
+Cc: <linux-wireless@vger.kernel.org>,
+	"lkml" <linux-kernel@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chatre, Reinette wrote:
+Joonwoo Park <joonwpark81@gmail.com> wrote:
+
+> interrupt mask
 > 
-> Very strange. Would it be possible to load the module with
-> "debug=0x43fff"? This will capture a detailed event log and error log
-> from uCode, so we can see what caused the uCode error.
+> After enabling/disabling interrupts flushing is required
 > 
 
-I will try. Is there some way to turn debug on and off after
-the module has been loaded, e.g. by running
+I have been looking at this patch and I would like to get some more
+feedback from the experts in the group.
 
-	echo 0x43fff >/proc/some/fancy/path
+First off, the register used for the read in order to flush has to be
+safe. We have to make sure that the register has no side effects. To do
+this we could use CSR_INT_MASK, as in "#define iwl_flush32(iwl)
+iwl_read32(iwl, CSR_INT_MASK)" This also enables us to flush at the end
+of a sequence of writes instead of after every write.
 
-?
+Digging deeper it is not 100% clear to me when we should do flushing to
+handle write posting. I understand that it should be done in time
+sensitive code, but that could on a high level mean any write operation
+in the driver. How should it be decided which writes to the device need
+to be flushed? 
 
+Patch is kept below fyi.
 
-Regards
+Reinette
 
-Harri
+> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com> ---
+> drivers/net/wireless/iwlwifi/iwl-io.h       |    2 ++
+> drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++++++
+> 2 files changed, 8 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h
+> b/drivers/net/wireless/iwlwifi/iwl-io.h
+> index 8a8b96f..f2bc30e 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-io.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+> @@ -87,6 +87,8 @@ static inline u32 __iwl_read32(char *f, u32
+> l, struct iwl_priv *iwl, u32 ofs)
+> #define iwl_read32(p, o) _iwl_read32(p, o)
+> #endif
+> 
+> +#define iwl_flush32(iwl, ofs) iwl_read32(iwl, ofs) +
+> static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
+> 				u32 bits, u32 mask, int timeout)
+> {
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 8ed898d..85f1112 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -4410,6 +4410,7 @@ static void iwl_enable_interrupts(struct
+> 	iwl_priv *priv) IWL_DEBUG_ISR("Enabling interrupts\n");
+> 	set_bit(STATUS_INT_ENABLED, &priv->status);
+> 	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
+> +	iwl_flush32(priv, CSR_INT_MASK);
+> }
+> 
+> static inline void iwl_disable_interrupts(struct iwl_priv *priv)
+> @@ -4418,11 +4419,15 @@ static inline void
+> iwl_disable_interrupts(struct iwl_priv *priv)
+> 
+> 	/* disable interrupts from uCode/NIC to host */
+> 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
+> +	iwl_flush32(priv, CSR_INT_MASK);
+> 
+> 	/* acknowledge/clear/reset any interrupts still pending
+> 	 * from uCode or flow handler (Rx/Tx DMA) */
+> 	iwl_write32(priv, CSR_INT, 0xffffffff);
+> +	iwl_flush32(priv, CSR_INT);
+> 	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
+> +	iwl_flush32(priv, CSR_FH_INT_STATUS);
+> +
+> 	IWL_DEBUG_ISR("Disabled interrupts\n");
+> }
+> 
+> @@ -4840,6 +4845,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
+> 	 * If we *don't* have something, we'll re-enable before
+> leaving here. */
+> 	inta_mask = iwl_read32(priv, CSR_INT_MASK);  /* just
+> for debug */
+> 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
+> +	iwl_flush32(priv, CSR_INT_MASK);
+> 
+> 	/* Discover which interrupts are active/pending */
+> 	inta = iwl_read32(priv, CSR_INT);
+> --
+> 1.5.3.rc5
+> 
+> 
+> ---------------------------------------------------------------
+> ----------
+> Check out the new SourceForge.net Marketplace.
+> It's the best place to buy or sell services for
+> just about anything Open Source.
+> http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.ne
+> t/marketplace _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
 
