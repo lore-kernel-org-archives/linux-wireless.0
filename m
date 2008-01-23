@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4108 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751236AbYAWTb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 14:31:59 -0500
-Date: Wed, 23 Jan 2008 14:02:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Silent crash witk 2-6.24-rc8-git4
-Message-ID: <20080123190207.GB3129@tuxdriver.com> (sfid-20080123_193204_528402_5BEECC7D)
-References: <200801220603.02986.chris2553@googlemail.com> <200801231521.36968.chris2553@googlemail.com> <200801231642.58782.chris2553@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200801231642.58782.chris2553@googlemail.com>
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:57046 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753343AbYAWRo4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2008 12:44:56 -0500
+Received: from [10.0.0.10] (80.220.119.243) by pne-smtpout4-sn2.hy.skanova.net (7.3.129)
+        id 478BE6630008167D for linux-wireless@vger.kernel.org; Wed, 23 Jan 2008 18:44:46 +0100
+Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080123145243.GA3129@tuxdriver.com>
+References: <20080120001342.25718.83669.stgit@fate.lan>
+	 <1201094475.7733.1.camel@localhost>  <20080123145243.GA3129@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 23 Jan 2008 19:44:46 +0200
+Message-Id: <1201110286.8696.10.camel@localhost> (sfid-20080123_174500_468573_5C5F3170)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
-> On Wednesday 23 January 2008, Chris Clayton wrote:
-> > Hi again.
-> > 
-> > On Tuesday 22 January 2008, Chris Clayton wrote:
-> > > Hi,
+On Wed, 2008-01-23 at 09:52 -0500, John W. Linville wrote:
+> I would like to have this driver soon, and FWIW I just put it in the
+> Fedora Rawhide kernel last night.
 > 
-> and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
-> (the none I sent earlier was from -git4, by the way)
+> However, I find that it does not seem to associate with WEP networks
+> on my USR5421.  I haven't had a chance to try it on open or WPA
+> networks, nor have I had a chance to debug it.  It does scan and see
+> the networks.
 > 
-> Call Trace:
-> [<c011440a>] __update_rq_clock+0x1a/0xf0
-> [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
-> [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
-> [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
+> Have you tested the driver as posted?  What device(s) are you using?
+> Have you used it on encrypted networks?
 
-I suspect this could relate to this commit:
+I guess I should start testing more if I'm going to be maintainer,
+you're right WEP doesn't work. Unencrypted and WPA/WPA2 networks do work
+for me but not WEP. Ad-Hoc and hidden WPA networks do not work either. I
+have Buffalo WLI-U2-KG125S which should have same hardware/firmware as
+USR5421.
 
-commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
-Author: Mattias Nissler <mattias.nissler@gmx.de>
-Date:   Mon Nov 12 15:03:12 2007 +0100
+ - Jussi
 
-    rt2x00: Allow rt61 to catch up after a missing tx report
-
-Could you revert that patch, rebuild, and try to recreate the problem?
-
-Thanks!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
