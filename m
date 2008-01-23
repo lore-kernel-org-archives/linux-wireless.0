@@ -1,57 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ag-out-0708.google.com ([72.14.246.247]:19585 "EHLO
-	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757575AbYAKSFg (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:56152 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbYAWUbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 13:05:36 -0500
-Received: by ag-out-0708.google.com with SMTP id 23so834570agd.10
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2008 10:05:35 -0800 (PST)
-Message-ID: <40f31dec0801111005r3beb4b4k3a4a5c17cef01298@mail.gmail.com> (sfid-20080111_180541_695742_5AD05CD7)
-Date: Fri, 11 Jan 2008 20:05:35 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Romano Giannetti" <romanol@upcomillas.es>
-Subject: Re: Testing ath5k driver
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1200073582.18380.1.camel@rukbat>
+	Wed, 23 Jan 2008 15:31:18 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so2318075fkz.5
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2008 12:31:14 -0800 (PST)
+Message-ID: <4797A3EE.7070902@gmail.com> (sfid-20080123_203122_698864_5D17D163)
+Date: Wed, 23 Jan 2008 22:30:38 +0200
+From: "Volodymyr G. Lukiianyk" <volodymyrgl@gmail.com>
 MIME-Version: 1.0
+To: jt@hpl.hp.com
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] WEXT: Correct the size of the buffer to be copied to
+ user-space in standard GET WE ioctls.
+References: <4793935F.2000102@gmail.com> <43e72e890801201104o5d2e395du558037179156e80b@mail.gmail.com> <20080122181402.GB11873@bougret.hpl.hp.com>
+In-Reply-To: <20080122181402.GB11873@bougret.hpl.hp.com>
 Content-Type: text/plain; charset=UTF-8
-References: <1200049360.12702.14.camel@rukbat>
-	 <40f31dec0801110856r1d0e04f3i284afb2a3f64f8c1@mail.gmail.com>
-	 <1200073582.18380.1.camel@rukbat>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
->
->
-> On Fri, 2008-01-11 at 18:56 +0200, Nick Kossifidis wrote:
-> > 2008/1/11, Romano Giannetti <romanol@upcomillas.es>:
-> > >
-> > >
-> > > [  312.999107] ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 19 (level, low) -> IRQ 19
-> > > [  312.999141] PCI: Setting latency timer of device 0000:06:00.0 to 64
-> > > [  312.999351] ath5k_pci 0000:06:00.0: registered as 'phy0'
-> > > [  314.048568] ath5k phy0: failed to resume the MAC Chip
-> > > [  314.048652] ACPI: PCI interrupt for device 0000:06:00.0 disabled
-> > > [  314.048674] ath5k_pci: probe of 0000:06:00.0 failed with error -5
-> > >
-> >
-> > It's a known bug in nic_wakeup, i've fixed it but patch is pending due
-> > to testing. Problem is that even with that fix RF2425 doesn't tx/rx,
-> > we are currently working with users to fix 2413/2414 support (radio
-> > revision 0x56) so it'll take a while (tests etc) before we make this
-> > work.
->
-> Ok, understood. Please feel free to ping me if some change goes in and
-> need testing.
->
-> Thanks,
->         Romano
+Jean Tourrilhes wrote:
 >
 
-ACK, thanx for the report ;-)
+[skiped]
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+>>> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+>>> index 47e80cc..c6ce59b 100644
+>>> --- a/net/wireless/wext.c
+>>> +++ b/net/wireless/wext.c
+>>> @@ -866,8 +866,7 @@ static int ioctl_standard_call(struct net_device *  dev,
+>>>                         }
+>>>
+>>>                         err = copy_to_user(iwr->u.data.pointer, extra,
+>>> -                                          iwr->u.data.length *
+>>> -                                          descr->token_size);
+>>> +                                          extra_size);
+>>>                         if (err)
+>>>                                 ret =  -EFAULT;
+>>>                 }
+> 
+> 	Your patch is not right either, because you could leak kernel
+> space memory to user space, which is not good either. And it's clearly
+> suboptimal as many time we only fill a tiny amount of that buffer.
+> 	What you have is a driver bug.
+
+Yeah, it was bug in a driver.
+
+> 
+> 	Let's look at what happens in details...
+> --------------------------------------------------------
+> 		extra_size = descr->max_tokens * descr->token_size;
+> 		extra = kzalloc(extra_size, GFP_KERNEL);
+> 		ret = handler(dev, &info, &(iwr->u), extra);
+> 			err = copy_to_user(iwr->u.data.pointer, extra,
+> 					   iwr->u.data.length *
+> 					   descr->token_size);
+> --------------------------------------------------------
+> 
+> 	Now, let's check a typical handler :
+> --------------------------------------------------------
+> static int ieee80211_ioctl_giwrange(struct net_device *dev,
+> 				 struct iw_request_info *info,
+> 				 struct iw_point *data, char *extra)
+> {
+> 	data->length = sizeof(struct iw_range);
+> --------------------------------------------------------
+> 
+> 	And lastly, the definition for the ioctl :
+> ---------------------------------------------
+> 	[SIOCGIWRANGE	- SIOCIWFIRST] = {
+> 		.header_type	= IW_HEADER_TYPE_POINT,
+> 		.token_size	= 1,
+> 		.max_tokens	= sizeof(struct iw_range),
+> 		.flags		= IW_DESCR_FLAG_DUMP,
+> 	},
+> ---------------------------------------------
+> 
+> 	What's happening is that the *driver* sets the actual amount
+> of data he wrote in iwr->u.data.length in the handler (see
+> above). There is no way to guess how much data the driver returns, and
+> we don't want to push more data in user space because we would leak
+> kernel buffer (security risk).
+
+Actually, the buffer is zeroed by kzalloc(), so only 0s would be leaked :)
+
+> 	(Note: we also check that we don't overrun the userspace
+> buffer).
+> 
+> 	Now, what's obviously missing is that we don't double check
+> that the driver returns valid data in iwr->u.data.length. If the
+> driver screws up, everything falls apart. But, there are many other
+> ways the driver could screw up, and we won't be able to catch
+> everything.
+> 	I've also seen this fail when the driver and the kernel have
+> not been compiled with the same version of Wireless Extensions, but
+> that's shooting yourself in the foot.
+> 
+
+Thanks for the thorough explanation and sorry for the noise.
+
+> 	Could you point out which driver is responsible for that ?
+
+It is an out-of-tree driver in development of which I'm somewhat involved.
+
