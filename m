@@ -1,56 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:40811 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754755AbYALTdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 14:33:36 -0500
-Date: Sat, 12 Jan 2008 20:28:54 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187 rate control doesn't work
-Message-ID: <20080112202854.2c24ba19@morte> (sfid-20080112_193343_297057_27A1905C)
-In-Reply-To: <478905B9.3080004@hauke-m.de>
-References: <477F9890.5050107@hauke-m.de>
-	<43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>
-	<47824D25.5090005@hauke-m.de>
-	<43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
-	<4787F03E.6080605@hauke-m.de>
-	<4788D24E.30805@hauke-m.de>
-	<20080112162121.2fc2f507@morte>
-	<478905B9.3080004@hauke-m.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:35898 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751458AbYAWVk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2008 16:40:27 -0500
+From: =?iso-8859-1?q?I=F1aky_P=E9rez-Gonz=E1lez?=
+	<inaky.perez-gonzalez@intel.com>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rfkill: add the WiMAX radio type
+Date: Wed, 23 Jan 2008 13:40:27 -0800
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+References: <200801231324.39483.inaky@linux.intel.com> <200801232235.01539.mb@bu3sch.de>
+In-Reply-To: <200801232235.01539.mb@bu3sch.de>
+MIME-Version: 1.0
+Message-Id: <200801231340.27501.inaky.perez-gonzalez@intel.com> (sfid-20080123_214031_546330_8B950435)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 12 Jan 2008 19:23:53 +0100
-Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Wednesday 23 January 2008, Michael Buesch wrote:
+> On Wednesday 23 January 2008 22:24:38 Inaky Perez-Gonzalez wrote:
+> > @@ -150,7 +154,7 @@ static const struct input_device_id rfki
+> >  		.keybit = { [BIT_WORD(KEY_WLAN)] = BIT_MASK(KEY_WLAN) },
+> >  	},
+> >  	{
+> > -		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+> > + 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+> 
+> Why are you adding a bogus whitespace to the start of the line here?
 
-> I have tried wireless-2.6 and I have the same problem. If the rate goes
-> over 11M no TCP/IP traffic goes through the wireless connecting. If rate
-> is set to auto and the rate control algorithm changes it to something
-> less than 11M TCP/IP traffic goes through, but if it is more than 11M no
-> TCP/IP traffic goes through the wireless link.
+My mistake, fixed. Thanks! -- updated patch follows
 
-And this is a problem if the rate control algorithm often sets the rate to
-more than 11M even if connection is unreliable at that rate. Does this
-actually happen? Are you currently using 'pid'?
+---
+rfkill: add the WiMAX radio type
 
-Also, it would be fine to have a dump of the PID events. In order to get
-this, you need to:
-- build a kernel with debugfs enabled;
-- mount debugfs (mount -t debugfs foo /mnt/debug)
+Teach rfkill about wimax radios.
 
-Then, before testing:
-cat /mnt/debug/ieee80211/phy0/stations/*/rc_pid_events > events_dump
+Had to define a KEY_WIMAX as a 'key for disabling only wimax radios',
+as other radio technologies have. This makes sense as hardware has
+specific keys for disabling specific radios.
 
-You can even make a graph out of that, with a python script which Mattias
-posted on this list some time ago, but a dump would be just fine.
+The RFKILL enabling part is, otherwise, a copy and paste of any other
+radio technology. 
 
+Signed-off-by: Inaky Perez-Gonzalez <inaky@linux.intel.com>
 
---
-Ciao
-Stefano
+---
+
+diff -r a52d5e9e9c91 include/linux/input.h
+--- a/include/linux/input.h	Mon Jan 14 16:13:06 2008 -0800
++++ b/include/linux/input.h	Mon Jan 14 16:23:40 2008 -0800
+@@ -362,6 +362,8 @@ struct input_absinfo {
+ #define KEY_BRIGHTNESS_CYCLE	243	/* brightness up, after max is min */
+ #define KEY_BRIGHTNESS_ZERO	244	/* brightness off, use ambient */
+ #define KEY_DISPLAY_OFF		245	/* display device to off state */
++
++#define KEY_WIMAX		246
+ 
+ #define BTN_MISC		0x100
+ #define BTN_0			0x100
+diff -r a52d5e9e9c91 include/linux/rfkill.h
+--- a/include/linux/rfkill.h	Mon Jan 14 16:13:06 2008 -0800
++++ b/include/linux/rfkill.h	Mon Jan 14 16:23:40 2008 -0800
+@@ -33,11 +33,13 @@
+  * RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
+  * RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
+  * RFKILL_TYPE_UWB: switch is on a ultra wideband device.
++ * RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+  */
+ enum rfkill_type {
+ 	RFKILL_TYPE_WLAN ,
+ 	RFKILL_TYPE_BLUETOOTH,
+ 	RFKILL_TYPE_UWB,
++	RFKILL_TYPE_WIMAX,
+ 	RFKILL_TYPE_MAX,
+ };
+ 
+diff -r a52d5e9e9c91 net/rfkill/rfkill-input.c
+--- a/net/rfkill/rfkill-input.c	Mon Jan 14 16:13:06 2008 -0800
++++ b/net/rfkill/rfkill-input.c	Mon Jan 14 16:23:40 2008 -0800
+@@ -84,6 +84,7 @@ static DEFINE_RFKILL_TASK(rfkill_wlan, R
+ static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_WLAN);
+ static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
+ static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
++static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
+ 
+ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 			unsigned int code, int down)
+@@ -98,6 +99,9 @@ static void rfkill_event(struct input_ha
+ 			break;
+ 		case KEY_UWB:
+ 			rfkill_schedule_toggle(&rfkill_uwb);
++			break;
++		case KEY_WIMAX:
++			rfkill_schedule_toggle(&rfkill_wimax);
+ 			break;
+ 		default:
+ 			break;
+@@ -158,6 +162,11 @@ static const struct input_device_id rfki
+ 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+ 		.evbit = { BIT_MASK(EV_KEY) },
+ 		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
++	},
++	{
++		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
++		.evbit = { BIT_MASK(EV_KEY) },
++		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
+ 	},
+ 	{ }
+ };
+diff -r a52d5e9e9c91 net/rfkill/rfkill.c
+--- a/net/rfkill/rfkill.c	Mon Jan 14 16:13:06 2008 -0800
++++ b/net/rfkill/rfkill.c	Mon Jan 14 16:23:40 2008 -0800
+@@ -126,6 +126,9 @@ static ssize_t rfkill_type_show(struct d
+ 	case RFKILL_TYPE_UWB:
+ 		type = "ultrawideband";
+ 		break;
++	case RFKILL_TYPE_WIMAX:
++		type = "wimax";
++		break;
+ 	default:
+ 		BUG();
+ 	}
