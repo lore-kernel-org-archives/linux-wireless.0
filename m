@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:33099 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbYAQWPR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2008 17:15:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: led support in mac80211 and drivers
-Date: Thu, 17 Jan 2008 23:12:59 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Tomas Carnecky <tom@dbservice.com>,
-	ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <478DF297.9020904@dbservice.com> <20080116200126.GA3164@tuxdriver.com> <1200584782.8007.59.camel@johannes.berg>
-In-Reply-To: <1200584782.8007.59.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801172313.00246.mb@bu3sch.de> (sfid-20080117_221553_485145_6149B0EE)
+Received: from mfe1.polimi.it ([131.175.12.23]:36481 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751849AbYAWL0F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2008 06:26:05 -0500
+Date: Wed, 23 Jan 2008 12:15:51 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 'upstream' 2008-01-22
+Message-ID: <20080123121551.4586e706@morte> (sfid-20080123_112614_562102_803CFB13)
+In-Reply-To: <20080123014521.GG3206@tuxdriver.com>
+References: <20080123014521.GG3206@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 17 January 2008 16:46:22 Johannes Berg wrote:
-> > > > > Actually the major problem I have currently with mac80211 trigger
-> > > > > implementation RX/TX trigger since Intel's led doesn't have to be
-> > > > > triggered ON/OFF on each packet, led is capable of blinking itself.,
-> 
-> I'm wondering if this shouldn't simply be a driver decision and mac80211
-> exports an RXon LED that is always "on" for as long as receive is
-> running (whatever that means, please specify!)
+On Tue, 22 Jan 2008 20:45:21 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-I read this thread multiple times, but I don't get where the problem is.
-Why don't you simply implement this in the driver:
-When LED didn't change software state for X jiffies, switch the auto-blinking
-LED in the hardware off. Switch it on if it's off in hardware and there's
-a software state transition.
-Where's the problem? This is trivial to implement.
+>       b43legacy: Remove the PHY spinlock
+
+I hope you tested this. I still haven't been able to (I received the
+needed hardware yesterday), and Michael said that the patch has been
+compile-tested only.
+
 
 -- 
-Greetings Michael.
+Ciao
+Stefano
