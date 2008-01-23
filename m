@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:23727 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884AbYAINDv (ORCPT
+Received: from mailout08.sul.t-online.de ([194.25.134.20]:46596 "EHLO
+	mailout08.sul.t-online.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751135AbYAWUKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 08:03:51 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so256800fga.17
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2008 05:03:50 -0800 (PST)
-Message-ID: <247d6d340801090503k289902afwd9fc22dbb4a1e70b@mail.gmail.com> (sfid-20080109_130356_099072_06D29AAF)
-Date: Wed, 9 Jan 2008 15:03:49 +0200
-From: "Guy Cohen" <guy.cohen@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>, linux-wireless@vger.kernel.org
-Subject: WMM QoS classification with local bridging (bridge_packets=1)
+	Wed, 23 Jan 2008 15:10:04 -0500
+Message-ID: <4797994C.1090900@t-online.de> (sfid-20080123_201022_822504_CA5A1BC7)
+Date: Wed, 23 Jan 2008 20:45:16 +0100
+From: Harald Dunkel <harald.dunkel@t-online.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, dhazelton@enter.net
+Subject: 2.6.24-rc8: iwl3945 gets stuck
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi folks,
 
-I'm running in AP mode with 4956 and I see that frames transmitted
-from one client through the AP to a second client will not have the
-correct TID set in the QoS header after being forwarded from the AP.
+I've got some problem with iwl3945: If I run
 
-At the end of ieee80211_deliver_skb there is this code that redirects
-rx frames sent to local stations back to the wireless driver:
+	xset dpms force off
 
-	if (xmit_skb) {
-		/* send to wireless media */
-		xmit_skb->protocol = __constant_htons(ETH_P_802_3);
-		skb_reset_network_header(xmit_skb);
-		skb_reset_mac_header(xmit_skb);
-		dev_queue_xmit(xmit_skb);
-	}
+for the local display while some network traffic is running, then
+the iwl3945 gets stuck. Syslog says:
 
-Then in classify_1d:
+Jan 23 19:29:41 daffy kernel: iwl3945: Microcode SW error detected.  Restarting 0x2000008.
+Jan 23 19:29:43 daffy kernel: iwl3945: Can't stop Rx DMA.
 
-	if (skb->protocol != __constant_htons(ETH_P_IP) ||
-	    skb->len < offset + sizeof(*ip))
-		return 0;
+The same happens if the Xserver runs into the configured timeout.
+If the network is idle, then there is no such problem, as it seems.
+If the Xserver is not running, and if the console runs into dpms,
+then iwl3945 seems to stay alive, too, but to be sure I would need
+some command similar to the xset shown above.
 
-The thing is that the protocol is set to ETH_P_802_3 and not IP...
+If the net is stuck (and if I am lucky), then I can rmmod iwl3945 and
+load it again, but sometimes I have to reboot.
 
-What do you think is the right way to fix this? Parse the frame in
-deliver_skb and set the protocol to be IP (when IP frame), or leave
-that as is and in classify_1d parse the frame instead of testing the
-protocol field?
+The machine is a Dell laptop xps m1330 running 64bit kernel 2.6.24-rc8.
+Encryption is wpa/psk. iwl3945 is loaded without any special options.
+At boot time there were no unusual call traces or something like this.
 
-I'm running with a slightly older version of mac, but I think it is
-the same behavior in wireless-dev 2.6 latest sources.
+The configured XWindow driver is "nv", but I could reproduce this with
+NVidia's proprietary "nvidia" driver, too. The vga device is a "nVidia
+Corporation GeForce 8400M GS".
 
-Thanks,
-Guy.
+I would be glad to help to track this down.
+
+
+Regards
+
+Harri
+
+
