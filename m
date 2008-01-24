@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web57913.mail.re3.yahoo.com ([68.142.236.106]:47785 "HELO
-	web57913.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755069AbYAYP6L (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22158 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbYAXIwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 10:58:11 -0500
-Date: Fri, 25 Jan 2008 07:58:06 -0800 (PST)
-From: hong zhang <henryzhang62@yahoo.com>
-Subject: Re: does any wifi driver supports 802.11n for access point?
-To: Richard Scherping <richard@scherping.de>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <47999F51.6040403@scherping.de>
+	Thu, 24 Jan 2008 03:52:32 -0500
+To: bruno randolf <bruno@thinktube.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, mcgrof@gmail.com,
+	jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+References: <20080118125252.6455.41047.stgit@one>
+	<1201099729.3454.17.camel@johannes.berg>
+	<200801241443.40067.bruno@thinktube.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Thu, 24 Jan 2008 10:51:05 +0200
+In-Reply-To: <200801241443.40067.bruno@thinktube.com> (ext bruno randolf's message of "Thu\, 24 Jan 2008 14\:43\:39 +0900")
+Message-ID: <87ir1ja9om.fsf@nokia.com> (sfid-20080124_085237_708489_D8949458)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <596875.96052.qm@web57913.mail.re3.yahoo.com> (sfid-20080125_155815_358486_72DDECAE)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard,
+bruno randolf <bruno@thinktube.com> writes:
 
-Because current open source mdwifi and mac80211 do not
-support atheros 802.11n chip yet.
-Does Atheros provide 802.11n driver for its 802.11n
-chip? Where does Dlink get 802.11n atheros driver for
-its aceess point products?
-
-----henry
-
---- Richard Scherping <richard@scherping.de> wrote:
-
-> hong zhang schrieb:
-> > How about iwl4965?
-> > is iwl4965 based on which wifi chip?
->=20
-> iwl4965 is for Intel=EF=BF=BD Wireless WiFi Link 4965AGN
+>> > --- a/net/mac80211/ieee80211_sta.c
+>> > +++ b/net/mac80211/ieee80211_sta.c
+>> > @@ -80,6 +80,9 @@ static void ieee80211_rx_bss_put(struct net_device
+>> > *dev, struct ieee80211_sta_bss *bss); static int
+>> > ieee80211_sta_find_ibss(struct net_device *dev,
+>> >                                    struct ieee80211_if_sta *ifsta);
+>> > +static int ieee80211_sta_join_ibss(struct net_device *dev,
+>> > +                                  struct ieee80211_if_sta *ifsta,
+>> > +                                  struct ieee80211_sta_bss *bss);
+>>
+>> No way, order the code properly, this mess needs to be cleaned up not
+>> added to.
 >
-(http://www.intel.com/network/connectivity/products/wireless/wireless_n=
-/overview.htm)
-> and works quite well. I have tested version 1.1.17
-> of the driver successfully connecting to a
-> Atheros-based 11n access point by D-Link and reached
-> about 80 MBit/s UDP netto.
->=20
-> Richard
->=20
+> Do you care to explain what's so bad about function declarations?
 
+I don't know about Johannes, but I just see them as unnecessary
+burden. If I change some parameters in a function, I'll get a compiler
+error and only after that I realise to change the declaration as well.
 
+With public (ie. non-static) functions it's a different issue, because
+I know that there's a declaration in the header file. But with static
+functions this is not the case.
 
-      _________________________________________________________________=
-___________________
-Looking for last minute shopping deals? =20
-=46ind them fast with Yahoo! Search.  http://tools.search.yahoo.com/new=
-search/category.php?category=3Dshopping
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kalle Valo
