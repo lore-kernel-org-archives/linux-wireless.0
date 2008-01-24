@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:36547 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759708AbYARVJp convert rfc822-to-8bit (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51664 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751936AbYAXW0v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 16:09:45 -0500
+	Thu, 24 Jan 2008 17:26:51 -0500
+Date: Thu, 24 Jan 2008 14:26:41 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+In-Reply-To: <200801242317.50948.mb@bu3sch.de>
+Message-ID: <alpine.LFD.1.00.0801241423190.7482@hp.linux-foundation.org> (sfid-20080124_222654_579341_2CA8D0BB)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801081630.31110.mb@bu3sch.de> <alpine.LFD.1.00.0801241224050.2803@woody.linux-foundation.org> <200801242317.50948.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Subject: RE: iwl3945 driver is still unusable!
-Date: Fri, 18 Jan 2008 13:09:37 -0800
-Message-ID: <D936D925018D154694D8A362EEB08920036F2DBF@orsmsx416.amr.corp.intel.com> (sfid-20080118_210949_978458_5043B6EB)
-In-Reply-To: <47910F33.2090505@archlinux.org>
-References: <fmclu6$dvl$1@ger.gmane.org> <fmpigk$c57$1@ger.gmane.org> <D936D925018D154694D8A362EEB08920036F286F@orsmsx416.amr.corp.intel.com> <47910F33.2090505@archlinux.org>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: =?iso-8859-1?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Cc: <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, January 18, 2008 12:42 PM, Thomas B=E4chler  wrote:
 
->> ipw3945 is deprecated - we focus our effort on iwlwifi at this time.
->=20
-> Which doesn't help anyone if it does not work. ipw3945 may be
-> deprecated in your eyes, but for me it is the only way to make my
-> wireless NIC work
-> reliably. From my point of view ipw3945 is stable and iwl3945
-> is _alpha_
-> software.
 
-Please understand that we need to focus limited resources. ipw3945 is d=
-eprecated and we focus on iwlwifi, which supports both 3945 and 4965. U=
-nfortunately we have been unable to reproduce your problem.=20
+On Thu, 24 Jan 2008, Michael Buesch wrote:
+> 
+> This was fixed in the drivers. A fix for zd1211rw got in and for
+> the RTL wireless drivers. Did any other driver trigger this warning?
 
-> It is, but if you read my E-Mail, you will notice that the driver
-> included in 2.6.24 is unusable, thus my request to use a newer driver
-> with a _stable_ kernel. The wireless-dev is based on the latest
-> linux-2.6 git, which is not always stable.
+The Intel driver does, and was tagged as the main culprit in at least the 
+pseudo-automated oops reports that Arjan sends to lkml.
 
-=46or this purpose I suggest that you consider the compat-wireless proj=
-ect. See http://www.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-w=
-ireless-2.6.git and http://linuxwireless.org/download/compat-wireless-2=
-=2E6/.
+> So it can cause some delay sometimes, but I'm pretty sure the fixes
+> should have hit mainline by now. I can recheck that if you desire.
 
-Reinette
+I'm 100% sure they haven't, since I could trigger this warning as of the 
+tree an hour ago (and I have since reverted it, so now I can't). That's 
+what reminded me - doing a final round of "test on the machines I have 
+available" before releasing 2.6.24.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+			Linus
