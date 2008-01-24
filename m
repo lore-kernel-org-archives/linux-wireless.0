@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ic0245.upco.es ([130.206.70.245]:38043 "EHLO
-	antispam.upcomillas.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbYANRm5 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:8687 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbYAXAEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 12:42:57 -0500
-Subject: Re: ath5k 2425 Support
-From: Romano Giannetti <romanol@upcomillas.es>
-To: Mike Moreton <mjvm06@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BAY137-W56510E55AB7D51DDDABF1D5460@phx.gbl>
-References: <BAY137-W56510E55AB7D51DDDABF1D5460@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-15
-Date: Mon, 14 Jan 2008 18:42:52 +0100
-Message-Id: <1200332572.27402.2.camel@pern> (sfid-20080114_174303_727568_C96AD416)
-Mime-Version: 1.0
+	Wed, 23 Jan 2008 19:04:06 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so10514fga.17
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2008 16:04:04 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Silent crash witk 2-6.24-rc8-git4
+Date: Thu, 24 Jan 2008 00:03:31 +0000
+Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <200801220603.02986.chris2553@googlemail.com> <200801231642.58782.chris2553@googlemail.com> <20080123190207.GB3129@tuxdriver.com>
+In-Reply-To: <20080123190207.GB3129@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801240003.31666.chris2553@googlemail.com> (sfid-20080124_000411_946927_B9C4C779)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks for the reply, John.
+
+On Wednesday 23 January 2008, John W. Linville wrote:
+> On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
+> > On Wednesday 23 January 2008, Chris Clayton wrote:
+> > > Hi again.
+> > > 
+> > > On Tuesday 22 January 2008, Chris Clayton wrote:
+> > > > Hi,
+> > 
+> > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
+> > (the none I sent earlier was from -git4, by the way)
+> > 
+> > Call Trace:
+> > [<c011440a>] __update_rq_clock+0x1a/0xf0
+> > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
+> > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
+> > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
+> 
+> I suspect this could relate to this commit:
+> 
+> commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
+> Author: Mattias Nissler <mattias.nissler@gmx.de>
+> Date:   Mon Nov 12 15:03:12 2007 +0100
+> 
+>     rt2x00: Allow rt61 to catch up after a missing tx report
+> 
+> Could you revert that patch, rebuild, and try to recreate the problem?
+> 
+
+I've reverted the patch by hand - the original patch on linux-wireless doesn't match the present state of the code
+in rt61pci.c and I'm not a git user. I'm pretty sure I've got it right, however.
+
+Problem now is that we are back where we were a few weeks ago because my wireless connection dies
+almost immediately after I start the download and from dmesg I see:
+
+phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 2.
+Please file bug report to http://rt2x00.serialmonkey.com.
+
+Chris
+
+> Thanks!
+> 
+> John
 
 
-On Mon, 2008-01-14 at 16:21 +0000, Mike Moreton wrote:
-> Is anyone working on support for the AR2425 in ath5k yet?
 
-See the thread started by me with subject: Testing ath5k driver on
-=46riday, 11. ;-)=20
-
-HTH
-	Romano=20
-
---=20
-Sorry for the disclaimer --- =A1I cannot stop it!
-
-
-
---
-La presente comunicaci=F3n tiene car=E1cter confidencial y es para el e=
-xclusivo uso del destinatario indicado en la misma. Si Ud. no es el des=
-tinatario indicado, le informamos que cualquier forma de distribuci=F3n=
-, reproducci=F3n o uso de esta comunicaci=F3n y/o de la informaci=F3n c=
-ontenida en la misma est=E1n estrictamente prohibidos por la ley. Si Ud=
-=2E ha recibido esta comunicaci=F3n por error, por favor, notif=EDquelo=
- inmediatamente al remitente contestando a este mensaje y proceda a con=
-tinuaci=F3n a destruirlo. Gracias por su colaboraci=F3n.
-
-This communication contains confidential information. It is for the exc=
-lusive use of the intended addressee. If you are not the intended addre=
-ssee, please note that any form of distribution, copying or use of this=
- communication or the information in it is strictly prohibited by law. =
-If you have received this communication in error, please immediately no=
-tify the sender by reply e-mail and destroy this message. Thank you for=
- your cooperation.=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
