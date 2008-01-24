@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:58834 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754289AbYAYRlI (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:38561 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757567AbYAXWFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 12:41:08 -0500
-Date: Fri, 25 Jan 2008 09:38:41 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Dan Williams <dcbw@redhat.com>
-cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-In-Reply-To: <1201282027.3422.15.camel@localhost.localdomain>
-Message-ID: <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org> (sfid-20080125_174113_021613_8821A1F7)
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>  <1201264166.12870.16.camel@johannes.berg>  <alpine.LFD.1.00.0801250753240.14161@hp.linux-foundation.org>  <200801251723.58891.mb@bu3sch.de>  <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
- <1201282027.3422.15.camel@localhost.localdomain>
+	Thu, 24 Jan 2008 17:05:14 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: Fix MAC control and microcode init
+Date: Thu, 24 Jan 2008 23:03:36 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+References: <200801222023.35131.mb@bu3sch.de> <1201165981.3454.49.camel@johannes.berg>
+In-Reply-To: <1201165981.3454.49.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200801242303.36694.mb@bu3sch.de> (sfid-20080124_220520_062594_AEDAAD98)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Fri, 25 Jan 2008, Dan Williams wrote:
+On Thursday 24 January 2008 10:13:01 Johannes Berg wrote:
 > 
-> Does Intel need to make iwlwifi and ipw2x00 work reliably on platforms
-> other than x86?  Or don't they?
+> > This also adds a longer delay for waiting for the microcode
+> > to initialize itself. It seems that the current timeout is sufficient
+> > on all available devices, but there's no real reason why we shouldn't
+> > wait for up to one second. Slow embedded devices might exist.
+> 
+> Your decision, but I very much doubt you can make the MAC any slower
+> than on the old devices, in fact, on new chips it runs considerably
+> faster I think.
 
-Why should they? 
+Ok, well. But the host machine does get faster. In theory we only
+gave the microcode 500 microseconds of time to initialize. I think
+that is is a pretty tiny timeframe. In practice the time was higher,
+because we had a loop that checked MMIO and delayed for 10usec.
+Of course this all has overhead. But as machines get faster and faster
+I think we can't assume to have more than 500 microseconds of time.
 
-If somebody else takes over maintenance, because Intel does a bad job, 
-that's fine.
+So, increasing the delay to one second doesn't hurt anyone. In
+all common cases it will continue after a few milliseconds. That's fine.
+Even if there is something going wrong (wrong firmware) you can
+interrupt the one second delay by hitting ^C.
 
-If somebody else sends in patches and they get accepted "around" Intel, 
-that's obviously also fine.
+I think the specs originally sayed to use a much longer delay than
+we were using. But we did use a shorter delay, because in some old
+bcm43xx code this ran unter spinlock as far as I remember. So we didn't
+want to spin several milliseconds and lockup the system, if something
+goes wrong in firmware. These times are gone and now we can sleep
+in this part of the code.
 
-But complaining about a vendor who does a good job technically, for 
-non-technical reasons, I really don't see that as being fine.
-
-Is it even physically *possible* to use that Intel wireless chipset with 
-anything but x86 CPU's (not just that, but actually _Intel_ x86 CPU's)? 
-And would it make any sense what-so-ever even if it was?
-
-And yes, portability is a great thing, but quite frankly, so is good 
-hardware. I personally can't really blame Intel engineers for not caring 
-about irrelevant hardware. 
-
-We should make technical decisions on _technical_ grounds, not some 
-perceived "this is how the world should work" grounds.
-
-		Linus
+-- 
+Greetings Michael.
