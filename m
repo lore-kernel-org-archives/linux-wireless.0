@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:53569 "EHLO
-	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760338AbYAYWvO (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:37025 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757464AbYAXVfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:51:14 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 06/14] [usbnet] Use wlan device name for RNDIS wireless devices
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
-Date: Sat, 26 Jan 2008 00:51:06 +0200
-Message-ID: <20080125225106.11716.20790.stgit@fate.lan> (sfid-20080125_225127_162860_10C9E737)
-In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
-References: <20080125225032.11716.77713.stgit@fate.lan>
+	Thu, 24 Jan 2008 16:35:47 -0500
+Date: Thu, 24 Jan 2008 13:34:35 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+In-Reply-To: <20080124210728.GD3200@tuxdriver.com>
+Message-ID: <alpine.LFD.1.00.0801241334010.7482@hp.linux-foundation.org> (sfid-20080124_213551_947160_3434D67B)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071830.51895.mb@bu3sch.de> <20080107212344.1372cc47@Varda> <200801081630.31110.mb@bu3sch.de> <alpine.LFD.1.00.0801241224050.2803@woody.linux-foundation.org>
+ <20080124210728.GD3200@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use wlan device name for RNDIS wireless devices.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
----
 
- drivers/net/usb/usbnet.c |    3 +++
- drivers/net/usb/usbnet.h |    2 ++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+On Thu, 24 Jan 2008, John W. Linville wrote:
+> 
+> There is no great harm in reverting
+> 81100eb80add328c4d2a377326f15aa0e7236398 if you would like to go ahead
+> and push the 2.6.24 release.  I suspect, however, that the mac80211
+> guys would like to keep it (or put it back for 2.6.25) to continue
+> to shame driver developers in the future.
 
-diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
-index 8ed1fc5..a2a2d5e 100644
---- a/drivers/net/usb/usbnet.c
-+++ b/drivers/net/usb/usbnet.c
-@@ -1204,6 +1204,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
- 		if ((dev->driver_info->flags & FLAG_ETHER) != 0
- 				&& (net->dev_addr [0] & 0x02) == 0)
- 			strcpy (net->name, "eth%d");
-+		/* WLAN devices should always be named "wlan%d" */
-+		if ((dev->driver_info->flags & FLAG_WLAN) != 0)
-+			strcpy(net->name, "wlan%d");
- 
- 		/* maybe the remote can't receive an Ethernet MTU */
- 		if (net->mtu > (dev->hard_mtu - net->hard_header_len))
-diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-index 1fae434..29ab92e 100644
---- a/drivers/net/usb/usbnet.h
-+++ b/drivers/net/usb/usbnet.h
-@@ -87,6 +87,8 @@ struct driver_info {
- #define FLAG_ETHER	0x0020		/* maybe use "eth%d" names */
- 
- #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
-+#define FLAG_WLAN	0x0080		/* use "wlan%d" names */
-+
- 
- 	/* init device ... can sleep, or cause probe() failure */
- 	int	(*bind)(struct usbnet *, struct usb_interface *);
+I'd be happy to have it back in the development tree, I just don't want to 
+have the noise for a release tree.
 
+Will revert that commit with a comment to that effect. Thanks,
+
+		Linus
