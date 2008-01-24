@@ -1,81 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52212 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754023AbYAMVoI (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:54863 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbYAXIuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 16:44:08 -0500
-Subject: Re: [PATCH 2/2] mac80211: A-MPDU Rx remove stop_rx_ba_session
-	warning print
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12002415431203-git-send-email-ron.rindjunsky@intel.com>
-References: <12002415431203-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Uzd2AXGIC9ZNiuCMViZK"
-Date: Sun, 13 Jan 2008 22:43:41 +0100
-Message-Id: <1200260621.5887.10.camel@johannes.berg> (sfid-20080113_214411_599887_22B817BC)
-Mime-Version: 1.0
+	Thu, 24 Jan 2008 03:50:03 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so159719fga.17
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2008 00:50:02 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Silent crash witk 2-6.24-rc8-git4
+Date: Thu, 24 Jan 2008 08:49:28 +0000
+Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <200801220603.02986.chris2553@googlemail.com> <20080123190207.GB3129@tuxdriver.com> <200801240003.31666.chris2553@googlemail.com>
+In-Reply-To: <200801240003.31666.chris2553@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801240849.28284.chris2553@googlemail.com> (sfid-20080124_085009_966015_852E05E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 24 January 2008, Chris Clayton wrote:
+> Thanks for the reply, John.
+> 
+> On Wednesday 23 January 2008, John W. Linville wrote:
+> > On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
+> > > On Wednesday 23 January 2008, Chris Clayton wrote:
+> > > > Hi again.
+> > > > 
+> > > > On Tuesday 22 January 2008, Chris Clayton wrote:
+> > > > > Hi,
+> > > 
+> > > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
+> > > (the none I sent earlier was from -git4, by the way)
+> > > 
+> > > Call Trace:
+> > > [<c011440a>] __update_rq_clock+0x1a/0xf0
+> > > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
+> > > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
+> > > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
+> > 
+> > I suspect this could relate to this commit:
+> > 
+> > commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
+> > Author: Mattias Nissler <mattias.nissler@gmx.de>
+> > Date:   Mon Nov 12 15:03:12 2007 +0100
+> > 
+> >     rt2x00: Allow rt61 to catch up after a missing tx report
+> > 
+> > Could you revert that patch, rebuild, and try to recreate the problem?
+> > 
+> 
+> I've reverted the patch by hand - the original patch on linux-wireless doesn't match the present state of the code
+> in rt61pci.c and I'm not a git user. I'm pretty sure I've got it right, however.
+> 
+> Problem now is that we are back where we were a few weeks ago because my wireless connection dies
+> almost immediately after I start the download and from dmesg I see:
+> 
 
---=-Uzd2AXGIC9ZNiuCMViZK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Doh! Of course, I can get the patch that needs to be reverted from Linus' git repository, so just
+to be certain my reversion-by-hand was, in fact, OK and not the source of the problem, I've done
+just that, and...
+
+> phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 2.
+> Please file bug report to http://rt2x00.serialmonkey.com.
+> 
+... this "non-free entry" still appears within a few seconds on any non-trivial network activity starting.
+
+> Chris
+> 
+> > Thanks!
+> > 
+> > John
+> 
+> 
+> 
 
 
-On Sun, 2008-01-13 at 18:25 +0200, Ron Rindjunsky wrote:
-> This patch removes a warning print from ieee80211_sta_stop_rx_ba_session
-> in case the tid is inactive when interface goes down.
 
-Thanks.
-
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/ieee80211_sta.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index 866eb80..bb73aac 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -1215,9 +1215,6 @@ void ieee80211_sta_stop_rx_ba_session(struct net_de=
-vice *dev, u8 *ra, u16 tid,
->  	if (sta->ampdu_mlme.tid_rx[tid].state
->  				!=3D HT_AGG_STATE_OPERATIONAL) {
->  		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-> -		if (net_ratelimit())
-> -			printk(KERN_DEBUG "rx BA session requested to stop on "
-> -				"inactive tid %d\n", tid);
->  		sta_info_put(sta);
->  		return;
->  	}
-
---=-Uzd2AXGIC9ZNiuCMViZK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4qGDKVg1VMiehFYAQLInw/+NmxL8dDmzRnSTgnv1FJB7lqkSQzePOue
-LgKidHm7g8nQNVeD674As1QhqBXeQ4AJAuJH0cHfosW9LIqEPR+E5Oci4aUF1JzW
-DDSp9zjF4aq8hgrpk47Qar2onL9PsvcDGFPLmJjc0wfwO3B73hSnyD/X/lzIxQR/
-Ya+4jiXN+sWWpJ6VeP9JCX14MsG9awXCzqgHAnikSsrjI0pjL4adKw8PE4xnD+4J
-2dUM7xrOKvUl0L1A8JD8MOsUfErD9MirzACkwHe4Ki1uQezksTHZHsYKgWxIZdhL
-jXDW3RO5ynAxwGfVBPuz6nHJn5MKPrhuuDxihY9X+pQzmDtByKjNmCEcz/87zbSQ
-dy1Hf0lF43MbJJVV7iaoTS3U4dZjt2+F6+6JiadduKG5HhpN/sfROXpy7RORm2dC
-MOXu22wVvPAterx/1UW0CpeGxLUfppH/ruXrx7FCn9kqzpS4MqpIGewPGjsiw9UA
-1LFPssCqJjj+PDMwS6bDHifP3ZbZ89qcVlf6BiwIhqo/EXJac3H7o8EOo3eBEgUo
-qxTvdJ9i5t0Yrrqa7ae81MvKFx2Ip5F09vvf1KHRZZw+gIUinSA28lNm4Oej/fn0
-R+XsrgLS13QV0Soo0VbGMM+j/i204SQ8T3Hc2A/fWbEA0c/xIuRpSfMr4dffrtBW
-iKZr+Jg/2qI=
-=HwRe
------END PGP SIGNATURE-----
-
---=-Uzd2AXGIC9ZNiuCMViZK--
-
+-- 
+Beer is proof that God loves us and wants us to be happy - Benjamin Franklin
