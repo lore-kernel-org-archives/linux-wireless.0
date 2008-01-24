@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:52362 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbYAVUY3 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42911 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752580AbYAXU1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 15:24:29 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2031703fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:24:27 -0800 (PST)
-Message-ID: <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com> (sfid-20080122_202431_782104_8DC48297)
-Date: Tue, 22 Jan 2008 21:24:27 +0100
-From: drago01 <drago01@gmail.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
+	Thu, 24 Jan 2008 15:27:51 -0500
+Date: Thu, 24 Jan 2008 12:27:03 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+In-Reply-To: <200801081630.31110.mb@bu3sch.de>
+Message-ID: <alpine.LFD.1.00.0801241224050.2803@woody.linux-foundation.org> (sfid-20080124_202755_066317_7467C072)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071830.51895.mb@bu3sch.de> <20080107212344.1372cc47@Varda> <200801081630.31110.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
->
->
-> >-----Original Message-----
-> >From: drago01 [mailto:drago01@gmail.com]
-> >Sent: Tuesday, January 22, 2008 10:12 PM
-> >To: Winkler, Tomas
->
-> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
-> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-> >
-> >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
-> wrote:
-> >>
-> >> I believe it's delaying uCode load to mac_start - still need to be
-> >> polished.
-> >
-> >ok, thx for the quick reply.
-> >If you have any potential fixes I would be happy to test them ;)
->
-> Can you get me the sequence it is happening? RF kill switch is off
-> before you power up the laptop or after, during association or in
-> unassociated state..etc
-> Thanks
 
-I boot with rf kill off = device on
-acciotate using NM
-kill the card by pressing the rfkill (ie. setting it to on)
-card is dead (like described in my first mail), until I relaod the module
-the rfkill switch  does not have any effect at this time.
+
+On Tue, 8 Jan 2008, Michael Buesch wrote:
+> > >
+> > > Can you check if that is the
+> > > WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+> > > in rx.c line 1486?
+> 
+> Yes fine.
+> Patches are on their way. Ignore the warning for now. It is harmless.
+
+I don't think this ever got fixed. 
+
+I don't see any alternative but just uncomment that bogus warning, because 
+it's otherwise going to just cause way more noise than it's worth. It's 
+apparently known to developers, and as such it's worthless in the source 
+code except as a way to make poor users worry.
+
+It's been in the top oops/warnings report for the last three weeks, and I 
+haven't gotten any patches for it, so I'm a bit grumpy. What's the point 
+of having a WARN_ON() if nobody involved *does* anything about it?
+
+		Linus
