@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:37509 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbYASIxu (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:24758 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750928AbYAXFv5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 03:53:50 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so580518ugc.16
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 00:53:46 -0800 (PST)
-Message-ID: <4791BA99.4010509@gmail.com> (sfid-20080119_085354_798665_B93D6408)
-Date: Sat, 19 Jan 2008 09:53:45 +0100
-From: drago01 <drago01@gmail.com>
+	Thu, 24 Jan 2008 00:51:57 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+Date: Thu, 24 Jan 2008 14:51:49 +0900
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	Adam Baker <linux@baker-net.org.uk>
+References: <20080118125252.6455.41047.stgit@one> <200801201143.09488.IvDoorn@gmail.com> <1201099791.3454.19.camel@johannes.berg>
+In-Reply-To: <1201099791.3454.19.camel@johannes.berg>
 MIME-Version: 1.0
-To: Jerone Young <jerone@gmail.com>
-CC: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	=?ISO-8859-1?Q?Thomas?= =?ISO-8859-1?Q?_B=E4chler?=
-	<thomas@archlinux.org>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] iwl3945 driver is still unusable!
-References: <fmclu6$dvl$1@ger.gmane.org> <fmpigk$c57$1@ger.gmane.org>	<D936D925018D154694D8A362EEB08920036F286F@orsmsx416.amr.corp.intel.com>	<47910F33.2090505@archlinux.org>	<D936D925018D154694D8A362EEB08920036F2DBF@orsmsx416.amr.corp.intel.com> <9f50a7a00801181804n314bcf09u69889d1a38fb4643@mail.gmail.com>
-In-Reply-To: <9f50a7a00801181804n314bcf09u69889d1a38fb4643@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801241451.49586.bruno@thinktube.com> (sfid-20080124_055201_815281_4C62A22F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jerone Young wrote:
-> If the ipw3945 is no longer going to be maintained. You guys should
-> consider removing it from the mainline kernel. This is in favor of
-> iwl3945 (which is in the kernel also).
->   
-ipw3945 was never in the mainline kernel.
-Might be your distro shipping it as an addon.
+On Wednesday 23 January 2008 23:49:51 Johannes Berg wrote:
+> > Then there is a problem for rt2x00. Since the mactime isn't known.
+> > rt2400pci is the _only_ device which has a RX_END_TIME field in the
+> > RX descriptor.
+>
+> I don't think it's required for IBSS to function, only for this from my
+> POV dubious "merge" functionality.
+
+also you might want to check if your hard- or firmware (if you have any) 
+handles IBSS merges already, especially with USB devices. i can't imagine how 
+a device driver without access to that information is supposed to merge IBSS.
+
+bruno
