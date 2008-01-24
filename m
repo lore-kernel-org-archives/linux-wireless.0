@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27532 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762664AbYARQfK convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37738 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbYAXOuk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 11:35:10 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: more iwlwifi merge fallout?
-Date: Fri, 18 Jan 2008 08:35:09 -0800
-Message-ID: <D936D925018D154694D8A362EEB08920036F28DD@orsmsx416.amr.corp.intel.com> (sfid-20080118_163531_670868_0F29C102)
-In-Reply-To: <1200615744.5716.5.camel@johannes.berg>
-References: <1200615744.5716.5.camel@johannes.berg>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+	Thu, 24 Jan 2008 09:50:40 -0500
+Subject: Re: [PATCH 03/12] mac80211: A-MPDU Tx adding basic functionality
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <12009163393182-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115439_500829_54AD44A6)
+References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+	 <12009163393182-git-send-email-ron.rindjunsky@intel.com>
+	 (sfid-20080121_115439_500829_54AD44A6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OLkbjUB1VXDrxvqe1EM3"
+Date: Thu, 24 Jan 2008 10:34:40 +0100
+Message-Id: <1201167281.3454.65.camel@johannes.berg> (sfid-20080124_145058_906100_2DC6AA56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 17, 2008 4:22 PM, Johannes Berg  wrote:
 
-> Declaring
-> 
-> inline int iwl3945_eeprom_acquire_semaphore(...)
-> 
-> is a bit weird for a function that is actually declared in a header
-> file and not static.
+--=-OLkbjUB1VXDrxvqe1EM3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This is not merge fallout, but has been this way since the driver was
-merged the first time. I do not know why it was done this way and I am
-not familiar enough with gcc optimization to know the implications of
-this (or what the better way should be). What do you suggest?
 
-Thanks
+> +	/* Will put all the packets in the new SW queue */
+> +	/* ieee80211_requeue(local, ieee802_1d_to_ac[tid]); */
+> +	spin_unlock_bh(&local->mdev->queue_lock);
+> +
+> +	/* We have most probably almost emptied the legacy queue */
+> +	/* ieee80211_wake_queue(local_to_hw(local), ieee802_1d_to_ac[tid]); */
 
-Reinette
+
+Can't you re-order the patches instead? Or, if it simply doesn't work,
+I'd much prefer them to go into the tree as a single patch. (You also
+introduced leading whitespace in the patches removing the comment marks)
+
+johannes
+
+--=-OLkbjUB1VXDrxvqe1EM3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR5hbr6Vg1VMiehFYAQJH5A/+JXr64PVSNaVUBFU946gWgSHWDEHNyRSL
+QNNcqtntc7Fty8qxKx2GOD3PJ1yHiLrV2+3uPHdKZmjVpANajNosk4k7RVzZ5LDZ
+OvlnXG4eEbSW5I6RUI1orGi7dOu0q0jYEMJW8H8q1PFzI/5MYCpEOhqT4I9/EWaK
+pfizwHR8OtoZ2SbhTgErdx0Lglhjs8tDoDwMf9Nu0uQLh8/6Ayx0u0ibhby0A87k
+OjuvnEifVT6Gyt1Cbrw9D4c93WhTwv88Rhn3oXFOO7Z8xR7Yxg3MZ8LAcoBT8ifj
+mtn0bSgIe31CzwxcFypZRVTHb0vKXZTIzsHNvpPzMz0BHdzsvX06U9JXSKWUcTnB
+TnhjFybzcApO77mK5v+vE3qMV/ERTveJ/U73a+bTQiEMthlSOmDW8H2s6v5WDz7G
+Rht0trnHUUOZbIX1E+USu/kXCR4Y3tzt/X3Trl66etCTz/Pu3LxwdoLivD78/SjY
+Jrf/+Y38VzATE0biRJJ0Q2523vEKErRBe1JuwB8JkV5XPF5Kx7A30EbLce2RuAw8
+a2dcSDmM9vx4oP5y4HBa+aRX9lIPLDLlKZQTT+9WKF3gVslIVwbTacF9MIdwUxc4
+k0uuQnAkWkR3kzqheHbWZwfCNcSBC37Nlk32njvuq8e4lcq7aa/vXpXE9kUvs/E4
+//G77o1zZyw=
+=Gumj
+-----END PGP SIGNATURE-----
+
+--=-OLkbjUB1VXDrxvqe1EM3--
+
