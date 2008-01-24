@@ -1,73 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:60471 "EHLO
-	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750767AbYAWNVU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbYAXOao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 08:21:20 -0500
-Received: from [10.0.0.10] (80.220.119.243) by pne-smtpout3-sn1.fre.skanova.net (7.3.129)
-        id 478149BD000F38BE for linux-wireless@vger.kernel.org; Wed, 23 Jan 2008 14:20:11 +0100
-Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080120001342.25718.83669.stgit@fate.lan>
-References: <20080120001342.25718.83669.stgit@fate.lan>
-Content-Type: text/plain
-Date: Wed, 23 Jan 2008 15:21:15 +0200
-Message-Id: <1201094475.7733.1.camel@localhost> (sfid-20080123_132124_359813_3B040B12)
+	Thu, 24 Jan 2008 09:30:44 -0500
+Subject: Re: [RFC] mac80211: proper short-slot handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	bruno randolf <br1@einfach.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Yanbo Li <dreamfly281@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <1ba2fa240801221226ra00fd76x8724b51023717b5e@mail.gmail.com> (sfid-20080122_202631_352414_1D2D107D)
+References: <1199974496.3861.80.camel@johannes.berg>
+	 <200801161737.00682.IvDoorn@gmail.com>
+	 <1200501699.8708.9.camel@johannes.berg>
+	 <200801161751.58244.IvDoorn@gmail.com>
+	 <1ba2fa240801221226ra00fd76x8724b51023717b5e@mail.gmail.com>
+	 (sfid-20080122_202631_352414_1D2D107D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G2/RaNRd9axqxH3S85Gw"
+Date: Thu, 24 Jan 2008 09:38:54 +0100
+Message-Id: <1201163934.3454.42.camel@johannes.berg> (sfid-20080124_143120_287879_69E6FA35)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-Any change of getting driver merged in 2.6.25?
+--=-G2/RaNRd9axqxH3S85Gw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- - Jussi
 
-On Sun, 2008-01-20 at 02:13 +0200, Jussi Kivilinna wrote:
-> Hello,
-> 
-> This is second try on wireless RNDIS patchset started by Bjorge Dijkstra. Since
-> Bjorge has disappeared, I claim maintainership of rndis_wext and this patchset
-> until he returns.
-> 
-> This patchset adds support for various 802.11 USB devices based on Broadcom
-> 4320 chip. Chip uses RNDIS to communicate with the host, so module depend
-> heavily on rndis_host/cdc_ether/usbnet and needs some changes on these 
-> modules in order to work.
-> 
-> Patches 1-6 are from first patchset:
->  1. Fix sparse warning: returning void valued expression
->  2. [cdc_ether] Hardwire CDC descriptors when missing
->  3. [rndis_host] Use 1KB buffer in rndis_unbind
->  4. [rndis_host] Halt device if rndis_bind fails
->  5. [rndis_host] Fix rndis packet filter flags
->  6. [usbnet] Use wlan device name for RNDIS wireless devices
-> 
-> Of these 1, 3 and 4 are not required for this version of rndis_wext to work.
-> 
-> Actual wireless part is changed from extension on rndis_host to separate 
-> driver. Different devices are detected by device specific USB vendor/product 
-> IDs as the way done with Windows drivers instead of detecting RNDIS media type 
-> like in first patchset.
-> 
-> New patches 7-14:
->  7. [rndis_host] Split up rndis_host.c
->  8. [rndis_host] export functions
->  9. [usbnet] add driver_priv pointer to 'struct usbnet'
-> 10. [rndis_host] Add rndis_early_init function pointer to 'struct rndis_data'.
-> 11. [rndis_host] Add rndis_link_change function pointer to 'struct rndis_data'.
-> 12. Move usbnet.h and rndis_host.h to include/linux/usb
-> 13. [rndis_host] blacklist known wireless RNDIS devices
-> 14. Add new driver 'rndis_wext' for wireless RNDIS devices.
-> 
-> Patches should be applied in order, series apply cleanly to 2.6.24-rc8.
-> 
->  - Jussi Kivilinna
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Finally I got to test this but somehow I'm not getting any changed bit
+> set except
+> association one. I'm still not sure if this is problem of iwl driver or m=
+ac80211
+> If anybody tested please let me know
+
+Hmm. And you're positive the network you were on supports short slot?
+But looking closely at the code does reveal a bug, short slot should be
+supported even in absence of an ERP IE.
+
+johannes
+
+--=-G2/RaNRd9axqxH3S85Gw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR5hOnaVg1VMiehFYAQLzTA//d2RJDs8l4z1KL/GGXSUi/hqhsCaHQLir
+UkUutt4Bfddwtdgt1ZBCQYtgVVauxJThR4qoRp1J2UUadexjBw+dp0o6BilHKIk8
+ML8kXHWSqLOHPtQ81Pitl+GLlconaWMBdOgOqeDR+YSs2+Y0FaOLAwRQDdD4NwZl
+a+XQFs3dvdhGue2c2MHMYkGJPX2UYqP/4abwgAok02ib9ykzWZ9JiVcO2qw4/xv4
+iqUwprjdh53kn6xS8TAa656W5AfIil+DgRcrupT5V+zXFSPpu7uofgbHG5zTuB9R
+EXtBZrMcmue5xX0YE8snt20PzfzheVAqJRZ6xW66K++cf6lviV0kKdFeShk+MX48
+cXvvHCiCxLFFjLbkOoWRk83RhXo8Bt3oqDePApws25nKrZXIk6bNtwjKF6S0I87F
+eSGVX7E2FMKhuqLWh3bHx769ZWaqFCHkindlPYGjsVipHrGp0azFZ3jiJjqnUDh3
+9dGRVZ5k4Lk1FClIhUV9Il6rTVzbfG9LQGH60RolXppY4AQmE6IB5YaZFfxk2H1f
+PqxD1ZFtHz1a+bC4b5eJgMie22BKVjQ831NbeKwi3fbeyxprelt57WREAlJfJiri
+B8jDxnfPtHKFLVcGCd9elunvdrRFTfy1CQdo3aIxHMBCjORzBZSeK2ZZyQ9pfzph
+6Uo5xrk/Jo8=
+=zbb+
+-----END PGP SIGNATURE-----
+
+--=-G2/RaNRd9axqxH3S85Gw--
 
