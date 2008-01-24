@@ -1,97 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13138 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758700AbYAULwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 06:52:36 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 09/12] iwlwifi: A-MPDU Tx conform API to mac80211
-Date: Mon, 21 Jan 2008 13:52:09 +0200
-Message-Id: <12009163404169-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115442_567754_287DA85B)
-In-Reply-To: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbYAXOpp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 09:45:45 -0500
+Subject: Re: [PATCH] b43: Fix MAC control and microcode init
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <200801222023.35131.mb@bu3sch.de> (sfid-20080122_192602_244741_E21941C1)
+References: <200801222023.35131.mb@bu3sch.de>
+	 (sfid-20080122_192602_244741_E21941C1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d+lLzmfDKTMDuDjRWaig"
+Date: Thu, 24 Jan 2008 10:13:01 +0100
+Message-Id: <1201165981.3454.49.camel@johannes.berg> (sfid-20080124_144831_286456_2F9F0BF5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch alters the current API in order to fit the new
-API mac80211 gives for A-MPDU Tx
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    9 +++++++--
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 ----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ----
- 3 files changed, 7 insertions(+), 10 deletions(-)
+--=-d+lLzmfDKTMDuDjRWaig
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 36ef618..e7ee0df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4737,6 +4737,12 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 		IWL_DEBUG_HT("stop Rx\n");
- 		iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
- 		break;
-+	case IEEE80211_AMPDU_TX_START:
-+		IWL_DEBUG_HT("start Tx\n");
-+		return iwl4965_mac_ht_tx_agg_start(hw, addr, tid, ssn);
-+	case IEEE80211_AMPDU_TX_STOP:
-+		IWL_DEBUG_HT("stop Tx\n");
-+		return iwl4965_mac_ht_tx_agg_stop(hw, addr, tid);
- 	default:
- 		IWL_DEBUG_HT("unknown\n");
- 		return -EINVAL;
-@@ -4835,8 +4841,7 @@ int iwl4965_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da, u16 tid,
- }
- 
- 
--int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da, u16 tid,
--			   int generator)
-+int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da, u16 tid)
- {
- 
- 	struct iwl4965_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 615b8fa..8e9f756 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -780,10 +780,6 @@ extern int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 				    enum ieee80211_ampdu_mlme_action action,
- 				    u8 *addr, u16 tid, u16 *ssn);
- #ifdef CONFIG_IWL4965_HT_AGG
--extern int iwl4965_mac_ht_tx_agg_start(struct ieee80211_hw *hw, u8 *da,
--				   u16 tid, u16 *start_seq_num);
--extern int iwl4965_mac_ht_tx_agg_stop(struct ieee80211_hw *hw, u8 *da,
--				  u16 tid, int generator);
- extern void iwl4965_turn_off_agg(struct iwl4965_priv *priv, u8 tid);
- extern void iwl4965_tl_get_stats(struct iwl4965_priv *priv,
- 				struct ieee80211_hdr *hdr);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9ae071e..70e6ad6 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -8984,10 +8984,6 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- #ifdef CONFIG_IWL4965_HT
- 	.conf_ht = iwl4965_mac_conf_ht,
- 	.ampdu_action = iwl4965_mac_ampdu_action,
--#ifdef CONFIG_IWL4965_HT_AGG
--	.ht_tx_agg_start = iwl4965_mac_ht_tx_agg_start,
--	.ht_tx_agg_stop = iwl4965_mac_ht_tx_agg_stop,
--#endif  /* CONFIG_IWL4965_HT_AGG */
- #endif  /* CONFIG_IWL4965_HT */
- 	.hw_scan = iwl4965_mac_hw_scan
- };
--- 
-1.5.3.7
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> This also adds a longer delay for waiting for the microcode
+> to initialize itself. It seems that the current timeout is sufficient
+> on all available devices, but there's no real reason why we shouldn't
+> wait for up to one second. Slow embedded devices might exist.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Your decision, but I very much doubt you can make the MAC any slower
+than on the old devices, in fact, on new chips it runs considerably
+faster I think.
+
+johannes
+
+--=-d+lLzmfDKTMDuDjRWaig
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR5hWnKVg1VMiehFYAQKBahAAh/S10iuKae/F7Gk2ey90BaEnbgO8oGdx
+BTSbwmEYkhn6pMmeWAsbgxkAB5X8v2PnRMkmD/ii731UK625aewhh3ITL5kJxYb3
+PQjQYxiira9nTdRiH4xGfbFd/K/fBv7vEVEYjlIzcu+pdKe2Cz/8nz7+savoXfOr
+A2Lh8GA759liFRdnZ2RmagKe++U31cJGMG/gVcaTcWWIBjYu+SpTmnYnslTpH+NB
+/Xeelrgqg9b1dIuXky6RCLi5H9hC8AAadrbPlqZAT81bX8agxDoXfcp8j5TBqzbh
+3knSyyb0FnDU3r0mUgZk/+up1MiyYySwQP6S+MTwYhTtXBrZ6kJxQR7+YYm5huHQ
+Y3nPQd8zTFe/WwM2diNsf9DydcMjDdo+/PT7JsZkJ07HSS1kAkd8/0UYU3hTU/eU
+VYnsvLYWn8qOwjMcWX0bQ5Qn+rcjrdYFbF6jETPuql8Otepzl0GCBweANmQVbqe0
+iVo11c+VCFm+pBmrhotFS4v6uwh2wf61kr77IGnuhYRvI7T/XL1j4AKY/IUsoqcu
+LqM7hujhygidEvGLADAgSg75SSnR0Sh8g7ce+JUg2gQu3KzhIlU0vUulk7mAj0Qx
+l2EKZvKoeT51x/gXkDvPuZwKA56dsR8grvDMCrDQ0/XV0VnNcoJy/mjFhRcyhji+
+fA8Ujpb+6K0=
+=EhkU
+-----END PGP SIGNATURE-----
+
+--=-d+lLzmfDKTMDuDjRWaig--
 
