@@ -1,79 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57487 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753889AbYABPWH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757323AbYAXQzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 10:22:07 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Strange mac80211 oops
-Date: Wed, 2 Jan 2008 16:21:26 +0100
-Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <200712242237.28913.mb@bu3sch.de> <200712291724.23726.mb@bu3sch.de> <1199263731.4172.66.camel@johannes.berg>
-In-Reply-To: <1199263731.4172.66.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801021621.26401.mb@bu3sch.de> (sfid-20080102_152217_868744_0A06ECE0)
+	Thu, 24 Jan 2008 11:55:20 -0500
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bruno randolf <bruno@thinktube.com>
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200801241226.28394.bruno@thinktube.com>
+References: <20080118125252.6455.41047.stgit@one>
+	 <1201099729.3454.17.camel@johannes.berg>
+	 <200801241226.28394.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DRp4eqzo7jYwFCwQe7sb"
+Date: Thu, 24 Jan 2008 17:55:04 +0100
+Message-Id: <1201193704.3454.137.camel@johannes.berg> (sfid-20080124_165547_277591_331A3C2E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 January 2008 09:48:51 Johannes Berg wrote:
-> 
-> On Sat, 2007-12-29 at 17:24 +0100, Michael Buesch wrote:
-> > This patch fixes RX packet alignment issues in the zd1211rw driver.
-> > This is based on a patch by Johannes Berg.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> Looks good to me, I guess you tested it.
 
-Yes, works fine.
-
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> > Index: wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c
-> > ===================================================================
-> > --- wireless-2.6.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 17:14:41.000000000 +0100
-> > +++ wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c	2007-12-29 17:15:00.000000000 +0100
-> > @@ -623,6 +623,8 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
-> >  	const struct rx_status *status;
-> >  	struct sk_buff *skb;
-> >  	int bad_frame = 0;
-> > +	u16 fc;
-> > +	bool is_qos, is_4addr, need_padding;
-> >  
-> >  	if (length < ZD_PLCP_HEADER_SIZE + 10 /* IEEE80211_1ADDR_LEN */ +
-> >  	             FCS_LEN + sizeof(struct rx_status))
-> > @@ -674,9 +676,22 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
-> >  			&& !mac->pass_ctrl)
-> >  		return 0;
-> >  
-> > -	skb = dev_alloc_skb(length);
-> > +	fc = le16_to_cpu(*((__le16 *) buffer));
-> > +
-> > +	is_qos = ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) &&
-> > +		 ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_QOS_DATA);
-> > +	is_4addr = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
-> > +		   (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
-> > +	need_padding = is_qos ^ is_4addr;
-> > +
-> > +	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
-> >  	if (skb == NULL)
-> >  		return -ENOMEM;
-> > +	if (need_padding) {
-> > +		/* Make sure the the payload data is 4 byte aligned. */
-> > +		skb_reserve(skb, 2);
-> > +	}
-> > +
-> >  	memcpy(skb_put(skb, length), buffer, length);
-> >  
-> >  	ieee80211_rx_irqsafe(hw, skb, &stats);
-> > 
-> 
+--=-DRp4eqzo7jYwFCwQe7sb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> i can see now how you could interpret this as only applying to timers, bu=
+t i=20
+> think that does just not make sense - why would you want to sync timers a=
+nd=20
+> adapt beacon intervals if you don't share the same BSSID?
 
--- 
-Greetings Michael.
+Hmm. Well I thought that was pretty much just for optimising performance
+but now that I think about it again...
+
+> i agree that the standard is quite ambigious when it comes to IBSS, but=20
+> practically speaking, it is necessary to merge IBSS cells most of the tim=
+e if=20
+> you want to have IBSS working as expected. therefore i tend to interpret =
+the=20
+> ambigious parts of the standard in a way that will improve functionality.
+
+I think "working as expected" is stretching it a bit ;) How do you
+expect IBSS to work? I'd expect only the simplest use case from it:
+start IBSS on one station and have another one in the vicinity find it
+while scanning and join it. That works regardless of merging or not.
+
+> please see my last post where i suggest to use:
+>=20
+> +               if (rx_status->flag & RX_FLAG_TSFT)
+> +                       /* in order for correct IBSS merging we need mact=
+ime*/
+> +                       mactime =3D rx_status->mactime;
+> +               else if (local && local->ops && local->ops->get_tsf)
+> +                       /* second best option: get current TSF */
+> +                       mactime =3D local->ops->get_tsf(local_to_hw(local=
+));
+> +               else
+> +                       /* can't merge without knowing the TSF */
+> +                       mactime =3D -1LLU;
+>=20
+> instead.
+
+Not sure. That's a bit on a fine line, if you have a slow device
+get_tsf() might be well off and this could trigger a BSSID change in
+both stations.
+
+johannes
+
+--=-DRp4eqzo7jYwFCwQe7sb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR5jC56Vg1VMiehFYAQKwLw/+LVZXHRygamCeC6gsLJKWsEizkRUUj/39
+iQ3GzAIL9HkpMBBDfhU2sNt79SQsCdY48Z+34A8ugPXmkMOWabAQNt8U4cL6zDIJ
+KlyKuLKJ9/VFZa2Lonoj6x6nXExfCKE+CIG4iqIYrAAgO9v40JGKsBfPVP7m35H3
++KCNZ0YLazMaJfAUettd2uGSUZksYatlJ8Zk88dCkrCDx3k16yYcatBhOavRe27V
+Xs7g7/0RCux5HploSG7m+FaJp36nltQbFzlCMREvqTf70bSsyP3jlM04Q+SzMnRi
+tKxXn9alwnndR0ifbRW0VzFPkeYIMyF06R51cZStTki7LYYDYBwsp5LlAIhuKUx5
+3bSUESpZUJ3YZuntsOhhQIDep+hxpaidTnCEzOoosaP44ymvXFRDuZqBq+qPTle1
+WdGAmZDdESdywh+kE3/YIj1JuUpI/jCtbA+IJbv5/pm/lq7BawKaO4hOUeVWyVsb
+a/ZU3KFuYJCGHG9CyyTJ4HRtiAzcglPT6uCwepn5E52Q1LCW71Umxbnxme0TUQUP
+U/BGssVCqU6HijPiPi+jYXr6wXSFgd4Sq75QyDpSYKNdW1eJRPYnunEQSpkpqdij
+R/QDTT09Tm80XPrh7Ec0wxq5AQ+eK43DNnHhRVDyLv+CFvvWdb+C/7v7UDLXG3Mi
+r7nMHpdOAL0=
+=W6bw
+-----END PGP SIGNATURE-----
+
+--=-DRp4eqzo7jYwFCwQe7sb--
+
