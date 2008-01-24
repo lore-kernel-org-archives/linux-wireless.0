@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8983 "EHLO mga02.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3586 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758814AbYAUKjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 05:39:24 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/2] mac80211: fixing ieee80211_bar types
-Date: Mon, 21 Jan 2008 12:39:11 +0200
-Message-Id: <12009119602588-git-send-email-tomas.winkler@intel.com> (sfid-20080121_103928_528032_0C5ABF9C)
-In-Reply-To: <12009119522429-git-send-email-tomas.winkler@intel.com>
-References: <12009119522429-git-send-email-tomas.winkler@intel.com>
+	id S1756146AbYAXVcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 16:32:05 -0500
+Date: Thu, 24 Jan 2008 16:07:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+Message-ID: <20080124210728.GD3200@tuxdriver.com> (sfid-20080124_213210_900983_50AF2014)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071830.51895.mb@bu3sch.de> <20080107212344.1372cc47@Varda> <200801081630.31110.mb@bu3sch.de> <alpine.LFD.1.00.0801241224050.2803@woody.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.1.00.0801241224050.2803@woody.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Thu, Jan 24, 2008 at 12:27:03PM -0800, Linus Torvalds wrote:
+> 
+> 
+> On Tue, 8 Jan 2008, Michael Buesch wrote:
+> > > >
+> > > > Can you check if that is the
+> > > > WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+> > > > in rx.c line 1486?
+> > 
+> > Yes fine.
+> > Patches are on their way. Ignore the warning for now. It is harmless.
+> 
+> I don't think this ever got fixed. 
+> 
+> I don't see any alternative but just uncomment that bogus warning, because 
+> it's otherwise going to just cause way more noise than it's worth. It's 
+> apparently known to developers, and as such it's worthless in the source 
+> code except as a way to make poor users worry.
+> 
+> It's been in the top oops/warnings report for the last three weeks, and I 
+> haven't gotten any patches for it, so I'm a bit grumpy. What's the point 
+> of having a WARN_ON() if nobody involved *does* anything about it?
 
-This patch changes ieee80211_bar control and start_seq_num to
-match the proper bitwise attribute expected from ieee 802.11 frame
+We've been trying to shame the iwlwifi team into fixing it.  They have
+been blaming their firmware, but I think they could fix the alignment
+in their driver.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/linux/ieee80211.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+There is no great harm in reverting
+81100eb80add328c4d2a377326f15aa0e7236398 if you would like to go ahead
+and push the 2.6.24 release.  I suspect, however, that the mac80211
+guys would like to keep it (or put it back for 2.6.25) to continue
+to shame driver developers in the future.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4d5a4c9..5de6d91 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -237,8 +237,8 @@ struct ieee80211_bar {
- 	__le16 duration;
- 	__u8 ra[6];
- 	__u8 ta[6];
--	__u16 control;
--	__u16 start_seq_num;
-+	__le16 control;
-+	__le16 start_seq_num;
- } __attribute__((packed));
- 
- /**
+John
 -- 
-1.5.2.2
-
+John W. Linville
+linville@tuxdriver.com
