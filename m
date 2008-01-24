@@ -1,112 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:28092 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758991AbYAFWjy (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37808 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752244AbYAXOww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 17:39:54 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so3071048ugc.16
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 14:39:53 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/12] rt2x00: Only set the TBCN flag when the interface is configured to send beacons.
-Date: Sun, 6 Jan 2008 23:38:58 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200801062337.35904.IvDoorn@gmail.com>
-In-Reply-To: <200801062337.35904.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801062338.58811.IvDoorn@gmail.com> (sfid-20080106_224010_517953_BA928B59)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 24 Jan 2008 09:52:52 -0500
+Subject: Re: [PATCH 06/12] mac80211: A-MPDU Tx adding qdisc support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <12009163392546-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115437_990483_56CB312C)
+References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+	 <12009163392546-git-send-email-ron.rindjunsky@intel.com>
+	 (sfid-20080121_115437_990483_56CB312C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4TM8++2SKrXfetvxqHUj"
+Date: Thu, 24 Jan 2008 10:42:58 +0100
+Message-Id: <1201167778.3454.75.camel@johannes.berg> (sfid-20080124_145307_592898_28722F67)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These flags used to be fixed to one in rt2500pci_config_type, which
-caused the beacon timer interrupt to fire. This would lead to
-rt2x00lib_beacondone adding work which called
-rt2x00lib_beacondone_scheduled which called ieee80211_beacon_get which
-printed an error about not having any beacon data.
 
-With this patch, these interrupts are only generated when the interface
-is configured to send beacons.
+--=-4TM8++2SKrXfetvxqHUj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Matthijs Kooijman <matthijs@stdin.nl>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c |    3 ++-
- drivers/net/wireless/rt2x00/rt61pci.c   |    3 ++-
- drivers/net/wireless/rt2x00/rt73usb.c   |    3 ++-
- 5 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index c9a234f..9eed9e9 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -280,7 +280,7 @@ static void rt2400pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--	rt2x00_set_field32(&reg, CSR14_TBCN, 1);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, (tsf_sync == TSF_SYNC_BEACON));
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, tsf_sync);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index a623454..8b2f54b 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -284,7 +284,7 @@ static void rt2500pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--	rt2x00_set_field32(&reg, CSR14_TBCN, 1);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, (tsf_sync == TSF_SYNC_BEACON));
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, tsf_sync);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 2ba8eda..27d34dd 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -327,7 +327,8 @@ static void rt2500usb_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 
- 	rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
- 	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 1);
--	rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 1);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TBCN,
-+			   (tsf_sync == TSF_SYNC_BEACON));
- 	rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 0);
- 	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, tsf_sync);
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 13c8086..f5b3378 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -317,7 +317,8 @@ static void rt61pci_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE,
-+			  (tsf_sync == TSF_SYNC_BEACON));
- 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, tsf_sync);
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 8093a4d..9393415 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -327,7 +327,8 @@ static void rt73usb_config_type(struct rt2x00_dev *rt2x00dev, const int type,
- 	 */
- 	rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE,
-+			   (tsf_sync == TSF_SYNC_BEACON));
- 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, tsf_sync);
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
--- 
-1.5.3.7
+> +#define IEEE80211_TXCTL_AMPDU		(1<<13) /* this frame should be sent
+> +						 * as part of an A-MPDU */
+
+Broadcom hardware will want to know
+ (a) is this part of an A-MPDU
+ (b) if so, is it
+     (i) the first mpdu
+     (ii) an intermediate mpdu
+     (iii) the last mpdu
+
+Can we provide that easily and avoid the driver having to keep track?
+
+>  struct ieee80211_sched_data
+>  {
+> +	unsigned long qdisc_pool;
+
+If we ever have hw with many more queues we may want to increase
+NUM_TX_DATA_QUEUES_AMPDU, so if I understand the code correctly should
+be an array sized something like BITS_TO_LONGS(NUM_TX_...)
+
+johannes
+
+--=-4TM8++2SKrXfetvxqHUj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR5hdoaVg1VMiehFYAQIoeBAAsfvYLERJozJy0CDJgtt2t6EnDD/rQagL
+QZu9Tsx1mKzxx+EmqQpZ8jQjSJ38a4WNNgJgdmBGXPwC0n8F9ik6d9JtOBmbSt6V
+cXfX5PsgoQGJLxNFLB8wr15XZA/hf9rDen2EStUK6Gh7+eoVeN1LjzT1yWjtjjkk
+cDaJoc5hMqP9ApdXKMsCmc7nTbQ7EU8RQT/NA3aVdN8kmyne7FSUHFApcNBAMjze
+juKXqHbAWgEgh29kgN4cenBEesKXbKwOCUkdx822JrJZptddqvKhFQGtoHCnfnX3
+/tyKIdr36S4FfGAlbZr2xyetNTNCQ5fc8t/39BzSdWdOH/Ej+5Ts5tAvkK9WHb6z
+C8LhmHYgLktnGysIaxTdcV2zLbtgBqG6v1lpabwRdGvIzWVDP5hVkGyT4XBdrfzh
+RP/A7IvkWHrsHUtyP6PjmzC+63iJeJEJjqK4YtIEZochkMmOiq7N9hcxzo5XEzAy
+gk/B43jlwjhZVjhUhnxyc3Dt5SBRvbbiXkIepNvpSGbo5rKLh8do1OF7gvB8+ju6
+aRqZ69OzwEUjp5oZEZII21KqdklXaA+kLXhx+sJicPOzPcmIolTHDf2vvXqcFYMB
+aZk4KHrCeoWYRJV8q1EDz0NcDqGT9geWTg9RODE2NznCKkbG++AgTzdr+a86PeS2
+snetLZK9Jwo=
+=LdJ2
+-----END PGP SIGNATURE-----
+
+--=-4TM8++2SKrXfetvxqHUj--
 
