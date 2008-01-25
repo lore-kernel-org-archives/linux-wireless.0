@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37037 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761250AbYAKVzu (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:38982 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbYAYWey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 16:55:50 -0500
-Subject: Re: [PATCH 3/8 v3] mac80211: A-MPDU Rx adding basic functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <c85cb4470801111020w6de28dc7jb58f0eacac513978@mail.gmail.com> (sfid-20080111_182042_195677_DA70E5F6)
-References: <11985948383801-git-send-email-ron.rindjunsky@intel.com>
-	 <11985948451654-git-send-email-ron.rindjunsky@intel.com>
-	 <1199976980.3861.87.camel@johannes.berg>
-	 <c85cb4470801111020w6de28dc7jb58f0eacac513978@mail.gmail.com>
-	 (sfid-20080111_182042_195677_DA70E5F6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PK5ocoJjeqDlkO8NJ0xY"
-Date: Fri, 11 Jan 2008 22:55:34 +0100
-Message-Id: <1200088534.3528.4.camel@johannes.berg> (sfid-20080111_215602_395608_901CC095)
-Mime-Version: 1.0
+	Fri, 25 Jan 2008 17:34:54 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1321986wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2008 14:34:53 -0800 (PST)
+Message-ID: <1ba2fa240801251434m54db8df6o95490bad4fca4214@mail.gmail.com> (sfid-20080125_223458_462164_F6ACB554)
+Date: Sat, 26 Jan 2008 00:34:53 +0200
+From: "Tomas Winkler" <tomas.winkler@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux 2.6.24-rc7
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Inaky Perez-Gonzalez" <inaky@linux.intel.com>,
+	"Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080125214626.GG14687@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
+	 <200801251941.25310.mb@bu3sch.de>
+	 <200801251311.45392.inaky@linux.intel.com>
+	 <200801252221.07558.mb@bu3sch.de>
+	 <20080125214626.GG14687@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-PK5ocoJjeqDlkO8NJ0xY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-On Fri, 2008-01-11 at 20:20 +0200, Ron Rindjunsky wrote:
+On Jan 25, 2008 11:46 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Fri, Jan 25, 2008 at 10:21:07PM +0100, Michael Buesch wrote:
+> > On Friday 25 January 2008 22:11:44 Inaky Perez-Gonzalez wrote:
+> > > On Friday 25 January 2008, Michael Buesch wrote:
+> > > > On Friday 25 January 2008 19:34:46 Linus Torvalds wrote:
+> > > > > My attitude is: CPU's that do unaligned accesses right are the *good*
+> > > > > CPU's. We should encourage them, and put the onus of being crap on the
+> > > > > ones that are crap, rather than penalizing the ones that aren't.
+> > > >
+> > > > I absolutely agree. But as this can get fixed with _no_ performance loss
+> > > > at all inside of the firmware (and who if not intel can change stuff
+> > > > in their firmware?), I think this warning is in fact valid.
+> > >
+> > > Well, you forgot the point that maybe it is not that simple to get such
+> > > a seemingly simple change into the firmware for a long list of reasons.
 > >
-> > [32566.907283] rx BA session requested to stop on inactive tid 0
-> > [32566.907290] rx BA session requested to stop on inactive tid 1
-> > [...]
-> >
-> > I suppose the message isn't really necessary except from
-> > ieee80211_sta_process_delba(), or something. Either way, we should get
-> > rid of it in the regular case.
+> > The reasons being?
+>
+> Firmware certification is expensive.
+>
+> Plus it is a bit unfair to ask for firmware changes just because the
+> vendor is actually engaged with us.  If this were Broadcom or Zydas
+> firmware we would have little recourse other than to accept it or
+> fix it in the driver or stack.
+>
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
 
-> what about putting it inside CONFIG_MAC80211_HT_DEBUG ? i don't want
-> to lose this print, there are several cases were it might help - timer
-> expirations, delBA, and fragmented frames.
+Sorry for getting late into this conversation till now I was enjoying
+my weekend :)
 
-I'd prefer not to get it even with HT_DEBUG enabled when I had no chance
-of doing HT in the first case because my hardware can't handle that.
+We are definitely not ignoring this issue. We are discussing this at
+Intel and this for sure will be fixed in next generation HW.  For now
+we are trying to find some remedy to this problem. The big problem we
+have that 11n handling is HW assisted and it's really hard to do
+something about it in the FW level for 11n cards. This is not
+something that we fix over night if at all. The truth is these cards
+never dreamed to be run on other CPUs then Intel so the morning  is
+hard :)
 
-johannes
+I would suggest to go for conditional copying on platforms that cannot
+handle unaligned for these platforms  we have to probably disable 11n
+though.
+Tomas
 
---=-PK5ocoJjeqDlkO8NJ0xY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4fl1aVg1VMiehFYAQJo7g/9EFycSLDprLSugcN0uBoTBHhW6pij8q/Y
-4U6dFcG2x9yQ8d7g8pehOaPxefvh+iMELsRDN3CYJ6oG/hsbrKIddjXT/Uqckxxx
-zSpn5t8t0Pi+xXDvcnig8s6EUvn+KJXUtWFFMc0qRkKLaz4KYqfZQqNMXR6MC2ph
-oEnG6EyzFGOaQl0ID7WBy0ziPySPufwoIVW2arQSSPcTpbNgFOvUiEVSPIljzAJL
-t6g1qiilweclYQvNo1EOhScYyNlioHdAt476+P3bxUMKiLqLxLptXrz2T7ABYs1h
-GXNg3k7NZNdjSn26lMHlw1rQUuf+4CSZjc5aYPjE18Jsk904HbcRRMn3k5Uim91R
-MHqEpzDL6ahbffXjZ7E8wfw9w4UsfqmbA6E0xwj9WwiWXfbXMx24067wsu8azffs
-R6kL07W9GA2EDkmhO2ybSrPtgkScmOP35Bn38Qb6KOZCfMjAXt89u+k/9alWI3WB
-54gMPgY5OCNivnZUDl0Sw3gijChLaHPFsIjdkYCBu7OdfAaTvVcXN98lY/uyR0Qb
-Foh2tCpws+bkIsMvlg+899wAhE9G43v9LOfcAzDlIbvmWwcho/4pVod9K/a1Sk++
-SkOcBGx8svjtGas2Jyl17XrokdhK6UfhbbW/LwGdsKlFckmwzXqf+2CHXOdRJqDx
-YoP/jSNsJVU=
-=mNRp
------END PGP SIGNATURE-----
-
---=-PK5ocoJjeqDlkO8NJ0xY--
-
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
