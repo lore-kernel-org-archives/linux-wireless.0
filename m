@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22822 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754877AbYA1MHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 07:07:38 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 08/12 v2] mac80211: A-MPDU Tx add delBA from recipient support
-Date: Mon, 28 Jan 2008 14:07:22 +0200
-Message-Id: <1201522054994-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120745_052373_A916568B)
-In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
-References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36456 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754656AbYAYBU3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 20:20:29 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
+Date: Thu, 24 Jan 2008 17:19:14 -0800
+Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
+	netdev@vger.kernel.org
+References: <20080120001342.25718.83669.stgit@fate.lan>
+In-Reply-To: <20080120001342.25718.83669.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801241719.14941.david-b@pacbell.net> (sfid-20080125_012129_115834_6E1CA719)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the ability to handle delBA from recipient to initiator
-during an A-MPDU session
+On Saturday 19 January 2008, Jussi Kivilinna wrote:
+> Hello,
+> 
+> This is second try on wireless RNDIS patchset started by Bjorge Dijkstra. Since
+> Bjorge has disappeared, I claim maintainership of rndis_wext and this patchset
+> until he returns.
+> 
+> This patchset adds support for various 802.11 USB devices based on Broadcom
+> 4320 chip. Chip uses RNDIS to communicate with the host, so module depend
+> heavily on rndis_host/cdc_ether/usbnet and needs some changes on these 
+> modules in order to work.
+> 
+> Patches 1-6 are from first patchset:
+>  1. Fix sparse warning: returning void valued expression
+>  2. [cdc_ether] Hardwire CDC descriptors when missing
+>  3. [rndis_host] Use 1KB buffer in rndis_unbind
+>  4. [rndis_host] Halt device if rndis_bind fails
+>  5. [rndis_host] Fix rndis packet filter flags
+>  6. [usbnet] Use wlan device name for RNDIS wireless devices
+> 
+> Of these 1, 3 and 4 are not required for this version of rndis_wext to work.
+> 
+> Actual wireless part is changed from extension on rndis_host to separate 
+> driver. Different devices are detected by device specific USB vendor/product 
+> IDs as the way done with Windows drivers instead of detecting RNDIS media type 
+> like in first patchset.
+> 
+> New patches 7-14:
+>  7. [rndis_host] Split up rndis_host.c
+>  8. [rndis_host] export functions
+>  9. [usbnet] add driver_priv pointer to 'struct usbnet'
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/ieee80211_sta.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+So far as I'm concerned patches 1-9 can go in any time.
 
-Index: wl2_6_24_rc8_ev/net/mac80211/ieee80211_sta.c
-===================================================================
---- wl2_6_24_rc8_ev.orig/net/mac80211/ieee80211_sta.c
-+++ wl2_6_24_rc8_ev/net/mac80211/ieee80211_sta.c
-@@ -1401,14 +1401,23 @@ static void ieee80211_sta_process_delba(
+The other patches I won't ack yet; see below.
+
+
+> 10. [rndis_host] Add rndis_early_init function pointer to 'struct rndis_data'.
+> 11. [rndis_host] Add rndis_link_change function pointer to 'struct rndis_data'.
+
+Those aren't added to "struct rndis_data" ... they're added to
+the struct at the core of the usbnet framework.  So they should
+not be RNDIS-specific ... even though the only current user will
+be the RNDIS host code.  Rename those methods and I'll be happy.
+
+
+> 12. Move usbnet.h and rndis_host.h to include/linux/usb
+
+No problem with that, except that fixing #10 and #11 will
+break them.
+
+
+> 13. [rndis_host] blacklist known wireless RNDIS devices
+
+That will be a headache over time though ... can't you just
+let the probe succeed enough to recogize it's wireless (using
+the media flag) and then bail, so the next driver can try?
+
+
+> 14. Add new driver 'rndis_wext' for wireless RNDIS devices.
+
+The real goods!  :)
+
  
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	if (net_ratelimit())
--		printk(KERN_DEBUG "delba from %s on tid %d reason code %d\n",
--			print_mac(mac, mgmt->sa), tid,
-+		printk(KERN_DEBUG "delba from %s (%s) tid %d reason code %d\n",
-+			print_mac(mac, mgmt->sa),
-+			initiator ? "recipient" : "initiator", tid,
- 			mgmt->u.action.u.delba.reason_code);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
- 	if (initiator == WLAN_BACK_INITIATOR)
- 		ieee80211_sta_stop_rx_ba_session(dev, sta->addr, tid,
- 						 WLAN_BACK_INITIATOR, 0);
-+	else { /* WLAN_BACK_RECIPIENT */
-+		spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		sta->ampdu_mlme.tid_tx[tid].state =
-+				HT_AGG_STATE_OPERATIONAL;
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		ieee80211_stop_tx_ba_session(&local->hw, sta->addr, tid,
-+					     WLAN_BACK_RECIPIENT);
-+	}
- 	sta_info_put(sta);
- }
- 
+> Patches should be applied in order, series apply cleanly to 2.6.24-rc8.
+> 
+>  - Jussi Kivilinna
+> 
+
+
