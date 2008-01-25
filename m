@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:32821 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750946AbYARGz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 01:55:27 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JFl8N-0004Fo-GX
-	for linux-wireless@vger.kernel.org; Fri, 18 Jan 2008 06:55:23 +0000
-Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 06:55:23 +0000
-Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2008 06:55:23 +0000
-To: linux-wireless@vger.kernel.org
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: iwl3945 driver is still unusable!
-Date: Fri, 18 Jan 2008 07:55:15 +0100
-Message-ID: <fmpigk$c57$1@ger.gmane.org> (sfid-20080118_065531_339901_66720747)
-References: <fmclu6$dvl$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-In-Reply-To: <fmclu6$dvl$1@ger.gmane.org>
-Cc: ipw3945-devel@lists.sourceforge.net
+Received: from an-out-0708.google.com ([209.85.132.242]:30687 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbYAYQMv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 11:12:51 -0500
+Received: by an-out-0708.google.com with SMTP id d31so160171and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2008 08:12:49 -0800 (PST)
+Message-ID: <40f31dec0801250812j3af289d9q851b1c4d7329f97@mail.gmail.com> (sfid-20080125_161254_205422_0246D569)
+Date: Fri, 25 Jan 2008 18:12:49 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "hong zhang" <henryzhang62@yahoo.com>
+Subject: Re: does any wifi driver supports 802.11n for access point?
+Cc: "Richard Scherping" <richard@scherping.de>,
+	"Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <596875.96052.qm@web57913.mail.re3.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <47999F51.6040403@scherping.de>
+	 <596875.96052.qm@web57913.mail.re3.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas B=E4chler schrieb:
-> What I need is a solution, meaning either a working iwl3945 version o=
-r a
-> patch to ipw3945 to compile with 2.6.24.
+2008/1/25, hong zhang <henryzhang62@yahoo.com>:
+> Richard,
+>
+> Because current open source mdwifi and mac80211 do not
+> support atheros 802.11n chip yet.
+> Does Atheros provide 802.11n driver for its 802.11n
+> chip? Where does Dlink get 802.11n atheros driver for
+> its aceess point products?
+>
+> ----henry
+>
 
-I was hoping for someone from Intel or someone with knowledge of the
-code to comment on both these issues:
+You should ask Atheros for that, drivers exist out there but not for
+us, D-Link/Apple etc have signed agreements with Atheros and have
+access to stuff that we don't have access to. As far as i know Atheros
+is willing to support n for linux, we 'll just wait and see...
 
-- Can ipw3945 be modified to compile with 2.6.24?
-- Can the newest iwl3945 from the website be modified to compile with
-2.6.24?
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
