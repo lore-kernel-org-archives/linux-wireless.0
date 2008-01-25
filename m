@@ -1,85 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35101 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751065AbYAJUcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 15:32:50 -0500
-From: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-Date: Thu, 10 Jan 2008 21:32:40 +0100
-Cc: "Will Dyson" <will.dyson@gmail.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rt2400-devel@lists.sourceforge.net
-References: <200801062337.35904.IvDoorn@gmail.com> <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com>
-In-Reply-To: <8e6f94720801100352t615025b6j1c2cc0081626fee5@mail.gmail.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:48429 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752583AbYAYLWz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 06:22:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable 3/3] b43: Fix dma-slot resource leakage
+Date: Fri, 25 Jan 2008 12:20:20 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801102132.42666.s.L-H@gmx.de> (sfid-20080110_203253_744619_C5DD6DCF)
+  charset="us-ascii"
+Message-Id: <200801251220.20332.mb@bu3sch.de> (sfid-20080125_112300_967875_84954419)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This fixes four resource leakages.
+In any error path we must deallocate the DMA frame slots we
+previously allocated by request_slot().
+This is done by storing the ring pointers before doing any ring
+allocation and restoring the old pointers in case of an error.
 
-On Donnerstag, 10. Januar 2008, Will Dyson wrote:
-[...]
-> Sorry to be out of the loop, but what is wrong with rt61pci? It works
-> really really well for me, using John's "everything" branch.
-> 
-> Hmm. Looking at Linus's tree, I can see that rt61pci is missing at
-> least 1 critical fix from Mattias Nissler that has been in
-> wireless-2.6 for a long time now.
-> 
-> rt2x00: Allow rt61 to catch up after a missing tx report
-> 
-> I'd be pretty disappointed if we released 2.6.24 without this. It is a
-> simple fix for a really obnoxious problem (although one that triggers
-> rarely on my hardware).
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-The same goes for (which can be easily rediffed against linux-2.6):
-	[PATCH 06/12] rt2x00: Put 802.11 data on 4 byte boundary
-without it, at least rt61pci, rt73usb and rt2500usb (plain 
-2.6.24-rc7-git2) trigger the well known:
+---
 
-WARNING: at net/mac80211/rx.c:1486 __ieee80211_rx()
-Pid: 0, comm: swapper Not tainted 2.6.24-rc7-git2-slh64-smp-1 #1
+This patch is upstream inside of the netdev tree.
 
-Call Trace:
- <IRQ>  [<ffffffff80232e4a>] __wake_up_common+0x5a/0x90
- [<ffffffff881fed9e>] :mac80211:__ieee80211_rx+0xbde/0xd00
- [<ffffffff880cb3e6>] :ehci_hcd:ehci_work+0x5d6/0x8e0
- [<ffffffff881f028b>] :mac80211:ieee80211_tasklet_handler+0xbb/0x120
- [<ffffffff80243507>] tasklet_action+0x47/0xb0
- [<ffffffff80243415>] __do_softirq+0x75/0xe0
- [<ffffffff8020d62c>] call_softirq+0x1c/0x30
- [<ffffffff8020f9f5>] do_softirq+0x35/0x90
- [<ffffffff802432a6>] irq_exit+0x96/0xa0
- [<ffffffff8020fad0>] do_IRQ+0x80/0x100
- [<ffffffff8020af60>] default_idle+0x0/0x40
- [<ffffffff8020af60>] default_idle+0x0/0x40
- [<ffffffff8020c981>] ret_from_intr+0x0/0xa
- <EOI>  [<ffffffff80220e60>] lapic_next_event+0x0/0x10
- [<ffffffff8020af89>] default_idle+0x29/0x40
- [<ffffffff8020b00f>] cpu_idle+0x6f/0xe0
 
-> There are also a bunch of antenna selection fixes that never went
-> upstream. These are required for my card to operate well at rates
-> greater than 1Mbit, even when fairly close to the AP.
-> 
-> But aside from these issues, the latest 2.6.24-rc7 seems ok for me. My
-> testing of it is somewhat limited, due to the terrible performance.
-> But I can associate, browse the web and run iperf tests.
-
-I can just agree to this statement, rt73usb works really well (at steady 
-~2.4 MB/s) and rt61pci is the first driver to actually work at all (yes, 
-the same performance issues, but rt61-legacy freezes using wpa2psk; 
-rt2500usb seems to have more problems).
-
-All tests based on plain 2.6.24-rc7-git2 (amd64 and wpa2psk/ CCMP) + the 
-following patches:
-- [PATCH 06/12] rt2x00: Put 802.11 data on 4 byte boundary
-- [PATCH] rt2x00: Corectly initialize rt2500usb MAC
-
-Thanks a lot
-	Stefan Lippers-Hollmann
+Index: linux-2.6.24/drivers/net/wireless/b43/dma.c
+===================================================================
+--- linux-2.6.24.orig/drivers/net/wireless/b43/dma.c	2008-01-25 11:48:31.000000000 +0100
++++ linux-2.6.24/drivers/net/wireless/b43/dma.c	2008-01-25 11:48:34.000000000 +0100
+@@ -1106,7 +1106,7 @@ static int dma_tx_fragment(struct b43_dm
+ {
+ 	const struct b43_dma_ops *ops = ring->ops;
+ 	u8 *header;
+-	int slot;
++	int slot, old_top_slot, old_used_slots;
+ 	int err;
+ 	struct b43_dmadesc_generic *desc;
+ 	struct b43_dmadesc_meta *meta;
+@@ -1116,6 +1116,9 @@ static int dma_tx_fragment(struct b43_dm
+ #define SLOTS_PER_PACKET  2
+ 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
+ 
++	old_top_slot = ring->current_slot;
++	old_used_slots = ring->used_slots;
++
+ 	/* Get a slot for the header. */
+ 	slot = request_slot(ring);
+ 	desc = ops->idx2desc(ring, slot, &meta_hdr);
+@@ -1125,13 +1128,19 @@ static int dma_tx_fragment(struct b43_dm
+ 	err = b43_generate_txhdr(ring->dev, header,
+ 			   skb->data, skb->len, ctl,
+ 			   generate_cookie(ring, slot));
+-	if (unlikely(err))
++	if (unlikely(err)) {
++		ring->current_slot = old_top_slot;
++		ring->used_slots = old_used_slots;
+ 		return err;
++	}
+ 
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 					   sizeof(struct b43_txhdr_fw4), 1);
+-	if (dma_mapping_error(meta_hdr->dmaaddr))
++	if (dma_mapping_error(meta_hdr->dmaaddr)) {
++		ring->current_slot = old_top_slot;
++		ring->used_slots = old_used_slots;
+ 		return -EIO;
++	}
+ 	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
+ 			     sizeof(struct b43_txhdr_fw4), 1, 0, 0);
+ 
+@@ -1149,6 +1158,8 @@ static int dma_tx_fragment(struct b43_dm
+ 	if (dma_mapping_error(meta->dmaaddr)) {
+ 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+ 		if (!bounce_skb) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -ENOMEM;
+ 			goto out_unmap_hdr;
+ 		}
+@@ -1159,6 +1170,8 @@ static int dma_tx_fragment(struct b43_dm
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 		if (dma_mapping_error(meta->dmaaddr)) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -EIO;
+ 			goto out_free_bounce;
+ 		}
