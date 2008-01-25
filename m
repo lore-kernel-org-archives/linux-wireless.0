@@ -1,85 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:2323 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbYA3QTS (ORCPT
+Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:58374 "EHLO
+	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757179AbYAYWvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 11:19:18 -0500
-Received: by an-out-0708.google.com with SMTP id d31so68416and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2008 08:19:14 -0800 (PST)
-Message-ID: <47A0A2F9.3020400@gmail.com> (sfid-20080130_161921_506832_0EE50DF3)
-Date: Wed, 30 Jan 2008 10:16:57 -0600
-From: "Jory A. Pratt" <geekypenguin@gmail.com>
+	Fri, 25 Jan 2008 17:51:04 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 04/14] [rndis_host] Halt device if rndis_bind fails.
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:50:55 +0200
+Message-ID: <20080125225055.11716.51265.stgit@fate.lan> (sfid-20080125_225124_932837_997D9364)
+In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: should we revert the cfg80211 API patches?
-References: <1201708352.4149.21.camel@johannes.berg>
-In-Reply-To: <1201708352.4149.21.camel@johannes.berg>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> John,
->
-> It appears that there's more trouble caused by my cfg80211 band API
-> patch than people are willing to put up with. Tomas has already asked
-> for it to be reverted, and neither Michael (Buesch) nor Stefano want to
-> maintain two driver branches (one "stable" 2.6.25 branch and one
-> "development" "for the future" branch).
->
-> FWIW, I support your decision to not push this particular patch for
-> 2.6.25, it really doesn't fall into the "tested well enough to merge
-> during merge window" category.
->
-> Additionally, since Michael Wu has (privately) announced to stop working
-> on wireless, a number of drivers are effectively unmaintained now and
-> I'm not sure I can quickly fix the breakage that my patch probably
-> caused in those drivers, especially since Michael Wu is the only
-> developer with access to all that hardware.
->
-> To ease the short term pain, we can remove/revert the commits in
-> question (those being 51c4c94e89a2042e8b20d640b49b6b605d71420d,
-> 6854a5291cce341751a7e2e195cc3e97d95afeec and
-> d0776155b288c20cc936bfd87d9a76255f244ed8).
->
-> Maybe I should have waited longer or posted the patches earlier. I
-> didn't post them earlier because I had not wanted to disrupt Intel's
-> iwlwifi work too much knowing that there were patches, and then those
-> patches caused bad breakage with my patch so I had to wait for another
-> Intel patchset fixing a number of bugs they introduced... I'll admit
-> that timing was horrible.
->
-> But, I'll be frank, if the patches are removed/revert I probably won't
-> continue maintaining them. I can't do much with these patches but
-> continually forward port them on top of new driver changes which is
-> boring and useless work. Experience has shown that hardly anybody but me
-> [1] actually tests my patches until I push them into your tree, so
-> continuing to forward port these patches won't actually help them become
-> better but can only make sure they don't completely bitrot into
-> oblivion.
->
-> The only way forward I see if these patches are reverted is that we
-> announce with the reversion that we'll merge them again in N weeks (with
-> N being a reasonably small number, say 4-6) and until then people can
-> test the patches and send me driver updates that I'll incorporate. But I
-> don't see how useful that is vs. just leaving the patches in place and
-> you managing the required driver updates.
->
-> johannes
->
-> [1] the only other people who test it seem to be mostly clueless people
-> who want to get AP mode working and then ask me stupid questions in
-> private... there are exceptions of course
->   
-Reverting the patch is not the answer. Everyone just needs to step up 
-and fix what they can. If maintainers are needed a call needs to be put 
-out to find one.
-The work is in the direction that moves wireless in linux toward that of 
-a windows machine that the users want and need.
+When bind fails after device was initialized, shutdown device properly
+by sending RNDIS_MSG_HALT.
 
--Jory
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+---
+
+ drivers/net/usb/rndis_host.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 42b161c..c686025 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -467,6 +467,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 		struct rndis_query_c	*get_c;
+ 		struct rndis_set	*set;
+ 		struct rndis_set_c	*set_c;
++		struct rndis_halt	*halt;
+ 	} u;
+ 	u32			tmp;
+ 	int			reply_len;
+@@ -517,7 +518,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 				"dev can't take %u byte packets (max %u)\n",
+ 				dev->hard_mtu, tmp);
+ 			retval = -EINVAL;
+-			goto fail_and_release;
++			goto halt_fail_and_release;
+ 		}
+ 		dev->hard_mtu = tmp;
+ 		net->mtu = dev->hard_mtu - net->hard_header_len;
+@@ -539,7 +540,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 			48, (void **) &bp, &reply_len);
+ 	if (unlikely(retval< 0)) {
+ 		dev_err(&intf->dev, "rndis get ethaddr, %d\n", retval);
+-		goto fail_and_release;
++		goto halt_fail_and_release;
+ 	}
+ 	memcpy(net->dev_addr, bp, ETH_ALEN);
+ 
+@@ -555,7 +556,7 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 	retval = rndis_command(dev, u.header);
+ 	if (unlikely(retval < 0)) {
+ 		dev_err(&intf->dev, "rndis set packet filter, %d\n", retval);
+-		goto fail_and_release;
++		goto halt_fail_and_release;
+ 	}
+ 
+ 	retval = 0;
+@@ -563,6 +564,11 @@ static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 	kfree(u.buf);
+ 	return retval;
+ 
++halt_fail_and_release:
++	memset(u.halt, 0, sizeof *u.halt);
++	u.halt->msg_type = RNDIS_MSG_HALT;
++	u.halt->msg_len = ccpu2(sizeof *u.halt);
++	(void) rndis_command(dev, (void *)u.halt);
+ fail_and_release:
+ 	usb_set_intfdata(info->data, NULL);
+ 	usb_driver_release_interface(driver_of(intf), info->data);
+
