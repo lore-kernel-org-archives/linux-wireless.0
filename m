@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:60004 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752226AbYA3K77 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 05:59:59 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/1] mac80211: adjustable number of bits for qdisc pool
-Date: Wed, 30 Jan 2008 12:58:45 +0200
-Message-Id: <12016907253540-git-send-email-ron.rindjunsky@intel.com> (sfid-20080130_110005_648165_6ED8CB76)
-Content-Type: text/plain; charset="us-ascii"
+Received: from vs166246.vserver.de ([62.75.166.246]:55046 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754140AbYAYWRc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 17:17:32 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux 2.6.24-rc7
+Date: Fri, 25 Jan 2008 23:15:09 +0100
+Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801252221.07558.mb@bu3sch.de> <20080125214626.GG14687@tuxdriver.com>
+In-Reply-To: <20080125214626.GG14687@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801252315.10112.mb@bu3sch.de> (sfid-20080125_221743_584512_DEF8AADC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix allows to control the number of bits that qdiscs book keeping can be done
-for with respect to the qdisc pool
+On Friday 25 January 2008 22:46:26 John W. Linville wrote:
+> On Fri, Jan 25, 2008 at 10:21:07PM +0100, Michael Buesch wrote:
+> > On Friday 25 January 2008 22:11:44 Inaky Perez-Gonzalez wrote:
+> > > On Friday 25 January 2008, Michael Buesch wrote:
+> > > > On Friday 25 January 2008 19:34:46 Linus Torvalds wrote:
+> > > > > My attitude is: CPU's that do unaligned accesses right are the *good* 
+> > > > > CPU's. We should encourage them, and put the onus of being crap on the 
+> > > > > ones that are crap, rather than penalizing the ones that aren't.
+> > > > 
+> > > > I absolutely agree. But as this can get fixed with _no_ performance loss
+> > > > at all inside of the firmware (and who if not intel can change stuff
+> > > > in their firmware?), I think this warning is in fact valid.
+> > > 
+> > > Well, you forgot the point that maybe it is not that simple to get such
+> > > a seemingly simple change into the firmware for a long list of reasons.
+> > 
+> > The reasons being?
+> 
+> Firmware certification is expensive.
+> 
+> Plus it is a bit unfair to ask for firmware changes just because the
+> vendor is actually engaged with us.  If this were Broadcom or Zydas
+> firmware we would have little recourse other than to accept it or
+> fix it in the driver or stack.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/wme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Well, we could patch broadcom's firmware ;)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 7bbc793..f12e044 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -25,7 +25,7 @@ const int ieee802_1d_to_ac[8] = { 2, 3, 3, 2, 1, 1, 0, 0 };
- 
- struct ieee80211_sched_data
- {
--	unsigned long qdisc_pool;
-+	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
- 	struct tcf_proto *filter_list;
- 	struct Qdisc *queues[TC_80211_MAX_QUEUES];
- 	struct sk_buff_head requeued[TC_80211_MAX_QUEUES];
+But anyway.
+So what about removing the WARN_ON() and replacing it by
+a conditional memmove then?
+I mean, the wireless hardware I care about already is sane or fixed.
+So if intel doesn't want to support this kind of machines, I'd say in
+the end it is OK and we should not care about it at all. I mean, nobody
+is forced to buy an intel card to use on such a machine.
+
+I must say I don't care much about intel's customers that want to run
+intel wireless in a machine that can't do unaligned access, if intel itself
+doesn't care at all about them. In the end it is _intel's_ performance
+problem and not ours.
+
+The problem with that is that the warning goes away and _future_ drivers
+will probably run into this performance problem and don't know about.
+
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Greetings Michael.
