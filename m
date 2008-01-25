@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:33399 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbYAMTdB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 14:33:01 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: remove unused variable
-Date: Sun, 13 Jan 2008 20:31:55 +0100
-Cc: rt2400-devel@lists.sourceforge.net,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from ra.tuxdriver.com ([70.61.120.52]:3136 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760204AbYAYTDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 14:03:18 -0500
+Date: Fri, 25 Jan 2008 13:34:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-References: <20080113194834.677af663@morte> <200801132014.53522.IvDoorn@gmail.com>
-In-Reply-To: <200801132014.53522.IvDoorn@gmail.com>
+Subject: Re: Linux 2.6.24-rc7
+Message-ID: <20080125183455.GC14687@tuxdriver.com> (sfid-20080125_190323_458934_47E302FD)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251723.58891.mb@bu3sch.de> <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org> <200801251921.48862.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801132031.55857.mb@bu3sch.de> (sfid-20080113_193307_315226_044A6523)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200801251921.48862.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 13 January 2008 20:14:53 Ivo van Doorn wrote:
-> Hi,
-> 
-> > Remove an unused variable that caused a warning while building. Please note
-> > that the pipe obtained there isn't used anywhere else.
-> 
-> This patch is in wireless-2.6 already...
+On Fri, Jan 25, 2008 at 07:21:48PM +0100, Michael Buesch wrote:
 
-No it is not in wireless-2.6.
+> So why remove
+> a sanity check that tells you about bugs in other drivers where it does
+> matter (because they are used on such weird architectures), just because one
+> vendor says "hey, doesn't matter for me"?
 
+This is a good point.  If people were already using a driver on an
+oddball architecture, then we would get _those_ warnings (as we did
+when someone plugged a zd1211 device into their sparc box).  The point
+of the warning is/was to point-out the problem to developers running
+on mainstream architecutres so that they could fix these problems
+rather than foisting them on some poor schmuck years from now trying
+to build an SPARC-based AP.  (Hey, it could happen...)
+
+John
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
