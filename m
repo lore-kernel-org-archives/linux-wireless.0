@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52582 "EHLO mga02.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4241 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755AbYA1MIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 07:08:49 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-Subject: [PATCH 0/12 v2] mac80211/iwlwifi: A-MPDU Tx support
-Date: Mon, 28 Jan 2008 14:07:14 +0200
-Message-Id: <12015220461052-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_122525_500166_CFD2E940)
+	id S1753300AbYAYDDe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 22:03:34 -0500
+Date: Thu, 24 Jan 2008 21:47:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH v2] PS3: gelic: Add wireless support for PS3
+Message-ID: <20080125024725.GB3411@tuxdriver.com> (sfid-20080125_030341_969745_FEEABE20)
+References: <20071213211626.BF8E.MOKUNO@sm.sony.co.jp> <20080124144253.6176.40F06B3A@sm.sony.co.jp> <1201225785.15917.8.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1201225785.15917.8.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches contains implementation for the IEEE802.11n 
-aggregated MPDUs (A-MPDU) MLME. The series handles Tx A-MPDU (initiator party).
+On Thu, Jan 24, 2008 at 08:49:45PM -0500, Dan Williams wrote:
+> On Thu, 2008-01-24 at 14:51 +0900, Masakazu Mokuno wrote:
+> > Hi
+> > 
+> > PS3: gelic: Add wireless support for PS3
+> > 
+> > This is the version 2 of the re-worked (rewritten) version of the
+> > wireless support driver for PS3.  The version 1 of the new driver was
+> > submitted on 13th Dec. 2007 (and the old one was submitted to net-dev ML
+> > in June 2007).
+> > 
+> > Major differences with the old driver are:
+> >   - The new driver has a separate ethX interface from ethernet.
+> >     They share the same MAC address.
+> >   - Thus we can use both ethernet and wireless simultaenously.
+> >   - The new driver returns AP's cipher information by the common IE
+> >     format in the scan information.
+> >   - Cipher selection is done via the common wireless extension way
+> 
+> Looks like all my issues have been addressed.  Thanks!  Lets get this in
+> 2.6.25 :)
+> 
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
-Please notice:
-===============
-As patches "cfg80211 API for channels/bitrates, mac80211 and driver conversion"
-and "nl80211: export hardware bitrate/channel capabilities" are still unstable,
-and cause current code to stop function, this series does not use those patches.
+ACK -- please merge it with the other patches through the powerpc tree.
 
-Notes to this series:
-======================
-This series of patches splits into:
- - patches 1-8 add 802.11n Tx A-MPDU MLME support to mac80211.
- - patches 9-12 demonstrates the use of the above mac80211's MLME through iwl4965 low level driver
+Thanks,
 
-The patches in the series should not be treated as stand alone patches,
-but as a complete MLME according to IEEE802.11n spec, although separation
-to patches by subjects was made for ease of handling.
-
-The patches do _not_ break any existing driver.
-Patches were made (and tested to work) with wireless branch 2.6.24-rc8 (#everything),
-on top of commit 597d23b88aca15dc4be31f051e06a949fd1a497a.
-
-The MLME framework includes the following:
-- A-MPDU MLME (for aggregated Tx per STA/TID)
-- addBA request support.
-- delBA request support (initiator party).
-- qdisc support by STA/TID.
-- Tx rate scaling support (block Ack aware)
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
