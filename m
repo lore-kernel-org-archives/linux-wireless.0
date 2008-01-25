@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53820
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752350AbYAZN10 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54143 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059AbYA2L2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 08:27:26 -0500
-Date: Sat, 26 Jan 2008 05:27:39 -0800 (PST)
-Message-Id: <20080126.052739.66441064.davem@davemloft.net> (sfid-20080126_132730_544533_6020489D)
-To: torvalds@linux-foundation.org
-Cc: mb@bu3sch.de, dcbw@redhat.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
-References: <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org>
-	<200801251930.27022.mb@bu3sch.de>
-	<alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
+	Tue, 29 Jan 2008 06:28:18 -0500
+Subject: Re: Kernel Panic in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <47996701.8000804@lwfinger.net>
+References: <47983B31.4020304@lwfinger.net>
+	 <1201185235.3454.93.camel@johannes.berg>  <47996701.8000804@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J860XtcZEEIwPKsRCo6f"
+Date: Fri, 25 Jan 2008 21:59:17 +0100
+Message-Id: <1201294757.9397.2.camel@johannes.berg> (sfid-20080129_112827_402830_26F1D0B5)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 25 Jan 2008 11:07:47 -0800 (PST)
 
-> 
-> 
-> On Fri, 25 Jan 2008, Michael Buesch wrote:
-> > 
-> > The problem is _not_ the wireless header access, but the alignment of the embedded
-> > protocol stack, if the header does not have a size aligned to 4.
-> > Do we want to clutter the whole networking stack below wireless with
-> > get_unaligned() or attribute(packed) or something like that?
-> 
-> That's what all the other protocols do, isn't it?
+--=-J860XtcZEEIwPKsRCo6f
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-No.
 
-> For example, on PowerPC, NET_IP_ALIGN is 0 - explicitly so that the *dma* 
-> from the card should be aligned, even if that in turn means that the IP 
-> payload itself is then just two-byte aligned rather than word-aligned 
-> (14-byte ethernet headers and all that).
+> >> Code: f6 44 02 08 10 74 12 45 85 ed 78 05 44 39 e9 7f 08 89 8f 24
+> >> RIP  [<ffffffff88202940>] :mac80211:rate_control_pid_tx_status+0x426/0=
+x45a
+> >=20
+> > Damn, I've seen that too but blamed it on my own patching. Stefano, any
+> > idea? IIRC some sta struct was NULL in pid_tx_status.
+>=20
+> The problem is not a NULL in one of the structs, but a runaway loop.
 
-PowerPC handles unaligned accesses transparently, so it is safe
-for them to make this setting.
+Ah, you're right, I remember now that the access was to some random
+rather high address which matches what you observed.
 
-It would not work out on sparc64 for example.
+johannes
 
-What happens in practice is that the drivers provide something
-reasonably aligned for IPV4 headers.  That's why we don't mark the
-IPV4 header structure as packed and that's why we don't have to use
-get_unaligned() to dereference the 32-bit addresses in there.
+--=-J860XtcZEEIwPKsRCo6f
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-So you'll see drivers for chips that have to 64-byte align the
-ethernet header in the RX packet for whatever reason, simply
-copy into a fresh buffer on receive.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Some drivers do this only platforms where unalign accesses trap or
-simply do not work.
+iQIVAwUAR5pNpKVg1VMiehFYAQLCFg/8C7X9XRrAj/dTvzrJ2kMoDU6Fthbg39JI
+mGo2eJ0aPU0qP0qeuOlXEh3wxG+8rmFxhTo2fMhzjUz45YTGmNR49Q1y1F/LNjyo
+TBH4ygp6p8G0odt2SgxiHf87+IZRZ+JSW1Qiwiz8spahpNQGm4Or5mIn4sF/r3oV
+Np5Rc6ng3qHTj2PwYRRGP9e3J8txe8VwmqPnd8wz5HdRNfj18mWE74YoP7QUICIv
+pL75H1mEQtt402NJSm5yO0ny4ljs6515eT8w8C7irjnX/FSHphpV4wLUWywuvg4l
+YwT4Vb2uJLu6yjxeuRy4rQvComBJnX+GOuvq/N+dJUlb0W1K2GgZXKBp3o23qDIe
+iJw8vC0Nj+YrdtuPlqYN3IF+WbX9VjOpEPzPbWiWDDHkJeiFA1rG5Zq7GbxjMPWj
+sKWuA1tuUBtps4wBFiAxv2yyVt9qRLIr969ya9iWwCfx8kbZ1Pec7gaycXgKYkFc
+c6s4ZGTyxYqc3bTcysSanKlL4hdZuFimRkUydF3y62M/PUJ5VEdcRQaJ4r/RYquE
++YFQbY+kDOzCtYRNoN4hsS7B8xQqh+4vIw2gpwyT3VNNmCY6YHZZPqt10SkPpTgo
+YwOsw+dmTxdEH4vdggUU23g5hUn3Mg9nXquOAkMN2f6M2D+0z8aiW4vqWxL75zs9
+xhWIHBtC+WU=
+=7duA
+-----END PGP SIGNATURE-----
+
+--=-J860XtcZEEIwPKsRCo6f--
+
