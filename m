@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:1695 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968AbYAFS0C (ORCPT
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:53569 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755996AbYAYWvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 13:26:02 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so4096177fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 10:26:01 -0800 (PST)
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] mac80211: Add radio led trigger
-Date: Sun, 6 Jan 2008 19:25:44 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200801061410.12862.IvDoorn@gmail.com> <1ba2fa240801061019w2cc28082s9084c00a5d14f810@mail.gmail.com>
-In-Reply-To: <1ba2fa240801061019w2cc28082s9084c00a5d14f810@mail.gmail.com>
+	Fri, 25 Jan 2008 17:51:31 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 09/14] [usbnet] add driver_priv pointer to 'struct usbnet'
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:51:23 +0200
+Message-ID: <20080125225123.11716.92165.stgit@fate.lan> (sfid-20080125_225145_782656_BAFE3FDC)
+In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801061925.44484.IvDoorn@gmail.com> (sfid-20080106_182607_797242_3A66182D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 January 2008, Tomas Winkler wrote:
-> On Jan 6, 2008 3:10 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > Some devices have a seperate LED which indicates if the radio is
-> > enabled or not. This adds a LED trigger to mac80211 where drivers
-> > can hook into when they are interested in radio status changes.
-> >
-> >
-> I wonder how this go together with RF KILL led?
+Add a private data pointer to usbnet for rndis_wlan module to use.
 
-They would be competing I fear, but not all devices have a rfkill button,
-which makes the mac80211 radio led trigger more usefull I think.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-Ivo
+ drivers/net/usb/usbnet.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+index 29ab92e..0b4bf09 100644
+--- a/drivers/net/usb/usbnet.h
++++ b/drivers/net/usb/usbnet.h
+@@ -31,6 +31,7 @@ struct usbnet {
+ 	struct usb_interface	*intf;
+ 	struct driver_info	*driver_info;
+ 	const char		*driver_name;
++	void			*driver_priv;
+ 	wait_queue_head_t	*wait;
+ 	struct mutex		phy_mutex;
+ 	unsigned char		suspend_count;
+
