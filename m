@@ -1,143 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61297 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753856AbYAWSPX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 13:15:23 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Joonwoo Park <joonwpark81@gmail.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: do not schedule tasklet when rcv unused irq
-Date: Wed, 23 Jan 2008 10:15:20 -0800
-Message-Id: <1201112121-22340-6-git-send-email-reinette.chatre@intel.com> (sfid-20080123_181530_372979_0E05860E)
-In-Reply-To: <1201112121-22340-5-git-send-email-reinette.chatre@intel.com>
-References: <1201112121-22340-1-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-2-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-3-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-4-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-5-git-send-email-reinette.chatre@intel.com>
+Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:58395 "EHLO
+	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756977AbYAYWvr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 17:51:47 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 12/14] [rndis_host] Add RNDIS physical medium checking into
+	generic_rndis_bind()
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:51:39 +0200
+Message-ID: <20080125225139.11716.91641.stgit@fate.lan> (sfid-20080125_225152_332720_3D7F1AAA)
+In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joonwoo Park <joonwpark81@gmail.com>
+Add RNDIS physical medium checking into generic_rndis_bind() and also make
+rndis_host to be only bind on every medium except wireless.
 
-The nic controller's scheduler interrupt (CSR_INT_BIT_SCD) indicates
-to the driver that scheduler finished to transmit the frame/frames.
-This bit is not used and the tasklet should thus not be scheduled upon
-its receipt.
-
-Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   12 ++++++++----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   12 ++++++++----
- 4 files changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index e4e4a85..f0a390a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -373,7 +373,7 @@ struct iwl3945_eeprom {
- #define CSR_INT_BIT_HW_ERR       (1 << 29) /* DMA hardware error FH_INT[31] */
- #define CSR_INT_BIT_DNLD         (1 << 28) /* uCode Download */
- #define CSR_INT_BIT_FH_TX        (1 << 27) /* Tx DMA FH_INT[1:0] */
--#define CSR_INT_BIT_MAC_CLK_ACTV (1 << 26) /* NIC controller's clock toggled on/off */
-+#define CSR_INT_BIT_SCD          (1 << 26) /* TXQ pointer advanced */
- #define CSR_INT_BIT_SW_ERR       (1 << 25) /* uCode error */
- #define CSR_INT_BIT_RF_KILL      (1 << 7)  /* HW RFKILL switch GP_CNTRL[27] toggled */
- #define CSR_INT_BIT_CT_KILL      (1 << 6)  /* Critical temp (chip too hot) rfkill */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index ff71c09..ffe1e9d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -465,7 +465,7 @@ struct iwl4965_eeprom {
- #define CSR_INT_BIT_HW_ERR       (1 << 29) /* DMA hardware error FH_INT[31] */
- #define CSR_INT_BIT_DNLD         (1 << 28) /* uCode Download */
- #define CSR_INT_BIT_FH_TX        (1 << 27) /* Tx DMA FH_INT[1:0] */
--#define CSR_INT_BIT_MAC_CLK_ACTV (1 << 26) /* NIC controller's clock toggled on/off */
-+#define CSR_INT_BIT_SCD          (1 << 26) /* TXQ pointer advanced */
- #define CSR_INT_BIT_SW_ERR       (1 << 25) /* uCode error */
- #define CSR_INT_BIT_RF_KILL      (1 << 7)  /* HW RFKILL switch GP_CNTRL[27] toggled */
- #define CSR_INT_BIT_CT_KILL      (1 << 6)  /* Critical temp (chip too hot) rfkill */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1e9e953..ea24e7b 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4759,8 +4759,9 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
- #ifdef CONFIG_IWL3945_DEBUG
- 	if (iwl3945_debug_level & (IWL_DL_ISR)) {
- 		/* NIC fires this, but we don't use it, redundant with WAKEUP */
--		if (inta & CSR_INT_BIT_MAC_CLK_ACTV)
--			IWL_DEBUG_ISR("Microcode started or stopped.\n");
-+		if (inta & CSR_INT_BIT_SCD)
-+			IWL_DEBUG_ISR("Scheduler finished to transmit "
-+				      "the frame/frames.\n");
+ drivers/net/usb/rndis_host.c |   34 +++++++++++++++++++++++++++++++---
+ drivers/net/usb/rndis_host.h |   19 ++++++++++++++++++-
+ 2 files changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 800c9d0..825ff51 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -271,7 +271,8 @@ response_error:
+ 	return -EDOM;
+ }
  
- 		/* Alive notification via Rx interrupt will do the real work */
- 		if (inta & CSR_INT_BIT_ALIVE)
-@@ -4768,7 +4769,7 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
- 	}
- #endif
- 	/* Safely ignore these bits for debug checks below */
--	inta &= ~(CSR_INT_BIT_MAC_CLK_ACTV | CSR_INT_BIT_ALIVE);
-+	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
+-int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
++int
++generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags)
+ {
+ 	int			retval;
+ 	struct net_device	*net = dev->net;
+@@ -287,7 +288,7 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 		struct rndis_set_c	*set_c;
+ 		struct rndis_halt	*halt;
+ 	} u;
+-	u32			tmp;
++	u32			tmp, *phym;
+ 	int			reply_len;
+ 	unsigned char		*bp;
  
- 	/* HW RF KILL switch toggled (4965 only) */
- 	if (inta & CSR_INT_BIT_RF_KILL) {
-@@ -4904,8 +4905,11 @@ static irqreturn_t iwl3945_isr(int irq, void *data)
- 	IWL_DEBUG_ISR("ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
- 		      inta, inta_mask, inta_fh);
+@@ -358,6 +359,28 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ 			dev->driver_info->early_init(dev) != 0)
+ 		goto halt_fail_and_release;
  
-+	inta &= ~CSR_INT_BIT_SCD;
++	/* Check physical medium */
++	reply_len = sizeof *phym;
++	retval = rndis_query(dev, intf, u.buf, OID_GEN_PHYSICAL_MEDIUM,
++			0, (void **) &phym, &reply_len);
++	if(retval != 0)
++		/* OID is optional so don't fail here. */
++		*phym = RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED;	
++	if(flags & FLAG_RNDIS_PHYM_WIRELESS &&
++			*phym != RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
++		dev_err(&intf->dev, "driver requires wireless physical "
++					"medium, but device is not.\n");
++		retval = -ENODEV;
++		goto halt_fail_and_release;
++	}
++	if(flags & FLAG_RNDIS_PHYM_NOT_WIRELESS &&
++			*phym == RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
++		dev_err(&intf->dev, "driver requires non-wireless physical "
++					"medium, but device is wireless.\n");
++		retval = -ENODEV;
++		goto halt_fail_and_release;
++	}
 +
- 	/* iwl3945_irq_tasklet() will service interrupts and re-enable them */
--	tasklet_schedule(&priv->irq_tasklet);
-+	if (likely(inta || inta_fh))
-+		tasklet_schedule(&priv->irq_tasklet);
- unplugged:
- 	spin_unlock(&priv->lock);
+ 	/* Get designated host ethernet address */
+ 	reply_len = ETH_ALEN;
+ 	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
+@@ -403,6 +426,11 @@ fail:
+ }
+ EXPORT_SYMBOL_GPL(generic_rndis_bind);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9f23c3f..2e82af1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5137,8 +5137,9 @@ static void iwl4965_irq_tasklet(struct iwl4965_priv *priv)
- #ifdef CONFIG_IWL4965_DEBUG
- 	if (iwl4965_debug_level & (IWL_DL_ISR)) {
- 		/* NIC fires this, but we don't use it, redundant with WAKEUP */
--		if (inta & CSR_INT_BIT_MAC_CLK_ACTV)
--			IWL_DEBUG_ISR("Microcode started or stopped.\n");
-+		if (inta & CSR_INT_BIT_SCD)
-+			IWL_DEBUG_ISR("Scheduler finished to transmit "
-+				      "the frame/frames.\n");
- 
- 		/* Alive notification via Rx interrupt will do the real work */
- 		if (inta & CSR_INT_BIT_ALIVE)
-@@ -5146,7 +5147,7 @@ static void iwl4965_irq_tasklet(struct iwl4965_priv *priv)
- 	}
- #endif
- 	/* Safely ignore these bits for debug checks below */
--	inta &= ~(CSR_INT_BIT_MAC_CLK_ACTV | CSR_INT_BIT_ALIVE);
-+	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
- 
- 	/* HW RF KILL switch toggled */
- 	if (inta & CSR_INT_BIT_RF_KILL) {
-@@ -5275,8 +5276,11 @@ static irqreturn_t iwl4965_isr(int irq, void *data)
- 	IWL_DEBUG_ISR("ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
- 		      inta, inta_mask, inta_fh);
- 
-+	inta &= ~CSR_INT_BIT_SCD;
++static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
++{
++	return generic_rndis_bind(dev, intf, FLAG_RNDIS_PHYM_NOT_WIRELESS);
++}
 +
- 	/* iwl4965_irq_tasklet() will service interrupts and re-enable them */
--	tasklet_schedule(&priv->irq_tasklet);
-+	if (likely(inta || inta_fh))
-+		tasklet_schedule(&priv->irq_tasklet);
+ void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	struct rndis_halt	*halt;
+@@ -518,7 +546,7 @@ EXPORT_SYMBOL_GPL(rndis_tx_fixup);
+ static const struct driver_info	rndis_info = {
+ 	.description =	"RNDIS device",
+ 	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
+-	.bind =		generic_rndis_bind,
++	.bind =		rndis_bind,
+ 	.unbind =	rndis_unbind,
+ 	.status =	rndis_status,
+ 	.rx_fixup =	rndis_rx_fixup,
+diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
+index 61f1fd8..edc1d4a 100644
+--- a/drivers/net/usb/rndis_host.h
++++ b/drivers/net/usb/rndis_host.h
+@@ -82,6 +82,17 @@ struct rndis_msg_hdr {
+ #define	RNDIS_STATUS_MEDIA_CONNECT	ccpu2(0x4001000b)
+ #define	RNDIS_STATUS_MEDIA_DISCONNECT	ccpu2(0x4001000c)
  
-  unplugged:
- 	spin_unlock(&priv->lock);
--- 
-1.5.3.4
++/* codes for OID_GEN_PHYSICAL_MEDIUM */
++#define	RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED	ccpu2(0x00000000)
++#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN	ccpu2(0x00000001)
++#define	RNDIS_PHYSICAL_MEDIUM_CABLE_MODEM	ccpu2(0x00000002)
++#define	RNDIS_PHYSICAL_MEDIUM_PHONE_LINE	ccpu2(0x00000003)
++#define	RNDIS_PHYSICAL_MEDIUM_POWER_LINE	ccpu2(0x00000004)
++#define	RNDIS_PHYSICAL_MEDIUM_DSL		ccpu2(0x00000005)
++#define	RNDIS_PHYSICAL_MEDIUM_FIBRE_CHANNEL	ccpu2(0x00000006)
++#define	RNDIS_PHYSICAL_MEDIUM_1394		ccpu2(0x00000007)
++#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_WAN	ccpu2(0x00000008)
++#define	RNDIS_PHYSICAL_MEDIUM_MAX		ccpu2(0x00000009)
+ 
+ struct rndis_data_hdr {
+ 	__le32	msg_type;		/* RNDIS_MSG_PACKET */
+@@ -222,6 +233,7 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+ #define OID_802_3_PERMANENT_ADDRESS	ccpu2(0x01010101)
+ #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
+ #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
++#define OID_GEN_PHYSICAL_MEDIUM		ccpu2(0x00010202)
+ 
+ /* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
+ #define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
+@@ -244,10 +256,15 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+ 	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
+ 	RNDIS_PACKET_TYPE_PROMISCUOUS)
+ 
++/* Flags to require specific physical medium type for generic_rndis_bind() */
++#define FLAG_RNDIS_PHYM_NOT_WIRELESS	0x0001
++#define FLAG_RNDIS_PHYM_WIRELESS	0x0002
++
+ 
+ extern void rndis_status(struct usbnet *dev, struct urb *urb);
+ extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
+-extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
++extern int
++generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags);
+ extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
+ extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
+ extern struct sk_buff *
 
