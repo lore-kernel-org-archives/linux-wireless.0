@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:25284 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757422AbYAaWFV (ORCPT
+Received: from web57907.mail.re3.yahoo.com ([68.142.236.100]:40201 "HELO
+	web57907.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752571AbYAYGQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 17:05:21 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so186023nfb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 14:05:20 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: IEEE80211_TXCTL_SEND_AFTER_DTIM
-Date: Thu, 31 Jan 2008 23:04:58 +0100
-Cc: linux-wireless@vger.kernel.org
+	Fri, 25 Jan 2008 01:16:33 -0500
+Date: Thu, 24 Jan 2008 22:16:32 -0800 (PST)
+From: hong zhang <henryzhang62@yahoo.com>
+Subject: Re: does any wifi driver supports 802.11n for access point?
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0801242047u326772b4t66078a0edb052d2a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801312304.58587.IvDoorn@gmail.com> (sfid-20080131_220527_105259_AE8FCB86)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Message-ID: <785147.24297.qm@web57907.mail.re3.yahoo.com> (sfid-20080125_061635_776405_4DD13EBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+How about iwl4965?
+is iwl4965 based on which wifi chip?
 
-I have overlooked the following patch when you submitted it to this list:
-	mac80211: allow easier multicast/broadcast buffering in hardware
+--- Nick Kossifidis <mickflemm@gmail.com> wrote:
 
-But I have a question about it, the flag IEEE80211_TXCTL_SEND_AFTER_DTIM
-indicates that the frame should be send after the beacon because of PS buffering,
-but doesn't that mean the same thing as using the queue id:
-	IEEE80211_TX_QUEUE_AFTER_BEACON
-(Which for rt2x00 resolves to using the ATIM queue...)
+> > 3. Does mac80211 run on atheros chip for access
+> point?
+> > It seems that mac80211 package only supports
+> station.
+> >
+> 
+> Not yet, we 're working on fixing several issues
+> right now.
+> 
+> As for Atheros's 802.11n parts, we still have lot of
+> work to do, even
+> madwifi/binary HAL doesn't support n right now.
+> 
+> 
+> -- 
+> GPG ID: 0xD21DB2DB
+> As you read this post global entropy rises. Have Fun
+> ;-)
+> Nick
+> 
 
-Ivo
+
+
+      ____________________________________________________________________________________
+Be a better friend, newshound, and 
+know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ 
+
