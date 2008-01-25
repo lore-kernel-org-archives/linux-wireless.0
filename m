@@ -1,80 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42079 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789AbYA2RqI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 12:46:08 -0500
-Subject: Re: [PATCH 1/1] mac80211: set assoc flag to bss_conf
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <12014435022755-git-send-email-tomas.winkler@intel.com> (sfid-20080127_141938_114099_DB9B65D9)
-References: <12014435022755-git-send-email-tomas.winkler@intel.com>
-	 (sfid-20080127_141938_114099_DB9B65D9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/L8qeJriFjnfJejx4bt/"
-Date: Tue, 29 Jan 2008 17:14:45 +0100
-Message-Id: <1201623285.4394.37.camel@johannes.berg> (sfid-20080129_174612_442991_2AA15762)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4816 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753953AbYAYVdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 16:33:41 -0500
+Date: Fri, 25 Jan 2008 16:18:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michael Buesch <mb@bu3sch.de>, Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+Message-ID: <20080125211815.GF14687@tuxdriver.com> (sfid-20080125_213347_250275_5598AFD2)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org> <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org> <200801251930.27022.mb@bu3sch.de> <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org> <20080125194807.GD14687@tuxdriver.com> <20080125195037.GE14687@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080125195037.GE14687@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jan 25, 2008 at 02:50:37PM -0500, John W. Linville wrote:
+> On Fri, Jan 25, 2008 at 02:48:07PM -0500, John W. Linville wrote:
+> 
+> > http://kerneltrap.org/mailarchive/linux-netdev/2007/11/24/442496
+> > 
+> > Quoth Herbert Xu:
+> > 
+> > "OK.  Let me clarify this a bit more.  We require at least one
+> > of the following rules to be met:
+> > 
+> > * the IPv4/IPv6 header is aligned by 8 bytes on reception;
+> > * or the platform provides unaligned exception handlers.
+> 
+> > (Hmmm..."aligned by 8 bytes", so our warning and my iwlwifi patch
+> > may still not be right...)
+> 
+> http://kerneltrap.org/mailarchive/linux-netdev/2007/11/25/443558
+> 
+> More from Herbert:
+> 
+> "Sorry I was wrong about the 8 bytes requirement.  Although the
+> IPv6 protocol does try to maintain an 8-byte alignment the Linux
+> stack never does anything that requires that.
+> 
+> So 4 bytes is enough."
+> 
+> Phew!
 
---=-/L8qeJriFjnfJejx4bt/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Alright, here is my whack at it...  The iwl_handle_data_packet_monitor
+bits are untested, as I appear to be too daft to figure-out how to
+exercise those paths.
 
+Anyway, this is mostly just so we can scope the driver change required
+in absence of a firmware change.  Persumably the changes required if
+we were to put such code in mac80211 would be similar.
 
-On Sun, 2008-01-27 at 16:18 +0200, Tomas Winkler wrote:
-> Only BSS_CHANGED_ASSOC was set in the 'changed' bitmask. Assignment  to
-> bss_conf.assoc was absent.
-> This patch assign value to  bss_conf.assoc according the association stat=
-e.
+John
 
-Yup, looks like I missed that, thanks.
+-----
 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+From: John W. Linville <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: move data at CPU to ensure 4-byte alignment for payload
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Ugly, but if the firmware won't cooperate...
 
-> ---
->  net/mac80211/ieee80211_sta.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index d252d09..2c4692b 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -492,6 +492,7 @@ static void ieee80211_set_associated(struct net_devic=
-e *dev,
->  	ifsta->last_probe =3D jiffies;
->  	ieee80211_led_assoc(local, assoc);
-> =20
-> +	sdata->bss_conf.assoc =3D assoc;
->  	ieee80211_bss_info_change_notify(sdata, changed);
->  }
-> =20
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   13 ++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   10 +++++++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 +++++++++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 +++++++++-
+ 4 files changed, 37 insertions(+), 6 deletions(-)
 
---=-/L8qeJriFjnfJejx4bt/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 3a45fe9..06cd28e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -252,6 +252,7 @@ static void iwl3945_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	struct iwl_rx_frame_hdr *rx_hdr = IWL_RX_HDR(pkt);
+ 	struct iwl_rx_frame_end *rx_end = IWL_RX_END(pkt);
+ 	short len = le16_to_cpu(rx_hdr->len);
++	int hdrlen, align;
+ 
+ 	/* We received data from the HW, so stop the watchdog */
+ 	if (unlikely((len + IWL_RX_FRAME_SIZE) > skb_tailroom(rxb->skb))) {
+@@ -275,11 +276,17 @@ static void iwl3945_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 		return;
+ 	}
+ 
+-	skb_reserve(rxb->skb, (void *)rx_hdr->payload - (void *)pkt);
++	hdr = (void *)rx_hdr->payload;
++	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
++	align = hdrlen & 3;
++
++	skb_reserve(rxb->skb, (void *)rx_hdr->payload - (void *)pkt - align);
+ 	/* Set the size of the skb to the size of the frame */
+-	skb_put(rxb->skb, le16_to_cpu(rx_hdr->len));
++	skb_put(rxb->skb, len);
+ 
+-	hdr = (void *)rxb->skb->data;
++        /* align payload on 4-byte boundary if necessary */
++	if (align)
++		memmove((void *)hdr - align, hdr, len);
+ 
+ 	if (iwl_param_hwcrypto)
+ 		iwl_set_decrypted_flag(priv, rxb->skb,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 891f90d..11eb75b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3496,6 +3496,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	__le32 *rx_end;
+ 	unsigned int skblen;
+ 	u32 ampdu_status;
++	int hdrlen, align;
+ 
+ 	if (!include_phy && priv->last_phy_res[0])
+ 		rx_start = (struct iwl4965_rx_phy_res *)&priv->last_phy_res[1];
+@@ -3533,10 +3534,17 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	ampdu_status = le32_to_cpu(*rx_end);
+ 	skblen = ((u8 *) rx_end - (u8 *) & pkt->u.raw[0]) + sizeof(u32);
+ 
++	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
++	align = hdrlen & 3;
++
+ 	/* start from MAC */
+-	skb_reserve(rxb->skb, (void *)hdr - (void *)pkt);
++	skb_reserve(rxb->skb, (void *)hdr - (void *)pkt - align);
+ 	skb_put(rxb->skb, len);	/* end where data ends */
+ 
++	/* align payload on 4-byte boundary if necessary */
++	if (align)
++		memmove(rxb->skb->data, hdr, len);
++
+ 	/* We only process data packets if the interface is open */
+ 	if (unlikely(!priv->is_open)) {
+ 		IWL_DEBUG_DROP_LIMIT
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1a6b0e0..d6018bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3056,7 +3056,9 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+ 				    struct ieee80211_rx_status *stats,
+ 				    u16 phy_flags)
+ {
++	struct ieee80211_hdr *hdr;
+ 	struct iwl_rt_rx_hdr *iwl_rt;
++	int hdrlen, align;
+ 
+ 	/* First cache any information we need before we overwrite
+ 	 * the information provided in the skb from the hardware */
+@@ -3072,8 +3074,14 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
++	/* determine payload alignment adjustment */
++	hdr = data;
++	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control))
++		+ sizeof(*iwl_rt);
++	align = 4 - (hdrlen & 3); /* invert align since already at skb head */
++
+ 	/* copy the frame data to write after where the radiotap header goes */
+-	iwl_rt = (void *)rxb->skb->data;
++	iwl_rt = (void *)rxb->skb->data + align;
+ 	memmove(iwl_rt->payload, data, len);
+ 
+ 	iwl_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 6cd57c2..9ef9d14 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3144,7 +3144,9 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+ 				    struct ieee80211_rx_status *stats,
+ 				    u16 phy_flags)
+ {
++	struct ieee80211_hdr *hdr;
+ 	struct iwl_rt_rx_hdr *iwl_rt;
++	int hdrlen, align;
+ 
+ 	/* First cache any information we need before we overwrite
+ 	 * the information provided in the skb from the hardware */
+@@ -3160,8 +3162,14 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
++	/* determine payload alignment adjustment */
++	hdr = data;
++	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control))
++		+ sizeof(*iwl_rt);
++	align = 4 - (hdrlen & 3); /* invert align since already at skb head */
++
+ 	/* copy the frame data to write after where the radiotap header goes */
+-	iwl_rt = (void *)rxb->skb->data;
++	iwl_rt = (void *)rxb->skb->data + align;
+ 	memmove(iwl_rt->payload, data, len);
+ 
+ 	iwl_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
+-- 
+1.5.3.3
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR59Q9KVg1VMiehFYAQJr9w//RPDUveEYeF+tNpNPupOXnfUJcXxFCD/z
-fLyqdh31BLzYgAdha5Z03sqQqfX0HCVRjwHeVm18PKsLVZv7QE+uceOtNdaBQ9ke
-qTYiz3P2nZlg5geWwcXfVOXGEr8hrv+m+nFaMJKNO14ScZ2GF54T50zi3mFB3My1
-u/lBPAI2wQEzZmjOC4CB4wNjw76sKm1TxctJ2RqxnpXZpU1BpZlhqs9JIoPbxfNN
-IKRWsrNBwJJXwZJcsu6gKCYLwn/WSeeP1Nww+PkX+oS+EedtgcwGeSllujuSQIfk
-0N08kRYQ0Ghrgu7FlMQsTLN44v+lZi2/OaTKNjmAlszuTLMOlmLYdTnC8LZ6C5I/
-xYjUFCwRurCOgH4TplyxfXkJekkyndrihj54nELEWk2V16rEnShjLMD98qjzGAYV
-mOD89cf1yVezfTLni5oDcGiCQGTW7jyD61Q5x6QUic/vnjOBeRNCy5X5l2hSIhzB
-2jbHCchkyGkhyHEzFTAfBXLD4RupRtyGssFzfy38jgyUBpf5YiXMjvpkDk/IlkCF
-IW/Hk+fvE5LSL5E0QqBl1V+U4sqUQmlH+ZOA4HOFyqGVeaKHFFI45dmIFxPNTEs0
-xhgZo1ds/HmC9v0OA12/NDpuCyKoBeHE0EPo05Rdefsxlhrh7DYq1h071leAG2HU
-6SCQ9UzKqhQ=
-=fjdX
------END PGP SIGNATURE-----
-
---=-/L8qeJriFjnfJejx4bt/--
-
+-- 
+John W. Linville
+linville@tuxdriver.com
