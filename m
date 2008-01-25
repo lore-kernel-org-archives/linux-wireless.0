@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:43296 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761362AbYA3W5k (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:20583 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752948AbYAYNPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 17:57:40 -0500
-Date: Wed, 30 Jan 2008 23:57:38 +0100
-From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-Subject: Re: ipw2200 stalls on high load
-Message-ID: <20080130225738.GB2648@Chamillionaire.breakpoint.cc> (sfid-20080130_225745_380211_26BD5C17)
-References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc> <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
+	Fri, 25 Jan 2008 08:15:45 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: fix interrupt while removing driver
+Date: Fri, 25 Jan 2008 14:15:48 +0100
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801251415.48216.hs4233@mail.mn-solutions.de> (sfid-20080125_131549_207131_A08E1318)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Chatre, Reinette | 2008-01-28 10:40:16 [-0800]:
+Previously I've got an interrupt while removing the driver.
 
->On ,Sebastian Siewior wrote:
->
->> Hello,
->> 
->> my wireless connection stalls after like 5 seconds once the
->> downloading performance passes around 600 KiB/sec. I noticed in dmesg
->> the following:
->>> ipw2200: Firmware error detected.  Restarting.
->
->Could you please submit a bug at http://www.bughost.org to enable us to
->track this problem? 
-Sure. #1487 looks very close. The firmware version seems to be different
-as well as the "the driver messsage". Do you want me to open a new one or
-should I follow-up?
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
->Thank you 
->
->Reinette
->
-Regards,
-Sebastian
+Index: wireless-2.6/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/if_cs.c	2008-01-25 13:54:08.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/if_cs.c	2008-01-25 13:54:50.000000000 +0100
+@@ -249,14 +249,14 @@ static irqreturn_t if_cs_interrupt(int i
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+ 	int_cause = if_cs_read16(card, IF_CS_C_INT_CAUSE);
+-	if(int_cause == 0x0) {
++	if (int_cause == 0x0) {
+ 		/* Not for us */
+ 		return IRQ_NONE;
+ 
+ 	} else if (int_cause == 0xffff) {
+ 		/* Read in junk, the card has probably been removed */
+ 		card->priv->surpriseremoved = 1;
+-
++		return IRQ_HANDLED;
+ 	} else {
+ 		if (int_cause & IF_CS_H_IC_TX_OVER)
+ 			lbs_host_to_card_done(card->priv);
+@@ -715,8 +715,8 @@ static void if_cs_release(struct pcmcia_
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+-	pcmcia_disable_device(p_dev);
+ 	free_irq(p_dev->irq.AssignedIRQ, card);
++	pcmcia_disable_device(p_dev);
+ 	if (card->iobase)
+ 		ioport_unmap(card->iobase);
+ 
