@@ -1,152 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7230 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbYAKBGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 20:06:39 -0500
-Subject: Re: [ipw3945-devel] [PATCH 4/5] iwlwifi: iwl3945 eliminate
-	sleepable task queue from context
-From: Zhu Yi <yi.zhu@intel.com>
-To: Joonwoo Park <joonwpark81@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <11998765783953-git-send-email-joonwpark81@gmail.com>
-References: <11998765783953-git-send-email-joonwpark81@gmail.com>
-Content-Type: text/plain
-Date: Fri, 11 Jan 2008 09:06:47 +0800
-Message-Id: <1200013607.3530.128.camel@debian.sh.intel.com> (sfid-20080111_010650_827077_EA034346)
+Received: from mfe1.polimi.it ([131.175.12.23]:46647 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754160AbYAYNeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 08:34:25 -0500
+Date: Fri, 25 Jan 2008 14:24:05 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: stable@kernel.org
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH stable 1/4] b43legacy: fix PIO crash
+Message-ID: <20080125142405.00429ede@morte> (sfid-20080125_133429_314401_ED2964DA)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joonwoo,
+Fix the crash reported below, which seems to happen on bcm4306 rev. 2 devices
+only while using PIO:
 
-We already did something similiar in our code base. Could you please
-take a look at this patch?
+Oops: 0000 [#1] PREEMPT
+Modules linked in: b43(F) rfkill(F) led_class(F) input_polldev(F) arc4 b43legacy mac80211 cfg80211 i915 drm snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device ohci1394 ieee1394 ssb pcmcia snd_intel8x0m ehci_hcd uhci_hcd evdev
 
-http://intellinuxwireless.org/repos/?p=iwlwifi.git;a=commitdiff;h=57aa02255e9d7be5e2494683fc2793bd1d0707e2
+Pid: 0, comm: swapper Tainted: GF	(2.6.24st3 #2)
+EIP: 0060:[<f90f667b>] EFLAGS: 00010002 CPU: 0
+EIP is at b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy]
+EAX: 0000049b EBX: f11f8044 ECX: 00000001 EDX: 00000000
+ESI: f1ff8000 EDI: 00000000 EBP: f11f8040 ESP: c04f4ef4
+ DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+Process swapper (pid: 0, ti=c04f4000 task=c0488300 task.ti=c04b8000)
+Stack: f90f2788 c05009f0 c0500900 000010f7 f1053823 c04f4f24 dfb8e800 00000003
+       f1368000 00000007 00000296 f90f1975 00001000 010c0800 01000000 00000007
+       f90f6391 f11f8000 00000082 c04f4f4a 00000000 00004fd0 10f70000 8c061000
+Call Trace:
+ [<f90f2788>] b43legacy_debugfs_log_txstat+0x48/0xb0 [b43legacy]
+ [<f90f1975>] b43legacy_handle_hwtxstatus+0x75/0x80 [b43legacy]
+ [<f90f6391>] b43legacy_pio_rx+0x201/0x280 [b43legacy]
+ [<f90e4fa3>] b43legacy_interrupt_tasklet+0x2e3/0x870 [b43legacy]
+ [<c0123567>] tasklet_action+0x27/0x60
+ [<c01237b4>] __do_softirq+0x54/0xb0
+ [<c010686b>] do_softirq+0x7b/0xe0
+ [<c01457c0>] handle_level_irq+0x0/0x110
+ [<c01457c0>] handle_level_irq+0x0/0x110
+ [<c0123758>] irq_exit+0x38/0x40
+ [<c0106953>] do_IRQ+0x83/0xd0
+ [<c011812f>] __update_rq_clock+0x4f/0x180
+ [<c0104b4f>] common_interrupt+0x23/0x28
+ [<c011007b>] wakeup_code+0x7b/0xde
+ [<c02b1039>] acpi_processor_idle+0x24a/0x3c9
+ [<c01025c7>] cpu_idle+0x47/0x80
+ [<c04b9ad5>] start_kernel+0x205/0x290
+ [<c04b9360>] unknown_bootoption+0x0/0x1f0
+ =======================
+Code: 0f 00 00 81 fb ff 00 00 00 0f 87 36 01 00 00 8d 04 db 85 ff 8d 6c c6 40 8d 5d 04 0f 85 ef 00 00 00 fe 4e 0e 0f b7 46 0c 8b 53 04 <8b> 4a 50 29 c8 83 e8 52 66 89 46 0c 8b 54 24 14 80 7a 0b 00 74
+EIP: [<f90f667b>] b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy] SS:ESP 0068:c04f4ef4
+Kernel panic - not syncing: Fatal exception in interrupt
 
-Thanks,
--yi
-On Wed, 2008-01-09 at 20:02 +0900, Joonwoo Park wrote:
-> Eleminiate task queuing of iwl_pci_probe, register hw to ieee80211 immediately
-> 
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   66 +++++++++++++++++---------
->  1 files changed, 43 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index f95f226..7e8d8b3 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -6171,27 +6171,9 @@ static void iwl_alive_start(struct iwl_priv *priv)
->  	if (iwl_is_rfkill(priv))
->  		return;
->  
-> -	if (!priv->mac80211_registered) {
-> -		/* Unlock so any user space entry points can call back into
-> -		 * the driver without a deadlock... */
-> -		mutex_unlock(&priv->mutex);
-> -		iwl_rate_control_register(priv->hw);
-> -		rc = ieee80211_register_hw(priv->hw);
-> -		priv->hw->conf.beacon_int = 100;
-> -		mutex_lock(&priv->mutex);
-> -
-> -		if (rc) {
-> -			iwl_rate_control_unregister(priv->hw);
-> -			IWL_ERROR("Failed to register network "
-> -				  "device (error %d)\n", rc);
-> -			return;
-> -		}
-> -
-> -		priv->mac80211_registered = 1;
-> +	iwl_reset_channel_flag(priv);
->  
-> -		iwl_reset_channel_flag(priv);
-> -	} else
-> -		ieee80211_start_queues(priv->hw);
-> +	ieee80211_start_queues(priv->hw);
->  
->  	priv->active_rate = priv->rates_mask;
->  	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
-> @@ -6369,7 +6351,8 @@ static int __iwl_up(struct iwl_priv *priv)
->  
->  	/* clear (again), then enable host interrupts */
->  	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-> -	iwl_enable_interrupts(priv);
-> +	if (priv->mac80211_registered)
-> +		iwl_enable_interrupts(priv);
->  
->  	/* really make sure rfkill handshake bits are cleared */
->  	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-> @@ -6887,10 +6870,21 @@ static void iwl_bg_scan_completed(struct work_struct *work)
->  
->  static int iwl_mac_start(struct ieee80211_hw *hw)
->  {
-> +	int ret;
->  	struct iwl_priv *priv = hw->priv;
->  
->  	IWL_DEBUG_MAC80211("enter\n");
->  
-> +	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-> +			iwl_is_ready(priv), HOST_COMPLETE_TIMEOUT);
-> +
-> +	if (ret == -ERESTARTSYS)
-> +		return ret;
-> +	else if (ret == 0 && !iwl_is_ready(priv)) {
-> +		IWL_ERROR("IWL ready timeout\n");
-> +		return -ETIMEDOUT;
-> +	}
-> +
->  	/* we should be verifying the device is ready to be opened */
->  	mutex_lock(&priv->mutex);
->  
-> @@ -8299,6 +8293,19 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
->  	cancel_work_sync(&priv->beacon_update);
->  }
->  
-> +static int iwl_register_hw(struct iwl_priv *priv)
-> +{
-> +	int err;
-> +	IWL_DEBUG_INFO("register_hw\n");
-> +	iwl_rate_control_register(priv->hw);
-> +	err = ieee80211_register_hw(priv->hw);
-> +	if (!err) {
-> +		priv->hw->conf.beacon_int = 100;
-> +		priv->mac80211_registered = 1;
-> +	}
-> +	return err;
-> +}
-> +
->  static struct attribute *iwl_sysfs_entries[] = {
->  	&dev_attr_antenna.attr,
->  	&dev_attr_channels.attr,
-> @@ -8546,11 +8553,24 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		goto out_pci_alloc;
->  	}
->  
-> +	err = __iwl_up(priv);
-> +	if (err) {
-> +		IWL_ERROR("Could not make up interface : %d\n", err);
-> +		mutex_unlock(&priv->mutex);
-> +		goto out_pci_alloc;
-> +	}
-> +
->  	mutex_unlock(&priv->mutex);
->  
-> -	IWL_DEBUG_INFO("Queing UP work.\n");
-> +	err = iwl_register_hw(priv);
-> +	if (err) {
-> +		iwl_rate_control_unregister(priv->hw);
-> +		IWL_ERROR("Failed to register network "
-> +			  "device (error %d)\n", err);
-> +		goto out_pci_alloc;
-> +	}
->  
-> -	queue_work(priv->workqueue, &priv->up);
-> +	iwl_enable_interrupts(priv);
->  
->  	return 0;
->  
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: linux-2.6.24/drivers/net/wireless/b43legacy/pio.c
+===================================================================
+--- linux-2.6.24.orig/drivers/net/wireless/b43legacy/pio.c
++++ linux-2.6.24/drivers/net/wireless/b43legacy/pio.c
+@@ -486,6 +486,9 @@ void b43legacy_pio_handle_txstatus(struc
+ 	queue = parse_cookie(dev, status->cookie, &packet);
+ 	B43legacy_WARN_ON(!queue);
+ 
++	if (!packet->skb)
++		return;
++
+ 	queue->tx_devq_packets--;
+ 	queue->tx_devq_used -= (packet->skb->len +
+ 				sizeof(struct b43legacy_txhdr_fw3));
 
+
+-- 
+Ciao
+Stefano
