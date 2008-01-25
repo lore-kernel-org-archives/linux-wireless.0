@@ -1,25 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36602
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751602AbYAWDEs (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:60199 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751747AbYAYSmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 22:04:48 -0500
-Date: Tue, 22 Jan 2008 19:04:56 -0800 (PST)
-Message-Id: <20080122.190456.206906647.davem@davemloft.net> (sfid-20080123_030453_049474_5B1F7542)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 'upstream' 2008-01-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080123014521.GG3206@tuxdriver.com>
-References: <20080123014521.GG3206@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 25 Jan 2008 13:42:52 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Linux 2.6.24-rc7
+Date: Fri, 25 Jan 2008 19:41:25 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251921.48862.mb@bu3sch.de> <alpine.LFD.1.00.0801251032330.2979@hp.linux-foundation.org>
+In-Reply-To: <alpine.LFD.1.00.0801251032330.2979@hp.linux-foundation.org>
+MIME-Version: 1.0
+Message-Id: <200801251941.25310.mb@bu3sch.de> (sfid-20080125_184255_311061_2C7D4C5E)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 22 Jan 2008 20:45:21 -0500
+On Friday 25 January 2008 19:34:46 Linus Torvalds wrote:
+> My attitude is: CPU's that do unaligned accesses right are the *good* 
+> CPU's. We should encourage them, and put the onus of being crap on the 
+> ones that are crap, rather than penalizing the ones that aren't.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
+I absolutely agree. But as this can get fixed with _no_ performance loss
+at all inside of the firmware (and who if not intel can change stuff
+in their firmware?), I think this warning is in fact valid.
 
-Pulled and pushed out to net-2.6.25, thanks!
+> In other words, we should use "get_unaligned()".
+
+So we should put get_unaligned() into the whole networking stack below
+wireless and penalize everybody, even gigabit-ethernet?
+
+-- 
+Greetings Michael.
