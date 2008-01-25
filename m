@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:60356 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754427AbYADWQk convert rfc822-to-8bit (ORCPT
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:36881 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752115AbYAYNO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 17:16:40 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Miguel =?utf-8?q?Bot=C3=B3n?= <mboton.lkml@gmail.com>
-Subject: Re: [PATCH] iwlwifi: fix compilation warning in 'iwl-4965.c'
-Date: Fri, 4 Jan 2008 23:15:26 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	yi.zhu@intel.com, linville@tuxdriver.com
-References: <200801042305.55188.mboton@gmail.com>
-In-Reply-To: <200801042305.55188.mboton@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200801042315.26817.mb@bu3sch.de> (sfid-20080104_221643_587519_CFEBCDA7)
+	Fri, 25 Jan 2008 08:14:58 -0500
+Subject: Re: [PATCH 10/14] [rndis_host] Add rndis_early_init function
+	pointer to 'struct rndis_data'.
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: David Brownell <david-b@pacbell.net>
+Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
+	netdev@vger.kernel.org
+In-Reply-To: <200801241710.35528.david-b@pacbell.net>
+References: <20080120001438.25718.96722.stgit@fate.lan>
+	 <200801241710.35528.david-b@pacbell.net>
+Content-Type: text/plain
+Date: Fri, 25 Jan 2008 15:14:50 +0200
+Message-Id: <1201266890.7266.0.camel@localhost> (sfid-20080125_131504_150586_94C56742)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 04 January 2008 23:05:54 Miguel Bot=C3=B3n wrote:
-> This patch fixes a compilation warning in 'iwl-4965.c'.
->=20
-> Signed-off-by: Miguel Bot=C3=B3n <mboton@gmail.com>
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wi=
-reless/iwlwifi/iwl-4965.c
-> index 74999af..92237cd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -3616,7 +3616,7 @@ static void iwl4965_add_radiotap(struct iwl4965=
-_priv *priv,
->  	if (skb_headroom(skb) < sizeof(*iwl4965_rt)) {
->  		if (net_ratelimit())
->  			printk(KERN_ERR "not enough headroom [%d] for "
-> -			       "radiotap head [%d]\n",
-> +			       "radiotap head [%ld]\n",
->  			       skb_headroom(skb), sizeof(*iwl4965_rt));
+On Thu, 2008-01-24 at 17:10 -0800, David Brownell wrote:
+> Could this -- and #11/14 -- instead be generalized a bit,
+> so they're not RNDIS-specific?  At least in name; the
+> only user for now would be the rndis_host code.
+> 
+> The generalization would presumably be "early_init" and
+> "link_change", paired with doc comments reflecting that
+> they're usable by any driver stack built over the usbnet
+> framework core.
+> 
+> There's no point IMO to having generalizable hooks be
+> restricted this way.
 
-I think %zu is the correct and portable integer conversion for a size_t=
- type.
-The kernel implementation seems to support it.
+Sure.
 
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
