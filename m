@@ -1,56 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:62851 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758822AbYAJWc6 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.187]:1624 "EHLO
+	rn-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756994AbYAYTEh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 17:32:58 -0500
-Date: Thu, 10 Jan 2008 14:31:30 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: j@w1.fi, linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: samr <sam@ravnborg.org>, akpm <akpm@linux-foundation.org>
-Subject: [PATCH] hostap: section mismatch warning
-Message-Id: <20080110143130.7efb2460.randy.dunlap@oracle.com> (sfid-20080110_223308_594440_5807BDFC)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 25 Jan 2008 14:04:37 -0500
+Received: by rn-out-0102.google.com with SMTP id i24so259435rng.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2008 11:04:35 -0800 (PST)
+Message-ID: <f6ca9fed0801251104m68ebfe45sd9e54a6a20fbb05d@mail.gmail.com> (sfid-20080125_190457_348894_0B9BF178)
+Date: Fri, 25 Jan 2008 20:04:35 +0100
+From: drago01 <drago01@gmail.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB51@hasmsx412.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
+	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
+	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB51@hasmsx412.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Jan 22, 2008 9:29 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
+>
+>
+> >-----Original Message-----
+> >From: drago01 [mailto:drago01@gmail.com]
+>
+> >Sent: Tuesday, January 22, 2008 10:24 PM
+> >To: Winkler, Tomas
+> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
+> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+> >
+> >On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com>
+> wrote:
+> >>
+> >>
+> >> >-----Original Message-----
+> >> >From: drago01 [mailto:drago01@gmail.com]
+> >> >Sent: Tuesday, January 22, 2008 10:12 PM
+> >> >To: Winkler, Tomas
+> >>
+> >> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
+> >> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+> >> >
+> >> >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
+> >> wrote:
+> >> >>
+> >> >> I believe it's delaying uCode load to mac_start - still need to be
+> >> >> polished.
+> >> >
+> >> >ok, thx for the quick reply.
+> >> >If you have any potential fixes I would be happy to test them ;)
+> >>
+> >> Can you get me the sequence it is happening? RF kill switch is off
+> >> before you power up the laptop or after, during association or in
+> >> unassociated state..etc
+> >> Thanks
+> >
+> >I boot with rf kill off = device on
+> >acciotate using NM
+> >kill the card by pressing the rfkill (ie. setting it to on)
+> >card is dead (like described in my first mail), until I relaod the
+> module
+> >the rfkill switch  does not have any effect at this time.
+>
+> Okay thanks, I'll try to look at it tomorrow
 
-Fix section mismatch by changing variable name to match one of the
-whitelisted (allowable) names for pointing into init data:
-
-WARNING: vmlinux.o(.data+0xce618): Section mismatch: reference to .init.data:prism2_plx_id_table (between 'prism2_plx_drv_id' and 'dev_info')
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/net/wireless/hostap/hostap_plx.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2.6.24-rc7-git1.orig/drivers/net/wireless/hostap/hostap_plx.c
-+++ linux-2.6.24-rc7-git1/drivers/net/wireless/hostap/hostap_plx.c
-@@ -608,7 +608,7 @@ static void prism2_plx_remove(struct pci
- 
- MODULE_DEVICE_TABLE(pci, prism2_plx_id_table);
- 
--static struct pci_driver prism2_plx_drv_id = {
-+static struct pci_driver prism2_plx_driver = {
- 	.name		= "hostap_plx",
- 	.id_table	= prism2_plx_id_table,
- 	.probe		= prism2_plx_probe,
-@@ -618,13 +618,13 @@ static struct pci_driver prism2_plx_drv_
- 
- static int __init init_prism2_plx(void)
- {
--	return pci_register_driver(&prism2_plx_drv_id);
-+	return pci_register_driver(&prism2_plx_driver);
- }
- 
- 
- static void __exit exit_prism2_plx(void)
- {
--	pci_unregister_driver(&prism2_plx_drv_id);
-+	pci_unregister_driver(&prism2_plx_driver);
- }
- 
- 
+Any updates? Can this patch be reerted until the regressions are sorted out?
