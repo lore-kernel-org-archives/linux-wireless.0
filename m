@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3949 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751858AbYAWCCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 21:02:00 -0500
-Date: Tue, 22 Jan 2008 20:44:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-2.6 'fixes' 2008-01-22
-Message-ID: <20080123014439.GF3206@tuxdriver.com> (sfid-20080123_020207_258395_3071973D)
+Received: from vs166246.vserver.de ([62.75.166.246]:55459 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753264AbYAYSX3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 13:23:29 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Linux 2.6.24-rc7
+Date: Fri, 25 Jan 2008 19:21:48 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251723.58891.mb@bu3sch.de> <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
+In-Reply-To: <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200801251921.48862.mb@bu3sch.de> (sfid-20080125_182332_613640_CC361FC0)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Friday 25 January 2008 17:43:09 Linus Torvalds wrote:
+> 
+> On Fri, 25 Jan 2008, Michael Buesch wrote:
+> > 
+> > If we are talking about what's sane or not...
+> > It's trivial to fix this in the firmware, like sane vendors like
+> > Broadcom do.
+> 
+> You just showed your total disregard for any sanity by calling broadcom 
+> "sane".
 
-Here is a NULL pointer avoidance fix for iwlwifi that would be nice
-to have in 2.6.24 if possible.
+The Broadcom firmware _is_ mostly sane. That's what I am saying.
+I wasn't talking about Broadcom's support or anything else.
 
-Thanks!
+> > Architectures that can't do unaligned access are heavily used in
+> > wireless embedded routers. So we are not going to pay a huge
+> > price there so just one vendor doesn't have to fix his firmware.
+> 
+> .. and you also showed that you didn't even read my email and the options 
+> I outlined. The fact is, the Intel wireless chipset only works with x86 
+> CPU's. There is absolutely zero "price" on crap CPU's, because they are 
+> simply not relevant to this driver.
 
-John
+I'm not sure what's so hard about adding this trivial fix to the firmware.
+The _fact_ that this warning triggered for lots of drivers means that
+developers are not aware of the problem. So why should we go on hiding bugs
+that are _trivial_ to fix?
 
----
+I absolutely hate the attitude "The problem does not happen on most
+of the stuff intel uses, so they don't need to fix this". So, I also don't
+need to fix bugs in code I wrote, just because I don't have such use
+scenario? That would be great. I'd know thousands of lines of b43 code
+that I'd like to immediately remove then.
+That's just not how it works in the real world.
 
-Individual patch available here:
+We should write the kernel and drivers as portable as possible. We left the
+old days when linux only ran on an i386. ;)
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes
+And to say it again, this is really really trivial to fix. So why remove
+a sanity check that tells you about bugs in other drivers where it does
+matter (because they are used on such weird architectures), just because one
+vendor says "hey, doesn't matter for me"?
 
----
+Adding the check to the driver is not an option, because most driver developers
+are not aware of the issue. So they would not add this. They would just run
+into weird issues and waste time debugging it.
 
-The following changes since commit 889c94a14e38e749c8060f597ee7825ea0764229:
-  Johann Felix Soden (1):
-        Fix file references in documentation and Kconfig
+If this was a hard to fix problem which would require changing lots of things,
+ok. That would be OK to remove the sanity check then. But that's not the case.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes 
-
-Reinette Chatre (1):
-      iwlwifi: fix possible read attempt on ucode that is not available
-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++++
- 2 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1a6b0e0..0b3ec7e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6342,6 +6342,11 @@ static int __iwl_up(struct iwl_priv *priv)
- 		return 0;
- 	}
- 
-+	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
-+		IWL_ERROR("ucode not available for device bringup\n");
-+		return -EIO;
-+	}
-+
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
- 
- 	rc = iwl_hw_nic_init(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 6cd57c2..15a45f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6698,6 +6698,11 @@ static int __iwl_up(struct iwl_priv *priv)
- 		return 0;
- 	}
- 
-+	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
-+		IWL_ERROR("ucode not available for device bringup\n");
-+		return -EIO;
-+	}
-+
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
- 
- 	rc = iwl_hw_nic_init(priv);
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
