@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58728 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836AbYA0HQj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2008 02:16:39 -0500
-Message-ID: <479C2FB0.7080700@garzik.org> (sfid-20080127_071643_684896_D55846C5)
-Date: Sun, 27 Jan 2008 02:16:00 -0500
-From: Jeff Garzik <jeff@garzik.org>
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36401 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754352AbYAYBUW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 20:20:22 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 06/14] [usbnet] Use wlan device name for RNDIS wireless devices
+Date: Thu, 24 Jan 2008 16:56:40 -0800
+Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
+	netdev@vger.kernel.org
+References: <20080120001415.25718.1762.stgit@fate.lan>
+In-Reply-To: <20080120001415.25718.1762.stgit@fate.lan>
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	mb@bu3sch.de, dcbw@redhat.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-References: <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org> <20080125194807.GD14687@tuxdriver.com> <alpine.LFD.1.00.0801251223590.2979@hp.linux-foundation.org> <20080126.053736.130683952.davem@davemloft.net> <alpine.LFD.1.00.0801262229300.3222@www.l.google.com>
-In-Reply-To: <alpine.LFD.1.00.0801262229300.3222@www.l.google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801241656.40667.david-b@pacbell.net> (sfid-20080125_012045_245802_9F3C1736)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds wrote:
-> But we shouldn't make up stupid rules like "network drivers *have* to 
-> align packets correctly", simply because such rules may not make sense to 
-> the driver writer. If the hardware simply cannot do it, or has some 
-> horrible performance behaviour when it does so, it's stupid to tell a 
-> driver that it has to do it.
+On Saturday 19 January 2008, Jussi Kivilinna wrote:
+> Use wlan device name for RNDIS wireless devices.
+> 
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
 
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
-<shrug>  seems like it should be possible to have an arch 
-copy-and-align-if-necessary hook at the point of packet reception 
-(netif_rx or netif_receive_skb).
-
-And it would certainly be a nice cleanup to move all those driver 
-implementations of rx_copybreak into common code.
-
-But ultimately the driver knows the hardware (alignment requirements, RX 
-skb allocation details) best, so by definition the low-level driver must 
-communicate that information /somehow/.
-
-That data may be communicated implicitly, sure:  maybe the 
-aforementioned arch hook could simply look at the alignment of the skb's 
-data, and make decision based on that (the driver still, by definition, 
-ultimately controls RX skb allocation, alignment, and DMA boundaries and 
-mappings)
-
-It would be nice to stop maintaining code like the following in 
-drivers/net/tulip/tulip_core.c:
-
-> /* Set the copy breakpoint for the copy-only-tiny-buffer Rx structure. */
-> #if defined(__alpha__) || defined(__arm__) || defined(__hppa__) \
->         || defined(CONFIG_SPARC) || defined(__ia64__) \
->         || defined(__sh__) || defined(__mips__)
-> static int rx_copybreak = 1518;
-> #else
-> static int rx_copybreak = 100;
-> #endif
-
-The driver passes a lot of information implicitly to the net stack 
-simply via its "style" of allocation and mapping.
-
-Its really a question of where you want to pay the cost of unaligned 
-accesses, and how much is too much.  If the data is going to be memcpy'd 
-to userspace or another buffer almost immediately, maybe we don't even 
-care, even on non-x86.
-
-Never know until you bench, I guess...
-
-	Jeff
+> ---
+> 
+>  drivers/net/usb/usbnet.c |    3 +++
+>  drivers/net/usb/usbnet.h |    2 ++
+>  2 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+> index 8ed1fc5..a2a2d5e 100644
+> --- a/drivers/net/usb/usbnet.c
+> +++ b/drivers/net/usb/usbnet.c
+> @@ -1204,6 +1204,9 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+>  		if ((dev->driver_info->flags & FLAG_ETHER) != 0
+>  				&& (net->dev_addr [0] & 0x02) == 0)
+>  			strcpy (net->name, "eth%d");
+> +		/* WLAN devices should always be named "wlan%d" */
+> +		if ((dev->driver_info->flags & FLAG_WLAN) != 0)
+> +			strcpy(net->name, "wlan%d");
+>  
+>  		/* maybe the remote can't receive an Ethernet MTU */
+>  		if (net->mtu > (dev->hard_mtu - net->hard_header_len))
+> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+> index 1fae434..29ab92e 100644
+> --- a/drivers/net/usb/usbnet.h
+> +++ b/drivers/net/usb/usbnet.h
+> @@ -87,6 +87,8 @@ struct driver_info {
+>  #define FLAG_ETHER	0x0020		/* maybe use "eth%d" names */
+>  
+>  #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
+> +#define FLAG_WLAN	0x0080		/* use "wlan%d" names */
+> +
+>  
+>  	/* init device ... can sleep, or cause probe() failure */
+>  	int	(*bind)(struct usbnet *, struct usb_interface *);
+> 
 
 
