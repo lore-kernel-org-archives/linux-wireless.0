@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56764 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760409AbYAKRSE (ORCPT
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36428 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754490AbYAYBUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 12:18:04 -0500
-Message-ID: <4787A4AB.5060601@lwfinger.net> (sfid-20080111_171813_368010_DD6E1D3C)
-Date: Fri, 11 Jan 2008 10:17:31 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 24 Jan 2008 20:20:25 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 09/14] [usbnet] add driver_priv pointer to 'struct usbnet'
+Date: Thu, 24 Jan 2008 16:59:36 -0800
+Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
+	netdev@vger.kernel.org
+References: <20080120001432.25718.30378.stgit@fate.lan>
+In-Reply-To: <20080120001432.25718.30378.stgit@fate.lan>
 MIME-Version: 1.0
-To: Martin Marques <martin@marquesminen.com.ar>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RFT] b43: Add support for new firmware
-References: <200801102046.56979.mb@bu3sch.de> <47879BE4.7040108@lwfinger.net> <47879CBD.8080403@marquesminen.com.ar>
-In-Reply-To: <47879CBD.8080403@marquesminen.com.ar>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801241659.36850.david-b@pacbell.net> (sfid-20080125_012046_965708_0B54759A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Marques wrote:
+On Saturday 19 January 2008, Jussi Kivilinna wrote:
+> Add a private data pointer to usbnet for rndis_wext module to use.
 > 
-> Sorry if it's a change of subject, but what does the flashing caps hang
-> mean? It has happend to me a lot when trying to run 3D apps.
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-AFAIK, it indicates an error so severe that the kernel has no chance to recover. Examples might be
-stack underflow or a page fault while accessing the stack.
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
-Your crashes when running 3D apps is likely a bug in the driver for your graphics adapter. Are you
-using a binary-only driver? If so, complain to the manufacturer. If it is an open-source driver,
-then a note to the Linux Kernel Mailing List would be appropriate. You should describe your kernel,
-configuration, etc. and list the 3D app that causes the problem.
+> ---
+> 
+>  drivers/net/usb/usbnet.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+> index 29ab92e..0b4bf09 100644
+> --- a/drivers/net/usb/usbnet.h
+> +++ b/drivers/net/usb/usbnet.h
+> @@ -31,6 +31,7 @@ struct usbnet {
+>  	struct usb_interface	*intf;
+>  	struct driver_info	*driver_info;
+>  	const char		*driver_name;
+> +	void			*driver_priv;
+>  	wait_queue_head_t	*wait;
+>  	struct mutex		phy_mutex;
+>  	unsigned char		suspend_count;
+> 
 
-Larry
+
