@@ -1,113 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:11107 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYAGUYl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:24:41 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so8702917fkz.5
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2008 12:24:39 -0800 (PST)
-Date: Mon, 7 Jan 2008 21:23:44 +0100
-From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
-	<ariveira@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from ra.tuxdriver.com ([70.61.120.52]:4243 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752482AbYAYUDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 15:03:41 -0500
+Date: Fri, 25 Jan 2008 14:48:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michael Buesch <mb@bu3sch.de>, Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
 Subject: Re: Linux 2.6.24-rc7
-Message-ID: <20080107212344.1372cc47@Varda> (sfid-20080107_202449_728880_6FDB633F)
-In-Reply-To: <200801071830.51895.mb@bu3sch.de>
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
-	<200801071724.03936.mb@bu3sch.de>
-	<20080107175248.7b0e143f@Varda>
-	<200801071830.51895.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Message-ID: <20080125194807.GD14687@tuxdriver.com> (sfid-20080125_200356_447491_362CD8E1)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org> <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org> <200801251930.27022.mb@bu3sch.de> <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Mon, 7 Jan 2008 18:30:51 +0100
-Michael Buesch <mb@bu3sch.de> escribi=C3=B3:
+On Fri, Jan 25, 2008 at 11:07:47AM -0800, Linus Torvalds wrote:
+> 
+> 
+> On Fri, 25 Jan 2008, Michael Buesch wrote:
+> > 
+> > The problem is _not_ the wireless header access, but the alignment of the embedded
+> > protocol stack, if the header does not have a size aligned to 4.
+> > Do we want to clutter the whole networking stack below wireless with
+> > get_unaligned() or attribute(packed) or something like that?
+> 
+> That's what all the other protocols do, isn't it?
+> 
+> For example, on PowerPC, NET_IP_ALIGN is 0 - explicitly so that the *dma* 
+> from the card should be aligned, even if that in turn means that the IP 
+> payload itself is then just two-byte aligned rather than word-aligned 
+> (14-byte ethernet headers and all that).
 
-> On Monday 07 January 2008 17:52:48 Alejandro Riveira Fern=C3=A1ndez w=
-rote:
-> > El Mon, 7 Jan 2008 17:24:03 +0100
-> > Michael Buesch <mb@bu3sch.de> escribi=C3=B3:
-> >=20
-> >                                                                    =
-                 =20
-> > >=20
-> > > Can you post the lines above this?
-> > > This might be a WARN_ON_ONCE() triggering, for which fixes are on=
- their way into
-> > > the wireless-2.6 tree.
-> >=20
-> >  This?
-> >=20
-> >=20
-> > [   37.043990] WARNING: at /home/alex/kernel/linux-2.6/net/mac80211=
-/rx.c:1486 __ieee80211_rx()=20
-> > [   37.043996] Pid: 0, comm: swapper Not tainted 2.6.24-rc7 #3     =
-                                                         =20
-> > [   37.043998]                                                     =
-                                                         =20
-> > [   37.043999] Call Trace:                                         =
-                                                         =20
-> > [   37.044001]  <IRQ>  [<ffffffff80227fe3>] enqueue_task+0x13/0x30 =
-                                                         =20
-> > [   37.044040]  [<ffffffff88178cbe>] :mac80211:__ieee80211_rx+0xc7e=
-/0xd30                                                   =20
-> > [   37.044044]  [<ffffffff80228062>] activate_task+0x32/0x50       =
-                                                         =20
-> > [   37.044073]  [<ffffffff8816a28b>] :mac80211:ieee80211_tasklet_ha=
-ndler+0xbb/0x120                                         =20
-> > [   37.044086]  [<ffffffff80238d08>] tasklet_action+0x48/0xb0      =
-                                                         =20
-> > [   37.044091]  [<ffffffff80238c09>] __do_softirq+0x69/0xe0        =
-                                                         =20
-> > [   37.044097]  [<ffffffff8020ce2c>] call_softirq+0x1c/0x30        =
-                                                         =20
-> > [   37.044101]  [<ffffffff8020efe5>] do_softirq+0x35/0x90          =
-                                                         =20
-> > [   37.044105]  [<ffffffff80238aa5>] irq_exit+0x95/0xa0            =
-                                                         =20
-> > [   37.044108]  [<ffffffff8020f0c0>] do_IRQ+0x80/0x100             =
-                                                         =20
-> > [   37.044111]  [<ffffffff8020a840>] default_idle+0x0/0x40         =
-                                                         =20
-> > [   37.044115]  [<ffffffff8020c181>] ret_from_intr+0x0/0xa         =
-                                                         =20
-> > [   37.044117]  <EOI>  [<ffffffff8020a869>] default_idle+0x29/0x40 =
-                                                         =20
-> > [   37.044130]  [<ffffffff8020a8f5>] cpu_idle+0x75/0xc0            =
-                                                         =20
-> > [   37.044146]                                                     =
-                                                         =20
->=20
->=20
-> Can you check if that is the
-> WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
-> in rx.c line 1486?
-=20
- How can I check? The source code I build does indeed have the line
- you quoted on net/mac80211/rx.c:1486 Is that what you are asking for?
-=20
- WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
+http://kerneltrap.org/mailarchive/linux-netdev/2007/11/24/442496
 
+Quoth Herbert Xu:
 
-=20
-=20
+"OK.  Let me clarify this a bit more.  We require at least one
+of the following rules to be met:
 
+* the IPv4/IPv6 header is aligned by 8 bytes on reception;
+* or the platform provides unaligned exception handlers.
 
-> If that is the one, then fixes are already on their way upstream.
-> Ignore the harmless warning for now.
- =20
- Thanks for your time
+So if your platform violates both rules then it won't work with
+the IP stack, simple as that.  Fortunately I don't think such a
+platform exists currently on Linux."
 
+That puts mac80211 in an awkward position.  It is not architecture
+code, so it can't make any assumptions about what is or isn't OK.
+So, we need to present aligned data to the network stack.
 
+We could put the alignment onus on mac80211, but this has proven to be
+very solvable at (near?) zero cost by all the other drivers.  I suppose
+we could put code in mac80211 to check/correct the alignment anyway
+and hope that the cost of such checking is small enough not to matter
+as long as drivers are passing aligned data anyway.  But that seems
+a bit silly, when at least so far only this one driver has balked at
+doing the right thing.
 
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm working on some iwlwifi patches to check/correct alignment.
+
+(Hmmm..."aligned by 8 bytes", so our warning and my iwlwifi patch
+may still not be right...)
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
