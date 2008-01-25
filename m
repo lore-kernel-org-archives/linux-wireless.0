@@ -1,49 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:40289 "HELO
-	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1761403AbYAYXJ1 (ORCPT
+Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:53569 "EHLO
+	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756316AbYAYWvZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 18:09:27 -0500
-From: David Brownell <david-b@pacbell.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH 00/14][v3]: Driver for Wireless RNDIS USB devices.
-Date: Fri, 25 Jan 2008 15:09:24 -0800
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bjd@jooz.net
-References: <20080125225032.11716.77713.stgit@fate.lan>
+	Fri, 25 Jan 2008 17:51:25 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 08/14] [rndis_host] export functions
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:51:17 +0200
+Message-ID: <20080125225117.11716.70766.stgit@fate.lan> (sfid-20080125_225144_112515_87DE816C)
 In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801251509.24377.david-b@pacbell.net> (sfid-20080125_230931_895463_00B746F1)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 25 January 2008, Jussi Kivilinna wrote:
-> Hello,
-> 
-> Here is the third try on wireless RNDIS patchset.
-> 
-> Patches 1-9 are from second patchset (with name change rndis_wext -> rndis_wlan
-> in comments where needed):
->  1. Fix sparse warning: returning void valued expression
->  2. [cdc_ether] Hardwire CDC descriptors when missing
->  3. [rndis_host] Use 1KB buffer in rndis_unbind
->  4. [rndis_host] Halt device if rndis_bind fails
->  5. [rndis_host] Fix rndis packet filter flags
->  6. [usbnet] Use wlan device name for RNDIS wireless devices
->  7. [rndis_host] Split up rndis_host.c
->  8. [rndis_host] export functions
->  9. [usbnet] add driver_priv pointer to 'struct usbnet'
+Export rndis_host functions and also rename rndis_bind() to
+generic_rndis_bind() for modules using rndis_host as base.
 
-If they're the same, my ack (as maintainer for that infrastructure
-and, for now, rndis_host) still stands.  I won't look at them again.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
+ drivers/net/usb/rndis_host.c |   20 +++++++++++++-------
+ drivers/net/usb/rndis_host.h |    9 +++++++++
+ 2 files changed, 22 insertions(+), 7 deletions(-)
 
-> Changed patches 10-14:
-> 10. [rndis_host] Add early_init function pointer to 'struct rndis_data'.
-> 11. [rndis_host] Add link_change function pointer to 'struct rndis_data'.
-> 12. [rndis_host] Add RNDIS physical medium checking into generic_rndis_bind()
-> 13. Move usbnet.h and rndis_host.h to include/linux/usb
-> 14. Add new driver 'rndis_wlan' for wireless RNDIS devices.
-> 
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 29d7e3b..1d6bf0a 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -60,13 +60,14 @@
+  * RNDIS notifications from device: command completion; "reverse"
+  * keepalives; etc
+  */
+-static void rndis_status(struct usbnet *dev, struct urb *urb)
++void rndis_status(struct usbnet *dev, struct urb *urb)
+ {
+ 	devdbg(dev, "rndis status urb, len %d stat %d",
+ 		urb->actual_length, urb->status);
+ 	// FIXME for keepalives, respond immediately (asynchronously)
+ 	// if not an RNDIS status, do like cdc_status(dev,urb) does
+ }
++EXPORT_SYMBOL_GPL(rndis_status);
+ 
+ /*
+  * RPC done RNDIS-style.  Caller guarantees:
+@@ -78,7 +79,7 @@ static void rndis_status(struct usbnet *dev, struct urb *urb)
+  * Call context is likely probe(), before interface name is known,
+  * which is why we won't try to use it in the diagnostics.
+  */
+-static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
++int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
+ {
+ 	struct cdc_state	*info = (void *) &dev->data;
+ 	int			master_ifnum;
+@@ -187,6 +188,7 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
+ 	dev_dbg(&info->control->dev, "rndis response timeout\n");
+ 	return -ETIMEDOUT;
+ }
++EXPORT_SYMBOL_GPL(rndis_command);
+ 
+ /*
+  * rndis_query:
+@@ -253,7 +255,7 @@ response_error:
+ 	return -EDOM;
+ }
+ 
+-static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
++int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	int			retval;
+ 	struct net_device	*net = dev->net;
+@@ -377,8 +379,9 @@ fail:
+ 	kfree(u.buf);
+ 	return retval;
+ }
++EXPORT_SYMBOL_GPL(generic_rndis_bind);
+ 
+-static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
++void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ {
+ 	struct rndis_halt	*halt;
+ 
+@@ -393,11 +396,12 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ 
+ 	usbnet_cdc_unbind(dev, intf);
+ }
++EXPORT_SYMBOL_GPL(rndis_unbind);
+ 
+ /*
+  * DATA -- host must not write zlps
+  */
+-static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
++int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
+ {
+ 	/* peripheral may have batched packets to us... */
+ 	while (likely(skb->len)) {
+@@ -439,8 +443,9 @@ static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
+ 	/* caller will usbnet_skb_return the remaining packet */
+ 	return 1;
+ }
++EXPORT_SYMBOL_GPL(rndis_rx_fixup);
+ 
+-static struct sk_buff *
++struct sk_buff *
+ rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
+ {
+ 	struct rndis_data_hdr	*hdr;
+@@ -485,12 +490,13 @@ fill:
+ 	/* FIXME make the last packet always be short ... */
+ 	return skb;
+ }
++EXPORT_SYMBOL_GPL(rndis_tx_fixup);
+ 
+ 
+ static const struct driver_info	rndis_info = {
+ 	.description =	"RNDIS device",
+ 	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
+-	.bind =		rndis_bind,
++	.bind =		generic_rndis_bind,
+ 	.unbind =	rndis_unbind,
+ 	.status =	rndis_status,
+ 	.rx_fixup =	rndis_rx_fixup,
+diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
+index 1386a17..61f1fd8 100644
+--- a/drivers/net/usb/rndis_host.h
++++ b/drivers/net/usb/rndis_host.h
+@@ -244,5 +244,14 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+ 	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
+ 	RNDIS_PACKET_TYPE_PROMISCUOUS)
+ 
++
++extern void rndis_status(struct usbnet *dev, struct urb *urb);
++extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
++extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
++extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
++extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
++extern struct sk_buff *
++rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags);
++
+ #endif	/* __RNDIS_HOST_H */
+ 
+
