@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:41344 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751451AbYAOTWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jan 2008 14:22:48 -0500
-Date: Tue, 15 Jan 2008 20:15:38 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Add support for new firmware
-Message-ID: <20080115201538.5e4347f9@morte> (sfid-20080115_192251_865184_44AC7D2E)
-In-Reply-To: <1200421662.17542.32.camel@dv>
-References: <200801131420.52995.mb@bu3sch.de>
-	<1200421662.17542.32.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from web57913.mail.re3.yahoo.com ([68.142.236.106]:47785 "HELO
+	web57913.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755069AbYAYP6L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 10:58:11 -0500
+Date: Fri, 25 Jan 2008 07:58:06 -0800 (PST)
+From: hong zhang <henryzhang62@yahoo.com>
+Subject: Re: does any wifi driver supports 802.11n for access point?
+To: Richard Scherping <richard@scherping.de>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <47999F51.6040403@scherping.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <596875.96052.qm@web57913.mail.re3.yahoo.com> (sfid-20080125_155815_358486_72DDECAE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 15 Jan 2008 13:27:42 -0500
-Pavel Roskin <proski@gnu.org> wrote:
+Richard,
 
-> I have finally found some time and hardware to test it, but the tarball
-> is overwhelming at its 186M.  And the worst thing, the server
-> disconnected after 30M and appears to be down right now.  P.S. It's up,
-> ETA is 48 minutes.
-> 
-> There were two files there.  I hope either is fine.  I'm trying to
-> download WRT150NV11_v1.51.3_ETSI.tgz
-> 
-> Cannot we petition Linksys to put wl_ap.o outside the tarball?  Or maybe
-> Broadcom could do it?
+Because current open source mdwifi and mac80211 do not
+support atheros 802.11n chip yet.
+Does Atheros provide 802.11n driver for its 802.11n
+chip? Where does Dlink get 802.11n atheros driver for
+its aceess point products?
 
-Good luck. ;) The only long-term lasting solution I see is to put more
-effort on an open firmware. The instruction set has been figured out, we
-just lack people and time there.
+----henry
 
-> Do you know that the Subversion repository of fwcutter has no files at
-> all?  I mean svn://svn.berlios.de/bcm43xx/trunk
-> 
-> Yes, I will try --unsupported, with version 009.
+--- Richard Scherping <richard@scherping.de> wrote:
 
-fwcutter development now happens here:
-http://bu3sch.de/gitweb?p=b43-tools.git;a=summary
+> hong zhang schrieb:
+> > How about iwl4965?
+> > is iwl4965 based on which wifi chip?
+>=20
+> iwl4965 is for Intel=EF=BF=BD Wireless WiFi Link 4965AGN
+>
+(http://www.intel.com/network/connectivity/products/wireless/wireless_n=
+/overview.htm)
+> and works quite well. I have tested version 1.1.17
+> of the driver successfully connecting to a
+> Atheros-based 11n access point by D-Link and reached
+> about 80 MBit/s UDP netto.
+>=20
+> Richard
+>=20
 
-Maybe we should add this along with git URLs on linuxwireless.org.
 
 
---
-Ciao
-Stefano
+      _________________________________________________________________=
+___________________
+Looking for last minute shopping deals? =20
+=46ind them fast with Yahoo! Search.  http://tools.search.yahoo.com/new=
+search/category.php?category=3Dshopping
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
