@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:41236 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756423AbYAYVWo (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:49120 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753606AbYAYRFN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 16:22:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-Subject: Re: Linux 2.6.24-rc7
-Date: Fri, 25 Jan 2008 22:21:07 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251941.25310.mb@bu3sch.de> <200801251311.45392.inaky@linux.intel.com>
-In-Reply-To: <200801251311.45392.inaky@linux.intel.com>
+	Fri, 25 Jan 2008 12:05:13 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801252221.07558.mb@bu3sch.de> (sfid-20080125_212247_424393_1B622373)
+	charset="us-ascii"
+Subject: RE: 2.6.24-rc8: iwl3945 gets stuck
+Date: Fri, 25 Jan 2008 09:04:29 -0800
+Message-ID: <D936D925018D154694D8A362EEB08920037FFC19@orsmsx416.amr.corp.intel.com> (sfid-20080125_170518_957528_4A5B3E3E)
+In-Reply-To: <4797994C.1090900@t-online.de>
+References: <4797994C.1090900@t-online.de>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Harald Dunkel" <harald.dunkel@t-online.de>,
+	<linux-wireless@vger.kernel.org>
+Cc: <linville@tuxdriver.com>, <dhazelton@enter.net>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 25 January 2008 22:11:44 Inaky Perez-Gonzalez wrote:
-> On Friday 25 January 2008, Michael Buesch wrote:
-> > On Friday 25 January 2008 19:34:46 Linus Torvalds wrote:
-> > > My attitude is: CPU's that do unaligned accesses right are the *good* 
-> > > CPU's. We should encourage them, and put the onus of being crap on the 
-> > > ones that are crap, rather than penalizing the ones that aren't.
-> > 
-> > I absolutely agree. But as this can get fixed with _no_ performance loss
-> > at all inside of the firmware (and who if not intel can change stuff
-> > in their firmware?), I think this warning is in fact valid.
+On ,  Harald Dunkel wrote:
+
+> I've got some problem with iwl3945: If I run
 > 
-> Well, you forgot the point that maybe it is not that simple to get such
-> a seemingly simple change into the firmware for a long list of reasons.
+> 	xset dpms force off
+> 
+> for the local display while some network traffic is running, then
+> the iwl3945 gets stuck. Syslog says:
+> 
+> Jan 23 19:29:41 daffy kernel: iwl3945: Microcode SW error
+> detected.  Restarting 0x2000008.
+> Jan 23 19:29:43 daffy kernel: iwl3945: Can't stop Rx DMA.
+> 
 
-The reasons being?
+Very strange. Would it be possible to load the module with
+"debug=0x43fff"? This will capture a detailed event log and error log
+from uCode, so we can see what caused the uCode error.
 
--- 
-Greetings Michael.
+Also, could you please open a bug in our bug tracker
+(http://www.bughost.org/bugzilla/) - this will make it easier to keep
+all info together and get the right people to take a look at it.
+
+Thanks
+
+Reinette
+
