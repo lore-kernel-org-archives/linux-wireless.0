@@ -1,81 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:33923 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752577AbYAGULd (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:60029 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784AbYAYBGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:11:33 -0500
-Date: Mon, 7 Jan 2008 13:49:49 -0500
-From: Forest Bond <forest@alittletooquiet.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20080107184949.GI18550@storm.local.network> (sfid-20080107_201142_021403_27E5B264)
-References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com> <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com> <20071105020730.GA4414@storm.local.network> <20071114170051.GD23778@storm.local.network> <20071114170634.GC6226@tuxdriver.com>
+	Thu, 24 Jan 2008 20:06:44 -0500
+Received: by an-out-0708.google.com with SMTP id d31so106115and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2008 17:06:41 -0800 (PST)
+Message-ID: <479935C3.7050403@gmail.com> (sfid-20080125_010648_868194_FBCAA3F0)
+Date: Thu, 24 Jan 2008 19:05:07 -0600
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sT9gWZPUZYhvPS56"
-In-Reply-To: <20071114170634.GC6226@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 breakage on broadcom hardware.
+Content-Type: multipart/mixed;
+ boundary="------------080601020008090803010803"
+From: "Jory A. Pratt" <geekypenguin@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------080601020008090803010803
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
---sT9gWZPUZYhvPS56
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+mac80211 appears to be broken by commit 
+921dda3b092b3d47c9b715d02be0c2615c8d7aa8 .
 
-Hi,
+An oops occurs on 4306 and 4318 broadcom hardware the minute the device 
+attempt to scan for any AP's in the area.
+I have attached the oops for review.
 
-On Wed, Nov 14, 2007 at 12:06:34PM -0500, John W. Linville wrote:
-> On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
->> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
->>> The post is here:
->>>=20
->>> http://forums.viaarena.com/messageview.aspx?catid=3D28&threadid=3D78745
->>>=20
->>> Any noise that can be contributed is welcome and appreciated.  You'll n=
-eed
->>> to create an account to post, though.
->=20
->> I also added these.  Perhaps having plenty of content/links regarding th=
-is
->> issue will help to increase visibility:
->>=20
->> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-linux-d=
-river/
->> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
->=20
-> Excellent...I appreciate your efforts as an agitator! :-)
+-Jory
 
-At this point I am not anticipating positive results WRT this endeavor, and=
- am
-unable to pursue further assistance from VIA.  Further, I've seen that the
-driver in question likely exhibits some interesting quirks that makes it
-difficult to use.  It is also bit-rotting out of relevance.
+--------------080601020008090803010803
+Content-Type: text/plain;
+ name="debug"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="debug"
 
-Can the driver be used as a reference for a fresh implementation?  I've not
-written a driver before, but would be open to the possibility.
-
-What are the legal ramifications of a driver author having access to
-proprietary source code?
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-
---sT9gWZPUZYhvPS56
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHgnRNRO4fQQdv5AwRAgUxAKDXB70z1jXUoVKx9YpOiJJFXRHk2wCcCx8l
-CN/j+Mwo1FTlSJF7uXcN0Bs=
-=teCv
------END PGP SIGNATURE-----
-
---sT9gWZPUZYhvPS56--
+UGlkOiAxNTYxLCBjb21tOiBiNDMgTm90IHRhaW50ZWQgMi42LjI0LXJjOCAjMQpSSVA6IDAw
+MTA6WzxmZmZmZmZmZjgwNWRjNTNlPl0gIFs8ZmZmZmZmZmY4MDVkYzUzZT5dIGllZWU4MDIx
+MV9zdGFfc2Nhbl93b3JrKzB4MTJlLzB4MjAwClJTUDogMDAxODpmZmZmODEwMDQ1OTdmZTcw
+ICBFRkxBR1M6IDAwMDEwMjgyClJBWDogMDAwMDAwMDAwMDAwMDAwMCBSQlg6IGRlYWQ0ZWFk
+MDAwMDAwMDEgUkNYOiAwMDAwMDAwMDAwMDAwMDAyClJEWDogZmZmZjgxMDA0NTljMjBjMCBS
+U0k6IGZmZmY4MTAwNDU4Yzk2ZTAgUkRJOiBmZmZmODEwMDQ1OWMzMDI4ClJCUDogZmZmZjgx
+MDA0NTljMjM4MCBSMDg6IGZmZmY4MTAwNDY4MTY5ODggUjA5OiAwMDAwMDAwMDAwMDAwM2Mz
+ClIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IGZmZmZmZmZmODA1ODgxMjAgUjEyOiBmZmZm
+ODEwMDQ1OWMzMDI4ClIxMzogZmZmZjgxMDA0NThjOTAwMCBSMTQ6IGZmZmY4MTAwNDY4MTY5
+NzggUjE1OiAwMDAwMDAwMDAwMDAwMDAwCkZTOiAgMDAwMDJiMjkyNDI5ZjEzMCgwMDAwKSBH
+UzpmZmZmZmZmZjgwN2FlMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwZjdlMzQ2YzAKQ1M6ICAw
+MDEwIERTOiAwMDE4IEVTOiAwMDE4IENSMDogMDAwMDAwMDA4MDA1MDAzYgpDUjI6IDAwMDAw
+MDAwMDA3YjVkNzAgQ1IzOiAwMDAwMDAwMDQzOGM3MDAwIENSNDogMDAwMDAwMDAwMDAwMDZl
+MApEUjA6IDAwMDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAw
+MDAwMDAwMDAwMDAwMApEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZmZmYw
+ZmYwIERSNzogMDAwMDAwMDAwMDAwMDQwMApQcm9jZXNzIGI0MyAocGlkOiAxNTYxLCB0aHJl
+YWRpbmZvIGZmZmY4MTAwNDU5N2UwMDAsIHRhc2sgZmZmZjgxMDA0NTliY2Y4MCkKU3RhY2s6
+ICAwMDAwMDAwMDAwMDAwMjgyIGZmZmY4MTAwNDU5YzMwMzAgZmZmZjgxMDA0NjgxNjk2MCBm
+ZmZmODEwMDQ1OWMzMDI4CiBmZmZmZmZmZjgwNWRjNDEwIGZmZmZmZmZmODAyNDFmYjcgZmZm
+ZjgxMDA0NjgxNjk4OCBmZmZmODEwMDQ2ODE2OTYwCiBmZmZmZmZmZjgwMjQyOTIwIGZmZmY4
+MTAwNDY4MTY5NzggMDAwMDAwMDAwMDAwMDAwMCBmZmZmZmZmZjgwMjQyOWMzCkNhbGwgVHJh
+Y2U6CiBbPGZmZmZmZmZmODA1ZGM0MTA+XSBpZWVlODAyMTFfc3RhX3NjYW5fd29yaysweDAv
+MHgyMDAKIFs8ZmZmZmZmZmY4MDI0MWZiNz5dIHJ1bl93b3JrcXVldWUrMHg4Ny8weDEyMAog
+WzxmZmZmZmZmZjgwMjQyOTIwPl0gd29ya2VyX3RocmVhZCsweDAvMHgxMTAKIFs8ZmZmZmZm
+ZmY4MDI0MjljMz5dIHdvcmtlcl90aHJlYWQrMHhhMy8weDExMAogWzxmZmZmZmZmZjgwMjQ2
+MWIwPl0gYXV0b3JlbW92ZV93YWtlX2Z1bmN0aW9uKzB4MC8weDMwCiBbPGZmZmZmZmZmODAy
+NDI5MjA+XSB3b3JrZXJfdGhyZWFkKzB4MC8weDExMAogWzxmZmZmZmZmZjgwMjQyOTIwPl0g
+d29ya2VyX3RocmVhZCsweDAvMHgxMTAKIFs8ZmZmZmZmZmY4MDI0NWRlYj5dIGt0aHJlYWQr
+MHg0Yi8weDgwCiBbPGZmZmZmZmZmODAyMGMzZjg+XSBjaGlsZF9yaXArMHhhLzB4MTIKIFs8
+ZmZmZmZmZmY4MDI0NWRhMD5dIGt0aHJlYWQrMHgwLzB4ODAKIFs8ZmZmZmZmZmY4MDIwYzNl
+ZT5dIGNoaWxkX3JpcCsweDAvMHgxMgoKCkNvZGU6IDNiIDQzIDE0IDdjIDBkIDgzIGJkIDk4
+IDBjIDAwIDAwIDAxIDBmIDg3IDZkIGZmIGZmIGZmIDRjIDYzIApSSVAgIFs8ZmZmZmZmZmY4
+MDVkYzUzZT5dIGllZWU4MDIxMV9zdGFfc2Nhbl93b3JrKzB4MTJlLzB4MjAwCiBSU1AgPGZm
+ZmY4MTAwNDU5N2ZlNzA+Ci0tLVsgZW5kIHRyYWNlIDZmZTgxYmYyNDY0ZTg4ZDEgXS0tLQo=
+--------------080601020008090803010803--
