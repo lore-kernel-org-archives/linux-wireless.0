@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:53462 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436AbYA3JLu (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:27648 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753053AbYAYGHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 04:11:50 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so144507rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2008 01:11:47 -0800 (PST)
-Message-ID: <c85cb4470801300111j610c1cak290c6a1d07cc54fe@mail.gmail.com> (sfid-20080130_091156_409652_13F72857)
-Date: Wed, 30 Jan 2008 11:11:47 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 06/12] mac80211: A-MPDU Tx adding qdisc support
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1201623169.4394.35.camel@johannes.berg>
+	Fri, 25 Jan 2008 01:07:30 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/3] ath5k: use SWBA to detect IBSS HW merges
+Date: Fri, 25 Jan 2008 15:07:17 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <20080119091759.31251.60264.stgit@one> <20080119091821.31251.5098.stgit@one> <1201166295.3454.52.camel@johannes.berg>
+In-Reply-To: <1201166295.3454.52.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163392546-git-send-email-ron.rindjunsky@intel.com>
-	 <1201167778.3454.75.camel@johannes.berg>
-	 <c85cb4470801270926g1f84fc8t5905b458b4eee012@mail.gmail.com>
-	 <1201623169.4394.35.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801251507.17814.bruno@thinktube.com> (sfid-20080125_060733_996398_0A446C44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I can change this book keeping, though current solution provides us up
-> > to 32 HW queues, which is really a huge amout of queues in terms of
-> > HW. if needed after all, i would prefer to do it on top of this
-> > series.
+On Thursday 24 January 2008 18:18:15 Johannes Berg wrote:
+> On Sat, 2008-01-19 at 18:18 +0900, Bruno Randolf wrote:
+> > time und check if a HW merge (automatic TSF update) has happened on every
+> > received beacon with the same BSSID.
 >
-> Well you don't really need to change any code I think, only use
->
->        unsigned long qdisc_pool[BITS_TO_LONGS(NUM_TX_DATA_QUEUES_AMPDU)];
->
-> instead and that way we should already be safe for future increases of
-> the NUM_TX_DATA_QUEUES_AMPDU value. set_bit/clear_bit/etc. are already
-> prepared to handle such an array so I'd prefer to have it right away
-> just so there are less gotchas when that happens.
+> I don't know who is smoking what (I suspect Atheros folks...), but
+> calling a TSF adoption a "merge" is pretty out of line IMHO when you
+> also describe some non-standard BSSID changes as "merge".
 
-right, i missed your point first time, i'll change it.
+hmm, i agree, that calling that a "merge" is a bit over the top. i was using 
+this term as somebody mentioned it in 
+http://madwifi.org/wiki/DevDocs/AdhocMerge, but i agree that "TSF update" is 
+more to the point and clearer.
+
+bruno
+
