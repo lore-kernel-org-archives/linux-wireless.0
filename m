@@ -1,91 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:36456 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754656AbYAYBU3 (ORCPT
+Received: from pne-smtpout4-sn1.fre.skanova.net ([81.228.11.168]:60270 "EHLO
+	pne-smtpout4-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759374AbYAYWu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 20:20:29 -0500
-From: David Brownell <david-b@pacbell.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
-Date: Thu, 24 Jan 2008 17:19:14 -0800
-Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
-	netdev@vger.kernel.org
-References: <20080120001342.25718.83669.stgit@fate.lan>
-In-Reply-To: <20080120001342.25718.83669.stgit@fate.lan>
+	Fri, 25 Jan 2008 17:50:57 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 03/14] [rndis_host] Use 1KB buffer in rndis_unbind
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:50:49 +0200
+Message-ID: <20080125225049.11716.93868.stgit@fate.lan> (sfid-20080125_225107_562826_AA64788F)
+In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200801241719.14941.david-b@pacbell.net> (sfid-20080125_012129_115834_6E1CA719)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 19 January 2008, Jussi Kivilinna wrote:
-> Hello,
-> 
-> This is second try on wireless RNDIS patchset started by Bjorge Dijkstra. Since
-> Bjorge has disappeared, I claim maintainership of rndis_wext and this patchset
-> until he returns.
-> 
-> This patchset adds support for various 802.11 USB devices based on Broadcom
-> 4320 chip. Chip uses RNDIS to communicate with the host, so module depend
-> heavily on rndis_host/cdc_ether/usbnet and needs some changes on these 
-> modules in order to work.
-> 
-> Patches 1-6 are from first patchset:
->  1. Fix sparse warning: returning void valued expression
->  2. [cdc_ether] Hardwire CDC descriptors when missing
->  3. [rndis_host] Use 1KB buffer in rndis_unbind
->  4. [rndis_host] Halt device if rndis_bind fails
->  5. [rndis_host] Fix rndis packet filter flags
->  6. [usbnet] Use wlan device name for RNDIS wireless devices
-> 
-> Of these 1, 3 and 4 are not required for this version of rndis_wext to work.
-> 
-> Actual wireless part is changed from extension on rndis_host to separate 
-> driver. Different devices are detected by device specific USB vendor/product 
-> IDs as the way done with Windows drivers instead of detecting RNDIS media type 
-> like in first patchset.
-> 
-> New patches 7-14:
->  7. [rndis_host] Split up rndis_host.c
->  8. [rndis_host] export functions
->  9. [usbnet] add driver_priv pointer to 'struct usbnet'
+rndis_command requires the caller to pass in a buffer of at least 1KB.
 
-So far as I'm concerned patches 1-9 can go in any time.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+---
 
-The other patches I won't ack yet; see below.
+ drivers/net/usb/rndis_host.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-> 10. [rndis_host] Add rndis_early_init function pointer to 'struct rndis_data'.
-> 11. [rndis_host] Add rndis_link_change function pointer to 'struct rndis_data'.
-
-Those aren't added to "struct rndis_data" ... they're added to
-the struct at the core of the usbnet framework.  So they should
-not be RNDIS-specific ... even though the only current user will
-be the RNDIS host code.  Rename those methods and I'll be happy.
-
-
-> 12. Move usbnet.h and rndis_host.h to include/linux/usb
-
-No problem with that, except that fixing #10 and #11 will
-break them.
-
-
-> 13. [rndis_host] blacklist known wireless RNDIS devices
-
-That will be a headache over time though ... can't you just
-let the probe succeed enough to recogize it's wireless (using
-the media flag) and then bail, so the next driver can try?
-
-
-> 14. Add new driver 'rndis_wext' for wireless RNDIS devices.
-
-The real goods!  :)
-
+diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+index 96ef6a9..42b161c 100644
+--- a/drivers/net/usb/rndis_host.c
++++ b/drivers/net/usb/rndis_host.c
+@@ -577,7 +577,7 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
+ 	struct rndis_halt	*halt;
  
-> Patches should be applied in order, series apply cleanly to 2.6.24-rc8.
-> 
->  - Jussi Kivilinna
-> 
-
+ 	/* try to clear any rndis state/activity (no i/o from stack!) */
+-	halt = kzalloc(sizeof *halt, GFP_KERNEL);
++	halt = kzalloc(CONTROL_BUFFER_SIZE, GFP_KERNEL);
+ 	if (halt) {
+ 		halt->msg_type = RNDIS_MSG_HALT;
+ 		halt->msg_len = ccpu2(sizeof *halt);
 
