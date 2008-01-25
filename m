@@ -1,27 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:6441 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751787AbYAaGKa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 01:10:30 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/5] iwlwifi driver updates
-Date: Wed, 30 Jan 2008 22:05:11 -0800
-Message-Id: <1201759516-28963-1-git-send-email-reinette.chatre@intel.com> (sfid-20080131_061033_377503_73F283A9)
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:32768 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751780AbYAYUI4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 15:08:56 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
+Date: Fri, 25 Jan 2008 12:08:49 -0800
+Cc: linux-wireless@vger.kernel.org, bjd@jooz.net,
+	netdev@vger.kernel.org
+References: <20080120001342.25718.83669.stgit@fate.lan> <200801241719.14941.david-b@pacbell.net> <1201267224.7266.6.camel@localhost>
+In-Reply-To: <1201267224.7266.6.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801251208.50006.david-b@pacbell.net> (sfid-20080125_200900_347197_A547B11A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please find a few iwlwifi updates. Patch 2/5 also touches
-include/linux/ieee80211.h
+On Friday 25 January 2008, Jussi Kivilinna wrote:
+> On Thu, 2008-01-24 at 17:19 -0800, David Brownell wrote:
+> > > 13. [rndis_host] blacklist known wireless RNDIS devices
+> > 
+> > That will be a headache over time though ... can't you just
+> > let the probe succeed enough to recogize it's wireless (using
+> > the media flag) and then bail, so the next driver can try?
+> 
+> Sure, that works too (but causes a little bit more message flood).
 
-[PATCH 1/5] iwlwifi: fix sparse warning in iwl 3945
-[PATCH 2/5] iwlwifi: Fix MIMO PS mode
-[PATCH 3/5] iwlwifi: remove ieee80211 types from iwl-helpers.h
-[PATCH 4/5] iwlwifi: fix merge sequence: exit on error before state change
-[PATCH 5/5] iwlwifi: fix merge error
+Excess messages can be dealt with, or at worst, ignored.
 
-Thank you
+Thanks.
 
-Reinette
