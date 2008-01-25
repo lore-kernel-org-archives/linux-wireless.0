@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:52692 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753325AbYAMSyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 13:54:50 -0500
-Date: Sun, 13 Jan 2008 19:48:34 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	rt2400-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: remove unused variable
-Message-ID: <20080113194834.677af663@morte> (sfid-20080113_185454_458346_9B1981C1)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from vs166246.vserver.de ([62.75.166.246]:48427 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784AbYAYLWz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 06:22:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable 1/3] b43: Fix suspend/resume
+Date: Fri, 25 Jan 2008 12:11:45 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200801251211.45980.mb@bu3sch.de> (sfid-20080125_112259_757838_EC0B50FE)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove an unused variable that caused a warning while building. Please note
-that the pipe obtained there isn't used anywhere else.
+This patch makes suspend/resume work with the b43 driver.
+We must not overwrite the MAC addresses in the init function, as this
+would also overwrite the MAC on resume. With an all-zero MAC the device
+firmware is not able to ACK any received packets anymore.
+Fix this by moving the initializion stuff that must be done on init but
+not on resume to the start function.
+Also zero out filter_flags to make sure we don't have some flags
+from a previous instance for a tiny timeframe until mac80211 reconfigures
+them.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
 ---
-Index: wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
+
+This patch is upstream inside of the netdev tree.
+
+
+Index: linux-2.6.24/drivers/net/wireless/b43/main.c
 ===================================================================
---- wireless-2.6.orig/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -176,7 +176,6 @@ int rt2x00usb_write_tx_data(struct rt2x0
- 	struct usb_device *usb_dev =
- 	    interface_to_usbdev(rt2x00dev_usb(rt2x00dev));
- 	struct data_entry *entry = rt2x00_get_data_entry(ring);
--	int pipe = usb_sndbulkpipe(usb_dev, 1);
- 	struct skb_desc *desc;
- 	u32 length;
+--- linux-2.6.24.orig/drivers/net/wireless/b43/main.c	2008-01-25 11:48:26.000000000 +0100
++++ linux-2.6.24/drivers/net/wireless/b43/main.c	2008-01-25 11:48:28.000000000 +0100
+@@ -3395,8 +3395,6 @@ static int b43_wireless_core_init(struct
+ 	b43_bluetooth_coext_enable(dev);
  
-
-
---
-Ciao
-Stefano
+ 	ssb_bus_powerup(bus, 1);	/* Enable dynamic PCTL */
+-	memset(wl->bssid, 0, ETH_ALEN);
+-	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	b43_upload_card_macaddress(dev);
+ 	b43_security_init(dev);
+ 	b43_rng_init(wl);
+@@ -3493,6 +3491,13 @@ static int b43_start(struct ieee80211_hw
+ 	int did_init = 0;
+ 	int err = 0;
+ 
++	/* Kill all old instance specific information to make sure
++	 * the card won't use it in the short timeframe between start
++	 * and mac80211 reconfiguring it. */
++	memset(wl->bssid, 0, ETH_ALEN);
++	memset(wl->mac_addr, 0, ETH_ALEN);
++	wl->filter_flags = 0;
++
+ 	/* First register RFkill.
+ 	 * LEDs that are registered later depend on it. */
+ 	b43_rfkill_init(dev);
