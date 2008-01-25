@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38563 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753946AbYAMVVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 16:21:52 -0500
-Subject: [PATCH] b43: rfkill use after free
-From: Eric Paris <eparis@redhat.com>
-To: bcm43xx-dev@lists.berlios.de
-Cc: mb@bu3sch.de, linville@tuxdriver.com,
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:34351 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755056AbYAYV4k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 16:56:40 -0500
+Date: Fri, 25 Jan 2008 13:54:31 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Sun, 13 Jan 2008 16:20:52 -0500
-Message-Id: <1200259252.4393.22.camel@localhost.localdomain> (sfid-20080113_212156_076915_549D9CA7)
-Mime-Version: 1.0
+Subject: Re: Linux 2.6.24-rc7
+In-Reply-To: <200801252221.07558.mb@bu3sch.de>
+Message-ID: <alpine.LFD.1.00.0801251350090.5056@hp.linux-foundation.org> (sfid-20080125_215647_625021_E5938D4D)
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801251941.25310.mb@bu3sch.de> <200801251311.45392.inaky@linux.intel.com> <200801252221.07558.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-inside b43_rfkill_exit() we call rfkill_unregister() which puts the last
-reference and frees the rfkill struct.  Then just 3 lines later the code
-explicitly calls rfkill_free() on the struct we already freed.  This
-showed up as slub corruption (what should have been 6b was showing up as
-6a) since the rfkill_free had dec'ed the are that should have been the
-use counter.
-
-stop using the already freed rfkill struct.
-
-=============================================================================
-BUG kmalloc-1024 (Not tainted): Poison overwritten
------------------------------------------------------------------------------
-
-INFO: 0xf40b89e8-0xf40b89e8. First byte 0x6a instead of 0x6b
-INFO: Allocated in rfkill_allocate+0x1b/0x8b [rfkill] age=231032011 cpu=0 pid=2403
-INFO: Freed in rfkill_release+0xd/0x19 [rfkill] age=366 cpu=0 pid=2403
-INFO: Slab 0xc1b62840 used=6 fp=0xf40b8860 flags=0x400040c3
-INFO: Object 0xf40b8860 @offset=2144 fp=0x00000000
-
-Signed-off-by: Eric Paris <eparis@redhat.com>
-
----
-
- drivers/net/wireless/b43/rfkill.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index 98cf70c..a19be53 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -195,6 +195,5 @@ void b43_rfkill_exit(struct b43_wldev *dev)
- 	rfkill_unregister(rfk->rfkill);
- 	input_free_polled_device(rfk->poll_dev);
- 	rfk->poll_dev = NULL;
--	rfkill_free(rfk->rfkill);
- 	rfk->rfkill = NULL;
- }
 
 
+On Fri, 25 Jan 2008, Michael Buesch wrote:
+> > Well, you forgot the point that maybe it is not that simple to get such
+> > a seemingly simple change into the firmware for a long list of reasons.
+> 
+> The reasons being?
+
+.. the reason being that people just expect existing firmware to work, for 
+example.
+
+The point being, even if a newer firmware was _available_, people wouldn't 
+necessarily run with it.
+
+We do *not* accept "upgrade the BIOS" as an answer to broken BIOSes 
+either. We work around BIOS limitations.
+
+There can easily be other issues too. The DMA engine literally might only 
+do word-aligned transfers. Or other operating systems have different rules 
+from Linux, and the firmware is designed for those other systems.
+
+Realistically, if it works with Windows, and I was a hardware team, and 
+the Linux people were whining about it, I'd feel perfectly fine in saying 
+"you're the buggy ones, we work fine".
+
+So no, whining about hardware or firmware features isn't really very 
+productive. You take what you get.
+
+				Linus
