@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4277 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751316AbYA1PcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 10:32:17 -0500
-Date: Mon, 28 Jan 2008 10:12:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rfkill: add the WiMAX radio type
-Message-ID: <20080128151238.GD5835@tuxdriver.com> (sfid-20080128_153221_657870_168DC5E6)
-References: <200801231324.39483.inaky@linux.intel.com> <200801232230.39590.IvDoorn@gmail.com> <200801231338.53501.inaky@linux.intel.com> <20080128085422.ZZRA012@mailhub.coreip.homeip.net>
+Received: from fg-out-1718.google.com ([72.14.220.156]:15336 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759016AbYAYXUl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 18:20:41 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so812102fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2008 15:20:39 -0800 (PST)
+Message-ID: <247d6d340801251520g75fb2701nb2c0ce71f1d178e6@mail.gmail.com> (sfid-20080125_232049_135506_771AF0D4)
+Date: Sat, 26 Jan 2008 01:20:39 +0200
+From: "Guy Cohen" <guy@cguy.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux 2.6.24-rc7
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Michael Buesch" <mb@bu3sch.de>, "Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080125224631.GH14687@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080128085422.ZZRA012@mailhub.coreip.homeip.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
+	 <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
+	 <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org>
+	 <200801251930.27022.mb@bu3sch.de>
+	 <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
+	 <20080125194807.GD14687@tuxdriver.com>
+	 <20080125195037.GE14687@tuxdriver.com>
+	 <20080125211815.GF14687@tuxdriver.com>
+	 <alpine.LFD.1.00.0801251354350.5056@hp.linux-foundation.org>
+	 <20080125224631.GH14687@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 28, 2008 at 08:56:03AM -0500, Dmitry Torokhov wrote:
+On 1/26/08, John W. Linville <linville@tuxdriver.com> wrote:
+> On Fri, Jan 25, 2008 at 01:56:15PM -0800, Linus Torvalds wrote:
+> > And why is it suddenly smart to do this in three drivers rather than one
+> > upper layer?
+>
+> Two drivers, FWIW... :-)
 
-> Yes, that should work, thank you. This will go through the network
-> tree, right?
+IMO, The right place to put a conditional memmove is at the 802.11 to
+802.3 conversion. currnetly iwlwifi always hands an aligned 802.11
+frame to mac80211. If it is needed to re-align the frame after
+stripping the odd 802.11 header to support CPUs that can't handle it,
+it makes sense to do it there.
 
-Yes, I've got it.
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> John
