@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754695AbYARMhg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 07:37:36 -0500
-Subject: Re: [RFC PATCH 09/12 v2] iwlwifi: A-MPDU Tx conform API to mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12005088643404-git-send-email-ron.rindjunsky@intel.com>
-References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
-	 <12005088643404-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BpNg+vE9AflZziBTfiU1"
-Date: Fri, 18 Jan 2008 01:36:10 +0100
-Message-Id: <1200616570.5716.8.camel@johannes.berg> (sfid-20080118_123739_403869_58664CA3)
+Received: from mfe1.polimi.it ([131.175.12.23]:33072 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754265AbYAYNgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 08:36:45 -0500
+Date: Fri, 25 Jan 2008 14:26:21 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: stable@kernel.org
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH stable 2/4] b43legacy: fix suspend/resume
+Message-ID: <20080125142621.0d240fd8@morte> (sfid-20080125_133647_994557_44ECD9F0)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch makes suspend/resume work with the b43legacy driver.
+We must not overwrite the MAC addresses in the init function, as this
+would also overwrite the MAC on resume. With an all-zero MAC the device
+firmware is not able to ACK any received packets anymore.
+Fix this by moving the initializion stuff that must be done on init but
+not on resume to the start function.
+Also zero out filter_flags to make sure we don't have some flags
+from a previous instance for a tiny timeframe until mac80211 reconfigures
+them.
 
---=-BpNg+vE9AflZziBTfiU1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch by Michael Buesch has been ported to b43legacy.
+
+Cc: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: linux-2.6.24/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- linux-2.6.24.orig/drivers/net/wireless/b43legacy/main.c
++++ linux-2.6.24/drivers/net/wireless/b43legacy/main.c
+@@ -3215,8 +3215,6 @@ static int b43legacy_wireless_core_init(
+ 	b43legacy_shm_write16(dev, B43legacy_SHM_SHARED, 0x0414, 0x01F4);
+ 
+ 	ssb_bus_powerup(bus, 1); /* Enable dynamic PCTL */
+-	memset(wl->bssid, 0, ETH_ALEN);
+-	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	b43legacy_upload_card_macaddress(dev);
+ 	b43legacy_security_init(dev);
+ 	b43legacy_rng_init(wl);
+@@ -3311,6 +3309,13 @@ static int b43legacy_start(struct ieee80
+ 	int did_init = 0;
+ 	int err = 0;
+ 
++	/* Kill all old instance specific information to make sure
++	 * the card won't use it in the short timeframe between start
++	 * and mac80211 reconfiguring it. */
++	memset(wl->bssid, 0, ETH_ALEN);
++	memset(wl->mac_addr, 0, ETH_ALEN);
++	wl->filter_flags = 0;
++
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED) {
 
 
->  int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
->  			     enum ieee80211_ampdu_mlme_action action,
-> -			     const u8 *addr, u16 tid, u16 ssn)
-> +			     u8 *addr, u16 tid, u16 *ssn)
->  {
->  	struct iwl4965_priv *priv =3D hw->priv;
->  	int sta_id;
-> @@ -4733,12 +4733,18 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw =
-*hw,
->  	switch (action) {
->  	case IEEE80211_AMPDU_RX_START:
->  		IWL_DEBUG_HT("start Rx\n");
-> -		iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, ssn);
-> +		iwl4965_sta_modify_add_ba_tid(priv, sta_id, tid, *ssn);
->  		break;
->  	case IEEE80211_AMPDU_RX_STOP:
->  		IWL_DEBUG_HT("stop Rx\n");
->  		iwl4965_sta_modify_del_ba_tid(priv, sta_id, tid);
->  		break;
-
-
->  extern int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
->  				    enum ieee80211_ampdu_mlme_action action,
-> -				    const u8 *addr, u16 tid, u16 ssn);
-> +				    u8 *addr, u16 tid, u16 *ssn);
->  #ifdef CONFIG_IWL4965_HT_AGG
-
-These changes need to be in patch 1 so that has a chance of compiling.
-
-johannes
-
---=-BpNg+vE9AflZziBTfiU1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4/0eKVg1VMiehFYAQKGURAAvPRIbnBOCGa20fs47E0gVsVnsrfFllE6
-V6NMWWABsEmP4pXc+eTF6Quw3x7KGhP0VMK6y4rdBmie7rILgGDCRDsdXAgHdkNN
-V+M+3Pxf7H9Uft+58o4XjW61C8mYxtNsOMQVkN6Sf4lxfdKubt5d15V86JhzOGmP
-itWKRnJzEWs6kAquVqLp9LF6neybiKlodwWJbL7Zt2PrUkuqffUT3cda4Wtjrf6H
-xk+hE5aab76fOXTVzZxdbTo1rQ90jZteMsRSRorNW3z2THCC2iVyl5iAZakSQs80
-Guihw/CBSwp9+RvbcKSaQeAXjforqRWcMuIJ9Ztz4pmNqCjkMqNtaPwXUP0yi+7I
-1b02OkVe/S182QWTRRqYj7Zf7emEX+pEXVqNWV8spiXCbK0rZ3pLhoEhI1Xk5dXo
-TvSAkecrWC7KK21LaubRISPBdK8O/yFBbbLPL8QcFwwpiihayhp3/JB2TyLsgxke
-P//5jEG2ZYsced95KpKDP3aenuV/KD6Pi4VTjq30FLLcro/2Brbm6V90Tko3v/WJ
-sLDUYHy4DKJ1Rvh/AlRAna21LXIxLr836v3/JqRP1XSg3ng7PkwZ4HFjuCJHX6xT
-wCgnTAmdydzkTaV40eARNZk17IbsYDISADWWd1u1O6g0lUfqCAyHDSpCVKC/GjK6
-xNREm5zjI2s=
-=4NqK
------END PGP SIGNATURE-----
-
---=-BpNg+vE9AflZziBTfiU1--
-
+--
+Ciao
+Stefano
