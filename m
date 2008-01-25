@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22023 "EHLO mga11.intel.com"
+Received: from MGW3.Sony.CO.JP ([137.153.0.15]:65343 "EHLO mgw3.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754743AbYAJRY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:24:27 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 07/10] mac80211: A-MPDU Tx change tx_status to support Block Ack data
-Date: Thu, 10 Jan 2008 19:22:19 +0200
-Message-Id: <11999857502772-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172458_646137_168199AD)
-In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752364AbYAYDiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2008 22:38:50 -0500
+Date: Fri, 25 Jan 2008 12:36:38 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH v2] PS3: gelic: Add wireless support for PS3
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Paul Mackerras <paulus@samba.org>
+In-Reply-To: <20080125024725.GB3411@tuxdriver.com>
+References: <1201225785.15917.8.camel@localhost.localdomain> <20080125024725.GB3411@tuxdriver.com>
+Message-Id: <20080125122408.5CC6.40F06B3A@sm.sony.co.jp> (sfid-20080125_033856_492608_C2BA48E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds fields to ieee80211_tx_status in order to allow block ack
-information exchange between low-level driver,mac80211 and rate scaling
-module.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+On Thu, 24 Jan 2008 21:47:25 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 335f506..dd9a761 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -408,12 +408,14 @@ struct ieee80211_rx_status {
-  *
-  * @IEEE80211_TX_STATUS_TX_FILTERED: The frame was not transmitted
-  *	because the destination STA was in powersave mode.
-- *
-  * @IEEE80211_TX_STATUS_ACK: Frame was acknowledged
-+ * @IEEE80211_TX_STATUS_AMPDU: The frame was aggregated, so status
-+ * 	is for the whole aggregation.
-  */
- enum ieee80211_tx_status_flags {
- 	IEEE80211_TX_STATUS_TX_FILTERED	= 1<<0,
- 	IEEE80211_TX_STATUS_ACK		= 1<<1,
-+	IEEE80211_TX_STATUS_AMPDU	= 1<<2,
- };
- 
- /**
-@@ -424,24 +426,25 @@ enum ieee80211_tx_status_flags {
-  *
-  * @control: a copy of the &struct ieee80211_tx_control passed to the driver
-  *	in the tx() callback.
-- *
-  * @flags: transmit status flags, defined above
-- *
-- * @ack_signal: signal strength of the ACK frame
-- *
-+ * @retry_count: number of retries
-  * @excessive_retries: set to 1 if the frame was retried many times
-  *	but not acknowledged
-- *
-- * @retry_count: number of retries
-- *
-+ * @ampdu_ack_len: number of aggregated frames.
-+ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-+ * @ampdu_ack_map: block ack bit map for the aggregation.
-+ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-+ * @ack_signal: signal strength of the ACK frame
-  * @queue_length: ?? REMOVE
-  * @queue_number: ?? REMOVE
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_tx_control control;
- 	u8 flags;
--	bool excessive_retries;
- 	u8 retry_count;
-+	bool excessive_retries;
-+	u8 ampdu_ack_len;
-+	u64 ampdu_ack_map;
- 	int ack_signal;
- 	int queue_length;
- 	int queue_number;
+> On Thu, Jan 24, 2008 at 08:49:45PM -0500, Dan Williams wrote:
+> > On Thu, 2008-01-24 at 14:51 +0900, Masakazu Mokuno wrote:
+> > > Hi
+> > > 
+> > > PS3: gelic: Add wireless support for PS3
+> > > 
+> > > This is the version 2 of the re-worked (rewritten) version of the
+> > > wireless support driver for PS3.  The version 1 of the new driver was
+> > > submitted on 13th Dec. 2007 (and the old one was submitted to net-dev ML
+> > > in June 2007).
+> > > 
+> > > Major differences with the old driver are:
+> > >   - The new driver has a separate ethX interface from ethernet.
+> > >     They share the same MAC address.
+> > >   - Thus we can use both ethernet and wireless simultaenously.
+> > >   - The new driver returns AP's cipher information by the common IE
+> > >     format in the scan information.
+> > >   - Cipher selection is done via the common wireless extension way
+> > 
+> > Looks like all my issues have been addressed.  Thanks!  Lets get this in
+> > 2.6.25 :)
+> > 
+> > Acked-by: Dan Williams <dcbw@redhat.com>
+> 
+> ACK -- please merge it with the other patches through the powerpc tree.
+> 
+> Thanks,
+> 
+> John
+
+Thank you, John, Dan.
+
+I'll ask Paul to merge this if the wired part of dependent gelic patches
+gets acked from network people.
+
+
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Masakazu MOKUNO
 
