@@ -1,87 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:48618 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755585AbYAYNmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 08:42:23 -0500
-Date: Fri, 25 Jan 2008 14:32:00 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: stable@kernel.org
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH stable 4/4] b43legacy: fix DMA slot resource leakage
-Message-ID: <20080125143200.4a77d304@morte> (sfid-20080125_134229_114450_047599D2)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:58351 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755890AbYAYWuw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 17:50:52 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 02/14] [cdc_ether] Hardwire CDC descriptors when missing
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, bjd@jooz.net, david-b@pacbell.net
+Date: Sat, 26 Jan 2008 00:50:44 +0200
+Message-ID: <20080125225044.11716.75749.stgit@fate.lan> (sfid-20080125_225057_122714_9DF0FFB8)
+In-Reply-To: <20080125225032.11716.77713.stgit@fate.lan>
+References: <20080125225032.11716.77713.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes four resource leakages.
-In any error path we must deallocate the DMA frame slots we
-previously allocated by request_slot().
-This is done by storing the ring pointers before doing any ring
-allocation and restoring the old pointers in case of an error.
+From: Bjorge Dijkstra <bjd@jooz.net>
 
-This patch by Michael Buesch has been ported to b43legacy.
+Just as ActiveSync devices, some regular RNDIS devices also lack
+the CDC descriptors (e.g. devices based on BCM4320 WLAN chip).
+This patch hardwires the CDC descriptors for all RNDIS style devices
+when they are missing.
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Bjorge Dijkstra <bjd@jooz.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-Index: linux-2.6.24/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- linux-2.6.24.orig/drivers/net/wireless/b43legacy/dma.c
-+++ linux-2.6.24/drivers/net/wireless/b43legacy/dma.c
-@@ -1164,7 +1164,7 @@ static int dma_tx_fragment(struct b43leg
- {
- 	const struct b43legacy_dma_ops *ops = ring->ops;
- 	u8 *header;
--	int slot;
-+	int slot, old_top_slot, old_used_slots;
- 	int err;
- 	struct b43legacy_dmadesc_generic *desc;
- 	struct b43legacy_dmadesc_meta *meta;
-@@ -1174,6 +1174,9 @@ static int dma_tx_fragment(struct b43leg
- #define SLOTS_PER_PACKET  2
- 	B43legacy_WARN_ON(skb_shinfo(skb)->nr_frags != 0);
- 
-+	old_top_slot = ring->current_slot;
-+	old_used_slots = ring->used_slots;
-+
- 	/* Get a slot for the header. */
- 	slot = request_slot(ring);
- 	desc = ops->idx2desc(ring, slot, &meta_hdr);
-@@ -1184,8 +1187,11 @@ static int dma_tx_fragment(struct b43leg
- 	err = b43legacy_generate_txhdr(ring->dev, header,
- 				 skb->data, skb->len, ctl,
- 				 generate_cookie(ring, slot));
--	if (unlikely(err))
-+	if (unlikely(err)) {
-+		ring->current_slot = old_top_slot;
-+		ring->used_slots = old_used_slots;
- 		return err;
-+	}
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 				       sizeof(struct b43legacy_txhdr_fw3), 1);
-@@ -1208,6 +1214,8 @@ static int dma_tx_fragment(struct b43leg
- 	if (dma_mapping_error(meta->dmaaddr)) {
- 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
- 		if (!bounce_skb) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -ENOMEM;
- 			goto out_unmap_hdr;
- 		}
-@@ -1218,6 +1226,8 @@ static int dma_tx_fragment(struct b43leg
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 		if (dma_mapping_error(meta->dmaaddr)) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -EIO;
- 			goto out_free_bounce;
- 		}
 
+ drivers/net/usb/cdc_ether.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
---
-Ciao
-Stefano
+diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
+index a42acc3..97c17bb 100644
+--- a/drivers/net/usb/cdc_ether.c
++++ b/drivers/net/usb/cdc_ether.c
+@@ -228,15 +228,16 @@ next_desc:
+ 		buf += buf [0];
+ 	}
+ 
+-	/* Microsoft ActiveSync based RNDIS devices lack the CDC descriptors,
+-	 * so we'll hard-wire the interfaces and not check for descriptors.
++	/* Microsoft ActiveSync based and some regular RNDIS devices lack the
++	 * CDC descriptors, so we'll hard-wire the interfaces and not check
++	 * for descriptors.
+ 	 */
+-	if (is_activesync(&intf->cur_altsetting->desc) && !info->u) {
++	if (rndis && !info->u) {
+ 		info->control = usb_ifnum_to_if(dev->udev, 0);
+ 		info->data = usb_ifnum_to_if(dev->udev, 1);
+ 		if (!info->control || !info->data) {
+ 			dev_dbg(&intf->dev,
+-				"activesync: master #0/%p slave #1/%p\n",
++				"rndis: master #0/%p slave #1/%p\n",
+ 				info->control,
+ 				info->data);
+ 			goto bad_desc;
+@@ -316,7 +317,6 @@ void usbnet_cdc_unbind(struct usbnet *dev, struct usb_interface *intf)
+ }
+ EXPORT_SYMBOL_GPL(usbnet_cdc_unbind);
+ 
+-
+ /*-------------------------------------------------------------------------
+  *
+  * Communications Device Class, Ethernet Control model
+
