@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55909 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757419AbYARMhy (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:46710 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938AbYAZTAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2008 07:37:54 -0500
-Subject: Re: [RFC PATCH 03/12 v2] mac80211: A-MPDU Tx adding basic
-	functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1200508864774-git-send-email-ron.rindjunsky@intel.com>
-References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
-	 <1200508864774-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dutnPpuq2iR1ujKO6iSw"
-Date: Fri, 18 Jan 2008 01:49:03 +0100
-Message-Id: <1200617343.5716.15.camel@johannes.berg> (sfid-20080118_123759_104644_80288CC6)
-Mime-Version: 1.0
+	Sat, 26 Jan 2008 14:00:52 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1086930fga.17
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2008 11:00:47 -0800 (PST)
+Message-ID: <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com> (sfid-20080126_190104_996602_1CD0E4F2)
+Date: Sat, 26 Jan 2008 20:00:47 +0100
+From: drago01 <drago01@gmail.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>
+In-Reply-To: <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
+	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
+	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
+	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
+> On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
+> >
+> >
+> > >-----Original Message-----
+> > >From: drago01 [mailto:drago01@gmail.com]
+> > >Sent: Tuesday, January 22, 2008 10:12 PM
+> > >To: Winkler, Tomas
+> >
+> > >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
+> > >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+> > >
+> > >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
+> > wrote:
+> > >>
+> > >> I believe it's delaying uCode load to mac_start - still need to be
+> > >> polished.
+> > >
+> > >ok, thx for the quick reply.
+> > >If you have any potential fixes I would be happy to test them ;)
+> >
+> > Can you get me the sequence it is happening? RF kill switch is off
+> > before you power up the laptop or after, during association or in
+> > unassociated state..etc
+> > Thanks
+>
+> I boot with rf kill off = device on
+> acciotate using NM
+> kill the card by pressing the rfkill (ie. setting it to on)
+> card is dead (like described in my first mail), until I relaod the module
+> the rfkill switch  does not have any effect at this time.
+>
 
---=-dutnPpuq2iR1ujKO6iSw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> +	ret =3D ieee80211_ht_agg_queue_add(local, sta, tid);
-
-Not going to compile since you haven't added that function yet... You
-should at least already have no stubs and later move them into the
-#ifndef QoS section.
-
-[...]
-
-Hmm. Now I forgot what else I wanted to say. I'll try to review the
-patches in more detail but TBH I still haven't understood the qdisc
-stuff. Well, that's not really a blocker I guess, you just need to stick
-around to help me with it in the future ;)
-
-johannes
-
---=-dutnPpuq2iR1ujKO6iSw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4/3fqVg1VMiehFYAQJuDA//Y3D0McbVQuEoA4GDGfRUtEuw3MWyM+uV
-cnL+n5aWhlPqTbqIBZxJJiqrbmpbeZ3+WRWUXt3NJrANXV5ipWpZ0GG2Rn8nryrs
-1DUAnAX4tvJnIpDluS+yKV8IQVzy+/K9GvLx6GC3KkLAfNm+ZhIjwWSLpS8mcJ1h
-fcZZPXOPESJXcrdFuLxd1abxclAfEjDEaRHMVSoOKEysY9WghICKqEHwt+lpyBg5
-FJOn2G1s9j7P1Z6kmhgRjgItraC1Ay5bb0vjkfqmIEfGby4nsFBbZuqFvEHYSBGO
-xAsc0jRDtvyrEbPC9ONvbaVlkvz6cKZCQVT6tYgt1EVi6znG1XeA6ziqlbE62r3Z
-BL8Pi3S37QEfjkqf0oEEp/4p3cX33AkHv2HQ7gIHWHIxSop5hsjEbeQMfsXvwbpk
-6J4tQBP3uVkt/2hw18DUlbrKVf47XySa4xReEUv8HfSW5n3tXQkgbHZz/yA/iCLc
-drIkyFcO/uZnDvvpoKI/HgXp1TkG5YAm4qkz/ulRhT/6PXZWhPbHhrlm8msTkjBX
-7+oEp72yBpOl77xHr1RQBv8OptF41lK5TVi6Y6kABxBLlXX8aP0czueoeWdY3dvj
-iUaAzuKf1KxqwBznG4fbc9wHz3XylftbXxRPpqpazeSN1IrcHty7j4LZkYp2L9vF
-MqHlm016vZM=
-=MV+q
------END PGP SIGNATURE-----
-
---=-dutnPpuq2iR1ujKO6iSw--
-
+OK, I investigated a bit and it seems to be the "disable interrupt
+when device goes down" is the problem.
+In my case NetworkManager detected the rfkill and brought the device
+down, which caused the interrupt to be disabled. Now after pressing
+the rfkill again nothing happend. But if I bring the device back up
+the interrupt is enabled again and rfkill and the card is back to
+live.
+So in short disabling the interrupt in mac_stop breaks the hw rfkill
+while the interface is down.
