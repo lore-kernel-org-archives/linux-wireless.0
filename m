@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:16069 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752781AbYAIJQM (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:63824 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761878AbYAZQJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 04:16:12 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 5/6] ath5k: configure beacons
-Date: Wed,  9 Jan 2008 18:16:08 +0900
-Message-Id: <1199870169-10476-6-git-send-email-bruno@thinktube.com> (sfid-20080109_091628_974169_FFAC487E)
-In-Reply-To: <1199870169-10476-5-git-send-email-bruno@thinktube.com>
-References: <1199870169-10476-1-git-send-email-bruno@thinktube.com>
- <1199870169-10476-2-git-send-email-bruno@thinktube.com>
- <1199870169-10476-3-git-send-email-bruno@thinktube.com>
- <1199870169-10476-4-git-send-email-bruno@thinktube.com>
- <1199870169-10476-5-git-send-email-bruno@thinktube.com>
+	Sat, 26 Jan 2008 11:09:57 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1041023fga.17
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2008 08:09:56 -0800 (PST)
+Date: Sat, 26 Jan 2008 19:09:36 +0300
+From: Cyrill Gorcunov <gorcunov@gmail.com>
+To: Thomas Tuttle <linux-kernel@ttuttle.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	LWML <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless: iwlwifi3945/4965 - fix incorrect counting of
+	memory
+Message-ID: <20080126160936.GB6738@cvg> (sfid-20080126_161022_758651_47675B1C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-call ath5k_beacon_config() on beacon_update and after channel changes. this is
-necessary to ensure beacons are sent.
+This patch does fix incorrect counting of memory allocated by kmalloc.
+It seems that could lead to allocated memory overrun and corrupt
+nearlaid memory area.
 
-Changes-licensed-under: 3-clause-BSD
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
+
 ---
- drivers/net/wireless/ath5k/base.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 30b16fd..92361df 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1056,6 +1056,7 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 		 */
- /*		ath5k_chan_change(sc, chan); */
- 
-+		ath5k_beacon_config(sc);
- 		/*
- 		 * Re-enable interrupts.
- 		 */
-@@ -2813,6 +2814,8 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	ret = ath5k_beacon_setup(sc, sc->bbuf, ctl);
- 	if (ret)
- 		sc->bbuf->skb = NULL;
-+	else
-+		ath5k_beacon_config(sc);
- 
- end:
- 	mutex_unlock(&sc->lock);
--- 
-1.5.3.4
+ iwl3945-base.c |    2 +-
+ iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+Index: linux-2.6.git/drivers/net/wireless/iwlwifi/iwl3945-base.c
+===================================================================
+--- linux-2.6.git.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-01-24 18:26:11.000000000 +0300
++++ linux-2.6.git/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-01-26 18:45:03.000000000 +0300
+@@ -6631,7 +6631,7 @@ static void iwl_bg_request_scan(struct w
+ 	 * that based on the direct_mask added to each channel entry */
+ 	scan->tx_cmd.len = cpu_to_le16(
+ 		iwl_fill_probe_req(priv, (struct ieee80211_mgmt *)scan->data,
+-			IWL_MAX_SCAN_SIZE - sizeof(scan), 0));
++			IWL_MAX_SCAN_SIZE - sizeof(*scan), 0));
+ 	scan->tx_cmd.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK;
+ 	scan->tx_cmd.sta_id = priv->hw_setting.bcast_sta_id;
+ 	scan->tx_cmd.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+
+Index: linux-2.6.git/drivers/net/wireless/iwlwifi/iwl4965-base.c
+===================================================================
+--- linux-2.6.git.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-01-26 18:45:38.000000000 +0300
++++ linux-2.6.git/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-01-26 18:46:06.000000000 +0300
+@@ -6992,7 +6992,7 @@ static void iwl_bg_request_scan(struct w
+ 	 * that based on the direct_mask added to each channel entry */
+ 	scan->tx_cmd.len = cpu_to_le16(
+ 		iwl_fill_probe_req(priv, (struct ieee80211_mgmt *)scan->data,
+-			IWL_MAX_SCAN_SIZE - sizeof(scan), 0));
++			IWL_MAX_SCAN_SIZE - sizeof(*scan), 0));
+ 	scan->tx_cmd.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK;
+ 	scan->tx_cmd.sta_id = priv->hw_setting.bcast_sta_id;
+ 	scan->tx_cmd.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
