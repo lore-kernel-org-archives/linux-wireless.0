@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
-	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754590AbYATAOi (ORCPT
+Received: from mailout07.sul.t-online.de ([194.25.134.83]:52459 "EHLO
+	mailout07.sul.t-online.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750776AbYAZOyt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 19:14:38 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 09/14] [usbnet] add driver_priv pointer to 'struct usbnet'
-To: linux-wireless@vger.kernel.org
-Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
-	netdev@vger.kernel.org
-Date: Sun, 20 Jan 2008 02:14:32 +0200
-Message-ID: <20080120001432.25718.30378.stgit@fate.lan> (sfid-20080120_001443_415981_9213E503)
+	Sat, 26 Jan 2008 09:54:49 -0500
+Message-ID: <479B49A6.1020902@t-online.de> (sfid-20080126_145455_659803_F8D16AF3)
+Date: Sat, 26 Jan 2008 15:54:30 +0100
+From: Harald Dunkel <harald.dunkel@t-online.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	dhazelton@enter.net, "Cahill, Ben M" <ben.m.cahill@intel.com>
+Subject: Re: 2.6.24-rc8: iwl3945 gets stuck
+References: <4797994C.1090900@t-online.de> <D936D925018D154694D8A362EEB08920037FFC19@orsmsx416.amr.corp.intel.com>
+In-Reply-To: <D936D925018D154694D8A362EEB08920037FFC19@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a private data pointer to usbnet for rndis_wext module to use.
+Chatre, Reinette wrote:
+> 
+> Very strange. Would it be possible to load the module with
+> "debug=0x43fff"? This will capture a detailed event log and error log
+> from uCode, so we can see what caused the uCode error.
+> 
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+I will try. Is there some way to turn debug on and off after
+the module has been loaded, e.g. by running
 
- drivers/net/usb/usbnet.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+	echo 0x43fff >/proc/some/fancy/path
 
-diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-index 29ab92e..0b4bf09 100644
---- a/drivers/net/usb/usbnet.h
-+++ b/drivers/net/usb/usbnet.h
-@@ -31,6 +31,7 @@ struct usbnet {
- 	struct usb_interface	*intf;
- 	struct driver_info	*driver_info;
- 	const char		*driver_name;
-+	void			*driver_priv;
- 	wait_queue_head_t	*wait;
- 	struct mutex		phy_mutex;
- 	unsigned char		suspend_count;
+?
+
+
+Regards
+
+Harri
 
