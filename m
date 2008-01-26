@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39693 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752577AbYAKQkd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 11:40:33 -0500
-Message-ID: <47879BE4.7040108@lwfinger.net> (sfid-20080111_164042_599754_D904213A)
-Date: Fri, 11 Jan 2008 09:40:04 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:36509 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753868AbYAZVwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jan 2008 16:52:25 -0500
+From: Helge Deller <deller@gmx.de>
 To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFT] b43: Add support for new firmware
-References: <200801102046.56979.mb@bu3sch.de>
-In-Reply-To: <200801102046.56979.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] use is_valid_ether_addr() macro in wireless drivers
+Date: Sat, 26 Jan 2008 22:52:22 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200801262238.18719.deller@gmx.de> <200801262245.40184.mb@bu3sch.de>
+In-Reply-To: <200801262245.40184.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801262252.22626.deller@gmx.de> (sfid-20080126_215228_930595_1B7AE113)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> This patch adds support for new firmware.
-> Please test this on old and new firmware.
+On Saturday 26 January 2008, Michael Buesch wrote:
+> On Saturday 26 January 2008 22:38:18 Helge Deller wrote:
+> > use is_valid_ether_addr() macro instead of hand-coded checks for 
+> > valid IP address.
+> > 
+> 
+> > diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+> > index 42a36b3..7251e71 100644
+> > --- a/drivers/net/wireless/wl3501_cs.c
+> > +++ b/drivers/net/wireless/wl3501_cs.c
+> > @@ -1577,13 +1577,12 @@ static int wl3501_set_wap(struct net_device *dev, struct iw_request_info *info,
+> >  			  union iwreq_data *wrqu, char *extra)
+> >  {
+> >  	struct wl3501_card *this = netdev_priv(dev);
+> > -	static const u8 bcast[ETH_ALEN] = { 255, 255, 255, 255, 255, 255 };
+> >  	int rc = -EINVAL;
+> >  
+> >  	/* FIXME: we support other ARPHRDs...*/
+> >  	if (wrqu->ap_addr.sa_family != ARPHRD_ETHER)
+> >  		goto out;
+> > -	if (!memcmp(bcast, wrqu->ap_addr.sa_data, ETH_ALEN)) {
+> > +	if (!is_valid_ether_addr(wrqu->ap_addr.sa_data)) {
+> >  		/* FIXME: rescan? */
+> >  	} else
+> >  		memcpy(this->bssid, wrqu->ap_addr.sa_data, ETH_ALEN);
+> 
+> This is a semantical change.
+> If the original code is correct, this should be is_broadcast_ether_addr()
 
-I have tested this patch with old firmware. It seems to work; however my testing is not complete as
-my computer has started hanging with the "Caps Lock" light flashing. The crash is not caused by this
-patch as it happened with 2.6.24-rc5, which has run for many days. I do have a suggestion for
-changing the patch (see below).
+Yes, but the original code is probably wrong.
+So I think my patch fixes a bug here as well.
 
-> +static inline
-> +size_t b43_txhdr_size(struct b43_wldev *dev)
-> +{
-> +	if (b43_is_old_txhdr_format(dev))
-> +		return 100 + sizeof(struct b43_plcp_hdr6);
-> +	return 104 + sizeof(struct b43_plcp_hdr6);
-> +}
-
-Why not eliminate most of the magic numbers in this part with
-
-size_t b43_txhdr_size(struct b43_wldev *dev)
-{
-	if (b43_is_old_txhdr_format(dev))
-		return sizeof(struct b43_txhdr) - 4;
-	return sizeof(struct b43_txhdr);
-}
-
-Larry
+Helge
