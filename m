@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42139 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757560AbYAKLjj (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:57228 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbYAZLVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 06:39:39 -0500
-Subject: handing cloned frames to netif_rx()?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-otqGlbx99hSwJc/dvnvo"
-Date: Fri, 11 Jan 2008 02:17:26 +0100
-Message-Id: <1200014246.3861.148.camel@johannes.berg> (sfid-20080111_113942_538600_6D5244BC)
-Mime-Version: 1.0
+	Sat, 26 Jan 2008 06:21:11 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
+Date: Sat, 26 Jan 2008 12:19:32 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Mattias Nissler <mattias.nissler@gmx.de>
+References: <20080126040534.005e6736@morte>
+In-Reply-To: <20080126040534.005e6736@morte>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801261219.34805.mb@bu3sch.de> (sfid-20080126_112116_693541_9538EAE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 26 January 2008 04:05:34 Stefano Brivio wrote:
+> From: Larry Finger <larry.finger@lwfinger.net>
+> 
+> Add a sanity check in rate_control_pid_adjust_rate(). Thanks to Larry Finger
+> for suggesting this and reporting a related bug.
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> NOT-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
+> ---
+> Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> ===================================================================
+> --- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
+> +++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> @@ -128,6 +128,11 @@ static void rate_control_pid_adjust_rate
+>  		}
+>  
+>  		newidx += back;
+> +
+> +		if (newidx < 0 || newidx >= sband->n_bitrates) {
+> +			WARN_ON(1);
+> +			break;
+> +		}
+>  	}
 
---=-otqGlbx99hSwJc/dvnvo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just you know, you can also do this kind of check this way:
 
-In 802.11n, there is a case where multiple data frames are received
-aggregated into a single frame (A-MSDU).
+	if (WARN_ON(newidx < 0 || newidx >= sband->n_bitrates))
+		break;
 
-Currently, we copy each of these frames out into their own skb, but
-because of the alignment with that etc. I started to think that we could
-simply pass up a clone of the original skb with start/length adjusted
-properly so that it windows only the contained packet.
+This way you have an implicite unlikely() and less lines. :)
+But you don't need to respin the patch. I'm also OK with the above.
+This is just informational. ;)
 
-The buffer would be shared but the data within the original window
-(starting with the 802.3 header) could even be written to, it won't be
-needed again by mac80211 once it's handed off to netif_rx(). The skb
-will obviously have lots of head- and tailroom but that space would be
-part of other packets.
-
-Is it ok to do this? Will something freak out if we pass a cloned skb to
-netif_rx()?
-
-johannes
-
---=-otqGlbx99hSwJc/dvnvo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4bDpKVg1VMiehFYAQLI7g/+PrcQAuCq/4RbYeU1yfqLEzHnbCtNjpMQ
-+5qBaZLcAi5AzpHqaR/7z3Ea39ciwSxhT3v3WCEPMZyPjP78efLFNKoZ5TCvVvFs
-eOsgQHzq+POAvZ2fCjINXKFab35O4W2RejHMLlBDG62adh2LL8XRUnIvItQrqLc8
-oXYSGahleuSIC4mBg4mGAOKPHZbJkrPmDLGQEqywAgPziMGIyv/uLkiCsOjr43yk
-nFjLFzkPz1wQMrpbYcVKfu0JYaVVtVcUYS9RqPKMAKgmyTuh5mrt3j0kV7zjKZsO
-MnewOAa9EX98wXvhx0Se6ofz7rtFlSI3bTLWDo55CzczhUX9EayGohLZtypatEs0
-xG1j+lKRiW48n6KkSvmOLQJxZ+7bTlOBebSuqjDOBrjye3zBU0oiQ7xjL2I5Q0Nu
-LB3W/+EybkSnC4DG9CGoCzW/4L+wontSmny1l75MyCPTf3Yxi151nJf4E/e/JhAa
-bu86f0MFdXEDX8sTc3Lm+46MQJnUj4yKvBqoG6ob1VTWV7Ce4MJazRqymRBiZPUa
-8KdCbq5XkDaphqkEiJ85/BlRr86Wa13DvP6jxJ8A3+NNGthg3acB+Nizmku+L1Hd
-sEIpREIjHVwCbCX0BR1+anKZoog6ncahsUTIq92KH8A0tv1AObyhJTX2DVDuhu5v
-VtAMrnTa9o8=
-=9bzi
------END PGP SIGNATURE-----
-
---=-otqGlbx99hSwJc/dvnvo--
-
+-- 
+Greetings Michael.
