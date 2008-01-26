@@ -1,145 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:45268 "EHLO
-	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754543AbYATAOd (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38442
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753211AbYAZNmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 19:14:33 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 08/14] [rndis_host] export functions
-To: linux-wireless@vger.kernel.org
-Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
-	netdev@vger.kernel.org
-Date: Sun, 20 Jan 2008 02:14:27 +0200
-Message-ID: <20080120001427.25718.45322.stgit@fate.lan> (sfid-20080120_001436_395744_530B90C6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 26 Jan 2008 08:42:10 -0500
+Date: Sat, 26 Jan 2008 05:42:23 -0800 (PST)
+Message-Id: <20080126.054223.118097210.davem@davemloft.net> (sfid-20080126_134219_198326_886E930C)
+To: inaky@linux.intel.com
+Cc: mb@bu3sch.de, torvalds@linux-foundation.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200801251328.35985.inaky@linux.intel.com>
+References: <200801251311.45392.inaky@linux.intel.com>
+	<200801252221.07558.mb@bu3sch.de>
+	<200801251328.35985.inaky@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Export rndis_host functions and also rename rndis_bind() to
-generic_rndis_bind() for modules using rndis_host as base.
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+Date: Fri, 25 Jan 2008 13:28:35 -0800
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+> For example: want to ship new firmware, drivers *and* full validation and
+> certification for a product that is already completed just to satisfy a 
+> fraction of a market which is not part of the designed target?
+> 
+> Do you know how much money that costs?
 
- drivers/net/usb/rndis_host.c |   20 +++++++++++++-------
- drivers/net/usb/rndis_host.h |    9 +++++++++
- 2 files changed, 22 insertions(+), 7 deletions(-)
+I'm glad you guys are the only one's with access to the firmware
+source, thus enduring that you can constantly come up with reasons
+like this in order to not have to fix the problem.
 
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 29d7e3b..1d6bf0a 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -60,13 +60,14 @@
-  * RNDIS notifications from device: command completion; "reverse"
-  * keepalives; etc
-  */
--static void rndis_status(struct usbnet *dev, struct urb *urb)
-+void rndis_status(struct usbnet *dev, struct urb *urb)
- {
- 	devdbg(dev, "rndis status urb, len %d stat %d",
- 		urb->actual_length, urb->status);
- 	// FIXME for keepalives, respond immediately (asynchronously)
- 	// if not an RNDIS status, do like cdc_status(dev,urb) does
- }
-+EXPORT_SYMBOL_GPL(rndis_status);
- 
- /*
-  * RPC done RNDIS-style.  Caller guarantees:
-@@ -78,7 +79,7 @@ static void rndis_status(struct usbnet *dev, struct urb *urb)
-  * Call context is likely probe(), before interface name is known,
-  * which is why we won't try to use it in the diagnostics.
-  */
--static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
-+int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
- {
- 	struct cdc_state	*info = (void *) &dev->data;
- 	int			master_ifnum;
-@@ -187,6 +188,7 @@ static int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
- 	dev_dbg(&info->control->dev, "rndis response timeout\n");
- 	return -ETIMEDOUT;
- }
-+EXPORT_SYMBOL_GPL(rndis_command);
- 
- /*
-  * rndis_query:
-@@ -253,7 +255,7 @@ response_error:
- 	return -EDOM;
- }
- 
--static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
-+int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
- {
- 	int			retval;
- 	struct net_device	*net = dev->net;
-@@ -377,8 +379,9 @@ fail:
- 	kfree(u.buf);
- 	return retval;
- }
-+EXPORT_SYMBOL_GPL(generic_rndis_bind);
- 
--static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
-+void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
- {
- 	struct rndis_halt	*halt;
- 
-@@ -393,11 +396,12 @@ static void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
- 
- 	usbnet_cdc_unbind(dev, intf);
- }
-+EXPORT_SYMBOL_GPL(rndis_unbind);
- 
- /*
-  * DATA -- host must not write zlps
-  */
--static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
-+int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
- {
- 	/* peripheral may have batched packets to us... */
- 	while (likely(skb->len)) {
-@@ -439,8 +443,9 @@ static int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
- 	/* caller will usbnet_skb_return the remaining packet */
- 	return 1;
- }
-+EXPORT_SYMBOL_GPL(rndis_rx_fixup);
- 
--static struct sk_buff *
-+struct sk_buff *
- rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
- {
- 	struct rndis_data_hdr	*hdr;
-@@ -485,12 +490,13 @@ fill:
- 	/* FIXME make the last packet always be short ... */
- 	return skb;
- }
-+EXPORT_SYMBOL_GPL(rndis_tx_fixup);
- 
- 
- static const struct driver_info	rndis_info = {
- 	.description =	"RNDIS device",
- 	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
--	.bind =		rndis_bind,
-+	.bind =		generic_rndis_bind,
- 	.unbind =	rndis_unbind,
- 	.status =	rndis_status,
- 	.rx_fixup =	rndis_rx_fixup,
-diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
-index 1386a17..61f1fd8 100644
---- a/drivers/net/usb/rndis_host.h
-+++ b/drivers/net/usb/rndis_host.h
-@@ -244,5 +244,14 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
- 	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
- 	RNDIS_PACKET_TYPE_PROMISCUOUS)
- 
-+
-+extern void rndis_status(struct usbnet *dev, struct urb *urb);
-+extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
-+extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
-+extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
-+extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
-+extern struct sk_buff *
-+rndis_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags);
-+
- #endif	/* __RNDIS_HOST_H */
- 
+You know that if the source were available, the community would have
+fixed the bug ages ago.
 
+But the situation is entirely in Intel's control which is surely
+exactly the way they like it.
