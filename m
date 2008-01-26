@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s39.bay0.hotmail.com ([65.54.246.239]:29608 "EHLO
-	bay0-omc3-s39.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752760AbYAWQid convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 11:38:33 -0500
-Message-ID: <BAY129-W14C8943AE66B2644546B0CCB3F0@phx.gbl> (sfid-20080123_163838_673077_BED467DD)
-From: Adrian Bassett <adrian.bassett@hotmail.co.uk>
-To: <linux-wireless@vger.kernel.org>
-Subject: 
-Date: Wed, 23 Jan 2008 16:38:33 +0000
+Received: from mfe1.polimi.it ([131.175.12.23]:48324 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750972AbYAZDDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2008 22:03:39 -0500
+Date: Sat, 26 Jan 2008 04:02:17 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: [PATCH 1/2] rc80211-pid: fix adjusted index check
+Message-ID: <20080126040217.7c5d2928@morte> (sfid-20080126_030351_627577_BBE8C6B4)
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Compare adjusted indices with real mac80211 indices instead of internal ones
+while checking them.
 
-[Non-subscriber submission]
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+John, not sure if this fixes the bug Larry reported, but should applied
+anyway.
 
-Hi,
-
-I have been using the rtl8180 driver via the git kernel route for a while now and would like to suggest that the following local ammendment is included in the development tree in order to support the PCI device 1799:700f.
-
-This device is found on the 'Belkin Wireless G Desktop Card' product, model 'F5D7000uk'.  From memory, the chip on the card is inscribed RTL8185L;  (I don't know the significance of the 'L', I'm afraid).
-
-commit 1c15edc0ab13c2bbfaa6164f856a39a5cf1b14a2
-Author: Adrian Bassett 
-Date:   Wed Jan 23 14:31:47 2008 +0000
-
-    rtl8180_dev.c:  add support for 1799:700f
-    
-    Signed-off-by: root 
-
-diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
-index 07f37b0..27ebd68 100644
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -36,6 +36,7 @@ MODULE_LICENSE("GPL");
- static struct pci_device_id rtl8180_table[] __devinitdata = {
-        /* rtl8185 */
-        { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8185) },
-+       { PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x700f) },
-        { PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x701f) },
+Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
++++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+@@ -78,8 +78,13 @@ static int rate_control_pid_shift_adjust
+ 	i = j + adj;
  
-        /* rtl8180 */
+ 	if (i < 0)
++		i = r[0].rev_index;
++	if (i > l - 1)
++		i = r[l - 1].rev_index;
++
++	if (r[i].index <= 0)
+ 		return r[0].index;
+-	if (i >= l - 1)
++	if (r[i].index >= l - 1)
+ 		return r[l - 1].index;
+ 
+ 	tmp = i;
 
-Thanks,
 
-Adrian Bassett
-_________________________________________________________________
-Get Hotmail on your mobile, text MSN to 63463!
-http://mobile.uk.msn.com/pc/mail.aspx
+-- 
+Ciao
+Stefano
