@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:45500 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753114AbYABTr7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58946
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754759AbYAZNrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 14:47:59 -0500
-Message-ID: <477BEA68.7090201@lwfinger.net> (sfid-20080102_194803_152795_235E469A)
-Date: Wed, 02 Jan 2008 11:47:52 -0800
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Fix rxheader channel parsing
-References: <200801021855.53410.mb@bu3sch.de> <477BDD58.9050702@lwfinger.net> <200801022002.58434.mb@bu3sch.de>
-In-Reply-To: <200801022002.58434.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 26 Jan 2008 08:47:06 -0500
+Date: Sat, 26 Jan 2008 05:47:20 -0800 (PST)
+Message-Id: <20080126.054720.158242838.davem@davemloft.net> (sfid-20080126_134723_411091_B717C0BC)
+To: torvalds@linux-foundation.org
+Cc: linville@tuxdriver.com, mb@bu3sch.de, dcbw@redhat.com,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LFD.1.00.0801251354350.5056@hp.linux-foundation.org>
+References: <20080125195037.GE14687@tuxdriver.com>
+	<20080125211815.GF14687@tuxdriver.com>
+	<alpine.LFD.1.00.0801251354350.5056@hp.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
->> Shouldn't you just drop this case? No B PHY devices will ever use b43 and the default branch will
->> issue the WARN_ON anyway.
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 25 Jan 2008 13:56:15 -0800 (PST)
+
 > 
-> I guess you misread the patch.
+> 
+> On Fri, 25 Jan 2008, John W. Linville wrote:
+> > 
+> > Anyway, this is mostly just so we can scope the driver change required
+> > in absence of a firmware change.  Persumably the changes required if
+> > we were to put such code in mac80211 would be similar.
+> 
+> Make this conditional on archictures that need it, please.
+> 
+> And why is it suddenly smart to do this in three drivers rather than one 
+> upper layer?
 > 
 
-I did indeed. Sorry.
+Grep the ethernet drivers Linus, we've been doing this since
+the Donald Becker era.
 
-Larry
-
+The ones that cannot provide the necessary alignment copy on
+platforms that cannot handle it without traps.
