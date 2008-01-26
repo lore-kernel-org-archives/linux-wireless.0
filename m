@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:48218 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796AbYAIJot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 04:44:49 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Pavel Roskin <proski@gnu.org>
-Cc: bruno randolf <bruno@thinktube.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: merge errors on 'everything'
-References: <200801091043.02204.bruno@thinktube.com>
-	<1199844835.3697.12.camel@dv>
-Date: Wed, 09 Jan 2008 10:44:46 +0100
-In-Reply-To: <1199844835.3697.12.camel@dv> (Pavel Roskin's message of "Tue\, 08
-	Jan 2008 21\:13\:55 -0500")
-Message-ID: <jek5mjgwoh.fsf@sykes.suse.de> (sfid-20080109_094453_251306_3D7F2711)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33668
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752539AbYAZNWL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jan 2008 08:22:11 -0500
+Date: Sat, 26 Jan 2008 05:22:24 -0800 (PST)
+Message-Id: <20080126.052224.193711536.davem@davemloft.net> (sfid-20080126_132227_484398_8B59871A)
+To: torvalds@linux-foundation.org
+Cc: dcbw@redhat.com, mb@bu3sch.de, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org>
+References: <1201282027.3422.15.camel@localhost.localdomain>
+	<alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
+	<alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 25 Jan 2008 10:22:13 -0800 (PST)
 
-> You can clean up the consequences of the failed merge by running
-> "git-reset --hard origin/everything" where "origin" is the name of th=
-e
-> remote.
+> With ethernet, there were chips that could only do DMA at certain
+> alignments etc, together with various other headers being involved,
+> making it impossible to require alignment without memcpy(), and I
+> don't think we've had any issues there.
 
-A failed merge leaves the head of the tree to be merged in MERGE_HEAD,
-so you can use "git reset --hard MERGE_HEAD" generically.
+Yes, we could do a copy in the input path in the Intel drivers.
 
-Andreas.
+But then Intel is going to say "see it's fixed" and will never make
+the 2 or 3 line fix to their firmware necessary to cure this
+efficiently on all platforms.
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To be honest I am in the camp of putting pressure on people
+to do the right thing, and Intel fixing their firmware is
+definitely the right thing to do here especially since it
+is so easy for them to do so.
+
+As for the "get another maintainer to step up" argument, nobody has
+access to Intel's firmware source besides them, otherwise I can assure
+you people would jump out of the woodwork by the handful to take over
+several of Intel's drivers.
+
+Many people are un-buggering up the Intel driver source bits that
+people do have access to and can edit.
+
+Intel controls the situation and that's just the way they like it.
+It's not really a community thing because of the firmware issue,
+so it's not possible to apply the same sort of "if you don't like
+it, stand up and do the work to fix it" arguments.
+
+We would if we could :-)
+
+FWIW, I do agree with cpus should do unaligned accesses transparently,
+without traps.  But unfortunately I don't think all the cell phones,
+wireless access points, building key-card entry systems and the like
+are going to switch over to x86 any time soon.  And in a scary sense
+this is becomming the dominant space for Linux by at least some
+measures :-)
