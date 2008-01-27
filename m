@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:36852 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752535AbYAHPbb convert rfc822-to-8bit (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:41998 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751115AbYA0GfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 10:31:31 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Alejandro Riveira =?utf-8?q?Fern=C3=A1ndez?= <ariveira@gmail.com>
+	Sun, 27 Jan 2008 01:35:16 -0500
+Date: Sat, 26 Jan 2008 22:32:27 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: David Miller <davem@davemloft.net>
+cc: linville@tuxdriver.com, mb@bu3sch.de, dcbw@redhat.com,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
 Subject: Re: Linux 2.6.24-rc7
-Date: Tue, 8 Jan 2008 16:30:30 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org> <200801071830.51895.mb@bu3sch.de> <20080107212344.1372cc47@Varda>
-In-Reply-To: <20080107212344.1372cc47@Varda>
+In-Reply-To: <20080126.053736.130683952.davem@davemloft.net>
+Message-ID: <alpine.LFD.1.00.0801262229300.3222@www.l.google.com> (sfid-20080127_063520_213138_FFC8BEC5)
+References: <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org> <20080125194807.GD14687@tuxdriver.com> <alpine.LFD.1.00.0801251223590.2979@hp.linux-foundation.org> <20080126.053736.130683952.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200801081630.31110.mb@bu3sch.de> (sfid-20080108_153150_694996_30850297)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 January 2008 21:23:44 Alejandro Riveira Fern=C3=A1ndez wro=
-te:
-> > > [   37.043990] WARNING: at /home/alex/kernel/linux-2.6/net/mac802=
-11/rx.c:1486 __ieee80211_rx()=20
-> > > [   37.043996] Pid: 0, comm: swapper Not tainted 2.6.24-rc7 #3   =
-                                                           =20
-> > > [   37.043998]                                                   =
-                                                           =20
-> > > [   37.043999] Call Trace:                                       =
-                                                           =20
-> > > [   37.044001]  <IRQ>  [<ffffffff80227fe3>] enqueue_task+0x13/0x3=
-0                                                          =20
-> > > [   37.044040]  [<ffffffff88178cbe>] :mac80211:__ieee80211_rx+0xc=
-7e/0xd30                                                   =20
-> > > [   37.044044]  [<ffffffff80228062>] activate_task+0x32/0x50     =
-                                                           =20
-> > > [   37.044073]  [<ffffffff8816a28b>] :mac80211:ieee80211_tasklet_=
-handler+0xbb/0x120                                         =20
-> > > [   37.044086]  [<ffffffff80238d08>] tasklet_action+0x48/0xb0    =
-                                                           =20
-> > > [   37.044091]  [<ffffffff80238c09>] __do_softirq+0x69/0xe0      =
-                                                           =20
-> > > [   37.044097]  [<ffffffff8020ce2c>] call_softirq+0x1c/0x30      =
-                                                           =20
-> > > [   37.044101]  [<ffffffff8020efe5>] do_softirq+0x35/0x90        =
-                                                           =20
-> > > [   37.044105]  [<ffffffff80238aa5>] irq_exit+0x95/0xa0          =
-                                                           =20
-> > > [   37.044108]  [<ffffffff8020f0c0>] do_IRQ+0x80/0x100           =
-                                                           =20
-> > > [   37.044111]  [<ffffffff8020a840>] default_idle+0x0/0x40       =
-                                                           =20
-> > > [   37.044115]  [<ffffffff8020c181>] ret_from_intr+0x0/0xa       =
-                                                           =20
-> > > [   37.044117]  <EOI>  [<ffffffff8020a869>] default_idle+0x29/0x4=
-0                                                          =20
-> > > [   37.044130]  [<ffffffff8020a8f5>] cpu_idle+0x75/0xc0          =
-                                                           =20
-> > > [   37.044146]                                                   =
-                                                           =20
-> >=20
-> >=20
-> > Can you check if that is the
-> > WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
-> > in rx.c line 1486?
-> =20
->  How can I check? The source code I build does indeed have the line
->  you quoted on net/mac80211/rx.c:1486 Is that what you are asking for=
-?
-> =20
->  WARN_ON_ONCE(((unsigned long)(skb->data + hdrlen)) & 3);
 
-Yes fine.
-Patches are on their way. Ignore the warning for now. It is harmless.
 
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, 26 Jan 2008, David Miller wrote:
+> 
+> We could even move the check and the copy out of the drivers
+> and into the top-level packet input.
+
+Hallelujah! Exactly.
+
+> That would be a double win, things would always work and not
+> trap, but also drivers could still optimize cases where aspects
+> of hardware behavior would allow avoiding the unaligned cases
+> better on a driver-local level.
+
+Absolutely. Even on x86 and PowerPC, even if the actual "memmove()" 
+doesn't take place, a driver that *can* make the packet data naturally 
+aligned will want to do so just for simple performance reasons.
+
+But we shouldn't make up stupid rules like "network drivers *have* to 
+align packets correctly", simply because such rules may not make sense to 
+the driver writer. If the hardware simply cannot do it, or has some 
+horrible performance behaviour when it does so, it's stupid to tell a 
+driver that it has to do it.
+
+			Linus
