@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45997 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751244AbYAICN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2008 21:13:57 -0500
-Subject: Re: merge errors on 'everything'
-From: Pavel Roskin <proski@gnu.org>
-To: bruno randolf <bruno@thinktube.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200801091043.02204.bruno@thinktube.com>
-References: <200801091043.02204.bruno@thinktube.com>
-Content-Type: text/plain
-Date: Tue, 08 Jan 2008 21:13:55 -0500
-Message-Id: <1199844835.3697.12.camel@dv> (sfid-20080109_021401_162361_512679CF)
+Received: from mfe1.polimi.it ([131.175.12.23]:49917 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753514AbYA0OgB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jan 2008 09:36:01 -0500
+Date: Sun, 27 Jan 2008 15:32:51 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lars <Lars_Ericsson@telia.com>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 refcounting bug was: [PATCH 2/2] rc80211-pid: add
+ sanity check
+Message-ID: <20080127153251.18b64cb7@morte> (sfid-20080127_143606_712905_BE9668EA)
+In-Reply-To: <20080127142248.3e76b237@morte>
+References: <20080126040534.005e6736@morte>
+	<200801261219.34805.mb@bu3sch.de>
+	<loom.20080126T193518-105@post.gmane.org>
+	<20080127134252.776cebd6@morte>
+	<20080127142248.3e76b237@morte>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-01-09 at 10:43 +0900, bruno randolf wrote:
-> hi!
-> 
-> many times when i do a 'git pull' to update the wireless-2.6 'everything' 
-> branch i run into unexplicable merge errors.
+Sorry, just disregard this report, Michael and others already reported that.
 
-I think the explanation is that the changes in the branch are rebased,
-rather than merged, when the wireless-2.6 repository is updated from the
-upstream Linux repository.
-
-git views changes on top of the old tree in your repository as
-independent from those that appear in wireless-2.6, so it tries to merge
-them.  But since it's actually the same patches, git sees that as a
-conflict.
-
-You can clean up the consequences of the failed merge by running
-"git-reset --hard origin/everything" where "origin" is the name of the
-remote.
-
-> i created the branch with 'git co --track -b everything origin/everything' and 
-> i don't work on this branch so all files are un-modified.
-> 
-> what am i doing wrong?
-
-I'm not sure you are doing anything wrong.  It's quite possible that git
-should be changed to handle this problem better.  Or maybe the
-wireless-2.6 repository should be managed differently.
 
 -- 
-Regards,
-Pavel Roskin
+Ciao
+Stefano
