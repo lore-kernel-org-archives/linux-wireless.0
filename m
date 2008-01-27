@@ -1,19 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:54935 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381AbYADOA1 (ORCPT
+Received: from smtp114.sbc.mail.mud.yahoo.com ([68.142.198.213]:37199 "HELO
+	smtp114.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752039AbYA0Q34 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 09:00:27 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so7199357fkz.5
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jan 2008 06:00:25 -0800 (PST)
-Message-ID: <477E3BF2.3090403@gmail.com> (sfid-20080104_140034_474015_B426E47E)
-Date: Fri, 04 Jan 2008 15:00:18 +0100
-From: Cristian <cristian.marussi@gmail.com>
+	Sun, 27 Jan 2008 11:29:56 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 10/14] [rndis_host] Add early_init function pointer to 'struct rndis_data'.
+Date: Sun, 27 Jan 2008 08:14:43 -0800
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bjd@jooz.net
+References: <20080125225032.11716.77713.stgit@fate.lan> <20080125225128.11716.59998.stgit@fate.lan>
+In-Reply-To: <20080125225128.11716.59998.stgit@fate.lan>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: (no subject)
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801270814.43760.david-b@pacbell.net> (sfid-20080127_163028_102558_AEF23910)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SUBSCRIBE LINUX-WIRELESS
+On Friday 25 January 2008, Jussi Kivilinna wrote:
+> Function pointer is for 'subminidrivers' that need to do work on device 
+> right after minidriver has initialized hardware.
+> 
+> For example, rndis_wlan setting device specific configuration parameters
+> with OID_GEN_RNDIS_CONFIG_PARAMETER right after rndis_host has 
+> initialized hardware with RNDIS_INIT.
+> 
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+
+... though I'm not sure I'd coin a term like "subminidriver".  ;)
+
+
+> ---
+> 
+>  drivers/net/usb/rndis_host.c |    6 ++++++
+>  drivers/net/usb/usbnet.h     |    5 +++++
+>  2 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+> index 1d6bf0a..0813903 100644
+> --- a/drivers/net/usb/rndis_host.c
+> +++ b/drivers/net/usb/rndis_host.c
+> @@ -336,6 +336,12 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+>  		dev->hard_mtu, tmp, dev->rx_urb_size,
+>  		1 << le32_to_cpu(u.init_c->packet_alignment));
+>  
+> +	/* module has some device initialization code needs to be done right
+> +	 * after RNDIS_INIT */
+> +	if (dev->driver_info->early_init &&
+> +			dev->driver_info->early_init(dev) != 0)
+> +		goto halt_fail_and_release;
+> +
+>  	/* Get designated host ethernet address */
+>  	reply_len = ETH_ALEN;
+>  	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
+> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+> index 0b4bf09..25b63d3 100644
+> --- a/drivers/net/usb/usbnet.h
+> +++ b/drivers/net/usb/usbnet.h
+> @@ -116,6 +116,11 @@ struct driver_info {
+>  	struct sk_buff	*(*tx_fixup)(struct usbnet *dev,
+>  				struct sk_buff *skb, gfp_t flags);
+>  
+> +	/* early initialization code, can sleep. This is for minidrivers
+> +	 * having 'subminidrivers' that need to do extra initialization
+> +	 * right after minidriver have initialized hardware. */
+> +	int	(*early_init)(struct usbnet *dev);
+> +
+>  	/* for new devices, use the descriptor-reading code instead */
+>  	int		in;		/* rx endpoint */
+>  	int		out;		/* tx endpoint */
+> 
+
+
