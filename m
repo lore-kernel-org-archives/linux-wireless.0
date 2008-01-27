@@ -1,133 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:5508 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbYAYBNR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 20:13:17 -0500
-Received: by an-out-0708.google.com with SMTP id d31so106551and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2008 17:13:16 -0800 (PST)
-Message-ID: <40f31dec0801241713l3c4dd74es9add7c0646d938d8@mail.gmail.com> (sfid-20080125_011321_388869_86FAFD5C)
-Date: Fri, 25 Jan 2008 03:13:15 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "John Daiker" <daikerjohn@gmail.com>
-Subject: Re: ath5k: 5212 / 5213A / 2413 identity crisis?
+Received: from mfe1.polimi.it ([131.175.12.23]:57255 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752583AbYA0TsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jan 2008 14:48:08 -0500
+Date: Sun, 27 Jan 2008 20:46:06 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Lars Ericsson <Lars_Ericsson@telia.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <479934C5.3060401@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <479934C5.3060401@gmail.com>
+Subject: [RFT] [PATCH] rc80211-pid: fix rate adjusting
+Message-ID: <20080127204606.63fbbaf7@morte> (sfid-20080127_194812_900990_8DAFF0C8)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/1/25, John Daiker <daikerjohn@gmail.com>:
-> Hello All,
->
-> I've been using MadWifi since I picked up a PCMCIA card a few months
-> ago.  I've tried out the ath5k driver, but can't get the card to 'iwlist
-> wlan0 scan' AP's, or even connect to an unsecured AP through 'iwconfig'
-> commands.
->
-> I've pasted an output of my dmesg output from both MadWifi and ath5k, as
-> well as lspci -v.
->
-> 'sudo modprobe ath_pci'
-> [ 2537.326216] ath_hal: 0.9.18.0 (AR5210, AR5211, AR5212, RF5111,
-> RF5112, RF2413, RF5413)
-> [ 2537.348389] wlan: 0.8.4.2 (0.9.3.3)
-> [ 2537.353061] ath_pci: 0.9.4.5 (0.9.3.3)
-> [ 2537.354583] ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 20 (level,
-> low) -> IRQ 20
-> [ 2537.620439] ath_rate_sample: 1.2 (0.9.3.3)
-> [ 2537.636510] wifi0: 11b rates: 1Mbps 2Mbps 5.5Mbps 11Mbps
-> [ 2537.636704] wifi0: 11g rates: 1Mbps 2Mbps 5.5Mbps 11Mbps 6Mbps 9Mbps
-> 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-> [ 2537.636947] wifi0: H/W encryption support: WEP AES AES_CCM TKIP
-> [ 2537.637108] wifi0: mac 7.8 phy 4.5 radio 5.6
-> [ 2537.637240] wifi0: Use hw queue 1 for WME_AC_BE traffic
-> [ 2537.637370] wifi0: Use hw queue 0 for WME_AC_BK traffic
-> [ 2537.637554] wifi0: Use hw queue 2 for WME_AC_VI traffic
-> [ 2537.637685] wifi0: Use hw queue 3 for WME_AC_VO traffic
-> [ 2537.637816] wifi0: Use hw queue 8 for CAB traffic
-> [ 2537.637952] wifi0: Use hw queue 9 for beacons
-> [ 2537.643490] wifi0: Atheros 5212: mem=0x54000000, irq=20
-> [ 2537.647060] net wlan0: device_rename: sysfs_create_symlink failed (-17)
->
-> 'sudo modprobe ath5k'
-> [ 2590.373989] ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 20 (level,
-> low) -> IRQ 20
-> [ 2590.374333] ath5k_pci 0000:07:00.0: registered as 'phy7'
-> [ 2590.446657] phy7: Selected rate control algorithm 'simple'
-> [ 2590.471263] ath5k phy7: Atheros AR5213A chip found (MAC: 0x78, PHY: 0x45)
-> [ 2590.471450] ath5k phy7: RF2112A 2GHz radio found (0x56)
-> [ 2590.485529] HW CONFIG: channel=1 freq=2412 phymode=2
-> [ 2590.523213] HW CONFIG: channel=1 freq=2412 phymode=2
-> [ 2590.538549] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.550964] HW CONFIG: channel=2 freq=2417 phymode=2
-> [ 2590.579394] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.591820] HW CONFIG: channel=3 freq=2422 phymode=2
-> [ 2590.620239] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.632661] HW CONFIG: channel=4 freq=2427 phymode=2
-> [ 2590.661093] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.673503] HW CONFIG: channel=5 freq=2432 phymode=2
-> [ 2590.701934] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.714368] HW CONFIG: channel=6 freq=2437 phymode=2
-> [ 2590.742785] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.755208] HW CONFIG: channel=7 freq=2442 phymode=2
-> [ 2590.783636] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.796057] HW CONFIG: channel=8 freq=2447 phymode=2
-> [ 2590.826261] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.838685] HW CONFIG: channel=9 freq=2452 phymode=2
-> [ 2590.867125] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.879533] HW CONFIG: channel=10 freq=2457 phymode=2
-> [ 2590.907962] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.920383] HW CONFIG: channel=11 freq=2462 phymode=2
-> [ 2590.950586] phy7: TX to low-level driver (len=40) FC=0x0040
-> DUR=0x0000 A1=ff:ff:ff:ff:ff:ff A2=00:13:46:d7:7f:c7 A3=ff:ff:ff:ff:ff:ff
-> [ 2590.963012] HW CONFIG: channel=1 freq=2412 phymode=2
->
-> 'lspci -v'
-> 07:00.0 Ethernet controller: Atheros Communications, Inc. AR2413
-> 802.11bg NIC (rev 01)
->         Subsystem: D-Link System Inc AirPlus G DWL-G630
->         Flags: bus master, medium devsel, latency 168, IRQ 20
->         Memory at 54000000 (32-bit, non-prefetchable) [size=64K]
->         Capabilities: <access denied>
->
->
-> Seems as if there is a discrepancy between:
->     MadWifi    (reporting an Atheros 5212)
->     ath5k      (reporting an Atheros AR5213A chip with a RF2112A radio)
->     lspci -v   (reporting an Atheros AR2413 chip)
->
->
-> I can help debug any possible solution to this.
->
-> John Daiker
->
-> PS> Sorry for the verbosity... just wanted all the info out there.
+Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
+in order to make the learning algorithm aware of constraints on rates. Also
+add some comments and rename variables.
 
-Thanx a lot for your input, it's a known problem and we are working on
-it. We 'll soon start working on a 2413 card compex donated to us and
-hopefully come up with a patch.
+This fixes a bug which prevented 802.11b/g non-AP STAs from working with
+802.11b only AP STAs.
 
-About chip's identity we don't identify chips by pci ids since vendors
-sometimes use faulty pci ids. You can see in the logs that your mac
-revision id is 0x7* and your radio revision id is 0x56, these values
-match 2413/2414 cards. We already updated ath_info tool for this, a
-patch series is pending for the driver (i have exams right now -again
-:P-, sorry for the delay).
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+John, this should supersede the previously posted patches 1/2 and 2/2. This
+needs further testing anyway.
+
+Larry, Lars, please test this. It works for me, both with 802.11b only and
+802.11b/g settings on my AP.
+
+Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
++++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+@@ -2,7 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
+- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
++ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -64,71 +64,66 @@
+  */
+ 
+ 
+-/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
+- * a worse failed frames behaviour and we'll choose the highest rate whose
+- * failed frames behaviour is not worse than the one of the original rate
+- * target. While at it, check that the adjustment is within the ranges. Then,
+- * provide the new rate index. */
+-static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
+-					 int adj, int cur, int l)
+-{
+-	int i, j, k, tmp;
+-
+-	j = r[cur].rev_index;
+-	i = j + adj;
+-
+-	if (i < 0)
+-		return r[0].index;
+-	if (i >= l - 1)
+-		return r[l - 1].index;
+-
+-	tmp = i;
+-
+-	if (adj < 0) {
+-		for (k = j; k >= i; k--)
+-			if (r[k].diff <= r[j].diff)
+-				tmp = k;
+-	} else {
+-		for (k = i + 1; k + i < l; k++)
+-			if (r[k].diff <= r[i].diff)
+-				tmp = k;
+-	}
+-
+-	return r[tmp].index;
+-}
+-
++/* Adjust the rate while ensuring that we won't switch to a lower rate if it
++ * exhibited a worse failed frames behaviour and we'll choose the highest rate
++ * whose failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the new rate is valid. */
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+ 					 struct sta_info *sta, int adj,
+ 					 struct rc_pid_rateinfo *rinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_supported_band *sband;
+-	int newidx;
+-	int maxrate;
+-	int back = (adj > 0) ? 1 : -1;
++	int cur_sorted, new_sorted, probe, tmp, n_bitrates, band;
++	int cur = sta->txrate_idx;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+-
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
++	band = sband->band;
++	n_bitrates = sband->n_bitrates;
+ 
+-	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate_idx,
+-					       sband->n_bitrates);
++	/* Map passed arguments to sorted values. */
++	cur_sorted = rinfo[cur].rev_index;
++	new_sorted = cur_sorted + adj;
++
++	/* Check limits. */
++	if (new_sorted < 0)
++		new_sorted = rinfo[0].rev_index;
++	else if (new_sorted >= n_bitrates)
++		new_sorted = rinfo[n_bitrates - 1].rev_index;
+ 
+-	while (newidx != sta->txrate_idx) {
+-		if (rate_supported(sta, sband->band, newidx) &&
+-		    (maxrate < 0 || newidx <= maxrate)) {
+-			sta->txrate_idx = newidx;
+-			break;
+-		}
++	tmp = new_sorted;
+ 
+-		newidx += back;
++	if (adj < 0) {
++		/* Ensure that the rate decrease isn't disadvantageous. */
++		for (probe = cur_sorted; probe >= new_sorted; probe--)
++			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
++			    rate_supported(sta, band, rinfo[probe].index))
++				tmp = probe;
++	} else {
++		/* Look for rate increase with zero (or below) cost. */
++		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
++			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
++			    rate_supported(sta, band, rinfo[probe].index))
++				tmp = probe;
+ 	}
+ 
++	/* Fit the rate found to the nearest supported rate. */
++	do {
++		if (rate_supported(sta, band, rinfo[tmp].index)) {
++			sta->txrate_idx = rinfo[tmp].index;
++			break;
++		}
++		if (adj < 0)
++			tmp--;
++		else
++			tmp++;
++	} while (tmp < n_bitrates && tmp >= 0);
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	rate_control_pid_event_rate_change(
+ 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
+-		newidx, sband->bitrates[newidx].bitrate);
++		cur, sband->bitrates[cur].bitrate);
+ #endif
+ }
+ 
+
 
 --
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Ciao
+Stefano
