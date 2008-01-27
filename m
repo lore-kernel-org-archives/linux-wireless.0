@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:47494 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292AbYASWU6 (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35640 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752846AbYA0RB4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 17:20:58 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2187111pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 14:20:56 -0800 (PST)
-Message-ID: <43e72e890801191420p5c25e32aid790748a982bd54d@mail.gmail.com> (sfid-20080119_222103_009243_0B2215FA)
-Date: Sat, 19 Jan 2008 17:20:56 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 2/4] ath5k: always extend rx timestamp with tsf
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <20080118125059.6342.18514.stgit@one>
+	Sun, 27 Jan 2008 12:01:56 -0500
+Message-ID: <479CB7A0.6090000@lwfinger.net> (sfid-20080127_170201_038386_F5D30487)
+Date: Sun, 27 Jan 2008 09:56:00 -0700
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125018.6342.94435.stgit@one>
-	 <20080118125059.6342.18514.stgit@one>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
+References: <20080126040534.005e6736@morte>
+In-Reply-To: <20080126040534.005e6736@morte>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 18, 2008 7:50 AM, Bruno Randolf <bruno@thinktube.com> wrote:
-> always extend the rx timestamp with the local TSF, since this information is
-> also needed for proper IBSS merging. this is done in the tasklet for now, maybe
-> has to be moved to the interrupt handler like in madwifi.
->
-> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
->
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Stefano Brivio wrote:
+> From: Larry Finger <larry.finger@lwfinger.net>
+> 
+> Add a sanity check in rate_control_pid_adjust_rate(). Thanks to Larry Finger
+> for suggesting this and reporting a related bug.
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> NOT-Signed-off-by: Larry Finger <larry.finger@lwfinger.net>
 > ---
->
->  drivers/net/wireless/ath5k/base.c |   17 ++++++++++++-----
->  1 files changed, 12 insertions(+), 5 deletions(-)
->
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 6bbee64..bb1745f 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1725,11 +1725,18 @@ accept:
->                         skb_pull(skb, pad);
->                 }
->
-> -               if (sc->opmode == IEEE80211_IF_TYPE_MNTR)
-> -                       rxs.mactime = ath5k_extend_tsf(sc->ah,
-> -                                       ds->ds_rxstat.rs_tstamp);
-> -               else
-> -                       rxs.mactime = ds->ds_rxstat.rs_tstamp;
-> +               /*
-> +                * always extend the mac timestamp, since this information is
-> +                * also needed for proper IBSS merging.
-> +                *
-> +                * XXX: it might be too late to do it here, since rs_tstamp is
-> +                * 15bit only. that means TSF extension has to be done within
-> +                * 32.768usec = 32ms. it might be necessary to move this to the
-> +                * interrupt handler, like it is done in madwifi.
-> +                */
-
-I'm trying to understand this a bit more and am confused. The TSF
-timer is based on 1MHz clock so it has a resolution of 1 microsecond
-(us). For 15 bits that would mean 32768 us so don't you mean it should
-be done within 32.768 ms instead of usec (or us)?
-
-> +               rxs.mactime = ath5k_extend_tsf(sc->ah, ds->ds_rxstat.rs_tstamp);
-> +               rxs.flag |= RX_FLAG_TSFT;
+> Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> ===================================================================
+> --- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
+> +++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+> @@ -128,6 +128,11 @@ static void rate_control_pid_adjust_rate
+>  		}
+>  
+>  		newidx += back;
 > +
->                 rxs.freq = sc->curchan->freq;
->                 rxs.channel = sc->curchan->chan;
->                 rxs.phymode = sc->curmode;
->
->
+> +		if (newidx < 0 || newidx >= sband->n_bitrates) {
+> +			WARN_ON(1);
+> +			break;
+> +		}
+>  	}
+>  
+>  #ifdef CONFIG_MAC80211_DEBUGFS
 
-Right now we only use mactime and even RX_FLAG_TSFT within mac80211 in
-rx.c on ieee80211_rx_monitor() for IEEE80211_RADIOTAP_TSFT so right
-now these changes would seem to do nothing. Should we be using this
-for something else -- if so what is it?
+The bug is triggered when the following conditions are true: (1) an 802.11g device is being used on
+an 802.11b network, (2) "newidx" from rate_control_pid_shift_adjust is higher than the index of 
+rates used by the AP, and (3) the value of "back" is 1. The loop keeps increasing "newidx" but 
+sta->supp_rates & BIT(newidx) can never be true.
 
-  Luis
+Although the real cause of the bug is due to selecting a trial value for the new rate that can never 
+be satisfied, I think that this sanity check is a reasonable way to detect and stop the runaway. As 
+this condition is likely to affect a lot of systems, I think the WARN_ON(1) should be removed from 
+the final version of the patch. With it in, a lot of logs will get spammed.
+
+Larry
+
+
+
