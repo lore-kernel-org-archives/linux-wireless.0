@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759059AbYAKOrV (ORCPT
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:57043 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750936AbYA0TFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 09:47:21 -0500
-Subject: Re: Bcm4311 shuts down on closing lid (intended?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ronald645@gmail.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47876C32.8090004@gmail.com> (sfid-20080111_132311_007072_430845CE)
-References: <47866FE6.4010100@gmail.com>
-	 (sfid-20080110_192630_077617_B3331316) <1200052973.3861.167.camel@johannes.berg>
-	 <47876C32.8090004@gmail.com> (sfid-20080111_132311_007072_430845CE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gjhZjF8qEHpiTJ7Y61rc"
-Date: Fri, 11 Jan 2008 15:47:02 +0100
-Message-Id: <1200062822.3861.169.camel@johannes.berg> (sfid-20080111_144751_967896_C857947C)
+	Sun, 27 Jan 2008 14:05:55 -0500
+Subject: Re: [PATCH 12/14] [rndis_host] Add RNDIS physical medium checking
+	into generic_rndis_bind()
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: David Brownell <david-b@pacbell.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bjd@jooz.net
+In-Reply-To: <200801270829.53470.david-b@pacbell.net>
+References: <20080125225032.11716.77713.stgit@fate.lan>
+	 <20080125225139.11716.91641.stgit@fate.lan>
+	 <200801270829.53470.david-b@pacbell.net>
+Content-Type: text/plain
+Date: Sun, 27 Jan 2008 21:05:46 +0200
+Message-Id: <1201460746.3663.18.camel@localhost> (sfid-20080127_190600_661431_10738A7B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2008-01-27 at 08:29 -0800, David Brownell wrote:
+> Well, other than the obvious checkpatch.pl warnings waiting to trigger
+> ("if" is not a function; put a space before the paren) and what I'd call
+> missing parens around the "flags & ...", those are *not* errors.  No
+> wonder you thought this would cause too many messages!!
+Well, I guess I got lazy between patchsets. 
 
---=-gjhZjF8qEHpiTJ7Y61rc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Just make those be dev_dbg() calls instead.  The strongest message level
+> you can argue for there would be KERN_NOTICE, "normal but significant";
+> except it's not especially significant.  Filtering by netif_msg_probe()
+> may be a good idea too; that's normally enabled in this framework.
+I'll use dev_dbg() with netif_msg_probe().
 
+> p.s. Before these get submitted, *all* of them need to pass "checkpatch.pl".
+>   Ideally, "checkpatch.pl --strict" ...
+Ok, I'll remember that now.
 
-> So that means the other drivers (bcm43xx and ndiswrapper) provided=20
-> enough signal strength to keep the wireless going even when it was=20
-> horizontal?
+I'm not very familiar with posting patches (as some might have noticed)
+so I have some questions.. if you don't mind. Now that you have acked
+most of the patches, is it ok for me to add your 'Acked-by' to those
+patches? Should I even repost all of these patches as patchset or just
+ones that have been fixed? Should I post new 'physical medium' patch as
+reply to this post and then repost patchset with your ack just to
+mailing list?
 
-Hm, ok, that is a bit odd, I wouldn't have expected bcm43xx to do that.
-Are you sure you're testing in the same place with the same distance to
-the AP etc?
-
-> P.S. I want to add my wireless card to the list (of working cards) (it's=20
-> not dell). How can I do this?
-
-You can't edit the global list, only the per-driver list, for that you
-need to sign up to the wiki and log in.
-
-johannes
-
---=-gjhZjF8qEHpiTJ7Y61rc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4eBZaVg1VMiehFYAQKGnRAApuS+qsfTHzInDzesaTBFZRxr09cXKOQk
-6m85ZbMC2u8YA8F+offPWIJ0ZN8+I+Lcl9vcNwUzZTH/5Xqc1F4L4Rw0V98KUyXq
-tOuZOgPsTaxS9ni4BluyVsqFM23imwEK9kEGzo6ksr6SBH+UwbQSzxMuZjdUScza
-FprhiJy6heApwI0n6v07iTxSbFh09IC8kx0ieuOxCsTDNQzEQUBuSbozJH+bDgpy
-VcBGFZ5lt/4SAyY4UMJIXaMEJw5bOnqDwBIZ2zRSNPsEYcULY0InzIqWf9vRyqsI
-LNKP0H9ePwYr3hIU9KvM8RTG6rba/O3/Vr+hW2bBdnD6CF71szxLN6t9IG3nycZ7
-KBRgFpkbEf2mFdK4sLj7FiwAyMHrgBmraSoI/OTfE9D12Gl1h7n1x4CoD36sG2Xu
-InAzvtq0JsK4E0KJHiTw7hK1KxT4A50tdjshUxKUPgSwvcbYXWUcOfnuo+l03VOz
-LhmfKnulYyPVQHbLHcqKXBBZSJ1GaehM80oCETWT2S0gLI3utOTD59Jj73CaZEQx
-KPhI6XB5gWkmjtSDbi15rrrhE8O2aicu31RFSi5gMTdesfjq58/ITJ/pX6IdqpH8
-o+Qfy+gYmuteDoN4u8+5AEKRcedCY5VWQnLQJleXE2pzfjJsIQPITnV7Ip6RcSKO
-U+BeeLv2Fao=
-=CzxD
------END PGP SIGNATURE-----
-
---=-gjhZjF8qEHpiTJ7Y61rc--
+ - Jussi Kivilinna
 
