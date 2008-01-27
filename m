@@ -1,85 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:24178 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752393AbYASJSa (ORCPT
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:44839 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751101AbYA0TvM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 04:18:30 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 3/3] ath5k: configure backoff for IBSS beacon queue
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Sat, 19 Jan 2008 18:18:41 +0900
-Message-ID: <20080119091841.31251.16946.stgit@one> (sfid-20080119_091838_045369_2DB45280)
-In-Reply-To: <20080119091759.31251.60264.stgit@one>
-References: <20080119091759.31251.60264.stgit@one>
+	Sun, 27 Jan 2008 14:51:12 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 12/14] [rndis_host] Add RNDIS physical medium checking into generic_rndis_bind()
+Date: Sun, 27 Jan 2008 11:51:09 -0800
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bjd@jooz.net
+References: <20080125225032.11716.77713.stgit@fate.lan> <200801270829.53470.david-b@pacbell.net> <1201460746.3663.18.camel@localhost>
+In-Reply-To: <1201460746.3663.18.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801271151.09988.david-b@pacbell.net> (sfid-20080127_195116_089173_27CA5E5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in "11.1.2.2 Beacon generation in an IBSS" the IEEE802.11 standard says=
-, each
-STA should... "b) Calculate a random delay uniformly distributed in the=
- range
-between zero and twice aCWmin =C3=97 aSlotTime,".
+On Sunday 27 January 2008, Jussi Kivilinna wrote:
+> 
+> I'm not very familiar with posting patches (as some might have noticed)
+> so I have some questions.. if you don't mind. Now that you have acked
+> most of the patches, is it ok for me to add your 'Acked-by' to those
+> patches?
 
-configure cwmin and cwmax of the beacon queue in IBSS mode according to=
- this.
-unfortunately beacon backoff does not work reliably yet, so i suspect w=
-e have a
-problem somewhere else, since the same settings (and similar beacon tim=
-er
-configuration) work for madwifi.
-
-drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Claus=
-e-BSD
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
-
- drivers/net/wireless/ath5k/base.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+On those patches I've acked, yes.  (Unless it's a different version
+from what I acked...)  You may not need to re-send them ... that's
+kind of a policy choice of the subsystem maintainer (Jeff Garzik in
+this case).  Most maintainers pick up acks from the mailing list, as
+part of their merge process.
 
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/a=
-th5k/base.c
-index a47e0f3..5bb1b04 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1447,8 +1447,7 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
- 	ret =3D ath5k_hw_get_tx_queueprops(ah, sc->bhalq, &qi);
- 	if (ret)
- 		return ret;
--	if (sc->opmode =3D=3D IEEE80211_IF_TYPE_AP ||
--	    sc->opmode =3D=3D IEEE80211_IF_TYPE_IBSS) {
-+	if (sc->opmode =3D=3D IEEE80211_IF_TYPE_AP) {
- 		/*
- 		 * Always burst out beacon and CAB traffic
- 		 * (aifs =3D cwmin =3D cwmax =3D 0)
-@@ -1456,8 +1455,19 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
- 		qi.tqi_aifs =3D 0;
- 		qi.tqi_cw_min =3D 0;
- 		qi.tqi_cw_max =3D 0;
-+	} else if (sc->opmode =3D=3D IEEE80211_IF_TYPE_IBSS) {
-+		/*
-+		 * Adhoc mode; backoff between 0 and (2 * cw_min).
-+		 */
-+		qi.tqi_aifs =3D 0;
-+		qi.tqi_cw_min =3D 0;
-+		qi.tqi_cw_max =3D 2 * ah->ah_cw_min;
- 	}
-=20
-+	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
-+		"beacon queueprops tqi_aifs:%d tqi_cw_min:%d tqi_cw_max:%d\n",
-+		qi.tqi_aifs, qi.tqi_cw_min, qi.tqi_cw_max);
-+
- 	ret =3D ath5k_hw_setup_tx_queueprops(ah, sc->bhalq, &qi);
- 	if (ret) {
- 		ATH5K_ERR(sc, "%s: unable to update parameters for beacon "
+> Should I even repost all of these patches as patchset or just 
+> ones that have been fixed?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Again, that's a subsystem-specific policy.  In most cases I'm
+familiar with, the answer is to avoid needless reposting ... so
+after it's acked, at most one repost-with-ack.  (And typically
+not even that, when maintainers pick up the acks.)
+
+The main reason to repost an entire patch series is to avoid
+confusion that creeps in with too many tweaked versions.  On
+the other hand, such reposting creates its own confusion...
+
+
+> Should I post new 'physical medium' patch as 
+> reply to this post and then repost patchset with your ack just to
+> mailing list?
+
+My two cents:  just post an updated version of $SUBJECT.
+If Jeff wants a version with the Acks, he'll tell you
+(or someone more up on netdev policies will).
+
+At this point, assuming you update $SUBJECT patch OK,
+I think this series is ready for Jeff's attention...
+
+- Dave
