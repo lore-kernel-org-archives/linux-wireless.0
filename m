@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38435
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753117AbYAZNkX (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:40168 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752664AbYA0R0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 08:40:23 -0500
-Date: Sat, 26 Jan 2008 05:40:36 -0800 (PST)
-Message-Id: <20080126.054036.63438935.davem@davemloft.net> (sfid-20080126_134027_958089_53138330)
-To: linville@tuxdriver.com
-Cc: torvalds@linux-foundation.org, mb@bu3sch.de, dcbw@redhat.com,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: Linux 2.6.24-rc7
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080125211815.GF14687@tuxdriver.com>
-References: <20080125194807.GD14687@tuxdriver.com>
-	<20080125195037.GE14687@tuxdriver.com>
-	<20080125211815.GF14687@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 27 Jan 2008 12:26:53 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1428396rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jan 2008 09:26:52 -0800 (PST)
+Message-ID: <c85cb4470801270926g1f84fc8t5905b458b4eee012@mail.gmail.com> (sfid-20080127_172655_676465_47F33706)
+Date: Sun, 27 Jan 2008 19:26:52 +0200
+From: "Ron Rindjunsky" <rindjon@googlemail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 06/12] mac80211: A-MPDU Tx adding qdisc support
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
+In-Reply-To: <1201167778.3454.75.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
+	 <12009163392546-git-send-email-ron.rindjunsky@intel.com>
+	 <1201167778.3454.75.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 25 Jan 2008 16:18:15 -0500
+> > +#define IEEE80211_TXCTL_AMPDU                (1<<13) /* this frame should be sent
+> > +                                              * as part of an A-MPDU */
+>
+> Broadcom hardware will want to know
+>  (a) is this part of an A-MPDU
+>  (b) if so, is it
+>     (i) the first mpdu
+>     (ii) an intermediate mpdu
+>     (iii) the last mpdu
+>
+> Can we provide that easily and avoid the driver having to keep track?
 
-> Alright, here is my whack at it...  The iwl_handle_data_packet_monitor
-> bits are untested, as I appear to be too daft to figure-out how to
-> exercise those paths.
-> 
-> Anyway, this is mostly just so we can scope the driver change required
-> in absence of a firmware change.  Persumably the changes required if
-> we were to put such code in mac80211 would be similar.
+well, this bit just tells the driver that this frame should be
+aggregated. it does not, in any case, determines to low-level driver
+what will be be distribution of frames per A-MPDU or the order of
+them, as this is the low-level's driver/HW job. so i believe Braodcom
+can do what iwlwifi do, just check this bit and decide if they
+aggregate the frame or not, and in which A-MPDU. the rest of the
+information needed can be extracted easily from start/stop aggregation
+flows.
 
-If this buffer is in the SKB, this is an illegal transformation.
+>
+> >  struct ieee80211_sched_data
+> >  {
+> > +     unsigned long qdisc_pool;
+>
+> If we ever have hw with many more queues we may want to increase
+> NUM_TX_DATA_QUEUES_AMPDU, so if I understand the code correctly should
+> be an array sized something like BITS_TO_LONGS(NUM_TX_...)
+>
 
-Once you put something in front of skb->data, it's fair game
-for other things to write over that buffer area with a pushed
-packet header of their own.
+I can change this book keeping, though current solution provides us up
+to 32 HW queues, which is really a huge amout of queues in terms of
+HW. if needed after all, i would prefer to do it on top of this
+series.
 
-The only legal way to fix this is to completely copy the packet,
-headers and all, at the input site.
+> johannes
+>
+>
