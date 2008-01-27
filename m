@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:6816 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbYALMF0 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56583
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751213AbYA0HYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 07:05:26 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1488262fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2008 04:05:23 -0800 (PST)
-To: Thomas =?iso-8859-15?q?B=E4chler?= <thomas@archlinux.org>
-Subject: Re: [rt2x00] rt2500pci massive speed problems
-Date: Sat, 12 Jan 2008 13:05:16 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <fma7v9$cn7$1@ger.gmane.org>
-In-Reply-To: <fma7v9$cn7$1@ger.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801121305.16205.IvDoorn@gmail.com> (sfid-20080112_120530_958361_DECF85FB)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sun, 27 Jan 2008 02:24:17 -0500
+Date: Sat, 26 Jan 2008 23:24:31 -0800 (PST)
+Message-Id: <20080126.232431.193736209.davem@davemloft.net> (sfid-20080127_072420_825761_14BA02B6)
+To: jeff@garzik.org
+Cc: torvalds@linux-foundation.org, linville@tuxdriver.com,
+	mb@bu3sch.de, dcbw@redhat.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <479C2FB0.7080700@garzik.org>
+References: <20080126.053736.130683952.davem@davemloft.net>
+	<alpine.LFD.1.00.0801262229300.3222@www.l.google.com>
+	<479C2FB0.7080700@garzik.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Jeff Garzik <jeff@garzik.org>
+Date: Sun, 27 Jan 2008 02:16:00 -0500
 
-> I have a MSI PC54G2 Wireless NIC:
-> 00:0b.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
-> 00:0b.0 0280: 1814:0201 (rev 01)
+> It would be nice to stop maintaining code like the following in 
+> drivers/net/tulip/tulip_core.c:
 > 
-> I have tested the speed with different rt2500pci versions and with the
-> rt2500 legacy driver, using a D-Link DI-524 wireless router in mixed
-> WPA/WPA2 TKIP/CCMP mode:
+> > /* Set the copy breakpoint for the copy-only-tiny-buffer Rx structure. */
+> > #if defined(__alpha__) || defined(__arm__) || defined(__hppa__) \
+> >         || defined(CONFIG_SPARC) || defined(__ia64__) \
+> >         || defined(__sh__) || defined(__mips__)
+> > static int rx_copybreak = 1518;
+> > #else
+> > static int rx_copybreak = 100;
+> > #endif
 > 
-> Linux 2.6.23.13, rt2x00 from CVS, the last version I got to compile with
-> 2.6.23 (a copy of this source is here:
-> ftp://ftp.archlinux.org/other/rt2x00-cvs/rt2x00-cvs-20070914.tar.bz2):
-> The speed is about 100KB/s.
-> 
-> Linux 2.6.24-rc7 (pulled from linux-2.6 git today):
-> The speed is about 20KB/s, which is obviously _much_ slower than the
-> older version above.
-> 
-> Linux 2.6.23.13, latest rt2500 legacy release.
-> Speed is over 1MB/s when downloading from the Internet, 900KB/s when
-> downloading from another client on the same WLAN, which is a sane result
-> IMO.
-> 
-> As you can see, the rt2500pci included in 2.6.24 is unusable when it
-> comes to speed, older versions were partially usable. However, if you
-> need good speed, the only way is to fall back to the legacy driver, with
-> the obvious problems (lack of wpa_supplicant support, thus only limited
-> WPA support).
+> The driver passes a lot of information implicitly to the net stack 
+> simply via its "style" of allocation and mapping.
 
-Set the rate to 54Mbs instead of auto, other people reported that that should help.
+I just want to note in passing that we should remember that
+there is a secoondary reason this copy-break logic exists
+in the drivers.
 
-Ivo
+When a reeived packet is attached to, and charged to, a socket,
+we account the real amount of memory the SKB has allocated to it.
 
+This means if the driver allocates full MTU sized frames for the
+device to DMA into, we can cause unintended problems for passing
+that packet directly in if there is only say 100 bytes of data.
+
+The socket gets charged for a full MTU's amount of memory instead
+of something more on the order of 100 bytes :-)
+
+In fact that is the original reason all of these things exists,
+it was just simple to extend it to handle alignment cases too.
+
+Anyways, once we put the logic for unaligned handling into a
+centralized location the above can now evaluate to a constant,
+or default to the lower value of 100.
