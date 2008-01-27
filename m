@@ -1,88 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:2024 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbYASKVf (ORCPT
+Received: from smtp114.sbc.mail.mud.yahoo.com ([68.142.198.213]:37204 "HELO
+	smtp114.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752487AbYA0Q35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 05:21:35 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so586059ugc.16
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2008 02:21:34 -0800 (PST)
-Message-ID: <4791CF2B.7090604@gmail.com> (sfid-20080119_102141_043023_09ABF14D)
-Date: Sat, 19 Jan 2008 11:21:31 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Sun, 27 Jan 2008 11:29:57 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 11/14] [rndis_host] Add link_change function pointer to 'struct rndis_data'.
+Date: Sun, 27 Jan 2008 08:15:16 -0800
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bjd@jooz.net
+References: <20080125225032.11716.77713.stgit@fate.lan> <20080125225134.11716.2264.stgit@fate.lan>
+In-Reply-To: <20080125225134.11716.2264.stgit@fate.lan>
 MIME-Version: 1.0
-To: Bruno Randolf <bruno@thinktube.com>
-CC: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] ath5k: debug level improvements
-References: <200801191147.04877.bruno@thinktube.com> <20080119024926.12055.9695.stgit@one>
-In-Reply-To: <20080119024926.12055.9695.stgit@one>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801270815.16812.david-b@pacbell.net> (sfid-20080127_163029_492853_93BFB3C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/2008 03:49 AM, Bruno Randolf wrote:
-> * use only one debug level for beacon debugging: unify ATH5K_DEBUG_BEACON and
-> ATH5K_DEBUG_BEACON_PROC
+On Friday 25 January 2008, Jussi Kivilinna wrote:
+> Callback to signal link state changes from minidriver to 
+> 'subminidrivers'.
 > 
-> * remove debug level ATH5K_DEBUG_FATAL. doesn't make sense as a debug level -
-> if it's fatal it should be logged as an error.
-> 
-> * fancier printing of debug levels. cat /debugfs/ath5k/phy0/debug
-> 
-> * allow debug levels to be changed by echoing their name into
-> /debugfs/ath5k/phy0/debug. this will toggle the state, when it was off it will
-> be turned on and vice versa.
-> 
-> drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
-> drivers/net/wireless/ath5k/debug.c:     Changes-licensed-under: GPL
-> drivers/net/wireless/ath5k/debug.h:     Changes-licensed-under: GPL
-> 
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
-> Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
+
+
 > ---
 > 
->  drivers/net/wireless/ath5k/base.c  |   10 ++--
->  drivers/net/wireless/ath5k/debug.c |   95 +++++++++++++++++++++++++++++++-----
->  drivers/net/wireless/ath5k/debug.h |   18 +++----
->  3 files changed, 93 insertions(+), 30 deletions(-)
+>  drivers/net/usb/rndis_host.c |   24 ++++++++++++++++++++----
+>  drivers/net/usb/usbnet.h     |    4 ++++
+>  2 files changed, 24 insertions(+), 4 deletions(-)
 > 
-> 
-[...]
-> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-> index 4ba649e..63e39f9 100644
-> --- a/drivers/net/wireless/ath5k/debug.c
-> +++ b/drivers/net/wireless/ath5k/debug.c
-> @@ -314,6 +314,76 @@ static const struct file_operations fops_reset = {
-[...]
-> +static ssize_t write_file_debug(struct file *file,
-> +				 const char __user *userbuf,
-> +				 size_t count, loff_t *ppos)
-> +{
-> +	struct ath5k_softc *sc = file->private_data;
-> +	int i;
-
-BTW. unsigned int generates better code on most platforms.
-
+> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+> index 0813903..800c9d0 100644
+> --- a/drivers/net/usb/rndis_host.c
+> +++ b/drivers/net/usb/rndis_host.c
+> @@ -148,10 +148,26 @@ int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
+>  					request_id, xid);
+>  				/* then likely retry */
+>  			} else switch (buf->msg_type) {
+> -			case RNDIS_MSG_INDICATE: {	/* fault */
+> -				// struct rndis_indicate *msg = (void *)buf;
+> -				dev_info(&info->control->dev,
+> -					"rndis fault indication\n");
+> +			case RNDIS_MSG_INDICATE: {	/* fault/event */
+> +				struct rndis_indicate *msg = (void *)buf;
+> +				int state = 0;
 > +
-> +	for (i = 0; i < ARRAY_SIZE(dbg_info); i++) {
-> +		if (strncmp(userbuf, dbg_info[i].name,
-> +					strlen(dbg_info[i].name)) == 0)
+> +				switch (msg->status) {
+> +				case RNDIS_STATUS_MEDIA_CONNECT:
+> +					state = 1;
+> +				case RNDIS_STATUS_MEDIA_DISCONNECT:
+> +					dev_info(&info->control->dev,
+> +						"rndis media %sconnect\n",
+> +						!state?"dis":"");
+> +					if (dev->driver_info->link_change)
+> +						dev->driver_info->link_change(
+> +							dev, state);
+> +					break;
+> +				default:
+> +					dev_info(&info->control->dev,
+> +						"rndis indication: 0x%08x\n",
+> +						le32_to_cpu(msg->status));
+> +				}
+>  				}
+>  				break;
+>  			case RNDIS_MSG_KEEPALIVE: {	/* ping */
+> diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
+> index 25b63d3..e0501da 100644
+> --- a/drivers/net/usb/usbnet.h
+> +++ b/drivers/net/usb/usbnet.h
+> @@ -121,6 +121,10 @@ struct driver_info {
+>  	 * right after minidriver have initialized hardware. */
+>  	int	(*early_init)(struct usbnet *dev);
+>  
+> +	/* called by minidriver when link state changes, state: 0=disconnect,
+> +	 * 1=connect */
+> +	void	(*link_change)(struct usbnet *dev, int state);
+> +
+>  	/* for new devices, use the descriptor-reading code instead */
+>  	int		in;		/* rx endpoint */
+>  	int		out;		/* tx endpoint */
+> 
 
-Ah, we have bugs in debug write methods. You can't pass user buffer to strcmp. 
-You must copy_from_user() it first. Otherwise kernel won't be happy from 
-userspace code such as:
-fd = open("path_to_the_debug_file", O_RDWR);
-write(fd, 1234 or NULL or whatever meaningless, 1);
 
-Also you don't need to call strncmp, strcmp is OK (you can rely on dbg_info.name 
-being null terminated and also the static strings such as "disable" are...) and 
-shorter.
-
-Microoptimisation is to put "break" right after it:
-
- > +			sc->debug.level ^= dbg_info[i].level; /* toggle bit */
-
-but it's not mandatory at all.
-
-thanks,
---js
