@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51696 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751612AbYA2CnI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 21:43:08 -0500
-Message-ID: <479E928C.5000709@lwfinger.net> (sfid-20080129_024313_427668_8EB49D43)
-Date: Mon, 28 Jan 2008 19:42:20 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: 'Stefano Brivio' <stefano.brivio@polimi.it>
-CC: Lars Ericsson <Lars_Ericsson@telia.com>,
-	"'John W. Linville'" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFT] [PATCH] rc80211-pid: fix rate adjusting
-References: <00db01c861e4$abc2fea0$0b3ca8c0@gotws1589>
-In-Reply-To: <00db01c861e4$abc2fea0$0b3ca8c0@gotws1589>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:36932 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753912AbYA0Sxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jan 2008 13:53:50 -0500
+Date: Sun, 27 Jan 2008 19:51:45 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
+Message-ID: <20080127195145.21c1a667@morte> (sfid-20080127_185354_770458_2A7165DD)
+In-Reply-To: <479CB7A0.6090000@lwfinger.net>
+References: <20080126040534.005e6736@morte>
+	<479CB7A0.6090000@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lars Ericsson wrote:
-> Hi,
-> 
-> Sorry, it took me some time to start testing.
-> I was using a rt2x00 kernel, which did not compile the patch.
-> Am using a RT61 minPCI as the STA.
-> 
-> Have build a new wireless kernel and made some initial test.
-> 
-> Findings so far:
-> 1) It does not select 11g speeds on 11b AP, fine.
-> 2) It does not use 11g speeds on 11g AP, not so good.
-> 3) It takes some time before the speed is adjusted.
->    I think that may be configurable, but have not spent any time on that.
+On Sun, 27 Jan 2008 09:56:00 -0700
+Larry Finger <larry.finger@lwfinger.net> wrote:
 
-I cannot confirm either 2) or 3). When I connected to a nearby 802.11g AP, it had adjusted the speed 
-to 54 Mbs by the time I got the output of an iwconfig.
+> Although the real cause of the bug is due to selecting a trial value for the new rate that can never 
+> be satisfied, I think that this sanity check is a reasonable way to detect and stop the runaway. As 
+> this condition is likely to affect a lot of systems, I think the WARN_ON(1) should be removed from 
+> the final version of the patch. With it in, a lot of logs will get spammed.
 
-Larry
+Agreed. I'm going to post a quite different patch which aims to solve the
+root cause. John, please disregard this one.
 
+
+--
+Ciao
+Stefano
