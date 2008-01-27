@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54143 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059AbYA2L2S (ORCPT
+Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:61808 "EHLO
+	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753818AbYA0PCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 06:28:18 -0500
-Subject: Re: Kernel Panic in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <47996701.8000804@lwfinger.net>
-References: <47983B31.4020304@lwfinger.net>
-	 <1201185235.3454.93.camel@johannes.berg>  <47996701.8000804@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J860XtcZEEIwPKsRCo6f"
-Date: Fri, 25 Jan 2008 21:59:17 +0100
-Message-Id: <1201294757.9397.2.camel@johannes.berg> (sfid-20080129_112827_402830_26F1D0B5)
-Mime-Version: 1.0
+	Sun, 27 Jan 2008 10:02:52 -0500
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: "'Stefano Brivio'" <stefano.brivio@polimi.it>
+Cc: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 2/2] rc80211-pid: add sanity check
+Date: Sun, 27 Jan 2008 14:53:00 +0100
+Message-ID: <007a01c860eb$ee8231b0$0b3ca8c0@gotws1589> (sfid-20080127_150255_927409_8B226D07)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+In-Reply-To: <20080127134252.776cebd6@morte>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Stefano,
 
---=-J860XtcZEEIwPKsRCo6f
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What happens is that the while (newidx != sta->txrate) will continue 
+until the newidx reaches 33. Reason is that BIT(33) is the same as BIT(1) 
+In the rate_supported() function.
+
+New sta->txrate will be 33 which is far beyond the valid size (12 in my
+case).
+In my system that happens to be a 11g speed :o).
+
+I have a trace if you are intresting. Its about 260K data but it show 
+How it happens. I think you need trafik (ping) in order for the relulator 
+to operate.
+
+Regards
+Lars
 
 
-> >> Code: f6 44 02 08 10 74 12 45 85 ed 78 05 44 39 e9 7f 08 89 8f 24
-> >> RIP  [<ffffffff88202940>] :mac80211:rate_control_pid_tx_status+0x426/0=
-x45a
-> >=20
-> > Damn, I've seen that too but blamed it on my own patching. Stefano, any
-> > idea? IIRC some sta struct was NULL in pid_tx_status.
->=20
-> The problem is not a NULL in one of the structs, but a runaway loop.
+-----Original Message-----
+From: Stefano Brivio [mailto:stefano.brivio@polimi.it] 
+Sent: den 27 januari 2008 13:43
+To: Lars
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
 
-Ah, you're right, I remember now that the access was to some random
-rather high address which matches what you observed.
+On Sat, 26 Jan 2008 19:40:14 +0000 (UTC) Lars <Lars_Ericsson@telia.com>
+wrote:
 
-johannes
+> Hi,
+> 
+> I have spent some time debugging this problem from a different angle.
+> 
+> If you use a 'b/g' STA connecting to a 'b' AP you will run into this 
+> loop in a few seconds. What also happens is that the STA will try 
+> using 'g' speeds. That was the way I located the problem.
 
---=-J860XtcZEEIwPKsRCo6f
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thank you. I couldn't really figure out how to reproduce the bug.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> In other words, I do not think a WARN_ON is good solution.
 
-iQIVAwUAR5pNpKVg1VMiehFYAQLCFg/8C7X9XRrAj/dTvzrJ2kMoDU6Fthbg39JI
-mGo2eJ0aPU0qP0qeuOlXEh3wxG+8rmFxhTo2fMhzjUz45YTGmNR49Q1y1F/LNjyo
-TBH4ygp6p8G0odt2SgxiHf87+IZRZ+JSW1Qiwiz8spahpNQGm4Or5mIn4sF/r3oV
-Np5Rc6ng3qHTj2PwYRRGP9e3J8txe8VwmqPnd8wz5HdRNfj18mWE74YoP7QUICIv
-pL75H1mEQtt402NJSm5yO0ny4ljs6515eT8w8C7irjnX/FSHphpV4wLUWywuvg4l
-YwT4Vb2uJLu6yjxeuRy4rQvComBJnX+GOuvq/N+dJUlb0W1K2GgZXKBp3o23qDIe
-iJw8vC0Nj+YrdtuPlqYN3IF+WbX9VjOpEPzPbWiWDDHkJeiFA1rG5Zq7GbxjMPWj
-sKWuA1tuUBtps4wBFiAxv2yyVt9qRLIr969ya9iWwCfx8kbZ1Pec7gaycXgKYkFc
-c6s4ZGTyxYqc3bTcysSanKlL4hdZuFimRkUydF3y62M/PUJ5VEdcRQaJ4r/RYquE
-+YFQbY+kDOzCtYRNoN4hsS7B8xQqh+4vIw2gpwyT3VNNmCY6YHZZPqt10SkPpTgo
-YwOsw+dmTxdEH4vdggUU23g5hUn3Mg9nXquOAkMN2f6M2D+0z8aiW4vqWxL75zs9
-xhWIHBtC+WU=
-=7duA
------END PGP SIGNATURE-----
+Please could you try my 1/2 patch? In the meanwhile, I'll try to use your
+information for more debugging.
 
---=-J860XtcZEEIwPKsRCo6f--
+
+--
+Ciao
+Stefano
 
